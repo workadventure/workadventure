@@ -2,14 +2,8 @@ import { ClientToServerMessage } from "@workadventure/messages";
 import { SpaceInterface } from "../SpaceInterface";
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
 import { Space } from "../Space";
-import {
-    SpaceEventEmitterInterface,
-    SpaceFilterEventEmitterInterface,
-} from "../SpaceEventEmitter/SpaceEventEmitterInterface";
 import { SpaceProviderInterface } from "./SpacerProviderInterface";
 
-
-export type AllSapceEventEmitter = (SpaceFilterEventEmitterInterface & SpaceEventEmitterInterface) | undefined;
 export class LocalSpaceProvider implements SpaceProviderInterface {
     constructor(
         private socket: WebSocket | undefined = undefined,
