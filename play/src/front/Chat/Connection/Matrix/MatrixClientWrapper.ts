@@ -13,6 +13,7 @@ import { SecretStorageKeyDescriptionAesV1 } from "matrix-js-sdk/lib/secret-stora
 import { openModal } from "svelte-modals";
 import { LocalUser } from "../../../Connection/LocalUser";
 import AccessSecretStorageDialog from "./AccessSecretStorageDialog.svelte";
+import { isEncryptionRequiredAndNotSet } from "./MatrixSecurity";
 
 // @ts-ignore
 window.Buffer = Buffer;
@@ -206,9 +207,9 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
                 body: {
                     initial_device_display_name: this.localUserStore.getName() || "",
                     refresh_token: true,
-                },
-                
+                },    
             });
+
             this.localUserStore.setMatrixUserId(user_id);
             this.localUserStore.setGuest(true);
 
@@ -328,6 +329,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
         });
 
         if (key === null) {
+            isEncryptionRequiredAndNotSet.set(true);
             throw Error("No recovery key provided");
         }
         this.cacheSecretStorageKey(keyId, key);
