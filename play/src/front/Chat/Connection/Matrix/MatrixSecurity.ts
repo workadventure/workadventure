@@ -5,8 +5,10 @@ import { decodeRecoveryKey } from "matrix-js-sdk/lib/crypto/recoverykey";
 import { openModal } from "svelte-modals";
 import InteractiveAuthDialog from "./InteractiveAuthDialog.svelte";
 import CreateRecoveryKeyDialog from "./CreateRecoveryKeyDialog.svelte";
+import { writable } from "svelte/store";
 
 let  initializingEncryption = false;
+export const isEncryptionRequiredAndNotSet = writable(false);
 export type KeyParams = { passphrase?: string; recoveryKey?: string };
 
 export function makeInputToKey(
@@ -43,14 +45,17 @@ export async function initClientCryptoConfiguration() {
             console.error("E2EE is not available for this client");
             return;
         }
+        if(initializingEncryption){
+            console.error("already initialize");
+            return;
+        }
 
         initializingEncryption = true;
 
         const keyBackupInfo = await matrixClientStore.getKeyBackupVersion();
         const isCrossSigningReady = await crypto.isCrossSigningReady();
 
-        if (!isCrossSigningReady && matrixClientStore.getRooms().some((room) => room.hasEncryptionStateEvent())) {
-            initializingEncryption = true;
+        if (!isCrossSigningReady ) {
             await crypto.bootstrapCrossSigning({
                 authUploadDeviceSigningKeys: async (makeRequest) => {
                     const finished = await new Promise<boolean>((resolve) => {
@@ -61,6 +66,7 @@ export async function initClientCryptoConfiguration() {
                         });
                     });
                     if (!finished) {
+                        isEncryptionRequiredAndNotSet.set(true);
                         throw new Error("Cross-signing key upload auth canceled");
                     }
                 },
@@ -80,6 +86,7 @@ export async function initClientCryptoConfiguration() {
                         });
                     });
                     if (generatedKey === null) {
+                        isEncryptionRequiredAndNotSet.set(true);
                         throw new Error("createSecretStorageKey : no generated secret storage key");
                     }
                     return Promise.resolve(generatedKey);
@@ -87,6 +94,7 @@ export async function initClientCryptoConfiguration() {
                 setupNewKeyBackup: keyBackupInfo === null,
                 keyBackupInfo: keyBackupInfo ?? undefined,
             });
+            isEncryptionRequiredAndNotSet.set(false);
         }
         await restoreBackupMessages(keyBackupInfo);
     } catch (error) {

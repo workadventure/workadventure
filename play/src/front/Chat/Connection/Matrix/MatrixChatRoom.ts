@@ -58,6 +58,14 @@ export class MatrixChatRoom implements ChatRoom {
         this.timelineWindow = new TimelineWindow(matrixRoom.client, matrixRoom.getLiveTimeline().getTimelineSet());
         this.isEncrypted = writable(matrixRoom.hasEncryptionStateEvent());
 
+
+        (async () => {
+            if (matrixRoom.hasEncryptionStateEvent()) {
+                await initClientCryptoConfiguration();
+            }
+        })();
+
+        
         //Necessary to keep matrix event content for local event deletions after initialization
         this.inMemoryEventsContent = new Map<EventId, MatrixEvent>();
         (async () => {
@@ -66,19 +74,20 @@ export class MatrixChatRoom implements ChatRoom {
 
         this.startHandlingChatRoomEvents();
 
-        this.matrixRoom.getPendingEvents().filter((ev : MatrixEvent)=> ev.status === EventStatus.NOT_SENT).forEach((event)=>{
-            this.matrixRoom.client.resendEvent(event,this.matrixRoom)
-            .catch((error)=>{
-                this.matrixRoom.client.cancelPendingEvent(event);
-                console.error(error);
+        this.matrixRoom
+            .getPendingEvents()
+            .filter((ev: MatrixEvent) => ev.status === EventStatus.NOT_SENT)
+            .forEach((event) => {
+                this.matrixRoom.client.resendEvent(event, this.matrixRoom).catch((error) => {
+                    this.matrixRoom.client.cancelPendingEvent(event);
+                    console.error(error);
+                });
             });
-        })
     }
 
     private async initMatrixRoomMessagesAndReactions() {
         if (this.matrixRoom.hasEncryptionStateEvent()) {
             await this.matrixRoom.decryptAllEvents();
-
         }
         await this.timelineWindow.load();
         const events = this.timelineWindow.getEvents();
@@ -110,7 +119,9 @@ export class MatrixChatRoom implements ChatRoom {
     }
 
     private startHandlingChatRoomEvents() {
-        this.matrixRoom.on(RoomEvent.Timeline,async (event, room, toStartOfTimeline, _ ,data)=> this.onRoomTimeline(event, room, toStartOfTimeline, _ ,data));
+        this.matrixRoom.on(RoomEvent.Timeline, async (event, room, toStartOfTimeline, _, data) =>
+            this.onRoomTimeline(event, room, toStartOfTimeline, _, data)
+        );
         this.matrixRoom.on(RoomEvent.Name, this.onRoomName.bind(this));
         this.matrixRoom.on(RoomEvent.Redaction, this.onRoomRedaction.bind(this));
     }
@@ -123,13 +134,12 @@ export class MatrixChatRoom implements ChatRoom {
         data: IRoomTimelineData
     ) {
 
-        if(event.getType() === EventType.RoomEncryption) {
+        if (event.getType() === EventType.RoomEncryption || event.getType() === EventType.RoomMessageEncrypted) {
             await initClientCryptoConfiguration();
         }
 
         //Only get realtime event
         if (toStartOfTimeline || !data || !data.liveEvent) {
-
             return;
         }
         if (room !== undefined) {
