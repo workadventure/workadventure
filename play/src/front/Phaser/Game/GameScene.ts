@@ -3327,12 +3327,24 @@ ${escapedMessage}
         this.lastMoveEventSent = event;
         this.lastSentTick = this.currentTick;
         const camera = this.cameras.main;
-        this.connection?.sharePosition(event.x, event.y, event.direction, event.moving, {
+        let viewport = {
             left: camera.scrollX,
             top: camera.scrollY,
             right: camera.scrollX + camera.width,
             bottom: camera.scrollY + camera.height,
-        });
+        };
+        if (!this.scene.scene.renderer) {
+            // In the very special case where we have no renderer, the viewport will not move along the Woka.
+            // We need to adjust it manually. We set it to something very large to make sure the Woka sees
+            // everything around (useful for bots, even if so far, it is a trick)
+            viewport = {
+                left: event.x - 3_000,
+                top: event.y - 3_000,
+                right: event.x + 3_000,
+                bottom: event.y + 3_000,
+            };
+        }
+        this.connection?.sharePosition(event.x, event.y, event.direction, event.moving, viewport);
         iframeListener.hasPlayerMoved(event);
     }
 
