@@ -19,7 +19,7 @@ CORS headers ([Cross Origin Resource Sharing](https://developer.mozilla.org/en-U
 :::caution
 If you are using the "scripting API", only allowing the `play.workadventu.re` will not be enough. You will need to allow `*`
 as a domain in order to be able to load scripts. If for some reason, you cannot or do not want to allow `*` as a domain, please
-read the [scripting internals](../developer/map-scripting/scripting-internals) guide for alternatives.
+read the [scripting internals](../../../developer/map-scripting/scripting-internals) guide for alternatives.
 :::
 
 ### Enabling CORS for Apache
