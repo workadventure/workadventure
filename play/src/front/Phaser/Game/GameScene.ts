@@ -1652,7 +1652,7 @@ export class GameScene extends DirtyScene {
                 /*const me = this;
                 this.events.once("render", () => {
                     if (me.connection) {*/
-                this.simplePeer = new SimplePeer(this.connection);
+                this.simplePeer = new SimplePeer(this.connection, this.remotePlayersRepository);
                 /*} else {
                         console.warn("Connection to peers not started!");
                     }
@@ -2073,7 +2073,7 @@ export class GameScene extends DirtyScene {
                 // So we know for sure that there is only one new user.
                 const peer = Array.from(peers.values())[0];
                 //askIfUserWantToJoinBubbleOf(peer.userName);
-                statusChanger.setUserNameInteraction(peer.userName);
+                statusChanger.setUserNameInteraction(peer.player.name);
                 statusChanger.applyInteractionRules();
 
                 pendingConnects.add(peer.userId);
