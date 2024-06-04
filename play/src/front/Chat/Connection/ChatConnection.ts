@@ -82,7 +82,6 @@ export interface CreateRoomOptions {
 
 export type ConnectionStatus = "ONLINE" | "ON_ERROR" | "CONNECTING" | "OFFLINE";
 
-
 export type spaceId = number;
 export type chatId = string;
 export interface ChatConnectionInterface {

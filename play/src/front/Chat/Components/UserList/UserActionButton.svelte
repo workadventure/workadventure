@@ -19,9 +19,9 @@
 
     const userList: Readable<Map<number, ChatUser>> = chatConnection.userConnected;
 
-    const me = Array.from($userList.values()).find((userInList)=>{
-        return userInList.id === localUserStore.getChatId()
-    })
+    const me = Array.from($userList.values()).find((userInList) => {
+        return userInList.id === localUserStore.getChatId();
+    });
     const iAmAdmin = me?.isAdmin ?? false;
 
     const goTo = (type: string, playUri: string, uuid: string) => {
