@@ -160,6 +160,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     disabledByAdmin: "Cette fonctionnalité est désactivée par l'administrateur.",
     anAdmin: "un administrateur",
     messageDeletedByYou: "Vous avez supprimé ce message",
+    messageEdited: "Modifié",
     waiting: "En attente",
     nothingToDisplay: "Rien à afficher",
     createRoom: {
@@ -207,6 +208,7 @@ const chat: DeepPartial<Translation["chat"]> = {
             title: "Chiffrement de bout en bout",
             description:
                 "Pour des raisons de sécurité, une clé de signature croisée doit être téléchargée sur notre serveur. En confirmant votre identité, vous enregistrerez la clé de signature croisée qui vous permettra de lire les messages chiffrés de WA et d'autres clients.",
+            instruction: "Veillez à confirmer la connexion SSO avant de cliquer sur le bouton Terminer.",
             buttons: {
                 cancel: "Annuler",
                 continueSSO: "Continuer avec le SSO",
@@ -228,6 +230,7 @@ const chat: DeepPartial<Translation["chat"]> = {
             },
         },
     },
+    connectionError: "Chat indisponible",
 };
 
 export default chat;

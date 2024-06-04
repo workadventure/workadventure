@@ -61,14 +61,14 @@
             class:tw-rounded-bl-none={!isMyMessage}
         >
             {#if $isDeleted}
-                <p class="tw-p-0 tw-m-0 tw-text-xs tw-text-gray-500 tw-flex tw-items-center">
+                <p class="tw-p-0 tw-m-0 tw-text-xs tw-text-gray-400 tw-flex tw-items-center">
                     <IconTrash size={12} />
                     {$LL.chat.messageDeleted()}
                 </p>
             {:else}
                 <svelte:component this={messageType[type]} {content} />
                 {#if $isModified}
-                    <p class="tw-text-gray-500 tw-text-xxxs tw-p-0 tw-m-0">(modified)</p>
+                    <p class="tw-text-gray-300 tw-text-xxxs tw-p-0 tw-m-0">({$LL.chat.messageEdited()})</p>
                 {/if}
                 {#if $selectedChatMessageToEdit !== null && $selectedChatMessageToEdit.id === id}
                     <MessageEdition message={$selectedChatMessageToEdit} />

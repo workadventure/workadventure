@@ -58,6 +58,8 @@
     $: filteredRoomInvitations = $roomInvitations.filter(({ name }) =>
         get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase())
     );
+
+    $: isGuest = chat.isGuest;
 </script>
 
 {#if $selectedRoom !== undefined}
@@ -106,9 +108,11 @@
             {/if}
             {$LL.chat.rooms()}</button
         >
-        <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={openCreateRoomModal}>
-            <IconSquarePlus size={16} />
-        </button>
+        {#if $isGuest === false}
+            <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={openCreateRoomModal}>
+                <IconSquarePlus size={16} />
+            </button>
+        {/if}
     </div>
 
     {#if displayRooms}
