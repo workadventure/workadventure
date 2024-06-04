@@ -8,6 +8,7 @@
     import RoomUserList from "./UserList/RoomUserList.svelte";
     import RoomList from "./RoomList.svelte";
     import ChatLoader from "./ChatLoader.svelte";
+    import ChatError from "./ChatError.svelte";
 
     const chat = gameManager.getCurrentGameScene().chatConnection;
     const DONE_TYPING_INTERVAL = 2000;
@@ -82,6 +83,7 @@
     }
 
     $: isEncryptionRequiredAndNotSet = chat.isEncryptionRequiredAndNotSet;
+    $: isGuest = chat.isGuest;
 </script>
 
 <div class="tw-flex tw-flex-col tw-gap-2 tw-h-full">
@@ -90,7 +92,7 @@
         <ChatLoader label={$LL.chat.connecting()} />
     {/if}
     {#if $chatConnectionStatus === "ON_ERROR"}
-        <p class="tw-text-red-500">Something went wrong with chat</p>
+        <ChatError />
     {/if}
     {#if $chatConnectionStatus === "ONLINE"}
         <nav class="nav">
@@ -115,7 +117,7 @@
                 />
             </div>
         </div>
-        {#if $isEncryptionRequiredAndNotSet}
+        {#if $isEncryptionRequiredAndNotSet===true && $isGuest === false}
             <button
                 on:click|stopPropagation={initChatConnectionEncryption}
                 class="tw-text-red-500 tw-flex tw-gap-1 tw-border tw-border-solid tw-border-red-500 tw-rounded-md tw-justify-center"

@@ -3,6 +3,7 @@
     import { ChatMessage } from "../../Connection/ChatConnection";
     import { selectedChatMessageToEdit, selectedChatMessageToReply } from "../../Stores/ChatStore";
     import { getChatEmojiPicker } from "../../EmojiPicker";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
 
     export let message: ChatMessage;
     export let messageRef: HTMLDivElement;
@@ -30,6 +31,11 @@
     }
 
     const { content, isMyMessage, type } = message;
+
+    const chat = gameManager.getCurrentGameScene().chatConnection;
+
+    $: isGuest = chat.isGuest;
+
 </script>
 
 <div class="tw-flex tw-flex-row tw-gap-1 tw-items-center">
@@ -43,18 +49,20 @@
             <IconArrowDown size={16} class="hover:tw-cursor-pointer hover:tw-text-secondary" />
         </a>
     {/if}
-    <button class="tw-p-0 tw-m-0 hover:tw-text-secondary" on:click={replyToMessage}>
+    <button class="tw-p-0 tw-m-0 hover:tw-text-black " on:click={replyToMessage}>
         <IconArrowBackUp size={16} />
     </button>
-    <button class="tw-p-0 tw-m-0 hover:tw-text-secondary" on:click={openCloseEmojiPicker}>
+    <button class="tw-p-0 tw-m-0 hover:tw-text-yellow-500" on:click={openCloseEmojiPicker}>
         <IconMoodSmile size={16} />
     </button>
     {#if isMyMessage && type === "text"}
-        <button class="tw-p-0 tw-m-0 hover:tw-text-secondary" on:click={selectMessageToEdit}>
+        <button class="tw-p-0 tw-m-0 hover:tw-text-blue-500" on:click={selectMessageToEdit}>
             <IconPencil size={16} />
         </button>
     {/if}
-    <button class="tw-p-0 tw-m-0 hover:tw-text-secondary" on:click={removeMessage}>
-        <IconTrash size={16} />
-    </button>
+    {#if $isGuest === false }
+        <button class="tw-p-0 tw-m-0 hover:tw-text-red-500" on:click={removeMessage}>
+            <IconTrash size={16} />
+        </button>
+    {/if}
 </div>

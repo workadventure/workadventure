@@ -73,7 +73,7 @@
         <div slot="content">
             <p>{$LL.chat.e2ee.interactiveAuth.description()}</p>
             {#if uiAuthPhase === INTERACTIVE_AUTH_PHASE.PRE_AUTH}
-                <p>Be sure to end SSO connection popup after before clicking on Finish button</p>
+                <p>{$LL.chat.e2ee.interactiveAuth.instruction()}</p>
             {/if}
         </div>
         <svelte:fragment slot="action">

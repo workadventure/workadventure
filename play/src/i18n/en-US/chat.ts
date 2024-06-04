@@ -159,6 +159,7 @@ const chat: BaseTranslation = {
     disabledByAdmin: "This feature is disabled by the administrator.",
     anAdmin: "an administrator",
     messageDeletedByYou: "You deleted this message",
+    messageEdited: "Modified",
     waiting: "Waiting",
     nothingToDisplay: "Nothing to display",
     createRoom: {
@@ -206,6 +207,7 @@ const chat: BaseTranslation = {
             title: "Chat end to end encryption",
             description:
                 "For security reason, a cross signing key must be uploaded to our server. By confirming your identity, you will save the cross signing key allowing you to read encrypted message from WA and other clients.",
+            instruction: "Be sure to end SSO connection popup after before clicking on Finish button",
             buttons: {
                 cancel: "Cancel",
                 continueSSO: "Continue with SSO",
@@ -227,6 +229,7 @@ const chat: BaseTranslation = {
             },
         },
     },
+    connectionError: "Chat not available",
 };
 
 export default chat;
