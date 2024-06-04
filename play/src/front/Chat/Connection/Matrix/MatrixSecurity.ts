@@ -65,6 +65,7 @@ export async function initClientCryptoConfiguration() {
                         });
                     });
                     if (!finished) {
+                        initializingEncryption = false;
                         isEncryptionRequiredAndNotSet.set(true);
                         initializingEncryption = false;
                         throw new Error("Cross-signing key upload auth canceled");
@@ -87,6 +88,7 @@ export async function initClientCryptoConfiguration() {
                         });
                     });
                     if (generatedKey === null) {
+                        initializingEncryption = false;
                         isEncryptionRequiredAndNotSet.set(true);
                         initializingEncryption = false;
                         throw new Error("createSecretStorageKey : no generated secret storage key");

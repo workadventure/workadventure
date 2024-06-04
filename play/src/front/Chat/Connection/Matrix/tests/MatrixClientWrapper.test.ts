@@ -32,11 +32,12 @@ describe("MatrixClientWrapper", () => {
 
             const matrixBaseURL = "";
 
-            const localUserStoreMock = {
+            const localUserStoreMock : MatrixLocalUserStore= {
                 getLocalUser: () => {
                     return null;
                 },
-            };
+            } as MatrixLocalUserStore;
+
             const matrixClientWrapperInstance: MatrixClientWrapperInterface = new MatrixClientWrapper(
                 matrixBaseURL,
                 localUserStoreMock,
@@ -105,7 +106,8 @@ describe("MatrixClientWrapper", () => {
                 getName: function (): string {
                     throw new Error("getName not implemented.");
                 },
-            };
+            } as unknown as MatrixLocalUserStore;
+
             const matrixClientWrapperInstance: MatrixClientWrapperInterface = new MatrixClientWrapper(
                 matrixBaseURL,
                 localUserStoreMock,
@@ -166,7 +168,7 @@ describe("MatrixClientWrapper", () => {
                 setMatrixRefreshToken: vi.fn(),
                 setMatrixAccessTokenExpireDate: vi.fn(),
                 getName: vi.fn().mockReturnValue(""),
-            };
+            } as unknown as MatrixLocalUserStore;
             const matrixClientWrapperInstance: MatrixClientWrapperInterface = new MatrixClientWrapper(
                 matrixBaseURL,
                 localUserStoreMock,
@@ -223,7 +225,7 @@ describe("MatrixClientWrapper", () => {
                 setMatrixRefreshToken: vi.fn(),
                 setMatrixAccessTokenExpireDate: vi.fn(),
                 getName: vi.fn().mockReturnValue(""),
-            };
+            } as unknown as MatrixLocalUserStore;
             const matrixClientWrapperInstance: MatrixClientWrapperInterface = new MatrixClientWrapper(
                 matrixBaseURL,
                 localUserStoreMock,
@@ -285,7 +287,7 @@ describe("MatrixClientWrapper", () => {
                 setMatrixRefreshToken: vi.fn(),
                 setMatrixAccessTokenExpireDate: vi.fn(),
                 getName: vi.fn().mockReturnValue(""),
-            };
+            } as unknown as MatrixLocalUserStore;
 
             const mock = vi.spyOn(MatrixClientWrapper.prototype as any, "matrixWebClientStore").mockReturnValue({});
             const matrixClientWrapperInstance: MatrixClientWrapperInterface = new MatrixClientWrapper(
@@ -307,32 +309,3 @@ describe("MatrixClientWrapper", () => {
         });
     });
 });
-
-/*
-    localUserStore {
-        getLocalUser()?.uuid
-        setMatrixDeviceId(deviceId, userId);
-        localUserStore.getMatrixAccessToken();
-        localUserStore.getMatrixRefreshToken();
-        localUserStore.getMatrixUserId();
-        localUserStore.getMatrixLoginToken();
-        localUserStore.setMatrixUserId(user_id);
-        localUserStore.setMatrixAccessToken(access_token);
-        localUserStore.setMatrixRefreshToken(refresh_token ?? null);
-        localUserStore.setMatrixAccessTokenExpireDate(expireDate);
-    }
-
-    createClient from matrix js sdk ==> client 
-
-    client {
-        login("",{
-            token: loginToken,
-            device_id: deviceId,
-            initial_device_display_name: "WorkAdventure",
-        })
-
-        registerGuest
-        client.setGuest(true);
-        clearStore
-    }
-*/

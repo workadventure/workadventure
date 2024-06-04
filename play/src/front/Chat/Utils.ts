@@ -9,20 +9,23 @@ import { scriptUtils } from "../Api/ScriptUtils";
 //enlever les events lié au chat dans iframelistener
 
 export const openCoWebSite = async (
-    url: string,
-    allowApi?: boolean,
-    allowPolicy?: string,
-    widthPercent?: number,
-    position?: number,
-    closable?: boolean,
-    lazy?: boolean
+    {url,allowApi,allowPolicy,closable,lazy,position,widthPercent}: {
+        url: string;
+        allowApi?: boolean | undefined;
+        allowPolicy?: string | undefined;
+        widthPercent?: number | undefined;
+        position?: number | undefined;
+        closable?: boolean | undefined;
+        lazy?: boolean | undefined;
+    },
+    source: MessageEventSource | null
 ) => {
-    if (!url) {
+    if (!url || !source) {
         throw new Error("Unknown query source");
     }
 
     const coWebsite: SimpleCoWebsite = new SimpleCoWebsite(
-        new URL(url, iframeListener.getBaseUrlFromSource(url)),
+        new URL(url, iframeListener.getBaseUrlFromSource(source)),
         allowApi,
         allowPolicy,
         widthPercent,

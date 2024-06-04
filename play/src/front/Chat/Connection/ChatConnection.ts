@@ -82,10 +82,13 @@ export interface CreateRoomOptions {
 
 export type ConnectionStatus = "ONLINE" | "ON_ERROR" | "CONNECTING" | "OFFLINE";
 
+
+export type spaceId = number;
+export type chatId = string;
 export interface ChatConnectionInterface {
     connectionStatus: Readable<ConnectionStatus>;
-    userConnected: Readable<Map<string, ChatUser>>;
-    userDisconnected: Readable<Map<string, ChatUser>>;
+    userConnected: Readable<Map<spaceId, ChatUser>>;
+    userDisconnected: Readable<Map<chatId, ChatUser>>;
     directRooms: Readable<ChatRoom[]>;
     rooms: Readable<ChatRoom[]>;
     invitations: Readable<ChatRoom[]>;

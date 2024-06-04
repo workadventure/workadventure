@@ -1518,7 +1518,7 @@ export class GameScene extends DirtyScene {
 
                 if (this.connection) {
                     //We need to add an env parameter to switch between chat services
-                    const matrixClientWrapper = new MatrixClientWrapper(MATRIX_PUBLIC_URI, localUserStore);
+                    const matrixClientWrapper = new MatrixClientWrapper(MATRIX_PUBLIC_URI ?? "", localUserStore);
                     const matrixClientPromise = matrixClientWrapper.initMatrixClient();
 
                     matrixClientPromise.then((matrixClient) => {
@@ -1527,10 +1527,12 @@ export class GameScene extends DirtyScene {
 
                     this.chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
 
-                    const chatId = localUserStore.getChatId();
-                    const email: string | null = localUserStore.getLocalUser()?.email || null;
-                    if (email && chatId) this.connection.emitUpdateChatId(email, chatId);
-                }
+
+                        const chatId = localUserStore.getChatId();
+                        const email: string | null = localUserStore.getLocalUser()?.email || null;
+                        if (email && chatId) this.connection.emitUpdateChatId(email, chatId);
+                    }
+                
 
                 const spaceProvider = LocalSpaceProviderSingleton.getInstance(onConnect.connection.socket);
                 StreamSpaceWatcherSingleton.getInstance(onConnect.connection.socket);

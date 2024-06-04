@@ -154,7 +154,7 @@ describe("Space", () => {
             tags: [],
             visitCardUrl: "test",
         });
-        space.updateUser(spaceUser);
+        space.updateUser(spaceUser,'');
         expect(eventsClient.some((message) => message.message?.$case === "updateSpaceUserMessage")).toBe(true);
         expect(eventsWatcher.some((message) => message.message?.$case === "updateSpaceUserMessage")).toBe(true);
 
@@ -289,6 +289,7 @@ describe("Space", () => {
         expect(user).toBeDefined();
         expect(user?.id).toBe(1);
     });
+    
     it("should notify client and back that a user is removed", () => {
         eventsClient = [];
         eventsWatcher = [];

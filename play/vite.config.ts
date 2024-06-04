@@ -84,5 +84,5 @@ export default defineConfig(({ mode }) => {
     } else {
         console.info("Sentry plugin disabled");
     }
-    return config;
+    return config ;
 });

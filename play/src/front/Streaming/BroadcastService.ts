@@ -8,6 +8,7 @@ import { screenWakeLock } from "../Utils/ScreenWakeLock";
 import { BroadcastSpace } from "./Common/BroadcastSpace";
 import { BroadcastConnection } from "./Common/BroadcastConnection";
 import { TrackWrapper } from "./Common/TrackWrapper";
+import { SpaceFilterInterface } from "../Space/SpaceFilter/SpaceFilter";
 
 export const jitsiLoadingStore = writable<boolean>(false);
 
@@ -62,11 +63,11 @@ export class BroadcastService {
      */
     public leaveSpace(spaceName: string) {
         const spaceNameSlugify = slugify(spaceName);
-        const space = this.broadcastSpaces.find((space) => space.space.name === spaceNameSlugify);
+        const space = this.broadcastSpaces.find((space) => space.space.getName() === spaceNameSlugify);
         if (space) {
             this.roomConnection.emitUnwatchSpaceLiveStreaming(spaceNameSlugify);
             space.destroy();
-            this.broadcastSpaces = this.broadcastSpaces.filter((space) => space.space.name !== spaceNameSlugify);
+            this.broadcastSpaces = this.broadcastSpaces.filter((space) => space.space.getName() !== spaceNameSlugify);
             broadcastServiceLogger("leaveSpace", spaceNameSlugify);
         }
         jitsiLoadingStore.set(false);
@@ -113,7 +114,8 @@ export class BroadcastService {
     private canDisconnectProvider(provider: string): boolean {
         return this.broadcastSpaces
             .filter((space) => space.provider === provider)
-            .every((space) => space.space.isEmpty);
+            .every((space) => space.space.getAllSpacesFilter()
+            .every((spaceFilter:SpaceFilterInterface)=> spaceFilter.getUsers().length === 0));
     }
 
     /**

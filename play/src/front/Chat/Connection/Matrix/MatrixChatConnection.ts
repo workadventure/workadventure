@@ -23,11 +23,13 @@ import {
 import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import {
     ChatConnectionInterface,
+    chatId,
     ChatRoom,
     ChatUser,
     Connection,
     ConnectionStatus,
     CreateRoomOptions,
+    spaceId,
 } from "../ChatConnection";
 import { SpaceUserExtended } from "../../../Space/SpaceFilter/SpaceFilter";
 import { selectedRoom } from "../../Stores/ChatStore";
@@ -38,9 +40,6 @@ import { initClientCryptoConfiguration, isEncryptionRequiredAndNotSet } from "./
 export const defaultWoka =
     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAAdCAYAAABBsffGAAAB/ElEQVRIia1WMW7CQBC8EAoqFy74AD1FqNzkAUi09DROwwN4Ag+gMQ09dcQXXNHQIucBPAJFc2Iue+dd40QZycLc7c7N7d7u+cU9wXw+ryyL0+n00eU9tCZIOp1O/f/ZbBbmzuczX6uuRVTlIAYpCSeTScumaZqw0OVyURd47SIGaZ7n6s4wjmc0Grn7/e6yLFtcr9dPaaOGhcTEeDxu2dxut2hXUJ9ioKmW0IidMg6/NPmD1EmqtojTBWAvE26SW8r+YhfIu87zbyB5BiRerVYtikXxXuLRuK058HABMyz/AX8UHwXgV0NRaEXzDKzaw+EQCioo1yrsLfvyjwZrTvK0yp/xh/o+JwbFhFYgFRNqzGEIB1ZhH2INkXJZoShn2WNSgJRNS/qoYSHxer1+qkhChnC320ULRI1LEsNhv99HISBkLmhP/7L8OfqhiKC6SzEJtSTLHMkGFhK6XC79L89rmtC6rv0YfjXV9COPDwtVQxEc2ZflIu7R+WADQrkA7eCH5BdFwQRXQ8bKxXejeWFoYZGCQM7Yh7BAkcw0DEnEEPHhbjBPQfCDvwzlEINlWZq3OAiOx2O0KwAKU8gehXfzu2Wz2VQMTXqCeLZZSNvtVv20MFsu48gQpDvjuHYxE+ZHESBPSJ/x3sqBvhe0hc5vRXkfypBY4xGcc9+lcFxartG6LgAAAABJRU5ErkJggg==";
 export const defaultColor = "#626262";
-
-type UUID = string;
-type chatId = string;
 
 export enum INTERACTIVE_AUTH_PHASE {
     PRE_AUTH = 1,
@@ -54,7 +53,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     directRooms: Readable<ChatRoom[]>;
     invitations: Readable<ChatRoom[]>;
     rooms: Readable<ChatRoom[]>;
-    userConnected: MapStore<UUID, ChatUser> = new MapStore<UUID, ChatUser>();
+    userConnected: MapStore<spaceId, ChatUser> = new MapStore<spaceId, ChatUser>();
     userDisconnected: MapStore<chatId, ChatUser> = new MapStore<chatId, ChatUser>();
     isEncryptionRequiredAndNotSet: Writable<boolean>;
 
@@ -169,7 +168,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             .getUsers()
             .filter((user) => user.userId !== this.client.getUserId())
             .forEach((user) => {
-                user.avatarUrl = this.client.mxcUrlToHttp(user.avatarUrl ?? "", 48, 48) ?? defaultWoka;
+                user.avatarUrl = defaultWoka;
                 this.userDisconnected.set(user.userId, chatUserFactory(user, this.client));
             });
 
@@ -194,6 +193,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 });
             })
             .catch((error) => console.error(error));
+
     }
 
     updateUserFromSpace(user: PartialSpaceUser): void {
@@ -205,8 +205,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
         if (user.availabilityStatus && user.availabilityStatus !== 0)
             connectedUserToUpdate.availabilityStatus.set(user.availabilityStatus);
-        if (connectedUserToUpdate.uuid)
-            this.userConnected.set(connectedUserToUpdate.uuid, {
+        if (connectedUserToUpdate.spaceId)
+            this.userConnected.set(connectedUserToUpdate.spaceId, {
                 id: connectedUserToUpdate.id,
                 uuid: connectedUserToUpdate.uuid,
                 avatarUrl: connectedUserToUpdate.avatarUrl,
@@ -243,7 +243,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             spaceId: user.id,
         };
 
-        const actualUser = this.userConnected.get(user.uuid);
+        const actualUser = this.userConnected.get(user.id);
         if (actualUser) {
             actualUser.availabilityStatus.set(user.availabilityStatus);
             updatedUser = {
@@ -262,12 +262,11 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             };
         }
 
-        this.userConnected.set(user.uuid, updatedUser);
+        this.userConnected.set(user.id, updatedUser);
     }
 
     disconnectSpaceUser(userId: number): void {
-        const { uuid } = Array.from(this.userConnected.values()).filter(({ spaceId }) => spaceId === userId)[0];
-        if (uuid) this.userConnected.delete(uuid);
+        this.userConnected.delete(userId);
     }
 
     async getWorldChatMembers(searchText?: string): Promise<ChatMemberData[]> {

@@ -239,7 +239,8 @@ export class JitsiTrackWrapper implements TrackWrapper {
     }
 
     public kickoff() {
-        this.spaceUser?.emitter?.emitKickOffUserMessage();
+        if(this.spaceUser?.jitsiParticipantId)
+            this.spaceUser?.emitter?.emitKickOffUserMessage(this.spaceUser.jitsiParticipantId);
     }
 
     public muteMicrophoneEverybody() {
@@ -251,10 +252,12 @@ export class JitsiTrackWrapper implements TrackWrapper {
     }
 
     public muteMicrophonePartcipant() {
-        this.spaceUser?.emitter?.emitMuteParticipantIdSpace();
+        if(this.spaceUser?.jitsiParticipantId)
+            this.spaceUser?.emitter?.emitMuteParticipantIdSpace(this.spaceUser.jitsiParticipantId);
     }
 
     public muteVideoParticipant() {
-        this.spaceUser?.emitter?.emitMuteVideoParticipantIdSpace();
+        if(this.spaceUser?.jitsiParticipantId)  
+            this.spaceUser?.emitter?.emitMuteVideoParticipantIdSpace(this.spaceUser.jitsiParticipantId);
     }
 }
