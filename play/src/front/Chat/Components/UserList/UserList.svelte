@@ -14,7 +14,7 @@
     $: filteredAndSortedUserList =
         [
             ...userList
-                ?.filter((user: ChatUser) => (me ? user.id !== me.id : true))
+                .filter((user: ChatUser) => (me ? user.spaceId !== me.spaceId : true))
                 .sort((a: ChatUser, b: ChatUser) => a.username?.localeCompare(b.username || "") || -1),
         ] || [];
 </script>
