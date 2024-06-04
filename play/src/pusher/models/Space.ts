@@ -107,6 +107,7 @@ export class Space implements CustomJsonReplacerInterface {
                 $case: "updateSpaceUserMessage",
                 updateSpaceUserMessage: {
                     spaceName: `${world}.${this.name}`,
+                    spaceName: this.name,
                     user: spaceUser,
                     filterName: undefined,
                 },
@@ -198,7 +199,7 @@ export class Space implements CustomJsonReplacerInterface {
     }
 
     private removeSpaceNamePrefix(spaceName: string, prefix: string): string {
-        return spaceName.replaceAll(`${prefix}.`, "");
+        return spaceName.replace(`${prefix}.`, "");
     }
 
     private notifyAllMetadata(subMessage: SubMessage) {

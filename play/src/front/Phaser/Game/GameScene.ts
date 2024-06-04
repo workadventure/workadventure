@@ -1518,7 +1518,7 @@ export class GameScene extends DirtyScene {
 
                 if (this.connection) {
                     //We need to add an env parameter to switch between chat services
-                    const matrixClientWrapper = new MatrixClientWrapper(MATRIX_PUBLIC_URI, localUserStore);
+                    const matrixClientWrapper = new MatrixClientWrapper(MATRIX_PUBLIC_URI ?? "", localUserStore);
                     const matrixClientPromise = matrixClientWrapper.initMatrixClient();
 
                     matrixClientPromise.then((matrixClient) => {

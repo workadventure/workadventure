@@ -33,7 +33,7 @@ describe("StreamSpaceWatcher", () => {
     it("should subscribe to all stream when you create StreamSpaceWatcher", () => {
         const mockSocket: WebSocket = {
             addEventListener: vi.fn(),
-        };
+        } as unknown as WebSocket;
 
         const decoder: { decode: (messageCoded: Uint8Array) => ServerToClientMessage } = {
             decode: vi.fn(),
@@ -45,20 +45,19 @@ describe("StreamSpaceWatcher", () => {
             exist: vi.fn(),
             get: vi.fn(),
             getAll: vi.fn(),
-            destroy: vi.fn(),
-        };
+            destroy : vi.fn()
+        } ;
 
         new StreamSpaceWatcher(SpaceProvider, mockSocket, decoder);
 
-        // eslint-disable-next-line @typescript-eslint/unbound-method
         expect(mockSocket.addEventListener).toHaveBeenCalledOnce();
-        expect(mockSocket.addEventListener.mock.calls[0][0]).toBe("message");
+        expect(mockSocket.addEventListener).toHaveBeenCalledWith("message");
     });
     it("should call addUserToSpace when stream addSpaceUserMessage receive a new message", async () => {
         const mockSocket = new WebSocket(`ws://localhost:${port}`);
-
         await serverSocket.connected;
 
+        
         const addSpaceUserMessage: AddSpaceUserMessage = {
             spaceName: "space-name",
             filterName: "filter-name",
@@ -91,7 +90,7 @@ describe("StreamSpaceWatcher", () => {
 
         const mockSpaceFilter: SpaceFilterInterface = {
             addUser: vi.fn(),
-        } as unknown as SpaceFilterInterface;
+        }as unknown as SpaceFilterInterface ;
         const mockSpace: SpaceInterface = {
             getSpaceFilter: vi.fn().mockImplementation(() => mockSpaceFilter),
         } as unknown as SpaceInterface;
@@ -101,7 +100,7 @@ describe("StreamSpaceWatcher", () => {
             exist: vi.fn(),
             get: vi.fn().mockImplementation(() => mockSpace),
             getAll: vi.fn(),
-            destroy: vi.fn(),
+            destroy: vi.fn()
         };
 
         new StreamSpaceWatcher(spaceProvider, mockSocket, decoder);
@@ -171,7 +170,7 @@ describe("StreamSpaceWatcher", () => {
             exist: vi.fn(),
             get: vi.fn().mockImplementation(() => mockSpace),
             getAll: vi.fn(),
-            destroy: vi.fn(),
+            destroy: vi.fn()
         };
 
         new StreamSpaceWatcher(spaceProvider, mockSocket, decoder);
@@ -244,7 +243,7 @@ describe("StreamSpaceWatcher", () => {
             exist: vi.fn(),
             get: vi.fn().mockImplementation(() => mockSpace),
             getAll: vi.fn(),
-            destroy: vi.fn(),
+            destroy: vi.fn()
         };
 
         new StreamSpaceWatcher(spaceProvider, mockSocket, decoder);
@@ -314,7 +313,7 @@ describe("StreamSpaceWatcher", () => {
             exist: vi.fn(),
             get: vi.fn().mockImplementation(() => mockSpace),
             getAll: vi.fn(),
-            destroy: vi.fn(),
+            destroy: vi.fn()
         };
 
         new StreamSpaceWatcher(spaceProvider, mockSocket, decoder);
