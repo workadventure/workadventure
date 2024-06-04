@@ -106,7 +106,6 @@ export class Space implements CustomJsonReplacerInterface {
             message: {
                 $case: "updateSpaceUserMessage",
                 updateSpaceUserMessage: {
-                    spaceName: `${world}.${this.name}`,
                     spaceName: this.name,
                     user: spaceUser,
                     filterName: undefined,

@@ -27,7 +27,7 @@ export class MatrixChatMessage implements ChatMessage {
         this.isDeleted = writable(this.getIsDeleted());
         this.isModified = writable(this.getIsModified());
 
-        event.on(MatrixEventEvent.Decrypted, (event) => {
+        event.on(MatrixEventEvent.Decrypted, () => {
             this.updateMessageContentOnDecryptedEvent();
         });
     }

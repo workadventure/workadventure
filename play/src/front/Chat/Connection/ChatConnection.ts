@@ -110,6 +110,7 @@ export interface ChatConnectionInterface {
     searchChatUsers(searchText: string): Promise<{ id: string; name: string | undefined }[] | undefined>;
     isEncryptionRequiredAndNotSet: Readable<boolean>;
     initEndToEndEncryption(): Promise<void>;
+    isGuest: Readable<boolean>;
 }
 
 export type Connection = AtLeast<RoomConnection, "queryChatMembers">;

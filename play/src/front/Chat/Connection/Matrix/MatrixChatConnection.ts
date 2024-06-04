@@ -56,6 +56,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     userConnected: MapStore<spaceId, ChatUser> = new MapStore<spaceId, ChatUser>();
     userDisconnected: MapStore<chatId, ChatUser> = new MapStore<chatId, ChatUser>();
     isEncryptionRequiredAndNotSet: Writable<boolean>;
+    isGuest!: Writable<boolean>;
 
     constructor(private connection: Connection, clientPromise: Promise<MatrixClient>) {
         this.connectionStatus = writable("CONNECTING");
@@ -79,6 +80,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         (async () => {
             this.client = await clientPromise;
             await this.startMatrixClient();
+            this.isGuest = writable(this.client.isGuest());
         })().catch((error) => {
             console.error(error);
         });
