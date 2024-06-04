@@ -12,10 +12,8 @@
     let widthWindow: number | undefined;
 
     function camMountedWidth() {
-        console.log("camMountedWidth !!!!!!!!!!!!!!!!!!!!!!!!!");
         widthWindow = document.getElementById("presentation-layout")?.offsetWidth;
         let allCams = (document.getElementsByClassName("all-cameras")[0] as HTMLElement)?.offsetWidth;
-        console.log("WIDTH ALL CAM = ", allCams);
         if (widthWindow !== undefined && allCams > widthWindow) {
             let scale = widthWindow / allCams;
             let cameras = document.querySelectorAll(".all-cameras");
@@ -79,7 +77,6 @@
             height: 300px;
         }
         .all-cameras {
-            position: fixed; /* Position fixed to align relative to the viewport */
             bottom: 0; /* Align to the bottom */
             right: 0; /* Align to the right */
             display: flex;

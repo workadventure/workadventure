@@ -18,9 +18,12 @@
     let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
     let statusStore = peer.statusStore;
     let changeIcon = true;
+    let visibleIcon = false;
     // let constraintStore = peer.constraintsStore;
 
     let embedScreen: Streamable;
+
+    $: visibleIcon = $statusStore === "connected";
 
     $: videoEnabled = $streamStore ? $streamStore.getVideoTracks().length > 0 : false;
 
@@ -33,10 +36,18 @@
     });
 
     function highlight() {
-        highlightedEmbedScreen.toggleHighlight(embedScreen);
+        if ($statusStore === "connected") {
+            highlightedEmbedScreen.toggleHighlight(embedScreen);
+        }
+        return;
     }
 
     $: changeIcon = $highlightedEmbedScreen === embedScreen;
+
+    // function calculateCamScreen() {
+    //     let camWidth = (document.getElementById("video") as HTMLElement)?.offsetWidth;
+    //     console.log("TTTEEEESSSSTTTTTT", camWidth);
+    // }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -48,15 +59,24 @@
         <div class="rtc-error" />
     {/if}
     {#if $streamStore !== null}
-        <video
-            use:srcObject={$streamStore}
-            autoplay
-            playsinline
-            class="w-full h-full mx-auto rounded object-contain"
-            muted
-        />
+        <div class="w-full h-full mx-auto rounded object-contain">
+            <video
+                use:srcObject={$streamStore}
+                autoplay
+                playsinline
+                class="w-full h-full mx-auto rounded object-contain"
+                muted
+            />
+            <div class="flex justify-center">
+                <span
+                    style="background-color: {backGroundColor}; color: {textColor};"
+                    class="nametag-text nametag-shape pr-3 pl-2 h-3 max-h-8">{name}</span
+                >
+                <BanReportBox {peer} />
+            </div>
+        </div>
         <div
-            class={changeIcon
+            class={changeIcon && visibleIcon
                 ? "hidden"
                 : "absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-full aspect-ratio bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 pointer-events-none"}
         >
@@ -85,7 +105,7 @@
         </div>
 
         <div
-            class={changeIcon
+            class={changeIcon && visibleIcon
                 ? "absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-full aspect-ratio bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 pointer-events-none"
                 : "hidden"}
         >
@@ -112,15 +132,7 @@
                 <path d="M15 15l6 6" />
             </svg>
         </div>
-        <i class="flex">
-            <span
-                style="background-color: {backGroundColor}; color: {textColor};"
-                class="nametag-text nametag-shape pr-3 pl-2 h-3 max-h-8">{name}</span
-            >
-        </i>
     {/if}
-
-    <BanReportBox {peer} />
 </div>
 <!-- on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)} -->
 

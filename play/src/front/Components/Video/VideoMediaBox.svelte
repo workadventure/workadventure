@@ -16,8 +16,13 @@
     import Woka from "../Woka/WokaFromUserId.svelte";
     import { isMediaBreakpointOnly } from "../../Utils/BreakpointsUtils";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
-    import { requestedCameraState, selectDefaultSpeaker, speakerSelectedStore } from "../../Stores/MediaStore";
-    import { embedScreenLayoutStore, heightCamWrapper } from "../../Stores/EmbedScreensStore";
+    import {
+        mediaStreamConstraintsStore,
+        // requestedCameraState,
+        selectDefaultSpeaker,
+        speakerSelectedStore,
+    } from "../../Stores/MediaStore";
+    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import loaderImg from "../images/loader.svg";
     import MicOffIcon from "../Icons/MicOffIcon.svelte";
@@ -28,7 +33,7 @@
     import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
     import MessageCircleIcon from "../Icons/MessageCircleIcon.svelte";
     import ActionMediaBox from "./ActionMediaBox.svelte";
-    import { requestedScreenSharingState, screenSharingLocalMedia } from "../../Stores/ScreenSharingStore";
+    import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import ScreenShareIcon from "../Icons/ScreenShareIcon.svelte";
 
     // Extend the HTMLVideoElement interface to add the setSinkId method.
@@ -74,25 +79,11 @@
 
     const debug = Debug("VideoMediaBox");
 
-    // function getSize() {
-    //     otherCamWidth = (document.getElementsByClassName("video-container")[0] as HTMLElement)?.offsetWidth;
-    //     console.log("JE SUIS DANS GETSIZE", otherCamWidth, typeof otherCamWidth);
-    //     totalOtherCamWidth += otherCamWidth;
-    //     console.log("HELLO", totalOtherCamWidth, typeof totalOtherCamWidth);
-    // }
-
     $: videoEnabled = $constraintStore ? $constraintStore.video : false;
 
     $: visibleIcon = $statusStore === "connected";
 
-    $: changeIcon = $highlightedEmbedScreen === embedScreen;
-
-    // if (peer) {
-    //     embedScreen = {
-    //         type: "streamable",
-    //         embed: peer as unknown as Streamable,
-    //     };
-    // }
+    $: changeIcon = embedScreen === $highlightedEmbedScreen;
 
     console.log("changeIcon", changeIcon);
     console.log("highlightedEmbedScreen", $highlightedEmbedScreen);
@@ -109,7 +100,6 @@
     let sinkIdPromise = CancelablePromise.resolve();
 
     onMount(() => {
-        // getSize();
         resizeObserver.observe(videoContainer);
 
         unsubscribeChangeOutput = speakerSelectedStore.subscribe((deviceId) => {
@@ -267,6 +257,7 @@
 <!-- class="video-container transition-all relative h-full aspect-video" -->
 
 <!-- Dans la premiere div     style="height:{$heightCamWrapper}px;"-->
+<!-- <div class={$mediaStreamConstraintsStore.audio ? "border-4 border-solid border-color rounded-lg" : ""}> -->
 <div
     class="video-container group/screenshare transition-all h-full w-full relative aspect-video"
     class:isHighlighted
@@ -279,7 +270,9 @@
     <ActionMediaBox {embedScreen} trackStreamWraper={peer} {videoEnabled} />
 
     <div
-        class="aspect-video absolute z-20 rounded-lg transition-all bg-no-repeat bg-center bg-contrast/80 backdrop-blur"
+        class="aspect-video absolute z-20 rounded-lg transition-all bg-no-repeat bg-center bg-contrast/80 backdrop-blur{$mediaStreamConstraintsStore.audio
+            ? 'border-8 border-solid border-color rounded-lg'
+            : ''}"
         style="background-image: url({loaderImg})"
         class:flex-col={videoEnabled}
         class:h-full={videoEnabled}
@@ -299,6 +292,7 @@
         <!-- Dans la video class:max-h-[230px]={videoEnabled && !isHightlighted}-->
         <video
             bind:this={videoElement}
+            class="w-full"
             class:h-0={!videoEnabled}
             class:w-0={!videoEnabled}
             class:object-contain={minimized || isHightlighted || aspectRatio < 1}
@@ -346,7 +340,9 @@
             <div class="absolute bottom-4 left-4 z-30">
                 <div class="flex">
                     <div
-                        class="relative rounded bg-contrast/90 backdrop-blur px-4 py-1 text-white text-sm pl-12 pr-9 bold"
+                        class="relative rounded backdrop-blur px-4 py-1 text-white text-sm pl-12 pr-9 bold {$mediaStreamConstraintsStore.audio
+                            ? 'background-color'
+                            : 'bg-contrast/90'}"
                     >
                         <div class="absolute left-1 -top-1 z-30" style="image-rendering:pixelated">
                             <Woka
@@ -407,7 +403,7 @@
                                 </div>
                             </div>
                         {/if}
-                        {#if $screenSharingLocalMedia && $requestedCameraState}
+                        {#if $requestedScreenSharingState === true}
                             <ScreenShareIcon />
                         {/if}
                     </div>
@@ -490,6 +486,7 @@
     </div>
 </div>
 
+<!-- </div> -->
 <style lang="scss">
     video {
         object-fit: cover;
@@ -498,6 +495,13 @@
         }
     }
 
+    .border-color {
+        border-color: #4156f6;
+    }
+
+    .background-color {
+        background-color: #4156f6;
+    }
     .isHighlighted {
         height: 100%;
         width: 100%;

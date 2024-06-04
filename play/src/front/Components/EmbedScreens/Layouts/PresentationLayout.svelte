@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { afterUpdate } from "svelte";
+    import { afterUpdate, onMount } from "svelte";
     import { highlightedEmbedScreen } from "../../../Stores/HighlightedEmbedScreenStore";
     import CamerasContainer from "../CamerasContainer.svelte";
     import MediaBox from "../../Video/MediaBox.svelte";
@@ -10,6 +10,11 @@
     import { isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
 
     let isMobile = window.matchMedia("(max-width: 767px)");
+
+    onMount(() => {
+        isMobile = window.matchMedia("(max-width: 767px)");
+        console.log("isMobile", isMobile);
+    });
 
     // function closeCoWebsite() {
     //     if ($highlightedEmbedScreen?.type === "cowebsite") {
@@ -67,9 +72,17 @@
 
 <div id="presentation-layout" bind:this={layoutDom}>
     <!-- Div pour l'affichage de toutes les camera (other cam : cameContainer / my cam : MyCamera'-->
-
-    <!-- Le isMobile ne march pas pour le moment -->
     {#if isMobile}
+        {console.log("je suis dans le mobile")}
+        <div id="video-container-receive" class={$highlightedEmbedScreen ? "block" : "hidden"}>
+            {#if $highlightedEmbedScreen}
+                {#key $highlightedEmbedScreen.uniqueId}
+                    <MediaBox isHightlighted={true} isClickable={true} streamable={$highlightedEmbedScreen} />
+                {/key}
+            {/if}
+        </div>
+        <!-- Le isMobile ne march pas pour le moment -->
+
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
             <div class="grid grid-flow-col gap-x-4 justify-center test-media">
                 {#if $jitsiLoadingStore}
@@ -85,23 +98,9 @@
         {/if}
 
         <!-- Div pour la personne qui reçoit le partage d'écran -->
-
-        <div id="video-container-receive" class={$highlightedEmbedScreen ? "block" : "hidden"}>
-            {#if $highlightedEmbedScreen}
-                {#key $highlightedEmbedScreen.uniqueId}
-                    <MediaBox isHightlighted={true} isClickable={true} streamable={$highlightedEmbedScreen} />
-                {/key}
-            {/if}
-        </div>
     {:else}
+        {console.log("je suis dans le pas mobile")}
         <!-- Div pour la personne qui reçoit le partage d'écran -->
-        <div id="video-container-receive" class={$highlightedEmbedScreen ? "block" : "hidden"}>
-            {#if $highlightedEmbedScreen}
-                {#key $highlightedEmbedScreen.uniqueId}
-                    <MediaBox isHightlighted={true} isClickable={true} streamable={$highlightedEmbedScreen} />
-                {/key}
-            {/if}
-        </div>
 
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
             <div class="grid grid-flow-col gap-x-4 justify-center test-media">
@@ -116,6 +115,13 @@
                 {/if}
             </div>
         {/if}
+        <div id="video-container-receive" class={$highlightedEmbedScreen ? "block" : "hidden"}>
+            {#if $highlightedEmbedScreen}
+                {#key $highlightedEmbedScreen.uniqueId}
+                    <MediaBox isHightlighted={true} isClickable={true} streamable={$highlightedEmbedScreen} />
+                {/key}
+            {/if}
+        </div>
     {/if}
 
     <!-- TODO HUGO Commented Why ?

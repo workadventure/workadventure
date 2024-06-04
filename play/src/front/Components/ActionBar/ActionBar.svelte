@@ -1155,7 +1155,7 @@
 
                             {#if camMenuIsDropped}
                                 <div
-                                    class="absolute mt-2 top-14 @xl/actions:top-16 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 left-24 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all hidden @md/actions:block max-h-[calc(100vh-96px)] overflow-y-auto"
+                                    class="absolute mt-2 top-14 z-1000 @xl/actions:top-16 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 left-24 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all hidden @md/actions:block max-h-[calc(100vh-96px)] overflow-y-auto"
                                     transition:fly={{ y: 40, duration: 150 }}
                                 >
                                     <div class="p-0 m-0 list-none">

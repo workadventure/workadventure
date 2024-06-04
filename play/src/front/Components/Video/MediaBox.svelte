@@ -96,9 +96,7 @@
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <!-- Ne pas mettre ici le media Strea store en condition maissur div niveau en dessous-->
         <div
-            class="media-container transition-all cam-share-receive justify-center relative h-full w-full {$mediaStreamConstraintsStore.audio
-                ? 'border-8 border-solid bg-indigo-400 rounded-lg'
-                : ''}"
+            class="media-container transition-all cam-share-receive justify-center relative h-full w-full"
             class:hightlighted={isHightlighted}
             class:max-w-sm={isHightlighted && !videoEnabled}
             class:mx-auto={isHightlighted && !videoEnabled}

@@ -13,7 +13,7 @@
     import { LL } from "../../i18n/i18n-svelte";
     import { inExternalServiceStore } from "../Stores/MyMediaStore";
     import { gameManager } from "../Phaser/Game/GameManager";
-    import { hasEmbedScreen, heightCamWrapper } from "../Stores/EmbedScreensStore";
+    import { heightCamWrapper } from "../Stores/EmbedScreensStore";
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
     import { srcObject } from "./Video/utils";
     import Woka from "./Woka/WokaFromUserId.svelte";
@@ -21,16 +21,17 @@
     import silentImg from "./images/silent-zone.gif";
 
     import MicOffIcon from "./Icons/MicOffIcon.svelte";
-    import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
+    // import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
     import ScreenShareIcon from "./Icons/ScreenShareIcon.svelte";
     import {
         requestedScreenSharingState,
-        screenSharingLocalMedia,
-        showDesktopCapturerSourcePicker,
+        // screenSharingAvailableStore,
+        // screenSharingLocalMedia,
+        // showDesktopCapturerSourcePicker,
     } from "../Stores/ScreenSharingStore";
-    import { RoomConnection } from "../Connection/RoomConnection";
-    import { screenSharingStreamStore } from "../Stores/PeerStore";
-    import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
+    // import { RoomConnection } from "../Connection/RoomConnection";
+    // import { screenSharingStreamStore } from "../Stores/PeerStore";
+    // import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
 
     let stream: MediaStream | null;
     let userName = gameManager.getPlayerName();
@@ -97,19 +98,10 @@
             }
         });
     });
-
-    // function addStyleSpeaker() {
-    //     let test = document.getElementsByClassName("test")
-    //     if ($mediaStreamConstraintsStore.audio) {
-    //         test
-    //     }
-    // }
 </script>
 
 <div
-    class="transition-all relative h-full test aspect-video w-fit m-auto {$mediaStreamConstraintsStore.audio
-        ? 'border-8 border-solid bg-indigo-400 rounded-lg'
-        : ''}"
+    class="transition-all relative h-full test aspect-video w-fit m-auto"
     bind:this={cameraContainer}
     style={small ? "width:100%" : "height:" + $heightCamWrapper + "px;"}
 >
@@ -133,11 +125,15 @@
     {:else if $localStreamStore.type === "success" && !$inExternalServiceStore}
         {#if $requestedCameraState && $mediaStreamConstraintsStore.video}
             <div
-                class="absolute bottom-4 left-4 z-30 {small ? 'hidden' : ''}"
+                class="absolute bottom-4 left-4 z-30 {small ? 'hidden' : ''} "
                 transition:fly={{ delay: 50, y: 50, duration: 150 }}
             >
                 <div class="flex">
-                    <span class="rounded bg-contrast/90 backdrop-blur px-4 py-1 text-white text-sm pl-12 pr-4 bold">
+                    <span
+                        class="rounded backdrop-blur px-4 py-1 text-white text-sm pl-12 pr-4 bold {$mediaStreamConstraintsStore.audio
+                            ? 'background-color'
+                            : 'bg-contrast/90'}"
+                    >
                         <div class="absolute left-1 -top-1" style="image-rendering:pixelated">
                             <Woka
                                 userId={-1}
@@ -147,7 +143,7 @@
                             />
                         </div>
                         {$LL.camera.my.nameTag()}
-                        {#if $screenSharingStreamStore}
+                        {#if $requestedScreenSharingState === true}
                             <ScreenShareIcon />
                         {/if}
                     </span>
@@ -155,7 +151,9 @@
             </div>
 
             <div
-                class="aspect-video w-full absolute top-0 left-0 overflow-hidden z-20 rounded-lg transition-all bg-no-repeat bg-center bg-contrast/80 backdrop-blur"
+                class="aspect-video w-full absolute top-0 left-0 overflow-hidden z-20 rounded-lg transition-all bg-no-repeat bg-center bg-contrast/80 backdrop-blur{$mediaStreamConstraintsStore.audio
+                    ? 'border-6 border-solid border-color'
+                    : ''}"
                 style="background-image: url({loaderImg})"
                 transition:fly={{ y: 50, duration: 150 }}
             >
@@ -190,7 +188,11 @@
                 class="w-full rounded-lg px-3 flex flex-row items-center bg-contrast/80 backdrop-blur media-box-camera-off-size h-12"
             >
                 <div class="grow">
-                    <span class="rounded bg-contrast/90 backdrop-blur px-4 py-1 text-white text-sm pl-12 pr-4 bold">
+                    <span
+                        class="rounded backdrop-blur px-4 py-1 text-white text-sm pl-12 pr-4 bold {$mediaStreamConstraintsStore.audio
+                            ? 'background-color'
+                            : 'bg-contrast/90'}"
+                    >
                         <div class="absolute left-1 -top-1" style="image-rendering:pixelated">
                             <Woka
                                 userId={-1}
@@ -221,6 +223,13 @@
 <style lang="scss">
     @import "../style/breakpoints.scss";
 
+    .border-color {
+        border-color: #4156f6;
+    }
+
+    .background-color {
+        background-color: #4156f6;
+    }
     .width {
         width: 350px;
     }
