@@ -1,9 +1,8 @@
 <script lang="ts">
-
     import { AuthDict, AuthType, InteractiveAuth, MatrixClient, UIAResponse } from "matrix-js-sdk";
     import { onMount } from "svelte";
     // eslint-disable-next-line import/no-unresolved
-    import { closeModal } from "svelte-modals";
+    import { closeModal, onBeforeClose } from "svelte-modals";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import InteractiveAuthSSO from "./InteractiveAuthSSO.svelte";
@@ -14,6 +13,7 @@
     export let onFinished: (finished: boolean) => Promise<void>;
     export let makeRequest: (auth: AuthDict | null) => Promise<UIAResponse<void>>;
 
+    let isInteractiveAuthFinished = false;
 
     let uiAuthStage: AuthType | string;
     let uiAuthPhase: number;
@@ -25,10 +25,10 @@
         },
         stateUpdated: onPhaseChange,
         requestEmailToken: mandatoryButNotUsedRequestEmailTokenFunction,
-        supportedStages: [AuthType.Sso, AuthType.SsoUnstable]
+        supportedStages: [AuthType.Sso, AuthType.SsoUnstable],
     });
 
-    function mandatoryButNotUsedRequestEmailTokenFunction(): Promise<{ sid: string; }> {
+    function mandatoryButNotUsedRequestEmailTokenFunction(): Promise<{ sid: string }> {
         return Promise.reject(new Error("Not supposed to be called"));
     }
 
@@ -40,16 +40,30 @@
         uiAuthPhase = newPhase;
     }
 
+    async function onCancelInteractiveAuth() {
+        await onFinished(false);
+        closeModal();
+    }
 
     onMount(() => {
-        interactiveAuth.attemptAuth().then(async () => {
-            await onFinished(true);
-        }).catch(async error => {
-            console.error(error);
-            await onFinished(false);
-        }).finally(() => {
-            closeModal();
-        });
+        interactiveAuth
+            .attemptAuth()
+            .then(async () => {
+                isInteractiveAuthFinished = true;
+                await onFinished(isInteractiveAuthFinished);
+            })
+            .catch(async (error) => {
+                console.error(error);
+                isInteractiveAuthFinished = false;
+                await onFinished(isInteractiveAuthFinished);
+            })
+            .finally(() => {
+                closeModal();
+            });
+    });
+
+    onBeforeClose(() => {
+        onFinished(isInteractiveAuthFinished)?.catch((error) => console.error(error));
     });
 </script>
 
@@ -63,9 +77,13 @@
             {/if}
         </div>
         <svelte:fragment slot="action">
-            <InteractiveAuthSSO authSessionId={interactiveAuth.getSessionId()} matrixClient={matrixClient}
-                                onPhaseChange={onUpdatePhaseChange} onCancel={()=>onFinished(false)}
-                                submitAuthDict={()=>interactiveAuth.submitAuthDict({})} />
+            <InteractiveAuthSSO
+                authSessionId={interactiveAuth.getSessionId()}
+                {matrixClient}
+                onPhaseChange={onUpdatePhaseChange}
+                onCancel={onCancelInteractiveAuth}
+                submitAuthDict={() => interactiveAuth.submitAuthDict({})}
+            />
         </svelte:fragment>
     </Popup>
 {/if}

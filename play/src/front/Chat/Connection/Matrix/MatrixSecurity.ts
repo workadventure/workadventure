@@ -1,13 +1,14 @@
-import {  MatrixClient, SecretStorage } from "matrix-js-sdk";
+import { MatrixClient, SecretStorage } from "matrix-js-sdk";
 import { GeneratedSecretStorageKey, KeyBackupInfo } from "matrix-js-sdk/lib/crypto-api";
 import { deriveKey } from "matrix-js-sdk/lib/crypto/key_passphrase";
 import { decodeRecoveryKey } from "matrix-js-sdk/lib/crypto/recoverykey";
+// eslint-disable-next-line import/no-unresolved
 import { openModal } from "svelte-modals";
+import { writable } from "svelte/store";
 import InteractiveAuthDialog from "./InteractiveAuthDialog.svelte";
 import CreateRecoveryKeyDialog from "./CreateRecoveryKeyDialog.svelte";
-import { writable } from "svelte/store";
 
-let  initializingEncryption = false;
+let initializingEncryption = false;
 export const isEncryptionRequiredAndNotSet = writable(false);
 export type KeyParams = { passphrase?: string; recoveryKey?: string };
 
@@ -33,21 +34,19 @@ export const updateMatrixClientStore = (matrixClient: MatrixClient) => {
 export async function initClientCryptoConfiguration() {
     try {
         if (!matrixClientStore) {
-            throw new Error("matrixClientStore is null");
+            return Promise.reject(new Error("matrixClientStore is null"));
         }
-        
-        if(matrixClientStore.isGuest()){
-            throw new Error("Guest user, no encryption key");
+
+        if (matrixClientStore.isGuest()) {
+            return Promise.reject(new Error("Guest user, no encryption key"));
         }
 
         const crypto = matrixClientStore.getCrypto();
         if (crypto === undefined) {
-            console.error("E2EE is not available for this client");
-            return;
+            return Promise.reject(new Error("E2EE is not available for this client"));
         }
-        if(initializingEncryption){
-            console.error("already initialize");
-            return;
+        if (initializingEncryption) {
+            return Promise.reject(new Error("Encryption already initialized"));
         }
 
         initializingEncryption = true;
@@ -55,7 +54,7 @@ export async function initClientCryptoConfiguration() {
         const keyBackupInfo = await matrixClientStore.getKeyBackupVersion();
         const isCrossSigningReady = await crypto.isCrossSigningReady();
 
-        if (!isCrossSigningReady ) {
+        if (!isCrossSigningReady || keyBackupInfo === null) {
             await crypto.bootstrapCrossSigning({
                 authUploadDeviceSigningKeys: async (makeRequest) => {
                     const finished = await new Promise<boolean>((resolve) => {
@@ -67,9 +66,11 @@ export async function initClientCryptoConfiguration() {
                     });
                     if (!finished) {
                         isEncryptionRequiredAndNotSet.set(true);
+                        initializingEncryption = false;
                         throw new Error("Cross-signing key upload auth canceled");
                     }
                 },
+                setupNewCrossSigning: keyBackupInfo === null,
             });
 
             await crypto.bootstrapSecretStorage({
@@ -87,6 +88,7 @@ export async function initClientCryptoConfiguration() {
                     });
                     if (generatedKey === null) {
                         isEncryptionRequiredAndNotSet.set(true);
+                        initializingEncryption = false;
                         throw new Error("createSecretStorageKey : no generated secret storage key");
                     }
                     return Promise.resolve(generatedKey);
@@ -101,12 +103,13 @@ export async function initClientCryptoConfiguration() {
         console.error("initClientCryptoConfiguration : ", error);
         initializingEncryption = false;
     }
+    return;
 }
 
 async function restoreBackupMessages(keyBackupInfo: KeyBackupInfo | null) {
     try {
         if (!matrixClientStore) {
-            throw new Error("matrixClientStore is null");
+            return Promise.reject(new Error("matrixClientStore is null"));
         }
         const has4s = await matrixClientStore.secretStorage.hasKey();
         const backupRestored = has4s ? await matrixClientStore.isKeyBackupKeyStored() : null;
@@ -121,12 +124,13 @@ async function restoreBackupMessages(keyBackupInfo: KeyBackupInfo | null) {
     } catch (error) {
         console.error("Unable to restoreBackupMessages : ", error);
     }
+    return;
 }
 
 async function restoreWithCachedKey(keyBackupInfo: KeyBackupInfo) {
     try {
         if (!matrixClientStore) {
-            throw new Error("matrixClientStore is null");
+            return Promise.reject(new Error("matrixClientStore is null"));
         }
         await matrixClientStore.restoreKeyBackupWithCache(undefined, undefined, keyBackupInfo);
         return true;
@@ -139,7 +143,7 @@ async function restoreWithCachedKey(keyBackupInfo: KeyBackupInfo) {
 async function restoreWithSecretStorage(keyBackupInfo: KeyBackupInfo) {
     try {
         if (!matrixClientStore) {
-            throw new Error("matrixClientStore is null");
+            return Promise.reject(new Error("matrixClientStore is null"));
         }
         await matrixClientStore.restoreKeyBackupWithSecretStorage(keyBackupInfo);
         return true;

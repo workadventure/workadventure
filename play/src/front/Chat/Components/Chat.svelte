@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { IconShieldLock } from "@tabler/icons-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue, joignableRoom, navChat } from "../Stores/ChatStore";
@@ -13,15 +14,15 @@
     $: chatConnectionStatus = chat.connectionStatus;
 
     let searchValue = "";
-    let typingTimer: NodeJS.Timeout;
-    let searchLoader: boolean = false;
+    let typingTimer: ReturnType<typeof setTimeout>;
+    let searchLoader = false;
 
     const handleKeyUp = () => {
         clearTimeout(typingTimer);
         typingTimer = setTimeout(() => {
             searchLoader = true;
             if ($navChat === "chat") {
-                searchAccesibleRooms();
+                searchAccessibleRooms();
             }
 
             setConnectedUsersFilter();
@@ -47,7 +48,7 @@
         if ($chatSearchBarValue === "" && connectedUsersFilter.getFilterType() !== "spaceFilterEverybody") {
             connectedUsersFilter.setFilter({
                 $case: "spaceFilterEverybody",
-                spaceFilterEverybody: {}
+                spaceFilterEverybody: {},
             });
 
             return;
@@ -56,18 +57,14 @@
         connectedUsersFilter.setFilter({
             $case: "spaceFilterContainName",
             spaceFilterContainName: {
-                value: $chatSearchBarValue
-            }
+                value: $chatSearchBarValue,
+            },
         });
-
-
     };
 
-    const searchAccesibleRooms = () => {
-        chat
-            .searchAccesibleRooms($chatSearchBarValue)
-            .then((chatRooms: { id: string, name: string | undefined }[]) => {
-                console.log(chatRooms);
+    const searchAccessibleRooms = () => {
+        chat.searchAccessibleRooms($chatSearchBarValue)
+            .then((chatRooms: { id: string; name: string | undefined }[]) => {
                 joignableRoom.set(chatRooms);
             })
             .finally(() => {
@@ -76,6 +73,15 @@
         return;
     };
 
+    async function initChatConnectionEncryption() {
+        try {
+            await chat.initEndToEndEncryption();
+        } catch (error) {
+            console.error("Failed to initChatConnectionEncryption", error);
+        }
+    }
+
+    $: isEncryptionRequiredAndNotSet = chat.isEncryptionRequiredAndNotSet;
 </script>
 
 <div class="tw-flex tw-flex-col tw-gap-2 tw-h-full">
@@ -100,6 +106,7 @@
         <div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid">
             <div class="tw-p-3">
                 <input
+                    autocomplete="new-password"
                     class="wa-searchbar tw-block tw-text-white tw-w-full placeholder:tw-text-sm tw-rounded-3xl tw-px-3 tw-py-1 tw-border-light-purple tw-border tw-border-solid tw-bg-transparent"
                     placeholder={$navChat === "users" ? $LL.chat.searchUser() : $LL.chat.searchChat()}
                     on:keydown={handleKeyDown}
@@ -108,6 +115,13 @@
                 />
             </div>
         </div>
+        {#if $isEncryptionRequiredAndNotSet}
+            <button
+                on:click|stopPropagation={initChatConnectionEncryption}
+                class="tw-text-red-500 tw-flex tw-gap-1 tw-border tw-border-solid tw-border-red-500 tw-rounded-md tw-justify-center"
+                ><IconShieldLock /> {$LL.chat.e2ee.encryptionNotConfigured()}</button
+            >
+        {/if}
         {#if $navChat === "users"}
             <RoomUserList />
             {#if searchLoader}
@@ -123,4 +137,3 @@
 </div>
 
 <audio id="newMessageSound" src="./static/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
-

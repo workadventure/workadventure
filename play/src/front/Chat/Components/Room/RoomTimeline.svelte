@@ -23,36 +23,35 @@
 
     onMount(() => {
         scrollToMessageListBottom();
-        if(messageListRef){
-            loadPreviousMessageOnScrollTop().catch(error=>console.error(error))
+        if (messageListRef) {
+            loadPreviousMessageOnScrollTop().catch((error) => console.error(error));
         }
-
     });
 
-    beforeUpdate(()=>{
-        if(messageListRef){
+    beforeUpdate(() => {
+        if (messageListRef) {
             const scrollableDistance = messageListRef.scrollHeight - messageListRef.offsetHeight;
             autoScroll = messageListRef.scrollTop > scrollableDistance - 20;
             onScrollTop = messageListRef.scrollTop === 0;
         }
-    })
+    });
 
     afterUpdate(() => {
         room.setTimelineAsRead();
-        const oldFirstListItem = messageListRef.querySelector<HTMLLIElement>("li[data-first-li=\"true\"]");
+        const oldFirstListItem = messageListRef.querySelector<HTMLLIElement>('li[data-first-li="true"]');
         if (autoScroll) {
             scrollToMessageListBottom();
         }
-        if(onScrollTop){
-            if(oldFirstListItem !== null){
-                messageListRef.scrollTop = oldFirstListItem.getBoundingClientRect().top - messageListRef.getBoundingClientRect().top;
+        if (onScrollTop) {
+            if (oldFirstListItem !== null) {
+                messageListRef.scrollTop =
+                    oldFirstListItem.getBoundingClientRect().top - messageListRef.getBoundingClientRect().top;
                 oldFirstListItem.removeAttribute("data-first-li");
             }
             const firstListItem = messageListRef.children.item(0);
             firstListItem?.setAttribute("data-first-li", "true");
         }
     });
-
 
     function scrollToMessageListBottom() {
         messageListRef.scrollTo(0, messageListRef.scrollHeight);
@@ -63,18 +62,19 @@
         selectedRoom.set(undefined);
     }
 
-    console.debug(room);
-   $: messages = room?.messages;
-   $: messageReaction = room?.messageReactions;
-
+    $: messages = room?.messages;
+    $: messageReaction = room?.messageReactions;
 </script>
 
 {#if room !== undefined}
     <button class="tw-p-0 tw-m-0" on:click={goBackAndClearSelectedChatMessage}>
         <IconArrowLeft />
     </button>
-    <ul on:scroll={()=>loadPreviousMessageOnScrollTop()} bind:this={messageListRef}
-        class="tw-list-none tw-p-0 tw-flex-1 tw-overflow-auto tw-flex tw-flex-col">
+    <ul
+        on:scroll={() => loadPreviousMessageOnScrollTop()}
+        bind:this={messageListRef}
+        class="tw-list-none tw-p-0 tw-flex-1 tw-overflow-auto tw-flex tw-flex-col"
+    >
         {#if $messages.length === 0}
             <p class="tw-self-center tw-text-md tw-text-gray-500">{$LL.chat.nothingToDisplay()}</p>
         {/if}
@@ -84,6 +84,5 @@
             </li>
         {/each}
     </ul>
-    <MessageInput room={room} />
+    <MessageInput {room} />
 {/if}
-

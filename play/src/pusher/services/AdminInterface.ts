@@ -20,7 +20,7 @@ export interface AdminInterface {
         companionTextureId?: string,
         locale?: string,
         tags?: string[],
-        chatID? : string
+        chatID?: string
     ): Promise<FetchMemberDataByUuidResponse>;
 
     /**
@@ -123,5 +123,5 @@ export interface AdminInterface {
 
     getWorldChatMembers(playUri: string, searchText: string): Promise<WorldChatMembersData>;
 
-    updateChatId(userIdentifier: string,chatId : string) : void;
+    updateChatId(userIdentifier: string, chatId: string): void;
 }

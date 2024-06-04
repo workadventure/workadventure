@@ -1,6 +1,6 @@
 <script lang="ts">
-
-    import { closeModal } from "svelte-modals";
+    // eslint-disable-next-line import/no-unresolved
+    import { closeModal, onBeforeClose } from "svelte-modals";
     import { CryptoApi } from "matrix-js-sdk";
     import { GeneratedSecretStorageKey } from "matrix-js-sdk/lib/crypto-api";
     import { IconFileDownload } from "@tabler/icons-svelte";
@@ -33,22 +33,27 @@
         closeModal();
     }
 
-    function downloadPrivateKeyFile() {
+    onBeforeClose(() => {
+        processCallback(generatedSecretStorageKey);
+    });
 
+    function downloadPrivateKeyFile() {
         const a = document.createElement("a");
-        a.href = "data:text/plain;charset=utf-8," + encodeURIComponent(generatedSecretStorageKey?.encodedPrivateKey ?? "");
+        a.href =
+            "data:text/plain;charset=utf-8," + encodeURIComponent(generatedSecretStorageKey?.encodedPrivateKey ?? "");
 
         //TODO : fileName traduction
         a.setAttribute("download", "private_key.txt");
         a.click();
 
         if (generatedSecretStorageKey?.encodedPrivateKey) {
-            navigator.clipboard.writeText(generatedSecretStorageKey.encodedPrivateKey);
+            navigator.clipboard
+                .writeText(generatedSecretStorageKey.encodedPrivateKey)
+                .catch((error) => console.error("Error on downloadPrivateKeyFile : ", error));
         }
 
         isPrivateKeyDownloaded = true;
     }
-
 </script>
 
 <Popup {isOpen}>
@@ -57,7 +62,8 @@
         <p>{$LL.chat.e2ee.createRecoveryKey.description()}</p>
         <input
             class="tw-w-full tw-rounded-xl tw-text-white placeholder:tw-text-sm tw-px-3 tw-py-2 tw-p tw-border-light-purple tw-border tw-border-solid tw-bg-contrast"
-            bind:value={passphraseInput} />
+            bind:value={passphraseInput}
+        />
         {#if generatedSecretStorageKey?.encodedPrivateKey}
             <p>{$LL.chat.e2ee.createRecoveryKey.privateKeyDescription()}</p>
             <div class="tw-flex tw-justify-between">
@@ -66,26 +72,28 @@
                     <IconFileDownload />
                 </button>
             </div>
-
         {/if}
         {#if error}
             <p class="tw-text-red-500">{$LL.chat.e2ee.createRecoveryKey.error()}</p>
         {/if}
     </div>
     <svelte:fragment slot="action">
-        <button class="tw-flex-1 tw-justify-center"
-                on:click={()=>closeModalAndContinueToWorkAdventure()}>{$LL.chat.e2ee.createRecoveryKey.buttons.cancel()}
+        <button class="tw-flex-1 tw-justify-center" on:click={() => closeModalAndContinueToWorkAdventure()}
+            >{$LL.chat.e2ee.createRecoveryKey.buttons.cancel()}
         </button>
         {#if generatedSecretStorageKey === undefined}
-            <button disabled={passphraseInput===undefined || passphraseInput?.trim().length===0}
-                    class="disabled:tw-text-gray-400 disabled:tw-bg-gray-500 tw-bg-secondary tw-flex-1 tw-justify-center"
-                    on:click={()=>generateRecoveryKey(passphraseInput)}>{$LL.chat.e2ee.createRecoveryKey.buttons.generate()}
+            <button
+                disabled={passphraseInput === undefined || passphraseInput?.trim().length === 0}
+                class="disabled:tw-text-gray-400 disabled:tw-bg-gray-500 tw-bg-secondary tw-flex-1 tw-justify-center"
+                on:click={() => generateRecoveryKey(passphraseInput)}
+                >{$LL.chat.e2ee.createRecoveryKey.buttons.generate()}
             </button>
         {:else}
             <button
                 disabled={!isPrivateKeyDownloaded}
                 class="disabled:tw-text-gray-400 disabled:tw-bg-gray-500 tw-bg-secondary tw-flex-1 tw-justify-center"
-                on:click={closeModalAndContinueToWorkAdventure}>{$LL.chat.e2ee.createRecoveryKey.buttons.continue()}
+                on:click={closeModalAndContinueToWorkAdventure}
+                >{$LL.chat.e2ee.createRecoveryKey.buttons.continue()}
             </button>
         {/if}
     </svelte:fragment>

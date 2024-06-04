@@ -1,3 +1,4 @@
+import { Buffer } from "buffer";
 import {
     createClient,
     ICreateClientOpts,
@@ -7,7 +8,6 @@ import {
     SecretStorage,
 } from "matrix-js-sdk";
 import Olm from "@matrix-org/olm";
-import { Buffer } from "buffer/";
 import { SecretStorageKeyDescriptionAesV1 } from "matrix-js-sdk/lib/secret-storage";
 // eslint-disable-next-line import/no-unresolved
 import { openModal } from "svelte-modals";
@@ -15,9 +15,7 @@ import { LocalUser } from "../../../Connection/LocalUser";
 import AccessSecretStorageDialog from "./AccessSecretStorageDialog.svelte";
 import { isEncryptionRequiredAndNotSet } from "./MatrixSecurity";
 
-// @ts-ignore
 window.Buffer = Buffer;
-
 global.Olm = Olm;
 
 export interface MatrixClientWrapperInterface {
@@ -105,9 +103,8 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
             matrixUserId = userIdFromLoginToken;
             matrixDeviceId = deviceId;
             this.localUserStore.setMatrixLoginToken(null);
-            this.localUserStore.setGuest(false)
+            this.localUserStore.setGuest(false);
         }
-
 
         if (accessToken === null && refreshToken === null) {
             console.warn("registerMatrixGuestUser");
@@ -156,8 +153,6 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
             },
         };
 
-  
-
         // Now, let's instantiate the Matrix client.
         this.client = this._createClient(matrixCreateClientOpts);
 
@@ -165,11 +160,10 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
 
         const displayName = this.localUserStore.getName();
 
-        if(this.localUserStore.isGuest() && displayName!== this.client.getUser(matrixUserId)?.displayName){
+        if (this.localUserStore.isGuest() && displayName !== this.client.getUser(matrixUserId)?.displayName) {
             //TODO : Change default display name
             await this.client.setDisplayName(displayName || "Guest");
         }
-
 
         if (oldMatrixUserId !== matrixUserId) {
             await this.client.clearStores();
@@ -207,7 +201,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
                 body: {
                     initial_device_display_name: this.localUserStore.getName() || "",
                     refresh_token: true,
-                },    
+                },
             });
 
             this.localUserStore.setMatrixUserId(user_id);
@@ -220,7 +214,6 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
             if (device_id !== undefined) {
                 this.localUserStore.setMatrixDeviceId(device_id, user_id);
             }
-            console.debug(device_id);
             return {
                 matrixUserId: user_id,
                 accessToken: access_token ?? null,
@@ -229,7 +222,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
             };
         } catch (error) {
             console.error(error);
-            throw new Error("Unable to etablish a Matrix Guest connection");
+            throw new Error("Unable to establish a Matrix Guest connection");
         }
     }
 
@@ -324,7 +317,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
             openModal(AccessSecretStorageDialog, {
                 keyInfo,
                 matrixClient: this.client,
-                onClose: (key: Uint8Array) => resolve(key),
+                onClose: (key: Uint8Array | null) => resolve(key),
             });
         });
 

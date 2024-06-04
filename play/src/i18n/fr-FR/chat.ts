@@ -189,10 +189,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     e2ee: {
+        encryptionNotConfigured: "Chiffrement non configuré",
         createRecoveryKey: {
             title: "Création d'une clé de récupération",
             description:
-                "Afin d'utiliser le cryptage de bout en bout dans le chat, vous devez créer une clé de récupération. Veuillez entrer votre phrase de passe ci-dessous, une clé de récupération sera créée.",
+                "Afin d'utiliser le cryptage de bout en bout dans le chat, vous devez créer une clé de récupération. Veuillez entrer votre phrase de sécurité ci-dessous, une clé de récupération sera créée.",
             privateKeyDescription:
                 "Il s'agit de votre clé privée, conservez-la quelque part pour retrouver les discussions cryptées après la déconnexion.",
             error: "Something went wrong on generateRecoveryKeyFromPassphrase",
@@ -203,9 +204,9 @@ const chat: DeepPartial<Translation["chat"]> = {
             },
         },
         interactiveAuth: {
-            title: "Cryptage de bout en bout",
+            title: "Chiffrement de bout en bout",
             description:
-                "Pour des raisons de sécurité, une clé de signature croisée doit être téléchargée sur notre serveur. En confirmant votre identité, vous enregistrerez la clé de signature croisée qui vous permettra de lire les messages cryptés de WA et d'autres clients.",
+                "Pour des raisons de sécurité, une clé de signature croisée doit être téléchargée sur notre serveur. En confirmant votre identité, vous enregistrerez la clé de signature croisée qui vous permettra de lire les messages chiffrés de WA et d'autres clients.",
             buttons: {
                 cancel: "Annuler",
                 continueSSO: "Continuer avec le SSO",
@@ -215,13 +216,13 @@ const chat: DeepPartial<Translation["chat"]> = {
         accessSecretStorage: {
             title: "Vérification de la session du chat",
             description:
-                "Afin de vérifier votre session et récupérer l'historique des messages cryptés, vous devez saisir votre clé de récupération ou votre phrase de passe.",
-            passphrase: "Phrase de passe",
+                "Afin de vérifier votre session et récupérer l'historique des messages cryptés, vous devez saisir votre clé de récupération ou votre phrase de sécurité.",
+            passphrase: "Phrase de sécurité",
             recoveryKey: "Clé de récupération",
             placeholder: "Entrer votre",
             buttons: {
                 cancel: "Annuler",
-                usePassphrase: "Utiliser la phrase de passe",
+                usePassphrase: "Utiliser la phrase de sécurité",
                 useRecoveryKey: "Utiliser la clé de récupération",
                 confirm: "Confirmer",
             },

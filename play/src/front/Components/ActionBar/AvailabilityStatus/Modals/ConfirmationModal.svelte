@@ -17,12 +17,12 @@
     transition:fly={{ y: -900, duration: 500 }}
     class="tw-flex tw-flex-col tw-text-white tw-backdrop-blur tw-rounded-xl
             tw-m-2 tw-pointer-events-auto
-            tw-bg-dark-purple/70 tw-max-w-sm tw-max-h-44 tw-self-center tw-justify-self-center "
+            tw-bg-dark-purple/70 tw-max-w-sm tw-max-h-44 tw-self-center tw-justify-self-center"
 >
     <section class="tw-flex tw-grow tw-items-center">
         <slot />
     </section>
-    <footer class="tw-flex tw-bg-dark-purple/70 tw-justify-end tw-p-2  tw-rounded-b-2xl ">
+    <footer class="tw-flex tw-bg-dark-purple/70 tw-justify-end tw-p-2 tw-rounded-b-2xl">
         <button class="light" on:click={handleAccept}>{acceptLabel}</button>
         <button class="outline" on:click={handleClose}>{closeLabel}</button>
     </footer>

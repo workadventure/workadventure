@@ -33,7 +33,7 @@ import { SpaceUserExtended } from "../../../Space/SpaceFilter/SpaceFilter";
 import { selectedRoom } from "../../Stores/ChatStore";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 import { chatUserFactory } from "./MatrixChatUser";
-
+import { initClientCryptoConfiguration, isEncryptionRequiredAndNotSet } from "./MatrixSecurity";
 
 export const defaultWoka =
     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAAdCAYAAABBsffGAAAB/ElEQVRIia1WMW7CQBC8EAoqFy74AD1FqNzkAUi09DROwwN4Ag+gMQ09dcQXXNHQIucBPAJFc2Iue+dd40QZycLc7c7N7d7u+cU9wXw+ryyL0+n00eU9tCZIOp1O/f/ZbBbmzuczX6uuRVTlIAYpCSeTScumaZqw0OVyURd47SIGaZ7n6s4wjmc0Grn7/e6yLFtcr9dPaaOGhcTEeDxu2dxut2hXUJ9ioKmW0IidMg6/NPmD1EmqtojTBWAvE26SW8r+YhfIu87zbyB5BiRerVYtikXxXuLRuK058HABMyz/AX8UHwXgV0NRaEXzDKzaw+EQCioo1yrsLfvyjwZrTvK0yp/xh/o+JwbFhFYgFRNqzGEIB1ZhH2INkXJZoShn2WNSgJRNS/qoYSHxer1+qkhChnC320ULRI1LEsNhv99HISBkLmhP/7L8OfqhiKC6SzEJtSTLHMkGFhK6XC79L89rmtC6rv0YfjXV9COPDwtVQxEc2ZflIu7R+WADQrkA7eCH5BdFwQRXQ8bKxXejeWFoYZGCQM7Yh7BAkcw0DEnEEPHhbjBPQfCDvwzlEINlWZq3OAiOx2O0KwAKU8gehXfzu2Wz2VQMTXqCeLZZSNvtVv20MFsu48gQpDvjuHYxE+ZHESBPSJ/x3sqBvhe0hc5vRXkfypBY4xGcc9+lcFxartG6LgAAAABJRU5ErkJggg==";
@@ -56,6 +56,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     rooms: Readable<ChatRoom[]>;
     userConnected: MapStore<UUID, ChatUser> = new MapStore<UUID, ChatUser>();
     userDisconnected: MapStore<chatId, ChatUser> = new MapStore<chatId, ChatUser>();
+    isEncryptionRequiredAndNotSet: Writable<boolean>;
 
     constructor(private connection: Connection, clientPromise: Promise<MatrixClient>) {
         this.connectionStatus = writable("CONNECTING");
@@ -74,10 +75,10 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 (room) => room.myMembership === KnownMembership.Join && room.type === "multiple"
             );
         });
+        this.isEncryptionRequiredAndNotSet = isEncryptionRequiredAndNotSet;
 
         (async () => {
             this.client = await clientPromise;
-
             await this.startMatrixClient();
         })().catch((error) => {
             console.error(error);
@@ -88,7 +89,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.client.on(ClientEvent.Sync, (state) => {
             switch (state) {
                 case SyncState.Prepared:
-                    this.connectionStatus.set("ONLINE");    
+                    this.connectionStatus.set("ONLINE");
                     this.initUserList();
                     break;
                 case SyncState.Error:
@@ -102,11 +103,9 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                     break;
             }
         });
-        this.client.on(ClientEvent.Room,this.onClientEventRoom.bind(this));
+        this.client.on(ClientEvent.Room, this.onClientEventRoom.bind(this));
         this.client.on(ClientEvent.DeleteRoom, this.onClientEventDeleteRoom.bind(this));
-        this.client.on(RoomEvent.MyMembership,this.onRoomEventMembership.bind(this));
-
-
+        this.client.on(RoomEvent.MyMembership, this.onRoomEventMembership.bind(this));
 
         await this.client.store.startup();
         await this.client.initRustCrypto();
@@ -115,10 +114,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             //Detached to prevent using listener on localIdReplaced for each event
             pendingEventOrdering: PendingEventOrdering.Detached,
         });
-
     }
-
-
 
     private async onClientEventRoom(room: Room) {
         const { roomId } = room;
@@ -131,7 +127,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
         const matrixRoom = new MatrixChatRoom(room);
         this.roomList.set(matrixRoom.id, matrixRoom);
-}
+    }
 
     private onClientEventDeleteRoom(roomId: string) {
         this.roomList.delete(roomId);
@@ -160,7 +156,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                     (this.userDisconnected.has(inviter) ||
                         Array.from(this.userConnected.values()).some((user: ChatUser) => user.id === inviter))
                 ) {
-
                     this.roomList.set(roomId, newRoom);
                     newRoom.joinRoom();
                 }
@@ -405,7 +400,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         return;
     }
 
-    async searchAccesibleRooms(searchText = ""): Promise<
+    async searchAccessibleRooms(searchText = ""): Promise<
         {
             id: string;
             name: string | undefined;
@@ -467,6 +462,10 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                     rej(error);
                 });
         });
+    }
+
+    initEndToEndEncryption(): Promise<void> {
+        return initClientCryptoConfiguration();
     }
 
     private async addDMRoomInAccountData(userId: string, roomId: string) {

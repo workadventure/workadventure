@@ -4,22 +4,25 @@
     import { chatSearchBarValue } from "../../Stores/ChatStore";
     import User from "./User.svelte";
 
-    export let userList : Array<ChatUser> = [];
+    export let userList: Array<ChatUser> = [];
 
-    const me : ChatUser|null = userList.reduce((acc : ChatUser | null,curr)=>{
-        if(acc!==null || curr.id !== localUserStore.getChatId())return acc;
+    const me: ChatUser | null = userList.reduce((acc: ChatUser | null, curr) => {
+        if (acc !== null || curr.id !== localUserStore.getChatId()) return acc;
         return curr;
-    },null);
+    }, null);
 
-
-    $: filteredAndSortedUserList = [...userList?.filter((user : ChatUser)=> (me)? user.id!==me.id : true).sort((a : ChatUser,b : ChatUser)=>a.username?.localeCompare(b.username||"")||-1)] || [];
-
+    $: filteredAndSortedUserList =
+        [
+            ...userList
+                ?.filter((user: ChatUser) => (me ? user.id !== me.id : true))
+                .sort((a: ChatUser, b: ChatUser) => a.username?.localeCompare(b.username || "") || -1),
+        ] || [];
 </script>
 
-    {#if me && me.username?.toLocaleLowerCase().includes($chatSearchBarValue)}
-        <User user={me} />
-    {/if}
+{#if me && me.username?.toLocaleLowerCase().includes($chatSearchBarValue)}
+    <User user={me} />
+{/if}
 
-    {#each [...filteredAndSortedUserList] as user (user.id)}
-        <User {user} />
-    {/each}
+{#each [...filteredAndSortedUserList] as user (user.id)}
+    <User {user} />
+{/each}

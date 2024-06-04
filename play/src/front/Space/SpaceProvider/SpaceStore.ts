@@ -12,7 +12,7 @@ export class LocalSpaceProvider implements SpaceProviderInterface {
 
     add(spaceName: string, metadata: Map<string, unknown> = new Map<string, unknown>()): SpaceInterface {
         if (this.exist(spaceName)) throw new SpaceAlreadyExistError(spaceName);
-        const newSpace: SpaceInterface = new Space(spaceName, metadata, this.socket,ClientToServerMessage);
+        const newSpace: SpaceInterface = new Space(spaceName, metadata, this.socket, ClientToServerMessage);
         this.spaces.set(newSpace.getName(), newSpace);
         return newSpace;
     }
@@ -34,10 +34,10 @@ export class LocalSpaceProvider implements SpaceProviderInterface {
         return space;
     }
 
-    destroy(){
-        this.getAll().forEach((space)=>{
+    destroy() {
+        this.getAll().forEach((space) => {
             space.destroy();
-        })
+        });
     }
 }
 
