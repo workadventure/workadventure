@@ -1,4 +1,4 @@
-import { ClientEvent, EventStatus, EventType, IEventRelation, MatrixEvent, MatrixEventEvent, MsgType, RelationType, Room, SyncState } from "matrix-js-sdk";
+import { EventType, MatrixEvent, MatrixEventEvent, MsgType, RelationType, Room } from "matrix-js-sdk";
 import { writable, Writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import { ChatMessage, ChatMessageContent, ChatMessageType, ChatUser } from "../ChatConnection";
@@ -22,13 +22,13 @@ export class MatrixChatMessage implements ChatMessage {
         this.date = event.getDate();
         this.sender = this.getSender();
         this.isMyMessage = this.room.client.getUserId() === event.getSender();
-        this.content = this.getMessageContent();
+        this.content = this.initMessageContent();
         this.isQuotedMessage = isQuotedMessage;
         this.isDeleted = writable(this.getIsDeleted());
         this.isModified = writable(this.getIsModified());
 
-        event.on(MatrixEventEvent.Decrypted, (_) => {
-            this.content = this.getMessageContent();
+        event.on(MatrixEventEvent.Decrypted, (event) => {
+            this.updateMessageContentOnDecryptedEvent();
         });
     }
 
@@ -42,15 +42,23 @@ export class MatrixChatMessage implements ChatMessage {
         return messageUser;
     }
 
-    private getMessageContent(): Writable<ChatMessageContent> {
+    private initMessageContent(): Writable<ChatMessageContent> {
+        return writable(this.getMessageContent());
+    }
+
+    private updateMessageContentOnDecryptedEvent() {
+        this.content.set(this.getMessageContent());
+    }
+
+    private getMessageContent(): ChatMessageContent {
         const unsigned = this.event.getUnsigned();
         const relation = unsigned["m.relations"];
         if (this.event.isDecryptionFailure()) {
-            return writable({ body: "failed to decrypt", url: undefined });
+            return { body: "🔐 Failed to decrypt", url: undefined };
         }
         if (relation) {
             if (relation["m.replace"]) {
-                return writable({ body: relation["m.replace"].content?.["m.new_content"].body, url: undefined });
+                return { body: relation["m.replace"].content?.["m.new_content"].body, url: undefined };
             }
         }
 
@@ -58,20 +66,20 @@ export class MatrixChatMessage implements ChatMessage {
         const quotedMessage = this.getQuotedMessage();
         if (quotedMessage !== undefined) {
             this.quotedMessage = quotedMessage;
-            return writable({
+            return {
                 body: content.formatted_body.replace(/^(<mx-reply>).*(<\/mx-reply>)/, ""),
                 url: undefined,
-            });
+            };
         }
 
         if (this.type !== "text") {
-            return writable({
+            return {
                 body: content.body,
                 url: this.room.client.mxcUrlToHttp(this.event.getOriginalContent().url) ?? undefined,
-            });
+            };
         }
 
-        return writable({ body: content.body, url: undefined });
+        return { body: content.body, url: undefined };
     }
 
     private getQuotedMessage() {
@@ -138,7 +146,6 @@ export class MatrixChatMessage implements ChatMessage {
     }
 
     async addReaction(reaction: string) {
-
         try {
             await this.room.client.sendEvent(this.room.roomId, EventType.Reaction, {
                 "m.relates_to": { key: reaction, rel_type: RelationType.Annotation, event_id: this.id },
@@ -156,7 +163,6 @@ export class MatrixChatMessage implements ChatMessage {
                 });
             });
             */
-
         }
     }
 }

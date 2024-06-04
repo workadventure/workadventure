@@ -60,5 +60,5 @@ export interface FrontConfigurationInterface {
     EMBEDLY_KEY: string | undefined;
     EJABBERD_DOMAIN: string | undefined;
     EJABBERD_WS_URI: string | undefined;
-    MATRIX_PUBLIC_URI : string | undefined;
+    MATRIX_PUBLIC_URI: string | undefined;
 }

@@ -36,7 +36,7 @@ export class StreamSpaceWatcher {
                             .get(subMessage.addSpaceUserMessage.spaceName)
                             .getSpaceFilter(subMessage.addSpaceUserMessage.filterName)
                             .addUser(subMessage.addSpaceUserMessage.user);
-                        
+
                         chatConnection.addUserFromSpace(extendedUser);
                         break;
                     }
@@ -52,12 +52,13 @@ export class StreamSpaceWatcher {
                         break;
                     }
                     case SpaceEvent.RemoveSpaceUser: {
-                        if (!subMessage.removeSpaceUserMessage.userId || !subMessage.removeSpaceUserMessage.filterName)return ; 
+                        if (!subMessage.removeSpaceUserMessage.userId || !subMessage.removeSpaceUserMessage.filterName)
+                            return;
                         this.spaceProvider
                             .get(subMessage.removeSpaceUserMessage.spaceName)
                             .getSpaceFilter(subMessage.removeSpaceUserMessage.filterName)
                             .removeUser(subMessage.removeSpaceUserMessage.userId);
-                        chatConnection.disconnectSpaceUser(subMessage.removeSpaceUserMessage.userId)
+                        chatConnection.disconnectSpaceUser(subMessage.removeSpaceUserMessage.userId);
                         break;
                     }
                     case SpaceEvent.updateSpaceMetadata: {

@@ -188,6 +188,7 @@ const chat: BaseTranslation = {
         },
     },
     e2ee: {
+        encryptionNotConfigured: "Encryption not configured",
         createRecoveryKey: {
             title: "Chat recovery key creation",
             description:

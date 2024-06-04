@@ -2,10 +2,7 @@ import { describe, expect, it } from "vitest";
 import { LocalSpaceProvider } from "../SpaceProvider/SpaceStore";
 import { SpaceInterface } from "../SpaceInterface";
 import { SpaceProviderInterface } from "../SpaceProvider/SpacerProviderInterface";
-import {
-    SpaceAlreadyExistError,
-    SpaceDoesNotExistError,
-} from "../Errors/SpaceError";
+import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
 
 describe("SpaceProviderInterface implementation", () => {
     describe("SpaceStore", () => {
@@ -32,7 +29,7 @@ describe("SpaceProviderInterface implementation", () => {
                     [newSpace.getName(), newSpace],
                 ]);
 
-                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(undefined,spaceMap);
+                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(undefined, spaceMap);
                 expect(() => {
                     spaceStore.add(newSpace.getName());
                 }).toThrow(SpaceAlreadyExistError);
@@ -50,7 +47,7 @@ describe("SpaceProviderInterface implementation", () => {
                     [newSpace.getName(), newSpace],
                 ]);
 
-                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider (undefined,spaceMap);
+                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(undefined, spaceMap);
 
                 const result: boolean = spaceStore.exist(newSpace.getName());
 
@@ -62,7 +59,7 @@ describe("SpaceProviderInterface implementation", () => {
                         return "space-test";
                     },
                 } as SpaceInterface;
-                const spaceStore: SpaceProviderInterface =  new LocalSpaceProvider ();;
+                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider();
                 const result: boolean = spaceStore.exist(newSpace.getName());
                 expect(result).toBeFalsy();
             });
@@ -92,7 +89,7 @@ describe("SpaceProviderInterface implementation", () => {
                     [space2.getName(), space2],
                 ]);
 
-                const spaceStore: SpaceProviderInterface =  new LocalSpaceProvider (undefined,spaceMap);;
+                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(undefined, spaceMap);
 
                 spaceStore.delete(spaceToDelete.getName());
                 expect(spaceStore.getAll()).not.toContain(spaceToDelete);
@@ -103,7 +100,7 @@ describe("SpaceProviderInterface implementation", () => {
                         return "space-test";
                     },
                 } as SpaceInterface;
-                const spaceStore: SpaceProviderInterface =  new LocalSpaceProvider ();;
+                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider();
 
                 expect(() => {
                     spaceStore.delete(newSpace.getName());
@@ -116,7 +113,7 @@ describe("SpaceProviderInterface implementation", () => {
                     getName(): string {
                         return "space-test1";
                     },
-                } as  SpaceInterface;
+                } as SpaceInterface;
 
                 const space2: SpaceInterface = {
                     getName(): string {
@@ -136,7 +133,7 @@ describe("SpaceProviderInterface implementation", () => {
                     [space2.getName(), space2],
                 ]);
 
-                const spaceStore: SpaceProviderInterface =  new LocalSpaceProvider (undefined,spaceMap);;
+                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(undefined, spaceMap);
 
                 expect(spaceStore.getAll()).toContain(space1);
                 expect(spaceStore.getAll()).toContain(space3);

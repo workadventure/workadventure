@@ -4,10 +4,8 @@
     import { selectedChatMessageToEdit, selectedChatMessageToReply } from "../../Stores/ChatStore";
     import { getChatEmojiPicker } from "../../EmojiPicker";
 
-
     export let message: ChatMessage;
     export let messageRef: HTMLDivElement;
-
 
     function replyToMessage() {
         selectedChatMessageToReply.set(message);
@@ -24,7 +22,7 @@
     const emojiPicker = getChatEmojiPicker();
 
     emojiPicker.on("emoji", ({ emoji }) => {
-        message.addReaction(emoji).catch(error => console.error(error));
+        message.addReaction(emoji).catch((error) => console.error(error));
     });
 
     function openCloseEmojiPicker() {
@@ -36,8 +34,12 @@
 
 <div class="tw-flex tw-flex-row tw-gap-1 tw-items-center">
     {#if message.type !== "text"}
-        <a href={$content.url} download={$content.body} class="tw-p-0 tw-m-0 tw-text-white hover:tw-text-white"
-           target="_blank">
+        <a
+            href={$content.url}
+            download={$content.body}
+            class="tw-p-0 tw-m-0 tw-text-white hover:tw-text-white"
+            target="_blank"
+        >
             <IconArrowDown size={16} class="hover:tw-cursor-pointer hover:tw-text-secondary" />
         </a>
     {/if}
@@ -47,7 +49,7 @@
     <button class="tw-p-0 tw-m-0 hover:tw-text-secondary" on:click={openCloseEmojiPicker}>
         <IconMoodSmile size={16} />
     </button>
-    {#if isMyMessage && type === "text" }
+    {#if isMyMessage && type === "text"}
         <button class="tw-p-0 tw-m-0 hover:tw-text-secondary" on:click={selectMessageToEdit}>
             <IconPencil size={16} />
         </button>

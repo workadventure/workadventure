@@ -158,7 +158,7 @@
             </label>
         </div>
     {/if}
-    <div class="tw-flex tw-flex-row  tw-gap-2 tw-flex-wrap tw-justify-end tw-text-sm">
+    <div class="tw-flex tw-flex-row tw-gap-2 tw-flex-wrap tw-justify-end tw-text-sm">
         {#if !isUploadForm}
             <button
                 class="tw-bg-red-500 tw-rounded"

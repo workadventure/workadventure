@@ -14,21 +14,21 @@
 
     $: chunks = highlightWords({
         text: $roomName.match(/\[\d*]/) ? $roomName.substring(0, $roomName.search(/\[\d*]/)) : $roomName,
-        query: $chatSearchBarValue
+        query: $chatSearchBarValue,
     });
-
 </script>
 
 <div
     class="tw-text-md tw-flex tw-gap-2 tw-flex-row tw-items-center hover:tw-bg-white hover:tw-bg-opacity-10 hover:tw-rounded-md hover:!tw-cursor-pointer tw-p-1"
-    on:click={()=> selectedRoom.set(room)}>
+    on:click={() => selectedRoom.set(room)}
+>
     <div class="tw-relative">
         <Avatar avatarUrl={room.avatarUrl} fallbackFirstLetter={$roomName.charAt(0)} />
         {#if $hasUnreadMessage}
             <NotificationBadge type="error" />
         {/if}
         {#if $isEncrypted}
-            <EncryptionBadge/>
+            <EncryptionBadge />
         {/if}
     </div>
     <p class="tw-m-0">

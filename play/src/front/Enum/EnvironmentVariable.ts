@@ -78,4 +78,3 @@ export const EJABBERD_DOMAIN = env.EJABBERD_DOMAIN;
 export const EJABBERD_WS_URI = env.EJABBERD_WS_URI;
 
 export const MATRIX_PUBLIC_URI = env.MATRIX_PUBLIC_URI;
-

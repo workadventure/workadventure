@@ -5,5 +5,5 @@ export interface SpaceProviderInterface {
     add(spaceName: string): SpaceInterface;
     exist(spaceName: string): boolean;
     delete(spaceName: string): void;
-    destroy():void;
+    destroy(): void;
 }

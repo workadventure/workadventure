@@ -58,14 +58,12 @@ export class MatrixChatRoom implements ChatRoom {
         this.timelineWindow = new TimelineWindow(matrixRoom.client, matrixRoom.getLiveTimeline().getTimelineSet());
         this.isEncrypted = writable(matrixRoom.hasEncryptionStateEvent());
 
-
         (async () => {
             if (matrixRoom.hasEncryptionStateEvent()) {
                 await initClientCryptoConfiguration();
             }
-        })();
+        })().catch((error) => console.error(error));
 
-        
         //Necessary to keep matrix event content for local event deletions after initialization
         this.inMemoryEventsContent = new Map<EventId, MatrixEvent>();
         (async () => {
@@ -133,7 +131,6 @@ export class MatrixChatRoom implements ChatRoom {
         _: boolean,
         data: IRoomTimelineData
     ) {
-
         if (event.getType() === EventType.RoomEncryption || event.getType() === EventType.RoomMessageEncrypted) {
             await initClientCryptoConfiguration();
         }

@@ -354,7 +354,7 @@ export class IoSocketController {
                             activatedInviteUser: true,
                             canEdit: false,
                             world: "",
-                            chatID
+                            chatID,
                         };
 
                         let characterTextures: WokaDetail[];
@@ -539,7 +539,7 @@ export class IoSocketController {
                             screenSharingState: undefined,
                             megaphoneState: undefined,
                             chatID,
-                            world : userData.world
+                            world: userData.world,
                         };
 
                         /* This immediately calls open handler, you must not use res after this call */
@@ -750,7 +750,6 @@ export class IoSocketController {
                             break;
                         }
                         case "addSpaceFilterMessage": {
-                            
                             if (message.message.addSpaceFilterMessage.spaceFilterMessage !== undefined)
                                 message.message.addSpaceFilterMessage.spaceFilterMessage.spaceName = `${
                                     socket.getUserData().world
@@ -788,7 +787,6 @@ export class IoSocketController {
                             message.message.watchSpaceMessage.spaceName = `${socket.getUserData().world}.${
                                 message.message.watchSpaceMessage.spaceName
                             }`;
-
 
                             void socketManager.handleJoinSpace(
                                 socket,
@@ -860,8 +858,11 @@ export class IoSocketController {
                             );
                             break;
                         }
-                        case "updateChatIdMessage" : {
-                            socketManager.handleUpdateChatId(message.message.updateChatIdMessage.email,message.message.updateChatIdMessage.chatId)
+                        case "updateChatIdMessage": {
+                            socketManager.handleUpdateChatId(
+                                message.message.updateChatIdMessage.email,
+                                message.message.updateChatIdMessage.chatId
+                            );
                             break;
                         }
                         case "queryMessage": {
