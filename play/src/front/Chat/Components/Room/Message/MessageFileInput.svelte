@@ -9,10 +9,12 @@
 
     $: {
         if (files) {
-            room.sendFiles(files).then(() => {
-                files = undefined;
-                unselectChatMessageToReplyIfSelected()
-            }).catch(error => console.error(error));
+            room.sendFiles(files)
+                .then(() => {
+                    files = undefined;
+                    unselectChatMessageToReplyIfSelected();
+                })
+                .catch((error) => console.error(error));
         }
     }
 
@@ -21,22 +23,13 @@
             selectedChatMessageToReply.set(null);
         }
     }
-
-
 </script>
 
 <div>
-    <input
-        id="upload"
-        class="tw-hidden"
-        type="file"
-        multiple
-        bind:files
-        data-testid="uploadCustomAsset"
-    />
+    <input id="upload" class="tw-hidden" type="file" multiple bind:files data-testid="uploadCustomAsset" />
     <label for="upload" class="tw-p-0 tw-m-0">
         {#if files !== undefined}
-            <IconLoader class="tw-animate-spin" size={18}  />
+            <IconLoader class="tw-animate-spin" size={18} />
         {:else}
             <IconPaperclip class="hover:!tw-cursor-pointer" size={18} />
         {/if}

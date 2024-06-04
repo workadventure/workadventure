@@ -11,21 +11,20 @@
         displayInvitationRoomActions = !displayInvitationRoomActions;
     }
 
-    function joinRoom(){
+    function joinRoom() {
         room.joinRoom();
-        selectedRoom.set(room)
-        
+        selectedRoom.set(room);
     }
 
-    function leaveRoom(){
+    function leaveRoom() {
         room.leaveRoom();
     }
-
 </script>
 
 <div
     class="tw-text-md tw-flex tw-gap-2 tw-flex-row tw-items-center hover:tw-bg-white hover:tw-bg-opacity-10 hover:tw-rounded-md hover:!tw-cursor-pointer tw-p-1"
-    on:click={toggleDisplayInvitationRoomActions}>
+    on:click={toggleDisplayInvitationRoomActions}
+>
     <div class="tw-relative">
         <Avatar avatarUrl={room.avatarUrl} fallbackFirstLetter={$roomName.charAt(0)} />
     </div>
@@ -33,8 +32,7 @@
 </div>
 {#if displayInvitationRoomActions}
     <div class="tw-flex">
-        <button class="tw-text-blue-300" on:click={()=>joinRoom()}>Accept</button>
-        <button class="tw-text-red-500" on:click={()=>leaveRoom()}>Decline</button>
+        <button class="tw-text-blue-300" on:click={() => joinRoom()}>Accept</button>
+        <button class="tw-text-red-500" on:click={() => leaveRoom()}>Decline</button>
     </div>
 {/if}
-        

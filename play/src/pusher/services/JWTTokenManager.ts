@@ -8,7 +8,7 @@ export const AuthTokenData = z.object({
     username: z.string().optional(),
     locale: z.string().optional(),
     tags: z.string().array().optional(),
-    matrixUserId: z.string().optional()
+    matrixUserId: z.string().optional(),
 });
 export type AuthTokenData = z.infer<typeof AuthTokenData>;
 
@@ -42,7 +42,9 @@ export class JWTTokenManager {
         tags?: string[],
         matrixUserId?: string
     ): string {
-        return Jwt.sign({ identifier, accessToken, username, locale, tags ,matrixUserId}, SECRET_KEY, { expiresIn: "30d" });
+        return Jwt.sign({ identifier, accessToken, username, locale, tags, matrixUserId }, SECRET_KEY, {
+            expiresIn: "30d",
+        });
     }
 
     public verifyJWTToken(token: string, ignoreExpiration = false): AuthTokenData {

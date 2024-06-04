@@ -3,7 +3,6 @@ import { svelte } from "@sveltejs/vite-plugin-svelte";
 import sveltePreprocess from "svelte-preprocess";
 import legacy from "@vitejs/plugin-legacy";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
-import inject from "@rollup/plugin-inject";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -28,9 +27,6 @@ export default defineConfig(({ mode }) => {
         build: {
             sourcemap: true,
             outDir: "./dist/public",
-            rollupOptions: {
-                plugins: [inject({ Buffer: ["buffer/", "Buffer"] })],
-            },
         },
         plugins: [
             svelte({

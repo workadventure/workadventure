@@ -97,7 +97,7 @@ export interface ChatConnectionInterface {
     createDirectRoom(userChatId: string): Promise<ChatRoom | undefined>;
     getDirectRoomFor(uuserChatId: string): ChatRoom | undefined;
     searchUsers(searchText: string): Promise<void>;
-    searchAccesibleRooms(searchText: string): Promise<
+    searchAccessibleRooms(searchText: string): Promise<
         {
             id: string;
             name: string | undefined;
@@ -106,6 +106,8 @@ export interface ChatConnectionInterface {
     joinRoom(roomId: string): Promise<ChatRoom | undefined>;
     destroy(): Promise<void>;
     searchChatUsers(searchText: string): Promise<{ id: string; name: string | undefined }[] | undefined>;
+    isEncryptionRequiredAndNotSet: Readable<boolean>;
+    initEndToEndEncryption(): Promise<void>;
 }
 
 export type Connection = AtLeast<RoomConnection, "queryChatMembers">;

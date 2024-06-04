@@ -1,5 +1,4 @@
 <script lang="ts">
-
     import { IconCircleX, IconMoodSmile, IconSend } from "@tabler/icons-svelte";
     import { onDestroy } from "svelte";
     import { ChatRoom } from "../../Connection/ChatConnection";
@@ -8,15 +7,13 @@
     import { getChatEmojiPicker } from "../../EmojiPicker";
     import LL from "../../../../i18n/i18n-svelte";
 
-
     export let room: ChatRoom;
 
     let message = "";
     let messageInput: HTMLTextAreaElement;
     let emojiButtonRef: HTMLButtonElement;
 
-
-    const selectedChatChatMessageToReplyUnsubscriber = selectedChatMessageToReply.subscribe(chatMessage => {
+    const selectedChatChatMessageToReplyUnsubscriber = selectedChatMessageToReply.subscribe((chatMessage) => {
         if (chatMessage !== null) {
             messageInput.focus();
         }
@@ -50,7 +47,7 @@
 
     const emojiPicker = getChatEmojiPicker();
     emojiPicker.on("emoji", ({ emoji }) => {
-        message+=emoji
+        message += emoji;
     });
 
     function openCloseEmojiPicker() {
@@ -58,32 +55,40 @@
     }
 
     $: quotedMessageContent = $selectedChatMessageToReply?.content;
-
-
 </script>
 
 {#if $selectedChatMessageToReply !== null}
     <div class="tw-flex tw-p-2 tw-items-center tw-gap-1">
-        <p class="tw-bg-brand-blue tw-rounded-md tw-p-2 tw-text-xs tw-m-0"
-           style:overflow-wrap="anywhere">{$quotedMessageContent?.body}</p>
+        <p class="tw-bg-brand-blue tw-rounded-md tw-p-2 tw-text-xs tw-m-0" style:overflow-wrap="anywhere">
+            {$quotedMessageContent?.body}
+        </p>
         <button class="tw-p-0 tw-m-0" on:click={unselectChatMessageToReply}>
             <IconCircleX />
         </button>
     </div>
 {/if}
 <div class="tw-flex tw-items-center tw-gap-1 tw-border tw-border-solid tw-rounded-xl tw-pr-1 tw-border-light-purple">
-    <textarea rows={1} bind:value={message}
-              bind:this={messageInput}
-              on:keydown={sendMessageOrEscapeLine}
-              class="tw-w-full tw-rounded-xl wa-searchbar tw-block tw-text-white placeholder:tw-text-sm tw-px-3 tw-py-1 tw-border-light-purple tw-border tw-bg-transparent tw-resize-none tw-m-0 tw-pr-5 tw-border-none tw-outline-none tw-shadow-none focus:tw-ring-0"
-              placeholder={$LL.chat.enter()} />
-    <button class="disabled:tw-opacity-30 disabled:!tw-cursor-none tw-p-0 tw-m-0" bind:this={emojiButtonRef}
-            on:click={openCloseEmojiPicker}>
+    <textarea
+        rows={1}
+        bind:value={message}
+        bind:this={messageInput}
+        on:keydown={sendMessageOrEscapeLine}
+        class="tw-w-full tw-rounded-xl wa-searchbar tw-block tw-text-white placeholder:tw-text-sm tw-px-3 tw-py-1 tw-border-light-purple tw-border tw-bg-transparent tw-resize-none tw-m-0 tw-pr-5 tw-border-none tw-outline-none tw-shadow-none focus:tw-ring-0"
+        placeholder={$LL.chat.enter()}
+    />
+    <button
+        class="disabled:tw-opacity-30 disabled:!tw-cursor-none tw-p-0 tw-m-0"
+        bind:this={emojiButtonRef}
+        on:click={openCloseEmojiPicker}
+    >
         <IconMoodSmile size={18} />
     </button>
-    <MessageFileInput room={room} />
-    <button class="disabled:tw-opacity-30 disabled:!tw-cursor-none disabled:tw-text-white  tw-p-0 tw-m-0 tw-text-secondary"
-            disabled={message.trim().length===0} on:click={()=>sendMessage(message)}>
+    <MessageFileInput {room} />
+    <button
+        class="disabled:tw-opacity-30 disabled:!tw-cursor-none disabled:tw-text-white tw-p-0 tw-m-0 tw-text-secondary"
+        disabled={message.trim().length === 0}
+        on:click={() => sendMessage(message)}
+    >
         <IconSend size={20} />
     </button>
 </div>

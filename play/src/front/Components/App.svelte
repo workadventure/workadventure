@@ -6,7 +6,7 @@
     import { enableCameraSceneVisibilityStore } from "../Stores/MediaStore";
     import {
         selectCharacterCustomizeSceneVisibleStore,
-        selectCharacterSceneVisibleStore
+        selectCharacterSceneVisibleStore,
     } from "../Stores/SelectCharacterStore";
     import { selectCompanionSceneVisibleStore } from "../Stores/SelectCompanionStore";
     import { gameSceneIsLoadedStore } from "../Stores/GameSceneStore";

@@ -1,5 +1,4 @@
 <script lang="ts">
-
     import { IconChevronDown, IconChevronRight, IconSquarePlus } from "@tabler/icons-svelte";
     import { get } from "svelte/store";
     // eslint-disable-next-line import/no-unresolved
@@ -34,7 +33,6 @@
         displayRoomInvitations = $roomInvitations.length > 0;
     }
 
-
     function toggleDisplayDirectRooms() {
         displayDirectRooms = !displayDirectRooms;
     }
@@ -51,10 +49,15 @@
         openModal(CreateRoomModal);
     }
 
-    $: filteredDirectRoom = $directRooms.filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()));
-    $: filteredRooms = $rooms.filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()));
-    $: filteredRoomInvitations = $roomInvitations.filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()));
-
+    $: filteredDirectRoom = $directRooms.filter(({ name }) =>
+        get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase())
+    );
+    $: filteredRooms = $rooms.filter(({ name }) =>
+        get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase())
+    );
+    $: filteredRoomInvitations = $roomInvitations.filter(({ name }) =>
+        get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase())
+    );
 </script>
 
 {#if $selectedRoom !== undefined}
@@ -101,7 +104,8 @@
             {:else}
                 <IconChevronRight />
             {/if}
-            {$LL.chat.rooms()}</button>
+            {$LL.chat.rooms()}</button
+        >
         <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={openCreateRoomModal}>
             <IconSquarePlus size={16} />
         </button>
@@ -123,5 +127,3 @@
         {/each}
     {/if}
 {/if}
-
-

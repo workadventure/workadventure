@@ -13,12 +13,11 @@
 
     if (!authSessionId) throw new Error("This UIA flow requires an authSessionId");
 
-
     let ssoUrl = matrixClient.getFallbackAuthUrl(AuthType.Sso, authSessionId);
     let popupWindow: Window | null = null;
     let phase = INTERACTIVE_AUTH_PHASE.PRE_AUTH;
 
-    const onReceiveMessage = (event: { data: string, origin: string }) => {
+    const onReceiveMessage = (event: { data: string; origin: string }) => {
         if (event.data === "authDone" && event.origin === matrixClient.getHomeserverUrl()) {
             if (popupWindow) {
                 popupWindow.close();
@@ -55,7 +54,6 @@
     <div class="tw-text-red-500" role="alert">{errorText}</div>
 {/if}
 
-
 <button class="tw-flex-1 tw-justify-center" on:click={onCancel}>
     {$LL.chat.e2ee.interactiveAuth.buttons.cancel()}
 </button>
@@ -68,4 +66,3 @@
         {$LL.chat.e2ee.interactiveAuth.buttons.finish()}
     </button>
 {/if}
-

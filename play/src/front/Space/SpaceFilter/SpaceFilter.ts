@@ -22,7 +22,7 @@ export interface SpaceFilterInterface {
     updateUserData(userdata: Partial<SpaceUser>): void;
     setFilter(filter: Filter): void;
     getName(): string;
-    getFilterType(): "spaceFilterEverybody" | "spaceFilterContainName" | "spaceFilterLiveStreaming"| undefined;
+    getFilterType(): "spaceFilterEverybody" | "spaceFilterContainName" | "spaceFilterLiveStreaming" | undefined;
     destroy(): void;
 }
 
@@ -139,12 +139,12 @@ export class SpaceFilter implements SpaceFilterInterface {
             },
         };
 
-        const wokaBase64 = await CharacterLayerManager.wokaBase64(user.characterTextures) ;
-        
+        const wokaBase64 = await CharacterLayerManager.wokaBase64(user.characterTextures);
+
         return {
             ...user,
             wokaPromise: undefined,
-            getWokaBase64: wokaBase64 ,
+            getWokaBase64: wokaBase64,
             updateSubject: new Subject<{
                 newUser: SpaceUserExtended;
                 changes: PartialSpaceUser;
@@ -253,7 +253,7 @@ export class SpaceFilter implements SpaceFilterInterface {
         });
     }
 
-    getFilterType(): "spaceFilterEverybody" | "spaceFilterContainName" | "spaceFilterLiveStreaming"| undefined {
+    getFilterType(): "spaceFilterEverybody" | "spaceFilterContainName" | "spaceFilterLiveStreaming" | undefined {
         return this.filter?.$case;
     }
     destroy() {

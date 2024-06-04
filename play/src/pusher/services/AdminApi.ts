@@ -367,7 +367,7 @@ class AdminApi implements AdminInterface {
         companionTextureId?: string,
         locale?: string,
         tags?: string[],
-        chatID? : string
+        chatID?: string
     ): Promise<FetchMemberDataByUuidResponse> {
         try {
             /**
@@ -433,7 +433,7 @@ class AdminApi implements AdminInterface {
                     companionTextureId,
                     accessToken,
                     isLogged: accessToken ? "1" : "0", // deprecated, use accessToken instead,
-                    chatID
+                    chatID,
                 },
                 headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
             });
@@ -1086,12 +1086,16 @@ class AdminApi implements AdminInterface {
     }
 
     updateChatId(userIdentifier: string, chatId: string): void {
-        axios.put(`${ADMIN_API_URL}/api/members/${userIdentifier}/chatId`,{
-            chatId,
-            userIdentifier
-        }, {
-            headers: { Authorization: `${ADMIN_API_TOKEN}` },
-        });
+        axios.put(
+            `${ADMIN_API_URL}/api/members/${userIdentifier}/chatId`,
+            {
+                chatId,
+                userIdentifier,
+            },
+            {
+                headers: { Authorization: `${ADMIN_API_TOKEN}` },
+            }
+        );
     }
 }
 

@@ -19,7 +19,7 @@
         speakerSelectedStore,
         streamingMegaphoneStore,
         usedCameraDeviceIdStore,
-        usedMicrophoneDeviceIdStore
+        usedMicrophoneDeviceIdStore,
     } from "../../Stores/MediaStore";
     import cameraImg from "../images/camera.png";
     import cameraOffImg from "../images/camera-off.png";
@@ -52,7 +52,7 @@
         inExternalServiceStore,
         myCameraStore,
         myMicrophoneStore,
-        proximityMeetingStore
+        proximityMeetingStore,
     } from "../../Stores/MyMediaStore";
     import {
         activeSubMenuStore,
@@ -65,7 +65,7 @@
         roomListActivated,
         screenSharingActivatedStore,
         SubMenusInterface,
-        subMenusStore
+        subMenusStore,
     } from "../../Stores/MenuStore";
     import {
         emoteDataStore,
@@ -73,7 +73,7 @@
         emoteMenuStore,
         emoteMenuSubCurrentEmojiSelectedStore,
         emoteMenuSubStore,
-        emoteStore
+        emoteStore,
     } from "../../Stores/EmoteStore";
     import { LL } from "../../../i18n/i18n-svelte";
     import { bottomActionBarVisibilityStore } from "../../Stores/BottomActionBarStore";
@@ -87,7 +87,7 @@
         modalIframeStore,
         modalVisibilityStore,
         roomListVisibilityStore,
-        showModalGlobalComminucationVisibilityStore
+        showModalGlobalComminucationVisibilityStore,
     } from "../../Stores/ModalStore";
     import { userHasAccessToBackOfficeStore } from "../../Stores/GameStore";
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
@@ -95,7 +95,7 @@
     import {
         liveStreamingEnabledStore,
         megaphoneCanBeUsedStore,
-        requestedMegaphoneStore
+        requestedMegaphoneStore,
     } from "../../Stores/MegaphoneStore";
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
@@ -377,8 +377,6 @@
     onMount(() => {
         resizeObserver.observe(mainHtmlDiv);
     });
-
-
 
     function buttonActionBarTrigger(id: string) {
         const button = $additionnalButtonsMenu.get(id) as AddButtonActionBarEvent;
