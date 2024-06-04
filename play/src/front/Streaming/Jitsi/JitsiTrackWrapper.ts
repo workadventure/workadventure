@@ -252,12 +252,12 @@ export class JitsiTrackWrapper implements TrackWrapper {
     }
 
     public muteMicrophonePartcipant() {
-        if (this.spaceUser?.jitsiParticipantId)
+        if(this.spaceUser?.jitsiParticipantId)
             this.spaceUser?.emitter?.emitMuteParticipantIdSpace(this.spaceUser.jitsiParticipantId);
     }
 
     public muteVideoParticipant() {
-        if (this.spaceUser?.jitsiParticipantId)
+        if(this.spaceUser?.jitsiParticipantId)  
             this.spaceUser?.emitter?.emitMuteVideoParticipantIdSpace(this.spaceUser.jitsiParticipantId);
     }
 }

@@ -39,11 +39,8 @@ describe("StreamSpaceWatcher", () => {
     });
 
     it("should subscribe to all stream when you create StreamSpaceWatcher", () => {
-        const addEventListenerSpy = vi.fn();
-        const mockSocket = {
-            addEventListener: (type: string) => {
-                addEventListenerSpy(type);
-            },
+        const mockSocket: WebSocket = {
+            addEventListener: vi.fn(),
         } as unknown as WebSocket;
 
         const decoder: { decode: (messageCoded: Uint8Array) => ServerToClientMessage } = {
@@ -64,10 +61,8 @@ describe("StreamSpaceWatcher", () => {
             updateSpaceUserFromSpace: vi.fn(),
         } as unknown as ChatConnectionInterface;
 
-        new StreamSpaceWatcher(SpaceProvider, mockSocket, decoder, mockChatConnection);
-
-        expect(addEventListenerSpy).toHaveBeenCalledOnce();
-        expect(addEventListenerSpy).toHaveBeenCalledWith("message");
+        expect(mockSocket.addEventListener).toHaveBeenCalledOnce();
+        expect(mockSocket.addEventListener).toHaveBeenCalledWith("message");
     });
 
     it("should call addUserToSpace when stream addSpaceUserMessage receive a new message", async () => {

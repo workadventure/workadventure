@@ -195,6 +195,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 });
             })
             .catch((error) => console.error(error));
+
     }
 
     updateUserFromSpace(user: PartialSpaceUser): void {
@@ -462,9 +463,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         });
     }
 
-    initEndToEndEncryption(): Promise<void> {
-        return initClientCryptoConfiguration();
-    }
 
     private async addDMRoomInAccountData(userId: string, roomId: string) {
         const directMap: Record<string, string[]> = this.client.getAccountData("m.direct")?.getContent() || {};
