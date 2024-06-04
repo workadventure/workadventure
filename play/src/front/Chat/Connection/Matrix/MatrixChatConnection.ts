@@ -117,7 +117,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         });
     }
 
-    private async onClientEventRoom(room: Room) {
+    private onClientEventRoom(room: Room) {
         const { roomId } = room;
         const existingMatrixChatRoom = this.roomList.get(roomId);
 
@@ -134,7 +134,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.roomList.delete(roomId);
     }
 
-    private async onRoomEventMembership(room: Room, membership: string, prevMembership: string | undefined) {
+    private onRoomEventMembership(room: Room, membership: string, prevMembership: string | undefined) {
         const { roomId } = room;
         const existingMatrixChatRoom = this.roomList.has(roomId);
         if (membership !== prevMembership && existingMatrixChatRoom) {
@@ -198,9 +198,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     }
 
     updateUserFromSpace(user: PartialSpaceUser): void {
-        const connectedUserToUpdate: ChatUser | undefined = Array.from(this.userConnected.values()).filter(
-            ({ spaceId }) => spaceId === user.id
-        )[0];
+        const connectedUserToUpdate: ChatUser | undefined = this.userConnected.get(user.id);
 
         if (!connectedUserToUpdate) return;
 
