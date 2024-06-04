@@ -32,7 +32,7 @@ describe("MatrixClientWrapper", () => {
 
             const matrixBaseURL = "";
 
-            const localUserStoreMock : MatrixLocalUserStore= {
+            const localUserStoreMock: MatrixLocalUserStore = {
                 getLocalUser: () => {
                     return null;
                 },

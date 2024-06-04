@@ -114,8 +114,11 @@ export class BroadcastService {
     private canDisconnectProvider(provider: string): boolean {
         return this.broadcastSpaces
             .filter((space) => space.provider === provider)
-            .every((space) => space.space.getAllSpacesFilter()
-            .every((spaceFilter:SpaceFilterInterface)=> spaceFilter.getUsers().length === 0));
+            .every((space) =>
+                space.space
+                    .getAllSpacesFilter()
+                    .every((spaceFilter: SpaceFilterInterface) => spaceFilter.getUsers().length === 0)
+            );
     }
 
     /**

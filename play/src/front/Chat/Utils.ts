@@ -9,7 +9,15 @@ import { scriptUtils } from "../Api/ScriptUtils";
 //enlever les events lié au chat dans iframelistener
 
 export const openCoWebSite = async (
-    {url,allowApi,allowPolicy,closable,lazy,position,widthPercent}: {
+    {
+        url,
+        allowApi,
+        allowPolicy,
+        closable,
+        lazy,
+        position,
+        widthPercent,
+    }: {
         url: string;
         allowApi?: boolean | undefined;
         allowPolicy?: string | undefined;
