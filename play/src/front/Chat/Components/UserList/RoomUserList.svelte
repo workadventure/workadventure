@@ -53,7 +53,7 @@
                         ? 'tw-bg-light-blue'
                         : 'tw-bg-gray'} tw-text-dark-purple tw-min-w-[20px] tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
                 >
-                {#if userInRoom?.length && userInRoom.length > 0}
+                {#if userInRoom?.length && userInRoom.length > 0 && roomName !== DISCONNECTED_LABEL}
                     {userInRoom?.length}
                 {/if}
                 </span>
