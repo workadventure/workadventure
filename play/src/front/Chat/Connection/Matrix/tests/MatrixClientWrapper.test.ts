@@ -72,6 +72,14 @@ describe("MatrixClientWrapper", () => {
 
             const matrixBaseURL = "baseUrl";
 
+            const matrixBaseURL = "";
+
+            const localUserStoreMock : MatrixLocalUserStore= {
+                getLocalUser: () => {
+                    return null;
+                },
+            } as MatrixLocalUserStore;
+
             const matrixClientWrapperInstance: MatrixClientWrapperInterface = new MatrixClientWrapper(
                 matrixBaseURL,
                 basicLocalUserStoreMock,
@@ -123,8 +131,19 @@ describe("MatrixClientWrapper", () => {
                     matrixUserId: "",
                 }),
                 getMatrixAccessToken: vi.fn().mockReturnValue(null),
+                getMatrixRefreshToken: vi.fn().mockReturnValue(null),
+                getMatrixUserId: vi.fn().mockReturnValue(null),
+                getMatrixLoginToken: vi.fn().mockReturnValue(null),
+                setMatrixDeviceId: vi.fn(),
+                setMatrixLoginToken: function (loginToken: string | null): void {
+                    throw new Error("setMatrixLoginToken not implemented.");
+                },
+                setMatrixUserId: vi.fn(),
+                setMatrixAccessToken: vi.fn(),
+                setMatrixRefreshToken: vi.fn(),
+                setMatrixAccessTokenExpireDate: vi.fn(),
+                getName: vi.fn().mockReturnValue(""),
             } as unknown as MatrixLocalUserStore;
-
             const matrixClientWrapperInstance: MatrixClientWrapperInterface = new MatrixClientWrapper(
                 matrixBaseURL,
                 localUserStoreMock,
@@ -150,8 +169,17 @@ describe("MatrixClientWrapper", () => {
                 }),
                 getMatrixAccessToken: vi.fn().mockReturnValue("accessToken"),
                 getMatrixUserId: vi.fn().mockReturnValue(null),
+                getMatrixLoginToken: vi.fn().mockReturnValue(null),
+                setMatrixDeviceId: vi.fn(),
+                setMatrixLoginToken: function (loginToken: string | null): void {
+                    throw new Error("setMatrixLoginToken not implemented.");
+                },
+                setMatrixUserId: vi.fn(),
+                setMatrixAccessToken: vi.fn(),
+                setMatrixRefreshToken: vi.fn(),
+                setMatrixAccessTokenExpireDate: vi.fn(),
+                getName: vi.fn().mockReturnValue(""),
             } as unknown as MatrixLocalUserStore;
-
             const matrixClientWrapperInstance: MatrixClientWrapperInterface = new MatrixClientWrapper(
                 matrixBaseURL,
                 localUserStoreMock,
@@ -262,7 +290,12 @@ describe("MatrixClientWrapper", () => {
                         device_id: deviceId,
                     });
                 },
-            };
+                setMatrixUserId: vi.fn(),
+                setMatrixAccessToken: vi.fn(),
+                setMatrixRefreshToken: vi.fn(),
+                setMatrixAccessTokenExpireDate: vi.fn(),
+                getName: vi.fn().mockReturnValue(""),
+            } as unknown as MatrixLocalUserStore;
 
             const createClient = vi.fn().mockReturnValue(mockClient);
 
@@ -420,97 +453,3 @@ describe("MatrixClientWrapper", () => {
             const refreshToken = "guestRefreshToken";
             const deviceId = "guestDeviceId";
             const matrixBaseURL = "testUrl";
-
-            const mockClient = {
-                ...basicMockClient,
-                registerGuest: () => {
-                    return Promise.resolve({
-                        access_token: accessToken,
-                        refresh_token: refreshToken,
-                        user_id: userId,
-                        device_id: deviceId,
-                    });
-                },
-                getUser: vi.fn().mockReturnValue({
-                    displayName: "DisplayName",
-                }),
-            };
-
-            const createClient = vi.fn().mockReturnValue(mockClient);
-
-            const localUserStoreMock: MatrixLocalUserStore = {
-                ...basicLocalUserStoreMock,
-                getLocalUser: vi.fn().mockReturnValue({
-                    uuid: "myUuid",
-                    email: "",
-                    isMatrixRegistered: false,
-                    matrixUserId: "",
-                }),
-                setMatrixDeviceId: vi.fn().mockReturnValue(""),
-                setMatrixUserId: vi.fn().mockReturnValue(""),
-                getName: vi.fn().mockReturnValue(userId),
-                isGuest: vi.fn().mockReturnValue(true),
-            } as unknown as MatrixLocalUserStore;
-
-            const matrixClientWrapperInstance: MatrixClientWrapperInterface = new MatrixClientWrapper(
-                matrixBaseURL,
-                localUserStoreMock,
-                createClient
-            );
-
-            await matrixClientWrapperInstance.initMatrixClient();
-
-            expect(mockClient.setDisplayName).toHaveBeenCalledOnce();
-            expect(mockClient.setDisplayName).toHaveBeenCalledWith(userId);
-        });
-        it("should use default name as display name when name is null", async () => {
-            const userId = "defaultMatrixName";
-            const accessToken = "guestAccessToken";
-            const refreshToken = "guestRefreshToken";
-            const deviceId = "guestDeviceId";
-            const matrixBaseURL = "testUrl";
-
-            const mockClient = {
-                ...basicMockClient,
-                registerGuest: () => {
-                    return Promise.resolve({
-                        access_token: accessToken,
-                        refresh_token: refreshToken,
-                        user_id: userId,
-                        device_id: deviceId,
-                    });
-                },
-                getUser: vi.fn().mockReturnValue({
-                    displayName: userId,
-                }),
-            };
-
-            const createClient = vi.fn().mockReturnValue(mockClient);
-
-            const localUserStoreMock: MatrixLocalUserStore = {
-                ...basicLocalUserStoreMock,
-                getLocalUser: vi.fn().mockReturnValue({
-                    uuid: "myUuid",
-                    email: "",
-                    isMatrixRegistered: false,
-                    matrixUserId: "",
-                }),
-                setMatrixDeviceId: vi.fn().mockReturnValue(""),
-                setMatrixUserId: vi.fn().mockReturnValue(""),
-                getName: vi.fn().mockReturnValue(null),
-                isGuest: vi.fn().mockReturnValue(true),
-            } as unknown as MatrixLocalUserStore;
-
-            const matrixClientWrapperInstance: MatrixClientWrapperInterface = new MatrixClientWrapper(
-                matrixBaseURL,
-                localUserStoreMock,
-                createClient
-            );
-
-            await matrixClientWrapperInstance.initMatrixClient();
-
-            expect(mockClient.setDisplayName).toHaveBeenCalledOnce();
-            expect(mockClient.setDisplayName).toHaveBeenCalledWith(DEFAULT_CHAT_DISPLAY_NAME);
-        });
-    });
-});

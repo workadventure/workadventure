@@ -9,6 +9,7 @@ import { SpaceFilterInterface } from "../Space/SpaceFilter/SpaceFilter";
 import { BroadcastSpace } from "./Common/BroadcastSpace";
 import { BroadcastConnection } from "./Common/BroadcastConnection";
 import { TrackWrapper } from "./Common/TrackWrapper";
+import { SpaceFilterInterface } from "../Space/SpaceFilter/SpaceFilter";
 
 export const jitsiLoadingStore = writable<boolean>(false);
 
