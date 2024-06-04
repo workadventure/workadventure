@@ -33,7 +33,7 @@ describe("StreamSpaceWatcher", () => {
     it("should subscribe to all stream when you create StreamSpaceWatcher", () => {
         const mockSocket: WebSocket = {
             addEventListener: vi.fn(),
-        };
+        }as unknown as WebSocket;
 
         const decoder: { decode: (messageCoded: Uint8Array) => ServerToClientMessage } = {
             decode: vi.fn(),
@@ -50,13 +50,11 @@ describe("StreamSpaceWatcher", () => {
 
         new StreamSpaceWatcher(SpaceProvider, mockSocket, decoder);
 
-        // eslint-disable-next-line @typescript-eslint/unbound-method
         expect(mockSocket.addEventListener).toHaveBeenCalledOnce();
-        expect(mockSocket.addEventListener.mock.calls[0][0]).toBe("message");
+        expect(mockSocket.addEventListener).toHaveBeenCalledWith("message");
     });
     it("should call addUserToSpace when stream addSpaceUserMessage receive a new message", async () => {
         const mockSocket = new WebSocket(`ws://localhost:${port}`);
-
         await serverSocket.connected;
 
         const addSpaceUserMessage: AddSpaceUserMessage = {
