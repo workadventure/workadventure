@@ -100,8 +100,7 @@ describe("StreamSpaceWatcher", () => {
         };
 
         const mockSpaceFilter: SpaceFilterInterface = {
-            addUser: vi.fn().mockResolvedValue(true),
-            //mock then
+            addUser: vi.fn(),
         } as unknown as SpaceFilterInterface;
         const mockSpace: SpaceInterface = {
             getSpaceFilter: vi.fn().mockImplementation(() => mockSpaceFilter),
