@@ -7,19 +7,19 @@ import {
     BanMessage,
     BatchToPusherMessage,
     BatchToPusherRoomMessage,
+    ChatMessagePrompt,
+    EventRequest,
+    EventResponse,
+    PingMessage,
     PusherToBackMessage,
     RefreshRoomPromptMessage,
     RoomMessage,
-    ServerToAdminClientMessage,
-    WorldFullWarningToRoomMessage,
-    ZoneMessage,
     RoomsList,
-    PingMessage,
-    ChatMessagePrompt,
+    ServerToAdminClientMessage,
     ServerToClientMessage,
     VariableRequest,
-    EventRequest,
-    EventResponse,
+    WorldFullWarningToRoomMessage,
+    ZoneMessage,
 } from "@workadventure/messages";
 import { RoomManagerServer } from "@workadventure/messages/src/ts-proto-generated/services";
 import {
@@ -63,7 +63,7 @@ const roomManager = {
 
         let room: GameRoom | null = null;
         let user: User | null = null;
-        let pongTimeoutId: NodeJS.Timer | undefined;
+        let pongTimeoutId: NodeJS.Timeout | undefined;
 
         call.on("data", (message: PusherToBackMessage) => {
             // On each message, let's reset the pong timeout
