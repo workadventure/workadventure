@@ -157,6 +157,9 @@ import { StreamSpaceWatcherSingleton } from "../../Space/SpaceWatcher/SocketSpac
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
 import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
+import { updateMatrixClientStore } from "../../Chat/Connection/Matrix/MatrixSecurity";
+import { proximityRoomConnection } from "../../Chat/Stores/ChatStore";
+import { ProximityChatConnection } from "../../Chat/Connection/Proximity/ProximityChatConnection";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -195,7 +198,6 @@ import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import Clamp = Phaser.Math.Clamp;
-import { updateMatrixClientStore } from "../../Chat/Connection/Matrix/MatrixSecurity";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -1521,11 +1523,24 @@ export class GameScene extends DirtyScene {
                     const matrixClientWrapper = new MatrixClientWrapper(MATRIX_PUBLIC_URI ?? "", localUserStore);
                     const matrixClientPromise = matrixClientWrapper.initMatrixClient();
 
-                    matrixClientPromise.then((matrixClient) => {
+                    await matrixClientPromise.then((matrixClient) => {
                         updateMatrixClientStore(matrixClient);
                     });
 
                     this.chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
+
+                    // initialise the proximity chat connection
+                    proximityRoomConnection.set(
+                        new ProximityChatConnection(
+                            this.connection,
+                            localUserStore.getLocalUser()?.uuid ?? "unknow",
+                            localUserStore.getName() ?? "unknow",
+                            get(currentPlayerWokaStore) ?? "unknow",
+                            this.room.roomName ?? "unknow",
+                            this.room.href,
+                            gameManager.myVisitCardUrl ? gameManager.myVisitCardUrl : undefined
+                        )
+                    );
 
                     const chatId = localUserStore.getChatId();
                     const email: string | null = localUserStore.getLocalUser()?.email || null;

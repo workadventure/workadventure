@@ -28,6 +28,7 @@ const chat: BaseTranslation = {
     searchChat: "Search for channel, message, etc ...",
     people: "People",
     rooms: "Rooms",
+    proximity: "Proximity Chat",
     role: {
         admin: "Administrator",
         member: "Member",
@@ -66,8 +67,8 @@ const chat: BaseTranslation = {
         title: "Your Timeline",
         open: "Open your time line history!",
         description: "Messages and events history",
-        incoming: " join the discussion",
-        outcoming: " quit the discussion",
+        incoming: "{userName} join the discussion",
+        outcoming: "{userName} quit the discussion",
     },
     form: {
         placeholder: "Enter your message...",

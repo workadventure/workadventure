@@ -14,6 +14,8 @@
     import MessageVideoFile from "./Message/MessageVideoFile.svelte";
     import MessageEdition from "./MessageEdition.svelte";
     import MessageReactions from "./MessageReactions.svelte";
+    import MessageIncoming from "./Message/MessageIncoming.svelte";
+    import MessageOutcoming from "./Message/MessageOutcoming.svelte";
 
     export let message: ChatMessage;
     export let reactions: MapStore<string, ChatMessageReaction> | undefined;
@@ -27,6 +29,9 @@
         file: MessageFile as ComponentType,
         audio: MessageAudioFile as ComponentType,
         video: MessageVideoFile as ComponentType,
+        incoming: MessageIncoming as ComponentType,
+        outcoming: MessageOutcoming as ComponentType,
+        proximity: MessageIncoming as ComponentType,
     };
 
     let messageRef: HTMLDivElement;
@@ -39,7 +44,9 @@
             class:tw-flex-row-reverse={isMyMessage}
             hidden={isQuotedMessage}
         >
-            <span>{isMyMessage ? "You" : sender?.username}</span>
+            {#if message.type !== "incoming" && message.type !== "outcoming"}
+                <span>{isMyMessage ? "You" : sender?.username}</span>
+            {/if}
             <span class={`tw-text-xxxs ${isMyMessage ? "tw-mr-1" : "tw-ml-1"}`}
                 >{date?.toLocaleTimeString($locale, {
                     hour: "2-digit",
@@ -54,11 +61,12 @@
         {/if}
 
         <div
-            class="message tw-rounded-2xl tw-p-2"
-            class:tw-bg-primary={!isMyMessage}
-            class:tw-bg-secondary={isMyMessage}
-            class:tw-rounded-br-none={isMyMessage}
-            class:tw-rounded-bl-none={!isMyMessage}
+            class="message tw-rounded-2xl"
+            class:tw-p-2={message.type !== "incoming" && message.type !== "outcoming"}
+            class:tw-bg-primary={!isMyMessage && message.type !== "incoming" && message.type !== "outcoming"}
+            class:tw-bg-secondary={isMyMessage && message.type !== "incoming" && message.type !== "outcoming"}
+            class:tw-rounded-br-none={isMyMessage && message.type !== "incoming" && message.type !== "outcoming"}
+            class:tw-rounded-bl-none={!isMyMessage && message.type !== "incoming" && message.type !== "outcoming"}
         >
             {#if $isDeleted}
                 <p class="tw-p-0 tw-m-0 tw-text-xs tw-text-gray-400 tw-flex tw-items-center">
@@ -85,7 +93,7 @@
             </div>
         {/if}
     </div>
-    {#if !isQuotedMessage && !$isDeleted}
+    {#if !isQuotedMessage && !$isDeleted && message.type !== "proximity" && message.type !== "incoming" && message.type !== "outcoming"}
         <div
             class={`options tw-bg-white/30 tw-backdrop-blur-sm tw-p-1 tw-rounded-md ${!isMyMessage ? "tw-left-6" : ""}`}
         >

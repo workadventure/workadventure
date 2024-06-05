@@ -39,6 +39,9 @@ export interface ChatRoom {
     hasPreviousMessage: Readable<boolean>;
     loadMorePreviousMessages: () => Promise<void>;
     isEncrypted: Readable<boolean>;
+
+    addIncomingUser?: (userName: string) => void;
+    addOutcomingUser?: (userName: string) => void;
 }
 
 //Readonly attributes
@@ -65,7 +68,7 @@ export interface ChatMessageReaction {
     reacted: Readable<boolean>;
 }
 
-export type ChatMessageType = "text" | "image" | "file" | "audio" | "video";
+export type ChatMessageType = "proximity" | "text" | "incoming" | "outcoming" | "image" | "file" | "audio" | "video";
 export type ChatMessageContent = { body: string; url: string | undefined };
 export const historyVisibilityOptions = ["world_readable", "joined", "invited"] as const;
 export type historyVisibility = (typeof historyVisibilityOptions)[number];

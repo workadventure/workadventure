@@ -6,7 +6,7 @@
     import { onMount } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import LL from "../../../i18n/i18n-svelte";
-    import { chatSearchBarValue, joignableRoom, selectedRoom } from "../Stores/ChatStore";
+    import { chatSearchBarValue, joignableRoom, proximityRoomConnection, selectedRoom } from "../Stores/ChatStore";
     import Room from "./Room/Room.svelte";
     import RoomTimeline from "./Room/RoomTimeline.svelte";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
@@ -47,6 +47,11 @@
 
     function openCreateRoomModal() {
         openModal(CreateRoomModal);
+    }
+
+    function toggleDisplayProximityChat() {
+        if ($proximityRoomConnection && get($proximityRoomConnection?.rooms).length > 0)
+            selectedRoom.set(get($proximityRoomConnection.rooms)[0]);
     }
 
     $: filteredDirectRoom = $directRooms.filter(({ name }) =>
@@ -129,5 +134,14 @@
         {#each $joignableRoom as room (room.id)}
             <JoignableRooms {room} />
         {/each}
+    {/if}
+
+    {#if $proximityRoomConnection}
+        <div class="tw-flex tw-justify-between">
+            <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={toggleDisplayProximityChat}>
+                <IconChevronRight />
+                {$LL.chat.proximity()}
+            </button>
+        </div>
     {/if}
 {/if}

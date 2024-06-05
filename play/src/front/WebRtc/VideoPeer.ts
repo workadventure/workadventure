@@ -14,6 +14,7 @@ import { TrackStreamWrapperInterface } from "../Streaming/Contract/TrackStreamWr
 import { TrackInterface } from "../Streaming/Contract/TrackInterface";
 import { showReportScreenStore } from "../Stores/ShowReportScreenStore";
 import { iframeListener } from "../Api/IframeListener";
+import { proximityRoomConnection } from "../Chat/Stores/ChatStore";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { blackListManager } from "./BlackListManager";
@@ -142,7 +143,12 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
             this._statusStore.set("connected");
 
             this._connected = true;
-            //chatMessagesService.addIncomingUser(this.userId);
+
+            const proximityMeeting = get(proximityRoomConnection);
+            if (proximityMeeting) {
+                const proximityRoomChat = get(proximityMeeting.rooms)[0];
+                if (proximityRoomChat.addIncomingUser != undefined) proximityRoomChat.addIncomingUser(this.userName);
+            }
 
             this.newMessageSubscription = newChatMessageSubject.subscribe((newMessage) => {
                 if (!newMessage) return;
@@ -318,7 +324,13 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
             this.onUnBlockSubscribe.unsubscribe();
             this.newMessageSubscription?.unsubscribe();
             this.newWritingStatusMessageSubscription?.unsubscribe();
-            //chatMessagesService.addOutcomingUser(this.userId);
+
+            const proximityMeeting = get(proximityRoomConnection);
+            if (proximityMeeting) {
+                const proximityRoomChat = get(proximityMeeting.rooms)[0];
+                if (proximityRoomChat.addOutcomingUser != undefined) proximityRoomChat.addOutcomingUser(this.userName);
+            }
+
             if (this.localStreamStoreSubscribe) this.localStreamStoreSubscribe();
             if (this.apparentMediaConstraintStoreSubscribe) this.apparentMediaConstraintStoreSubscribe();
             if (this.volumeStoreSubscribe) this.volumeStoreSubscribe();
