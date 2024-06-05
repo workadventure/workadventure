@@ -11,7 +11,7 @@ class MapsManager {
     private loadedMaps: Map<string, GameMap>;
     private loadedMapsCommandsQueue: Map<string, EditMapCommandMessage[]>;
 
-    private saveMapIntervals: Map<string, NodeJS.Timer>;
+    private saveMapIntervals: Map<string, NodeJS.Timeout>;
     private mapLastChangeTimestamp: Map<string, number>;
 
     private mapListService: MapListService;
@@ -32,7 +32,7 @@ class MapsManager {
     constructor() {
         this.loadedMaps = new Map<string, GameMap>();
         this.loadedMapsCommandsQueue = new Map<string, EditMapCommandMessage[]>();
-        this.saveMapIntervals = new Map<string, NodeJS.Timer>();
+        this.saveMapIntervals = new Map<string, NodeJS.Timeout>();
         this.mapLastChangeTimestamp = new Map<string, number>();
         this.mapListService = new MapListService(fileSystem, new WebHookService(WEB_HOOK_URL));
     }

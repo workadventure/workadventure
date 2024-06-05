@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig, loadEnv } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import sveltePreprocess from "svelte-preprocess";
@@ -10,9 +11,6 @@ export default defineConfig(({ mode }) => {
     // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
     const env = loadEnv(mode, process.cwd(), "");
     const config = {
-        define: {
-            global: {},
-        },
         server: {
             host: "0.0.0.0",
             port: 8080,

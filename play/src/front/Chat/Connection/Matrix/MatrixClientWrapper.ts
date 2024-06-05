@@ -7,7 +7,6 @@ import {
     MatrixClient,
     SecretStorage,
 } from "matrix-js-sdk";
-import Olm from "@matrix-org/olm";
 import { SecretStorageKeyDescriptionAesV1 } from "matrix-js-sdk/lib/secret-storage";
 // eslint-disable-next-line import/no-unresolved
 import { openModal } from "svelte-modals";
@@ -16,7 +15,6 @@ import AccessSecretStorageDialog from "./AccessSecretStorageDialog.svelte";
 import { isEncryptionRequiredAndNotSet } from "./MatrixSecurity";
 
 window.Buffer = Buffer;
-global.Olm = Olm;
 
 export interface MatrixClientWrapperInterface {
     initMatrixClient(): Promise<MatrixClient>;
