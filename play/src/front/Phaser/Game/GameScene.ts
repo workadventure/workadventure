@@ -2077,6 +2077,14 @@ export class GameScene extends DirtyScene {
                 statusChanger.applyInteractionRules();
 
                 pendingConnects.add(peer.userId);
+                setTimeout(() => {
+                    // In case the peer never connects, we should remove it from the pendingConnects after a timeout
+                    pendingConnects.delete(peer.userId);
+                    /*if (pendingConnects.size === 0 && !alreadyInBubble && !this.cleanupDone) {
+                        iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
+                        alreadyInBubble = true;
+                    }*/
+                }, 5000);
                 peer.once("connect", () => {
                     pendingConnects.delete(peer.userId);
                     if (pendingConnects.size === 0) {
@@ -2114,6 +2122,14 @@ export class GameScene extends DirtyScene {
                         const peer = peers.get(newUser.userId);
                         if (peer) {
                             pendingConnects.add(newUser.userId);
+                            setTimeout(() => {
+                                // In case the peer never connects, we should remove it from the pendingConnects after a timeout
+                                pendingConnects.delete(newUser.userId);
+                                /*if (pendingConnects.size === 0 && !alreadyInBubble && !this.cleanupDone) {
+                                    iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
+                                    alreadyInBubble = true;
+                                }*/
+                            }, 5000);
                             peer.once("connect", () => {
                                 pendingConnects.delete(newUser.userId);
                                 if (pendingConnects.size === 0) {
