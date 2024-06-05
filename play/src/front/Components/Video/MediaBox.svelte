@@ -8,7 +8,7 @@
     import type { ObtainedMediaStreamConstraints } from "../../WebRtc/P2PMessages/ConstraintMessage";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { JitsiTrackStreamWrapper } from "../../Streaming/Jitsi/JitsiTrackStreamWrapper";
-    import { mediaStreamConstraintsStore } from "../../Stores/MediaStore";
+    // import { mediaStreamConstraintsStore } from "../../Stores/MediaStore";
     import VideoMediaBox from "./VideoMediaBox.svelte";
     import ScreenSharingMediaBox from "./ScreenSharingMediaBox.svelte";
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
@@ -217,12 +217,6 @@
             display: flex;
             justify-content: center;
             aspect-ratio: 3.1;
-        }
-    }
-
-    @container (min-width: 1920px) {
-        .cam-share-receive {
-            aspect-ratio: 2.5;
         }
     }
 </style>

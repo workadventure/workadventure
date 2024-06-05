@@ -10,7 +10,6 @@
     // $: clickable = !full;
 
     let widthWindow: number | undefined;
-
     function camMountedWidth() {
         widthWindow = document.getElementById("presentation-layout")?.offsetWidth;
         let allCams = (document.getElementsByClassName("all-cameras")[0] as HTMLElement)?.offsetWidth;
@@ -41,7 +40,7 @@
 <!-- grid-flow-col grid-flow-col -->
 <!-- {#if $streamableCollectionStore.size < 3} -->
 
-<div class="all-cameras overflow-visible content-center flex gap-x-4 justify-center">
+<div class="all-cameras overflow-visible gap-4">
     {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
         {#if !highlightedEmbedScreen || $highlightedEmbedScreen !== peer}
             {#key uniqueId}
@@ -51,11 +50,11 @@
             {/key}
         {/if}
     {/each}
-    <div id="unique-mycam ">
-        {#if $myCameraStore}
+    {#if $myCameraStore}
+        <div id="unique-mycam">
             <MyCamera />
-        {/if}
-    </div>
+        </div>
+    {/if}
 </div>
 
 <!-- && !$megaphoneEnabledStore TODO HUGO -->
@@ -72,6 +71,11 @@
         height: 200px;
     }
 
+    .all-cameras {
+        display: flex;
+        justify-content: center;
+    }
+
     @container (max-width: 767px) {
         .mobile-height {
             height: 300px;
@@ -82,13 +86,14 @@
             display: flex;
             flex-direction: column;
             align-items: flex-end;
-            scale: 0.5;
         }
 
         #unique-cam-other,
         #unique-mycam {
             align-self: flex-end;
             margin-top: auto;
+            width: 180px;
+            height: 90px;
         }
     }
 </style>

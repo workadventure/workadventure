@@ -337,7 +337,7 @@
                     </div>
                 </div>
             {/if}
-            <div class="absolute bottom-4 left-4 z-30">
+            <div class="absolute bottom-4 left-4 z-30 responsive-dimension">
                 <div class="flex">
                     <div
                         class="relative rounded backdrop-blur px-4 py-1 text-white text-sm pl-12 pr-9 bold {$mediaStreamConstraintsStore.audio
@@ -487,7 +487,7 @@
 </div>
 
 <!-- </div> -->
-<style lang="scss">
+<style>
     video {
         object-fit: cover;
         &.object-contain {
@@ -508,5 +508,14 @@
         display: flex;
         justify-content: center;
         align-items: center;
+    }
+
+    @container (max-width: 767px) {
+        .responsive-dimension {
+            scale: 0.7;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
     }
 </style>

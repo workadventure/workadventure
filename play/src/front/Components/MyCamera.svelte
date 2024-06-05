@@ -13,7 +13,7 @@
     import { LL } from "../../i18n/i18n-svelte";
     import { inExternalServiceStore } from "../Stores/MyMediaStore";
     import { gameManager } from "../Phaser/Game/GameManager";
-    import { heightCamWrapper } from "../Stores/EmbedScreensStore";
+    // import { heightCamWrapper } from "../Stores/EmbedScreensStore";
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
     import { srcObject } from "./Video/utils";
     import Woka from "./Woka/WokaFromUserId.svelte";
@@ -100,10 +100,11 @@
     });
 </script>
 
+<!-- style={small ? "width:100%" : "height:" + $heightCamWrapper + "px;"} -->
+
 <div
-    class="transition-all relative h-full test aspect-video w-fit m-auto"
+    class="transition-all relative h-full flex flex justify-center aspect-video w-fit m-auto dimension"
     bind:this={cameraContainer}
-    style={small ? "width:100%" : "height:" + $heightCamWrapper + "px;"}
 >
     <!--If we are in a silent zone-->
     {#if $silentStore}
@@ -125,7 +126,7 @@
     {:else if $localStreamStore.type === "success" && !$inExternalServiceStore}
         {#if $requestedCameraState && $mediaStreamConstraintsStore.video}
             <div
-                class="absolute bottom-4 left-4 z-30 {small ? 'hidden' : ''} "
+                class="absolute bottom-4 left-4 z-30 responsive-dimension {small ? 'hidden' : ''} "
                 transition:fly={{ delay: 50, y: 50, duration: 150 }}
             >
                 <div class="flex">
@@ -185,7 +186,7 @@
             <!-- If we do not have a video to display-->
         {:else if !$requestedCameraState && !$cameraEnergySavingStore}
             <div
-                class="w-full rounded-lg px-3 flex flex-row items-center bg-contrast/80 backdrop-blur media-box-camera-off-size h-12"
+                class="w-full rounded-lg px-3 flex flex-row items-center bg-contrast/80 backdrop-blur media-box-camera-off-size h-12 "
             >
                 <div class="grow">
                     <span
@@ -220,9 +221,11 @@
     {/if}
 </div>
 
-<style lang="scss">
-    @import "../style/breakpoints.scss";
-
+<style>
+    .dimension {
+        width: 350px;
+        height: 200px;
+    }
     .border-color {
         border-color: #4156f6;
     }
@@ -230,7 +233,18 @@
     .background-color {
         background-color: #4156f6;
     }
-    .width {
-        width: 350px;
+
+    @container (max-width: 767px) {
+        .dimension {
+            width: 180px;
+            height: 90px;
+        }
+
+        .responsive-dimension {
+            scale: 0.7;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
     }
 </style>

@@ -7,14 +7,27 @@
     import { myJitsiCameraStore, streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
     import Loading from "../../Video/Loading.svelte";
     import { jitsiLoadingStore } from "../../../Streaming/BroadcastService";
-    import { isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
 
-    let isMobile = window.matchMedia("(max-width: 767px)");
+    const isMobile = window.matchMedia("(max-width: 767px)");
+    let isVertical: boolean;
 
     onMount(() => {
-        isMobile = window.matchMedia("(max-width: 767px)");
-        console.log("isMobile", isMobile);
+        isMobile.addEventListener("change", (e: any) => handleTabletChange(e));
+        handleTabletChange(isMobile);
+        calculateHeight();
     });
+
+    function handleTabletChange(e: MediaQueryList) {
+        if (e.matches) {
+            isVertical = true;
+            console.log("isVertical", isVertical);
+            reduceSizeIfScreenShare();
+        } else {
+            isVertical = false;
+            console.log("isVertical", isVertical);
+            reduceSizeIfScreenShare();
+        }
+    }
 
     // function closeCoWebsite() {
     //     if ($highlightedEmbedScreen?.type === "cowebsite") {
@@ -29,9 +42,7 @@
     // }
 
     afterUpdate(() => {
-        if ($highlightedEmbedScreen) {
-            // coWebsiteManager.resizeAllIframes();
-        }
+        reduceSizeIfScreenShare();
     });
 
     let layoutDom: HTMLDivElement;
@@ -52,75 +63,113 @@
     //     }
     // });
 
-    $: $highlightedEmbedScreen, reduceSizeIfScreenShare();
+    $: if ($highlightedEmbedScreen) reduceSizeIfScreenShare();
+    console.log($highlightedEmbedScreen, ": HOLLLLLLLLAAAAAAAAAAAA");
 
     function reduceSizeIfScreenShare() {
-        let containerCam = document.getElementsByClassName("test-media")[0] as HTMLElement;
+        console.log("fonction reduceSizeIfScreenShare");
+        let containerCam = document.getElementById("container-media") as HTMLDivElement;
+        console.log("containerCam", containerCam);
         if (containerCam) {
-            if ($highlightedEmbedScreen) {
+            if ($highlightedEmbedScreen && isVertical === false) {
+                console.log("je suis dans le higlight reduceSizeIfScreenShare");
                 containerCam.style.transform = "scale(0.7)";
-                containerCam.style.marginTop = "-35px";
+                containerCam.style.marginTop = "-45px";
             } else {
+                console.log("je suis PAS reduceSizeIfScreenShare");
                 containerCam.style.transform = "scale(1)";
                 containerCam.style.marginTop = "0px";
             }
         }
     }
+
+    let onresize = function () {
+        calculateHeight();
+    };
+    window.addEventListener("resize", onresize);
+
+    function calculateHeight() {
+        let screenShareHeight = (document.getElementById("video-container-receive") as HTMLElement)?.offsetHeight;
+        // console.log("screenShareHeight", screenShareHeight);
+        let heightWindow = window.innerHeight;
+        // console.log("heightWindow", heightWindow);
+        let blankHeight = heightWindow - screenShareHeight;
+        // console.log("blankHeight", blankHeight);
+        let finalHeight = heightWindow - blankHeight;
+        if (screenShareHeight > finalHeight) {
+            let scale = heightWindow / screenShareHeight;
+            let screenShare = document.querySelector(".screen-sharing");
+            if (screenShare instanceof HTMLElement) {
+                screenShare.style.transform = `scale(${scale})`;
+            }
+        }
+    }
+
+    // A voir pour le resize en hauteur
+
+    // window.addEventListener("resize", function () {
+    //     let myDiv = document.getElementById("video-container-receive");
+    //     let newWidth = window.innerHeight * 0.8;
+    //     if (myDiv) {
+    //         myDiv.style.scale = "0.5";
+    //     }
+    // });
+
+    // window.dispatchEvent(new Event("resize"));
 </script>
 
 <!-- class:full-medias={displayFullMedias} -->
 
 <div id="presentation-layout" bind:this={layoutDom}>
-    <!-- Div pour l'affichage de toutes les camera (other cam : cameContainer / my cam : MyCamera'-->
-    {#if isMobile}
-        {console.log("je suis dans le mobile")}
-        <div id="video-container-receive" class={$highlightedEmbedScreen ? "block" : "hidden"}>
-            {#if $highlightedEmbedScreen}
-                {#key $highlightedEmbedScreen.uniqueId}
-                    <MediaBox isHightlighted={true} isClickable={true} streamable={$highlightedEmbedScreen} />
-                {/key}
+    <!-- Div pour l'affichage de toutes les caméras (other cam : cameContainer / my cam : MyCamera) -->
+    {#if isVertical}
+        <div class="vertical">
+            <div id="video-container-receive" class={$highlightedEmbedScreen ? "block" : "hidden"}>
+                {#if $highlightedEmbedScreen}
+                    {#key $highlightedEmbedScreen.uniqueId}
+                        <MediaBox isHightlighted={true} isClickable={true} streamable={$highlightedEmbedScreen} />
+                    {/key}
+                {/if}
+            </div>
+            <!-- Le isMobile ne marche pas pour le moment -->
+
+            {#if $streamableCollectionStore.size > 0 || $myCameraStore}
+                <div class="grid grid-flow-col gap-x-4 justify-center vertical items-end" id="container-media">
+                    {#if $jitsiLoadingStore}
+                        <Loading />
+                    {/if}
+                    {#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true && $myCameraStore}
+                        <CamerasContainer />
+                    {/if}
+                    {#if $myJitsiCameraStore}
+                        <MediaBox streamable={$myJitsiCameraStore} isClickable={false} />
+                    {/if}
+                </div>
             {/if}
         </div>
-        <!-- Le isMobile ne march pas pour le moment -->
-
-        {#if $streamableCollectionStore.size > 0 || $myCameraStore}
-            <div class="grid grid-flow-col gap-x-4 justify-center test-media">
-                {#if $jitsiLoadingStore}
-                    <Loading />
-                {/if}
-                {#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true && $myCameraStore}
-                    <CamerasContainer />
-                {/if}
-                {#if $myJitsiCameraStore}
-                    <MediaBox streamable={$myJitsiCameraStore} isClickable={false} />
-                {/if}
-            </div>
-        {/if}
-
-        <!-- Div pour la personne qui reçoit le partage d'écran -->
     {:else}
-        {console.log("je suis dans le pas mobile")}
-        <!-- Div pour la personne qui reçoit le partage d'écran -->
-
-        {#if $streamableCollectionStore.size > 0 || $myCameraStore}
-            <div class="grid grid-flow-col gap-x-4 justify-center test-media">
-                {#if $jitsiLoadingStore}
-                    <Loading />
-                {/if}
-                {#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true && $myCameraStore}
-                    <CamerasContainer />
-                {/if}
-                {#if $myJitsiCameraStore}
-                    <MediaBox streamable={$myJitsiCameraStore} isClickable={false} />
+        <div class="horizontal">
+            <!-- Div pour la personne qui reçoit le partage d'écran -->
+            {#if $streamableCollectionStore.size > 0 || $myCameraStore}
+                <div class="grid grid-flow-col gap-x-4 justify-center vertical" id="container-media">
+                    {#if $jitsiLoadingStore}
+                        <Loading />
+                    {/if}
+                    {#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true && $myCameraStore}
+                        <CamerasContainer />
+                    {/if}
+                    {#if $myJitsiCameraStore}
+                        <MediaBox streamable={$myJitsiCameraStore} isClickable={false} />
+                    {/if}
+                </div>
+            {/if}
+            <div id="video-container-receive" class={$highlightedEmbedScreen ? "block" : "hidden"}>
+                {#if $highlightedEmbedScreen}
+                    {#key $highlightedEmbedScreen.uniqueId}
+                        <MediaBox isHightlighted={true} isClickable={true} streamable={$highlightedEmbedScreen} />
+                    {/key}
                 {/if}
             </div>
-        {/if}
-        <div id="video-container-receive" class={$highlightedEmbedScreen ? "block" : "hidden"}>
-            {#if $highlightedEmbedScreen}
-                {#key $highlightedEmbedScreen.uniqueId}
-                    <MediaBox isHightlighted={true} isClickable={true} streamable={$highlightedEmbedScreen} />
-                {/key}
-            {/if}
         </div>
     {/if}
 
@@ -144,8 +193,7 @@
                 {/if}
             </div>
         {/if}
-        -->
-    <!-- {/if} -->
+    -->
 </div>
 
 <!-- Props du composant camera container highlightedEmbedScreen={$highlightedEmbedScreen} -->
@@ -224,6 +272,16 @@
         .video-container-receive {
             scale: 0.5;
             margin-top: 0;
+        }
+
+        .container-media {
+            margin-top: -70px;
+        }
+
+        .test-2 {
+            background-color: red;
+            width: 70%;
+            height: 30%;
         }
     }
 </style>

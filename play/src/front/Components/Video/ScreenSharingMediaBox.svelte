@@ -25,14 +25,31 @@
 
     $: visibleIcon = $statusStore === "connected";
 
-    $: videoEnabled = $streamStore ? $streamStore.getVideoTracks().length > 0 : false;
+    // $: videoEnabled = $streamStore ? $streamStore.getVideoTracks().length > 0 : false;
 
     if (peer) {
         embedScreen = peer as unknown as Streamable;
     }
 
+    // let onresize = function () {
+    //     //your code here
+    //     //this is just an example
+    //     let width = document.body.clientWidth;
+    //     let height = document.body.clientHeight;
+
+    //     console.log("width", width);
+    //     console.log("height", height);
+    //     calculateHeight();
+    // };
+    // window.addEventListener("resize", onresize);
+
+    // console.log(window.innerWidth);
+    // console.log(window.innerHeight);
+    // console.log("BONJOUUUUR");
+
     onMount(() => {
         embedScreen = peer;
+        // calculateHeight();
     });
 
     function highlight() {
@@ -44,9 +61,20 @@
 
     $: changeIcon = $highlightedEmbedScreen === embedScreen;
 
-    // function calculateCamScreen() {
-    //     let camWidth = (document.getElementById("video") as HTMLElement)?.offsetWidth;
-    //     console.log("TTTEEEESSSSTTTTTT", camWidth);
+    // function calculateHeight() {
+    //     let screenShareHeight = (document.getElementById("video") as HTMLElement)?.offsetHeight;
+    //     console.log("screenShareHeight", screenShareHeight);
+    //     let heightWindow = window.innerHeight;
+    //     console.log("heightWindow", heightWindow);
+    //     let blankHeight = heightWindow - screenShareHeight;
+    //     console.log("blankHeight", blankHeight);
+    //     if (screenShareHeight > heightWindow) {
+    //         let scale = heightWindow / screenShareHeight;
+    //         let screenShare = document.querySelector(".screen-sharing");
+    //         if (screenShare instanceof HTMLElement) {
+    //             screenShare.style.transform = `scale(${scale})`;
+    //         }
+    //     }
     // }
 </script>
 
@@ -59,7 +87,7 @@
         <div class="rtc-error" />
     {/if}
     {#if $streamStore !== null}
-        <div class="w-full h-full mx-auto rounded object-contain">
+        <div class="w-full h-full mx-auto rounded object-contain" id="video">
             <video
                 use:srcObject={$streamStore}
                 autoplay
@@ -146,6 +174,42 @@
 
 <!-- For div above BAN REPORT -->
 <style>
+    @container (max-height: 638px) {
+        .screen-sharing {
+            background-color: red;
+            scale: 0.5;
+        }
+    }
+
+    /* @container (min-height: 768px) and (max-height: 1023px) {
+        .screen-sharing {
+            scale: 0.5;
+        }
+    } */
+
+    /* @container (min-height: 1280px) and (max-height: 1439px) {
+        .screen-sharing {
+            scale: 0.6;
+        }
+    } */
+
+    @container (min-height: 1440px) and (max-height: 1919px) {
+        .screen-sharing {
+            scale: 0.7;
+        }
+
+        .screen-blocker {
+            display: flex;
+            justify-content: center;
+            scale: 0.8;
+        }
+    }
+
+    /* @container (min-height: 1920px) {
+        .screen-sharing {
+            scale: 0.9;
+        }
+    } */
     /* @container (max-width: 767px) {
         .video-container {
             scale: 0.5;
