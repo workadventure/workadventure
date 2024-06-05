@@ -35,7 +35,6 @@
     const chat = gameManager.getCurrentGameScene().chatConnection;
 
     $: isGuest = chat.isGuest;
-
 </script>
 
 <div class="tw-flex tw-flex-row tw-gap-1 tw-items-center">
@@ -49,7 +48,7 @@
             <IconArrowDown size={16} class="hover:tw-cursor-pointer hover:tw-text-secondary" />
         </a>
     {/if}
-    <button class="tw-p-0 tw-m-0 hover:tw-text-black " on:click={replyToMessage}>
+    <button class="tw-p-0 tw-m-0 hover:tw-text-black" on:click={replyToMessage}>
         <IconArrowBackUp size={16} />
     </button>
     <button class="tw-p-0 tw-m-0 hover:tw-text-yellow-500" on:click={openCloseEmojiPicker}>
@@ -60,7 +59,7 @@
             <IconPencil size={16} />
         </button>
     {/if}
-    {#if $isGuest === false }
+    {#if $isGuest === false}
         <button class="tw-p-0 tw-m-0 hover:tw-text-red-500" on:click={removeMessage}>
             <IconTrash size={16} />
         </button>

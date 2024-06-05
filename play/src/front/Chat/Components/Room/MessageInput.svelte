@@ -3,9 +3,9 @@
     import { onDestroy } from "svelte";
     import { ChatRoom } from "../../Connection/ChatConnection";
     import { selectedChatMessageToReply } from "../../Stores/ChatStore";
-    import MessageFileInput from "./Message/MessageFileInput.svelte";
     import { getChatEmojiPicker } from "../../EmojiPicker";
     import LL from "../../../../i18n/i18n-svelte";
+    import MessageFileInput from "./Message/MessageFileInput.svelte";
 
     export let room: ChatRoom;
 

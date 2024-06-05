@@ -1923,6 +1923,22 @@ export class GameScene extends DirtyScene {
                     warningMessageStore.addWarningMessage(errorMessage.message);
                 });
 
+                // The proximityPrivateMessageToClientMessageStream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.proximityPrivateMessageToClientMessageStream.subscribe(
+                    (proximityPrivateMessageToClientMessage) => {
+                        console.log("proximityPrivateMessageToClientMessage", proximityPrivateMessageToClientMessage);
+                    }
+                );
+
+                // The proximityPublicMessageToClientMessageStream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.proximityPublicMessageToClientMessageStream.subscribe(
+                    (proximityPublicMessageToClientMessage) => {
+                        console.log("proximityPublicMessageToClientMessage", proximityPublicMessageToClientMessage);
+                    }
+                );
+
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
                 // Analyze tags to find if we are admin. If yes, show console.
 

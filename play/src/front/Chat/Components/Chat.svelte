@@ -117,7 +117,7 @@
                 />
             </div>
         </div>
-        {#if $isEncryptionRequiredAndNotSet===true && $isGuest === false}
+        {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}
             <button
                 on:click|stopPropagation={initChatConnectionEncryption}
                 class="tw-text-red-500 tw-flex tw-gap-1 tw-border tw-border-solid tw-border-red-500 tw-rounded-md tw-justify-center"

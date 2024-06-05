@@ -393,4 +393,10 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
     blockOrReportUser(): void {
         showReportScreenStore.set({ userId: this.userId, userName: this.userName });
     }
+    sendProximityPublicMessage(message: string): void {
+        this.connection.emitProximityPublicMessage("peer", message);
+    }
+    sendProximityPrivateMessage(message: string): void {
+        this.connection.emitProximityPrivateMessage("peer", message, this.userUuid);
+    }
 }

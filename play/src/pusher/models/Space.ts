@@ -554,6 +554,35 @@ export class Space implements CustomJsonReplacerInterface {
         this.notifyAllUsers(subMessage);
     }
 
+    public sendProximityPublicMessage(sender: SocketData, message: string) {
+        const subMessage: SubMessage = {
+            message: {
+                $case: "proximityPublicMessageToClientMessage",
+                proximityPublicMessageToClientMessage: {
+                    spaceName: this.name,
+                    message,
+                    senderUserUuid: sender.userUuid,
+                },
+            },
+        };
+        this.notifyAllUsers(subMessage);
+    }
+
+    public sendProximityPrivateMessage(sender: SocketData, message: string, receiverUserUuid: string) {
+        const subMessage: SubMessage = {
+            message: {
+                $case: "proximityPrivateMessageToClientMessage",
+                proximityPrivateMessageToClientMessage: {
+                    spaceName: this.name,
+                    message,
+                    senderUserUuid: sender.userUuid,
+                    receiverUserUuid,
+                },
+            },
+        };
+        this.notifyAllUsers(subMessage);
+    }
+
     // Notify all users in this space
     private notifyAllUsers(subMessage: SubMessage) {
         this.clientWatchers.forEach((watcher) => {

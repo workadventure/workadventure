@@ -19,10 +19,10 @@ import { IconButton, IconButtonEvent } from "../Components/Ui/IconButton";
 import { selectCharacterCustomizeSceneVisibleStore } from "../../Stores/SelectCharacterStore";
 import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
 import { connectionManager } from "../../Connection/ConnectionManager";
+import { areCharacterTexturesValid } from "../../Connection/LocalUserUtils";
 import { SelectCharacterSceneName } from "./SelectCharacterScene";
 import { AbstractCharacterScene } from "./AbstractCharacterScene";
 import { EnableCameraSceneName } from "./EnableCameraScene";
-import { areCharacterTexturesValid } from "../../Connection/LocalUserUtils";
 
 export const CustomizeSceneName = "CustomizeScene";
 

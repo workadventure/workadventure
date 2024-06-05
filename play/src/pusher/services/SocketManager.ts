@@ -554,6 +554,40 @@ export class SocketManager implements ZoneEventListener {
                                     });
                                     break;
                                 }
+                                case "proximityPublicMessageToClientMessage": {
+                                    debug("[space] proximityPublicMessageToClientMessage received");
+                                    spaceStreamToBack.write({
+                                        message: {
+                                            $case: "proximityPublicMessageToClientMessage",
+                                            proximityPublicMessageToClientMessage: {
+                                                spaceName:
+                                                    message.message.proximityPublicMessageToClientMessage.spaceName,
+                                                message: message.message.proximityPublicMessageToClientMessage.message,
+                                            },
+                                        },
+                                    });
+                                    break;
+                                }
+                                case "proximityPrivateMessageToClientMessage": {
+                                    debug("[space] proximityPrivateMessageToClientMessage received");
+                                    spaceStreamToBack.write({
+                                        message: {
+                                            $case: "proximityPrivateMessageToClientMessage",
+                                            proximityPrivateMessageToClientMessage: {
+                                                spaceName:
+                                                    message.message.proximityPrivateMessageToClientMessage.spaceName,
+                                                message: message.message.proximityPrivateMessageToClientMessage.message,
+                                                senderUserUuid:
+                                                    message.message.proximityPrivateMessageToClientMessage
+                                                        .senderUserUuid,
+                                                receiverUserUuid:
+                                                    message.message.proximityPrivateMessageToClientMessage
+                                                        .receiverUserUuid,
+                                            },
+                                        },
+                                    });
+                                    break;
+                                }
                                 default: {
                                     const _exhaustiveCheck: never = message.message;
                                 }
@@ -1589,6 +1623,39 @@ export class SocketManager implements ZoneEventListener {
 
     handleUpdateChatId(email: string, chatId: string): void {
         adminService.updateChatId(email, chatId);
+    }
+
+    // handle proximity public message
+    handleProximityPublicSpaceMessage(
+        client: Socket,
+        spaceName: string,
+        messageContent: string,
+        message: PusherToBackMessage["message"]
+    ) {
+        const socketData = client.getUserData();
+        const space = socketData.spaces.find((space) => space.name === spaceName);
+        if (!space) {
+            this.forwardMessageToBack(client, message);
+            return;
+        }
+        space.sendProximityPublicMessage(socketData, messageContent);
+    }
+
+    // handle proximity private message
+    handleProximityPrivateSpaceMessage(
+        client: Socket,
+        spaceName: string,
+        messageContent: string,
+        receiverUserUuid: string,
+        message: PusherToBackMessage["message"]
+    ) {
+        const socketData = client.getUserData();
+        const space = socketData.spaces.find((space) => space.name === spaceName);
+        if (!space) {
+            this.forwardMessageToBack(client, message);
+            return;
+        }
+        space.sendProximityPrivateMessage(socketData, messageContent, receiverUserUuid);
     }
 }
 
