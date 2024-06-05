@@ -1,8 +1,13 @@
 import crypto from "crypto";
 import {
+    AddSpaceUserMessage,
     AnswerMessage,
+    AskPositionMessage,
     BanUserMessage,
     BatchToPusherMessage,
+    ChatMessagePrompt,
+    EditMapCommandMessage,
+    EditMapCommandsArrayMessage,
     EmoteEventMessage,
     EmotePromptMessage,
     FollowAbortMessage,
@@ -16,41 +21,36 @@ import {
     JoinBBBMeetingAnswer,
     JoinBBBMeetingQuery,
     JoinRoomMessage,
+    KickOffMessage,
     LockGroupPromptMessage,
+    MuteMicrophoneEverybodyMessage,
+    MuteMicrophoneMessage,
+    MuteVideoEverybodyMessage,
+    MuteVideoMessage,
     PlayerDetailsUpdatedMessage,
     QueryMessage,
+    RemoveSpaceUserMessage,
     RoomDescription,
     RoomJoinedMessage,
     RoomsList,
+    SendEventQuery,
     SendUserMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
     SubToPusherMessage,
+    TurnCredentialsAnswer,
+    UnwatchSpaceMessage,
+    UpdateMapToNewestWithKeyMessage,
+    UpdateSpaceMetadataMessage,
+    UpdateSpaceUserMessage,
     UserJoinedZoneMessage,
     UserMovesMessage,
     VariableMessage,
+    WatchSpaceMessage,
     WebRtcSignalToClientMessage,
     WebRtcSignalToServerMessage,
     WebRtcStartMessage,
     Zone as ProtoZone,
-    AskPositionMessage,
-    EditMapCommandMessage,
-    ChatMessagePrompt,
-    UpdateMapToNewestWithKeyMessage,
-    EditMapCommandsArrayMessage,
-    WatchSpaceMessage,
-    UnwatchSpaceMessage,
-    UpdateSpaceUserMessage,
-    AddSpaceUserMessage,
-    RemoveSpaceUserMessage,
-    SendEventQuery,
-    UpdateSpaceMetadataMessage,
-    KickOffMessage,
-    MuteMicrophoneMessage,
-    MuteVideoMessage,
-    MuteMicrophoneEverybodyMessage,
-    MuteVideoEverybodyMessage,
-    TurnCredentialsAnswer,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -803,6 +803,9 @@ export class SocketManager {
                     break;
                 }
                 case "getMemberQuery": {
+                    break;
+                }
+                case "chatMembersQuery": {
                     break;
                 }
                 default: {
