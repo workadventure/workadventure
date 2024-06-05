@@ -123,5 +123,5 @@ export interface AdminInterface {
 
     getWorldChatMembers(playUri: string, searchText: string): Promise<WorldChatMembersData>;
 
-    updateChatId(userIdentifier: string, chatId: string): void;
+    updateChatId(userIdentifier: string, chatId: string): Promise<void>;
 }

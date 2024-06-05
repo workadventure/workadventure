@@ -1621,8 +1621,12 @@ export class SocketManager implements ZoneEventListener {
         };
     }
 
-    handleUpdateChatId(email: string, chatId: string): void {
-        adminService.updateChatId(email, chatId);
+    async handleUpdateChatId(email: string, chatId: string): Promise<void> {
+        try {
+            await adminService.updateChatId(email, chatId);
+        } catch (e) {
+            console.error("SocketManager => handleUpdateChatId => error while updating chat id", e);
+        }
     }
 
     // handle proximity public message
