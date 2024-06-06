@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { IconChevronDown, IconChevronRight, IconSquarePlus } from "@tabler/icons-svelte";
     import { get } from "svelte/store";
     // eslint-disable-next-line import/no-unresolved
     import { openModal } from "svelte-modals";
@@ -12,6 +11,7 @@
     import RoomInvitation from "./Room/RoomInvitation.svelte";
     import JoignableRooms from "./Room/JoignableRooms.svelte";
     import CreateRoomModal from "./Room/CreateRoomModal.svelte";
+    import { IconChevronDown, IconChevronRight, IconSquarePlus } from "@wa-icons";
 
     const chat = gameManager.getCurrentGameScene().chatConnection;
 
@@ -110,7 +110,7 @@
         >
         {#if $isGuest === false}
             <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={openCreateRoomModal}>
-                <IconSquarePlus size={16} />
+                <IconSquarePlus font-size={16} />
             </button>
         {/if}
     </div>

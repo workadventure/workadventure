@@ -1,16 +1,16 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { ChevronRightIcon } from "svelte-feather-icons";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
     import {
-        WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM,
         mapEditorWamSettingsEditorToolCurrentMenuItemStore,
+        WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM,
     } from "../../Stores/MapEditorStore";
     import { userIsAdminStore } from "../../Stores/GameStore";
     import Megaphone from "./ConfigureMyRoom/Megaphone.svelte";
     import RoomSettings from "./ConfigureMyRoom/RoomSettings.svelte";
+    import { IconChevronRight } from "@wa-icons";
 
     function getCurrentComponent(): typeof Megaphone | typeof RoomSettings {
         switch ($mapEditorWamSettingsEditorToolCurrentMenuItemStore) {
@@ -49,7 +49,7 @@
                         )}
                 >
                     <span>{$LL.mapEditor.settings.room.title()}</span>
-                    <ChevronRightIcon class={`tw--mr-2`} />
+                    <IconChevronRight class={`tw--mr-2`} />
                 </li>
             {/if}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -62,7 +62,7 @@
                     )}
             >
                 <span>Megaphone</span>
-                <ChevronRightIcon class={`tw--mr-2`} />
+                <IconChevronRight class={`tw--mr-2`} />
             </li>
         </ul>
     </div>

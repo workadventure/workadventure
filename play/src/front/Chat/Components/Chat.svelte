@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { IconShieldLock } from "@tabler/icons-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue, joignableRoom, navChat } from "../Stores/ChatStore";
@@ -9,6 +8,7 @@
     import RoomList from "./RoomList.svelte";
     import ChatLoader from "./ChatLoader.svelte";
     import ChatError from "./ChatError.svelte";
+    import { IconShieldLock } from "@wa-icons";
 
     const chat = gameManager.getCurrentGameScene().chatConnection;
     const DONE_TYPING_INTERVAL = 2000;
@@ -117,7 +117,7 @@
                 />
             </div>
         </div>
-        {#if $isEncryptionRequiredAndNotSet===true && $isGuest === false}
+        {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}
             <button
                 on:click|stopPropagation={initChatConnectionEncryption}
                 class="tw-text-red-500 tw-flex tw-gap-1 tw-border tw-border-solid tw-border-red-500 tw-rounded-md tw-justify-center"

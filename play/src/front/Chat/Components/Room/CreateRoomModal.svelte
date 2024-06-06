@@ -1,12 +1,12 @@
 <script lang="ts">
     import { closeModal } from "svelte-modals";
-    import { IconAlertTriangle, IconHelpCircle } from "@tabler/icons-svelte";
     import { get } from "svelte/store";
     import Select from "svelte-select";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import { CreateRoomOptions, historyVisibility, historyVisibilityOptions } from "../../Connection/ChatConnection";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import LL from "../../../../i18n/i18n-svelte";
+    import { IconAlertTriangle, IconHelpCircle } from "../../../Components/Icons";
 
     export let isOpen: boolean;
     let createRoomOptions: CreateRoomOptions = { visibility: "public" };
@@ -69,7 +69,7 @@
             <option value="public">{$LL.chat.createRoom.visibility.public()}</option>
         </select>
         <p class="tw-text-xs tw-m-0 tw-p-0 tw-text-gray-400 tw-pl-1">
-            <IconHelpCircle size={18} />
+            <IconHelpCircle font-size={18} />
             {#if createRoomOptions.visibility === "private"}
                 {$LL.chat.createRoom.visibility.privateDescription()}
             {:else if createRoomOptions.visibility === "public"}
@@ -82,7 +82,7 @@
                 <label class="tw-m-0" for="encryptData">{$LL.chat.createRoom.e2eEncryption.label()}</label>
             </div>
             <p class="tw-text-xs tw-m-0 tw-p-0 tw-text-gray-400 tw-pl-1">
-                <IconAlertTriangle size={18} />
+                <IconAlertTriangle font-size={18} />
                 {$LL.chat.createRoom.e2eEncryption.description()}
             </p>
         {/if}

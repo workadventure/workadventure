@@ -6,7 +6,6 @@
         EntityDescriptionPropertyData,
     } from "@workadventure/map-editor";
     import { onDestroy } from "svelte";
-    import { ArrowLeftIcon } from "svelte-feather-icons";
     import { ApplicationDefinitionInterface } from "@workadventure/messages";
     import {
         mapEditorEntityModeStore,
@@ -20,6 +19,7 @@
     import PlayAudioPropertyEditor from "../PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "../PropertyEditor/OpenWebsitePropertyEditor.svelte";
     import { connectionManager } from "../../../Connection/ConnectionManager";
+    import { IconArrowLeft } from "@wa-icons";
 
     let properties: EntityDataProperties = [];
     let entityName = "";
@@ -252,7 +252,7 @@
     </div>
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <p on:click|preventDefault={backToSelectObject} class="tw-flex tw-flex-row tw-items-center tw-text-xs tw-m-0">
-        <ArrowLeftIcon size="12" class="tw-cursor-pointer" />
+        <IconArrowLeft font-size="12" class="tw-cursor-pointer" />
         <span class="tw-ml-1 tw-cursor-pointer">{$LL.mapEditor.entityEditor.itemPicker.backToSelectObject()}</span>
     </p>
     <div class="properties-buttons tw-flex tw-flex-row">
