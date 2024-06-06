@@ -1,7 +1,6 @@
 import { Readable } from "svelte/store";
-import { Space } from "../../Space/Space";
-import { TrackWrapper } from "./TrackWrapper";
 import { SpaceInterface } from "../../Space/SpaceInterface";
+import { TrackWrapper } from "./TrackWrapper";
 
 export interface BroadcastSpace {
     readonly provider: string;

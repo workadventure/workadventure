@@ -77,7 +77,9 @@
                 placeholder={`${$LL.chat.e2ee.accessSecretStorage.placeholder()} ${$LL.chat.e2ee.accessSecretStorage.passphrase()}`}
                 bind:value={passphraseInput}
                 on:keydown={(key) => {
-                    key.key === "Enter" ? checkAndSubmitRecoveryOrPassphraseIfValid() : undefined;
+                    key.key === "Enter"
+                        ? checkAndSubmitRecoveryOrPassphraseIfValid().catch((error) => console.error(error))
+                        : undefined;
                 }}
             />
             <button on:click={changeAccessSecretStorageMethod} class={changeAccessSecretStorageMethodButtonClass}>

@@ -157,6 +157,7 @@ import { StreamSpaceWatcherSingleton } from "../../Space/SpaceWatcher/SocketSpac
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
 import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
+import { updateMatrixClientStore } from "../../Chat/Connection/Matrix/MatrixSecurity";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -195,7 +196,6 @@ import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import Clamp = Phaser.Math.Clamp;
-import { updateMatrixClientStore } from "../../Chat/Connection/Matrix/MatrixSecurity";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -1521,9 +1521,13 @@ export class GameScene extends DirtyScene {
                     const matrixClientWrapper = new MatrixClientWrapper(MATRIX_PUBLIC_URI ?? "", localUserStore);
                     const matrixClientPromise = matrixClientWrapper.initMatrixClient();
 
-                    matrixClientPromise.then((matrixClient) => {
-                        updateMatrixClientStore(matrixClient);
-                    });
+                    matrixClientPromise
+                        .then((matrixClient) => {
+                            updateMatrixClientStore(matrixClient);
+                        })
+                        .catch((e) => {
+                            console.error(e);
+                        });
 
                     this.chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
 

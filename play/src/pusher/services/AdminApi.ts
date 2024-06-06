@@ -1086,16 +1086,20 @@ class AdminApi implements AdminInterface {
     }
 
     updateChatId(userIdentifier: string, chatId: string): void {
-        axios.put(
-            `${ADMIN_API_URL}/api/members/${userIdentifier}/chatId`,
-            {
-                chatId,
-                userIdentifier,
-            },
-            {
-                headers: { Authorization: `${ADMIN_API_TOKEN}` },
-            }
-        );
+        axios
+            .put(
+                `${ADMIN_API_URL}/api/members/${userIdentifier}/chatId`,
+                {
+                    chatId,
+                    userIdentifier,
+                },
+                {
+                    headers: { Authorization: `${ADMIN_API_TOKEN}` },
+                }
+            )
+            .catch((e) => {
+                console.error(e);
+            });
     }
 }
 

@@ -1,7 +1,6 @@
 import type { ChatEvent } from "@workadventure/shared-utils";
 import { GoogleWorkSpaceService, KlaxoonService } from "@workadventure/shared-utils";
 import { StartWritingEvent, StopWritingEvent } from "@workadventure/shared-utils/src/Events/WritingEvent";
-import { playersStore } from "../Stores/PlayersStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 
 class ScriptUtils {
@@ -45,8 +44,9 @@ class ScriptUtils {
     public sendChat(chatEvent: ChatEvent, origin?: Window) {
         switch (chatEvent.options.scope) {
             case "local": {
-                //const userId = playersStore.addFacticePlayer(chatEvent.options.author || "System");
                 //TODO, fix me with new matrix chat integration
+                //const userId = playersStore.addFacticePlayer(chatEvent.options.author || "System");
+
                 //chatMessagesService.addExternalMessage(userId, chatEvent.message, origin);
                 console.debug("Not implemented yet with new chat integration");
                 break;
@@ -72,19 +72,19 @@ class ScriptUtils {
     }
 
     public startWriting(startWritingEvent: StartWritingEvent, origin?: Window) {
-        const userId = playersStore.addFacticePlayer(startWritingEvent.author || "System");
-
+        //TODO, fix me with new matrix chat integration
+        //const userId = playersStore.addFacticePlayer(startWritingEvent.author || "System");
         /*const writingUsersList = get(writingStatusMessageStore);
         writingUsersList.add(playersStore.getPlayerById(userId));*/
         //writingStatusMessageStore.addWritingStatus(userId, ChatMessageTypes.userWriting);
-
         /*iframeListener.sendWritingStatusToChatIframe()
 
         chatMessagesService.startWriting(userId, origin);*/
     }
 
     public stopWriting(stopWritingEvent: StopWritingEvent, origin?: Window) {
-        const userId = playersStore.addFacticePlayer(stopWritingEvent.author || "System");
+        //TODO, fix me with new matrix chat integration
+        //const userId = playersStore.addFacticePlayer(stopWritingEvent.author || "System");
         //chatMessagesService.stopWriting(userId, origin);
         //writingStatusMessageStore.addWritingStatus(userId, ChatMessageTypes.userStopWriting);
     }
