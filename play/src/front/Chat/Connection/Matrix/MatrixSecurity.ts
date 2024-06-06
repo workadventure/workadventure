@@ -53,10 +53,6 @@ export async function initClientCryptoConfiguration() {
         (async () => {
             const keyBackupInfo = await matrixClientStore?.getKeyBackupVersion();
 
-            if (!keyBackupInfo) {
-                return initializingEncryptionReject(new Error("no keyBackupInfo"));
-            }
-
             const isCrossSigningReady = await crypto.isCrossSigningReady();
 
             if (!isCrossSigningReady || keyBackupInfo === null) {
@@ -108,7 +104,9 @@ export async function initClientCryptoConfiguration() {
                 isEncryptionRequiredAndNotSet.set(false);
             }
 
-            await restoreBackupMessages(keyBackupInfo);
+            if (keyBackupInfo !== null && keyBackupInfo !== undefined) {
+                await restoreBackupMessages(keyBackupInfo);
+            }
 
             return resolve();
         })().catch((error) => {
@@ -121,7 +119,7 @@ export async function initClientCryptoConfiguration() {
     return;
 }
 
-async function restoreBackupMessages(keyBackupInfo: KeyBackupInfo | null) {
+async function restoreBackupMessages(keyBackupInfo: KeyBackupInfo) {
     try {
         if (!matrixClientStore) {
             return Promise.reject(new Error("matrixClientStore is null"));
@@ -129,12 +127,9 @@ async function restoreBackupMessages(keyBackupInfo: KeyBackupInfo | null) {
         const has4s = await matrixClientStore.secretStorage.hasKey();
         const backupRestored = has4s ? await matrixClientStore.isKeyBackupKeyStored() : null;
 
-        if (keyBackupInfo) {
-            console.debug("keyBackupInfo : ", keyBackupInfo);
-            const restoredWithCachedKey = await restoreWithCachedKey(keyBackupInfo);
-            if (!restoredWithCachedKey && backupRestored) {
-                await restoreWithSecretStorage(keyBackupInfo);
-            }
+        const restoredWithCachedKey = await restoreWithCachedKey(keyBackupInfo);
+        if (!restoredWithCachedKey && backupRestored) {
+            await restoreWithSecretStorage(keyBackupInfo);
         }
     } catch (error) {
         console.error("Unable to restoreBackupMessages : ", error);
