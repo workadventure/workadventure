@@ -174,20 +174,20 @@ Instead, you should use the "secrets" feature of GitHub to store the API key. Th
 
 <details>
   <summary>Learn how to configure a secret in GitHub</summary>
-    <div>
+<div>
 
-<!-- - Go to your GitHub repository -->
+- Go to your GitHub repository
 
-<!-- - Click on the "Settings" tab
+- Click on the "Settings" tab
   ![The settings tab](./images/github-settings.png)
 - Click on the "Secrets and variables" link in the left panel
   ![The secrets link](./images/github-secrets-and-variables.png)
 - Click on the "Actions" link
   ![The actions button](./images/github-actions-menu.png)
 - Finally, click on the "New repository secret" button
-![The new repository secret button](./images/github-new-repo-secret.png) -->
+  ![The new repository secret button](./images/github-new-repo-secret.png)
 
-  </div>
+</div>
 </details>
 
 You should create a secret named `MAP_STORAGE_API_KEY` and paste your map storage API key there. See the [previous section](#using-the-command-line) to know how to get your API key.
