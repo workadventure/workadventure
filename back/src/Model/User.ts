@@ -83,7 +83,7 @@ export class User implements Movable, CustomJsonReplacerInterface {
         voiceIndicatorShown?: boolean,
         activatedInviteUser?: boolean,
         applications?: ApplicationMessage[],
-        chatID?:string
+        chatID?: string
     ): Promise<User> {
         const playersVariablesRepository = await getPlayersVariablesRepository();
         const variables = new PlayerVariables(uuid, roomUrl, roomGroup, playersVariablesRepository, isLogged);
@@ -311,8 +311,6 @@ export class User implements Movable, CustomJsonReplacerInterface {
                         );
                     });
 
-                
-            
                 // Let's dispatch the message to the user.
                 brother.emitInBatch({
                     message: {
