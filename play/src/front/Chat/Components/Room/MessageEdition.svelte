@@ -2,7 +2,7 @@
     import { get } from "svelte/store";
     import { ChatMessage } from "../../Connection/ChatConnection";
     import { selectedChatMessageToEdit } from "../../Stores/ChatStore";
-    import { IconCheck, IconX } from "../../../Components/Icons";
+    import { IconCheck, IconX } from "@wa-icons";
 
     export let message: ChatMessage;
 
