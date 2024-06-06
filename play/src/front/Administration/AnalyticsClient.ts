@@ -721,5 +721,21 @@ class AnalyticsClient {
             })
             .catch((e) => console.error(e));
     }
+
+    openGlobalMessage(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_action_globalmessage");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    openGlobalAudio(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_action_globalaudio");
+            })
+            .catch((e) => console.error(e));
+    }
 }
 export const analyticsClient = new AnalyticsClient();
