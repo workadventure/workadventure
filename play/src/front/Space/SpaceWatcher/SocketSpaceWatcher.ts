@@ -18,7 +18,7 @@ export class StreamSpaceWatcher {
         decoder: Required<{ decode: (messageCoded: Uint8Array) => ServerToClientMessage }>,
         private chatConnection: ChatConnectionInterface = gameManager.getCurrentGameScene().chatConnection
     ) {
-        this.socket.addEventListener("message", async (messageEvent: MessageEvent) => {
+        this.socket.addEventListener("message", (messageEvent: MessageEvent) => {
             const arrayBuffer: ArrayBuffer = messageEvent.data;
             const serverMessage = decoder.decode(new Uint8Array(arrayBuffer));
             const message = serverMessage.message;
@@ -32,12 +32,15 @@ export class StreamSpaceWatcher {
                     case SpaceEvent.AddSpaceUser: {
                         if (!subMessage.addSpaceUserMessage.user || !subMessage.addSpaceUserMessage.filterName) return;
 
-                        const extendedUser = await this.spaceProvider
+                        this.spaceProvider
                             .get(subMessage.addSpaceUserMessage.spaceName)
                             .getSpaceFilter(subMessage.addSpaceUserMessage.filterName)
-                            .addUser(subMessage.addSpaceUserMessage.user);
+                            .addUser(subMessage.addSpaceUserMessage.user)
+                            .then((extendedUser) => {
+                                chatConnection.addUserFromSpace(extendedUser);
+                            })
+                            .catch((e) => console.error(e));
 
-                        chatConnection.addUserFromSpace(extendedUser);
                         break;
                     }
                     case SpaceEvent.UpdateSpaceUser: {

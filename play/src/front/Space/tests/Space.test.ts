@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { ClientToServerMessage, UnwatchSpaceMessage, WatchSpaceMessage } from "@workadventure/messages";
+
 import { Space } from "../Space";
 import { SpaceFilterAlreadyExistError, SpaceNameIsEmptyError } from "../Errors/SpaceError";
 import { SpaceFilterInterface } from "../SpaceFilter/SpaceFilter";
@@ -16,10 +17,11 @@ describe("Space test", () => {
     it("should return a error when pass a empty string as spaceName", () => {
         const spaceName = "";
         const metadata = new Map<string, unknown>();
-        const mockSocket: Partial<WebSocket> = {
+        const mockSocket = {
             readyState: WebSocket.CONNECTING,
             send: vi.fn(),
-        };
+        } as unknown as WebSocket;
+
         const mockEncoder: { encode: (messageCoded: ClientToServerMessage) => { finish: () => Uint8Array } } = {
             encode: vi.fn().mockImplementation((msg) => {
                 return {
@@ -28,7 +30,7 @@ describe("Space test", () => {
             }),
         };
         expect(() => {
-            new Space(spaceName, metadata, mockSocket as WebSocket, mockEncoder);
+            new Space(spaceName, metadata, mockSocket, mockEncoder);
         }).toThrow(SpaceNameIsEmptyError);
     });
     it("should not return a error when pass a string as spaceName", () => {
@@ -37,7 +39,7 @@ describe("Space test", () => {
         const mockSocket: Partial<WebSocket> = {
             readyState: WebSocket.CONNECTING,
             send: vi.fn(),
-        };
+        } as unknown as WebSocket;
         const mockEncoder: { encode: (messageCoded: ClientToServerMessage) => { finish: () => Uint8Array } } = {
             encode: vi.fn().mockImplementation((msg) => {
                 return {
@@ -54,7 +56,7 @@ describe("Space test", () => {
         const mockSocket: Partial<WebSocket> = {
             readyState: WebSocket.CONNECTING,
             send: vi.fn(),
-        };
+        } as unknown as WebSocket;
 
         const mockEncoder: { encode: (messageCoded: ClientToServerMessage) => { finish: () => Uint8Array } } = {
             encode: vi.fn().mockImplementation((msg) => {
@@ -96,7 +98,7 @@ describe("Space test", () => {
         const mockSocket: Partial<WebSocket> = {
             readyState: WebSocket.CONNECTING,
             send: vi.fn(),
-        };
+        } as unknown as WebSocket;
 
         const mockEncoder: { encode: (messageCoded: ClientToServerMessage) => { finish: () => Uint8Array } } = {
             encode: vi.fn().mockImplementation((msg) => {
@@ -133,7 +135,7 @@ describe("Space test", () => {
         const mockSocket: Partial<WebSocket> = {
             readyState: WebSocket.CONNECTING,
             send: vi.fn(),
-        };
+        } as unknown as WebSocket;
 
         const mockEncoder: { encode: (messageCoded: ClientToServerMessage) => { finish: () => Uint8Array } } = {
             encode: vi.fn().mockImplementation((msg) => {
@@ -163,7 +165,7 @@ describe("Space test", () => {
         const mockSocket: Partial<WebSocket> = {
             readyState: WebSocket.CONNECTING,
             send: vi.fn(),
-        };
+        } as unknown as WebSocket;
 
         const mockEncoder: { encode: (messageCoded: ClientToServerMessage) => { finish: () => Uint8Array } } = {
             encode: vi.fn().mockImplementation((msg) => {
@@ -190,7 +192,7 @@ describe("Space test", () => {
         const mockSocket: Partial<WebSocket> = {
             readyState: WebSocket.CONNECTING,
             send: vi.fn(),
-        };
+        } as unknown as WebSocket;
 
         const mockEncoder: { encode: (messageCoded: ClientToServerMessage) => { finish: () => Uint8Array } } = {
             encode: vi.fn().mockImplementation((msg) => {
@@ -224,7 +226,7 @@ describe("Space test", () => {
         const mockSocket: Partial<WebSocket> = {
             readyState: WebSocket.CONNECTING,
             send: vi.fn(),
-        };
+        } as unknown as WebSocket;
 
         const mockEncoder: { encode: (messageCoded: ClientToServerMessage) => { finish: () => Uint8Array } } = {
             encode: vi.fn().mockImplementation((msg) => {
@@ -258,7 +260,7 @@ describe("Space test", () => {
         const mockSocket: Partial<WebSocket> = {
             readyState: WebSocket.CONNECTING,
             send: vi.fn(),
-        };
+        } as unknown as WebSocket;
 
         const mockEncoder: { encode: (messageCoded: ClientToServerMessage) => { finish: () => Uint8Array } } = {
             encode: vi.fn().mockImplementation((msg) => {
@@ -284,7 +286,7 @@ describe("Space test", () => {
         const mockSocket: Partial<WebSocket> = {
             readyState: WebSocket.CONNECTING,
             send: vi.fn(),
-        };
+        } as unknown as WebSocket;
 
         const mockEncoder: { encode: (messageCoded: ClientToServerMessage) => { finish: () => Uint8Array } } = {
             encode: vi.fn().mockImplementation((msg) => {

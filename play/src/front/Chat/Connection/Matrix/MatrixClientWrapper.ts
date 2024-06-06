@@ -321,7 +321,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
 
         if (key === null) {
             isEncryptionRequiredAndNotSet.set(true);
-            throw Error("No recovery key provided");
+            return null;
         }
         this.cacheSecretStorageKey(keyId, key);
         return [keyId, key];

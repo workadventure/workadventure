@@ -117,9 +117,9 @@ export class MatrixChatRoom implements ChatRoom {
     }
 
     private startHandlingChatRoomEvents() {
-        this.matrixRoom.on(RoomEvent.Timeline, async (event, room, toStartOfTimeline, _, data) =>
-            this.onRoomTimeline(event, room, toStartOfTimeline, _, data)
-        );
+        this.matrixRoom.on(RoomEvent.Timeline, (event, room, toStartOfTimeline, _, data) => {
+            this.onRoomTimeline(event, room, toStartOfTimeline, _, data).catch((error) => console.error(error));
+        });
         this.matrixRoom.on(RoomEvent.Name, this.onRoomName.bind(this));
         this.matrixRoom.on(RoomEvent.Redaction, this.onRoomRedaction.bind(this));
     }
