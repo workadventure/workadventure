@@ -22,7 +22,6 @@ export default defineConfig(({ mode }) => {
             },
             watch: {
                 ignored: ["./src/pusher"],
-                followSymlinks: false,
             },
         },
         build: {
