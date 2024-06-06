@@ -29,18 +29,6 @@
         }
     }
 
-    // function closeCoWebsite() {
-    //     if ($highlightedEmbedScreen?.type === "cowebsite") {
-    //         /* if the co-website is closable, would like we to close it instead of unloading it?
-    //         if ($highlightedEmbedScreen.embed.isClosable()) {
-    //             coWebsiteManager.closeCoWebsite($highlightedEmbedScreen.embed);
-    //         }*/
-    //         coWebsiteManager.unloadCoWebsite($highlightedEmbedScreen.embed).catch((err) => {
-    //             console.error("Cannot unload co-website", err);
-    //         });
-    //     }
-    // }
-
     afterUpdate(() => {
         reduceSizeIfScreenShare();
     });
@@ -74,7 +62,7 @@
             if ($highlightedEmbedScreen && isVertical === false) {
                 console.log("je suis dans le higlight reduceSizeIfScreenShare");
                 containerCam.style.transform = "scale(0.7)";
-                containerCam.style.marginTop = "-45px";
+                containerCam.style.marginTop = "-35px";
             } else {
                 console.log("je suis PAS reduceSizeIfScreenShare");
                 containerCam.style.transform = "scale(1)";
@@ -224,7 +212,7 @@
 
     @container (max-width: 767px) {
         .video-container-receive {
-            scale: 0.5;
+            /* scale: 0.5; */
             margin-top: 0;
         }
 

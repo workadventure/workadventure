@@ -103,7 +103,7 @@
 <!-- style={small ? "width:100%" : "height:" + $heightCamWrapper + "px;"} -->
 
 <div
-    class="transition-all relative h-full flex flex justify-center aspect-video w-fit m-auto dimension"
+    class="transition-all relative h-full w-full flex flex justify-center aspect-video m-auto dimension"
     bind:this={cameraContainer}
 >
     <!--If we are in a silent zone-->
@@ -235,11 +235,6 @@
     }
 
     @container (max-width: 767px) {
-        .dimension {
-            width: 150px;
-            height: 70px;
-        }
-
         .responsive-dimension {
             scale: 0.7;
             position: absolute;

@@ -9,6 +9,8 @@
     // export let full = false;
     // $: clickable = !full;
 
+    let isVertical = false;
+
     let widthWindow: number | undefined;
     function camMountedWidth() {
         widthWindow = document.getElementById("presentation-layout")?.offsetWidth;
@@ -40,7 +42,7 @@
 <!-- grid-flow-col grid-flow-col -->
 <!-- {#if $streamableCollectionStore.size < 3} -->
 
-<div class="all-cameras overflow-visible gap-4">
+<div class="all-cameras overflow-visible">
     {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
         {#if !highlightedEmbedScreen || $highlightedEmbedScreen !== peer}
             {#key uniqueId}
@@ -66,6 +68,7 @@
 
 <!-- isClickable={clickable} -->
 <style>
+    #unique-mycam,
     #unique-cam-other {
         width: 350px;
         height: 200px;
@@ -74,6 +77,7 @@
     .all-cameras {
         display: flex;
         justify-content: center;
+        gap: 1rem;
     }
 
     @container (max-width: 767px) {
@@ -85,6 +89,7 @@
             right: 0; /* Align to the right */
             display: flex;
             flex-direction: column;
+            gap: 0.2rem;
             align-items: flex-end;
         }
 
@@ -93,7 +98,7 @@
             align-self: flex-end;
             margin-top: auto;
             width: 150px;
-            height: 70px;
+            height: 85px;
         }
     }
 </style>
