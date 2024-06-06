@@ -50,7 +50,7 @@
     ] as Array<[string, ChatUser[]]>;
 </script>
 
-{#each roomsWithUsers as [roomName, userInRoom]}
+{#each roomsWithUsers as [roomName, userInRoom] (roomName)}
     {#if userInRoom && userInRoom.length > 0}
         <div class="users tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple">
             <div class="tw-px-4 tw-py-1 tw-flex tw-items-center">

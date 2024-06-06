@@ -18,3 +18,5 @@ _
 **/charts/*.tgz
 
 synapse/homeserver.log*
+
+.vscode/settings.json

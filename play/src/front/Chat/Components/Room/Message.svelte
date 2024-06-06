@@ -5,7 +5,6 @@
     import LL, { locale } from "../../../../i18n/i18n-svelte";
     import Avatar from "../Avatar.svelte";
     import { selectedChatMessageToEdit } from "../../Stores/ChatStore";
-    import { IconCornerDownRight, IconTrash } from "@wa-icons";
     import MessageOptions from "./MessageOptions.svelte";
     import MessageImage from "./Message/MessageImage.svelte";
     import MessageText from "./Message/MessageText.svelte";
@@ -14,6 +13,7 @@
     import MessageVideoFile from "./Message/MessageVideoFile.svelte";
     import MessageEdition from "./MessageEdition.svelte";
     import MessageReactions from "./MessageReactions.svelte";
+    import { IconCornerDownRight, IconTrash } from "@wa-icons";
 
     export let message: ChatMessage;
     export let reactions: MapStore<string, ChatMessageReaction> | undefined;

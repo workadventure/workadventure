@@ -2,7 +2,7 @@
     export let colorHex: string;
     export let position: "absolute" | "relative";
     export let cursorType: "auto" | "pointer" = "auto";
-    export let componentClass: string = "";
+    export let componentClass = "";
 </script>
 
 <div class="tw-relative tw-cursor-{cursorType} {componentClass}" style="--color:{colorHex}">
