@@ -85,9 +85,6 @@
 
     $: changeIcon = embedScreen === $highlightedEmbedScreen;
 
-    console.log("changeIcon", changeIcon);
-    console.log("highlightedEmbedScreen", $highlightedEmbedScreen);
-
     const resizeObserver = new ResizeObserver(() => {
         minimized = isMediaBreakpointOnly("md");
     });

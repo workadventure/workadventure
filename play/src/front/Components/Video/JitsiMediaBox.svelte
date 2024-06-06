@@ -35,7 +35,6 @@
     let videoTrackUnSuscriber: Unsubscriber;
 
     onMount(() => {
-        console.log("bonjour je suis mon propre partage d'ecran");
         resizeObserver.observe(jitsiMediaBoxHtml);
         videoTrackUnSuscriber = videoTrackStore.subscribe((videoTrack) => {
             if (videoTrack == undefined && isHightlighted) highlightedEmbedScreen.toggleHighlight(embedScreen);
@@ -46,11 +45,6 @@
         resizeObserver.unobserve(jitsiMediaBoxHtml);
         if (videoTrackUnSuscriber) videoTrackUnSuscriber();
     });
-
-    // function highlight() {
-    //     console.log("JE SUIS DANS LA FONCTION HIGHLIGHT PTN LAAAAA");
-    //     highlightedEmbedScreen.toggleHighlight(embedScreen);
-    // }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

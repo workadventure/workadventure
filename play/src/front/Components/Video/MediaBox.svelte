@@ -34,48 +34,14 @@
     onMount(() => {
         gameScene.reposition();
         dispatch("camMounted");
-        console.log("MOUNTED MEDIA BOX");
     });
-
-    // function getWidthOfCam() {
-    //     camWidth = (document.getElementsByClassName("width")[0] as HTMLElement)?.offsetWidth;
-    //     console.log("TTTEEEESSSSTTTTTT", camWidth);
-    // }
 
     onDestroy(() => {
         gameScene.reposition();
         dispatch("camUnmounted");
     });
 
-    // function consoleLog() {
-    //     if (streamable instanceof VideoPeer) {
-    //         console.log("Si le streamable est une vidéo d'une autre personne", streamable);
-    //     } else if (streamable instanceof ScreenSharingPeer) {
-    //         console.log("Si le streamable est un partage d'écran de la part d'un autre utilisateur !", streamable);
-    //     } else if (streamable instanceof JitsiTrackStreamWrapper) {
-    //         console.log("Si le streamable est une vidéo de l'utilisateur", streamable);
-    //     } else {
-    //         console.log("Div pour celui qui partage son écran avec partage d'écran en petit", streamable);
-    //     }
-    // }
-
-    // function addStyleSpeaker() {
-    //     if ($constraintStore && $constraintStore.audio !== false) {
-
-    //     }
-    // }
-
     $: videoEnabled = $constraintStore ? $constraintStore.video : false;
-
-    function addStyleHighlight() {
-        // if ($highlightedEmbedScreen) {
-        //     isHighlighted = true;
-        //     console.log("isHighlighted", isHighlighted);
-        // } else {
-        //     isHighlighted = false;
-        //     console.log("isNOOTHighlighted", isHighlighted);
-        // }
-    }
 
     // $: $highlightedEmbedScreen, reduceSizeIfScreenShare();
 

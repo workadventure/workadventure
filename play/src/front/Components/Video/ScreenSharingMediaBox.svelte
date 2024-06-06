@@ -31,22 +31,6 @@
         embedScreen = peer as unknown as Streamable;
     }
 
-    // let onresize = function () {
-    //     //your code here
-    //     //this is just an example
-    //     let width = document.body.clientWidth;
-    //     let height = document.body.clientHeight;
-
-    //     console.log("width", width);
-    //     console.log("height", height);
-    //     calculateHeight();
-    // };
-    // window.addEventListener("resize", onresize);
-
-    // console.log(window.innerWidth);
-    // console.log(window.innerHeight);
-    // console.log("BONJOUUUUR");
-
     onMount(() => {
         embedScreen = peer;
         // calculateHeight();
@@ -60,22 +44,6 @@
     }
 
     $: changeIcon = $highlightedEmbedScreen === embedScreen;
-
-    // function calculateHeight() {
-    //     let screenShareHeight = (document.getElementById("video") as HTMLElement)?.offsetHeight;
-    //     console.log("screenShareHeight", screenShareHeight);
-    //     let heightWindow = window.innerHeight;
-    //     console.log("heightWindow", heightWindow);
-    //     let blankHeight = heightWindow - screenShareHeight;
-    //     console.log("blankHeight", blankHeight);
-    //     if (screenShareHeight > heightWindow) {
-    //         let scale = heightWindow / screenShareHeight;
-    //         let screenShare = document.querySelector(".screen-sharing");
-    //         if (screenShare instanceof HTMLElement) {
-    //             screenShare.style.transform = `scale(${scale})`;
-    //         }
-    //     }
-    // }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

@@ -52,7 +52,6 @@
     }
 
     function pin() {
-        console.log("je suis dans la fonction pin");
         if (!videoEnabled) return;
         highlightedEmbedScreen.toggleHighlight(embedScreen);
         embedScreenLayoutStore.set(LayoutMode.Presentation);
