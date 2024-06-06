@@ -485,13 +485,6 @@
 
 <!-- </div> -->
 <style>
-    video {
-        object-fit: cover;
-        &.object-contain {
-            object-fit: contain;
-        }
-    }
-
     .border-color {
         border-color: #4156f6;
     }

@@ -1,4 +1,4 @@
-import path, { join } from "path";
+import path from "path";
 import {
     EmoteEventMessage,
     JoinRoomMessage,

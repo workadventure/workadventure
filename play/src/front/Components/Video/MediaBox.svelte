@@ -69,7 +69,6 @@
             class:m-auto={!isHightlighted && !videoEnabled}
             class:aspect-video={!isHightlighted && !videoEnabled}
             class:clickable={isClickable}
-            on:click={addStyleHighlight}
             transition:fly={{ y: 50, duration: 150 }}
         >
             <!-- Video de l'autre personne-->
