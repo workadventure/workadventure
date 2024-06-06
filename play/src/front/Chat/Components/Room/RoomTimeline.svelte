@@ -81,7 +81,7 @@
             <div class="tw-flex tw-flex-row tw-items-center tw-gap-2">
                 {#each [...$userConnected] as [userId, user] (userId)}
                     <div class="avatar">
-                        <Avatar avatarUrl={user?.avatarUrl} fallbackFirstLetter={user?.username?.charAt(0)} />
+                        <Avatar {userId} fallbackFirstLetter={user?.username?.charAt(0)} color={user?.color} />
                     </div>
                 {/each}
             </div>

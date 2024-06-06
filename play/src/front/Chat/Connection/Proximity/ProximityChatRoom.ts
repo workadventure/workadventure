@@ -83,7 +83,7 @@ export class ProximityChatRoom implements ChatRoom {
             this._connection.roomConnection.emitProximityPublicMessage(spaceName, message);
     }
 
-    addIncomingUser(userId: number, userUuid: string, userName: string, avatarUrl?: string): void {
+    addIncomingUser(userId: number, userUuid: string, userName: string, color?: string): void {
         this.sendMessage(get(LL).chat.timeLine.incoming({ userName }), "incoming", false);
 
         const newChatUser: ChatUser = {
@@ -91,10 +91,10 @@ export class ProximityChatRoom implements ChatRoom {
             uuid: userUuid,
             availabilityStatus: writable(AvailabilityStatus.ONLINE),
             username: userName,
-            avatarUrl: avatarUrl ?? null,
+            avatarUrl: null,
             roomName: undefined,
             playUri: undefined,
-            color: undefined,
+            color: color,
             spaceId: get(this._connection.spaceId),
         };
 
