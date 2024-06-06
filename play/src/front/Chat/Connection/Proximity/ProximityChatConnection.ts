@@ -4,6 +4,7 @@ import { ChatConnectionInterface, ChatRoom, ChatUser, ConnectionStatus, CreateRo
 import { SpaceUserExtended } from "../../../Space/SpaceFilter/SpaceFilter";
 import { RoomConnection } from "../../../Connection/RoomConnection";
 import { ProximityChatRoom } from "./ProximityChatRoom";
+import { SpaceProviderInterface } from "../../../Space/SpaceProvider/SpacerProviderInterface";
 
 export class ProximityChatConnection implements ChatConnectionInterface {
     connectionStatus: Readable<ConnectionStatus> = writable("ONLINE");
@@ -15,8 +16,8 @@ export class ProximityChatConnection implements ChatConnectionInterface {
     isEncryptionRequiredAndNotSet: Readable<boolean> = writable(false);
     isGuest: Readable<boolean> = writable(false);
 
-    public spaceId: Readable<number | undefined>;
-    public spaceName: Readable<string | undefined>;
+    public spaceId: Writable<string | undefined> = writable(undefined);
+    public spaceName: Writable<string | undefined> = writable(undefined);
 
     constructor(
         private _roomConnection: RoomConnection,
@@ -26,9 +27,6 @@ export class ProximityChatConnection implements ChatConnectionInterface {
         private _roomName: string,
         private _playUri: string,
         private _visitCardUrl?: string,
-
-        _spaceId?: number,
-        _spaceName?: string
     ) {
         // Create current user for the proximity chat
         const user: ChatUser = {
@@ -37,7 +35,7 @@ export class ProximityChatConnection implements ChatConnectionInterface {
             username: this._username,
             avatarUrl: this._avatarUrl,
             roomName: this._roomName,
-            spaceId: _spaceId,
+            spaceId: undefined,
             playUri: this._playUri,
             isAdmin: false,
             isMember: true,
@@ -45,8 +43,6 @@ export class ProximityChatConnection implements ChatConnectionInterface {
             availabilityStatus: writable(AvailabilityStatus.ONLINE),
             color: undefined,
         };
-        this.spaceId = writable(_spaceId);
-        this.spaceName = writable(_spaceName);
 
         // Add the proximity chat room to the list of rooms
         this.rooms.update((rooms) => {
@@ -57,13 +53,13 @@ export class ProximityChatConnection implements ChatConnectionInterface {
 
     addUserFromSpace(user: SpaceUserExtended): void {
         this.userConnected.update((users) => {
-            users.set(user.id, user);
+            users.set(user.uuid, user);
             return users;
         });
     }
     updateUserFromSpace(user: PartialSpaceUser): void {
         this.userConnected.update((users) => {
-            users.set(user.id, user);
+            users.set(user.uuid, user);
             return users;
         });
     }
@@ -103,6 +99,11 @@ export class ProximityChatConnection implements ChatConnectionInterface {
     }
     initEndToEndEncryption(): Promise<void> {
         throw new Error("Method not implemented.");
+    }
+    
+    joinSpace(spaceId: string, spaceName: string): void {
+        this.spaceId.set(spaceId);
+        this.spaceName.set(spaceName);
     }
 
     // method to get room connection

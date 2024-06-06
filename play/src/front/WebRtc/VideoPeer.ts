@@ -115,6 +115,12 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
 
         this._constraintsStore = writable<ObtainedMediaStreamConstraints | null>(null);
 
+        const proximityMeeting = get(proximityRoomConnection);
+        if(proximityMeeting && proximityMeeting.joinSpace && this.user.webRtcUser) proximityMeeting.joinSpace(
+            this.user.webRtcUser!.split(':')[0],
+            `peer_${this.user.webRtcUser!.split(':')[0]}`
+        );
+
         //start listen signal for the peer connection
         this.on("signal", (data: unknown) => {
             this.sendWebrtcSignal(data);
@@ -144,7 +150,6 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
 
             this._connected = true;
 
-            const proximityMeeting = get(proximityRoomConnection);
             if (proximityMeeting) {
                 const proximityRoomChat = get(proximityMeeting.rooms)[0];
                 if (proximityRoomChat.addIncomingUser != undefined) {
@@ -332,7 +337,7 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
             if (proximityMeeting) {
                 const proximityRoomChat = get(proximityMeeting.rooms)[0];
                 if (proximityRoomChat.addOutcomingUser != undefined)
-                    proximityRoomChat.addOutcomingUser(this.userId, this.userName);
+                    proximityRoomChat.addOutcomingUser(this.userId, this.userUuid, this.userName);
             }
 
             if (this.localStreamStoreSubscribe) this.localStreamStoreSubscribe();

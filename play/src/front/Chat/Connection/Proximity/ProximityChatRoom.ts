@@ -95,24 +95,48 @@ export class ProximityChatRoom implements ChatRoom {
             roomName: undefined,
             playUri: undefined,
             color: color,
-            spaceId: get(this._connection.spaceId),
+            spaceId: undefined,
         };
 
         this._connection.userConnected.update((users) => {
-            users.set(userId, newChatUser);
+            users.set(userUuid, newChatUser);
             return users;
         });
         this.membersId.push(userId.toString());
     }
 
-    addOutcomingUser(userId: number, userName: string): void {
+    addOutcomingUser(userId: number, userUuid: string, userName: string): void {
         this.sendMessage(get(LL).chat.timeLine.outcoming({ userName }), "outcoming", false);
 
         this._connection.userConnected.update((users) => {
-            users.delete(userId);
+            users.delete(userUuid);
             return users;
         });
         this.membersId = this.membersId.filter((id) => id !== userId.toString());
+    }
+
+    addNewMessage(
+        message: string,
+        senderUserUuid: string,
+    ): void {
+        // Create content message
+        const newChatMessageContent = {
+            body: message,
+            url: undefined,
+        };
+
+        // Create message
+        const newMessage = new ProximityChatMessage(
+            uuidv4(),
+            get(this._connection.userConnected).get(senderUserUuid),
+            writable(newChatMessageContent),
+            new Date(),
+            false,
+            "proximity"
+        );
+
+        // Add message to the list
+        this.messages.push(newMessage);
     }
 
     startWriting(): void {

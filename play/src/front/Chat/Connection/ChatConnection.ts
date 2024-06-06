@@ -41,7 +41,8 @@ export interface ChatRoom {
     isEncrypted: Readable<boolean>;
 
     addIncomingUser?: (userId: number, userUuid: string, userName: string, color?: string) => void;
-    addOutcomingUser?: (userId: number, userName: string) => void;
+    addOutcomingUser?: (userId: number, userUuid: string, userName: string) => void;
+    addNewMessage?: (message: string, senderUserUuid: string) => void;
 }
 
 //Readonly attributes
@@ -114,6 +115,8 @@ export interface ChatConnectionInterface {
     isEncryptionRequiredAndNotSet: Readable<boolean>;
     initEndToEndEncryption(): Promise<void>;
     isGuest: Readable<boolean>;
+
+    joinSpace?: (spaceId: string, spaceName: string) => void;
 }
 
 export type Connection = AtLeast<RoomConnection, "queryChatMembers">;

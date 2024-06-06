@@ -1535,7 +1535,7 @@ export class GameScene extends DirtyScene {
                             this.connection,
                             localUserStore.getLocalUser()?.uuid ?? "unknow",
                             localUserStore.getName() ?? "unknow",
-                            get(currentPlayerWokaStore) ?? "unknow",
+                            get(gameManager.getCurrentGameScene().CurrentPlayer.pictureStore) ?? "unknow",
                             this.room.roomName ?? "unknow",
                             this.room.href,
                             gameManager.myVisitCardUrl ? gameManager.myVisitCardUrl : undefined
@@ -1942,7 +1942,7 @@ export class GameScene extends DirtyScene {
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.proximityPrivateMessageToClientMessageStream.subscribe(
                     (proximityPrivateMessageToClientMessage) => {
-                        console.log("proximityPrivateMessageToClientMessage", proximityPrivateMessageToClientMessage);
+                        console.info("proximity private message not implemented yet!");
                     }
                 );
 
@@ -1950,7 +1950,19 @@ export class GameScene extends DirtyScene {
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.proximityPublicMessageToClientMessageStream.subscribe(
                     (proximityPublicMessageToClientMessage) => {
-                        console.log("proximityPublicMessageToClientMessage", proximityPublicMessageToClientMessage);
+                        const _proximityRoomConnection = get(proximityRoomConnection);
+                        if(!_proximityRoomConnection) return;
+
+                        const room = get(_proximityRoomConnection?.rooms)[0];
+                        if(!room || !room.addNewMessage) return;
+
+                        // the user is me do not show the message
+                        if(proximityPublicMessageToClientMessage.senderUserUuid === localUserStore.getLocalUser()?.uuid) return;
+
+                        room.addNewMessage(
+                            proximityPublicMessageToClientMessage.message,
+                            proximityPublicMessageToClientMessage.senderUserUuid!
+                        );
                     }
                 );
 

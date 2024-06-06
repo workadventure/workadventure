@@ -4,6 +4,8 @@ import { SpaceProviderInterface } from "../SpaceProvider/SpacerProviderInterface
 import { LocalSpaceProviderSingleton } from "../SpaceProvider/SpaceStore";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { gameManager } from "../../Phaser/Game/GameManager";
+import { proximityRoomConnection } from "../../Chat/Stores/ChatStore";
+import { get } from "svelte/store";
 
 export enum SpaceEvent {
     AddSpaceUser = "addSpaceUserMessage",
@@ -22,6 +24,9 @@ export class StreamSpaceWatcher {
             const arrayBuffer: ArrayBuffer = messageEvent.data;
             const serverMessage = decoder.decode(new Uint8Array(arrayBuffer));
             const message = serverMessage.message;
+
+            const proximityRoom = get(proximityRoomConnection);
+
             if (message === undefined) return;
             if (message.$case !== "batchMessage") return;
             for (const subMessageWrapper of message.batchMessage.payload) {
@@ -36,8 +41,8 @@ export class StreamSpaceWatcher {
                             .get(subMessage.addSpaceUserMessage.spaceName)
                             .getSpaceFilter(subMessage.addSpaceUserMessage.filterName)
                             .addUser(subMessage.addSpaceUserMessage.user);
-
-                        chatConnection.addUserFromSpace(extendedUser);
+                        this.chatConnection.addUserFromSpace(extendedUser);
+                        proximityRoom?.addUserFromSpace(extendedUser);
                         break;
                     }
                     case SpaceEvent.UpdateSpaceUser: {
@@ -48,7 +53,8 @@ export class StreamSpaceWatcher {
                             .get(subMessage.updateSpaceUserMessage.spaceName)
                             .getSpaceFilter(subMessage.updateSpaceUserMessage.filterName)
                             .updateUserData(subMessage.updateSpaceUserMessage.user);
-                        chatConnection.updateUserFromSpace(subMessage.updateSpaceUserMessage.user);
+                        this.chatConnection.updateUserFromSpace(subMessage.updateSpaceUserMessage.user);
+                        proximityRoom?.updateUserFromSpace(subMessage.updateSpaceUserMessage.user);
                         break;
                     }
                     case SpaceEvent.RemoveSpaceUser: {
@@ -58,7 +64,8 @@ export class StreamSpaceWatcher {
                             .get(subMessage.removeSpaceUserMessage.spaceName)
                             .getSpaceFilter(subMessage.removeSpaceUserMessage.filterName)
                             .removeUser(subMessage.removeSpaceUserMessage.userId);
-                        chatConnection.disconnectSpaceUser(subMessage.removeSpaceUserMessage.userId);
+                        this.chatConnection.disconnectSpaceUser(subMessage.removeSpaceUserMessage.userId);
+                        proximityRoom?.disconnectSpaceUser(subMessage.removeSpaceUserMessage.userId);
                         break;
                     }
                     case SpaceEvent.updateSpaceMetadata: {
