@@ -203,10 +203,7 @@
 
 <!-- Props du composant camera container highlightedEmbedScreen={$highlightedEmbedScreen} -->
 <style>
-    #video-container-receive {
-    }
-
-    #presentation-layout.full-medias {
+    #presentation-layout {
         overflow-y: auto;
         overflow-x: hidden;
     }
@@ -214,54 +211,6 @@
     #presentation-layout {
         display: flex;
         flex-direction: column;
-    }
-
-    .test-media {
-        margin-bottom: -25px;
-    }
-
-    #embed-left-block {
-        flex-direction: column;
-        /* flex: 0 0 75%; */
-        height: 100%;
-        width: 75%;
-        padding-bottom: 4rem;
-    }
-
-    #main-embed-screen .highlighted-cowebsite {
-        height: 100% !important;
-        width: 100% !important;
-        position: relative;
-    }
-
-    #main-embed-screen .highlighted-cowebsite-container {
-        height: 100% !important;
-        width: 96%;
-        background-color: rgba(0, 0, 0, 0.6);
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-
-    #main-embed-screen .highlighted-cowebsite-container .actions {
-        z-index: 151;
-        position: absolute;
-        width: 100%;
-        top: 5px;
-        right: 5px;
-        display: flex;
-        flex-direction: row;
-        justify-content: flex-end;
-        gap: 2%;
-    }
-
-    #main-embed-screen .highlighted-cowebsite-container .actions button {
-        pointer-events: all;
-    }
-
-    @media (min-width: 768px) {
-        #embed-left-block {
-            flex: 0 0 65%;
-        }
     }
 
     @media (min-width: 576px) {
