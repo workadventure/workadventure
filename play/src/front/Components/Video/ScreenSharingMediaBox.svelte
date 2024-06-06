@@ -92,7 +92,7 @@
                 use:srcObject={$streamStore}
                 autoplay
                 playsinline
-                class="w-full h-full mx-auto rounded object-contain"
+                class="h-full w-full mx-auto rounded object-contain"
                 muted
             />
             <div class="flex justify-center">
@@ -176,22 +176,21 @@
 <style>
     @container (max-height: 638px) {
         .screen-sharing {
-            background-color: red;
             scale: 0.5;
         }
     }
 
-    /* @container (min-height: 768px) and (max-height: 1023px) {
+    @container (min-height: 768px) and (max-height: 1023px) {
         .screen-sharing {
             scale: 0.5;
         }
-    } */
+    }
 
-    /* @container (min-height: 1280px) and (max-height: 1439px) {
+    @container (min-height: 1280px) and (max-height: 1439px) {
         .screen-sharing {
             scale: 0.6;
         }
-    } */
+    }
 
     @container (min-height: 1440px) and (max-height: 1919px) {
         .screen-sharing {
@@ -204,33 +203,4 @@
             scale: 0.8;
         }
     }
-
-    /* @container (min-height: 1920px) {
-        .screen-sharing {
-            scale: 0.9;
-        }
-    } */
-    /* @container (max-width: 767px) {
-        .video-container {
-            scale: 0.5;
-        }
-    }
-
-    @container (min-width: 768px) and (max-width: 1023px) {
-        .video-container {
-            scale: 0.8;
-        }
-    }
-
-    @container (min-width: 1440px) and (max-width: 1919px) {
-        .video-container {
-            scale: 0.6;
-        }
-    } */
-
-    /* @container (min-width: 1920px) {
-        .video-container {
-            scale: 1;
-        }
-    } */
 </style>

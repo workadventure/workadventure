@@ -1,11 +1,11 @@
 <script lang="ts">
-    import { LayoutMode } from "../../WebRtc/LayoutManager";
-    import { embedScreenLayoutStore, heightCamWrapper } from "../../Stores/EmbedScreensStore";
-    import { emoteMenuSubStore } from "../../Stores/EmoteStore";
-    import PresentationLayout from "./Layouts/PresentationLayout.svelte";
-    import MozaicLayout from "./Layouts/MozaicLayout.svelte";
     import "../../style/wa-theme/video-ui.scss";
-    import { focusMode, rightMode, lightMode, hideMode } from "../../Stores/ActionsCamStore";
+    // import { LayoutMode } from "../../WebRtc/LayoutManager";
+    // import { embedScreenLayoutStore, heightCamWrapper } from "../../Stores/EmbedScreensStore";
+    // import { emoteMenuSubStore } from "../../Stores/EmoteStore";
+    import PresentationLayout from "./Layouts/PresentationLayout.svelte";
+    // import MozaicLayout from "./Layouts/MozaicLayout.svelte";
+    import { focusMode, rightMode, lightMode } from "../../Stores/ActionsCamStore";
 
     // DO for the focus mode
 
@@ -74,8 +74,6 @@
     // }
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-
 <div
     id="embedScreensContainer"
     class="{$focusMode
@@ -107,7 +105,7 @@
 
 <!-- style={$emoteMenuSubStore ? "padding-top:96px;" : ""} -->
 <style>
-    @media (max-width: 768px) {
+    @container (max-width: 768px) {
         #embedScreensContainer {
             display: block;
         }

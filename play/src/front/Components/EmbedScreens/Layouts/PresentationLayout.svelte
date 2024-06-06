@@ -134,7 +134,12 @@
             <!-- Le isMobile ne marche pas pour le moment -->
 
             {#if $streamableCollectionStore.size > 0 || $myCameraStore}
-                <div class="grid grid-flow-col gap-x-4 justify-center vertical items-end" id="container-media">
+                <div
+                    class="grid grid-flow-col gap-x-4 {$highlightedEmbedScreen
+                        ? 'justify-end'
+                        : 'justify-center'} vertical"
+                    id="container-media"
+                >
                     {#if $jitsiLoadingStore}
                         <Loading />
                     {/if}
@@ -276,12 +281,6 @@
 
         .container-media {
             margin-top: -70px;
-        }
-
-        .test-2 {
-            background-color: red;
-            width: 70%;
-            height: 30%;
         }
     }
 </style>

@@ -121,19 +121,6 @@
         <ScreenSharingMediaBox peer={streamable} clickable={isClickable} />
     </div>
 
-    <!-- Test pour m'inspirer de ces props css pour le mode mobile de celui qui recoit le partage mais en mode display block et non flex -->
-    <!-- <div
-        class="media-container {isHightlighted ? 'hightlighted mr-6' : 'flex h-full aspect-ratio'}"
-        class:clickable={isClickable}
-        class:mozaic-full-width={mozaicSolo}
-        class:mozaic-duo={mozaicDuo}
-        class:mozaic-quarter={mozaicQuarter}
-    >
-        <div class="{isHightlighted ? 'h-[41vw] mr-6' : 'mx-auto'}   w-full h-full flex screen-blocker">
-            <ScreenSharingMediaBox peer={streamable} clickable={isClickable} />
-        </div>
-    </div> -->
-
     <!-- Si le streamable est une vidéo de l'utilisateur / Je sais pas trop ce que c'est-->
 {:else if streamable instanceof JitsiTrackStreamWrapper}
     <div
@@ -160,10 +147,7 @@
     </div>
 {:else}
     <!-- Div pour celui qui partage son écran avec partage d'écran en petit-->
-    <div
-        class="media-container {isHightlighted ? 'hightlighted' : 'flex h-full aspect-ratio'}"
-        class:clickable={isClickable}
-    >
+    <div class="media-container {isHightlighted ? 'hightlighted' : 'flex h-full'}" class:clickable={isClickable}>
         <div class="{isHightlighted ? 'h-[41vw] mr-6' : 'mx-auto'} w-full h-full flex screen-blocker">
             <LocalStreamMediaBox peer={streamable} clickable={isClickable} cssClass="" />
         </div>

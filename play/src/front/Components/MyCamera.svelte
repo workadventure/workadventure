@@ -236,8 +236,8 @@
 
     @container (max-width: 767px) {
         .dimension {
-            width: 180px;
-            height: 90px;
+            width: 150px;
+            height: 70px;
         }
 
         .responsive-dimension {

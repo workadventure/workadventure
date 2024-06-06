@@ -92,8 +92,8 @@
         #unique-mycam {
             align-self: flex-end;
             margin-top: auto;
-            width: 180px;
-            height: 90px;
+            width: 150px;
+            height: 70px;
         }
     }
 </style>
