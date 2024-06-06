@@ -1531,15 +1531,7 @@ export class GameScene extends DirtyScene {
 
                     // initialise the proximity chat connection
                     proximityRoomConnection.set(
-                        new ProximityChatConnection(
-                            this.connection,
-                            localUserStore.getLocalUser()?.uuid ?? "unknow",
-                            localUserStore.getName() ?? "unknow",
-                            get(gameManager.getCurrentGameScene().CurrentPlayer.pictureStore) ?? "unknow",
-                            this.room.roomName ?? "unknow",
-                            this.room.href,
-                            gameManager.myVisitCardUrl ? gameManager.myVisitCardUrl : undefined
-                        )
+                        new ProximityChatConnection(this.connection)
                     );
 
                     const chatId = localUserStore.getChatId();

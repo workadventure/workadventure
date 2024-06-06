@@ -21,35 +21,7 @@ export class ProximityChatConnection implements ChatConnectionInterface {
 
     constructor(
         private _roomConnection: RoomConnection,
-        private _userUuid: string,
-        private _username: string,
-        private _avatarUrl: string,
-        private _roomName: string,
-        private _playUri: string,
-        private _visitCardUrl?: string,
-    ) {
-        // Create current user for the proximity chat
-        const user: ChatUser = {
-            id: this._userUuid,
-            uuid: this._userUuid,
-            username: this._username,
-            avatarUrl: this._avatarUrl,
-            roomName: this._roomName,
-            spaceId: undefined,
-            playUri: this._playUri,
-            isAdmin: false,
-            isMember: true,
-            visitCardUrl: this._visitCardUrl,
-            availabilityStatus: writable(AvailabilityStatus.ONLINE),
-            color: undefined,
-        };
-
-        // Add the proximity chat room to the list of rooms
-        this.rooms.update((rooms) => {
-            rooms.push(new ProximityChatRoom(this, user));
-            return rooms;
-        });
-    }
+    ) {}
 
     addUserFromSpace(user: SpaceUserExtended): void {
         this.userConnected.update((users) => {
