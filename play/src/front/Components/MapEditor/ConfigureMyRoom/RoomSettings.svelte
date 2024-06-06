@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { InfoIcon } from "svelte-feather-icons";
     import { onMount } from "svelte";
     import { writable } from "svelte/store";
     import { LL } from "../../../../i18n/i18n-svelte";
@@ -10,6 +9,7 @@
     import { UpdateWAMMetadataFrontCommand } from "../../../Phaser/Game/MapEditor/Commands/WAM/UpdateWAMMetadataFrontCommand";
     import ButtonState from "../../Input/ButtonState.svelte";
     import { InputTagOption } from "../../Input/InputTagOption";
+    import { IconInfoCircle } from "@wa-icons";
 
     let dynamicStrings = {
         error: {
@@ -88,7 +88,7 @@
         error={dynamicStrings.error.name}
     />
     <p class="help-text">
-        <InfoIcon size="18" />
+        <IconInfoCircle font-size="18" />
         {$LL.mapEditor.settings.room.helps.description()}
     </p>
     <InputTextArea
@@ -98,12 +98,12 @@
         onKeyPress={() => {}}
     />
     <p class="help-text">
-        <InfoIcon size="18" />
+        <IconInfoCircle font-size="18" />
         {$LL.mapEditor.settings.room.helps.tags()}
     </p>
     <InputTags label={$LL.mapEditor.settings.room.inputs.tags()} options={_tag} bind:value={tags} />
     <p class="help-text">
-        <InfoIcon size="18" />
+        <IconInfoCircle font-size="18" />
         {$LL.mapEditor.settings.room.helps.copyright()}
     </p>
     <InputTextArea

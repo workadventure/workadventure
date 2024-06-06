@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { IconLoader, IconPaperclip } from "@tabler/icons-svelte";
     import { get } from "svelte/store";
     import { ChatRoom } from "../../../Connection/ChatConnection";
     import { selectedChatMessageToReply } from "../../../Stores/ChatStore";
+    import { IconLoader, IconPaperclip } from "@wa-icons";
 
     let files: FileList | undefined = undefined;
     export let room: ChatRoom;
@@ -29,9 +29,9 @@
     <input id="upload" class="tw-hidden" type="file" multiple bind:files data-testid="uploadCustomAsset" />
     <label for="upload" class="tw-p-0 tw-m-0">
         {#if files !== undefined}
-            <IconLoader class="tw-animate-spin" size={18} />
+            <IconLoader class="tw-animate-spin" font-size={18} />
         {:else}
-            <IconPaperclip class="hover:!tw-cursor-pointer" size={18} />
+            <IconPaperclip class="hover:!tw-cursor-pointer" font-size={18} />
         {/if}
     </label>
 </div>

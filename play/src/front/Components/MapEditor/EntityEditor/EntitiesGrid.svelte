@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { IconPhotoOff } from "@tabler/icons-svelte";
     import { EntityVariant } from "../../../Phaser/Game/MapEditor/Entities/EntityVariant";
     import LL from "../../../../i18n/i18n-svelte";
     import EntityItem from "./EntityItem/EntityItem.svelte";
+    import { IconPhotoOff } from "@wa-icons";
 
     export let entityPrefabVariants: EntityVariant[];
     export let onSelectEntity: (entityVariant: EntityVariant) => void;

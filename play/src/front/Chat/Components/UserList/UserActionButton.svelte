@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { MoreHorizontalIcon, SlashIcon } from "svelte-feather-icons";
     import { Readable } from "svelte/store";
     import walk from "../../../../../public/static/svg/walk.svg";
     import teleport from "../../../../../public/static/svg/teleport.svg";
@@ -10,6 +9,7 @@
     import { requestVisitCardsStore } from "../../../Stores/GameStore";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { localUserStore } from "../../../Connection/LocalUserStore";
+    import { IconForbid, IconMoreVertical } from "@wa-icons";
 
     export let user: ChatUser;
 
@@ -51,7 +51,7 @@
 
 <div class="wa-dropdown">
     <button class="tw-text-light-purple focus:outline-none tw-m-0" on:click|stopPropagation={openChatUserMenu}>
-        <MoreHorizontalIcon />
+        <IconMoreVertical />
     </button>
     <!-- on:mouseleave={closeChatUserMenu} -->
     <div class={`wa-dropdown-menu ${chatMenuActive ? "" : "tw-invisible"}`} on:mouseleave={closeChatUserMenu}>
@@ -88,7 +88,7 @@
                 class="ban wa-dropdown-item tw-text-pop-red"
                 on:click|stopPropagation={() => {
                     if (user.username) chatConnection.sendBan(user.id, user.username);
-                }}><SlashIcon size="13" /> {$LL.chat.ban.title()}</span
+                }}><IconForbid font-size="13" /> {$LL.chat.ban.title()}</span
             >
         {/if}
     </div>
