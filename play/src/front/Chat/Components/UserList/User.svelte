@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { ShieldIcon, UsersIcon } from "svelte-feather-icons";
     import { AvailabilityStatus } from "@workadventure/messages";
     import highlightWords from "highlight-words";
     import { localUserStore } from "../../../Connection/LocalUserStore";
@@ -10,6 +9,7 @@
     import { chatSearchBarValue, navChat, selectedRoom } from "../../Stores/ChatStore";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import UserActionButton from "./UserActionButton.svelte";
+    import { IconShield, IconUsers } from "@wa-icons";
 
     export let user: ChatUser;
 
@@ -102,12 +102,12 @@
                 {/if}
                 {#if isAdmin}
                     <span class="tw-text-warning" title={$LL.chat.role.admin()}>
-                        <ShieldIcon size="13" />
+                        <IconShield font-size="13" />
                     </span>
                 {/if}
                 {#if isMember}
                     <span title={$LL.chat.role.member()}>
-                        <UsersIcon size="13" />
+                        <IconUsers font-size="13" />
                     </span>
                 {/if}
             </h1>

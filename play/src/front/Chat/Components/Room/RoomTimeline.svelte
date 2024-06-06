@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { IconArrowLeft } from "@tabler/icons-svelte";
     import { afterUpdate, beforeUpdate, onMount } from "svelte";
     import { get } from "svelte/store";
     import { ChatRoom } from "../../Connection/ChatConnection";
@@ -7,6 +6,7 @@
     import LL from "../../../../i18n/i18n-svelte";
     import Message from "./Message.svelte";
     import MessageInput from "./MessageInput.svelte";
+    import { IconArrowLeft } from "@wa-icons";
 
     export let room: ChatRoom;
 

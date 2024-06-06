@@ -1,8 +1,11 @@
 <script lang="ts">
     import { createEventDispatcher, onMount } from "svelte";
     import { OpenWebsitePropertyData } from "@workadventure/map-editor";
-    import { AlertTriangleIcon } from "svelte-feather-icons";
     import {
+        EraserException,
+        EraserService,
+        ExcalidrawException,
+        ExcalidrawService,
         GoogleWorkSpaceException,
         GoogleWorkSpaceService,
         KlaxoonEvent,
@@ -34,6 +37,7 @@
     import { InputTagOption } from "../../Input/InputTagOption";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
+    import { IconAlertTriangle } from "@wa-icons";
 
     export let property: OpenWebsitePropertyData;
     export let triggerOnActionChoosen: boolean = property.trigger === "onaction";
@@ -696,7 +700,7 @@
             {/if}
             {#if !embeddable && error === ""}
                 <span class="err tw-text-warning-900 tw-text-xs tw-italic tw-mt-1"
-                    ><AlertTriangleIcon size="12" />
+                    ><IconAlertTriangle font-size="12" />
                     {$LL.mapEditor.properties.linkProperties.messageNotEmbeddableLink()}.
                     <a
                         href="https://workadventu.re/map-building/troubleshooting.md#content-issues-embedding-a-website"
@@ -743,7 +747,7 @@
             {#if property.forceNewTab == true}
                 <div class="tw-mb-3">
                     <span class="err tw-text-warning-900 tw-text-xs tw-italic">
-                        <AlertTriangleIcon size="12" />
+                        <IconAlertTriangle font-size="12" />
                         {$LL.mapEditor.properties.linkProperties.forcedInNewTab()}
                     </span>
                 </div>
@@ -751,7 +755,7 @@
             {#if !embeddable && !property.newTab}
                 <div class="tw-mb-3">
                     <span class="err tw-text-warning-900 tw-text-xs tw-italic"
-                        ><AlertTriangleIcon size="12" />
+                        ><IconAlertTriangle font-size="12" />
                         {$LL.mapEditor.properties.linkProperties.warningEmbeddableLink()}.
                         <a
                             href="https://workadventu.re/map-building/troubleshooting.md#content-issues-embedding-a-website"

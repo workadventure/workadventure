@@ -1,12 +1,12 @@
 <script lang="ts">
-    import { IconCloudUpload } from "@tabler/icons-svelte";
     import { CustomEntityDirection, UploadEntityMessage } from "@workadventure/messages";
     import { onDestroy } from "svelte";
     import { v4 as uuidv4 } from "uuid";
-    import { Direction, EntityPrefab, ENTITY_UPLOAD_SUPPORTED_FORMATS_FRONT } from "@workadventure/map-editor";
+    import { Direction, ENTITY_UPLOAD_SUPPORTED_FORMATS_FRONT, EntityPrefab } from "@workadventure/map-editor";
     import LL from "../../../../../i18n/i18n-svelte";
     import { mapEditorEntityUploadEventStore } from "../../../../Stores/MapEditorStore";
     import CustomEntityEditionForm from "../CustomEntityEditionForm/CustomEntityEditionForm.svelte";
+    import { IconCloudUpload } from "@wa-icons";
 
     let files: FileList | undefined = undefined;
     let dropZoneRef: HTMLDivElement;
@@ -129,7 +129,7 @@
                 class="tw-flex tw-flex-row tw-gap-2 tw-min-w-full tw-p-2 tw-m-0 tw-items-center tw-justify-center"
                 for="upload"
             >
-                <IconCloudUpload size={32} stroke={1} />
+                <IconCloudUpload font-size={32} />
                 <span class="tw-flex tw-flex-col">
                     <span class="hover:tw-cursor-pointer">
                         {$LL.mapEditor.entityEditor.uploadEntity.dragDrop()}

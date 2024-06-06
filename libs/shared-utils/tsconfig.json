@@ -5,13 +5,14 @@
       "target": "ES2020",
       "lib": [
         "es2019",
-        "dom",
+        "dom"
       ],
       "module": "CommonJS",
       "esModuleInterop": true,
       "strict": true,
       "declaration": true,
       "sourceMap": true,
-      "importsNotUsedAsValues": "remove"
+      "importsNotUsedAsValues": "remove",
+      "skipLibCheck": true
     }
-  }
+}
