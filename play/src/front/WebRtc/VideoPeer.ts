@@ -147,7 +147,8 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
             const proximityMeeting = get(proximityRoomConnection);
             if (proximityMeeting) {
                 const proximityRoomChat = get(proximityMeeting.rooms)[0];
-                if (proximityRoomChat.addIncomingUser != undefined) proximityRoomChat.addIncomingUser(this.userName);
+                if (proximityRoomChat.addIncomingUser != undefined)
+                    proximityRoomChat.addIncomingUser(this.userId, this.userUuid, this.userName);
             }
 
             this.newMessageSubscription = newChatMessageSubject.subscribe((newMessage) => {
@@ -328,7 +329,8 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
             const proximityMeeting = get(proximityRoomConnection);
             if (proximityMeeting) {
                 const proximityRoomChat = get(proximityMeeting.rooms)[0];
-                if (proximityRoomChat.addOutcomingUser != undefined) proximityRoomChat.addOutcomingUser(this.userName);
+                if (proximityRoomChat.addOutcomingUser != undefined)
+                    proximityRoomChat.addOutcomingUser(this.userId, this.userName);
             }
 
             if (this.localStreamStoreSubscribe) this.localStreamStoreSubscribe();

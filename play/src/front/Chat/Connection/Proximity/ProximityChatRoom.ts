@@ -1,6 +1,7 @@
 import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
 import { Readable, get, writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
+import { AvailabilityStatus } from "@workadventure/messages";
 import {
     ChatMessage,
     ChatMessageContent,
@@ -82,12 +83,36 @@ export class ProximityChatRoom implements ChatRoom {
             this._connection.roomConnection.emitProximityPublicMessage(spaceName, message);
     }
 
-    addIncomingUser(userName: string): void {
+    addIncomingUser(userId: number, userUuid: string, userName: string, avatarUrl?: string): void {
         this.sendMessage(get(LL).chat.timeLine.incoming({ userName }), "incoming", false);
+
+        const newChatUser: ChatUser = {
+            id: userId.toString(),
+            uuid: userUuid,
+            availabilityStatus: writable(AvailabilityStatus.ONLINE),
+            username: userName,
+            avatarUrl: avatarUrl ?? null,
+            roomName: undefined,
+            playUri: undefined,
+            color: undefined,
+            spaceId: get(this._connection.spaceId),
+        };
+
+        this._connection.userConnected.update((users) => {
+            users.set(userId, newChatUser);
+            return users;
+        });
+        this.membersId.push(userId.toString());
     }
 
-    addOutcomingUser(userName: string): void {
+    addOutcomingUser(userId: number, userName: string): void {
         this.sendMessage(get(LL).chat.timeLine.outcoming({ userName }), "outcoming", false);
+
+        this._connection.userConnected.update((users) => {
+            users.delete(userId);
+            return users;
+        });
+        this.membersId = this.membersId.filter((id) => id !== userId.toString());
     }
 
     startWriting(): void {

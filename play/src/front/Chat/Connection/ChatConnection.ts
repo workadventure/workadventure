@@ -40,8 +40,8 @@ export interface ChatRoom {
     loadMorePreviousMessages: () => Promise<void>;
     isEncrypted: Readable<boolean>;
 
-    addIncomingUser?: (userName: string) => void;
-    addOutcomingUser?: (userName: string) => void;
+    addIncomingUser?: (userId: number, userUuid: string, userName: string, avatarUrl?: string) => void;
+    addOutcomingUser?: (userId: number, userName: string) => void;
 }
 
 //Readonly attributes
