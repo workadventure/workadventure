@@ -132,7 +132,7 @@
                 <div class="flex">
                     <span
                         class="rounded backdrop-blur px-4 py-1 text-white text-sm pl-12 pr-4 bold {$mediaStreamConstraintsStore.audio
-                            ? 'background-color'
+                            ? 'background-color-speaker'
                             : 'bg-contrast/90'}"
                     >
                         <div class="absolute left-1 -top-1" style="image-rendering:pixelated">
@@ -191,7 +191,7 @@
                 <div class="grow">
                     <span
                         class="rounded backdrop-blur px-4 py-1 text-white text-sm pl-12 pr-4 bold {$mediaStreamConstraintsStore.audio
-                            ? 'background-color'
+                            ? 'background-color-speaker'
                             : 'bg-contrast/90'}"
                     >
                         <div class="absolute left-1 -top-1" style="image-rendering:pixelated">
@@ -222,15 +222,11 @@
 </div>
 
 <style>
-    .dimension {
-        width: 350px;
-        height: 200px;
-    }
     .border-color {
         border-color: #4156f6;
     }
 
-    .background-color {
+    .background-color-speaker {
         background-color: #4156f6;
     }
 

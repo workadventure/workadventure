@@ -15,21 +15,12 @@
 
     $: changeIcon = !!$highlightedEmbedScreen;
 
-    // if (stream) {
-    //     embedScreen = {
-    //         type: "streamable",
-    //         embed: peer as unknown as Streamable,
-    //     };
-    // }
-
     function highlight() {
         highlightedEmbedScreen.toggleHighlight(peer);
     }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-
-<!--style="height:{$heightCamWrapper}px"-->
 <div
     class="group/screenshare m-0 relative video-container rounded-lg screen-sharing {cssClass
         ? cssClass
@@ -134,6 +125,12 @@
         .screen-blocker {
             display: flex;
             justify-content: center;
+        }
+    }
+
+    @container (min-width: 1920px) {
+        .screenshare {
+            aspect-ratio: 2.6;
         }
     }
 </style>

@@ -5,12 +5,6 @@
     import MyCamera from "../MyCamera.svelte";
     import { myCameraStore } from "../../Stores/MyMediaStore";
 
-    // export let highlightedEmbedScreen: EmbedScreen | undefined;
-    // export let full = false;
-    // $: clickable = !full;
-
-    let isVertical = false;
-
     let widthWindow: number | undefined;
     function camMountedWidth() {
         widthWindow = document.getElementById("presentation-layout")?.offsetWidth;
@@ -37,11 +31,6 @@
     }
 </script>
 
-<!-- svelte-ignore missing-declaration -->
-<!-- <aside class:full in:fly|local={{ x: 200, duration: 100 }} class="mobile-height"> -->
-<!-- grid-flow-col grid-flow-col -->
-<!-- {#if $streamableCollectionStore.size < 3} -->
-
 <div class="all-cameras overflow-visible">
     {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
         {#if !highlightedEmbedScreen || $highlightedEmbedScreen !== peer}
@@ -60,13 +49,8 @@
 </div>
 
 <!-- && !$megaphoneEnabledStore TODO HUGO -->
+
 <!-- </aside> -->
-
-<!-- {$mediaStreamConstraintsStore.audio
-    ? 'border-8 border-solid bg-indigo-400 rounded-lg'
-    : ''} -->
-
-<!-- isClickable={clickable} -->
 <style>
     #unique-mycam,
     #unique-cam-other {

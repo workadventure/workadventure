@@ -9,8 +9,6 @@
     import BanReportBox from "./BanReportBox.svelte";
     import { onMount } from "svelte";
 
-    export let clickable = false;
-
     export let peer: ScreenSharingPeer;
     let streamStore = peer.streamStore;
     let name = peer.userName;
@@ -19,13 +17,10 @@
     let statusStore = peer.statusStore;
     let changeIcon = true;
     let visibleIcon = false;
-    // let constraintStore = peer.constraintsStore;
 
     let embedScreen: Streamable;
 
     $: visibleIcon = $statusStore === "connected";
-
-    // $: videoEnabled = $streamStore ? $streamStore.getVideoTracks().length > 0 : false;
 
     if (peer) {
         embedScreen = peer as unknown as Streamable;
@@ -33,7 +28,6 @@
 
     onMount(() => {
         embedScreen = peer;
-        // calculateHeight();
     });
 
     function highlight() {
@@ -130,45 +124,3 @@
         </div>
     {/if}
 </div>
-<!-- on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)} -->
-
-<!-- nametag-screenshare-container container-end flex media-box-camera-on-size -->
-<!-- For DIV above i-->
-
-<!-- <div
-        class="report-ban-screenshare-container flex video-on-responsive-height media-box-camera-on-position media-box-screensharing-size
-        z-[600] flex opacity-0 translate-x-0 transition-all"
-    > -->
-
-<!-- For div above BAN REPORT -->
-<style>
-    @container (max-height: 638px) {
-        .screen-sharing {
-            scale: 0.5;
-        }
-    }
-
-    @container (min-height: 768px) and (max-height: 1023px) {
-        .screen-sharing {
-            scale: 0.5;
-        }
-    }
-
-    @container (min-height: 1280px) and (max-height: 1439px) {
-        .screen-sharing {
-            scale: 0.6;
-        }
-    }
-
-    @container (min-height: 1440px) and (max-height: 1919px) {
-        .screen-sharing {
-            scale: 0.7;
-        }
-
-        .screen-blocker {
-            display: flex;
-            justify-content: center;
-            scale: 0.8;
-        }
-    }
-</style>

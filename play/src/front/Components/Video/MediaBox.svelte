@@ -42,25 +42,10 @@
     });
 
     $: videoEnabled = $constraintStore ? $constraintStore.video : false;
-
-    // $: $highlightedEmbedScreen, reduceSizeIfScreenShare();
-
-    // function reduceSizeIfScreenShare() {
-    //     let containerCam = document.getElementsByClassName("media-container")[0] as HTMLElement;
-    //     if ($highlightedEmbedScreen) {
-    //         console.log("REDUCE SIZE");
-    //         // containerCam.style.aspectRatio = "2.5";
-    //     }
-    // }
 </script>
 
-<!--class:mr-6={isHightlighted && videoEnabled}-->
-
-<!-- Si le streamable est une vidéo d'une autre personne genre college de Bulles-->
 {#if streamable instanceof VideoPeer}
     {#if $constraintStore || $statusStore === "error" || $statusStore === "connecting"}
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- Ne pas mettre ici le media Strea store en condition maissur div niveau en dessous-->
         <div
             class="media-container transition-all cam-share-receive justify-center relative h-full w-full"
             class:hightlighted={isHightlighted}
@@ -71,22 +56,17 @@
             class:clickable={isClickable}
             transition:fly={{ y: 50, duration: 150 }}
         >
-            <!-- Video de l'autre personne-->
             <VideoMediaBox peer={streamable} clickable={isClickable} />
         </div>
     {/if}
-
-    <!-- Si le streamable est un partage d'écran de la part d'un autre utilisateur !-->
 {:else if streamable instanceof ScreenSharingPeer}
     <div
         class="media-container cam-share-receive justify-center h-full w-full
             media-box-shape-color"
         class:clickable={isClickable}
     >
-        <ScreenSharingMediaBox peer={streamable} clickable={isClickable} />
+        <ScreenSharingMediaBox peer={streamable} />
     </div>
-
-    <!-- Si le streamable est une vidéo de l'utilisateur / Je sais pas trop ce que c'est-->
 {:else if streamable instanceof JitsiTrackStreamWrapper}
     <div
         class="media-container media-box-shape-color pointer-events-auto screen-blocker"
@@ -111,7 +91,6 @@
         </div>
     </div>
 {:else}
-    <!-- Div pour celui qui partage son écran avec partage d'écran en petit-->
     <div class="media-container {isHightlighted ? 'hightlighted' : 'flex h-full'}" class:clickable={isClickable}>
         <div class="{isHightlighted ? 'h-[41vw] mr-6' : 'mx-auto'} w-full h-full flex screen-blocker">
             <LocalStreamMediaBox peer={streamable} clickable={isClickable} cssClass="" />
@@ -119,26 +98,7 @@
     </div>
 {/if}
 
-<!-- class:mozaic-full-width={mozaicSolo}
-        class:mozaic-duo={mozaicDuo}
-        class:mozaic-quarter={mozaicQuarter} -->
 <style>
-    /* @import "../../style/breakpoints.scss"; */
-
-    /* @include media-breakpoint-up(sm) {
-        .receiving-sharing {
-            display: block;
-        }
-    } */
-
-    /*Classes factorizing tailwind's ones are defined in video-ui.scss
-
-    .media-container {
-        &.clickable {
-            cursor: pointer;
-        }
-    }*/
-
     @container (min-width: 768px) and (max-width: 1023px) {
         .cam-share-receive {
             aspect-ratio: 2.5;
@@ -166,6 +126,11 @@
             display: flex;
             justify-content: center;
             aspect-ratio: 3.1;
+        }
+    }
+    @container (min-width: 1920px) {
+        .cam-share-receive {
+            aspect-ratio: 2.6;
         }
     }
 </style>

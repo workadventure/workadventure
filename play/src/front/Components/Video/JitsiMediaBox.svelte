@@ -138,9 +138,3 @@
         {/await}
     {/if}
 </div>
-
-<style lang="scss">
-    /*    video.no-video {
-        visibility: collapse;
-    }*/
-</style>
