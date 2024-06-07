@@ -47,6 +47,7 @@
 {#if $chatVisibilityStore}
     <section
         id="chat"
+        data-testid="chat"
         transition:fly={{ duration: 200, x: -335 }}
         class="chatWindow tw-overflow-hidden tw-bg-contrast/95 tw-backdrop-blur-md tw-p-4"
     >
