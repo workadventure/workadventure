@@ -1,8 +1,19 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { LocalSpaceProvider } from "../SpaceProvider/SpaceStore";
 import { SpaceInterface } from "../SpaceInterface";
 import { SpaceProviderInterface } from "../SpaceProvider/SpacerProviderInterface";
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
+import { Space } from "../Space";
+
+vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
+    return {
+        CharacterLayerManager: {
+            wokaBase64(): Promise<string> {
+                return Promise.resolve("");
+            },
+        },
+    };
+});
 
 describe("SpaceProviderInterface implementation", () => {
     describe("SpaceStore", () => {
@@ -16,7 +27,7 @@ describe("SpaceProviderInterface implementation", () => {
 
                 const spaceStore: SpaceProviderInterface = new LocalSpaceProvider();
                 spaceStore.add(newSpace.getName());
-                expect(spaceStore.getAll()).toContain(newSpace);
+                expect(spaceStore.get(newSpace.getName())).toBeInstanceOf(Space);
             });
             it("should return a error when you try to add a space who already exist", () => {
                 const newSpace: SpaceInterface = {
@@ -66,23 +77,28 @@ describe("SpaceProviderInterface implementation", () => {
         });
         describe("SpaceStore delete", () => {
             it("should delete a space when space is in the store", () => {
+                const destroyMock = vi.fn();
+
                 const spaceToDelete: SpaceInterface = {
                     getName(): string {
                         return "space-to-delete";
                     },
-                } as SpaceInterface;
+                    destroy: destroyMock,
+                } as unknown as SpaceInterface;
 
                 const space1: SpaceInterface = {
                     getName(): string {
                         return "space-test1";
                     },
-                } as SpaceInterface;
+                    destroy: destroyMock,
+                } as unknown as SpaceInterface;
 
                 const space2: SpaceInterface = {
                     getName(): string {
                         return "space-test2";
                     },
-                } as SpaceInterface;
+                    destroy: destroyMock,
+                } as unknown as SpaceInterface;
                 const spaceMap: Map<string, SpaceInterface> = new Map<string, SpaceInterface>([
                     [spaceToDelete.getName(), spaceToDelete],
                     [space1.getName(), space1],
@@ -93,6 +109,7 @@ describe("SpaceProviderInterface implementation", () => {
 
                 spaceStore.delete(spaceToDelete.getName());
                 expect(spaceStore.getAll()).not.toContain(spaceToDelete);
+                expect(destroyMock).toBeCalledTimes(1);
             });
             it("should return a error when you try to delete a space who is not in the space ", () => {
                 const newSpace: SpaceInterface = {
