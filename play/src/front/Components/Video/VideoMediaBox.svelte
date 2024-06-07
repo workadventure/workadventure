@@ -32,9 +32,9 @@
     import FlagIcon from "../Icons/FlagIcon.svelte";
     import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
     import MessageCircleIcon from "../Icons/MessageCircleIcon.svelte";
-    import ActionMediaBox from "./ActionMediaBox.svelte";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import ScreenShareIcon from "../Icons/ScreenShareIcon.svelte";
+    import ActionMediaBox from "./ActionMediaBox.svelte";
 
     // Extend the HTMLVideoElement interface to add the setSinkId method.
     // See https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
@@ -82,7 +82,7 @@
 
     $: visibleIcon = $statusStore === "connected";
 
-    $: changeIcon = embedScreen === $highlightedEmbedScreen;
+    $: changeIcon = $highlightedEmbedScreen === peer;
 
     const resizeObserver = new ResizeObserver(() => {
         minimized = isMediaBreakpointOnly("md");
@@ -430,35 +430,6 @@
     >
         <svg
             xmlns="http://www.w3.org/2000/svg"
-            class="icon icon-tabler icon-tabler-arrows-maximize"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            stroke-width="1.5"
-            stroke="#ffffff"
-            fill="none"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-        >
-            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-            <path d="M16 4l4 0l0 4" />
-            <path d="M14 10l6 -6" />
-            <path d="M8 20l-4 0l0 -4" />
-            <path d="M4 20l6 -6" />
-            <path d="M16 20l4 0l0 -4" />
-            <path d="M14 14l6 6" />
-            <path d="M8 4l-4 0l0 4" />
-            <path d="M4 4l6 6" />
-        </svg>
-    </div>
-
-    <div
-        class={changeIcon && visibleIcon
-            ? "hidden"
-            : "absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-full aspect-ratio bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 pointer-events-none"}
-    >
-        <svg
-            xmlns="http://www.w3.org/2000/svg"
             class="icon icon-tabler icon-tabler-arrows-minimize"
             width="24"
             height="24"
@@ -478,6 +449,35 @@
             <path d="M15 9l6 -6" />
             <path d="M19 15l-4 0l0 4" />
             <path d="M15 15l6 6" />
+        </svg>
+    </div>
+
+    <div
+        class={changeIcon && visibleIcon
+            ? "hidden"
+            : "absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-full aspect-ratio bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 pointer-events-none"}
+    >
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="icon icon-tabler icon-tabler-arrows-maximize"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="#ffffff"
+            fill="none"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+        >
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M16 4l4 0l0 4" />
+            <path d="M14 10l6 -6" />
+            <path d="M8 20l-4 0l0 -4" />
+            <path d="M4 20l6 -6" />
+            <path d="M16 20l4 0l0 -4" />
+            <path d="M14 14l6 6" />
+            <path d="M8 4l-4 0l0 4" />
+            <path d="M4 4l6 6" />
         </svg>
     </div>
 </div>
