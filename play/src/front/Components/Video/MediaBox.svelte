@@ -56,7 +56,7 @@
             class:clickable={isClickable}
             transition:fly={{ y: 50, duration: 150 }}
         >
-            <VideoMediaBox peer={streamable} clickable={isClickable} />
+            <VideoMediaBox peer={streamable} />
         </div>
     {/if}
 {:else if streamable instanceof ScreenSharingPeer}

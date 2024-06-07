@@ -43,7 +43,6 @@
         requestVideoFrameCallback(callback: VideoFrameRequestCallback, options?: IdleRequestOptions): number;
     }
 
-    export let clickable = false;
     export let isHightlighted = false;
     export let peer: VideoPeer;
 

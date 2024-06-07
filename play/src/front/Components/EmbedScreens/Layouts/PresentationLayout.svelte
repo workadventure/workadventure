@@ -12,7 +12,6 @@
     import Loading from "../../Video/Loading.svelte";
     import { jitsiLoadingStore } from "../../../Streaming/BroadcastService";
 
-    let layoutDom: HTMLDivElement;
     const isMobile = window.matchMedia("(max-width: 767px)");
     let isVertical: boolean;
     let currentHighlightedEmbedScreen: Streamable | undefined;
@@ -56,7 +55,7 @@
 
 <!-- class:full-medias={displayFullMedias} -->
 
-<div id="presentation-layout" bind:this={layoutDom}>
+<div id="presentation-layout">
     {#if isVertical}
         <div class="vertical">
             <div id="video-container-receive" class={$highlightedEmbedScreen ? "block" : "hidden"}>
