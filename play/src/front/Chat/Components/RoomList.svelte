@@ -108,7 +108,7 @@
             {$LL.chat.rooms()}</button
         >
         {#if $isGuest === false}
-            <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={openCreateRoomModal}>
+            <button data-testid="openCreateRoomModalButton" class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={openCreateRoomModal}>
                 <IconSquarePlus font-size={16} />
             </button>
         {/if}

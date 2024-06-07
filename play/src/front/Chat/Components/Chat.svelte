@@ -87,7 +87,6 @@
 </script>
 
 <div class="tw-flex tw-flex-col tw-gap-2 tw-h-full">
-    <div id="chatModal" class="tw-absolute tw-to-50%" />
     {#if $chatConnectionStatus === "CONNECTING"}
         <ChatLoader label={$LL.chat.connecting()} />
     {/if}

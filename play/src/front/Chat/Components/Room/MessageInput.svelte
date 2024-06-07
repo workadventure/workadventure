@@ -69,6 +69,7 @@
 {/if}
 <div class="tw-flex tw-items-center tw-gap-1 tw-border tw-border-solid tw-rounded-xl tw-pr-1 tw-border-light-purple">
     <textarea
+        data-testid="messageInput"
         rows={1}
         bind:value={message}
         bind:this={messageInput}
@@ -85,6 +86,7 @@
     </button>
     <MessageFileInput {room} />
     <button
+        data-testid="sendMessageButton"
         class="disabled:tw-opacity-30 disabled:!tw-cursor-none disabled:tw-text-white tw-p-0 tw-m-0 tw-text-secondary"
         disabled={message.trim().length === 0}
         on:click={() => sendMessage(message)}

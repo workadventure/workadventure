@@ -388,7 +388,7 @@ class LocalAdmin implements AdminInterface {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
     updateChatId(userIdentifier: string, chatId: string) {
-        return Promise.reject(new Error("No admin backoffice set!"));
+        return Promise.resolve("No admin backoffice to updateChatID !");
     }
 }
 
