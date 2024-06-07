@@ -16,6 +16,7 @@
                 (camera as HTMLElement).style.transform = `scale(${scale})`;
             });
         }
+        // stackCameraIfSuperiorToFive();
     }
 
     function camUnmountedWidth() {
@@ -28,7 +29,20 @@
                 (camera as HTMLElement).style.transform = `scale(${scale})`;
             });
         }
+        // stackCameraIfSuperiorToFive();
     }
+
+    //Fonction pour stack les caméras
+
+    // function stackCameraIfSuperiorToFive() {
+    //     let allCams = document.getElementsByClassName("all-cameras");
+    //     if (allCams.length > 4) {
+    //         let cameras = document.querySelectorAll(".all-cameras");
+    //         cameras.forEach((camera) => {
+    //             (camera as HTMLElement).style.flexDirection = "column";
+    //         });
+    //     }
+    // }
 </script>
 
 <div class="all-cameras overflow-visible">

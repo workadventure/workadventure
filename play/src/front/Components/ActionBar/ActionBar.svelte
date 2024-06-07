@@ -114,10 +114,10 @@
     import { StringUtils } from "../../Utils/StringUtils";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
     import { focusMode, rightMode, hideMode } from "../../Stores/ActionsCamStore";
-
+    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     // gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
     let userName = gameManager.getPlayerName() || "";
-
+    export const className: string = "";
     let microphoneActive = false;
     let cameraActive = false;
     let profileMenuIsDropped = false;
@@ -126,6 +126,8 @@
     let helpActive: string | undefined = undefined;
     let navigating = false;
     let camMenuIsDropped = false;
+    let smallArrowVisible = true;
+    let layoutDom: HTMLDivElement;
     const sound = new Audio("/resources/objects/webrtc-out-button.mp3");
 
     function focusModeOn() {
@@ -139,14 +141,13 @@
     }
 
     function lightModeOn() {
-        console.log("Je suis dans la fonction lightModeOn pour le focusMode");
         focusMode.set(true);
         console.log("focusMode", focusMode);
     }
 
     function hideModeOn() {
         hideMode.set(!get(hideMode));
-        console.log("hideMode", hideMode);
+        console.log("hideMode", $hideMode);
     }
 
     function screenSharingClick(): void {
@@ -164,7 +165,6 @@
             requestedCameraState.disableWebcam();
         } else {
             requestedCameraState.enableWebcam();
-            // layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone"); Voir avec Hugo
         }
     }
 
@@ -174,10 +174,10 @@
             requestedMicrophoneState.disableMicrophone();
         } else {
             requestedMicrophoneState.enableMicrophone();
-            // layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone"); Voir avec Hugo
         }
     }
 
+    // Still needed ?
     function switchLayoutMode() {
         // if ($embedScreenLayoutStore === LayoutMode.Presentation) {
         //     $embedScreenLayoutStore = LayoutMode.VideoChat;
@@ -490,7 +490,10 @@
 {#if !$chatVisibilityStore}
     <ChatOverlay />
 {/if}
-<div class="@container/actions w-full z-[301] bottom-0 sm:top-0 transition-all pointer-events-none bp-menu">
+<div
+    class="@container/actions w-full z-[301] bottom-0 sm:top-0 transition-all pointer-events-none bp-menu"
+    bind:this={layoutDom}
+>
     <div class="flex w-full p-2 space-x-2 @xl/actions:p-4 @xl/actions:space-x-4">
         <div
             class="justify-start flex-1 pointer-events-auto w-32"
@@ -760,6 +763,7 @@
                                 <div
                                     class="group/btn-follow bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 rounded-l-lg sm:rounded-l-none sm:first:rounded-l-lg sm:last:rounded-r-lg  aspect-square"
                                 >
+                                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                                     <div
                                         class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 rounded group-hover/btn-follow:bg-white/10 aspect-square flex items-center justify-center transition-all {$followStateStore ===
                                         'active'
@@ -784,6 +788,7 @@
                                         />
                                     {/if}
                                 </div>
+                                <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <div
                                     class="group/btn-lock relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 rounded-none sm:first:rounded-l-lg sm:last:rounded-r-lg aspect-square"
                                     class:disabled={$currentPlayerGroupLockStateStore}
@@ -858,23 +863,26 @@
                         <!-- NAV : MICROPHONE END -->
                         <!--{#if $microphoneListStore.length > 1 || $cameraListStore.length > 1 || $speakerListStore.length > 0}
                         {/if}-->
-                        <div
-                            class="absolute h-3 w-7 rounded-b bg-contrast/80 backdrop-blur left-0 right-0 m-auto p-1 z-10 opacity-0 transition-all -bottom-3 hidden sm:block {cameraActive
-                                ? 'opacity-100'
-                                : 'group-hover/hardware:opacity-100'}"
-                        >
+                        {#if smallArrowVisible}
                             <div
-                                class="absolute bottom-1 left-0 right-0 m-auto hover:bg-white/10 h-5 w-5 flex items-center justify-center rounded-sm"
-                                on:click|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}
+                                class="absolute h-3 w-7 rounded-b bg-contrast/80 backdrop-blur left-0 right-0 m-auto p-1 z-10 opacity-0 transition-all -bottom-3 hidden sm:block {cameraActive
+                                    ? 'opacity-100'
+                                    : 'group-hover/hardware:opacity-100'}"
                             >
-                                <ChevronUpIcon
-                                    height="h-4"
-                                    width="w-4"
-                                    classList="aspect-square transition-all {cameraActive ? '' : 'rotate-180'}"
-                                    strokeWidth="2"
-                                />
+                                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                <div
+                                    class="absolute bottom-1 left-0 right-0 m-auto hover:bg-white/10 h-5 w-5 flex items-center justify-center rounded-sm"
+                                    on:click|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}
+                                >
+                                    <ChevronUpIcon
+                                        height="h-4"
+                                        width="w-4"
+                                        classList="aspect-square transition-all {cameraActive ? '' : 'rotate-180'}"
+                                        strokeWidth="2"
+                                    />
+                                </div>
                             </div>
-                        </div>
+                        {/if}
                         {#if cameraActive}
                             <div
                                 class="absolute top-20 left-1/2 transform -translate-x-1/2 text-white rounded-lg w-64 overflow-hidden before:content-[''] before:absolute before:w-full before:h-full before:z-1 before:left-0 before:top-0 before:rounded-lg before:bg-contrast/80 before:backdrop-blur after:content-[''] after:absolute after:z-0 after:w-full after:bg-transparent after:h-full after:-top-4 after:-left-0 transition-all"
@@ -1132,6 +1140,7 @@
                             <div
                                 class="group/btn-menu-cam relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square hidden sm:block"
                                 on:click={() => (camMenuIsDropped = !camMenuIsDropped)}
+                                on:click={() => (smallArrowVisible = !smallArrowVisible)}
                             >
                                 <div
                                     class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 p-1 m-0 rounded group-[.disabled]/btn-screen-share:bg-secondary hover:bg-white/10 flex items-center justify-center transition-all {$requestedScreenSharingState &&
@@ -1155,12 +1164,12 @@
 
                             {#if camMenuIsDropped}
                                 <div
-                                    class="absolute mt-2 top-14 z-1500 @xl/actions:top-16 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 left-24 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all hidden @md/actions:block max-h-[calc(100vh-96px)] overflow-y-auto"
+                                    class="absolute mt-2 top-14 test @xl/actions:top-16 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 left-24 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all hidden @md/actions:block max-h-[calc(100vh-96px)] overflow-y-auto"
                                     transition:fly={{ y: 40, duration: 150 }}
                                 >
-                                    <div class="p-0 m-0 list-none">
+                                    <div class="p-0 m-0 list-none test">
                                         <button
-                                            class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
+                                            class="group test flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
                                             on:click={lightModeOn}
                                         >
                                             <div
@@ -1192,44 +1201,19 @@
                                             </div>
                                             <div>{$LL.actionbar.rightMode()}</div>
                                         </button>
-                                        <button
-                                            class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
-                                            on:click={hideModeOn}
-                                        >
-                                            <div
-                                                class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
+                                        {#if $highlightedEmbedScreen}
+                                            <button
+                                                class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
+                                                on:click={hideModeOn}
                                             >
-                                                <ProfilIcon />
-                                            </div>
-                                            <div>{$LL.actionbar.hideMode()}</div>
-                                        </button>
-
-                                        <!-- <button
-                                            class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full pointer-events-auto"
-                                            on:click={() => openEditCompanionScene()}
-                                        >
-                                            <div
-                                                class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
-                                            >
-                                                <Companion
-                                                    userId={-1}
-                                                    placeholderSrc="./static/images/default-companion.png"
-                                                    width="26px"
-                                                    height="26px"
-                                                />
-                                            </div>
-                                            <div>{$LL.actionbar.companion()}</div>
-                                        </button> -->
-                                        <!-- <button
-                                            class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full pointer-events-auto"
-                                        >
-                                            <div
-                                                class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
-                                            >
-                                                <AchievementIcon />
-                                            </div>
-                                            <div>{$LL.actionbar.quest()}</div>
-                                        </button> -->
+                                                <div
+                                                    class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
+                                                >
+                                                    <ProfilIcon />
+                                                </div>
+                                                <div>{$LL.actionbar.hideMode()}</div>
+                                            </button>
+                                        {/if}
                                     </div>
                                 </div>
                             {/if}
@@ -1819,5 +1803,9 @@
         .move-menu {
             transform: translateX(-3rem);
         }
+    }
+
+    .focus-mode {
+        background-color: red;
     }
 </style>

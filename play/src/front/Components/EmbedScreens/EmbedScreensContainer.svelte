@@ -77,14 +77,14 @@
 <div
     id="embedScreensContainer"
     class="{$focusMode
-        ? `group relative h-full pt-2 @sm/main-layout @xl/main-layout items-center pointer-events-auto transition-all`
-        : `group relative h-full pt-2 @sm/main-layout @xl/main-layout items-center pointer-events-auto transition-all bg-contrast/80`}
+        ? `group relative h-full w-full @sm/main-layout @xl/main-layout items-center pointer-events-auto transition-all`
+        : `group relative h-full w-full @sm/main-layout @xl/main-layout items-center pointer-events-auto transition-all bg-contrast/80`}
         {$rightMode
-        ? 'group relative h-full pt-2 @sm/main-layout @xl/main-layout items-center pointer-events-auto transition-all flex flex-col'
-        : 'group relative h-full pt-2 @sm/main-layout @xl/main-layout items-center pointer-events-auto transition-all'}"
-    style={$lightMode
-        ? "group relative h-full pt-2 @sm/main-layout @xl/main-layout items-center pointer-events-auto transition-all"
-        : ""}
+        ? 'group relative h-full w-full @sm/main-layout @xl/main-layout items-center pointer-events-auto transition-all flex flex-col'
+        : 'group relative h-full w-full @sm/main-layout @xl/main-layout items-center pointer-events-auto transition-all'}
+        {$lightMode
+        ? 'group relative h-full w-full @sm/main-layout @xl/main-layout items-center pointer-events-auto transition-all'
+        : ''}"
 >
     <PresentationLayout />
     <!-- {#if $embedScreenLayoutStore === LayoutMode.Presentation}
@@ -104,10 +104,10 @@
 </div>
 
 <!-- style={$emoteMenuSubStore ? "padding-top:96px;" : ""} -->
-<style>
+<!-- <style>
     @container (max-width: 768px) {
         #embedScreensContainer {
             display: block;
         }
     }
-</style>
+</style> -->

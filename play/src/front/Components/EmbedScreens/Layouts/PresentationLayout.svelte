@@ -11,6 +11,7 @@
     } from "../../../Stores/StreamableCollectionStore";
     import Loading from "../../Video/Loading.svelte";
     import { jitsiLoadingStore } from "../../../Streaming/BroadcastService";
+    import { hideMode, rightMode } from "../../../Stores/ActionsCamStore";
 
     const isMobile = window.matchMedia("(max-width: 767px)");
     let isVertical: boolean;
@@ -51,13 +52,53 @@
             containerCam.style.marginBottom = "0px";
         }
     }
+
+    $: $rightMode, setRightMode();
+
+    function setRightMode() {
+        console.log($rightMode);
+        console.log(isVertical);
+        console.log("je suis dans le right mode");
+        if ($rightMode && !isVertical) {
+            console.log("je suis dans le if du right mode");
+            let containerLayoutCam = document.getElementById("right-mode");
+            console.log(containerLayoutCam);
+            containerLayoutCam?.classList.add("right-mode-on");
+            // Cette div est nul mais dans l'idéé je veux faire qqch comme cela
+        } else {
+            let containerLayoutCam = document.getElementById("right-mode");
+            containerLayoutCam?.classList.remove("right-mode-on");
+        }
+    }
+
+    $: if ($hideMode && $highlightedEmbedScreen) setHideMode();
+
+    function setHideMode() {
+        // ATTENTION NE PLUS RENDRE CLICKABLE LE SCREENSHARE CAR SINON PLUS RIEN
+        let containerLayoutCam = document.getElementById("container-media");
+        let containerScreenShare = document.getElementById("video-container-receive");
+
+        if ($hideMode && !isVertical) {
+            containerLayoutCam?.classList.add("hidden");
+
+            if (containerScreenShare) {
+                containerScreenShare.classList.add("fullscreen");
+            }
+        } else if (!$hideMode && !isVertical) {
+            containerLayoutCam?.classList.remove("hidden");
+
+            if (containerScreenShare) {
+                containerScreenShare.style.transform = "scale(1)";
+            }
+        }
+    }
 </script>
 
 <!-- class:full-medias={displayFullMedias} -->
 
 <div id="presentation-layout">
     {#if isVertical}
-        <div class="vertical">
+        <div class="vertical" id="right-mode">
             <div id="video-container-receive" class={$highlightedEmbedScreen ? "block" : "hidden"}>
                 {#if $highlightedEmbedScreen}
                     {#key $highlightedEmbedScreen.uniqueId}
@@ -134,6 +175,15 @@
 </div>
 
 <style>
+    .right-mode-on {
+        display: flex;
+        flex-direction: column;
+        background-color: red;
+    }
+
+    .fullscreen {
+        scale: 1.4;
+    }
     #presentation-layout {
         overflow-y: auto;
         overflow-x: hidden;
