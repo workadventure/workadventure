@@ -6,8 +6,10 @@ import { Filter, SpaceFilter, SpaceFilterInterface, SpaceUserExtended } from "..
 
 vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
     return {
-        wokaBase64(): Promise<string> {
-            return Promise.resolve("");
+        CharacterLayerManager: {
+            wokaBase64(): Promise<string> {
+                return Promise.resolve("");
+            },
         },
     };
 });
@@ -45,7 +47,6 @@ describe("SpaceFilter", () => {
                 spaceName,
                 undefined,
                 vi.fn(),
-
                 userMap
             );
 
