@@ -12,7 +12,7 @@ import TabItem from '@theme/TabItem';
 As of May 2024, this is the recommended way of hosting your maps
 :::
 
-<iframe width="100%" height="480" src="https://youtu.be/WNcbEHm2Hlg" title="Upload your map - With the script" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" allowfullscreen></iframe>
+<iframe width="100%" height="480" src="https://youtube.com/embed/WNcbEHm2Hlg" title="Upload your map - With the script" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" allowfullscreen></iframe>
 
 The WorkAdventure server can host your map files.
 
@@ -144,7 +144,7 @@ In the next chapter, a more robust way to store and work on your map files: a Gi
 
 ## Using Git and a CI/CD pipeline
 
-<iframe width="100%" height="480" src="https://youtu.be/FvS63eHeKi0" title="Upload your map using Git CI/CD" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" allowfullscreen></iframe>
+<iframe width="100%" height="480" src="https://youtube.com/embed/FvS63eHeKi0" title="Upload your map using Git CI/CD" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" allowfullscreen></iframe>
 
 A great place to store your original files is in a Git repository (like GitHub or Gitlab). If you are a developer, you probably already know
 Git. The Git repository offers the following advantages:
