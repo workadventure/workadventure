@@ -8,14 +8,12 @@
     import Avatar from "../Avatar.svelte";
     import Message from "./Message.svelte";
     import MessageInput from "./MessageInput.svelte";
-    import { gameManager } from "../../../Phaser/Game/GameManager";
 
     export let room: ChatRoom;
 
     let messageListRef: HTMLUListElement;
     let autoScroll = true;
     let onScrollTop = false;
-    let userConnectedName = "";
 
     async function loadPreviousMessageOnScrollTop() {
         while (messageListRef.scrollTop === 0 && get(room.hasPreviousMessage)) {
@@ -29,8 +27,6 @@
         if (messageListRef) {
             loadPreviousMessageOnScrollTop().catch((error) => console.error(error));
         }
-
-        userConnectedName = gameManager.getCurrentGameScene().CurrentPlayer.name;
     });
 
     beforeUpdate(() => {
@@ -83,10 +79,13 @@
     >
         {#if room.id === "proximity" && $userConnected !== undefined}
             <div class="tw-flex tw-flex-row tw-items-center tw-gap-2">
-                <Avatar userId={-1} fallbackFirstLetter={userConnectedName} />
                 {#each [...$userConnected] as [userId, user] (userId)}
                     <div class="avatar">
-                        <Avatar {userId} fallbackFirstLetter={user?.username?.charAt(0)} color={user?.color} />
+                        <Avatar
+                            avatarUrl={user.avatarUrl}
+                            fallbackFirstLetter={user?.username?.charAt(0)}
+                            color={user?.color}
+                        />
                     </div>
                 {/each}
             </div>

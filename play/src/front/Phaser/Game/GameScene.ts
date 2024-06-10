@@ -1531,7 +1531,11 @@ export class GameScene extends DirtyScene {
 
                     // initialise the proximity chat connection
                     proximityRoomConnection.set(
-                        new ProximityChatConnection(this.connection)
+                        new ProximityChatConnection(
+                            this.connection,
+                            this.connection.getUserId(),
+                            localUserStore.getLocalUser()?.uuid ?? "unknow"
+                        )
                     );
 
                     const chatId = localUserStore.getChatId();
@@ -1787,33 +1791,43 @@ export class GameScene extends DirtyScene {
                     }
                 });
 
-                const broadcastService = new BroadcastService(
-                    this.connection,
-                    (
-                        connection: RoomConnection,
-                        spaceName: string,
-                        spaceFilter: SpaceFilterMessage,
-                        broadcastService: BroadcastService,
-                        playSound: boolean
-                    ) => {
-                        return new JitsiBroadcastSpace(connection, spaceName, spaceFilter, broadcastService, playSound);
-                    }
-                );
-                this._broadcastService = broadcastService;
-
-                // The megaphoneSettingsMessageStream is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.megaphoneSettingsMessageStream.subscribe((megaphoneSettingsMessage) => {
-                    if (megaphoneSettingsMessage) {
-                        megaphoneCanBeUsedStore.set(megaphoneSettingsMessage.enabled);
-                        if (
-                            megaphoneSettingsMessage.url &&
-                            get(availabilityStatusStore) !== AvailabilityStatus.DO_NOT_DISTURB
-                        ) {
-                            broadcastService.joinSpace(megaphoneSettingsMessage.url);
+                try {
+                    const broadcastService = new BroadcastService(
+                        this.connection,
+                        (
+                            connection: RoomConnection,
+                            spaceName: string,
+                            spaceFilter: SpaceFilterMessage,
+                            broadcastService: BroadcastService,
+                            playSound: boolean
+                        ) => {
+                            return new JitsiBroadcastSpace(
+                                connection,
+                                spaceName,
+                                spaceFilter,
+                                broadcastService,
+                                playSound
+                            );
                         }
-                    }
-                });
+                    );
+                    this._broadcastService = broadcastService;
+
+                    // The megaphoneSettingsMessageStream is completed in the RoomConnection. No need to unsubscribe.
+                    //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                    this.connection.megaphoneSettingsMessageStream.subscribe((megaphoneSettingsMessage) => {
+                        if (megaphoneSettingsMessage) {
+                            megaphoneCanBeUsedStore.set(megaphoneSettingsMessage.enabled);
+                            if (
+                                megaphoneSettingsMessage.url &&
+                                get(availabilityStatusStore) !== AvailabilityStatus.DO_NOT_DISTURB
+                            ) {
+                                broadcastService.joinSpace(megaphoneSettingsMessage.url);
+                            }
+                        }
+                    });
+                } catch (e) {
+                    console.error(e);
+                }
 
                 // The muteMicrophoneSpaceUserMessage is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
@@ -1943,18 +1957,16 @@ export class GameScene extends DirtyScene {
                 this.connection.proximityPublicMessageToClientMessageStream.subscribe(
                     (proximityPublicMessageToClientMessage) => {
                         const _proximityRoomConnection = get(proximityRoomConnection);
-                        if(!_proximityRoomConnection) return;
+                        if (!_proximityRoomConnection) return;
 
                         const room = get(_proximityRoomConnection?.rooms)[0];
-                        if(!room || !room.addNewMessage) return;
+                        if (!room || !room.addNewMessage) return;
 
                         // the user is me do not show the message
-                        if(proximityPublicMessageToClientMessage.senderUserUuid === localUserStore.getLocalUser()?.uuid) return;
-
-                        room.addNewMessage(
-                            proximityPublicMessageToClientMessage.message,
-                            proximityPublicMessageToClientMessage.senderUserUuid!
-                        );
+                        const proximityUserUuid = proximityPublicMessageToClientMessage.senderUserUuid;
+                        if (proximityUserUuid == undefined || proximityUserUuid === localUserStore.getLocalUser()?.uuid)
+                            return;
+                        room.addNewMessage(proximityPublicMessageToClientMessage.message, proximityUserUuid);
                     }
                 );
 

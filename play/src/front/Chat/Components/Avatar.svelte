@@ -44,11 +44,18 @@
     }
 </script>
 
-{#if userId}
+{#if userId && userId != -1}
     <div
         class="tw-rounded-full"
         style="width: 32px; height: 32px;"
         style:background-color={`${color ? color : `#${getColorByFirstLetter(fallbackFirstLetter)}`}`}
+    >
+        <WokaFromUserId {userId} placeholderSrc={""} customHeight="32px" customWidth="32px" />
+    </div>
+{:else if userId === -1}
+    <div
+        class={`tw-rounded-full tw-bg-amber-600 tw-text-center tw-uppercase tw-text-white tw-w-8 tw-h-8`}
+        style:background-color={`#${color ? color : getColorByFirstLetter(fallbackFirstLetter)}`}
     >
         <WokaFromUserId {userId} placeholderSrc={""} customHeight="32px" customWidth="32px" />
     </div>
