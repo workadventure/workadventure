@@ -5,26 +5,6 @@ import {evaluateScript} from "./utils/scripting";
 import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('Iframe API', () => {
-  test('can be called from an iframe loading a script', async ({
-    page,
-  }, { project }) => {
-    // Skip test for mobile device
-    if(project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
-    
-    await page.goto(
-      publicTestMapUrl("tests/Metadata/cowebsiteAllowApi.json", "iframe_script")
-    );
-
-    await login(page);
-
-    // FIXME e2e test related to chat
-    //await expect(page.locator('p.other-text')).toHaveText('The iframe opened by a script works !', {useInnerText: true});
-  });
-
   test('can add a custom menu by scripting API', async ({
     page
   }, { project }) => {
@@ -66,9 +46,8 @@ test.describe('Iframe API', () => {
 
     await page.click('button:has-text("custom callback menu")');
     await expect(
-        page.frameLocator('iframe#chatWorkAdventure')
-            .locator('aside.chatWindow')
-            .locator(".wa-message-body")
+        page.frameLocator('#chat.chatWindow')
+            .locator(".message")
     ).toContainText('Custom menu clicked');
 
     // Now, let's add a menu item and open an iframe

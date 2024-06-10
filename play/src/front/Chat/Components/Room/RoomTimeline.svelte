@@ -69,7 +69,7 @@
 </script>
 
 {#if room !== undefined}
-    <button class="tw-p-0 tw-m-0" on:click={goBackAndClearSelectedChatMessage}>
+    <button class="back-roomlist tw-p-0 tw-m-0" on:click={goBackAndClearSelectedChatMessage}>
         <IconArrowLeft />
     </button>
     <ul

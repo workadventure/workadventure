@@ -230,8 +230,9 @@ test.describe('Use application into TimeLine @chat', () => {
     await Menu.openChat(page);
     await Chat.openTimeline(page);
 
-    // Create test to use Docs application
-    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('.actions').first().click();
+    // TODO no implemented yet with the new chat
+    /*// Create test to use Docs application
+    await page.locator('aside.chatWindow').locator('.actions').first().click();
     await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('.wa-message-form .actions button.action:has-text("Google Docs")').click();
     await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').getByPlaceholder('https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit').click();
     await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').getByPlaceholder('https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit').fill('https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit')
@@ -270,7 +271,7 @@ test.describe('Use application into TimeLine @chat', () => {
     await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('#timeLine-messageList').click();
     await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('#send').click();
 
-    await expect(page.frameLocator('#chatWorkAdventure').getByRole('link', { name: 'https://www.youtube.com/embed/Y9ubBWf5w20?feature=oembed' })).toContainText('https://www.youtube.com/embed/Y9ubBWf5w20?feature=oembed');
+    await expect(page.frameLocator('#chatWorkAdventure').getByRole('link', { name: 'https://www.youtube.com/embed/Y9ubBWf5w20?feature=oembed' })).toContainText('https://www.youtube.com/embed/Y9ubBWf5w20?feature=oembed');*/
 
     // Create test to use Klaxoon application
   });

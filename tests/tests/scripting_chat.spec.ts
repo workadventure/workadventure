@@ -2,7 +2,6 @@ import {expect, test, webkit} from '@playwright/test';
 import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
 import Chat from './utils/chat';
-import {expectInViewport, expectOutViewport} from "./utils/viewport";
 import Map from './utils/map';
 import {publicTestMapUrl} from "./utils/urls";
 
@@ -20,35 +19,33 @@ test.describe('Scripting chat functions', () => {
 
         await login(page);
 
-        await expectOutViewport("#chatWindow", page);
-
         // Test open chat scripting
         await evaluateScript(page, async () => {
             return WA.chat.open();
         });
-        await expectInViewport("#chatWindow", page);
+
+        await expect(page.locator('#chat.chatWindow')).toBeVisible();
 
         // Open the time line
         await Chat.openTimeline(page);
-        await expect(page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow')).toBeVisible();
+        await expect(page.locator('#chat.chatWindow')).toContainText('Nothing to display');
 
         // Test send message scripting
         await evaluateScript(page, async () => {
             return WA.chat.sendChatMessage('Test message sent', 'Test machine');
         });
         await expect(
-                page.frameLocator('iframe#chatWorkAdventure')
-                .locator('aside.chatWindow')
-                .locator(".wa-message-body")
+                page.locator('#chat.chatWindow')
+                .locator(".message")
         ).toContainText('Test message sent');
         await expect(
-            page.frameLocator('iframe#chatWorkAdventure')
-            .locator('aside.chatWindow')
-            .locator("#timeLine-messageList")
+            page.locator('#chat.chatWindow')
+            .locator(".messageHeader")
         ).toContainText('Test machine');
 
+        // TODO implement start and stop typing in the new chat
         // Test start typing
-        await evaluateScript(page, async () => {
+       /* await evaluateScript(page, async () => {
             return WA.chat.startTyping({
                 scope: "local",
                 author: "Eve",
@@ -65,18 +62,22 @@ test.describe('Scripting chat functions', () => {
             });
         });
 
-        await expect.poll(() => page.frameLocator('iframe[title="WorkAdventureChat"]').getByText('Eve', { exact: true }).count()).toBe(0);
+        await expect.poll(() => page.frameLocator('iframe[title="WorkAdventureChat"]').getByText('Eve', { exact: true }).count()).toBe(0);*/
 
         // Test close chat scripting
         await evaluateScript(page, async () => {
             return WA.chat.close();
         });
 
-
-        await expectOutViewport("#chatWindow", page);
+        await expect(page.locator('#chat.chatWindow')).toBeHidden();
     });
 
     test('can send message to bubble users @chat', async ({ page, browser}, { project }) => {
+
+        // TODO bubble not implemented yet for the new chat
+        //eslint-disable-next-line playwright/no-skipped-test
+        test.skip();
+
         // Skip test for mobile device
         if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
