@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { IconCornerDownRight, IconTrash } from "@tabler/icons-svelte";
     import { ComponentType } from "svelte";
     import { MapStore } from "@workadventure/store-utils";
     import { ChatMessage, ChatMessageReaction, ChatMessageType } from "../../Connection/ChatConnection";
@@ -16,6 +15,7 @@
     import MessageReactions from "./MessageReactions.svelte";
     import MessageIncoming from "./Message/MessageIncoming.svelte";
     import MessageOutcoming from "./Message/MessageOutcoming.svelte";
+    import { IconCornerDownRight, IconTrash } from "@wa-icons";
 
     export let message: ChatMessage;
     export let reactions: MapStore<string, ChatMessageReaction> | undefined;
@@ -70,7 +70,7 @@
         >
             {#if $isDeleted}
                 <p class="tw-p-0 tw-m-0 tw-text-xs tw-text-gray-400 tw-flex tw-items-center">
-                    <IconTrash size={12} />
+                    <IconTrash font-size={12} />
                     {$LL.chat.messageDeleted()}
                 </p>
             {:else}
@@ -88,7 +88,7 @@
         </div>
         {#if quotedMessage}
             <div class="response">
-                <IconCornerDownRight />
+                <IconCornerDownRight font-size="24" />
                 <svelte:self message={quotedMessage} />
             </div>
         {/if}

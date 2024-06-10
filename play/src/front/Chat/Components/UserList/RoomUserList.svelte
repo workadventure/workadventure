@@ -1,11 +1,11 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { ChevronUpIcon } from "svelte-feather-icons";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { ChatUser } from "../../Connection/ChatConnection";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { chatSearchBarValue, shownRoomListStore } from "../../Stores/ChatStore";
     import UserList from "./UserList.svelte";
+    import { IconChevronUp } from "@wa-icons";
 
     const chat = gameManager.getCurrentGameScene().chatConnection;
     const DISCONNECTED_LABEL = "disconnected";
@@ -50,7 +50,7 @@
     ] as Array<[string, ChatUser[]]>;
 </script>
 
-{#each roomsWithUsers as [roomName, userInRoom]}
+{#each roomsWithUsers as [roomName, userInRoom] (roomName)}
     {#if userInRoom && userInRoom.length > 0}
         <div class="users tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple">
             <div class="tw-px-4 tw-py-1 tw-flex tw-items-center">
@@ -70,7 +70,7 @@
                     class="tw-text-lighter-purple"
                     on:click={() => shownRoomListStore.set($shownRoomListStore === roomName ? "" : roomName)}
                 >
-                    <ChevronUpIcon
+                    <IconChevronUp
                         class={`tw-transform tw-transition ${$shownRoomListStore === roomName ? "" : "tw-rotate-180"}`}
                     />
                 </button>

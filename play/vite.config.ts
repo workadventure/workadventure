@@ -4,6 +4,8 @@ import { svelte } from "@sveltejs/vite-plugin-svelte";
 import sveltePreprocess from "svelte-preprocess";
 import legacy from "@vitejs/plugin-legacy";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
+import Icons from "unplugin-icons/vite";
+import tsconfigPaths from "vite-tsconfig-paths";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -40,6 +42,7 @@ export default defineConfig(({ mode }) => {
                     }
                 },
             }),
+            Icons({ compiler: "svelte" }),
             legacy({
                 //targets: ['defaults', 'not IE 11', 'iOS > 14.3']
 
@@ -47,6 +50,7 @@ export default defineConfig(({ mode }) => {
                 polyfills: ["web.structured-clone"],
                 modernPolyfills: ["web.structured-clone"],
             }),
+            tsconfigPaths(),
         ],
         optimizeDeps: {
             include: ["olm"],

@@ -1,6 +1,5 @@
 <script lang="ts">
     import { writable } from "svelte/store";
-    import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "svelte-feather-icons";
     import { fly } from "svelte/transition";
     import { onMount } from "svelte";
     import { AvailabilityStatus } from "@workadventure/messages";
@@ -101,6 +100,7 @@
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
     import AvailabilityStatusComponent from "./AvailabilityStatus/AvailabilityStatus.svelte";
+    import { IconCheck, IconChevronDown, IconChevronUp } from "@wa-icons";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
@@ -570,9 +570,9 @@
                                     on:click|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}
                                 >
                                     {#if cameraActive}
-                                        <ChevronDownIcon size="13" />
+                                        <IconChevronDown font-size="13" />
                                     {:else}
-                                        <ChevronUpIcon size="13" />
+                                        <IconChevronUp font-size="13" />
                                     {/if}
                                 </button>
 
@@ -594,7 +594,7 @@
                                         >
                                             {StringUtils.normalizeDeviceName(camera.label)}
                                             {#if $usedCameraDeviceIdStore === camera.deviceId}
-                                                <CheckIcon size="13" class="tw-ml-1" />
+                                                <IconCheck font-size="13" class="tw-ml-1" />
                                             {/if}
                                         </span>
                                     {/each}
@@ -638,9 +638,9 @@
                                         (microphoneActive = !microphoneActive)}
                                 >
                                     {#if microphoneActive}
-                                        <ChevronDownIcon size="13" />
+                                        <IconChevronDown font-size="13" />
                                     {:else}
-                                        <ChevronUpIcon size="13" />
+                                        <IconChevronUp font-size="13" />
                                     {/if}
                                 </button>
 
@@ -665,7 +665,7 @@
                                             >
                                                 {StringUtils.normalizeDeviceName(microphone.label)}
                                                 {#if $usedMicrophoneDeviceIdStore === microphone.deviceId}
-                                                    <CheckIcon size="13" />
+                                                    <IconCheck font-size="13" />
                                                 {/if}
                                             </span>
                                         {/each}
@@ -687,7 +687,7 @@
                                             >
                                                 {StringUtils.normalizeDeviceName(speaker.label)}
                                                 {#if $speakerSelectedStore === speaker.deviceId}
-                                                    <CheckIcon size="13" />
+                                                    <IconCheck font-size="13" />
                                                 {/if}
                                             </span>
                                         {/each}

@@ -3,9 +3,9 @@
     import { closeModal, onBeforeClose } from "svelte-modals";
     import { CryptoApi } from "matrix-js-sdk";
     import { GeneratedSecretStorageKey } from "matrix-js-sdk/lib/crypto-api";
-    import { IconFileDownload } from "@tabler/icons-svelte";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import LL from "../../../../i18n/i18n-svelte";
+    import { IconFileDownload } from "@wa-icons";
 
     export let isOpen: boolean;
     export let crypto: CryptoApi;

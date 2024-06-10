@@ -1,11 +1,11 @@
 <script lang="ts">
-    import { IconCircleX, IconMoodSmile, IconSend } from "@tabler/icons-svelte";
     import { onDestroy } from "svelte";
     import { ChatRoom } from "../../Connection/ChatConnection";
     import { selectedChatMessageToReply } from "../../Stores/ChatStore";
     import { getChatEmojiPicker } from "../../EmojiPicker";
     import LL from "../../../../i18n/i18n-svelte";
     import MessageFileInput from "./Message/MessageFileInput.svelte";
+    import { IconCircleX, IconMoodSmile, IconSend } from "@wa-icons";
 
     export let room: ChatRoom;
 
@@ -81,7 +81,7 @@
         bind:this={emojiButtonRef}
         on:click={openCloseEmojiPicker}
     >
-        <IconMoodSmile size={18} />
+        <IconMoodSmile font-size={18} />
     </button>
     <MessageFileInput {room} />
     <button
@@ -89,6 +89,6 @@
         disabled={message.trim().length === 0}
         on:click={() => sendMessage(message)}
     >
-        <IconSend size={20} />
+        <IconSend font-size={20} />
     </button>
 </div>

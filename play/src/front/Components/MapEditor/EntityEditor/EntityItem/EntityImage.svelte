@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { IconLoader, IconPhotoOff } from "@tabler/icons-svelte";
     import { createEventDispatcher } from "svelte";
+    import { IconLoader, IconPhotoOff } from "@wa-icons";
 
     export let classNames: string | undefined = undefined;
     export let imageSource: string;

@@ -1523,9 +1523,13 @@ export class GameScene extends DirtyScene {
                     const matrixClientWrapper = new MatrixClientWrapper(MATRIX_PUBLIC_URI ?? "", localUserStore);
                     const matrixClientPromise = matrixClientWrapper.initMatrixClient();
 
-                    await matrixClientPromise.then((matrixClient) => {
-                        updateMatrixClientStore(matrixClient);
-                    });
+                    matrixClientPromise
+                        .then((matrixClient) => {
+                            updateMatrixClientStore(matrixClient);
+                        })
+                        .catch((e) => {
+                            console.error(e);
+                        });
 
                     this.chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
 
