@@ -176,4 +176,28 @@ export class ProximityChatRoom implements ChatRoom {
     loadMorePreviousMessages(): Promise<void> {
         return Promise.resolve();
     }
+
+    addExternalMessage(message: string, authorName?: string): void {
+        // Create content message
+        const newChatMessageContent = {
+            body: message,
+            url: undefined,
+        };
+
+        // Create message
+        const newMessage = new ProximityChatMessage(
+            uuidv4(),
+            {
+                ...this.unkowUser,
+                username: authorName ?? this.unkowUser.username,
+            },
+            writable(newChatMessageContent),
+            new Date(),
+            false,
+            "proximity"
+        );
+
+        // Add message to the list
+        this.messages.push(newMessage);
+    }
 }

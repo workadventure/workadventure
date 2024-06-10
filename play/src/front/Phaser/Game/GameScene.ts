@@ -158,7 +158,7 @@ import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
 import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
 import { updateMatrixClientStore } from "../../Chat/Connection/Matrix/MatrixSecurity";
-import { proximityRoomConnection } from "../../Chat/Stores/ChatStore";
+import { proximityRoomConnection, selectedRoom } from "../../Chat/Stores/ChatStore";
 import { ProximityChatConnection } from "../../Chat/Connection/Proximity/ProximityChatConnection";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
@@ -2520,15 +2520,46 @@ ${escapedMessage}
                 _newChatMessageSubject.next(text);
             })
         );
-        /**
- *         this.iframeSubscriptionList.push(
-            iframeListener.newChatMessageWritingStatusStream.subscribe((status) => {
-                _newChatMessageWritingStatusSubject.next(status);
+
+        this.iframeSubscriptionList.push(
+            iframeListener.chatMessageStream.subscribe((chatMessage) => {
+                switch (chatMessage.options.scope) {
+                    case "local": {
+                        const _proximityRoomConnection = get(proximityRoomConnection);
+                        if (!_proximityRoomConnection) return;
+
+                        const room = get(_proximityRoomConnection.rooms)[0];
+                        if (!room || !room.addExternalMessage) return;
+
+                        room.addExternalMessage(chatMessage.message, chatMessage.options.author);
+                        selectedRoom.set(room);
+                        chatVisibilityStore.set(true);
+                        break;
+                    }
+                    case "bubble": {
+                        //TODO, fixme, causing chat with bot not working anymore.
+                        //💡To display chat from proximity bubble, create a ChatRoom (not matrix)
+                        // set it to the selectedChatRoom store
+
+                        /*iframeListener.sendMessageToChatIframe({
+                            type: ChatMessageTypes.me,
+                            text: [chatEvent.message],
+                            date: new Date(),
+                        });*/
+                        //chatMessagesStore.addExternalMessage(gameManager.getCurrentGameScene().connection?.getUserId(), chatEvent.message, origin);
+                        console.debug("Not implemented yet with new chat integration");
+                        break;
+                    }
+                }
             })
         );
- *
- *
- */
+
+        this.iframeSubscriptionList.push(
+            iframeListener.newChatMessageWritingStatusStream.subscribe((status) => {
+                // TODO: Implement
+                console.debug("Not implemented yet with new chat integration", status);
+            })
+        );
 
         this.iframeSubscriptionList.push(
             iframeListener.disablePlayerControlStream.subscribe(() => {

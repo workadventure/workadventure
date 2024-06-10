@@ -43,6 +43,7 @@ export interface ChatRoom {
     addIncomingUser?: (userId: number, userUuid: string, userName: string, color?: string) => void;
     addOutcomingUser?: (userId: number, userUuid: string, userName: string) => void;
     addNewMessage?: (message: string, senderUserUuid: string) => void;
+    addExternalMessage?: (message: string, authorName?: string) => void;
 }
 
 //Readonly attributes

@@ -27,6 +27,11 @@ export class ProximityChatConnection implements ChatConnectionInterface {
     }
 
     addUserFromSpace(user: SpaceUserExtended): void {
+        // if the user isn't already in the list, don't add it
+        if (get(this.userConnected).has(user.id) == false) {
+            return;
+        }
+
         let avataUrl = gameManager.getCurrentGameScene().CurrentPlayer.pictureStore;
         if (user.id !== this._userId) {
             avataUrl = gameManager
@@ -44,17 +49,17 @@ export class ProximityChatConnection implements ChatConnectionInterface {
             avatarUrl: get(avataUrl),
         } as ChatUser;
 
-        // if the user isn't already in the list, don't add it
-        if (get(this.userConnected).has(user.id) == false) {
-            return;
-        }
-
         this.userConnected.update((users) => {
             users.set(user.id, chatUser);
             return users;
         });
     }
     updateUserFromSpace(user: PartialSpaceUser): void {
+        // if the user isn't already in the list, don't add it
+        if (get(this.userConnected).has(user.id) == false) {
+            return;
+        }
+
         let avataUrl = gameManager.getCurrentGameScene().CurrentPlayer.pictureStore;
         if (user.id !== this._userId) {
             avataUrl = gameManager
