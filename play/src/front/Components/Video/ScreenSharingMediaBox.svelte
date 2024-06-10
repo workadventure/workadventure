@@ -18,6 +18,10 @@
     let changeIcon = true;
     let visibleIcon = false;
 
+    const isResized = window.matchMedia("(max-height: 727px)");
+    let isVertical: boolean;
+    let video = document.getElementById("screen-sharing") as HTMLVideoElement;
+
     let embedScreen: Streamable;
 
     $: visibleIcon = $statusStore === "connected";
@@ -28,7 +32,21 @@
 
     onMount(() => {
         embedScreen = peer;
+        // isResized.addEventListener("change", (e: any) => handleTabletChange(e));
+        // handleTabletChange(isResized);
+        // isNearBottom(video);
     });
+
+    // function handleTabletChange(e: MediaQueryList) {
+    //     isNearBottom(video);
+    //     if (e.matches) {
+    //         isVertical = true;
+    //         console.log("Vertical");
+    //     } else {
+    //         isVertical = false;
+    //         console.log("Horizontal ou vertical pas rezize");
+    //     }
+    // }
 
     function highlight() {
         if ($statusStore === "connected") {
@@ -38,10 +56,23 @@
     }
 
     $: changeIcon = $highlightedEmbedScreen === embedScreen;
+
+    // function isNearBottom(element: HTMLElement) {
+    //     if (window.innerHeight - element.getBoundingClientRect().bottom < 50) {
+    //         video.style.objectFit = "contain";
+    //         console.log("Near bottom");
+    //     } else {
+    //         console.log("Not near bottom");
+    //     }
+    // }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div class="group/screenshare video-container h-full w-full relative screen-sharing" on:click={highlight}>
+<div
+    class="group/screenshare video-container h-full w-full relative screen-sharing"
+    id="screen-sharing"
+    on:click={highlight}
+>
     {#if $statusStore === "connecting"}
         <div class="connecting-spinner" />
     {/if}

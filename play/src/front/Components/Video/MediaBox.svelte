@@ -8,7 +8,6 @@
     import type { ObtainedMediaStreamConstraints } from "../../WebRtc/P2PMessages/ConstraintMessage";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { JitsiTrackStreamWrapper } from "../../Streaming/Jitsi/JitsiTrackStreamWrapper";
-    // import { mediaStreamConstraintsStore } from "../../Stores/MediaStore";
     import VideoMediaBox from "./VideoMediaBox.svelte";
     import ScreenSharingMediaBox from "./ScreenSharingMediaBox.svelte";
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
