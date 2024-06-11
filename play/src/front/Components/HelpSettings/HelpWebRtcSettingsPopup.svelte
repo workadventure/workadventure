@@ -28,7 +28,7 @@
     onMount(() => {
         const notAskAgainValue = localStorage.getItem("notAskAgainHelpWebRtcSettingsPopup");
         if (notAskAgainValue === "true") {
-            // Close this popup but show warnong message
+            // Close this popup but show warning message
             warningMessageStore.addWarningMessage($LL.camera.webrtc.content());
             close();
         }
