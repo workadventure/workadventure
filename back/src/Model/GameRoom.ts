@@ -130,23 +130,15 @@ export class GameRoom implements BrothersFinder {
         const mapDetails = await GameRoom.getMapDetails(roomUrl);
         const wamUrl = mapDetails.wamUrl;
 
-        let mapUrl: string;
-        let wamFile: WAMFileFormat | undefined = undefined;
-
-        if (!wamUrl && mapDetails.mapUrl) {
-            mapUrl = mapDetails.mapUrl;
-        } else if (wamUrl) {
-            wamFile = await mapFetcher.fetchWamFile(wamUrl, INTERNAL_MAP_STORAGE_URL, PUBLIC_MAP_STORAGE_PREFIX);
-            try {
-                new URL(wamFile.mapUrl);
-                mapUrl = wamFile.mapUrl;
-            } catch (e) {
-                console.info("Map URL is not a valid URL, trying to normalize it", e);
-                mapUrl = mapFetcher.normalizeMapUrl(wamUrl, wamFile.mapUrl);
-            }
-        } else {
-            throw new Error("No mapUrl or wamUrl");
-        }
+        const mapUrl = await mapFetcher.getMapUrl(
+            wamUrl ? undefined : mapDetails.mapUrl,
+            wamUrl,
+            INTERNAL_MAP_STORAGE_URL,
+            PUBLIC_MAP_STORAGE_PREFIX
+        );
+        const wamSettings = wamUrl
+            ? (await mapFetcher.fetchWamFile(wamUrl, INTERNAL_MAP_STORAGE_URL, PUBLIC_MAP_STORAGE_PREFIX)).settings
+            : undefined;
 
         const gameRoom = new GameRoom(
             roomUrl,
@@ -165,7 +157,7 @@ export class GameRoom implements BrothersFinder {
             mapDetails.editable ?? false,
             mapUrl,
             wamUrl,
-            wamFile ? wamFile.settings : undefined
+            wamSettings
         );
 
         gameRoom
