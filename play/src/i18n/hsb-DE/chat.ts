@@ -61,8 +61,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         title: "Twoja chronika chata",
         open: "Wočiń swoju chroniku!",
         description: "Powěsćowy a podawkowy wotběh",
-        incoming: " přistupi diskusiji",
-        outcoming: " wopušći diskusiji",
+        incoming: "{userName} přistupi diskusiji",
+        outcoming: "{userName} wopušći diskusiji",
     },
     form: {
         placeholder: "Zapodaj swoju powěsć...",
