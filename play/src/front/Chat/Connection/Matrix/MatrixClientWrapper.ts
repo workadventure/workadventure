@@ -1,4 +1,6 @@
 import { Buffer } from "buffer";
+import Olm from "@matrix-org/olm";
+
 import {
     createClient,
     ICreateClientOpts,
@@ -7,10 +9,9 @@ import {
     MatrixClient,
     SecretStorage,
 } from "matrix-js-sdk";
+
 import { SecretStorageKeyDescriptionAesV1 } from "matrix-js-sdk/lib/secret-storage";
-// eslint-disable-next-line import/no-unresolved
 import { openModal } from "svelte-modals";
-import Olm from "@matrix-org/olm";
 import { LocalUser } from "../../../Connection/LocalUser";
 import AccessSecretStorageDialog from "./AccessSecretStorageDialog.svelte";
 import { isEncryptionRequiredAndNotSet } from "./MatrixSecurity";
@@ -57,7 +58,6 @@ export interface MatrixLocalUserStore {
 
 export class MatrixClientWrapper implements MatrixClientWrapperInterface {
     private client!: MatrixClient;
-
     private secretStorageKeys: Record<string, Uint8Array> = {};
 
     constructor(

@@ -16,7 +16,7 @@ export class StreamSpaceWatcher {
         private spaceProvider: SpaceProviderInterface,
         private socket: WebSocket,
         decoder: Required<{ decode: (messageCoded: Uint8Array) => ServerToClientMessage }>,
-        private chatConnection: ChatConnectionInterface = gameManager.getCurrentGameScene().chatConnection
+        chatConnection: ChatConnectionInterface = gameManager.getCurrentGameScene().chatConnection
     ) {
         this.socket.addEventListener("message", (messageEvent: MessageEvent) => {
             const arrayBuffer: ArrayBuffer = messageEvent.data;
