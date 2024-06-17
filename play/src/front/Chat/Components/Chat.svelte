@@ -118,6 +118,7 @@
         </div>
         {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}
             <button
+                data-testid="restoreEncryptionButton"
                 on:click|stopPropagation={initChatConnectionEncryption}
                 class="tw-text-red-500 tw-flex tw-gap-1 tw-border tw-border-solid tw-border-red-500 tw-rounded-md tw-justify-center"
                 ><IconShieldLock /> {$LL.chat.e2ee.encryptionNotConfigured()}</button

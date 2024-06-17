@@ -72,6 +72,7 @@
                 id="passphrase"
                 type="password"
                 autocomplete="new-password"
+                data-testid="passphraseInput"
                 class="tw-w-full tw-rounded-xl tw-text-white placeholder:tw-text-sm tw-px-3 tw-py-2 tw-p tw-border-light-purple tw-border tw-border-solid tw-bg-contrast"
                 placeholder={`${$LL.chat.e2ee.accessSecretStorage.placeholder()} ${$LL.chat.e2ee.accessSecretStorage.passphrase()}`}
                 bind:value={passphraseInput}
@@ -91,6 +92,7 @@
                 placeholder={`${$LL.chat.e2ee.accessSecretStorage.placeholder()} ${$LL.chat.e2ee.accessSecretStorage.recoveryKey()}`}
                 type="password"
                 autocomplete="new-password"
+                data-testid="recoveryKeyInput"
                 class="tw-w-full tw-rounded-xl tw-text-white placeholder:tw-text-sm tw-px-3 tw-py-2 tw-p tw-border-light-purple tw-border tw-border-solid tw-bg-contrast"
                 bind:value={recoveryKeyInput}
             />

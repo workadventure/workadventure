@@ -37,7 +37,7 @@ suppress_key_server_warning: true
 
 jwt_config:
   enabled: true
-  secret: "yourSecretKey"
+  secret: "yourSecretKey2020"
   algorithm: "HS256"
   subject_claim: "matrixUserId"
 
@@ -90,3 +90,14 @@ auto_join_rooms:
 
 autocreate_auto_join_rooms: true
 # vim:ft=yaml
+
+rc_login:
+  address:
+    per_second: 0.15
+    burst_count: 10
+  account:
+    per_second: 0.18
+    burst_count: 10
+  failed_attempts:
+    per_second: 0.19
+    burst_count: 10

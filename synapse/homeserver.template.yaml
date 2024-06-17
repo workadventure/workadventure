@@ -90,3 +90,14 @@ auto_join_rooms:
 
 autocreate_auto_join_rooms: true
 # vim:ft=yaml
+
+rc_login:
+  address:
+    per_second: 0.15
+    burst_count: 10
+  account:
+    per_second: 0.18
+    burst_count: 10
+  failed_attempts:
+    per_second: 0.19
+    burst_count: 10
