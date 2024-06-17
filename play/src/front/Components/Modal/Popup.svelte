@@ -1,6 +1,5 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    // eslint-disable-next-line import/no-unresolved
     import { closeModal } from "svelte-modals";
 
     export let isOpen = false;

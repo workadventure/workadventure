@@ -3,7 +3,6 @@ import type { EditMapCommandMessage } from "@workadventure/messages";
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import { v4 as uuid } from "uuid";
-// eslint-disable-next-line import/no-unresolved
 import { openModal } from "svelte-modals";
 import {
     mapEditorAreaModeStore,

@@ -1,5 +1,4 @@
 <script lang="ts">
-    // eslint-disable-next-line import/no-unresolved
     import { closeModal, onBeforeClose } from "svelte-modals";
     import { CryptoApi } from "matrix-js-sdk";
     import { GeneratedSecretStorageKey } from "matrix-js-sdk/lib/crypto-api";

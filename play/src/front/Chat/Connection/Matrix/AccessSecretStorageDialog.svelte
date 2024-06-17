@@ -1,6 +1,5 @@
 <script lang="ts">
     import { MatrixClient, SecretStorage } from "matrix-js-sdk";
-    // eslint-disable-next-line import/no-unresolved
     import { closeModal, onBeforeClose } from "svelte-modals";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import LL from "../../../../i18n/i18n-svelte";

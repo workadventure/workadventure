@@ -1,7 +1,6 @@
 <script lang="ts">
     import { AuthDict, AuthType, InteractiveAuth, MatrixClient, UIAResponse } from "matrix-js-sdk";
     import { onMount } from "svelte";
-    // eslint-disable-next-line import/no-unresolved
     import { closeModal, onBeforeClose } from "svelte-modals";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import LL from "../../../../i18n/i18n-svelte";
