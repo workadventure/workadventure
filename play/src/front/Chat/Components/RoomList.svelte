@@ -1,6 +1,5 @@
 <script lang="ts">
     import { get } from "svelte/store";
-    // eslint-disable-next-line import/no-unresolved
     import { openModal } from "svelte-modals";
     import { onMount } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";

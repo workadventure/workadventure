@@ -2,7 +2,6 @@ import { MatrixClient, SecretStorage } from "matrix-js-sdk";
 import { GeneratedSecretStorageKey, KeyBackupInfo } from "matrix-js-sdk/lib/crypto-api";
 import { deriveKey } from "matrix-js-sdk/lib/crypto/key_passphrase";
 import { decodeRecoveryKey } from "matrix-js-sdk/lib/crypto/recoverykey";
-// eslint-disable-next-line import/no-unresolved
 import { openModal } from "svelte-modals";
 import { writable } from "svelte/store";
 import InteractiveAuthDialog from "./InteractiveAuthDialog.svelte";
