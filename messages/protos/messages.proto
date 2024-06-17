@@ -884,10 +884,8 @@ message ServerToClientMessage {
     MutedVideoMessage mutedVideoMessage = 34;
     AskMutedMessage askMutedMessage = 35;
     AskMutedVideoMessage askMutedVideoMessage = 36;
-    ProximityPublicMessage proximityPublicMessage = 37;
-    ProximityPrivateMessage proximityPrivateMessage = 38;
-    ProximityPublicMessageToClientMessage proximityPublicMessageToClientMessage = 39;
-    ProximityPrivateMessageToClientMessage proximityPrivateMessageToClientMessage = 40;
+    ProximityPublicMessageToClientMessage proximityPublicMessageToClientMessage = 37;
+    ProximityPrivateMessageToClientMessage proximityPrivateMessageToClientMessage = 38;
   }
 }
 

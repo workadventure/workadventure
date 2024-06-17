@@ -56,7 +56,7 @@ export class ProximityChatRoom implements ChatRoom {
     hasPreviousMessage = writable(false);
     isEncrypted = writable(false);
 
-    unkowUser = {
+    unknowUser = {
         id: "0",
         uuid: "0",
         availabilityStatus: writable(AvailabilityStatus.ONLINE),
@@ -80,7 +80,7 @@ export class ProximityChatRoom implements ChatRoom {
         // Create message
         const newMessage = new ProximityChatMessage(
             uuidv4(),
-            get(this._connection.userConnected).get(this._userId) ?? this.unkowUser,
+            get(this._connection.userConnected).get(this._userId) ?? this.unknowUser,
             writable(newChatMessageContent),
             new Date(),
             true,
@@ -142,7 +142,7 @@ export class ProximityChatRoom implements ChatRoom {
         // Create message
         const newMessage = new ProximityChatMessage(
             uuidv4(),
-            sender ?? this.unkowUser,
+            sender ?? this.unknowUser,
             writable(newChatMessageContent),
             new Date(),
             false,
@@ -188,8 +188,8 @@ export class ProximityChatRoom implements ChatRoom {
         const newMessage = new ProximityChatMessage(
             uuidv4(),
             {
-                ...this.unkowUser,
-                username: authorName ?? this.unkowUser.username,
+                ...this.unknowUser,
+                username: authorName ?? this.unknowUser.username,
             },
             writable(newChatMessageContent),
             new Date(),

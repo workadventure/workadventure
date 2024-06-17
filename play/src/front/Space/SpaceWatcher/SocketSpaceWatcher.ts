@@ -1,11 +1,11 @@
 import { z } from "zod";
 import { ServerToClientMessage } from "@workadventure/messages";
+import { get } from "svelte/store";
 import { SpaceProviderInterface } from "../SpaceProvider/SpacerProviderInterface";
 import { LocalSpaceProviderSingleton } from "../SpaceProvider/SpaceStore";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { proximityRoomConnection } from "../../Chat/Stores/ChatStore";
-import { get } from "svelte/store";
 
 export enum SpaceEvent {
     AddSpaceUser = "addSpaceUserMessage",
