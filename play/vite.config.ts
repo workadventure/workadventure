@@ -1,4 +1,3 @@
-/// <reference types="vitest" />
 import { defineConfig, loadEnv } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import sveltePreprocess from "svelte-preprocess";
@@ -52,8 +51,18 @@ export default defineConfig(({ mode }) => {
             }),
             tsconfigPaths(),
         ],
+        test: {
+            environment: "jsdom",
+            globals: true,
+            coverage: {
+                all: true,
+                include: ["src/*.ts", "src/**/*.ts"],
+                exclude: ["src/i18n", "src/enum"],
+            },
+        },
         optimizeDeps: {
             include: ["olm"],
+            exclude: ["svelte-modals"],
             esbuildOptions: {
                 define: {
                     global: "globalThis",

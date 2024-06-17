@@ -5,7 +5,14 @@ window.env = {
     DEBUG_MODE: true,
 };
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("../../../../src/front/Enum/EnvironmentVariable.ts", () => {
+    return {
+        MAX_USERNAME_LENGTH: 10,
+    };
+});
+
 import {
     areCharacterTexturesValid,
     isUserNameValid,
