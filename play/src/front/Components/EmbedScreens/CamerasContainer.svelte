@@ -181,8 +181,8 @@
             height: 300px;
         }
         .grid-layout-template {
-            bottom: 0; /* Align to the bottom */
-            right: 0; /* Align to the right */
+            bottom: 0;
+            right: 0;
             display: flex;
             flex-direction: column;
             gap: 0.2rem;
