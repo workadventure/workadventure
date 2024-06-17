@@ -199,6 +199,13 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             error: "Veuillez entrer une URL Excalidraw valide",
             disabled: "L'intégration Excalidraw est désactivée.",
         },
+        cardsProperties: {
+            label: "Ouvrir Cards",
+            description:
+                "Simplifiez l'accès aux savoirs de vos équipes, clients et partenaires ! Format digeste, accessible sur tous supports.",
+            error: "Veuillez entrer une URL Cards valide",
+            disabled: "L'intégration Cards est désactivée.",
+        },
     },
     areaEditor: {
         editInstructions: "Sélectionnez une zone pour modifier ses propriétés.",

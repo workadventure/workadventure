@@ -12,6 +12,8 @@ export * as EraserService from "./Application/EraserService";
 export * as EraserException from "./Application/Exception/EraserException";
 export * as ExcalidrawException from "./Application/Exception/ExcalidrawException";
 export * as ExcalidrawService from "./Application/ExcalidrawService";
+export * as CardsService from "./Application/CardsService";
+export * as CardsException from "./Application/Exception/CardsException";
 export * from "./Events/XmppSettingsMessageEvent";
 export * from "./Events/ChatEvent";
 export * from "./Events/BanEvent";

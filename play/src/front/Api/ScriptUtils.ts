@@ -1,9 +1,10 @@
-import { GoogleWorkSpaceService, KlaxoonService, ChatMessageTypes } from "@workadventure/shared-utils";
+import { GoogleWorkSpaceService, KlaxoonService, ChatMessageTypes, CardsService } from "@workadventure/shared-utils";
 import type { ChatEvent } from "@workadventure/shared-utils";
 import { StartWritingEvent, StopWritingEvent } from "@workadventure/shared-utils/src/Events/WritingEvent";
 import { playersStore } from "../Stores/PlayersStore";
 import { chatMessagesService, writingStatusMessageStore } from "../Stores/ChatStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
+import { localUserStore } from "../Connection/LocalUserStore";
 import { iframeListener } from "./IframeListener";
 
 class ScriptUtils {
@@ -19,6 +20,12 @@ class ScriptUtils {
         if (GoogleWorkSpaceService.isEmbedableGooglWorkSapceLink(urlApi)) {
             // If it a Google WorkSpace link opening in new tab, we need to remove the embedded parameter
             url = GoogleWorkSpaceService.getGoogleWorkSpaceBasicUrl(urlApi);
+        }
+
+        // Check if the Url is a Cards link
+        if (CardsService.isCardsLink(urlApi)) {
+            // If it is a Cards link opening in new tab, we need to remove the token parameter
+            url = CardsService.getCardsLink(urlApi, localUserStore.getAuthToken());
         }
 
         window.open(url);

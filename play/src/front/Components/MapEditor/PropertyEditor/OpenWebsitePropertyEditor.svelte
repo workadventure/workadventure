@@ -13,6 +13,8 @@
         EraserException,
         ExcalidrawService,
         ExcalidrawException,
+        CardsService,
+        CardsException,
     } from "@workadventure/shared-utils";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
@@ -23,12 +25,14 @@
     import googleSlidesSvg from "../../images/applications/icon_google_slides.svg";
     import eraserSvg from "../../images/applications/icon_eraser.svg";
     import excalidrawSvg from "../../images/applications/icon_excalidraw.svg";
+    import cardPng from "../../images/applications/icon_cards.svg";
     import pickerSvg from "../../images/applications/picker.svg";
     import { connectionManager } from "../../../Connection/ConnectionManager";
     import { GOOGLE_DRIVE_PICKER_APP_ID, GOOGLE_DRIVE_PICKER_CLIENT_ID } from "../../../Enum/EnvironmentVariable";
     import Tooltip from "../../Util/Tooltip.svelte";
     import InputTags from "../../Input/InputTags.svelte";
     import { InputTagOption } from "../../Input/InputTagOption";
+    import { localUserStore } from "../../../Connection/LocalUserStore";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: OpenWebsitePropertyData;
@@ -140,6 +144,8 @@
                     property.link = GoogleWorkSpaceService.getGoogleWorkSpaceBasicUrl(new URL(property.link));
                 } else if (property.application == "klaxoon") {
                     property.link = KlaxoonService.getKlaxoonBasicUrl(new URL(property.link));
+                } else if (property.application == "cards") {
+                    property.link = CardsService.getCardsLink(new URL(property.link), localUserStore.getAuthToken());
                 }
             }
         } else {
@@ -156,6 +162,8 @@
                         new URL(property.link),
                         connectionManager.klaxoonToolClientId
                     );
+                } else if (property.application == "cards") {
+                    property.link = CardsService.getCardsLink(new URL(property.link), localUserStore.getAuthToken());
                 }
             }
         }
@@ -318,6 +326,27 @@
                     error =
                         e instanceof ExcalidrawException.ExcalidrawException
                             ? $LL.mapEditor.properties.excalidrawProperties.error()
+                            : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
+                    console.info("Error to check embeddable website", e);
+                    property.link = null;
+                    throw e;
+                } finally {
+                    embeddableLoading = false;
+                    onValueChange();
+                }
+            }
+
+            if (property.application == "cards") {
+                try {
+                    CardsService.validateLink(new URL(property.link));
+                    embeddable = true;
+                    optionAdvancedActivated = false;
+                    property.newTab = oldNewTabValue;
+                } catch (e) {
+                    embeddable = false;
+                    error =
+                        e instanceof CardsException.CardsLinkException
+                            ? $LL.mapEditor.properties.cardsProperties.error()
                             : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
                     console.info("Error to check embeddable website", e);
                     property.link = null;
@@ -591,6 +620,9 @@
                 alt={$LL.mapEditor.properties.eraserProperties.description()}
             />
             {$LL.mapEditor.properties.eraserProperties.label()}
+        {:else if property.application === "cards"}
+            <img class="tw-w-6 tw-mr-1" src={cardPng} alt={$LL.mapEditor.properties.cardsProperties.description()} />
+            {$LL.mapEditor.properties.cardsProperties.label()}
         {:else if property.application === "website"}
             <img class="tw-w-6 tw-mr-1" src={icon} alt={$LL.mapEditor.properties.linkProperties.description()} />
             {$LL.mapEditor.properties.linkProperties.label()}

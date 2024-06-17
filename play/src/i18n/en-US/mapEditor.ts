@@ -201,6 +201,13 @@ const mapEditor: BaseTranslation = {
             error: "Please enter a valid Excalidraw URL",
             disabled: "Excalidraw integration is disabled.",
         },
+        cardsProperties: {
+            label: "Open Cards",
+            description:
+                "Quickest and easyestsolution to share your knowledge in no time, online, on MS Teams and on mobile.",
+            error: "Please enter a valid Cards URL",
+            disabled: "Cards integration is disabled.",
+        },
     },
     areaEditor: {
         editInstructions: "Click an area to modify its properties.",
