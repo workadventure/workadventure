@@ -9,7 +9,6 @@
     import Chat from "./Components/Chat.svelte";
 
     function closeChat() {
-        console.debug("closed");
         chatVisibilityStore.set(false);
     }
 
@@ -49,9 +48,9 @@
         id="chat"
         data-testid="chat"
         transition:fly={{ duration: 200, x: -335 }}
-        class="chatWindow tw-overflow-hidden tw-bg-contrast/95 tw-backdrop-blur-md tw-p-4"
+        class="chatWindow !tw-min-w-full sm:!tw-min-w-[360px] tw-overflow-hidden tw-bg-contrast/95 tw-backdrop-blur-md tw-p-4"
     >
-        <button class="close-window" on:click={closeChat}>&#215;</button>
+        <button class="close-window" data-testid="closeChatButton" on:click={closeChat}>&#215;</button>
         <Chat />
     </section>
 {/if}
@@ -59,20 +58,12 @@
 <style lang="scss">
     @import "../style/breakpoints.scss";
 
-    @include media-breakpoint-up(sm) {
-        .chatWindow {
-            width: 100% !important;
-        }
-    }
-
     .chatWindow {
         color: white;
         display: flex;
         flex-direction: column;
         position: absolute !important;
         top: 0;
-        min-width: 335px !important;
-        width: 20% !important;
         height: 100vh !important;
         z-index: 2000;
         pointer-events: auto;
