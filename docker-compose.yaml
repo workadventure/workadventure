@@ -475,6 +475,7 @@ services:
         - "traefik.http.routers.matrix.service=matrix"
     volumes:
         - synapsedata:/data/
+        - ./synapse/start.sh:/data/start.sh
         - ./synapse/federation:/etc/nginx/vhost.d/matrix.workadventure.localhost
     environment:
         VIRTUAL_HOST: "matrix.workadventure.localhost"
