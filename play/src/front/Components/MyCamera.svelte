@@ -126,7 +126,7 @@
     {:else if $localStreamStore.type === "success" && !$inExternalServiceStore}
         {#if $requestedCameraState && $mediaStreamConstraintsStore.video}
             <div
-                class="absolute bottom-4 left-4 z-30 responsive-dimension {small ? 'hidden' : ''} "
+                class="absolute bottom-8 left-4 z-30 responsive-dimension {small ? 'hidden' : ''} "
                 transition:fly={{ delay: 50, y: 50, duration: 150 }}
             >
                 <div class="flex">
@@ -162,9 +162,8 @@
                     {$LL.camera.my.loading()}
                 </div>
                 <video
-                    class="h-full w-full rounded-lg md:object-cover relative z-20"
+                    class="w-full rounded-lg md:object-cover relative z-20"
                     class:object-contain={stream}
-                    class:max-h-[230px]={stream}
                     style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
                     use:srcObject={stream}
                     autoplay

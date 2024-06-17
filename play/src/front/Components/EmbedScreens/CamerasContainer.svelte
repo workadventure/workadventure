@@ -16,10 +16,13 @@
     let isHightlighted = false;
 
     highlightedEmbedScreen.subscribe((value) => {
+        console.log("je suis dans le camera container");
         if (value) {
             isHightlighted = true;
+            console.log(isHightlighted);
         } else {
             isHightlighted = false;
+            console.log(isHightlighted);
         }
     });
 
@@ -54,103 +57,110 @@
     }
 
     function stackCameras() {
-        let cameras = document.querySelectorAll(".all-cameras");
+        console.log("stackCameras");
 
-        cameras.forEach((camera) => {
-            (camera as HTMLElement).style.display = "flex";
-        });
+        // let cameras = document.querySelectorAll(".all-cameras");
 
-        let allCamerasTest = document.getElementById("cameras-container");
+        // cameras.forEach((camera) => {
+        //     (camera as HTMLElement).style.display = "flex";
+        // });
 
-        if (xxxlScreen.matches) {
-            if (cameras.length > 8) {
-                if (allCamerasTest && !isHightlighted) {
-                    allCamerasTest.classList.remove("grid-layout-template");
-                    allCamerasTest.style.display = "grid";
-                    allCamerasTest.style.gridTemplateColumns = "repeat(8, minmax(350px, 1fr))";
-                    allCamerasTest.style.gap = "10px";
-                } else if (allCamerasTest && isHightlighted) {
-                    allCamerasTest.classList.add("grid-layout-3");
-                    allCamerasTest.style.display = "flex";
-                    allCamerasTest.style.flexDirection = "row";
-                    adjustCameraDisplay();
-                }
-            }
-        } else if (xxlScreen.matches) {
-            if (cameras.length > 6) {
-                if (allCamerasTest && !isHightlighted) {
-                    allCamerasTest.classList.remove("grid-layout-template");
-                    allCamerasTest.style.display = "grid";
-                    allCamerasTest.style.gridTemplateColumns = "repeat(6, minmax(350px, 1fr))";
-                    allCamerasTest.style.gap = "10px";
-                } else if (allCamerasTest && isHightlighted) {
-                    allCamerasTest.classList.add("grid-layout-3");
-                    allCamerasTest.style.display = "flex";
-                    allCamerasTest.style.flexDirection = "row";
-                    adjustCameraDisplay();
-                }
-            }
-        } else if (xlScreen.matches) {
-            if (cameras.length > 5) {
-                if (allCamerasTest && !isHightlighted) {
-                    allCamerasTest.classList.remove("grid-layout-template");
-                    allCamerasTest.style.display = "grid";
-                    allCamerasTest.style.gridTemplateColumns = "repeat(5, minmax(350px, 1fr))";
-                    allCamerasTest.style.gap = "10px";
-                } else if (allCamerasTest && isHightlighted) {
-                    allCamerasTest.classList.add("grid-layout-3");
-                    allCamerasTest.style.display = "flex";
-                    allCamerasTest.style.flexDirection = "row";
-                    adjustCameraDisplay();
-                }
-            }
-        } else if (lgScreen.matches) {
-            if (cameras.length > 4) {
-                if (allCamerasTest && !isHightlighted) {
-                    allCamerasTest.classList.remove("grid-layout-template");
-                    allCamerasTest.style.display = "grid";
-                    allCamerasTest.style.gridTemplateColumns = "repeat(4, minmax(350px, 1fr))";
-                    allCamerasTest.style.gap = "10px";
-                } else if (allCamerasTest && isHightlighted) {
-                    allCamerasTest.classList.add("grid-layout-3");
-                    allCamerasTest.style.display = "flex";
-                    allCamerasTest.style.flexDirection = "row";
-                    adjustCameraDisplay();
-                }
-            }
-        } else if (mdScreen.matches) {
-            console.log("je suis dans le cas mdScreen");
-            if (cameras.length > 2) {
-                if (allCamerasTest && !isHightlighted) {
-                    allCamerasTest.classList.remove("grid-layout-template");
-                    allCamerasTest.style.display = "grid";
-                    allCamerasTest.style.gridTemplateColumns = "repeat(2, minmax(350px, 1fr))";
-                    allCamerasTest.style.gap = "10px";
-                } else if (allCamerasTest && isHightlighted) {
-                    allCamerasTest.classList.add("grid-layout-3");
-                    allCamerasTest.style.display = "flex";
-                    allCamerasTest.style.flexDirection = "row";
-                    adjustCameraDisplay();
-                }
-            }
-        }
+        // let allCamerasTest = document.getElementById("cameras-container");
+
+        // if (xxxlScreen.matches) {
+        //     if (cameras.length > 8) {
+        //         if (allCamerasTest && !isHightlighted) {
+        //             allCamerasTest.classList.remove("grid-layout-template");
+        //             allCamerasTest.style.display = "grid";
+        //             allCamerasTest.style.gridTemplateColumns = "repeat(8, minmax(350px, 1fr))";
+        //             allCamerasTest.style.gap = "10px";
+        //         } else if (allCamerasTest && isHightlighted) {
+        //             allCamerasTest.classList.add("grid-layout-3");
+        //             allCamerasTest.style.display = "flex";
+        //             allCamerasTest.style.flexDirection = "row";
+        //             adjustCameraDisplay();
+        //         }
+        //     }
+        // } else if (xxlScreen.matches) {
+        //     if (cameras.length > 6) {
+        //         if (allCamerasTest && !isHightlighted) {
+        //             allCamerasTest.classList.remove("grid-layout-template");
+        //             allCamerasTest.style.display = "grid";
+        //             allCamerasTest.style.gridTemplateColumns = "repeat(6, minmax(350px, 1fr))";
+        //             allCamerasTest.style.gap = "10px";
+        //         } else if (allCamerasTest && isHightlighted) {
+        //             allCamerasTest.classList.add("grid-layout-3");
+        //             allCamerasTest.style.display = "flex";
+        //             allCamerasTest.style.flexDirection = "row";
+        //             adjustCameraDisplay();
+        //         }
+        //     }
+        // } else if (xlScreen.matches) {
+        //     if (cameras.length > 5) {
+        //         if (allCamerasTest && !isHightlighted) {
+        //             allCamerasTest.classList.remove("grid-layout-template");
+        //             allCamerasTest.style.display = "grid";
+        //             allCamerasTest.style.gridTemplateColumns = "repeat(5, minmax(350px, 1fr))";
+        //             allCamerasTest.style.gap = "10px";
+        //         } else if (allCamerasTest && isHightlighted) {
+        //             allCamerasTest.classList.add("grid-layout-3");
+        //             allCamerasTest.style.display = "flex";
+        //             allCamerasTest.style.flexDirection = "row";
+        //             adjustCameraDisplay();
+        //         }
+        //     }
+        // } else if (lgScreen.matches) {
+        //     if (cameras.length > 4) {
+        //         if (allCamerasTest && !isHightlighted) {
+        //             allCamerasTest.classList.remove("grid-layout-template");
+        //             allCamerasTest.style.display = "grid";
+        //             allCamerasTest.style.gridTemplateColumns = "repeat(4, minmax(350px, 1fr))";
+        //             allCamerasTest.style.gap = "10px";
+        //         } else if (allCamerasTest && isHightlighted) {
+        //             allCamerasTest.classList.add("grid-layout-3");
+        //             allCamerasTest.style.display = "flex";
+        //             allCamerasTest.style.flexDirection = "row";
+        //             adjustCameraDisplay();
+        //         }
+        //     }
+        // } else if (mdScreen.matches) {
+        //     console.log("je suis dans le cas mdScreen");
+        //     if (cameras.length > 2) {
+        //         if (allCamerasTest && !isHightlighted) {
+        //             allCamerasTest.classList.remove("grid-layout-template");
+        //             allCamerasTest.style.display = "grid";
+        //             allCamerasTest.style.gridTemplateColumns = "repeat(2, minmax(350px, 1fr))";
+        //             allCamerasTest.style.gap = "10px";
+        //         } else if (allCamerasTest && isHightlighted) {
+        //             allCamerasTest.classList.add("grid-layout-3");
+        //             allCamerasTest.style.display = "flex";
+        //             allCamerasTest.style.flexDirection = "row";
+        //             adjustCameraDisplay();
+        //         }
+        //     }
+        // }
     }
 
-    $: isHightlighted, stackCameras();
+    // $: isHightlighted, stackCameras();
 </script>
 
-<div class="grid-layout-template all-cameras-container overflow-visible" id="cameras-container">
+<div
+    class={isHightlighted
+        ? "flex justify-center gap-x-4 all-cameras-container overflow-visible grid-layout-template w-fit m-auto"
+        : "grid grid-cols-[repeat(auto-fit,minmax(50px, 110px))] md:grid grid-cols-[repeat(auto-fit,minmax(110px,320px))] justify-center align-center gap-4 "}
+    id="cameras-container"
+>
     {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
         {#if !highlightedEmbedScreen || $highlightedEmbedScreen !== peer}
             {#key uniqueId}
-                <div id="unique-cam-other" class="all-cameras">
+                <div class="all-cameras m-auto {isHightlighted ? 'w-[230px]' : 'w-full'}">
                     <MediaBox streamable={peer} on:camMounted={camMountedWidth} on:camUnmounted={camUnmountedWidth} />
                 </div>
             {/key}
         {/if}
     {/each}
     {#if $myCameraStore}
-        <div id="unique-mycam" class="all-cameras">
+        <div id="unique-mycam" class="all-cameras {isHightlighted ? 'w-[230px]' : 'w-full'} m-auto">
             <MyCamera />
         </div>
     {/if}
@@ -158,43 +168,22 @@
 
 <!-- && !$megaphoneEnabledStore TODO HUGO -->
 <style>
-    #unique-mycam,
-    #unique-cam-other {
-        width: 350px;
-        height: 200px;
-    }
-
-    .grid-layout-template {
+    /* .grid-layout-template {
         display: flex;
         justify-content: center;
         gap: 1rem;
-    }
-
-    .grid-layout-3 {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(350px, 1fr));
-        gap: 1rem;
-    }
+    } */
 
     @container (max-width: 767px) {
-        .mobile-height {
-            height: 300px;
-        }
         .grid-layout-template {
+            display: flex;
             bottom: 0;
             right: 0;
-            display: flex;
             flex-direction: column;
             gap: 0.2rem;
             align-items: flex-end;
-        }
-
-        #unique-cam-other,
-        #unique-mycam {
-            align-self: flex-end;
-            margin-top: auto;
-            width: 150px;
-            height: 85px;
+            scale: 0.7;
+            background-color: red;
         }
     }
 </style>

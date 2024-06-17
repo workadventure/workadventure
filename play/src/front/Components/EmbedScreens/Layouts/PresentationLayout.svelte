@@ -16,6 +16,7 @@
     const isMobile = window.matchMedia("(max-width: 767px)");
     let isVertical: boolean;
     let currentHighlightedEmbedScreen: Streamable | undefined;
+    let isHightlighted = false;
 
     onMount(() => {
         isMobile.addEventListener("change", (e: any) => handleTabletChange(e));
@@ -92,41 +93,45 @@
             }
         }
     }
+
+    highlightedEmbedScreen.subscribe((value) => {
+        console.log("je suis dans le presentation layout");
+        if (value) {
+            isHightlighted = true;
+            console.log(isHightlighted);
+        } else {
+            isHightlighted = false;
+            console.log(isHightlighted);
+        }
+    });
 </script>
 
 <!-- class:full-medias={displayFullMedias} -->
 
-<div id="presentation-layout">
-    {#if isVertical}
-        <div class="vertical" id="right-mode">
-            <div id="video-container-receive" class={$highlightedEmbedScreen ? "block" : "hidden"}>
-                {#if $highlightedEmbedScreen}
-                    {#key $highlightedEmbedScreen.uniqueId}
-                        <MediaBox isHightlighted={true} isClickable={true} streamable={$highlightedEmbedScreen} />
-                    {/key}
-                {/if}
-            </div>
-
-            {#if $streamableCollectionStore.size > 0 || $myCameraStore}
-                <div
-                    class="grid grid-flow-col gap-x-4 {$highlightedEmbedScreen
-                        ? 'justify-end'
-                        : 'justify-center'} vertical"
-                    id="container-media"
-                >
-                    {#if $jitsiLoadingStore}
-                        <Loading />
-                    {/if}
-                    {#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true && $myCameraStore}
-                        <CamerasContainer />
-                    {/if}
-                    {#if $myJitsiCameraStore}
-                        <MediaBox streamable={$myJitsiCameraStore} isClickable={false} />
-                    {/if}
-                </div>
+<div class={isHightlighted ? "presentation-layout md:flex flex-col" : ""}>
+    {#if $streamableCollectionStore.size > 0 || $myCameraStore}
+        <div class="justify-end md:justify-center {isHightlighted ? 'mb-2' : ''}" id="container-media">
+            {#if $jitsiLoadingStore}
+                <Loading />
+            {/if}
+            {#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true && $myCameraStore}
+                <CamerasContainer />
+            {/if}
+            {#if $myJitsiCameraStore}
+                <MediaBox streamable={$myJitsiCameraStore} isClickable={false} />
             {/if}
         </div>
-    {:else}
+    {/if}
+
+    <div id="video-container-receive" class={$highlightedEmbedScreen ? "block" : "hidden"}>
+        {#if $highlightedEmbedScreen}
+            {#key $highlightedEmbedScreen.uniqueId}
+                <MediaBox isHightlighted={true} isClickable={true} streamable={$highlightedEmbedScreen} />
+            {/key}
+        {/if}
+    </div>
+</div>
+<!-- {#if isVertical}{:else}
         <div class="horizontal">
             {#if $streamableCollectionStore.size > 0 || $myCameraStore}
                 <div class="grid grid-flow-col gap-x-4 justify-center container-media" id="container-media">
@@ -149,9 +154,9 @@
                 {/if}
             </div>
         </div>
-    {/if}
+    {/if} -->
 
-    <!-- TODO HUGO Commented Why ?
+<!-- TODO HUGO Commented Why ?
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
             <div
                 class="relative self-end z-[300] bottom-6 md:bottom-4 max-w-[25%] w-full"
@@ -172,30 +177,28 @@
             </div>
         {/if}
     -->
-</div>
-
 <style>
-    .right-mode-on {
+    /* .right-mode-on {
         display: flex;
         flex-direction: column;
         background-color: red;
-    }
+    } */
 
     .fullscreen {
         scale: 1.4;
     }
-    #presentation-layout {
+    .presentation-layout {
         overflow-y: auto;
         overflow-x: hidden;
     }
 
-    #presentation-layout {
+    .presentation-layout {
         display: flex;
         flex-direction: column;
     }
 
     @media (min-width: 576px) {
-        #presentation-layout {
+        .presentation-layout {
             position: fixed;
             left: 0;
             width: 100%;

@@ -18,9 +18,9 @@
     let changeIcon = true;
     let visibleIcon = false;
 
-    const isResized = window.matchMedia("(max-height: 727px)");
-    let isVertical: boolean;
-    let video = document.getElementById("screen-sharing") as HTMLVideoElement;
+    // const isResized = window.matchMedia("(max-height: 727px)");
+    // let isVertical: boolean;
+    // let video = document.getElementById("screen-sharing") as HTMLVideoElement;
 
     let embedScreen: Streamable;
 

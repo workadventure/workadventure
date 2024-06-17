@@ -333,7 +333,7 @@
                     </div>
                 </div>
             {/if}
-            <div class="absolute bottom-4 left-4 z-30 responsive-dimension">
+            <div class="absolute bottom-8 left-4 z-30 responsive-dimension">
                 <div class="flex">
                     <div
                         class="relative rounded backdrop-blur px-4 py-1 text-white text-sm pl-12 pr-9 bold {$mediaStreamConstraintsStore.audio
