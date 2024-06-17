@@ -48,17 +48,23 @@ npm run upload -- -k your-api-key -u your-mapstorage-url -d your-directory
 <Tabs>
   <TabItem label="SAAS version" value="saas" default>
 
-1. **Your Map Storage API Key:**
+1. **The URL of your map storage:**
    You can find it in [your admin account](https://admin.workadventu.re).
    Log in.
    In the left panel, click on "Developers" tab then "API keys / Zapier".
-   There you can create a new token. (Don't forget to save it !)
+   There are 3 links, be careful to take the `Map-storage API endpoint`, it is the url for uploading files to the map storage service of WorkAdventure.
 
    ![Get your API Key](../../images/navigate_admin.png)
    ![Get your API Key](../../images/get_info_key.png)
 
-2. **The URL of your map storage:**
-   The map storage is in the same section as the API Key above. There are 3 links, be careful to take the `Map-storage API endpoint`, it is the url for uploading files to the map storage service of WorkAdventure.
+   :::info Select the World
+   Be careful to select the good world just above before copying your map storage url and create your key
+   :::
+   ![Choose your world](../../images/select-your-world.png)
+
+2. **Your Map Storage API Key:**
+   You can find it in in the same section as the map storage url just below.
+   There you can create a new token. (Don't forget to save it !)
 
 3. **Directory:**
    You can also add a `directory name` if you want. It will be the folder where all your uploaded files will be stored in.
@@ -107,8 +113,7 @@ After answering these questions, the script will start to upload your directory.
 Now for every change you only just have to commit and push all your changes ! Just wait a few minutes, and your map will be propagated automatically on your server.
 
 :::info
-Your settings have been saved in a `.env` file (except the map storage API key that was saved in the `.env.secret` file). Should you need to change them,
-you can edit these files.
+Your settings have been saved in a `.env` file (except the map storage API key that was saved in the `.env.secret` file). If you need to change them, you can edit these files.
 :::
 
 ## Understanding what is happening
