@@ -13,6 +13,16 @@
     let xxlScreen = window.matchMedia("(min-width: 1920px) and (max-width: 2559px)");
     let xxxlScreen = window.matchMedia("(min-width: 2560px)");
 
+    let isHightlighted = false;
+
+    highlightedEmbedScreen.subscribe((value) => {
+        if (value) {
+            isHightlighted = true;
+        } else {
+            isHightlighted = false;
+        }
+    });
+
     onMount(() => {
         mdScreen.addEventListener("change", stackCameras);
         lgScreen.addEventListener("change", stackCameras);
@@ -33,12 +43,9 @@
 
     function adjustCameraDisplay() {
         widthWindow = document.getElementById("presentation-layout")?.offsetWidth;
-        console.log("WidthWindow :", widthWindow);
         let allCams = (document.getElementsByClassName("all-cameras-container")[0] as HTMLElement)?.offsetWidth;
-        console.log("AllCams :", allCams);
         if (widthWindow !== undefined && allCams > widthWindow) {
             let scale = widthWindow / allCams;
-            console.log("Scale :", scale);
             let cameras = document.querySelectorAll(".all-cameras-container");
             cameras.forEach((camera) => {
                 (camera as HTMLElement).style.transform = `scale(${scale})`;
@@ -47,7 +54,6 @@
     }
 
     function stackCameras() {
-        console.log("je suis dans la fonction stackCameras");
         let cameras = document.querySelectorAll(".all-cameras");
 
         cameras.forEach((camera) => {
@@ -58,51 +64,79 @@
 
         if (xxxlScreen.matches) {
             if (cameras.length > 8) {
-                if (allCamerasTest) {
+                if (allCamerasTest && !isHightlighted) {
                     allCamerasTest.classList.remove("grid-layout-template");
                     allCamerasTest.style.display = "grid";
                     allCamerasTest.style.gridTemplateColumns = "repeat(8, minmax(350px, 1fr))";
                     allCamerasTest.style.gap = "10px";
+                } else if (allCamerasTest && isHightlighted) {
+                    allCamerasTest.classList.add("grid-layout-3");
+                    allCamerasTest.style.display = "flex";
+                    allCamerasTest.style.flexDirection = "row";
+                    adjustCameraDisplay();
                 }
             }
         } else if (xxlScreen.matches) {
             if (cameras.length > 6) {
-                if (allCamerasTest) {
+                if (allCamerasTest && !isHightlighted) {
                     allCamerasTest.classList.remove("grid-layout-template");
                     allCamerasTest.style.display = "grid";
                     allCamerasTest.style.gridTemplateColumns = "repeat(6, minmax(350px, 1fr))";
                     allCamerasTest.style.gap = "10px";
+                } else if (allCamerasTest && isHightlighted) {
+                    allCamerasTest.classList.add("grid-layout-3");
+                    allCamerasTest.style.display = "flex";
+                    allCamerasTest.style.flexDirection = "row";
+                    adjustCameraDisplay();
                 }
             }
         } else if (xlScreen.matches) {
-            console.log("lololololol");
             if (cameras.length > 5) {
-                if (allCamerasTest) {
+                if (allCamerasTest && !isHightlighted) {
                     allCamerasTest.classList.remove("grid-layout-template");
                     allCamerasTest.style.display = "grid";
                     allCamerasTest.style.gridTemplateColumns = "repeat(5, minmax(350px, 1fr))";
                     allCamerasTest.style.gap = "10px";
+                } else if (allCamerasTest && isHightlighted) {
+                    allCamerasTest.classList.add("grid-layout-3");
+                    allCamerasTest.style.display = "flex";
+                    allCamerasTest.style.flexDirection = "row";
+                    adjustCameraDisplay();
                 }
             }
         } else if (lgScreen.matches) {
-            console.log("je suis dans le cas lgScreen");
             if (cameras.length > 4) {
-                if (allCamerasTest) {
+                if (allCamerasTest && !isHightlighted) {
                     allCamerasTest.classList.remove("grid-layout-template");
                     allCamerasTest.style.display = "grid";
                     allCamerasTest.style.gridTemplateColumns = "repeat(4, minmax(350px, 1fr))";
                     allCamerasTest.style.gap = "10px";
+                } else if (allCamerasTest && isHightlighted) {
+                    allCamerasTest.classList.add("grid-layout-3");
+                    allCamerasTest.style.display = "flex";
+                    allCamerasTest.style.flexDirection = "row";
+                    adjustCameraDisplay();
                 }
             }
         } else if (mdScreen.matches) {
             console.log("je suis dans le cas mdScreen");
-            if (cameras.length > 3) {
-                console.log("je suis dans le cas mdScreen avec plus de 2 cam");
-                allCamerasTest?.classList.remove("grid-layout-template");
-                allCamerasTest?.classList.add("grid-layout-3");
+            if (cameras.length > 2) {
+                if (allCamerasTest && !isHightlighted) {
+                    allCamerasTest.classList.remove("grid-layout-template");
+                    allCamerasTest.style.display = "grid";
+                    allCamerasTest.style.gridTemplateColumns = "repeat(2, minmax(350px, 1fr))";
+                    allCamerasTest.style.gap = "10px";
+                } else if (allCamerasTest && isHightlighted) {
+                    allCamerasTest.classList.add("grid-layout-3");
+                    allCamerasTest.style.display = "flex";
+                    allCamerasTest.style.flexDirection = "row";
+                    adjustCameraDisplay();
+                }
             }
         }
     }
+
+    $: isHightlighted, stackCameras();
 </script>
 
 <div class="grid-layout-template all-cameras-container overflow-visible" id="cameras-container">
@@ -133,6 +167,12 @@
     .grid-layout-template {
         display: flex;
         justify-content: center;
+        gap: 1rem;
+    }
+
+    .grid-layout-3 {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(350px, 1fr));
         gap: 1rem;
     }
 
