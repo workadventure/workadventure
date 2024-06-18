@@ -476,6 +476,7 @@ services:
     volumes:
         - synapsedata:/data/
         - ./synapse/start.sh:/data/start.sh
+        - ./synapse/homeserver.template.yaml:/data/homeserver.template.yaml
         - ./synapse/federation:/etc/nginx/vhost.d/matrix.workadventure.localhost
     environment:
         VIRTUAL_HOST: "matrix.workadventure.localhost"
