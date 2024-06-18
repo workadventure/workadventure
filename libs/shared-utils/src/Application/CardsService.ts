@@ -7,7 +7,7 @@ export const validateLink = (url: URL) => {
 
 export const isCardsLink = (url: URL) => {
     return ["member.workadventu.re", "member.staging.workadventu.re", "member.workadventure.localhost"].includes(url.hostname) 
-        && url.pathname === "/cards"
+        && url.pathname.indexOf("cards") !== -1
         && url.searchParams.has("tenant")
         && url.searchParams.has("learning");
 };

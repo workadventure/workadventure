@@ -4,34 +4,19 @@ import { StartWritingEvent, StopWritingEvent } from "@workadventure/shared-utils
 import { playersStore } from "../Stores/PlayersStore";
 import { chatMessagesService, writingStatusMessageStore } from "../Stores/ChatStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
-import { localUserStore } from "../Connection/LocalUserStore";
+import { gameManager } from "../Phaser/Game/GameManager";
 import { iframeListener } from "./IframeListener";
 
 class ScriptUtils {
     public openTab(url: string) {
-        const urlApi = new URL(url);
-        // Check if the url is a klaxoon link
-        if (KlaxoonService.isKlaxoonLink(urlApi)) {
-            // If it is a Klaxoon link opening in new tab, we need to remove the embedded parameter
-            url = KlaxoonService.getKlaxoonBasicUrl(urlApi);
-        }
+        // Get URL from the website
+        url = this.getWebsiteUrl(url);
 
-        // Check if the url is a Google WorkSpace link
-        if (GoogleWorkSpaceService.isEmbedableGooglWorkSapceLink(urlApi)) {
-            // If it a Google WorkSpace link opening in new tab, we need to remove the embedded parameter
-            url = GoogleWorkSpaceService.getGoogleWorkSpaceBasicUrl(urlApi);
-        }
-
-        // Check if the Url is a Cards link
-        if (CardsService.isCardsLink(urlApi)) {
-            // If it is a Cards link opening in new tab, we need to remove the token parameter
-            url = CardsService.getCardsLink(urlApi, localUserStore.getAuthToken());
-        }
-
+        // Open the url in a new tab
         window.open(url);
 
         // Analytics tracking for opening a new tab
-        analyticsClient.openedWebsite(urlApi);
+        analyticsClient.openedWebsite(new URL(url));
     }
 
     public goToPage(url: string) {
@@ -98,6 +83,30 @@ class ScriptUtils {
             console.info("Error in checking if in iframe", e);
             return true;
         }
+    }
+
+    public getWebsiteUrl(url: string) {
+        const urlApi = new URL(url);
+        // Check if the url is a klaxoon link
+        if (KlaxoonService.isKlaxoonLink(urlApi)) {
+            // If it is a Klaxoon link opening in new tab, we need to remove the embedded parameter
+            url = KlaxoonService.getKlaxoonBasicUrl(urlApi);
+        }
+
+        // Check if the url is a Google WorkSpace link
+        if (GoogleWorkSpaceService.isEmbedableGooglWorkSapceLink(urlApi)) {
+            // If it a Google WorkSpace link opening in new tab, we need to remove the embedded parameter
+            url = GoogleWorkSpaceService.getGoogleWorkSpaceBasicUrl(urlApi);
+        }
+
+        // Check if the Url is a Cards link
+        if (CardsService.isCardsLink(urlApi)) {
+            // If it is a Cards link opening in new tab, we need to remove the token parameter
+            const userRoomToken = gameManager.getCurrentGameScene().connection?.userRoomToken;
+            url = CardsService.getCardsLink(urlApi, userRoomToken);
+        }
+
+        return url;
     }
 }
 
