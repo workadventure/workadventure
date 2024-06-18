@@ -19,6 +19,8 @@ import { isEncryptionRequiredAndNotSet } from "./MatrixSecurity";
 globalThis.Olm = Olm;
 window.Buffer = Buffer;
 
+export const DEFAULT_CHAT_DISPLAY_NAME = "Guest";
+
 export interface MatrixClientWrapperInterface {
     initMatrixClient(): Promise<MatrixClient>;
     cacheSecretStorageKey(keyId: string, key: Uint8Array): void;
@@ -68,6 +70,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
 
     public async initMatrixClient(): Promise<MatrixClient> {
         const userId = this.localUserStore.getLocalUser()?.uuid;
+
         if (!userId) {
             throw new Error("UserUUID is undefined, this is not supposed to happen.");
         }
@@ -102,8 +105,6 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
             refreshToken = refreshTokenFromLoginToken;
             matrixUserId = userIdFromLoginToken;
             matrixDeviceId = deviceId;
-            this.localUserStore.setMatrixLoginToken(null);
-            this.localUserStore.setGuest(false);
         }
 
         if (accessToken === null && refreshToken === null) {
@@ -162,7 +163,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
 
         if (this.localUserStore.isGuest() && displayName !== this.client.getUser(matrixUserId)?.displayName) {
             //TODO : Change default display name
-            await this.client.setDisplayName(displayName || "Guest");
+            await this.client.setDisplayName(displayName || DEFAULT_CHAT_DISPLAY_NAME);
         }
 
         if (oldMatrixUserId !== matrixUserId) {
@@ -273,6 +274,8 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
 
         //Login token has been used, remove it from local storage
         this.localUserStore.setMatrixLoginToken(null);
+
+        this.localUserStore.setGuest(false);
 
         // Note: we ignore the device ID returned by the server. We use the one we generated.
         // This will be required in the future when we switch to a Native OpenID Matrix client.
