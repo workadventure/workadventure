@@ -475,9 +475,9 @@ services:
         - "traefik.http.services.matrix.loadbalancer.server.port=8008"
         - "traefik.http.routers.matrix.service=matrix"
     volumes:
-        - synapsedata:/data/
-        - ./synapse/start.sh:/data/start.sh
-        - ./synapse/homeserver.template.yaml:/data/homeserver.template.yaml
+        - ./synapse:/data/
+        #- ./synapse/start.sh:/data/start.sh
+        #- ./synapse/homeserver.template.yaml:/data/homeserver.template.yaml
         - ./synapse/federation:/etc/nginx/vhost.d/matrix.workadventure.localhost
     environment:
         VIRTUAL_HOST: "matrix.workadventure.localhost"
@@ -512,5 +512,5 @@ services:
 #      #- --cert=/root/letsencrypt/fullchain.pem
 #      #- --pkey=/root/letsencrypt/privkey.pem
 #    network_mode: host
-volumes:
-  synapsedata:
+#volumes:
+#  synapsedata:

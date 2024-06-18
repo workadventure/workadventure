@@ -1,6 +1,6 @@
 #!/bin/bash
 apt update
-apt-get install -y gettext-base
+apt-get install -y gettext-base sudo
 
 set -e
 #set -x
@@ -20,11 +20,11 @@ done
 
 envsubst < /data/homeserver.template.yaml > /data/homeserver.yaml
 
-cd /data
 python -m synapse.app.homeserver \
     --config-path /data/homeserver.yaml \
     --generate-config \
     --report-stats=yes
+sudo chmod -R 777 /data
 
 sleep 5 && register_new_matrix_user -c /data/homeserver.yaml -u ${MATRIX_ADMIN_USER} -p ${MATRIX_ADMIN_PASSWORD} -a &
 exec "/start.py"
