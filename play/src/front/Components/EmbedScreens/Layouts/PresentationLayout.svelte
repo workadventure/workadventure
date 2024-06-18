@@ -108,7 +108,7 @@
 
 <!-- class:full-medias={displayFullMedias} -->
 
-<div class={isHightlighted ? "presentation-layout md:flex flex-col" : ""}>
+<div class={isHightlighted ? "presentation-layout flex flex-col-reverse md:flex-col" : ""}>
     {#if $streamableCollectionStore.size > 0 || $myCameraStore}
         <div class="justify-end md:justify-center {isHightlighted ? 'mb-2' : ''}" id="container-media">
             {#if $jitsiLoadingStore}
