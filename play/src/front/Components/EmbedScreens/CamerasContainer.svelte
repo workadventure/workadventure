@@ -146,8 +146,8 @@
 
 <div
     class={isHightlighted
-        ? "flex justify-center gap-x-4 all-cameras-container overflow-visible grid-layout-template w-fit m-auto"
-        : "grid grid-cols-[repeat(auto-fit,minmax(50px, 110px))] md:grid grid-cols-[repeat(auto-fit,minmax(110px,320px))] justify-center align-center gap-4 "}
+        ? "flex justify-center gap-x-4 all-cameras-container overflow-visible responsive-layout w-fit m-auto"
+        : "grid justify-center align-center gap-4  sm:grid-cols-[repeat(auto-fit,minmax(70px, 140px))] md:grid-cols-[repeat(auto-fit,minmax(110px,320px))]"}
     id="cameras-container"
 >
     {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
@@ -175,7 +175,7 @@
     } */
 
     @container (max-width: 767px) {
-        .grid-layout-template {
+        .responsive-layoutå {
             display: flex;
             bottom: 0;
             right: 0;
