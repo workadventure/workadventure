@@ -537,7 +537,14 @@ export class GameMapPropertiesListener {
         };
 
         const openCoWebsiteFunction = () => {
-            const url = new URL(openWebsiteProperty ?? "", this.scene.mapUrlFile);
+            // Check URl and get the correct one
+            let urlStr = openWebsiteProperty ?? "";
+            try {
+                urlStr = scriptUtils.getWebsiteUrl(openWebsiteProperty ?? "");
+            } catch (e) {
+                console.error("Error on getWebsiteUrl: ", e);
+            }
+            const url = new URL(urlStr, this.scene.mapUrlFile);
             const coWebsite = new SimpleCoWebsite(
                 url,
                 allowApiProperty,
@@ -589,8 +596,15 @@ export class GameMapPropertiesListener {
             });
             */
         } else if (websiteTriggerProperty === ON_ICON_TRIGGER_BUTTON) {
+            // Check URl and get the correct one
+            let urlStr = openWebsiteProperty ?? "";
+            try {
+                urlStr = scriptUtils.getWebsiteUrl(openWebsiteProperty ?? "");
+            } catch (e) {
+                console.error("Error on getWebsiteUrl: ", e);
+            }
             const coWebsite = new SimpleCoWebsite(
-                new URL(openWebsiteProperty ?? "", this.scene.mapUrlFile),
+                new URL(urlStr, this.scene.mapUrlFile),
                 allowApiProperty,
                 websitePolicyProperty,
                 websiteWidthProperty,

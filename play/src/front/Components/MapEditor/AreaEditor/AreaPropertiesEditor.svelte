@@ -133,6 +133,10 @@
                     case "excalidraw":
                         placeholder = "https://excalidraw.workadventu.re/";
                         break;
+                    case "cards":
+                        placeholder =
+                            "https://member.workadventu.re/cards?tenant=<your tenant from cards>&learning=<your leaning from cards>";
+                        break;
                     default:
                         placeholder = "https://workadventu.re";
                         break;
@@ -485,6 +489,13 @@
                 subProperty="excalidraw"
                 on:click={() => {
                     onAddProperty("openWebsite", "excalidraw");
+                }}
+            />
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                subProperty="cards"
+                on:click={() => {
+                    onAddProperty("openWebsite", "cards");
                 }}
             />
         </div>

@@ -137,6 +137,7 @@ export const EnvironmentVariables = z.object({
         .string()
         .optional()
         .transform((val) => toArray(val)),
+    CARDS_ENABLED: BoolAsString.optional().transform((val) => toBool(val, false)),
 
     // Limit bandwidth environment variables
     PEER_VIDEO_LOW_BANDWIDTH: PositiveIntAsString.optional(),

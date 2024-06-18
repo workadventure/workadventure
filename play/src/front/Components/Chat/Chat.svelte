@@ -126,6 +126,7 @@
                                         eraserToolActivated: connectionManager.eraserToolActivated,
                                         excalidrawToolActivated: connectionManager.excalidrawToolActivated,
                                         excalidrawToolDomains: connectionManager.excalidrawToolDomains,
+                                        cardsToolActivated: connectionManager.cardsToolActivated,
                                         applications: connectionManager.applications,
                                     },
                                 },

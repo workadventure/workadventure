@@ -371,8 +371,14 @@ export class AreasPropertiesListener {
             });
              */
         } else if (property.trigger === ON_ICON_TRIGGER_BUTTON) {
+            let url = property.link ?? "";
+            try {
+                url = scriptUtils.getWebsiteUrl(property.link ?? "");
+            } catch (e) {
+                console.error("Error on getWebsiteUrl: ", e);
+            }
             const coWebsite = new SimpleCoWebsite(
-                new URL(property.link ?? "", this.scene.mapUrlFile),
+                new URL(url, this.scene.mapUrlFile),
                 property.allowAPI,
                 property.policy,
                 property.width,
@@ -659,7 +665,16 @@ export class AreasPropertiesListener {
         coWebsiteOpen: OpenCoWebsite,
         actionId: string
     ): void {
-        const url = new URL(property.link ?? "", this.scene.mapUrlFile);
+        // Check URl and get the correct one
+        let urlStr = property.link ?? "";
+        try {
+            urlStr = scriptUtils.getWebsiteUrl(property.link ?? "");
+        } catch (e) {
+            console.error("Error on getWebsiteUrl: ", e);
+        }
+
+        // Create the co-website to be opened
+        const url = new URL(urlStr, this.scene.mapUrlFile);
         const coWebsite = new SimpleCoWebsite(
             url,
             property.allowAPI,
