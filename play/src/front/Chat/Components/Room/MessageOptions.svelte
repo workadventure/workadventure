@@ -6,7 +6,8 @@
     import { IconArrowBackUp, IconArrowDown, IconMoodSmile, IconPencil, IconTrash } from "@wa-icons";
 
     export let message: ChatMessage;
-    export let messageRef: HTMLDivElement;
+
+    let optionRef: HTMLDivElement;
 
     function replyToMessage() {
         selectedChatMessageToReply.set(message);
@@ -27,7 +28,7 @@
     });
 
     function openCloseEmojiPicker() {
-        emojiPicker.isPickerVisible() ? emojiPicker.hidePicker() : emojiPicker.showPicker(messageRef);
+        emojiPicker.togglePicker(optionRef);
     }
 
     const { content, isMyMessage, type } = message;
@@ -37,7 +38,7 @@
     $: isGuest = chat.isGuest;
 </script>
 
-<div class="tw-flex tw-flex-row tw-gap-1 tw-items-center">
+<div class="tw-flex tw-flex-row tw-gap-1 tw-items-center" bind:this={optionRef}>
     {#if message.type !== "text"}
         <a
             href={$content.url}
@@ -51,7 +52,11 @@
     <button class="tw-p-0 tw-m-0 hover:tw-text-black" on:click={replyToMessage}>
         <IconArrowBackUp font-size={16} />
     </button>
-    <button class="tw-p-0 tw-m-0 hover:tw-text-yellow-500" on:click={openCloseEmojiPicker}>
+    <button
+        data-testid="openEmojiPickerButton"
+        class="tw-p-0 tw-m-0 hover:tw-text-yellow-500"
+        on:click={openCloseEmojiPicker}
+    >
         <IconMoodSmile font-size={16} />
     </button>
     {#if isMyMessage && type === "text"}

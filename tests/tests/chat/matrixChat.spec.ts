@@ -55,6 +55,24 @@ test.describe("Matrix chat tests @oidc", () => {
     await expect(page.getByText(chatMessageContent)).toBeAttached();
   });
 
+  /*test("React to message", async ({ page }) => {
+    await login(page, "test", 3);
+    await oidcAdminTagLogin(page);
+    await ChatUtils.openChat(page);
+    await ChatUtils.openCreateRoomDialog(page);
+    const publicChatRoomName = ChatUtils.getRandomName();
+    await page.getByTestId("createRoomName").fill(publicChatRoomName);
+    await page.getByTestId("createRoomButton").click();
+    await page.getByText(publicChatRoomName).click();
+    const chatMessageContent = "This is a test message";
+    await page.getByTestId("messageInput").fill(chatMessageContent);
+    await page.getByTestId("sendMessageButton").click();
+    await page.getByText(chatMessageContent).hover();
+    await page.getByTestId("openEmojiPickerButton").click();
+    await page.getByText("😀").nth(0).click();
+    await expect(page.getByText("😀")).toBeAttached();
+  });*/
+
   test("Create a private chat room", async ({ page }) => {
     await login(page, "test", 3);
     await oidcAdminTagLogin(page);

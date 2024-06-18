@@ -6,7 +6,10 @@
 </script>
 
 {#if isOpen}
-    <div class="popup-menu tw-w-[90%] tw-m-auto tw-left-0 tw-right-0 sm:tw-max-w-[668px] tw-min-h-fit tw-rounded-3xl" transition:fly={{ y:-1000,delay: 0, duration: 300 }}>
+    <div
+        class="popup-menu tw-w-[90%] tw-m-auto tw-left-0 tw-right-0 sm:tw-max-w-[668px] tw-min-h-fit tw-rounded-3xl"
+        transition:fly={{ y: -1000, delay: 0, duration: 300 }}
+    >
         <button type="button" class="close-window !tw-bg-transparent !tw-border-none" on:click={closeModal}
             >&times
         </button>

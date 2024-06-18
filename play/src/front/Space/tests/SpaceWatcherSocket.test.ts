@@ -44,7 +44,7 @@ describe("StreamSpaceWatcher", () => {
             addEventListener: (type: string) => {
                 addEventListenerSpy(type);
             },
-        }as unknown as WebSocket;
+        } as unknown as WebSocket;
 
         const decoder: { decode: (messageCoded: Uint8Array) => ServerToClientMessage } = {
             decode: vi.fn(),

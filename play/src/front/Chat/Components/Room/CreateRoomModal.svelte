@@ -49,8 +49,6 @@
 
         return [];
     }
-
-    console.debug(createRoomOptions.visibility)
 </script>
 
 <Popup {isOpen}>
@@ -67,7 +65,11 @@
             data-testid="createRoomName"
         />
         <p class="tw-p-0 tw-m-0 tw-pl-1 tw-font-bold">{$LL.chat.createRoom.visibility.label()}</p>
-        <select data-testid="createRoomVisibility" bind:value={createRoomOptions.visibility} class="tw-m-0 tw-bg-contrast tw-rounded-xl">
+        <select
+            data-testid="createRoomVisibility"
+            bind:value={createRoomOptions.visibility}
+            class="tw-m-0 tw-bg-contrast tw-rounded-xl"
+        >
             <option value="private">{$LL.chat.createRoom.visibility.private()}</option>
             <option value="public">{$LL.chat.createRoom.visibility.public()}</option>
         </select>
@@ -82,7 +84,12 @@
         </p>
         {#if createRoomOptions.visibility === "private"}
             <div class="tw-pl-1">
-                <input data-testid="createRoomEncryption" bind:value={createRoomOptions.encrypt} type="checkbox" id="encryptData" />
+                <input
+                    data-testid="createRoomEncryption"
+                    bind:value={createRoomOptions.encrypt}
+                    type="checkbox"
+                    id="encryptData"
+                />
                 <label class="tw-m-0" for="encryptData">{$LL.chat.createRoom.e2eEncryption.label()}</label>
             </div>
             <p class="tw-text-xs tw-m-0 tw-p-0 tw-text-gray-400 tw-pl-1">

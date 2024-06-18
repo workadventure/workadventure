@@ -213,6 +213,12 @@ test.describe("Chat @chat", () => {
 });
 
 test.describe("Use application into TimeLine @chat", () => {
+  test.beforeEach("Chat test DEPRECATED due to new chat engine", () => {
+    //eslint-disable-next-line playwright/no-skipped-test
+    test.skip();
+    return;
+  });
+
   test("main", async ({ page, browser, browserName }, { project }) => {
     // Skip test for mobile device
     if (project.name === "mobilechromium") {
