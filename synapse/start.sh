@@ -26,5 +26,5 @@ python -m synapse.app.homeserver \
     --report-stats=yes
 sudo chmod -R 777 /data
 
-sleep 5 && register_new_matrix_user -c /data/homeserver.yaml -u ${MATRIX_ADMIN_USER} -p ${MATRIX_ADMIN_PASSWORD} -a &
+sleep 10 && register_new_matrix_user -c /data/homeserver.yaml -u ${MATRIX_ADMIN_USER} -p ${MATRIX_ADMIN_PASSWORD} -a &
 exec "/start.py"
