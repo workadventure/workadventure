@@ -131,6 +131,7 @@
         {/if}
     </div>
 </div>
+
 <!-- {#if isVertical}{:else}
         <div class="horizontal">
             {#if $streamableCollectionStore.size > 0 || $myCameraStore}
@@ -178,23 +179,12 @@
         {/if}
     -->
 <style>
-    /* .right-mode-on {
-        display: flex;
-        flex-direction: column;
-        background-color: red;
-    } */
-
     .fullscreen {
         scale: 1.4;
     }
     .presentation-layout {
         overflow-y: auto;
         overflow-x: hidden;
-    }
-
-    .presentation-layout {
-        display: flex;
-        flex-direction: column;
     }
 
     @media (min-width: 576px) {
@@ -215,4 +205,10 @@
             margin-top: -70px;
         }
     }
+
+    /* .right-mode-on {
+        display: flex;
+        flex-direction: column;
+        background-color: red;
+    } */
 </style>

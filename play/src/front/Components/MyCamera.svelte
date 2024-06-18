@@ -126,7 +126,7 @@
     {:else if $localStreamStore.type === "success" && !$inExternalServiceStore}
         {#if $requestedCameraState && $mediaStreamConstraintsStore.video}
             <div
-                class="absolute bottom-8 left-4 z-30 responsive-dimension {small ? 'hidden' : ''} "
+                class="absolute bottom-4 left-4 z-30 responsive-dimension {small ? 'hidden' : ''} "
                 transition:fly={{ delay: 50, y: 50, duration: 150 }}
             >
                 <div class="flex">
@@ -185,7 +185,7 @@
             <!-- If we do not have a video to display-->
         {:else if !$requestedCameraState && !$cameraEnergySavingStore}
             <div
-                class="w-full rounded-lg px-3 flex flex-row items-center bg-contrast/80 backdrop-blur media-box-camera-off-size h-12 "
+                class="w-full rounded-lg px-3 flex flex-row items-center bg-contrast/80 backdrop-blur media-box-camera-off-size h-12"
             >
                 <div class="grow">
                     <span

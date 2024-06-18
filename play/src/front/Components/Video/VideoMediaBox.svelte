@@ -288,7 +288,7 @@
         <!-- Dans la video class:max-h-[230px]={videoEnabled && !isHightlighted}-->
         <video
             bind:this={videoElement}
-            class="w-full"
+            class="w-full h-full"
             class:h-0={!videoEnabled}
             class:w-0={!videoEnabled}
             class:object-contain={minimized || isHightlighted || aspectRatio < 1}
@@ -333,7 +333,7 @@
                     </div>
                 </div>
             {/if}
-            <div class="absolute bottom-8 left-4 z-30 responsive-dimension">
+            <div class="absolute bottom-4 left-4 z-30 responsive-dimension">
                 <div class="flex">
                     <div
                         class="relative rounded backdrop-blur px-4 py-1 text-white text-sm pl-12 pr-9 bold {$mediaStreamConstraintsStore.audio

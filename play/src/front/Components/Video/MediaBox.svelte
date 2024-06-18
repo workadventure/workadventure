@@ -17,8 +17,6 @@
     export let isHightlighted = false;
     export let isClickable = false;
 
-    const dispatch = createEventDispatcher();
-
     let constraintStore: Readable<ObtainedMediaStreamConstraints | null>;
     if (streamable instanceof VideoPeer) {
         constraintStore = streamable.constraintsStore;
@@ -32,12 +30,12 @@
 
     onMount(() => {
         gameScene.reposition();
-        dispatch("camMounted");
+        // dispatch("camMounted");
     });
 
     onDestroy(() => {
         gameScene.reposition();
-        dispatch("camUnmounted");
+        // dispatch("camUnmounted");
     });
 
     $: videoEnabled = $constraintStore ? $constraintStore.video : false;
