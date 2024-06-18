@@ -1531,12 +1531,10 @@ export class GameScene extends DirtyScene {
 
                     this.chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
 
-
-                        const chatId = localUserStore.getChatId();
-                        const email: string | null = localUserStore.getLocalUser()?.email || null;
-                        if (email && chatId) this.connection.emitUpdateChatId(email, chatId);
-                    }
-                
+                    const chatId = localUserStore.getChatId();
+                    const email: string | null = localUserStore.getLocalUser()?.email || null;
+                    if (email && chatId) this.connection.emitUpdateChatId(email, chatId);
+                }
 
                 const spaceProvider = LocalSpaceProviderSingleton.getInstance(onConnect.connection.socket);
                 StreamSpaceWatcherSingleton.getInstance(onConnect.connection.socket);

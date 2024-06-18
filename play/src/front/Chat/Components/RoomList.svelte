@@ -27,26 +27,27 @@
         expandOrCollapseRoomsIfEmpty();
     });
 
-    const directRoomsUnsubscriber = rooms.subscribe((rooms)=>openRoomsIfCollapsedBeforeNewRoom(rooms))
-    const roomInvitationsUnsubscriber = roomInvitations.subscribe((roomInvitations)=>openRoomInvitationsIfCollapsedBeforeNewRoom(roomInvitations))
+    const directRoomsUnsubscriber = rooms.subscribe((rooms) => openRoomsIfCollapsedBeforeNewRoom(rooms));
+    const roomInvitationsUnsubscriber = roomInvitations.subscribe((roomInvitations) =>
+        openRoomInvitationsIfCollapsedBeforeNewRoom(roomInvitations)
+    );
 
-    onDestroy(()=>{
+    onDestroy(() => {
         directRoomsUnsubscriber();
         roomInvitationsUnsubscriber();
-    })
+    });
 
-    function openRoomsIfCollapsedBeforeNewRoom(rooms:ChatRoom[]) {
+    function openRoomsIfCollapsedBeforeNewRoom(rooms: ChatRoom[]) {
         if (rooms.length !== 0 && displayRooms === false) {
             displayRooms = true;
         }
     }
 
-    function openRoomInvitationsIfCollapsedBeforeNewRoom(roomInvitations:ChatRoom[]) {
+    function openRoomInvitationsIfCollapsedBeforeNewRoom(roomInvitations: ChatRoom[]) {
         if (roomInvitations.length !== 0 && displayRoomInvitations === false) {
             displayRoomInvitations = true;
         }
     }
-
 
     function expandOrCollapseRoomsIfEmpty() {
         displayDirectRooms = $directRooms.length > 0;
@@ -81,7 +82,6 @@
     );
 
     $: isGuest = chat.isGuest;
-
 </script>
 
 {#if $selectedRoom !== undefined}
@@ -131,7 +131,11 @@
             {$LL.chat.rooms()}</button
         >
         {#if $isGuest === false}
-            <button data-testid="openCreateRoomModalButton" class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={openCreateRoomModal}>
+            <button
+                data-testid="openCreateRoomModalButton"
+                class="tw-p-0 tw-m-0 tw-text-gray-400"
+                on:click={openCreateRoomModal}
+            >
                 <IconSquarePlus font-size={16} />
             </button>
         {/if}
@@ -139,12 +143,12 @@
 
     {#if displayRooms}
         <div class="tw-flex tw-flex-col tw-overflow-auto">
-        {#each filteredRooms as room (room.id)}
-            <Room {room} />
-        {/each}
-        {#if filteredRooms.length === 0}
-            <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
-        {/if}
+            {#each filteredRooms as room (room.id)}
+                <Room {room} />
+            {/each}
+            {#if filteredRooms.length === 0}
+                <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
+            {/if}
         </div>
     {/if}
 

@@ -45,7 +45,7 @@
         selectedChatChatMessageToReplyUnsubscriber();
     });
 
-    const emojiPicker = getChatEmojiPicker();
+    const emojiPicker = getChatEmojiPicker({ right: "0" });
     emojiPicker.on("emoji", ({ emoji }) => {
         message += emoji;
     });
