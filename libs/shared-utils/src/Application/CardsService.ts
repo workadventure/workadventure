@@ -6,14 +6,18 @@ export const validateLink = (url: URL) => {
 };
 
 export const isCardsLink = (url: URL) => {
-    return ["member.workadventu.re", "member.staging.workadventu.re", "member.workadventure.localhost"].includes(url.hostname) 
-        && url.pathname.indexOf("cards") !== -1
-        && url.searchParams.has("tenant")
-        && url.searchParams.has("learning");
+    return (
+        ["member.workadventu.re", "member.staging.workadventu.re", "member.workadventure.localhost"].includes(
+            url.hostname
+        ) &&
+        url.pathname.indexOf("cards") !== -1 &&
+        url.searchParams.has("tenant") &&
+        url.searchParams.has("learning")
+    );
 };
 
-export const getCardsLink = (url: URL, userToken?: string|null) : string => {
+export const getCardsLink = (url: URL, userToken?: string | null): string => {
     if (!isCardsLink(url)) throw new CardsLinkException();
-    if(userToken != undefined) url.searchParams.set("token", userToken);
+    if (userToken != undefined) url.searchParams.set("token", userToken);
     return url.toString();
 };
