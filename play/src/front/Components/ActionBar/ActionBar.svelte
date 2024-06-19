@@ -440,6 +440,7 @@
         iframeListener.chatTotalMessagesToSeeStream.subscribe((total) => totalMessagesToSee.set(total));
         //resizeObserver.observe(mainHtmlDiv);
         sound.load();
+        calcHeight();
     });
 
     onDestroy(() => {
@@ -461,6 +462,10 @@
             mapEditorModeStore.set(false);
         }
     });
+
+    function calcHeight() {
+        console.log(layoutDom.offsetHeight);
+    }
 
     // function playSoundClick() {
     //     sound.play().catch((e) => console.error(e));
@@ -704,7 +709,7 @@
                             {#if $bottomActionBarVisibilityStore}
                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <div
-                                    class="group/btn-layout bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg  aspect-square hidden sm:block"
+                                    class="group/btn-layout bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square hidden sm:block"
                                 >
                                     <div
                                         class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 rounded btn-layout/btn-more:bg-white/10 aspect-square flex items-center justify-center transition-all"
@@ -761,7 +766,7 @@
                                     </div>
                                 </div>
                                 <div
-                                    class="group/btn-follow bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 rounded-l-lg sm:rounded-l-none sm:first:rounded-l-lg sm:last:rounded-r-lg  aspect-square"
+                                    class="group/btn-follow bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 rounded-l-lg sm:rounded-l-none sm:first:rounded-l-lg sm:last:rounded-r-lg aspect-square"
                                 >
                                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                                     <div

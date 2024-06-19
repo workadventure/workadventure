@@ -78,7 +78,7 @@
     id="embedScreensContainer"
     class="{$focusMode
         ? `group relative h-full w-full @sm/main-layout @xl/main-layout items-center pointer-events-auto transition-all`
-        : `group relative h-full w-full @sm/main-layout @xl/main-layout items-center pointer-events-auto transition-all bg-contrast/80`}
+        : `group relative h-full w-full @sm/main-layout @xl/main-layout items-center pointer-events-auto transition-all`}
         {$rightMode
         ? 'group relative h-full w-full @sm/main-layout @xl/main-layout items-center pointer-events-auto transition-all flex flex-col'
         : 'group relative h-full w-full @sm/main-layout @xl/main-layout items-center pointer-events-auto transition-all'}

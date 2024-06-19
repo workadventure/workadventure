@@ -12,6 +12,7 @@
     import ScreenSharingMediaBox from "./ScreenSharingMediaBox.svelte";
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
     import JitsiMediaBox from "./JitsiMediaBox.svelte";
+    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
 
     export let streamable: Streamable;
     export let isHightlighted = false;
@@ -37,12 +38,15 @@
     });
 
     $: videoEnabled = $constraintStore ? $constraintStore.video : false;
+    $: isHightlighted = $highlightedEmbedScreen === streamable;
 </script>
 
 {#if streamable instanceof VideoPeer}
     {#if $constraintStore || $statusStore === "error" || $statusStore === "connecting"}
         <div
-            class="media-container transition-all cam-share-receive justify-center relative h-full w-full"
+            class="media-container transition-all justify-center {isHightlighted
+                ? 'cam-share-receive'
+                : ''} relative h-full w-full"
             class:hightlighted={isHightlighted}
             class:max-w-sm={isHightlighted && !videoEnabled}
             class:mx-auto={isHightlighted && !videoEnabled}
@@ -56,7 +60,7 @@
     {/if}
 {:else if streamable instanceof ScreenSharingPeer}
     <div
-        class="media-container cam-share-receive justify-center h-full w-full
+        class="media-container {isHightlighted ? 'cam-share-receive' : ''} justify-center w-full
             media-box-shape-color"
         class:clickable={isClickable}
     >
@@ -87,7 +91,8 @@
     </div>
 {:else}
     <div class="media-container {isHightlighted ? 'hightlighted' : 'flex h-full'}" class:clickable={isClickable}>
-        <div class="{isHightlighted ? 'h-[41vw] mr-6' : 'mx-auto'} w-full h-full flex screen-blocker">
+        <!-- Here for the resize o-->
+        <div class="{isHightlighted ? ' mr-6 cam-share-receive' : 'mx-auto'} flex justify-center screen-blocker">
             <LocalStreamMediaBox peer={streamable} clickable={isClickable} cssClass="" />
         </div>
     </div>

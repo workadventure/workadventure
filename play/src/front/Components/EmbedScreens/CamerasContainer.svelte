@@ -37,7 +37,7 @@
     window.addEventListener("resize", checkOverflow);
 </script>
 
-<div class={isHightlighted ? "highlight" : "not-highlighted"} id="cameras-container">
+<div class={isHightlighted ? "highlight p-2" : "not-highlighted p-2"} id="cameras-container">
     {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
         {#if !highlightedEmbedScreen || $highlightedEmbedScreen !== peer}
             {#key uniqueId}
@@ -87,7 +87,7 @@
         justify-content: center;
         align-items: center;
         gap: 1rem;
-        grid-template-columns: repeat(auto-fit, minmax(100px, 280px));
+        grid-template-columns: repeat(auto-fit, minmax(120px, 280px));
     }
 
     @container (min-width: 1024) and (max-width: 1279px) {
@@ -100,7 +100,6 @@
         }
         .not-highlighted {
             grid-template-columns: repeat(auto-fit, minmax(90px, 220px));
-            background-color: blue;
         }
     }
 

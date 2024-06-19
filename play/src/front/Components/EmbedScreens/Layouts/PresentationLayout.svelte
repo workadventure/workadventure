@@ -35,6 +35,8 @@
         }
     }
 
+    onMount(() => {});
+
     afterUpdate(() => {
         modifySizeCamIfScreenShare();
     });
@@ -95,15 +97,24 @@
     }
 
     highlightedEmbedScreen.subscribe((value) => {
-        console.log("je suis dans le presentation layout");
         if (value) {
             isHightlighted = true;
-            console.log(isHightlighted);
         } else {
             isHightlighted = false;
-            console.log(isHightlighted);
         }
     });
+
+    // function calcHeight() {
+    //     console.log("je suis dans le calc height");
+    //     let containerCam = document.getElementById("container-media") as HTMLDivElement;
+    //     console.log("container cam", containerCam);
+    //     if (containerCam) {
+    //         let height = containerCam.clientHeight;
+    //         console.log("height de container cam :", height);
+    //         let windowHeight = window.innerHeight;
+    //         console.log("window height :", windowHeight);
+    //     }
+    // }
 </script>
 
 <!-- class:full-medias={displayFullMedias} -->
