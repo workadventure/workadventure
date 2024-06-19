@@ -1,7 +1,7 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { type Readable } from "svelte/store";
-    import { onMount, onDestroy, createEventDispatcher } from "svelte";
+    import { onMount, onDestroy } from "svelte";
     import { PeerStatus, VideoPeer } from "../../WebRtc/VideoPeer";
     import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
@@ -30,12 +30,10 @@
 
     onMount(() => {
         gameScene.reposition();
-        // dispatch("camMounted");
     });
 
     onDestroy(() => {
         gameScene.reposition();
-        // dispatch("camUnmounted");
     });
 
     $: videoEnabled = $constraintStore ? $constraintStore.video : false;
@@ -116,12 +114,6 @@
 
     @container (min-width: 1440px) and (max-width: 1919px) {
         .cam-share-receive {
-            aspect-ratio: 3.1;
-        }
-
-        .screen-blocker {
-            display: flex;
-            justify-content: center;
             aspect-ratio: 3.1;
         }
     }
