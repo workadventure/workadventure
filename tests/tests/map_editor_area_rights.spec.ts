@@ -57,10 +57,13 @@ test.describe("Map editor area with rights @oidc", () => {
       ["admin"]
     );
     await Menu.closeMapEditor(page);
+    const anonymLoginPromise = page.waitForResponse(
+      (response) =>
+        response.url().includes("anonymLogin") && response.status() === 200
+    );
     await oidcLogout(page);
+    await anonymLoginPromise;
 
-    await page.goto(Map.url("empty"));
-    await page.waitForURL(Map.url("empty"));
     await Map.walkTo(page, "ArrowRight", 500);
     await Map.walkTo(page, "ArrowUp", 1000);
 
@@ -520,7 +523,7 @@ test.describe("Map editor area with rights @oidc", () => {
       AreaAccessRights.entityPositionInArea.x,
       AreaAccessRights.entityPositionInArea.y
     );
-    await  expect(
+    await expect(
       page2.getByTestId("claimPersonalAreaButton")
     ).not.toBeAttached();
   });
