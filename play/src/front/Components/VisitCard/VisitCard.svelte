@@ -41,7 +41,7 @@
     <iframe
         title="visitCard"
         src={visitCardUrl}
-        allow="clipboard-read; clipboard-write"
+        allow="clipboard-read; clipboard-write self {visitCardUrl}"
         style="width: {w}; height: {h}"
         class:hidden
         bind:this={cvIframe}
