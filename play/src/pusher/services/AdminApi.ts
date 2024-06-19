@@ -1,7 +1,8 @@
 import type { AxiosResponse } from "axios";
 import axios, { isAxiosError } from "axios";
-import type { AdminApiData, ChatMemberData, MapDetailsData, MemberData, RoomRedirect } from "@workadventure/messages";
+import type { AdminApiData, ChatMemberData, MapDetailsData, RoomRedirect } from "@workadventure/messages";
 import {
+    MemberData,
     Capabilities,
     CompanionDetail,
     ErrorApiData,
@@ -1050,11 +1051,11 @@ class AdminApi implements AdminInterface {
      *            $ref: '#/definitions/MemberData'
      */
     async searchMembers(playUri: string | null, searchText: string): Promise<MemberData[]> {
-        const response = await axios.get<MemberData[]>(ADMIN_API_URL + "/api/members", {
+        const response = await axios.get<unknown>(ADMIN_API_URL + "/api/members", {
             params: { playUri, searchText },
             headers: { Authorization: `${ADMIN_API_TOKEN}` },
         });
-        return response.data ? response.data : [];
+        return MemberData.array().parse(response.data);
     }
 
     /**

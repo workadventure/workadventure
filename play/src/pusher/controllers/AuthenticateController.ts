@@ -281,12 +281,18 @@ export class AuthenticateController extends BaseHttpController {
                 email ? matrixProvider.getBareMatrixIdFromEmail(email) : undefined
             );
 
+            const matrixPublicUri = userInfo.matrix_url ?? MATRIX_PUBLIC_URI;
+
             // If Matrix is configured, we need to get an access token for the Synapse server
-            if (MATRIX_PUBLIC_URI) {
+            if (matrixPublicUri) {
                 // TODO: check Matrix server login parameters to be sure we can connect
 
                 const matrixCallbackUrl = new URL("/matrix-callback", PUSHER_URL).toString();
-                const matrixRedirectUrl = new URL("/_matrix/client/r0/login/sso/redirect", MATRIX_PUBLIC_URI);
+                let redirectPath = "/_matrix/client/v3/login/sso/redirect";
+                if (userInfo.matrix_identity_provider) {
+                    redirectPath += "/" + userInfo.matrix_identity_provider;
+                }
+                const matrixRedirectUrl = new URL(redirectPath, matrixPublicUri);
                 matrixRedirectUrl.searchParams.append("redirectUrl", matrixCallbackUrl);
 
                 res.atomic(() => {

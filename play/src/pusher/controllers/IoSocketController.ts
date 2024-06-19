@@ -872,18 +872,18 @@ export class IoSocketController {
                                 };
                                 switch (message.message.queryMessage.query?.$case) {
                                     case "roomTagsQuery": {
-                                        void socketManager.handleRoomTagsQuery(socket, message.message.queryMessage);
+                                        await socketManager.handleRoomTagsQuery(socket, message.message.queryMessage);
                                         break;
                                     }
                                     case "embeddableWebsiteQuery": {
-                                        void socketManager.handleEmbeddableWebsiteQuery(
+                                        await socketManager.handleEmbeddableWebsiteQuery(
                                             socket,
                                             message.message.queryMessage
                                         );
                                         break;
                                     }
                                     case "roomsFromSameWorldQuery": {
-                                        void socketManager.handleRoomsFromSameWorldQuery(
+                                        await socketManager.handleRoomsFromSameWorldQuery(
                                             socket,
                                             message.message.queryMessage
                                         );
