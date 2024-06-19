@@ -49,7 +49,7 @@
             <IconArrowDown font-size={16} class="hover:tw-cursor-pointer hover:tw-text-secondary" />
         </a>
     {/if}
-    <button class="tw-p-0 tw-m-0 hover:tw-text-black" on:click={replyToMessage}>
+    <button class="tw-p-0 tw-m-0 hover:tw-text-black" data-testid="replyToMessageButton" on:click={replyToMessage}>
         <IconArrowBackUp font-size={16} />
     </button>
     <button

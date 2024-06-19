@@ -55,7 +55,26 @@ test.describe("Matrix chat tests @oidc", () => {
     await expect(page.getByText(chatMessageContent)).toBeAttached();
   });
 
-  /*test("React to message", async ({ page }) => {
+  test("Reply to message", async ({ page }) => {
+    await login(page, "test", 3);
+    await oidcAdminTagLogin(page);
+    await ChatUtils.openChat(page);
+    await ChatUtils.openCreateRoomDialog(page);
+    const publicChatRoomName = ChatUtils.getRandomName();
+    await page.getByTestId("createRoomName").fill(publicChatRoomName);
+    await page.getByTestId("createRoomButton").click();
+    await page.getByText(publicChatRoomName).click();
+    const chatMessageContent = "This is a test message";
+    await page.getByTestId("messageInput").fill(chatMessageContent);
+    await page.getByTestId("sendMessageButton").click();
+    await page.getByText(chatMessageContent).hover();
+    await page.getByTestId("replyToMessageButton").click();
+    await page.getByTestId("messageInput").fill("Sample response");
+    await page.getByTestId("sendMessageButton").click();
+    await expect(page.getByText(chatMessageContent)).toHaveCount(2);
+  });
+
+  test("React to message", async ({ page }) => {
     await login(page, "test", 3);
     await oidcAdminTagLogin(page);
     await ChatUtils.openChat(page);
@@ -69,9 +88,34 @@ test.describe("Matrix chat tests @oidc", () => {
     await page.getByTestId("sendMessageButton").click();
     await page.getByText(chatMessageContent).hover();
     await page.getByTestId("openEmojiPickerButton").click();
-    await page.getByText("😀").nth(0).click();
-    await expect(page.getByText("😀")).toBeAttached();
-  });*/
+    const reactionKey = "😀";
+    await page.getByText(reactionKey).nth(1).click({ force: true });
+    await expect(
+      page.getByTestId(`${reactionKey}_reactionButton`)
+    ).toBeAttached();
+  });
+
+  test("Remove reaction to message", async ({ page }) => {
+    await login(page, "test", 3);
+    await oidcAdminTagLogin(page);
+    await ChatUtils.openChat(page);
+    await ChatUtils.openCreateRoomDialog(page);
+    const publicChatRoomName = ChatUtils.getRandomName();
+    await page.getByTestId("createRoomName").fill(publicChatRoomName);
+    await page.getByTestId("createRoomButton").click();
+    await page.getByText(publicChatRoomName).click();
+    const chatMessageContent = "This is a test message";
+    await page.getByTestId("messageInput").fill(chatMessageContent);
+    await page.getByTestId("sendMessageButton").click();
+    await page.getByText(chatMessageContent).hover();
+    await page.getByTestId("openEmojiPickerButton").click();
+    const reactionKey = "😀";
+    await page.getByText(reactionKey).nth(1).click({ force: true });
+    await page.getByTestId(`${reactionKey}_reactionButton`).click();
+    await expect(
+      page.getByTestId(`${reactionKey}_reactionButton`)
+    ).not.toBeAttached();
+  });
 
   test("Create a private chat room", async ({ page }) => {
     await login(page, "test", 3);
