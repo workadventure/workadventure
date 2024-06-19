@@ -157,7 +157,7 @@ import { StreamSpaceWatcherSingleton } from "../../Space/SpaceWatcher/SocketSpac
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
 import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
-import { updateMatrixClientStore } from "../../Chat/Connection/Matrix/MatrixSecurity";
+import { matrixSecurity } from "../../Chat/Connection/Matrix/MatrixSecurity";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -1523,7 +1523,7 @@ export class GameScene extends DirtyScene {
 
                     matrixClientPromise
                         .then((matrixClient) => {
-                            updateMatrixClientStore(matrixClient);
+                            matrixSecurity.updateMatrixClientStore(matrixClient);
                         })
                         .catch((e) => {
                             console.error(e);
