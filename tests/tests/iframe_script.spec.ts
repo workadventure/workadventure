@@ -1,20 +1,19 @@
-import { chromium, expect, test } from '@playwright/test';
-import { login } from './utils/roles';
-import Menu from "./utils/menu";
-import {evaluateScript} from "./utils/scripting";
-import {publicTestMapUrl} from "./utils/urls";
+import { chromium, expect, test } from "@playwright/test";
+import { login } from "./utils/roles";
+import { evaluateScript } from "./utils/scripting";
+import { publicTestMapUrl } from "./utils/urls";
 
-test.describe('Iframe API', () => {
-  test('can be called from an iframe loading a script', async ({
-    page,
-  }, { project }) => {
+test.describe("Iframe API", () => {
+  test("can be called from an iframe loading a script", async ({ page }, {
+    project,
+  }) => {
     // Skip test for mobile device
-    if(project.name === "mobilechromium") {
+    if (project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
     }
-    
+
     await page.goto(
       publicTestMapUrl("tests/Metadata/cowebsiteAllowApi.json", "iframe_script")
     );
@@ -25,16 +24,20 @@ test.describe('Iframe API', () => {
     //await expect(page.locator('p.other-text')).toHaveText('The iframe opened by a script works !', {useInnerText: true});
   });
 
+  /* THIS TEST IS IGNORE BECAUSE IT's USING THE OLD CHAT
   test('can add a custom menu by scripting API', async ({
     page
   }, { project }) => {
+
+
+
     // Skip test for mobile device
     if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
     }
-    
+
     await page.goto(
         publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
     );
@@ -100,124 +103,120 @@ test.describe('Iframe API', () => {
 
     await expect(page.locator('.menu-container')).toContainText("Share the link of the room");
   });
+   */
 
-  test('base room properties', async ({ page }, { project }) => {
+  test("base room properties", async ({ page }, { project }) => {
     // Skip test for mobile device
-    if(project.name === "mobilechromium") {
+    if (project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
     }
-    
+
     await page.goto(
-        publicTestMapUrl("tests/E2E/empty.json", "iframe_script")+"#foo=bar"
+      publicTestMapUrl("tests/E2E/empty.json", "iframe_script") + "#foo=bar"
     );
 
     await login(page);
 
     const parameter = await evaluateScript(page, async () => {
-      
       await WA.onInit();
 
-      
       return WA.room.hashParameters.foo;
     });
 
-    expect(parameter).toEqual('bar');
+    expect(parameter).toEqual("bar");
   });
 
-  test('disable and enable map editor', async ({ page }, { project }) => {
-      // Skip test for mobile device
-      if(project.name === "mobilechromium") {
-        //eslint-disable-next-line playwright/no-skipped-test
-        test.skip();
-        return;
-      }
-
-      await page.goto(
-          publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
-      );
-
-      await login(page);
-
-      // Create a script to evaluate function to disable map editor
-      await evaluateScript(page, async () => {
-        
-        await WA.onInit();
-        
-        WA.controls.disableMapEditor();
-      });
-
-      // Check if the map editor is disabled
-      expect(await page.locator('#mapEditorIcon').isDisabled({timeout: 10000})).toBeTruthy();
-
-      // Create a script to evaluate function to enable map editor
-      await evaluateScript(page, async () => {
-        
-        await WA.onInit();
-        
-        WA.controls.restoreMapEditor();
-      });
-
-      // Check if the map editor is enabled
-      expect(await page.locator('#mapEditorIcon').isDisabled({timeout: 10000})).toBeFalsy();
-
-      page.close();
-  });
-
-  test('test disable invite user button', async ({ page }) => {
-    await page.goto(
-        publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
-    );
-
-    await page.evaluate(() => localStorage.setItem('debug', '*'));
-    await login(page, 'Alice', 3);
-
-    // Create a script to evaluate function to disable map editor
-    await evaluateScript(page, async () => {
-      
-      await WA.onInit();
-      
-      WA.controls.disableInviteButton();
-    });
-
-    // Check if the screen sharing is disabled
-    expect(await page.locator('#invite-btn').isHidden({timeout: 10000})).toBeTruthy();
-
-    // Create a script to evaluate function to enable map editor
-    await evaluateScript(page, async () => {
-      
-      await WA.onInit();
-      
-      WA.controls.restoreInviteButton();
-    });
-
-    // Check if the screen sharing is enabled
-    expect(await page.locator('#invite-btn').isVisible({timeout: 10000})).toBeTruthy();
-
-    page.close();
-  });
-
-  test('test disable screen sharing', async ({ page, browser }) => {
-    // This test does not depend on the browser. Let's only run it in Chromium.
-    if(browser.browserType() !== chromium) {
+  test("disable and enable map editor", async ({ page }, { project }) => {
+    // Skip test for mobile device
+    if (project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
     }
-    
-    await page.goto(
-        publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
-    );
 
-    await page.evaluate(() => localStorage.setItem('debug', '*'));
-    await login(page, 'Alice', 3);
+    await page.goto(publicTestMapUrl("tests/E2E/empty.json", "iframe_script"));
+
+    await login(page);
 
     // Create a script to evaluate function to disable map editor
     await evaluateScript(page, async () => {
-      
       await WA.onInit();
-      
+
+      WA.controls.disableMapEditor();
+    });
+
+    // Check if the map editor is disabled
+    expect(
+      await page.locator("#mapEditorIcon").isDisabled({ timeout: 10000 })
+    ).toBeTruthy();
+
+    // Create a script to evaluate function to enable map editor
+    await evaluateScript(page, async () => {
+      await WA.onInit();
+
+      WA.controls.restoreMapEditor();
+    });
+
+    // Check if the map editor is enabled
+    expect(
+      await page.locator("#mapEditorIcon").isDisabled({ timeout: 10000 })
+    ).toBeFalsy();
+
+    page.close();
+  });
+
+  test("test disable invite user button", async ({ page }) => {
+    await page.goto(publicTestMapUrl("tests/E2E/empty.json", "iframe_script"));
+
+    await page.evaluate(() => localStorage.setItem("debug", "*"));
+    await login(page, "Alice", 3);
+
+    // Create a script to evaluate function to disable map editor
+    await evaluateScript(page, async () => {
+      await WA.onInit();
+
+      WA.controls.disableInviteButton();
+    });
+
+    // Check if the screen sharing is disabled
+    expect(
+      await page.locator("#invite-btn").isHidden({ timeout: 10000 })
+    ).toBeTruthy();
+
+    // Create a script to evaluate function to enable map editor
+    await evaluateScript(page, async () => {
+      await WA.onInit();
+
+      WA.controls.restoreInviteButton();
+    });
+
+    // Check if the screen sharing is enabled
+    expect(
+      await page.locator("#invite-btn").isVisible({ timeout: 10000 })
+    ).toBeTruthy();
+
+    page.close();
+  });
+
+  test("test disable screen sharing", async ({ page, browser }) => {
+    // This test does not depend on the browser. Let's only run it in Chromium.
+    if (browser.browserType() !== chromium) {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
+    await page.goto(publicTestMapUrl("tests/E2E/empty.json", "iframe_script"));
+
+    await page.evaluate(() => localStorage.setItem("debug", "*"));
+    await login(page, "Alice", 3);
+
+    // Create a script to evaluate function to disable map editor
+    await evaluateScript(page, async () => {
+      await WA.onInit();
+
       WA.controls.disableScreenSharing();
     });
 
@@ -225,54 +224,54 @@ test.describe('Iframe API', () => {
     const newBrowser = await browser.browserType().launch();
     const pageBob = await newBrowser.newPage();
     await pageBob.goto(
-        publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
+      publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
     );
-    await pageBob.evaluate(() => localStorage.setItem('debug', '*'));
+    await pageBob.evaluate(() => localStorage.setItem("debug", "*"));
     await login(pageBob, "Bob", 5);
 
     // Check if the screen sharing is disabled
-    expect(await page.locator('#screenSharing').isDisabled({timeout: 10000})).toBeTruthy();
+    expect(
+      await page.locator("#screenSharing").isDisabled({ timeout: 10000 })
+    ).toBeTruthy();
 
     // Create a script to evaluate function to enable map editor
     await evaluateScript(page, async () => {
-      
       await WA.onInit();
-      
+
       WA.controls.restoreScreenSharing();
     });
 
     // Check if the screen sharing is enabled
-    expect(await page.locator('#screenSharing').isDisabled({timeout: 10000})).toBeFalsy();
+    expect(
+      await page.locator("#screenSharing").isDisabled({ timeout: 10000 })
+    ).toBeFalsy();
 
     pageBob.close();
     page.close();
   });
 
-  test('test disable right click user button', async ({ page, browser}) => {
+  test("test disable right click user button", async ({ page, browser }) => {
     // This test does not depend on the browser. Let's only run it in Chromium.
-    if(browser.browserType() !== chromium) {
+    if (browser.browserType() !== chromium) {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
     }
-  
 
-    await page.goto(
-        publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
-    );
+    await page.goto(publicTestMapUrl("tests/E2E/empty.json", "iframe_script"));
 
-    await page.evaluate(() => localStorage.setItem('debug', '*'));
-    await login(page, 'Alice', 3);
+    await page.evaluate(() => localStorage.setItem("debug", "*"));
+    await login(page, "Alice", 3);
 
     // Right click to move the user
-    await page.locator('canvas').click({
-      button: 'right',
+    await page.locator("canvas").click({
+      button: "right",
       position: {
         x: 381,
-        y: 121
-      }
+        y: 121,
+      },
     });
- 
+
     // Create a script to evaluate function to disable map editor
     await evaluateScript(page, async () => {
       await WA.onInit();
@@ -280,12 +279,12 @@ test.describe('Iframe API', () => {
     });
 
     // Right click to move the user
-    await page.locator('canvas').click({
-      button: 'right',
+    await page.locator("canvas").click({
+      button: "right",
       position: {
         x: 246,
-        y: 295
-      }
+        y: 295,
+      },
     });
 
     // Create a script to evaluate function to enable map editor
@@ -299,5 +298,5 @@ test.describe('Iframe API', () => {
     page.close();
   });
 
-  // TDODO: disable and restore wheel zoom 
+  // TDODO: disable and restore wheel zoom
 });
