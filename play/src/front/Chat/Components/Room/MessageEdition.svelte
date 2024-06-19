@@ -24,7 +24,11 @@
 </script>
 
 <div>
-    <input class="tw-rounded-md tw-p-1 tw-border tw-border-solid" bind:value={inputValue} data-testid="editMessageInput" />
+    <input
+        class="tw-rounded-md tw-p-1 tw-border tw-border-solid"
+        bind:value={inputValue}
+        data-testid="editMessageInput"
+    />
     {#if editError}
         <p class="tw-text-red-500 tw-text-xxs tw-p-0 tw-m-0">Unable to edit message. Try again.</p>
     {/if}
