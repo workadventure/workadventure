@@ -60,12 +60,16 @@
         <IconMoodSmile font-size={16} />
     </button>
     {#if isMyMessage && type === "text"}
-        <button class="tw-p-0 tw-m-0 hover:tw-text-blue-500" on:click={selectMessageToEdit}>
+        <button
+            class="tw-p-0 tw-m-0 hover:tw-text-blue-500"
+            data-testid="editMessageButton"
+            on:click={selectMessageToEdit}
+        >
             <IconPencil font-size={16} />
         </button>
     {/if}
     {#if $isGuest === false}
-        <button class="tw-p-0 tw-m-0 hover:tw-text-red-500" on:click={removeMessage}>
+        <button class="tw-p-0 tw-m-0 hover:tw-text-red-500" data-testid="removeMessageButton" on:click={removeMessage}>
             <IconTrash font-size={16} />
         </button>
     {/if}

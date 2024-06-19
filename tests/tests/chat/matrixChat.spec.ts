@@ -117,6 +117,65 @@ test.describe("Matrix chat tests @oidc", () => {
     ).not.toBeAttached();
   });
 
+  test("Remove message", async ({ page }) => {
+    await login(page, "test", 3);
+    await oidcAdminTagLogin(page);
+    await ChatUtils.openChat(page);
+    await ChatUtils.openCreateRoomDialog(page);
+    const publicChatRoomName = ChatUtils.getRandomName();
+    await page.getByTestId("createRoomName").fill(publicChatRoomName);
+    await page.getByTestId("createRoomButton").click();
+    await page.getByText(publicChatRoomName).click();
+    const chatMessageContent = "This is a test message";
+    await page.getByTestId("messageInput").fill(chatMessageContent);
+    await page.getByTestId("sendMessageButton").click();
+    await page.getByText(chatMessageContent).hover();
+    await page.getByTestId("removeMessageButton").click();
+    await expect(page.getByText(chatMessageContent)).not.toBeAttached();
+  });
+
+  test("Edit message", async ({ page }) => {
+    await login(page, "test", 3);
+    await oidcAdminTagLogin(page);
+    await ChatUtils.openChat(page);
+    await ChatUtils.openCreateRoomDialog(page);
+    const publicChatRoomName = ChatUtils.getRandomName();
+    await page.getByTestId("createRoomName").fill(publicChatRoomName);
+    await page.getByTestId("createRoomButton").click();
+    await page.getByText(publicChatRoomName).click();
+    const chatMessageContent = "This is a test message";
+    const chatMessageEdited = "This is a test edited message";
+    await page.getByTestId("messageInput").fill(chatMessageContent);
+    await page.getByTestId("sendMessageButton").click();
+    await page.getByText(chatMessageContent).hover();
+    await page.getByTestId("editMessageButton").click();
+    await page.getByTestId("editMessageInput").fill(chatMessageEdited);
+    await page.getByTestId("saveMessageEditionButton").click();
+    await expect(page.getByText(chatMessageEdited)).toBeAttached();
+    await expect(page.getByText(chatMessageContent)).not.toBeAttached();
+  });
+
+  test("Cancel edit message", async ({ page }) => {
+    await login(page, "test", 3);
+    await oidcAdminTagLogin(page);
+    await ChatUtils.openChat(page);
+    await ChatUtils.openCreateRoomDialog(page);
+    const publicChatRoomName = ChatUtils.getRandomName();
+    await page.getByTestId("createRoomName").fill(publicChatRoomName);
+    await page.getByTestId("createRoomButton").click();
+    await page.getByText(publicChatRoomName).click();
+    const chatMessageContent = "This is a test message";
+    const chatMessageEdited = "This is a test edited message";
+    await page.getByTestId("messageInput").fill(chatMessageContent);
+    await page.getByTestId("sendMessageButton").click();
+    await page.getByText(chatMessageContent).hover();
+    await page.getByTestId("editMessageButton").click();
+    await page.getByTestId("editMessageInput").fill(chatMessageEdited);
+    await page.getByTestId("cancelMessageEditionButton").click();
+    await expect(page.getByText(chatMessageEdited)).not.toBeAttached();
+    await expect(page.getByText(chatMessageContent)).toBeAttached();
+  });
+
   test("Create a private chat room", async ({ page }) => {
     await login(page, "test", 3);
     await oidcAdminTagLogin(page);
