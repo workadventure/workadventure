@@ -3,7 +3,7 @@
     import { closeModal, onBeforeClose } from "svelte-modals";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import LL from "../../../../i18n/i18n-svelte";
-    import { makeInputToKey } from "./MatrixSecurity";
+    import { MatrixSecurity } from "./MatrixSecurity";
     import { IconEdit, IconKey } from "@wa-icons";
 
     export let isOpen: boolean;
@@ -29,7 +29,7 @@
             error = true;
             return;
         }
-        const inputToKey = makeInputToKey(keyInfo);
+        const inputToKey = MatrixSecurity.makeInputToKey(keyInfo);
         const key = await inputToKey({ recoveryKey: recoveryKeyInput, passphrase: passphraseInput });
         const keyVerified = await matrixClient.secretStorage.checkKey(key, keyInfo);
 

@@ -21,7 +21,7 @@ import { ChatRoom, ChatRoomMembership } from "../ChatConnection";
 import { selectedChatMessageToReply } from "../../Stores/ChatStore";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
-import { initClientCryptoConfiguration } from "./MatrixSecurity";
+import { matrixSecurity } from "./MatrixSecurity";
 
 type EventId = string;
 
@@ -60,7 +60,7 @@ export class MatrixChatRoom implements ChatRoom {
 
         (async () => {
             if (matrixRoom.hasEncryptionStateEvent()) {
-                await initClientCryptoConfiguration();
+                await matrixSecurity.initClientCryptoConfiguration();
             }
         })().catch((error) => console.error(error));
 
@@ -132,7 +132,7 @@ export class MatrixChatRoom implements ChatRoom {
         data: IRoomTimelineData
     ) {
         if (event.getType() === EventType.RoomEncryption || event.getType() === EventType.RoomMessageEncrypted) {
-            await initClientCryptoConfiguration();
+            await matrixSecurity.initClientCryptoConfiguration();
         }
 
         //Only get realtime event

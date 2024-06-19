@@ -14,7 +14,7 @@ import { SecretStorageKeyDescriptionAesV1 } from "matrix-js-sdk/lib/secret-stora
 import { openModal } from "svelte-modals";
 import { LocalUser } from "../../../Connection/LocalUser";
 import AccessSecretStorageDialog from "./AccessSecretStorageDialog.svelte";
-import { isEncryptionRequiredAndNotSet } from "./MatrixSecurity";
+import { matrixSecurity } from "./MatrixSecurity";
 
 globalThis.Olm = Olm;
 window.Buffer = Buffer;
@@ -325,7 +325,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
         });
 
         if (key === null) {
-            isEncryptionRequiredAndNotSet.set(true);
+            matrixSecurity.isEncryptionRequiredAndNotSet.set(true);
             return null;
         }
         this.cacheSecretStorageKey(keyId, key);
