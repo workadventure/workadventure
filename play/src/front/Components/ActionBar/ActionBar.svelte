@@ -113,8 +113,9 @@
     import PenIcon from "../Icons/PenIcon.svelte";
     import { StringUtils } from "../../Utils/StringUtils";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
-    import { focusMode, rightMode, hideMode } from "../../Stores/ActionsCamStore";
+    import { focusMode, rightMode, hideMode, toggleHighlightMode } from "../../Stores/ActionsCamStore";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
+
     // gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
     let userName = gameManager.getPlayerName() || "";
     export const className: string = "";
@@ -496,7 +497,9 @@
     <ChatOverlay />
 {/if}
 <div
-    class="@container/actions w-full z-[301] bottom-0 sm:top-0 transition-all pointer-events-none bp-menu"
+    class={$toggleHighlightMode
+        ? "hidden"
+        : "@container/actions w-full z-[301] bottom-0 sm:top-0 transition-all pointer-events-none bp-menu"}
     bind:this={layoutDom}
 >
     <div class="flex w-full p-2 space-x-2 @xl/actions:p-4 @xl/actions:space-x-4">

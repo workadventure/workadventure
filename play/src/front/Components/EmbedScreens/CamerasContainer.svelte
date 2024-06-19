@@ -5,6 +5,7 @@
     import MyCamera from "../MyCamera.svelte";
     import { myCameraStore } from "../../Stores/MyMediaStore";
     import { afterUpdate } from "svelte";
+    import { toggleHighlightMode } from "../../Stores/ActionsCamStore";
 
     let isHightlighted = false;
 
@@ -37,7 +38,10 @@
     window.addEventListener("resize", checkOverflow);
 </script>
 
-<div class={isHightlighted ? "highlight p-2" : "not-highlighted p-2"} id="cameras-container">
+<div
+    class="{isHightlighted ? 'highlight p-2' : 'not-highlighted p-2'} {$toggleHighlightMode ? 'hidden' : ''}"
+    id="cameras-container"
+>
     {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
         {#if !highlightedEmbedScreen || $highlightedEmbedScreen !== peer}
             {#key uniqueId}

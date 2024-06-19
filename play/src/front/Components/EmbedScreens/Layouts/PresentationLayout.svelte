@@ -11,7 +11,7 @@
     } from "../../../Stores/StreamableCollectionStore";
     import Loading from "../../Video/Loading.svelte";
     import { jitsiLoadingStore } from "../../../Streaming/BroadcastService";
-    import { hideMode, rightMode } from "../../../Stores/ActionsCamStore";
+    import { rightMode } from "../../../Stores/ActionsCamStore";
 
     const isMobile = window.matchMedia("(max-width: 767px)");
     let isVertical: boolean;

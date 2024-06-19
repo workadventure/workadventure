@@ -8,6 +8,7 @@
     import { srcObject } from "./utils";
     import BanReportBox from "./BanReportBox.svelte";
     import { onMount } from "svelte";
+    import { toggleHighlightMode } from "../../Stores/ActionsCamStore";
 
     export let peer: ScreenSharingPeer;
     let streamStore = peer.streamStore;
@@ -16,7 +17,9 @@
     let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
     let statusStore = peer.statusStore;
     let isHightlighted = true;
-    let fullScreen = false;
+    // let fullScreen = writable(false);
+    let isFullScreen: boolean;
+
     let embedScreen: Streamable;
 
     // const isResized = window.matchMedia("(max-height: 727px)");
@@ -29,6 +32,7 @@
 
     onMount(() => {
         embedScreen = peer;
+
         // isResized.addEventListener("change", (e: any) => handleTabletChange(e));
         // handleTabletChange(isResized);
         // isNearBottom(video);
@@ -49,18 +53,71 @@
     // console.log(changeIcon, ": change icon du receveur");
     $: isHightlighted = $highlightedEmbedScreen === embedScreen;
 
+    // $: isFullScreen = $fullScreen;
+    console.log(toggleHighlightMode + " : is full screen");
+
     function toggleFullScreen() {
-        console.log("je suis dans le toggle full screen");
-        if (isHightlighted) {
-            if (fullScreen) {
-                fullScreen = false;
-                console.log("toggle not full screen");
+        toggleHighlightMode.update((current) => !current);
+        toggleHighlightMode.subscribe((value) => {
+            console.log("Full screen is now:", value);
+        });
+
+        const video = document.getElementById("screen-sharing") as HTMLVideoElement;
+        console.log("Video found", video);
+        console.log($toggleHighlightMode + " : toggle highlight mode");
+        if (video) {
+            if ($toggleHighlightMode) {
+                console.log("je suis dans le full screen");
+
+                video.style.height = `${document.documentElement.clientHeight}px`;
+                video.style.width = `${document.documentElement.clientWidth}px`;
             } else {
-                fullScreen = true;
-                console.log("toggle full screen");
+                console.log("je suis dans le else donc plus full screen");
+                video.style.height = "100%";
+                video.style.width = "100%";
             }
         }
     }
+
+    // function toggleFullScreen() {
+    //     console.log("je suis dans le toggle full screen");
+    //     fullScreen = !fullScreen;
+    //     console.log(fullScreen + " : full screen");
+    //     if (isHightlighted) {
+    //         if (fullScreen) {
+    //             fullScreen = false;
+    //             console.log("toggle not full screen");
+    //         } else {
+    //             fullScreen = true;
+    //             console.log("toggle full screen");
+    //         }
+    //     }
+    // }
+
+    // function toggleFullScreen() {
+    //     console.log("Toggle full screen");
+
+    //     // Récupérer l'élément vidéo
+    //     const video = document.querySelector("video");
+
+    //     if (!video) {
+    //         console.error("Video element not found");
+    //         return;
+    //     }
+
+    //     if (!document.fullscreenElement) {
+    //         // Si le mode plein écran n'est pas activé, activer le plein écran
+    //         if (video.requestFullscreen) {
+    //             video.requestFullscreen();
+    //         }
+    //         console.log("Entering full screen");
+    //     } else {
+    //         if (document.exitFullscreen) {
+    //             document.exitFullscreen();
+    //         }
+    //         console.log("Exiting full screen");
+    //     }
+    // }
 
     // function toggleHighlight() {
     //     highlightedEmbedScreen.toggleHighlight(embedScreen);
@@ -92,11 +149,7 @@
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div
-    class="group/screenshare video-container h-full w-full relative screen-sharing"
-    id="screen-sharing"
-    class:fullscreen={fullScreen}
->
+<div class="group/screenshare video-container h-full w-full relative screen-sharing" id="screen-sharing">
     {#if $statusStore === "connecting"}
         <div class="connecting-spinner" />
     {/if}
@@ -104,7 +157,12 @@
         <div class="rtc-error" />
     {/if}
     {#if $streamStore !== null}
-        <div class="w-full h-full mx-auto rounded object-contain" id="video">
+        <div
+            class={$toggleHighlightMode
+                ? "fixed top-0 left-0 w-full h-full"
+                : "h-full w-full fullscreen mx-auto rounded object-contain"}
+            id="video-container"
+        >
             <video
                 use:srcObject={$streamStore}
                 autoplay
@@ -187,7 +245,7 @@
                 </div>
                 <div class="h-[1px] z-30 w-full bg-white/20" />
                 <div
-                    class="fullscreen w-full hover:bg-white/10 flex justify-around items-center z-25 rounded-lg"
+                    class="w-full hover:bg-white/10 flex justify-around items-center z-25 rounded-lg"
                     on:click={toggleFullScreen}
                 >
                     <svg
@@ -218,9 +276,3 @@
         </div>
     {/if}
 </div>
-
-<style>
-    .fullscreen {
-        width: 100%;
-    }
-</style>

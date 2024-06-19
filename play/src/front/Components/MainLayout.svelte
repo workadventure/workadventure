@@ -52,7 +52,7 @@
     import MapList from "./Exploration/MapList.svelte";
     import WarningToast from "./WarningContainer/WarningToast.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
-    import { focusMode } from "../Stores/ActionsCamStore";
+    import { focusMode, toggleHighlightMode } from "../Stores/ActionsCamStore";
 
     let mainLayout: HTMLDivElement;
     // export let message: string;
@@ -112,7 +112,7 @@
         : ''}"
     bind:this={mainLayout}
 >
-    <div class="action-bar">
+    <div class={$toggleHighlightMode ? "hidden" : "action-bar"}>
         <ActionBar />
     </div>
 
