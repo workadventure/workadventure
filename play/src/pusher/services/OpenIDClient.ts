@@ -112,6 +112,8 @@ class OpenIDClient {
         access_token: string;
         username: string;
         locale: string;
+        matrix_url: string | undefined;
+        matrix_identity_provider: string | undefined;
     }> {
         const fullUrl = req.url;
         const cookies = req.cookies;
@@ -147,6 +149,8 @@ class OpenIDClient {
                         username: res[OPID_USERNAME_CLAIM] as string,
                         locale: res[OPID_LOCALE_CLAIM] as string,
                         tags: res[OPID_TAGS_CLAIM] as string[],
+                        matrix_url: res.matrix_url as string | undefined,
+                        matrix_identity_provider: res.matrix_identity_provider as string | undefined,
                     };
                 });
             });
