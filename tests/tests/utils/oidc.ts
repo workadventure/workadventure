@@ -1,6 +1,10 @@
 import { Page } from "@playwright/test";
 
-export async function oidcLogin(page: Page, userName = "User1", password = "pwd") {
+export async function oidcLogin(
+  page: Page,
+  userName = "User1",
+  password = "pwd"
+) {
   await page.click("#menuIcon img:first-child");
   await page.click('a:has-text("Sign in")');
 
@@ -17,6 +21,10 @@ export async function oidcLogout(page: Page) {
 
 export async function oidcAdminTagLogin(page) {
   await oidcLogin(page);
+}
+
+export async function oidcMatrixUserLogin(page) {
+  await oidcLogin(page, "UserMatrix", "pwd");
 }
 
 export async function oidcMemberTagLogin(page) {
