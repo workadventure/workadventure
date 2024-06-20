@@ -86,7 +86,7 @@
             <div class="tw-pl-1">
                 <input
                     data-testid="createRoomEncryption"
-                    bind:value={createRoomOptions.encrypt}
+                    bind:checked={createRoomOptions.encrypt}
                     type="checkbox"
                     id="encryptData"
                 />
