@@ -13,6 +13,8 @@
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
     import JitsiMediaBox from "./JitsiMediaBox.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
+    import { toggleHighlightMode } from "../../Stores/ActionsCamStore";
+    import { screenSharingPeerStore } from "../../Stores/PeerStore";
 
     export let streamable: Streamable;
     export let isHightlighted = false;
@@ -92,7 +94,7 @@
 {:else}
     <div class="media-container {isHightlighted ? 'hightlighted' : 'flex h-full'}" class:clickable={isClickable}>
         <!-- Here for the resize o-->
-        <div class="{isHightlighted ? ' mr-6 cam-share-receive' : 'mx-auto'} flex justify-center screen-blocker">
+        <div class="{isHightlighted ? 'cam-share-receive' : 'mx-auto'} flex justify-center screen-blocker">
             <LocalStreamMediaBox peer={streamable} clickable={isClickable} cssClass="" />
         </div>
     </div>

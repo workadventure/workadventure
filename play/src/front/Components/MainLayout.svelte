@@ -53,6 +53,7 @@
     import WarningToast from "./WarningContainer/WarningToast.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
     import { focusMode, toggleHighlightMode } from "../Stores/ActionsCamStore";
+    import { screenSharingPeerStore } from "../Stores/PeerStore";
 
     let mainLayout: HTMLDivElement;
     // export let message: string;
@@ -112,7 +113,7 @@
         : ''}"
     bind:this={mainLayout}
 >
-    <div class={$toggleHighlightMode ? "hidden" : "action-bar"}>
+    <div class={$screenSharingPeerStore.size > 0 && $toggleHighlightMode ? "hidden" : "action-bar"}>
         <ActionBar />
     </div>
 

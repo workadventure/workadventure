@@ -63,7 +63,7 @@
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { mapEditorModeStore } from "../../Stores/MapEditorStore";
     import { iframeListener } from "../../Api/IframeListener";
-    import { peerStore } from "../../Stores/PeerStore";
+    import { peerStore, screenSharingPeerStore } from "../../Stores/PeerStore";
     import {
         modalIframeStore,
         modalVisibilityStore,
@@ -115,6 +115,7 @@
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
     import { focusMode, rightMode, hideMode, toggleHighlightMode } from "../../Stores/ActionsCamStore";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
+    import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
 
     // gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
     let userName = gameManager.getPlayerName() || "";
@@ -468,6 +469,26 @@
         console.log(layoutDom.offsetHeight);
     }
 
+    // $: $screenSharingPeerStore.size < 1 ? displayActionBar() : "";
+
+    // function displayActionBar() {
+    //     console.log("JE SUIS DANS LE DISPLAY DE L'ACTION BAR");
+    //     console.log($screenSharingPeerStore.size, "screenSharingPeerStore");
+    //     console.log($toggleHighlightMode, "toggleHighlightMode");
+
+    //     if ($toggleHighlightMode) {
+    //         layoutDom.classList.add("hidden");
+    //     } else {
+    //         layoutDom.classList.remove("hidden");
+    //     }
+
+    //     if ($screenSharingPeerStore.size < 1) {
+    //         layoutDom.classList.add("hidden");
+    //     } else {
+    //         layoutDom.classList.remove("hidden");
+    //     }
+    // }
+
     // function playSoundClick() {
     //     sound.play().catch((e) => console.error(e));
     // }
@@ -490,16 +511,36 @@
     // on:mouseleave={() => { !navigating ? helpActive = false : '' }}
 
      */
+
+    // $: $screenSharingPeerStore.size < 1 && $toggleHighlightMode ? displayActionBar() : "";
+
+    // function displayActionBar() {
+    //     layoutDom.classList.remove("hidden");
+    // }
+
+    // function displayActionBar() {}
+
+    // function computeClasses($toggleHighlightMode: boolean, $screenSharingPeerStore: Map<number, ScreenSharingPeer>) {
+    //     const baseClass =
+    //         "@container/actions w-full z-[301] bottom-0 sm:top-0 transition-all pointer-events-none bp-menu";
+
+    //     return $toggleHighlightMode && $screenSharingPeerStore.size > 0 ? "hidden" : baseClass;
+    // }
+
+    // $: classList = computeClasses($toggleHighlightMode, $screenSharingPeerStore);
 </script>
 
-<svelte:window on:keydown={onKeyDown} />
 {#if !$chatVisibilityStore}
     <ChatOverlay />
 {/if}
+
+<!-- class={$toggleHighlightMode && $screenSharingPeerStore.size > 0
+? "hidden"
+: "@container/actions w-full z-[301] bottom-0 sm:top-0 transition-all pointer-events-none bp-menu"} -->
+<svelte:window on:keydown={onKeyDown} />
+
 <div
-    class={$toggleHighlightMode
-        ? "hidden"
-        : "@container/actions w-full z-[301] bottom-0 sm:top-0 transition-all pointer-events-none bp-menu"}
+    class={"@container/actions w-full z-[301] bottom-0 sm:top-0 transition-all pointer-events-none bp-menu"}
     bind:this={layoutDom}
 >
     <div class="flex w-full p-2 space-x-2 @xl/actions:p-4 @xl/actions:space-x-4">

@@ -17,8 +17,8 @@ function createHighlightedEmbedScreenStore() {
 
         },
         toggleHighlight: (embedScreen: Streamable) => {
-            update((currentEmbedScreen) => {
 
+            update((currentEmbedScreen) => {
                 if (!currentEmbedScreen || embedScreen !== currentEmbedScreen || embedScreen.uniqueId !== currentEmbedScreen.uniqueId) {
                     console.log("highlightedEmbedScreen: ", embedScreen, "il est toggle");
                     return embedScreen;

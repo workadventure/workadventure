@@ -12,16 +12,19 @@ function createPeerStore<T>() {
     return {
         subscribe,
         getPeer(userId: number): T | undefined {
+            console.log("getPeer", userId);
             return get({ subscribe }).get(userId);
         },
         addPeer(userId: number, peer: T) {
             update((users) => {
+                console.log("addPeer", userId);
                 users.set(userId, peer);
                 return users;
             });
         },
         removePeer(userId: number) {
             update((users) => {
+                console.log("removePeer", userId);
                 const peerConnectionDeleted = users.delete(userId);
                 if (!peerConnectionDeleted) {
                     Sentry.captureException(new Error("Error deleting peer connection"));

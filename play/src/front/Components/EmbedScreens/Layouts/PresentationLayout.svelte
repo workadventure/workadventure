@@ -11,7 +11,8 @@
     } from "../../../Stores/StreamableCollectionStore";
     import Loading from "../../Video/Loading.svelte";
     import { jitsiLoadingStore } from "../../../Streaming/BroadcastService";
-    import { rightMode } from "../../../Stores/ActionsCamStore";
+    import { rightMode, hideMode, toggleHighlightMode } from "../../../Stores/ActionsCamStore";
+    import { peerStore, screenSharingPeerStore } from "../../../Stores/PeerStore";
 
     const isMobile = window.matchMedia("(max-width: 767px)");
     let isVertical: boolean;
@@ -25,6 +26,11 @@
 
     highlightedEmbedScreen.subscribe((value) => {
         currentHighlightedEmbedScreen = value;
+        if (value) {
+            isHightlighted = true;
+        } else {
+            isHightlighted = false;
+        }
     });
 
     function handleTabletChange(e: MediaQueryList) {
@@ -34,8 +40,6 @@
             isVertical = false;
         }
     }
-
-    onMount(() => {});
 
     afterUpdate(() => {
         modifySizeCamIfScreenShare();
@@ -96,14 +100,6 @@
         }
     }
 
-    highlightedEmbedScreen.subscribe((value) => {
-        if (value) {
-            isHightlighted = true;
-        } else {
-            isHightlighted = false;
-        }
-    });
-
     // function calcHeight() {
     //     console.log("je suis dans le calc height");
     //     let containerCam = document.getElementById("container-media") as HTMLDivElement;
@@ -115,13 +111,18 @@
     //         console.log("window height :", windowHeight);
     //     }
     // }
+
+    $: console.log($screenSharingPeerStore, "screenSharingPeerStore");
 </script>
 
 <!-- class:full-medias={displayFullMedias} -->
 
 <div class={isHightlighted ? "presentation-layout flex flex-col-reverse md:flex-col" : ""}>
     {#if $streamableCollectionStore.size > 0 || $myCameraStore}
-        <div class="justify-end md:justify-center {isHightlighted ? 'mb-2' : ''}" id="container-media">
+        <div
+            class="justify-end md:justify-center {$toggleHighlightMode ? 'hidden' : ''} {isHightlighted ? 'mb-2' : ''}"
+            id="container-media"
+        >
             {#if $jitsiLoadingStore}
                 <Loading />
             {/if}
@@ -134,30 +135,8 @@
         </div>
     {/if}
 
-    <div id="video-container-receive" class={$highlightedEmbedScreen ? "block" : "hidden"}>
+    {#if $peerStore.size > 0}
         {#if $highlightedEmbedScreen}
-            {#key $highlightedEmbedScreen.uniqueId}
-                <MediaBox isHightlighted={true} isClickable={true} streamable={$highlightedEmbedScreen} />
-            {/key}
-        {/if}
-    </div>
-</div>
-
-<!-- {#if isVertical}{:else}
-        <div class="horizontal">
-            {#if $streamableCollectionStore.size > 0 || $myCameraStore}
-                <div class="grid grid-flow-col gap-x-4 justify-center container-media" id="container-media">
-                    {#if $jitsiLoadingStore}
-                        <Loading />
-                    {/if}
-                    {#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true && $myCameraStore}
-                        <CamerasContainer />
-                    {/if}
-                    {#if $myJitsiCameraStore}
-                        <MediaBox streamable={$myJitsiCameraStore} isClickable={false} />
-                    {/if}
-                </div>
-            {/if}
             <div id="video-container-receive" class={$highlightedEmbedScreen ? "block" : "hidden"}>
                 {#if $highlightedEmbedScreen}
                     {#key $highlightedEmbedScreen.uniqueId}
@@ -165,36 +144,13 @@
                     {/key}
                 {/if}
             </div>
-        </div>
-    {/if} -->
-
-<!-- TODO HUGO Commented Why ?
-        {#if $streamableCollectionStore.size > 0 || $myCameraStore}
-            <div
-                class="relative self-end z-[300] bottom-6 md:bottom-4 max-w-[25%] w-full"
-                class:w-[10%]={$highlightedEmbedScreen != undefined}
-            >
-                {#if $jitsiLoadingStore}
-                    <Loading />
-                {/if}
-                {#if $streamableCollectionStore.size > 0}
-                    <CamerasContainer highlightedEmbedScreen={$highlightedEmbedScreen} />
-                {/if}
-                {#if $myCameraStore && !$liveStreamingEnabledStore}
-                    <MyCamera />
-                {/if}
-                {#if $myJitsiCameraStore}
-                    <MediaBox streamable={$myJitsiCameraStore} isClickable={false} />
-                {/if}
-            </div>
         {/if}
-    -->
+    {/if}
+</div>
+
 <style>
-    .fullscreen {
-        scale: 1.4;
-    }
     .presentation-layout {
-        overflow-y: auto;
+        overflow-y: hidden;
         overflow-x: hidden;
     }
 

@@ -1,14 +1,15 @@
 <script lang="ts">
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
+    import { onMount, onDestroy } from "svelte";
     import { Color } from "@workadventure/shared-utils";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import type { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
     import { srcObject } from "./utils";
     import BanReportBox from "./BanReportBox.svelte";
-    import { onMount } from "svelte";
     import { toggleHighlightMode } from "../../Stores/ActionsCamStore";
+    import { screenSharingPeerStore } from "../../Stores/PeerStore";
 
     export let peer: ScreenSharingPeer;
     let streamStore = peer.streamStore;
@@ -17,139 +18,56 @@
     let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
     let statusStore = peer.statusStore;
     let isHightlighted = true;
-    // let fullScreen = writable(false);
-    let isFullScreen: boolean;
-
     let embedScreen: Streamable;
-
-    // const isResized = window.matchMedia("(max-height: 727px)");
-    // let isVertical: boolean;
-    // let video = document.getElementById("screen-sharing") as HTMLVideoElement;
 
     if (peer) {
         embedScreen = peer as unknown as Streamable;
     }
 
-    onMount(() => {
-        embedScreen = peer;
+    // $: $screenSharingPeerStore.size < 1, onDestroy();
+    console.log($screenSharingPeerStore.size, "size");
+    console.log($toggleHighlightMode, "toggle");
+    $: $toggleHighlightMode, console.log($toggleHighlightMode, "toggle", $screenSharingPeerStore.size, "size");
 
-        // isResized.addEventListener("change", (e: any) => handleTabletChange(e));
-        // handleTabletChange(isResized);
-        // isNearBottom(video);
-    });
+    // onDestroy(() => {
+    //     console.log("je suis dans le on destroy de l'autre partage d'écran");
+    //     toggleHighlightMode.update(() => false);
+    // });
 
-    // function handleTabletChange(e: MediaQueryList) {
-    //     isNearBottom(video);
-    //     if (e.matches) {
-    //         isVertical = true;
-    //         console.log("Vertical");
-    //     } else {
-    //         isVertical = false;
-    //         console.log("Horizontal ou vertical pas rezize");
-    //     }
-    // }
+    // onMount(() => {
+    //     console.log("je suis dans le onMount");
+    //     embedScreen = peer;
+    // });
 
-    // $: changeIcon = $highlightedEmbedScreen === embedScreen;
-    // console.log(changeIcon, ": change icon du receveur");
     $: isHightlighted = $highlightedEmbedScreen === embedScreen;
-
-    // $: isFullScreen = $fullScreen;
-    console.log(toggleHighlightMode + " : is full screen");
+    // $: $screenSharingPeerStore.size > 0 && $toggleHighlightMode ? untogglefFullScreen() : null;
 
     function toggleFullScreen() {
         toggleHighlightMode.update((current) => !current);
-        toggleHighlightMode.subscribe((value) => {
-            console.log("Full screen is now:", value);
-        });
-
         const video = document.getElementById("screen-sharing") as HTMLVideoElement;
-        console.log("Video found", video);
-        console.log($toggleHighlightMode + " : toggle highlight mode");
+
         if (video) {
             if ($toggleHighlightMode) {
-                console.log("je suis dans le full screen");
-
                 video.style.height = `${document.documentElement.clientHeight}px`;
                 video.style.width = `${document.documentElement.clientWidth}px`;
             } else {
-                console.log("je suis dans le else donc plus full screen");
                 video.style.height = "100%";
                 video.style.width = "100%";
             }
         }
     }
+    // screenSharingPeerStore.subscribe(() => {
+    //     toggleHighlightMode.update(() => false);
+    // });
 
-    // function toggleFullScreen() {
-    //     console.log("je suis dans le toggle full screen");
-    //     fullScreen = !fullScreen;
-    //     console.log(fullScreen + " : full screen");
-    //     if (isHightlighted) {
-    //         if (fullScreen) {
-    //             fullScreen = false;
-    //             console.log("toggle not full screen");
-    //         } else {
-    //             fullScreen = true;
-    //             console.log("toggle full screen");
-    //         }
-    //     }
-    // }
-
-    // function toggleFullScreen() {
-    //     console.log("Toggle full screen");
-
-    //     // Récupérer l'élément vidéo
-    //     const video = document.querySelector("video");
-
-    //     if (!video) {
-    //         console.error("Video element not found");
-    //         return;
-    //     }
-
-    //     if (!document.fullscreenElement) {
-    //         // Si le mode plein écran n'est pas activé, activer le plein écran
-    //         if (video.requestFullscreen) {
-    //             video.requestFullscreen();
-    //         }
-    //         console.log("Entering full screen");
-    //     } else {
-    //         if (document.exitFullscreen) {
-    //             document.exitFullscreen();
-    //         }
-    //         console.log("Exiting full screen");
-    //     }
-    // }
-
-    // function toggleHighlight() {
-    //     highlightedEmbedScreen.toggleHighlight(embedScreen);
-    // }
-
-    // function toggleHighlight() {
-    //     console.log("toggle highlight");
-    //     highlightedEmbedScreen.toggleHighlight(peer);
-    //     highlightedEmbedScreen.subscribe((value) => {
-    //         console.log("je suis dans le local screen sharing");
-    //         if (value) {
-    //             isHightlighted = true;
-    //             console.log(isHightlighted + " : is highlighted");
-    //         } else {
-    //             isHightlighted = false;
-    //             console.log(isHightlighted + " : is not highlighted");
-    //         }
-    //     });
-    // }
-
-    // function isNearBottom(element: HTMLElement) {
-    //     if (window.innerHeight - element.getBoundingClientRect().bottom < 50) {
-    //         video.style.objectFit = "contain";
-    //         console.log("Near bottom");
-    //     } else {
-    //         console.log("Not near bottom");
-    //     }
-    // }
+    function untogglefFullScreen() {
+        toggleHighlightMode.update(() => false);
+        highlightedEmbedScreen.toggleHighlight(embedScreen);
+    }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div class="group/screenshare video-container h-full w-full relative screen-sharing" id="screen-sharing">
+<div class="group/screenshare h-full w-full relative screen-sharing" id="screen-sharing">
     {#if $statusStore === "connecting"}
         <div class="connecting-spinner" />
     {/if}
@@ -161,7 +79,6 @@
             class={$toggleHighlightMode
                 ? "fixed top-0 left-0 w-full h-full"
                 : "h-full w-full fullscreen mx-auto rounded object-contain"}
-            id="video-container"
         >
             <video
                 use:srcObject={$streamStore}
@@ -181,7 +98,7 @@
         <div
             class={isHightlighted
                 ? "hidden"
-                : "absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-full aspect-ratio bg-contrast/50 opacity-0 group-hover/screenshare:opacity-100 backdrop-blur transition-all"}
+                : "absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-full aspect-ratio bg-contrast/50 opacity-0 group-hover/screenshare:opacity-100 backdrop-blur transition-all cursor-pointer"}
             on:click={() => highlightedEmbedScreen.toggleHighlight(embedScreen)}
         >
             <svg
@@ -211,17 +128,17 @@
 
         <div
             class={isHightlighted
-                ? "absolute top-0 bottom-0 right-0 left-0 m-auto h-28 w-60 z-20 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 flex items-center justify-center"
+                ? "absolute top-0 bottom-0 right-0 left-0 m-auto h-28 w-60 z-20 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 flex items-center justify-center cursor-pointer"
                 : "hidden"}
         >
-            <div class="block flex flex-col justify-evenly h-full w-full">
+            <div class="block flex flex-col justify-evenly cursor-pointer h-full w-full">
                 <div
                     class="svg w-full hover:bg-white/10 flex justify-around items-center z-25 rounded-lg"
-                    on:click={() => highlightedEmbedScreen.toggleHighlight(embedScreen)}
+                    on:click={untogglefFullScreen}
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        class="icon icon-tabler icon-tabler-arrows-maximize"
+                        class="icon icon-tabler cursor-pointer icon-tabler-arrows-maximize"
                         width="24"
                         height="24"
                         viewBox="0 0 24 24"
@@ -245,12 +162,12 @@
                 </div>
                 <div class="h-[1px] z-30 w-full bg-white/20" />
                 <div
-                    class="w-full hover:bg-white/10 flex justify-around items-center z-25 rounded-lg"
+                    class="w-full hover:bg-white/10 flex justify-around cursor-pointer items-center z-25 rounded-lg"
                     on:click={toggleFullScreen}
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        class="icon icon-tabler icon-tabler-arrows-maximize"
+                        class="icon icon-tabler cursor-pointer icon-tabler-arrows-maximize"
                         width="24"
                         height="24"
                         viewBox="0 0 24 24"
@@ -270,7 +187,11 @@
                         <path d="M19 15l-4 0l0 4" />
                         <path d="M15 15l6 6" />
                     </svg>
-                    <p class="font-bold text-white">Toggle full screen</p>
+                    {#if $toggleHighlightMode}
+                        <p class="font-bold cursor-pointer text-white">Untoggle full screen</p>
+                    {:else}
+                        <p class="font-bold cursor-pointer text-white">Toggle full screen</p>
+                    {/if}
                 </div>
             </div>
         </div>
