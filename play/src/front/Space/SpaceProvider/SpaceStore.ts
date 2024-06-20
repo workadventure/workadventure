@@ -38,6 +38,7 @@ export class LocalSpaceProvider implements SpaceProviderInterface {
         this.getAll().forEach((space) => {
             space.destroy();
         });
+        this.spaces.clear();
     }
 }
 

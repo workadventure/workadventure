@@ -157,5 +157,44 @@ describe("SpaceProviderInterface implementation", () => {
                 expect(spaceStore.getAll()).toContain(space3);
             });
         });
+        describe("SpaceStore destroy", () => {
+            it("should destroy space store", () => {
+                const space1: SpaceInterface = {
+                    getName(): string {
+                        return "space-test1";
+                    },
+                    destroy: vi.fn(),
+                } as unknown as SpaceInterface;
+
+                const space2: SpaceInterface = {
+                    getName(): string {
+                        return "space-test2";
+                    },
+                    destroy: vi.fn(),
+                } as unknown as SpaceInterface;
+
+                const space3: SpaceInterface = {
+                    getName(): string {
+                        return "space-to-delete";
+                    },
+                    destroy: vi.fn(),
+                } as unknown as SpaceInterface;
+
+                const spaceMap: Map<string, SpaceInterface> = new Map<string, SpaceInterface>([
+                    [space3.getName(), space3],
+                    [space1.getName(), space1],
+                    [space2.getName(), space2],
+                ]);
+                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(undefined, spaceMap);
+                spaceStore.destroy();
+                expect(spaceStore.getAll()).toHaveLength(0);
+                // eslint-disable-next-line @typescript-eslint/unbound-method
+                expect(space1.destroy).toHaveBeenCalledOnce();
+                // eslint-disable-next-line @typescript-eslint/unbound-method
+                expect(space2.destroy).toHaveBeenCalledOnce();
+                // eslint-disable-next-line @typescript-eslint/unbound-method
+                expect(space3.destroy).toHaveBeenCalledOnce();
+            });
+        });
     });
 });
