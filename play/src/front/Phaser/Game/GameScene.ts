@@ -155,9 +155,6 @@ import { LocalSpaceProviderSingleton } from "../../Space/SpaceProvider/SpaceStor
 import { CONNECTED_USER_FILTER_NAME, WORLD_SPACE_NAME } from "../../Space/Space";
 import { StreamSpaceWatcherSingleton } from "../../Space/SpaceWatcher/SocketSpaceWatcher";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
-import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
-import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
-import { matrixSecurity } from "../../Chat/Connection/Matrix/MatrixSecurity";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -187,6 +184,9 @@ import { DEPTH_BUBBLE_CHAT_SPRITE, DEPTH_WHITE_MASK } from "./DepthIndexes";
 import { ScriptingEventsManager } from "./ScriptingEventsManager";
 import { faviconManager } from "./../../WebRtc/FaviconManager";
 import { FollowManager } from "./FollowManager";
+import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
+import { matrixSecurity } from "../../Chat/Connection/Matrix/MatrixSecurity";
+import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
@@ -532,33 +532,6 @@ export class GameScene extends DirtyScene {
 
     //hook create scene
     create(): void {
-        /*getMatrixClient()
-            .then(async (clientResult) => {
-                if (isSuccess(clientResult)) {
-                    const client = clientResult.value;
-                    const rooms = await client.getJoinedRooms();
-                    console.warn("rooms", rooms);
-                    console.warn("user id", client.getUserId());
-
-                    client.on("Room.timeline", (event, room, toStartOfTimeline, removed, data) => {
-                        console.warn("Room.timeline", event, room, toStartOfTimeline, removed, data);
-                    });
-
-                    client.on("RoomState.events", (event, state) => {
-                        console.warn("RoomState.events", event, state);
-                    });
-                } else {
-                    if (clientResult.error.type === "no-matrix-credentials") {
-                        console.warn("no matrix credentials");
-                    } else if (clientResult.error.type === "no-matrix-server") {
-                        console.warn("NO MATRIX SERVER CONFIGURED");
-                    } else {
-                        console.error("matrix error", clientResult.error.error);
-                    }
-                }
-            })
-            .catch((e) => console.error(e));*/
-
         this.input.topOnly = false;
         this.preloading = false;
         this.cleanupDone = false;
