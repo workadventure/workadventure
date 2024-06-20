@@ -97,7 +97,6 @@ describe("MatrixSecurity", () => {
             expect(mockCrypto.bootstrapCrossSigning).toHaveBeenCalledOnce();
             expect(mockCrypto.bootstrapSecretStorage).toHaveBeenCalledOnce();
 
-            console.log(mockCrypto.bootstrapCrossSigning.mock.calls);
             expect(matrixSecurity["restoreBackupMessages"]).toHaveBeenCalledOnce();
         });
         it("should call bootstrap and should not restore backup message function when crossSigning is not ready and keybackupinfo is null ", async () => {
@@ -125,7 +124,6 @@ describe("MatrixSecurity", () => {
             expect(mockCrypto.bootstrapCrossSigning).toHaveBeenCalledOnce();
             expect(mockCrypto.bootstrapSecretStorage).toHaveBeenCalledOnce();
 
-            console.log(mockCrypto.bootstrapCrossSigning.mock.calls);
             expect(matrixSecurity["restoreBackupMessages"]).not.toHaveBeenCalledOnce();
         });
         it("should not call bootstrap and should not restore backup message function when crossSigning is not ready and keybackupinfo is null ", async () => {
@@ -153,7 +151,6 @@ describe("MatrixSecurity", () => {
             expect(mockCrypto.bootstrapCrossSigning).not.toHaveBeenCalledOnce();
             expect(mockCrypto.bootstrapSecretStorage).not.toHaveBeenCalledOnce();
 
-            console.log(mockCrypto.bootstrapCrossSigning.mock.calls);
             expect(matrixSecurity["restoreBackupMessages"]).toHaveBeenCalledOnce();
         });
         it("should set initializingEncryptionPromise to undefined when we catch a error during the initialization", async () => {
