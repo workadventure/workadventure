@@ -9,7 +9,7 @@ function createHighlightedEmbedScreenStore() {
         subscribe,
         highlight: (embedScreen: Streamable) => {
             set(embedScreen);
-            console.log("highlightedEmbedScreen: ", "il est toggle");
+            console.log("highlightedEmbedScreen: ", embedScreen, "il est toggle");
 
         },
         removeHighlight: () => {
@@ -20,10 +20,10 @@ function createHighlightedEmbedScreenStore() {
 
             update((currentEmbedScreen) => {
                 if (!currentEmbedScreen || embedScreen !== currentEmbedScreen || embedScreen.uniqueId !== currentEmbedScreen.uniqueId) {
-                    console.log("highlightedEmbedScreen: ", "il est toggle");
+                    console.log("highlightedEmbedScreen: ", "il est toggle", embedScreen);
                     return embedScreen;
                 } else {
-                    console.log("highlightedEmbedScreen: ", "il est pas toggle");
+                    console.log("highlightedEmbedScreen: ", "il est pas toggle",  embedScreen);
                     return undefined;
                 }
             });

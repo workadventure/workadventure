@@ -53,7 +53,8 @@
     import WarningToast from "./WarningContainer/WarningToast.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
     import { focusMode, highlightFullScreen } from "../Stores/ActionsCamStore";
-    import { screenSharingPeerStore } from "../Stores/PeerStore";
+    import { peerStore, screenSharingPeerStore } from "../Stores/PeerStore";
+    import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 
     let mainLayout: HTMLDivElement;
     // export let message: string;
@@ -101,6 +102,10 @@
             div.remove();
         }
     }
+
+    peerStore.subscribe((value) => {
+        console.log("peerStore VALUE", value);
+    });
 </script>
 
 <!-- Components ordered by z-index -->
@@ -113,9 +118,12 @@
         : ''}"
     bind:this={mainLayout}
 >
-    <div class={$screenSharingPeerStore.size > 0 && $highlightFullScreen ? "hidden" : "action-bar"}>
+    <div class={$peerStore.size > 0 && $highlightFullScreen ? "hidden" : "action-bar"}>
         <ActionBar />
     </div>
+    <!-- <div class={$screenSharingPeerStore.size > 0 && $highlightFullScreen ? "hidden" : "action-bar"}>
+        <ActionBar />
+    </div> -->
 
     {#if $modalVisibilityStore || $modalPopupVisibilityStore}
         <div class="bg-black/60 w-full h-full fixed left-0 right-0" />

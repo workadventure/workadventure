@@ -44,14 +44,25 @@
         modifySizeCamIfScreenShare();
     });
 
+    highlightedEmbedScreen.subscribe((value) => {
+        console.log("highlightedEmbedScreen VALUE", value);
+        if (value) {
+            isHightlighted = true;
+            console.log("isHightlighted", isHightlighted);
+        } else {
+            isHightlighted = false;
+            console.log("isHightlighted", isHightlighted);
+        }
+    });
+
     $: if ($highlightedEmbedScreen) modifySizeCamIfScreenShare();
 
     function modifySizeCamIfScreenShare() {
-        let containerCam = document.querySelector(".container-media") as HTMLDivElement;
+        let containerCam = document.getElementById("container-media") as HTMLDivElement;
         if (containerCam && currentHighlightedEmbedScreen !== undefined) {
             containerCam.style.transform = "scale(0.7)";
             containerCam.style.marginTop = "-25px";
-            containerCam.style.marginBottom = "-25px";
+            containerCam.style.marginBottom = "-10px";
         } else if (containerCam && currentHighlightedEmbedScreen === undefined) {
             containerCam.style.transform = "scale(1)";
             containerCam.style.marginTop = "0px";

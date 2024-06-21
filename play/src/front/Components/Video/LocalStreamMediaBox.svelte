@@ -11,7 +11,6 @@
     let stream = peer.stream;
     export let cssClass: string | undefined;
     let embedScreen: Streamable;
-    let isHighlightedMyScreen = true;
 
     if (peer) {
         embedScreen = peer as unknown as Streamable;
@@ -31,11 +30,11 @@
                 video.style.width = "100%";
             }
         }
-        isHighlightedMyScreen = !isHighlightedMyScreen;
     }
 
     function untogglefFullScreen() {
         highlightedEmbedScreen.toggleHighlight(peer);
+        highlightFullScreen.set(false);
     }
 </script>
 
@@ -129,31 +128,53 @@
                     class="w-full hover:bg-white/10 flex justify-around cursor-pointer items-center z-25 rounded-lg"
                     on:click={toggleFullScreen}
                 >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="icon icon-tabler cursor-pointer icon-tabler-arrows-maximize"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        stroke-width="1.5"
-                        stroke="#ffffff"
-                        fill="none"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                    >
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M5 9l4 0l0 -4" />
-                        <path d="M3 3l6 6" />
-                        <path d="M5 15l4 0l0 4" />
-                        <path d="M3 21l6 -6" />
-                        <path d="M19 9l-4 0l0 -4" />
-                        <path d="M15 9l6 -6" />
-                        <path d="M19 15l-4 0l0 4" />
-                        <path d="M15 15l6 6" />
-                    </svg>
                     {#if $highlightFullScreen}
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="icon icon-tabler cursor-pointer icon-tabler-arrows-maximize"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="#ffffff"
+                            fill="none"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M5 9l4 0l0 -4" />
+                            <path d="M3 3l6 6" />
+                            <path d="M5 15l4 0l0 4" />
+                            <path d="M3 21l6 -6" />
+                            <path d="M19 9l-4 0l0 -4" />
+                            <path d="M15 9l6 -6" />
+                            <path d="M19 15l-4 0l0 4" />
+                            <path d="M15 15l6 6" />
+                        </svg>
                         <p class="font-bold cursor-pointer text-white">Untoggle full screen</p>
                     {:else}
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="icon icon-tabler cursor-pointer icon-tabler-arrows-minimize"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="#ffffff"
+                            fill="none"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M16 4l4 0l0 4" />
+                            <path d="M14 10l6 -6" />
+                            <path d="M8 20l-4 0l0 -4" />
+                            <path d="M4 20l6 -6" />
+                            <path d="M16 20l4 0l0 -4" />
+                            <path d="M14 14l6 6" />
+                            <path d="M8 4l-4 0l0 4" />
+                            <path d="M4 4l6 6" />
+                        </svg>
                         <p class="font-bold cursor-pointer text-white">Toggle full screen</p>
                     {/if}
                 </div>

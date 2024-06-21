@@ -9,13 +9,22 @@
 
     let isHightlighted = false;
 
-    highlightedEmbedScreen.subscribe((value) => {
-        if (value) {
-            isHightlighted = true;
-        } else {
-            isHightlighted = false;
-        }
-    });
+    // highlightedEmbedScreen.subscribe((value) => {
+    //     console.log("highlightedEmbedScreen VALUE", value);
+    //     if (value) {
+    //         isHightlighted = true;
+    //     } else {
+    //         isHightlighted = false;
+    //     }
+    // });
+    // highlightFullScreen.subscribe((value) => {
+    //     console.trace("highlightFullScreen VALUE", value);
+    //     if (value) {
+    //         isHightlighted = true;
+    //     } else {
+    //         isHightlighted = false;
+    //     }
+    // });
 
     afterUpdate(() => {
         checkOverflow();
@@ -36,7 +45,9 @@
 </script>
 
 <div
-    class="{isHightlighted ? 'highlight p-2 ' : 'not-highlighted p-2 '} {$highlightFullScreen ? 'hidden' : ''}"
+    class="{isHightlighted ? 'highlight p-2 ' : 'not-highlighted p-2 '} {$highlightFullScreen && $highlightedEmbedScreen
+        ? 'hidden'
+        : ''} "
     id="cameras-container"
 >
     {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
