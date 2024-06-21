@@ -13,8 +13,6 @@
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
     import JitsiMediaBox from "./JitsiMediaBox.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
-    import { toggleHighlightMode } from "../../Stores/ActionsCamStore";
-    import { screenSharingPeerStore } from "../../Stores/PeerStore";
 
     export let streamable: Streamable;
     export let isHightlighted = false;

@@ -1,15 +1,13 @@
 <script lang="ts">
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
-    import { onMount, onDestroy } from "svelte";
     import { Color } from "@workadventure/shared-utils";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import type { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
     import { srcObject } from "./utils";
     import BanReportBox from "./BanReportBox.svelte";
-    import { toggleHighlightMode } from "../../Stores/ActionsCamStore";
-    import { screenSharingPeerStore } from "../../Stores/PeerStore";
+    import { highlightFullScreen } from "../../Stores/ActionsCamStore";
 
     export let peer: ScreenSharingPeer;
     let streamStore = peer.streamStore;
@@ -17,37 +15,21 @@
     let backGroundColor = Color.getColorByString(peer.userName);
     let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
     let statusStore = peer.statusStore;
-    let isHightlighted = true;
+    let isHighlighted = true;
     let embedScreen: Streamable;
 
     if (peer) {
         embedScreen = peer as unknown as Streamable;
     }
 
-    // $: $screenSharingPeerStore.size < 1, onDestroy();
-    console.log($screenSharingPeerStore.size, "size");
-    console.log($toggleHighlightMode, "toggle");
-    $: $toggleHighlightMode, console.log($toggleHighlightMode, "toggle", $screenSharingPeerStore.size, "size");
-
-    // onDestroy(() => {
-    //     console.log("je suis dans le on destroy de l'autre partage d'écran");
-    //     toggleHighlightMode.update(() => false);
-    // });
-
-    // onMount(() => {
-    //     console.log("je suis dans le onMount");
-    //     embedScreen = peer;
-    // });
-
-    $: isHightlighted = $highlightedEmbedScreen === embedScreen;
-    // $: $screenSharingPeerStore.size > 0 && $toggleHighlightMode ? untogglefFullScreen() : null;
+    $: isHighlighted = $highlightedEmbedScreen === embedScreen;
 
     function toggleFullScreen() {
-        toggleHighlightMode.update((current) => !current);
+        highlightFullScreen.update((current) => !current);
         const video = document.getElementById("screen-sharing") as HTMLVideoElement;
 
         if (video) {
-            if ($toggleHighlightMode) {
+            if ($highlightFullScreen) {
                 video.style.height = `${document.documentElement.clientHeight}px`;
                 video.style.width = `${document.documentElement.clientWidth}px`;
             } else {
@@ -56,12 +38,8 @@
             }
         }
     }
-    // screenSharingPeerStore.subscribe(() => {
-    //     toggleHighlightMode.update(() => false);
-    // });
 
     function untogglefFullScreen() {
-        toggleHighlightMode.update(() => false);
         highlightedEmbedScreen.toggleHighlight(embedScreen);
     }
 </script>
@@ -76,7 +54,7 @@
     {/if}
     {#if $streamStore !== null}
         <div
-            class={$toggleHighlightMode
+            class={$highlightFullScreen
                 ? "fixed top-0 left-0 w-full h-full"
                 : "h-full w-full fullscreen mx-auto rounded object-contain"}
         >
@@ -87,7 +65,7 @@
                 class="h-full w-full mx-auto rounded object-contain"
                 muted
             />
-            <div class={isHightlighted ? "flex justify-center" : "absolute top-[70%]"}>
+            <div class={isHighlighted ? "flex justify-center" : "absolute top-[70%]"}>
                 <span
                     style="background-color: {backGroundColor}; color: {textColor};"
                     class="nametag-text nametag-shape pr-3 pl-2 h-3 max-h-8">{name}</span
@@ -96,7 +74,7 @@
             </div>
         </div>
         <div
-            class={isHightlighted
+            class={isHighlighted
                 ? "hidden"
                 : "absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-full aspect-ratio bg-contrast/50 opacity-0 group-hover/screenshare:opacity-100 backdrop-blur transition-all cursor-pointer"}
             on:click={() => highlightedEmbedScreen.toggleHighlight(embedScreen)}
@@ -124,10 +102,9 @@
                 <path d="M4 4l6 6" />
             </svg>
         </div>
-        <!-- bouton du toggle-->
 
         <div
-            class={isHightlighted
+            class={isHighlighted
                 ? "absolute top-0 bottom-0 right-0 left-0 m-auto h-28 w-60 z-20 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 flex items-center justify-center cursor-pointer"
                 : "hidden"}
         >
@@ -187,7 +164,7 @@
                         <path d="M19 15l-4 0l0 4" />
                         <path d="M15 15l6 6" />
                     </svg>
-                    {#if $toggleHighlightMode}
+                    {#if $highlightFullScreen}
                         <p class="font-bold cursor-pointer text-white">Untoggle full screen</p>
                     {:else}
                         <p class="font-bold cursor-pointer text-white">Toggle full screen</p>

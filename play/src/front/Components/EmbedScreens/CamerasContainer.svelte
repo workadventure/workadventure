@@ -5,19 +5,15 @@
     import MyCamera from "../MyCamera.svelte";
     import { myCameraStore } from "../../Stores/MyMediaStore";
     import { afterUpdate } from "svelte";
-    import { toggleHighlightMode } from "../../Stores/ActionsCamStore";
-    import { screenSharingPeerStore } from "../../Stores/PeerStore";
+    import { highlightFullScreen } from "../../Stores/ActionsCamStore";
 
     let isHightlighted = false;
 
     highlightedEmbedScreen.subscribe((value) => {
-        console.log("je suis dans le camera container");
         if (value) {
             isHightlighted = true;
-            console.log(isHightlighted);
         } else {
             isHightlighted = false;
-            console.log(isHightlighted);
         }
     });
 
@@ -39,7 +35,10 @@
     window.addEventListener("resize", checkOverflow);
 </script>
 
-<div class={isHightlighted ? "highlight p-2" : "not-highlighted p-2"} id="cameras-container">
+<div
+    class="{isHightlighted ? 'highlight p-2 ' : 'not-highlighted p-2 '} {$highlightFullScreen ? 'hidden' : ''}"
+    id="cameras-container"
+>
     {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
         {#if !highlightedEmbedScreen || $highlightedEmbedScreen !== peer}
             {#key uniqueId}
@@ -75,6 +74,10 @@
         width: 80%;
         max-width: 100%;
         -webkit-overflow-scrolling: touch;
+    }
+
+    .hidden {
+        display: none !important;
     }
 
     .all-cameras-highlighted {

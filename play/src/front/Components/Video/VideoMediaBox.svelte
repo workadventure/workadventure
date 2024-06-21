@@ -84,6 +84,16 @@
 
     $: changeIcon = $highlightedEmbedScreen === peer;
 
+    $: isHighlighted = $highlightedEmbedScreen === peer;
+    // console.log("highlight ? (dans le composant de la video peer)", isHighlighted);
+
+    function highlight() {
+        if ($statusStore === "connected") {
+            highlightedEmbedScreen.toggleHighlight(peer);
+            console.log("highlight ? (dans le composant de la video peer lolilol)", isHighlighted);
+        }
+    }
+
     const resizeObserver = new ResizeObserver(() => {
         minimized = isMediaBreakpointOnly("md");
     });
@@ -238,14 +248,6 @@
         setTimeout(() => {
             aspectRatio = videoElement != undefined ? videoElement.videoWidth / videoElement.videoHeight : 1;
         }, 1000);
-    }
-
-    $: isHighlighted = $highlightedEmbedScreen === peer;
-
-    function highlight() {
-        if ($statusStore === "connected") {
-            highlightedEmbedScreen.toggleHighlight(peer);
-        }
     }
 </script>
 

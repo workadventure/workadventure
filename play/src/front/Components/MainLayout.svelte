@@ -9,7 +9,7 @@
     import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
     import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
     import { soundPlayingStore } from "../Stores/SoundPlayingStore";
-    import { embedScreenLayoutStore, hasEmbedScreen } from "../Stores/EmbedScreensStore";
+    import { hasEmbedScreen } from "../Stores/EmbedScreensStore";
     import {
         showLimitRoomModalStore,
         modalVisibilityStore,
@@ -52,7 +52,7 @@
     import MapList from "./Exploration/MapList.svelte";
     import WarningToast from "./WarningContainer/WarningToast.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
-    import { focusMode, toggleHighlightMode } from "../Stores/ActionsCamStore";
+    import { focusMode, highlightFullScreen } from "../Stores/ActionsCamStore";
     import { screenSharingPeerStore } from "../Stores/PeerStore";
 
     let mainLayout: HTMLDivElement;
@@ -113,7 +113,7 @@
         : ''}"
     bind:this={mainLayout}
 >
-    <div class={$screenSharingPeerStore.size > 0 && $toggleHighlightMode ? "hidden" : "action-bar"}>
+    <div class={$screenSharingPeerStore.size > 0 && $highlightFullScreen ? "hidden" : "action-bar"}>
         <ActionBar />
     </div>
 

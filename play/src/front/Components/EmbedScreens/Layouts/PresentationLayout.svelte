@@ -11,8 +11,7 @@
     } from "../../../Stores/StreamableCollectionStore";
     import Loading from "../../Video/Loading.svelte";
     import { jitsiLoadingStore } from "../../../Streaming/BroadcastService";
-    import { rightMode, hideMode, toggleHighlightMode } from "../../../Stores/ActionsCamStore";
-    import { peerStore, screenSharingPeerStore } from "../../../Stores/PeerStore";
+    import { rightMode, hideMode } from "../../../Stores/ActionsCamStore";
 
     const isMobile = window.matchMedia("(max-width: 767px)");
     let isVertical: boolean;
@@ -63,13 +62,8 @@
     $: $rightMode, setRightMode();
 
     function setRightMode() {
-        console.log($rightMode);
-        console.log(isVertical);
-        console.log("je suis dans le right mode");
         if ($rightMode && !isVertical) {
-            console.log("je suis dans le if du right mode");
             let containerLayoutCam = document.getElementById("right-mode");
-            console.log(containerLayoutCam);
             containerLayoutCam?.classList.add("right-mode-on");
             // Cette div est nul mais dans l'idéé je veux faire qqch comme cela
         } else {
@@ -111,43 +105,34 @@
     //         console.log("window height :", windowHeight);
     //     }
     // }
-
-    $: console.log($screenSharingPeerStore, "screenSharingPeerStore");
 </script>
 
 <!-- class:full-medias={displayFullMedias} -->
 
-<div class={isHightlighted ? "presentation-layout flex flex-col-reverse md:flex-col" : ""}>
-    {#if $streamableCollectionStore.size > 0 || $myCameraStore}
-        <div
-            class="justify-end md:justify-center {$toggleHighlightMode ? 'hidden' : ''} {isHightlighted ? 'mb-2' : ''}"
-            id="container-media"
-        >
-            {#if $jitsiLoadingStore}
-                <Loading />
-            {/if}
-            {#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true && $myCameraStore}
-                <CamerasContainer />
-            {/if}
-            {#if $myJitsiCameraStore}
-                <MediaBox streamable={$myJitsiCameraStore} isClickable={false} />
-            {/if}
-        </div>
-    {/if}
-
-    {#if $peerStore.size > 0}
-        {#if $highlightedEmbedScreen}
-            <div id="video-container-receive" class={$highlightedEmbedScreen ? "block" : "hidden"}>
-                {#if $highlightedEmbedScreen}
-                    {#key $highlightedEmbedScreen.uniqueId}
-                        <MediaBox isHightlighted={true} isClickable={true} streamable={$highlightedEmbedScreen} />
-                    {/key}
-                {/if}
-            </div>
+<!-- <div class={isHightlighted ? "presentation-layout flex flex-col-reverse md:flex-col" : ""}> -->
+{#if $streamableCollectionStore.size > 0 || $myCameraStore}
+    <div class="justify-end md:justify-center gc -m {isHightlighted ? 'mb-2' : ''}" id="container-media">
+        {#if $jitsiLoadingStore}
+            <Loading />
         {/if}
-    {/if}
-</div>
+        {#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true && $myCameraStore}
+            <CamerasContainer />
+        {/if}
+        {#if $myJitsiCameraStore}
+            <MediaBox streamable={$myJitsiCameraStore} isClickable={false} />
+        {/if}
+    </div>
+{/if}
 
+{#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true && $highlightedEmbedScreen}
+    <div id="video-container-receive" class={$highlightedEmbedScreen ? "block" : "hidden"}>
+        {#key $highlightedEmbedScreen.uniqueId}
+            <MediaBox isHightlighted={true} isClickable={true} streamable={$highlightedEmbedScreen} />
+        {/key}
+    </div>
+{/if}
+
+<!-- </div> -->
 <style>
     .presentation-layout {
         overflow-y: hidden;

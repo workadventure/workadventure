@@ -63,7 +63,7 @@
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { mapEditorModeStore } from "../../Stores/MapEditorStore";
     import { iframeListener } from "../../Api/IframeListener";
-    import { peerStore, screenSharingPeerStore } from "../../Stores/PeerStore";
+    import { peerStore } from "../../Stores/PeerStore";
     import {
         modalIframeStore,
         modalVisibilityStore,
@@ -113,9 +113,8 @@
     import PenIcon from "../Icons/PenIcon.svelte";
     import { StringUtils } from "../../Utils/StringUtils";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
-    import { focusMode, rightMode, hideMode, toggleHighlightMode } from "../../Stores/ActionsCamStore";
+    import { focusMode, rightMode, hideMode } from "../../Stores/ActionsCamStore";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
-    import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
 
     // gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
     let userName = gameManager.getPlayerName() || "";
