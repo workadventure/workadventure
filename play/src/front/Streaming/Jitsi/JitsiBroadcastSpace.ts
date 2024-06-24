@@ -84,6 +84,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
                         }
                     }).catch((e) => {
                         // TODO : Handle the error and retry to join the conference
+                        jitsiLoadingStore.set(false);
                         console.error("Error while joining the conference", e);
                     });
                 }
@@ -200,8 +201,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
                 jitsiLoadingStore.set(false);
             });
         jitsiConferencesStore.delete(this.space.getName());
-
-        this.unsubscribes.forEach((unsubscribe) => unsubscribe());
         this.spaceStore.delete(this.space.getName());
+        this.unsubscribes.forEach((unsubscribe) => unsubscribe());
     }
 }

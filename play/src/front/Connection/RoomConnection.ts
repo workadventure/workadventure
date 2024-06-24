@@ -1493,7 +1493,6 @@ export class RoomConnection implements RoomConnection {
 
     public emitMegaphoneState(state: boolean) {
         const currentMegaphoneName = get(currentLiveStreamingNameStore);
-        console.log({ currentMegaphoneName, slugifyNAme: slugify(currentMegaphoneName || "") });
         this.send({
             message: {
                 $case: "megaphoneStateMessage",
