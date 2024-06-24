@@ -120,7 +120,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     more: "plus",
     sendBack: "Renvoyer",
     delete: "Supprimer",
-    messageDeleted: "Ce message a été supprimé par ",
+    messageDeleted: "Message supprimé",
     emoji: {
         icon: "Emojis",
         search: "Chercher un emoji...",
