@@ -12,6 +12,7 @@
     let message = "";
     let messageInput: HTMLTextAreaElement;
     let emojiButtonRef: HTMLButtonElement;
+    let stopTypingTimeOutID: undefined | ReturnType<typeof setTimeout>;
 
     const selectedChatChatMessageToReplyUnsubscriber = selectedChatMessageToReply.subscribe((chatMessage) => {
         if (chatMessage !== null) {
@@ -28,13 +29,31 @@
         }
         if (keyDownEvent.key === "Enter" && message.trim().length !== 0) {
             sendMessage(message);
+            return;
         }
+
+        if (stopTypingTimeOutID) {
+            clearTimeout(stopTypingTimeOutID);
+        }
+        console.warn("start Typing");
+        room.startTyping()
+            .then(() => {
+                stopTypingTimeOutID = setTimeout(() => {
+                    room.stopTyping().catch((error) => console.error(error));
+                    stopTypingTimeOutID = undefined;
+                    console.warn("end Typing");
+                }, 1000);
+            })
+            .catch((error) => console.error(error));
     }
 
     function sendMessage(messageToSend: string) {
         room?.sendMessage(messageToSend);
         messageInput.value = "";
         message = "";
+        if (stopTypingTimeOutID) {
+            clearTimeout(stopTypingTimeOutID);
+        }
     }
 
     function unselectChatMessageToReply() {
