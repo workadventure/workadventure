@@ -4,6 +4,7 @@ import { SpaceProviderInterface } from "../SpaceProvider/SpacerProviderInterface
 import { LocalSpaceProviderSingleton } from "../SpaceProvider/SpaceStore";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { gameManager } from "../../Phaser/Game/GameManager";
+import { WORLD_SPACE_NAME } from "../Space";
 
 export enum SpaceEvent {
     AddSpaceUser = "addSpaceUserMessage",
@@ -28,6 +29,8 @@ export class StreamSpaceWatcher {
                 const subMessage = subMessageWrapper.message;
                 if (subMessage === undefined) return;
 
+                console.log("$case : ", subMessage.$case);
+
                 switch (subMessage.$case) {
                     case SpaceEvent.AddSpaceUser: {
                         if (!subMessage.addSpaceUserMessage.user || !subMessage.addSpaceUserMessage.filterName) return;
@@ -37,7 +40,8 @@ export class StreamSpaceWatcher {
                             .getSpaceFilter(subMessage.addSpaceUserMessage.filterName)
                             .addUser(subMessage.addSpaceUserMessage.user)
                             .then((extendedUser) => {
-                                chatConnection.addUserFromSpace(extendedUser);
+                                if (subMessage.addSpaceUserMessage.spaceName === WORLD_SPACE_NAME)
+                                    chatConnection.addUserFromSpace(extendedUser);
                             })
                             .catch((e) => console.error(e));
 
@@ -51,7 +55,9 @@ export class StreamSpaceWatcher {
                             .get(subMessage.updateSpaceUserMessage.spaceName)
                             .getSpaceFilter(subMessage.updateSpaceUserMessage.filterName)
                             .updateUserData(subMessage.updateSpaceUserMessage.user);
-                        chatConnection.updateUserFromSpace(subMessage.updateSpaceUserMessage.user);
+
+                        if (subMessage.updateSpaceUserMessage.spaceName === WORLD_SPACE_NAME)
+                            chatConnection.updateUserFromSpace(subMessage.updateSpaceUserMessage.user);
                         break;
                     }
                     case SpaceEvent.RemoveSpaceUser: {
@@ -61,7 +67,8 @@ export class StreamSpaceWatcher {
                             .get(subMessage.removeSpaceUserMessage.spaceName)
                             .getSpaceFilter(subMessage.removeSpaceUserMessage.filterName)
                             .removeUser(subMessage.removeSpaceUserMessage.userId);
-                        chatConnection.disconnectSpaceUser(subMessage.removeSpaceUserMessage.userId);
+                        if (subMessage.removeSpaceUserMessage.spaceName === WORLD_SPACE_NAME)
+                            chatConnection.disconnectSpaceUser(subMessage.removeSpaceUserMessage.userId);
                         break;
                     }
                     case SpaceEvent.updateSpaceMetadata: {

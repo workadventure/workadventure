@@ -844,6 +844,9 @@ export class IoSocketController {
                             break;
                         }
                         case "megaphoneStateMessage": {
+                            message.message.megaphoneStateMessage.spaceName = `${socket.getUserData().world}.${
+                                message.message.megaphoneStateMessage.spaceName
+                            }`;
                             socketManager.handleMegaphoneState(socket, message.message.megaphoneStateMessage);
                             break;
                         }

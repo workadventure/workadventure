@@ -117,16 +117,67 @@ export class Space implements CustomJsonReplacerInterface {
     }
     public localUpdateUser(spaceUser: PartialSpaceUser, world: string) {
         const user = this.users.get(spaceUser.id);
-
+        let oldUser: SpaceUserExtended | undefined;
         if (!user) {
             console.error("User not found in this space", spaceUser);
             return;
         }
 
-        const updatedUser = {
-            ...user,
-            ...spaceUser,
-        } as SpaceUserExtended;
+        //const updatedUser = merge(user,spaceUser) as SpaceUserExtended;
+
+        if (user) {
+            oldUser = structuredClone(user);
+            if (spaceUser.tags.length > 0) {
+                user.tags = spaceUser.tags;
+            }
+            if (spaceUser.name) {
+                user.name = spaceUser.name;
+                user.lowercaseName = spaceUser.name.toLowerCase();
+            }
+            if (spaceUser.playUri) {
+                user.playUri = spaceUser.playUri;
+            }
+            if (spaceUser.color) {
+                user.color = spaceUser.color;
+            }
+            if (spaceUser.characterTextures.length > 0) {
+                user.characterTextures = spaceUser.characterTextures;
+            }
+            if (spaceUser.isLogged !== undefined) {
+                user.isLogged = spaceUser.isLogged;
+            }
+            if (spaceUser.availabilityStatus !== undefined) {
+                user.availabilityStatus = spaceUser.availabilityStatus;
+            }
+            if (spaceUser.roomName) {
+                user.roomName = spaceUser.roomName;
+            }
+            if (spaceUser.visitCardUrl) {
+                user.visitCardUrl = spaceUser.visitCardUrl;
+            }
+            if (spaceUser.screenSharingState !== undefined) {
+                user.screenSharingState = spaceUser.screenSharingState;
+            }
+            if (spaceUser.microphoneState !== undefined) {
+                user.microphoneState = spaceUser.microphoneState;
+            }
+            if (spaceUser.cameraState !== undefined) {
+                user.cameraState = spaceUser.cameraState;
+            }
+            if (spaceUser.megaphoneState !== undefined) {
+                user.megaphoneState = spaceUser.megaphoneState;
+            }
+            if (spaceUser.jitsiParticipantId) {
+                user.jitsiParticipantId = spaceUser.jitsiParticipantId;
+            }
+            if (spaceUser.uuid) {
+                user.uuid = spaceUser.uuid;
+            }
+
+            if (spaceUser.chatID !== undefined) {
+                user.chatID = spaceUser.chatID;
+            }
+        }
 
         if (spaceUser.name) user.lowercaseName = spaceUser.name.toLowerCase();
 
@@ -142,7 +193,7 @@ export class Space implements CustomJsonReplacerInterface {
                 },
             },
         };
-        this.notifyAll(subMessage, updatedUser, user);
+        this.notifyAll(subMessage, user, oldUser);
     }
 
     public removeUser(userId: number) {
@@ -258,22 +309,22 @@ export class Space implements CustomJsonReplacerInterface {
                             socketData.world
                         );
 
-                        const shouldRemoveUser = oldUser
+                        const shouldRemoveUser: boolean = oldUser
                             ? this.filterOneUser(spaceFilter, oldUser) && !this.filterOneUser(spaceFilter, youngUser)
                             : false;
 
-                        const shouldUpdateUser: boolean = oldUser
+                        const shouldAddUser: boolean = oldUser
                             ? !this.filterOneUser(spaceFilter, oldUser) && this.filterOneUser(spaceFilter, youngUser)
                             : false;
 
-                        if (!oldUser || (!shouldRemoveUser && !shouldUpdateUser)) {
+                        if (!oldUser || (!shouldRemoveUser && !shouldAddUser)) {
                             socketData.emitInBatch(subMessage);
                             debug(`${this.name} : user ${youngUser.lowercaseName} update sent to ${socketData.name}`);
                             return;
                         }
 
-                        if (shouldUpdateUser) {
-                            this.notifyMeUpdateUser(watcher, youngUser, spaceFilter.filterName);
+                        if (shouldAddUser) {
+                            this.notifyMeAddUser(watcher, youngUser, spaceFilter.filterName);
                             return;
                         }
 

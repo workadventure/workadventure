@@ -6,6 +6,7 @@ import { ConcatenateMapStore } from "@workadventure/store-utils";
 import { RoomConnection } from "../Connection/RoomConnection";
 import { screenWakeLock } from "../Utils/ScreenWakeLock";
 import { SpaceFilterInterface } from "../Space/SpaceFilter/SpaceFilter";
+import { LocalSpaceProviderSingleton } from "../Space/SpaceProvider/SpaceStore";
 import { BroadcastSpace } from "./Common/BroadcastSpace";
 import { BroadcastConnection } from "./Common/BroadcastConnection";
 import { TrackWrapper } from "./Common/TrackWrapper";
@@ -43,11 +44,22 @@ export class BroadcastService {
         broadcastSpaceFactory?: BroadcastSpaceFactory
     ): BroadcastSpace {
         const spaceNameSlugify = slugify(spaceName);
-        const spaceFilter = this.roomConnection.emitWatchSpaceLiveStreaming(spaceNameSlugify);
+
+        const spaceFilter: SpaceFilterMessage = {
+            filterName: "watchSpaceLiveStreaming",
+            spaceName: spaceNameSlugify,
+            filter: {
+                $case: "spaceFilterLiveStreaming",
+                spaceFilterLiveStreaming: {},
+            },
+        };
+
         const broadcastSpace = broadcastSpaceFactory
             ? broadcastSpaceFactory(this.roomConnection, spaceNameSlugify, spaceFilter, this, playSound)
             : this.defaultBroadcastSpaceFactory(this.roomConnection, spaceNameSlugify, spaceFilter, this, playSound);
+
         this.broadcastSpaces.push(broadcastSpace);
+
         this.tracks.addStore(broadcastSpace.tracks);
         broadcastServiceLogger("joinSpace", spaceNameSlugify);
         screenWakeLock
@@ -65,8 +77,8 @@ export class BroadcastService {
         const spaceNameSlugify = slugify(spaceName);
         const space = this.broadcastSpaces.find((space) => space.space.getName() === spaceNameSlugify);
         if (space) {
-            this.roomConnection.emitUnwatchSpaceLiveStreaming(spaceNameSlugify);
-            space.destroy();
+            const spaceStore = LocalSpaceProviderSingleton.getInstance();
+            spaceStore.delete(spaceName);
             this.broadcastSpaces = this.broadcastSpaces.filter((space) => space.space.getName() !== spaceNameSlugify);
             broadcastServiceLogger("leaveSpace", spaceNameSlugify);
         }
@@ -125,7 +137,8 @@ export class BroadcastService {
      * Destroy the broadcast service
      */
     public destroy(): void {
-        this.broadcastSpaces.forEach((space) => space.destroy());
+        const spaceStore = LocalSpaceProviderSingleton.getInstance();
+        this.broadcastSpaces.forEach((space) => spaceStore.delete(space.space.getName()));
     }
 
     /**
