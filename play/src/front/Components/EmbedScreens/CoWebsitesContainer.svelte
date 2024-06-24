@@ -16,7 +16,7 @@
 <!-- Cette div devra apparaitre que s'il y a un event et elle peux apparaitre avec la methode display main dans le cowebsite manager-->
 
 <div
-    class="w-1/2 h-screen absolute right-0 top-0 bg-contrast/50 backdrop-blur z-[1000]"
+    class="w-1/2 h-screen absolute right-0 top-0 bg-contrast/50 backdrop-blur z-[1000] hidden"
     class:vertical
     transition:fly={{ duration: 750, x: 1000 }}
 >

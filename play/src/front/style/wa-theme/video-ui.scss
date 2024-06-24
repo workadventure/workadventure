@@ -104,23 +104,23 @@
 }
 
 /* MOZAIC MODE */
-.mozaic-full-width {
-    @apply mozaic-full-size;
+// .mozaic-full-width {
+//     @apply mozaic-full-size;
 
-    .nametag-webcam-container,
-    .woka-webcam-container,
-    .voice-meter-webcam-container,
-    .report-ban-container {
-        @apply mozaic-full-size bottom-0;
-    }
+//     .nametag-webcam-container,
+//     .woka-webcam-container,
+//     .voice-meter-webcam-container,
+//     .report-ban-container {
+//         @apply mozaic-full-size bottom-0;
+//     }
 
-    .video-container {
-        @apply mozaic-full-size;
-        &.video-off{
-            @apply md:h-[4vh];
-        }
-    }
-}
+//     .video-container {
+//         @apply mozaic-full-size;
+//         &.video-off{
+//             @apply md:h-[4vh];
+//         }
+//     }
+// }
 
 .mozaic-duo,
 .mozaic-quarter {

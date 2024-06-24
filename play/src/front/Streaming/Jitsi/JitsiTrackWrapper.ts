@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-unresolved
 import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
 import { Readable, Unsubscriber, writable, Writable, readable } from "svelte/store";
 import { Subscription } from "rxjs";
@@ -209,13 +208,9 @@ export class JitsiTrackWrapper implements TrackWrapper {
             // Never highlight our own screen sharing
             return;
         }
-        // Let's notify the embedded store that a new screen-sharing has started
-        highlightedEmbedScreen.highlight({
-            type: "streamable",
-            embed: this.screenSharingTrackWrapper,
-        });
+        // Notifions le magasin intégré qu'un nouveau partage d'écran a commencé
+        highlightedEmbedScreen.toggleHighlight(this.screenSharingTrackWrapper);
     }
-
     get volumeStore(): Readable<number[] | undefined> | undefined {
         return this._volumeStore;
     }

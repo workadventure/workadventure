@@ -4,7 +4,7 @@
     import { onDestroy, onMount } from "svelte";
 
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-    import { EmbedScreen, highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
+    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { Streamable, myJitsiCameraStore } from "../../Stores/StreamableCollectionStore";
     import SoundMeterWidgetWrapper from "../SoundMeterWidgetWrapper.svelte";
     import { JitsiTrackStreamWrapper } from "../../Streaming/Jitsi/JitsiTrackStreamWrapper";
@@ -14,7 +14,6 @@
     import JitsiAudioElement from "./JitsiAudioElement.svelte";
     import ActionMediaBox from "./ActionMediaBox.svelte";
 
-
     export let clickable = true;
     export let isHightlighted = false;
     export let peer: JitsiTrackStreamWrapper;
@@ -22,15 +21,11 @@
     const videoTrackStore: Readable<JitsiTrack | undefined> = peer.videoTrackStore;
     const audioTrackStore: Readable<JitsiTrack | undefined> = peer.audioTrackStore;
 
-    let embedScreen: EmbedScreen;
+    let embedScreen: Streamable;
 
     if (peer) {
-        embedScreen = {
-            type: "streamable",
-            embed: peer as unknown as Streamable,
-        };
+        embedScreen = peer as unknown as Streamable;
     }
-
     let jitsiMediaBoxHtml: HTMLDivElement;
     let isMobileFormat = isMediaBreakpointUp("md");
     const resizeObserver = new ResizeObserver(() => {
@@ -75,8 +70,8 @@
             <JitsiVideoElement
                 jitsiTrack={$videoTrackStore}
                 isLocal={$videoTrackStore?.isLocal()}
-                isHightlighted={isHightlighted}
-                isMobileFormat={isMobileFormat}
+                {isHightlighted}
+                {isMobileFormat}
             />
         </div>
     {/if}
@@ -143,9 +138,3 @@
         {/await}
     {/if}
 </div>
-
-<style lang="scss">
-    /*    video.no-video {
-        visibility: collapse;
-    }*/
-</style>

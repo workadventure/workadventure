@@ -7,7 +7,7 @@
     import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
     import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
     import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
-    import { iframeStates, coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
+    import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 
     import jitsiIcon from "../images/jitsi.png";
     import meetingIcon from "../images/meeting.svg";
@@ -47,39 +47,39 @@
         };
     });
 
-    async function onClick() {
-        if ($mainCoWebsite) {
-            if ($mainCoWebsite.getId() === coWebsite.getId()) {
-                if (coWebsiteManager.getMainState() === iframeStates.closed) {
-                    coWebsiteManager.displayMain();
-                } else if ($highlightedEmbedScreen?.type === "cowebsite") {
-                    coWebsiteManager.goToMain($highlightedEmbedScreen.embed);
-                } else {
-                    coWebsiteManager.hideMain();
-                }
-            } else {
-                if (vertical) {
-                    coWebsiteManager.hideMain();
-                    coWebsiteManager.goToMain(coWebsite);
-                    coWebsiteManager.displayMain();
-                } else if (coWebsiteManager.getMainState() === iframeStates.closed) {
-                    coWebsiteManager.goToMain(coWebsite);
-                    coWebsiteManager.displayMain();
-                } else {
-                    highlightedEmbedScreen.toggleHighlight({
-                        type: "cowebsite",
-                        embed: coWebsite,
-                    });
-                }
-            }
-        }
+    // async function onClick() {
+    //     if ($mainCoWebsite) {
+    //         if ($mainCoWebsite.getId() === coWebsite.getId()) {
+    //             if (coWebsiteManager.getMainState() === iframeStates.closed) {
+    //                 coWebsiteManager.displayMain();
+    //             } else if ($highlightedEmbedScreen?.type === "cowebsite") {
+    //                 coWebsiteManager.goToMain($highlightedEmbedScreen.embed);
+    //             } else {
+    //                 coWebsiteManager.hideMain();
+    //             }
+    //         } else {
+    //             if (vertical) {
+    //                 coWebsiteManager.hideMain();
+    //                 coWebsiteManager.goToMain(coWebsite);
+    //                 coWebsiteManager.displayMain();
+    //             } else if (coWebsiteManager.getMainState() === iframeStates.closed) {
+    //                 coWebsiteManager.goToMain(coWebsite);
+    //                 coWebsiteManager.displayMain();
+    //             } else {
+    //                 highlightedEmbedScreen.toggleHighlight({
+    //                     type: "cowebsite",
+    //                     embed: coWebsite,
+    //                 });
+    //             }
+    //         }
+    //     }
 
-        if ($state === "asleep") {
-            await coWebsiteManager.loadCoWebsite(coWebsite);
-        }
+    //     if ($state === "asleep") {
+    //         await coWebsiteManager.loadCoWebsite(coWebsite);
+    //     }
 
-        coWebsiteManager.resizeAllIframes();
-    }
+    //     // coWebsiteManager.resizeAllIframes();
+    // }
 
     function noDrag() {
         return false;
@@ -87,16 +87,16 @@
 
     let isHighlight = false;
     let isMain = false;
-    $: {
-        isMain =
-            $mainState === iframeStates.opened &&
-            $mainCoWebsite !== undefined &&
-            $mainCoWebsite.getId() === coWebsite.getId();
-        isHighlight =
-            $highlightedEmbedScreen !== undefined &&
-            $highlightedEmbedScreen?.type === "cowebsite" &&
-            $highlightedEmbedScreen?.embed.getId() === coWebsite.getId();
-    }
+    // $: {
+    //     isMain =
+    //         $mainState === iframeStates.opened &&
+    //         $mainCoWebsite !== undefined &&
+    //         $mainCoWebsite.getId() === coWebsite.getId();
+    //     isHighlight =
+    //         $highlightedEmbedScreen !== undefined &&
+    //         $highlightedEmbedScreen?.type === "cowebsite" &&
+    //         $highlightedEmbedScreen?.embed.getId() === coWebsite.getId();
+    // }
 </script>
 
 <div
@@ -126,7 +126,8 @@
         <div class="bold text-lg">{cowebsiteName}</div>
         <div class="italic text-xs opacity-50 -mt-1">{cowebsiteName}</div>
     </div>
-    <div on:click={() => analyticsClient.stackOpenCloseMultiIframe()} on:click={onClick}>
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <div on:click={() => analyticsClient.stackOpenCloseMultiIframe()}>
         <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
             <g clip-path="url(#clip0_1820_4223)">
                 <path

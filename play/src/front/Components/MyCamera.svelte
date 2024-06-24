@@ -13,7 +13,7 @@
     import { LL } from "../../i18n/i18n-svelte";
     import { inExternalServiceStore } from "../Stores/MyMediaStore";
     import { gameManager } from "../Phaser/Game/GameManager";
-    import { heightCamWrapper } from "../Stores/EmbedScreensStore";
+    // import { heightCamWrapper } from "../Stores/EmbedScreensStore";
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
     import { srcObject } from "./Video/utils";
     import Woka from "./Woka/WokaFromUserId.svelte";
@@ -21,11 +21,54 @@
     import silentImg from "./images/silent-zone.gif";
 
     import MicOffIcon from "./Icons/MicOffIcon.svelte";
+    // import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
+    import ScreenShareIcon from "./Icons/ScreenShareIcon.svelte";
+    import {
+        requestedScreenSharingState,
+        // screenSharingAvailableStore,
+        // screenSharingLocalMedia,
+        // showDesktopCapturerSourcePicker,
+    } from "../Stores/ScreenSharingStore";
+    // import { RoomConnection } from "../Connection/RoomConnection";
+    // import { screenSharingStreamStore } from "../Stores/PeerStore";
+    // import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
 
     let stream: MediaStream | null;
     let userName = gameManager.getPlayerName();
     let backgroundColor = Color.getColorByString(userName ?? "default");
     let textColor = Color.getTextColorByBackgroundColor(backgroundColor);
+
+    // Voir pour assigner un userId a un partage d'écran et ensuite si il est egale ai user id j'affiche l'icone
+
+    // $: screenSharingRequesterStoreValue = $screenSharingRequesterStore;
+    // $: requestedScreenSharingStateValue = $requestedScreenSharingState;
+
+    // const unsubscribeScreenSharingRequesterStore = screenSharingRequesterStore.subscribe((value) => {
+    //     $screenSharingRequesterStore = value;
+    // });
+
+    // const unsubscribeRequestedScreenSharingState = requestedScreenSharingState.subscribe((value) => {
+    //     $requestedScreenSharingState = value;
+    // });
+
+    // $: $requestedScreenSharingState = getIdOrNameIfScreenSharing();
+
+    // function getIdOrNameIfScreenSharing() {
+    //     if ($requestedScreenSharingState) {
+    //         return gameManager.getPlayerName();
+    //     }
+    //     return false;
+    // }
+    //     if ($screenSharingRequesterStore === userId) {
+    //         console.log("BONJOUR");
+    //         return true;
+    //     }
+    //     return false;
+
+    // if ($screenSharingRequesterStore) {
+    //     return $gameManager.getPlayerName();
+    // }
+    // return gameManager.getPlayerName();
 
     const unsubscribeLocalStreamStore = localStreamStore.subscribe((value) => {
         if (value.type === "success") {
@@ -57,10 +100,11 @@
     });
 </script>
 
+<!-- style={small ? "width:100%" : "height:" + $heightCamWrapper + "px;"} -->
+
 <div
-    class="transition-all relative h-full aspect-video w-fit m-auto"
+    class="transition-all relative h-full w-full flex flex justify-center aspect-video m-auto dimension"
     bind:this={cameraContainer}
-    style={small ? "width:100%" : "height:" + $heightCamWrapper + "px;"}
 >
     <!--If we are in a silent zone-->
     {#if $silentStore}
@@ -82,11 +126,15 @@
     {:else if $localStreamStore.type === "success" && !$inExternalServiceStore}
         {#if $requestedCameraState && $mediaStreamConstraintsStore.video}
             <div
-                class="absolute bottom-4 left-4 z-30 {small ? 'hidden' : ''}"
+                class="absolute bottom-4 left-4 z-30 responsive-dimension {small ? 'hidden' : ''} "
                 transition:fly={{ delay: 50, y: 50, duration: 150 }}
             >
                 <div class="flex">
-                    <span class="rounded bg-contrast/90 backdrop-blur px-4 py-1 text-white text-sm pl-12 pr-4 bold">
+                    <span
+                        class="rounded backdrop-blur px-4 py-1 text-white text-sm pl-12 pr-4 bold {$mediaStreamConstraintsStore.audio
+                            ? 'background-color-speaker'
+                            : 'bg-contrast/90'}"
+                    >
                         <div class="absolute left-1 -top-1" style="image-rendering:pixelated">
                             <Woka
                                 userId={-1}
@@ -96,12 +144,17 @@
                             />
                         </div>
                         {$LL.camera.my.nameTag()}
+                        {#if $requestedScreenSharingState === true}
+                            <ScreenShareIcon />
+                        {/if}
                     </span>
                 </div>
             </div>
 
             <div
-                class="aspect-video w-full absolute top-0 left-0 overflow-hidden z-20 rounded-lg transition-all bg-no-repeat bg-center bg-contrast/80 backdrop-blur"
+                class="aspect-video w-full absolute top-0 left-0 overflow-hidden z-20 rounded-lg transition-all bg-no-repeat bg-center bg-contrast/80 backdrop-blur{$mediaStreamConstraintsStore.audio
+                    ? 'border-6 border-solid border-color'
+                    : ''}"
                 style="background-image: url({loaderImg})"
                 transition:fly={{ y: 50, duration: 150 }}
             >
@@ -109,9 +162,8 @@
                     {$LL.camera.my.loading()}
                 </div>
                 <video
-                    class="h-full w-full rounded-lg md:object-cover relative z-20"
+                    class="w-full rounded-lg md:object-cover relative z-20"
                     class:object-contain={stream}
-                    class:max-h-[230px]={stream}
                     style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
                     use:srcObject={stream}
                     autoplay
@@ -136,7 +188,11 @@
                 class="w-full rounded-lg px-3 flex flex-row items-center bg-contrast/80 backdrop-blur media-box-camera-off-size h-12"
             >
                 <div class="grow">
-                    <span class="rounded bg-contrast/90 backdrop-blur px-4 py-1 text-white text-sm pl-12 pr-4 bold">
+                    <span
+                        class="rounded backdrop-blur px-4 py-1 text-white text-sm pl-12 pr-4 bold {$mediaStreamConstraintsStore.audio
+                            ? 'background-color-speaker'
+                            : 'bg-contrast/90'}"
+                    >
                         <div class="absolute left-1 -top-1" style="image-rendering:pixelated">
                             <Woka
                                 userId={-1}
@@ -164,6 +220,21 @@
     {/if}
 </div>
 
-<style lang="scss">
-    @import "../style/breakpoints.scss";
+<style>
+    .border-color {
+        border-color: #4156f6;
+    }
+
+    .background-color-speaker {
+        background-color: #4156f6;
+    }
+
+    @container (max-width: 767px) {
+        .responsive-dimension {
+            scale: 0.7;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+    }
 </style>

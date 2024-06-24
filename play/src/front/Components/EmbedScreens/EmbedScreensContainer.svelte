@@ -1,76 +1,113 @@
 <script lang="ts">
-    import { LayoutMode } from "../../WebRtc/LayoutManager";
-    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
-    import { emoteMenuSubStore } from "../../Stores/EmoteStore";
-    import PresentationLayout from "./Layouts/PresentationLayout.svelte";
-    import MozaicLayout from "./Layouts/MozaicLayout.svelte";
     import "../../style/wa-theme/video-ui.scss";
+    // import { LayoutMode } from "../../WebRtc/LayoutManager";
+    // import { embedScreenLayoutStore, heightCamWrapper } from "../../Stores/EmbedScreensStore";
+    // import { emoteMenuSubStore } from "../../Stores/EmoteStore";
+    import PresentationLayout from "./Layouts/PresentationLayout.svelte";
+    // import MozaicLayout from "./Layouts/MozaicLayout.svelte";
+    import { focusMode, rightMode, lightMode } from "../../Stores/ActionsCamStore";
 
-    /**
+    // DO for the focus mode
+
+    // let isBackgroundActive = false;
+
+    // function changeBackground() {
+    //     isBackgroundActive = !isBackgroundActive;
+    // }
+
+    // onMount(() => {
+    //     window.addEventListener("addFocus", changeBackground);
+    //     return () => {
+    //         window.removeEventListener("addFocus", changeBackground);
+    //     };
+    // });
+
+    /*
      * Hugo :
      * Goal : make a resizable cam height
      * Doesn't work properly : buggy */
-    /*
-    export let y = 20
 
-//     let expanding: `top` | "bottom" | undefined | null;
-//     let start: number | null, initial: { y: number, height: number } | null;
-//     let height = get(heightCamWrapper);
+    // export let y = 20;
 
-//     /* eslint-disable @typescript-eslint/no-explicit-any */
-//     function startExpand(type: any, event: any): void { // eslint-disable-line @typescript-eslint/no-unused-vars
-//         expanding = type
-//         start = event.pageY
-//         initial = { y, height }
-//     }
+    // let expanding: `top` | "bottom" | undefined | null;
+    // let start: number | null, initial: { y: number; height: number } | null;p
+    // let height = $heightCamWrapper;
+    // let delta: number;
 
-//     function stopExpand() {
-//         expanding = null
-//         start = null
-//         initial = null
-//     }
+    // //     /* eslint-disable @typescript-eslint/no-explicit-any */
+    // function startExpand(type: any, event: any): void {
+    //     // eslint-disable-line @typescript-eslint/no-unused-vars
+    //     expanding = type;
+    //     start = event.pageY;
+    //     initial = { y, height };
+    // }
 
-// /* eslint-disable @typescript-eslint/no-explicit-any */
-//     function expand(event: any) { // eslint-disable-line @typescript-eslint/no-unused-vars
-//         if (!expanding) return
-//         if (expanding == 'top') {
-//             const delta = start !== null ? start - event.pageY : 0;
-//             console.log(event.pageY);
-//             if (initial) {
-//                 y = initial.y - delta;
-//             }
-//             $heightCamWrapper = initial ? initial.height + delta : $heightCamWrapper;
-//             return
-//         }
+    // function stopExpand() {
+    //     expanding = null;
+    //     start = null;
+    //     initial = null;
+    // }
 
-        // if (expanding == 'bottom') {
-        //     const delta = event.pageY - start
-        //     console.log(event.pageY);
-        //     $heightCamWrapper = initial.height + delta
-        //     return
-        // }
+    // /* eslint-disable @typescript-eslint/no-explicit-any */
+    // function expand(event: any) {
+    //     // eslint-disable-line @typescript-eslint/no-unused-vars
+    //     if (!expanding) return;
+    //     if (expanding == "top") {
+    //         const delta = start !== null ? start - event.pageY : 0;
+    //         console.log(event.pageY);
+    //         if (initial) {
+    //             y = initial.y - delta;
+    //         }
+    //         $heightCamWrapper = initial ? initial.height + delta : $heightCamWrapper;
+    //         return;
+    //     }
 
+    //     if (expanding == "bottom") {
+    //         if (start) {
+    //             delta = event.pageY - start;
+    //         }
+
+    //         console.log(event.pageY);
+    //         $heightCamWrapper = (initial?.height ?? 0) + delta;
+    //         return;
+    //     }
+    // }
 </script>
 
 <div
     id="embedScreensContainer"
-    class="group relative h-full pt-2 @sm/main-layout:pt-20 @xl/main-layout:pt-24 flex justify-center items-center pointer-events-auto transition-all pb-7"
-    style={$emoteMenuSubStore ? "padding-top:96px;" : ""}
+    class="{$focusMode
+        ? `group relative h-full w-full @sm/main-layout @xl/main-layout items-center pointer-events-auto transition-all`
+        : `group relative h-full w-full @sm/main-layout @xl/main-layout items-center pointer-events-auto transition-all`}
+        {$rightMode
+        ? 'group relative h-full w-full @sm/main-layout @xl/main-layout items-center pointer-events-auto transition-all flex flex-col'
+        : 'group relative h-full w-full @sm/main-layout @xl/main-layout items-center pointer-events-auto transition-all'}
+        {$lightMode
+        ? 'group relative h-full w-full @sm/main-layout @xl/main-layout items-center pointer-events-auto transition-all'
+        : ''}"
 >
-    {#if $embedScreenLayoutStore === LayoutMode.Presentation}
-        <PresentationLayout />
-    {:else}
-        <MozaicLayout />
-    {/if}
-    <!--
-    <div class="group-hover:opacity-100 pointer-events-auto opacity-0 absolute bottom-0 h-4 hover:bg-white/10 w-56 m-auto bg-contrast/80 rounded-full cursor-row-resize transition-all" on:mousedown={startExpand.bind(this, 'bottom')} on:mousemove={expand}>
-        <div class="group-hover:opacity-100 opacity-0 absolute bottom-1 left-0 right-0 m-auto h-2 w-48 pointer-events-none">
-            <div class="bg-white rounded-lg h-1 w-48"></div>
+    <PresentationLayout />
+    <!-- {#if $embedScreenLayoutStore === LayoutMode.Presentation}
+    {:else} -->
+    <!-- <MozaicLayout /> -->
+    <!-- {/if} -->
+
+    <!-- <div
+        class="group-hover:opacity-100 pointer-events-auto opacity-0 absolute bottom-0 h-4 hover:bg-white/10 w-56 m-auto bg-contrast/80 rounded-full cursor-row-resize transition-all"
+    >
+        <div
+            class="group-hover:opacity-100 opacity-0 absolute bottom-1 left-0 right-0 m-auto h-2 w-48 pointer-events-none"
+        >
+            <div class="bg-white rounded-lg h-1 w-48" />
         </div>
-    </div>
-    -->
-    <!-- TODO HUGO -->
+    </div> -->
 </div>
 
-<style lang="scss">
-</style>
+<!-- style={$emoteMenuSubStore ? "padding-top:96px;" : ""} -->
+<!-- <style>
+    @container (max-width: 768px) {
+        #embedScreensContainer {
+            display: block;
+        }
+    }
+</style> -->

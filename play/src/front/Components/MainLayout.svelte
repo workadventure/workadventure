@@ -9,6 +9,7 @@
     import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
     import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
     import { soundPlayingStore } from "../Stores/SoundPlayingStore";
+    import { hasEmbedScreen } from "../Stores/EmbedScreensStore";
     import {
         showLimitRoomModalStore,
         modalVisibilityStore,
@@ -50,6 +51,10 @@
     import Popup from "./Modal/Popup.svelte";
     import MapList from "./Exploration/MapList.svelte";
     import WarningToast from "./WarningContainer/WarningToast.svelte";
+    import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
+    import { focusMode, highlightFullScreen } from "../Stores/ActionsCamStore";
+    import { peerStore, screenSharingPeerStore } from "../Stores/PeerStore";
+    import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 
     let mainLayout: HTMLDivElement;
     // export let message: string;
@@ -63,16 +68,53 @@
         resizeObserver.observe(mainLayout);
         // ...
     });
+
+    $: $focusMode, setFocusMode();
+
+    function setFocusMode() {
+        if ($focusMode === true) {
+            addFocusModeStyle();
+        } else {
+            removeFocusModeStyle();
+        }
+    }
+
+    function addFocusModeStyle() {
+        console.log("je suis dans le addDivForResize");
+        const div = document.createElement("div");
+        div.id = "focus-mode-active";
+        div.style.backgroundColor = "blue";
+        div.style.opacity = "0.5";
+        div.style.width = "100%";
+        div.style.height = "100%";
+        div.style.position = "absolute";
+        div.style.top = "0";
+        div.style.right = "0";
+        div.style.zIndex = "10";
+        document.body.appendChild(div);
+    }
+
+    function removeFocusModeStyle() {
+        const div = document.getElementById("focus-mode-active");
+        if (div) {
+            div.remove();
+        }
+    }
 </script>
 
 <!-- Components ordered by z-index -->
 <div
     id="main-layout"
-    class="@container/main-layout relative z-10 h-screen pointer-events-none {[...$coWebsites.values()].length === 0
+    class="@container/main-layout relative flex flex-col z-10 pointer-events-none h-screen index{[
+        ...$coWebsites.values(),
+    ].length === 0
         ? 'not-cowebsite'
         : ''}"
     bind:this={mainLayout}
 >
+    <div class={$peerStore.size > 0 && $highlightFullScreen ? "hidden" : "action-bar"}>
+        <ActionBar />
+    </div>
     {#if $modalVisibilityStore || $modalPopupVisibilityStore}
         <div class="bg-black/60 w-full h-full fixed left-0 right-0" />
     {/if}
@@ -137,10 +179,11 @@
             <VisitCard visitCardUrl={$requestVisitCardsStore} />
         {/if}
 
-        <!-- {#if $hasEmbedScreen}
-            <EmbedScreensContainer />
-        {/if} -->
-
+        <div class="embed-screens-container">
+            {#if $hasEmbedScreen}
+                <EmbedScreensContainer />
+            {/if}
+        </div>
         {#if $uiWebsitesStore}
             <UiWebsiteContainer />
         {/if}
@@ -181,8 +224,6 @@
         <ActionsMenu />
     {/if}
 
-    <ActionBar />
-    <!-- svelte-ignore missing-declaration -->
     <div class="popups">
         {#each $popupStore.slice().reverse() as popup (popup.uuid)}
             <div class="popupwrapper">
@@ -260,5 +301,20 @@
     .popupwrapper:nth-child(12),
     .popupwrapper:nth-child(13) {
         display: none;
+    }
+
+    #main-layout {
+        container-type: size;
+    }
+
+    .action-bar {
+        z-index: 10;
+    }
+    .index {
+        z-index: 50;
+    }
+    .embed-screens-container {
+        position: relative;
+        z-index: 0;
     }
 </style>

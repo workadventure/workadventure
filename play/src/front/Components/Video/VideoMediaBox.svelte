@@ -7,18 +7,23 @@
     import CancelablePromise from "cancelable-promise";
     import Debug from "debug";
     import { fly } from "svelte/transition";
-    import type { VideoPeer } from "../../WebRtc/VideoPeer";
+    import { ArrowDownIcon, ArrowUpIcon } from "svelte-feather-icons";
+    import { VideoPeer } from "../../WebRtc/VideoPeer";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
-    import type { EmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import { LL } from "../../../i18n/i18n-svelte";
 
     import Woka from "../Woka/WokaFromUserId.svelte";
     import { isMediaBreakpointOnly } from "../../Utils/BreakpointsUtils";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
-    import { selectDefaultSpeaker, speakerSelectedStore } from "../../Stores/MediaStore";
-    import { embedScreenLayoutStore, heightCamWrapper } from "../../Stores/EmbedScreensStore";
+    import {
+        mediaStreamConstraintsStore,
+        // requestedCameraState,
+        selectDefaultSpeaker,
+        speakerSelectedStore,
+    } from "../../Stores/MediaStore";
+    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import loaderImg from "../images/loader.svg";
     import MicOffIcon from "../Icons/MicOffIcon.svelte";
@@ -28,6 +33,9 @@
     import FlagIcon from "../Icons/FlagIcon.svelte";
     import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
     import MessageCircleIcon from "../Icons/MessageCircleIcon.svelte";
+    import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
+    import ScreenShareIcon from "../Icons/ScreenShareIcon.svelte";
+    import { highlightFullScreen } from "../../Stores/ActionsCamStore";
     import ActionMediaBox from "./ActionMediaBox.svelte";
 
     // Extend the HTMLVideoElement interface to add the setSinkId method.
@@ -37,7 +45,6 @@
         requestVideoFrameCallback(callback: VideoFrameRequestCallback, options?: IdleRequestOptions): number;
     }
 
-    export let clickable = false;
     export let isHightlighted = false;
     export let peer: VideoPeer;
 
@@ -51,32 +58,28 @@
     let unsubscribeChangeOutput: Unsubscriber;
     let unsubscribeStreamStore: Unsubscriber;
     let unsubscribeConstraintStore: Unsubscriber;
-
-    let embedScreen: EmbedScreen;
+    let embedScreen: Streamable;
     let videoContainer: HTMLDivElement;
     let videoElement: HTMLVideoElementExt;
     let minimized = isMediaBreakpointOnly("md");
     let noVideoTimeout: ReturnType<typeof setTimeout> | undefined;
-
     let destroyed = false;
     let currentDeviceId: string | undefined;
-
     let displayNoVideoWarning = false;
-
     let showUserSubMenu = false;
-
     let aspectRatio = 1;
+    let isHighlighted = false;
+    let menuDrop = false;
 
     const debug = Debug("VideoMediaBox");
 
+    if (peer) {
+        embedScreen = peer as unknown as Streamable;
+    }
+
     $: videoEnabled = $constraintStore ? $constraintStore.video : false;
 
-    if (peer) {
-        embedScreen = {
-            type: "streamable",
-            embed: peer as unknown as Streamable,
-        };
-    }
+    $: isHighlighted = $highlightedEmbedScreen === peer;
 
     const resizeObserver = new ResizeObserver(() => {
         minimized = isMediaBreakpointOnly("md");
@@ -156,7 +159,7 @@
             }
 
             wasVideoEnabled = constraints?.video ?? false;
-            if (!wasVideoEnabled && isHightlighted) highlightedEmbedScreen.toggleHighlight(embedScreen);
+            if (!wasVideoEnabled && isHightlighted) highlightedEmbedScreen.removeHighlight();
             updateRatio();
         });
     });
@@ -234,26 +237,48 @@
         }, 1000);
     }
 
-    function hightlight() {
-        if (!clickable || !videoEnabled) return;
-        highlightedEmbedScreen.toggleHighlight(embedScreen);
+    $: isHighlighted = $highlightedEmbedScreen === embedScreen;
+
+    function toggleFullScreen() {
+        highlightFullScreen.update((current) => !current);
+        const video = document.getElementById("other-cam-screen") as HTMLVideoElement;
+        if (video) {
+            if ($highlightFullScreen) {
+                video.style.height = `${document.documentElement.clientHeight}px`;
+                video.style.width = `${document.documentElement.clientWidth}px`;
+            } else {
+                video.style.height = "100%";
+                video.style.width = "100%";
+            }
+        }
+    }
+
+    function untogglefFullScreen() {
+        highlightedEmbedScreen.removeHighlight();
+        highlightFullScreen.set(false);
     }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- class="video-container transition-all relative h-full aspect-video" -->
+
+<!-- Dans la premiere div     style="height:{$heightCamWrapper}px;"-->
+<!-- <div class={$mediaStreamConstraintsStore.audio ? "border-4 border-solid border-color rounded-lg" : ""}> -->
 <div
-    class="video-container transition-all relative h-full aspect-video"
+    class="video-container group/screenshare transition-all h-full w-full relative aspect-video"
+    class:isHighlighted
     class:video-off={!videoEnabled}
     class:h-full={$embedScreenLayoutStore === LayoutMode.VideoChat}
     bind:this={videoContainer}
     on:click={() => analyticsClient.pinMeetingAction()}
-    on:click={() => hightlight()}
-    style="height:{$heightCamWrapper}px;"
+    id="other-cam-screen"
 >
     <ActionMediaBox {embedScreen} trackStreamWraper={peer} {videoEnabled} />
 
     <div
-        class="aspect-video absolute top-0 left-0 z-20 rounded-lg transition-all bg-no-repeat bg-center bg-contrast/80 backdrop-blur"
+        class="aspect-video absolute z-20 rounded-lg transition-all bg-no-repeat bg-center bg-contrast/80 backdrop-blur{$mediaStreamConstraintsStore.audio
+            ? 'border-8 border-solid border-color rounded-lg'
+            : ''}"
         style="background-image: url({loaderImg})"
         class:flex-col={videoEnabled}
         class:h-full={videoEnabled}
@@ -269,12 +294,14 @@
             <div class="rtc-error" />
         {/if}
         <!-- svelte-ignore a11y-media-has-caption -->
+
+        <!-- Dans la video class:max-h-[230px]={videoEnabled && !isHightlighted}-->
         <video
             bind:this={videoElement}
+            class="w-full h-full"
             class:h-0={!videoEnabled}
             class:w-0={!videoEnabled}
             class:object-contain={minimized || isHightlighted || aspectRatio < 1}
-            class:max-h-[230px]={videoEnabled && !isHightlighted}
             class:max-h-full={videoEnabled && !isHightlighted && $embedScreenLayoutStore === LayoutMode.VideoChat}
             class:max-h-[80vh]={videoEnabled && isHightlighted}
             class:h-full={videoEnabled}
@@ -282,11 +309,23 @@
             autoplay
             playsinline
         />
+        <div
+            class={isHighlighted
+                ? "w-8 h-8 bg-contrast/80 flex rounded-sm z-10 opacity-0 group-hover/screenshare:opacity-100 absolute inset-0 mx-auto"
+                : "hidden"}
+            on:click={() => (menuDrop = !menuDrop)}
+        >
+            {#if menuDrop}
+                <ArrowUpIcon class="w-4 h-4 m-auto flex items-center text-white" />
+            {:else}
+                <ArrowDownIcon class="w-4 h-4 m-auto flex items-center text-white" />
+            {/if}
+        </div>
 
         {#if videoEnabled}
             {#if displayNoVideoWarning}
                 <div
-                    class="absolute w-full h-full top-0 left-0 flex justify-center items-center bg-danger/50 text-white"
+                    class="absolute w-full h-full left-0 top-0 flex justify-center items-center bg-danger/50 text-white"
                 >
                     <div class="text-center">
                         <svg
@@ -316,10 +355,12 @@
                     </div>
                 </div>
             {/if}
-            <div class="absolute bottom-4 left-4 z-30">
+            <div class="absolute bottom-4 left-4 z-30 responsive-dimension">
                 <div class="flex">
                     <div
-                        class="relative rounded bg-contrast/90 backdrop-blur px-4 py-1 text-white text-sm pl-12 pr-9 bold"
+                        class="relative rounded backdrop-blur px-4 py-1 text-white text-sm pl-12 pr-9 bold {$mediaStreamConstraintsStore.audio
+                            ? 'background-color'
+                            : 'bg-contrast/90'}"
                     >
                         <div class="absolute left-1 -top-1 z-30" style="image-rendering:pixelated">
                             <Woka
@@ -380,6 +421,9 @@
                                 </div>
                             </div>
                         {/if}
+                        {#if $requestedScreenSharingState === true}
+                            <ScreenShareIcon />
+                        {/if}
                     </div>
                 </div>
             </div>
@@ -401,13 +445,154 @@
             </div>
         {/if}
     </div>
+    <div
+        class={isHighlighted
+            ? "hidden"
+            : "absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-full aspect-ratio bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 cursor-pointer"}
+        on:click={() => highlightedEmbedScreen.highlight(peer)}
+    >
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="icon icon-tabler cursor-pointer icon-tabler-arrows-minimize"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="#ffffff"
+            fill="none"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+        >
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M16 4l4 0l0 4" />
+            <path d="M14 10l6 -6" />
+            <path d="M8 20l-4 0l0 -4" />
+            <path d="M4 20l6 -6" />
+            <path d="M16 20l4 0l0 -4" />
+            <path d="M14 14l6 6" />
+            <path d="M8 4l-4 0l0 4" />
+            <path d="M4 4l6 6" />
+        </svg>
+    </div>
+
+    <div
+        class={isHighlighted && menuDrop
+            ? "absolute top-0 bottom-0 right-0 left-0 m-auto h-28 w-60 z-20 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 flex items-center justify-center cursor-pointer"
+            : "hidden"}
+    >
+        <div class="block flex flex-col justify-evenly cursor-pointer h-full w-full">
+            <div
+                class="svg w-full hover:bg-white/10 flex justify-around items-center z-25 rounded-lg"
+                on:click={untogglefFullScreen}
+                on:click={() => (menuDrop = !menuDrop)}
+            >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="icon icon-tabler cursor-pointer icon-tabler-arrows-maximize"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="#ffffff"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M5 9l4 0l0 -4" />
+                    <path d="M3 3l6 6" />
+                    <path d="M5 15l4 0l0 4" />
+                    <path d="M3 21l6 -6" />
+                    <path d="M19 9l-4 0l0 -4" />
+                    <path d="M15 9l6 -6" />
+                    <path d="M19 15l-4 0l0 4" />
+                    <path d="M15 15l6 6" />
+                </svg>
+                <p class="font-bold text-white">Reduce the screen</p>
+            </div>
+            <div class="h-[1px] z-30 w-full bg-white/20" />
+            <div
+                class="w-full hover:bg-white/10 flex justify-around cursor-pointer items-center z-25 rounded-lg"
+                on:click={toggleFullScreen}
+                on:click={() => (menuDrop = !menuDrop)}
+            >
+                {#if $highlightFullScreen}
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="icon icon-tabler cursor-pointer icon-tabler-arrows-maximize"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="#ffffff"
+                        fill="none"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M5 9l4 0l0 -4" />
+                        <path d="M3 3l6 6" />
+                        <path d="M5 15l4 0l0 4" />
+                        <path d="M3 21l6 -6" />
+                        <path d="M19 9l-4 0l0 -4" />
+                        <path d="M15 9l6 -6" />
+                        <path d="M19 15l-4 0l0 4" />
+                        <path d="M15 15l6 6" />
+                    </svg>
+                    <p class="font-bold cursor-pointer text-white">Untoggle full screen</p>
+                {:else}
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="icon icon-tabler cursor-pointer icon-tabler-arrows-minimize"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="#ffffff"
+                        fill="none"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M16 4l4 0l0 4" />
+                        <path d="M14 10l6 -6" />
+                        <path d="M8 20l-4 0l0 -4" />
+                        <path d="M4 20l6 -6" />
+                        <path d="M16 20l4 0l0 -4" />
+                        <path d="M14 14l6 6" />
+                        <path d="M8 4l-4 0l0 4" />
+                        <path d="M4 4l6 6" />
+                    </svg>
+                    <p class="font-bold cursor-pointer text-white">Toggle full screen</p>
+                {/if}
+            </div>
+        </div>
+    </div>
 </div>
 
-<style lang="scss">
-    video {
-        object-fit: cover;
-        &.object-contain {
-            object-fit: contain;
+<!-- </div> -->
+<style>
+    .border-color {
+        border-color: #4156f6;
+    }
+
+    .background-color {
+        background-color: #4156f6;
+    }
+    .isHighlighted {
+        height: 100%;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    @container (max-width: 767px) {
+        .responsive-dimension {
+            scale: 0.7;
+            position: absolute;
+            top: 0;
+            left: 0;
         }
     }
 </style>
