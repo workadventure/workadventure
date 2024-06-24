@@ -29,8 +29,6 @@ export class StreamSpaceWatcher {
                 const subMessage = subMessageWrapper.message;
                 if (subMessage === undefined) return;
 
-                console.log("$case : ", subMessage.$case);
-
                 switch (subMessage.$case) {
                     case SpaceEvent.AddSpaceUser: {
                         if (!subMessage.addSpaceUserMessage.user || !subMessage.addSpaceUserMessage.filterName) return;

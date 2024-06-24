@@ -1777,6 +1777,11 @@ export class GameScene extends DirtyScene {
                     if (megaphoneSettingsMessage) {
                         megaphoneCanBeUsedStore.set(megaphoneSettingsMessage.enabled);
                         if (megaphoneSettingsMessage.url) {
+                            const oldMegaphoneUrl = get(megaphoneUrlStore);
+
+                            if (oldMegaphoneUrl && megaphoneSettingsMessage.url !== oldMegaphoneUrl) {
+                                spaceProvider.delete(oldMegaphoneUrl);
+                            }
                             broadcastService.joinSpace(megaphoneSettingsMessage.url);
                             megaphoneUrlStore.set(megaphoneSettingsMessage.url);
                         }
