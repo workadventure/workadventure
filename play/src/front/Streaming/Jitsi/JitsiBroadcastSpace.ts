@@ -12,6 +12,7 @@ import { BroadcastSpace } from "../Common/BroadcastSpace";
 import { JITSI_DOMAIN, JITSI_MUC_DOMAIN, JITSI_XMPP_DOMAIN } from "../../Enum/EnvironmentVariable";
 import { SpaceInterface } from "../../Space/SpaceInterface";
 import { LocalSpaceProviderSingleton } from "../../Space/SpaceProvider/SpaceStore";
+import { SpaceProviderInterface } from "../../Space/SpaceProvider/SpacerProviderInterface";
 import { jitsiConferencesStore } from "./JitsiConferencesStore";
 import { JitsiConferenceWrapper } from "./JitsiConferenceWrapper";
 import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
@@ -35,7 +36,6 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
     private jitsiTracks: ForwardableStore<Map<string, JitsiTrackWrapper>>;
     readonly space: SpaceInterface;
     readonly provider = "jitsi";
-
     private associatedStreamStoreTimeOut: NodeJS.Timeout | undefined;
 
     constructor(
@@ -43,11 +43,12 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
         spaceName: string,
         private spaceFilter: SpaceFilterMessage,
         private broadcastService: BroadcastService,
-        private playSound: boolean
+        private playSound: boolean,
+        private spaceStore: SpaceProviderInterface = LocalSpaceProviderSingleton.getInstance()
     ) {
         super();
 
-        this.space = LocalSpaceProviderSingleton.getInstance().add(spaceName);
+        this.space = this.spaceStore.add(spaceName);
 
         this.space.watch(spaceFilter.filterName).setFilter(spaceFilter.filter);
 
@@ -199,7 +200,8 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
                 jitsiLoadingStore.set(false);
             });
         jitsiConferencesStore.delete(this.space.getName());
+
         this.unsubscribes.forEach((unsubscribe) => unsubscribe());
-        this.space.destroy();
+        this.spaceStore.delete(this.space.getName());
     }
 }

@@ -53,9 +53,7 @@ import {
     ServerToClientMessage as ServerToClientMessageTsProto,
     SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
     SetPlayerVariableMessage_Scope,
-    SpaceFilterMessage,
     TokenExpiredMessage,
-    UnwatchSpaceMessage,
     UpdateSpaceFilterMessage,
     UpdateSpaceMetadataMessage,
     UpdateSpaceUserMessage,
@@ -65,7 +63,6 @@ import {
     UserLeftMessage as UserLeftMessageTsProto,
     UserMovedMessage as UserMovedMessageTsProto,
     ViewportMessage as ViewportMessageTsProto,
-    WatchSpaceMessage,
     WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
     WorldConnectionMessage,
     XmppSettingsMessage,
@@ -1461,67 +1458,6 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitWatchSpaceLiveStreaming(spaceName: string) {
-        const spaceFilter: SpaceFilterMessage = {
-            filterName: "watchSpaceLiveStreaming",
-            spaceName,
-            filter: {
-                $case: "spaceFilterLiveStreaming",
-                spaceFilterLiveStreaming: {},
-            },
-        };
-        this.send({
-            message: {
-                $case: "watchSpaceMessage",
-                watchSpaceMessage: WatchSpaceMessage.fromPartial({
-                    spaceName,
-                    spaceFilter,
-                }),
-            },
-        });
-        return spaceFilter;
-    }
-    public emitUserJoinSpace(spaceName: string) {
-        const spaceFilter: SpaceFilterMessage = {
-            filterName: "",
-            spaceName,
-            filter: undefined,
-        };
-        this.send({
-            message: {
-                $case: "watchSpaceMessage",
-                watchSpaceMessage: WatchSpaceMessage.fromPartial({
-                    spaceName,
-                    spaceFilter,
-                }),
-            },
-        });
-        return spaceFilter;
-    }
-
-    public emitUnwatchSpaceLiveStreaming(spaceName: string) {
-        this.send({
-            message: {
-                $case: "unwatchSpaceMessage",
-                unwatchSpaceMessage: UnwatchSpaceMessage.fromPartial({
-                    spaceName,
-                }),
-            },
-        });
-    }
-
-    public emitUpdateSpaceMetadata(spaceName: string, metadata: { [key: string]: unknown }): void {
-        this.send({
-            message: {
-                $case: "updateSpaceMetadataMessage",
-                updateSpaceMetadataMessage: UpdateSpaceMetadataMessage.fromPartial({
-                    spaceName,
-                    metadata: JSON.stringify(metadata),
-                }),
-            },
-        });
-    }
-
     public emitCameraState(state: boolean) {
         this.send({
             message: {
@@ -1557,24 +1493,13 @@ export class RoomConnection implements RoomConnection {
 
     public emitMegaphoneState(state: boolean) {
         const currentMegaphoneName = get(currentLiveStreamingNameStore);
+        console.log({ currentMegaphoneName, slugifyNAme: slugify(currentMegaphoneName || "") });
         this.send({
             message: {
                 $case: "megaphoneStateMessage",
                 megaphoneStateMessage: {
                     value: state,
                     spaceName: currentMegaphoneName ? slugify(currentMegaphoneName) : undefined,
-                },
-            },
-        });
-    }
-
-    public emitJitsiParticipantIdSpace(spaceName: string, participantId: string) {
-        this.send({
-            message: {
-                $case: "jitsiParticipantIdSpaceMessage",
-                jitsiParticipantIdSpaceMessage: {
-                    spaceName,
-                    value: participantId,
                 },
             },
         });

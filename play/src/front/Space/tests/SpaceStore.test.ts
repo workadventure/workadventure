@@ -29,7 +29,7 @@ describe("SpaceProviderInterface implementation", () => {
                 spaceStore.add(newSpace.getName());
                 expect(spaceStore.get(newSpace.getName())).toBeInstanceOf(Space);
             });
-            it("should return a error when you try to add a space who already exist", () => {
+            it("should return a error when you try to add a space which already exist", () => {
                 const newSpace: SpaceInterface = {
                     getName(): string {
                         return "space-test";
