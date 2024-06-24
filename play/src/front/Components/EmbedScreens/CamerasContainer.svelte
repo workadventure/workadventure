@@ -45,7 +45,7 @@
 </script>
 
 <div
-    class="{isHightlighted ? 'highlight p-2 ' : 'not-highlighted p-2 '} {$highlightFullScreen && $highlightedEmbedScreen
+    class="{isHightlighted ? 'highlight' : 'not-highlighted'} {$highlightFullScreen && $highlightedEmbedScreen
         ? 'hidden'
         : ''} "
     id="cameras-container"

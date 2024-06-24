@@ -72,9 +72,7 @@
     $: $focusMode, setFocusMode();
 
     function setFocusMode() {
-        console.log("je suis dans le set focusMode du main layout", $focusMode);
         if ($focusMode === true) {
-            console.log("mainLayout", mainLayout);
             addFocusModeStyle();
         } else {
             removeFocusModeStyle();
@@ -102,10 +100,6 @@
             div.remove();
         }
     }
-
-    peerStore.subscribe((value) => {
-        console.log("peerStore VALUE", value);
-    });
 </script>
 
 <!-- Components ordered by z-index -->
@@ -121,10 +115,6 @@
     <div class={$peerStore.size > 0 && $highlightFullScreen ? "hidden" : "action-bar"}>
         <ActionBar />
     </div>
-    <!-- <div class={$screenSharingPeerStore.size > 0 && $highlightFullScreen ? "hidden" : "action-bar"}>
-        <ActionBar />
-    </div> -->
-
     {#if $modalVisibilityStore || $modalPopupVisibilityStore}
         <div class="bg-black/60 w-full h-full fixed left-0 right-0" />
     {/if}

@@ -484,6 +484,7 @@
             <div
                 class="svg w-full hover:bg-white/10 flex justify-around items-center z-25 rounded-lg"
                 on:click={untogglefFullScreen}
+                on:click={() => (menuDrop = !menuDrop)}
             >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -513,6 +514,7 @@
             <div
                 class="w-full hover:bg-white/10 flex justify-around cursor-pointer items-center z-25 rounded-lg"
                 on:click={toggleFullScreen}
+                on:click={() => (menuDrop = !menuDrop)}
             >
                 {#if $highlightFullScreen}
                     <svg

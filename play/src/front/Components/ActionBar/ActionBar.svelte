@@ -441,7 +441,6 @@
         iframeListener.chatTotalMessagesToSeeStream.subscribe((total) => totalMessagesToSee.set(total));
         //resizeObserver.observe(mainHtmlDiv);
         sound.load();
-        calcHeight();
     });
 
     onDestroy(() => {
@@ -463,10 +462,6 @@
             mapEditorModeStore.set(false);
         }
     });
-
-    function calcHeight() {
-        console.log(layoutDom.offsetHeight);
-    }
 
     // $: $screenSharingPeerStore.size < 1 ? displayActionBar() : "";
 

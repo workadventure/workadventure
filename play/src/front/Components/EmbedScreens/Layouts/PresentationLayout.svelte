@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { afterUpdate, onMount } from "svelte";
+    import { afterUpdate, onDestroy, onMount } from "svelte";
+    import { writable } from "svelte/store";
     import { highlightedEmbedScreen } from "../../../Stores/HighlightedEmbedScreenStore";
     import CamerasContainer from "../CamerasContainer.svelte";
     import MediaBox from "../../Video/MediaBox.svelte";
@@ -11,17 +12,49 @@
     } from "../../../Stores/StreamableCollectionStore";
     import Loading from "../../Video/Loading.svelte";
     import { jitsiLoadingStore } from "../../../Streaming/BroadcastService";
-    import { rightMode, hideMode } from "../../../Stores/ActionsCamStore";
+    import { rightMode, hideMode, highlightFullScreen } from "../../../Stores/ActionsCamStore";
 
     const isMobile = window.matchMedia("(max-width: 767px)");
     let isVertical: boolean;
     let currentHighlightedEmbedScreen: Streamable | undefined;
     let isHightlighted = false;
+    let camContainer: HTMLDivElement;
+    let highlightScreen: any;
+
+    const windowSize = writable({
+        height: window.innerHeight,
+        camHeight: 0,
+        screenShareHeight: 0,
+    });
+
+    const handleResize = () => {
+        windowSize.set({
+            height: window.innerHeight,
+            camHeight: camContainer?.offsetHeight || 0,
+            screenShareHeight: highlightScreen?.offsetHeight || 0,
+        });
+        resizeHeight();
+    };
 
     onMount(() => {
         isMobile.addEventListener("change", (e: any) => handleTabletChange(e));
         handleTabletChange(isMobile);
+
+        window.addEventListener("resize", handleResize);
+        return () => {
+            window.removeEventListener("resize", handleResize);
+        };
     });
+
+    function resizeHeight() {
+        console.log("FENETRE", window.innerHeight);
+        let totalElementsHeight = camContainer.offsetHeight + highlightScreen.offsetHeight + 72;
+        if (totalElementsHeight > window.innerHeight) {
+            console.log("je suis dans le if");
+            let containerCam = document.getElementById("container-media") as HTMLDivElement;
+            containerCam.style.height = `${window.innerHeight - 72}px`;
+        }
+    }
 
     highlightedEmbedScreen.subscribe((value) => {
         currentHighlightedEmbedScreen = value;
@@ -44,26 +77,16 @@
         modifySizeCamIfScreenShare();
     });
 
-    highlightedEmbedScreen.subscribe((value) => {
-        console.log("highlightedEmbedScreen VALUE", value);
-        if (value) {
-            isHightlighted = true;
-            console.log("isHightlighted", isHightlighted);
-        } else {
-            isHightlighted = false;
-            console.log("isHightlighted", isHightlighted);
-        }
-    });
-
     $: if ($highlightedEmbedScreen) modifySizeCamIfScreenShare();
+    $: if ($highlightFullScreen) modifySizeCamIfScreenShare();
 
     function modifySizeCamIfScreenShare() {
         let containerCam = document.getElementById("container-media") as HTMLDivElement;
-        if (containerCam && currentHighlightedEmbedScreen !== undefined) {
+        if (containerCam && currentHighlightedEmbedScreen !== undefined && !$highlightFullScreen) {
             containerCam.style.transform = "scale(0.7)";
             containerCam.style.marginTop = "-25px";
             containerCam.style.marginBottom = "-10px";
-        } else if (containerCam && currentHighlightedEmbedScreen === undefined) {
+        } else {
             containerCam.style.transform = "scale(1)";
             containerCam.style.marginTop = "0px";
             containerCam.style.marginBottom = "0px";
@@ -105,6 +128,10 @@
         }
     }
 
+    onDestroy(() => {
+        isMobile.removeEventListener("change", (e: any) => handleTabletChange(e));
+    });
+
     // function calcHeight() {
     //     console.log("je suis dans le calc height");
     //     let containerCam = document.getElementById("container-media") as HTMLDivElement;
@@ -122,7 +149,11 @@
 
 <!-- <div class={isHightlighted ? "presentation-layout flex flex-col-reverse md:flex-col" : ""}> -->
 {#if $streamableCollectionStore.size > 0 || $myCameraStore}
-    <div class="justify-end md:justify-center gc -m {isHightlighted ? 'mb-2' : ''}" id="container-media">
+    <div
+        class="justify-end md:justify-center gc -m {isHightlighted ? 'mb-2' : ''}"
+        id="container-media"
+        bind:this={camContainer}
+    >
         {#if $jitsiLoadingStore}
             <Loading />
         {/if}
@@ -136,21 +167,15 @@
 {/if}
 
 {#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true && $highlightedEmbedScreen}
-    <div id="video-container-receive" class={$highlightedEmbedScreen ? "block" : "hidden"}>
+    <div id="video-container-receive" class={$highlightedEmbedScreen ? "block" : "hidden"} bind:this={highlightScreen}>
         {#key $highlightedEmbedScreen.uniqueId}
             <MediaBox isHightlighted={true} isClickable={true} streamable={$highlightedEmbedScreen} />
         {/key}
     </div>
 {/if}
 
-<!-- </div> -->
 <style>
-    .presentation-layout {
-        overflow-y: hidden;
-        overflow-x: hidden;
-    }
-
-    @media (min-width: 576px) {
+    @container (min-width: 576px) {
         .presentation-layout {
             position: fixed;
             left: 0;
@@ -168,6 +193,10 @@
             margin-top: -70px;
         }
     }
+    /*
+    @container {
+
+    } */
 
     /* .right-mode-on {
         display: flex;
