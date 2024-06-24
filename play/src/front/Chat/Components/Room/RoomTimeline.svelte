@@ -10,6 +10,8 @@
 
     export let room: ChatRoom;
 
+    const NUMBER_OF_TYPING_MEMBER_TO_DISPLAY = 3;
+    let typingMembers = room.typingMembers;
     let messageListRef: HTMLUListElement;
     let autoScroll = true;
     let onScrollTop = false;
@@ -84,5 +86,40 @@
             </li>
         {/each}
     </ul>
+    {#if $typingMembers.length > 0}
+        <div class=" tw-flex tw-row tw-w-full tw-text-gray-300 tw-text-sm tw-p-0 tw-m-0">
+            {$typingMembers.slice(0, NUMBER_OF_TYPING_MEMBER_TO_DISPLAY)}
+            {#if $typingMembers.length > NUMBER_OF_TYPING_MEMBER_TO_DISPLAY}
+                + {$typingMembers.length - NUMBER_OF_TYPING_MEMBER_TO_DISPLAY}
+            {/if}
+            is typing
+            <div class="tw-flex tw-text-lg tw-ml-1">
+                <div class="animate-bounce-1">.</div>
+                <div class="animate-bounce-2">.</div>
+                <div class="animate-bounce-3">.</div>
+            </div>
+        </div>
+    {/if}
     <MessageInput {room} />
 {/if}
+
+<style>
+    @keyframes bounce {
+        0%,
+        100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-25%);
+        }
+    }
+    .animate-bounce-1 {
+        animation: bounce 1s infinite;
+    }
+    .animate-bounce-2 {
+        animation: bounce 1s infinite 0.1s;
+    }
+    .animate-bounce-3 {
+        animation: bounce 1s infinite 0.2s;
+    }
+</style>

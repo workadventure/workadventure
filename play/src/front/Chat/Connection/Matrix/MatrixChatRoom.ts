@@ -10,6 +10,7 @@ import {
     ReceiptType,
     Room,
     RoomEvent,
+    RoomMemberEvent,
     TimelineWindow,
 } from "matrix-js-sdk";
 import { get, Writable, writable } from "svelte/store";
@@ -39,6 +40,7 @@ export class MatrixChatRoom implements ChatRoom {
     timelineWindow: TimelineWindow;
     inMemoryEventsContent: Map<EventId, IContent>;
     isEncrypted!: Writable<boolean>;
+    typingMembers: Writable<string[]>;
 
     constructor(private matrixRoom: Room) {
         this.id = matrixRoom.roomId;
@@ -57,6 +59,31 @@ export class MatrixChatRoom implements ChatRoom {
         this.hasPreviousMessage = writable(false);
         this.timelineWindow = new TimelineWindow(matrixRoom.client, matrixRoom.getLiveTimeline().getTimelineSet());
         this.isEncrypted = writable(matrixRoom.hasEncryptionStateEvent());
+        this.typingMembers = writable([]);
+
+        void this.matrixRoom.getMembersWithMembership(KnownMembership.Join).forEach((member) =>
+            member.on(RoomMemberEvent.Typing, (event, member) => {
+                const memberDisplayName = member.user?.displayName;
+
+                const myUserID = this.matrixRoom.client.getSafeUserId();
+                const myDisplayName = this.matrixRoom.client.getUser(myUserID)?.displayName;
+
+                if (!memberDisplayName || memberDisplayName === myDisplayName) return;
+
+                if (get(this.typingMembers).includes(memberDisplayName)) {
+                    this.typingMembers.update((currentTypingMemberList) => {
+                        return currentTypingMemberList.filter(
+                            (memberDisplayName) => memberDisplayName !== memberDisplayName
+                        );
+                    });
+                    return;
+                }
+
+                this.typingMembers.update((currentValue) => {
+                    return [...currentValue, memberDisplayName];
+                });
+            })
+        );
 
         (async () => {
             if (matrixRoom.hasEncryptionStateEvent()) {
@@ -438,5 +465,15 @@ export class MatrixChatRoom implements ChatRoom {
 
     private removeEventContentInMemory(eventId: string) {
         this.inMemoryEventsContent.delete(eventId);
+    }
+
+    startTyping(): Promise<object> {
+        const isTypingTime = 30000;
+        return this.matrixRoom.client.sendTyping(this.id, true, isTypingTime);
+    }
+
+    stopTyping(): Promise<object> {
+        const isTypingTime = 30000;
+        return this.matrixRoom.client.sendTyping(this.id, false, isTypingTime);
     }
 }

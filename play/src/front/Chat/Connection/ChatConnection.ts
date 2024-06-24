@@ -39,6 +39,9 @@ export interface ChatRoom {
     hasPreviousMessage: Readable<boolean>;
     loadMorePreviousMessages: () => Promise<void>;
     isEncrypted: Readable<boolean>;
+    typingMembers: Readable<string[]>;
+    startTyping: () => Promise<object>;
+    stopTyping: () => Promise<object>;
 }
 
 //Readonly attributes
