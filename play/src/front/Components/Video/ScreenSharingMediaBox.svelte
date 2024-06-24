@@ -2,12 +2,13 @@
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
     import { Color } from "@workadventure/shared-utils";
+    import { ArrowDownIcon, ArrowUpIcon } from "svelte-feather-icons";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import type { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
+    import { highlightFullScreen } from "../../Stores/ActionsCamStore";
     import { srcObject } from "./utils";
     import BanReportBox from "./BanReportBox.svelte";
-    import { highlightFullScreen } from "../../Stores/ActionsCamStore";
 
     export let peer: ScreenSharingPeer;
     let streamStore = peer.streamStore;
@@ -17,6 +18,7 @@
     let statusStore = peer.statusStore;
     let isHighlighted = true;
     let embedScreen: Streamable;
+    let menuDrop = false;
 
     if (peer) {
         embedScreen = peer as unknown as Streamable;
@@ -66,6 +68,20 @@
                 class="h-full w-full mx-auto rounded object-contain"
                 muted
             />
+
+            <div
+                class={isHighlighted
+                    ? "w-8 h-8 bg-contrast/80 flex rounded-sm z-10 opacity-0 group-hover/screenshare:opacity-100 absolute inset-0 mx-auto"
+                    : "hidden"}
+                on:click={() => (menuDrop = !menuDrop)}
+            >
+                {#if menuDrop}
+                    <ArrowUpIcon class="w-4 h-4 m-auto flex items-center text-white" />
+                {:else}
+                    <ArrowDownIcon class="w-4 h-4 m-auto flex items-center text-white" />
+                {/if}
+            </div>
+
             <div class={isHighlighted ? "flex justify-center" : "absolute top-[70%]"}>
                 <span
                     style="background-color: {backGroundColor}; color: {textColor};"
@@ -104,12 +120,10 @@
             </svg>
         </div>
 
-        <div
-            class={isHighlighted
-                ? "absolute top-0 bottom-0 right-0 left-0 m-auto h-28 w-60 z-20 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 flex items-center justify-center cursor-pointer"
-                : "hidden"}
-        >
-            <div class="block flex flex-col justify-evenly cursor-pointer h-full w-full">
+        <div class={isHighlighted && menuDrop ? "block" : "hidden"}>
+            <div
+                class="block flex flex-col justify-evenly top-0 bottom-0 right-0 left-0 m-auto h-28 w-60 z-20 rounded-lg bg-contrast/50 backdrop-blur absolute transition-all flex items-center justify-center cursor-pointer  cursor-pointer"
+            >
                 <div
                     class="svg w-full hover:bg-white/10 flex justify-around items-center z-25 rounded-lg"
                     on:click={untogglefFullScreen}

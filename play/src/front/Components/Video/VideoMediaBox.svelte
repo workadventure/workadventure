@@ -7,6 +7,7 @@
     import CancelablePromise from "cancelable-promise";
     import Debug from "debug";
     import { fly } from "svelte/transition";
+    import { ArrowDownIcon, ArrowUpIcon } from "svelte-feather-icons";
     import { VideoPeer } from "../../WebRtc/VideoPeer";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
@@ -34,8 +35,8 @@
     import MessageCircleIcon from "../Icons/MessageCircleIcon.svelte";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import ScreenShareIcon from "../Icons/ScreenShareIcon.svelte";
-    import ActionMediaBox from "./ActionMediaBox.svelte";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
+    import ActionMediaBox from "./ActionMediaBox.svelte";
 
     // Extend the HTMLVideoElement interface to add the setSinkId method.
     // See https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
@@ -57,23 +58,18 @@
     let unsubscribeChangeOutput: Unsubscriber;
     let unsubscribeStreamStore: Unsubscriber;
     let unsubscribeConstraintStore: Unsubscriber;
-
     let embedScreen: Streamable;
     let videoContainer: HTMLDivElement;
     let videoElement: HTMLVideoElementExt;
     let minimized = isMediaBreakpointOnly("md");
     let noVideoTimeout: ReturnType<typeof setTimeout> | undefined;
-
     let destroyed = false;
     let currentDeviceId: string | undefined;
-
     let displayNoVideoWarning = false;
-
     let showUserSubMenu = false;
-
     let aspectRatio = 1;
-
     let isHighlighted = false;
+    let menuDrop = false;
 
     const debug = Debug("VideoMediaBox");
 
@@ -258,7 +254,6 @@
     }
 
     function untogglefFullScreen() {
-        console.log("fonction reduce toggle screen");
         highlightedEmbedScreen.removeHighlight();
         highlightFullScreen.set(false);
     }
@@ -314,6 +309,18 @@
             autoplay
             playsinline
         />
+        <div
+            class={isHighlighted
+                ? "w-8 h-8 bg-contrast/80 flex rounded-sm z-10 opacity-0 group-hover/screenshare:opacity-100 absolute inset-0 mx-auto"
+                : "hidden"}
+            on:click={() => (menuDrop = !menuDrop)}
+        >
+            {#if menuDrop}
+                <ArrowUpIcon class="w-4 h-4 m-auto flex items-center text-white" />
+            {:else}
+                <ArrowDownIcon class="w-4 h-4 m-auto flex items-center text-white" />
+            {/if}
+        </div>
 
         {#if videoEnabled}
             {#if displayNoVideoWarning}
@@ -469,7 +476,7 @@
     </div>
 
     <div
-        class={isHighlighted
+        class={isHighlighted && menuDrop
             ? "absolute top-0 bottom-0 right-0 left-0 m-auto h-28 w-60 z-20 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 flex items-center justify-center cursor-pointer"
             : "hidden"}
     >

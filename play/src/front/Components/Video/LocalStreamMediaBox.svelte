@@ -1,9 +1,10 @@
 <script lang="ts">
+    import { ArrowDownIcon, ArrowUpIcon } from "svelte-feather-icons";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { ScreenSharingLocalMedia } from "../../Stores/ScreenSharingStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
-    import { srcObject } from "./utils";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
+    import { srcObject } from "./utils";
 
     export let clickable = false;
 
@@ -11,6 +12,7 @@
     let stream = peer.stream;
     export let cssClass: string | undefined;
     let embedScreen: Streamable;
+    let menuDrop = false;
 
     if (peer) {
         embedScreen = peer as unknown as Streamable;
@@ -58,6 +60,18 @@
                 muted
                 playsinline
             />
+            <div
+                class={isHighlighted
+                    ? "w-8 h-8 bg-contrast/80 flex rounded-sm z-10 opacity-0 group-hover/screenshare:opacity-100 absolute inset-0 mx-auto"
+                    : "hidden"}
+                on:click={() => (menuDrop = !menuDrop)}
+            >
+                {#if menuDrop}
+                    <ArrowUpIcon class="w-4 h-4 m-auto flex items-center text-white" />
+                {:else}
+                    <ArrowDownIcon class="w-4 h-4 m-auto flex items-center text-white" />
+                {/if}
+            </div>
         </div>
         <div
             class={isHighlighted
@@ -90,7 +104,7 @@
         </div>
 
         <div
-            class={isHighlighted
+            class={isHighlighted && menuDrop
                 ? "absolute top-0 bottom-0 right-0 left-0 m-auto h-28 w-60 z-20 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 flex items-center justify-center cursor-pointer"
                 : "hidden"}
         >
