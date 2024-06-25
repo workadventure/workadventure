@@ -517,7 +517,7 @@ class IframeListener {
                     } else if (iframeEvent.type == "restoreInviteUserButton") {
                         this._inviteUserButtonStream.next(true);
                     } else if (iframeEvent.type == "chatReady") {
-                        console.log("chatReady");
+                        console.info("chatReady");
                     } else if (iframeEvent.type == "disableRoomList") {
                         this._roomListStream.next(false);
                     } else if (iframeEvent.type == "restoreRoomList") {

@@ -1,10 +1,9 @@
 import { expect, test, webkit } from "@playwright/test";
-import Map from "./utils/map";
 import { evaluateScript } from "./utils/scripting";
 import { login } from "./utils/roles";
 import { publicTestMapUrl } from "./utils/urls";
-import { expectInViewport, expectOutViewport } from "./utils/viewport";
 import Chat from "./utils/chat";
+import Map from "./utils/map";
 
 //TODO update tests for new proximity chat !
 test.describe("Scripting chat functions", () => {
@@ -72,64 +71,77 @@ test.describe("Scripting chat functions", () => {
     });
     await expect(page.locator('#chat')).toBeHidden();
   });
-  /*test('can send message to bubble users @chat', async ({ page, browser}, { project }) => {
-    // Skip test for mobile device
-    if(project.name === "mobilechromium") {
+
+  test('can send message to bubble users @chat', async ({ page, browser}, { project }) => {
+      // Skip test for mobile device
+      if(project.name === "mobilechromium") {
         //eslint-disable-next-line playwright/no-skipped-test
         test.skip();
         return;
-    }
-    // It seems WebRTC fails to start on Webkit
-    if(browser.browserType() === webkit) {
+      }
+      // It seems WebRTC fails to start on Webkit
+      if(browser.browserType() === webkit) {
         //eslint-disable-next-line playwright/no-skipped-test
         test.skip();
         return;
-    }
-    await page.goto(
+      }
+
+      const bob = page;
+      await bob.goto(
         publicTestMapUrl("tests/E2E/empty.json", "scripting_chat")
-    );
-    await login(page);
-    await Map.teleportToPosition(page, 32, 32);
-    const newBrowser = await browser.browserType().launch();
-    const page2 = await newBrowser.newPage();
-    await page2.goto(publicTestMapUrl("tests/E2E/empty.json", "scripting_chat"));
-    await evaluateScript(page, async () => {
+      );
+      await login(bob, "Bob");
+
+      // test to send bubblme message when entering proximity meeting
+      await evaluateScript(bob, async () => {
         WA.player.proximityMeeting.onJoin().subscribe((user) => {
             console.log("Entering proximity meeting with", user);
             WA.chat.sendChatMessage('Test message sent', {
                 scope: 'bubble',
+                author: "Test"
             });
         });
-    });
-    await login(page2);
-    const promise = evaluateScript(page2, async () => {
-        return new Promise((resolve) => {
-            WA.chat.onChatMessage((message, event) => {
-                resolve(message);
-            }, {
-                scope: "bubble",
-            });
-        });
-    });
-    // Wait for the onChatMessage to be registered
-    await new Promise<void>((resolve) => {
-        setTimeout(() => {
-            resolve();
-        }, 500);
-    });
-    await Map.teleportToPosition(page2, 32, 32);
-    await promise;
-    await evaluateScript(page, async () => {
-        WA.chat.startTyping({
-            scope: 'bubble',
-        });
-    });
-    await expect(page2.frameLocator('iframe[title="WorkAdventureChat"]').locator('.loading-group')).toBeVisible();
-    await evaluateScript(page, async () => {
-        WA.chat.stopTyping({
-            scope: 'bubble',
-        });
-    });
-    await expect.poll(() => page2.frameLocator('iframe[title="WorkAdventureChat"]').locator('.loading-group').count()).toBe(0);
-  });*/
+      });
+
+      // Move bob to the position 32, 32
+      await Map.teleportToPosition(bob, 32, 32);
+
+      // Open new page for alice
+      const newBrowser = await browser.browserType().launch();
+      const alice = await newBrowser.newPage();
+      await alice.goto(publicTestMapUrl("tests/E2E/empty.json", "scripting_chat"));
+      await login(alice, "Alice");
+
+      // Move alice to the same position as bob
+      await Map.teleportToPosition(alice, 32, 32);
+
+      // Check that bob received the message
+      await expect(
+        bob.locator('#chat')
+        .locator('#message')
+        .nth(0)
+      ).toContainText('Alice join the discussion', { timeout: 30000 });
+
+      // Check that bob received the message
+      await expect(
+        bob.locator('#chat')
+        .locator('#message')
+        .nth(1)
+      ).toContainText('Test message sent', { timeout: 30000 });
+
+      // TODO: Check that alice also received the message
+      // Check that bob received the message
+      /*await expect(
+        alice.locator('#chat')
+        .locator('#message')
+        .nth(0)
+      ).toContainText('Bob join the discussion', { timeout: 30000 });
+
+      // Check that alice also received the message
+      await expect(
+        alice.locator('#chat')
+        .locator('#message')
+        .nth(1)
+      ).toContainText('Test message sent', { timeout: 30000 });*/
+  });
 });

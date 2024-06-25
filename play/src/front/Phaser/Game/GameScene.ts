@@ -2573,17 +2573,15 @@ ${escapedMessage}
                         break;
                     }
                     case "bubble": {
-                        //TODO, fixme, causing chat with bot not working anymore.
-                        //💡To display chat from proximity bubble, create a ChatRoom (not matrix)
-                        // set it to the selectedChatRoom store
+                        const _proximityRoomConnection = get(proximityRoomConnection);
+                        if (!_proximityRoomConnection) return;
 
-                        /*iframeListener.sendMessageToChatIframe({
-                            type: ChatMessageTypes.me,
-                            text: [chatEvent.message],
-                            date: new Date(),
-                        });*/
-                        //chatMessagesStore.addExternalMessage(gameManager.getCurrentGameScene().connection?.getUserId(), chatEvent.message, origin);
-                        console.debug("Not implemented yet with new chat integration");
+                        const room = get(_proximityRoomConnection.rooms)[0];
+                        if (!room || !room.addExternalMessage) return;
+
+                        room.addExternalMessage(chatMessage.message);
+                        selectedRoom.set(room);
+                        chatVisibilityStore.set(true);
                         break;
                     }
                 }

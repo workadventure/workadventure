@@ -342,8 +342,6 @@ export class RoomConnection implements RoomConnection {
                 return;
             }
 
-            console.log("this.socket.onmessage => Received message", message);
-
             switch (message.$case) {
                 case "batchMessage": {
                     for (const subMessageWrapper of message.batchMessage.payload) {
