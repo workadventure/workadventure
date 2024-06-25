@@ -2,6 +2,8 @@
     import { createEventDispatcher, onMount } from "svelte";
     import { OpenWebsitePropertyData } from "@workadventure/map-editor";
     import {
+        CardsException,
+        CardsService,
         EraserException,
         EraserService,
         ExcalidrawException,
@@ -12,12 +14,6 @@
         KlaxoonException,
         KlaxoonService,
         YoutubeService,
-        EraserService,
-        EraserException,
-        ExcalidrawService,
-        ExcalidrawException,
-        CardsService,
-        CardsException,
     } from "@workadventure/shared-utils";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
