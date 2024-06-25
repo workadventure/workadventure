@@ -1,9 +1,7 @@
-import type { ChatEvent } from "@workadventure/shared-utils";
-import { GoogleWorkSpaceService, KlaxoonService } from "@workadventure/shared-utils";
+import { CardsService, ChatEvent, GoogleWorkSpaceService, KlaxoonService } from "@workadventure/shared-utils";
 import { StartWritingEvent, StopWritingEvent } from "@workadventure/shared-utils/src/Events/WritingEvent";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { gameManager } from "../Phaser/Game/GameManager";
-import { iframeListener } from "./IframeListener";
 
 class ScriptUtils {
     public openTab(url: string) {

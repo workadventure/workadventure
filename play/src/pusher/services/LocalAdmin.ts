@@ -11,6 +11,7 @@ import { Capabilities, OpidWokaNamePolicy } from "@workadventure/messages";
 import axios from "axios";
 import { MapsCacheFileFormat } from "@workadventure/map-editor";
 import {
+    CARDS_ENABLED,
     DISABLE_ANONYMOUS,
     ENABLE_CHAT,
     ENABLE_CHAT_DISCONNECTED_LIST,
@@ -30,8 +31,6 @@ import {
     PUBLIC_MAP_STORAGE_URL,
     START_ROOM_URL,
     YOUTUBE_ENABLED,
-    EXCALIDRAW_ENABLED,
-    CARDS_ENABLED,
 } from "../enums/EnvironmentVariable";
 import type { AdminInterface } from "./AdminInterface";
 import type { AdminBannedData, FetchMemberDataByUuidResponse, WorldChatMembersData } from "./AdminApi";
