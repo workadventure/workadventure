@@ -4,6 +4,7 @@
     import { ChatRoom } from "../../Connection/ChatConnection";
     import { selectedChatMessageToReply, selectedRoom } from "../../Stores/ChatStore";
     import LL from "../../../../i18n/i18n-svelte";
+    import Avatar from "../Avatar.svelte";
     import Message from "./Message.svelte";
     import MessageInput from "./MessageInput.svelte";
     import { IconArrowLeft } from "@wa-icons";
@@ -87,13 +88,30 @@
         {/each}
     </ul>
     {#if $typingMembers.length > 0}
-        <div class=" tw-flex tw-row tw-w-full tw-text-gray-300 tw-text-sm tw-p-0 tw-m-0">
-            {$typingMembers.slice(0, NUMBER_OF_TYPING_MEMBER_TO_DISPLAY)}
+        <div class=" tw-flex tw-row tw-w-full tw-text-gray-300 tw-text-sm  tw-m-0 tw-px-2">
+            <!-- {$typingMembers.map(typingMember => typingMember.name).slice(0, NUMBER_OF_TYPING_MEMBER_TO_DISPLAY)} -->
+            {#each $typingMembers
+                .map((typingMember, index) => ({ ...typingMember, index }))
+                .slice(0, NUMBER_OF_TYPING_MEMBER_TO_DISPLAY) as typingMember (typingMember.id)}
+                {#if typingMember.avatarUrl || typingMember.name}
+                    <div class="-tw-ml-2é">
+                        <Avatar
+                            isChatAvatar={true}
+                            avatarUrl={typingMember.avatarUrl}
+                            fallbackFirstLetter={typingMember.name ? typingMember.name[0] : "A"}
+                        />
+                    </div>
+                {/if}
+            {/each}
+
             {#if $typingMembers.length > NUMBER_OF_TYPING_MEMBER_TO_DISPLAY}
-                + {$typingMembers.length - NUMBER_OF_TYPING_MEMBER_TO_DISPLAY}
+                <div
+                    class={`tw-rounded-full tw-h-6 tw-w-6 tw-text-center tw-uppercase tw-text-white tw-bg-gray-400 -tw-ml-1 chatAvatar`}
+                >
+                    +{$typingMembers.length - NUMBER_OF_TYPING_MEMBER_TO_DISPLAY}
+                </div>
             {/if}
-            is typing
-            <div class="tw-flex tw-text-lg tw-ml-1">
+            <div class="message tw-rounded-2xl tw-px-3 tw-rounded-bl-none tw-bg-primary tw-flex tw-text-lg tw-ml-1">
                 <div class="animate-bounce-1">.</div>
                 <div class="animate-bounce-2">.</div>
                 <div class="animate-bounce-3">.</div>
@@ -121,5 +139,15 @@
     }
     .animate-bounce-3 {
         animation: bounce 1s infinite 0.2s;
+    }
+    .message {
+        min-width: 0;
+        overflow-wrap: anywhere;
+        position: relative;
+    }
+    .chatAvatar {
+        border-style: solid;
+        border-color: rgb(27 42 65 / 0.95);
+        border-width: 1px;
     }
 </style>

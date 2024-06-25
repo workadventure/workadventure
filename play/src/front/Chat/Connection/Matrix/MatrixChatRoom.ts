@@ -40,7 +40,7 @@ export class MatrixChatRoom implements ChatRoom {
     timelineWindow: TimelineWindow;
     inMemoryEventsContent: Map<EventId, IContent>;
     isEncrypted!: Writable<boolean>;
-    typingMembers: Writable<string[]>;
+    typingMembers: Writable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
 
     constructor(private matrixRoom: Room) {
         this.id = matrixRoom.roomId;
@@ -63,24 +63,36 @@ export class MatrixChatRoom implements ChatRoom {
 
         void this.matrixRoom.getMembersWithMembership(KnownMembership.Join).forEach((member) =>
             member.on(RoomMemberEvent.Typing, (event, member) => {
-                const memberDisplayName = member.user?.displayName;
+                const typingMember = member.user;
+                if (!typingMember) return;
+
+                const typingMemberInformation = {
+                    id: typingMember.userId,
+                    name: typingMember.displayName || null,
+                    avatarUrl: typingMember.avatarUrl || null,
+                };
+
+                typingMemberInformation.avatarUrl = typingMemberInformation.avatarUrl
+                    ? this.matrixRoom.client.mxcUrlToHttp(typingMemberInformation.avatarUrl ?? "", 48, 48)
+                    : typingMemberInformation.avatarUrl;
 
                 const myUserID = this.matrixRoom.client.getSafeUserId();
-                const myDisplayName = this.matrixRoom.client.getUser(myUserID)?.displayName;
 
-                if (!memberDisplayName || memberDisplayName === myDisplayName) return;
+                if (!typingMemberInformation.id || typingMemberInformation.id === myUserID) return;
 
-                if (get(this.typingMembers).includes(memberDisplayName)) {
+                const isAlreadyTyping = get(this.typingMembers).some((memberInformation) => {
+                    return memberInformation.id === typingMemberInformation.id;
+                });
+
+                if (isAlreadyTyping) {
                     this.typingMembers.update((currentTypingMemberList) => {
-                        return currentTypingMemberList.filter(
-                            (memberDisplayName) => memberDisplayName !== memberDisplayName
-                        );
+                        return currentTypingMemberList.filter((member) => member.id !== typingMemberInformation.id);
                     });
                     return;
                 }
 
-                this.typingMembers.update((currentValue) => {
-                    return [...currentValue, memberDisplayName];
+                this.typingMembers.update((currentTypingMemberList) => {
+                    return [...currentTypingMemberList, typingMemberInformation];
                 });
             })
         );

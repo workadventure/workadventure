@@ -1,6 +1,7 @@
 <script lang="ts">
     export let avatarUrl: string | null = null;
     export let fallbackFirstLetter = "A";
+    export let isChatAvatar = false;
 
     const colors = [
         "CB4288",
@@ -41,12 +42,26 @@
 </script>
 
 {#if avatarUrl}
-    <img src={avatarUrl} alt={"User avatar"} class="tw-rounded-full tw-h-6 tw-w-6 tw-object-contain tw-bg-white" />
+    <img
+        class:chatAvatar={isChatAvatar}
+        src={avatarUrl}
+        alt={"User avatar"}
+        class="tw-rounded-full tw-h-6 tw-w-6 tw-object-contain tw-bg-white"
+    />
 {:else}
     <div
+        class:chatAvatar={isChatAvatar}
         class={`tw-rounded-full tw-bg-amber-600 tw-h-6 tw-w-6 tw-text-center tw-uppercase tw-text-white`}
         style:background-color={`#${getColorByFirstLetter(fallbackFirstLetter)}`}
     >
         {fallbackFirstLetter}
     </div>
 {/if}
+
+<style>
+    .chatAvatar {
+        border-style: solid;
+        border-color: rgb(27 42 65 / 0.95);
+        border-width: 1px;
+    }
+</style>
