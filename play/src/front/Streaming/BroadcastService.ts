@@ -6,7 +6,6 @@ import { ConcatenateMapStore } from "@workadventure/store-utils";
 import { RoomConnection } from "../Connection/RoomConnection";
 import { screenWakeLock } from "../Utils/ScreenWakeLock";
 import { SpaceFilterInterface } from "../Space/SpaceFilter/SpaceFilter";
-import { LocalSpaceProviderSingleton } from "../Space/SpaceProvider/SpaceStore";
 import { BroadcastSpace } from "./Common/BroadcastSpace";
 import { BroadcastConnection } from "./Common/BroadcastConnection";
 import { TrackWrapper } from "./Common/TrackWrapper";
@@ -77,11 +76,12 @@ export class BroadcastService {
         const spaceNameSlugify = slugify(spaceName);
         const space = this.broadcastSpaces.find((space) => space.space.getName() === spaceNameSlugify);
         if (space) {
-            const spaceStore = LocalSpaceProviderSingleton.getInstance();
-            spaceStore.delete(spaceName);
+            space.destroy();
             this.broadcastSpaces = this.broadcastSpaces.filter((space) => space.space.getName() !== spaceNameSlugify);
+
             broadcastServiceLogger("leaveSpace", spaceNameSlugify);
         }
+
         jitsiLoadingStore.set(false);
         if (this.screenWakeRelease) {
             this.screenWakeRelease()
@@ -137,8 +137,9 @@ export class BroadcastService {
      * Destroy the broadcast service
      */
     public destroy(): void {
-        const spaceStore = LocalSpaceProviderSingleton.getInstance();
-        this.broadcastSpaces.forEach((space) => spaceStore.delete(space.space.getName()));
+        this.broadcastSpaces.forEach((space) => {
+            space.destroy();
+        });
     }
 
     /**
