@@ -35,7 +35,7 @@
     import MessageCircleIcon from "../Icons/MessageCircleIcon.svelte";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import ScreenShareIcon from "../Icons/ScreenShareIcon.svelte";
-    import { highlightFullScreen } from "../../Stores/ActionsCamStore";
+    import { highlightFullScreen, setHeight } from "../../Stores/ActionsCamStore";
     import ActionMediaBox from "./ActionMediaBox.svelte";
 
     // Extend the HTMLVideoElement interface to add the setSinkId method.
@@ -70,6 +70,7 @@
     let aspectRatio = 1;
     let isHighlighted = false;
     let menuDrop = false;
+    let currentHighlightedEmbedScreen: Streamable | undefined;
 
     const debug = Debug("VideoMediaBox");
 
@@ -83,6 +84,26 @@
 
     const resizeObserver = new ResizeObserver(() => {
         minimized = isMediaBreakpointOnly("md");
+    });
+
+    $: $setHeight, calcHeightVideo();
+    $: $highlightedEmbedScreen === peer && calcHeightVideo();
+
+    function calcHeightVideo() {
+        if ($highlightedEmbedScreen === peer && videoContainer) {
+            videoContainer.style.height = `${$setHeight}px`;
+        }
+    }
+
+    highlightedEmbedScreen.subscribe((value) => {
+        console.log("highlightedEmbedScreen VALUE", value);
+        currentHighlightedEmbedScreen = value;
+        handleResize();
+        if (value) {
+            isHightlighted = true;
+        } else {
+            isHightlighted = false;
+        }
     });
 
     // TODO: check the race condition when setting sinkId is solved.

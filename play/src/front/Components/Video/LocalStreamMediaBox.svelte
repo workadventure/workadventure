@@ -3,8 +3,9 @@
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { ScreenSharingLocalMedia } from "../../Stores/ScreenSharingStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
-    import { highlightFullScreen } from "../../Stores/ActionsCamStore";
+    import { highlightFullScreen, setHeight } from "../../Stores/ActionsCamStore";
     import { srcObject } from "./utils";
+    import video from "../../../i18n/en-US/video";
 
     export let clickable = false;
 
@@ -13,6 +14,7 @@
     export let cssClass: string | undefined;
     let embedScreen: Streamable;
     let menuDrop = false;
+    let videoContainer: HTMLDivElement;
 
     if (peer) {
         embedScreen = peer as unknown as Streamable;
@@ -38,6 +40,15 @@
         highlightedEmbedScreen.toggleHighlight(peer);
         highlightFullScreen.set(false);
     }
+
+    $: $setHeight, calcHeightVideo();
+    $: $highlightedEmbedScreen === embedScreen, calcHeightVideo();
+
+    function calcHeightVideo() {
+        if ($highlightedEmbedScreen === peer && videoContainer) {
+            videoContainer.style.height = `${$setHeight}px`;
+        }
+    }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -46,6 +57,7 @@
     class="group/screenshare m-0 relative w-full h-full rounded-lg {cssClass ? cssClass : ''} container-class"
     class:hide={!stream}
     id="screen-sharing"
+    bind:this={videoContainer}
 >
     {#if stream}
         <div

@@ -6,7 +6,7 @@
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import type { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
-    import { highlightFullScreen } from "../../Stores/ActionsCamStore";
+    import { highlightFullScreen, setHeight } from "../../Stores/ActionsCamStore";
     import { srcObject } from "./utils";
     import BanReportBox from "./BanReportBox.svelte";
 
@@ -19,6 +19,8 @@
     let isHighlighted = true;
     let embedScreen: Streamable;
     let menuDrop = false;
+    let videoContainer: HTMLDivElement;
+    let currentHighlightedEmbedScreen: Streamable | undefined;
 
     if (peer) {
         embedScreen = peer as unknown as Streamable;
@@ -45,10 +47,18 @@
         highlightedEmbedScreen.toggleHighlight(embedScreen);
         highlightFullScreen.set(false);
     }
+
+    $: $setHeight, calcHeightVideo();
+    $: $highlightedEmbedScreen === embedScreen, calcHeightVideo();
+    function calcHeightVideo() {
+        if ($highlightedEmbedScreen === embedScreen && videoContainer) {
+            videoContainer.style.height = `${$setHeight}px`;
+        }
+    }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div class="group/screenshare h-full w-full relative screen-sharing" id="screen-sharing">
+<div class="group/screenshare h-full w-full relative screen-sharing" id="screen-sharing" bind:this={videoContainer}>
     {#if $statusStore === "connecting"}
         <div class="connecting-spinner" />
     {/if}

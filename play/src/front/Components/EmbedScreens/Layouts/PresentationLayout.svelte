@@ -12,7 +12,7 @@
     } from "../../../Stores/StreamableCollectionStore";
     import Loading from "../../Video/Loading.svelte";
     import { jitsiLoadingStore } from "../../../Streaming/BroadcastService";
-    import { rightMode, hideMode, highlightFullScreen } from "../../../Stores/ActionsCamStore";
+    import { rightMode, hideMode, highlightFullScreen, setHeight } from "../../../Stores/ActionsCamStore";
 
     const isMobile = window.matchMedia("(max-width: 767px)");
     let isVertical: boolean;
@@ -36,7 +36,14 @@
         resizeHeight();
     };
 
+    afterUpdate(() => {
+        modifySizeCamIfScreenShare();
+    });
+
+    // $: $highlightedEmbedScreen?.uniqueId, resizeHeight();
+
     onMount(() => {
+        resizeHeight();
         isMobile.addEventListener("change", (e: any) => handleTabletChange(e));
         handleTabletChange(isMobile);
 
@@ -47,17 +54,20 @@
     });
 
     function resizeHeight() {
-        console.log("FENETRE", window.innerHeight);
-        let totalElementsHeight = camContainer.offsetHeight + highlightScreen.offsetHeight + 72;
-        if (totalElementsHeight > window.innerHeight) {
-            console.log("je suis dans le if");
-            let containerCam = document.getElementById("container-media") as HTMLDivElement;
-            containerCam.style.height = `${window.innerHeight - 72}px`;
+        console.log("JE SUIS DANS REsIZE HEIGHT");
+        let availableHeight = window.innerHeight - (camContainer?.offsetHeight || 0) - 72;
+        console.log("availableHeight", availableHeight);
+        if (availableHeight < 0) {
+            availableHeight = 0;
         }
+        setHeight.set(availableHeight);
+        console.log($setHeight, "SET HEIGHT");
     }
 
     highlightedEmbedScreen.subscribe((value) => {
+        console.log("highlightedEmbedScreen VALUE", value);
         currentHighlightedEmbedScreen = value;
+        handleResize();
         if (value) {
             isHightlighted = true;
         } else {
@@ -73,10 +83,6 @@
         }
     }
 
-    afterUpdate(() => {
-        modifySizeCamIfScreenShare();
-    });
-
     $: if ($highlightedEmbedScreen) modifySizeCamIfScreenShare();
     $: if ($highlightFullScreen) modifySizeCamIfScreenShare();
 
@@ -84,8 +90,8 @@
         let containerCam = document.getElementById("container-media") as HTMLDivElement;
         if (containerCam && currentHighlightedEmbedScreen !== undefined && !$highlightFullScreen) {
             containerCam.style.transform = "scale(0.7)";
-            containerCam.style.marginTop = "-25px";
-            containerCam.style.marginBottom = "-10px";
+            containerCam.style.marginTop = "-24px";
+            containerCam.style.marginBottom = "-8px";
         } else {
             containerCam.style.transform = "scale(1)";
             containerCam.style.marginTop = "0px";
@@ -131,18 +137,6 @@
     onDestroy(() => {
         isMobile.removeEventListener("change", (e: any) => handleTabletChange(e));
     });
-
-    // function calcHeight() {
-    //     console.log("je suis dans le calc height");
-    //     let containerCam = document.getElementById("container-media") as HTMLDivElement;
-    //     console.log("container cam", containerCam);
-    //     if (containerCam) {
-    //         let height = containerCam.clientHeight;
-    //         console.log("height de container cam :", height);
-    //         let windowHeight = window.innerHeight;
-    //         console.log("window height :", windowHeight);
-    //     }
-    // }
 </script>
 
 <!-- class:full-medias={displayFullMedias} -->
