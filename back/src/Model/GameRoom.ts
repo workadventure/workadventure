@@ -137,13 +137,7 @@ export class GameRoom implements BrothersFinder {
             mapUrl = mapDetails.mapUrl;
         } else if (wamUrl) {
             wamFile = await mapFetcher.fetchWamFile(wamUrl, INTERNAL_MAP_STORAGE_URL, PUBLIC_MAP_STORAGE_PREFIX);
-            try {
-                new URL(wamFile.mapUrl);
-                mapUrl = wamFile.mapUrl;
-            } catch (e) {
-                console.info("Map URL is not a valid URL, trying to normalize it", e);
-                mapUrl = mapFetcher.normalizeMapUrl(wamUrl, wamFile.mapUrl);
-            }
+            mapUrl = new URL(wamFile.mapUrl, wamUrl).toString();
         } else {
             throw new Error("No mapUrl or wamUrl");
         }

@@ -19,6 +19,10 @@ export const loadAllLayers = (
         const layerArray: WokaTextureDescriptionInterface[] = [];
         Object.values(layer).forEach((textureDescriptor) => {
             layerArray.push(textureDescriptor);
+            if (!textureDescriptor.url) {
+                console.warn("Player resource has no URL", textureDescriptor);
+                return;
+            }
             load.spritesheet(textureDescriptor.id, textureDescriptor.url, { frameWidth: 32, frameHeight: 32 });
         });
         returnArray.push(layerArray);
@@ -31,6 +35,10 @@ export const loadAllDefaultModels = (
 ): WokaTextureDescriptionInterface[] => {
     const returnArray = Object.values(playerTextures.getTexturesResources(PlayerTexturesKey.Woka));
     returnArray.forEach((playerResource: WokaTextureDescriptionInterface) => {
+        if (!playerResource.url) {
+            console.warn("Player resource has no URL", playerResource);
+            return;
+        }
         load.spritesheet(playerResource.id, playerResource.url, { frameWidth: 32, frameHeight: 32 });
     });
     return returnArray;

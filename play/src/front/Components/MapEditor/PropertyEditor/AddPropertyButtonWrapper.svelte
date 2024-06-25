@@ -12,6 +12,7 @@
     import excalidrawSvg from "../../images/applications/icon_excalidraw.svg";
     import workerWhiteSvg from "../../images/applications/worker_white.svg";
     import teamWhiteSvg from "../../images/applications/team_white.svg";
+    import cardsPng from "../../images/applications/icon_cards.svg";
     import LL from "../../../../i18n/i18n-svelte";
     import { connectionManager } from "../../../Connection/ConnectionManager";
     import AddPropertyButton from "./AddPropertyButton.svelte";
@@ -254,6 +255,21 @@
         img={excalidrawSvg}
         style={`z-index: 100;${isActive ? "background-color: #4156f6;" : ""}`}
         disabled={!connectionManager.excalidrawToolActivated}
+        on:click={(event) => {
+            dispatch("click", event);
+        }}
+    />
+{/if}
+
+{#if property === "openWebsite" && subProperty === "cards"}
+    <AddPropertyButton
+        headerText={$LL.mapEditor.properties.cardsProperties.label()}
+        descriptionText={connectionManager.cardsToolActivated
+            ? $LL.mapEditor.properties.cardsProperties.description()
+            : $LL.mapEditor.properties.cardsProperties.disabled()}
+        img={cardsPng}
+        style={`z-index: 100;${isActive ? "background-color: #4156f6;" : ""}`}
+        disabled={!connectionManager.cardsToolActivated}
         on:click={(event) => {
             dispatch("click", event);
         }}

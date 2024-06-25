@@ -90,20 +90,21 @@
         activeLiveMessage = true;
         inputSendTextActive = false;
         uploadAudioActive = false;
+        analyticsClient.openMegaphone();
     }
 
     function activateInputText() {
-        analyticsClient.globalMessage();
         activeLiveMessage = false;
         inputSendTextActive = true;
         uploadAudioActive = false;
+        analyticsClient.openGlobalMessage();
     }
 
     function activateUploadAudio() {
-        analyticsClient.globalMessage();
         activeLiveMessage = false;
         inputSendTextActive = false;
         uploadAudioActive = true;
+        analyticsClient.openGlobalAudio();
     }
 
     function back() {
@@ -158,7 +159,7 @@
     }
 
     function startLive() {
-        analyticsClient.openMegaphone();
+        analyticsClient.startMegaphone();
         currentLiveStreamingNameStore.set($megaphoneUrlStore);
         requestedMegaphoneStore.set(true);
         close();

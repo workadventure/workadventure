@@ -57,6 +57,7 @@ export interface FrontConfigurationInterface {
     GOOGLE_DRIVE_PICKER_APP_ID: string | undefined;
     EXCALIDRAW_ENABLED: boolean;
     EXCALIDRAW_DOMAINS: string[];
+    CARDS_ENABLED: boolean;
     EMBEDLY_KEY: string | undefined;
     EJABBERD_DOMAIN: string | undefined;
     EJABBERD_WS_URI: string | undefined;

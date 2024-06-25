@@ -3,8 +3,8 @@
     import { get } from "svelte/store";
     import { ChatRoom } from "../../Connection/ChatConnection";
     import { proximityRoomConnection, selectedChatMessageToReply, selectedRoom } from "../../Stores/ChatStore";
-    import LL from "../../../../i18n/i18n-svelte";
     import Avatar from "../Avatar.svelte";
+    import LL from "../../../../i18n/i18n-svelte";
     import Message from "./Message.svelte";
     import MessageInput from "./MessageInput.svelte";
     import { IconArrowLeft } from "@wa-icons";

@@ -53,9 +53,7 @@ import {
     ServerToClientMessage as ServerToClientMessageTsProto,
     SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
     SetPlayerVariableMessage_Scope,
-    SpaceFilterMessage,
     TokenExpiredMessage,
-    UnwatchSpaceMessage,
     UpdateSpaceFilterMessage,
     UpdateSpaceMetadataMessage,
     UpdateSpaceUserMessage,
@@ -65,7 +63,6 @@ import {
     UserLeftMessage as UserLeftMessageTsProto,
     UserMovedMessage as UserMovedMessageTsProto,
     ViewportMessage as ViewportMessageTsProto,
-    WatchSpaceMessage,
     WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
     WorldConnectionMessage,
     XmppSettingsMessage,
@@ -1587,18 +1584,6 @@ export class RoomConnection implements RoomConnection {
                 megaphoneStateMessage: {
                     value: state,
                     spaceName: currentMegaphoneName ? slugify(currentMegaphoneName) : undefined,
-                },
-            },
-        });
-    }
-
-    public emitJitsiParticipantIdSpace(spaceName: string, participantId: string) {
-        this.send({
-            message: {
-                $case: "jitsiParticipantIdSpaceMessage",
-                jitsiParticipantIdSpaceMessage: {
-                    spaceName,
-                    value: participantId,
                 },
             },
         });

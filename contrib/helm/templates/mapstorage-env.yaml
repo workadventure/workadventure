@@ -8,6 +8,7 @@ metadata:
 data:
   API_URL: {{ range $replica, $f := until (int .Values.back.replicaCount) }}{{ include "workadventure.fullname" $ }}-back-{{ $replica }}:50051{{ if ne $replica (sub (int $.Values.back.replicaCount) 1)  }}{{ "," }}{{ end }}{{ end }}
   PATH_PREFIX: "{{ if .Values.singleDomain }}/map-storage{{ end }}"
+  ENTITY_COLLECTION_URLS: "https://{{ .Values.domainName }}/collections/FurnitureCollection.json,https://{{ .Values.domainName }}/collections/OfficeCollection.json"
 
   {{- range $key, $val := .Values.commonEnv }}
   {{ $key }}: {{ $val | quote }}

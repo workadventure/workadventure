@@ -15,6 +15,7 @@ import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
 import { _ServiceWorker } from "../Network/ServiceWorker";
 import { GameConnexionTypes, urlManager } from "../Url/UrlManager";
 import {
+    CARDS_ENABLED,
     ENABLE_OPENID,
     ERASER_ENABLED,
     EXCALIDRAW_DOMAINS,
@@ -51,6 +52,7 @@ const enum defautlNativeIntegrationAppName {
     GOOGLE_SLIDES = "Google Slides",
     ERASER = "Eraser",
     EXCALIDRAW = "Excalidraw",
+    CARDS = "Cards",
 }
 
 class ConnectionManager {
@@ -74,6 +76,7 @@ class ConnectionManager {
     private _googleDriveActivated: boolean | undefined;
     private _excalidrawToolActivated: boolean | undefined;
     private _excalidrawToolDomains: string[] | undefined;
+    private _cardsToolActivated: boolean | undefined;
 
     private _applications: ApplicationDefinitionInterface[] = [];
 
@@ -101,6 +104,7 @@ class ConnectionManager {
         this.eraserToolActivated = ERASER_ENABLED;
         this.excalidrawToolActivated = EXCALIDRAW_ENABLED;
         this.excalidrawToolDomains = EXCALIDRAW_DOMAINS;
+        this.cardsToolActivated = CARDS_ENABLED;
     }
 
     /**
@@ -529,6 +533,11 @@ class ConnectionManager {
                 );
                 this.excalidrawToolActivated = ExcalidrawApp?.enabled ?? EXCALIDRAW_ENABLED;
 
+                const CardsApp = connect.room.applications?.find(
+                    (app) => app.name === defautlNativeIntegrationAppName.CARDS
+                );
+                this.cardsToolActivated = CardsApp?.enabled ?? CARDS_ENABLED;
+
                 // Set other applications
                 for (const app of connect.room.applications ?? []) {
                     if (
@@ -539,7 +548,8 @@ class ConnectionManager {
                         defautlNativeIntegrationAppName.GOOGLE_SHEETS === app.name ||
                         defautlNativeIntegrationAppName.GOOGLE_SLIDES === app.name ||
                         defautlNativeIntegrationAppName.ERASER === app.name ||
-                        defautlNativeIntegrationAppName.EXCALIDRAW === app.name
+                        defautlNativeIntegrationAppName.EXCALIDRAW === app.name ||
+                        defautlNativeIntegrationAppName.CARDS === app.name
                     ) {
                         continue;
                     }
@@ -799,6 +809,13 @@ class ConnectionManager {
     }
     set excalidrawToolDomains(domains: string[] | undefined) {
         this._excalidrawToolDomains = domains;
+    }
+
+    get cardsToolActivated(): boolean {
+        return this._cardsToolActivated ?? false;
+    }
+    set cardsToolActivated(activated: boolean | undefined) {
+        this._cardsToolActivated = activated;
     }
 
     get applications(): ApplicationDefinitionInterface[] {

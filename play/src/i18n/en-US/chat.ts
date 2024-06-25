@@ -120,7 +120,7 @@ const chat: BaseTranslation = {
     more: "more",
     sendBack: "Send back",
     delete: "Delete",
-    messageDeleted: "This message was deleted by ",
+    messageDeleted: "Message deleted",
     emoji: {
         icon: "Icon to open or close emoji selected popup",
         search: "Search emojis...",

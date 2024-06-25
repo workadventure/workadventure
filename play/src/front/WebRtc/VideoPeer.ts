@@ -15,6 +15,7 @@ import { TrackInterface } from "../Streaming/Contract/TrackInterface";
 import { showReportScreenStore } from "../Stores/ShowReportScreenStore";
 import { iframeListener } from "../Api/IframeListener";
 import { proximityRoomConnection } from "../Chat/Stores/ChatStore";
+import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { blackListManager } from "./BlackListManager";
@@ -53,7 +54,7 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
     constructor(
         public user: UserSimplePeerInterface,
         initiator: boolean,
-        public readonly userName: string,
+        public readonly player: RemotePlayerData,
         private connection: RoomConnection
     ) {
         const bandwidth = get(videoBandwidthStore);
@@ -413,7 +414,7 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
         this.connection.emitKickOffUserMessage(this.userUuid, "peer");
     }
     blockOrReportUser(): void {
-        showReportScreenStore.set({ userId: this.userId, userName: this.userName });
+        showReportScreenStore.set({ userId: this.userId, userName: this.player.name });
     }
     sendProximityPublicMessage(message: string): void {
         this.connection.emitProximityPublicMessage("peer", message);
