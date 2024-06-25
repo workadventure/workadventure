@@ -20,6 +20,8 @@ import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
 import { RoomMessageEventContent } from "matrix-js-sdk/lib/@types/events";
 import { ChatRoom, ChatRoomMembership } from "../ChatConnection";
 import { selectedChatMessageToReply } from "../../Stores/ChatStore";
+import { LocalSpaceProviderSingleton } from "../../../Space/SpaceProvider/SpaceStore";
+import { WORLD_SPACE_NAME, CONNECTED_USER_FILTER_NAME } from "../../../Space/Space";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { matrixSecurity } from "./MatrixSecurity";
@@ -42,7 +44,7 @@ export class MatrixChatRoom implements ChatRoom {
     isEncrypted!: Writable<boolean>;
     typingMembers: Writable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
 
-    constructor(private matrixRoom: Room) {
+    constructor(private matrixRoom: Room, private spaceStore = LocalSpaceProviderSingleton.getInstance()) {
         this.id = matrixRoom.roomId;
         this.name = writable(matrixRoom.name);
         this.type = this.getMatrixRoomType();
@@ -72,10 +74,6 @@ export class MatrixChatRoom implements ChatRoom {
                     avatarUrl: typingMember.avatarUrl || null,
                 };
 
-                typingMemberInformation.avatarUrl = typingMemberInformation.avatarUrl
-                    ? this.matrixRoom.client.mxcUrlToHttp(typingMemberInformation.avatarUrl ?? "", 48, 48)
-                    : typingMemberInformation.avatarUrl;
-
                 const myUserID = this.matrixRoom.client.getSafeUserId();
 
                 if (!typingMemberInformation.id || typingMemberInformation.id === myUserID) return;
@@ -89,6 +87,22 @@ export class MatrixChatRoom implements ChatRoom {
                         return currentTypingMemberList.filter((member) => member.id !== typingMemberInformation.id);
                     });
                     return;
+                }
+
+                const allUserSpaceFilter = this.spaceStore
+                    .get(WORLD_SPACE_NAME)
+                    .getSpaceFilter(CONNECTED_USER_FILTER_NAME);
+
+                const userFromSpace = allUserSpaceFilter
+                    .getUsers()
+                    .filter((spaceuser) => spaceuser.chatID === typingMemberInformation.id)[0];
+
+                if (userFromSpace && userFromSpace.getWokaBase64) {
+                    typingMemberInformation.avatarUrl = userFromSpace.getWokaBase64;
+                } else {
+                    typingMemberInformation.avatarUrl = typingMemberInformation.avatarUrl
+                        ? this.matrixRoom.client.mxcUrlToHttp(typingMemberInformation.avatarUrl ?? "", 48, 48)
+                        : typingMemberInformation.avatarUrl;
                 }
 
                 this.typingMembers.update((currentTypingMemberList) => {
