@@ -55,6 +55,7 @@ export class ProximityChatRoom implements ChatRoom {
     membersId: string[] = [];
     hasPreviousMessage = writable(false);
     isEncrypted = writable(false);
+    typingMembers: Readable<string[]> = writable([]);
 
     unknowUser = {
         id: "0",
@@ -199,5 +200,14 @@ export class ProximityChatRoom implements ChatRoom {
 
         // Add message to the list
         this.messages.push(newMessage);
+    }
+
+    startTyping(): Promise<object> {
+        console.info("Function not implemented.");
+        return Promise.resolve({});
+    }
+    stopTyping(): Promise<object> {
+        console.info("Function not implemented.");
+        return Promise.resolve({});
     }
 }

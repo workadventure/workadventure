@@ -158,7 +158,6 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
                     proximityRoomChat.addIncomingUser(this.userId, this.userUuid, this.userName, color ?? undefined);
                 }
             }
-            //chatMessagesService.addIncomingUser(this.userId);
 
             this.newMessageSubscription = newChatMessageSubject.subscribe((newMessage) => {
                 if (!newMessage) return;
@@ -342,7 +341,6 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
                     proximityRoomChat.addOutcomingUser(this.userId, this.userUuid, this.userName);
             }
 
-            //chatMessagesService.addOutcomingUser(this.userId);
             if (this.localStreamStoreSubscribe) this.localStreamStoreSubscribe();
             if (this.apparentMediaConstraintStoreSubscribe) this.apparentMediaConstraintStoreSubscribe();
             if (this.volumeStoreSubscribe) this.volumeStoreSubscribe();

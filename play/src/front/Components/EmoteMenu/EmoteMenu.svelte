@@ -67,7 +67,7 @@
     }
 
     onDestroy(() => {
-        if (unsubscriber) {
+        if (unsubscriber != null) {
             unsubscriber();
         }
 

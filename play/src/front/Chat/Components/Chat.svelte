@@ -98,9 +98,11 @@
         <nav class="nav">
             <div class="background" class:chat={$navChat === "chat"} />
             <ul>
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <li class:active={$navChat === "users"} on:click={() => navChat.set("users")}>
                     {$LL.chat.users()}
                 </li>
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <li class:active={$navChat === "chat"} on:click={() => navChat.set("chat")}>{$LL.chat.chat()}</li>
             </ul>
         </nav>

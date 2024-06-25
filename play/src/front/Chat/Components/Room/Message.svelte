@@ -94,7 +94,7 @@
         <div
             class={`options tw-bg-white/30 tw-backdrop-blur-sm tw-p-1 tw-rounded-md ${!isMyMessage ? "tw-left-6" : ""}`}
         >
-            <MessageOptions {messageRef} {message} />
+            <MessageOptions {message} />
         </div>
     {/if}
 </div>

@@ -157,7 +157,6 @@ import { StreamSpaceWatcherSingleton } from "../../Space/SpaceWatcher/SocketSpac
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
 import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
-import { updateMatrixClientStore } from "../../Chat/Connection/Matrix/MatrixSecurity";
 import { proximityRoomConnection, selectedRoom } from "../../Chat/Stores/ChatStore";
 import { ProximityChatConnection } from "../../Chat/Connection/Proximity/ProximityChatConnection";
 import { matrixSecurity } from "../../Chat/Connection/Matrix/MatrixSecurity";
@@ -1815,7 +1814,10 @@ export class GameScene extends DirtyScene {
                 this.connection.megaphoneSettingsMessageStream.subscribe((megaphoneSettingsMessage) => {
                     if (megaphoneSettingsMessage) {
                         megaphoneCanBeUsedStore.set(megaphoneSettingsMessage.enabled);
-                        if (megaphoneSettingsMessage.url && get(availabilityStatusStore) !== AvailabilityStatus.DO_NOT_DISTURB) {
+                        if (
+                            megaphoneSettingsMessage.url &&
+                            get(availabilityStatusStore) !== AvailabilityStatus.DO_NOT_DISTURB
+                        ) {
                             const oldMegaphoneUrl = get(megaphoneUrlStore);
 
                             if (oldMegaphoneUrl && megaphoneSettingsMessage.url !== oldMegaphoneUrl) {
@@ -1980,6 +1982,10 @@ export class GameScene extends DirtyScene {
                         if (proximityUserUuid == undefined || proximityUserUuid === localUserStore.getLocalUser()?.uuid)
                             return;
                         room.addNewMessage(proximityPublicMessageToClientMessage.message, proximityUserUuid);
+
+                        // if the proximity chat is not open, open it to see the message
+                        chatVisibilityStore.set(true);
+                        if (get(selectedRoom) == undefined) selectedRoom.set(room);
                     }
                 );
 
