@@ -156,7 +156,7 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
                 const proximityRoomChat = get(proximityMeeting.rooms)[0];
                 if (proximityRoomChat.addIncomingUser != undefined) {
                     const color = playersStore.getPlayerById(this.userId)?.color;
-                    proximityRoomChat.addIncomingUser(this.userId, this.userUuid, this.userName, color ?? undefined);
+                    proximityRoomChat.addIncomingUser(this.userId, this.userUuid, this.player.name, color ?? undefined);
                 }
             }
 
@@ -339,7 +339,7 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
             if (proximityMeeting) {
                 const proximityRoomChat = get(proximityMeeting.rooms)[0];
                 if (proximityRoomChat.addOutcomingUser != undefined)
-                    proximityRoomChat.addOutcomingUser(this.userId, this.userUuid, this.userName);
+                    proximityRoomChat.addOutcomingUser(this.userId, this.userUuid, this.player.name);
             }
 
             if (this.localStreamStoreSubscribe) this.localStreamStoreSubscribe();

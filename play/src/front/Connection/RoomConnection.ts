@@ -69,6 +69,9 @@ import {
     TurnCredentialsAnswer,
     ProximityPrivateMessageToClientMessage,
     ProximityPublicMessageToClientMessage,
+    SpaceFilterMessage,
+    WatchSpaceMessage,
+    UnwatchSpaceMessage,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -1584,6 +1587,18 @@ export class RoomConnection implements RoomConnection {
                 megaphoneStateMessage: {
                     value: state,
                     spaceName: currentMegaphoneName ? slugify(currentMegaphoneName) : undefined,
+                },
+            },
+        });
+    }
+
+    public emitJitsiParticipantIdSpace(spaceName: string, participantId: string) {
+        this.send({
+            message: {
+                $case: "jitsiParticipantIdSpaceMessage",
+                jitsiParticipantIdSpaceMessage: {
+                    spaceName,
+                    value: participantId,
                 },
             },
         });
