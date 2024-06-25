@@ -2,7 +2,9 @@ import { test } from "@playwright/test";
 
 //TODO update tests for new proximity chat !
 test.describe("Scripting chat functions", () => {
-  test("MUST BE IMPLEMENTED WITH NEW PROXIMITY CHAT", () => {});
+  test("MUST BE IMPLEMENTED WITH NEW PROXIMITY CHAT", () => {
+    test.skip();
+  });
   // test('can open / close chat + start / stop typing @chat', async ({ page}, { project }) => {
   //     // Skip test for mobile device
   //     if(project.name === "mobilechromium") {

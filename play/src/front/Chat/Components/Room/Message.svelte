@@ -33,11 +33,9 @@
         outcoming: MessageOutcoming as ComponentType,
         proximity: MessageIncoming as ComponentType,
     };
-
-    let messageRef: HTMLDivElement;
 </script>
 
-<div id="message" bind:this={messageRef} class={`${isMyMessage && "tw-self-end tw-flex-row-reverse tw-relative"}`}>
+<div id="message" class={`${isMyMessage && "tw-self-end tw-flex-row-reverse tw-relative"}`}>
     <div class={`container-grid ${isMyMessage ? "tw-justify-end grid-container-inverted" : "tw-justify-start"}`}>
         <div
             class="messageHeader tw-text-gray-500 tw-text-xxs tw-p-0 tw-m-0 tw-flex tw-justify-between tw-items-end"
