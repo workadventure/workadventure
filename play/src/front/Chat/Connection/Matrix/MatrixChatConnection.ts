@@ -6,6 +6,7 @@ import {
     ICreateRoomStateEvent,
     IRoomDirectoryOptions,
     MatrixClient,
+    MatrixError,
     PendingEventOrdering,
     Room,
     RoomEvent,
@@ -291,14 +292,28 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         if (roomOptions === undefined) {
             return Promise.reject(new Error("CreateRoomOptions is empty"));
         }
-        return await this.client.createRoom(this.mapCreateRoomOptionsToMatrixCreateRoomOptions(roomOptions));
+        try {
+            return await this.client.createRoom(this.mapCreateRoomOptionsToMatrixCreateRoomOptions(roomOptions));
+        } catch (error) {
+            throw this.handleMatrixError(error);
+        }
+    }
+
+    private handleMatrixError(error: unknown) {
+        if (error instanceof MatrixError) {
+            error.data.error;
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            //@ts-ignore
+            return new Error(error.data.error, { cause: error });
+        }
+        return error;
     }
 
     private mapCreateRoomOptionsToMatrixCreateRoomOptions(roomOptions: CreateRoomOptions): ICreateRoomOpts {
         return {
             name: roomOptions.name,
             visibility: roomOptions.visibility as Visibility | undefined,
-            room_alias_name: roomOptions.name,
+            room_alias_name: roomOptions.name?.replace(/ /g, "-"),
             invite: roomOptions.invite?.map((invitation) => invitation.value) ?? [],
             is_direct: roomOptions.is_direct,
             initial_state: this.computeInitialState(roomOptions),

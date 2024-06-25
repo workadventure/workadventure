@@ -187,6 +187,7 @@ const chat: BaseTranslation = {
             create: "Create",
             cancel: "Cancel",
         },
+        error: "Error on room creation",
     },
     e2ee: {
         encryptionNotConfigured: "Encryption not configured",

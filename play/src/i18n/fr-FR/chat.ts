@@ -188,6 +188,7 @@ const chat: DeepPartial<Translation["chat"]> = {
             create: "Créer",
             cancel: "Annuler",
         },
+        error: "Erreur lors de la création du salon",
     },
     e2ee: {
         encryptionNotConfigured: "Chiffrement non configuré",
