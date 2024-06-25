@@ -13,6 +13,7 @@ import {
 } from "../ChatConnection";
 import LL from "../../../../i18n/i18n-svelte";
 import { gameManager } from "../../../Phaser/Game/GameManager";
+import { iframeListener } from "../../../Api/IframeListener";
 import { ProximityChatConnection } from "./ProximityChatConnection";
 
 export class ProximityChatMessage implements ChatMessage {
@@ -93,8 +94,23 @@ export class ProximityChatRoom implements ChatRoom {
 
         // Use the room connection to send the message to other users of the space
         const spaceName = get(this._connection.spaceName);
-        if (broadcast && spaceName != undefined)
+        if (broadcast && spaceName != undefined) {
             this._connection.roomConnection.emitProximityPublicMessage(spaceName, message);
+
+            // Send bubble message to WorkAdventure scripting API
+            try {
+                iframeListener.sendUserInputChat(message, this._userId);
+            } catch (e) {
+                console.error("Error while sending message to WorkAdventure scripting API", e);
+            }
+        } else {
+            // Send local message to WorkAdventure scripting API
+            try {
+                iframeListener.sendUserInputChat(message, undefined);
+            } catch (e) {
+                console.error("Error while sending message to WorkAdventure scripting API", e);
+            }
+        }
     }
 
     addIncomingUser(userId: number, userUuid: string, userName: string, color?: string): void {
@@ -139,7 +155,9 @@ export class ProximityChatRoom implements ChatRoom {
             url: undefined,
         };
 
-        const sender = [...get(this._connection.userConnected).values()].find((user) => user.uuid === senderUserUuid);
+        const sender: ChatUser | undefined = [...get(this._connection.userConnected).values()].find(
+            (user) => user.uuid === senderUserUuid
+        );
         // Create message
         const newMessage = new ProximityChatMessage(
             uuidv4(),
