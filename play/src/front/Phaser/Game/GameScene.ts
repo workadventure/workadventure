@@ -139,7 +139,7 @@ import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
 import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer, debugZoom } from "../../Utils/Debuggers";
 import { checkCoturnServer } from "../../Components/Video/utils";
 import { BroadcastService } from "../../Streaming/BroadcastService";
-import { liveStreamingEnabledStore, megaphoneCanBeUsedStore } from "../../Stores/MegaphoneStore";
+import { liveStreamingEnabledStore, megaphoneCanBeUsedStore, megaphoneUrlStore } from "../../Stores/MegaphoneStore";
 import { CompanionTextureError } from "../../Exception/CompanionTextureError";
 import { SelectCompanionScene, SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { scriptUtils } from "../../Api/ScriptUtils";
@@ -160,6 +160,7 @@ import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWr
 import { updateMatrixClientStore } from "../../Chat/Connection/Matrix/MatrixSecurity";
 import { proximityRoomConnection, selectedRoom } from "../../Chat/Stores/ChatStore";
 import { ProximityChatConnection } from "../../Chat/Connection/Proximity/ProximityChatConnection";
+import { matrixSecurity } from "../../Chat/Connection/Matrix/MatrixSecurity";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -1525,7 +1526,7 @@ export class GameScene extends DirtyScene {
 
                     matrixClientPromise
                         .then((matrixClient) => {
-                            updateMatrixClientStore(matrixClient);
+                            matrixSecurity.updateMatrixClientStore(matrixClient);
                         })
                         .catch((e) => {
                             console.error(e);
@@ -1795,43 +1796,51 @@ export class GameScene extends DirtyScene {
                     }
                 });
 
-                try {
-                    const broadcastService = new BroadcastService(
-                        this.connection,
-                        (
-                            connection: RoomConnection,
-                            spaceName: string,
-                            spaceFilter: SpaceFilterMessage,
-                            broadcastService: BroadcastService,
-                            playSound: boolean
-                        ) => {
-                            return new JitsiBroadcastSpace(
-                                connection,
-                                spaceName,
-                                spaceFilter,
-                                broadcastService,
-                                playSound
-                            );
-                        }
-                    );
-                    this._broadcastService = broadcastService;
+                const broadcastService = new BroadcastService(
+                    this.connection,
+                    (
+                        connection: RoomConnection,
+                        spaceName: string,
+                        spaceFilter: SpaceFilterMessage,
+                        broadcastService: BroadcastService,
+                        playSound: boolean
+                    ) => {
+                        return new JitsiBroadcastSpace(connection, spaceName, spaceFilter, broadcastService, playSound);
+                    }
+                );
+                this._broadcastService = broadcastService;
 
-                    // The megaphoneSettingsMessageStream is completed in the RoomConnection. No need to unsubscribe.
-                    //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                    this.connection.megaphoneSettingsMessageStream.subscribe((megaphoneSettingsMessage) => {
-                        if (megaphoneSettingsMessage) {
-                            megaphoneCanBeUsedStore.set(megaphoneSettingsMessage.enabled);
-                            if (
-                                megaphoneSettingsMessage.url &&
-                                get(availabilityStatusStore) !== AvailabilityStatus.DO_NOT_DISTURB
-                            ) {
-                                broadcastService.joinSpace(megaphoneSettingsMessage.url);
+                // The megaphoneSettingsMessageStream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.megaphoneSettingsMessageStream.subscribe((megaphoneSettingsMessage) => {
+                    if (megaphoneSettingsMessage) {
+                        megaphoneCanBeUsedStore.set(megaphoneSettingsMessage.enabled);
+                        if (megaphoneSettingsMessage.url && get(availabilityStatusStore) !== AvailabilityStatus.DO_NOT_DISTURB) {
+                            const oldMegaphoneUrl = get(megaphoneUrlStore);
+
+                            if (oldMegaphoneUrl && megaphoneSettingsMessage.url !== oldMegaphoneUrl) {
+                                spaceProvider.delete(oldMegaphoneUrl);
                             }
+                            broadcastService.joinSpace(megaphoneSettingsMessage.url);
+                            megaphoneUrlStore.set(megaphoneSettingsMessage.url);
                         }
-                    });
-                } catch (e) {
-                    console.error(e);
-                }
+                    }
+                });
+                this._broadcastService = broadcastService;
+
+                // The megaphoneSettingsMessageStream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.megaphoneSettingsMessageStream.subscribe((megaphoneSettingsMessage) => {
+                    if (megaphoneSettingsMessage) {
+                        megaphoneCanBeUsedStore.set(megaphoneSettingsMessage.enabled);
+                        if (
+                            megaphoneSettingsMessage.url &&
+                            get(availabilityStatusStore) !== AvailabilityStatus.DO_NOT_DISTURB
+                        ) {
+                            broadcastService.joinSpace(megaphoneSettingsMessage.url);
+                        }
+                    }
+                });
 
                 // The muteMicrophoneSpaceUserMessage is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe

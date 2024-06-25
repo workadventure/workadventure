@@ -7,6 +7,7 @@ export const megaphoneCanBeUsedStore = writable<boolean>(false);
 
 export const requestedMegaphoneStore = writable<boolean>(false);
 
+export const megaphoneUrlStore = writable<string | undefined>(undefined);
 /**
  * This store is true if the user is livestreaming, i.e. if the user is a speaker or (if the user has requested the megaphone and is enabling its camera or microphone or screen)
  */

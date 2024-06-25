@@ -1,4 +1,6 @@
 import { Buffer } from "buffer";
+import Olm from "@matrix-org/olm";
+
 import {
     createClient,
     ICreateClientOpts,
@@ -7,16 +9,17 @@ import {
     MatrixClient,
     SecretStorage,
 } from "matrix-js-sdk";
+
 import { SecretStorageKeyDescriptionAesV1 } from "matrix-js-sdk/lib/secret-storage";
-// eslint-disable-next-line import/no-unresolved
 import { openModal } from "svelte-modals";
-import Olm from "@matrix-org/olm";
 import { LocalUser } from "../../../Connection/LocalUser";
 import AccessSecretStorageDialog from "./AccessSecretStorageDialog.svelte";
-import { isEncryptionRequiredAndNotSet } from "./MatrixSecurity";
+import { matrixSecurity } from "./MatrixSecurity";
 
 globalThis.Olm = Olm;
 window.Buffer = Buffer;
+
+export const DEFAULT_CHAT_DISPLAY_NAME = "Guest";
 
 export interface MatrixClientWrapperInterface {
     initMatrixClient(): Promise<MatrixClient>;
@@ -57,7 +60,6 @@ export interface MatrixLocalUserStore {
 
 export class MatrixClientWrapper implements MatrixClientWrapperInterface {
     private client!: MatrixClient;
-
     private secretStorageKeys: Record<string, Uint8Array> = {};
 
     constructor(
@@ -68,6 +70,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
 
     public async initMatrixClient(): Promise<MatrixClient> {
         const userId = this.localUserStore.getLocalUser()?.uuid;
+
         if (!userId) {
             throw new Error("UserUUID is undefined, this is not supposed to happen.");
         }
@@ -102,8 +105,6 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
             refreshToken = refreshTokenFromLoginToken;
             matrixUserId = userIdFromLoginToken;
             matrixDeviceId = deviceId;
-            this.localUserStore.setMatrixLoginToken(null);
-            this.localUserStore.setGuest(false);
         }
 
         if (accessToken === null && refreshToken === null) {
@@ -162,7 +163,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
 
         if (this.localUserStore.isGuest() && displayName !== this.client.getUser(matrixUserId)?.displayName) {
             //TODO : Change default display name
-            await this.client.setDisplayName(displayName || "Guest");
+            await this.client.setDisplayName(displayName || DEFAULT_CHAT_DISPLAY_NAME);
         }
 
         if (oldMatrixUserId !== matrixUserId) {
@@ -274,6 +275,8 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
         //Login token has been used, remove it from local storage
         this.localUserStore.setMatrixLoginToken(null);
 
+        this.localUserStore.setGuest(false);
+
         // Note: we ignore the device ID returned by the server. We use the one we generated.
         // This will be required in the future when we switch to a Native OpenID Matrix client.
         return {
@@ -322,7 +325,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
         });
 
         if (key === null) {
-            isEncryptionRequiredAndNotSet.set(true);
+            matrixSecurity.isEncryptionRequiredAndNotSet.set(true);
             return null;
         }
         this.cacheSecretStorageKey(keyId, key);

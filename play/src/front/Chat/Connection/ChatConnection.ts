@@ -44,6 +44,9 @@ export interface ChatRoom {
     addOutcomingUser?: (userId: number, userUuid: string, userName: string) => void;
     addNewMessage?: (message: string, senderUserUuid: string) => void;
     addExternalMessage?: (message: string, authorName?: string) => void;
+    typingMembers: Readable<string[]>;
+    startTyping: () => Promise<object>;
+    stopTyping: () => Promise<object>;
 }
 
 //Readonly attributes
@@ -116,7 +119,6 @@ export interface ChatConnectionInterface {
     isEncryptionRequiredAndNotSet: Readable<boolean>;
     initEndToEndEncryption(): Promise<void>;
     isGuest: Readable<boolean>;
-
     joinSpace?: (spaceId: string, spaceName: string) => void;
 }
 

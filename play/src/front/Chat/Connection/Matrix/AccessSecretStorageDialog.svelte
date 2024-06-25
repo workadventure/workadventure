@@ -1,10 +1,9 @@
 <script lang="ts">
     import { MatrixClient, SecretStorage } from "matrix-js-sdk";
-    // eslint-disable-next-line import/no-unresolved
     import { closeModal, onBeforeClose } from "svelte-modals";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import LL from "../../../../i18n/i18n-svelte";
-    import { makeInputToKey } from "./MatrixSecurity";
+    import { MatrixSecurity } from "./MatrixSecurity";
     import { IconEdit, IconKey } from "@wa-icons";
 
     export let isOpen: boolean;
@@ -30,7 +29,7 @@
             error = true;
             return;
         }
-        const inputToKey = makeInputToKey(keyInfo);
+        const inputToKey = MatrixSecurity.makeInputToKey(keyInfo);
         const key = await inputToKey({ recoveryKey: recoveryKeyInput, passphrase: passphraseInput });
         const keyVerified = await matrixClient.secretStorage.checkKey(key, keyInfo);
 
@@ -73,6 +72,7 @@
                 id="passphrase"
                 type="password"
                 autocomplete="new-password"
+                data-testid="passphraseInput"
                 class="tw-w-full tw-rounded-xl tw-text-white placeholder:tw-text-sm tw-px-3 tw-py-2 tw-p tw-border-light-purple tw-border tw-border-solid tw-bg-contrast"
                 placeholder={`${$LL.chat.e2ee.accessSecretStorage.placeholder()} ${$LL.chat.e2ee.accessSecretStorage.passphrase()}`}
                 bind:value={passphraseInput}
@@ -92,6 +92,7 @@
                 placeholder={`${$LL.chat.e2ee.accessSecretStorage.placeholder()} ${$LL.chat.e2ee.accessSecretStorage.recoveryKey()}`}
                 type="password"
                 autocomplete="new-password"
+                data-testid="recoveryKeyInput"
                 class="tw-w-full tw-rounded-xl tw-text-white placeholder:tw-text-sm tw-px-3 tw-py-2 tw-p tw-border-light-purple tw-border tw-border-solid tw-bg-contrast"
                 bind:value={recoveryKeyInput}
             />

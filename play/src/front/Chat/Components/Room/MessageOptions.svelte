@@ -6,7 +6,8 @@
     import { IconArrowBackUp, IconArrowDown, IconMoodSmile, IconPencil, IconTrash } from "@wa-icons";
 
     export let message: ChatMessage;
-    export let messageRef: HTMLDivElement;
+
+    let optionRef: HTMLDivElement;
 
     function replyToMessage() {
         selectedChatMessageToReply.set(message);
@@ -27,7 +28,7 @@
     });
 
     function openCloseEmojiPicker() {
-        emojiPicker.isPickerVisible() ? emojiPicker.hidePicker() : emojiPicker.showPicker(messageRef);
+        emojiPicker.togglePicker(optionRef);
     }
 
     const { content, isMyMessage, type } = message;
@@ -37,7 +38,7 @@
     $: isGuest = chat.isGuest;
 </script>
 
-<div class="tw-flex tw-flex-row tw-gap-1 tw-items-center">
+<div class="tw-flex tw-flex-row tw-gap-1 tw-items-center" bind:this={optionRef}>
     {#if message.type !== "text"}
         <a
             href={$content.url}
@@ -48,19 +49,27 @@
             <IconArrowDown font-size={16} class="hover:tw-cursor-pointer hover:tw-text-secondary" />
         </a>
     {/if}
-    <button class="tw-p-0 tw-m-0 hover:tw-text-black" on:click={replyToMessage}>
+    <button class="tw-p-0 tw-m-0 hover:tw-text-black" data-testid="replyToMessageButton" on:click={replyToMessage}>
         <IconArrowBackUp font-size={16} />
     </button>
-    <button class="tw-p-0 tw-m-0 hover:tw-text-yellow-500" on:click={openCloseEmojiPicker}>
+    <button
+        data-testid="openEmojiPickerButton"
+        class="tw-p-0 tw-m-0 hover:tw-text-yellow-500"
+        on:click={openCloseEmojiPicker}
+    >
         <IconMoodSmile font-size={16} />
     </button>
     {#if isMyMessage && type === "text"}
-        <button class="tw-p-0 tw-m-0 hover:tw-text-blue-500" on:click={selectMessageToEdit}>
+        <button
+            class="tw-p-0 tw-m-0 hover:tw-text-blue-500"
+            data-testid="editMessageButton"
+            on:click={selectMessageToEdit}
+        >
             <IconPencil font-size={16} />
         </button>
     {/if}
     {#if $isGuest === false}
-        <button class="tw-p-0 tw-m-0 hover:tw-text-red-500" on:click={removeMessage}>
+        <button class="tw-p-0 tw-m-0 hover:tw-text-red-500" data-testid="removeMessageButton" on:click={removeMessage}>
             <IconTrash font-size={16} />
         </button>
     {/if}

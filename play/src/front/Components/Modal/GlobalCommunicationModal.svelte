@@ -28,7 +28,11 @@
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { StringUtils } from "../../Utils/StringUtils";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import { requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
+    import {
+        currentLiveStreamingNameStore,
+        megaphoneUrlStore,
+        requestedMegaphoneStore,
+    } from "../../Stores/MegaphoneStore";
     import { userIsAdminStore } from "../../Stores/GameStore";
     import { IconInfoCircle } from "@wa-icons";
 
@@ -155,6 +159,7 @@
 
     function startLive() {
         analyticsClient.openMegaphone();
+        currentLiveStreamingNameStore.set($megaphoneUrlStore);
         requestedMegaphoneStore.set(true);
         close();
     }

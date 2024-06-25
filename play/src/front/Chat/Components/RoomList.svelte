@@ -1,11 +1,12 @@
 <script lang="ts">
     import { get } from "svelte/store";
     // eslint-disable-next-line import/no-unresolved
-    import { openModal } from "svelte-modals";
-    import { onMount } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue, joignableRoom, proximityRoomConnection, selectedRoom } from "../Stores/ChatStore";
+    import { openModal } from "svelte-modals";
+    import { onDestroy, onMount } from "svelte";
+    import { ChatRoom } from "../Connection/ChatConnection";
     import Room from "./Room/Room.svelte";
     import RoomTimeline from "./Room/RoomTimeline.svelte";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
@@ -26,6 +27,28 @@
     onMount(() => {
         expandOrCollapseRoomsIfEmpty();
     });
+
+    const directRoomsUnsubscriber = rooms.subscribe((rooms) => openRoomsIfCollapsedBeforeNewRoom(rooms));
+    const roomInvitationsUnsubscriber = roomInvitations.subscribe((roomInvitations) =>
+        openRoomInvitationsIfCollapsedBeforeNewRoom(roomInvitations)
+    );
+
+    onDestroy(() => {
+        directRoomsUnsubscriber();
+        roomInvitationsUnsubscriber();
+    });
+
+    function openRoomsIfCollapsedBeforeNewRoom(rooms: ChatRoom[]) {
+        if (rooms.length !== 0 && displayRooms === false) {
+            displayRooms = true;
+        }
+    }
+
+    function openRoomInvitationsIfCollapsedBeforeNewRoom(roomInvitations: ChatRoom[]) {
+        if (roomInvitations.length !== 0 && displayRoomInvitations === false) {
+            displayRoomInvitations = true;
+        }
+    }
 
     function expandOrCollapseRoomsIfEmpty() {
         displayDirectRooms = $directRooms.length > 0;
@@ -114,19 +137,25 @@
             {$LL.chat.rooms()}</button
         >
         {#if $isGuest === false}
-            <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={openCreateRoomModal}>
+            <button
+                data-testid="openCreateRoomModalButton"
+                class="tw-p-0 tw-m-0 tw-text-gray-400"
+                on:click={openCreateRoomModal}
+            >
                 <IconSquarePlus font-size={16} />
             </button>
         {/if}
     </div>
 
     {#if displayRooms}
-        {#each filteredRooms as room (room.id)}
-            <Room {room} />
-        {/each}
-        {#if filteredRooms.length === 0}
-            <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
-        {/if}
+        <div class="tw-flex tw-flex-col tw-overflow-auto">
+            {#each filteredRooms as room (room.id)}
+                <Room {room} />
+            {/each}
+            {#if filteredRooms.length === 0}
+                <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
+            {/if}
+        </div>
     {/if}
 
     {#if $joignableRoom.length > 0}
@@ -134,14 +163,5 @@
         {#each $joignableRoom as room (room.id)}
             <JoignableRooms {room} />
         {/each}
-    {/if}
-
-    {#if $proximityRoomConnection}
-        <div class="tw-flex tw-justify-between">
-            <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={toggleDisplayProximityChat}>
-                <IconChevronRight />
-                {$LL.chat.proximity()}
-            </button>
-        </div>
     {/if}
 {/if}

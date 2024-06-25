@@ -1,19 +1,41 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { ClientToServerMessage, UnwatchSpaceMessage, WatchSpaceMessage } from "@workadventure/messages";
-
 import { Space } from "../Space";
 import { SpaceFilterAlreadyExistError, SpaceNameIsEmptyError } from "../Errors/SpaceError";
 import { SpaceFilterInterface } from "../SpaceFilter/SpaceFilter";
 
+const WebSocket = {
+    CONNECTING: 0,
+    CLOSING: 2,
+    CLOSED: 3,
+};
+
 vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
     return {
-        wokaBase64(): Promise<string> {
-            return Promise.resolve("");
+        CharacterLayerManager: {
+            wokaBase64(): Promise<string> {
+                return Promise.resolve("");
+            },
         },
     };
 });
 
 describe("Space test", () => {
+    beforeAll(() => {
+        const WebSocketMock = vi.fn(() => {
+            return {
+                CONNECTING: 0,
+                CLOSING: 2,
+                CLOSED: 3,
+            };
+        });
+        vi.stubGlobal("WebSocket", WebSocketMock);
+    });
+
+    afterAll(() => {
+        vi.restoreAllMocks();
+    });
+
     it("should return a error when pass a empty string as spaceName", () => {
         const spaceName = "";
         const metadata = new Map<string, unknown>();

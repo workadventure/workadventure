@@ -2,7 +2,7 @@ import { EmojiButton } from "@joeattardi/emoji-button";
 import { get } from "svelte/store";
 import LL from "../../i18n/i18n-svelte";
 
-export const getChatEmojiPicker = () => {
+export const getChatEmojiPicker = (position?: { top?: string; right?: string; left?: string; bottom?: string }) => {
     const translationFunction = get(LL);
     return new EmojiButton({
         styleProperties: {
@@ -15,6 +15,7 @@ export const getChatEmojiPicker = () => {
         emojisPerRow: 5,
         autoFocusSearch: false,
         showPreview: false,
+        position: position ?? "auto",
         rootElement: document.getElementById("chat") ?? document.body,
         i18n: {
             search: translationFunction.emoji.search(),

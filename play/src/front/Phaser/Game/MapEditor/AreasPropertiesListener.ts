@@ -698,8 +698,6 @@ export class AreasPropertiesListener {
     private handleSpeakerMegaphonePropertyOnEnter(property: SpeakerMegaphonePropertyData): void {
         if (property.name !== undefined && property.id !== undefined) {
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
-            // TODO remove this console.log after testing
-            console.info("handleSpeakerMegaphonePropertyOnEnter => joinSpace => uniqRoomName : ", uniqRoomName);
             currentLiveStreamingNameStore.set(uniqRoomName);
             this.scene.broadcastService.joinSpace(uniqRoomName, false);
             isSpeakerStore.set(true);
@@ -730,8 +728,6 @@ export class AreasPropertiesListener {
             );
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
-                // TODO remove this log after testing
-                console.info("handleListenerMegaphonePropertyOnEnter => joinSpace => uniqRoomName", uniqRoomName);
                 currentLiveStreamingNameStore.set(uniqRoomName);
                 this.scene.broadcastService.joinSpace(uniqRoomName, false);
                 if (property.chatEnabled) {
@@ -749,8 +745,6 @@ export class AreasPropertiesListener {
             );
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
-                // TODO remove this log after testing
-                console.info("handleListenerMegaphonePropertyOnLeave => uniqRoomName", uniqRoomName);
                 currentLiveStreamingNameStore.set(undefined);
                 this.scene.broadcastService.leaveSpace(uniqRoomName);
                 if (property.chatEnabled) {

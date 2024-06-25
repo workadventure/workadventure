@@ -1,5 +1,4 @@
 <script>
-    // eslint-disable-next-line import/no-unresolved
     import { closeModal, Modals } from "svelte-modals";
 </script>
 

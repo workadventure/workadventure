@@ -805,6 +805,9 @@ export class SocketManager {
                 case "chatMembersQuery": {
                     break;
                 }
+                case "chatMembersQuery": {
+                    break;
+                }
                 default: {
                     const _exhaustiveCheck: never = queryCase;
                 }

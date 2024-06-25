@@ -1,5 +1,4 @@
 <script lang="ts">
-    // eslint-disable-next-line import/no-unresolved
     import { closeModal, onBeforeClose } from "svelte-modals";
     import { CryptoApi } from "matrix-js-sdk";
     import { GeneratedSecretStorageKey } from "matrix-js-sdk/lib/crypto-api";
@@ -61,6 +60,7 @@
     <div slot="content">
         <p>{$LL.chat.e2ee.createRecoveryKey.description()}</p>
         <input
+            data-testid="passphraseInput"
             class="tw-w-full tw-rounded-xl tw-text-white placeholder:tw-text-sm tw-px-3 tw-py-2 tw-p tw-border-light-purple tw-border tw-border-solid tw-bg-contrast"
             bind:value={passphraseInput}
         />
@@ -68,7 +68,7 @@
             <p>{$LL.chat.e2ee.createRecoveryKey.privateKeyDescription()}</p>
             <div class="tw-flex tw-justify-between">
                 <p class="tw-text-green-500 tw-m-0 tw-content-center">{generatedSecretStorageKey.encodedPrivateKey}</p>
-                <button on:click={downloadPrivateKeyFile}>
+                <button data-testid="downloadRecoveryKeyButton" on:click={downloadPrivateKeyFile}>
                     <IconFileDownload />
                 </button>
             </div>

@@ -6,6 +6,7 @@ import { LocalSpaceProviderSingleton } from "../SpaceProvider/SpaceStore";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { proximityRoomConnection } from "../../Chat/Stores/ChatStore";
+import { WORLD_SPACE_NAME } from "../Space";
 
 export enum SpaceEvent {
     AddSpaceUser = "addSpaceUserMessage",
@@ -18,7 +19,7 @@ export class StreamSpaceWatcher {
         private spaceProvider: SpaceProviderInterface,
         private socket: WebSocket,
         decoder: Required<{ decode: (messageCoded: Uint8Array) => ServerToClientMessage }>,
-        private chatConnection: ChatConnectionInterface = gameManager.getCurrentGameScene().chatConnection
+        chatConnection: ChatConnectionInterface = gameManager.getCurrentGameScene().chatConnection
     ) {
         this.socket.addEventListener("message", (messageEvent: MessageEvent) => {
             const arrayBuffer: ArrayBuffer = messageEvent.data;
@@ -42,7 +43,8 @@ export class StreamSpaceWatcher {
                             .getSpaceFilter(subMessage.addSpaceUserMessage.filterName)
                             .addUser(subMessage.addSpaceUserMessage.user)
                             .then((extendedUser) => {
-                                chatConnection.addUserFromSpace(extendedUser);
+                                if (subMessage.addSpaceUserMessage.spaceName === WORLD_SPACE_NAME)
+                                    chatConnection.addUserFromSpace(extendedUser);
                             })
                             .catch((e) => console.error(e));
 
@@ -56,7 +58,8 @@ export class StreamSpaceWatcher {
                             .get(subMessage.updateSpaceUserMessage.spaceName)
                             .getSpaceFilter(subMessage.updateSpaceUserMessage.filterName)
                             .updateUserData(subMessage.updateSpaceUserMessage.user);
-                        this.chatConnection.updateUserFromSpace(subMessage.updateSpaceUserMessage.user);
+                        if (subMessage.updateSpaceUserMessage.spaceName === WORLD_SPACE_NAME)
+                            chatConnection.updateUserFromSpace(subMessage.updateSpaceUserMessage.user);
                         proximityRoom?.updateUserFromSpace(subMessage.updateSpaceUserMessage.user);
                         break;
                     }
@@ -67,7 +70,8 @@ export class StreamSpaceWatcher {
                             .get(subMessage.removeSpaceUserMessage.spaceName)
                             .getSpaceFilter(subMessage.removeSpaceUserMessage.filterName)
                             .removeUser(subMessage.removeSpaceUserMessage.userId);
-                        this.chatConnection.disconnectSpaceUser(subMessage.removeSpaceUserMessage.userId);
+                        if (subMessage.removeSpaceUserMessage.spaceName === WORLD_SPACE_NAME)
+                            chatConnection.disconnectSpaceUser(subMessage.removeSpaceUserMessage.userId);
                         proximityRoom?.disconnectSpaceUser(subMessage.removeSpaceUserMessage.userId);
                         break;
                     }

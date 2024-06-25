@@ -1,7 +1,7 @@
 version: "3.6"
 services:
   reverse-proxy:
-    image: traefik:v2.8
+    image: traefik:v2.11
     expose:
       - "8080"
     ports:
@@ -474,7 +474,9 @@ services:
         - "traefik.http.services.matrix.loadbalancer.server.port=8008"
         - "traefik.http.routers.matrix.service=matrix"
     volumes:
-        - ./synapse/:/data/
+        - ./synapse:/data/
+        #- ./synapse/start.sh:/data/start.sh
+        #- ./synapse/homeserver.template.yaml:/data/homeserver.template.yaml
         - ./synapse/federation:/etc/nginx/vhost.d/matrix.workadventure.localhost
     environment:
         VIRTUAL_HOST: "matrix.workadventure.localhost"
@@ -485,7 +487,6 @@ services:
         MATRIX_ADMIN_USER: '$MATRIX_ADMIN_USER'
         MATRIX_ADMIN_PASSWORD: '$MATRIX_ADMIN_PASSWORD'
         JWT_SECRET: '$SECRET_KEY'
-
 #  coturn:
 #    image: coturn/coturn:4.5.2
 #    command:
@@ -510,3 +511,5 @@ services:
 #      #- --cert=/root/letsencrypt/fullchain.pem
 #      #- --pkey=/root/letsencrypt/privkey.pem
 #    network_mode: host
+#volumes:
+#  synapsedata:

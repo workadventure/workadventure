@@ -37,16 +37,14 @@
     let messageRef: HTMLDivElement;
 </script>
 
-<div id="message" bind:this={messageRef} class={`${isMyMessage && "tw-self-end tw-flex-row-reverse"}`}>
+<div id="message" bind:this={messageRef} class={`${isMyMessage && "tw-self-end tw-flex-row-reverse tw-relative"}`}>
     <div class={`container-grid ${isMyMessage ? "tw-justify-end grid-container-inverted" : "tw-justify-start"}`}>
         <div
             class="messageHeader tw-text-gray-500 tw-text-xxs tw-p-0 tw-m-0 tw-flex tw-justify-between tw-items-end"
             class:tw-flex-row-reverse={isMyMessage}
             hidden={isQuotedMessage}
         >
-            {#if message.type !== "incoming" && message.type !== "outcoming"}
-                <span>{isMyMessage ? "You" : sender?.username}</span>
-            {/if}
+            <span>{isMyMessage ? "You" : sender?.username}</span>
             <span class={`tw-text-xxxs ${isMyMessage ? "tw-mr-1" : "tw-ml-1"}`}
                 >{date?.toLocaleTimeString($locale, {
                     hour: "2-digit",
@@ -61,8 +59,7 @@
         {/if}
 
         <div
-            class="message tw-rounded-2xl"
-            class:tw-p-2={message.type !== "incoming" && message.type !== "outcoming"}
+            class="message tw-rounded-2xl tw-p-2"
             class:tw-bg-primary={!isMyMessage && message.type !== "incoming" && message.type !== "outcoming"}
             class:tw-bg-secondary={isMyMessage && message.type !== "incoming" && message.type !== "outcoming"}
             class:tw-rounded-br-none={isMyMessage && message.type !== "incoming" && message.type !== "outcoming"}

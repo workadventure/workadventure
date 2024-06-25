@@ -62,12 +62,18 @@
             class="tw-w-full tw-rounded-xl tw-text-white placeholder:tw-text-sm tw-px-3 tw-py-2 tw-p tw-border-light-purple tw-border tw-border-solid tw-bg-contrast"
             placeholder={$LL.chat.createRoom.name()}
             bind:value={createRoomOptions.name}
+            data-testid="createRoomName"
         />
         <p class="tw-p-0 tw-m-0 tw-pl-1 tw-font-bold">{$LL.chat.createRoom.visibility.label()}</p>
-        <select bind:value={createRoomOptions.visibility} class="tw-m-0 tw-bg-contrast tw-rounded-xl">
+        <select
+            data-testid="createRoomVisibility"
+            bind:value={createRoomOptions.visibility}
+            class="tw-m-0 tw-bg-contrast tw-rounded-xl"
+        >
             <option value="private">{$LL.chat.createRoom.visibility.private()}</option>
             <option value="public">{$LL.chat.createRoom.visibility.public()}</option>
         </select>
+
         <p class="tw-text-xs tw-m-0 tw-p-0 tw-text-gray-400 tw-pl-1">
             <IconHelpCircle font-size={18} />
             {#if createRoomOptions.visibility === "private"}
@@ -78,7 +84,12 @@
         </p>
         {#if createRoomOptions.visibility === "private"}
             <div class="tw-pl-1">
-                <input bind:value={createRoomOptions.encrypt} type="checkbox" id="encryptData" />
+                <input
+                    data-testid="createRoomEncryption"
+                    bind:checked={createRoomOptions.encrypt}
+                    type="checkbox"
+                    id="encryptData"
+                />
                 <label class="tw-m-0" for="encryptData">{$LL.chat.createRoom.e2eEncryption.label()}</label>
             </div>
             <p class="tw-text-xs tw-m-0 tw-p-0 tw-text-gray-400 tw-pl-1">
@@ -117,6 +128,7 @@
         <button class="tw-flex-1 tw-justify-center" on:click={closeModal}>{$LL.chat.createRoom.buttons.cancel()}</button
         >
         <button
+            data-testid="createRoomButton"
             class="disabled:tw-text-gray-400 disabled:tw-bg-gray-500 tw-bg-secondary tw-flex-1 tw-justify-center"
             disabled={createRoomOptions.name === undefined || createRoomOptions.name?.trim().length === 0}
             on:click={() => createNewRoom(createRoomOptions)}

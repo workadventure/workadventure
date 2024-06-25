@@ -12,6 +12,7 @@
     let message = "";
     let messageInput: HTMLTextAreaElement;
     let emojiButtonRef: HTMLButtonElement;
+    let stopTypingTimeOutID: undefined | ReturnType<typeof setTimeout>;
 
     const selectedChatChatMessageToReplyUnsubscriber = selectedChatMessageToReply.subscribe((chatMessage) => {
         if (chatMessage !== null) {
@@ -28,13 +29,31 @@
         }
         if (keyDownEvent.key === "Enter" && message.trim().length !== 0) {
             sendMessage(message);
+            return;
         }
+
+        if (stopTypingTimeOutID) {
+            clearTimeout(stopTypingTimeOutID);
+        }
+        console.warn("start Typing");
+        room.startTyping()
+            .then(() => {
+                stopTypingTimeOutID = setTimeout(() => {
+                    room.stopTyping().catch((error) => console.error(error));
+                    stopTypingTimeOutID = undefined;
+                    console.warn("end Typing");
+                }, 1000);
+            })
+            .catch((error) => console.error(error));
     }
 
     function sendMessage(messageToSend: string) {
         room?.sendMessage(messageToSend);
         messageInput.value = "";
         message = "";
+        if (stopTypingTimeOutID) {
+            clearTimeout(stopTypingTimeOutID);
+        }
     }
 
     function unselectChatMessageToReply() {
@@ -45,7 +64,7 @@
         selectedChatChatMessageToReplyUnsubscriber();
     });
 
-    const emojiPicker = getChatEmojiPicker();
+    const emojiPicker = getChatEmojiPicker({ right: "0" });
     emojiPicker.on("emoji", ({ emoji }) => {
         message += emoji;
     });
@@ -69,6 +88,7 @@
 {/if}
 <div class="tw-flex tw-items-center tw-gap-1 tw-border tw-border-solid tw-rounded-xl tw-pr-1 tw-border-light-purple">
     <textarea
+        data-testid="messageInput"
         rows={1}
         bind:value={message}
         bind:this={messageInput}
@@ -85,6 +105,7 @@
     </button>
     <MessageFileInput {room} />
     <button
+        data-testid="sendMessageButton"
         class="disabled:tw-opacity-30 disabled:!tw-cursor-none disabled:tw-text-white tw-p-0 tw-m-0 tw-text-secondary"
         disabled={message.trim().length === 0}
         on:click={() => sendMessage(message)}

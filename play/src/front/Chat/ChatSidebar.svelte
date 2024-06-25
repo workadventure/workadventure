@@ -47,10 +47,11 @@
 {#if $chatVisibilityStore}
     <section
         id="chat"
+        data-testid="chat"
         transition:fly={{ duration: 200, x: -335 }}
-        class="chatWindow tw-overflow-hidden tw-bg-contrast/95 tw-backdrop-blur-md tw-p-4"
+        class="chatWindow !tw-min-w-full sm:!tw-min-w-[360px] tw-overflow-hidden tw-bg-contrast/95 tw-backdrop-blur-md tw-p-4"
     >
-        <button class="close-window" on:click={closeChat}>&#215;</button>
+        <button class="close-window" data-testid="closeChatButton" on:click={closeChat}>&#215;</button>
         <Chat />
     </section>
 {/if}

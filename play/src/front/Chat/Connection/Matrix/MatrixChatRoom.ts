@@ -10,6 +10,7 @@ import {
     ReceiptType,
     Room,
     RoomEvent,
+    RoomMemberEvent,
     TimelineWindow,
 } from "matrix-js-sdk";
 import { get, Writable, writable } from "svelte/store";
@@ -21,7 +22,7 @@ import { ChatRoom, ChatRoomMembership } from "../ChatConnection";
 import { selectedChatMessageToReply } from "../../Stores/ChatStore";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
-import { initClientCryptoConfiguration } from "./MatrixSecurity";
+import { matrixSecurity } from "./MatrixSecurity";
 
 type EventId = string;
 
@@ -39,6 +40,7 @@ export class MatrixChatRoom implements ChatRoom {
     timelineWindow: TimelineWindow;
     inMemoryEventsContent: Map<EventId, IContent>;
     isEncrypted!: Writable<boolean>;
+    typingMembers: Writable<string[]>;
 
     constructor(private matrixRoom: Room) {
         this.id = matrixRoom.roomId;
@@ -57,10 +59,35 @@ export class MatrixChatRoom implements ChatRoom {
         this.hasPreviousMessage = writable(false);
         this.timelineWindow = new TimelineWindow(matrixRoom.client, matrixRoom.getLiveTimeline().getTimelineSet());
         this.isEncrypted = writable(matrixRoom.hasEncryptionStateEvent());
+        this.typingMembers = writable([]);
+
+        void this.matrixRoom.getMembersWithMembership(KnownMembership.Join).forEach((member) =>
+            member.on(RoomMemberEvent.Typing, (event, member) => {
+                const memberDisplayName = member.user?.displayName;
+
+                const myUserID = this.matrixRoom.client.getSafeUserId();
+                const myDisplayName = this.matrixRoom.client.getUser(myUserID)?.displayName;
+
+                if (!memberDisplayName || memberDisplayName === myDisplayName) return;
+
+                if (get(this.typingMembers).includes(memberDisplayName)) {
+                    this.typingMembers.update((currentTypingMemberList) => {
+                        return currentTypingMemberList.filter(
+                            (memberDisplayName) => memberDisplayName !== memberDisplayName
+                        );
+                    });
+                    return;
+                }
+
+                this.typingMembers.update((currentValue) => {
+                    return [...currentValue, memberDisplayName];
+                });
+            })
+        );
 
         (async () => {
             if (matrixRoom.hasEncryptionStateEvent()) {
-                await initClientCryptoConfiguration();
+                await matrixSecurity.initClientCryptoConfiguration();
             }
         })().catch((error) => console.error(error));
 
@@ -132,7 +159,7 @@ export class MatrixChatRoom implements ChatRoom {
         data: IRoomTimelineData
     ) {
         if (event.getType() === EventType.RoomEncryption || event.getType() === EventType.RoomMessageEncrypted) {
-            await initClientCryptoConfiguration();
+            await matrixSecurity.initClientCryptoConfiguration();
         }
 
         //Only get realtime event
@@ -438,5 +465,15 @@ export class MatrixChatRoom implements ChatRoom {
 
     private removeEventContentInMemory(eventId: string) {
         this.inMemoryEventsContent.delete(eventId);
+    }
+
+    startTyping(): Promise<object> {
+        const isTypingTime = 30000;
+        return this.matrixRoom.client.sendTyping(this.id, true, isTypingTime);
+    }
+
+    stopTyping(): Promise<object> {
+        const isTypingTime = 30000;
+        return this.matrixRoom.client.sendTyping(this.id, false, isTypingTime);
     }
 }
