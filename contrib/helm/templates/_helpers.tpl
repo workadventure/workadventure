@@ -109,32 +109,6 @@ Create the domains
 {{- end -}}
 {{- end }}
 
-{{- define "workadventure.ejabberdDomainName" -}}
-{{- coalesce .Values.ejabberd.ingress.domainName (printf "xmpp%s%s" .Values.domainNamePrefix .Values.domainName) }}
-{{- end -}}
-{{- define "workadventure.ejabberdUrl" -}}
-{{- if .Values.singleDomain -}}
-/xmpp
-{{- else -}}
-{{- if .Values.ejabberd.ingress.domainName -}}
-{{ printf "https://%s" .Values.ejabberd.ingress.domainName }}
-{{- else -}}
-{{- printf "https://xmpp%s%s" .Values.domainNamePrefix .Values.domainName }}
-{{- end }}
-{{- end -}}
-{{- end }}
-{{- define "workadventure.ejabberdWsUrl" -}}
-{{- if .Values.singleDomain -}}
-wss://{{ .Values.domainName }}/xmpp
-{{- else -}}
-{{- if .Values.ejabberd.ingress.domainName -}}
-{{ printf "wss://%s" .Values.ejabberd.ingress.domainName }}
-{{- else -}}
-{{- printf "wss://xmpp%s%s" .Values.domainNamePrefix .Values.domainName }}
-{{- end }}
-{{- end -}}
-{{- end }}
-
 {{- define "workadventure.mapStorageDomainName" -}}
 {{- coalesce .Values.mapstorage.ingress.domainName (printf "map-storage%s%s" .Values.domainNamePrefix .Values.domainName) }}
 {{- end -}}
@@ -191,21 +165,6 @@ https://{{ .Values.domainName }}/maps
 {{ printf "https://%s" .Values.maps.ingress.domainName }}
 {{- else -}}
 {{- printf "https://maps%s%s" .Values.domainNamePrefix .Values.domainName }}
-{{- end }}
-{{- end -}}
-{{- end }}
-
-{{- define "workadventure.chatDomainName" -}}
-{{- coalesce .Values.chat.ingress.domainName (printf "chat%s%s" .Values.domainNamePrefix .Values.domainName) }}
-{{- end -}}
-{{- define "workadventure.chatUrl" -}}
-{{- if .Values.singleDomain -}}
-/chat/
-{{- else -}}
-{{- if .Values.chat.ingress.domainName -}}
-{{ printf "https://%s" .Values.chat.ingress.domainName }}
-{{- else -}}
-{{- printf "https://chat%s%s" .Values.domainNamePrefix .Values.domainName }}
 {{- end }}
 {{- end -}}
 {{- end }}
