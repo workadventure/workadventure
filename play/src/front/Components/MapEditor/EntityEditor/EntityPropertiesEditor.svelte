@@ -179,6 +179,11 @@
                         placeholder = "https://excalidraw.workadventu.re/";
                         buttonLabel = $LL.mapEditor.properties.excalidrawProperties.label();
                         break;
+                    case "cards":
+                        placeholder =
+                            "https://member.workadventu.re?tenant=<your cards tenant>&learning=<Your cards learning>";
+                        buttonLabel = $LL.mapEditor.properties.cardsProperties.label();
+                        break;
                     default:
                         placeholder = "https://workadventu.re";
                         buttonLabel = $LL.mapEditor.properties.linkProperties.label();

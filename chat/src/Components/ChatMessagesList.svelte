@@ -7,8 +7,9 @@
     import { EmojiButton } from "@joeattardi/emoji-button";
     import { ChatState } from "stanza/Constants";
     import { JID } from "stanza";
+    import { defaultWoka, defaultColor } from "@workadventure/shared-utils";
     import { MucRoom } from "../Xmpp/MucRoom";
-    import { User, defaultColor, defaultWoka } from "../Xmpp/AbstractRoom";
+    import { User } from "../Xmpp/AbstractRoom";
     import { LL, locale } from "../i18n/i18n-svelte";
     import { userStore } from "../Stores/LocalUserStore";
     import { mucRoomsStore } from "../Stores/MucRoomsStore";

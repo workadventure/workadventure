@@ -77,22 +77,22 @@ test.describe("Map editor @oidc", () => {
         await Megaphone.megaphoneAddNewRights(page, "example");
         await Megaphone.megaphoneSave(page);
         await Megaphone.isCorrectlySaved(page);
+
         // Test if tags are working correctly, all current users doesn't have the tag "example" to use megaphone
         await Menu.isNotThereMegaphoneButton(page);
         await Menu.isNotThereMegaphoneButton(page2);
+
         // Remove rights
         await Megaphone.megaphoneRemoveRights(page, "example");
         await Megaphone.megaphoneSave(page);
         await Megaphone.isCorrectlySaved(page);
+
         // Megaphone should be displayed and usable by all the current users
         await Menu.isThereMegaphoneButton(page);
         await Menu.isThereMegaphoneButton(page2);
         await Menu.closeMapEditor(page);
-
         await Menu.toggleMegaphoneButton(page);
 
-        // Check that the live message is displayed
-        //await expect(page.locator('.menu-container #content-liveMessage h3')).toContainText('Live message', {timeout: 5_000});
         // Click on the button to start live message
         await page
             .locator(".menu-container #content-liveMessage")
@@ -115,10 +115,6 @@ test.describe("Map editor @oidc", () => {
 
     test('Successfully set "SpeakerZone" in the map editor', async ({page, browser, request}) => {
         // skip the test, speaker zone with Jitsi is deprecated
-        //eslint-disable-next-line playwright/no-skipped-test
-        test.skip();
-        return;
-
         await resetWamMaps(request);
 
         await page.goto(Map.url("empty"));
@@ -145,18 +141,17 @@ test.describe("Map editor @oidc", () => {
         const newBrowser = await browser.browserType().launch();
         const page2 = await newBrowser.newPage();
         await page2.goto(Map.url("empty"));
-        //await page2.evaluate(() => { localStorage.setItem('debug', '*'); });
-        //await page2.reload();
+
         await login(page2, "test2", 5);
         await oidcAdminTagLogin(page2);
         await Map.teleportToPosition(page2, 4 * 32, 7 * 32);
 
         // The user in the listener zone can see the speaker
-        await expect(await page2.locator(".cameras-container .other-cameras .jitsi-video")).toBeVisible({
+        await expect(page2.locator(".cameras-container .other-cameras .jitsi-video")).toBeVisible({
             timeout: 20_000,
         });
         // The speaker cannot see the listener
-        await expect(await page.locator(".cameras-container .other-cameras .jitsi-video")).toBeHidden({timeout: 20_000});
+        await expect(page.locator(".cameras-container .other-cameras .jitsi-video")).toBeHidden({timeout: 20_000});
 
         // Now, let's move player 2 to the speaker zone
         await Map.walkToPosition(page2, 4 * 32, 2 * 32);
@@ -164,9 +159,9 @@ test.describe("Map editor @oidc", () => {
         //await Map.teleportToPosition(page2, 4*32, 2*32);
 
         // The first speaker (player 1) can now see player2
-        await expect(await page.locator(".cameras-container .other-cameras .jitsi-video")).toBeVisible({timeout: 20_000});
+        await expect(page.locator(".cameras-container .other-cameras .jitsi-video")).toBeVisible({timeout: 20_000});
         // And the opposite is still true (player 2 can see player 1)
-        await expect(await page2.locator(".cameras-container .other-cameras .jitsi-video")).toBeVisible({
+        await expect(page2.locator(".cameras-container .other-cameras .jitsi-video")).toBeVisible({
             timeout: 20_000,
         });
     });

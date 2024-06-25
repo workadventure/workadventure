@@ -30,6 +30,7 @@ import {
     GOOGLE_SLIDES_ENABLED,
     ERASER_ENABLED,
     EXCALIDRAW_ENABLED,
+    CARDS_ENABLED,
 } from "../enums/EnvironmentVariable";
 import type { AdminInterface } from "./AdminInterface";
 import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
@@ -175,6 +176,17 @@ class LocalAdmin implements AdminInterface {
                 name: "Excalidraw",
                 doc: "https://excalidraw.com",
                 description: "Excalidraw (White board)",
+                enabled: true,
+                default: true,
+                forceNewTab: false,
+                allowAPI: false,
+            });
+        }
+        if (CARDS_ENABLED) {
+            applications.push({
+                name: "Cards",
+                doc: "https://workadventu.re",
+                description: "Cards (learning tool)",
                 enabled: true,
                 default: true,
                 forceNewTab: false,

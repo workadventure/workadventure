@@ -48,6 +48,13 @@ export interface CameraManagerEventCameraUpdateData {
     zoom: number;
 }
 
+/**
+ * The CameraManager is responsible for managing the camera in the game.
+ * It allows to set the camera to follow the player, to focus on a specific point or to be in exploration mode.
+ *
+ * The CameraManager handles the transitions / animations between the different camera modes.
+ * It also handles the smooth zoom in and out of the camera.
+ */
 export class CameraManager extends Phaser.Events.EventEmitter {
     private camera: Phaser.Cameras.Scene2D.Camera;
     private waScaleManager: WaScaleManager;
@@ -56,7 +63,6 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
     private restoreZoomTween?: Phaser.Tweens.Tween;
     private startFollowTween?: Phaser.Tweens.Tween;
-    private zoomOutTween?: Phaser.Tweens.Tween;
 
     private playerToFollow?: Player;
     private cameraLocked: boolean;
@@ -282,13 +288,19 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             this.camera.setBounds(0, 0, this.mapSize.width, this.mapSize.height);
             return;
         }
+        this.setExplorationMode();
+        if (!this.explorerFocusOn) {
+            this.explorerFocusOn = { x: this.camera.centerX, y: this.camera.centerY };
+            this.camera.startFollow(this.explorerFocusOn, true);
+        }
+
         const oldPos = { ...this.explorerFocusOn };
         const startZoomModifier = this.waScaleManager.zoomModifier;
         this.animationInProgress = true;
         this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.animateCallback);
         this.targetReachInProgress = false;
         this.explorerFocusOnTarget = undefined;
-        this.zoomOutTween?.stop();
+        this.stopPan();
         this.startFollowTween = this.scene.tweens.addCounter({
             from: 0,
             to: 1,

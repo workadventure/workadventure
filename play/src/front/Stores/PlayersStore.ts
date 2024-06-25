@@ -3,7 +3,6 @@ import { AvailabilityStatus } from "@workadventure/messages";
 import { Color } from "@workadventure/shared-utils";
 import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 import type { RoomConnection } from "../Connection/RoomConnection";
-import { localUserStore } from "../Connection/LocalUserStore";
 
 let idCount = 0;
 
@@ -34,7 +33,6 @@ function createPlayersStore() {
                         userUuid: message.userUuid,
                         availabilityStatus: message.availabilityStatus,
                         color: Color.getColorByString(message.name),
-                        isLogged: localUserStore.isLogged(),
                     });
                     return users;
                 });
@@ -76,7 +74,6 @@ function createPlayersStore() {
                     availabilityStatus: AvailabilityStatus.ONLINE,
                     userUuid: "dummy",
                     color: Color.getColorByString(name),
-                    isLogged: localUserStore.isLogged(),
                 });
                 return users;
             });

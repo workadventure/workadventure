@@ -11,7 +11,7 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             yourMicrophone: "votre microphone",
             yourCamera: "votre camera",
             title: "Live message",
-            button: "Démarer un live",
+            button: "Démarrer un live",
             and: "et",
             toAll: "à tous les participants",
             confirm: "Confirmer",
@@ -27,11 +27,11 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
         textMessage: {
             title: "Message texte",
             notice: `
-            Le text message permet d'envoyer un message à toutes les personnes connecté dans le salon ou le world.
+            Le text message permet d'envoyer un message à toutes les personnes connectées dans le salon ou le world.
 
             Ce message sera affiché sous forme de popup en haut de la page et sera accompagné d'un son permettant d'identifier qu'une information est à lire.
 
-            Un exemple de message : "La conférence de la salle 3 commence dans 2 minutes 🎉. Vous pouvez vous rendre dans la zone de conférence 3 et ouvire l'application de visio 🚀"
+            Un exemple de message : "La conférence de la salle 3 commence dans 2 minutes 🎉. Vous pouvez vous rendre dans la zone de conférence 3 et ouvrir l'application de visio 🚀"
             `,
             button: "Envoyer un message texte",
             noAccess: "Vous n'avez pas accès à cette fonctionnalité 😱 Veuillez contacter l'administrateur 🙏",
@@ -41,9 +41,9 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             notice: `
             L'audio message est un message de type "MP3, OGG..." envoyé à tous les utilisateurs connecté dans le salon ou dans le world.
 
-            Ce message audio sera téléchargé et lancé à toute les personnes recevant cette notification.
+            Ce message audio sera téléchargé et lancé à toutes les personnes recevant cette notification.
 
-            Un exemple de message auio peut être un enregistrement audio pour indiquer qu'une conférence va démarrer dans quelques minutes.
+            Un exemple de message audio peut être un enregistrement audio pour indiquer qu'une conférence va démarrer dans quelques minutes.
             `,
             button: "Envoyer un message audio",
             noAccess: "Vous n'avez pas accès à cette fonctionnalité 😱 Veuillez contacter l'administrateur 🙏",

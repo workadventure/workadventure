@@ -16,6 +16,7 @@
         ChatMessageTypes,
         ExcalidrawService,
         ExcalidrawException,
+        defaultWoka,
     } from "@workadventure/shared-utils";
     import {
         chatMessagesStore,
@@ -29,7 +30,6 @@
     import { activeThreadStore } from "../../Stores/ActiveThreadStore";
     import { mucRoomsStore } from "../../Stores/MucRoomsStore";
     import { HtmlUtils } from "../../Utils/HtmlUtils";
-    import { defaultWoka } from "../../Xmpp/AbstractRoom";
     import { chatConnectionManager } from "../../Connection/ChatConnectionManager";
     import ApplicationPicker from "../Content/ApplicationPicker.svelte";
     import { iframeListener } from "../../IframeListener";

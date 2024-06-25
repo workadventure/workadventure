@@ -302,7 +302,7 @@ export class JitsiConferenceWrapper {
             room.join("");
 
             // send notification that the user joined the conference
-            notificationPlayingStore.playNotification(jitsiRoomName, "jitsi.png");
+            notificationPlayingStore.playNotification(jitsiRoomName, "jitsi.png", jitsiRoomName);
         });
     }
 
@@ -354,6 +354,8 @@ export class JitsiConferenceWrapper {
         });
 
         this.megaphoneEnabledUnsubscribe();
+        // Remove notification for this room
+        notificationPlayingStore.removeNotificationById(this.jitsiRoomName);
     }
 
     private async createLocalTracks(types: DeviceBroadcastable[]): Promise<JitsiLocalTrack[]> {

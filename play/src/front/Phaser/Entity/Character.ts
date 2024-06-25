@@ -4,6 +4,7 @@ import type CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
 import type { AvailabilityStatus as AvailabilityStatusType } from "@workadventure/messages";
 import { AvailabilityStatus, PositionMessage_Direction } from "@workadventure/messages";
+import { defaultWoka } from "@workadventure/shared-utils";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import { PlayerStatusDot } from "../Components/PlayerStatusDot";
 import { TalkIcon } from "../Components/TalkIcon";
@@ -132,6 +133,13 @@ export abstract class Character extends Container implements OutlineableInterfac
                         this.textureLoadedDeferred.resolve();
 
                         return this.getSnapshot().then((htmlImageElementSrc) => {
+                            // When there is no renderer (for instance with bots), the htmlImageElementSrc is an empty string
+                            if (!htmlImageElementSrc) {
+                                htmlImageElementSrc = defaultWoka;
+                            }
+                            if (userId != undefined) {
+                                currentPlayerWokaStore.set(htmlImageElementSrc);
+                            }
                             this._pictureStore.set(htmlImageElementSrc);
                         });
                     })

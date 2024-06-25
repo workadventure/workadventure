@@ -13,5 +13,4 @@ export interface PlayerInterface {
     availabilityStatus: AvailabilityStatus;
     color?: string | null;
     outlineColor?: number;
-    isLogged?: boolean;
 }

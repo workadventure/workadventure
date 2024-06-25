@@ -432,10 +432,11 @@ export class MapEditorModeManager {
                 return;
             }
             this.equipTool(
-                this.lastlyUsedTool ??
-                    (get(mapEditorActivated) || get(mapEditorActivatedForThematics)
-                        ? EditorToolName.EntityEditor
-                        : EditorToolName.ExploreTheRoom)
+                this.lastlyUsedTool && this.lastlyUsedTool != EditorToolName.CloseMapEditor
+                    ? this.lastlyUsedTool
+                    : get(mapEditorActivated) || get(mapEditorActivatedForThematics)
+                    ? EditorToolName.EntityEditor
+                    : EditorToolName.ExploreTheRoom
             );
         });
     }
