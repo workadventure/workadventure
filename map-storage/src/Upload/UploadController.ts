@@ -189,6 +189,7 @@ export class UploadController {
                         .filter((zipEntry) => zipEntry.name.includes(".wam"))
                         .map((zipEntry) => path.parse(zipEntry.name).name);
                     // Iterate over the entries in the ZIP archive
+
                     for (const zipEntry of zipEntries) {
                         const key = mapPath(path.join(directory, zipEntry.name), req);
                         // Store the file
@@ -202,7 +203,6 @@ export class UploadController {
                             wamToPurge.push(wamUrl);
                         }
                     }
-
                     await Promise.all(promises);
 
                     await zip.close();
@@ -476,15 +476,13 @@ export class UploadController {
         zip: StreamZip.StreamZipAsync
     ): Promise<void> {
         const wamPath = tmjKey.slice().replace(".tmj", ".wam");
-        if (!(await this.fileSystem.exist(wamPath))) {
-            const tmjString = (await zip.entryData(zipEntry)).toString();
-            // Using "as" instead of Zod because the Zod check was alreadz performed before.
-            const tmjContent = JSON.parse(tmjString) as ITiledMap;
-            await this.fileSystem.writeStringAsFile(
-                wamPath,
-                JSON.stringify(await this.getFreshWAMFileContent(`./${path.basename(tmjKey)}`, tmjContent), null, 4)
-            );
-        }
+        const tmjString = (await zip.entryData(zipEntry)).toString();
+        // Using "as" instead of Zod because the Zod check was alreadz performed before.
+        const tmjContent = JSON.parse(tmjString) as ITiledMap;
+        await this.fileSystem.writeStringAsFile(
+            wamPath,
+            JSON.stringify(await this.getFreshWAMFileContent(`./${path.basename(tmjKey)}`, tmjContent), null, 4)
+        );
     }
 
     private async getFreshWAMFileContent(tmjFilePath: string, tmjContent: ITiledMap): Promise<WAMFileFormat> {
@@ -547,6 +545,7 @@ export class UploadController {
         }
         return wamFile;
     }
+
     /**
      * Let's filter out any file starting with "."
      */
