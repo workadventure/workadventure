@@ -1,6 +1,10 @@
 <script lang="ts">
+    import WokaFromUserId from "../../Components/Woka/WokaFromUserId.svelte";
+
     export let avatarUrl: string | null = null;
+    export let userId: number | string | null = null;
     export let fallbackFirstLetter = "A";
+    export let color: string | null = null;
     export let isChatAvatar = false;
 
     const colors = [
@@ -41,18 +45,33 @@
     }
 </script>
 
-{#if avatarUrl}
+{#if userId && userId != -1}
+    <div
+        class="tw-rounded-full"
+        style="width: 32px; height: 32px;"
+        style:background-color={`${color ? color : `#${getColorByFirstLetter(fallbackFirstLetter)}`}`}
+    >
+        <WokaFromUserId {userId} placeholderSrc={""} customHeight="32px" customWidth="32px" />
+    </div>
+{:else if userId === -1}
+    <div
+        class={`tw-rounded-full tw-bg-amber-600 tw-text-center tw-uppercase tw-text-white tw-w-8 tw-h-8`}
+        style:background-color={`#${color ? color : getColorByFirstLetter(fallbackFirstLetter)}`}
+    >
+        <WokaFromUserId {userId} placeholderSrc={""} customHeight="32px" customWidth="32px" />
+    </div>
+{:else if avatarUrl}
     <img
-        class:chatAvatar={isChatAvatar}
         src={avatarUrl}
         alt={"User avatar"}
         class="tw-rounded-full tw-h-6 tw-w-6 tw-object-contain tw-bg-white"
+        style:background-color={`${color ? color : `#${getColorByFirstLetter(fallbackFirstLetter)}`}`}
     />
 {:else}
     <div
         class:chatAvatar={isChatAvatar}
         class={`tw-rounded-full tw-bg-amber-600 tw-h-6 tw-w-6 tw-text-center tw-uppercase tw-text-white`}
-        style:background-color={`#${getColorByFirstLetter(fallbackFirstLetter)}`}
+        style:background-color={`#${color ? color : getColorByFirstLetter(fallbackFirstLetter)}`}
     >
         {fallbackFirstLetter}
     </div>

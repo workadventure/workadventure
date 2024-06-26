@@ -1,5 +1,4 @@
 <script lang="ts">
-    import type { Unsubscriber } from "svelte/store";
     import { onDestroy, onMount } from "svelte";
     import { EmojiButton } from "@joeattardi/emoji-button";
     import { emoteMenuStore, emoteDataStore } from "../../Stores/EmoteStore";
@@ -8,8 +7,6 @@
 
     let emojiContainer: HTMLElement;
     let picker: EmojiButton;
-
-    let unsubscriber: Unsubscriber | null = null;
 
     onMount(() => {
         picker = new EmojiButton({
@@ -67,10 +64,6 @@
     }
 
     onDestroy(() => {
-        if (unsubscriber) {
-            unsubscriber();
-        }
-
         document.body.removeEventListener("click", checkClickOutSide);
         picker.destroyPicker();
     });

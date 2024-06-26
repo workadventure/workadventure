@@ -134,7 +134,10 @@ export class WorkadventureChatCommands<PublicState extends { [key: string]: unkn
         const finalOptions = options ?? { scope: "local" };
 
         return chatStream.subscribe((event) => {
-            if (finalOptions.scope === "local" && event.senderId !== undefined) {
+            if (
+                (finalOptions.scope === "local" && event.senderId !== undefined) ||
+                (finalOptions.scope === "bubble" && event.senderId === undefined)
+            ) {
                 return;
             }
             callback(event.message, {

@@ -123,7 +123,6 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
         jitsiBroadcastSpaceLogger("Joining Jitsi conference, jitsiConnection is defined " + roomName);
 
         const turnCredentialsAnswer = await this.roomConnection.queryTurnCredentials();
-        console.log("JitsiBroadCastSpace => joinJitsiConference => turnCredentialsAnswer", turnCredentialsAnswer);
         const jitsiConference = await JitsiConferenceWrapper.join(
             certifiedJitsiConnection,
             roomName,

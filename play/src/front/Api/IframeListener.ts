@@ -1,6 +1,6 @@
 import { Subject } from "rxjs";
 import { availabilityStatusToJSON } from "@workadventure/messages";
-import { BanEvent, ChatMessage, KLAXOON_ACTIVITY_PICKER_EVENT } from "@workadventure/shared-utils";
+import { BanEvent, ChatEvent, ChatMessage, KLAXOON_ACTIVITY_PICKER_EVENT } from "@workadventure/shared-utils";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
 import {
     additionnalButtonsMenu,
@@ -208,6 +208,9 @@ class IframeListener {
     private readonly _roomListStream: Subject<boolean> = new Subject();
     public readonly roomListButtonStream = this._roomListStream.asObservable();
 
+    private readonly _chatMessageStream: Subject<ChatEvent> = new Subject();
+    public readonly chatMessageStream = this._chatMessageStream.asObservable();
+
     private readonly iframes = new Map<HTMLIFrameElement, string | undefined>();
     private readonly iframeCloseCallbacks = new Map<MessageEventSource, Set<() => void>>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
@@ -352,7 +355,7 @@ class IframeListener {
                     } else if (iframeEvent.type === "cameraFollowPlayer") {
                         this._cameraFollowPlayerStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "chat") {
-                        scriptUtils.sendChat(iframeEvent.data, iframe.contentWindow ?? undefined);
+                        this._chatMessageStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "startWriting") {
                         scriptUtils.startWriting(iframeEvent.data, iframe.contentWindow ?? undefined);
                     } else if (iframeEvent.type === "stopWriting") {
@@ -514,7 +517,7 @@ class IframeListener {
                     } else if (iframeEvent.type == "restoreInviteUserButton") {
                         this._inviteUserButtonStream.next(true);
                     } else if (iframeEvent.type == "chatReady") {
-                        console.log("chatReady");
+                        console.info("chatReady");
                     } else if (iframeEvent.type == "disableRoomList") {
                         this._roomListStream.next(false);
                     } else if (iframeEvent.type == "restoreRoomList") {

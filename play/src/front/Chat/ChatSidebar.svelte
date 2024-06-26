@@ -9,6 +9,7 @@
     import Chat from "./Components/Chat.svelte";
 
     function closeChat() {
+        console.debug("closed");
         chatVisibilityStore.set(false);
     }
 
@@ -58,12 +59,20 @@
 <style lang="scss">
     @import "../style/breakpoints.scss";
 
+    @include media-breakpoint-up(sm) {
+        .chatWindow {
+            width: 100% !important;
+        }
+    }
+
     .chatWindow {
         color: white;
         display: flex;
         flex-direction: column;
         position: absolute !important;
         top: 0;
+        min-width: 335px !important;
+        width: 20% !important;
         height: 100vh !important;
         z-index: 2000;
         pointer-events: auto;

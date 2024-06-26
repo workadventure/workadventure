@@ -39,6 +39,11 @@ export interface ChatRoom {
     hasPreviousMessage: Readable<boolean>;
     loadMorePreviousMessages: () => Promise<void>;
     isEncrypted: Readable<boolean>;
+
+    addIncomingUser?: (userId: number, userUuid: string, userName: string, color?: string) => void;
+    addOutcomingUser?: (userId: number, userUuid: string, userName: string) => void;
+    addNewMessage?: (message: string, senderUserUuid: string) => void;
+    addExternalMessage?: (message: string, authorName?: string) => void;
     typingMembers: Readable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
     startTyping: () => Promise<object>;
     stopTyping: () => Promise<object>;
@@ -68,7 +73,7 @@ export interface ChatMessageReaction {
     reacted: Readable<boolean>;
 }
 
-export type ChatMessageType = "text" | "image" | "file" | "audio" | "video";
+export type ChatMessageType = "proximity" | "text" | "incoming" | "outcoming" | "image" | "file" | "audio" | "video";
 export type ChatMessageContent = { body: string; url: string | undefined };
 export const historyVisibilityOptions = ["world_readable", "joined", "invited"] as const;
 export type historyVisibility = (typeof historyVisibilityOptions)[number];
@@ -114,6 +119,7 @@ export interface ChatConnectionInterface {
     isEncryptionRequiredAndNotSet: Readable<boolean>;
     initEndToEndEncryption(): Promise<void>;
     isGuest: Readable<boolean>;
+    joinSpace?: (spaceId: string, spaceName: string) => void;
 }
 
 export type Connection = AtLeast<RoomConnection, "queryChatMembers">;

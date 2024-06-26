@@ -29,6 +29,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     searchChat: "Rechercher un canal, un message, etc ...",
     people: "Personnes",
     rooms: "Salons",
+    proximity: "Bulle de discussion",
     role: {
         admin: "Administrateur",
         member: "Membre",
@@ -67,8 +68,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         title: "Votre historique",
         open: "Ouvrir votre historique de conversation !",
         description: "Historique de vos conversations",
-        incoming: " a rejoint la conversation",
-        outcoming: " a quitté la conversation",
+        incoming: "{userName} a rejoint la conversation",
+        outcoming: "{userName} a quitté la conversation",
     },
     form: {
         placeholder: "Écrire votre message...",

@@ -15,6 +15,7 @@ import { TrackInterface } from "../Streaming/Contract/TrackInterface";
 import { showReportScreenStore } from "../Stores/ShowReportScreenStore";
 import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
 import { iframeListener } from "../Api/IframeListener";
+import { proximityRoomConnection } from "../Chat/Stores/ChatStore";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { blackListManager } from "./BlackListManager";
@@ -115,6 +116,13 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
 
         this._constraintsStore = writable<ObtainedMediaStreamConstraints | null>(null);
 
+        const proximityMeeting = get(proximityRoomConnection);
+        if (proximityMeeting && proximityMeeting.joinSpace && this.user.webRtcUser)
+            proximityMeeting.joinSpace(
+                this.user.webRtcUser.split(":")[0],
+                `peer_${this.user.webRtcUser.split(":")[0]}`
+            );
+
         //start listen signal for the peer connection
         this.on("signal", (data: unknown) => {
             this.sendWebrtcSignal(data);
@@ -144,7 +152,13 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
 
             this._connected = true;
 
-            //chatMessagesService.addIncomingUser(this.userId);
+            if (proximityMeeting) {
+                const proximityRoomChat = get(proximityMeeting.rooms)[0];
+                if (proximityRoomChat.addIncomingUser != undefined) {
+                    const color = playersStore.getPlayerById(this.userId)?.color;
+                    proximityRoomChat.addIncomingUser(this.userId, this.userUuid, this.player.name, color ?? undefined);
+                }
+            }
 
             this.newMessageSubscription = newChatMessageSubject.subscribe((newMessage) => {
                 if (!newMessage) return;
@@ -320,7 +334,14 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
             this.onUnBlockSubscribe.unsubscribe();
             this.newMessageSubscription?.unsubscribe();
             this.newWritingStatusMessageSubscription?.unsubscribe();
-            //chatMessagesService.addOutcomingUser(this.userId);
+
+            const proximityMeeting = get(proximityRoomConnection);
+            if (proximityMeeting) {
+                const proximityRoomChat = get(proximityMeeting.rooms)[0];
+                if (proximityRoomChat.addOutcomingUser != undefined)
+                    proximityRoomChat.addOutcomingUser(this.userId, this.userUuid, this.player.name);
+            }
+
             if (this.localStreamStoreSubscribe) this.localStreamStoreSubscribe();
             if (this.apparentMediaConstraintStoreSubscribe) this.apparentMediaConstraintStoreSubscribe();
             if (this.volumeStoreSubscribe) this.volumeStoreSubscribe();
@@ -394,5 +415,11 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
     }
     blockOrReportUser(): void {
         showReportScreenStore.set({ userId: this.userId, userName: this.player.name });
+    }
+    sendProximityPublicMessage(message: string): void {
+        this.connection.emitProximityPublicMessage("peer", message);
+    }
+    sendProximityPrivateMessage(message: string): void {
+        this.connection.emitProximityPrivateMessage("peer", message, this.userUuid);
     }
 }

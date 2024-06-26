@@ -2,9 +2,9 @@
     import { afterUpdate, beforeUpdate, onMount } from "svelte";
     import { get } from "svelte/store";
     import { ChatRoom } from "../../Connection/ChatConnection";
-    import { selectedChatMessageToReply, selectedRoom } from "../../Stores/ChatStore";
-    import LL from "../../../../i18n/i18n-svelte";
+    import { proximityRoomConnection, selectedChatMessageToReply, selectedRoom } from "../../Stores/ChatStore";
     import Avatar from "../Avatar.svelte";
+    import LL from "../../../../i18n/i18n-svelte";
     import Message from "./Message.svelte";
     import MessageInput from "./MessageInput.svelte";
     import { IconArrowLeft } from "@wa-icons";
@@ -67,10 +67,11 @@
 
     $: messages = room?.messages;
     $: messageReaction = room?.messageReactions;
+    $: userConnected = $proximityRoomConnection?.userConnected;
 </script>
 
 {#if room !== undefined}
-    <button class="tw-p-0 tw-m-0" on:click={goBackAndClearSelectedChatMessage}>
+    <button class="back-roomlist tw-p-0 tw-m-0" on:click={goBackAndClearSelectedChatMessage}>
         <IconArrowLeft />
     </button>
     <ul
@@ -78,6 +79,19 @@
         bind:this={messageListRef}
         class="tw-list-none tw-p-0 tw-flex-1 tw-overflow-auto tw-flex tw-flex-col"
     >
+        {#if room.id === "proximity" && $userConnected !== undefined}
+            <div class="tw-flex tw-flex-row tw-items-center tw-gap-2">
+                {#each [...$userConnected] as [userId, user] (userId)}
+                    <div class="avatar">
+                        <Avatar
+                            avatarUrl={user.avatarUrl}
+                            fallbackFirstLetter={user?.username?.charAt(0)}
+                            color={user?.color}
+                        />
+                    </div>
+                {/each}
+            </div>
+        {/if}
         {#if $messages.length === 0}
             <p class="tw-self-center tw-text-md tw-text-gray-500">{$LL.chat.nothingToDisplay()}</p>
         {/if}

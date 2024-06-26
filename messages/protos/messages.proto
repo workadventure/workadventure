@@ -330,6 +330,8 @@ message ClientToServerMessage {
     MuteVideoEveryBodyParticipantMessage muteVideoEveryBodyParticipantMessage = 40;
     BanPlayerMessage banPlayerMessage = 41;
     UpdateChatIdMessage updateChatIdMessage = 42;
+    ProximityPublicMessage proximityPublicMessage = 43;
+    ProximityPrivateMessage proximityPrivateMessage = 44;
   }
 }
 
@@ -587,6 +589,8 @@ message SubMessage {
     MuteVideoEverybodyMessage muteVideoEverybodyMessage = 26;
     AskMuteMicrophoneMessage askMuteMicrophoneMessage = 27;
     AskMuteVideoMessage askMuteVideoMessage = 28;
+    ProximityPublicMessageToClientMessage proximityPublicMessageToClientMessage = 29;
+    ProximityPrivateMessageToClientMessage proximityPrivateMessageToClientMessage = 30;
   }
 }
 
@@ -820,6 +824,30 @@ message AskMutedVideoMessage {
   string message = 2;
 }
 
+message ProximityPublicMessage {
+  string spaceName = 1;
+  string message = 2;
+}
+
+message ProximityPrivateMessage {
+  string spaceName = 1;
+  string receiverUserUuid = 2;
+  string message = 3;
+}
+
+message ProximityPublicMessageToClientMessage {
+  string spaceName = 1;
+  string message = 2;
+  optional string senderUserUuid = 3;
+}
+
+message ProximityPrivateMessageToClientMessage {
+  string spaceName = 1;
+  string receiverUserUuid = 2;
+  string message = 3;
+  optional string senderUserUuid = 4;
+}
+
 /**
  * Messages going from back and pusher to the front
  */
@@ -856,6 +884,8 @@ message ServerToClientMessage {
     MutedVideoMessage mutedVideoMessage = 34;
     AskMutedMessage askMutedMessage = 35;
     AskMutedVideoMessage askMutedVideoMessage = 36;
+    ProximityPublicMessageToClientMessage proximityPublicMessageToClientMessage = 37;
+    ProximityPrivateMessageToClientMessage proximityPrivateMessageToClientMessage = 38;
   }
 }
 
@@ -962,6 +992,8 @@ message PusherToBackMessage {
     MuteEveryBodyParticipantMessage muteEveryBodyParticipantMessage = 27;
     MuteVideoParticipantIdMessage muteVideoParticipantIdMessage = 28;
     MuteVideoEveryBodyParticipantMessage muteVideoEveryBodyParticipantMessage = 29;
+    ProximityPublicMessage proximityPublicMessage = 30;
+    ProximityPrivateMessage proximityPrivateMessage = 31;
   }
 }
 
@@ -1167,6 +1199,8 @@ message PusherToBackSpaceMessage{
     MuteVideoEverybodyMessage muteVideoEverybodyMessage = 12;
     AskMuteMicrophoneMessage askMuteMicrophoneMessage = 13;
     AskMuteVideoMessage askMuteVideoMessage = 14;
+    ProximityPrivateMessageToClientMessage proximityPrivateMessageToClientMessage = 15;
+    ProximityPublicMessageToClientMessage proximityPublicMessageToClientMessage = 16;
   }
 }
 
@@ -1184,6 +1218,8 @@ message BackToPusherSpaceMessage{
     MuteVideoEverybodyMessage muteVideoEverybodyMessage = 10;
     AskMuteMicrophoneMessage askMuteMicrophoneMessage = 11;
     AskMuteVideoMessage askMuteVideoMessage = 12;
+    ProximityPublicMessageToClientMessage proximityPublicMessageToClientMessage = 13;
+    ProximityPrivateMessageToClientMessage proximityPrivateMessageToClientMessage = 14;
   }
 }
 
