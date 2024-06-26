@@ -3,18 +3,19 @@ import type { Translation } from "../i18n-types";
 
 const woka: DeepPartial<Translation["woka"]> = {
     customWoka: {
-        title: "Dein WOKA bearbeiten",
+        title: "Bearbeite deinen WOKA",
         navigation: {
-            return: "Zurück",
-            back: "Hoch",
-            finish: "Auswählen",
-            next: "Runter",
+            return: "Zurückkehren",
+            back: "Zurück",
+            finish: "Fertig",
+            next: "Weiter",
+            backTodefaultWoka: "Zurück zum Standard-WOKA",
         },
     },
     selectWoka: {
-        title: "Dein WOKA auswählen",
-        continue: "Auswählen",
-        customize: "Bearbeite dein WOKA",
+        title: "Deinen WOKA auswählen",
+        continue: "Weiter",
+        customize: "Bearbeite deinen WOKA",
     },
     menu: {
         businessCard: "Visitenkarte",
