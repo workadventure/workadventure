@@ -31,6 +31,6 @@ export const isCardsConnectedLink = (url: URL) => {
         ) &&
         url.pathname.indexOf("cards") !== -1 &&
         url.searchParams.has("tenant") &&
-        url.searchParams.has("learning")
+        url.searchParams.has("training")
     );
 };
