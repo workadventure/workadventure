@@ -2,6 +2,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MatrixClient } from "matrix-js-sdk";
 import { MatrixSecurity } from "../MatrixSecurity";
 
+vi.mock("../../../../Phaser/Entity/CharacterLayerManager", () => {
+    return {
+        CharacterLayerManager: {
+            wokaBase64(): Promise<string> {
+                return Promise.resolve("");
+            },
+        },
+    };
+});
+
 describe("MatrixSecurity", () => {
     describe("initClientCryptoConfiguration", () => {
         const basicMockClient = {
@@ -175,14 +185,6 @@ describe("MatrixSecurity", () => {
             await matrixSecurity["initializingEncryptionPromise"]?.catch(() =>
                 expect(matrixSecurity["initializingEncryptionPromise"]).toBeUndefined()
             );
-
-            /*
-            TODO:
-            Ajouter des catchs sur les bootstrap pour pouvoir appeler le initializingEncryptionReject et remettre a undefined la promise ?
-            si le 1er passe mais pas le 2eme ? meme traitement
-            
-            Try sur les  ????
-            */
         });
     });
 });

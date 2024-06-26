@@ -5,6 +5,7 @@
     export let userId: number | string | null = null;
     export let fallbackFirstLetter = "A";
     export let color: string | null = null;
+    export let isChatAvatar = false;
 
     const colors = [
         "CB4288",
@@ -68,9 +69,18 @@
     />
 {:else}
     <div
+        class:chatAvatar={isChatAvatar}
         class={`tw-rounded-full tw-bg-amber-600 tw-h-6 tw-w-6 tw-text-center tw-uppercase tw-text-white`}
         style:background-color={`#${color ? color : getColorByFirstLetter(fallbackFirstLetter)}`}
     >
         {fallbackFirstLetter}
     </div>
 {/if}
+
+<style>
+    .chatAvatar {
+        border-style: solid;
+        border-color: rgb(27 42 65 / 0.95);
+        border-width: 1px;
+    }
+</style>

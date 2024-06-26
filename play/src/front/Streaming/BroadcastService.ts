@@ -80,6 +80,7 @@ export class BroadcastService {
             this.broadcastSpaces = this.broadcastSpaces.filter((space) => space.space.getName() !== spaceNameSlugify);
             broadcastServiceLogger("leaveSpace", spaceNameSlugify);
         }
+
         jitsiLoadingStore.set(false);
         if (this.screenWakeRelease) {
             this.screenWakeRelease()
@@ -135,7 +136,9 @@ export class BroadcastService {
      * Destroy the broadcast service
      */
     public destroy(): void {
-        this.broadcastSpaces.forEach((space) => space.destroy());
+        this.broadcastSpaces.forEach((space) => {
+            space.destroy();
+        });
     }
 
     /**

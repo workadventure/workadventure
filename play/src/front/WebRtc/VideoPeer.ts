@@ -13,9 +13,9 @@ import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintSto
 import { TrackStreamWrapperInterface } from "../Streaming/Contract/TrackStreamWrapperInterface";
 import { TrackInterface } from "../Streaming/Contract/TrackInterface";
 import { showReportScreenStore } from "../Stores/ShowReportScreenStore";
+import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
 import { iframeListener } from "../Api/IframeListener";
 import { proximityRoomConnection } from "../Chat/Stores/ChatStore";
-import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { blackListManager } from "./BlackListManager";

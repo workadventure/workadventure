@@ -44,7 +44,7 @@ export interface ChatRoom {
     addOutcomingUser?: (userId: number, userUuid: string, userName: string) => void;
     addNewMessage?: (message: string, senderUserUuid: string) => void;
     addExternalMessage?: (message: string, authorName?: string) => void;
-    typingMembers: Readable<string[]>;
+    typingMembers: Readable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
     startTyping: () => Promise<object>;
     stopTyping: () => Promise<object>;
 }

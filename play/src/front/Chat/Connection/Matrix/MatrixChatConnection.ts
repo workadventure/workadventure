@@ -313,7 +313,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         return {
             name: roomOptions.name,
             visibility: roomOptions.visibility as Visibility | undefined,
-            room_alias_name: roomOptions.name?.replace(/ /g, "-"),
+            room_alias_name: roomOptions.name,
             invite: roomOptions.invite?.map((invitation) => invitation.value) ?? [],
             is_direct: roomOptions.is_direct,
             initial_state: this.computeInitialState(roomOptions),

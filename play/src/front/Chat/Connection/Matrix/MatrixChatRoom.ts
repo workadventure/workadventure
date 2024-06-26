@@ -20,6 +20,8 @@ import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
 import { RoomMessageEventContent } from "matrix-js-sdk/lib/@types/events";
 import { ChatRoom, ChatRoomMembership } from "../ChatConnection";
 import { selectedChatMessageToReply } from "../../Stores/ChatStore";
+import { LocalSpaceProviderSingleton } from "../../../Space/SpaceProvider/SpaceStore";
+import { WORLD_SPACE_NAME, CONNECTED_USER_FILTER_NAME } from "../../../Space/Space";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { matrixSecurity } from "./MatrixSecurity";
@@ -40,9 +42,9 @@ export class MatrixChatRoom implements ChatRoom {
     timelineWindow: TimelineWindow;
     inMemoryEventsContent: Map<EventId, IContent>;
     isEncrypted!: Writable<boolean>;
-    typingMembers: Writable<string[]>;
+    typingMembers: Writable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
 
-    constructor(private matrixRoom: Room) {
+    constructor(private matrixRoom: Room, private spaceStore = LocalSpaceProviderSingleton.getInstance()) {
         this.id = matrixRoom.roomId;
         this.name = writable(matrixRoom.name);
         this.type = this.getMatrixRoomType();
@@ -63,24 +65,48 @@ export class MatrixChatRoom implements ChatRoom {
 
         void this.matrixRoom.getMembersWithMembership(KnownMembership.Join).forEach((member) =>
             member.on(RoomMemberEvent.Typing, (event, member) => {
-                const memberDisplayName = member.user?.displayName;
+                const typingMember = member.user;
+                if (!typingMember) return;
+
+                const typingMemberInformation = {
+                    id: typingMember.userId,
+                    name: typingMember.displayName || null,
+                    avatarUrl: typingMember.avatarUrl || null,
+                };
 
                 const myUserID = this.matrixRoom.client.getSafeUserId();
-                const myDisplayName = this.matrixRoom.client.getUser(myUserID)?.displayName;
 
-                if (!memberDisplayName || memberDisplayName === myDisplayName) return;
+                if (!typingMemberInformation.id || typingMemberInformation.id === myUserID) return;
 
-                if (get(this.typingMembers).includes(memberDisplayName)) {
+                const isAlreadyTyping = get(this.typingMembers).some((memberInformation) => {
+                    return memberInformation.id === typingMemberInformation.id;
+                });
+
+                if (isAlreadyTyping) {
                     this.typingMembers.update((currentTypingMemberList) => {
-                        return currentTypingMemberList.filter(
-                            (memberDisplayName) => memberDisplayName !== memberDisplayName
-                        );
+                        return currentTypingMemberList.filter((member) => member.id !== typingMemberInformation.id);
                     });
                     return;
                 }
 
-                this.typingMembers.update((currentValue) => {
-                    return [...currentValue, memberDisplayName];
+                const allUserSpaceFilter = this.spaceStore
+                    .get(WORLD_SPACE_NAME)
+                    .getSpaceFilter(CONNECTED_USER_FILTER_NAME);
+
+                const userFromSpace = allUserSpaceFilter
+                    .getUsers()
+                    .filter((spaceuser) => spaceuser.chatID === typingMemberInformation.id)[0];
+
+                if (userFromSpace && userFromSpace.getWokaBase64) {
+                    typingMemberInformation.avatarUrl = userFromSpace.getWokaBase64;
+                } else {
+                    typingMemberInformation.avatarUrl = typingMemberInformation.avatarUrl
+                        ? this.matrixRoom.client.mxcUrlToHttp(typingMemberInformation.avatarUrl ?? "", 48, 48)
+                        : typingMemberInformation.avatarUrl;
+                }
+
+                this.typingMembers.update((currentTypingMemberList) => {
+                    return [...currentTypingMemberList, typingMemberInformation];
                 });
             })
         );

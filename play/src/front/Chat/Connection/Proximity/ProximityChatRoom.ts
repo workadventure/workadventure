@@ -56,7 +56,7 @@ export class ProximityChatRoom implements ChatRoom {
     membersId: string[] = [];
     hasPreviousMessage = writable(false);
     isEncrypted = writable(false);
-    typingMembers: Readable<string[]> = writable([]);
+    typingMembers: Readable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
 
     unknowUser = {
         id: "0",
@@ -70,7 +70,9 @@ export class ProximityChatRoom implements ChatRoom {
         spaceId: undefined,
     } as ChatUser;
 
-    constructor(private _connection: ProximityChatConnection, private _userId: number, private _userUuid: string) {}
+    constructor(private _connection: ProximityChatConnection, private _userId: number, private _userUuid: string) {
+        this.typingMembers = writable([]);
+    }
 
     sendMessage(message: string, action: ChatMessageType = "proximity", broadcast = true): void {
         // Create content message

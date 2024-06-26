@@ -23,6 +23,6 @@
     <User user={me} />
 {/if}
 
-{#each [...filteredAndSortedUserList] as user (user.spaceId)}
+{#each [...filteredAndSortedUserList] as user ((user.spaceId, user.id))}
     <User {user} />
 {/each}
