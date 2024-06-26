@@ -87,7 +87,7 @@
             <span
                 class="ban wa-dropdown-item tw-text-pop-red"
                 on:click|stopPropagation={() => {
-                    if (user.username) chatConnection.sendBan(user.id, user.username);
+                    if (user.username && user.uuid) chatConnection.sendBan(user.uuid, user.username);
                 }}><IconForbid font-size="13" /> {$LL.chat.ban.title()}</span
             >
         {/if}
