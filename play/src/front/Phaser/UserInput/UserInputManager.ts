@@ -241,6 +241,15 @@ export class UserInputManager {
         eventsMap.set(UserInputEvent.JoystickMove, this.joystickEvents.any());
         this.keysCode.forEach((d) => {
             if (d.keyInstance?.isDown) {
+                // Fix mac keyboard issue
+                // Prevents the input from being triggered when the focus is on an input field
+                if (
+                    d.keyInstance.originalEvent.target instanceof HTMLInputElement ||
+                    d.keyInstance.originalEvent.target instanceof HTMLTextAreaElement
+                ) {
+                    d.keyInstance.reset();
+                    return;
+                }
                 eventsMap.set(d.event, true);
             }
         });
