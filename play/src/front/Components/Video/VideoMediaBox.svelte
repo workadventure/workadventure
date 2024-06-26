@@ -70,7 +70,6 @@
     let aspectRatio = 1;
     let isHighlighted = false;
     let menuDrop = false;
-    let currentHighlightedEmbedScreen: Streamable | undefined;
 
     const debug = Debug("VideoMediaBox");
 
@@ -86,26 +85,6 @@
         minimized = isMediaBreakpointOnly("md");
     });
 
-    $: $setHeight, calcHeightVideo();
-    $: $highlightedEmbedScreen === peer && calcHeightVideo();
-
-    function calcHeightVideo() {
-        if ($highlightedEmbedScreen === peer && videoContainer) {
-            videoContainer.style.height = `${$setHeight}px`;
-        }
-    }
-
-    highlightedEmbedScreen.subscribe((value) => {
-        console.log("highlightedEmbedScreen VALUE", value);
-        currentHighlightedEmbedScreen = value;
-        handleResize();
-        if (value) {
-            isHightlighted = true;
-        } else {
-            isHightlighted = false;
-        }
-    });
-
     // TODO: check the race condition when setting sinkId is solved.
     // Also, read: https://github.com/nwjs/nw.js/issues/4340
 
@@ -114,6 +93,7 @@
     let sinkIdPromise = CancelablePromise.resolve();
 
     onMount(() => {
+        calcHeightVideo();
         resizeObserver.observe(videoContainer);
 
         unsubscribeChangeOutput = speakerSelectedStore.subscribe((deviceId) => {
@@ -258,26 +238,49 @@
         }, 1000);
     }
 
+    $: $setHeight, calcHeightVideo();
+    $: $highlightedEmbedScreen === peer && calcHeightVideo();
+
+    function calcHeightVideo() {
+        if ($highlightedEmbedScreen === peer && videoContainer) {
+            videoContainer.style.height = `${$setHeight}px`;
+        }
+    }
+
+    highlightedEmbedScreen.subscribe((value) => {
+        if (value) {
+            isHightlighted = true;
+        } else {
+            isHightlighted = false;
+        }
+    });
+
     $: isHighlighted = $highlightedEmbedScreen === embedScreen;
 
     function toggleFullScreen() {
         highlightFullScreen.update((current) => !current);
-        const video = document.getElementById("other-cam-screen") as HTMLVideoElement;
-        if (video) {
+        if (videoContainer) {
             if ($highlightFullScreen) {
-                video.style.height = `${document.documentElement.clientHeight}px`;
-                video.style.width = `${document.documentElement.clientWidth}px`;
+                videoContainer.style.height = `${document.documentElement.clientHeight}px`;
+                console.log("document.documentElement.clientHeight", document.documentElement.clientHeight);
+                videoContainer.style.width = `${document.documentElement.clientWidth}px`;
             } else {
-                video.style.height = "100%";
-                video.style.width = "100%";
+                videoContainer.style.height = "100%";
+                videoContainer.style.width = "100%";
             }
         }
+        calcHeightVideo();
     }
 
     function untogglefFullScreen() {
         highlightedEmbedScreen.removeHighlight();
         highlightFullScreen.set(false);
+        calcHeightVideo();
     }
+
+    highlightedEmbedScreen.subscribe(() => {
+        calcHeightVideo();
+    });
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -292,7 +295,6 @@
     class:h-full={$embedScreenLayoutStore === LayoutMode.VideoChat}
     bind:this={videoContainer}
     on:click={() => analyticsClient.pinMeetingAction()}
-    id="other-cam-screen"
 >
     <ActionMediaBox {embedScreen} trackStreamWraper={peer} {videoEnabled} />
 
@@ -308,6 +310,7 @@
         class:flex-row={!videoEnabled}
         class:relative={!videoEnabled}
         class:justify-center={$statusStore === "connecting" || $statusStore === "error"}
+        id="test"
     >
         {#if $statusStore === "connecting"}
             <div class="connecting-spinner" />
@@ -324,7 +327,6 @@
             class:w-0={!videoEnabled}
             class:object-contain={minimized || isHightlighted || aspectRatio < 1}
             class:max-h-full={videoEnabled && !isHightlighted && $embedScreenLayoutStore === LayoutMode.VideoChat}
-            class:max-h-[80vh]={videoEnabled && isHightlighted}
             class:h-full={videoEnabled}
             class:rounded-lg={videoEnabled}
             autoplay
@@ -471,6 +473,7 @@
             ? "hidden"
             : "absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-full aspect-ratio bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 cursor-pointer"}
         on:click={() => highlightedEmbedScreen.highlight(peer)}
+        on:click={calcHeightVideo}
     >
         <svg
             xmlns="http://www.w3.org/2000/svg"

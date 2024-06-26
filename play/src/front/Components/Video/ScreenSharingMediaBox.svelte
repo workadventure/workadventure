@@ -6,9 +6,10 @@
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import type { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
-    import { highlightFullScreen, setHeight } from "../../Stores/ActionsCamStore";
+    import { highlightFullScreen, setHeightScreenShare } from "../../Stores/ActionsCamStore";
     import { srcObject } from "./utils";
     import BanReportBox from "./BanReportBox.svelte";
+    import { onMount } from "svelte";
 
     export let peer: ScreenSharingPeer;
     let streamStore = peer.streamStore;
@@ -20,7 +21,10 @@
     let embedScreen: Streamable;
     let menuDrop = false;
     let videoContainer: HTMLDivElement;
-    let currentHighlightedEmbedScreen: Streamable | undefined;
+
+    onMount(() => {
+        calcHeightVideo();
+    });
 
     if (peer) {
         embedScreen = peer as unknown as Streamable;
@@ -29,32 +33,42 @@
     $: isHighlighted = $highlightedEmbedScreen === embedScreen;
 
     function toggleFullScreen() {
+        console.log("je suis dans la fonction toggleFullScreen");
         highlightFullScreen.update((current) => !current);
-        const video = document.getElementById("screen-sharing") as HTMLVideoElement;
-
-        if (video) {
+        if (videoContainer) {
             if ($highlightFullScreen) {
-                video.style.height = `${document.documentElement.clientHeight}px`;
-                video.style.width = `${document.documentElement.clientWidth}px`;
+                videoContainer.style.height = `${document.documentElement.clientHeight}px`;
+                videoContainer.style.width = `${document.documentElement.clientWidth}px`;
             } else {
-                video.style.height = "100%";
-                video.style.width = "100%";
+                videoContainer.style.height = "100%";
+                videoContainer.style.width = "100%";
             }
         }
+        calcHeightVideo();
     }
 
+    onMount(() => {
+        calcHeightVideo();
+    });
+
     function untogglefFullScreen() {
-        highlightedEmbedScreen.toggleHighlight(embedScreen);
+        calcHeightVideo();
+        highlightedEmbedScreen.removeHighlight();
         highlightFullScreen.set(false);
     }
 
-    $: $setHeight, calcHeightVideo();
+    $: $setHeightScreenShare, calcHeightVideo();
     $: $highlightedEmbedScreen === embedScreen, calcHeightVideo();
+
     function calcHeightVideo() {
         if ($highlightedEmbedScreen === embedScreen && videoContainer) {
-            videoContainer.style.height = `${$setHeight}px`;
+            videoContainer.style.height = `${$setHeightScreenShare}px`;
         }
     }
+
+    highlightedEmbedScreen.subscribe(() => {
+        calcHeightVideo();
+    });
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -104,7 +118,8 @@
             class={isHighlighted
                 ? "hidden"
                 : "absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-full aspect-ratio bg-contrast/50 opacity-0 group-hover/screenshare:opacity-100 backdrop-blur transition-all cursor-pointer"}
-            on:click={() => highlightedEmbedScreen.toggleHighlight(embedScreen)}
+            on:click={() => highlightedEmbedScreen.highlight(embedScreen)}
+            on:click={calcHeightVideo}
         >
             <svg
                 xmlns="http://www.w3.org/2000/svg"

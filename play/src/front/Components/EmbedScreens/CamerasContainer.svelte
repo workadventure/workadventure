@@ -9,26 +9,19 @@
 
     let isHightlighted = false;
 
-    // highlightedEmbedScreen.subscribe((value) => {
-    //     console.log("highlightedEmbedScreen VALUE", value);
-    //     if (value) {
-    //         isHightlighted = true;
-    //     } else {
-    //         isHightlighted = false;
-    //     }
-    // });
-    // highlightFullScreen.subscribe((value) => {
-    //     console.trace("highlightFullScreen VALUE", value);
-    //     if (value) {
-    //         isHightlighted = true;
-    //     } else {
-    //         isHightlighted = false;
-    //     }
-    // });
+    highlightedEmbedScreen.subscribe((value) => {
+        if (value) {
+            isHightlighted = true;
+        } else {
+            isHightlighted = false;
+        }
+    });
 
     afterUpdate(() => {
         checkOverflow();
     });
+
+    $: $highlightedEmbedScreen, checkOverflow();
 
     function checkOverflow() {
         const camContainer = document.getElementById("cameras-container");
@@ -82,7 +75,7 @@
         overflow-x: auto;
         overflow-y: hidden;
         margin: 0 auto;
-        width: 80%;
+        width: 100%;
         max-width: 100%;
         -webkit-overflow-scrolling: touch;
     }

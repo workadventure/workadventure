@@ -99,7 +99,7 @@
 {/if}
 
 <style>
-    @container (min-width: 768px) and (max-width: 1023px) {
+    /* @container (min-width: 768px) and (max-width: 1023px) {
         .cam-share-receive {
             aspect-ratio: 2.5;
         }
@@ -126,5 +126,5 @@
         .cam-share-receive {
             aspect-ratio: 2.6;
         }
-    }
+    } */
 </style>

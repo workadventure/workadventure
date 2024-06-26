@@ -12,14 +12,20 @@
     } from "../../../Stores/StreamableCollectionStore";
     import Loading from "../../Video/Loading.svelte";
     import { jitsiLoadingStore } from "../../../Streaming/BroadcastService";
-    import { rightMode, hideMode, highlightFullScreen, setHeight } from "../../../Stores/ActionsCamStore";
+    import {
+        rightMode,
+        hideMode,
+        highlightFullScreen,
+        setHeight,
+        setHeightScreenShare,
+    } from "../../../Stores/ActionsCamStore";
 
     const isMobile = window.matchMedia("(max-width: 767px)");
     let isVertical: boolean;
     let currentHighlightedEmbedScreen: Streamable | undefined;
     let isHightlighted = false;
     let camContainer: HTMLDivElement;
-    let highlightScreen: any;
+    let highlightScreen: HTMLDivElement;
 
     const windowSize = writable({
         height: window.innerHeight,
@@ -40,8 +46,6 @@
         modifySizeCamIfScreenShare();
     });
 
-    // $: $highlightedEmbedScreen?.uniqueId, resizeHeight();
-
     onMount(() => {
         resizeHeight();
         isMobile.addEventListener("change", (e: any) => handleTabletChange(e));
@@ -54,18 +58,15 @@
     });
 
     function resizeHeight() {
-        console.log("JE SUIS DANS REsIZE HEIGHT");
         let availableHeight = window.innerHeight - (camContainer?.offsetHeight || 0) - 72;
-        console.log("availableHeight", availableHeight);
         if (availableHeight < 0) {
             availableHeight = 0;
         }
         setHeight.set(availableHeight);
-        console.log($setHeight, "SET HEIGHT");
+        setHeightScreenShare.set(availableHeight);
     }
 
     highlightedEmbedScreen.subscribe((value) => {
-        console.log("highlightedEmbedScreen VALUE", value);
         currentHighlightedEmbedScreen = value;
         handleResize();
         if (value) {
@@ -88,14 +89,16 @@
 
     function modifySizeCamIfScreenShare() {
         let containerCam = document.getElementById("container-media") as HTMLDivElement;
-        if (containerCam && currentHighlightedEmbedScreen !== undefined && !$highlightFullScreen) {
-            containerCam.style.transform = "scale(0.7)";
-            containerCam.style.marginTop = "-24px";
-            containerCam.style.marginBottom = "-8px";
-        } else {
-            containerCam.style.transform = "scale(1)";
-            containerCam.style.marginTop = "0px";
-            containerCam.style.marginBottom = "0px";
+        if (containerCam) {
+            if (currentHighlightedEmbedScreen !== undefined && !$highlightFullScreen) {
+                containerCam.style.transform = "scale(0.7)";
+                containerCam.style.marginTop = "-24px";
+                containerCam.style.marginBottom = "-8px";
+            } else {
+                containerCam.style.transform = "scale(1)";
+                containerCam.style.marginTop = "0px";
+                containerCam.style.marginBottom = "0px";
+            }
         }
     }
 
@@ -126,47 +129,40 @@
                 containerScreenShare.classList.add("fullscreen");
             }
         } else if (!$hideMode && !isVertical) {
-            containerLayoutCam?.classList.remove("hidden");
-
             if (containerScreenShare) {
                 containerScreenShare.style.transform = "scale(1)";
             }
         }
     }
-
-    onDestroy(() => {
-        isMobile.removeEventListener("change", (e: any) => handleTabletChange(e));
-    });
 </script>
 
-<!-- class:full-medias={displayFullMedias} -->
+<div class="presentation-layout flex flex-col-reverse md:flex-col">
+    {#if $streamableCollectionStore.size > 0 || $myCameraStore}
+        <div class="justify-end md:justify-center" id="container-media" bind:this={camContainer}>
+            {#if $jitsiLoadingStore}
+                <Loading />
+            {/if}
+            {#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true && $myCameraStore}
+                <CamerasContainer />
+            {/if}
+            {#if $myJitsiCameraStore}
+                <MediaBox streamable={$myJitsiCameraStore} isClickable={false} />
+            {/if}
+        </div>
+    {/if}
 
-<!-- <div class={isHightlighted ? "presentation-layout flex flex-col-reverse md:flex-col" : ""}> -->
-{#if $streamableCollectionStore.size > 0 || $myCameraStore}
-    <div
-        class="justify-end md:justify-center gc -m {isHightlighted ? 'mb-2' : ''}"
-        id="container-media"
-        bind:this={camContainer}
-    >
-        {#if $jitsiLoadingStore}
-            <Loading />
-        {/if}
-        {#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true && $myCameraStore}
-            <CamerasContainer />
-        {/if}
-        {#if $myJitsiCameraStore}
-            <MediaBox streamable={$myJitsiCameraStore} isClickable={false} />
-        {/if}
-    </div>
-{/if}
-
-{#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true && $highlightedEmbedScreen}
-    <div id="video-container-receive" class={$highlightedEmbedScreen ? "block" : "hidden"} bind:this={highlightScreen}>
-        {#key $highlightedEmbedScreen.uniqueId}
-            <MediaBox isHightlighted={true} isClickable={true} streamable={$highlightedEmbedScreen} />
-        {/key}
-    </div>
-{/if}
+    {#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true && $highlightedEmbedScreen}
+        <div
+            id="video-container-receive"
+            class="mb-8 md:mb-0{$highlightedEmbedScreen ? 'block' : 'hidden'}"
+            bind:this={highlightScreen}
+        >
+            {#key $highlightedEmbedScreen.uniqueId}
+                <MediaBox isHightlighted={true} isClickable={true} streamable={$highlightedEmbedScreen} />
+            {/key}
+        </div>
+    {/if}
+</div>
 
 <style>
     @container (min-width: 576px) {
@@ -187,14 +183,4 @@
             margin-top: -70px;
         }
     }
-    /*
-    @container {
-
-    } */
-
-    /* .right-mode-on {
-        display: flex;
-        flex-direction: column;
-        background-color: red;
-    } */
 </style>
