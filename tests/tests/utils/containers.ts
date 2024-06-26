@@ -14,7 +14,7 @@ export function dockerCompose(command: string) {
         param += ' -f '+overrideDockerCompose;
     }
 
-    return execSync('docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml '+param+' '+command, {
+    return execSync('docker compose -f docker-compose.yaml -f docker-compose-oidc.yaml '+param+' '+command, {
         cwd: __dirname + '/../../../'
     });
 }
