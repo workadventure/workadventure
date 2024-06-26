@@ -67,6 +67,11 @@ import {
     WorldConnectionMessage,
     XmppSettingsMessage,
     TurnCredentialsAnswer,
+    ProximityPrivateMessageToClientMessage,
+    ProximityPublicMessageToClientMessage,
+    SpaceFilterMessage,
+    WatchSpaceMessage,
+    UnwatchSpaceMessage,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -230,6 +235,14 @@ export class RoomConnection implements RoomConnection {
     public readonly askMutedMessage = this._askMutedMessage.asObservable();
     private readonly _askMutedVideoMessage = new Subject<AskMutedVideoMessage>();
     public readonly askMutedVideoMessage = this._askMutedVideoMessage.asObservable();
+    private readonly _proximityPrivateMessageToClientMessageStream =
+        new Subject<ProximityPrivateMessageToClientMessage>();
+    public readonly proximityPrivateMessageToClientMessageStream =
+        this._proximityPrivateMessageToClientMessageStream.asObservable();
+    private readonly _proximityPublicMessageToClientMessageStream =
+        new Subject<ProximityPublicMessageToClientMessage>();
+    public readonly proximityPublicMessageToClientMessageStream =
+        this._proximityPublicMessageToClientMessageStream.asObservable();
     private queries = new Map<
         number,
         {
@@ -748,6 +761,18 @@ export class RoomConnection implements RoomConnection {
                 }
                 case "askMutedVideoMessage": {
                     this._askMutedVideoMessage.next(message.askMutedVideoMessage);
+                    break;
+                }
+                case "proximityPrivateMessageToClientMessage": {
+                    this._proximityPrivateMessageToClientMessageStream.next(
+                        message.proximityPrivateMessageToClientMessage
+                    );
+                    break;
+                }
+                case "proximityPublicMessageToClientMessage": {
+                    this._proximityPublicMessageToClientMessageStream.next(
+                        message.proximityPublicMessageToClientMessage
+                    );
                     break;
                 }
                 default: {
@@ -1458,6 +1483,67 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    public emitWatchSpaceLiveStreaming(spaceName: string) {
+        const spaceFilter: SpaceFilterMessage = {
+            filterName: "watchSpaceLiveStreaming",
+            spaceName,
+            filter: {
+                $case: "spaceFilterLiveStreaming",
+                spaceFilterLiveStreaming: {},
+            },
+        };
+        this.send({
+            message: {
+                $case: "watchSpaceMessage",
+                watchSpaceMessage: WatchSpaceMessage.fromPartial({
+                    spaceName,
+                    spaceFilter,
+                }),
+            },
+        });
+        return spaceFilter;
+    }
+    public emitUserJoinSpace(spaceName: string) {
+        const spaceFilter: SpaceFilterMessage = {
+            filterName: "",
+            spaceName,
+            filter: undefined,
+        };
+        this.send({
+            message: {
+                $case: "watchSpaceMessage",
+                watchSpaceMessage: WatchSpaceMessage.fromPartial({
+                    spaceName,
+                    spaceFilter,
+                }),
+            },
+        });
+        return spaceFilter;
+    }
+
+    public emitUnwatchSpaceLiveStreaming(spaceName: string) {
+        this.send({
+            message: {
+                $case: "unwatchSpaceMessage",
+                unwatchSpaceMessage: UnwatchSpaceMessage.fromPartial({
+                    spaceName,
+                }),
+            },
+        });
+    }
+
+    public emitUpdateSpaceMetadata(spaceName: string, metadata: { [key: string]: unknown }): void {
+        this.send({
+            message: {
+                $case: "updateSpaceMetadataMessage",
+                updateSpaceMetadataMessage: UpdateSpaceMetadataMessage.fromPartial({
+                    spaceName,
+                    metadata: JSON.stringify(metadata),
+                }),
+            },
+        });
+    }
+
     public emitCameraState(state: boolean) {
         this.send({
             message: {
@@ -1499,6 +1585,18 @@ export class RoomConnection implements RoomConnection {
                 megaphoneStateMessage: {
                     value: state,
                     spaceName: currentMegaphoneName ? slugify(currentMegaphoneName) : undefined,
+                },
+            },
+        });
+    }
+
+    public emitJitsiParticipantIdSpace(spaceName: string, participantId: string) {
+        this.send({
+            message: {
+                $case: "jitsiParticipantIdSpaceMessage",
+                jitsiParticipantIdSpaceMessage: {
+                    spaceName,
+                    value: participantId,
                 },
             },
         });
@@ -1678,6 +1776,39 @@ export class RoomConnection implements RoomConnection {
             message: {
                 $case: "pingMessage",
                 pingMessage: {},
+            },
+        });
+    }
+
+    public emitProximityPublicMessage(spaceName: string, message: string) {
+        if (!this.userId) {
+            console.warn("No user id defined to send a message to mute every video!");
+            return;
+        }
+        this.send({
+            message: {
+                $case: "proximityPublicMessage",
+                proximityPublicMessage: {
+                    spaceName,
+                    message,
+                },
+            },
+        });
+    }
+
+    public emitProximityPrivateMessage(spaceName: string, message: string, userReceiverId: string) {
+        if (!this.userId) {
+            console.warn("No user id defined to send a message to mute every video!");
+            return;
+        }
+        this.send({
+            message: {
+                $case: "proximityPrivateMessage",
+                proximityPrivateMessage: {
+                    spaceName,
+                    message,
+                    receiverUserUuid: userReceiverId,
+                },
             },
         });
     }

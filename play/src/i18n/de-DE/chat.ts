@@ -62,8 +62,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         title: "Deine Timeline",
         open: "Öffne deine Chronik!",
         description: "Nachrichten- und Ereignisverlauf",
-        incoming: " tritt der Diskussion bei",
-        outcoming: " verlässt die Diskussion",
+        incoming: "{userName} tritt der Diskussion bei",
+        outcoming: "{userName} verlässt die Diskussion",
     },
     form: {
         placeholder: "Gib deine Nachricht ein...",

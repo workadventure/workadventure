@@ -1037,6 +1037,25 @@ export class IoSocketController {
                             await socketManager.handleBanPlayerMessage(socket, message.message.banPlayerMessage);
                             break;
                         }
+                        case "proximityPublicMessage": {
+                            socketManager.handleProximityPublicSpaceMessage(
+                                socket,
+                                message.message.proximityPublicMessage.spaceName,
+                                message.message.proximityPublicMessage.message,
+                                message.message
+                            );
+                            break;
+                        }
+                        case "proximityPrivateMessage": {
+                            socketManager.handleProximityPrivateSpaceMessage(
+                                socket,
+                                message.message.proximityPrivateMessage.spaceName,
+                                message.message.proximityPrivateMessage.message,
+                                message.message.proximityPrivateMessage.receiverUserUuid,
+                                message.message
+                            );
+                            break;
+                        }
                         default: {
                             const _exhaustiveCheck: never = message.message;
                         }

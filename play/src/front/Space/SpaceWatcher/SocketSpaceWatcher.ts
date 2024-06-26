@@ -1,9 +1,11 @@
 import { z } from "zod";
 import { ServerToClientMessage } from "@workadventure/messages";
+import { get } from "svelte/store";
 import { SpaceProviderInterface } from "../SpaceProvider/SpacerProviderInterface";
 import { LocalSpaceProviderSingleton } from "../SpaceProvider/SpaceStore";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { gameManager } from "../../Phaser/Game/GameManager";
+import { proximityRoomConnection } from "../../Chat/Stores/ChatStore";
 import { WORLD_SPACE_NAME } from "../Space";
 
 export enum SpaceEvent {
@@ -23,6 +25,9 @@ export class StreamSpaceWatcher {
             const arrayBuffer: ArrayBuffer = messageEvent.data;
             const serverMessage = decoder.decode(new Uint8Array(arrayBuffer));
             const message = serverMessage.message;
+
+            const proximityRoom = get(proximityRoomConnection);
+
             if (message === undefined) return;
             if (message.$case !== "batchMessage") return;
             for (const subMessageWrapper of message.batchMessage.payload) {
@@ -53,9 +58,9 @@ export class StreamSpaceWatcher {
                             .get(subMessage.updateSpaceUserMessage.spaceName)
                             .getSpaceFilter(subMessage.updateSpaceUserMessage.filterName)
                             .updateUserData(subMessage.updateSpaceUserMessage.user);
-
                         if (subMessage.updateSpaceUserMessage.spaceName === WORLD_SPACE_NAME)
                             chatConnection.updateUserFromSpace(subMessage.updateSpaceUserMessage.user);
+                        proximityRoom?.updateUserFromSpace(subMessage.updateSpaceUserMessage.user);
                         break;
                     }
                     case SpaceEvent.RemoveSpaceUser: {
@@ -67,6 +72,7 @@ export class StreamSpaceWatcher {
                             .removeUser(subMessage.removeSpaceUserMessage.userId);
                         if (subMessage.removeSpaceUserMessage.spaceName === WORLD_SPACE_NAME)
                             chatConnection.disconnectSpaceUser(subMessage.removeSpaceUserMessage.userId);
+                        proximityRoom?.disconnectSpaceUser(subMessage.removeSpaceUserMessage.userId);
                         break;
                     }
                     case SpaceEvent.updateSpaceMetadata: {

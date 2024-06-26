@@ -58,6 +58,8 @@ export interface JitsiEventEmitter {
     emitMuteVideoEveryBodySpace(): void;
     emitMuteParticipantIdSpace(userId: string): void;
     emitMuteVideoParticipantIdSpace(userId: string): void;
+    emitProximityPublicMessage(message: string): void;
+    emitProximityPrivateMessage(message: string, receiverUserUuid: string): void;
 }
 
 export class SpaceFilter implements SpaceFilterInterface {
@@ -136,6 +138,12 @@ export class SpaceFilter implements SpaceFilterInterface {
             },
             emitMuteVideoParticipantIdSpace: (userId: string) => {
                 this.emitMuteVideoParticipantIdSpace(userId);
+            },
+            emitProximityPublicMessage: (message: string) => {
+                this.emitProximityPublicMessage(message);
+            },
+            emitProximityPrivateMessage: (message: string, receiverUserUuid: string) => {
+                this.emitProximityPrivateMessage(message, receiverUserUuid);
             },
         };
 
@@ -248,6 +256,31 @@ export class SpaceFilter implements SpaceFilterInterface {
                 muteVideoParticipantIdMessage: {
                     spaceName: this.spaceName,
                     mutedUserUuid: userId,
+                },
+            },
+        });
+    }
+
+    private emitProximityPublicMessage(message: string) {
+        this.sender({
+            message: {
+                $case: "proximityPublicMessage",
+                proximityPublicMessage: {
+                    spaceName: this.spaceName,
+                    message,
+                },
+            },
+        });
+    }
+
+    private emitProximityPrivateMessage(message: string, receiverUserUuid: string) {
+        this.sender({
+            message: {
+                $case: "proximityPrivateMessage",
+                proximityPrivateMessage: {
+                    spaceName: this.spaceName,
+                    message,
+                    receiverUserUuid,
                 },
             },
         });

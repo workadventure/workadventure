@@ -1,12 +1,9 @@
 import {expect, Page} from "@playwright/test";
-import {expectInViewport} from "./viewport";
 
 class Menu {
     async openChat(page: Page) {
         await page.click('button.chat-btn');
-        await expectInViewport('#chatWindow', page);
-        await expect(page.locator('button.chat-btn')).toHaveClass(/border-top-light/);
-        await expect(page.locator('#chatWindow')).toHaveClass(/show/);
+        await expect(page.locator('#chat.chatWindow')).toBeVisible();
     }
 
     async openMapEditor(page: Page) {

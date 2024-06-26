@@ -178,7 +178,7 @@ describe("MatrixChatConnection", () => {
                 .then(() => {
                     expect(startMatrixClientSpy).toHaveBeenCalledOnce();
                 })
-                .catch((e) => console.log(e));
+                .catch((e) => console.error(e));
         });
         it("should not call startMatrixClient when client promise reject", () => {
             const clientPromise = Promise.reject(new Error(""));
