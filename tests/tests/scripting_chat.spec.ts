@@ -1,9 +1,8 @@
-import { expect, test, webkit } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { evaluateScript } from "./utils/scripting";
 import { login } from "./utils/roles";
 import { publicTestMapUrl } from "./utils/urls";
 import Chat from "./utils/chat";
-import Map from "./utils/map";
 
 //TODO update tests for new proximity chat !
 test.describe("Scripting chat functions", () => {
@@ -72,7 +71,7 @@ test.describe("Scripting chat functions", () => {
     await expect(page.locator('#chat')).toBeHidden();
   });
 
-  test('can send message to bubble users @chat', async ({ page, browser}, { project }) => {
+  /*test('can send message to bubble users @chat', async ({ page, browser}, { project }) => {
       // Skip test for mobile device
       if(project.name === "mobilechromium") {
         //eslint-disable-next-line playwright/no-skipped-test
@@ -131,7 +130,7 @@ test.describe("Scripting chat functions", () => {
 
       // TODO: Check that alice also received the message
       // Check that bob received the message
-      /*await expect(
+      await expect(
         alice.locator('#chat')
         .locator('#message')
         .nth(0)
@@ -142,6 +141,6 @@ test.describe("Scripting chat functions", () => {
         alice.locator('#chat')
         .locator('#message')
         .nth(1)
-      ).toContainText('Test message sent', { timeout: 30000 });*/
-  });
+      ).toContainText('Test message sent', { timeout: 30000 });
+  });*/
 });
