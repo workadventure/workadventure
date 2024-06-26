@@ -13,6 +13,7 @@ import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintSto
 import { TrackStreamWrapperInterface } from "../Streaming/Contract/TrackStreamWrapperInterface";
 import { TrackInterface } from "../Streaming/Contract/TrackInterface";
 import { showReportScreenStore } from "../Stores/ShowReportScreenStore";
+import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
 import { iframeListener } from "../Api/IframeListener";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
@@ -52,7 +53,7 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
     constructor(
         public user: UserSimplePeerInterface,
         initiator: boolean,
-        public readonly userName: string,
+        public readonly player: RemotePlayerData,
         private connection: RoomConnection
     ) {
         const bandwidth = get(videoBandwidthStore);
@@ -142,6 +143,7 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
             this._statusStore.set("connected");
 
             this._connected = true;
+
             //chatMessagesService.addIncomingUser(this.userId);
 
             this.newMessageSubscription = newChatMessageSubject.subscribe((newMessage) => {
@@ -391,6 +393,6 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
         this.connection.emitKickOffUserMessage(this.userUuid, "peer");
     }
     blockOrReportUser(): void {
-        showReportScreenStore.set({ userId: this.userId, userName: this.userName });
+        showReportScreenStore.set({ userId: this.userId, userName: this.player.name });
     }
 }

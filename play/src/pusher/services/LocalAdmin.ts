@@ -11,6 +11,7 @@ import { Capabilities, OpidWokaNamePolicy } from "@workadventure/messages";
 import axios from "axios";
 import { MapsCacheFileFormat } from "@workadventure/map-editor";
 import {
+    CARDS_ENABLED,
     DISABLE_ANONYMOUS,
     ENABLE_CHAT,
     ENABLE_CHAT_DISCONNECTED_LIST,
@@ -175,6 +176,17 @@ class LocalAdmin implements AdminInterface {
                 name: "Excalidraw",
                 doc: "https://excalidraw.com",
                 description: "Excalidraw (White board)",
+                enabled: true,
+                default: true,
+                forceNewTab: false,
+                allowAPI: false,
+            });
+        }
+        if (CARDS_ENABLED) {
+            applications.push({
+                name: "Cards",
+                doc: "https://workadventu.re",
+                description: "Cards (learning tool)",
                 enabled: true,
                 default: true,
                 forceNewTab: false,

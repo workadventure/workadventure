@@ -1,27 +1,18 @@
-import type { ChatEvent } from "@workadventure/shared-utils";
-import { GoogleWorkSpaceService, KlaxoonService } from "@workadventure/shared-utils";
+import { CardsService, ChatEvent, GoogleWorkSpaceService, KlaxoonService } from "@workadventure/shared-utils";
 import { StartWritingEvent, StopWritingEvent } from "@workadventure/shared-utils/src/Events/WritingEvent";
 import { analyticsClient } from "../Administration/AnalyticsClient";
+import { gameManager } from "../Phaser/Game/GameManager";
 
 class ScriptUtils {
     public openTab(url: string) {
-        const urlApi = new URL(url);
-        // Check if the url is a klaxoon link
-        if (KlaxoonService.isKlaxoonLink(urlApi)) {
-            // If it is a Klaxoon link opening in new tab, we need to remove the embedded parameter
-            url = KlaxoonService.getKlaxoonBasicUrl(urlApi);
-        }
+        // Get URL from the website
+        url = this.getWebsiteUrl(url);
 
-        // Check if the url is a Google WorkSpace link
-        if (GoogleWorkSpaceService.isEmbedableGooglWorkSapceLink(urlApi)) {
-            // If it a Google WorkSpace link opening in new tab, we need to remove the embedded parameter
-            url = GoogleWorkSpaceService.getGoogleWorkSpaceBasicUrl(urlApi);
-        }
-
+        // Open the url in a new tab
         window.open(url);
 
         // Analytics tracking for opening a new tab
-        analyticsClient.openedWebsite(urlApi);
+        analyticsClient.openedWebsite(new URL(url));
     }
 
     public goToPage(url: string) {
@@ -96,6 +87,30 @@ class ScriptUtils {
             console.info("Error in checking if in iframe", e);
             return true;
         }
+    }
+
+    public getWebsiteUrl(url: string) {
+        const urlApi = new URL(url);
+        // Check if the url is a klaxoon link
+        if (KlaxoonService.isKlaxoonLink(urlApi)) {
+            // If it is a Klaxoon link opening in new tab, we need to remove the embedded parameter
+            url = KlaxoonService.getKlaxoonBasicUrl(urlApi);
+        }
+
+        // Check if the url is a Google WorkSpace link
+        if (GoogleWorkSpaceService.isEmbedableGooglWorkSapceLink(urlApi)) {
+            // If it a Google WorkSpace link opening in new tab, we need to remove the embedded parameter
+            url = GoogleWorkSpaceService.getGoogleWorkSpaceBasicUrl(urlApi);
+        }
+
+        // Check if the Url is a Cards link
+        if (CardsService.isCardsLink(urlApi)) {
+            // If it is a Cards link opening in new tab, we need to remove the token parameter
+            const userRoomToken = gameManager.getCurrentGameScene().connection?.userRoomToken;
+            url = CardsService.getCardsLink(urlApi, userRoomToken);
+        }
+
+        return url;
     }
 }
 

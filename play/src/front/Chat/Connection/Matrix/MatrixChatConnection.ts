@@ -6,6 +6,7 @@ import {
     ICreateRoomStateEvent,
     IRoomDirectoryOptions,
     MatrixClient,
+    MatrixError,
     PendingEventOrdering,
     Room,
     RoomEvent,
@@ -284,16 +285,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         if (this.connection.emitBanPlayerMessage) this.connection.emitBanPlayerMessage(uuid, username);
     }
 
-    //TODO createOptions only on matrix size
-    async createRoom(roomOptions?: CreateRoomOptions): Promise<{
-        room_id: string;
-    }> {
-        if (roomOptions === undefined) {
-            return Promise.reject(new Error("CreateRoomOptions is empty"));
-        }
-        return await this.client.createRoom(this.mapCreateRoomOptionsToMatrixCreateRoomOptions(roomOptions));
-    }
-
     private mapCreateRoomOptionsToMatrixCreateRoomOptions(roomOptions: CreateRoomOptions): ICreateRoomOpts {
         return {
             name: roomOptions.name,
@@ -319,6 +310,30 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         }
 
         return initial_state;
+    }
+
+    //TODO createOptions only on matrix size
+    async createRoom(roomOptions?: CreateRoomOptions): Promise<{
+        room_id: string;
+    }> {
+        if (roomOptions === undefined) {
+            return Promise.reject(new Error("CreateRoomOptions is empty"));
+        }
+        try {
+            return await this.client.createRoom(this.mapCreateRoomOptionsToMatrixCreateRoomOptions(roomOptions));
+        } catch (error) {
+            throw this.handleMatrixError(error);
+        }
+    }
+
+    private handleMatrixError(error: unknown) {
+        if (error instanceof MatrixError) {
+            error.data.error;
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            //@ts-ignore
+            return new Error(error.data.error, { cause: error });
+        }
+        return error;
     }
 
     async createDirectRoom(userToInvite: string): Promise<ChatRoom | undefined> {

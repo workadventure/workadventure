@@ -12,6 +12,7 @@
     import googleSlidesSvg from "../images/applications/icon_google_slides.svg";
     import eraserSvg from "../images/applications/icon_eraser.svg";
     import excalidrawSvg from "../images/applications/icon_excalidraw.svg";
+    import cardsPng from "../images/applications/icon_cards.svg";
     import { emoteMenuSubStore } from "../../Stores/EmoteStore";
     import { helpSettingsPopupBlockedStore } from "../../Stores/HelpSettingsPopupBlockedStore";
     import { connectionManager } from "../../Connection/ConnectionManager";
@@ -190,6 +191,21 @@
                             disabled={!connectionManager.excalidrawToolActivated}
                         >
                             <img draggable="false" src={excalidrawSvg} style="padding: 2px" alt="Excalidraw" />
+                        </button>
+                    </div>
+                {/if}
+                {#if connectionManager.cardsToolActivated}
+                    <div class="tw-transition-all bottom-action-button">
+                        <Tooltip text={$LL.mapEditor.properties.cardsProperties.label()} />
+                        <button
+                            on:click={() => {
+                                window.open(`https://excalidraw.com`, "_blanck");
+                                appMenuOpened = false;
+                            }}
+                            id={`button-app-klaxoon`}
+                            disabled={!connectionManager.cardsToolActivated}
+                        >
+                            <img draggable="false" src={cardsPng} style="padding: 2px" alt="Excalidraw" />
                         </button>
                     </div>
                 {/if}

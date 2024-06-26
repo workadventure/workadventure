@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onDestroy, onMount } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { SelectCompanionScene, SelectCompanionSceneName } from "../../Phaser/Login/SelectCompanionScene";
     import {
@@ -28,6 +29,9 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { ENABLE_OPENID } from "../../Enum/EnvironmentVariable";
     import { CustomizeScene, CustomizeSceneName } from "../../Phaser/Login/CustomizeScene";
+    import { iframeListener } from "../../Api/IframeListener";
+
+    let profileIframe: HTMLIFrameElement;
 
     function disableMenuStores() {
         menuVisiblilityStore.set(false);
@@ -73,6 +77,14 @@
     function showWokaNameButton() {
         return connectionManager.currentRoom?.opidWokaNamePolicy !== "force_opid";
     }
+
+    onMount(() => {
+        if ($profileAvailable && profileIframe) iframeListener.registerIframe(profileIframe);
+    });
+
+    onDestroy(() => {
+        if ($profileAvailable && profileIframe) iframeListener.unregisterIframe(profileIframe);
+    });
 </script>
 
 <div class="customize-main">
@@ -156,6 +168,7 @@
         <section class="centered-column tw-w-full tw-m-auto resizing-text">
             {#if $profileAvailable}
                 <iframe
+                    bind:this={profileIframe}
                     title="profile"
                     src={getProfileUrl()}
                     class="tw-w-4/5 tw-h-screen tw-border-0 tw-border-solid tw-border-light-blue"

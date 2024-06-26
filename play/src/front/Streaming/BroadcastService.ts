@@ -78,7 +78,6 @@ export class BroadcastService {
         if (space) {
             space.destroy();
             this.broadcastSpaces = this.broadcastSpaces.filter((space) => space.space.getName() !== spaceNameSlugify);
-
             broadcastServiceLogger("leaveSpace", spaceNameSlugify);
         }
 

@@ -164,7 +164,7 @@ export class WorkadventureControlsCommands extends IframeApiContribution<Workadv
     }
 
     /**
-     * Disable invite button.
+     * Disable room list.
      * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-room-list | Website documentation}
      */
     disableRoomList(): void {
@@ -172,7 +172,7 @@ export class WorkadventureControlsCommands extends IframeApiContribution<Workadv
     }
 
     /**
-     * Restore invite button.
+     * Restore room list.
      * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-room-list | Website documentation}
      */
     restoreRoomList(): void {

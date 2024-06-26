@@ -25,7 +25,7 @@ const camera: BaseTranslation = {
         content: "The video relay server cannot be reached. You may be unable to communicate with other users.",
         solutionVpn:
             "If you are <strong>connecting via a VPN</strong>, please disconnect from you VPN and refresh the web page.",
-        solutionVpnNotAskAgain: "Understand and don't ask again 🫡",
+        solutionVpnNotAskAgain: "Understood. Don't warn me again 🫡",
         solutionHotspot:
             "If you are on a restricted network (company network...), try switching network. For instance, create a <strong>Wifi hotspot</strong> with your phone and connect via your phone.",
         solutionNetworkAdmin: "If you are a <strong>network administrator</strong>, review the ",

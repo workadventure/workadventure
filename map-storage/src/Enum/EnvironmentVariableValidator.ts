@@ -128,6 +128,22 @@ export const EnvironmentVariables = z.object({
         ),
     AUTHENTICATION_USER: z.string().optional().transform(emptyStringToUndefined),
     AUTHENTICATION_PASSWORD: z.string().optional().transform(emptyStringToUndefined),
+    WAM_TEMPLATE_URL: z
+        .string()
+        .url()
+        .or(z.literal(""))
+        .optional()
+        .describe("The URL to fetch an empty WAM template")
+        .transform(emptyStringToUndefined),
+    ENTITY_COLLECTION_URLS: z
+        .string()
+        .url()
+        .or(z.literal(""))
+        .optional()
+        .describe(
+            "A comma separated list of entity collection URLs to be used when a new TMJ map is uploaded. Note: ignored if WAM_TEMPLATE_URL is set."
+        )
+        .transform(emptyStringToUndefined),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

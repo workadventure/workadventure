@@ -31,6 +31,13 @@
     {#if hidden}
         <div class="loader" />
     {/if}
+    {#if !hidden}
+        <div class="buttonContainer">
+            <button class="light tw-m-auto tw-cursor-pointer tw-px-3 tw-mb-2 tw-mr-0" on:click={closeCard}
+                >{$LL.menu.visitCard.close()}</button
+            >
+        </div>
+    {/if}
     <iframe
         title="visitCard"
         src={visitCardUrl}
@@ -39,11 +46,6 @@
         class:hidden
         bind:this={cvIframe}
     />
-    {#if !hidden}
-        <div class="buttonContainer">
-            <button class="nes-btn is-popUpElement" on:click={closeCard}>{$LL.menu.visitCard.close()}</button>
-        </div>
-    {/if}
 </section>
 
 <svelte:window on:message={handleIframeMessage} />

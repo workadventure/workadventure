@@ -56,6 +56,10 @@ export class CompanionTexturesLoadingManager {
     loadModels(load: LoaderPlugin, companionTextures: CompanionTextures): CompanionTexture[] {
         const returnArray = Object.values(companionTextures.getCompanionResources());
         returnArray.forEach((companionResource) => {
+            if (!companionResource.url) {
+                console.warn("Companion resource has no URL", companionResource);
+                return;
+            }
             load.spritesheet(companionResource.id, companionResource.url, { frameWidth: 32, frameHeight: 32 });
         });
         return returnArray;

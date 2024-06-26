@@ -1682,7 +1682,7 @@ export class GameScene extends DirtyScene {
                 /*const me = this;
                 this.events.once("render", () => {
                     if (me.connection) {*/
-                this.simplePeer = new SimplePeer(this.connection);
+                this.simplePeer = new SimplePeer(this.connection, this.remotePlayersRepository);
                 /*} else {
                         console.warn("Connection to peers not started!");
                     }
@@ -2106,10 +2106,18 @@ export class GameScene extends DirtyScene {
                 // So we know for sure that there is only one new user.
                 const peer = Array.from(peers.values())[0];
                 //askIfUserWantToJoinBubbleOf(peer.userName);
-                statusChanger.setUserNameInteraction(peer.userName);
+                statusChanger.setUserNameInteraction(peer.player.name);
                 statusChanger.applyInteractionRules();
 
                 pendingConnects.add(peer.userId);
+                setTimeout(() => {
+                    // In case the peer never connects, we should remove it from the pendingConnects after a timeout
+                    pendingConnects.delete(peer.userId);
+                    /*if (pendingConnects.size === 0 && !alreadyInBubble && !this.cleanupDone) {
+                        iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
+                        alreadyInBubble = true;
+                    }*/
+                }, 5000);
                 peer.once("connect", () => {
                     pendingConnects.delete(peer.userId);
                     if (pendingConnects.size === 0) {
@@ -2147,6 +2155,14 @@ export class GameScene extends DirtyScene {
                         const peer = peers.get(newUser.userId);
                         if (peer) {
                             pendingConnects.add(newUser.userId);
+                            setTimeout(() => {
+                                // In case the peer never connects, we should remove it from the pendingConnects after a timeout
+                                pendingConnects.delete(newUser.userId);
+                                /*if (pendingConnects.size === 0 && !alreadyInBubble && !this.cleanupDone) {
+                                    iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
+                                    alreadyInBubble = true;
+                                }*/
+                            }, 5000);
                             peer.once("connect", () => {
                                 pendingConnects.delete(newUser.userId);
                                 if (pendingConnects.size === 0) {
@@ -3333,12 +3349,24 @@ ${escapedMessage}
         this.lastMoveEventSent = event;
         this.lastSentTick = this.currentTick;
         const camera = this.cameras.main;
-        this.connection?.sharePosition(event.x, event.y, event.direction, event.moving, {
+        let viewport = {
             left: camera.scrollX,
             top: camera.scrollY,
             right: camera.scrollX + camera.width,
             bottom: camera.scrollY + camera.height,
-        });
+        };
+        if (!this.scene.scene.renderer) {
+            // In the very special case where we have no renderer, the viewport will not move along the Woka.
+            // We need to adjust it manually. We set it to something very large to make sure the Woka sees
+            // everything around (useful for bots, even if so far, it is a trick)
+            viewport = {
+                left: event.x - 3_000,
+                top: event.y - 3_000,
+                right: event.x + 3_000,
+                bottom: event.y + 3_000,
+            };
+        }
+        this.connection?.sharePosition(event.x, event.y, event.direction, event.moving, viewport);
         iframeListener.hasPlayerMoved(event);
     }
 
