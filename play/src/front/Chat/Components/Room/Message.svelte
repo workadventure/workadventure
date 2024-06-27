@@ -15,6 +15,7 @@
     import MessageReactions from "./MessageReactions.svelte";
     import MessageIncoming from "./Message/MessageIncoming.svelte";
     import MessageOutcoming from "./Message/MessageOutcoming.svelte";
+    import MessageProximity from "./Message/MessageProximity.svelte";
     import { IconCornerDownRight, IconTrash } from "@wa-icons";
 
     export let message: ChatMessage;
@@ -22,6 +23,8 @@
 
     const { id, sender, isMyMessage, date, content, quotedMessage, isQuotedMessage, type, isDeleted, isModified } =
         message;
+
+    const messageFromSystem = type === "incoming" || type === "outcoming";
 
     const messageType: { [key in ChatMessageType]: ComponentType } = {
         image: MessageImage as ComponentType,
@@ -31,18 +34,23 @@
         video: MessageVideoFile as ComponentType,
         incoming: MessageIncoming as ComponentType,
         outcoming: MessageOutcoming as ComponentType,
-        proximity: MessageIncoming as ComponentType,
+        proximity: MessageProximity as ComponentType,
     };
 </script>
 
-<div id="message" class={`${isMyMessage && "tw-self-end tw-flex-row-reverse tw-relative"}`}>
+<div
+    id="message"
+    class={`${isMyMessage && "tw-self-end tw-flex-row-reverse tw-relative"} ${
+        messageFromSystem && "tw-justify-center"
+    }`}
+>
     <div class={`container-grid ${isMyMessage ? "tw-justify-end grid-container-inverted" : "tw-justify-start"}`}>
         <div
             class="messageHeader tw-text-gray-500 tw-text-xxs tw-p-0 tw-m-0 tw-flex tw-justify-between tw-items-end"
             class:tw-flex-row-reverse={isMyMessage}
-            hidden={isQuotedMessage}
+            hidden={isQuotedMessage || messageFromSystem}
         >
-            <span>{isMyMessage ? "You" : sender?.username}</span>
+            <span hidden={messageFromSystem}>{isMyMessage ? "You" : sender?.username}</span>
             <span class={`tw-text-xxxs ${isMyMessage ? "tw-mr-1" : "tw-ml-1"}`}
                 >{date?.toLocaleTimeString($locale, {
                     hour: "2-digit",
@@ -58,10 +66,10 @@
 
         <div
             class="message tw-rounded-2xl tw-p-2"
-            class:tw-bg-primary={!isMyMessage && message.type !== "incoming" && message.type !== "outcoming"}
-            class:tw-bg-secondary={isMyMessage && message.type !== "incoming" && message.type !== "outcoming"}
-            class:tw-rounded-br-none={isMyMessage && message.type !== "incoming" && message.type !== "outcoming"}
-            class:tw-rounded-bl-none={!isMyMessage && message.type !== "incoming" && message.type !== "outcoming"}
+            class:tw-bg-primary={!isMyMessage && !messageFromSystem}
+            class:tw-bg-secondary={isMyMessage && !messageFromSystem}
+            class:tw-rounded-br-none={isMyMessage && !messageFromSystem}
+            class:tw-rounded-bl-none={!isMyMessage && !messageFromSystem}
         >
             {#if $isDeleted}
                 <p class="tw-p-0 tw-m-0 tw-text-xs tw-text-gray-400 tw-flex tw-items-center">
