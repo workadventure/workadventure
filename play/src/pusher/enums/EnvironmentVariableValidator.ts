@@ -58,8 +58,6 @@ export const EnvironmentVariables = z.object({
     USERNAME_POLICY: z.string().optional(),
     DISABLE_ANONYMOUS: BoolAsString.optional().transform((val) => toBool(val, false)),
     PROMETHEUS_AUTHORIZATION_TOKEN: z.string().optional(),
-    EJABBERD_DOMAIN: z.string().optional(),
-    EJABBERD_JWT_SECRET: z.string().optional(),
     ENABLE_CHAT: BoolAsString.optional().transform((val) => toBool(val, true)),
     ENABLE_CHAT_UPLOAD: BoolAsString.optional().transform((val) => toBool(val, true)),
     ENABLE_CHAT_ONLINE_LIST: BoolAsString.optional().transform((val) => toBool(val, true)),
@@ -152,7 +150,6 @@ export const EnvironmentVariables = z.object({
     MATRIX_PUBLIC_URI: z.string().optional(),
 
     EMBEDLY_KEY: z.string().optional(),
-    EJABBERD_WS_URI: z.string().optional(),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

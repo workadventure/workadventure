@@ -34,7 +34,6 @@ export type SocketData = {
     roomId: string;
     userId?: number; // User Id served by the back
     userUuid: string; // Admin UUID
-    userJid: string;
     isLogged: boolean;
     ipAddress: string;
     name: string;
@@ -48,8 +47,6 @@ export type SocketData = {
     tags: string[];
     visitCardUrl: string | null;
     userRoomToken: string | undefined;
-    jabberId: string;
-    jabberPassword: string | undefined | null;
     activatedInviteUser: boolean | undefined;
     mucRooms: Array<MucRoomDefinition>;
     applications?: Array<ApplicationDefinitionInterface> | null;

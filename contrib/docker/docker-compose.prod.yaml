@@ -69,9 +69,6 @@ services:
       - ENABLE_CHAT_ONLINE_LIST
       - ENABLE_CHAT_DISCONNECTED_LIST
       - UPLOADER_URL=/uploader
-      # Only used if you set up a JWT authentication mechanism in Ejabberd
-      - EJABBERD_JWT_SECRET=${EJABBERD_JWT_SECRET}
-      - EJABBERD_DOMAIN=${EJABBERD_DOMAIN}
       # Report issues menu
       - ENABLE_REPORT_ISSUES_MENU=${ENABLE_REPORT_ISSUES_MENU}
       - REPORT_ISSUES_URL=${REPORT_ISSUES_URL}
@@ -159,10 +156,6 @@ services:
       - INTERNAL_MAP_STORAGE_URL=http://map-storage:3000
       - PUBLIC_MAP_STORAGE_URL=https://${DOMAIN}/map-storage
       - PLAYER_VARIABLES_MAX_TTL
-      - EJABBERD_API_URI
-      - EJABBERD_DOMAIN=${EJABBERD_DOMAIN}
-      - EJABBERD_USER=${EJABBERD_USER}
-      - EJABBERD_PASSWORD=${EJABBERD_PASSWORD}
       - ENABLE_CHAT
       - ENABLE_CHAT_UPLOAD
       - SENTRY_DSN=${SENTRY_DSN_BACK}
@@ -237,33 +230,6 @@ services:
     image: redis:6
     volumes:
       - redisdata:/data
-    restart: ${RESTART_POLICY}
-
-  ejabberd:
-    image: workadventure/ejabberd:v1
-    ports:
-      - '5443:5443'
-    environment:
-      - CTL_ON_CREATE=register ${EJABBERD_USER} ${EJABBERD_DOMAIN} ${EJABBERD_PASSWORD}
-      - JWT_SECRET=${EJABBERD_JWT_SECRET}
-      - EJABBERD_DOMAIN=${EJABBERD_DOMAIN}
-      - EJABBERD_USER=${EJABBERD_USER}
-      - EJABBERD_PASSWORD=${EJABBERD_PASSWORD}
-    volumes:
-      - ../../xmpp/ejabberd.template.yml:/opt/ejabberd/conf/ejabberd.template.yml
-    labels:
-      traefik.enable: "true"
-      traefik.http.middlewares.strip-ejabberd-prefix.stripprefix.prefixes: "/xmpp"
-      traefik.http.routers.ejabberd.middlewares: "strip-ejabberd-prefix@docker"
-      traefik.http.routers.ejabberd.rule: "Host(`${DOMAIN}`) && PathPrefix(`/xmpp`)"
-      traefik.http.routers.ejabberd.entryPoints: "web"
-      traefik.http.services.ejabberd.loadbalancer.server.port: "5443"
-      traefik.http.routers.ejabberd-ssl.middlewares: "strip-ejabberd-prefix@docker"
-      traefik.http.routers.ejabberd-ssl.rule: "Host(`${DOMAIN}`) && PathPrefix(`/xmpp`)"
-      traefik.http.routers.ejabberd-ssl.entryPoints: "websecure"
-      traefik.http.routers.ejabberd-ssl.service: "ejabberd"
-      traefik.http.routers.ejabberd-ssl.tls: "true"
-      traefik.http.routers.ejabberd-ssl.tls.certresolver: "myresolver"
     restart: ${RESTART_POLICY}
 
   map-storage:

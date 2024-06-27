@@ -29,7 +29,6 @@ describe("Space", () => {
         roomId: "",
         userId: 1,
         userUuid: "",
-        userJid: "",
         isLogged: false,
         ipAddress: "",
         name: "",
@@ -43,8 +42,6 @@ describe("Space", () => {
         tags: [],
         visitCardUrl: null,
         userRoomToken: undefined,
-        jabberId: "",
-        jabberPassword: undefined,
         activatedInviteUser: undefined,
         mucRooms: [],
         applications: undefined,
@@ -154,7 +151,7 @@ describe("Space", () => {
             tags: [],
             visitCardUrl: "test",
         });
-        space.updateUser(spaceUser,'');
+        space.updateUser(spaceUser, "");
         expect(eventsClient.some((message) => message.message?.$case === "updateSpaceUserMessage")).toBe(true);
         expect(eventsWatcher.some((message) => message.message?.$case === "updateSpaceUserMessage")).toBe(true);
 
@@ -289,7 +286,7 @@ describe("Space", () => {
         expect(user).toBeDefined();
         expect(user?.id).toBe(1);
     });
-    
+
     it("should notify client and back that a user is removed", () => {
         eventsClient = [];
         eventsWatcher = [];

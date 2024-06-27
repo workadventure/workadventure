@@ -2,11 +2,6 @@ import { expect, test } from "@playwright/test";
 import { hideNoCamera, login } from "./utils/roles";
 import Chat from "./utils/chat";
 import Map from "./utils/map";
-import {
-  findContainer,
-  startContainer,
-  stopContainer,
-} from "./utils/containers";
 import { createFileOfSize, deleteFile, fileExist } from "./utils/file";
 import Menu from "./utils/menu";
 import { publicTestMapUrl } from "./utils/urls";
@@ -184,31 +179,32 @@ test.describe("Chat @chat", () => {
       await Chat.forumExist(page, "Welcome");
     });
 
-    await test.step("disconnect and reconnect to ejabberd and pusher @docker", async () => {
-      const ejabberd = await findContainer("ejabberd");
-
-      const chat = page
-        .frameLocator("iframe#chatWorkAdventure")
-        .locator("aside.chatWindow");
-      await Chat.slideToUsers(page);
-      await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);
-
-      await stopContainer(ejabberd);
-      await expect(chat).toContainText("Waiting for server initialization");
-      await startContainer(ejabberd);
-      await Chat.slideToUsers(page);
-      await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);
-
-      const pusher = await findContainer("play");
-      await stopContainer(pusher);
-      await expect(page.locator(".errorScreen p.code")).toContainText(
-        "CONNECTION_"
-      );
-
-      await startContainer(pusher);
-      await Chat.slideToUsers(page);
-      await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);
-    });
+    // TODO: migrate this test to Matrix disconnect / reconnect instead.
+    // await test.step("disconnect and reconnect to ejabberd and pusher @docker", async () => {
+    //   const ejabberd = await findContainer("ejabberd");
+    //
+    //   const chat = page
+    //     .frameLocator("iframe#chatWorkAdventure")
+    //     .locator("aside.chatWindow");
+    //   await Chat.slideToUsers(page);
+    //   await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);
+    //
+    //   await stopContainer(ejabberd);
+    //   await expect(chat).toContainText("Waiting for server initialization");
+    //   await startContainer(ejabberd);
+    //   await Chat.slideToUsers(page);
+    //   await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);
+    //
+    //   const pusher = await findContainer("play");
+    //   await stopContainer(pusher);
+    //   await expect(page.locator(".errorScreen p.code")).toContainText(
+    //     "CONNECTION_"
+    //   );
+    //
+    //   await startContainer(pusher);
+    //   await Chat.slideToUsers(page);
+    //   await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);
+    // });
   });
 });
 

@@ -187,7 +187,6 @@ export class SocketManager {
         }
 
         const roomJoinedMessage: Partial<RoomJoinedMessage> = {
-            userJid: joinRoomMessage.userJid,
             tag: joinRoomMessage.tag,
             userRoomToken: joinRoomMessage.userRoomToken,
             characterTextures: joinRoomMessage.characterTextures,
@@ -449,7 +448,6 @@ export class SocketManager {
         }
         const userJoinedZoneMessage: Partial<UserJoinedZoneMessage> = {
             userId: user.id,
-            userJid: user.userJid,
             userUuid: user.uuid,
             name: user.name,
             availabilityStatus: user.getAvailabilityStatus(),

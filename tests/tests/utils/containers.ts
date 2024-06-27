@@ -105,13 +105,13 @@ export async function stopPlay(): Promise<void> {
   dockerCompose("stop play");
 }
 
-export async function stopEjabberd(): Promise<void> {
+/*export async function stopEjabberd(): Promise<void> {
   dockerCompose("stop ejabberd");
 }
 
 export async function rebootEjabberd(): Promise<void> {
   dockerCompose("up --force-recreate -d ejabberd");
-}
+}*/
 
 export async function resetRedis(): Promise<void> {
   dockerCompose("stop redis");

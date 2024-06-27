@@ -59,7 +59,5 @@ export interface FrontConfigurationInterface {
     EXCALIDRAW_DOMAINS: string[];
     CARDS_ENABLED: boolean;
     EMBEDLY_KEY: string | undefined;
-    EJABBERD_DOMAIN: string | undefined;
-    EJABBERD_WS_URI: string | undefined;
     MATRIX_PUBLIC_URI: string | undefined;
 }
