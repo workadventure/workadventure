@@ -2,6 +2,7 @@ import { Buffer } from "buffer";
 import type { Subscription } from "rxjs";
 import { get, Readable, readable, Unsubscriber, Writable, writable } from "svelte/store";
 import Peer from "simple-peer/simplepeer.min.js";
+import { v4 } from "uuid";
 import type { RoomConnection } from "../Connection/RoomConnection";
 import { localStreamStore, videoBandwidthStore } from "../Stores/MediaStore";
 import { playersStore } from "../Stores/PlayersStore";
@@ -55,7 +56,8 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
         public user: UserSimplePeerInterface,
         initiator: boolean,
         public readonly player: RemotePlayerData,
-        private connection: RoomConnection
+        private connection: RoomConnection,
+        private spaceName?: string
     ) {
         const bandwidth = get(videoBandwidthStore);
         super({
@@ -117,11 +119,21 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
         this._constraintsStore = writable<ObtainedMediaStreamConstraints | null>(null);
 
         const proximityMeeting = get(proximityRoomConnection);
-        if (proximityMeeting && proximityMeeting.joinSpace && this.user.webRtcUser)
-            proximityMeeting.joinSpace(
-                this.user.webRtcUser.split(":")[0],
-                `peer_${this.user.webRtcUser.split(":")[0]}`
-            );
+
+        // Define the spaceId and spaceName
+        // By convention, the video peer space name id defined by the prefix "webrct_"
+        let _spaceId = v4(),
+            _spaceName = _spaceId;
+        if (this.spaceName) {
+            _spaceId = this.spaceName.replace("webrct_", "");
+            _spaceName = this.spaceName;
+        } else if (this.user.webRtcUser) {
+            (_spaceId = this.user.webRtcUser.split(":")[0]),
+                (_spaceName = `webrct_${this.user.webRtcUser.split(":")[0]}`);
+        }
+        // Join the space for proximity meeting
+        if (proximityMeeting && proximityMeeting.joinSpace != undefined)
+            proximityMeeting.joinSpace(_spaceId, _spaceName);
 
         //start listen signal for the peer connection
         this.on("signal", (data: unknown) => {

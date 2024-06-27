@@ -623,6 +623,7 @@ export class RoomConnection implements RoomConnection {
                         webRtcPassword: message.webRtcSignalToClientMessage.webrtcPassword
                             ? message.webRtcSignalToClientMessage.webrtcPassword
                             : undefined,
+                        spaceName: message.webRtcSignalToClientMessage.spaceName ?? undefined,
                     });
                     break;
                 }
@@ -636,6 +637,7 @@ export class RoomConnection implements RoomConnection {
                         webRtcPassword: message.webRtcScreenSharingSignalToClientMessage.webrtcPassword
                             ? message.webRtcScreenSharingSignalToClientMessage.webrtcPassword
                             : undefined,
+                        spaceName: message.webRtcScreenSharingSignalToClientMessage.spaceName,
                     });
                     break;
                 }

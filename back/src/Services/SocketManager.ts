@@ -302,6 +302,7 @@ export class SocketManager {
         const webrtcSignalToClientMessage: Partial<WebRtcSignalToClientMessage> = {
             userId: user.id,
             signal: data.signal,
+            spaceName: `webrtc_${room.id}`,
         };
 
         // TODO: only compute credentials if data.signal.type === "offer"
@@ -336,6 +337,7 @@ export class SocketManager {
         const webrtcSignalToClientMessage: Partial<WebRtcSignalToClientMessage> = {
             userId: user.id,
             signal: data.signal,
+            spaceName: `webrtc_${room.id}`,
         };
 
         // TODO: only compute credentials if data.signal.type === "offer"

@@ -703,6 +703,7 @@ message WebRtcSignalToClientMessage {
   string signal = 2;
   string webrtcUserName = 4;
   string webrtcPassword = 5;
+  optional string spaceName = 6;
 }
 
 message TeleportMessageMessage{
