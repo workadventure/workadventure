@@ -157,8 +157,8 @@ import { StreamSpaceWatcherSingleton } from "../../Space/SpaceWatcher/SocketSpac
 import { ChatConnectionInterface, ChatType } from "../../Chat/Connection/ChatConnection";
 import { proximityRoomConnection, selectedRoom } from "../../Chat/Stores/ChatStore";
 import { ProximityChatConnection } from "../../Chat/Connection/Proximity/ProximityChatConnection";
-import { ChatConnectionFactory, ChatConnectionFactory } from "../../Chat/Connection/ConnectionFactory";
-import { SpaceProviderInterface, SpaceProviderInterface } from "../../Space/SpaceProvider/SpaceProviderInterface";
+import { ChatConnectionFactory } from "../../Chat/Connection/ConnectionFactory";
+import { SpaceProviderInterface } from "../../Space/SpaceProvider/SpaceProviderInterface";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -1565,7 +1565,6 @@ export class GameScene extends DirtyScene {
                             availabilityStatus: availabilityStatusToJSON(message.availabilityStatus),
                             position: message.position,
                             variables: message.variables,
-                            chatID: message.chatID,
                         },
                     });
                 });
