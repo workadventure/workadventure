@@ -1,7 +1,8 @@
 import type { AdminApiData, ErrorApiData, MapDetailsData, MemberData, RoomRedirect } from "@workadventure/messages";
 import { Capabilities } from "@workadventure/messages";
-import { AdminBannedData, FetchMemberDataByUuidResponse, WorldChatMembersData } from "./AdminApi";
+import { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
 import { ShortMapDescriptionList } from "./ShortMapDescription";
+import { WorldChatMembersData } from "./WorldChatMembersData";
 
 export interface AdminInterface {
     /**
