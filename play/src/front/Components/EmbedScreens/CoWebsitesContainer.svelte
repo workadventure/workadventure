@@ -104,7 +104,6 @@
             if (maxWidth !== newWidth) {
                 container.style.width = maxWidth + "px";
             }
-            resizeMax(newWidth);
             waScaleManager.applyNewSize();
         };
         const handleMouseUp = () => {
@@ -142,7 +141,8 @@
             if (maxHeight !== newHeight) {
                 container.style.height = maxHeight + "px";
             }
-            resizeMax(newHeight);
+            // resizeMax(newHeight);
+            resizeMin(newHeight);
             waScaleManager.applyNewSize();
         }
         const handleMouseUp = () => {
@@ -174,17 +174,33 @@
         }
     }
 
-    // $: if (vertical) ? $totalTabWidth, numberMaxCowebsite() : $totalTabWidthMobile, numberMaxCowebsite();
-    $: console.log($totalTabWidth, "totalTabWidth");
+    function resizeMin(newValue: number) {
+        const minHeight = window.innerHeight * 0.25;
+        console.log(minHeight, "minHeight");
+        if (newValue > minHeight) {
+            widthContainer.set(newValue);
+        } else {
+            container.style.height = `${minHeight}px`;
+        }
+    }
+
+    $: {
+        if (vertical) {
+            $totalTabWidth, numberMaxCowebsite();
+        } else {
+            $totalTabWidthMobile, numberMaxCowebsite();
+        }
+    }
+    // $: console.log($totalTabWidth, "totalTabWidth");
     $: $totalTabWidthMobile, numberMaxCowebsite();
     $: $widthContainer, numberMaxCowebsite();
-    $: console.log($widthContainer, "widthContainer");
+    // $: console.log($widthContainer, "widthContainer");
 
     function numberMaxCowebsite() {
         if (!vertical) {
             numberMaxOfCowebsite = Math.floor((window.innerWidth - $canvasWidth) / 300);
-            console.log(numberMaxOfCowebsite, "numberMaxOfCowebsite");
         } else {
+            // console.log(numberMaxOfCowebsite, "numberMaxOfCowebsite");
             numberMaxOfCowebsite = Math.floor((window.innerWidth - $canvasWidth) / 220);
         }
     }
@@ -327,16 +343,24 @@
                         </div>
                     {/each}
                 {/if}
+                <div class="flex justify-end">
+                    <div
+                        class="ml-full aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer"
+                        on:click={toggleFullScreen}
+                    >
+                        <FullScreenIcon />
+                    </div>
+                </div>
             </div>
         </div>
 
         <div
-            class="fixed top-[15%] left-0 bg-contrast/80 rounded-lg max-h-[80vh] min-h-[50px] overflow-y-auto w-auto tab-drop-down"
+            class="absolute md:fixed z-1800 top-[0%] md:top-[15%] left-0 bg-contrast/80 rounded-lg max-h-[80vh] min-h-[50px] overflow-y-auto w-auto tab-drop-down"
         >
             {#if appearDropdownMenu}
                 {#if !vertical}
                     <div class="max-h-[50px] w-[50px] bg-red-500 absolute top-0 left-0" />
-                    {#each $coWebsites.slice(Math.floor(numberMaxOfCowebsite)) as coWebsite (coWebsite.getId())}
+                    {#each $coWebsites.slice(numberMaxOfCowebsite) as coWebsite (coWebsite.getId())}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div on:click={() => setActiveCowebsite(coWebsite)}>
                             <CoWebsiteTab
@@ -349,7 +373,7 @@
                     {/each}
                 {:else}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    {#each $coWebsites.slice(Math.floor(numberMaxOfCowebsite)) as coWebsite (coWebsite.getId())}
+                    {#each $coWebsites.slice(numberMaxOfCowebsite) as coWebsite (coWebsite.getId())}
                         <div on:click={() => setActiveCowebsite(coWebsite)}>
                             <CoWebsiteTab
                                 {coWebsite}
@@ -363,12 +387,6 @@
             {/if}
         </div>
         <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <div
-            class="aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer"
-            on:click={toggleFullScreen}
-        >
-            <FullScreenIcon />
-        </div>
     </div>
 
     <div class={vertical ? "h-full ml-3 responsive-website" : "h-full object-contain ml-3"}>
