@@ -157,8 +157,8 @@ import { StreamSpaceWatcherSingleton } from "../../Space/SpaceWatcher/SocketSpac
 import { ChatConnectionInterface, ChatType } from "../../Chat/Connection/ChatConnection";
 import { proximityRoomConnection, selectedRoom } from "../../Chat/Stores/ChatStore";
 import { ProximityChatConnection } from "../../Chat/Connection/Proximity/ProximityChatConnection";
-import { ChatConnectionFactory } from "../../Chat/Connection/ConnectionFactory";
-import { SpaceProviderInterface } from "../../Space/SpaceProvider/SpacerProviderInterface";
+import { ChatConnectionFactory, ChatConnectionFactory } from "../../Chat/Connection/ConnectionFactory";
+import { SpaceProviderInterface, SpaceProviderInterface } from "../../Space/SpaceProvider/SpaceProviderInterface";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -167,7 +167,6 @@ import { soundManager } from "./SoundManager";
 import { SharedVariablesManager } from "./SharedVariablesManager";
 import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
 import { DynamicAreaManager } from "./DynamicAreaManager";
-
 import { PlayerMovement } from "./PlayerMovement";
 import { PlayersPositionInterpolator } from "./PlayersPositionInterpolator";
 import { DirtyScene } from "./DirtyScene";
@@ -1509,13 +1508,14 @@ export class GameScene extends DirtyScene {
                         .then((chatConnection) => (this.chatConnection = chatConnection))
                         .catch((error) => console.error(error));
 
-                    const proximityChatConnection = new ProximityChatConnection(
-                        this.connection,
-                        this.connection.getUserId(),
-                        localUserStore.getLocalUser()?.uuid ?? "unknow"
-                    );
                     // initialise the proximity chat connection
-                    proximityRoomConnection.set(proximityChatConnection);
+                    proximityRoomConnection.set(
+                        new ProximityChatConnection(
+                            this.connection,
+                            this.connection.getUserId(),
+                            localUserStore.getLocalUser()?.uuid ?? "Unknown"
+                        )
+                    );
 
                     spaceProvider = LocalSpaceProviderSingleton.getInstance(onConnect.connection.socket);
                     StreamSpaceWatcherSingleton.getInstance(onConnect.connection.socket, chatConnectionPromise);
@@ -1563,7 +1563,6 @@ export class GameScene extends DirtyScene {
                             availabilityStatus: availabilityStatusToJSON(message.availabilityStatus),
                             position: message.position,
                             variables: message.variables,
-                            chatID: message.chatID,
                         },
                     });
                 });
