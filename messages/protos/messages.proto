@@ -612,7 +612,6 @@ message GroupDeleteMessage {
 
 message UserJoinedMessage {
   int32 userId = 1;
-  string userJid = 2;
   string name = 3;
   repeated CharacterTextureMessage characterTextures = 4;
   PositionMessage position = 5;
@@ -675,7 +674,6 @@ message RoomJoinedMessage {
   bool activatedInviteUser = 9;
   repeated VariableMessage playerVariable = 10;
   repeated ApplicationMessage applications = 11;
-  string userJid = 12;
   EditMapCommandsArrayMessage editMapCommandsArrayMessage = 13;
   string webrtcUserName = 14;
   string webrtcPassword = 15;
@@ -877,7 +875,6 @@ message ServerToClientMessage {
     GroupUsersUpdateMessage groupUsersUpdateMessage = 25;
     ErrorScreenMessage errorScreenMessage = 26;
     AnswerMessage answerMessage = 28;
-    XmppSettingsMessage xmppSettingsMessage = 29;
     MoveToPositionMessage moveToPositionMessage = 31;
     InvalidCompanionTextureMessage invalidCompanionTextureMessage = 32;
     MutedMessage mutedMessage = 33;
@@ -907,7 +904,6 @@ message JoinRoomMessage {
   bool activatedInviteUser = 12;
   bool isLogged = 13;
   repeated ApplicationMessage applications = 14;
-  string userJid = 15;
   google.protobuf.StringValue lastCommandId = 16;
   bool canEdit = 17;
   google.protobuf.StringValue chatID = 18;
@@ -915,7 +911,6 @@ message JoinRoomMessage {
 
 message UserJoinedZoneMessage {
   int32 userId = 1;
-  string userJid = 2;
   string name = 3;
   repeated CharacterTextureMessage characterTextures = 4;
   PositionMessage position = 5;
@@ -1156,13 +1151,6 @@ message MucRoomDefinitionMessage {
   string name = 2;
   string type = 3;
   bool subscribe = 4;
-}
-
-message XmppSettingsMessage{
-  string conferenceDomain = 2;
-  repeated MucRoomDefinitionMessage rooms = 3;
-  string jabberId = 4;
-  string jabberPassword = 5;
 }
 
 message BanUserByUuidMessage{

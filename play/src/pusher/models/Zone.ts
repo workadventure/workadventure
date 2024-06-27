@@ -41,7 +41,6 @@ export interface ZoneEventListener {
 export class UserDescriptor {
     private constructor(
         public readonly userId: number,
-        public readonly userJid: string,
         private userUuid: string,
         private name: string,
         private characterTextures: CharacterTextureMessage[],
@@ -64,7 +63,6 @@ export class UserDescriptor {
         }
         return new UserDescriptor(
             message.userId,
-            message.userJid,
             message.userUuid,
             message.name,
             message.characterTextures,
@@ -107,7 +105,6 @@ export class UserDescriptor {
     public toUserJoinedMessage(): UserJoinedMessage {
         const userJoinedMessage: UserJoinedMessage = {
             userId: this.userId,
-            userJid: this.userJid,
             name: this.name,
             characterTextures: this.characterTextures,
             position: this.position,

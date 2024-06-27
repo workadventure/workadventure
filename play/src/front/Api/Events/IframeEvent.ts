@@ -4,7 +4,6 @@ import {
     isChatEvent,
     isChatMessage,
     isKlaxoonEvent,
-    isXmppSettingsMessageEvent,
     KLAXOON_ACTIVITY_PICKER_EVENT,
 } from "@workadventure/shared-utils";
 import { isStartWritingEvent, isStopWritingEvent } from "@workadventure/shared-utils/src/Events/WritingEvent";
@@ -502,10 +501,6 @@ export const isIframeResponseEvent = z.union([
     z.object({
         type: z.literal("availabilityStatus"),
         data: z.number(),
-    }),
-    z.object({
-        type: z.literal("xmppSettingsMessage"),
-        data: isXmppSettingsMessageEvent,
     }),
 
     // TODO will be deleted if timeline is becoming a MUC room

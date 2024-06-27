@@ -16,7 +16,6 @@ export interface MessageUserMovedInterface {
 
 export interface MessageUserJoined {
     userId: number;
-    userJid: string;
     name: string;
     characterTextures: WokaTextureDescriptionInterface[];
     position: PositionMessage;

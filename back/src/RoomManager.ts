@@ -326,7 +326,6 @@ const roomManager = {
                     "Connection lost with user ",
                     user?.uuid,
                     user?.name,
-                    user?.userJid,
                     "in room",
                     room?.roomUrl,
                     "at : ",
@@ -337,7 +336,6 @@ const roomManager = {
                     `Connection lost with user
                     ${JSON.stringify(user?.uuid)}
                     ${JSON.stringify(user?.name)}
-                    ${JSON.stringify(user?.userJid)} 
                     in room 
                     ${JSON.stringify(room?.roomUrl)}`,
                     "debug"

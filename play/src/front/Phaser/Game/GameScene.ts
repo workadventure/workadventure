@@ -1787,14 +1787,6 @@ export class GameScene extends DirtyScene {
                     this._room.group ?? undefined
                 );
 
-                // The xmppSettingsMessageStream is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.xmppSettingsMessageStream.subscribe((xmppSettingsMessage) => {
-                    if (xmppSettingsMessage) {
-                        //chatConnectionManager.initXmppSettings(xmppSettingsMessage);
-                    }
-                });
-
                 const broadcastService = new BroadcastService(
                     this.connection,
                     (

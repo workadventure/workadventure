@@ -94,9 +94,6 @@ services:
       INTERNAL_MAP_STORAGE_URL: "http://map-storage:3000"
       ENABLE_OPENAPI_ENDPOINT: "true"
       START_ROOM_URL: "$START_ROOM_URL"
-      # Only used if you set up a JWT authentication mechanism in Ejabberd
-      EJABBERD_JWT_SECRET: $EJABBERD_JWT_SECRET
-      EJABBERD_DOMAIN: $EJABBERD_DOMAIN
       ENABLE_CHAT: "$ENABLE_CHAT"
       ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
       ENABLE_CHAT_ONLINE_LIST: "$ENABLE_CHAT_ONLINE_LIST"
@@ -224,10 +221,6 @@ services:
       PUBLIC_MAP_STORAGE_URL: "http://map-storage.workadventure.localhost"
       INTERNAL_MAP_STORAGE_URL: "http://map-storage:3000"
       PLAYER_VARIABLES_MAX_TTL: $PLAYER_VARIABLES_MAX_TTL
-      EJABBERD_API_URI: http://ejabberd:5443/api/
-      EJABBERD_DOMAIN: $EJABBERD_DOMAIN
-      EJABBERD_USER: $EJABBERD_USER
-      EJABBERD_PASSWORD: $EJABBERD_PASSWORD
       ENABLE_CHAT: "$ENABLE_CHAT"
       ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
       # Sentry integration
@@ -345,24 +338,6 @@ services:
       - "traefik.http.routers.icon.rule=Host(`icon.workadventure.localhost`)"
       - "traefik.http.routers.icon.entryPoints=web"
       - "traefik.http.services.icon.loadbalancer.server.port=8080"
-
-  ejabberd:
-    image: workadventure/ejabberd:v1
-    ports:
-      - "5443:5443"
-    environment:
-      CTL_ON_CREATE: register $EJABBERD_USER $EJABBERD_DOMAIN $EJABBERD_PASSWORD
-      JWT_SECRET: $EJABBERD_JWT_SECRET
-      EJABBERD_DOMAIN: $EJABBERD_DOMAIN
-      EJABBERD_USER: $EJABBERD_USER
-      EJABBERD_PASSWORD: $EJABBERD_PASSWORD
-    volumes:
-      - ./xmpp/ejabberd.template.yml:/opt/ejabberd/conf/ejabberd.template.yml
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.xmpp.rule=Host(`xmpp.workadventure.localhost`)"
-      - "traefik.http.routers.xmpp.entryPoints=web"
-      - "traefik.http.services.xmpp.loadbalancer.server.port=5443"
 
   # A mock server to test OpenID connect connectivity
   oidc-server-mock:

@@ -65,7 +65,6 @@ import {
     ViewportMessage as ViewportMessageTsProto,
     WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
     WorldConnectionMessage,
-    XmppSettingsMessage,
     TurnCredentialsAnswer,
     ProximityPrivateMessageToClientMessage,
     ProximityPublicMessageToClientMessage,
@@ -193,8 +192,6 @@ export class RoomConnection implements RoomConnection {
     public readonly playerDetailsUpdatedMessageStream = this._playerDetailsUpdatedMessageStream.asObservable();
     private readonly _connectionErrorStream = new Subject<CloseEvent>();
     public readonly connectionErrorStream = this._connectionErrorStream.asObservable();
-    private readonly _xmppSettingsMessageStream = new BehaviorSubject<XmppSettingsMessage | undefined>(undefined);
-    public readonly xmppSettingsMessageStream = this._xmppSettingsMessageStream.asObservable();
     // If this timeout triggers, we consider the connection is lost (no ping received)
     private timeout: ReturnType<typeof setInterval> | undefined = undefined;
     private readonly _moveToPositionMessageStream = new Subject<MoveToPositionMessageProto>();
@@ -741,10 +738,6 @@ export class RoomConnection implements RoomConnection {
                         query.resolve(message.answerMessage.answer);
                     }
                     this.queries.delete(queryId);
-                    break;
-                }
-                case "xmppSettingsMessage": {
-                    this._xmppSettingsMessageStream.next(message.xmppSettingsMessage);
                     break;
                 }
                 case "mutedMessage": {
@@ -1871,7 +1864,6 @@ export class RoomConnection implements RoomConnection {
 
         return {
             userId: message.userId,
-            userJid: message.userJid,
             name: message.name,
             characterTextures,
             visitCardUrl: message.visitCardUrl,
@@ -1926,7 +1918,6 @@ export class RoomConnection implements RoomConnection {
         this._editMapCommandMessageStream.complete();
         this._playerDetailsUpdatedMessageStream.complete();
         this._connectionErrorStream.complete();
-        this._xmppSettingsMessageStream.complete();
         this._moveToPositionMessageStream.complete();
         this._joinMucRoomMessageStream.complete();
         this._leaveMucRoomMessageStream.complete();

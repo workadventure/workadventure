@@ -33,7 +33,6 @@ export class User implements Movable, CustomJsonReplacerInterface {
 
     public constructor(
         public id: number,
-        public userJid: string,
         public readonly uuid: string,
         public readonly isLogged: boolean,
         public readonly IPAddress: string,
@@ -63,7 +62,6 @@ export class User implements Movable, CustomJsonReplacerInterface {
     public static async create(
         id: number,
         uuid: string,
-        userJid: string,
         isLogged: boolean,
         IPAddress: string,
         position: PointInterface,
@@ -91,7 +89,6 @@ export class User implements Movable, CustomJsonReplacerInterface {
 
         return new User(
             id,
-            userJid,
             uuid,
             isLogged,
             IPAddress,
