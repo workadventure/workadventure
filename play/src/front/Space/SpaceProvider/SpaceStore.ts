@@ -2,7 +2,7 @@ import { ClientToServerMessage } from "@workadventure/messages";
 import { SpaceInterface } from "../SpaceInterface";
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
 import { Space } from "../Space";
-import { SpaceProviderInterface } from "./SpacerProviderInterface";
+import { SpaceProviderInterface } from "./SpaceProviderInterface";
 
 export class LocalSpaceProvider implements SpaceProviderInterface {
     constructor(

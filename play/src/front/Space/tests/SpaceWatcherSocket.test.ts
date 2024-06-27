@@ -9,7 +9,7 @@ import {
     UpdateSpaceUserMessage,
 } from "@workadventure/messages";
 import { SpaceEvent, StreamSpaceWatcher } from "../SpaceWatcher/SocketSpaceWatcher";
-import { SpaceProviderInterface } from "../SpaceProvider/SpacerProviderInterface";
+import { SpaceProviderInterface } from "../SpaceProvider/SpaceProviderInterface";
 import { SpaceInterface } from "../SpaceInterface";
 import { SpaceFilterInterface } from "../SpaceFilter/SpaceFilter";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";

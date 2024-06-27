@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { LocalSpaceProvider } from "../SpaceProvider/SpaceStore";
 import { SpaceInterface } from "../SpaceInterface";
-import { SpaceProviderInterface } from "../SpaceProvider/SpacerProviderInterface";
+import { SpaceProviderInterface } from "../SpaceProvider/SpaceProviderInterface";
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
 import { Space } from "../Space";
 

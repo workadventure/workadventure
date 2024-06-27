@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { ServerToClientMessage } from "@workadventure/messages";
 import { get } from "svelte/store";
-import { SpaceProviderInterface } from "../SpaceProvider/SpacerProviderInterface";
+import { SpaceProviderInterface } from "../SpaceProvider/SpaceProviderInterface";
 import { LocalSpaceProviderSingleton } from "../SpaceProvider/SpaceStore";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { gameManager } from "../../Phaser/Game/GameManager";

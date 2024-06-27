@@ -12,7 +12,7 @@ import { BroadcastSpace } from "../Common/BroadcastSpace";
 import { JITSI_DOMAIN, JITSI_MUC_DOMAIN, JITSI_XMPP_DOMAIN } from "../../Enum/EnvironmentVariable";
 import { SpaceInterface } from "../../Space/SpaceInterface";
 import { LocalSpaceProviderSingleton } from "../../Space/SpaceProvider/SpaceStore";
-import { SpaceProviderInterface } from "../../Space/SpaceProvider/SpacerProviderInterface";
+import { SpaceProviderInterface } from "../../Space/SpaceProvider/SpaceProviderInterface";
 import { jitsiConferencesStore } from "./JitsiConferencesStore";
 import { JitsiConferenceWrapper } from "./JitsiConferenceWrapper";
 import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
