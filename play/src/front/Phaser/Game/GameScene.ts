@@ -1516,6 +1516,8 @@ export class GameScene extends DirtyScene {
                             localUserStore.getLocalUser()?.uuid ?? "Unknown"
                         )
                     );
+                    // initialise the proximity chat connection
+                    proximityRoomConnection.set(proximityChatConnection);
 
                     spaceProvider = LocalSpaceProviderSingleton.getInstance(onConnect.connection.socket);
                     StreamSpaceWatcherSingleton.getInstance(onConnect.connection.socket, chatConnectionPromise);
@@ -1563,6 +1565,7 @@ export class GameScene extends DirtyScene {
                             availabilityStatus: availabilityStatusToJSON(message.availabilityStatus),
                             position: message.position,
                             variables: message.variables,
+                            chatID: message.chatID,
                         },
                     });
                 });
