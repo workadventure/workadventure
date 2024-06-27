@@ -54,6 +54,7 @@ export interface WebRtcSignalReceivedMessageInterface {
     signal: SignalData;
     webRtcUser: string | undefined;
     webRtcPassword: string | undefined;
+    spaceName: string | undefined;
 }
 
 export interface ViewportInterface {

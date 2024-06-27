@@ -65,6 +65,7 @@ export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
 
 export class GameRoom implements BrothersFinder {
+    public readonly id: string;
     // Users, sorted by ID
     private readonly users = new Map<number, User>();
     private readonly usersByUuid = new Map<string, Set<User>>();
@@ -101,6 +102,9 @@ export class GameRoom implements BrothersFinder {
         private _wamUrl?: string,
         private _wamSettings: WAMFileFormat["settings"] = {}
     ) {
+        // uniq id for the room is timestamp
+        this.id = Date.now().toString();
+
         // A zone is 10 sprites wide.
         this.positionNotifier = new PositionNotifier(
             320,
