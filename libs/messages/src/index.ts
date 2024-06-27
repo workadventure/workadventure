@@ -18,4 +18,3 @@ export * from "./JsonMessages/OpidWokaNamePolicy";
 export * from "./JsonMessages/MeResponse";
 export * from "./JsonMessages/MeRequest";
 export * from "./JsonMessages/MemberData";
-export * from "./JsonMessages/ChatMemberData";

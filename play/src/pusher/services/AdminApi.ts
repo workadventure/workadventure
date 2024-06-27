@@ -1,6 +1,6 @@
 import type { AxiosResponse } from "axios";
 import axios, { isAxiosError } from "axios";
-import type { AdminApiData, ChatMemberData, MapDetailsData, RoomRedirect } from "@workadventure/messages";
+import type { AdminApiData, ChatMember, MapDetailsData, RoomRedirect } from "@workadventure/messages";
 import {
     MemberData,
     Capabilities,
@@ -38,7 +38,7 @@ export interface AdminBannedData {
 
 export interface WorldChatMembersData {
     total: number;
-    members: ChatMemberData[];
+    members: ChatMember[];
 }
 
 export const isFetchMemberDataByUuidSuccessResponse = z.object({

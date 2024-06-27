@@ -14,13 +14,7 @@ import {
     Visibility,
 } from "matrix-js-sdk";
 import { MapStore } from "@workadventure/store-utils";
-import {
-    AvailabilityStatus,
-    ChatMember,
-    ChatMemberData,
-    ChatMembersAnswer,
-    PartialSpaceUser,
-} from "@workadventure/messages";
+import { AvailabilityStatus, ChatMember, ChatMembersAnswer, PartialSpaceUser } from "@workadventure/messages";
 import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import {
     ChatConnectionInterface,
@@ -276,7 +270,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.userConnected.delete(userId);
     }
 
-    async getWorldChatMembers(searchText?: string): Promise<ChatMemberData[]> {
+    async getWorldChatMembers(searchText?: string): Promise<ChatMember[]> {
         const { members } = await this.connection.queryChatMembers(searchText ?? "");
         return members;
     }
