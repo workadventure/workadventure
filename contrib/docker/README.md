@@ -167,9 +167,25 @@ Keeping your server secure is also important. You can configure the `SECURITY_EM
 to receive security notifications from the WorkAdventure core team.
 You will be notified if your WorkAdventure version contains a known security flaw.
 
+#### Adding authentication
+
+WorkAdventure does not provide its own authentication system. Instead, you can connect WorkAdventure to an OpenID Connect
+authentication provider (like Google, GitHub, or any other provider).
+
 If you want to connect WorkAdventure to an authentication provider, you can follow the [OpenID Connect documentation](../../docs/dev/openid.md).
 
-Finally, you can set up a list of restricted users [allowed to access the inline map editor](../../docs/dev/inline-map-editor.md).
+When OpenID is configured, you should set up a list of restricted users [allowed to access the inline map editor](../../docs/dev/inline-map-editor.md).
+
+#### Connecting to a chat server
+
+WorkAdventure can connect to a [Matrix server](https://matrix.org/) to provide chat features.
+Matrix is a decentralized chat protocol that allows you to host your own chat server.
+
+With Matrix integration configured, you can chat with other users, even when they are not connected to WorkAdventure.
+For instance, a user can chat with you from a Matrix client like Element on his mobile phone, while you are in WorkAdventure.
+
+You can follow the [Matrix documentation](../../docs/others/self-hosting/matrix.md) to learn how to configure your Matrix server
+and connect it to WorkAdventure.
 
 ## Upgrading WorkAdventure
 
