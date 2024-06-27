@@ -32,7 +32,6 @@ In this docker-compose file, you will find:
 - A map-storage container (NodeJS) that serves your maps and provides map-editing features
 - An icon container to fetch the favicon of sites imported in iframes
 - A Redis server to store values from variables originating from the Scripting API
-- A XMPP container that runs an Ejabberd server in charge of the chat / user list
 
 ```mermaid
 graph LR
@@ -43,7 +42,6 @@ graph LR
     B --> E(Icon)
     D --> F(Back)
     F --> G(Redis)
-    D --> J(XMPP)
     F --> K(Map storage)
     A --> K(Map storage)
     end
