@@ -149,11 +149,12 @@
 
     {#if displayRooms}
         <div class="tw-flex tw-flex-col tw-overflow-auto">
-            {#each filteredRooms as room (room.id)}
-                <Room {room} />
-            {/each}
-            {#if filteredRooms.length === 0}
+            {#if filteredRooms.length === 0 || chat.type === "PROXIMITY"}
                 <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
+            {:else}
+                {#each filteredRooms as room (room.id)}
+                    <Room {room} />
+                {/each}
             {/if}
         </div>
     {/if}
