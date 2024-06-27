@@ -18,5 +18,9 @@ _
 **/charts/*.tgz
 
 synapse/homeserver.log*
+synapse/matrix.workadventure.localhost.signing.key
+synapse/homeserver.db
+synapse/homeserver.db-*
+synapse/homeserver.yaml
 
 .vscode/settings.json
