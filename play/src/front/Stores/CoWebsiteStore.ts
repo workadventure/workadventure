@@ -1,4 +1,4 @@
-import { get, writable } from "svelte/store";
+import { derived, get, writable } from "svelte/store";
 import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 import { Subject } from "rxjs";
 
@@ -40,12 +40,20 @@ export function createCoWebsiteStore() {
 
 export const coWebsites = createCoWebsiteStore();
 
+export const totalTabWidth = derived(coWebsites, ($coWebsites) => {
+    return $coWebsites.length * 300;
+});
+
+export const totalTabWidthMobile = derived(coWebsites, ($coWebsites) => {
+    return $coWebsites.length * 220;
+});
 
 export let widthContainer = writable(window.innerWidth);
 export let heightContainer = writable(window.innerHeight);
 export let fullScreenCowebsite = writable(false);
 export let canvasWidth = writable(window.innerWidth);
 export let canvasHeight = writable(window.innerHeight);
+// export let totalTabWidth = writable(0);
 export class CoWebsiteManager {
 
     private _onResize: Subject<void> = new Subject();

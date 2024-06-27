@@ -46,11 +46,11 @@
             cowebsiteName = cowebsiteName.charAt(0).toUpperCase() + cowebsiteName.slice(1);
             isDuplicable = true;
         }
-        dispatch("tabMounted");
+        // dispatch("tabMounted");
     });
 
     onDestroy(() => {
-        dispatch("tabUnmounted");
+        // dispatch("tabUnmounted");
     });
 
     function closeTab() {
@@ -109,10 +109,8 @@
                 {#if isLoading}
                     {#if isJitsi}
                         {$LL.cowebsite.jitsi()}
-                        <!-- {$LL.mapEditor.properties.jitsiProperties.roomNameLabel()} -->
                     {:else if isBBB}
                         {$LL.cowebsite.bigBlueButton()}
-                        <!-- {$LL.mapEditor.properties.bigBlueButtonProperties.roomNameLabel()} -->
                     {:else}
                         {cowebsiteName}
                     {/if}
