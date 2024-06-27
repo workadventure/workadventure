@@ -1,4 +1,4 @@
-import { CardsService, ChatEvent, GoogleWorkSpaceService, KlaxoonService } from "@workadventure/shared-utils";
+import { CardsService, GoogleWorkSpaceService, KlaxoonService } from "@workadventure/shared-utils";
 import { StartWritingEvent, StopWritingEvent } from "@workadventure/shared-utils/src/Events/WritingEvent";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { gameManager } from "../Phaser/Game/GameManager";
@@ -30,36 +30,6 @@ class ScriptUtils {
         }
 
         window.location.href = url;
-    }
-
-    public sendChat(chatEvent: ChatEvent, origin?: Window) {
-        switch (chatEvent.options.scope) {
-            case "local": {
-                //TODO, fix me with new matrix chat integration
-                //const userId = playersStore.addFacticePlayer(chatEvent.options.author || "System");
-
-                //chatMessagesService.addExternalMessage(userId, chatEvent.message, origin);
-                console.debug("Not implemented yet with new chat integration");
-                break;
-            }
-            case "bubble": {
-                //TODO, fixme, causing chat with bot not working anymore.
-                //💡To display chat from proximity bubble, create a ChatRoom (not matrix)
-                // set it to the selectedChatRoom store
-
-                /*iframeListener.sendMessageToChatIframe({
-                    type: ChatMessageTypes.me,
-                    text: [chatEvent.message],
-                    date: new Date(),
-                });*/
-                //chatMessagesStore.addExternalMessage(gameManager.getCurrentGameScene().connection?.getUserId(), chatEvent.message, origin);
-                console.debug("Not implemented yet with new chat integration");
-                break;
-            }
-            default: {
-                const _exhaustiveCheck: never = chatEvent.options;
-            }
-        }
     }
 
     public startWriting(startWritingEvent: StartWritingEvent, origin?: Window) {
