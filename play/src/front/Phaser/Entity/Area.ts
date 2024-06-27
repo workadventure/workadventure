@@ -7,28 +7,31 @@ import LL from "../../../i18n/i18n-svelte";
 
 export class Area extends Phaser.GameObjects.Rectangle {
     private areaCollider: Phaser.Physics.Arcade.Collider | undefined = undefined;
+    private areaOverlap: Phaser.Physics.Arcade.Collider | undefined = undefined;
     private userHasCollideWithArea = false;
     private highlightTimeOut: undefined | NodeJS.Timeout = undefined;
     private collideTimeOut: undefined | NodeJS.Timeout = undefined;
 
-    constructor(public readonly scene: GameScene, public areaData: AreaData, collide?: boolean) {
+    constructor(public readonly scene: GameScene, public areaData: AreaData, collide?: boolean, overlap?: boolean) {
         super(
             scene,
             areaData.x + areaData.width * 0.5,
             areaData.y + areaData.height * 0.5,
             areaData.width,
             areaData.height,
-            0xff0000,
-            0.1
+            collide ? 0xff0000 : overlap ? 0x0000ff : 0x000000,
+            collide || overlap ? 0.1 : 0
         );
         this.scene.add.existing(this).setVisible(false);
         this.scene.physics.add.existing(this, true);
         if (collide) {
             this.applyCollider();
         }
+
+        if (overlap) this.applyOverlap();
     }
 
-    public updateArea(newAreaData: AtLeast<AreaData, "id">, collide?: boolean) {
+    public updateArea(newAreaData: AtLeast<AreaData, "id">, collide?: boolean, overlap?: boolean) {
         merge(this.areaData, newAreaData);
         this.setPosition(this.areaData.x + this.areaData.width * 0.5, this.areaData.y + this.areaData.height * 0.5);
         this.setSize(this.areaData.width, this.areaData.height);
@@ -43,6 +46,10 @@ export class Area extends Phaser.GameObjects.Rectangle {
             this.areaCollider.destroy();
             this.areaCollider = undefined;
         }
+
+        if (overlap) this.applyOverlap();
+        else if (this.areaOverlap !== undefined) this.areaOverlap.destroy();
+        this.areaOverlap = undefined;
     }
 
     destroy(fromScene?: boolean) {
@@ -63,6 +70,13 @@ export class Area extends Phaser.GameObjects.Rectangle {
         }
     }
 
+    private applyOverlap() {
+        if (this.areaCollider === undefined)
+            this.areaCollider = this.scene.physics.add.overlap(this.scene.CurrentPlayer, this, () =>
+                this.onOverLapAction()
+            );
+    }
+
     private highLightArea() {
         this.setVisible(true);
         this.highlightTimeOut = setTimeout(() => this.setVisible(false), 1000);
@@ -79,5 +93,10 @@ export class Area extends Phaser.GameObjects.Rectangle {
             this.displayWarningMessageOnCollide();
             this.collideTimeOut = setTimeout(() => (this.userHasCollideWithArea = false), 3000);
         }
+    }
+
+    private onOverLapAction() {
+        this.highLightArea();
+        this.collideTimeOut = setTimeout(() => (this.userHasCollideWithArea = false), 3000);
     }
 }

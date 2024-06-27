@@ -22,7 +22,14 @@ export class AreasManager {
     }
 
     public addArea(areaData: AreaData): void {
-        this.areas.push(new Area(this.scene, areaData, this.areaPermissions.isUserHasAreaAccess(areaData.id)));
+        this.areas.push(
+            new Area(
+                this.scene,
+                areaData,
+                this.areaPermissions.isUserHasAreaAccess(areaData.id),
+                this.areaPermissions.isOverlappingArea(areaData.id)
+            )
+        );
         this.updateMapEditorOptionForSpecificAreas();
     }
 
@@ -33,7 +40,11 @@ export class AreasManager {
             return;
         }
         const areaToUpdate = this.areas[indexOfAreaToUpdate];
-        areaToUpdate.updateArea(updatedArea, !this.areaPermissions.isUserHasAreaAccess(updatedArea.id));
+        areaToUpdate.updateArea(
+            updatedArea,
+            !this.areaPermissions.isUserHasAreaAccess(updatedArea.id),
+            this.areaPermissions.isOverlappingArea(updatedArea.id)
+        );
         this.updateMapEditorOptionForSpecificAreas();
     }
 
@@ -51,7 +62,14 @@ export class AreasManager {
     private initializeAreas() {
         const gameMapAreas = this.gameMapAreas.getAreas();
         gameMapAreas.forEach((areaData) =>
-            this.areas.push(new Area(this.scene, areaData, !this.areaPermissions.isUserHasAreaAccess(areaData.id)))
+            this.areas.push(
+                new Area(
+                    this.scene,
+                    areaData,
+                    !this.areaPermissions.isUserHasAreaAccess(areaData.id),
+                    this.areaPermissions.isOverlappingArea(areaData.id)
+                )
+            )
         );
         this.updateMapEditorOptionForSpecificAreas();
     }
