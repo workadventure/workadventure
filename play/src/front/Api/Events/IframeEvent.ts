@@ -358,10 +358,6 @@ export const isIframeEventWrapper = z.union([
         data: z.undefined(),
     }),
     z.object({
-        type: z.literal("chatReady"),
-        data: z.undefined(),
-    }),
-    z.object({
         type: z.literal("disableRoomList"),
         data: z.undefined(),
     }),
