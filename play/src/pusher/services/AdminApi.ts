@@ -1,6 +1,6 @@
 import type { AxiosResponse } from "axios";
 import axios, { isAxiosError } from "axios";
-import type { AdminApiData, ChatMember, MapDetailsData, RoomRedirect } from "@workadventure/messages";
+import type { AdminApiData, MapDetailsData, RoomRedirect } from "@workadventure/messages";
 import {
     MemberData,
     Capabilities,
@@ -30,15 +30,11 @@ import type { AdminInterface } from "./AdminInterface";
 import type { AuthTokenData } from "./JWTTokenManager";
 import { jwtTokenManager } from "./JWTTokenManager";
 import { ShortMapDescriptionList } from "./ShortMapDescription";
+import { WorldChatMembersData } from "./WorldChatMembersData";
 
 export interface AdminBannedData {
     is_banned: boolean;
     message: string;
-}
-
-export interface WorldChatMembersData {
-    total: number;
-    members: ChatMember[];
 }
 
 export const isFetchMemberDataByUuidSuccessResponse = z.object({
@@ -1004,19 +1000,48 @@ class AdminApi implements AdminInterface {
         return;
     }
 
-    //TODO : @openapi doc
     async getWorldChatMembers(playUri: string, searchText = ""): Promise<WorldChatMembersData> {
-        const response = await axios.get<WorldChatMembersData>(`${ADMIN_API_URL}/api/chat/members`, {
+        /**
+         * @openapi
+         * /api/chat/members:
+         *   get:
+         *     tags: ["AdminAPI"]
+         *     description: Get the list of members to be displayed in the chat
+         *     security:
+         *      - Bearer: []
+         *     produces:
+         *      - "application/json"
+         *     parameters:
+         *      - name: "roomUrl"
+         *        in: "query"
+         *        description: "The URL of the room"
+         *        type: "string"
+         *        required: true
+         *        example: "https://play.workadventu.re/@/teamSlug/worldSlug/roomSlug"
+         *      - name: "searchText"
+         *        in: "query"
+         *        description: "An optional search text to filter the members"
+         *        type: "string"
+         *        example: "john"
+         *     responses:
+         *       200:
+         *         description: The list of members
+         *         schema:
+         *             $ref: "#/definitions/WorldChatMembersData"
+         *       404:
+         *         description: Error while retrieving the data
+         *         schema:
+         *             $ref: '#/definitions/ErrorApiErrorData'
+         */
+        const response = await axios.get<unknown>(`${ADMIN_API_URL}/api/chat/members`, {
             headers: { Authorization: `${ADMIN_API_TOKEN}` },
             params: {
                 playUri,
                 searchText,
             },
         });
-        return {
-            total: response.data.total,
-            members: response.data.members,
-        };
+
+        return WorldChatMembersData.parse(response.data);
     }
 
     /**
@@ -1066,7 +1091,6 @@ class AdminApi implements AdminInterface {
      *        description: The member UUID
      *     responses:
      *       200:
-     *        description: Member list or empty list.
      *        schema:
      *            $ref: '#/definitions/MemberData'
      *        404:

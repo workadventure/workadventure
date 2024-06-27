@@ -16,6 +16,7 @@ import {
 } from "@workadventure/messages";
 import type { SchemaObject } from "openapi3-ts";
 import { isFetchMemberDataByUuidResponse } from "./AdminApi";
+import { WorldChatMembersData } from "./WorldChatMembersData";
 
 class SwaggerGenerator {
     definitions(type: string | null): {
@@ -29,6 +30,7 @@ class SwaggerGenerator {
                 MapDetailsData: generateSchema(isMapDetailsData),
                 RoomRedirect: generateSchema(isRoomRedirect),
                 WokaDetail: generateSchema(WokaDetail),
+                WorldChatMembersData: generateSchema(WorldChatMembersData),
             },
         };
         if (type === "external") {
@@ -51,6 +53,7 @@ class SwaggerGenerator {
                 WokaDetail: generateSchema(WokaDetail),
                 WokaList: generateSchema(wokaList),
                 WokaTexture: generateSchema(wokaTexture),
+                WorldChatMembersData: generateSchema(WorldChatMembersData),
             },
         };
     }
