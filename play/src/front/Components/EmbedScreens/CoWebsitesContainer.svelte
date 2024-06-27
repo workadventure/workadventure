@@ -1,7 +1,7 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
-    import { coWebsites } from "../../Stores/CoWebsiteStore";
+    import { canvasHeight, canvasWidth, coWebsites, fullScreenCowebsite } from "../../Stores/CoWebsiteStore";
     import FullScreenIcon from "../Icons/FullScreenIcon.svelte";
     import JitsiCowebsiteComponent from "../Cowebsites/JistiCowebsiteComponent.svelte";
     import SimpleCowebsiteComponent from "../Cowebsites/SimpleCowebsiteComponent.svelte";
@@ -17,7 +17,7 @@
     import { waScaleManager } from "../../Phaser/Services/WaScaleManager";
 
     let activeCowebsite = $coWebsites[0];
-    let showDropdown = false;
+    let showDropdown = true;
     let showArrow = false;
     let container: HTMLElement;
     let resizeBar: HTMLElement;
@@ -35,11 +35,11 @@
     let vertical: boolean;
     let fullScreen = false;
     let resizeBarHide = false;
+    let styleTag: HTMLStyleElement;
 
     onMount(() => {
         mediaQuery.addEventListener("change", (e: any) => handleTabletChange(e));
         handleTabletChange(mediaQuery);
-
         if (!vertical) {
             let widthOnMount = parseInt(getComputedStyle(container).width);
             widthContainer.set(widthOnMount);
@@ -49,9 +49,7 @@
             heightContainer.set(heightOnMount);
             heightContainer.subscribe(() => {});
         }
-
         updateDynamicStyles();
-
         waScaleManager.applyNewSize();
     });
 
@@ -76,8 +74,9 @@
 
     function resizeDesktop() {
         startWidthContainer = parseInt(getComputedStyle(container).width);
+        console.log(startWidthContainer, "startWidthContainer");
         initialWidth = parseInt(getComputedStyle(container).width);
-
+        console.log(initialWidth, "initialWidth");
         const handleMouseDown = (e: { clientX: number }) => {
             startX = e.clientX;
             startWidthContainer = parseInt(getComputedStyle(container).width);
@@ -90,7 +89,7 @@
             widthContainer.set(newWidth);
             finalWidth = newWidth + "px";
             container.style.width = finalWidth;
-            const maxWidth = Math.min(newWidth, window.innerWidth - 350);
+            const maxWidth = Math.min(newWidth, window.innerWidth * 0.75);
             widthContainer.set(maxWidth);
             if (maxWidth !== newWidth) {
                 container.style.width = maxWidth + "px";
@@ -108,6 +107,44 @@
             resizeBar.removeEventListener("mousedown", handleMouseDown);
             document.removeEventListener("mousemove", handleMouseMove);
             document.removeEventListener("mouseup", handleMouseUp);
+        };
+    }
+
+    function resizeMobile() {
+        startWidthContainer = parseInt(getComputedStyle(container).width);
+        initialWidth = parseInt(getComputedStyle(container).width);
+        function handleMouseDown(e: TouchEvent) {
+            let clientY = e.touches[0].clientY;
+            startY = clientY;
+            startHeight = parseInt(getComputedStyle(container).height);
+            document.addEventListener("touchmove", handleMouseMove, { passive: false });
+            document.addEventListener("touchend", handleMouseUp);
+        }
+        resizeBar.addEventListener("touchstart", handleMouseDown, false);
+        function handleMouseMove(e: TouchEvent) {
+            let clientY = e.touches[0].clientY;
+            let newHeight = startHeight - (clientY - startY);
+            heightContainer.set(newHeight);
+            finalHeight = newHeight + "px";
+            container.style.height = finalHeight;
+            const maxHeight = Math.min(newHeight, window.innerHeight * 0.75);
+            heightContainer.set(maxHeight);
+            if (maxHeight !== newHeight) {
+                container.style.height = maxHeight + "px";
+            }
+            resizeMax(newHeight);
+            waScaleManager.applyNewSize();
+            // appearDropdown();
+        }
+        const handleMouseUp = () => {
+            appearDropdown();
+            document.removeEventListener("touchmove", handleMouseMove);
+            document.removeEventListener("touchend", handleMouseUp);
+        };
+        return () => {
+            resizeBar.removeEventListener("touchstart", handleMouseDown);
+            document.removeEventListener("touchmove", handleMouseMove);
+            document.removeEventListener("touchend", handleMouseUp);
         };
     }
 
@@ -129,47 +166,20 @@
         }
     }
 
-    function resizeMobile() {
-        startWidthContainer = parseInt(getComputedStyle(container).width);
-        initialWidth = parseInt(getComputedStyle(container).width);
+    function stackTabOnResize() {
+        let widthTabBar = parseInt(getComputedStyle(container).width);
 
-        function handleMouseDown(e: TouchEvent) {
-            let clientY = e.touches[0].clientY;
-            startY = clientY;
-            startHeight = parseInt(getComputedStyle(container).height);
-            document.addEventListener("touchmove", handleMouseMove, { passive: false });
-            document.addEventListener("touchend", handleMouseUp);
-        }
-
-        resizeBar.addEventListener("touchstart", handleMouseDown, false);
-
-        function handleMouseMove(e: TouchEvent) {
-            let clientY = e.touches[0].clientY;
-            let newHeight = startHeight - (clientY - startY);
-            heightContainer.set(newHeight);
-            finalHeight = newHeight + "px";
-            container.style.height = finalHeight;
-            const maxHeight = Math.min(newHeight, window.innerHeight - 350);
-            heightContainer.set(maxHeight);
-            if (maxHeight !== newHeight) {
-                container.style.height = maxHeight + "px";
+        if (widthTab > widthTabBar) {
+            let tab = document.getElementById("tabBar");
+            if (tab) {
+                tab.style.flexDirection = "column";
             }
-
-            resizeMax(newHeight);
-            waScaleManager.applyNewSize();
+        } else {
+            let tab = document.getElementById("tabBar");
+            if (tab) {
+                tab.style.flexDirection = "row";
+            }
         }
-
-        const handleMouseUp = () => {
-            appearDropdown();
-            document.removeEventListener("touchmove", handleMouseMove);
-            document.removeEventListener("touchend", handleMouseUp);
-        };
-
-        return () => {
-            resizeBar.removeEventListener("touchstart", handleMouseDown);
-            document.removeEventListener("touchmove", handleMouseMove);
-            document.removeEventListener("touchend", handleMouseUp);
-        };
     }
 
     function addDivForResize() {
@@ -182,7 +192,6 @@
         div.style.right = "0";
         div.style.zIndex = "1800";
         document.body.appendChild(div);
-
         window.addEventListener("mouseup", removeDivForResize);
     }
 
@@ -197,6 +206,7 @@
         if (!vertical) {
             totalTabsWidth += widthTab;
             appearDropdown();
+            stackTabOnResize();
         } else {
             totalTabsWidth += widthTabResponsive;
             appearDropdown();
@@ -207,6 +217,7 @@
         if (!vertical) {
             totalTabsWidth -= widthTab;
             appearDropdown();
+            stackTabOnResize();
         } else {
             totalTabsWidth -= widthTabResponsive;
             appearDropdown();
@@ -214,15 +225,17 @@
     }
 
     function appearDropdown() {
-        let div = document.getElementById("dropdown-container");
+        let dropdown = document.getElementById("dropdown-container");
+        // console.log(totalTabsWidth, "totalTabsWidth");
+        // console.log(startWidthContainer, "startWidthContainer");
         if (totalTabsWidth > startWidthContainer) {
-            if (div) {
-                div.classList.remove("hidden");
+            if (dropdown) {
+                dropdown.classList.remove("hidden");
             }
             showArrow = true;
         } else {
-            if (div) {
-                div.classList.add("hidden");
+            if (dropdown) {
+                dropdown.classList.add("hidden");
             }
             showArrow = false;
         }
@@ -232,56 +245,62 @@
         activeCowebsite = coWebsite;
         showDropdown = false;
     };
+
     const subscription = coWebsites.subscribe((arr) => {
         activeCowebsite = arr[arr.length - 1];
     });
 
     function toggleFullScreen() {
-        console.log("toggleFullScreen");
-        if (fullScreen) {
+        if ($fullScreenCowebsite && !vertical) {
+            fullScreenCowebsite.set(false);
+            container.style.width = `${$widthContainer - $canvasWidth}px`;
             resizeBarHide = false;
-            fullScreen = false;
-        } else {
+        } else if ($fullScreenCowebsite && vertical) {
+            fullScreenCowebsite.set(false);
+            widthContainer.set(window.innerHeight);
+            container.style.height = `${$heightContainer - $canvasHeight}px`;
+            resizeBarHide = false;
+        } else if (!$fullScreenCowebsite && !vertical) {
+            fullScreenCowebsite.set(true);
+            widthContainer.set(window.innerWidth);
+            container.style.width = `${$widthContainer}px`;
+            container.style.backgroundColor = "#1b2a40";
             resizeBarHide = true;
-            fullScreen = true;
+        } else {
+            fullScreenCowebsite.set(true);
+            heightContainer.set(window.innerHeight);
+            container.style.height = `${$heightContainer}px`;
+            resizeBarHide = true;
         }
     }
-
-    let styleTag: HTMLStyleElement;
 
     function updateDynamicStyles() {
         let widthPercent = activeCowebsite.getWidthPercent() || 50;
         let heightPercent = activeCowebsite.getHeightPercent() || 50;
-
         if (widthPercent < 25) {
             widthPercent = 25;
         } else if (widthPercent > 75) {
             widthPercent = 75;
         }
-
         if (heightPercent < 25) {
             heightPercent = 25;
         } else if (heightPercent > 75) {
             heightPercent = 75;
         }
-
         const cssVertical = `
             .height-default-vertical {
                 width: 100%;
                 height: ${heightPercent}%;
             }`;
-
         const cssHorizontal = `
             .width-default-horizontal {
                 height: 100%;
                 width: ${widthPercent}%;
             }`;
-
         if (!styleTag) {
             styleTag = document.createElement("style");
             document.head.appendChild(styleTag);
         }
-
         vertical ? (styleTag.textContent = cssVertical) : (styleTag.textContent = cssHorizontal);
     }
 
@@ -289,12 +308,12 @@
     $: vertical, updateDynamicStyles();
 </script>
 
+<!-- class:fullscreen={fullScreen} -->
 <div
     id="cowebsites-container"
     class={vertical
         ? "height-default-vertical w-full right-0 top-0 fixed bg-contrast/50 backdrop-blur left_panel responsive-container fullscreen"
         : "width-default-horizontal h-full right-0 top-0 fixed bg-contrast/50 backdrop-blur left_panel flex-col padding"}
-    class:fullscreen={fullScreen}
     bind:this={container}
     in:fly|local={vertical ? { duration: 750, y: -1000 } : { duration: 750, x: 1000 }}
 >
@@ -312,7 +331,7 @@
         {/if}
 
         <div class="relative">
-            <div class="tab-bar flex items-center justify-between overflow-x-auto">
+            <div class="tab-bar flex items-center justify-between overflow-x-auto" id="tabBar">
                 {#if !vertical}
                     <!-- 300 is corresponding to the width of a tab so we calculate to know if it will fit -->
                     {#each $coWebsites.slice(0, Math.floor(initialWidth / 300)) as coWebsite (coWebsite.getId())}
@@ -434,7 +453,6 @@
         height: auto;
         border-radius: 8px;
     }
-
     @media (max-width: 768px) {
         #cowebsites-container {
             width: 100%;
@@ -442,26 +460,22 @@
             display: flex;
             flex-direction: column;
         }
-
         .responsive-resize-bar {
             position: relative;
             rotate: 90deg;
             height: 10rem;
             margin: -3rem auto -3rem auto;
         }
-
         .responsive-website {
             width: 94%;
             border-radius: 8px;
         }
-
         .tab-drop-down {
             margin-top: 15%;
             width: 200px;
             height: auto;
             border-radius: 8px;
         }
-
         #dropdown-container {
             width: 220px;
         }

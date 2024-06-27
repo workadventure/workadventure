@@ -43,6 +43,9 @@ export const coWebsites = createCoWebsiteStore();
 
 export let widthContainer = writable(window.innerWidth);
 export let heightContainer = writable(window.innerHeight);
+export let fullScreenCowebsite = writable(false);
+export let canvasWidth = writable(window.innerWidth);
+export let canvasHeight = writable(window.innerHeight);
 export class CoWebsiteManager {
 
     private _onResize: Subject<void> = new Subject();
@@ -56,7 +59,8 @@ export class CoWebsiteManager {
 
     calculateNewWidth() {
         const currentWidth = get(widthContainer);
-        if (!this.verticalMode && get(coWebsites).length > 0){
+        if (!this.verticalMode && get(coWebsites).length > 0 ) {
+            canvasWidth.set(window.innerWidth - currentWidth);
             return window.innerWidth - currentWidth;
         }
         return window.innerWidth
@@ -65,6 +69,7 @@ export class CoWebsiteManager {
     calculateNewHeight() {
         const currentHeight = get(heightContainer);
         if(this.verticalMode && get(coWebsites).length > 0) {
+            canvasHeight.set(window.innerHeight - currentHeight);
             return window.innerHeight - currentHeight;
         }
         return window.innerHeight

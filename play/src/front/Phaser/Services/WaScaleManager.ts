@@ -78,7 +78,6 @@ export class WaScaleManager {
                 scene.events.once(Phaser.Scenes.Events.RENDER, () => scene.onResize());
             }
         }
-
         this.game.markDirty();
     }
 
