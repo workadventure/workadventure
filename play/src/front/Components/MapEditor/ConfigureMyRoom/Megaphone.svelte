@@ -1,7 +1,6 @@
 <script lang="ts">
     import { fade } from "svelte/transition";
     import { UpdateMegaphoneSettingMessage } from "@workadventure/messages";
-    import { InfoIcon } from "svelte-feather-icons";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { LL } from "../../../../i18n/i18n-svelte";
     import InputText from "../../Input/InputText.svelte";
@@ -11,6 +10,7 @@
     import ButtonState from "../../Input/ButtonState.svelte";
     import { executeUpdateWAMSettings } from "../../../Phaser/Game/MapEditor/Commands/Facades";
     import { InputTagOption } from "../../Input/InputTagOption";
+    import { IconInfoCircle } from "@wa-icons";
 
     let enabled: boolean = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.enabled ?? false;
     const oldRights: string[] = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.rights ?? [];
@@ -109,7 +109,7 @@
             />
             <InputSelect label={$LL.mapEditor.settings.megaphone.inputs.scope()} options={scopes} bind:value={scope} />
             <p class="help-text">
-                <InfoIcon size="18" />
+                <IconInfoCircle font-size="18" />
                 {$LL.mapEditor.settings.megaphone.inputs.spaceNameHelper()}
             </p>
             <InputTags
@@ -118,7 +118,7 @@
                 bind:value={rights}
             />
             <p class="help-text">
-                <InfoIcon size="18" />
+                <IconInfoCircle font-size="18" />
                 {$LL.mapEditor.settings.megaphone.inputs.rightsHelper()}
             </p>
             <ButtonState promise={save} initialText={$LL.menu.settings.save()} loadingText="Saving" />

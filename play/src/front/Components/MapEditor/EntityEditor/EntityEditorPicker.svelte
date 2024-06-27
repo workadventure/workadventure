@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { IconChevronLeft, IconDeselect, IconPencil } from "@tabler/icons-svelte";
     import type { EntityPrefab } from "@workadventure/map-editor";
     import { onDestroy } from "svelte";
     import { get } from "svelte/store";
@@ -20,6 +19,7 @@
     import EntityVariantPositionPicker from "./EntityItem/EntityVariantPositionPicker.svelte";
     import EntityUpload from "./EntityUpload/EntityUpload.svelte";
     import TagListItem from "./TagListItem.svelte";
+    import { IconChevronLeft, IconDeselect, IconPencil } from "@wa-icons";
 
     type customTag = "Custom";
 
@@ -239,13 +239,13 @@
                                 class="tw-bg-blue-500 tw-rounded"
                                 data-testid="editEntity"
                                 on:click={() => setIsEditingCustomEntity(true)}
-                                ><IconPencil size={16} />{$LL.mapEditor.entityEditor.buttons.editEntity()}</button
+                                ><IconPencil font-size={16} />{$LL.mapEditor.entityEditor.buttons.editEntity()}</button
                             >
                         {/if}
                         <button
                             class="tw-self-start tw-absolute tw-right-0"
                             data-testid="clearEntitySelection"
-                            on:click={clearEntitySelection}><IconDeselect /></button
+                            on:click={clearEntitySelection}><IconDeselect font-size={20} /></button
                         >
                     {/if}
                 </div>

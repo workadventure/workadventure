@@ -52,7 +52,6 @@ import { MapLoadingError } from "../Services/MapLoadingError";
 import { getMapStorageClient } from "../Services/MapStorageClient";
 import { emitError, emitErrorOnRoomSocket } from "../Services/MessageHelpers";
 import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
-import { MucManager } from "../Services/MucManager";
 import { VariableError } from "../Services/VariableError";
 import { VariablesManager } from "../Services/VariablesManager";
 import { BrothersFinder } from "./BrothersFinder";
@@ -65,6 +64,7 @@ export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
 
 export class GameRoom implements BrothersFinder {
+    public readonly id: string;
     // Users, sorted by ID
     private readonly users = new Map<number, User>();
     private readonly usersByUuid = new Map<string, Set<User>>();
@@ -101,6 +101,9 @@ export class GameRoom implements BrothersFinder {
         private _wamUrl?: string,
         private _wamSettings: WAMFileFormat["settings"] = {}
     ) {
+        // uniq id for the room is timestamp
+        this.id = Date.now().toString();
+
         // A zone is 10 sprites wide.
         this.positionNotifier = new PositionNotifier(
             320,
@@ -162,18 +165,6 @@ export class GameRoom implements BrothersFinder {
             wamFile ? wamFile.settings : undefined
         );
 
-        gameRoom
-            .getMucManager()
-            .then((mucManager) => {
-                mucManager.init(mapDetails).catch((err) => {
-                    console.error(err);
-                    Sentry.captureException(err);
-                });
-            })
-            .catch((err) => {
-                console.error("Error get Muc Manager: ", err);
-                Sentry.captureException(`Error get Muc Manager: ${JSON.stringify(err)}`);
-            });
         return gameRoom;
     }
 
@@ -232,7 +223,6 @@ export class GameRoom implements BrothersFinder {
         const user = await User.create(
             this.nextUserId,
             joinRoomMessage.userUuid,
-            joinRoomMessage.userJid,
             joinRoomMessage.isLogged,
             joinRoomMessage.IPAddress,
             position,
@@ -251,7 +241,8 @@ export class GameRoom implements BrothersFinder {
             undefined,
             undefined,
             joinRoomMessage.activatedInviteUser,
-            joinRoomMessage.applications
+            joinRoomMessage.applications,
+            joinRoomMessage.chatID
         );
         this.users.set(user.id, user);
         let set = this.usersByUuid.get(user.uuid);
@@ -1083,55 +1074,6 @@ export class GameRoom implements BrothersFinder {
             return [];
         }
         return [...family].filter((theUser) => theUser !== user);
-    }
-
-    private mucManagerPromise: Promise<MucManager> | undefined;
-    private mucManagerLastLoad: Date | undefined;
-
-    private getMucManager(): Promise<MucManager> {
-        const lastMapUrl = this._mapUrl;
-        if (!this.mucManagerPromise) {
-            // For localhost maps
-            this._mapUrl = this._mapUrl.replace("http://maps.workadventure.localhost", "http://maps:80");
-            this.mucManagerLastLoad = new Date();
-            this.mucManagerPromise = this.getMap(true)
-                .then((map) => {
-                    return new MucManager(this._roomUrl, map);
-                })
-                .catch((e) => {
-                    if (e instanceof LocalUrlError) {
-                        // If we are trying to load a local URL, we are probably in test mode.
-                        // In this case, let's bypass the server-side checks completely.
-
-                        // Note: we run this message inside a setTimeout so that the room listeners can have time to connect.
-                        setTimeout(() => {
-                            for (const roomListener of this.roomListeners) {
-                                emitErrorOnRoomSocket(
-                                    roomListener,
-                                    "You are loading a local map. If you use the scripting API in this map, please be aware that server-side checks and muc persistence is disabled."
-                                );
-                            }
-                        }, 1000);
-                    } else {
-                        // An error occurred while loading the map
-                        // Right now, let's bypass the error. In the future, we should make sure the user is aware of that
-                        // and that he/she will act on it to fix the problem.
-
-                        // Note: we run this message inside a setTimeout so that the room listeners can have time to connect.
-                        setTimeout(() => {
-                            for (const roomListener of this.roomListeners) {
-                                emitErrorOnRoomSocket(
-                                    roomListener,
-                                    "Your map does not seem accessible from the WorkAdventure servers. Is it behind a firewall or a proxy? Your map should be accessible from the WorkAdventure servers. If you use the scripting API in this map, please be aware that server-side checks and muc persistence is disabled."
-                                );
-                            }
-                        }, 1000);
-                    }
-                    return new MucManager(this._roomUrl, null);
-                });
-        }
-        this._mapUrl = lastMapUrl;
-        return this.mucManagerPromise;
     }
 
     public sendSubMessageToRoom(subMessage: SubToPusherRoomMessage) {

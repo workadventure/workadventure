@@ -11,7 +11,7 @@ const debug = Debug("space");
  */
 export class SpacesWatcher {
     private _spacesWatched: string[];
-    private pingInterval: NodeJS.Timer | undefined;
+    private pingInterval: NodeJS.Timeout | undefined;
     private pongTimeout: NodeJS.Timeout | undefined;
     public constructor(public readonly id: string, private readonly socket: SpaceSocket, private timeout = 30) {
         this._spacesWatched = [];

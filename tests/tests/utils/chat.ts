@@ -39,11 +39,12 @@ class Chat {
     }
 
     async openTimeline(page: Page){
-        await this.get(page).locator('#timeline #openTimeline').click();
+        await page.getByRole('button', {name: 'Proximity Chat'}).click();
+        await expect(page.locator('#chat.chatWindow')).toBeVisible();
     }
 
     async closeTimeline(page: Page){
-        await this.get(page).locator('#activeTimeline .exit').click();
+        await page.locator('button.back-roomlist').click();
     }
 
     async UL_walkTo(page: Page, nickname: string){

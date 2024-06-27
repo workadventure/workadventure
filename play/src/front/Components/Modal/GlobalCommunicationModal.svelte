@@ -1,7 +1,6 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
-    import { InfoIcon } from "svelte-feather-icons";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { showModalGlobalComminucationVisibilityStore } from "../../Stores/ModalStore";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
@@ -29,8 +28,13 @@
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { StringUtils } from "../../Utils/StringUtils";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import { requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
+    import {
+        currentLiveStreamingNameStore,
+        megaphoneUrlStore,
+        requestedMegaphoneStore,
+    } from "../../Stores/MegaphoneStore";
     import { userIsAdminStore } from "../../Stores/GameStore";
+    import { IconInfoCircle } from "@wa-icons";
 
     let mainModal: HTMLDivElement;
 
@@ -156,6 +160,7 @@
 
     function startLive() {
         analyticsClient.startMegaphone();
+        currentLiveStreamingNameStore.set($megaphoneUrlStore);
         requestedMegaphoneStore.set(true);
         close();
     }
@@ -221,7 +226,10 @@
                             />
                             {$LL.megaphone.modal.textMessage.title()}
                         </h3>
-                        <p class="help-text"><InfoIcon size="18" /> {$LL.megaphone.modal.audioMessage.noAccess()}</p>
+                        <p class="help-text">
+                            <IconInfoCircle font-size="18" />
+                            {$LL.megaphone.modal.audioMessage.noAccess()}
+                        </p>
                         <button class="light tw-max-w-fit" on:click={activateInputText} disabled={!$userIsAdminStore}>
                             {$LL.megaphone.modal.textMessage.button()}</button
                         >
@@ -238,7 +246,10 @@
                             />
                             {$LL.megaphone.modal.audioMessage.title()}
                         </h3>
-                        <p class="help-text"><InfoIcon size="18" /> {$LL.megaphone.modal.audioMessage.noAccess()}</p>
+                        <p class="help-text">
+                            <IconInfoCircle font-size="18" />
+                            {$LL.megaphone.modal.audioMessage.noAccess()}
+                        </p>
                         <button class="light tw-max-w-fit" on:click={activateUploadAudio} disabled={!$userIsAdminStore}>
                             {$LL.megaphone.modal.audioMessage.button()}</button
                         >

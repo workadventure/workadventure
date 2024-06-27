@@ -27,23 +27,19 @@ In this docker-compose file, you will find:
 
 - A reverse-proxy (Traefik) that dispatches requests to the WorkAdventure containers and handles HTTPS termination. HTTPS certificates will be automatically generated using LetsEncrypt.
 - A play container (NodeJS) that serves static files for the "game" (HTML/JS/CSS) and is the point of entry for users (you can start many if you want to increase performance)
-- A chat container (nginx) that serves static files for the chat bar (HTML/JS/CSS)
 - A back container (NodeJS) that shares your rooms information
 - A map-storage container (NodeJS) that serves your maps and provides map-editing features
 - An icon container to fetch the favicon of sites imported in iframes
 - A Redis server to store values from variables originating from the Scripting API
-- A XMPP container that runs an Ejabberd server in charge of the chat / user list
 
 ```mermaid
 graph LR
     A[Browser] --> B(Traefik)
     subgraph docker-compose
-    B --> I(Chat)
     B --> D(Play)
     B --> E(Icon)
     D --> F(Back)
     F --> G(Redis)
-    D --> J(XMPP)
     F --> K(Map storage)
     A --> K(Map storage)
     end
@@ -55,17 +51,6 @@ graph LR
 > You can host your maps on the WorkAdventure server itself (using the dedicated map-storage container), or outside
 > of the WorkAdventure server, on any [properly configured HTTP server](../../docs/maps/hosting.md) (Nginx, Apache...). 
 > The default docker-compose file does **not** contain a container dedicated to hosting maps. The documentation and
-
-> **Note**
-> The Ejabberd server is used to list all the users connected to your environment and also
-> to transmit chat messages. The Ejabberd server proposed in this install comes almost
-> unconfigured. There is a basic system set up to authenticate users using JWT. Because
-> authentications are using JWT, nothing will be saved.
-> If you want to persist messages and use "real accounts", you will need to implement the
-> "admin API" (it is the role of the Admin API to give valid credentials to Ejabberd),
-> and you will need to modify the Ejabberd configuration to persist messages the way you want
-> (using Mnesia or any other supported database)
-
 
 ## Getting started
 
@@ -169,9 +154,25 @@ Keeping your server secure is also important. You can configure the `SECURITY_EM
 to receive security notifications from the WorkAdventure core team.
 You will be notified if your WorkAdventure version contains a known security flaw.
 
+#### Adding authentication
+
+WorkAdventure does not provide its own authentication system. Instead, you can connect WorkAdventure to an OpenID Connect
+authentication provider (like Google, GitHub, or any other provider).
+
 If you want to connect WorkAdventure to an authentication provider, you can follow the [OpenID Connect documentation](../../docs/dev/openid.md).
 
-Finally, you can set up a list of restricted users [allowed to access the inline map editor](../../docs/dev/inline-map-editor.md).
+When OpenID is configured, you should set up a list of restricted users [allowed to access the inline map editor](../../docs/dev/inline-map-editor.md).
+
+#### Connecting to a chat server
+
+WorkAdventure can connect to a [Matrix server](https://matrix.org/) to provide chat features.
+Matrix is a decentralized chat protocol that allows you to host your own chat server.
+
+With Matrix integration configured, you can chat with other users, even when they are not connected to WorkAdventure.
+For instance, a user can chat with you from a Matrix client like Element on his mobile phone, while you are in WorkAdventure.
+
+You can follow the [Matrix documentation](../../docs/others/self-hosting/matrix.md) to learn how to configure your Matrix server
+and connect it to WorkAdventure.
 
 ## Upgrading WorkAdventure
 

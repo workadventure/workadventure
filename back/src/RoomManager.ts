@@ -7,19 +7,19 @@ import {
     BanMessage,
     BatchToPusherMessage,
     BatchToPusherRoomMessage,
+    ChatMessagePrompt,
+    EventRequest,
+    EventResponse,
+    PingMessage,
     PusherToBackMessage,
     RefreshRoomPromptMessage,
     RoomMessage,
-    ServerToAdminClientMessage,
-    WorldFullWarningToRoomMessage,
-    ZoneMessage,
     RoomsList,
-    PingMessage,
-    ChatMessagePrompt,
+    ServerToAdminClientMessage,
     ServerToClientMessage,
     VariableRequest,
-    EventRequest,
-    EventResponse,
+    WorldFullWarningToRoomMessage,
+    ZoneMessage,
 } from "@workadventure/messages";
 import { RoomManagerServer } from "@workadventure/messages/src/ts-proto-generated/services";
 import {
@@ -63,7 +63,7 @@ const roomManager = {
 
         let room: GameRoom | null = null;
         let user: User | null = null;
-        let pongTimeoutId: NodeJS.Timer | undefined;
+        let pongTimeoutId: NodeJS.Timeout | undefined;
 
         call.on("data", (message: PusherToBackMessage) => {
             // On each message, let's reset the pong timeout
@@ -225,6 +225,21 @@ const roomManager = {
                                 socketManager.handleMuteVideoEveryBodyParticipantMessage(user);
                                 break;
                             }
+                            case "proximityPublicMessage": {
+                                socketManager.handleProximityPublicMessage(
+                                    user,
+                                    message.message.proximityPublicMessage
+                                );
+                                break;
+                            }
+                            case "proximityPrivateMessage": {
+                                socketManager.handleProximityPrivateMessage(
+                                    user,
+                                    message.message.proximityPrivateMessage,
+                                    message.message.proximityPrivateMessage.receiverUserUuid
+                                );
+                                break;
+                            }
                             default: {
                                 const _exhaustiveCheck: never = message.message;
                             }
@@ -311,7 +326,6 @@ const roomManager = {
                     "Connection lost with user ",
                     user?.uuid,
                     user?.name,
-                    user?.userJid,
                     "in room",
                     room?.roomUrl,
                     "at : ",
@@ -322,7 +336,6 @@ const roomManager = {
                     `Connection lost with user
                     ${JSON.stringify(user?.uuid)}
                     ${JSON.stringify(user?.name)}
-                    ${JSON.stringify(user?.userJid)} 
                     in room 
                     ${JSON.stringify(room?.roomUrl)}`,
                     "debug"

@@ -1,5 +1,4 @@
 <script lang="ts">
-    // eslint-disable-next-line import/no-unresolved
     import { closeModal } from "svelte-modals";
     import PopupGeneric from "../Modal/Popup.svelte";
     import LL from "../../../i18n/i18n-svelte";

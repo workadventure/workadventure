@@ -16,7 +16,6 @@ export interface MessageUserMovedInterface {
 
 export interface MessageUserJoined {
     userId: number;
-    userJid: string;
     name: string;
     characterTextures: WokaTextureDescriptionInterface[];
     position: PositionMessage;
@@ -54,6 +53,7 @@ export interface WebRtcSignalReceivedMessageInterface {
     signal: SignalData;
     webRtcUser: string | undefined;
     webRtcPassword: string | undefined;
+    spaceName: string | undefined;
 }
 
 export interface ViewportInterface {

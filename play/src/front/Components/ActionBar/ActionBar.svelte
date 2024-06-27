@@ -1,10 +1,7 @@
 <script lang="ts">
-    import type { Unsubscriber } from "svelte/store";
     import { writable } from "svelte/store";
-    import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "svelte-feather-icons";
     import { fly } from "svelte/transition";
-    import { onDestroy, onMount } from "svelte";
-    import { Subscription } from "rxjs";
+    import { onMount } from "svelte";
     import { AvailabilityStatus } from "@workadventure/messages";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import {
@@ -58,16 +55,16 @@
     } from "../../Stores/MyMediaStore";
     import {
         activeSubMenuStore,
+        addActionButtonActionBarEvent,
+        addClassicButtonActionBarEvent,
+        additionnalButtonsMenu,
         inviteUserActivated,
+        mapManagerActivated,
         menuVisiblilityStore,
+        roomListActivated,
+        screenSharingActivatedStore,
         SubMenusInterface,
         subMenusStore,
-        additionnalButtonsMenu,
-        addClassicButtonActionBarEvent,
-        addActionButtonActionBarEvent,
-        mapManagerActivated,
-        screenSharingActivatedStore,
-        roomListActivated,
     } from "../../Stores/MenuStore";
     import {
         emoteDataStore,
@@ -88,8 +85,8 @@
     import {
         modalIframeStore,
         modalVisibilityStore,
-        showModalGlobalComminucationVisibilityStore,
         roomListVisibilityStore,
+        showModalGlobalComminucationVisibilityStore,
     } from "../../Stores/ModalStore";
     import { userHasAccessToBackOfficeStore } from "../../Stores/GameStore";
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
@@ -102,8 +99,8 @@
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
-
     import AvailabilityStatusComponent from "./AvailabilityStatus/AvailabilityStatus.svelte";
+    import { IconCheck, IconChevronDown, IconChevronUp } from "@wa-icons";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
@@ -172,6 +169,7 @@
             menuVisiblilityStore.set(false);
             activeSubMenuStore.activateByIndex(0);
         }
+
         chatVisibilityStore.set(!$chatVisibilityStore);
     }
 
@@ -374,20 +372,10 @@
         speakerSelectedStore.set(deviceId);
     }
 
-    let subscribers = new Array<Unsubscriber>();
-    let chatTotalMessagesSubscription: Subscription | undefined;
     let totalMessagesToSee = writable<number>(0);
 
     onMount(() => {
-        chatTotalMessagesSubscription = iframeListener.chatTotalMessagesToSeeStream.subscribe((total) =>
-            totalMessagesToSee.set(total)
-        );
         resizeObserver.observe(mainHtmlDiv);
-    });
-
-    onDestroy(() => {
-        subscribers.map((subscriber) => subscriber());
-        chatTotalMessagesSubscription?.unsubscribe();
     });
 
     function buttonActionBarTrigger(id: string) {
@@ -582,9 +570,9 @@
                                     on:click|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}
                                 >
                                     {#if cameraActive}
-                                        <ChevronDownIcon size="13" />
+                                        <IconChevronDown font-size="13" />
                                     {:else}
-                                        <ChevronUpIcon size="13" />
+                                        <IconChevronUp font-size="13" />
                                     {/if}
                                 </button>
 
@@ -606,7 +594,7 @@
                                         >
                                             {StringUtils.normalizeDeviceName(camera.label)}
                                             {#if $usedCameraDeviceIdStore === camera.deviceId}
-                                                <CheckIcon size="13" class="tw-ml-1" />
+                                                <IconCheck font-size="13" class="tw-ml-1" />
                                             {/if}
                                         </span>
                                     {/each}
@@ -650,9 +638,9 @@
                                         (microphoneActive = !microphoneActive)}
                                 >
                                     {#if microphoneActive}
-                                        <ChevronDownIcon size="13" />
+                                        <IconChevronDown font-size="13" />
                                     {:else}
-                                        <ChevronUpIcon size="13" />
+                                        <IconChevronUp font-size="13" />
                                     {/if}
                                 </button>
 
@@ -677,7 +665,7 @@
                                             >
                                                 {StringUtils.normalizeDeviceName(microphone.label)}
                                                 {#if $usedMicrophoneDeviceIdStore === microphone.deviceId}
-                                                    <CheckIcon size="13" />
+                                                    <IconCheck font-size="13" />
                                                 {/if}
                                             </span>
                                         {/each}
@@ -699,7 +687,7 @@
                                             >
                                                 {StringUtils.normalizeDeviceName(speaker.label)}
                                                 {#if $speakerSelectedStore === speaker.deviceId}
-                                                    <CheckIcon size="13" />
+                                                    <IconCheck font-size="13" />
                                                 {/if}
                                             </span>
                                         {/each}

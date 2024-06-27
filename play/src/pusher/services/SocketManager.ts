@@ -1,43 +1,43 @@
 import Debug from "debug";
 import type { compressors } from "hyper-express";
 import {
+    AddSpaceFilterMessage,
     AdminMessage,
     AdminPusherToBackMessage,
     AdminRoomMessage,
+    BackToPusherSpaceMessage,
     BanMessage,
+    BanPlayerMessage,
+    ChatMembersAnswer,
+    ChatMembersQuery,
     EmoteEventMessage,
     ErrorApiData,
     ErrorMessage,
     ErrorScreenMessage,
+    GetMemberAnswer,
+    GetMemberQuery,
     JoinRoomMessage,
-    MucRoomDefinition,
+    MegaphoneStateMessage,
+    MemberData,
+    PartialSpaceUser,
     PlayerDetailsUpdatedMessage,
     PlayGlobalMessage,
     PusherToBackMessage,
+    PusherToBackSpaceMessage,
+    QueryMessage,
+    RemoveSpaceFilterMessage,
     ReportPlayerMessage,
+    SearchMemberAnswer,
+    SearchMemberQuery,
     ServerToAdminClientMessage,
     ServerToClientMessage,
-    UserMovesMessage,
-    ViewportMessage,
-    XmppSettingsMessage,
-    PusherToBackSpaceMessage,
-    BackToPusherSpaceMessage,
-    PartialSpaceUser,
-    AddSpaceFilterMessage,
-    UpdateSpaceFilterMessage,
-    RemoveSpaceFilterMessage,
     SetPlayerDetailsMessage,
     SpaceFilterMessage,
-    WatchSpaceMessage,
-    QueryMessage,
-    MegaphoneStateMessage,
+    UpdateSpaceFilterMessage,
     UpdateSpaceMetadataMessage,
-    BanPlayerMessage,
-    SearchMemberQuery,
-    SearchMemberAnswer,
-    MemberData,
-    GetMemberQuery,
-    GetMemberAnswer,
+    UserMovesMessage,
+    ViewportMessage,
+    WatchSpaceMessage,
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import axios, { AxiosResponse, isAxiosError } from "axios";
@@ -48,7 +48,7 @@ import type { BackSpaceConnection, SocketData } from "../models/Websocket/Socket
 import { ProtobufUtils } from "../models/Websocket/ProtobufUtils";
 import type { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../models/Zone";
 import type { AdminConnection, AdminSocketData } from "../models/Websocket/AdminSocketData";
-import { EJABBERD_DOMAIN, EMBEDDED_DOMAINS_WHITELIST } from "../enums/EnvironmentVariable";
+import { EMBEDDED_DOMAINS_WHITELIST } from "../enums/EnvironmentVariable";
 import { Space } from "../models/Space";
 import { UpgradeFailedData } from "../controllers/IoSocketController";
 import { emitInBatch } from "./IoSocketHelpers";
@@ -216,7 +216,6 @@ export class SocketManager implements ZoneEventListener {
         try {
             const joinRoomMessage: JoinRoomMessage = {
                 userUuid: socketData.userUuid,
-                userJid: socketData.userJid,
                 IPAddress: socketData.ipAddress,
                 roomId: socketData.roomId,
                 name: socketData.name,
@@ -233,6 +232,7 @@ export class SocketManager implements ZoneEventListener {
                 visitCardUrl: socketData.visitCardUrl ?? "", // TODO: turn this into an optional field
                 userRoomToken: socketData.userRoomToken ?? "", // TODO: turn this into an optional field
                 lastCommandId: socketData.lastCommandId ?? "", // TODO: turn this into an optional field
+                chatID: socketData.chatID,
             };
 
             debug("Calling joinRoom '" + socketData.roomId + "'");
@@ -395,7 +395,7 @@ export class SocketManager implements ZoneEventListener {
                                     const updateSpaceUserMessage = message.message.updateSpaceUserMessage;
                                     const space = this.spaces.get(updateSpaceUserMessage.spaceName);
                                     if (space && updateSpaceUserMessage.user) {
-                                        space.localUpdateUser(updateSpaceUserMessage.user);
+                                        space.localUpdateUser(updateSpaceUserMessage.user, socketData.world);
                                     }
                                     break;
                                 }
@@ -551,6 +551,40 @@ export class SocketManager implements ZoneEventListener {
                                     });
                                     break;
                                 }
+                                case "proximityPublicMessageToClientMessage": {
+                                    debug("[space] proximityPublicMessageToClientMessage received");
+                                    spaceStreamToBack.write({
+                                        message: {
+                                            $case: "proximityPublicMessageToClientMessage",
+                                            proximityPublicMessageToClientMessage: {
+                                                spaceName:
+                                                    message.message.proximityPublicMessageToClientMessage.spaceName,
+                                                message: message.message.proximityPublicMessageToClientMessage.message,
+                                            },
+                                        },
+                                    });
+                                    break;
+                                }
+                                case "proximityPrivateMessageToClientMessage": {
+                                    debug("[space] proximityPrivateMessageToClientMessage received");
+                                    spaceStreamToBack.write({
+                                        message: {
+                                            $case: "proximityPrivateMessageToClientMessage",
+                                            proximityPrivateMessageToClientMessage: {
+                                                spaceName:
+                                                    message.message.proximityPrivateMessageToClientMessage.spaceName,
+                                                message: message.message.proximityPrivateMessageToClientMessage.message,
+                                                senderUserUuid:
+                                                    message.message.proximityPrivateMessageToClientMessage
+                                                        .senderUserUuid,
+                                                receiverUserUuid:
+                                                    message.message.proximityPrivateMessageToClientMessage
+                                                        .receiverUserUuid,
+                                            },
+                                        },
+                                    });
+                                    break;
+                                }
                                 default: {
                                     const _exhaustiveCheck: never = message.message;
                                 }
@@ -701,6 +735,7 @@ export class SocketManager implements ZoneEventListener {
             $case: "setPlayerDetailsMessage",
             setPlayerDetailsMessage: playerDetailsMessage,
         };
+
         socketManager.forwardMessageToBack(client, pusherToBackMessage);
 
         if (socketData.spaceUser.availabilityStatus !== playerDetailsMessage.availabilityStatus) {
@@ -708,9 +743,10 @@ export class SocketManager implements ZoneEventListener {
             const partialSpaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
                 availabilityStatus: playerDetailsMessage.availabilityStatus,
                 id: socketData.userId,
+                chatID: socketData.chatID,
             });
             socketData.spaces.forEach((space) => {
-                space.updateUser(partialSpaceUser);
+                space.updateUser(partialSpaceUser, socketData.world);
             });
         }
     }
@@ -1130,38 +1166,6 @@ export class SocketManager implements ZoneEventListener {
         this.forwardMessageToBack(client, message);
     }
 
-    emitXMPPSettings(client: Socket): void {
-        const socketData = client.getUserData();
-        const xmppSettings: XmppSettingsMessage = {
-            conferenceDomain: "conference." + EJABBERD_DOMAIN,
-            rooms: socketData.mucRooms.map((definition: MucRoomDefinition) => {
-                if (!definition.name || !definition.url || !definition.type) {
-                    throw new Error("Name URL and type cannot be empty!");
-                }
-                return {
-                    name: definition.name,
-                    url: definition.url,
-                    type: definition.type,
-                    subscribe: definition.subscribe,
-                };
-            }),
-            jabberId: socketData.jabberId,
-            jabberPassword: socketData.jabberPassword ?? "",
-        };
-
-        if (!socketData.disconnecting) {
-            client.send(
-                ServerToClientMessage.encode({
-                    message: {
-                        $case: "xmppSettingsMessage",
-                        xmppSettingsMessage: xmppSettings,
-                    },
-                }).finish(),
-                true
-            );
-        }
-    }
-
     handleAddSpaceFilterMessage(client: Socket, addSpaceFilterMessage: AddSpaceFilterMessage) {
         const newFilter = addSpaceFilterMessage.spaceFilterMessage;
         const socketData = client.getUserData();
@@ -1169,13 +1173,11 @@ export class SocketManager implements ZoneEventListener {
             const space = socketData.spaces.find((space) => space.name === newFilter.spaceName);
             if (space) {
                 space.handleAddFilter(client, addSpaceFilterMessage);
-                let spacesFilter = socketData.spacesFilters.get(space.name);
+                let spacesFilter = socketData.spacesFilters.get(space.name) || [];
                 if (!spacesFilter) {
-                    spacesFilter = [newFilter];
-                } else {
-                    spacesFilter.push(newFilter);
+                    spacesFilter = [...spacesFilter, newFilter];
+                    socketData.spacesFilters.set(space.name, spacesFilter);
                 }
-                socketData.spacesFilters.set(space.name, spacesFilter);
             }
         }
     }
@@ -1233,7 +1235,7 @@ export class SocketManager implements ZoneEventListener {
             id: socketData.userId,
         });
         socketData.spaces.forEach((space) => {
-            space.updateUser(partialSpaceUser);
+            space.updateUser(partialSpaceUser, socketData.world);
         });
     }
 
@@ -1246,7 +1248,7 @@ export class SocketManager implements ZoneEventListener {
             id: socketData.userId,
         });
         socketData.spaces.forEach((space) => {
-            space.updateUser(partialSpaceUser);
+            space.updateUser(partialSpaceUser, socketData.world);
         });
     }
 
@@ -1259,7 +1261,7 @@ export class SocketManager implements ZoneEventListener {
             id: socketData.userId,
         });
         socketData.spaces.forEach((space) => {
-            space.updateUser(partialSpaceUser);
+            space.updateUser(partialSpaceUser, socketData.world);
         });
     }
 
@@ -1274,7 +1276,7 @@ export class SocketManager implements ZoneEventListener {
         socketData.spaces
             .filter((space) => !megaphoneStateMessage.spaceName || space.name === megaphoneStateMessage.spaceName)
             .forEach((space) => {
-                space.updateUser(partialSpaceUser);
+                space.updateUser(partialSpaceUser, socketData.world);
             });
     }
 
@@ -1286,7 +1288,7 @@ export class SocketManager implements ZoneEventListener {
                 jitsiParticipantId,
                 id: socketData.userId,
             });
-            space.updateUser(partialSpaceUser);
+            space.updateUser(partialSpaceUser, socketData.world);
         }
     }
 
@@ -1573,6 +1575,56 @@ export class SocketManager implements ZoneEventListener {
                 visitCardUrl: memberFromApi.visitCardUrl ?? undefined,
             },
         };
+    }
+
+    async handleChatMembersQuery(client: Socket, chatMemberQuery: ChatMembersQuery): Promise<ChatMembersAnswer> {
+        const { roomId } = client.getUserData();
+        const { total, members } = await adminService.getWorldChatMembers(roomId, chatMemberQuery.searchText);
+        return {
+            total,
+            members,
+        };
+    }
+
+    handleUpdateChatId(email: string, chatId: string): void {
+        try {
+            adminService.updateChatId(email, chatId);
+        } catch (e) {
+            console.error("SocketManager => handleUpdateChatId => error while updating chat id", e);
+        }
+    }
+
+    // handle proximity public message
+    handleProximityPublicSpaceMessage(
+        client: Socket,
+        spaceName: string,
+        messageContent: string,
+        message: PusherToBackMessage["message"]
+    ) {
+        const socketData = client.getUserData();
+        const space = socketData.spaces.find((space) => space.name === spaceName);
+        if (!space) {
+            this.forwardMessageToBack(client, message);
+            return;
+        }
+        space.sendProximityPublicMessage(socketData, messageContent);
+    }
+
+    // handle proximity private message
+    handleProximityPrivateSpaceMessage(
+        client: Socket,
+        spaceName: string,
+        messageContent: string,
+        receiverUserUuid: string,
+        message: PusherToBackMessage["message"]
+    ) {
+        const socketData = client.getUserData();
+        const space = socketData.spaces.find((space) => space.name === spaceName);
+        if (!space) {
+            this.forwardMessageToBack(client, message);
+            return;
+        }
+        space.sendProximityPrivateMessage(socketData, messageContent, receiverUserUuid);
     }
 }
 

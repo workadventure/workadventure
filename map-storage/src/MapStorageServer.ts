@@ -7,15 +7,15 @@ import {
     CreateEntityCommand,
     DeleteAreaCommand,
     DeleteEntityCommand,
+    EntityCoordinates,
     EntityDataProperties,
+    EntityDimensions,
+    EntityPermissions,
     UpdateAreaCommand,
     UpdateEntityCommand,
     UpdateWAMMetadataCommand,
     UpdateWAMSettingCommand,
     WAMEntityData,
-    EntityPermissions,
-    EntityCoordinates,
-    EntityDimensions,
 } from "@workadventure/map-editor";
 import {
     EditMapCommandMessage,
@@ -33,6 +33,9 @@ import { UploadEntityMapStorageCommand } from "./Commands/UploadEntityMapStorage
 import { entitiesManager } from "./EntitiesManager";
 import { mapsManager } from "./MapsManager";
 import { mapPathUsingDomainWithPrefix } from "./Services/PathMapper";
+import { LockByKey } from "./Services/LockByKey";
+
+const editionLocks = new LockByKey<string>();
 
 const mapStorageServer: MapStorageServer = {
     ping(call: ServerUnaryCall<PingMessage, Empty>, callback: sendUnaryData<PingMessage>): void {
@@ -109,190 +112,195 @@ const mapStorageServer: MapStorageServer = {
             const mapUrl = new URL(call.request.mapKey);
             const mapKey = mapPathUsingDomainWithPrefix(mapUrl.pathname, mapUrl.hostname);
 
-            const gameMap = await mapsManager.getOrLoadGameMap(mapKey);
-
-            const { connectedUserTags, userCanEdit, userUUID } = call.request;
-
-            const gameMapAreas = gameMap.getGameMapAreas();
-            const entityCommandPermissions = gameMapAreas
-                ? new EntityPermissions(gameMapAreas, connectedUserTags, userCanEdit, userUUID)
-                : undefined;
-
             const editMapMessage = editMapCommandMessage.editMapMessage.message;
-            const commandId = editMapCommandMessage.id;
-            switch (editMapMessage.$case) {
-                case "modifyAreaMessage": {
-                    const message = editMapMessage.modifyAreaMessage;
-                    // NOTE: protobuf does not distinguish between null and empty array, we cannot create optional repeated value.
-                    //       Because of that, we send additional "modifyProperties" flag set properties value as "undefined" so they won't get erased
-                    //       by [] value which was supposed to be null.
-                    const dataToModify: AtLeast<AreaData, "id"> = structuredClone(message);
-                    if (!message.modifyProperties) {
-                        dataToModify.properties = undefined;
+
+            await editionLocks.waitForLock(mapKey, async () => {
+                const gameMap = await mapsManager.getOrLoadGameMap(mapKey);
+
+                const { connectedUserTags, userCanEdit, userUUID } = call.request;
+
+                const gameMapAreas = gameMap.getGameMapAreas();
+                const entityCommandPermissions = gameMapAreas
+                    ? new EntityPermissions(gameMapAreas, connectedUserTags, userCanEdit, userUUID)
+                    : undefined;
+
+                const commandId = editMapCommandMessage.id;
+                switch (editMapMessage.$case) {
+                    case "modifyAreaMessage": {
+                        const message = editMapMessage.modifyAreaMessage;
+                        // NOTE: protobuf does not distinguish between null and empty array, we cannot create optional repeated value.
+                        //       Because of that, we send additional "modifyProperties" flag set properties value as "undefined" so they won't get erased
+                        //       by [] value which was supposed to be null.
+                        const dataToModify: AtLeast<AreaData, "id"> = structuredClone(message);
+                        if (!message.modifyProperties) {
+                            dataToModify.properties = undefined;
+                        }
+                        const area = gameMap.getGameMapAreas()?.getArea(message.id);
+                        if (area) {
+                            await mapsManager.executeCommand(
+                                mapKey,
+                                mapUrl.host,
+                                new UpdateAreaCommand(gameMap, dataToModify, commandId)
+                            );
+                        } else {
+                            console.log(`Could not find area with id: ${message.id}`);
+                        }
+                        break;
                     }
-                    const area = gameMap.getGameMapAreas()?.getArea(message.id);
-                    if (area) {
+                    case "createAreaMessage": {
+                        const message = editMapMessage.createAreaMessage;
+                        const areaObjectConfig: AreaData = {
+                            ...message,
+                            visible: true,
+                        };
                         await mapsManager.executeCommand(
                             mapKey,
                             mapUrl.host,
-                            new UpdateAreaCommand(gameMap, dataToModify, commandId)
+                            new CreateAreaCommand(gameMap, areaObjectConfig, commandId)
                         );
-                    } else {
-                        console.log(`Could not find area with id: ${message.id}`);
+                        break;
                     }
-                    break;
-                }
-                case "createAreaMessage": {
-                    const message = editMapMessage.createAreaMessage;
-                    const areaObjectConfig: AreaData = {
-                        ...message,
-                        visible: true,
-                    };
-                    await mapsManager.executeCommand(
-                        mapKey,
-                        mapUrl.host,
-                        new CreateAreaCommand(gameMap, areaObjectConfig, commandId)
-                    );
-                    break;
-                }
-                case "deleteAreaMessage": {
-                    const message = editMapMessage.deleteAreaMessage;
-                    await mapsManager.executeCommand(
-                        mapKey,
-                        mapUrl.host,
-                        new DeleteAreaCommand(gameMap, message.id, commandId)
-                    );
-                    break;
-                }
-                case "modifyEntityMessage": {
-                    const message = editMapMessage.modifyEntityMessage;
+                    case "deleteAreaMessage": {
+                        const message = editMapMessage.deleteAreaMessage;
+                        await mapsManager.executeCommand(
+                            mapKey,
+                            mapUrl.host,
+                            new DeleteAreaCommand(gameMap, message.id, commandId)
+                        );
+                        break;
+                    }
+                    case "modifyEntityMessage": {
+                        const message = editMapMessage.modifyEntityMessage;
 
-                    // NOTE: protobuf does not distinguish between null and empty array, we cannot create optional repeated value.
-                    //       Because of that, we send additional "modifyProperties" flag set properties value as "undefined" so they won't get erased
-                    //       by [] value which was supposed to be null.
-                    const dataToModify: Partial<WAMEntityData> = structuredClone(message);
-                    if (!message.modifyProperties) {
-                        dataToModify.properties = undefined;
+                        // NOTE: protobuf does not distinguish between null and empty array, we cannot create optional repeated value.
+                        //       Because of that, we send additional "modifyProperties" flag set properties value as "undefined" so they won't get erased
+                        //       by [] value which was supposed to be null.
+                        const dataToModify: Partial<WAMEntityData> = structuredClone(message);
+                        if (!message.modifyProperties) {
+                            dataToModify.properties = undefined;
+                        }
+                        const entity = gameMap.getGameMapEntities()?.getEntity(message.id);
+                        if (entity) {
+                            const { x, y, width, height } = message;
+                            if (
+                                entityCommandPermissions &&
+                                !entityCommandPermissions.canEdit(
+                                    getEntityCenterCoordinates({ x, y }, { width, height })
+                                )
+                            ) {
+                                Sentry.captureException("User is not allowed to modify the entity on map");
+                                break;
+                            }
+                            await mapsManager.executeCommand(
+                                mapKey,
+                                mapUrl.host,
+                                new UpdateEntityCommand(gameMap, message.id, dataToModify, commandId)
+                            );
+                        } else {
+                            console.log(`Could not find entity with id: ${message.id}`);
+                        }
+                        break;
                     }
-                    const entity = gameMap.getGameMapEntities()?.getEntity(message.id);
-                    if (entity) {
+                    case "createEntityMessage": {
+                        const message = editMapMessage.createEntityMessage;
                         const { x, y, width, height } = message;
                         if (
                             entityCommandPermissions &&
                             !entityCommandPermissions.canEdit(getEntityCenterCoordinates({ x, y }, { width, height }))
                         ) {
-                            Sentry.captureException("User is not allowed to modify the entity on map");
+                            Sentry.captureException("User is not allowed to create entity on map");
                             break;
                         }
                         await mapsManager.executeCommand(
                             mapKey,
                             mapUrl.host,
-                            new UpdateEntityCommand(gameMap, message.id, dataToModify, commandId)
+                            new CreateEntityCommand(
+                                gameMap,
+                                message.id,
+                                {
+                                    prefabRef: {
+                                        id: message.prefabId,
+                                        collectionName: message.collectionName,
+                                    },
+                                    x: message.x,
+                                    y: message.y,
+                                    properties: message.properties as EntityDataProperties,
+                                },
+                                commandId
+                            )
                         );
-                    } else {
-                        console.log(`Could not find entity with id: ${message.id}`);
-                    }
-                    break;
-                }
-                case "createEntityMessage": {
-                    const message = editMapMessage.createEntityMessage;
-                    const { x, y, width, height } = message;
-                    if (
-                        entityCommandPermissions &&
-                        !entityCommandPermissions.canEdit(getEntityCenterCoordinates({ x, y }, { width, height }))
-                    ) {
-                        Sentry.captureException("User is not allowed to create entity on map");
                         break;
                     }
-                    await mapsManager.executeCommand(
-                        mapKey,
-                        mapUrl.host,
-                        new CreateEntityCommand(
-                            gameMap,
-                            message.id,
-                            {
-                                prefabRef: {
-                                    id: message.prefabId,
-                                    collectionName: message.collectionName,
-                                },
-                                x: message.x,
-                                y: message.y,
-                                properties: message.properties as EntityDataProperties,
-                            },
-                            commandId
-                        )
-                    );
-                    break;
-                }
-                case "deleteEntityMessage": {
-                    const message = editMapMessage.deleteEntityMessage;
-                    await mapsManager.executeCommand(
-                        mapKey,
-                        mapUrl.host,
-                        new DeleteEntityCommand(gameMap, message.id, commandId)
-                    );
-                    break;
-                }
-                case "uploadEntityMessage": {
-                    const uploadEntityMessage = editMapMessage.uploadEntityMessage;
-                    await entitiesManager.executeCommand(
-                        new UploadEntityMapStorageCommand(uploadEntityMessage, mapUrl.hostname)
-                    );
-                    break;
-                }
-                case "modifyCustomEntityMessage": {
-                    const modifyCustomEntityMessage = editMapMessage.modifyCustomEntityMessage;
-                    await entitiesManager.executeCommand(
-                        new ModifyCustomEntityMapStorageCommand(modifyCustomEntityMessage, mapUrl.hostname)
-                    );
-                    break;
-                }
-                case "deleteCustomEntityMessage": {
-                    const deleteCustomEntityMessage = editMapMessage.deleteCustomEntityMessage;
-                    await entitiesManager.executeCommand(
-                        new DeleteCustomEntityMapStorageCommand(deleteCustomEntityMessage, gameMap, mapUrl.hostname)
-                    );
-                    break;
-                }
-                case "updateWAMSettingsMessage": {
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                    const message = editMapMessage.updateWAMSettingsMessage;
-                    const wam = gameMap.getWam();
-                    if (!wam) {
-                        throw new Error("WAM is not defined");
+                    case "deleteEntityMessage": {
+                        const message = editMapMessage.deleteEntityMessage;
+                        await mapsManager.executeCommand(
+                            mapKey,
+                            mapUrl.host,
+                            new DeleteEntityCommand(gameMap, message.id, commandId)
+                        );
+                        break;
                     }
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-                    await mapsManager.executeCommand(
-                        mapKey,
-                        mapUrl.host,
-                        new UpdateWAMSettingCommand(wam, message, commandId)
-                    );
-                    break;
-                }
-                case "errorCommandMessage": {
-                    // Nothing to do, this message will never come from client
-                    break;
-                }
-                case "modifiyWAMMetadataMessage": {
-                    const message = editMapMessage.modifiyWAMMetadataMessage;
-                    const wam = gameMap.getWam();
-                    if (!wam) {
-                        throw new Error("WAM is not defined");
+                    case "uploadEntityMessage": {
+                        const uploadEntityMessage = editMapMessage.uploadEntityMessage;
+                        await entitiesManager.executeCommand(
+                            new UploadEntityMapStorageCommand(uploadEntityMessage, mapUrl.hostname)
+                        );
+                        break;
                     }
-                    await mapsManager.executeCommand(
-                        mapKey,
-                        mapUrl.host,
-                        new UpdateWAMMetadataCommand(wam, message, commandId)
-                    );
-                    break;
+                    case "modifyCustomEntityMessage": {
+                        const modifyCustomEntityMessage = editMapMessage.modifyCustomEntityMessage;
+                        await entitiesManager.executeCommand(
+                            new ModifyCustomEntityMapStorageCommand(modifyCustomEntityMessage, mapUrl.hostname)
+                        );
+                        break;
+                    }
+                    case "deleteCustomEntityMessage": {
+                        const deleteCustomEntityMessage = editMapMessage.deleteCustomEntityMessage;
+                        await entitiesManager.executeCommand(
+                            new DeleteCustomEntityMapStorageCommand(deleteCustomEntityMessage, gameMap, mapUrl.hostname)
+                        );
+                        break;
+                    }
+                    case "updateWAMSettingsMessage": {
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                        const message = editMapMessage.updateWAMSettingsMessage;
+                        const wam = gameMap.getWam();
+                        if (!wam) {
+                            throw new Error("WAM is not defined");
+                        }
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+                        await mapsManager.executeCommand(
+                            mapKey,
+                            mapUrl.host,
+                            new UpdateWAMSettingCommand(wam, message, commandId)
+                        );
+                        break;
+                    }
+                    case "errorCommandMessage": {
+                        // Nothing to do, this message will never come from client
+                        break;
+                    }
+                    case "modifiyWAMMetadataMessage": {
+                        const message = editMapMessage.modifiyWAMMetadataMessage;
+                        const wam = gameMap.getWam();
+                        if (!wam) {
+                            throw new Error("WAM is not defined");
+                        }
+                        await mapsManager.executeCommand(
+                            mapKey,
+                            mapUrl.host,
+                            new UpdateWAMMetadataCommand(wam, message, commandId)
+                        );
+                        break;
+                    }
+                    default: {
+                        const _exhaustiveCheck: never = editMapMessage;
+                    }
                 }
-                default: {
-                    const _exhaustiveCheck: never = editMapMessage;
-                }
-            }
-            // send edit map message back as a valid one
-            mapsManager.addCommandToQueue(mapKey, editMapCommandMessage);
-            callback(null, editMapCommandMessage);
+                // send edit map message back as a valid one
+                mapsManager.addCommandToQueue(mapKey, editMapCommandMessage);
+                callback(null, editMapCommandMessage);
+            });
         })().catch((e: unknown) => {
             console.log(e);
             callback(null, {

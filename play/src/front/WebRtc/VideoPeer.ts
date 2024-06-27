@@ -1,16 +1,12 @@
 import { Buffer } from "buffer";
 import type { Subscription } from "rxjs";
-import { Readable, Writable, Unsubscriber, get, readable, writable } from "svelte/store";
+import { get, Readable, readable, Unsubscriber, Writable, writable } from "svelte/store";
 import Peer from "simple-peer/simplepeer.min.js";
+import { v4 } from "uuid";
 import type { RoomConnection } from "../Connection/RoomConnection";
 import { localStreamStore, videoBandwidthStore } from "../Stores/MediaStore";
 import { playersStore } from "../Stores/PlayersStore";
-import {
-    chatMessagesService,
-    newChatMessageSubject,
-    newChatMessageWritingStatusSubject,
-    writingStatusMessageStore,
-} from "../Stores/ChatStore";
+import { newChatMessageSubject } from "../Stores/ChatStore";
 import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { gameManager } from "../Phaser/Game/GameManager";
@@ -19,6 +15,8 @@ import { TrackStreamWrapperInterface } from "../Streaming/Contract/TrackStreamWr
 import { TrackInterface } from "../Streaming/Contract/TrackInterface";
 import { showReportScreenStore } from "../Stores/ShowReportScreenStore";
 import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
+import { iframeListener } from "../Api/IframeListener";
+import { proximityRoomConnection } from "../Chat/Stores/ChatStore";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { blackListManager } from "./BlackListManager";
@@ -58,7 +56,8 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
         public user: UserSimplePeerInterface,
         initiator: boolean,
         public readonly player: RemotePlayerData,
-        private connection: RoomConnection
+        private connection: RoomConnection,
+        private spaceName?: string
     ) {
         const bandwidth = get(videoBandwidthStore);
         super({
@@ -119,6 +118,23 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
 
         this._constraintsStore = writable<ObtainedMediaStreamConstraints | null>(null);
 
+        const proximityMeeting = get(proximityRoomConnection);
+
+        // Define the spaceId and spaceName
+        // By convention, the video peer space name id defined by the prefix "webrct_"
+        let _spaceId = v4(),
+            _spaceName = _spaceId;
+        if (this.spaceName) {
+            _spaceId = this.spaceName.replace("webrct_", "");
+            _spaceName = this.spaceName;
+        } else if (this.user.webRtcUser) {
+            (_spaceId = this.user.webRtcUser.split(":")[0]),
+                (_spaceName = `webrct_${this.user.webRtcUser.split(":")[0]}`);
+        }
+        // Join the space for proximity meeting
+        if (proximityMeeting && proximityMeeting.joinSpace != undefined)
+            proximityMeeting.joinSpace(_spaceId, _spaceName);
+
         //start listen signal for the peer connection
         this.on("signal", (data: unknown) => {
             this.sendWebrtcSignal(data);
@@ -148,7 +164,13 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
 
             this._connected = true;
 
-            chatMessagesService.addIncomingUser(this.userId);
+            if (proximityMeeting) {
+                const proximityRoomChat = get(proximityMeeting.rooms)[0];
+                if (proximityRoomChat.addIncomingUser != undefined) {
+                    const color = playersStore.getPlayerById(this.userId)?.color;
+                    proximityRoomChat.addIncomingUser(this.userId, this.userUuid, this.player.name, color ?? undefined);
+                }
+            }
 
             this.newMessageSubscription = newChatMessageSubject.subscribe((newMessage) => {
                 if (!newMessage) return;
@@ -162,19 +184,21 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
                 );
             });
 
-            this.newWritingStatusMessageSubscription = newChatMessageWritingStatusSubject.subscribe((status) => {
-                if (status === undefined) {
-                    return;
+            this.newWritingStatusMessageSubscription = iframeListener.newChatMessageWritingStatusStream.subscribe(
+                (status) => {
+                    if (status === undefined) {
+                        return;
+                    }
+                    this.write(
+                        new Buffer(
+                            JSON.stringify({
+                                type: "message_status",
+                                message: status,
+                            } as MessageStatusMessage)
+                        )
+                    );
                 }
-                this.write(
-                    new Buffer(
-                        JSON.stringify({
-                            type: "message_status",
-                            message: status,
-                        } as MessageStatusMessage)
-                    )
-                );
-            });
+            );
         });
 
         this.on("data", (chunk: Buffer) => {
@@ -188,13 +212,13 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
                     }
                     case "message": {
                         if (!blackListManager.isBlackListed(this.userUuid)) {
-                            chatMessagesService.addExternalMessage(this.userId, message.message);
+                            //chatMessagesService.addExternalMessage(this.userId, message.message);
                         }
                         break;
                     }
                     case "message_status": {
                         if (!blackListManager.isBlackListed(this.userUuid)) {
-                            writingStatusMessageStore.addWritingStatus(this.userId, message.message);
+                            //writingStatusMessageStore.addWritingStatus(this.userId, message.message);
                         }
                         break;
                     }
@@ -322,7 +346,14 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
             this.onUnBlockSubscribe.unsubscribe();
             this.newMessageSubscription?.unsubscribe();
             this.newWritingStatusMessageSubscription?.unsubscribe();
-            chatMessagesService.addOutcomingUser(this.userId);
+
+            const proximityMeeting = get(proximityRoomConnection);
+            if (proximityMeeting) {
+                const proximityRoomChat = get(proximityMeeting.rooms)[0];
+                if (proximityRoomChat.addOutcomingUser != undefined)
+                    proximityRoomChat.addOutcomingUser(this.userId, this.userUuid, this.player.name);
+            }
+
             if (this.localStreamStoreSubscribe) this.localStreamStoreSubscribe();
             if (this.apparentMediaConstraintStoreSubscribe) this.apparentMediaConstraintStoreSubscribe();
             if (this.volumeStoreSubscribe) this.volumeStoreSubscribe();
@@ -396,5 +427,11 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
     }
     blockOrReportUser(): void {
         showReportScreenStore.set({ userId: this.userId, userName: this.player.name });
+    }
+    sendProximityPublicMessage(message: string): void {
+        this.connection.emitProximityPublicMessage("peer", message);
+    }
+    sendProximityPrivateMessage(message: string): void {
+        this.connection.emitProximityPrivateMessage("peer", message, this.userUuid);
     }
 }

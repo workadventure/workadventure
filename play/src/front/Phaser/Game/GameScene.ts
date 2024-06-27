@@ -21,8 +21,8 @@ import { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@w
 import {
     ENTITIES_FOLDER_PATH_NO_PREFIX,
     ENTITY_COLLECTION_FILE,
-    EntityPrefabType,
     EntityPermissions,
+    EntityPrefabType,
     GameMap,
     GameMapProperties,
     WAMFileFormat,
@@ -43,6 +43,7 @@ import {
     DEBUG_MODE,
     ENABLE_MAP_EDITOR,
     ENABLE_OPENID,
+    MATRIX_PUBLIC_URI,
     MAX_PER_GROUP,
     POSITION_DELAY,
     PUBLIC_MAP_STORAGE_PREFIX,
@@ -113,19 +114,13 @@ import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStor
 import { hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connection/AxiosUtils";
 import { StringUtils } from "../../Utils/StringUtils";
 import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
-import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
-import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
+
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
 import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
 import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 import type { AskPositionEvent } from "../../Api/Events/AskPositionEvent";
-import {
-    _newChatMessageSubject,
-    _newChatMessageWritingStatusSubject,
-    chatVisibilityStore,
-    forceRefreshChatStore,
-} from "../../Stores/ChatStore";
+import { _newChatMessageSubject, chatVisibilityStore, forceRefreshChatStore } from "../../Stores/ChatStore";
 import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
 import { gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
 import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
@@ -133,18 +128,18 @@ import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import {
+    cameraResistanceModeStore,
     mapEditorModeStore,
     mapEditorSelectedToolStore,
     mapEditorWamSettingsEditorToolCurrentMenuItemStore,
-    WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM,
     mapExplorationModeStore,
-    cameraResistanceModeStore,
+    WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM,
 } from "../../Stores/MapEditorStore";
 import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
 import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer, debugZoom } from "../../Utils/Debuggers";
 import { checkCoturnServer } from "../../Components/Video/utils";
 import { BroadcastService } from "../../Streaming/BroadcastService";
-import { liveStreamingEnabledStore, megaphoneCanBeUsedStore } from "../../Stores/MegaphoneStore";
+import { liveStreamingEnabledStore, megaphoneCanBeUsedStore, megaphoneUrlStore } from "../../Stores/MegaphoneStore";
 import { CompanionTextureError } from "../../Exception/CompanionTextureError";
 import { SelectCompanionScene, SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { scriptUtils } from "../../Api/ScriptUtils";
@@ -155,6 +150,16 @@ import { askDialogStore } from "../../Stores/MeetingStore";
 import { hideBubbleConfirmationModal } from "../../Rules/StatusRules/statusChangerFunctions";
 import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/statusChanger";
 import { warningMessageStore } from "../../Stores/ErrorStore";
+import { getCoWebSite, openCoWebSite } from "../../Chat/Utils";
+import { LocalSpaceProviderSingleton } from "../../Space/SpaceProvider/SpaceStore";
+import { CONNECTED_USER_FILTER_NAME, WORLD_SPACE_NAME } from "../../Space/Space";
+import { StreamSpaceWatcherSingleton } from "../../Space/SpaceWatcher/SocketSpaceWatcher";
+import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
+import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
+import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
+import { matrixSecurity } from "../../Chat/Connection/Matrix/MatrixSecurity";
+import { proximityRoomConnection, selectedRoom } from "../../Chat/Stores/ChatStore";
+import { ProximityChatConnection } from "../../Chat/Connection/Proximity/ProximityChatConnection";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -173,7 +178,6 @@ import { ActivatablesManager } from "./ActivatablesManager";
 import type { AddPlayerInterface } from "./AddPlayerInterface";
 import type { CameraManagerEventCameraUpdateData } from "./CameraManager";
 import { CameraManager, CameraManagerEvent } from "./CameraManager";
-
 import { EditorToolName, MapEditorModeManager } from "./MapEditor/MapEditorModeManager";
 import type { PlayerDetailsUpdate } from "./RemotePlayersRepository";
 import { RemotePlayersRepository } from "./RemotePlayersRepository";
@@ -320,6 +324,7 @@ export class GameScene extends DirtyScene {
         this.currentCompanionTextureResolve = resolve;
         this.currentCompanionTextureReject = reject;
     });
+    public chatConnection!: ChatConnectionInterface;
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
@@ -529,6 +534,33 @@ export class GameScene extends DirtyScene {
 
     //hook create scene
     create(): void {
+        /*getMatrixClient()
+            .then(async (clientResult) => {
+                if (isSuccess(clientResult)) {
+                    const client = clientResult.value;
+                    const rooms = await client.getJoinedRooms();
+                    console.warn("rooms", rooms);
+                    console.warn("user id", client.getUserId());
+
+                    client.on("Room.timeline", (event, room, toStartOfTimeline, removed, data) => {
+                        console.warn("Room.timeline", event, room, toStartOfTimeline, removed, data);
+                    });
+
+                    client.on("RoomState.events", (event, state) => {
+                        console.warn("RoomState.events", event, state);
+                    });
+                } else {
+                    if (clientResult.error.type === "no-matrix-credentials") {
+                        console.warn("no matrix credentials");
+                    } else if (clientResult.error.type === "no-matrix-server") {
+                        console.warn("NO MATRIX SERVER CONFIGURED");
+                    } else {
+                        console.error("matrix error", clientResult.error.error);
+                    }
+                }
+            })
+            .catch((e) => console.error(e));*/
+
         this.input.topOnly = false;
         this.preloading = false;
         this.cleanupDone = false;
@@ -1013,6 +1045,8 @@ export class GameScene extends DirtyScene {
         this.gameMapFrontWrapper?.close();
         this.followManager?.close();
 
+        LocalSpaceProviderSingleton.getInstance().destroy();
+
         //When we leave game, the camera is stop to be reopen after.
         // I think that we could keep camera status and the scene can manage camera setup
         //TODO find wy chrome don't manage correctly a multiple ask mediaDevices
@@ -1484,6 +1518,40 @@ export class GameScene extends DirtyScene {
                     }
                 }
 
+                if (this.connection) {
+                    //We need to add an env parameter to switch between chat services
+                    const matrixClientWrapper = new MatrixClientWrapper(MATRIX_PUBLIC_URI ?? "", localUserStore);
+                    const matrixClientPromise = matrixClientWrapper.initMatrixClient();
+
+                    matrixClientPromise
+                        .then((matrixClient) => {
+                            matrixSecurity.updateMatrixClientStore(matrixClient);
+                        })
+                        .catch((e) => {
+                            console.error(e);
+                        });
+
+                    this.chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
+
+                    // initialise the proximity chat connection
+                    proximityRoomConnection.set(
+                        new ProximityChatConnection(
+                            this.connection,
+                            this.connection.getUserId(),
+                            localUserStore.getLocalUser()?.uuid ?? "Unknown"
+                        )
+                    );
+
+                    const chatId = localUserStore.getChatId();
+                    const email: string | null = localUserStore.getLocalUser()?.email || null;
+                    if (email && chatId) this.connection.emitUpdateChatId(email, chatId);
+                }
+
+                const spaceProvider = LocalSpaceProviderSingleton.getInstance(onConnect.connection.socket);
+                StreamSpaceWatcherSingleton.getInstance(onConnect.connection.socket);
+
+                spaceProvider.add(WORLD_SPACE_NAME).watch(CONNECTED_USER_FILTER_NAME);
+
                 this.tryOpenMapEditorWithToolEditorParameter();
 
                 this.subscribeToStores();
@@ -1627,7 +1695,7 @@ export class GameScene extends DirtyScene {
                 // The joinMucRoomMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.joinMucRoomMessageStream.subscribe((mucRoomDefinitionMessage) => {
-                    iframeListener.sendJoinMucEventToChatIframe(
+                    void iframeListener.sendJoinMucEventToChatIframe(
                         mucRoomDefinitionMessage.url,
                         mucRoomDefinitionMessage.name,
                         mucRoomDefinitionMessage.type,
@@ -1638,7 +1706,7 @@ export class GameScene extends DirtyScene {
                 // The leaveMucRoomMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.leaveMucRoomMessageStream.subscribe((leaveMucRoomMessage) => {
-                    iframeListener.sendLeaveMucEventToChatIframe(leaveMucRoomMessage.url);
+                    void iframeListener.sendLeaveMucEventToChatIframe(leaveMucRoomMessage.url);
                 });
 
                 // The worldFullMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
@@ -1719,14 +1787,6 @@ export class GameScene extends DirtyScene {
                     this._room.group ?? undefined
                 );
 
-                // The xmppSettingsMessageStream is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.xmppSettingsMessageStream.subscribe((xmppSettingsMessage) => {
-                    if (xmppSettingsMessage) {
-                        iframeListener.sendXmppSettingsToChatIframe(xmppSettingsMessage);
-                    }
-                });
-
                 const broadcastService = new BroadcastService(
                     this.connection,
                     (
@@ -1750,7 +1810,29 @@ export class GameScene extends DirtyScene {
                             megaphoneSettingsMessage.url &&
                             get(availabilityStatusStore) !== AvailabilityStatus.DO_NOT_DISTURB
                         ) {
+                            const oldMegaphoneUrl = get(megaphoneUrlStore);
+
+                            if (oldMegaphoneUrl && megaphoneSettingsMessage.url !== oldMegaphoneUrl) {
+                                spaceProvider.delete(oldMegaphoneUrl);
+                            }
                             broadcastService.joinSpace(megaphoneSettingsMessage.url);
+                            megaphoneUrlStore.set(megaphoneSettingsMessage.url);
+                        }
+                    }
+                });
+                this._broadcastService = broadcastService;
+
+                // The megaphoneSettingsMessageStream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.megaphoneSettingsMessageStream.subscribe((megaphoneSettingsMessage) => {
+                    if (megaphoneSettingsMessage) {
+                        megaphoneCanBeUsedStore.set(megaphoneSettingsMessage.enabled);
+                        if (
+                            megaphoneSettingsMessage.url &&
+                            get(availabilityStatusStore) !== AvailabilityStatus.DO_NOT_DISTURB
+                        ) {
+                            broadcastService.joinSpace(megaphoneSettingsMessage.url);
+                            megaphoneUrlStore.set(megaphoneSettingsMessage.url);
                         }
                     }
                 });
@@ -1869,6 +1951,36 @@ export class GameScene extends DirtyScene {
                 this.connection.errorMessageStream.subscribe((errorMessage) => {
                     warningMessageStore.addWarningMessage(errorMessage.message);
                 });
+
+                // The proximityPrivateMessageToClientMessageStream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.proximityPrivateMessageToClientMessageStream.subscribe(
+                    (proximityPrivateMessageToClientMessage) => {
+                        console.info("proximity private message not implemented yet!");
+                    }
+                );
+
+                // The proximityPublicMessageToClientMessageStream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.proximityPublicMessageToClientMessageStream.subscribe(
+                    (proximityPublicMessageToClientMessage) => {
+                        const _proximityRoomConnection = get(proximityRoomConnection);
+                        if (!_proximityRoomConnection) return;
+
+                        const room = get(_proximityRoomConnection?.rooms)[0];
+                        if (!room || !room.addNewMessage) return;
+
+                        // the user is me do not show the message
+                        const proximityUserUuid = proximityPublicMessageToClientMessage.senderUserUuid;
+                        if (proximityUserUuid == undefined || proximityUserUuid === localUserStore.getLocalUser()?.uuid)
+                            return;
+                        room.addNewMessage(proximityPublicMessageToClientMessage.message, proximityUserUuid);
+
+                        // if the proximity chat is not open, open it to see the message
+                        chatVisibilityStore.set(true);
+                        if (get(selectedRoom) == undefined) selectedRoom.set(room);
+                    }
+                );
 
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
                 // Analyze tags to find if we are admin. If yes, show console.
@@ -2438,10 +2550,42 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
-            iframeListener.newChatMessageWritingStatusStream.subscribe((status) => {
-                _newChatMessageWritingStatusSubject.next(status);
+            iframeListener.chatMessageStream.subscribe((chatMessage) => {
+                switch (chatMessage.options.scope) {
+                    case "local": {
+                        const _proximityRoomConnection = get(proximityRoomConnection);
+                        if (!_proximityRoomConnection) return;
+
+                        const room = get(_proximityRoomConnection.rooms)[0];
+                        if (!room || !room.addExternalMessage) return;
+
+                        room.addExternalMessage(chatMessage.message, chatMessage.options.author);
+                        selectedRoom.set(room);
+                        chatVisibilityStore.set(true);
+                        break;
+                    }
+                    case "bubble": {
+                        const _proximityRoomConnection = get(proximityRoomConnection);
+                        if (!_proximityRoomConnection) return;
+
+                        const room = get(_proximityRoomConnection.rooms)[0];
+                        if (!room || !room.addExternalMessage) return;
+
+                        room.addExternalMessage(chatMessage.message);
+                        selectedRoom.set(room);
+                        chatVisibilityStore.set(true);
+                        break;
+                    }
+                }
             })
         );
+
+        /*this.iframeSubscriptionList.push(
+            iframeListener.newChatMessageWritingStatusStream.subscribe((status) => {
+                // TODO: Implement
+                console.debug("Not implemented yet with new chat integration", status);
+            })
+        );*/
 
         this.iframeSubscriptionList.push(
             iframeListener.disablePlayerControlStream.subscribe(() => {
@@ -2676,41 +2820,11 @@ ${escapedMessage}
         );
 
         iframeListener.registerAnswerer("openCoWebsite", async (openCoWebsite, source) => {
-            if (!source) {
-                throw new Error("Unknown query source");
-            }
-
-            const url = new URL(openCoWebsite.url, iframeListener.getBaseUrlFromSource(source));
-            const coWebsite: SimpleCoWebsite = new SimpleCoWebsite(
-                url,
-                openCoWebsite.allowApi,
-                openCoWebsite.allowPolicy,
-                openCoWebsite.widthPercent,
-                openCoWebsite.closable
-            );
-
-            coWebsiteManager.addCoWebsiteToStore(coWebsite, openCoWebsite.position);
-
-            if (openCoWebsite.lazy === undefined || !openCoWebsite.lazy) {
-                await coWebsiteManager.loadCoWebsite(coWebsite);
-            }
-
-            // Analytics tracking for co-websites
-            analyticsClient.openedWebsite(url);
-
-            return {
-                id: coWebsite.getId(),
-            };
+            return openCoWebSite(openCoWebsite, source);
         });
 
         iframeListener.registerAnswerer("getCoWebsites", () => {
-            const coWebsites = coWebsiteManager.getCoWebsites();
-
-            return coWebsites.map((coWebsite: CoWebsite) => {
-                return {
-                    id: coWebsite.getId(),
-                };
-            });
+            return getCoWebSite();
         });
 
         iframeListener.registerAnswerer("closeCoWebsite", (coWebsiteId) => {

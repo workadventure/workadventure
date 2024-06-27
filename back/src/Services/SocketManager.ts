@@ -1,8 +1,13 @@
 import crypto from "crypto";
 import {
+    AddSpaceUserMessage,
     AnswerMessage,
+    AskPositionMessage,
     BanUserMessage,
     BatchToPusherMessage,
+    ChatMessagePrompt,
+    EditMapCommandMessage,
+    EditMapCommandsArrayMessage,
     EmoteEventMessage,
     EmotePromptMessage,
     FollowAbortMessage,
@@ -16,41 +21,40 @@ import {
     JoinBBBMeetingAnswer,
     JoinBBBMeetingQuery,
     JoinRoomMessage,
+    KickOffMessage,
     LockGroupPromptMessage,
+    MuteMicrophoneEverybodyMessage,
+    MuteMicrophoneMessage,
+    MuteVideoEverybodyMessage,
+    MuteVideoMessage,
     PlayerDetailsUpdatedMessage,
     QueryMessage,
+    RemoveSpaceUserMessage,
     RoomDescription,
     RoomJoinedMessage,
     RoomsList,
+    SendEventQuery,
     SendUserMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
     SubToPusherMessage,
+    TurnCredentialsAnswer,
+    UnwatchSpaceMessage,
+    UpdateMapToNewestWithKeyMessage,
+    UpdateSpaceMetadataMessage,
+    UpdateSpaceUserMessage,
     UserJoinedZoneMessage,
     UserMovesMessage,
     VariableMessage,
+    WatchSpaceMessage,
     WebRtcSignalToClientMessage,
     WebRtcSignalToServerMessage,
     WebRtcStartMessage,
     Zone as ProtoZone,
-    AskPositionMessage,
-    EditMapCommandMessage,
-    ChatMessagePrompt,
-    UpdateMapToNewestWithKeyMessage,
-    EditMapCommandsArrayMessage,
-    WatchSpaceMessage,
-    UnwatchSpaceMessage,
-    UpdateSpaceUserMessage,
-    AddSpaceUserMessage,
-    RemoveSpaceUserMessage,
-    SendEventQuery,
-    UpdateSpaceMetadataMessage,
-    KickOffMessage,
-    MuteMicrophoneMessage,
-    MuteVideoMessage,
-    MuteMicrophoneEverybodyMessage,
-    MuteVideoEverybodyMessage,
-    TurnCredentialsAnswer,
+    ProximityPrivateMessage,
+    ProximityPublicMessageToClientMessage,
+    ProximityPrivateMessageToClientMessage,
+    ProximityPublicMessage,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -183,7 +187,6 @@ export class SocketManager {
         }
 
         const roomJoinedMessage: Partial<RoomJoinedMessage> = {
-            userJid: joinRoomMessage.userJid,
             tag: joinRoomMessage.tag,
             userRoomToken: joinRoomMessage.userRoomToken,
             characterTextures: joinRoomMessage.characterTextures,
@@ -299,6 +302,7 @@ export class SocketManager {
         const webrtcSignalToClientMessage: Partial<WebRtcSignalToClientMessage> = {
             userId: user.id,
             signal: data.signal,
+            spaceName: `webrtc_${room.id}`,
         };
 
         // TODO: only compute credentials if data.signal.type === "offer"
@@ -333,6 +337,7 @@ export class SocketManager {
         const webrtcSignalToClientMessage: Partial<WebRtcSignalToClientMessage> = {
             userId: user.id,
             signal: data.signal,
+            spaceName: `webrtc_${room.id}`,
         };
 
         // TODO: only compute credentials if data.signal.type === "offer"
@@ -445,7 +450,6 @@ export class SocketManager {
         }
         const userJoinedZoneMessage: Partial<UserJoinedZoneMessage> = {
             userId: user.id,
-            userJid: user.userJid,
             userUuid: user.uuid,
             name: user.name,
             availabilityStatus: user.getAvailabilityStatus(),
@@ -795,14 +799,10 @@ export class SocketManager {
                 }
                 case "embeddableWebsiteQuery":
                 case "roomTagsQuery":
-                case "roomsFromSameWorldQuery": {
-                    // Nothing to do, the message will never be received in the back
-                    break;
-                }
-                case "searchMemberQuery": {
-                    break;
-                }
-                case "getMemberQuery": {
+                case "roomsFromSameWorldQuery":
+                case "searchMemberQuery":
+                case "getMemberQuery":
+                case "chatMembersQuery": {
                     break;
                 }
                 default: {
@@ -1562,6 +1562,41 @@ export class SocketManager {
         });
     }
 
+    handleProximityPublicSpaceMessage(
+        pusher: SpacesWatcher,
+        proximityPublicSpaceMessage: ProximityPublicMessageToClientMessage
+    ) {
+        const space = this.spaces.get(proximityPublicSpaceMessage.spaceName);
+        if (!space) return;
+        pusher.write({
+            message: {
+                $case: "proximityPublicMessageToClientMessage",
+                proximityPublicMessageToClientMessage: {
+                    spaceName: proximityPublicSpaceMessage.spaceName,
+                    message: proximityPublicSpaceMessage.message,
+                },
+            },
+        });
+    }
+
+    handleProximityPrivateSpaceMessage(
+        pusher: SpacesWatcher,
+        proximityPrivateSpaceMessage: ProximityPrivateMessageToClientMessage
+    ) {
+        const space = this.spaces.get(proximityPrivateSpaceMessage.spaceName);
+        if (!space) return;
+        pusher.write({
+            message: {
+                $case: "proximityPrivateMessageToClientMessage",
+                proximityPrivateMessageToClientMessage: {
+                    spaceName: proximityPrivateSpaceMessage.spaceName,
+                    message: proximityPrivateSpaceMessage.message,
+                    receiverUserUuid: proximityPrivateSpaceMessage.receiverUserUuid,
+                },
+            },
+        });
+    }
+
     private handleSendEventQuery(gameRoom: GameRoom, user: User, sendEventQuery: SendEventQuery) {
         gameRoom.dispatchEvent(sendEventQuery.name, sendEventQuery.data, user.id, sendEventQuery.targetUserIds);
     }
@@ -1744,6 +1779,50 @@ export class SocketManager {
             };
             mutedUser.socket.write(serverToClientMessage);
         }
+    }
+
+    // handle proximity public message
+    handleProximityPublicMessage(user: User, message: ProximityPublicMessage) {
+        const group = user.group;
+        if (!group) {
+            return;
+        }
+        const receiverUsers = group.getUsers();
+        for (const receiverUser of receiverUsers) {
+            receiverUser.socket.write({
+                message: {
+                    $case: "proximityPublicMessageToClientMessage",
+                    proximityPublicMessageToClientMessage: {
+                        spaceName: message.spaceName,
+                        message: message.message,
+                        senderUserUuid: user.uuid,
+                    },
+                },
+            });
+        }
+    }
+
+    // handle proximity private message
+    handleProximityPrivateMessage(user: User, message: ProximityPrivateMessage, receiverUserUuid: string) {
+        const group = user.group;
+        if (!group) {
+            return;
+        }
+        const receiverUser = group.getUsers().find((user) => user.uuid === receiverUserUuid);
+        if (!receiverUser) {
+            return;
+        }
+        receiverUser.socket.write({
+            message: {
+                $case: "proximityPrivateMessageToClientMessage",
+                proximityPrivateMessageToClientMessage: {
+                    spaceName: message.spaceName,
+                    message: message.message,
+                    senderUserUuid: user.uuid,
+                    receiverUserUuid: receiverUserUuid,
+                },
+            },
+        });
     }
 }
 

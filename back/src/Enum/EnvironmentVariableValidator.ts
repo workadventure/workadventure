@@ -48,10 +48,6 @@ export const EnvironmentVariables = z.object({
     INTERNAL_MAP_STORAGE_URL: AbsoluteOrRelativeUrl.optional()
         .transform(emptyStringToUndefined)
         .describe('The internal URL to the map-storage server (for instance: "https://map-storage:3000"'),
-    EJABBERD_API_URI: AbsoluteOrRelativeUrl.optional().transform((val) => val?.replace(/\/+$/, "")),
-    EJABBERD_DOMAIN: z.string().optional().transform(emptyStringToUndefined),
-    EJABBERD_USER: z.string().optional().transform(emptyStringToUndefined),
-    EJABBERD_PASSWORD: z.string().optional().transform(emptyStringToUndefined),
     PLAYER_VARIABLES_MAX_TTL: z
         .string()
         .optional()
