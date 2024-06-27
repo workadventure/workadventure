@@ -1914,6 +1914,9 @@ export class RoomConnection implements RoomConnection {
         this._userJoinedMessageStream.complete();
         this._userLeftMessageStream.complete();
         this._refreshRoomMessageStream.complete();
+        this._followRequestMessageStream.complete();
+        this._followConfirmationMessageStream.complete();
+        this._followAbortMessageStream.complete();
         this._itemEventMessageStream.complete();
         this._emoteEventMessageStream.complete();
         this._variableMessageStream.complete();
@@ -1929,7 +1932,6 @@ export class RoomConnection implements RoomConnection {
         this._updateSpaceMetadataMessageStream.complete();
         this._megaphoneSettingsMessageStream.complete();
         this._receivedEventMessageStream.complete();
-        this._updateSpaceMetadataMessageStream.complete();
         this._muteMicrophoneMessage.complete();
         this._muteVideoMessage.complete();
         this._muteMicrophoneEverybodyMessage.complete();
