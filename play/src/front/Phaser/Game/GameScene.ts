@@ -170,7 +170,6 @@ import { soundManager } from "./SoundManager";
 import { SharedVariablesManager } from "./SharedVariablesManager";
 import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
 import { DynamicAreaManager } from "./DynamicAreaManager";
-
 import { PlayerMovement } from "./PlayerMovement";
 import { PlayersPositionInterpolator } from "./PlayersPositionInterpolator";
 import { DirtyScene } from "./DirtyScene";
@@ -1512,13 +1511,14 @@ export class GameScene extends DirtyScene {
                         .then((chatConnection) => (this.chatConnection = chatConnection))
                         .catch((error) => console.error(error));
 
-                    const proximityChatConnection = new ProximityChatConnection(
-                        this.connection,
-                        this.connection.getUserId(),
-                        localUserStore.getLocalUser()?.uuid ?? "unknow"
-                    );
                     // initialise the proximity chat connection
-                    proximityRoomConnection.set(proximityChatConnection);
+                    proximityRoomConnection.set(
+                        new ProximityChatConnection(
+                            this.connection,
+                            this.connection.getUserId(),
+                            localUserStore.getLocalUser()?.uuid ?? "Unknown"
+                        )
+                    );
 
                     spaceProvider = LocalSpaceProviderSingleton.getInstance(onConnect.connection.socket);
                     StreamSpaceWatcherSingleton.getInstance(onConnect.connection.socket, chatConnectionPromise);
@@ -1566,7 +1566,6 @@ export class GameScene extends DirtyScene {
                             availabilityStatus: availabilityStatusToJSON(message.availabilityStatus),
                             position: message.position,
                             variables: message.variables,
-                            chatID: message.chatID,
                         },
                     });
                 });
