@@ -91,7 +91,9 @@ export type ConnectionStatus = "ONLINE" | "ON_ERROR" | "CONNECTING" | "OFFLINE";
 
 export type spaceId = number;
 export type chatId = string;
+export type ChatType = "MATRIX" | "PROXIMITY";
 export interface ChatConnectionInterface {
+    type: ChatType;
     connectionStatus: Readable<ConnectionStatus>;
     userConnected: Readable<Map<spaceId, ChatUser>>;
     userDisconnected: Readable<Map<chatId, ChatUser>>;

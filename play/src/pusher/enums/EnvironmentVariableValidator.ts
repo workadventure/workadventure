@@ -150,6 +150,7 @@ export const EnvironmentVariables = z.object({
     MATRIX_PUBLIC_URI: z.string().optional(),
 
     EMBEDLY_KEY: z.string().optional(),
+    CHAT_TYPE: z.union([z.literal("PROXIMITY"), z.literal("MATRIX")]).default("PROXIMITY"),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

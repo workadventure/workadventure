@@ -64,7 +64,7 @@ describe("StreamSpaceWatcher", () => {
             updateSpaceUserFromSpace: vi.fn(),
         } as unknown as ChatConnectionInterface;
 
-        new StreamSpaceWatcher(SpaceProvider, mockSocket, decoder, mockChatConnection);
+        new StreamSpaceWatcher(SpaceProvider, mockSocket, decoder, Promise.resolve(mockChatConnection));
 
         expect(addEventListenerSpy).toHaveBeenCalledOnce();
         expect(addEventListenerSpy).toHaveBeenCalledWith("message");
@@ -125,7 +125,7 @@ describe("StreamSpaceWatcher", () => {
             updateUserFromSpace: vi.fn(),
         } as unknown as ChatConnectionInterface;
 
-        new StreamSpaceWatcher(spaceProvider, mockSocket, decoder, mockChatConnection);
+        new StreamSpaceWatcher(spaceProvider, mockSocket, decoder, Promise.resolve(mockChatConnection));
 
         serverSocket.send(message);
 
@@ -200,7 +200,7 @@ describe("StreamSpaceWatcher", () => {
             updateUserFromSpace: vi.fn(),
         } as unknown as ChatConnectionInterface;
 
-        new StreamSpaceWatcher(spaceProvider, mockSocket, decoder, mockChatConnection);
+        new StreamSpaceWatcher(spaceProvider, mockSocket, decoder, Promise.resolve(mockChatConnection));
 
         serverSocket.send(message);
 
@@ -278,7 +278,7 @@ describe("StreamSpaceWatcher", () => {
             updateUserFromSpace: vi.fn(),
         } as unknown as ChatConnectionInterface;
 
-        new StreamSpaceWatcher(spaceProvider, mockSocket, decoder, mockChatConnection);
+        new StreamSpaceWatcher(spaceProvider, mockSocket, decoder, Promise.resolve(mockChatConnection));
 
         serverSocket.send(message);
 
@@ -350,7 +350,7 @@ describe("StreamSpaceWatcher", () => {
             updateUserFromSpace: vi.fn(),
         } as unknown as ChatConnectionInterface;
 
-        new StreamSpaceWatcher(spaceProvider, mockSocket, decoder, mockChatConnection);
+        new StreamSpaceWatcher(spaceProvider, mockSocket, decoder, Promise.resolve(mockChatConnection));
 
         serverSocket.send(message);
 

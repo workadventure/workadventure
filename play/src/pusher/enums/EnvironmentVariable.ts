@@ -115,7 +115,7 @@ export const GOOGLE_DRIVE_PICKER_APP_ID = env.GOOGLE_DRIVE_PICKER_APP_ID;
 export const MATRIX_DOMAIN: string = env.MATRIX_DOMAIN || "";
 export const MATRIX_PUBLIC_URI: string | undefined = env.MATRIX_PUBLIC_URI;
 export const MATRIX_API_URI: string | undefined = env.MATRIX_API_URI;
-
+export const CHAT_TYPE: "MATRIX" | "PROXIMITY" | undefined = env.CHAT_TYPE;
 // Front container:
 export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     DEBUG_MODE: env.DEBUG_MODE,
@@ -177,4 +177,5 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     GOOGLE_DRIVE_PICKER_APP_ID: env.GOOGLE_DRIVE_PICKER_APP_ID,
     EMBEDLY_KEY: env.EMBEDLY_KEY,
     MATRIX_PUBLIC_URI,
+    CHAT_TYPE,
 };
