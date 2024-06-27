@@ -1940,6 +1940,8 @@ export class RoomConnection implements RoomConnection {
         this._mutedVideoMessage.complete();
         this._askMutedMessage.complete();
         this._askMutedVideoMessage.complete();
+        this._proximityPrivateMessageToClientMessageStream.complete();
+        this._proximityPublicMessageToClientMessageStream.complete();
     }
 
     private goToSelectYourWokaScene(): void {
