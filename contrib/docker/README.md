@@ -27,7 +27,6 @@ In this docker-compose file, you will find:
 
 - A reverse-proxy (Traefik) that dispatches requests to the WorkAdventure containers and handles HTTPS termination. HTTPS certificates will be automatically generated using LetsEncrypt.
 - A play container (NodeJS) that serves static files for the "game" (HTML/JS/CSS) and is the point of entry for users (you can start many if you want to increase performance)
-- A chat container (nginx) that serves static files for the chat bar (HTML/JS/CSS)
 - A back container (NodeJS) that shares your rooms information
 - A map-storage container (NodeJS) that serves your maps and provides map-editing features
 - An icon container to fetch the favicon of sites imported in iframes
@@ -37,7 +36,6 @@ In this docker-compose file, you will find:
 graph LR
     A[Browser] --> B(Traefik)
     subgraph docker-compose
-    B --> I(Chat)
     B --> D(Play)
     B --> E(Icon)
     D --> F(Back)
@@ -53,17 +51,6 @@ graph LR
 > You can host your maps on the WorkAdventure server itself (using the dedicated map-storage container), or outside
 > of the WorkAdventure server, on any [properly configured HTTP server](../../docs/maps/hosting.md) (Nginx, Apache...). 
 > The default docker-compose file does **not** contain a container dedicated to hosting maps. The documentation and
-
-> **Note**
-> The Ejabberd server is used to list all the users connected to your environment and also
-> to transmit chat messages. The Ejabberd server proposed in this install comes almost
-> unconfigured. There is a basic system set up to authenticate users using JWT. Because
-> authentications are using JWT, nothing will be saved.
-> If you want to persist messages and use "real accounts", you will need to implement the
-> "admin API" (it is the role of the Admin API to give valid credentials to Ejabberd),
-> and you will need to modify the Ejabberd configuration to persist messages the way you want
-> (using Mnesia or any other supported database)
-
 
 ## Getting started
 
