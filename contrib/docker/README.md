@@ -133,6 +133,13 @@ docker-compose logs -f
 
 Before starting using WorkAdventure, you will need to upload your first map.
 
+#### Uploading from the map starter kit
+
+Design your own map using the [map starter kit](https://github.com/workadventure/map-starter-kit).
+When you are happy with the result, [follow the steps in the "upload your map documentation"](https://docs.workadventu.re/map-building/tiled-editor/publish/wa-hosted)
+
+#### Checking everything worked
+
 Open your browser and go to `https://<your-domain>/map-storage/`.
 
 You will be asked to authenticate. Use the credentials you configured in the `.env` file.
@@ -142,17 +149,7 @@ You will be asked to authenticate. Use the credentials you configured in the `.e
 > hard coded in the `.env` file. This is not ideal, but works for now (the map-storage container
 > is quite new). Contributions are welcome if you want to improve this.
 
-From the map-storage interface, you can upload your first map.
-
-It should be a ZIP file, containing maps stored with the `.tmj` extension.
-
-### 6. Testing
-
-Now, you need to find out the URL of the map you just uploaded.
-
-Assuming your ZIP file contains a map named `somedir/my-map.tmj`, you can connect to the map by going to:
-
-`https://<your-domain>/~/somedir/my-map.tmj`
+You should see a link to the map you just uploaded.
 
 Are you connected? Congratulations! Share the URL with your friends and start using WorkAdventure!
 
