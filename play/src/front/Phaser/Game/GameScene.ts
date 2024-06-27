@@ -1538,7 +1538,7 @@ export class GameScene extends DirtyScene {
                         new ProximityChatConnection(
                             this.connection,
                             this.connection.getUserId(),
-                            localUserStore.getLocalUser()?.uuid ?? "unknow"
+                            localUserStore.getLocalUser()?.uuid ?? "Unknown"
                         )
                     );
 
