@@ -1519,8 +1519,6 @@ export class GameScene extends DirtyScene {
                             localUserStore.getLocalUser()?.uuid ?? "Unknown"
                         )
                     );
-                    // initialise the proximity chat connection
-                    proximityRoomConnection.set(proximityChatConnection);
 
                     spaceProvider = LocalSpaceProviderSingleton.getInstance(onConnect.connection.socket);
                     StreamSpaceWatcherSingleton.getInstance(onConnect.connection.socket, chatConnectionPromise);
@@ -3528,9 +3526,7 @@ ${escapedMessage}
                 addPlayerData.visitCardUrl,
                 addPlayerData.companionTexture
                     ? lazyLoadPlayerCompanionTexture(this.superLoad, addPlayerData.companionTexture)
-                    : undefined,
-                null,
-                addPlayerData.chatID
+                    : undefined
             );
         } catch (error) {
             if (error instanceof CharacterTextureError) {

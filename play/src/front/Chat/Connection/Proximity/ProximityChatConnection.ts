@@ -1,11 +1,5 @@
 import { Readable, Writable, get, writable } from "svelte/store";
-import {
-    AvailabilityStatus,
-    ChatMember,
-    ChatMemberData,
-    ChatMembersAnswer,
-    PartialSpaceUser,
-} from "@workadventure/messages";
+import { AvailabilityStatus, ChatMember, ChatMembersAnswer, PartialSpaceUser } from "@workadventure/messages";
 import {
     ChatConnectionInterface,
     ChatRoom,
@@ -73,7 +67,7 @@ export class ProximityChatConnection implements ChatConnectionInterface {
             .catch((error) => console.error(error));
     }
 
-    async getWorldChatMembers(searchText?: string): Promise<ChatMemberData[]> {
+    async getWorldChatMembers(searchText?: string): Promise<ChatMember[]> {
         const { members } = await this._roomConnection.queryChatMembers(searchText ?? "");
         return members;
     }
