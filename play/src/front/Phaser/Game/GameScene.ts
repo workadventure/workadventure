@@ -42,10 +42,10 @@ import { lazyLoadPlayerCharacterTextures } from "../Entity/PlayerTexturesLoading
 import { lazyLoadPlayerCompanionTexture } from "../Companion/CompanionTexturesLoadingManager";
 import { iframeListener } from "../../Api/IframeListener";
 import {
+    CHAT_TYPE,
     DEBUG_MODE,
     ENABLE_MAP_EDITOR,
     ENABLE_OPENID,
-    MATRIX_PUBLIC_URI,
     MAX_PER_GROUP,
     POSITION_DELAY,
     PUBLIC_MAP_STORAGE_PREFIX,
@@ -156,12 +156,11 @@ import { getCoWebSite, openCoWebSite } from "../../Chat/Utils";
 import { LocalSpaceProviderSingleton } from "../../Space/SpaceProvider/SpaceStore";
 import { CONNECTED_USER_FILTER_NAME, WORLD_SPACE_NAME } from "../../Space/Space";
 import { StreamSpaceWatcherSingleton } from "../../Space/SpaceWatcher/SocketSpaceWatcher";
-import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
-import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
-import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
-import { matrixSecurity } from "../../Chat/Connection/Matrix/MatrixSecurity";
+import { ChatConnectionInterface, ChatType } from "../../Chat/Connection/ChatConnection";
 import { proximityRoomConnection, selectedRoom } from "../../Chat/Stores/ChatStore";
 import { ProximityChatConnection } from "../../Chat/Connection/Proximity/ProximityChatConnection";
+import { ChatConnectionFactory } from "../../Chat/Connection/ConnectionFactory";
+import { SpaceProviderInterface } from "../../Space/SpaceProvider/SpacerProviderInterface";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
@@ -537,33 +536,6 @@ export class GameScene extends DirtyScene {
 
     //hook create scene
     create(): void {
-        /*getMatrixClient()
-            .then(async (clientResult) => {
-                if (isSuccess(clientResult)) {
-                    const client = clientResult.value;
-                    const rooms = await client.getJoinedRooms();
-                    console.warn("rooms", rooms);
-                    console.warn("user id", client.getUserId());
-
-                    client.on("Room.timeline", (event, room, toStartOfTimeline, removed, data) => {
-                        console.warn("Room.timeline", event, room, toStartOfTimeline, removed, data);
-                    });
-
-                    client.on("RoomState.events", (event, state) => {
-                        console.warn("RoomState.events", event, state);
-                    });
-                } else {
-                    if (clientResult.error.type === "no-matrix-credentials") {
-                        console.warn("no matrix credentials");
-                    } else if (clientResult.error.type === "no-matrix-server") {
-                        console.warn("NO MATRIX SERVER CONFIGURED");
-                    } else {
-                        console.error("matrix error", clientResult.error.error);
-                    }
-                }
-            })
-            .catch((e) => console.error(e));*/
-
         this.input.topOnly = false;
         this.preloading = false;
         this.cleanupDone = false;
@@ -1489,7 +1461,7 @@ export class GameScene extends DirtyScene {
      */
     private connect(): void {
         const camera = this.cameraManager.getCamera();
-
+        let spaceProvider: SpaceProviderInterface | undefined;
         connectionManager
             .connectToRoomSocket(
                 this.roomUrl,
@@ -1520,40 +1492,38 @@ export class GameScene extends DirtyScene {
                         console.error("Error while updating map to newest", e);
                     }
                 }
-
                 if (this.connection) {
-                    //We need to add an env parameter to switch between chat services
-                    const matrixClientWrapper = new MatrixClientWrapper(MATRIX_PUBLIC_URI ?? "", localUserStore);
-                    const matrixClientPromise = matrixClientWrapper.initMatrixClient();
+                    const typeOfChat: ChatType = CHAT_TYPE || "PROXIMITY";
 
-                    matrixClientPromise
-                        .then((matrixClient) => {
-                            matrixSecurity.updateMatrixClientStore(matrixClient);
-                        })
-                        .catch((e) => {
-                            console.error(e);
-                        });
+                    const chatConnectionPromise: Promise<ChatConnectionInterface> = new Promise((resolve, reject) => {
+                        if (this.connection) {
+                            ChatConnectionFactory.createConnection(typeOfChat, this.connection)
+                                .then((chatConnection) => {
+                                    this.chatConnection = chatConnection;
+                                    resolve(chatConnection);
+                                })
+                                .catch((error) => {
+                                    reject(new Error(error));
+                                });
+                        }
+                    });
 
-                    this.chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
+                    chatConnectionPromise
+                        .then((chatConnection) => (this.chatConnection = chatConnection))
+                        .catch((error) => console.error(error));
 
-                    // initialise the proximity chat connection
-                    proximityRoomConnection.set(
-                        new ProximityChatConnection(
-                            this.connection,
-                            this.connection.getUserId(),
-                            localUserStore.getLocalUser()?.uuid ?? "Unknown"
-                        )
+                    const proximityChatConnection = new ProximityChatConnection(
+                        this.connection,
+                        this.connection.getUserId(),
+                        localUserStore.getLocalUser()?.uuid ?? "unknow"
                     );
+                    // initialise the proximity chat connection
+                    proximityRoomConnection.set(proximityChatConnection);
 
-                    const chatId = localUserStore.getChatId();
-                    const email: string | null = localUserStore.getLocalUser()?.email || null;
-                    if (email && chatId) this.connection.emitUpdateChatId(email, chatId);
+                    spaceProvider = LocalSpaceProviderSingleton.getInstance(onConnect.connection.socket);
+                    StreamSpaceWatcherSingleton.getInstance(onConnect.connection.socket, chatConnectionPromise);
+                    spaceProvider.add(WORLD_SPACE_NAME).watch(CONNECTED_USER_FILTER_NAME);
                 }
-
-                const spaceProvider = LocalSpaceProviderSingleton.getInstance(onConnect.connection.socket);
-                StreamSpaceWatcherSingleton.getInstance(onConnect.connection.socket);
-
-                spaceProvider.add(WORLD_SPACE_NAME).watch(CONNECTED_USER_FILTER_NAME);
 
                 this.tryOpenMapEditorWithToolEditorParameter();
 
@@ -1596,6 +1566,7 @@ export class GameScene extends DirtyScene {
                             availabilityStatus: availabilityStatusToJSON(message.availabilityStatus),
                             position: message.position,
                             variables: message.variables,
+                            chatID: message.chatID,
                         },
                     });
                 });
@@ -1816,7 +1787,7 @@ export class GameScene extends DirtyScene {
                             const oldMegaphoneUrl = get(megaphoneUrlStore);
 
                             if (oldMegaphoneUrl && megaphoneSettingsMessage.url !== oldMegaphoneUrl) {
-                                spaceProvider.delete(oldMegaphoneUrl);
+                                spaceProvider?.delete(oldMegaphoneUrl);
                             }
                             broadcastService.joinSpace(megaphoneSettingsMessage.url);
                             megaphoneUrlStore.set(megaphoneSettingsMessage.url);
@@ -3556,7 +3527,9 @@ ${escapedMessage}
                 addPlayerData.visitCardUrl,
                 addPlayerData.companionTexture
                     ? lazyLoadPlayerCompanionTexture(this.superLoad, addPlayerData.companionTexture)
-                    : undefined
+                    : undefined,
+                null,
+                addPlayerData.chatID
             );
         } catch (error) {
             if (error instanceof CharacterTextureError) {

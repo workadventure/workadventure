@@ -19,7 +19,7 @@
 
     $: userStatus = isMe ? availabilityStatusStore : availabilityStatus;
 
-    let chatConnection = gameManager.getCurrentGameScene().chatConnection;
+    const chatConnection = gameManager.getCurrentGameScene().chatConnection;
 
     $: chunks = highlightWords({
         text: username.match(/\[\d*]/) ? username.substring(0, username.search(/\[\d*]/)) : username,

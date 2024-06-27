@@ -1567,6 +1567,7 @@ export class SocketManager implements ZoneEventListener {
                 name: memberFromApi.name ?? undefined,
                 email: memberFromApi.email ?? undefined,
                 visitCardUrl: memberFromApi.visitCardUrl ?? undefined,
+                chatID: memberFromApi.chatID ?? undefined,
             },
         };
     }
