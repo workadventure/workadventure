@@ -62,7 +62,7 @@
     }
 
     function toggleActionMenu(value: boolean) {
-        console.log("value", value, $moreActionOpened, !$moreActionOpened);
+        // console.log("value", value, $moreActionOpened, !$moreActionOpened);
         moreActionOpened.set(value);
     }
 

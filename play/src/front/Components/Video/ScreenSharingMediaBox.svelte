@@ -33,7 +33,6 @@
     $: isHighlighted = $highlightedEmbedScreen === embedScreen;
 
     function toggleFullScreen() {
-        console.log("je suis dans la fonction toggleFullScreen");
         highlightFullScreen.update((current) => !current);
         if (videoContainer) {
             if ($highlightFullScreen) {

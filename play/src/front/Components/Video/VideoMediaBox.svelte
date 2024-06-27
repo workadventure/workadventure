@@ -175,6 +175,7 @@
             clearTimeout(noVideoTimeout);
             noVideoTimeout = undefined;
         }
+        subscription.unsubscribe();
     });
 
     //sets the ID of the audio device to use for output
@@ -247,7 +248,7 @@
         }
     }
 
-    highlightedEmbedScreen.subscribe((value) => {
+    highlightedEmbedScreen.subscribe((value: any) => {
         if (value) {
             isHightlighted = true;
         } else {
@@ -261,8 +262,8 @@
         highlightFullScreen.update((current) => !current);
         if (videoContainer) {
             if ($highlightFullScreen) {
+                console.log("je suis dans le if du full screen");
                 videoContainer.style.height = `${document.documentElement.clientHeight}px`;
-                console.log("document.documentElement.clientHeight", document.documentElement.clientHeight);
                 videoContainer.style.width = `${document.documentElement.clientWidth}px`;
             } else {
                 videoContainer.style.height = "100%";
@@ -278,7 +279,7 @@
         calcHeightVideo();
     }
 
-    highlightedEmbedScreen.subscribe(() => {
+    const subscription = highlightedEmbedScreen.subscribe(() => {
         calcHeightVideo();
     });
 </script>
@@ -289,7 +290,9 @@
 <!-- Dans la premiere div     style="height:{$heightCamWrapper}px;"-->
 <!-- <div class={$mediaStreamConstraintsStore.audio ? "border-4 border-solid border-color rounded-lg" : ""}> -->
 <div
-    class="video-container group/screenshare transition-all h-full w-full relative aspect-video"
+    class="video-container group/screenshare transition-all h-full w-full relative aspect-video {$highlightFullScreen
+        ? 'mt-8'
+        : ''}"
     class:isHighlighted
     class:video-off={!videoEnabled}
     class:h-full={$embedScreenLayoutStore === LayoutMode.VideoChat}

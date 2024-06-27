@@ -66,7 +66,7 @@
         setHeightScreenShare.set(availableHeight);
     }
 
-    highlightedEmbedScreen.subscribe((value) => {
+    const subscription = highlightedEmbedScreen.subscribe((value) => {
         currentHighlightedEmbedScreen = value;
         handleResize();
         if (value) {
@@ -102,38 +102,41 @@
         }
     }
 
-    $: $rightMode, setRightMode();
+    onDestroy(() => {
+        isMobile.removeEventListener("change", (e: any) => handleTabletChange(e));
+        subscription.unsubscribe();
+    });
 
-    function setRightMode() {
-        if ($rightMode && !isVertical) {
-            let containerLayoutCam = document.getElementById("right-mode");
-            containerLayoutCam?.classList.add("right-mode-on");
-            // Cette div est nul mais dans l'idéé je veux faire qqch comme cela
-        } else {
-            let containerLayoutCam = document.getElementById("right-mode");
-            containerLayoutCam?.classList.remove("right-mode-on");
-        }
-    }
+    // $: $rightMode, setRightMode();
 
-    $: if ($hideMode && $highlightedEmbedScreen) setHideMode();
+    // function setRightMode() {
+    //     if ($rightMode && !isVertical) {
+    //         let containerLayoutCam = document.getElementById("right-mode");
+    //         containerLayoutCam?.classList.add("right-mode-on");
+    //         // Cette div est nul mais dans l'idéé je veux faire qqch comme cela
+    //     } else {
+    //         let containerLayoutCam = document.getElementById("right-mode");
+    //         containerLayoutCam?.classList.remove("right-mode-on");
+    //     }
+    // }
 
-    function setHideMode() {
-        // ATTENTION NE PLUS RENDRE CLICKABLE LE SCREENSHARE CAR SINON PLUS RIEN
-        let containerLayoutCam = document.getElementById("container-media");
-        let containerScreenShare = document.getElementById("video-container-receive");
+    // $: if ($hideMode && $highlightedEmbedScreen) setHideMode();
 
-        if ($hideMode && !isVertical) {
-            containerLayoutCam?.classList.add("hidden");
+    // function setHideMode() {
+    //     // ATTENTION NE PLUS RENDRE CLICKABLE LE SCREENSHARE CAR SINON PLUS RIEN
 
-            if (containerScreenShare) {
-                containerScreenShare.classList.add("fullscreen");
-            }
-        } else if (!$hideMode && !isVertical) {
-            if (containerScreenShare) {
-                containerScreenShare.style.transform = "scale(1)";
-            }
-        }
-    }
+    //     if ($hideMode && !isVertical) {
+    //         camContainer?.classList.add("hidden");
+
+    //         if (highlightScreen) {
+    //             highlightScreen.classList.add("fullscreen");
+    //         }
+    //     } else if (!$hideMode && !isVertical) {
+    //         if (highlightScreen) {
+    //             highlightScreen.style.transform = "scale(1)";
+    //         }
+    //     }
+    // }
 </script>
 
 <div class="presentation-layout flex flex-col-reverse md:flex-col">

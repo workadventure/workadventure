@@ -53,8 +53,7 @@
     import WarningToast from "./WarningContainer/WarningToast.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
     import { focusMode, highlightFullScreen } from "../Stores/ActionsCamStore";
-    import { peerStore, screenSharingPeerStore } from "../Stores/PeerStore";
-    import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
+    import { peerStore } from "../Stores/PeerStore";
 
     let mainLayout: HTMLDivElement;
     // export let message: string;

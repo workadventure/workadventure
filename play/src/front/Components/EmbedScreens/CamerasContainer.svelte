@@ -4,17 +4,21 @@
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import MyCamera from "../MyCamera.svelte";
     import { myCameraStore } from "../../Stores/MyMediaStore";
-    import { afterUpdate } from "svelte";
+    import { afterUpdate, onDestroy } from "svelte";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
 
     let isHightlighted = false;
 
-    highlightedEmbedScreen.subscribe((value) => {
+    const subscription = highlightedEmbedScreen.subscribe((value) => {
         if (value) {
             isHightlighted = true;
         } else {
             isHightlighted = false;
         }
+    });
+
+    onDestroy(() => {
+        subscription.unsubscribe();
     });
 
     afterUpdate(() => {
@@ -23,10 +27,11 @@
 
     $: $highlightedEmbedScreen, checkOverflow();
 
+    // voir pour le justify content qui ne fonctionne pas au pin de la cam
     function checkOverflow() {
         const camContainer = document.getElementById("cameras-container");
         if (camContainer) {
-            if (camContainer.scrollWidth > camContainer.clientWidth) {
+            if (camContainer.scrollWidth < camContainer.clientWidth) {
                 camContainer.style.justifyContent = "flex-start";
             } else {
                 camContainer.style.justifyContent = "center";

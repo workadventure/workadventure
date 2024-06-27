@@ -5,7 +5,7 @@
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import { highlightFullScreen, setHeight } from "../../Stores/ActionsCamStore";
     import { srcObject } from "./utils";
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
 
     export let clickable = false;
 
@@ -55,8 +55,12 @@
         }
     }
 
-    highlightedEmbedScreen.subscribe(() => {
+    const subscription = highlightedEmbedScreen.subscribe(() => {
         calcHeightVideo();
+    });
+
+    onDestroy(() => {
+        subscription.unsubscribe();
     });
 </script>
 
