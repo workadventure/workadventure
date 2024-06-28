@@ -617,9 +617,9 @@
             <img
                 class="tw-w-6 tw-mr-1"
                 src={excalidrawSvg}
-                alt={$LL.mapEditor.properties.eraserProperties.description()}
+                alt={$LL.mapEditor.properties.excalidrawProperties.description()}
             />
-            {$LL.mapEditor.properties.eraserProperties.label()}
+            {$LL.mapEditor.properties.excalidrawProperties.label()}
         {:else if property.application === "cards"}
             <img class="tw-w-6 tw-mr-1" src={cardPng} alt={$LL.mapEditor.properties.cardsProperties.description()} />
             {$LL.mapEditor.properties.cardsProperties.label()}
