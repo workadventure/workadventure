@@ -83,11 +83,7 @@
             <div class="tw-flex tw-flex-row tw-items-center tw-gap-2">
                 {#each [...$userConnected] as [userId, user] (userId)}
                     <div class="avatar">
-                        <Avatar
-                            avatarUrl={user.avatarUrl}
-                            fallbackFirstLetter={user?.username?.charAt(0)}
-                            color={user?.color}
-                        />
+                        <Avatar avatarUrl={user.avatarUrl} fallbackName={user?.username} color={user?.color} />
                     </div>
                 {/each}
             </div>
@@ -112,7 +108,7 @@
                         <Avatar
                             isChatAvatar={true}
                             avatarUrl={typingMember.avatarUrl}
-                            fallbackFirstLetter={typingMember.name ? typingMember.name[0] : "A"}
+                            fallbackName={typingMember.name ? typingMember.name : "Unknown"}
                         />
                     </div>
                 {/if}

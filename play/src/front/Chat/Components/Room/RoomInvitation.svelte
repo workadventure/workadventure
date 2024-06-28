@@ -26,7 +26,7 @@
     on:click={toggleDisplayInvitationRoomActions}
 >
     <div class="tw-relative">
-        <Avatar avatarUrl={room.avatarUrl} fallbackFirstLetter={$roomName.charAt(0)} />
+        <Avatar avatarUrl={room.avatarUrl} fallbackName={$roomName} />
     </div>
     <p class="tw-m-0">{$roomName}</p>
 </div>

@@ -7,11 +7,15 @@ function toHexa(r: number, g: number, b: number): string {
     return "#" + Math.floor(r * 256).toString(16) + Math.floor(g * 256).toString(16) + Math.floor(b * 256).toString(16);
 }
 
-export function getColorRgbFromHue(hue: number): { r: number; g: number; b: number } {
+export function getColorRgbFromHue(
+    hue: number,
+    saturation = 0.5,
+    brightness = 0.95
+): { r: number; g: number; b: number } {
     const golden_ratio_conjugate = 0.618033988749895;
     hue += golden_ratio_conjugate;
     hue %= 1;
-    return hsv_to_rgb(hue, 0.5, 0.95);
+    return hsv_to_rgb(hue, saturation, brightness);
 }
 
 //todo: test this.
