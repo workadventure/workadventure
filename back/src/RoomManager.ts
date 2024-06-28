@@ -240,6 +240,13 @@ const roomManager = {
                                 );
                                 break;
                             }
+                            case "typingProximityMessage": {
+                                socketManager.handleTypingProximityMessage(
+                                    user,
+                                    message.message.typingProximityMessage
+                                );
+                                break;
+                            }
                             default: {
                                 const _exhaustiveCheck: never = message.message;
                             }

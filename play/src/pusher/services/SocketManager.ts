@@ -585,6 +585,20 @@ export class SocketManager implements ZoneEventListener {
                                     });
                                     break;
                                 }
+                                case "typingProximityMessageToClientMessage": {
+                                    debug("[space] typingProximityMessageToClientMessage received");
+                                    spaceStreamToBack.write({
+                                        message: {
+                                            $case: "typingProximityMessageToClientMessage",
+                                            typingProximityMessageToClientMessage: {
+                                                spaceName:
+                                                    message.message.typingProximityMessageToClientMessage.spaceName,
+                                                typing: message.message.typingProximityMessageToClientMessage.typing,
+                                            },
+                                        },
+                                    });
+                                    break;
+                                }
                                 default: {
                                     const _exhaustiveCheck: never = message.message;
                                 }
@@ -1625,6 +1639,22 @@ export class SocketManager implements ZoneEventListener {
             return;
         }
         space.sendProximityPrivateMessage(socketData, messageContent, receiverUserUuid);
+    }
+
+    // handle typing proximity message
+    handleTypingProximitySpaceMessage(
+        client: Socket,
+        spaceName: string,
+        isTyping: boolean,
+        message: PusherToBackMessage["message"]
+    ) {
+        const socketData = client.getUserData();
+        const space = socketData.spaces.find((space) => space.name === spaceName);
+        if (!space) {
+            this.forwardMessageToBack(client, message);
+            return;
+        }
+        space.sendTypingProximityMessage(socketData, isTyping);
     }
 }
 
