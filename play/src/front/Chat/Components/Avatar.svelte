@@ -7,14 +7,13 @@
     export let fallbackName = "A";
     export let color: string | null = null;
     export let isChatAvatar = false;
-    
 </script>
 
 {#if userId && userId != -1}
     <div
         class="tw-rounded-full"
         style="width: 32px; height: 32px;"
-        style:background-color={`${color ? color : `${getColorByString((fallbackName))}`}`}
+        style:background-color={`${color ? color : `${getColorByString(fallbackName)}`}`}
     >
         <WokaFromUserId {userId} placeholderSrc={""} customHeight="32px" customWidth="32px" />
     </div>
