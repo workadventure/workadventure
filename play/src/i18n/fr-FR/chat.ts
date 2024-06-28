@@ -8,6 +8,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         visitCard: "Carte de visite",
         addFriend: "Ajouter un ami",
     },
+    loader: "Chargement...",
     typing: "est en train d'écire...",
     users: "Utilisateurs",
     chat: "Chat",
