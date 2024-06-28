@@ -85,7 +85,7 @@
                     <div class="avatar">
                         <Avatar
                             avatarUrl={user.avatarUrl}
-                            fallbackFirstLetter={user?.username?.charAt(0)}
+                            fallbackName={user?.username}
                             color={user?.color}
                         />
                     </div>
@@ -112,7 +112,7 @@
                         <Avatar
                             isChatAvatar={true}
                             avatarUrl={typingMember.avatarUrl}
-                            fallbackFirstLetter={typingMember.name ? typingMember.name[0] : "A"}
+                            fallbackName={typingMember.name ? typingMember.name : "Unknown"}
                         />
                     </div>
                 {/if}

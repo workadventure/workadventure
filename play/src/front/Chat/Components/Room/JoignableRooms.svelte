@@ -34,7 +34,7 @@
     on:click={toggleDisplayInvitationRoomActions}
 >
     <div class="tw-relative">
-        <Avatar avatarUrl={null} fallbackFirstLetter={room.name?.charAt(0)} />
+        <Avatar avatarUrl={null} fallbackName={room.name} />
     </div>
     <div>
         {#each chunks as chunk (chunk.key)}

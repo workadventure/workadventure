@@ -23,7 +23,7 @@
     on:click={() => selectedRoom.set(room)}
 >
     <div class="tw-relative">
-        <Avatar avatarUrl={room.avatarUrl} fallbackFirstLetter={$roomName.charAt(0)} />
+        <Avatar avatarUrl={room.avatarUrl} fallbackName={$roomName} />
         {#if $hasUnreadMessage}
             <NotificationBadge type="error" />
         {/if}

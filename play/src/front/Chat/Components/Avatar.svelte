@@ -1,62 +1,27 @@
 <script lang="ts">
     import WokaFromUserId from "../../Components/Woka/WokaFromUserId.svelte";
+    import { getColorByString } from "../../Utils/ColorGenerator";
 
     export let avatarUrl: string | null = null;
     export let userId: number | string | null = null;
-    export let fallbackFirstLetter = "A";
+    export let fallbackName = "A";
     export let color: string | null = null;
     export let isChatAvatar = false;
-
-    const colors = [
-        "CB4288",
-        "C5458A",
-        "BF488C",
-        "B94C8D",
-        "B34F8F",
-        "AD5291",
-        "A75593",
-        "A15995",
-        "9B5C96",
-        "955F98",
-        "8F629A",
-        "89669C",
-        "83699E",
-        "7D6C9F",
-        "776FA1",
-        "7173A3",
-        "6B76A5",
-        "6579A7",
-        "5F7CA8",
-        "5980AA",
-        "5383AC",
-        "4D86AE",
-        "4789B0",
-        "418DB1",
-        "3B90B3",
-        "3593B5",
-    ];
-
-    function getColorByFirstLetter(firstLetter: string) {
-        if (!firstLetter) {
-            return "black";
-        }
-        const indexColor = firstLetter.toLowerCase().charCodeAt(0) - 97;
-        return colors[indexColor];
-    }
+    
 </script>
 
 {#if userId && userId != -1}
     <div
         class="tw-rounded-full"
         style="width: 32px; height: 32px;"
-        style:background-color={`${color ? color : `#${getColorByFirstLetter(fallbackFirstLetter)}`}`}
+        style:background-color={`${color ? color : `${getColorByString((fallbackName))}`}`}
     >
         <WokaFromUserId {userId} placeholderSrc={""} customHeight="32px" customWidth="32px" />
     </div>
 {:else if userId === -1}
     <div
         class={`tw-rounded-full tw-bg-amber-600 tw-text-center tw-uppercase tw-text-white tw-w-8 tw-h-8`}
-        style:background-color={`#${color ? color : getColorByFirstLetter(fallbackFirstLetter)}`}
+        style:background-color={`${color ? color : getColorByString(fallbackName)}`}
     >
         <WokaFromUserId {userId} placeholderSrc={""} customHeight="32px" customWidth="32px" />
     </div>
@@ -65,15 +30,15 @@
         src={avatarUrl}
         alt={"User avatar"}
         class="tw-rounded-full tw-h-6 tw-w-6 tw-object-contain tw-bg-white"
-        style:background-color={`${color ? color : `#${getColorByFirstLetter(fallbackFirstLetter)}`}`}
+        style:background-color={`${color ? color : `${getColorByString(fallbackName)}`}`}
     />
 {:else}
     <div
         class:chatAvatar={isChatAvatar}
         class={`tw-rounded-full tw-bg-amber-600 tw-h-6 tw-w-6 tw-text-center tw-uppercase tw-text-white`}
-        style:background-color={`#${color ? color : getColorByFirstLetter(fallbackFirstLetter)}`}
+        style:background-color={`${color ? color : getColorByString(fallbackName)}`}
     >
-        {fallbackFirstLetter}
+        {fallbackName.charAt(0)}
     </div>
 {/if}
 
