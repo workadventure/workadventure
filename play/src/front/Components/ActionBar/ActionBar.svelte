@@ -463,26 +463,6 @@
         }
     });
 
-    // $: $screenSharingPeerStore.size < 1 ? displayActionBar() : "";
-
-    // function displayActionBar() {
-    //     console.log("JE SUIS DANS LE DISPLAY DE L'ACTION BAR");
-    //     console.log($screenSharingPeerStore.size, "screenSharingPeerStore");
-    //     console.log($toggleHighlightMode, "toggleHighlightMode");
-
-    //     if ($toggleHighlightMode) {
-    //         layoutDom.classList.add("hidden");
-    //     } else {
-    //         layoutDom.classList.remove("hidden");
-    //     }
-
-    //     if ($screenSharingPeerStore.size < 1) {
-    //         layoutDom.classList.add("hidden");
-    //     } else {
-    //         layoutDom.classList.remove("hidden");
-    //     }
-    // }
-
     // function playSoundClick() {
     //     sound.play().catch((e) => console.error(e));
     // }
@@ -498,30 +478,7 @@
     //     resetChatVisibility();
     //     resetModalVisibility();
     //     roomListVisibilityStore.set(true);
-    // }
-
-
-    // on:mouseenter={() => { if (!navigating) helpActive = !!"chat"; }}
-    // on:mouseleave={() => { !navigating ? helpActive = false : '' }}
-
-     */
-
-    // $: $screenSharingPeerStore.size < 1 && $toggleHighlightMode ? displayActionBar() : "";
-
-    // function displayActionBar() {
-    //     layoutDom.classList.remove("hidden");
-    // }
-
-    // function displayActionBar() {}
-
-    // function computeClasses($toggleHighlightMode: boolean, $screenSharingPeerStore: Map<number, ScreenSharingPeer>) {
-    //     const baseClass =
-    //         "@container/actions w-full z-[301] bottom-0 sm:top-0 transition-all pointer-events-none bp-menu";
-
-    //     return $toggleHighlightMode && $screenSharingPeerStore.size > 0 ? "hidden" : baseClass;
-    // }
-
-    // $: classList = computeClasses($toggleHighlightMode, $screenSharingPeerStore);
+    // }*/
 </script>
 
 {#if !$chatVisibilityStore}

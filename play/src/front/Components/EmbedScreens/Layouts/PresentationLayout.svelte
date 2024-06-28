@@ -57,6 +57,8 @@
         };
     });
 
+    $: window.innerHeight, resizeHeight();
+
     function resizeHeight() {
         let availableHeight = window.innerHeight - (camContainer?.offsetHeight || 0) - 72;
         if (availableHeight < 0) {
@@ -104,7 +106,7 @@
 
     onDestroy(() => {
         isMobile.removeEventListener("change", (e: any) => handleTabletChange(e));
-        subscription.unsubscribe();
+        // subscription.unsubscribe();
     });
 
     // $: $rightMode, setRightMode();

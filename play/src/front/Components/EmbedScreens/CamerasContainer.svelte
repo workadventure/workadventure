@@ -8,33 +8,40 @@
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
 
     let isHightlighted = false;
+    let isMobile = window.matchMedia("(max-width: 768px)");
 
     const subscription = highlightedEmbedScreen.subscribe((value) => {
+        checkOverflow();
         if (value) {
             isHightlighted = true;
         } else {
             isHightlighted = false;
         }
     });
-
     onDestroy(() => {
-        subscription.unsubscribe();
+        // subscription.unsubscribe();
     });
 
     afterUpdate(() => {
         checkOverflow();
     });
 
-    $: $highlightedEmbedScreen, checkOverflow();
-
     // voir pour le justify content qui ne fonctionne pas au pin de la cam
     function checkOverflow() {
         const camContainer = document.getElementById("cameras-container");
         if (camContainer) {
-            if (camContainer.scrollWidth < camContainer.clientWidth) {
-                camContainer.style.justifyContent = "flex-start";
+            if (isMobile.matches && $highlightedEmbedScreen) {
+                if (camContainer.scrollWidth < camContainer.clientWidth) {
+                    camContainer.style.justifyContent = "center";
+                } else {
+                    camContainer.style.justifyContent = "flex-start";
+                }
             } else {
-                camContainer.style.justifyContent = "center";
+                if (camContainer.scrollWidth < camContainer.clientWidth) {
+                    camContainer.style.justifyContent = "flex-start";
+                } else {
+                    camContainer.style.justifyContent = "center";
+                }
             }
         }
     }

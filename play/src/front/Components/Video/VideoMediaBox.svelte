@@ -175,7 +175,7 @@
             clearTimeout(noVideoTimeout);
             noVideoTimeout = undefined;
         }
-        subscription.unsubscribe();
+        // subscription.unsubscribe();
     });
 
     //sets the ID of the audio device to use for output
@@ -262,7 +262,6 @@
         highlightFullScreen.update((current) => !current);
         if (videoContainer) {
             if ($highlightFullScreen) {
-                console.log("je suis dans le if du full screen");
                 videoContainer.style.height = `${document.documentElement.clientHeight}px`;
                 videoContainer.style.width = `${document.documentElement.clientWidth}px`;
             } else {
@@ -313,7 +312,6 @@
         class:flex-row={!videoEnabled}
         class:relative={!videoEnabled}
         class:justify-center={$statusStore === "connecting" || $statusStore === "error"}
-        id="test"
     >
         {#if $statusStore === "connecting"}
             <div class="connecting-spinner" />
