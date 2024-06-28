@@ -413,8 +413,5 @@
             width: 94%;
             border-radius: 8px;
         }
-        #dropdown-container {
-            width: 220px;
-        }
     }
 </style>
