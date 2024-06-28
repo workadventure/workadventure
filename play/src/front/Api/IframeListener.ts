@@ -365,10 +365,8 @@ class IframeListener {
                         this._chatMessageStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "startWriting") {
                         this._startTypingProximityMessageStream.next(iframeEvent.data);
-                        scriptUtils.startWriting(iframeEvent.data, iframe.contentWindow ?? undefined);
                     } else if (iframeEvent.type === "stopWriting") {
                         this._stopTypingProximityMessageStream.next(iframeEvent.data);
-                        scriptUtils.stopWriting(iframeEvent.data, iframe.contentWindow ?? undefined);
                     } else if (iframeEvent.type === "openChat") {
                         this._openChatStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "closeChat") {
