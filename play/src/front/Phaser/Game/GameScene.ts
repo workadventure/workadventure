@@ -160,6 +160,7 @@ import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWr
 import { matrixSecurity } from "../../Chat/Connection/Matrix/MatrixSecurity";
 import { proximityRoomConnection, selectedRoom } from "../../Chat/Stores/ChatStore";
 import { ProximityChatConnection } from "../../Chat/Connection/Proximity/ProximityChatConnection";
+import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -1982,6 +1983,23 @@ export class GameScene extends DirtyScene {
                     }
                 );
 
+                // the typingProximityMessageToClientMessageStream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.typingProximityPrivateMessageToClientMessage.subscribe(
+                    (typingProximityMessageToClientMessage) => {
+                        const _proximityRoomConnection = get(proximityRoomConnection);
+                        if (!_proximityRoomConnection) return;
+
+                        const room = get(_proximityRoomConnection?.rooms)[0];
+                        if (!room || !(room instanceof ProximityChatRoom)) return;
+
+                        if (typingProximityMessageToClientMessage.senderUserUuid != undefined)
+                            if (typingProximityMessageToClientMessage.typing)
+                                room.addTypingUser(typingProximityMessageToClientMessage.senderUserUuid);
+                            else room.removeTypingUser(typingProximityMessageToClientMessage.senderUserUuid);
+                    }
+                );
+
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
                 // Analyze tags to find if we are admin. If yes, show console.
 
@@ -2577,6 +2595,29 @@ ${escapedMessage}
                         break;
                     }
                 }
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.startTypingProximityMessageStream.subscribe((sartWriting) => {
+                const _proximityRoomConnection = get(proximityRoomConnection);
+                if (!_proximityRoomConnection) return;
+
+                const room = get(_proximityRoomConnection.rooms)[0];
+                if (!room || !(room instanceof ProximityChatRoom)) return;
+
+                room.addExternalTypingUser(btoa(sartWriting.author ?? "unknow"), sartWriting.author ?? "unknow", null);
+            })
+        );
+        this.iframeSubscriptionList.push(
+            iframeListener.stopTypingProximityMessageStream.subscribe((stopWriting) => {
+                const _proximityRoomConnection = get(proximityRoomConnection);
+                if (!_proximityRoomConnection) return;
+
+                const room = get(_proximityRoomConnection.rooms)[0];
+                if (!room || !(room instanceof ProximityChatRoom)) return;
+
+                room.removeExternalTypingUser(btoa(stopWriting.author ?? "unknow"));
             })
         );
 

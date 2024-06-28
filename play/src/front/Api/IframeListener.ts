@@ -1,6 +1,7 @@
 import { Subject } from "rxjs";
 import { availabilityStatusToJSON } from "@workadventure/messages";
 import { BanEvent, ChatEvent, ChatMessage, KLAXOON_ACTIVITY_PICKER_EVENT } from "@workadventure/shared-utils";
+import { StartWritingEvent, StopWritingEvent } from "@workadventure/shared-utils/src/Events/WritingEvent";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
 import {
     additionnalButtonsMenu,
@@ -211,6 +212,12 @@ class IframeListener {
     private readonly _chatMessageStream: Subject<ChatEvent> = new Subject();
     public readonly chatMessageStream = this._chatMessageStream.asObservable();
 
+    private readonly _startTypingProximityMessageStream: Subject<StartWritingEvent> = new Subject();
+    public readonly startTypingProximityMessageStream = this._startTypingProximityMessageStream.asObservable();
+
+    private readonly _stopTypingProximityMessageStream: Subject<StopWritingEvent> = new Subject();
+    public readonly stopTypingProximityMessageStream = this._stopTypingProximityMessageStream.asObservable();
+
     private readonly iframes = new Map<HTMLIFrameElement, string | undefined>();
     private readonly iframeCloseCallbacks = new Map<MessageEventSource, Set<() => void>>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
@@ -357,8 +364,10 @@ class IframeListener {
                     } else if (iframeEvent.type === "chat") {
                         this._chatMessageStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "startWriting") {
+                        this._startTypingProximityMessageStream.next(iframeEvent.data);
                         scriptUtils.startWriting(iframeEvent.data, iframe.contentWindow ?? undefined);
                     } else if (iframeEvent.type === "stopWriting") {
+                        this._stopTypingProximityMessageStream.next(iframeEvent.data);
                         scriptUtils.stopWriting(iframeEvent.data, iframe.contentWindow ?? undefined);
                     } else if (iframeEvent.type === "openChat") {
                         this._openChatStream.next(iframeEvent.data);

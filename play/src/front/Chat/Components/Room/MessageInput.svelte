@@ -13,6 +13,7 @@
     let messageInput: HTMLTextAreaElement;
     let emojiButtonRef: HTMLButtonElement;
     let stopTypingTimeOutID: undefined | ReturnType<typeof setTimeout>;
+    const TYPINT_TIMEOUT = 10000;
 
     const selectedChatChatMessageToReplyUnsubscriber = selectedChatMessageToReply.subscribe((chatMessage) => {
         if (chatMessage !== null) {
@@ -21,6 +22,21 @@
     });
 
     function sendMessageOrEscapeLine(keyDownEvent: KeyboardEvent) {
+        if (stopTypingTimeOutID) clearTimeout(stopTypingTimeOutID);
+        room.startTyping()
+            .then(() => {
+                stopTypingTimeOutID = setTimeout(() => {
+                    room.stopTyping().catch((error) => console.error(error));
+                    stopTypingTimeOutID = undefined;
+                }, TYPINT_TIMEOUT);
+            })
+            .catch((error) => console.error(error));
+
+        if (keyDownEvent.key === "Enter" || message == "" || message == undefined) {
+            if (stopTypingTimeOutID) clearTimeout(stopTypingTimeOutID);
+            room.stopTyping().catch((error) => console.error(error));
+        }
+
         if (keyDownEvent.key === "Enter" && keyDownEvent.shiftKey) {
             return;
         }
@@ -31,20 +47,6 @@
             sendMessage(message);
             return;
         }
-
-        if (stopTypingTimeOutID) {
-            clearTimeout(stopTypingTimeOutID);
-        }
-        console.warn("start Typing");
-        room.startTyping()
-            .then(() => {
-                stopTypingTimeOutID = setTimeout(() => {
-                    room.stopTyping().catch((error) => console.error(error));
-                    stopTypingTimeOutID = undefined;
-                    console.warn("end Typing");
-                }, 1000);
-            })
-            .catch((error) => console.error(error));
     }
 
     function sendMessage(messageToSend: string) {
@@ -58,6 +60,13 @@
 
     function unselectChatMessageToReply() {
         selectedChatMessageToReply.set(null);
+    }
+
+    function onInputHandler(event: Event & { currentTarget: EventTarget & HTMLTextAreaElement }) {
+        if (message == "" || message == undefined) {
+            if (stopTypingTimeOutID) clearTimeout(stopTypingTimeOutID);
+            room.stopTyping().catch((error) => console.error(error));
+        }
     }
 
     onDestroy(() => {
@@ -93,6 +102,7 @@
         bind:value={message}
         bind:this={messageInput}
         on:keydown={sendMessageOrEscapeLine}
+        on:input={onInputHandler}
         class="tw-w-full tw-rounded-xl wa-searchbar tw-block tw-text-white placeholder:tw-text-sm tw-px-3 tw-py-1 tw-border-light-purple tw-border tw-bg-transparent tw-resize-none tw-m-0 tw-pr-5 tw-border-none tw-outline-none tw-shadow-none focus:tw-ring-0"
         placeholder={$LL.chat.enter()}
     />
