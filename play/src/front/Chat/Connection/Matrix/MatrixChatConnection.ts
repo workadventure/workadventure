@@ -16,6 +16,7 @@ import {
 import { MapStore } from "@workadventure/store-utils";
 import { AvailabilityStatus, ChatMember, ChatMembersAnswer, PartialSpaceUser } from "@workadventure/messages";
 import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
+import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import {
     ChatConnectionInterface,
     chatId,
@@ -304,10 +305,14 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     }
 
     private mapCreateRoomOptionsToMatrixCreateRoomOptions(roomOptions: CreateRoomOptions): ICreateRoomOpts {
+        const roomName = roomOptions.name;
+        if (roomName === undefined) {
+            throw new Error("Room name is undefined");
+        }
         return {
-            name: roomOptions.name,
+            name: roomName.trim(),
             visibility: roomOptions.visibility as Visibility | undefined,
-            room_alias_name: roomOptions.name,
+            room_alias_name: slugify(roomName),
             invite: roomOptions.invite?.map((invitation) => invitation.value) ?? [],
             is_direct: roomOptions.is_direct,
             initial_state: this.computeInitialState(roomOptions),
