@@ -55,6 +55,8 @@ import {
     ProximityPublicMessageToClientMessage,
     ProximityPrivateMessageToClientMessage,
     ProximityPublicMessage,
+    TypingProximityMessage,
+    TypingProximityMessageToClientMessage,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -1597,6 +1599,23 @@ export class SocketManager {
         });
     }
 
+    handleTypingProximitySpaceUserMessage(
+        pusher: SpacesWatcher,
+        typingSpaceUserMessage: TypingProximityMessageToClientMessage
+    ) {
+        const space = this.spaces.get(typingSpaceUserMessage.spaceName);
+        if (!space) return;
+        pusher.write({
+            message: {
+                $case: "typingProximityMessageToClientMessage",
+                typingProximityMessageToClientMessage: {
+                    spaceName: typingSpaceUserMessage.spaceName,
+                    typing: typingSpaceUserMessage.typing,
+                },
+            },
+        });
+    }
+
     private handleSendEventQuery(gameRoom: GameRoom, user: User, sendEventQuery: SendEventQuery) {
         gameRoom.dispatchEvent(sendEventQuery.name, sendEventQuery.data, user.id, sendEventQuery.targetUserIds);
     }
@@ -1823,6 +1842,27 @@ export class SocketManager {
                 },
             },
         });
+    }
+
+    // handle proximity typing message
+    handleTypingProximityMessage(user: User, message: TypingProximityMessage) {
+        const group = user.group;
+        if (!group) {
+            return;
+        }
+        const receiverUsers = group.getUsers();
+        for (const receiverUser of receiverUsers) {
+            receiverUser.socket.write({
+                message: {
+                    $case: "typingProximityMessageToClientMessage",
+                    typingProximityMessageToClientMessage: {
+                        spaceName: message.spaceName,
+                        typing: message.typing,
+                        senderUserUuid: user.uuid,
+                    },
+                },
+            });
+        }
     }
 }
 

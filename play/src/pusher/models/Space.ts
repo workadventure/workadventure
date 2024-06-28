@@ -634,6 +634,20 @@ export class Space implements CustomJsonReplacerInterface {
         this.notifyAllUsers(subMessage);
     }
 
+    public sendTypingProximityMessage(sender: SocketData, isTyping: boolean) {
+        const subMessage: SubMessage = {
+            message: {
+                $case: "typingProximityMessageToClientMessage",
+                typingProximityMessageToClientMessage: {
+                    spaceName: this.name,
+                    typing: isTyping,
+                    senderUserUuid: sender.userUuid,
+                },
+            },
+        };
+        this.notifyAllUsers(subMessage);
+    }
+
     // Notify all users in this space
     private notifyAllUsers(subMessage: SubMessage) {
         this.clientWatchers.forEach((watcher) => {

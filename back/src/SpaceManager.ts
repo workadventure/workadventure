@@ -110,6 +110,13 @@ const spaceManager = {
                         );
                         break;
                     }
+                    case "typingProximityMessageToClientMessage": {
+                        socketManager.handleTypingProximitySpaceUserMessage(
+                            pusher,
+                            message.message.typingProximityMessageToClientMessage
+                        );
+                        break;
+                    }
                     default: {
                         const _exhaustiveCheck: never = message.message;
                     }

@@ -332,6 +332,7 @@ message ClientToServerMessage {
     UpdateChatIdMessage updateChatIdMessage = 42;
     ProximityPublicMessage proximityPublicMessage = 43;
     ProximityPrivateMessage proximityPrivateMessage = 44;
+    TypingProximityMessage typingProximityMessage = 45;
   }
 }
 
@@ -591,6 +592,7 @@ message SubMessage {
     AskMuteVideoMessage askMuteVideoMessage = 28;
     ProximityPublicMessageToClientMessage proximityPublicMessageToClientMessage = 29;
     ProximityPrivateMessageToClientMessage proximityPrivateMessageToClientMessage = 30;
+    TypingProximityMessageToClientMessage typingProximityMessageToClientMessage = 31;
   }
 }
 
@@ -834,6 +836,11 @@ message ProximityPrivateMessage {
   string message = 3;
 }
 
+message TypingProximityMessage{
+    string spaceName = 1;
+    bool typing = 2;
+}
+
 message ProximityPublicMessageToClientMessage {
   string spaceName = 1;
   string message = 2;
@@ -845,6 +852,12 @@ message ProximityPrivateMessageToClientMessage {
   string receiverUserUuid = 2;
   string message = 3;
   optional string senderUserUuid = 4;
+}
+
+message TypingProximityMessageToClientMessage{
+  string spaceName = 1;
+  bool typing = 2;
+  optional string senderUserUuid = 3;
 }
 
 /**
@@ -884,6 +897,7 @@ message ServerToClientMessage {
     AskMutedVideoMessage askMutedVideoMessage = 36;
     ProximityPublicMessageToClientMessage proximityPublicMessageToClientMessage = 37;
     ProximityPrivateMessageToClientMessage proximityPrivateMessageToClientMessage = 38;
+    TypingProximityMessageToClientMessage typingProximityMessageToClientMessage = 39;
   }
 }
 
@@ -990,6 +1004,7 @@ message PusherToBackMessage {
     MuteVideoEveryBodyParticipantMessage muteVideoEveryBodyParticipantMessage = 29;
     ProximityPublicMessage proximityPublicMessage = 30;
     ProximityPrivateMessage proximityPrivateMessage = 31;
+    TypingProximityMessage typingProximityMessage = 32;
   }
 }
 
@@ -1190,6 +1205,7 @@ message PusherToBackSpaceMessage{
     AskMuteVideoMessage askMuteVideoMessage = 14;
     ProximityPrivateMessageToClientMessage proximityPrivateMessageToClientMessage = 15;
     ProximityPublicMessageToClientMessage proximityPublicMessageToClientMessage = 16;
+    TypingProximityMessageToClientMessage typingProximityMessageToClientMessage = 17;
   }
 }
 
@@ -1209,6 +1225,7 @@ message BackToPusherSpaceMessage{
     AskMuteVideoMessage askMuteVideoMessage = 12;
     ProximityPublicMessageToClientMessage proximityPublicMessageToClientMessage = 13;
     ProximityPrivateMessageToClientMessage proximityPrivateMessageToClientMessage = 14;
+    TypingProximityMessageToClientMessage typingProximityMessageToClientMessage = 15;
   }
 }
 

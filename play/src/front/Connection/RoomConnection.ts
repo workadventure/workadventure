@@ -1808,6 +1808,18 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    public emitTypingProximityMessage(spaceName: string, typing: boolean) {
+        this.send({
+            message: {
+                $case: "typingProximityMessage",
+                typingProximityMessage: {
+                    spaceName,
+                    typing,
+                },
+            },
+        });
+    }
+
     private toPositionMessage(
         x: number,
         y: number,

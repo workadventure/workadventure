@@ -1022,6 +1022,15 @@ export class IoSocketController {
                             );
                             break;
                         }
+                        case "typingProximityMessage": {
+                            socketManager.handleTypingProximitySpaceMessage(
+                                socket,
+                                message.message.typingProximityMessage.spaceName,
+                                message.message.typingProximityMessage.typing,
+                                message.message
+                            );
+                            break;
+                        }
                         default: {
                             const _exhaustiveCheck: never = message.message;
                         }
