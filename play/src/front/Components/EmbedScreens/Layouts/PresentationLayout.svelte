@@ -139,6 +139,8 @@
     //         }
     //     }
     // }
+    $: console.log($streamableCollectionStore, "streamable");
+    $: console.log($myCameraStore, "camera");
 </script>
 
 <div class="presentation-layout flex flex-col-reverse md:flex-col">
