@@ -55,9 +55,8 @@
     let mainLayout: HTMLDivElement;
     // export let message: string;
 
-    let isMobile = isMediaBreakpointUp("md");
     const resizeObserver = new ResizeObserver(() => {
-        isMobile = isMediaBreakpointUp("md");
+        isMediaBreakpointUp("md");
     });
 
     onMount(() => {
