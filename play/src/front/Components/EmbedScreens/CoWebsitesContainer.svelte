@@ -22,6 +22,7 @@
     import { heightContainer } from "../../Stores/CoWebsiteStore";
     import { waScaleManager } from "../../Phaser/Services/WaScaleManager";
     import MenuBurgerIcon from "../Icons/MenuBurgerIcon.svelte";
+    import XIcon from "../Icons/XIcon.svelte";
 
     let activeCowebsite = $coWebsites[0];
     let showArrow = false;
@@ -34,18 +35,14 @@
     let finalHeight;
     let startHeight: number;
     const mediaQuery = window.matchMedia("(max-width: 768px)");
-    let initialWidth: number;
-    const widthTab = 300;
-    const widthTabResponsive = 220;
     let vertical: boolean;
     let resizeBarHide = false;
     let styleTag: HTMLStyleElement;
-    $: appearDropdownMenu = $totalTabWidth > window.innerWidth - $widthContainer + 100;
-    // $: appearDropdownMenuMobile = $totalTabWidthMobile > window.innerWidth - $widthContainer + 100;
-    $: showArrow = $totalTabWidth > window.innerWidth - $widthContainer + 100;
+    $: appearDropdownMenu = $totalTabWidth >= window.innerWidth - $widthContainer;
+    $: appearDropdownMenuMobile = $totalTabWidthMobile > $widthContainer;
+    $: showArrow = $totalTabWidth > window.innerWidth - $widthContainer;
     let numberMaxOfCowebsite: number;
     let menuBurgerIcon = false;
-    // $: console.log(appearDropdownMenu, "appearDropdownMenu");
 
     onMount(() => {
         mediaQuery.addEventListener("change", (e: any) => handleTabletChange(e));
@@ -84,9 +81,6 @@
 
     function resizeDesktop() {
         startWidthContainer = parseInt(getComputedStyle(container).width);
-        // console.log(startWidthContainer, "startWidthContainer");
-        initialWidth = parseInt(getComputedStyle(container).width);
-        // console.log(initialWidth, "initialWidth");
         const handleMouseDown = (e: { clientX: number }) => {
             startX = e.clientX;
             startWidthContainer = parseInt(getComputedStyle(container).width);
@@ -121,7 +115,6 @@
 
     function resizeMobile() {
         startWidthContainer = parseInt(getComputedStyle(container).width);
-        initialWidth = parseInt(getComputedStyle(container).width);
         function handleMouseDown(e: TouchEvent) {
             let clientY = e.touches[0].clientY;
             startY = clientY;
@@ -156,27 +149,8 @@
         };
     }
 
-    function resizeMax(newValue: number) {
-        if (!vertical) {
-            const maxWidth = window.innerWidth * 0.75;
-            if (newValue < maxWidth) {
-                widthContainer.set(newValue);
-            } else {
-                container.style.width = `${maxWidth}px`;
-            }
-        } else {
-            const maxHeight = window.innerHeight * 0.75;
-            if (newValue < maxHeight) {
-                heightContainer.set(newValue);
-            } else {
-                container.style.height = `${maxHeight}px`;
-            }
-        }
-    }
-
     function resizeMin(newValue: number) {
         const minHeight = window.innerHeight * 0.25;
-        console.log(minHeight, "minHeight");
         if (newValue > minHeight) {
             widthContainer.set(newValue);
         } else {
@@ -191,17 +165,14 @@
             $totalTabWidthMobile, numberMaxCowebsite();
         }
     }
-    // $: console.log($totalTabWidth, "totalTabWidth");
     $: $totalTabWidthMobile, numberMaxCowebsite();
     $: $widthContainer, numberMaxCowebsite();
-    // $: console.log($widthContainer, "widthContainer");
 
     function numberMaxCowebsite() {
         if (!vertical) {
             numberMaxOfCowebsite = Math.floor((window.innerWidth - $canvasWidth) / 300);
         } else {
-            // console.log(numberMaxOfCowebsite, "numberMaxOfCowebsite");
-            numberMaxOfCowebsite = Math.floor((window.innerWidth - $canvasWidth) / 220);
+            numberMaxOfCowebsite = Math.floor($canvasWidth / 220);
         }
     }
 
@@ -296,7 +267,7 @@
     id="cowebsites-container"
     class={vertical
         ? "height-default-vertical w-full right-0 top-0 fixed bg-contrast/50 backdrop-blur left_panel responsive-container fullscreen"
-        : "width-default-horizontal h-full right-0 top-0 fixed bg-contrast/50 backdrop-blur left_panel flex-col padding"}
+        : "width-default-horizontal h-full right-0 top-0 fixed bg-contrast/50 backdrop-blur left_panel flex-col pb-[76px]"}
     bind:this={container}
     in:fly|local={vertical ? { duration: 750, y: -1000 } : { duration: 750, x: 1000 }}
 >
@@ -304,13 +275,15 @@
         {#if showArrow}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div
-                class="aspect-ratio fill-white h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer {menuBurgerIcon
-                    ? 'stroke-white'
-                    : 'bg-white fill-black'}"
+                class="aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer"
                 on:click={() => (appearDropdownMenu = !appearDropdownMenu)}
                 on:click={() => (menuBurgerIcon = !menuBurgerIcon)}
             >
-                <MenuBurgerIcon />
+                {#if menuBurgerIcon}
+                    <MenuBurgerIcon />
+                {:else}
+                    <XIcon />
+                {/if}
             </div>
         {/if}
 
@@ -344,6 +317,7 @@
                     {/each}
                 {/if}
                 <div class="flex justify-end">
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
                         class="ml-full aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer"
                         on:click={toggleFullScreen}
@@ -354,39 +328,39 @@
             </div>
         </div>
 
-        <div
-            class="absolute md:fixed z-1800 top-[0%] md:top-[15%] left-0 bg-contrast/80 rounded-lg max-h-[80vh] min-h-[50px] overflow-y-auto w-auto tab-drop-down"
-        >
-            {#if appearDropdownMenu}
-                {#if !vertical}
-                    <div class="max-h-[50px] w-[50px] bg-red-500 absolute top-0 left-0" />
-                    {#each $coWebsites.slice(numberMaxOfCowebsite) as coWebsite (coWebsite.getId())}
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                        <div on:click={() => setActiveCowebsite(coWebsite)}>
-                            <CoWebsiteTab
-                                {coWebsite}
-                                isLoading={true}
-                                active={activeCowebsite === coWebsite}
-                                on:close={() => coWebsites.remove(coWebsite)}
-                            />
-                        </div>
-                    {/each}
-                {:else}
+        {#if !vertical && appearDropdownMenu}
+            <div
+                class="absolute md:fixed z-1800 md:top-[8%] left-0 bg-contrast/80 rounded-lg max-h-[80vh] min-h-[50px] overflow-y-auto w-auto tab-drop-down"
+            >
+                {#each $coWebsites.slice(numberMaxOfCowebsite) as coWebsite (coWebsite.getId())}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    {#each $coWebsites.slice(numberMaxOfCowebsite) as coWebsite (coWebsite.getId())}
-                        <div on:click={() => setActiveCowebsite(coWebsite)}>
-                            <CoWebsiteTab
-                                {coWebsite}
-                                isLoading={true}
-                                active={activeCowebsite === coWebsite}
-                                on:close={() => coWebsites.remove(coWebsite)}
-                            />
-                        </div>
-                    {/each}
-                {/if}
-            {/if}
-        </div>
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div on:click={() => setActiveCowebsite(coWebsite)}>
+                        <CoWebsiteTab
+                            {coWebsite}
+                            isLoading={true}
+                            active={activeCowebsite === coWebsite}
+                            on:close={() => coWebsites.remove(coWebsite)}
+                        />
+                    </div>
+                {/each}
+            </div>
+        {:else if vertical && appearDropdownMenuMobile}
+            <div
+                class="absolute md:fixed z-1800 top-[15%] left-0 bg-contrast/80 rounded-md max-h-[80vh] w-[220px] overflow-y-auto w-auto tab-drop-down"
+            >
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                {#each $coWebsites.slice(numberMaxOfCowebsite) as coWebsite (coWebsite.getId())}
+                    <div on:click={() => setActiveCowebsite(coWebsite)}>
+                        <CoWebsiteTab
+                            {coWebsite}
+                            isLoading={true}
+                            active={activeCowebsite === coWebsite}
+                            on:close={() => coWebsites.remove(coWebsite)}
+                        />
+                    </div>
+                {/each}
+            </div>
+        {/if}
     </div>
 
     <div class={vertical ? "h-full ml-3 responsive-website" : "h-full object-contain ml-3"}>
@@ -422,24 +396,6 @@
         width: 100%;
         background-color: #1b2941;
     }
-    .padding {
-        padding-bottom: 76px;
-    }
-    /* .tab-drop-down {
-        margin-top: 10%;
-        padding-top: -48px;
-        width: 300px;
-        height: auto;
-        border-radius: 8px;
-    } */
-    /*
-    #dropdown-container {
-
-        max-height: 80vh;
-        min-height: 50px;
-        width: auto;
-    } */
-
     @media (max-width: 768px) {
         #cowebsites-container {
             width: 100%;
@@ -455,12 +411,6 @@
         }
         .responsive-website {
             width: 94%;
-            border-radius: 8px;
-        }
-        .tab-drop-down {
-            margin-top: 15%;
-            width: 200px;
-            height: auto;
             border-radius: 8px;
         }
         #dropdown-container {
