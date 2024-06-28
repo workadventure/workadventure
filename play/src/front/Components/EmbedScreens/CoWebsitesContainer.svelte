@@ -40,10 +40,17 @@
     let styleTag: HTMLStyleElement;
     $: appearDropdownMenu = vertical
         ? $totalTabWidthMobile > $widthContainer
-        : $totalTabWidth >= window.innerWidth - $widthContainer;
-    $: showArrow = $totalTabWidth > window.innerWidth - $widthContainer;
+        : $totalTabWidth >= window.innerWidth - $widthContainer && window.innerWidth !== $widthContainer;
+    $: showArrow = $totalTabWidth > window.innerWidth - $widthContainer ? true : false;
     let numberMaxOfCowebsite: number;
     let menuBurgerIcon = false;
+    let isToggleFullScreen = false;
+
+    // $: console.log(showArrow, "showArrow");
+
+    $: console.log($totalTabWidth, "total tab width");
+    $: console.log(window.innerWidth, "width window");
+    $: console.log($widthContainer, "width container");
 
     onMount(() => {
         mediaQuery.addEventListener("change", handleTabletChange);
@@ -171,17 +178,25 @@
     $: $totalTabWidthMobile, numberMaxCowebsite();
     $: $widthContainer, numberMaxCowebsite();
     $: {
-        if (appearDropdownMenu) {
-            menuBurgerIcon = !menuBurgerIcon;
+        if (isToggleFullScreen) {
+            menuBurgerIcon = false;
+            appearDropdownMenu = true;
+        } else {
+            menuBurgerIcon = true;
         }
     }
 
     function numberMaxCowebsite() {
         if (!vertical) {
             numberMaxOfCowebsite = Math.floor((window.innerWidth - $canvasWidth) / 300);
+            if (numberMaxOfCowebsite < 1) {
+                appearDropdownMenu === false;
+            }
         } else {
             numberMaxOfCowebsite = Math.floor($canvasWidth / 220);
-            menuBurgerIcon = !menuBurgerIcon;
+            if (numberMaxOfCowebsite < 1) {
+                appearDropdownMenu === false;
+            }
         }
     }
 
@@ -219,24 +234,31 @@
             fullScreenCowebsite.set(false);
             container.style.width = `${$widthContainer - $canvasWidth}px`;
             resizeBarHide = false;
+            isToggleFullScreen = false;
         } else if ($fullScreenCowebsite && vertical) {
             fullScreenCowebsite.set(false);
             widthContainer.set(window.innerHeight);
             container.style.height = `${$heightContainer - $canvasHeight}px`;
             resizeBarHide = false;
+            isToggleFullScreen = false;
         } else if (!$fullScreenCowebsite && !vertical) {
             fullScreenCowebsite.set(true);
             widthContainer.set(window.innerWidth);
             container.style.width = `${$widthContainer}px`;
             container.style.backgroundColor = "#1b2a40";
             resizeBarHide = true;
+            isToggleFullScreen = true;
         } else {
             fullScreenCowebsite.set(true);
             heightContainer.set(window.innerHeight);
             container.style.height = `${$heightContainer}px`;
             resizeBarHide = true;
+            isToggleFullScreen = true;
         }
     }
+
+    // $: console.log(appearDropdownMenu, "appear menu drop down");
+    // $: console.log(showArrow, "show Arrow");
 
     function updateDynamicStyles() {
         let widthPercent = activeCowebsite.getWidthPercent() || 50;
@@ -270,6 +292,9 @@
 
     $: activeCowebsite, updateDynamicStyles();
     $: vertical, updateDynamicStyles();
+
+    $: console.log(menuBurgerIcon, "menu burger icon");
+    $: console.log(appearDropdownMenu, "appear drop down menu");
 </script>
 
 <div
@@ -289,9 +314,9 @@
                 on:click={() => (menuBurgerIcon = !menuBurgerIcon)}
             >
                 {#if menuBurgerIcon}
-                    <ChevronDownIcon />
-                {:else}
                     <XIcon />
+                {:else}
+                    <ChevronDownIcon />
                 {/if}
             </div>
         {/if}
@@ -337,7 +362,7 @@
         </div>
         <!-- </div> -->
 
-        {#if !vertical && appearDropdownMenu}
+        {#if !vertical && appearDropdownMenu && menuBurgerIcon}
             <div
                 class="absolute md:fixed z-1800 md:top-[8%] left-0 bg-contrast/80 rounded-lg max-h-[80vh] min-h-[50px] overflow-y-auto w-auto tab-drop-down"
             >
@@ -384,10 +409,9 @@
 
     <div
         class={vertical
-            ? "absolute left-1 top-0 bottom-0 m-auto w-1.5 h-40 bg-white rounded cursor-col-resize test-resize responsive-resize-bar"
-            : "absolute resize-x left-1 top-0 bottom-0 m-auto w-1.5 h-40 bg-white rounded cursor-col-resize test-resize"}
+            ? "absolute left-1 top-0 bottom-0 m-auto w-1.5 h-40 bg-white rounded cursor-col-resize responsive-resize-bar"
+            : "absolute  left-1 top-0 bottom-0 m-auto w-1.5 h-40 bg-white rounded cursor-col-resize"}
         class:resize-bar={resizeBarHide}
-        id="resize-bar"
         bind:this={resizeBar}
         on:mousedown={addDivForResize}
         on:mouseup={removeDivForResize}
