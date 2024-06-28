@@ -21,8 +21,8 @@
     import { widthContainer } from "../../Stores/CoWebsiteStore";
     import { heightContainer } from "../../Stores/CoWebsiteStore";
     import { waScaleManager } from "../../Phaser/Services/WaScaleManager";
-    import MenuBurgerIcon from "../Icons/MenuBurgerIcon.svelte";
     import XIcon from "../Icons/XIcon.svelte";
+    import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
 
     let activeCowebsite = $coWebsites[0];
     let showArrow = false;
@@ -38,15 +38,16 @@
     let vertical: boolean;
     let resizeBarHide = false;
     let styleTag: HTMLStyleElement;
-    $: appearDropdownMenu = $totalTabWidth >= window.innerWidth - $widthContainer;
-    $: appearDropdownMenuMobile = $totalTabWidthMobile > $widthContainer;
+    $: appearDropdownMenu = vertical
+        ? $totalTabWidthMobile > $widthContainer
+        : $totalTabWidth >= window.innerWidth - $widthContainer;
     $: showArrow = $totalTabWidth > window.innerWidth - $widthContainer;
     let numberMaxOfCowebsite: number;
     let menuBurgerIcon = false;
 
     onMount(() => {
-        mediaQuery.addEventListener("change", (e: any) => handleTabletChange(e));
-        handleTabletChange(mediaQuery);
+        mediaQuery.addEventListener("change", handleTabletChange);
+        handleTabletChange();
         if (!vertical) {
             let widthOnMount = parseInt(getComputedStyle(container).width);
             widthContainer.set(widthOnMount);
@@ -67,14 +68,17 @@
         if (styleTag) {
             document.head.removeChild(styleTag);
         }
+        mediaQuery.removeEventListener("change", handleTabletChange);
     });
 
-    function handleTabletChange(e: MediaQueryList) {
-        if (e.matches) {
+    function handleTabletChange() {
+        if (mediaQuery.matches) {
             vertical = true;
+            console.log(vertical, "vertical");
             resizeMobile();
         } else {
             vertical = false;
+            console.log(vertical, "vertical");
             resizeDesktop();
         }
     }
@@ -101,7 +105,6 @@
             waScaleManager.applyNewSize();
         };
         const handleMouseUp = () => {
-            // appearDropdown();
             document.removeEventListener("mousemove", handleMouseMove);
             document.removeEventListener("mouseup", handleMouseUp);
         };
@@ -125,7 +128,7 @@
         resizeBar.addEventListener("touchstart", handleMouseDown, false);
         function handleMouseMove(e: TouchEvent) {
             let clientY = e.touches[0].clientY;
-            let newHeight = startHeight - (clientY - startY);
+            let newHeight = startHeight + (clientY - startY);
             heightContainer.set(newHeight);
             finalHeight = newHeight + "px";
             container.style.height = finalHeight;
@@ -167,12 +170,18 @@
     }
     $: $totalTabWidthMobile, numberMaxCowebsite();
     $: $widthContainer, numberMaxCowebsite();
+    $: {
+        if (appearDropdownMenu) {
+            menuBurgerIcon = !menuBurgerIcon;
+        }
+    }
 
     function numberMaxCowebsite() {
         if (!vertical) {
             numberMaxOfCowebsite = Math.floor((window.innerWidth - $canvasWidth) / 300);
         } else {
             numberMaxOfCowebsite = Math.floor($canvasWidth / 220);
+            menuBurgerIcon = !menuBurgerIcon;
         }
     }
 
@@ -280,53 +289,53 @@
                 on:click={() => (menuBurgerIcon = !menuBurgerIcon)}
             >
                 {#if menuBurgerIcon}
-                    <MenuBurgerIcon />
+                    <ChevronDownIcon />
                 {:else}
                     <XIcon />
                 {/if}
             </div>
         {/if}
 
-        <div class="relative">
-            <div class="tab-bar flex items-center justify-between overflow-x-auto" id="tabBar">
-                {#if !vertical}
-                    <!-- 300 is corresponding to the width of a tab so we calculate to know if it will fit -->
-                    {#each $coWebsites.slice(0, numberMaxOfCowebsite) as coWebsite (coWebsite.getId())}
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                        <div on:click={() => setActiveCowebsite(coWebsite)}>
-                            <CoWebsiteTab
-                                {coWebsite}
-                                isLoading={true}
-                                active={activeCowebsite === coWebsite}
-                                on:close={() => coWebsites.remove(coWebsite)}
-                            />
-                        </div>
-                    {/each}
-                {:else}
-                    <!-- Same thing for mobile -->
-                    {#each $coWebsites.slice(0, numberMaxOfCowebsite) as coWebsite (coWebsite.getId())}
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                        <div on:click={() => setActiveCowebsite(coWebsite)}>
-                            <CoWebsiteTab
-                                {coWebsite}
-                                isLoading={true}
-                                active={activeCowebsite === coWebsite}
-                                on:close={() => coWebsites.remove(coWebsite)}
-                            />
-                        </div>
-                    {/each}
-                {/if}
-                <div class="flex justify-end">
+        <!-- <div class="relative"> -->
+        <div class="tab-bar flex items-center w-full overflow-x-auto">
+            {#if !vertical}
+                <!-- 300 is corresponding to the width of a tab so we calculate to know if it will fit -->
+                {#each $coWebsites.slice(0, numberMaxOfCowebsite) as coWebsite (coWebsite.getId())}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div
-                        class="ml-full aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer"
-                        on:click={toggleFullScreen}
-                    >
-                        <FullScreenIcon />
+                    <div on:click={() => setActiveCowebsite(coWebsite)}>
+                        <CoWebsiteTab
+                            {coWebsite}
+                            isLoading={true}
+                            active={activeCowebsite === coWebsite}
+                            on:close={() => coWebsites.remove(coWebsite)}
+                        />
                     </div>
+                {/each}
+            {:else}
+                <!-- Same thing for mobile -->
+                {#each $coWebsites.slice(0, numberMaxOfCowebsite) as coWebsite (coWebsite.getId())}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div on:click={() => setActiveCowebsite(coWebsite)}>
+                        <CoWebsiteTab
+                            {coWebsite}
+                            isLoading={true}
+                            active={activeCowebsite === coWebsite}
+                            on:close={() => coWebsites.remove(coWebsite)}
+                        />
+                    </div>
+                {/each}
+            {/if}
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <div class="flex justify-end w-full">
+                <div
+                    class="ml-full aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer"
+                    on:click={toggleFullScreen}
+                >
+                    <FullScreenIcon />
                 </div>
             </div>
         </div>
+        <!-- </div> -->
 
         {#if !vertical && appearDropdownMenu}
             <div
@@ -344,7 +353,7 @@
                     </div>
                 {/each}
             </div>
-        {:else if vertical && appearDropdownMenuMobile}
+        {:else if vertical && appearDropdownMenu}
             <div
                 class="absolute md:fixed z-1800 top-[15%] left-0 bg-contrast/80 rounded-md max-h-[80vh] w-[220px] overflow-y-auto w-auto tab-drop-down"
             >
@@ -376,7 +385,7 @@
     <div
         class={vertical
             ? "absolute left-1 top-0 bottom-0 m-auto w-1.5 h-40 bg-white rounded cursor-col-resize test-resize responsive-resize-bar"
-            : "absolute left-1 top-0 bottom-0 m-auto w-1.5 h-40 bg-white rounded cursor-col-resize test-resize"}
+            : "absolute resize-x left-1 top-0 bottom-0 m-auto w-1.5 h-40 bg-white rounded cursor-col-resize test-resize"}
         class:resize-bar={resizeBarHide}
         id="resize-bar"
         bind:this={resizeBar}
