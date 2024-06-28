@@ -71,6 +71,7 @@ import {
     SpaceFilterMessage,
     WatchSpaceMessage,
     UnwatchSpaceMessage,
+    TypingProximityMessageToClientMessage,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -240,6 +241,11 @@ export class RoomConnection implements RoomConnection {
         new Subject<ProximityPublicMessageToClientMessage>();
     public readonly proximityPublicMessageToClientMessageStream =
         this._proximityPublicMessageToClientMessageStream.asObservable();
+    private readonly _typingProximityPrivateMessageToClientMessage =
+        new Subject<TypingProximityMessageToClientMessage>();
+    public readonly typingProximityPrivateMessageToClientMessage =
+        this._typingProximityPrivateMessageToClientMessage.asObservable();
+
     private queries = new Map<
         number,
         {
@@ -767,6 +773,12 @@ export class RoomConnection implements RoomConnection {
                 case "proximityPublicMessageToClientMessage": {
                     this._proximityPublicMessageToClientMessageStream.next(
                         message.proximityPublicMessageToClientMessage
+                    );
+                    break;
+                }
+                case "typingProximityMessageToClientMessage": {
+                    this._typingProximityPrivateMessageToClientMessage.next(
+                        message.typingProximityMessageToClientMessage
                     );
                     break;
                 }
@@ -1956,6 +1968,7 @@ export class RoomConnection implements RoomConnection {
         this._askMutedVideoMessage.complete();
         this._proximityPrivateMessageToClientMessageStream.complete();
         this._proximityPublicMessageToClientMessageStream.complete();
+        this._typingProximityPrivateMessageToClientMessage.complete();
     }
 
     private goToSelectYourWokaScene(): void {

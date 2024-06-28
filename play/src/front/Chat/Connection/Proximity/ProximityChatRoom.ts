@@ -1,5 +1,5 @@
 import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
-import { Readable, get, writable } from "svelte/store";
+import { Readable, Writable, get, writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import { AvailabilityStatus } from "@workadventure/messages";
 import {
@@ -56,7 +56,7 @@ export class ProximityChatRoom implements ChatRoom {
     membersId: string[] = [];
     hasPreviousMessage = writable(false);
     isEncrypted = writable(false);
-    typingMembers: Readable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
+    typingMembers: Writable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
 
     unknowUser = {
         id: "0",
@@ -174,14 +174,6 @@ export class ProximityChatRoom implements ChatRoom {
         this.messages.push(newMessage);
     }
 
-    startWriting(): void {
-        console.info("Function not implemented yet!");
-    }
-
-    stopWriting(): void {
-        console.info("Function not implemented yet!");
-    }
-
     sendFiles(files: FileList): Promise<void> {
         return Promise.resolve();
     }
@@ -223,11 +215,59 @@ export class ProximityChatRoom implements ChatRoom {
     }
 
     startTyping(): Promise<object> {
-        console.info("Function not implemented.");
+        const spaceName = get(this._connection.spaceName);
+        if (spaceName == undefined) return Promise.resolve({});
+        this._connection.roomConnection.emitTypingProximityMessage(spaceName, true);
         return Promise.resolve({});
     }
     stopTyping(): Promise<object> {
-        console.info("Function not implemented.");
+        const spaceName = get(this._connection.spaceName);
+        if (spaceName == undefined) return Promise.resolve({});
+        this._connection.roomConnection.emitTypingProximityMessage(spaceName, false);
         return Promise.resolve({});
+    }
+
+    addTypingUser(senderUserUuid: string): void {
+        const sender: ChatUser | undefined = [...get(this._connection.userConnected).values()].find(
+            (user) => user.uuid === senderUserUuid
+        );
+        if (sender == undefined) return;
+
+        this.typingMembers.update((typingMembers) => {
+            if (typingMembers.find((user) => user.id === sender.id) == undefined) {
+                typingMembers.push({
+                    id: sender.id,
+                    name: sender.username ?? null,
+                    avatarUrl: sender.avatarUrl ?? null,
+                });
+            }
+            return typingMembers;
+        });
+    }
+
+    removeTypingUser(senderUserUuid: string): void {
+        const sender: ChatUser | undefined = [...get(this._connection.userConnected).values()].find(
+            (user) => user.uuid === senderUserUuid
+        );
+        if (sender == undefined) return;
+
+        this.typingMembers.update((typingMembers) => {
+            return typingMembers.filter((user) => user.id !== sender.id);
+        });
+    }
+
+    addExternalTypingUser(id: string, name: string, avatarUrl: string | null): void {
+        this.typingMembers.update((typingMembers) => {
+            if (typingMembers.find((user) => user.id === id) == undefined) {
+                typingMembers.push({ id, name, avatarUrl });
+            }
+            return typingMembers;
+        });
+    }
+
+    removeExternalTypingUser(id: string) {
+        this.typingMembers.update((typingMembers) => {
+            return typingMembers.filter((user) => user.id !== id);
+        });
     }
 }
