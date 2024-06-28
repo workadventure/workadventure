@@ -62,7 +62,7 @@
         selectedChatMessageToReply.set(null);
     }
 
-    function onInputHandler(event: Event & { currentTarget: EventTarget & HTMLTextAreaElement }) {
+    function onInputHandler() {
         if (message == "" || message == undefined) {
             if (stopTypingTimeOutID) clearTimeout(stopTypingTimeOutID);
             room.stopTyping().catch((error) => console.error(error));
