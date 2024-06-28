@@ -267,9 +267,9 @@
             } else {
                 videoContainer.style.height = "100%";
                 videoContainer.style.width = "100%";
+                calcHeightVideo();
             }
         }
-        calcHeightVideo();
     }
 
     function untogglefFullScreen() {
@@ -290,7 +290,7 @@
 <!-- <div class={$mediaStreamConstraintsStore.audio ? "border-4 border-solid border-color rounded-lg" : ""}> -->
 <div
     class="video-container group/screenshare transition-all h-full w-full relative aspect-video {$highlightFullScreen
-        ? 'mt-8'
+        ? ''
         : ''}"
     class:isHighlighted
     class:video-off={!videoEnabled}

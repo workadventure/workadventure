@@ -21,10 +21,15 @@
     let embedScreen: Streamable;
     let menuDrop = false;
     let videoContainer: HTMLDivElement;
+    let isMobile = window.matchMedia("(max-width: 768px)").matches;
 
     onMount(() => {
-        calcHeightVideo();
+        if (!isMobile) {
+            calcHeightVideo();
+        }
     });
+
+    // $: $highlightFullScreen && !isMobile, calcHeightVideo();
 
     if (peer) {
         embedScreen = peer as unknown as Streamable;
@@ -43,21 +48,18 @@
                 videoContainer.style.width = "100%";
             }
         }
-        calcHeightVideo();
+        if (!isMobile) {
+            calcHeightVideo();
+        }
     }
 
-    onMount(() => {
-        calcHeightVideo();
-    });
-
     function untogglefFullScreen() {
-        calcHeightVideo();
         highlightedEmbedScreen.removeHighlight();
         highlightFullScreen.set(false);
     }
 
     $: $setHeightScreenShare, calcHeightVideo();
-    $: $highlightedEmbedScreen === embedScreen, calcHeightVideo();
+    // $: $highlightedEmbedScreen === embedScreen, calcHeightVideo();
 
     function calcHeightVideo() {
         if ($highlightedEmbedScreen === embedScreen && videoContainer) {
