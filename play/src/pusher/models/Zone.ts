@@ -49,7 +49,8 @@ export class UserDescriptor {
         private visitCardUrl: string | null,
         private variables: { [key: string]: string },
         private companionTexture?: CompanionTextureMessage,
-        private outlineColor?: number
+        private outlineColor?: number,
+        private chatID?: string
     ) {
         if (!Number.isInteger(this.userId)) {
             throw new Error("UserDescriptor.userId is not an integer: " + this.userId);
@@ -71,7 +72,8 @@ export class UserDescriptor {
             message.visitCardUrl,
             message.variables,
             message.companionTexture,
-            message.hasOutline ? message.outlineColor : undefined
+            message.hasOutline ? message.outlineColor : undefined,
+            message.chatID
         );
     }
 
@@ -115,6 +117,7 @@ export class UserDescriptor {
             outlineColor: this.outlineColor ?? 0, // FIXME: improve the typing
             hasOutline: this.outlineColor !== undefined,
             variables: this.variables,
+            chatID: this.chatID,
         };
 
         return userJoinedMessage;
@@ -207,12 +210,13 @@ export class Zone implements CustomJsonReplacerInterface {
                         switch (message.message.$case) {
                             case "userJoinedZoneMessage": {
                                 const userJoinedZoneMessage = message.message.userJoinedZoneMessage;
+                                console.log(userJoinedZoneMessage);
                                 const userDescriptor =
                                     UserDescriptor.createFromUserJoinedZoneMessage(userJoinedZoneMessage);
                                 this.users.set(userJoinedZoneMessage.userId, userDescriptor);
 
                                 const fromZone = userJoinedZoneMessage.fromZone;
-
+                                //TODO : modifier le userJoinedZoneMessage
                                 this.notifyUserEnter(userDescriptor, fromZone);
                                 break;
                             }
@@ -470,6 +474,7 @@ export class Zone implements CustomJsonReplacerInterface {
 
     public startListening(listener: Socket): void {
         const userData = listener.getUserData();
+        console.log({ userData });
         for (const [userId, user] of this.users.entries()) {
             if (userId !== userData.userId) {
                 this.socketListener.onUserEnters(user, listener);

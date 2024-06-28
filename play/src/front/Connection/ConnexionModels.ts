@@ -25,6 +25,7 @@ export interface MessageUserJoined {
     userUuid: string;
     outlineColor: number | undefined;
     variables: Map<string, unknown>;
+    chatID?: string;
 }
 
 export interface PositionInterface {
