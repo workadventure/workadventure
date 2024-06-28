@@ -7,6 +7,7 @@ const chat: BaseTranslation = {
         visitCard: "Visit card",
         addFriend: "Add friend",
     },
+    loader: "Loading...",
     typing: "is typing...",
     users: "Users",
     chat: "Chat",
