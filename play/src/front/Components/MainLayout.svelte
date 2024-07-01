@@ -9,6 +9,7 @@
     import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
     import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
     import { soundPlayingStore } from "../Stores/SoundPlayingStore";
+    import { hasEmbedScreen } from "../Stores/EmbedScreensStore";
     import {
         showLimitRoomModalStore,
         modalVisibilityStore,
@@ -33,7 +34,6 @@
     import ReportMenu from "./ReportMenu/ReportMenu.svelte";
     import VisitCard from "./VisitCard/VisitCard.svelte";
     import WarningBanner from "./WarningContainer/WarningBanner.svelte";
-    import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
     import BanMessageContainer from "./TypeMessage/BanMessageContainer.svelte";
     import TextMessageContainer from "./TypeMessage/TextMessageContainer.svelte";
     import AudioPlaying from "./UI/AudioPlaying.svelte";
@@ -50,13 +50,13 @@
     import Popup from "./Modal/Popup.svelte";
     import MapList from "./Exploration/MapList.svelte";
     import WarningToast from "./WarningContainer/WarningToast.svelte";
+    import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
 
     let mainLayout: HTMLDivElement;
     // export let message: string;
 
-    let isMobile = isMediaBreakpointUp("md");
     const resizeObserver = new ResizeObserver(() => {
-        isMobile = isMediaBreakpointUp("md");
+        isMediaBreakpointUp("md");
     });
 
     onMount(() => {
@@ -68,7 +68,7 @@
 <!-- Components ordered by z-index -->
 <div
     id="main-layout"
-    class="@container/main-layout relative z-10 h-screen pointer-events-none {[...$coWebsites.values()].length === 0
+    class="@container/main-layout relative h-full pointer-events-none {[...$coWebsites.values()].length === 0
         ? 'not-cowebsite'
         : ''}"
     bind:this={mainLayout}
@@ -76,10 +76,6 @@
     {#if $modalVisibilityStore || $modalPopupVisibilityStore}
         <div class="bg-black/60 w-full h-full fixed left-0 right-0" />
     {/if}
-
-    <aside id="main-layout-left-aside">
-        <CoWebsitesContainer vertical={isMobile} />
-    </aside>
 
     <section id="main-layout-main" class="pb-0 pointer-events-none">
         <Lazy
@@ -125,6 +121,10 @@
             <HelpPopUpBlocked />
         {/if}
 
+        {#if $hasEmbedScreen}
+            <EmbedScreensContainer />
+        {/if}
+
         {#if $soundPlayingStore}
             <AudioPlaying url={$soundPlayingStore} />
         {/if}
@@ -136,10 +136,6 @@
         {#if $requestVisitCardsStore}
             <VisitCard visitCardUrl={$requestVisitCardsStore} />
         {/if}
-
-        <!-- {#if $hasEmbedScreen}
-            <EmbedScreensContainer />
-        {/if} -->
 
         {#if $uiWebsitesStore}
             <UiWebsiteContainer />

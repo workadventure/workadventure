@@ -4,7 +4,6 @@
     import WebFontLoaderPlugin from "phaser3-rex-plugins/plugins/webfontloader-plugin.js";
     import OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
     import { DEBUG_MODE, SENTRY_DSN_FRONT, SENTRY_ENVIRONMENT, SENTRY_RELEASE } from "../Enum/EnvironmentVariable";
-    import { coWebsiteManager } from "../WebRtc/CoWebsiteManager";
     import { HdpiManager } from "../Phaser/Services/HdpiManager";
     import { EntryScene } from "../Phaser/Login/EntryScene";
     import { LoginScene } from "../Phaser/Login/LoginScene";
@@ -19,6 +18,7 @@
     import { HtmlUtils } from "../WebRtc/HtmlUtils";
     import { iframeListener } from "../Api/IframeListener";
     import { desktopApi } from "../Api/Desktop";
+    import { coWebsiteManager, coWebsites } from "../Stores/CoWebsiteStore";
     import GameOverlay from "./GameOverlay.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
 
@@ -190,16 +190,62 @@
     });
 </script>
 
-<div class="bg-contrast h-screen w-screen absolute z-[2]" />
-<div class="bg-contrast h-screen w-screen absolute z-[2]" />
-<div class="main-container z-10 relative">
-    <!-- Create the editor container -->
-    <GameOverlay {game} />
-    <div id="game" bind:this={gameDiv} class="absolute top-0 -z-10" />
-    <GameOverlay {game} />
-    <div id="game" bind:this={gameDiv} class="absolute top-0 -z-10" />
-    <CoWebsitesContainer />
+<div class="wrapper">
+    <div class="map-container">
+        <div id="game" bind:this={gameDiv}>
+            <GameOverlay {game} />
+        </div>
+    </div>
+    {#if $coWebsites.length > 0}
+        <div class="cowebsite-container">
+            <CoWebsitesContainer />
+        </div>
+    {/if}
 </div>
 
-<style lang="scss">
+<style>
+    .wrapper {
+        position: absolute;
+        height: 100%;
+        width: 100%;
+    }
+
+    .map-container {
+        flex: 1;
+        position: fixed;
+    }
+
+    .cowebsite-container {
+        flex: 1;
+        position: relative;
+    }
+
+    @media (max-width: 768px) {
+        #game {
+            position: relative;
+        }
+        .wrapper {
+            display: flex;
+            flex-direction: column-reverse;
+            width: 100%;
+            height: 100%;
+        }
+
+        .map-container {
+            position: fixed;
+        }
+
+        .cowebsite-container {
+            position: relative;
+        }
+
+        #game {
+            position: relative;
+        }
+
+        .cowebsite-container {
+            width: 100%;
+            height: 50%;
+        }
+    }
 </style>

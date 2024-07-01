@@ -1,5 +1,5 @@
-import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import type { Game } from "../Game/Game";
+import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
 import { ResizableScene } from "../Login/ResizableScene";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import { HdpiManager } from "./HdpiManager";
@@ -43,6 +43,7 @@ export class WaScaleManager {
             height: height * devicePixelRatio,
         });
 
+
         if (realSize.width !== 0 && gameSize.width !== 0 && devicePixelRatio !== 0) {
             this.actualZoom = realSize.width / gameSize.width / devicePixelRatio;
         }
@@ -77,7 +78,6 @@ export class WaScaleManager {
                 scene.events.once(Phaser.Scenes.Events.RENDER, () => scene.onResize());
             }
         }
-
         this.game.markDirty();
     }
 

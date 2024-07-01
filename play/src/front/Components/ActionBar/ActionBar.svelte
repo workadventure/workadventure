@@ -32,10 +32,10 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { chatVisibilityStore, chatZoneLiveStore } from "../../Stores/ChatStore";
     import {
-        proximityMeetingStore,
         inExternalServiceStore,
         myCameraStore,
         myMicrophoneStore,
+        proximityMeetingStore,
     } from "../../Stores/MyMediaStore";
     import {
         activeSubMenuStore,
@@ -737,6 +737,7 @@
                                 <div
                                     class="group/btn-follow bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 rounded-l-lg sm:rounded-l-none sm:first:rounded-l-lg sm:last:rounded-r-lg  aspect-square"
                                 >
+                                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                                     <div
                                         class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 rounded group-hover/btn-follow:bg-white/10 aspect-square flex items-center justify-center transition-all {$followStateStore ===
                                         'active'
@@ -761,6 +762,7 @@
                                         />
                                     {/if}
                                 </div>
+                                <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <div
                                     class="group/btn-lock relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 rounded-none sm:first:rounded-l-lg sm:last:rounded-r-lg aspect-square"
                                     class:disabled={$currentPlayerGroupLockStateStore}
@@ -799,13 +801,13 @@
                         {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore}
                             <!-- NAV : MICROPHONE START -->
                             {#if $myMicrophoneStore}
-                                <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <div
                                     class="group/btn-mic peer/mic relative bg-contrast/80 backdrop-blur p-2 sm:pr-0 sm:last:pr-2 aspect-square {$bottomActionBarVisibilityStore
                                         ? 'rounded-none sm:rounded-l-lg'
                                         : 'rounded-l-lg'}"
                                     class:disabled={!$requestedMicrophoneState || $silentStore}
                                 >
+                                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                                     <div
                                         class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 p-1 m-0 rounded group-[.disabled]/btn-mic:bg-danger hover:bg-white/10 flex items-center justify-center transition-all"
                                         on:click={() => analyticsClient.microphone()}
@@ -840,6 +842,7 @@
                                 ? 'opacity-100'
                                 : 'group-hover/hardware:opacity-100'}"
                         >
+                            <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div
                                 class="absolute bottom-1 left-0 right-0 m-auto hover:bg-white/10 h-5 w-5 flex items-center justify-center rounded-sm"
                                 on:click|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}
@@ -989,6 +992,7 @@
                                             {$LL.actionbar.subtitle.speaker()}
                                         </div>
                                         {#each $speakerListStore as speaker, index (index)}
+                                            <!-- svelte-ignore a11y-click-events-have-key-events -->
                                             <div
                                                 class="group flex items-center relative z-10 py-1 px-4 overflow-hidden {$speakerSelectedStore ===
                                                 speaker.deviceId
@@ -1214,6 +1218,7 @@
                     </div>
                 {/if}
                 {#if $mapEditorActivated || $userHasAccessToBackOfficeStore}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
                         id="action-admin"
                         class="items-center relative transition-all hidden @lg/actions:block"
@@ -1252,6 +1257,7 @@
                             >
                                 <ul class="p-0 m-0">
                                     {#if $mapEditorActivated}
+                                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                                         <li
                                             class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold"
                                             on:click={() => toggleMapEditorMode()}
@@ -1280,6 +1286,7 @@
                                         </li>
                                     {/if}
                                     {#if $userHasAccessToBackOfficeStore}
+                                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                                         <li
                                             class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold"
                                             on:click={() => openBo()}
@@ -1322,6 +1329,7 @@
                         {/if}
                     </div>
                 {/if}
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     id="action-user"
                     class="flex items-center relative transition-all hidden @md/actions:flex"

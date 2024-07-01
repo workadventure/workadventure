@@ -20,7 +20,6 @@ import { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@w
 import { GameMap, GameMapProperties, WAMFileFormat } from "@workadventure/map-editor";
 import { userMessageManager } from "../../Administration/UserMessageManager";
 import { connectionManager } from "../../Connection/ConnectionManager";
-import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { urlManager } from "../../Url/UrlManager";
 import { mediaManager } from "../../WebRtc/MediaManager";
 import { UserInputManager } from "../UserInput/UserInputManager";
@@ -145,6 +144,7 @@ import PopUpRoomAccessDenied from "../../Components/PopUp/PopUpRoomAccessDenied.
 import PopUpMapEditorNotEnabled from "../../Components/PopUp/PopUpMapEditorNotEnabled.svelte";
 import PopUpMapEditorShortcut from "../../Components/PopUp/PopUpMapEditorShortcut.svelte";
 import PopUpTriggerActionMessage from "../../Components/PopUp/PopUpTriggerActionMessage.svelte";
+import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -2098,7 +2098,7 @@ ${escapedMessage}
             })
         );
 
-        iframeListener.registerAnswerer("openCoWebsite", async (openCoWebsite, source) => {
+        iframeListener.registerAnswerer("openCoWebsite", (openCoWebsite, source) => {
             if (!source) {
                 throw new Error("Unknown query source");
             }
@@ -2111,11 +2111,7 @@ ${escapedMessage}
                 openCoWebsite.closable
             );
 
-            coWebsiteManager.addCoWebsiteToStore(coWebsite, openCoWebsite.position);
-
-            if (openCoWebsite.lazy === undefined || !openCoWebsite.lazy) {
-                await coWebsiteManager.loadCoWebsite(coWebsite);
-            }
+            coWebsiteManager.addCoWebsiteToStore(coWebsite);
 
             return {
                 id: coWebsite.getId(),
