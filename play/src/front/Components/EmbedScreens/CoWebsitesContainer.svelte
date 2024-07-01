@@ -230,8 +230,8 @@
             isToggleFullScreen = false;
         } else if ($fullScreenCowebsite && vertical) {
             fullScreenCowebsite.set(false);
-            heightContainer.set(window.innerHeight - $canvasHeight);
             container.style.height = `${$heightContainer - $canvasHeight}px`;
+            heightContainer.set(window.innerHeight - $canvasHeight);
             resizeBarHide = false;
             isToggleFullScreen = false;
         } else if (!$fullScreenCowebsite && !vertical) {
