@@ -1,7 +1,7 @@
-import { ClientEvent, MatrixClient, PendingEventOrdering, RoomEvent, EventType, SyncState } from "matrix-js-sdk";
+import { ClientEvent, EventType, MatrixClient, PendingEventOrdering, RoomEvent, SyncState } from "matrix-js-sdk";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { KnownMembership } from "matrix-js-sdk/lib/types";
-import { Writable, get, writable } from "svelte/store";
+import { get, Writable, writable } from "svelte/store";
 import { AvailabilityStatus, PartialSpaceUser } from "@workadventure/messages";
 import { MatrixChatConnection } from "../MatrixChatConnection";
 import { ChatUser, Connection, CreateRoomOptions } from "../../ChatConnection";
@@ -598,6 +598,35 @@ describe("MatrixChatConnection", () => {
             await expect(matrixChatConnection.createRoom()).rejects.toThrowError("CreateRoomOptions is empty");
         });
 
+        it("should return client.createRoom Reject error when roomOptions is defined but name is undefined", async () => {
+            const expected = {
+                room_id: "1",
+            };
+            const mockStartClient = vi.fn();
+            const mockMatrixClient = {
+                isGuest: vi.fn(),
+                on: vi.fn(),
+                store: {
+                    startup: vi.fn(),
+                },
+                initRustCrypto: vi.fn(),
+                startClient: mockStartClient,
+                createRoom: vi.fn().mockResolvedValue(expected),
+            } as unknown as MatrixClient;
+
+            const clientPromise = Promise.resolve(mockMatrixClient);
+
+            const matrixChatConnection = new MatrixChatConnection(
+                basicMockConnection,
+                clientPromise,
+                basicMockMatrixSecurity
+            );
+
+            await clientPromise;
+
+            await expect(matrixChatConnection.createRoom({})).rejects.toThrowError("Room name is undefined");
+        });
+
         it("should return client.createRoom Result when roomOptions is defined", async () => {
             const expected = {
                 room_id: "1",
@@ -624,7 +653,7 @@ describe("MatrixChatConnection", () => {
 
             await clientPromise;
 
-            expect(await matrixChatConnection.createRoom({})).toEqual(expected);
+            expect(await matrixChatConnection.createRoom({ name: "Test" })).toEqual(expected);
         });
     });
     describe("createDirectRoom", () => {

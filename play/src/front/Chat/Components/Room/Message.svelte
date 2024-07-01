@@ -60,7 +60,7 @@
         </div>
         {#if (!isMyMessage || isQuotedMessage) && sender !== undefined}
             <div class="avatar">
-                <Avatar avatarUrl={sender?.avatarUrl} fallbackFirstLetter={sender?.username?.charAt(0)} />
+                <Avatar avatarUrl={sender?.avatarUrl} fallbackName={sender?.username} />
             </div>
         {/if}
 

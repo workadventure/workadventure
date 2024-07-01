@@ -129,14 +129,11 @@
         {/if}
         {#if $navChat === "users"}
             <RoomUserList />
-            {#if searchLoader}
-                <ChatLoader label={"search msg ..."} />
-            {/if}
         {:else}
             <RoomList />
-            {#if searchLoader}
-                <ChatLoader label={"search msg ..."} />
-            {/if}
+        {/if}
+        {#if searchLoader}
+            <ChatLoader label={$LL.chat.loader()} />
         {/if}
     {/if}
 </div>
