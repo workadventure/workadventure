@@ -10,7 +10,7 @@
             <div
                 style={`grid-area: ${rowIndex + 1} / ${columnIndex + 1}`}
                 class={`tw-cursor-pointer tw-border-solid tw-border tw-border-gray-400 tw-rounded-sm ${
-                    collisionGrid[rowIndex][columnIndex] === 1 ? "tw-bg-gray-500" : ""
+                    collisionGrid[rowIndex][columnIndex] === 1 ? "tw-bg-red-600" : ""
                 } tw-bg-opacity-30`}
                 on:click={() => updateCollisionGrid(rowIndex, columnIndex)}
             />

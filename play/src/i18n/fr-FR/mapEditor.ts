@@ -275,6 +275,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             groundLevel: "Au sol",
             custom: "Personnalisé",
             standing: "Debout",
+            collision: "Collision",
+            wokaAbove: "Woka devant",
+            wokaBelow: "Woka derrière",
         },
         buttons: {
             editEntity: "Editer",
