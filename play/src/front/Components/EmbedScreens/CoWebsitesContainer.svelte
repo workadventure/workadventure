@@ -225,11 +225,12 @@
         if ($fullScreenCowebsite && !vertical) {
             fullScreenCowebsite.set(false);
             container.style.width = `${$widthContainer - $canvasWidth}px`;
+            widthContainer.set(window.innerWidth - $canvasWidth);
             resizeBarHide = false;
             isToggleFullScreen = false;
         } else if ($fullScreenCowebsite && vertical) {
             fullScreenCowebsite.set(false);
-            widthContainer.set(window.innerHeight);
+            heightContainer.set(window.innerHeight - $canvasHeight);
             container.style.height = `${$heightContainer - $canvasHeight}px`;
             resizeBarHide = false;
             isToggleFullScreen = false;
