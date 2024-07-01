@@ -24,11 +24,13 @@ import {
 import { liveStreamingEnabledStore } from "../../Stores/MegaphoneStore";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
+import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
 import { DeviceBroadcastable } from "../Common/ConferenceWrapper";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { getIceServersConfig } from "../../Components/Video/utils";
 import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
 import { JitsiLocalTracks } from "./JitsiLocalTracks";
+import { JitsiTrackStreamWrapper } from "./JitsiTrackStreamWrapper";
 
 const debug = Debug("JitsiConferenceWrapper");
 
@@ -50,6 +52,7 @@ export class JitsiConferenceWrapper {
     private cameraDeviceIdStoreUnsubscriber: Unsubscriber | undefined;
     private microphoneDeviceIdStoreUnsubscriber: Unsubscriber | undefined;
     private requestedScreenSharingStateUnsubscriber: Unsubscriber | undefined;
+    private requestHighlightedEmbedScreenSubscribtion: Unsubscriber | undefined;
     private cameraDeviceId: string | undefined = undefined;
     private microphoneDeviceId: string | undefined = undefined;
 
@@ -77,6 +80,13 @@ export class JitsiConferenceWrapper {
                 this.broadcast([]);
             }
         });
+        const videoConstraints = {
+            colibriClass: "ReceiverVideoConstraints",
+            lastN: 2,
+            defaultConstraints: { maxHeight: 180, maxFrameRate: 15 }, // Default resolution requested for all endpoints.
+        };
+        console.log("requestHighlightedEmbedScreenSubscribtion => videoConstraints", videoConstraints);
+        this.jitsiConference.setReceiverConstraints(videoConstraints);
     }
 
     public static join(
@@ -228,6 +238,46 @@ export class JitsiConferenceWrapper {
                 }
             );
 
+            jitsiConferenceWrapper.requestHighlightedEmbedScreenSubscribtion = highlightedEmbedScreen.subscribe(
+                (highlightedEmbedScreen_) => {
+                    console.log(
+                        "requestHighlightedEmbedScreenSubscribtion => highlightedEmbedScreen_",
+                        highlightedEmbedScreen_
+                    );
+                    if (highlightedEmbedScreen_ == undefined) {
+                        //jitsiConferenceWrapper.jitsiConference.setReceiverVideoConstraint(180);
+                        return;
+                    }
+                    console.log(
+                        'requestHighlightedEmbedScreenSubscribtion => highlightedEmbedScreen_.type === "streamable"',
+                        highlightedEmbedScreen_.type === "streamable"
+                    );
+                    console.log(
+                        "requestHighlightedEmbedScreenSubscribtion => highlightedEmbedScreen_.embed instanceof JitsiTrackStreamWrapper",
+                        highlightedEmbedScreen_.embed instanceof JitsiTrackStreamWrapper
+                    );
+                    if (
+                        highlightedEmbedScreen_.type === "streamable" &&
+                        highlightedEmbedScreen_.embed instanceof JitsiTrackStreamWrapper
+                    ) {
+                        const participantId = highlightedEmbedScreen_.embed.jitsiTrackWrapper.uniqueId;
+                        const videoConstraints = {
+                            colibriClass: "ReceiverVideoConstraints",
+                            lastN: 2,
+                            onStageSources: [participantId], // The source names of the video tracks that are prioritized up to a higher resolution.
+                            defaultConstraints: { maxHeight: 180, maxFrameRate: 15 }, // Default resolution requested for all endpoints.
+                            constraints: {
+                                // Source specific resolution.
+                                [participantId]: { maxHeight: 720, maxFrameRate: 30 },
+                            },
+                        };
+                        console.log("requestHighlightedEmbedScreenSubscribtion => videoConstraints", videoConstraints);
+                        jitsiConferenceWrapper.jitsiConference.setReceiverConstraints(videoConstraints);
+                        //jitsiConferenceWrapper.jitsiConference.setReceiverVideoConstraint(720);
+                    }
+                }
+            );
+
             /**
              * Handles remote tracks
              * @param track JitsiTrackWrapper object
@@ -330,6 +380,9 @@ export class JitsiConferenceWrapper {
         }
         if (this.requestedScreenSharingStateUnsubscriber) {
             this.requestedScreenSharingStateUnsubscriber();
+        }
+        if (this.requestHighlightedEmbedScreenSubscribtion) {
+            this.requestHighlightedEmbedScreenSubscribtion();
         }
 
         await this.jitsiConference.leave(reason).then(async () => {
