@@ -1003,30 +1003,11 @@ export class IoSocketController {
                             await socketManager.handleBanPlayerMessage(socket, message.message.banPlayerMessage);
                             break;
                         }
-                        case "proximityPublicMessage": {
-                            socketManager.handleProximityPublicSpaceMessage(
+                        case "publicEvent": {
+                            socketManager.handlePublicEvent(
                                 socket,
-                                message.message.proximityPublicMessage.spaceName,
-                                message.message.proximityPublicMessage.message,
-                                message.message
-                            );
-                            break;
-                        }
-                        case "proximityPrivateMessage": {
-                            socketManager.handleProximityPrivateSpaceMessage(
-                                socket,
-                                message.message.proximityPrivateMessage.spaceName,
-                                message.message.proximityPrivateMessage.message,
-                                message.message.proximityPrivateMessage.receiverUserUuid,
-                                message.message
-                            );
-                            break;
-                        }
-                        case "typingProximityMessage": {
-                            socketManager.handleTypingProximitySpaceMessage(
-                                socket,
-                                message.message.typingProximityMessage.spaceName,
-                                message.message.typingProximityMessage.typing,
+                                message.message.publicEvent.spaceName,
+                                message.message.publicEvent.spaceEvent!,
                                 message.message
                             );
                             break;

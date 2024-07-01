@@ -51,12 +51,7 @@ import {
     WebRtcSignalToServerMessage,
     WebRtcStartMessage,
     Zone as ProtoZone,
-    ProximityPrivateMessage,
-    ProximityPublicMessageToClientMessage,
-    ProximityPrivateMessageToClientMessage,
-    ProximityPublicMessage,
-    TypingProximityMessage,
-    TypingProximityMessageToClientMessage,
+    PublicEvent,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -1564,54 +1559,13 @@ export class SocketManager {
         });
     }
 
-    handleProximityPublicSpaceMessage(
-        pusher: SpacesWatcher,
-        proximityPublicSpaceMessage: ProximityPublicMessageToClientMessage
-    ) {
-        const space = this.spaces.get(proximityPublicSpaceMessage.spaceName);
+    handlePublicEvent(pusher: SpacesWatcher, publicEvent: PublicEvent) {
+        const space = this.spaces.get(publicEvent.spaceName);
         if (!space) return;
         pusher.write({
             message: {
-                $case: "proximityPublicMessageToClientMessage",
-                proximityPublicMessageToClientMessage: {
-                    spaceName: proximityPublicSpaceMessage.spaceName,
-                    message: proximityPublicSpaceMessage.message,
-                },
-            },
-        });
-    }
-
-    handleProximityPrivateSpaceMessage(
-        pusher: SpacesWatcher,
-        proximityPrivateSpaceMessage: ProximityPrivateMessageToClientMessage
-    ) {
-        const space = this.spaces.get(proximityPrivateSpaceMessage.spaceName);
-        if (!space) return;
-        pusher.write({
-            message: {
-                $case: "proximityPrivateMessageToClientMessage",
-                proximityPrivateMessageToClientMessage: {
-                    spaceName: proximityPrivateSpaceMessage.spaceName,
-                    message: proximityPrivateSpaceMessage.message,
-                    receiverUserUuid: proximityPrivateSpaceMessage.receiverUserUuid,
-                },
-            },
-        });
-    }
-
-    handleTypingProximitySpaceUserMessage(
-        pusher: SpacesWatcher,
-        typingSpaceUserMessage: TypingProximityMessageToClientMessage
-    ) {
-        const space = this.spaces.get(typingSpaceUserMessage.spaceName);
-        if (!space) return;
-        pusher.write({
-            message: {
-                $case: "typingProximityMessageToClientMessage",
-                typingProximityMessageToClientMessage: {
-                    spaceName: typingSpaceUserMessage.spaceName,
-                    typing: typingSpaceUserMessage.typing,
-                },
+                $case: "publicEvent",
+                publicEvent,
             },
         });
     }
@@ -1800,52 +1754,8 @@ export class SocketManager {
         }
     }
 
-    // handle proximity public message
-    handleProximityPublicMessage(user: User, message: ProximityPublicMessage) {
-        const group = user.group;
-        if (!group) {
-            return;
-        }
-        const receiverUsers = group.getUsers();
-        for (const receiverUser of receiverUsers) {
-            receiverUser.socket.write({
-                message: {
-                    $case: "proximityPublicMessageToClientMessage",
-                    proximityPublicMessageToClientMessage: {
-                        spaceName: message.spaceName,
-                        message: message.message,
-                        senderUserUuid: user.uuid,
-                    },
-                },
-            });
-        }
-    }
-
-    // handle proximity private message
-    handleProximityPrivateMessage(user: User, message: ProximityPrivateMessage, receiverUserUuid: string) {
-        const group = user.group;
-        if (!group) {
-            return;
-        }
-        const receiverUser = group.getUsers().find((user) => user.uuid === receiverUserUuid);
-        if (!receiverUser) {
-            return;
-        }
-        receiverUser.socket.write({
-            message: {
-                $case: "proximityPrivateMessageToClientMessage",
-                proximityPrivateMessageToClientMessage: {
-                    spaceName: message.spaceName,
-                    message: message.message,
-                    senderUserUuid: user.uuid,
-                    receiverUserUuid: receiverUserUuid,
-                },
-            },
-        });
-    }
-
     // handle proximity typing message
-    handleTypingProximityMessage(user: User, message: TypingProximityMessage) {
+    handlePublicEventMessage(user: User, publicEvent: PublicEvent) {
         const group = user.group;
         if (!group) {
             return;
@@ -1854,10 +1764,9 @@ export class SocketManager {
         for (const receiverUser of receiverUsers) {
             receiverUser.socket.write({
                 message: {
-                    $case: "typingProximityMessageToClientMessage",
-                    typingProximityMessageToClientMessage: {
-                        spaceName: message.spaceName,
-                        typing: message.typing,
+                    $case: "publicEvent",
+                    publicEvent: {
+                        ...publicEvent,
                         senderUserUuid: user.uuid,
                     },
                 },

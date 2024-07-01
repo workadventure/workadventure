@@ -32,6 +32,7 @@ import {
     ServerToAdminClientMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
+    SpaceEvent,
     SpaceFilterMessage,
     UpdateSpaceFilterMessage,
     UpdateSpaceMetadataMessage,
@@ -551,49 +552,14 @@ export class SocketManager implements ZoneEventListener {
                                     });
                                     break;
                                 }
-                                case "proximityPublicMessageToClientMessage": {
-                                    debug("[space] proximityPublicMessageToClientMessage received");
+                                case "publicEvent": {
+                                    debug("[space] publicEvent received");
                                     spaceStreamToBack.write({
                                         message: {
-                                            $case: "proximityPublicMessageToClientMessage",
-                                            proximityPublicMessageToClientMessage: {
-                                                spaceName:
-                                                    message.message.proximityPublicMessageToClientMessage.spaceName,
-                                                message: message.message.proximityPublicMessageToClientMessage.message,
-                                            },
-                                        },
-                                    });
-                                    break;
-                                }
-                                case "proximityPrivateMessageToClientMessage": {
-                                    debug("[space] proximityPrivateMessageToClientMessage received");
-                                    spaceStreamToBack.write({
-                                        message: {
-                                            $case: "proximityPrivateMessageToClientMessage",
-                                            proximityPrivateMessageToClientMessage: {
-                                                spaceName:
-                                                    message.message.proximityPrivateMessageToClientMessage.spaceName,
-                                                message: message.message.proximityPrivateMessageToClientMessage.message,
-                                                senderUserUuid:
-                                                    message.message.proximityPrivateMessageToClientMessage
-                                                        .senderUserUuid,
-                                                receiverUserUuid:
-                                                    message.message.proximityPrivateMessageToClientMessage
-                                                        .receiverUserUuid,
-                                            },
-                                        },
-                                    });
-                                    break;
-                                }
-                                case "typingProximityMessageToClientMessage": {
-                                    debug("[space] typingProximityMessageToClientMessage received");
-                                    spaceStreamToBack.write({
-                                        message: {
-                                            $case: "typingProximityMessageToClientMessage",
-                                            typingProximityMessageToClientMessage: {
-                                                spaceName:
-                                                    message.message.typingProximityMessageToClientMessage.spaceName,
-                                                typing: message.message.typingProximityMessageToClientMessage.typing,
+                                            $case: "publicEvent",
+                                            publicEvent: {
+                                                spaceName: message.message.publicEvent.spaceName,
+                                                spaceEvent: message.message.publicEvent.spaceEvent,
                                             },
                                         },
                                     });
@@ -1608,11 +1574,11 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    // handle proximity public message
-    handleProximityPublicSpaceMessage(
+    // handle the public event for proximity message
+    handlePublicEvent(
         client: Socket,
         spaceName: string,
-        messageContent: string,
+        spaceEvent: SpaceEvent,
         message: PusherToBackMessage["message"]
     ) {
         const socketData = client.getUserData();
@@ -1621,40 +1587,7 @@ export class SocketManager implements ZoneEventListener {
             this.forwardMessageToBack(client, message);
             return;
         }
-        space.sendProximityPublicMessage(socketData, messageContent);
-    }
-
-    // handle proximity private message
-    handleProximityPrivateSpaceMessage(
-        client: Socket,
-        spaceName: string,
-        messageContent: string,
-        receiverUserUuid: string,
-        message: PusherToBackMessage["message"]
-    ) {
-        const socketData = client.getUserData();
-        const space = socketData.spaces.find((space) => space.name === spaceName);
-        if (!space) {
-            this.forwardMessageToBack(client, message);
-            return;
-        }
-        space.sendProximityPrivateMessage(socketData, messageContent, receiverUserUuid);
-    }
-
-    // handle typing proximity message
-    handleTypingProximitySpaceMessage(
-        client: Socket,
-        spaceName: string,
-        isTyping: boolean,
-        message: PusherToBackMessage["message"]
-    ) {
-        const socketData = client.getUserData();
-        const space = socketData.spaces.find((space) => space.name === spaceName);
-        if (!space) {
-            this.forwardMessageToBack(client, message);
-            return;
-        }
-        space.sendTypingProximityMessage(socketData, isTyping);
+        space.sendPublicEvent({ spaceName, spaceEvent });
     }
 }
 
