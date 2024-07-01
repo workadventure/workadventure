@@ -231,15 +231,12 @@ export class RoomConnection implements RoomConnection {
     public readonly askMutedMessage = this._askMutedMessage.asObservable();
     private readonly _askMutedVideoMessage = new Subject<AskMutedVideoMessage>();
     public readonly askMutedVideoMessage = this._askMutedVideoMessage.asObservable();
-    private readonly _proximityPrivateMessageToClientMessageStream = new Subject<PublicEvent>();
-    public readonly proximityPrivateMessageToClientMessageStream =
-        this._proximityPrivateMessageToClientMessageStream.asObservable();
-    private readonly _proximityPublicMessageToClientMessageStream = new Subject<PublicEvent>();
-    public readonly proximityPublicMessageToClientMessageStream =
-        this._proximityPublicMessageToClientMessageStream.asObservable();
-    private readonly _typingProximityPrivateMessageToClientMessage = new Subject<PublicEvent>();
-    public readonly typingProximityPrivateMessageToClientMessage =
-        this._typingProximityPrivateMessageToClientMessage.asObservable();
+    private readonly _proximityPrivateMessageEvent = new Subject<PublicEvent>();
+    public readonly proximityPrivateMessageEvent = this._proximityPrivateMessageEvent.asObservable();
+    private readonly _proximityPublicMessageEvent = new Subject<PublicEvent>();
+    public readonly proximityPublicMessageEvent = this._proximityPublicMessageEvent.asObservable();
+    private readonly _typingProximityEvent = new Subject<PublicEvent>();
+    public readonly typingProximityEvent = this._typingProximityEvent.asObservable();
 
     private queries = new Map<
         number,
@@ -762,15 +759,15 @@ export class RoomConnection implements RoomConnection {
                 case "publicEvent": {
                     switch (message.publicEvent.spaceEvent?.event?.$case) {
                         case "spaceMessage": {
-                            this._proximityPublicMessageToClientMessageStream.next(message.publicEvent);
+                            this._proximityPublicMessageEvent.next(message.publicEvent);
                             break;
                         }
                         case "spaceIsTyping": {
-                            this._typingProximityPrivateMessageToClientMessage.next(message.publicEvent);
+                            this._typingProximityEvent.next(message.publicEvent);
                             break;
                         }
                         case "spacePrivateMessage": {
-                            this._proximityPrivateMessageToClientMessageStream.next(message.publicEvent);
+                            this._proximityPrivateMessageEvent.next(message.publicEvent);
                             break;
                         }
                         default: {
@@ -1986,9 +1983,9 @@ export class RoomConnection implements RoomConnection {
         this._mutedVideoMessage.complete();
         this._askMutedMessage.complete();
         this._askMutedVideoMessage.complete();
-        this._proximityPrivateMessageToClientMessageStream.complete();
-        this._proximityPublicMessageToClientMessageStream.complete();
-        this._typingProximityPrivateMessageToClientMessage.complete();
+        this._proximityPrivateMessageEvent.complete();
+        this._proximityPublicMessageEvent.complete();
+        this._typingProximityEvent.complete();
     }
 
     private goToSelectYourWokaScene(): void {
