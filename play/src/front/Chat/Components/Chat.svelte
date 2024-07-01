@@ -4,11 +4,14 @@
     import { chatSearchBarValue, joignableRoom, navChat } from "../Stores/ChatStore";
     import { CONNECTED_USER_FILTER_NAME, WORLD_SPACE_NAME } from "../../Space/Space";
     import { LocalSpaceProviderSingleton } from "../../Space/SpaceProvider/SpaceStore";
+    import { INITIAL_SIDEBAR_WIDTH } from "../../Stores/ChatStore";
     import RoomUserList from "./UserList/RoomUserList.svelte";
     import RoomList from "./RoomList.svelte";
     import ChatLoader from "./ChatLoader.svelte";
     import ChatError from "./ChatError.svelte";
     import { IconShieldLock } from "@wa-icons";
+
+    export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
 
     const chat = gameManager.getCurrentGameScene().chatConnection;
     const DONE_TYPING_INTERVAL = 2000;
@@ -86,7 +89,7 @@
     $: isGuest = chat.isGuest;
 </script>
 
-<div class="tw-flex tw-flex-col tw-gap-2 tw-h-full">
+<div class="tw-flex tw-flex-col tw-gap-2 tw-h-full ">
     <div id="chatModal" class="tw-absolute tw-to-50%" />
     {#if $chatConnectionStatus === "CONNECTING"}
         <ChatLoader label={$LL.chat.connecting()} />
@@ -130,7 +133,7 @@
         {#if $navChat === "users"}
             <RoomUserList />
         {:else}
-            <RoomList />
+            <RoomList {sideBarWidth} />
         {/if}
         {#if searchLoader}
             <ChatLoader label={$LL.chat.loader()} />
