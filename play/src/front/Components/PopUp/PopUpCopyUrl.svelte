@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { coWebsites } from "../../Stores/CoWebsiteStore";
     import { createEventDispatcher } from "svelte";
     import XIcon from "../Icons/XIcon.svelte";
     import { popupStore } from "../../Stores/PopupStore";
+    import { coWebsites } from "../../Stores/CoWebsiteStore";
 
     const dispatch = createEventDispatcher();
     let isPopupVisible = false;

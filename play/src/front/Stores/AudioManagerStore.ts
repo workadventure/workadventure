@@ -1,7 +1,7 @@
 import { get, writable } from "svelte/store";
+import PopUpSound from '../Components/PopUp/PopUpSound.svelte';
 import { peerStore } from "./PeerStore";
 import { popupStore } from "./PopupStore";
-import PopUpSound from '../Components/PopUp/PopUpSound.svelte';
 
 export interface audioManagerVolume {
     muted: boolean;
