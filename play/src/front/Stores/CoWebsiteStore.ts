@@ -1,7 +1,6 @@
 import { derived, get, writable } from "svelte/store";
-import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 import { Subject } from "rxjs";
-
+import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 
 export function createCoWebsiteStore() {
     const { subscribe, set, update } = writable<Array<CoWebsite>>([]);
@@ -25,7 +24,9 @@ export function createCoWebsiteStore() {
     };
 
     const remove = (coWebsite: CoWebsite) => {
-        update((currentArray) => currentArray.filter((currentCoWebsite) => currentCoWebsite.getId() !== coWebsite.getId()));
+        update((currentArray) =>
+            currentArray.filter((currentCoWebsite) => currentCoWebsite.getId() !== coWebsite.getId())
+        );
     };
 
     const empty = () => set([]);
@@ -48,44 +49,38 @@ export const totalTabWidthMobile = derived(coWebsites, ($coWebsites) => {
     return $coWebsites.length * 220;
 });
 
-export let widthContainer = writable(window.innerWidth);
-export let heightContainer = writable(window.innerHeight);
-export let fullScreenCowebsite = writable(false);
-export let canvasWidth = writable(window.innerWidth);
-export let canvasHeight = writable(window.innerHeight);
-// export let totalTabWidth = writable(0);
+export const widthContainer = writable(window.innerWidth);
+export const heightContainer = writable(window.innerHeight);
+export const fullScreenCowebsite = writable(false);
+export const canvasWidth = writable(window.innerWidth);
+export const canvasHeight = writable(window.innerHeight);
 export class CoWebsiteManager {
-
     private _onResize: Subject<void> = new Subject();
     public onResize = this._onResize.asObservable();
-
 
     get verticalMode(): boolean {
         return window.innerWidth < window.innerHeight;
     }
 
-
     calculateNewWidth() {
         const currentWidth = get(widthContainer);
-        if (!this.verticalMode && get(coWebsites).length > 0 ) {
+        if (!this.verticalMode && get(coWebsites).length > 0) {
             canvasWidth.set(window.innerWidth - currentWidth);
             return window.innerWidth - currentWidth;
         }
-        return window.innerWidth
+        return window.innerWidth;
     }
 
     calculateNewHeight() {
         const currentHeight = get(heightContainer);
-        if(this.verticalMode && get(coWebsites).length > 0) {
+        if (this.verticalMode && get(coWebsites).length > 0) {
             canvasHeight.set(window.innerHeight - currentHeight);
             return window.innerHeight - currentHeight;
         }
-        return window.innerHeight
+        return window.innerHeight;
     }
 
-
-
-    public getGameSize(): {height:number, width:number} {
+    public getGameSize(): { height: number; width: number } {
         const height = this.calculateNewHeight() || 0;
         const width = this.calculateNewWidth() || 0;
 
@@ -98,10 +93,9 @@ export class CoWebsiteManager {
 
         return {
             height: height,
-            width: width
-        }
+            width: width,
+        };
     }
-
 
     public addCoWebsiteToStore(coWebsite: CoWebsite) {
         coWebsite?.getWidthPercent();
@@ -110,7 +104,6 @@ export class CoWebsiteManager {
     public removeCoWebsiteToStore(coWebsite: CoWebsite) {
         coWebsites.remove(coWebsite);
     }
-
 
     public generateUniqueId() {
         let id = undefined;
@@ -121,18 +114,15 @@ export class CoWebsiteManager {
         return id;
     }
 
-
     public getCoWebsiteById(coWebsiteId: string): CoWebsite {
         return get(coWebsites).find((coWebsite: CoWebsite) => {
             return coWebsite.getId() === coWebsiteId;
         })!;
     }
 
-
     public getCoWebsites() {
         return get(coWebsites);
     }
-
 
     public closeCoWebsites(): void {
         get(coWebsites).forEach((coWebsite: CoWebsite) => {
@@ -140,23 +130,17 @@ export class CoWebsiteManager {
         });
     }
 
-
     public closeCoWebsite(coWebsite: CoWebsite): void {
         this.removeCoWebsiteToStore(coWebsite);
     }
 
-
     public unloadCoWebsite(coWebsite: CoWebsite): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-        });
+        return new Promise<void>((resolve, reject) => {});
     }
-
 
     public cleanup(): void {
         this.closeCoWebsites();
     }
-
 }
 
-
-export const coWebsiteManager = new CoWebsiteManager;
+export const coWebsiteManager = new CoWebsiteManager();

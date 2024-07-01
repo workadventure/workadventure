@@ -8,6 +8,8 @@
         fullScreenCowebsite,
         totalTabWidth,
         totalTabWidthMobile,
+        widthContainer,
+        heightContainer,
     } from "../../Stores/CoWebsiteStore";
     import FullScreenIcon from "../Icons/FullScreenIcon.svelte";
     import JitsiCowebsiteComponent from "../Cowebsites/JistiCowebsiteComponent.svelte";
@@ -16,16 +18,13 @@
     import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
     import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
     import BigBlueButtonCowebsiteComponent from "../Cowebsites/BigBlueButtonCowebsiteComponent.svelte";
-    import CoWebsiteTab from "./CoWebsiteTab.svelte";
     import { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
-    import { widthContainer } from "../../Stores/CoWebsiteStore";
-    import { heightContainer } from "../../Stores/CoWebsiteStore";
     import { waScaleManager } from "../../Phaser/Services/WaScaleManager";
     import XIcon from "../Icons/XIcon.svelte";
     import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
+    import CoWebsiteTab from "./CoWebsiteTab.svelte";
 
     let activeCowebsite = $coWebsites[0];
-    let showArrow = false;
     let container: HTMLElement;
     let resizeBar: HTMLElement;
     let startY: number;
@@ -43,14 +42,8 @@
         : $totalTabWidth >= window.innerWidth - $widthContainer && window.innerWidth !== $widthContainer;
     $: showArrow = $totalTabWidth > window.innerWidth - $widthContainer ? true : false;
     let numberMaxOfCowebsite: number;
-    let menuBurgerIcon = false;
+    let menuArrow = false;
     let isToggleFullScreen = false;
-
-    // $: console.log(showArrow, "showArrow");
-
-    $: console.log($totalTabWidth, "total tab width");
-    $: console.log(window.innerWidth, "width window");
-    $: console.log($widthContainer, "width container");
 
     onMount(() => {
         mediaQuery.addEventListener("change", handleTabletChange);
@@ -58,34 +51,20 @@
         if (!vertical) {
             let widthOnMount = parseInt(getComputedStyle(container).width);
             widthContainer.set(widthOnMount);
-            widthContainer.subscribe(() => {});
         } else {
             let heightOnMount = parseInt(getComputedStyle(container).height);
             heightContainer.set(heightOnMount);
-            heightContainer.subscribe(() => {});
         }
         updateDynamicStyles();
         waScaleManager.applyNewSize();
     });
 
-    onDestroy(() => {
-        heightContainer.set(window.innerHeight);
-        widthContainer.set(window.innerWidth);
-        waScaleManager.applyNewSize();
-        if (styleTag) {
-            document.head.removeChild(styleTag);
-        }
-        mediaQuery.removeEventListener("change", handleTabletChange);
-    });
-
     function handleTabletChange() {
         if (mediaQuery.matches) {
             vertical = true;
-            console.log(vertical, "vertical");
             resizeMobile();
         } else {
             vertical = false;
-            console.log(vertical, "vertical");
             resizeDesktop();
         }
     }
@@ -175,14 +154,19 @@
             $totalTabWidthMobile, numberMaxCowebsite();
         }
     }
+
     $: $totalTabWidthMobile, numberMaxCowebsite();
     $: $widthContainer, numberMaxCowebsite();
+    $: isToggleFullScreen, numberMaxCowebsite();
+
     $: {
         if (isToggleFullScreen) {
-            menuBurgerIcon = false;
-            appearDropdownMenu = true;
+            menuArrow = false;
+            numberMaxCowebsite();
         } else {
-            menuBurgerIcon = true;
+            menuArrow = true;
+            showArrow = true;
+            appearDropdownMenu = true;
         }
     }
 
@@ -190,12 +174,19 @@
         if (!vertical) {
             numberMaxOfCowebsite = Math.floor((window.innerWidth - $canvasWidth) / 300);
             if (numberMaxOfCowebsite < 1) {
-                appearDropdownMenu === false;
+                appearDropdownMenu = false;
+            }
+            if (isToggleFullScreen) {
+                numberMaxOfCowebsite = Math.floor(window.innerWidth / 300);
+                if ($totalTabWidth < window.innerWidth) {
+                    appearDropdownMenu = false;
+                    showArrow = false;
+                }
             }
         } else {
             numberMaxOfCowebsite = Math.floor($canvasWidth / 220);
             if (numberMaxOfCowebsite < 1) {
-                appearDropdownMenu === false;
+                appearDropdownMenu = false;
             }
         }
     }
@@ -223,6 +214,7 @@
     const setActiveCowebsite = (coWebsite: CoWebsite) => {
         activeCowebsite = coWebsite;
         appearDropdownMenu = false;
+        menuArrow = false;
     };
 
     const subscription = coWebsites.subscribe((arr) => {
@@ -257,9 +249,6 @@
         }
     }
 
-    // $: console.log(appearDropdownMenu, "appear menu drop down");
-    // $: console.log(showArrow, "show Arrow");
-
     function updateDynamicStyles() {
         let widthPercent = activeCowebsite.getWidthPercent() || 50;
         let heightPercent = activeCowebsite.getHeightPercent() || 50;
@@ -293,8 +282,16 @@
     $: activeCowebsite, updateDynamicStyles();
     $: vertical, updateDynamicStyles();
 
-    $: console.log(menuBurgerIcon, "menu burger icon");
-    $: console.log(appearDropdownMenu, "appear drop down menu");
+    onDestroy(() => {
+        heightContainer.set(window.innerHeight);
+        widthContainer.set(window.innerWidth);
+        waScaleManager.applyNewSize();
+        if (styleTag) {
+            document.head.removeChild(styleTag);
+        }
+        mediaQuery.removeEventListener("change", handleTabletChange);
+        subscription();
+    });
 </script>
 
 <div
@@ -311,9 +308,9 @@
             <div
                 class="aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer"
                 on:click={() => (appearDropdownMenu = !appearDropdownMenu)}
-                on:click={() => (menuBurgerIcon = !menuBurgerIcon)}
+                on:click={() => (menuArrow = !menuArrow)}
             >
-                {#if menuBurgerIcon}
+                {#if menuArrow}
                     <XIcon />
                 {:else}
                     <ChevronDownIcon />
@@ -321,7 +318,6 @@
             </div>
         {/if}
 
-        <!-- <div class="relative"> -->
         <div class="tab-bar flex items-center w-full overflow-x-auto">
             {#if !vertical}
                 <!-- 300 is corresponding to the width of a tab so we calculate to know if it will fit -->
@@ -360,9 +356,8 @@
                 </div>
             </div>
         </div>
-        <!-- </div> -->
 
-        {#if !vertical && appearDropdownMenu && menuBurgerIcon}
+        {#if !vertical && appearDropdownMenu && menuArrow}
             <div
                 class="absolute md:fixed z-1800 md:top-[8%] left-0 bg-contrast/80 rounded-lg max-h-[80vh] min-h-[50px] overflow-y-auto w-auto tab-drop-down"
             >
