@@ -101,22 +101,28 @@
         class="tw-w-full "
         style={displayTwoColumnLayout ? `border-right:1px solid #4d4b67;padding-right:12px;max-width:335px ` : ``}
     >
-        <button class="tw-p-0 tw-m-0  tw-text-gray-400" on:click={toggleDisplayRoomInvitations}>
-            {#if displayRoomInvitations}
-                <IconChevronDown />
-            {:else}
-                <IconChevronRight />
-            {/if}
-            Invitations
-        </button>
+        {#if $joignableRoom.length > 0}
+        <p class="tw-p-0 tw-m-0 tw-text-gray-400">{$LL.chat.availableRooms()}</p>
+        {#each $joignableRoom as room (room.id)}
+            <JoignableRooms {room} />
+        {/each}
+    {/if}
+    <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={toggleDisplayRoomInvitations}>
         {#if displayRoomInvitations}
-            {#each filteredRoomInvitations as room (room.id)}
-                <RoomInvitation {room} />
-            {/each}
-            {#if filteredRoomInvitations.length === 0}
-                <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
-            {/if}
+            <IconChevronDown />
+        {:else}
+            <IconChevronRight />
         {/if}
+        Invitations
+    </button>
+    {#if displayRoomInvitations}
+        {#each filteredRoomInvitations as room (room.id)}
+            <RoomInvitation {room} />
+        {/each}
+        {#if filteredRoomInvitations.length === 0}
+            <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
+        {/if}
+    {/if}
 
         <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={toggleDisplayDirectRooms}>
             {#if displayDirectRooms}
@@ -155,23 +161,16 @@
             {/if}
         </div>
 
-        {#if displayRooms}
-            <div class="tw-flex tw-flex-col tw-overflow-auto">
-                {#each filteredRooms as room (room.id)}
-                    <Room {room} />
-                {/each}
-                {#if filteredRooms.length === 0}
-                    <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
-                {/if}
-            </div>
-        {/if}
-
-        {#if $joignableRoom.length > 0}
-            Joignable Room :
-            {#each $joignableRoom as room (room.id)}
-                <JoignableRooms {room} />
+    {#if displayRooms}
+        <div class="tw-flex tw-flex-col tw-overflow-auto">
+            {#each filteredRooms as room (room.id)}
+                <Room {room} />
             {/each}
-        {/if}
+            {#if filteredRooms.length === 0}
+                <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
+            {/if}
+        </div>
+    {/if}
 
         {#if $proximityRoomConnection}
             <div class="tw-flex tw-justify-between">
