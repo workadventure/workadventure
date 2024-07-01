@@ -66,12 +66,10 @@ import {
     WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
     WorldConnectionMessage,
     TurnCredentialsAnswer,
-    ProximityPrivateMessageToClientMessage,
-    ProximityPublicMessageToClientMessage,
     SpaceFilterMessage,
     WatchSpaceMessage,
     UnwatchSpaceMessage,
-    TypingProximityMessageToClientMessage,
+    PublicEvent,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -233,16 +231,13 @@ export class RoomConnection implements RoomConnection {
     public readonly askMutedMessage = this._askMutedMessage.asObservable();
     private readonly _askMutedVideoMessage = new Subject<AskMutedVideoMessage>();
     public readonly askMutedVideoMessage = this._askMutedVideoMessage.asObservable();
-    private readonly _proximityPrivateMessageToClientMessageStream =
-        new Subject<ProximityPrivateMessageToClientMessage>();
+    private readonly _proximityPrivateMessageToClientMessageStream = new Subject<PublicEvent>();
     public readonly proximityPrivateMessageToClientMessageStream =
         this._proximityPrivateMessageToClientMessageStream.asObservable();
-    private readonly _proximityPublicMessageToClientMessageStream =
-        new Subject<ProximityPublicMessageToClientMessage>();
+    private readonly _proximityPublicMessageToClientMessageStream = new Subject<PublicEvent>();
     public readonly proximityPublicMessageToClientMessageStream =
         this._proximityPublicMessageToClientMessageStream.asObservable();
-    private readonly _typingProximityPrivateMessageToClientMessage =
-        new Subject<TypingProximityMessageToClientMessage>();
+    private readonly _typingProximityPrivateMessageToClientMessage = new Subject<PublicEvent>();
     public readonly typingProximityPrivateMessageToClientMessage =
         this._typingProximityPrivateMessageToClientMessage.asObservable();
 
@@ -764,22 +759,24 @@ export class RoomConnection implements RoomConnection {
                     this._askMutedVideoMessage.next(message.askMutedVideoMessage);
                     break;
                 }
-                case "proximityPrivateMessageToClientMessage": {
-                    this._proximityPrivateMessageToClientMessageStream.next(
-                        message.proximityPrivateMessageToClientMessage
-                    );
-                    break;
-                }
-                case "proximityPublicMessageToClientMessage": {
-                    this._proximityPublicMessageToClientMessageStream.next(
-                        message.proximityPublicMessageToClientMessage
-                    );
-                    break;
-                }
-                case "typingProximityMessageToClientMessage": {
-                    this._typingProximityPrivateMessageToClientMessage.next(
-                        message.typingProximityMessageToClientMessage
-                    );
+                case "publicEvent": {
+                    switch (message.publicEvent.spaceEvent?.event?.$case) {
+                        case "spaceMessage": {
+                            this._proximityPublicMessageToClientMessageStream.next(message.publicEvent);
+                            break;
+                        }
+                        case "spaceIsTyping": {
+                            this._typingProximityPrivateMessageToClientMessage.next(message.publicEvent);
+                            break;
+                        }
+                        case "spacePrivateMessage": {
+                            this._proximityPrivateMessageToClientMessageStream.next(message.publicEvent);
+                            break;
+                        }
+                        default: {
+                            break;
+                        }
+                    }
                     break;
                 }
                 default: {
@@ -1792,41 +1789,64 @@ export class RoomConnection implements RoomConnection {
             console.warn("No user id defined to send a message to mute every video!");
             return;
         }
+
         this.send({
             message: {
-                $case: "proximityPublicMessage",
-                proximityPublicMessage: {
+                $case: "publicEvent",
+                publicEvent: {
                     spaceName,
-                    message,
+                    spaceEvent: {
+                        event: {
+                            $case: "spaceMessage",
+                            spaceMessage: {
+                                message,
+                            },
+                        },
+                    },
                 },
             },
         });
     }
 
-    public emitProximityPrivateMessage(spaceName: string, message: string, userReceiverId: string) {
+    public emitProximityPrivateMessage(spaceName: string, message: string, receiverUserUuid: string) {
         if (!this.userId) {
             console.warn("No user id defined to send a message to mute every video!");
             return;
         }
+
         this.send({
             message: {
-                $case: "proximityPrivateMessage",
-                proximityPrivateMessage: {
+                $case: "publicEvent",
+                publicEvent: {
                     spaceName,
-                    message,
-                    receiverUserUuid: userReceiverId,
+                    spaceEvent: {
+                        event: {
+                            $case: "spacePrivateMessage",
+                            spacePrivateMessage: {
+                                message,
+                                receiverUserUuid,
+                            },
+                        },
+                    },
                 },
             },
         });
     }
 
-    public emitTypingProximityMessage(spaceName: string, typing: boolean) {
+    public emitTypingProximityMessage(spaceName: string, isTyping: boolean) {
         this.send({
             message: {
-                $case: "typingProximityMessage",
-                typingProximityMessage: {
+                $case: "publicEvent",
+                publicEvent: {
                     spaceName,
-                    typing,
+                    spaceEvent: {
+                        event: {
+                            $case: "spaceIsTyping",
+                            spaceIsTyping: {
+                                isTyping,
+                            },
+                        },
+                    },
                 },
             },
         });

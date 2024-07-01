@@ -14,6 +14,7 @@ import {
     availabilityStatusToJSON,
     ErrorScreenMessage,
     PositionMessage_Direction,
+    PublicEvent,
     SpaceFilterMessage,
 } from "@workadventure/messages";
 import { z } from "zod";
@@ -1955,50 +1956,48 @@ export class GameScene extends DirtyScene {
 
                 // The proximityPrivateMessageToClientMessageStream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.proximityPrivateMessageToClientMessageStream.subscribe(
-                    (proximityPrivateMessageToClientMessage) => {
-                        console.info("proximity private message not implemented yet!");
-                    }
-                );
+                this.connection.proximityPrivateMessageToClientMessageStream.subscribe((publicEvent: PublicEvent) => {
+                    console.info("proximity private message not implemented yet!");
+                });
 
                 // The proximityPublicMessageToClientMessageStream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.proximityPublicMessageToClientMessageStream.subscribe(
-                    (proximityPublicMessageToClientMessage) => {
-                        const _proximityRoomConnection = get(proximityRoomConnection);
-                        if (!_proximityRoomConnection) return;
+                this.connection.proximityPublicMessageToClientMessageStream.subscribe((publicEvent: PublicEvent) => {
+                    if (publicEvent.spaceEvent!.event?.$case != "spaceMessage") return;
 
-                        const room = get(_proximityRoomConnection?.rooms)[0];
-                        if (!room || !room.addNewMessage) return;
+                    const _proximityRoomConnection = get(proximityRoomConnection);
+                    if (!_proximityRoomConnection) return;
 
-                        // the user is me do not show the message
-                        const proximityUserUuid = proximityPublicMessageToClientMessage.senderUserUuid;
-                        if (proximityUserUuid == undefined || proximityUserUuid === localUserStore.getLocalUser()?.uuid)
-                            return;
-                        room.addNewMessage(proximityPublicMessageToClientMessage.message, proximityUserUuid);
+                    const room = get(_proximityRoomConnection?.rooms)[0];
+                    if (!room || !room.addNewMessage) return;
 
-                        // if the proximity chat is not open, open it to see the message
-                        chatVisibilityStore.set(true);
-                        if (get(selectedRoom) == undefined) selectedRoom.set(room);
-                    }
-                );
+                    // the user is me do not show the message
+                    const proximityUserUuid = publicEvent.senderUserUuid;
+                    if (proximityUserUuid == undefined || proximityUserUuid === localUserStore.getLocalUser()?.uuid)
+                        return;
+                    room.addNewMessage(publicEvent.spaceEvent!.event.spaceMessage.message, proximityUserUuid);
+
+                    // if the proximity chat is not open, open it to see the message
+                    chatVisibilityStore.set(true);
+                    if (get(selectedRoom) == undefined) selectedRoom.set(room);
+                });
 
                 // the typingProximityMessageToClientMessageStream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.typingProximityPrivateMessageToClientMessage.subscribe(
-                    (typingProximityMessageToClientMessage) => {
-                        const _proximityRoomConnection = get(proximityRoomConnection);
-                        if (!_proximityRoomConnection) return;
+                this.connection.typingProximityPrivateMessageToClientMessage.subscribe((publicEvent: PublicEvent) => {
+                    if (publicEvent.spaceEvent!.event?.$case != "spaceIsTyping") return;
 
-                        const room = get(_proximityRoomConnection?.rooms)[0];
-                        if (!room || !(room instanceof ProximityChatRoom)) return;
+                    const _proximityRoomConnection = get(proximityRoomConnection);
+                    if (!_proximityRoomConnection) return;
 
-                        if (typingProximityMessageToClientMessage.senderUserUuid != undefined)
-                            if (typingProximityMessageToClientMessage.typing)
-                                room.addTypingUser(typingProximityMessageToClientMessage.senderUserUuid);
-                            else room.removeTypingUser(typingProximityMessageToClientMessage.senderUserUuid);
-                    }
-                );
+                    const room = get(_proximityRoomConnection?.rooms)[0];
+                    if (!room || !(room instanceof ProximityChatRoom)) return;
+
+                    if (publicEvent.senderUserUuid != undefined)
+                        if (publicEvent.spaceEvent!.event.spaceIsTyping.isTyping)
+                            room.addTypingUser(publicEvent.senderUserUuid);
+                        else room.removeTypingUser(publicEvent.senderUserUuid);
+                });
 
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
                 // Analyze tags to find if we are admin. If yes, show console.

@@ -264,10 +264,17 @@ export class SpaceFilter implements SpaceFilterInterface {
     private emitProximityPublicMessage(message: string) {
         this.sender({
             message: {
-                $case: "proximityPublicMessage",
-                proximityPublicMessage: {
+                $case: "publicEvent",
+                publicEvent: {
                     spaceName: this.spaceName,
-                    message,
+                    spaceEvent: {
+                        event: {
+                            $case: "spaceMessage",
+                            spaceMessage: {
+                                message,
+                            },
+                        },
+                    },
                 },
             },
         });
@@ -276,11 +283,18 @@ export class SpaceFilter implements SpaceFilterInterface {
     private emitProximityPrivateMessage(message: string, receiverUserUuid: string) {
         this.sender({
             message: {
-                $case: "proximityPrivateMessage",
-                proximityPrivateMessage: {
+                $case: "publicEvent",
+                publicEvent: {
                     spaceName: this.spaceName,
-                    message,
-                    receiverUserUuid,
+                    spaceEvent: {
+                        event: {
+                            $case: "spacePrivateMessage",
+                            spacePrivateMessage: {
+                                message,
+                                receiverUserUuid,
+                            },
+                        },
+                    },
                 },
             },
         });
