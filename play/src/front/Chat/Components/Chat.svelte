@@ -89,8 +89,8 @@
     $: isGuest = chat.isGuest;
 </script>
 
-
-<div class="!tw-flex !tw-flex-col !tw-gap-2 !tw-flex-1 !tw-relative !tw-w-auto !tw-h-full">
+<div class="tw-flex tw-flex-col tw-gap-2 tw-h-full ">
+    <div id="chatModal" class="tw-absolute tw-to-50%" />
     {#if $chatConnectionStatus === "CONNECTING"}
         <ChatLoader label={$LL.chat.connecting()} />
     {/if}
@@ -124,25 +124,22 @@
                 </div>
             </div>
         </div>
-        <div class="tw-flex tw-flex-col tw-gap-2 tw-flex-1 tw-min-h-0" class:!tw-flex-row={sideBarWidth > INITIAL_SIDEBAR_WIDTH*2}>
-            {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}
-                <button
-                    data-testid="restoreEncryptionButton"
-                    on:click|stopPropagation={initChatConnectionEncryption}
-                    class="tw-text-red-500 tw-flex tw-gap-1 tw-border tw-border-solid tw-border-red-500 tw-rounded-md tw-justify-center"
-                >
-                    <IconShieldLock /> {$LL.chat.e2ee.encryptionNotConfigured()}</button
-                >
-            {/if}
-            {#if $navChat === "users"}
-                <RoomUserList />
-            {:else}
-                <RoomList {sideBarWidth} />
-            {/if}
-            {#if searchLoader}
-                <ChatLoader label={$LL.chat.loader()} />
-            {/if}
-        </div>
+        {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}
+            <button
+                data-testid="restoreEncryptionButton"
+                on:click|stopPropagation={initChatConnectionEncryption}
+                class="tw-text-red-500 tw-flex tw-gap-1 tw-border tw-border-solid tw-border-red-500 tw-rounded-md tw-justify-center"
+                ><IconShieldLock /> {$LL.chat.e2ee.encryptionNotConfigured()}</button
+            >
+        {/if}
+        {#if $navChat === "users"}
+            <RoomUserList />
+        {:else}
+            <RoomList {sideBarWidth} />
+        {/if}
+        {#if searchLoader}
+            <ChatLoader label={$LL.chat.loader()} />
+        {/if}
     {/if}
 </div>
 
