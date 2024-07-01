@@ -1956,13 +1956,13 @@ export class GameScene extends DirtyScene {
 
                 // The proximityPrivateMessageToClientMessageStream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.proximityPrivateMessageToClientMessageStream.subscribe((publicEvent: PublicEvent) => {
+                this.connection.proximityPrivateMessageEvent.subscribe((publicEvent: PublicEvent) => {
                     console.info("proximity private message not implemented yet!");
                 });
 
                 // The proximityPublicMessageToClientMessageStream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.proximityPublicMessageToClientMessageStream.subscribe((publicEvent: PublicEvent) => {
+                this.connection.proximityPublicMessageEvent.subscribe((publicEvent: PublicEvent) => {
                     if (publicEvent.spaceEvent!.event?.$case != "spaceMessage") return;
 
                     const _proximityRoomConnection = get(proximityRoomConnection);
@@ -1984,7 +1984,7 @@ export class GameScene extends DirtyScene {
 
                 // the typingProximityMessageToClientMessageStream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.typingProximityPrivateMessageToClientMessage.subscribe((publicEvent: PublicEvent) => {
+                this.connection.typingProximityEvent.subscribe((publicEvent: PublicEvent) => {
                     if (publicEvent.spaceEvent!.event?.$case != "spaceIsTyping") return;
 
                     const _proximityRoomConnection = get(proximityRoomConnection);

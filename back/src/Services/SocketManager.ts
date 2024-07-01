@@ -1760,15 +1760,16 @@ export class SocketManager {
         if (!group) {
             return;
         }
+        const newEvent = {
+            ...publicEvent,
+            senderUserUuid: user.uuid,
+        };
         const receiverUsers = group.getUsers();
         for (const receiverUser of receiverUsers) {
             receiverUser.socket.write({
                 message: {
                     $case: "publicEvent",
-                    publicEvent: {
-                        ...publicEvent,
-                        senderUserUuid: user.uuid,
-                    },
+                    publicEvent: newEvent,
                 },
             });
         }
