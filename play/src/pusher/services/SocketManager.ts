@@ -22,6 +22,7 @@ import {
     PartialSpaceUser,
     PlayerDetailsUpdatedMessage,
     PlayGlobalMessage,
+    PrivateEvent,
     PusherToBackMessage,
     PusherToBackSpaceMessage,
     QueryMessage,
@@ -32,7 +33,6 @@ import {
     ServerToAdminClientMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
-    SpaceEvent,
     SpaceFilterMessage,
     UpdateSpaceFilterMessage,
     UpdateSpaceMetadataMessage,
@@ -560,6 +560,20 @@ export class SocketManager implements ZoneEventListener {
                                             publicEvent: {
                                                 spaceName: message.message.publicEvent.spaceName,
                                                 spaceEvent: message.message.publicEvent.spaceEvent,
+                                                senderUserUuid: socketData.userUuid,
+                                            },
+                                        },
+                                    });
+                                    break;
+                                }
+                                case "privateEvent": {
+                                    debug("[space] privateEvent received");
+                                    spaceStreamToBack.write({
+                                        message: {
+                                            $case: "privateEvent",
+                                            privateEvent: {
+                                                ...message.message.privateEvent,
+                                                senderUserUuid: socketData.userUuid,
                                             },
                                         },
                                     });
@@ -1575,19 +1589,34 @@ export class SocketManager implements ZoneEventListener {
     }
 
     // handle the public event for proximity message
-    handlePublicEvent(
-        client: Socket,
-        spaceName: string,
-        spaceEvent: SpaceEvent,
-        message: PusherToBackMessage["message"]
-    ) {
+    handlePublicEvent(client: Socket, spaceName: string, message: PusherToBackMessage["message"]) {
         const socketData = client.getUserData();
         const space = socketData.spaces.find((space) => space.name === spaceName);
         if (!space) {
             this.forwardMessageToBack(client, message);
             return;
         }
-        space.sendPublicEvent({ spaceName, spaceEvent });
+        if (message?.$case !== "publicEvent") return;
+        space.sendPublicEvent({
+            ...message.publicEvent,
+            senderUserUuid: socketData.userUuid,
+        });
+    }
+
+    handlePrivateEvent(client: Socket, spaceName: string, message: PusherToBackMessage["message"]) {
+        const socketData = client.getUserData();
+        const space = socketData.spaces.find((space) => space.name === spaceName);
+        if (!space) {
+            this.forwardMessageToBack(client, message);
+            return;
+        }
+
+        if (message?.$case !== "privateEvent") return;
+        const newPrivateEvent: PrivateEvent = {
+            ...message.privateEvent,
+            receiverUserUuid: socketData.userUuid,
+        };
+        space.sendPrivateEvent(newPrivateEvent);
     }
 }
 

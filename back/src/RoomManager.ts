@@ -229,6 +229,10 @@ const roomManager = {
                                 socketManager.handlePublicEventMessage(user, message.message.publicEvent);
                                 break;
                             }
+                            case "privateEvent": {
+                                socketManager.handlePrivateEventMessage(user, message.message.privateEvent);
+                                break;
+                            }
                             default: {
                                 const _exhaustiveCheck: never = message.message;
                             }
