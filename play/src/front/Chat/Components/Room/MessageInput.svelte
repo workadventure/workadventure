@@ -35,13 +35,11 @@
         if (stopTypingTimeOutID) {
             clearTimeout(stopTypingTimeOutID);
         }
-        console.warn("start Typing");
         room.startTyping()
             .then(() => {
                 stopTypingTimeOutID = setTimeout(() => {
                     room.stopTyping().catch((error) => console.error(error));
                     stopTypingTimeOutID = undefined;
-                    console.warn("end Typing");
                 }, 1000);
             })
             .catch((error) => console.error(error));
