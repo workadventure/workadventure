@@ -21,6 +21,7 @@ import {
     ChatConnectionInterface,
     chatId,
     ChatRoom,
+    ChatType,
     ChatUser,
     Connection,
     ConnectionStatus,
@@ -53,6 +54,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     userDisconnected: MapStore<chatId, ChatUser> = new MapStore<chatId, ChatUser>();
     isEncryptionRequiredAndNotSet: Writable<boolean>;
     isGuest!: Writable<boolean>;
+    type: ChatType = "MATRIX";
 
     constructor(
         private connection: Connection,

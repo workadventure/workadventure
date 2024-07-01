@@ -29,8 +29,9 @@ vi.mock("../../Phaser/Game/GameManager", () => {
 let serverSocket: WS;
 
 const port = 3333;
+const flushPromises = () => new Promise(setImmediate);
 
-describe("StreamSpaceWatcher", () => {
+describe("SpaceWatcherSocket", () => {
     beforeAll(() => {
         serverSocket = new WS(`ws://localhost:${port}`);
     });
@@ -64,7 +65,7 @@ describe("StreamSpaceWatcher", () => {
             updateSpaceUserFromSpace: vi.fn(),
         } as unknown as ChatConnectionInterface;
 
-        new StreamSpaceWatcher(SpaceProvider, mockSocket, decoder, mockChatConnection);
+        new StreamSpaceWatcher(SpaceProvider, mockSocket, decoder, Promise.resolve(mockChatConnection));
 
         expect(addEventListenerSpy).toHaveBeenCalledOnce();
         expect(addEventListenerSpy).toHaveBeenCalledWith("message");
@@ -125,9 +126,11 @@ describe("StreamSpaceWatcher", () => {
             updateUserFromSpace: vi.fn(),
         } as unknown as ChatConnectionInterface;
 
-        new StreamSpaceWatcher(spaceProvider, mockSocket, decoder, mockChatConnection);
+        new StreamSpaceWatcher(spaceProvider, mockSocket, decoder, Promise.resolve(mockChatConnection));
 
         serverSocket.send(message);
+
+        await flushPromises();
 
         expect(decoder.decode).toHaveBeenCalledOnce();
         // eslint-disable-next-line @typescript-eslint/unbound-method
@@ -200,9 +203,10 @@ describe("StreamSpaceWatcher", () => {
             updateUserFromSpace: vi.fn(),
         } as unknown as ChatConnectionInterface;
 
-        new StreamSpaceWatcher(spaceProvider, mockSocket, decoder, mockChatConnection);
+        new StreamSpaceWatcher(spaceProvider, mockSocket, decoder, Promise.resolve(mockChatConnection));
 
         serverSocket.send(message);
+        await flushPromises();
 
         expect(decoder.decode).toHaveBeenCalledOnce();
         // eslint-disable-next-line @typescript-eslint/unbound-method
@@ -278,9 +282,10 @@ describe("StreamSpaceWatcher", () => {
             updateUserFromSpace: vi.fn(),
         } as unknown as ChatConnectionInterface;
 
-        new StreamSpaceWatcher(spaceProvider, mockSocket, decoder, mockChatConnection);
+        new StreamSpaceWatcher(spaceProvider, mockSocket, decoder, Promise.resolve(mockChatConnection));
 
         serverSocket.send(message);
+        await flushPromises();
 
         expect(decoder.decode).toHaveBeenCalledOnce();
         // eslint-disable-next-line @typescript-eslint/unbound-method
@@ -350,9 +355,11 @@ describe("StreamSpaceWatcher", () => {
             updateUserFromSpace: vi.fn(),
         } as unknown as ChatConnectionInterface;
 
-        new StreamSpaceWatcher(spaceProvider, mockSocket, decoder, mockChatConnection);
+        new StreamSpaceWatcher(spaceProvider, mockSocket, decoder, Promise.resolve(mockChatConnection));
 
         serverSocket.send(message);
+
+        await flushPromises();
 
         expect(decoder.decode).toHaveBeenCalledOnce();
         // eslint-disable-next-line @typescript-eslint/unbound-method
