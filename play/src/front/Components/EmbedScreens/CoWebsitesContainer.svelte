@@ -10,6 +10,7 @@
         totalTabWidthMobile,
         widthContainer,
         heightContainer,
+        coWebsiteManager,
     } from "../../Stores/CoWebsiteStore";
     import FullScreenIcon from "../Icons/FullScreenIcon.svelte";
     import JitsiCowebsiteComponent from "../Cowebsites/JistiCowebsiteComponent.svelte";
@@ -60,6 +61,8 @@
     });
 
     function handleTabletChange() {
+        waScaleManager.applyNewSize();
+        console.log("je suis dans le handle tablet change");
         if (mediaQuery.matches) {
             vertical = true;
             resizeMobile();
@@ -70,6 +73,8 @@
     }
 
     function resizeDesktop() {
+        console.log("je suis dans le resize desktop");
+        waScaleManager.applyNewSize();
         startWidthContainer = parseInt(getComputedStyle(container).width);
         const handleMouseDown = (e: { clientX: number }) => {
             startX = e.clientX;
@@ -89,6 +94,7 @@
                 container.style.width = maxWidth + "px";
             }
             waScaleManager.applyNewSize();
+            waScaleManager.refreshFocusOnTarget();
         };
         const handleMouseUp = () => {
             document.removeEventListener("mousemove", handleMouseMove);
@@ -103,6 +109,8 @@
     }
 
     function resizeMobile() {
+        console.log("je suis dans le resize mobile");
+        waScaleManager.applyNewSize();
         startWidthContainer = parseInt(getComputedStyle(container).width);
         function handleMouseDown(e: TouchEvent) {
             let clientY = e.touches[0].clientY;
@@ -123,7 +131,6 @@
             if (maxHeight !== newHeight) {
                 container.style.height = maxHeight + "px";
             }
-            // resizeMax(newHeight);
             resizeMin(newHeight);
             waScaleManager.applyNewSize();
         }
@@ -158,6 +165,9 @@
     $: $totalTabWidthMobile, numberMaxCowebsite();
     $: $widthContainer, numberMaxCowebsite();
     $: isToggleFullScreen, numberMaxCowebsite();
+
+    $: $widthContainer, waScaleManager.applyNewSize();
+    $: $heightContainer, waScaleManager.applyNewSize();
 
     $: {
         if (isToggleFullScreen) {
@@ -301,7 +311,6 @@
         ? "height-default-vertical w-full right-0 top-0 fixed bg-contrast/50 backdrop-blur left_panel responsive-container fullscreen"
         : "width-default-horizontal h-full right-0 top-0 fixed bg-contrast/50 backdrop-blur left_panel flex-col pb-[76px]"}
     bind:this={container}
-    in:fly|local={vertical ? { duration: 750, y: -1000 } : { duration: 750, x: 1000 }}
 >
     <div class="flex py-2 ml-3 items-center height-tab overflow-hidden">
         {#if showArrow}

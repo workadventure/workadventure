@@ -55,8 +55,7 @@ export const fullScreenCowebsite = writable(false);
 export const canvasWidth = writable(window.innerWidth);
 export const canvasHeight = writable(window.innerHeight);
 export class CoWebsiteManager {
-    private _onResize: Subject<void> = new Subject();
-    public onResize = this._onResize.asObservable();
+
 
     get verticalMode(): boolean {
         return window.innerWidth < window.innerHeight;
@@ -64,8 +63,12 @@ export class CoWebsiteManager {
 
     calculateNewWidth() {
         const currentWidth = get(widthContainer);
+        console.log("currentWidth", currentWidth);
         if (!this.verticalMode && get(coWebsites).length > 0) {
             canvasWidth.set(window.innerWidth - currentWidth);
+            console.log("window width", window.innerWidth);
+            console.log("canvas width", currentWidth);
+            console.log("other width", window.innerWidth - currentWidth);
             return window.innerWidth - currentWidth;
         }
         return window.innerWidth;
@@ -73,16 +76,20 @@ export class CoWebsiteManager {
 
     calculateNewHeight() {
         const currentHeight = get(heightContainer);
+        console.log("currentHeight", currentHeight);
         if (this.verticalMode && get(coWebsites).length > 0) {
             canvasHeight.set(window.innerHeight - currentHeight);
+            console.log("window height", window.innerHeight);
+            console.log("canvasHeight", currentHeight);
+            console.log("other height", window.innerHeight - currentHeight);
             return window.innerHeight - currentHeight;
         }
         return window.innerHeight;
     }
 
     public getGameSize(): { height: number; width: number } {
-        const height = this.calculateNewHeight() || 0;
-        const width = this.calculateNewWidth() || 0;
+        const height = this.calculateNewHeight();
+        const width = this.calculateNewWidth();
 
         if (height !== undefined) {
             heightContainer.set(height);
