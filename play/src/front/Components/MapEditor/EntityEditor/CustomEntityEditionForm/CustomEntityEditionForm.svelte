@@ -4,6 +4,7 @@
     import LL from "../../../../../i18n/i18n-svelte";
     import EntityImage from "../EntityItem/EntityImage.svelte";
     import EntityEditionCollisionGrid from "./EntityEditionCollisionGrid.svelte";
+    import LogoCollisionGrid from "./LogoCollisionGrid.svg";
 
     export let customEntity: EntityPrefab;
     export let isUploadForm = false;
@@ -28,6 +29,7 @@
         STANDING = "Standing",
         CUSTOM = "Custom",
     }
+
     let selectedDepthOption: depthOptions = depthOffset === 0 ? depthOptions.STANDING : depthOptions.CUSTOM;
 
     function getModifiedCustomEntity(): EntityPrefab {
@@ -45,6 +47,7 @@
     }
 
     const COLLISION_GRID_SIZE = 32;
+
     function generateCollisionGridIfNotExists(imageRef: HTMLImageElement) {
         entityImageRef = imageRef;
         if (collisionGrid.length === 0) {
@@ -103,17 +106,27 @@
             imageAlt={customEntity.name}
         />
         {#if displayDepthCustomSelector}
-            <div class="tw-rotate-[270deg]" style="width: 30px;margin-top: {entityImageRef?.height - 30}px">
-                <input
-                    class="!tw-cursor-grab active:!tw-cursor-grabbing slider"
-                    style="width: {entityImageRef?.height}px"
-                    bind:value={depthOffset}
-                    type="range"
-                    max={entityImageRef?.naturalHeight}
-                />
+            <div>
+                <p class="tw-m-0 tw-p-0 tw-text-xs">{$LL.mapEditor.entityEditor.customEntityEditorForm.wokaAbove()}</p>
+                <div class="tw-rotate-[270deg]" style="width: 30px;margin-top: {entityImageRef?.height - 30}px">
+                    <input
+                        class="!tw-cursor-grab active:!tw-cursor-grabbing slider"
+                        style="width: {entityImageRef?.height}px"
+                        bind:value={depthOffset}
+                        type="range"
+                        max={entityImageRef?.naturalHeight}
+                    />
+                </div>
+                <p class="tw-m-0 tw-p-0 tw-text-xs">{$LL.mapEditor.entityEditor.customEntityEditorForm.wokaBelow()}</p>
             </div>
         {/if}
     </div>
+    {#if !floatingObject}
+        <div>
+            <img src={LogoCollisionGrid} alt="Logo collision grid" width="28px" />
+            <p class="tw-text-xs tw-m-0 tw-p-0">{$LL.mapEditor.entityEditor.customEntityEditorForm.collision()}</p>
+        </div>
+    {/if}
     <div>
         <label for="id"><b>{$LL.mapEditor.entityEditor.customEntityEditorForm.imageName()}</b></label>
         <input
