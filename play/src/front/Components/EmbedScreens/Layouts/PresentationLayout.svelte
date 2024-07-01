@@ -1,6 +1,6 @@
 <script lang="ts">
     import { afterUpdate, onDestroy, onMount } from "svelte";
-    import { writable } from "svelte/store";
+    import { Unsubscriber, writable } from "svelte/store";
     import { highlightedEmbedScreen } from "../../../Stores/HighlightedEmbedScreenStore";
     import CamerasContainer from "../CamerasContainer.svelte";
     import MediaBox from "../../Video/MediaBox.svelte";
@@ -26,6 +26,7 @@
     let isHightlighted = false;
     let camContainer: HTMLDivElement;
     let highlightScreen: HTMLDivElement;
+    let unsubscribeHighlightEmbedScreen: Unsubscriber;
 
     const windowSize = writable({
         height: window.innerHeight,
@@ -68,7 +69,7 @@
         setHeightScreenShare.set(availableHeight);
     }
 
-    const subscription = highlightedEmbedScreen.subscribe((value) => {
+    unsubscribeHighlightEmbedScreen = highlightedEmbedScreen.subscribe((value) => {
         currentHighlightedEmbedScreen = value;
         handleResize();
         if (value) {
@@ -105,8 +106,7 @@
     }
 
     onDestroy(() => {
-        isMobile.removeEventListener("change", (e: any) => handleTabletChange(e));
-        // subscription.unsubscribe();
+        if (unsubscribeHighlightEmbedScreen) unsubscribeHighlightEmbedScreen();
     });
 
     // $: $rightMode, setRightMode();

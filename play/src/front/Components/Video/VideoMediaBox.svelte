@@ -70,6 +70,7 @@
     let aspectRatio = 1;
     let isHighlighted = false;
     let menuDrop = false;
+    let unsubscribeHighlightEmbedScreen: Unsubscriber;
 
     const debug = Debug("VideoMediaBox");
 
@@ -175,7 +176,7 @@
             clearTimeout(noVideoTimeout);
             noVideoTimeout = undefined;
         }
-        // subscription.unsubscribe();
+        if (unsubscribeHighlightEmbedScreen) unsubscribeHighlightEmbedScreen();
     });
 
     //sets the ID of the audio device to use for output
@@ -248,7 +249,8 @@
         }
     }
 
-    highlightedEmbedScreen.subscribe((value: any) => {
+    unsubscribeHighlightEmbedScreen = highlightedEmbedScreen.subscribe((value) => {
+        calcHeightVideo();
         if (value) {
             isHightlighted = true;
         } else {
@@ -277,10 +279,6 @@
         highlightFullScreen.set(false);
         calcHeightVideo();
     }
-
-    const subscription = highlightedEmbedScreen.subscribe(() => {
-        calcHeightVideo();
-    });
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

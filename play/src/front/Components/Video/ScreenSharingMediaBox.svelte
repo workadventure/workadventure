@@ -9,7 +9,8 @@
     import { highlightFullScreen, setHeightScreenShare } from "../../Stores/ActionsCamStore";
     import { srcObject } from "./utils";
     import BanReportBox from "./BanReportBox.svelte";
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
+    import { Unsubscriber } from "svelte/store";
 
     export let peer: ScreenSharingPeer;
     let streamStore = peer.streamStore;
@@ -22,6 +23,7 @@
     let menuDrop = false;
     let videoContainer: HTMLDivElement;
     let isMobile = window.matchMedia("(max-width: 768px)").matches;
+    let unsubscribeHighlightEmbedScreen: Unsubscriber;
 
     onMount(() => {
         if (!isMobile) {
@@ -67,8 +69,12 @@
         }
     }
 
-    highlightedEmbedScreen.subscribe(() => {
+    unsubscribeHighlightEmbedScreen = highlightedEmbedScreen.subscribe(() => {
         calcHeightVideo();
+    });
+
+    onDestroy(() => {
+        if (unsubscribeHighlightEmbedScreen) unsubscribeHighlightEmbedScreen();
     });
 </script>
 

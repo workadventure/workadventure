@@ -6,6 +6,7 @@
     import { highlightFullScreen, setHeight } from "../../Stores/ActionsCamStore";
     import { srcObject } from "./utils";
     import { onDestroy, onMount } from "svelte";
+    import { Unsubscriber } from "svelte/store";
 
     export let clickable = false;
 
@@ -15,6 +16,7 @@
     let embedScreen: Streamable;
     let menuDrop = false;
     let videoContainer: HTMLDivElement;
+    let unsubscribeHighlightEmbedScreen: Unsubscriber;
 
     onMount(() => {
         calcHeightVideo();
@@ -55,12 +57,12 @@
         }
     }
 
-    const subscription = highlightedEmbedScreen.subscribe(() => {
+    unsubscribeHighlightEmbedScreen = highlightedEmbedScreen.subscribe(() => {
         calcHeightVideo();
     });
 
     onDestroy(() => {
-        // subscription.unsubscribe();
+        if (unsubscribeHighlightEmbedScreen) unsubscribeHighlightEmbedScreen();
     });
 </script>
 
