@@ -331,6 +331,7 @@ message ClientToServerMessage {
     BanPlayerMessage banPlayerMessage = 41;
     UpdateChatIdMessage updateChatIdMessage = 42;
     PublicEvent publicEvent = 43;
+    PrivateEvent privateEvent = 44;
   }
 }
 
@@ -589,6 +590,7 @@ message SubMessage {
     AskMuteMicrophoneMessage askMuteMicrophoneMessage = 27;
     AskMuteVideoMessage askMuteVideoMessage = 28;
     PublicEvent publicEvent = 29;
+    PrivateEvent privateEvent = 30;
   }
 }
 
@@ -831,7 +833,6 @@ message SpaceEvent {
   oneof event {
     SpaceMessage spaceMessage = 1;
     SpaceIsTyping spaceIsTyping = 2;
-    SpacePrivateMessage spacePrivateMessage = 3;
   }
 }
 
@@ -843,9 +844,11 @@ message SpaceIsTyping {
   bool isTyping = 1;
 }
 
-message SpacePrivateMessage {
-  string message = 1;
+message PrivateEvent {
+  string spaceName = 1;
   string receiverUserUuid = 2;
+  optional string senderUserUuid = 3;
+  SpaceMessage spaceMessage = 4;
 }
 
 /**
@@ -884,6 +887,7 @@ message ServerToClientMessage {
     AskMutedMessage askMutedMessage = 35;
     AskMutedVideoMessage askMutedVideoMessage = 36;
     PublicEvent publicEvent = 37;
+    PrivateEvent privateEvent = 38;
   }
 }
 
@@ -989,6 +993,7 @@ message PusherToBackMessage {
     MuteVideoParticipantIdMessage muteVideoParticipantIdMessage = 28;
     MuteVideoEveryBodyParticipantMessage muteVideoEveryBodyParticipantMessage = 29;
     PublicEvent publicEvent = 30;
+    PrivateEvent privateEvent = 31;
   }
 }
 
@@ -1188,6 +1193,7 @@ message PusherToBackSpaceMessage{
     AskMuteMicrophoneMessage askMuteMicrophoneMessage = 13;
     AskMuteVideoMessage askMuteVideoMessage = 14;
     PublicEvent publicEvent = 15;
+    PrivateEvent privateEvent = 16;
   }
 }
 
@@ -1206,6 +1212,7 @@ message BackToPusherSpaceMessage{
     AskMuteMicrophoneMessage askMuteMicrophoneMessage = 11;
     AskMuteVideoMessage askMuteVideoMessage = 12;
     PublicEvent publicEvent = 13;
+    PrivateEvent privateEvent = 14;
   }
 }
 

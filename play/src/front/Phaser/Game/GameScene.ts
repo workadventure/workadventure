@@ -14,6 +14,7 @@ import {
     availabilityStatusToJSON,
     ErrorScreenMessage,
     PositionMessage_Direction,
+    PrivateEvent,
     PublicEvent,
     SpaceFilterMessage,
 } from "@workadventure/messages";
@@ -1956,7 +1957,7 @@ export class GameScene extends DirtyScene {
 
                 // The proximityPrivateMessageToClientMessageStream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.proximityPrivateMessageEvent.subscribe((publicEvent: PublicEvent) => {
+                this.connection.proximityPrivateMessageEvent.subscribe((privateEvent: PrivateEvent) => {
                     console.info("proximity private message not implemented yet!");
                 });
 

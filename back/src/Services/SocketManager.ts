@@ -52,6 +52,7 @@ import {
     WebRtcStartMessage,
     Zone as ProtoZone,
     PublicEvent,
+    PrivateEvent,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -1773,6 +1774,30 @@ export class SocketManager {
                 },
             });
         }
+    }
+
+    handlePrivateEventMessage(user: User, privateEvent: PrivateEvent) {
+        const group = user.group;
+        if (!group) {
+            return;
+        }
+        const newEvent = {
+            ...privateEvent,
+            senderUserUuid: user.uuid,
+        };
+
+        const receiverUser = group.getUsers().find((user) => user.uuid === privateEvent.receiverUserUuid);
+        if (receiverUser == undefined) {
+            console.warn("receiverUser is undefined");
+            return;
+        }
+
+        receiverUser.socket.write({
+            message: {
+                $case: "privateEvent",
+                privateEvent: newEvent,
+            },
+        });
     }
 }
 

@@ -70,6 +70,7 @@ import {
     WatchSpaceMessage,
     UnwatchSpaceMessage,
     PublicEvent,
+    PrivateEvent,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -231,7 +232,7 @@ export class RoomConnection implements RoomConnection {
     public readonly askMutedMessage = this._askMutedMessage.asObservable();
     private readonly _askMutedVideoMessage = new Subject<AskMutedVideoMessage>();
     public readonly askMutedVideoMessage = this._askMutedVideoMessage.asObservable();
-    private readonly _proximityPrivateMessageEvent = new Subject<PublicEvent>();
+    private readonly _proximityPrivateMessageEvent = new Subject<PrivateEvent>();
     public readonly proximityPrivateMessageEvent = this._proximityPrivateMessageEvent.asObservable();
     private readonly _proximityPublicMessageEvent = new Subject<PublicEvent>();
     public readonly proximityPublicMessageEvent = this._proximityPublicMessageEvent.asObservable();
@@ -766,14 +767,14 @@ export class RoomConnection implements RoomConnection {
                             this._typingProximityEvent.next(message.publicEvent);
                             break;
                         }
-                        case "spacePrivateMessage": {
-                            this._proximityPrivateMessageEvent.next(message.publicEvent);
-                            break;
-                        }
                         default: {
                             break;
                         }
                     }
+                    break;
+                }
+                case "privateEvent": {
+                    this._proximityPrivateMessageEvent.next(message.privateEvent);
                     break;
                 }
                 default: {
@@ -1813,17 +1814,12 @@ export class RoomConnection implements RoomConnection {
 
         this.send({
             message: {
-                $case: "publicEvent",
-                publicEvent: {
+                $case: "privateEvent",
+                privateEvent: {
                     spaceName,
-                    spaceEvent: {
-                        event: {
-                            $case: "spacePrivateMessage",
-                            spacePrivateMessage: {
-                                message,
-                                receiverUserUuid,
-                            },
-                        },
+                    receiverUserUuid,
+                    spaceMessage: {
+                        message,
                     },
                 },
             },

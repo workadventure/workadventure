@@ -1,6 +1,7 @@
 import {
     AddSpaceFilterMessage,
     PartialSpaceUser,
+    PrivateEvent,
     PublicEvent,
     PusherToBackSpaceMessage,
     RemoveSpaceFilterMessage,
@@ -612,6 +613,20 @@ export class Space implements CustomJsonReplacerInterface {
                 $case: "publicEvent",
                 publicEvent: message,
             },
+        });
+    }
+
+    public sendPrivateEvent(message: PrivateEvent) {
+        [...this.clientWatchers.values()].forEach((watcher) => {
+            const socketData = watcher.getUserData();
+            if (socketData.userUuid === message.receiverUserUuid) {
+                socketData.emitInBatch({
+                    message: {
+                        $case: "privateEvent",
+                        privateEvent: message,
+                    },
+                });
+            }
         });
     }
 

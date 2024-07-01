@@ -1007,7 +1007,14 @@ export class IoSocketController {
                             socketManager.handlePublicEvent(
                                 socket,
                                 message.message.publicEvent.spaceName,
-                                message.message.publicEvent.spaceEvent!,
+                                message.message
+                            );
+                            break;
+                        }
+                        case "privateEvent": {
+                            socketManager.handlePrivateEvent(
+                                socket,
+                                message.message.privateEvent.spaceName,
                                 message.message
                             );
                             break;
