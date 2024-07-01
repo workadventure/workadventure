@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onMount } from "svelte";
     import type { Game } from "../Phaser/Game/Game";
     import { errorStore } from "../Stores/ErrorStore";
     import { errorScreenStore } from "../Stores/ErrorScreenStore";
@@ -27,7 +28,6 @@
     import EnableCameraScene from "./EnableCamera/EnableCameraScene.svelte";
     import bgMap from "./images/map-exemple.png";
     import defaultLoader from "./images/Workadventure.gif";
-    import { onMount } from "svelte";
 
     export let game: Game;
 
@@ -35,21 +35,18 @@
     let gameOverlayStyle = document.getElementById("gameoverlay");
 
     onMount(() => {
-        mediaQuery.addEventListener("change", (e: any) => handleTabletChange(e));
-        handleTabletChange(mediaQuery);
+        mediaQuery.addEventListener("change", handleTabletChange);
+        handleTabletChange();
         console.log(gameOverlayStyle);
     });
 
-    function handleTabletChange(e: MediaQueryList) {
-        console.log(gameOverlayStyle);
-        if (e.matches) {
+    function handleTabletChange() {
+        if (mediaQuery.matches) {
             if (gameOverlayStyle) {
-                console.log("Tablet détecté");
                 gameOverlayStyle.style.position = "fixed";
             }
         } else {
             if (gameOverlayStyle) {
-                console.log("Tablet not detected");
                 gameOverlayStyle.style.position = "absolute";
             }
         }

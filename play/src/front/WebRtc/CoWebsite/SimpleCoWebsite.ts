@@ -1,6 +1,6 @@
 import CancelablePromise from "cancelable-promise";
-import type { CoWebsite } from "./CoWebsite";
 import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
+import type { CoWebsite } from "./CoWebsite";
 
 export class SimpleCoWebsite implements CoWebsite {
     protected id: string;

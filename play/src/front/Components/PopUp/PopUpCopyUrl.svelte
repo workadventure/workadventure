@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
+    import { createEventDispatcher, onDestroy } from "svelte";
     import XIcon from "../Icons/XIcon.svelte";
     import { popupStore } from "../../Stores/PopupStore";
     import { coWebsites } from "../../Stores/CoWebsiteStore";
@@ -7,7 +7,7 @@
     const dispatch = createEventDispatcher();
     let isPopupVisible = false;
 
-    coWebsites.subscribe(() => {
+    const subscription = coWebsites.subscribe(() => {
         isPopupVisible = !isPopupVisible;
         if (!isPopupVisible) {
             popupStore.removePopup("popupCopyUrl");
@@ -17,6 +17,10 @@
     function closeBanner() {
         dispatch("close");
     }
+
+    onDestroy(() => {
+        subscription();
+    });
 </script>
 
 <div

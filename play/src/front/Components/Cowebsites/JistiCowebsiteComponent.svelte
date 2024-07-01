@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
     import { get } from "svelte/store";
+    import CancelablePromise from "cancelable-promise";
     import {
         JitsiCoWebsite,
         JitsiApi,
@@ -16,7 +17,6 @@
     import { inExternalServiceStore } from "../../Stores/MyMediaStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
-    import CancelablePromise from "cancelable-promise";
 
     export let actualCowebsite: JitsiCoWebsite;
     let domain = actualCowebsite.getDomain();
@@ -121,7 +121,7 @@
                 });
 
                 jistiMeetLoadedPromise
-                    .then(async () => {
+                    .then(() => {
                         if (cancelled) {
                             console.info("CLOSING BECAUSE CANCELLED AFTER LOAD");
                             return;
