@@ -19,10 +19,12 @@
         }
     });
 
-    onDestroy(() => {
+    onDestroy(async () => {
         try {
+            screenWakeRelease;
             if (screenWakeRelease) {
-                screenWakeRelease();
+                await screenWakeRelease();
+                screenWakeRelease;
                 screenWakeRelease = undefined;
             }
             inExternalServiceStore.set(false);
