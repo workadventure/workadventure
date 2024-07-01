@@ -283,17 +283,12 @@ export class SpaceFilter implements SpaceFilterInterface {
     private emitProximityPrivateMessage(message: string, receiverUserUuid: string) {
         this.sender({
             message: {
-                $case: "publicEvent",
-                publicEvent: {
+                $case: "privateEvent",
+                privateEvent: {
                     spaceName: this.spaceName,
-                    spaceEvent: {
-                        event: {
-                            $case: "spacePrivateMessage",
-                            spacePrivateMessage: {
-                                message,
-                                receiverUserUuid,
-                            },
-                        },
+                    receiverUserUuid,
+                    spaceMessage: {
+                        message,
                     },
                 },
             },
