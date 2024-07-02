@@ -22,9 +22,12 @@
         requestVisitCardsStore.set(null);
     }
 
-    function canSendMessageTo(chatID: string) {
+    function canSendMessageTo(chatID: string): boolean {
         let room: ChatRoom | undefined = chatConnection.getDirectRoomFor(chatID);
-        if (!room && get(chatConnection.isGuest)) return false;
+
+        const isGuest = get(chatConnection.isGuest) ?? true;
+
+        if (!room && isGuest) return false;
 
         return true;
     }
@@ -64,12 +67,16 @@
     {/if}
     {#if !hidden}
         <div class="buttonContainer tw-flex tw-flex-row-reverse tw-gap-2">
-            <button class="light tw-cursor-pointer tw-px-3 tw-mb-2 tw-mr-0" on:click={closeCard}
-                >{$LL.menu.visitCard.close()}</button
+            <button
+                class="light tw-cursor-pointer tw-px-3 tw-mb-2 tw-mr-0"
+                data-testid="closeVisitCard"
+                on:click={closeCard}>{$LL.menu.visitCard.close()}</button
             >
             {#if selectPlayerChatID && canSendMessageTo(selectPlayerChatID)}
-                <button class="light tw-cursor-pointer tw-px-3 tw-mb-2 tw-mr-0" on:click={sendMessage}
-                    >{$LL.menu.visitCard.sendMessage()}</button
+                <button
+                    class="light tw-cursor-pointer tw-px-3 tw-mb-2 tw-mr-0"
+                    data-testid="sendMessagefromVisitCardButton"
+                    on:click={sendMessage}>{$LL.menu.visitCard.sendMessage()}</button
                 >
             {/if}
         </div>

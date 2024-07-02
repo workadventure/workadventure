@@ -91,6 +91,8 @@ message SetPlayerDetailsMessage {
   google.protobuf.BoolValue showVoiceIndicator = 5;
   AvailabilityStatus availabilityStatus = 6;
   SetPlayerVariableMessage setVariable = 7;
+  string chatID = 8;
+  
 }
 
 message UserMovesMessage {

@@ -174,7 +174,7 @@ export class Space implements CustomJsonReplacerInterface {
                 user.uuid = spaceUser.uuid;
             }
 
-            if (spaceUser.chatID !== undefined) {
+            if (spaceUser.chatID) {
                 user.chatID = spaceUser.chatID;
             }
         }
