@@ -225,19 +225,12 @@ const roomManager = {
                                 socketManager.handleMuteVideoEveryBodyParticipantMessage(user);
                                 break;
                             }
-                            case "proximityPublicMessage": {
-                                socketManager.handleProximityPublicMessage(
-                                    user,
-                                    message.message.proximityPublicMessage
-                                );
+                            case "publicEvent": {
+                                socketManager.handlePublicEventMessage(user, message.message.publicEvent);
                                 break;
                             }
-                            case "proximityPrivateMessage": {
-                                socketManager.handleProximityPrivateMessage(
-                                    user,
-                                    message.message.proximityPrivateMessage,
-                                    message.message.proximityPrivateMessage.receiverUserUuid
-                                );
+                            case "privateEvent": {
+                                socketManager.handlePrivateEventMessage(user, message.message.privateEvent);
                                 break;
                             }
                             default: {

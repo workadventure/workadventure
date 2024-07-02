@@ -51,7 +51,6 @@ test.describe("Scripting chat functions", () => {
       .locator(".messageHeader")
     ).toContainText('Test machine');
 
-    /*
     // Test start typing
     await evaluateScript(page, async () => {
         return WA.chat.startTyping({
@@ -59,7 +58,12 @@ test.describe("Scripting chat functions", () => {
             author: "Eve",
         });
     });
-    await expect(page.frameLocator('iframe[title="WorkAdventureChat"]').getByText('Eve', { exact: true })).toBeVisible();
+    await expect(
+      page.locator('#chat')
+      .locator('#message')
+      .locator(`#typing-user-${btoa("Eve")}`)
+    ).toBeVisible();
+
     // Test stop typing
     await evaluateScript(page, async () => {
         return WA.chat.stopTyping({
@@ -67,8 +71,12 @@ test.describe("Scripting chat functions", () => {
             author: "Eve",
         });
     });
-    await expect.poll(() => page.frameLocator('iframe[title="WorkAdventureChat"]').getByText('Eve', { exact: true }).count()).toBe(0);
-    */
+    await expect(
+      page.locator('#chat')
+      .locator('#message')
+      .locator(`#typing-user-${btoa("Eve")}`)
+    ).toBeHidden();
+
     // Test close chat scripting
     await evaluateScript(page, async () => {
         return WA.chat.close();

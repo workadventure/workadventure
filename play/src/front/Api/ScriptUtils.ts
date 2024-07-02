@@ -1,5 +1,4 @@
 import { CardsService, GoogleWorkSpaceService, KlaxoonService } from "@workadventure/shared-utils";
-import { StartWritingEvent, StopWritingEvent } from "@workadventure/shared-utils/src/Events/WritingEvent";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { gameManager } from "../Phaser/Game/GameManager";
 
@@ -30,24 +29,6 @@ class ScriptUtils {
         }
 
         window.location.href = url;
-    }
-
-    public startWriting(startWritingEvent: StartWritingEvent, origin?: Window) {
-        //TODO, fix me with new matrix chat integration
-        //const userId = playersStore.addFacticePlayer(startWritingEvent.author || "System");
-        /*const writingUsersList = get(writingStatusMessageStore);
-        writingUsersList.add(playersStore.getPlayerById(userId));*/
-        //writingStatusMessageStore.addWritingStatus(userId, ChatMessageTypes.userWriting);
-        /*iframeListener.sendWritingStatusToChatIframe()
-
-        chatMessagesService.startWriting(userId, origin);*/
-    }
-
-    public stopWriting(stopWritingEvent: StopWritingEvent, origin?: Window) {
-        //TODO, fix me with new matrix chat integration
-        //const userId = playersStore.addFacticePlayer(stopWritingEvent.author || "System");
-        //chatMessagesService.stopWriting(userId, origin);
-        //writingStatusMessageStore.addWritingStatus(userId, ChatMessageTypes.userStopWriting);
     }
 
     private inIframe() {

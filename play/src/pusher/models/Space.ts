@@ -1,6 +1,8 @@
 import {
     AddSpaceFilterMessage,
     PartialSpaceUser,
+    PrivateEvent,
+    PublicEvent,
     PusherToBackSpaceMessage,
     RemoveSpaceFilterMessage,
     SpaceFilterMessage,
@@ -605,33 +607,27 @@ export class Space implements CustomJsonReplacerInterface {
         this.notifyAllUsers(subMessage);
     }
 
-    public sendProximityPublicMessage(sender: SocketData, message: string) {
-        const subMessage: SubMessage = {
+    public sendPublicEvent(message: PublicEvent) {
+        this.notifyAllUsers({
             message: {
-                $case: "proximityPublicMessageToClientMessage",
-                proximityPublicMessageToClientMessage: {
-                    spaceName: this.name,
-                    message,
-                    senderUserUuid: sender.userUuid,
-                },
+                $case: "publicEvent",
+                publicEvent: message,
             },
-        };
-        this.notifyAllUsers(subMessage);
+        });
     }
 
-    public sendProximityPrivateMessage(sender: SocketData, message: string, receiverUserUuid: string) {
-        const subMessage: SubMessage = {
-            message: {
-                $case: "proximityPrivateMessageToClientMessage",
-                proximityPrivateMessageToClientMessage: {
-                    spaceName: this.name,
-                    message,
-                    senderUserUuid: sender.userUuid,
-                    receiverUserUuid,
-                },
-            },
-        };
-        this.notifyAllUsers(subMessage);
+    public sendPrivateEvent(message: PrivateEvent) {
+        [...this.clientWatchers.values()].forEach((watcher) => {
+            const socketData = watcher.getUserData();
+            if (socketData.userUuid === message.receiverUserUuid) {
+                socketData.emitInBatch({
+                    message: {
+                        $case: "privateEvent",
+                        privateEvent: message,
+                    },
+                });
+            }
+        });
     }
 
     // Notify all users in this space

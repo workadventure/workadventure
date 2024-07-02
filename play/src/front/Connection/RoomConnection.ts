@@ -66,11 +66,11 @@ import {
     WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
     WorldConnectionMessage,
     TurnCredentialsAnswer,
-    ProximityPrivateMessageToClientMessage,
-    ProximityPublicMessageToClientMessage,
     SpaceFilterMessage,
     WatchSpaceMessage,
     UnwatchSpaceMessage,
+    PublicEvent,
+    PrivateEvent,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -232,14 +232,13 @@ export class RoomConnection implements RoomConnection {
     public readonly askMutedMessage = this._askMutedMessage.asObservable();
     private readonly _askMutedVideoMessage = new Subject<AskMutedVideoMessage>();
     public readonly askMutedVideoMessage = this._askMutedVideoMessage.asObservable();
-    private readonly _proximityPrivateMessageToClientMessageStream =
-        new Subject<ProximityPrivateMessageToClientMessage>();
-    public readonly proximityPrivateMessageToClientMessageStream =
-        this._proximityPrivateMessageToClientMessageStream.asObservable();
-    private readonly _proximityPublicMessageToClientMessageStream =
-        new Subject<ProximityPublicMessageToClientMessage>();
-    public readonly proximityPublicMessageToClientMessageStream =
-        this._proximityPublicMessageToClientMessageStream.asObservable();
+    private readonly _proximityPrivateMessageEvent = new Subject<PrivateEvent>();
+    public readonly proximityPrivateMessageEvent = this._proximityPrivateMessageEvent.asObservable();
+    private readonly _proximityPublicMessageEvent = new Subject<PublicEvent>();
+    public readonly proximityPublicMessageEvent = this._proximityPublicMessageEvent.asObservable();
+    private readonly _typingProximityEvent = new Subject<PublicEvent>();
+    public readonly typingProximityEvent = this._typingProximityEvent.asObservable();
+
     private queries = new Map<
         number,
         {
@@ -758,16 +757,27 @@ export class RoomConnection implements RoomConnection {
                     this._askMutedVideoMessage.next(message.askMutedVideoMessage);
                     break;
                 }
-                case "proximityPrivateMessageToClientMessage": {
-                    this._proximityPrivateMessageToClientMessageStream.next(
-                        message.proximityPrivateMessageToClientMessage
-                    );
+                case "publicEvent": {
+                    switch (message.publicEvent.spaceEvent?.event?.$case) {
+                        case "spaceMessage": {
+                            this._proximityPublicMessageEvent.next(message.publicEvent);
+                            break;
+                        }
+                        case "spaceIsTyping": {
+                            this._typingProximityEvent.next(message.publicEvent);
+                            break;
+                        }
+                        default: {
+                            // Security check: if we forget a "case", the line below will catch the error at compile-time.
+                            //@ts-ignore
+                            const _exhaustiveCheck: never = message.publicEvent.spaceEvent?.event;
+                            break;
+                        }
+                    }
                     break;
                 }
-                case "proximityPublicMessageToClientMessage": {
-                    this._proximityPublicMessageToClientMessageStream.next(
-                        message.proximityPublicMessageToClientMessage
-                    );
+                case "privateEvent": {
+                    this._proximityPrivateMessageEvent.next(message.privateEvent);
                     break;
                 }
                 default: {
@@ -1780,29 +1790,59 @@ export class RoomConnection implements RoomConnection {
             console.warn("No user id defined to send a message to mute every video!");
             return;
         }
+
         this.send({
             message: {
-                $case: "proximityPublicMessage",
-                proximityPublicMessage: {
+                $case: "publicEvent",
+                publicEvent: {
                     spaceName,
-                    message,
+                    spaceEvent: {
+                        event: {
+                            $case: "spaceMessage",
+                            spaceMessage: {
+                                message,
+                            },
+                        },
+                    },
                 },
             },
         });
     }
 
-    public emitProximityPrivateMessage(spaceName: string, message: string, userReceiverId: string) {
+    public emitProximityPrivateMessage(spaceName: string, message: string, receiverUserUuid: string) {
         if (!this.userId) {
             console.warn("No user id defined to send a message to mute every video!");
             return;
         }
+
         this.send({
             message: {
-                $case: "proximityPrivateMessage",
-                proximityPrivateMessage: {
+                $case: "privateEvent",
+                privateEvent: {
                     spaceName,
-                    message,
-                    receiverUserUuid: userReceiverId,
+                    receiverUserUuid,
+                    spaceMessage: {
+                        message,
+                    },
+                },
+            },
+        });
+    }
+
+    public emitTypingProximityMessage(spaceName: string, isTyping: boolean) {
+        this.send({
+            message: {
+                $case: "publicEvent",
+                publicEvent: {
+                    spaceName,
+                    spaceEvent: {
+                        event: {
+                            $case: "spaceIsTyping",
+                            spaceIsTyping: {
+                                isTyping,
+                            },
+                        },
+                    },
                 },
             },
         });
@@ -1942,8 +1982,9 @@ export class RoomConnection implements RoomConnection {
         this._mutedVideoMessage.complete();
         this._askMutedMessage.complete();
         this._askMutedVideoMessage.complete();
-        this._proximityPrivateMessageToClientMessageStream.complete();
-        this._proximityPublicMessageToClientMessageStream.complete();
+        this._proximityPrivateMessageEvent.complete();
+        this._proximityPublicMessageEvent.complete();
+        this._typingProximityEvent.complete();
     }
 
     private goToSelectYourWokaScene(): void {

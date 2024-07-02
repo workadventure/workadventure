@@ -96,18 +96,11 @@ const spaceManager = {
                         socketManager.handleMuteVideoSpaceUserMessage(pusher, message.message.askMuteVideoMessage);
                         break;
                     }
-                    case "proximityPublicMessageToClientMessage": {
-                        socketManager.handleProximityPublicSpaceMessage(
-                            pusher,
-                            message.message.proximityPublicMessageToClientMessage
-                        );
+                    case "publicEvent": {
+                        socketManager.handlePublicEvent(pusher, message.message.publicEvent);
                         break;
                     }
-                    case "proximityPrivateMessageToClientMessage": {
-                        socketManager.handleProximityPublicSpaceMessage(
-                            pusher,
-                            message.message.proximityPrivateMessageToClientMessage
-                        );
+                    case "privateEvent": {
                         break;
                     }
                     default: {
