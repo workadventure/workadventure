@@ -14,6 +14,12 @@
     import { inExternalServiceStore } from "../Stores/MyMediaStore";
     import { gameManager } from "../Phaser/Game/GameManager";
     // import { heightCamWrapper } from "../Stores/EmbedScreensStore";
+    import {
+        requestedScreenSharingState,
+        // screenSharingAvailableStore,
+        // screenSharingLocalMedia,
+        // showDesktopCapturerSourcePicker,
+    } from "../Stores/ScreenSharingStore";
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
     import { srcObject } from "./Video/utils";
     import Woka from "./Woka/WokaFromUserId.svelte";
@@ -23,12 +29,6 @@
     import MicOffIcon from "./Icons/MicOffIcon.svelte";
     // import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
     import ScreenShareIcon from "./Icons/ScreenShareIcon.svelte";
-    import {
-        requestedScreenSharingState,
-        // screenSharingAvailableStore,
-        // screenSharingLocalMedia,
-        // showDesktopCapturerSourcePicker,
-    } from "../Stores/ScreenSharingStore";
     // import { RoomConnection } from "../Connection/RoomConnection";
     // import { screenSharingStreamStore } from "../Stores/PeerStore";
     // import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
@@ -100,6 +100,8 @@
     });
 </script>
 
+<!-- Bug with tansition : transition:fly={{ y: 50, duration: 150 }} -->
+
 <!-- style={small ? "width:100%" : "height:" + $heightCamWrapper + "px;"} -->
 
 <div
@@ -127,7 +129,7 @@
         {#if $requestedCameraState && $mediaStreamConstraintsStore.video}
             <div
                 class="absolute bottom-4 left-4 z-30 responsive-dimension {small ? 'hidden' : ''} "
-                transition:fly={{ delay: 50, y: 50, duration: 150 }}
+                in:fly={{ y: 50, duration: 150 }}
             >
                 <div class="flex">
                     <span
@@ -156,7 +158,6 @@
                     ? 'border-6 border-solid border-color'
                     : ''}"
                 style="background-image: url({loaderImg})"
-                transition:fly={{ y: 50, duration: 150 }}
             >
                 <div class="text-white/50 text-xxs absolute w-full h-6 left-0 text-center top-0 -bottom-20 m-auto z-10">
                     {$LL.camera.my.loading()}

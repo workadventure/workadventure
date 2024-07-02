@@ -3,14 +3,14 @@
 
     import { Color } from "@workadventure/shared-utils";
     import { ArrowDownIcon, ArrowUpIcon } from "svelte-feather-icons";
+    import { onDestroy, onMount } from "svelte";
+    import { Unsubscriber } from "svelte/store";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import type { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
     import { highlightFullScreen, setHeightScreenShare } from "../../Stores/ActionsCamStore";
     import { srcObject } from "./utils";
     import BanReportBox from "./BanReportBox.svelte";
-    import { onDestroy, onMount } from "svelte";
-    import { Unsubscriber } from "svelte/store";
 
     export let peer: ScreenSharingPeer;
     let streamStore = peer.streamStore;
@@ -154,7 +154,7 @@
 
         <div class={isHighlighted && menuDrop ? "block" : "hidden"}>
             <div
-                class="block flex flex-col justify-evenly top-0 bottom-0 right-0 left-0 m-auto h-28 w-60 z-20 rounded-lg bg-contrast/50 backdrop-blur absolute transition-all flex items-center justify-center cursor-pointer  cursor-pointer"
+                class="sm:w-30 sm:h-12 block flex flex-col justify-evenly top-0 bottom-0 right-0 left-0 m-auto h-28 w-60 z-20 rounded-lg bg-contrast/50 backdrop-blur absolute transition-all flex items-center justify-center cursor-pointer  cursor-pointer"
             >
                 <div
                     class="svg w-full hover:bg-white/10 flex justify-around items-center z-25 rounded-lg"

@@ -8,11 +8,11 @@
     import type { ObtainedMediaStreamConstraints } from "../../WebRtc/P2PMessages/ConstraintMessage";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { JitsiTrackStreamWrapper } from "../../Streaming/Jitsi/JitsiTrackStreamWrapper";
+    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import VideoMediaBox from "./VideoMediaBox.svelte";
     import ScreenSharingMediaBox from "./ScreenSharingMediaBox.svelte";
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
     import JitsiMediaBox from "./JitsiMediaBox.svelte";
-    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
 
     export let streamable: Streamable;
     export let isHightlighted = false;
@@ -41,6 +41,8 @@
     $: isHightlighted = $highlightedEmbedScreen === streamable;
 </script>
 
+<!-- Bug with tansition : transition:fly={{ y: 50, duration: 150 }} -->
+
 {#if streamable instanceof VideoPeer}
     {#if $constraintStore || $statusStore === "error" || $statusStore === "connecting"}
         <div
@@ -53,7 +55,7 @@
             class:m-auto={!isHightlighted && !videoEnabled}
             class:aspect-video={!isHightlighted && !videoEnabled}
             class:clickable={isClickable}
-            transition:fly={{ y: 50, duration: 150 }}
+            in:fly={{ y: 50, duration: 150 }}
         >
             <VideoMediaBox peer={streamable} />
         </div>

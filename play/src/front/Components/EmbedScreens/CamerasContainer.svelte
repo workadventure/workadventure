@@ -1,12 +1,12 @@
 <script lang="ts">
+    import { afterUpdate, onDestroy } from "svelte";
+    import { Unsubscriber } from "svelte/store";
     import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
     import MediaBox from "../Video/MediaBox.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import MyCamera from "../MyCamera.svelte";
     import { myCameraStore } from "../../Stores/MyMediaStore";
-    import { afterUpdate, onDestroy } from "svelte";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
-    import { Unsubscriber } from "svelte/store";
 
     let isHightlighted = false;
     let isMobile = window.matchMedia("(max-width: 768px)");
@@ -21,9 +21,9 @@
         }
     });
 
-    // afterUpdate(() => {
-    //     checkOverflow();
-    // });
+    afterUpdate(() => {
+        checkOverflow();
+    });
 
     // voir pour le justify content qui ne fonctionne pas au pin de la cam
     function checkOverflow() {

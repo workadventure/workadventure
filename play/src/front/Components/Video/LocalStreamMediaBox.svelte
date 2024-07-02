@@ -1,12 +1,12 @@
 <script lang="ts">
     import { ArrowDownIcon, ArrowUpIcon } from "svelte-feather-icons";
+    import { onDestroy, onMount } from "svelte";
+    import { Unsubscriber } from "svelte/store";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { ScreenSharingLocalMedia } from "../../Stores/ScreenSharingStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
-    import { highlightFullScreen, setHeight } from "../../Stores/ActionsCamStore";
+    import { highlightFullScreen, setHeightScreenShare } from "../../Stores/ActionsCamStore";
     import { srcObject } from "./utils";
-    import { onDestroy, onMount } from "svelte";
-    import { Unsubscriber } from "svelte/store";
 
     export let clickable = false;
 
@@ -17,9 +17,12 @@
     let menuDrop = false;
     let videoContainer: HTMLDivElement;
     let unsubscribeHighlightEmbedScreen: Unsubscriber;
+    let isMobile = window.matchMedia("(max-width: 768px)").matches;
 
     onMount(() => {
-        calcHeightVideo();
+        if (!isMobile) {
+            calcHeightVideo();
+        }
     });
 
     if (peer) {
@@ -39,21 +42,22 @@
                 videoContainer.style.width = "100%";
             }
         }
-        calcHeightVideo();
+        if (!isMobile) {
+            calcHeightVideo();
+        }
     }
 
     function untogglefFullScreen() {
         highlightedEmbedScreen.toggleHighlight(peer);
         highlightFullScreen.set(false);
-        calcHeightVideo();
     }
 
-    $: $setHeight, calcHeightVideo();
+    $: $setHeightScreenShare, calcHeightVideo();
     $: $highlightedEmbedScreen === embedScreen, calcHeightVideo();
 
     function calcHeightVideo() {
         if ($highlightedEmbedScreen === peer && videoContainer) {
-            videoContainer.style.height = `${$setHeight}px`;
+            videoContainer.style.height = `${$setHeightScreenShare}px`;
         }
     }
 

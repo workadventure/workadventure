@@ -27,6 +27,8 @@
     import { askDialogStore } from "../Stores/MeetingStore";
     import { mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
+    import { focusMode, highlightFullScreen } from "../Stores/ActionsCamStore";
+    import { peerStore } from "../Stores/PeerStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import HelpCameraSettingsPopup from "./HelpSettings/HelpCameraSettingsPopup.svelte";
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
@@ -52,8 +54,6 @@
     import MapList from "./Exploration/MapList.svelte";
     import WarningToast from "./WarningContainer/WarningToast.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
-    import { focusMode, highlightFullScreen } from "../Stores/ActionsCamStore";
-    import { peerStore } from "../Stores/PeerStore";
 
     let mainLayout: HTMLDivElement;
     // export let message: string;
@@ -99,6 +99,8 @@
             div.remove();
         }
     }
+
+    $: console.log("highlight full screen ", $highlightFullScreen);
 </script>
 
 <!-- Components ordered by z-index -->

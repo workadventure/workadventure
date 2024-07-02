@@ -71,6 +71,7 @@
     let isHighlighted = false;
     let menuDrop = false;
     let unsubscribeHighlightEmbedScreen: Unsubscriber;
+    let isMobile = window.matchMedia("(max-width: 768px)").matches;
 
     const debug = Debug("VideoMediaBox");
 
@@ -94,6 +95,9 @@
     let sinkIdPromise = CancelablePromise.resolve();
 
     onMount(() => {
+        if (!isMobile) {
+            calcHeightVideo();
+        }
         calcHeightVideo();
         resizeObserver.observe(videoContainer);
 
@@ -177,6 +181,7 @@
             noVideoTimeout = undefined;
         }
         if (unsubscribeHighlightEmbedScreen) unsubscribeHighlightEmbedScreen();
+        highlightFullScreen.set(false);
     });
 
     //sets the ID of the audio device to use for output
@@ -241,7 +246,7 @@
     }
 
     $: $setHeight, calcHeightVideo();
-    $: $highlightedEmbedScreen === peer && calcHeightVideo();
+    $: $highlightedEmbedScreen, calcHeightVideo();
 
     function calcHeightVideo() {
         if ($highlightedEmbedScreen === peer && videoContainer) {
@@ -264,20 +269,23 @@
         highlightFullScreen.update((current) => !current);
         if (videoContainer) {
             if ($highlightFullScreen) {
+                console.log("toggleFullScreen height", document.documentElement.clientHeight);
+                console.log("toggleFullScreen width", document.documentElement.clientWidth);
                 videoContainer.style.height = `${document.documentElement.clientHeight}px`;
                 videoContainer.style.width = `${document.documentElement.clientWidth}px`;
             } else {
                 videoContainer.style.height = "100%";
                 videoContainer.style.width = "100%";
-                calcHeightVideo();
             }
+        }
+        if (!isMobile) {
+            calcHeightVideo();
         }
     }
 
     function untogglefFullScreen() {
         highlightedEmbedScreen.removeHighlight();
         highlightFullScreen.set(false);
-        calcHeightVideo();
     }
 </script>
 
@@ -287,13 +295,11 @@
 <!-- Dans la premiere div     style="height:{$heightCamWrapper}px;"-->
 <!-- <div class={$mediaStreamConstraintsStore.audio ? "border-4 border-solid border-color rounded-lg" : ""}> -->
 <div
-    class="video-container group/screenshare transition-all h-full w-full relative aspect-video {$highlightFullScreen
-        ? ''
-        : ''}"
+    class="video-container group/screenshare transition-all h-full w-full relative aspect-video"
+    bind:this={videoContainer}
     class:isHighlighted
     class:video-off={!videoEnabled}
     class:h-full={$embedScreenLayoutStore === LayoutMode.VideoChat}
-    bind:this={videoContainer}
     on:click={() => analyticsClient.pinMeetingAction()}
 >
     <ActionMediaBox {embedScreen} trackStreamWraper={peer} {videoEnabled} />
