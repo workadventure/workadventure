@@ -93,6 +93,12 @@
 {#if $selectedRoom !== undefined}
     <RoomTimeline room={$selectedRoom} />
 {:else}
+    {#if $joignableRoom.length > 0}
+        <p class="tw-p-0 tw-m-0 tw-text-gray-400">{$LL.chat.availableRooms()}</p>
+        {#each $joignableRoom as room (room.id)}
+            <JoignableRooms {room} />
+        {/each}
+    {/if}
     <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={toggleDisplayRoomInvitations}>
         {#if displayRoomInvitations}
             <IconChevronDown />
@@ -156,13 +162,6 @@
                 <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
             {/if}
         </div>
-    {/if}
-
-    {#if $joignableRoom.length > 0}
-        Joignable Room :
-        {#each $joignableRoom as room (room.id)}
-            <JoignableRooms {room} />
-        {/each}
     {/if}
 
     {#if $proximityRoomConnection}

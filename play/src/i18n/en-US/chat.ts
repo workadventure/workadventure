@@ -29,6 +29,7 @@ const chat: BaseTranslation = {
     searchChat: "Search for channel, message, etc ...",
     people: "People",
     rooms: "Rooms",
+    availableRooms: "Available rooms",
     proximity: "Proximity Chat",
     role: {
         admin: "Administrator",

@@ -425,6 +425,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             name: string | undefined;
         }[]
     > {
+        const isGuestUser = get(this.isGuest);
         return new Promise((res, rej) => {
             const searchOption: IRoomDirectoryOptions = {
                 include_all_networks: true,
@@ -436,8 +437,18 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 .publicRooms(searchOption)
                 .then(({ chunk }) => {
                     const publicRoomsChunkRoom = chunk
-                        .filter(({ room_id }) => !this.roomList.has(room_id))
+                        .filter(({ room_id, guest_can_join }) => {
+                            if (this.roomList.has(room_id)) {
+                                return false;
+                            }
+                            if (!isGuestUser) {
+                                return true;
+                            } else {
+                                return guest_can_join;
+                            }
+                        })
                         .map((chunkRoom) => {
+                            console.debug(chunkRoom);
                             return {
                                 id: chunkRoom.room_id,
                                 name: chunkRoom.name,
@@ -481,7 +492,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 })
                 .catch((error) => {
                     console.error("Unable to join", error);
-                    rej(error);
+                    rej(this.handleMatrixError(error));
+                    //rej(error);
                 });
         });
     }
