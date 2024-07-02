@@ -14,6 +14,7 @@ export interface PlayerInterface {
     color?: string | null;
     outlineColor?: number;
     isLogged?: boolean;
+    chatID?: string;
     //chat interface
     //companion: string | null;
     //wokaSrc?: string;

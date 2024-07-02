@@ -95,6 +95,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 case SyncState.Prepared:
                     this.connectionStatus.set("ONLINE");
                     this.initUserList();
+                    this.connection.emitPlayerChatID(this.client.getSafeUserId());
                     break;
                 case SyncState.Error:
                     this.connectionStatus.set("ON_ERROR");
@@ -209,7 +210,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             connectedUserToUpdate.availabilityStatus.set(user.availabilityStatus);
         if (connectedUserToUpdate.spaceId)
             this.userConnected.set(connectedUserToUpdate.spaceId, {
-                id: connectedUserToUpdate.id,
+                id: user.chatID ?? connectedUserToUpdate.id,
                 uuid: connectedUserToUpdate.uuid,
                 avatarUrl: connectedUserToUpdate.avatarUrl,
                 availabilityStatus: connectedUserToUpdate.availabilityStatus,
@@ -221,7 +222,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 isMember:
                     user.tags && user.tags.length > 0 ? user.tags.includes("member") : connectedUserToUpdate.isMember,
                 visitCardUrl: user.visitCardUrl ?? connectedUserToUpdate.visitCardUrl,
-                color: user.color || connectedUserToUpdate.color,
+                color: user.color ?? connectedUserToUpdate.color,
                 spaceId: connectedUserToUpdate.spaceId,
             });
     }

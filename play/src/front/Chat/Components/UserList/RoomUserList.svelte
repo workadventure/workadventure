@@ -67,6 +67,7 @@
                     {roomName}
                 </p>
                 <button
+                    data-testid="userByRooms{roomName === DISCONNECTED_LABEL ? '-disconnected' : ''}"
                     class="tw-text-lighter-purple"
                     on:click={() => shownRoomListStore.set($shownRoomListStore === roomName ? "" : roomName)}
                 >

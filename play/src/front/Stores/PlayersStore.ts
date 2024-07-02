@@ -32,6 +32,7 @@ function createPlayersStore() {
                         userUuid: message.userUuid,
                         availabilityStatus: message.availabilityStatus,
                         color: Color.getColorByString(message.name),
+                        chatID: message.chatID,
                     });
                     return users;
                 });

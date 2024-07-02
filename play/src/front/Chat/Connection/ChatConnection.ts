@@ -1,5 +1,4 @@
 import { Readable, Writable } from "svelte/store";
-import { AtLeast } from "@workadventure/map-editor";
 import { AvailabilityStatus, PartialSpaceUser } from "@workadventure/messages";
 import { MapStore } from "@workadventure/store-utils";
 import { RoomConnection } from "../../Connection/RoomConnection";
@@ -122,4 +121,4 @@ export interface ChatConnectionInterface {
     joinSpace?: (spaceId: string, spaceName: string) => void;
 }
 
-export type Connection = AtLeast<RoomConnection, "queryChatMembers">;
+export type Connection = Pick<RoomConnection, "queryChatMembers" | "emitPlayerChatID" | "emitBanPlayerMessage">;

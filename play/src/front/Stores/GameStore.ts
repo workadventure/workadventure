@@ -22,3 +22,5 @@ export const userHasAccessToBackOfficeStore = derived(
 );
 
 export const bannerStore = writable<BannerEvent | null>(null);
+
+export const selectedChatIDRemotePlayerStore = writable<string | null>(null);
