@@ -313,8 +313,8 @@ export class IoSocketController {
                             query.characterTextureIds === undefined
                                 ? []
                                 : typeof query.characterTextureIds === "string"
-                                ? [query.characterTextureIds]
-                                : query.characterTextureIds;
+                                    ? [query.characterTextureIds]
+                                    : query.characterTextureIds;
 
                         const tokenData = token ? jwtTokenManager.verifyJWTToken(token) : null;
 
@@ -491,7 +491,7 @@ export class IoSocketController {
                                 visitCardUrl: memberVisitCardUrl ?? undefined,
                                 chatID,
                             }),
-                            emitInBatch: (payload: SubMessage): void => {},
+                            emitInBatch: (payload: SubMessage): void => { },
                             batchedMessages: {
                                 event: "",
                                 payload: [],
@@ -717,17 +717,15 @@ export class IoSocketController {
                         }
                         case "addSpaceFilterMessage": {
                             if (message.message.addSpaceFilterMessage.spaceFilterMessage !== undefined)
-                                message.message.addSpaceFilterMessage.spaceFilterMessage.spaceName = `${
-                                    socket.getUserData().world
-                                }.${message.message.addSpaceFilterMessage.spaceFilterMessage.spaceName}`;
+                                message.message.addSpaceFilterMessage.spaceFilterMessage.spaceName = `${socket.getUserData().world
+                                    }.${message.message.addSpaceFilterMessage.spaceFilterMessage.spaceName}`;
                             socketManager.handleAddSpaceFilterMessage(socket, message.message.addSpaceFilterMessage);
                             break;
                         }
                         case "updateSpaceFilterMessage": {
                             if (message.message.updateSpaceFilterMessage.spaceFilterMessage !== undefined)
-                                message.message.updateSpaceFilterMessage.spaceFilterMessage.spaceName = `${
-                                    socket.getUserData().world
-                                }.${message.message.updateSpaceFilterMessage.spaceFilterMessage.spaceName}`;
+                                message.message.updateSpaceFilterMessage.spaceFilterMessage.spaceName = `${socket.getUserData().world
+                                    }.${message.message.updateSpaceFilterMessage.spaceFilterMessage.spaceName}`;
                             socketManager.handleUpdateSpaceFilterMessage(
                                 socket,
                                 message.message.updateSpaceFilterMessage
@@ -736,9 +734,8 @@ export class IoSocketController {
                         }
                         case "removeSpaceFilterMessage": {
                             if (message.message.removeSpaceFilterMessage.spaceFilterMessage !== undefined)
-                                message.message.removeSpaceFilterMessage.spaceFilterMessage.spaceName = `${
-                                    socket.getUserData().world
-                                }.${message.message.removeSpaceFilterMessage.spaceFilterMessage.spaceName}`;
+                                message.message.removeSpaceFilterMessage.spaceFilterMessage.spaceName = `${socket.getUserData().world
+                                    }.${message.message.removeSpaceFilterMessage.spaceFilterMessage.spaceName}`;
                             socketManager.handleRemoveSpaceFilterMessage(
                                 socket,
                                 message.message.removeSpaceFilterMessage
@@ -750,9 +747,8 @@ export class IoSocketController {
                             break;
                         }
                         case "watchSpaceMessage": {
-                            message.message.watchSpaceMessage.spaceName = `${socket.getUserData().world}.${
-                                message.message.watchSpaceMessage.spaceName
-                            }`;
+                            message.message.watchSpaceMessage.spaceName = `${socket.getUserData().world}.${message.message.watchSpaceMessage.spaceName
+                                }`;
 
                             void socketManager.handleJoinSpace(
                                 socket,
@@ -776,9 +772,8 @@ export class IoSocketController {
                                 return;
                             }
 
-                            message.message.updateSpaceMetadataMessage.spaceName = `${socket.getUserData().world}.${
-                                message.message.updateSpaceMetadataMessage.spaceName
-                            }`;
+                            message.message.updateSpaceMetadataMessage.spaceName = `${socket.getUserData().world}.${message.message.updateSpaceMetadataMessage.spaceName
+                                }`;
 
                             await socketManager.handleUpdateSpaceMetadata(
                                 socket,
@@ -788,9 +783,8 @@ export class IoSocketController {
                             break;
                         }
                         case "unwatchSpaceMessage": {
-                            message.message.unwatchSpaceMessage.spaceName = `${socket.getUserData().world}.${
-                                message.message.unwatchSpaceMessage.spaceName
-                            }`;
+                            message.message.unwatchSpaceMessage.spaceName = `${socket.getUserData().world}.${message.message.unwatchSpaceMessage.spaceName
+                                }`;
                             void socketManager.handleLeaveSpace(socket, message.message.unwatchSpaceMessage.spaceName);
                             break;
                         }
@@ -810,16 +804,14 @@ export class IoSocketController {
                             break;
                         }
                         case "megaphoneStateMessage": {
-                            message.message.megaphoneStateMessage.spaceName = `${socket.getUserData().world}.${
-                                message.message.megaphoneStateMessage.spaceName
-                            }`;
+                            message.message.megaphoneStateMessage.spaceName = `${socket.getUserData().world}.${message.message.megaphoneStateMessage.spaceName
+                                }`;
                             socketManager.handleMegaphoneState(socket, message.message.megaphoneStateMessage);
                             break;
                         }
                         case "jitsiParticipantIdSpaceMessage": {
-                            message.message.jitsiParticipantIdSpaceMessage.spaceName = `${socket.getUserData().world}.${
-                                message.message.jitsiParticipantIdSpaceMessage.spaceName
-                            }`;
+                            message.message.jitsiParticipantIdSpaceMessage.spaceName = `${socket.getUserData().world}.${message.message.jitsiParticipantIdSpaceMessage.spaceName
+                                }`;
                             socketManager.handleJitsiParticipantIdSpace(
                                 socket,
                                 message.message.jitsiParticipantIdSpaceMessage.spaceName,
@@ -882,6 +874,15 @@ export class IoSocketController {
                                         this.sendAnswerMessage(socket, answerMessage);
                                         break;
                                     }
+                                    case "searchTagsQuery": {
+                                        console.log("🔥🔥🔥🔥🔥")
+                                        console.log('on est dans le bon switch')
+                                        const searchTagsAnswer = await socketManager.handleSearchTagsQuery(
+                                            socket,
+                                            message.message.queryMessage.query.searchTagsQuery
+                                        );
+                                        break;
+                                    }
                                     case "getMemberQuery": {
                                         const getMemberAnswer = await socketManager.handleGetMemberQuery(
                                             message.message.queryMessage.query.getMemberQuery
@@ -912,8 +913,8 @@ export class IoSocketController {
                                             error !== null && typeof error === "object"
                                                 ? error.toString()
                                                 : typeof error === "string"
-                                                ? error
-                                                : "Unknown error",
+                                                    ? error
+                                                    : "Unknown error",
                                     },
                                 };
                                 this.sendAnswerMessage(socket, answerMessage);
@@ -939,9 +940,8 @@ export class IoSocketController {
                             break;
                         }
                         case "muteParticipantIdMessage": {
-                            message.message.muteParticipantIdMessage.spaceName = `${socket.getUserData().world}.${
-                                message.message.muteParticipantIdMessage.spaceName
-                            }`;
+                            message.message.muteParticipantIdMessage.spaceName = `${socket.getUserData().world}.${message.message.muteParticipantIdMessage.spaceName
+                                }`;
                             socketManager.handleMuteParticipantIdMessage(
                                 socket,
                                 message.message.muteParticipantIdMessage.spaceName,
@@ -951,9 +951,8 @@ export class IoSocketController {
                             break;
                         }
                         case "muteVideoParticipantIdMessage": {
-                            message.message.muteVideoParticipantIdMessage.spaceName = `${socket.getUserData().world}.${
-                                message.message.muteVideoParticipantIdMessage.spaceName
-                            }`;
+                            message.message.muteVideoParticipantIdMessage.spaceName = `${socket.getUserData().world}.${message.message.muteVideoParticipantIdMessage.spaceName
+                                }`;
 
                             socketManager.handleMuteVideoParticipantIdMessage(
                                 socket,
@@ -964,9 +963,8 @@ export class IoSocketController {
                             break;
                         }
                         case "kickOffUserMessage": {
-                            message.message.kickOffUserMessage.spaceName = `${socket.getUserData().world}.${
-                                message.message.kickOffUserMessage.spaceName
-                            }`;
+                            message.message.kickOffUserMessage.spaceName = `${socket.getUserData().world}.${message.message.kickOffUserMessage.spaceName
+                                }`;
                             socketManager.handleKickOffSpaceUserMessage(
                                 socket,
                                 message.message.kickOffUserMessage.spaceName,
@@ -976,9 +974,8 @@ export class IoSocketController {
                             break;
                         }
                         case "muteEveryBodyParticipantMessage": {
-                            message.message.muteEveryBodyParticipantMessage.spaceName = `${
-                                socket.getUserData().world
-                            }.${message.message.muteEveryBodyParticipantMessage.spaceName}`;
+                            message.message.muteEveryBodyParticipantMessage.spaceName = `${socket.getUserData().world
+                                }.${message.message.muteEveryBodyParticipantMessage.spaceName}`;
                             socketManager.handleMuteEveryBodyParticipantMessage(
                                 socket,
                                 message.message.muteEveryBodyParticipantMessage.spaceName,
@@ -988,9 +985,8 @@ export class IoSocketController {
                             break;
                         }
                         case "muteVideoEveryBodyParticipantMessage": {
-                            message.message.muteVideoEveryBodyParticipantMessage.spaceName = `${
-                                socket.getUserData().world
-                            }.${message.message.muteVideoEveryBodyParticipantMessage.spaceName}`;
+                            message.message.muteVideoEveryBodyParticipantMessage.spaceName = `${socket.getUserData().world
+                                }.${message.message.muteVideoEveryBodyParticipantMessage.spaceName}`;
                             socketManager.handleMuteVideoEveryBodyParticipantMessage(
                                 socket,
                                 message.message.muteVideoEveryBodyParticipantMessage.spaceName,

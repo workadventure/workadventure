@@ -3,6 +3,7 @@
     import Select from "svelte-select";
     import LL from "../../../i18n/i18n-svelte";
     import { InputTagOption } from "./InputTagOption";
+    import { gameManager } from "../../Phaser/Game/GameManager";
 
     const dispatch = createEventDispatcher();
 
@@ -25,6 +26,18 @@
         }
     }
 
+    async function searchWorldTags(filterText: string) {
+        const connection = gameManager.getCurrentGameScene().connection;
+        if (connection) {
+            try {
+                return await connection.queryTags(filterText);
+            } catch (error) {
+                console.error(error);
+            }
+        }
+        return [];
+    }
+
     function _handleChange() {
         options = options.map((i) => {
             delete i.created;
@@ -42,6 +55,7 @@
         id="selector"
         on:filter={handleFilter}
         bind:filterText
+        loadOptions={searchWorldTags}
         on:change={_handleChange}
         on:input={handleChange}
         on:select={handleChange}
