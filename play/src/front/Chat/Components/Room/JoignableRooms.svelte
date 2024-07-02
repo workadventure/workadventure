@@ -1,9 +1,9 @@
 <script lang="ts">
     import highlightWords from "highlight-words";
+    import { fade } from "svelte/transition";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { chatSearchBarValue, joignableRoom, selectedRoom } from "../../Stores/ChatStore";
     import Avatar from "../Avatar.svelte";
-    import { fade } from "svelte/transition";
 
     export let room: { id: string; name: string | undefined };
     let displayInvitationRoomActions = false;
