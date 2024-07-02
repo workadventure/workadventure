@@ -850,6 +850,18 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    public emitPlayerChatID(chatID: string): void {
+        const message = SetPlayerDetailsMessageTsProto.fromPartial({
+            chatID,
+        });
+        this.send({
+            message: {
+                $case: "setPlayerDetailsMessage",
+                setPlayerDetailsMessage: message,
+            },
+        });
+    }
+
     public emitPlayerOutlineColor(color: number | null) {
         let message: SetPlayerDetailsMessageTsProto;
         if (color === null) {

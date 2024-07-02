@@ -13,6 +13,8 @@ describe("MatrixChatConnection", () => {
 
     const basicMockConnection: Connection = {
         queryChatMembers: vi.fn(),
+        emitBanPlayerMessage: vi.fn(),
+        emitPlayerChatID: vi.fn(),
     };
     const basicMockMatrixSecurity = {
         isEncryptionRequiredAndNotSet: false,
