@@ -806,9 +806,9 @@ export class RoomConnection implements RoomConnection {
             } catch (e) {
                 console.error(
                     "Unable to unserialize value received from server for a variable. " +
-                        'Value received: "' +
-                        serializedValue +
-                        '". Error: ',
+                    'Value received: "' +
+                    serializedValue +
+                    '". Error: ',
                     e
                 );
             }
@@ -1630,6 +1630,19 @@ export class RoomConnection implements RoomConnection {
             throw new Error("Unexpected answer");
         }
         return answer.embeddableWebsiteAnswer;
+    }
+
+    public async queryTags(searchText: string): Promise<string[]> {
+        const answer = await this.query({
+            $case: "searchTagsQuery",
+            searchTagsQuery: {
+                searchText,
+            },
+        });
+        if (answer.$case !== "searchTagsAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.searchTagsAnswer.tags;
     }
 
     public async queryMembers(searchText: string): Promise<Member[]> {

@@ -28,7 +28,9 @@ import {
     RemoveSpaceFilterMessage,
     ReportPlayerMessage,
     SearchMemberAnswer,
+    SearchTagsAnswer,
     SearchMemberQuery,
+    SearchTagsQuery,
     ServerToAdminClientMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
@@ -157,10 +159,10 @@ export class SocketManager implements ZoneEventListener {
                 if (!socketData.disconnecting) {
                     console.warn(
                         "Admin connection lost to back server '" +
-                            apiClient.getChannel().getTarget() +
-                            "' for room '" +
-                            roomId +
-                            "'"
+                        apiClient.getChannel().getTarget() +
+                        "' for room '" +
+                        roomId +
+                        "'"
                     );
                     this.closeWebsocketConnection(client, 1011, "Admin Connection lost to back server");
                 }
@@ -168,19 +170,19 @@ export class SocketManager implements ZoneEventListener {
             .on("error", (err: Error) => {
                 console.error(
                     "Error in connection to back server '" +
-                        apiClient.getChannel().getTarget() +
-                        "' for room '" +
-                        roomId +
-                        "':",
+                    apiClient.getChannel().getTarget() +
+                    "' for room '" +
+                    roomId +
+                    "':",
                     err
                 );
 
                 Sentry.captureMessage(
                     "Error in connection to back server '" +
-                        apiClient.getChannel().getTarget() +
-                        "' for room '" +
-                        roomId +
-                        err,
+                    apiClient.getChannel().getTarget() +
+                    "' for room '" +
+                    roomId +
+                    err,
                     "debug"
                 );
                 if (!socketData.disconnecting) {
@@ -274,10 +276,10 @@ export class SocketManager implements ZoneEventListener {
                     if (!socketData.disconnecting) {
                         console.warn(
                             "Connection lost to back server '" +
-                                apiClient.getChannel().getTarget() +
-                                "' for room '" +
-                                socketData.roomId +
-                                "'"
+                            apiClient.getChannel().getTarget() +
+                            "' for room '" +
+                            socketData.roomId +
+                            "'"
                         );
                         this.closeWebsocketConnection(client, 1011, "Connection lost to back server");
                     }
@@ -286,21 +288,21 @@ export class SocketManager implements ZoneEventListener {
                     const date = new Date();
                     console.error(
                         "Error in connection to back server '" +
-                            apiClient.getChannel().getTarget() +
-                            "' for room '" +
-                            socketData.roomId +
-                            "'at :" +
-                            date.toLocaleString("en-GB"),
+                        apiClient.getChannel().getTarget() +
+                        "' for room '" +
+                        socketData.roomId +
+                        "'at :" +
+                        date.toLocaleString("en-GB"),
                         err
                     );
                     Sentry.captureMessage(
                         "Error in connection to back server '" +
-                            apiClient.getChannel().getTarget() +
-                            "' for room '" +
-                            socketData.roomId +
-                            "': " +
-                            socketData.userUuid +
-                            err,
+                        apiClient.getChannel().getTarget() +
+                        "' for room '" +
+                        socketData.roomId +
+                        "': " +
+                        socketData.userUuid +
+                        err,
                         "debug"
                     );
                     if (!socketData.disconnecting) {
@@ -598,19 +600,19 @@ export class SocketManager implements ZoneEventListener {
                         .on("error", (err: Error) => {
                             console.error(
                                 "Error in connection to back server '" +
-                                    apiSpaceClient.getChannel().getTarget() +
-                                    "' for space '" +
-                                    spaceName +
-                                    "':",
+                                apiSpaceClient.getChannel().getTarget() +
+                                "' for space '" +
+                                spaceName +
+                                "':",
                                 err
                             );
                             Sentry.captureException(
                                 "Error in connection to back server '" +
-                                    apiSpaceClient.getChannel().getTarget() +
-                                    "' for space '" +
-                                    spaceName +
-                                    "':" +
-                                    err
+                                apiSpaceClient.getChannel().getTarget() +
+                                "' for space '" +
+                                spaceName +
+                                "':" +
+                                err
                             );
                         });
                     return spaceStreamToBack;
@@ -1562,6 +1564,16 @@ export class SocketManager implements ZoneEventListener {
                 id: member.id,
                 email: member.email ?? undefined,
             })),
+        };
+    }
+
+    async handleSearchTagsQuery(client: Socket, searchTagsQuery: SearchTagsQuery): Promise<SearchTagsAnswer> {
+        const { world } = client.getUserData();
+        const tags = await adminService.searchTags(world, searchTagsQuery.searchText);
+        console.log("🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥")
+        console.log("tags", tags);
+        return {
+            tags,
         };
     }
 
