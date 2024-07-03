@@ -741,7 +741,7 @@ describe("MatrixChatConnection", () => {
 
             await matrixChatConnection.createDirectRoom(userId);
 
-            expect(matrixChatConnection["createRoom"]).toHaveBeenCalledOnce();
+            expect(mockMatrixClient["createRoom"]).toHaveBeenCalledOnce();
             expect(matrixChatConnection["addDMRoomInAccountData"]).toHaveBeenCalledOnce();
             //eslint-disable-next-line @typescript-eslint/unbound-method
             expect(mockMatrixClient.getRoom).toHaveBeenCalledOnce();
