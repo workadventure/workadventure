@@ -61,13 +61,16 @@
     const handleTouchStart = (e: TouchEvent) => {
         let dragX = e.targetTouches[0].pageX;
 
-        document.ontouchmove = (e: TouchEvent) => {
+        function onTouchMove(e: TouchEvent) {
             container.style.width = container.offsetWidth + e.targetTouches[0].pageX - dragX + "px";
             dragX = e.targetTouches[0].pageX;
-        };
-        document.ontouchend = () => {
-            document.ontouchmove = null;
-        };
+        }
+
+        document.addEventListener("touchmove", onTouchMove);
+
+        document.addEventListener("touchend", () => {
+            document.removeEventListener("touchmove", onTouchMove);
+        });
     };
 
     const handleDbClick = () => {
