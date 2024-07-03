@@ -33,7 +33,7 @@ export class WaScaleManager {
     }
 
     public applyNewSize(camera?: Phaser.Cameras.Scene2D.Camera) {
-        console.log("JE SUIS DANS APPLY NEW SIZE")
+        console.log("applyNewSize");
         if (this.scaleManager === undefined) {
             return;
         }
@@ -43,8 +43,6 @@ export class WaScaleManager {
             width: width * devicePixelRatio,
             height: height * devicePixelRatio,
         });
-        console.log("width", width * devicePixelRatio);
-        console.log("height", height * devicePixelRatio)
 
         if (realSize.width !== 0 && gameSize.width !== 0 && devicePixelRatio !== 0) {
             this.actualZoom = realSize.width / gameSize.width / devicePixelRatio;
@@ -99,7 +97,6 @@ export class WaScaleManager {
                 scene.events.once(Phaser.Scenes.Events.RENDER, () => scene.onResize());
             }
         }
-
         this.game.markDirty();
     }
 

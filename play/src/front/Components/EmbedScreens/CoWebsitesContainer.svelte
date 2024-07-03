@@ -34,7 +34,7 @@
     let finalWidth;
     let finalHeight;
     let startHeight: number;
-    const mediaQuery = window.matchMedia("(max-width: 768px)");
+    let mediaQuery = window.matchMedia("(max-width: 768px)");
     let vertical: boolean;
     let resizeBarHide = false;
     let styleTag: HTMLStyleElement;
@@ -45,6 +45,11 @@
     let numberMaxOfCowebsite: number;
     let menuArrow = false;
     let isToggleFullScreen = false;
+    let windowWidth = window.innerWidth;
+    let windowHeight = window.innerHeight;
+
+    $: windowWidth, waScaleManager.applyNewSize();
+    $: windowHeight, waScaleManager.applyNewSize();
 
     onMount(() => {
         mediaQuery.addEventListener("change", handleTabletChange);
@@ -60,9 +65,18 @@
         waScaleManager.applyNewSize();
     });
 
+    $: mediaQuery, waScaleManager.applyNewSize();
+    $: mediaQuery, waScaleManager.refreshFocusOnTarget();
+
+    // window.addEventListener("resize", function () {
+    //     waScaleManager.applyNewSize();
+    //     waScaleManager.refreshFocusOnTarget();
+    // });
+
     function handleTabletChange() {
+        console.log("je suis dans handleTabletChange");
         waScaleManager.applyNewSize();
-        console.log("je suis dans le handle tablet change");
+        console.log("je suis dans le wa scale manager");
         if (mediaQuery.matches) {
             vertical = true;
             resizeMobile();
@@ -73,8 +87,7 @@
     }
 
     function resizeDesktop() {
-        console.log("je suis dans le resize desktop");
-        waScaleManager.applyNewSize();
+        heightContainer.set(window.innerHeight);
         startWidthContainer = parseInt(getComputedStyle(container).width);
         const handleMouseDown = (e: { clientX: number }) => {
             startX = e.clientX;
@@ -109,8 +122,7 @@
     }
 
     function resizeMobile() {
-        console.log("je suis dans le resize mobile");
-        waScaleManager.applyNewSize();
+        widthContainer.set(window.innerWidth);
         startWidthContainer = parseInt(getComputedStyle(container).width);
         function handleMouseDown(e: TouchEvent) {
             let clientY = e.touches[0].clientY;
@@ -133,6 +145,7 @@
             }
             resizeMin(newHeight);
             waScaleManager.applyNewSize();
+            waScaleManager.refreshFocusOnTarget();
         }
         const handleMouseUp = () => {
             document.removeEventListener("touchmove", handleMouseMove);
@@ -166,8 +179,8 @@
     $: $widthContainer, numberMaxCowebsite();
     $: isToggleFullScreen, numberMaxCowebsite();
 
-    $: $widthContainer, waScaleManager.applyNewSize();
-    $: $heightContainer, waScaleManager.applyNewSize();
+    // $: $widthContainer, waScaleManager.applyNewSize();
+    // $: $heightContainer, waScaleManager.applyNewSize();
 
     $: {
         if (isToggleFullScreen) {
@@ -412,6 +425,7 @@
         {/if}
     </div>
 
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
         class={vertical
             ? "absolute left-1 top-0 bottom-0 m-auto w-1.5 h-40 bg-white rounded cursor-col-resize responsive-resize-bar"

@@ -174,16 +174,17 @@
         }
 
         window.addEventListener("resize", function () {
+            // console.log("resize !!!!!!!!!!!!!!!!!!!!!");
             waScaleManager.applyNewSize();
             waScaleManager.refreshFocusOnTarget();
         });
 
         // coWebsiteManager.onResize is a singleton. No need to unsubscribe.
         //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-        coWebsiteManager.onResize.subscribe(() => {
-            waScaleManager.applyNewSize();
-            waScaleManager.refreshFocusOnTarget();
-        });
+        // coWebsiteManager.onResize.subscribe(() => {
+        //     waScaleManager.applyNewSize();
+        //     waScaleManager.refreshFocusOnTarget();
+        // });
 
         iframeListener.init();
         desktopApi.init();

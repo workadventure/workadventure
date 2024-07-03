@@ -61,27 +61,20 @@ export class CoWebsiteManager {
         return window.innerWidth < window.innerHeight;
     }
 
-    calculateNewWidth() {
+
+    private calculateNewWidth() {
         const currentWidth = get(widthContainer);
-        console.log("currentWidth", currentWidth);
         if (!this.verticalMode && get(coWebsites).length > 0) {
             canvasWidth.set(window.innerWidth - currentWidth);
-            console.log("window width", window.innerWidth);
-            console.log("canvas width", currentWidth);
-            console.log("other width", window.innerWidth - currentWidth);
             return window.innerWidth - currentWidth;
         }
         return window.innerWidth;
     }
 
-    calculateNewHeight() {
+    private calculateNewHeight() {
         const currentHeight = get(heightContainer);
-        console.log("currentHeight", currentHeight);
         if (this.verticalMode && get(coWebsites).length > 0) {
             canvasHeight.set(window.innerHeight - currentHeight);
-            console.log("window height", window.innerHeight);
-            console.log("canvasHeight", currentHeight);
-            console.log("other height", window.innerHeight - currentHeight);
             return window.innerHeight - currentHeight;
         }
         return window.innerHeight;
