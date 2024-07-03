@@ -35,7 +35,7 @@
     import MessageCircleIcon from "../Icons/MessageCircleIcon.svelte";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import ScreenShareIcon from "../Icons/ScreenShareIcon.svelte";
-    import { highlightFullScreen, setHeight } from "../../Stores/ActionsCamStore";
+    import { highlightFullScreen, setHeight, setHeightScreenShare } from "../../Stores/ActionsCamStore";
     import ActionMediaBox from "./ActionMediaBox.svelte";
 
     // Extend the HTMLVideoElement interface to add the setSinkId method.
@@ -61,7 +61,7 @@
     let embedScreen: Streamable;
     let videoContainer: HTMLDivElement;
     let videoElement: HTMLVideoElementExt;
-    let minimized = isMediaBreakpointOnly("md");
+    // let minimized = isMediaBreakpointOnly("md");
     let noVideoTimeout: ReturnType<typeof setTimeout> | undefined;
     let destroyed = false;
     let currentDeviceId: string | undefined;
@@ -83,9 +83,55 @@
 
     $: isHighlighted = $highlightedEmbedScreen === peer;
 
-    const resizeObserver = new ResizeObserver(() => {
-        minimized = isMediaBreakpointOnly("md");
+    // const resizeObserver = new ResizeObserver(() => {
+    //     minimized = isMediaBreakpointOnly("md");
+    // });
+
+    $: $setHeightScreenShare, calcHeightVideo();
+    $: $highlightedEmbedScreen, calcHeightVideo();
+
+    function calcHeightVideo() {
+        console.log("je suis dans la fonction calc video");
+        if ($highlightedEmbedScreen === peer && videoContainer) {
+            console.log("je suis dans le if de calc video");
+            console.log("setHeightScreenShare", $setHeightScreenShare, "setHeight ", $setHeight);
+            videoContainer.style.height = `${setHeight}px`;
+        }
+    }
+
+    unsubscribeHighlightEmbedScreen = highlightedEmbedScreen.subscribe((value) => {
+        calcHeightVideo();
+        if (value) {
+            isHightlighted = true;
+        } else {
+            isHightlighted = false;
+        }
     });
+
+    $: isHighlighted = $highlightedEmbedScreen === embedScreen;
+
+    function toggleFullScreen() {
+        highlightFullScreen.update((current) => !current);
+        if (videoContainer) {
+            if ($highlightFullScreen) {
+                console.log("toggleFullScreen height", document.documentElement.clientHeight);
+                console.log("toggleFullScreen width", document.documentElement.clientWidth);
+                videoContainer.style.height = `${document.documentElement.clientHeight}px`;
+                videoContainer.style.width = `${document.documentElement.clientWidth}px`;
+            } else {
+                videoContainer.style.height = "100%";
+                videoContainer.style.width = "100%";
+            }
+        }
+        if (!isMobile) {
+            calcHeightVideo();
+        }
+    }
+
+    function untogglefFullScreen() {
+        highlightedEmbedScreen.removeHighlight();
+        highlightFullScreen.set(false);
+    }
 
     // TODO: check the race condition when setting sinkId is solved.
     // Also, read: https://github.com/nwjs/nw.js/issues/4340
@@ -98,8 +144,8 @@
         if (!isMobile) {
             calcHeightVideo();
         }
-        calcHeightVideo();
-        resizeObserver.observe(videoContainer);
+        // calcHeightVideo();
+        // resizeObserver.observe(videoContainer);
 
         unsubscribeChangeOutput = speakerSelectedStore.subscribe((deviceId) => {
             if (deviceId !== undefined) {
@@ -131,7 +177,7 @@
                 }
                 return;
             });
-            updateRatio();
+            // updateRatio();
         });
 
         // Let's display a warning if the video stream never reaches the user.
@@ -166,7 +212,7 @@
 
             wasVideoEnabled = constraints?.video ?? false;
             if (!wasVideoEnabled && isHightlighted) highlightedEmbedScreen.removeHighlight();
-            updateRatio();
+            // updateRatio();
         });
     });
 
@@ -238,68 +284,27 @@
         });
     }
 
-    function updateRatio() {
-        // TODO: remove this hack
-        setTimeout(() => {
-            aspectRatio = videoElement != undefined ? videoElement.videoWidth / videoElement.videoHeight : 1;
-        }, 1000);
-    }
+    // function updateRatio() {
+    //     // TODO: remove this hack
+    //     setTimeout(() => {
+    //         aspectRatio = videoElement != undefined ? videoElement.videoWidth / videoElement.videoHeight : 1;
 
-    $: $setHeight, calcHeightVideo();
-    $: $highlightedEmbedScreen, calcHeightVideo();
-
-    function calcHeightVideo() {
-        if ($highlightedEmbedScreen === peer && videoContainer) {
-            videoContainer.style.height = `${$setHeight}px`;
-        }
-    }
-
-    unsubscribeHighlightEmbedScreen = highlightedEmbedScreen.subscribe((value) => {
-        calcHeightVideo();
-        if (value) {
-            isHightlighted = true;
-        } else {
-            isHightlighted = false;
-        }
-    });
-
-    $: isHighlighted = $highlightedEmbedScreen === embedScreen;
-
-    function toggleFullScreen() {
-        highlightFullScreen.update((current) => !current);
-        if (videoContainer) {
-            if ($highlightFullScreen) {
-                console.log("toggleFullScreen height", document.documentElement.clientHeight);
-                console.log("toggleFullScreen width", document.documentElement.clientWidth);
-                videoContainer.style.height = `${document.documentElement.clientHeight}px`;
-                videoContainer.style.width = `${document.documentElement.clientWidth}px`;
-            } else {
-                videoContainer.style.height = "100%";
-                videoContainer.style.width = "100%";
-            }
-        }
-        if (!isMobile) {
-            calcHeightVideo();
-        }
-    }
-
-    function untogglefFullScreen() {
-        highlightedEmbedScreen.removeHighlight();
-        highlightFullScreen.set(false);
-    }
+    //     }, 1000);
+    // }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- class="video-container transition-all relative h-full aspect-video" -->
 
 <!-- Dans la premiere div     style="height:{$heightCamWrapper}px;"-->
-<!-- <div class={$mediaStreamConstraintsStore.audio ? "border-4 border-solid border-color rounded-lg" : ""}> -->
-<div
-    class="video-container group/screenshare transition-all h-full w-full relative aspect-video"
-    bind:this={videoContainer}
-    class:isHighlighted
+<!-- <div class={$mediaStreamConstraintsStore.audio ? "border-4 border-solid border-color rounded-lg" : ""}>
+
     class:video-off={!videoEnabled}
-    class:h-full={$embedScreenLayoutStore === LayoutMode.VideoChat}
+ class:h-full={$embedScreenLayoutStore === LayoutMode.VideoChat}
+-->
+<div
+    class="group/screenshare flex justify-center h-full w-full relative aspect-video"
+    bind:this={videoContainer}
     on:click={() => analyticsClient.pinMeetingAction()}
 >
     <ActionMediaBox {embedScreen} trackStreamWraper={peer} {videoEnabled} />
@@ -310,7 +315,6 @@
             : ''}"
         style="background-image: url({loaderImg})"
         class:flex-col={videoEnabled}
-        class:h-full={videoEnabled}
         class:items-center={!videoEnabled || $statusStore === "connecting" || $statusStore === "error"}
         class:px-7={!videoEnabled}
         class:flex-row={!videoEnabled}
@@ -330,7 +334,7 @@
             class="w-full h-full"
             class:h-0={!videoEnabled}
             class:w-0={!videoEnabled}
-            class:object-contain={minimized || isHightlighted || aspectRatio < 1}
+            class:object-contain={isHightlighted || aspectRatio < 1}
             class:max-h-full={videoEnabled && !isHightlighted && $embedScreenLayoutStore === LayoutMode.VideoChat}
             class:h-full={videoEnabled}
             class:rounded-lg={videoEnabled}
