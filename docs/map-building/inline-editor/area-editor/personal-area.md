@@ -1,6 +1,6 @@
 ---
 
-sidebar_position: 50
+sidebar_position: 60
 
 ---
 
@@ -23,10 +23,11 @@ There are two options :
 - Static claim mode : A specified user is set as the area owner.
 
 ![](../../images/editor/personal-area/personal-area-2.png)<br/>
-<i>Dynamic claim mode: Enter user tags in the "allowed user tags" input field.</i>
+*Dynamic claim mode: Enter user tags in the "allowed user tags" input field.*
+
 
 ![](../../images/editor/personal-area/personal-area-3.png)<br/>
-<i>Static claim mode: Search for the user's email or name to assign ownership.</i>
+*Static claim mode: Search for the user's email or name to assign ownership.*
 
 ## Claim personal area access
 
@@ -37,16 +38,19 @@ Once the area is claimed, the owner can add items to their personal space.
 
 ## Revoke personal area access
 
-As an authorized user, you can manage personal area properties in the map editor. If an area is claimed, you have the option to revoke access, making the area available for others to claim.<br/>
-![](../../images/editor/personal-area/personal-area-5.png)<br/>
+As an authorized user, you can manage personal area properties in the map editor. If an area is claimed, you have the option to revoke access, making the area available for others to claim.
+
+![](../../images/editor/personal-area/personal-area-5.png)
 
 If the area contains objects, a warning message will prompt you to decide how to manage these items.
+
 ![](../../images/editor/personal-area/personal-area-6.png)<br/>
 
 ## Visit card and message
 
-<b>Note: This feature is not available in the self-hosted version of WorkAdventure.</b>
-
+:::info
+This feature is not available in the self-hosted version of WorkAdventure.
+:::
 When a user walks through a personal area and the owner is away, the owner's visit card will be displayed. From there, visitors can leave a message in the chat.
 
 

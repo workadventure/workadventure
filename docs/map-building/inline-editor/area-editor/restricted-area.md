@@ -1,6 +1,6 @@
 ---
 
-sidebar_position: 50
+sidebar_position: 70
 
 ---
 
@@ -32,6 +32,7 @@ A user without access to an area will be stopped near the restricted zone. A mes
 ## Place object for allowed user
 
 An allowed user can place an object inside the area. They will have access to the entity editor and will be guided to place the object in the appropriate zone.
+
 ![](../../images/editor/restricted-area/restricted-area-4.gif)
 
 Only users with edition access tag can place object inside the area. Users with read access tag can only read object property and access the area.
