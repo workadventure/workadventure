@@ -33,11 +33,13 @@ export class WaScaleManager {
     }
 
     public applyNewSize(camera?: Phaser.Cameras.Scene2D.Camera) {
-        console.log("applyNewSize");
+        // console.log("applyNewSize");
         if (this.scaleManager === undefined) {
             return;
         }
         const { width, height } = coWebsiteManager.getGameSize();
+        // console.log("width", width);
+        // console.log("height", height);
         const devicePixelRatio = window.devicePixelRatio ?? 1;
         const { game: gameSize, real: realSize } = this.hdpiManager.getOptimalGameSize({
             width: width * devicePixelRatio,

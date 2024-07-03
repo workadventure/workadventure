@@ -1,8 +1,6 @@
 import { derived, get, writable } from "svelte/store";
-import { Subject } from "rxjs";
 import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
-import { waScaleManager } from "../Phaser/Services/WaScaleManager";
-import { gameManager } from "../Phaser/Game/GameManager";
+
 
 export function createCoWebsiteStore() {
     const { subscribe, set, update } = writable<Array<CoWebsite>>([]);
@@ -56,6 +54,7 @@ export const heightContainer = writable(window.innerHeight);
 export const fullScreenCowebsite = writable(false);
 export const canvasWidth = writable(window.innerWidth);
 export const canvasHeight = writable(window.innerHeight);
+
 export class CoWebsiteManager {
 
     // private _onResize: Subject<void> = new Subject();
@@ -65,23 +64,37 @@ export class CoWebsiteManager {
         return window.innerWidth < window.innerHeight;
     }
 
+    private isResizingFromCoWebsite: boolean = false;
+
+    public setResizingFromCoWebsite(value: boolean) {
+        this.isResizingFromCoWebsite = value;
+    }
+
+    // c'est la la merde
 
     private calculateNewWidth() {
         const currentWidth = get(widthContainer);
-        if (!this.verticalMode && get(coWebsites).length > 0) {
+        if (!this.verticalMode && this.isResizingFromCoWebsite && get(coWebsites).length > 0) {
+            console.log("je suis dans le resize CO WEBSITE")
             canvasWidth.set(window.innerWidth - currentWidth);
             return window.innerWidth - currentWidth;
+        } else if (!this.verticalMode && !this.isResizingFromCoWebsite && get(coWebsites).length > 0) {
+            return window.innerWidth - currentWidth;
+        } else {
+            return window.innerWidth;
         }
-        return window.innerWidth;
     }
 
     private calculateNewHeight() {
         const currentHeight = get(heightContainer);
-        if (this.verticalMode && get(coWebsites).length > 0) {
+        if (this.isResizingFromCoWebsite && this.verticalMode && get(coWebsites).length > 0) {
             canvasHeight.set(window.innerHeight - currentHeight);
             return window.innerHeight - currentHeight;
+        } else if (!this.isResizingFromCoWebsite && this.verticalMode && get(coWebsites).length > 0) {
+            return window.innerHeight - currentHeight;
+        } else {
+            return window.innerHeight;
         }
-        return window.innerHeight;
     }
 
     public getGameSize(): { height: number; width: number } {

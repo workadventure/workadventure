@@ -34,7 +34,6 @@
     let finalWidth;
     let finalHeight;
     let startHeight: number;
-    let mediaQuery = window.matchMedia("(max-width: 768px)");
     let vertical: boolean;
     let resizeBarHide = false;
     let styleTag: HTMLStyleElement;
@@ -51,12 +50,28 @@
     // $: windowWidth, waScaleManager.applyNewSize();
     // $: windowHeight, waScaleManager.applyNewSize();
 
+    // function updateScreenSize() {
+    //     if (window.innerWidth < 768) {
+    //         vertical = true;
+    //         coWebsiteManager.setResizingFromCoWebsite(true);
+    //         console.log(vertical);
+    //     } else {
+    //         vertical = false;
+    //         coWebsiteManager.setResizingFromCoWebsite(true);
+    //         console.log(vertical);
+    //     }
+    // }
+
+    window.addEventListener("resize", () => {
+        coWebsiteManager.setResizingFromCoWebsite(false);
+        waScaleManager.applyNewSize();
+    });
+
     onMount(() => {
-        mediaQuery.addEventListener("change", handleTabletChange);
-        handleTabletChange();
         if (!vertical) {
             let widthOnMount = parseInt(getComputedStyle(container).width);
             widthContainer.set(widthOnMount);
+            console.log($widthContainer, "ON MOUNT");
         } else {
             let heightOnMount = parseInt(getComputedStyle(container).height);
             heightContainer.set(heightOnMount);
@@ -66,18 +81,20 @@
         resizeCowebsite();
     });
 
-    $: mediaQuery.matches ? (vertical = true) : (vertical = false);
+    // $: vertical, waScaleManager.applyNewSize();
 
-    function handleTabletChange() {
-        // console.log("je suis dans handleTabletChange");
-        waScaleManager.applyNewSize();
-        // console.log("je suis dans le wa scale manager");
-        if (mediaQuery.matches) {
-            vertical = true;
-        } else {
-            vertical = false;
-        }
-    }
+    // $: mediaQuery.matches ? (vertical = true) : (vertical = false);
+
+    // function handleTabletChange() {
+    //     // console.log("je suis dans handleTabletChange");
+    //     waScaleManager.applyNewSize();
+    //     // console.log("je suis dans le wa scale manager");
+    //     // if (mediaQuery.matches) {
+    //     //     vertical = true;
+    //     // } else {
+    //     //     vertical = false;
+    //     // }
+    // }
 
     // $: vertical, resizeCowebsite();
 
@@ -92,6 +109,8 @@
     // });
 
     function resizeCowebsite() {
+        console.log("je suis dans resizeCowebsite");
+        coWebsiteManager.setResizingFromCoWebsite(true);
         if (!vertical) {
             heightContainer.set(window.innerHeight);
             startWidthContainer = parseInt(getComputedStyle(container).width);
@@ -105,6 +124,7 @@
             const handleMouseMove = (e: { clientX: number }) => {
                 let newWidth = startWidthContainer - (e.clientX - startX);
                 widthContainer.set(newWidth);
+                console.log($widthContainer, "HOLEHOLEHOLE");
                 finalWidth = newWidth + "px";
                 container.style.width = finalWidth;
                 const maxWidth = Math.min(newWidth, window.innerWidth * 0.75);
@@ -314,11 +334,13 @@
     onDestroy(() => {
         heightContainer.set(window.innerHeight);
         widthContainer.set(window.innerWidth);
+        coWebsiteManager.setResizingFromCoWebsite(false);
         waScaleManager.applyNewSize();
+
         if (styleTag) {
             document.head.removeChild(styleTag);
         }
-        mediaQuery.removeEventListener("change", handleTabletChange);
+        // mediaQuery.removeEventListener("change", handleTabletChange);
         subscription();
     });
 </script>
@@ -437,6 +459,7 @@
             : "absolute  left-1 top-0 bottom-0 m-auto w-1.5 h-40 bg-white rounded cursor-col-resize"}
         class:resize-bar={resizeBarHide}
         bind:this={resizeBar}
+        on:mousedown={resizeCowebsite}
         on:mousedown={addDivForResize}
         on:mouseup={removeDivForResize}
         on:touchstart={addDivForResize}
