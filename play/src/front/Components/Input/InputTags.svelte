@@ -2,8 +2,8 @@
     import { createEventDispatcher } from "svelte";
     import Select from "svelte-select";
     import LL from "../../../i18n/i18n-svelte";
-    import { InputTagOption } from "./InputTagOption";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import { InputTagOption } from "./InputTagOption";
 
     const dispatch = createEventDispatcher();
 
@@ -27,6 +27,7 @@
     }
 
     async function searchWorldTags(filterText: string) {
+        if (filterText.length < 1) return [];
         const connection = gameManager.getCurrentGameScene().connection;
         if (connection) {
             try {
