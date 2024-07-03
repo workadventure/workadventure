@@ -1,6 +1,8 @@
 import { derived, get, writable } from "svelte/store";
 import { Subject } from "rxjs";
 import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
+import { waScaleManager } from "../Phaser/Services/WaScaleManager";
+import { gameManager } from "../Phaser/Game/GameManager";
 
 export function createCoWebsiteStore() {
     const { subscribe, set, update } = writable<Array<CoWebsite>>([]);
@@ -56,6 +58,8 @@ export const canvasWidth = writable(window.innerWidth);
 export const canvasHeight = writable(window.innerHeight);
 export class CoWebsiteManager {
 
+    // private _onResize: Subject<void> = new Subject();
+    // public onResize = this._onResize.asObservable();
 
     get verticalMode(): boolean {
         return window.innerWidth < window.innerHeight;
@@ -139,8 +143,20 @@ export class CoWebsiteManager {
     }
 
     public cleanup(): void {
-        this.closeCoWebsites();
+        this.closeCoWebsites
     }
+
+    // public resizeObserver = new ResizeObserver(() => {
+    //     this.fire();
+    // });
+
+    // private fire(): void {
+    //     this._onResize.next();
+    //     waScaleManager.applyNewSize();
+    //     // TODO: this line because the refresh focus should be emited with an event
+    //     waScaleManager.refreshFocusOnTarget(gameManager.getCurrentGameScene().cameras.main);
+    // }
+
 }
 
 export const coWebsiteManager = new CoWebsiteManager();

@@ -1,6 +1,6 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { onDestroy, onMount } from "svelte";
+    import { afterUpdate, onDestroy, onMount } from "svelte";
     import {
         canvasHeight,
         canvasWidth,
@@ -25,8 +25,8 @@
     import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
     import CoWebsiteTab from "./CoWebsiteTab.svelte";
 
+    let container: HTMLElement; // Move this line above the resizeDesktop function
     let activeCowebsite = $coWebsites[0];
-    let container: HTMLElement;
     let resizeBar: HTMLElement;
     let startY: number;
     let startX: number;
@@ -45,11 +45,11 @@
     let numberMaxOfCowebsite: number;
     let menuArrow = false;
     let isToggleFullScreen = false;
-    let windowWidth = window.innerWidth;
-    let windowHeight = window.innerHeight;
+    // let windowWidth = window.innerWidth;
+    // let windowHeight = window.innerHeight;
 
-    $: windowWidth, waScaleManager.applyNewSize();
-    $: windowHeight, waScaleManager.applyNewSize();
+    // $: windowWidth, waScaleManager.applyNewSize();
+    // $: windowHeight, waScaleManager.applyNewSize();
 
     onMount(() => {
         mediaQuery.addEventListener("change", handleTabletChange);
@@ -63,99 +63,104 @@
         }
         updateDynamicStyles();
         waScaleManager.applyNewSize();
+        resizeCowebsite();
     });
 
-    $: mediaQuery, waScaleManager.applyNewSize();
-    $: mediaQuery, waScaleManager.refreshFocusOnTarget();
+    $: mediaQuery.matches ? (vertical = true) : (vertical = false);
 
-    // window.addEventListener("resize", function () {
+    function handleTabletChange() {
+        // console.log("je suis dans handleTabletChange");
+        waScaleManager.applyNewSize();
+        // console.log("je suis dans le wa scale manager");
+        if (mediaQuery.matches) {
+            vertical = true;
+        } else {
+            vertical = false;
+        }
+    }
+
+    // $: vertical, resizeCowebsite();
+
+    // coWebsiteManager.onResize.subscribe(() => {
+    //     console.log("JE SUIS DANS LE SUBSCRIBE DU COWEBSITE MANAGER");
     //     waScaleManager.applyNewSize();
     //     waScaleManager.refreshFocusOnTarget();
     // });
 
-    function handleTabletChange() {
-        console.log("je suis dans handleTabletChange");
-        waScaleManager.applyNewSize();
-        console.log("je suis dans le wa scale manager");
-        if (mediaQuery.matches) {
-            vertical = true;
-            resizeMobile();
-        } else {
-            vertical = false;
-            resizeDesktop();
-        }
-    }
+    // afterUpdate(() => {
+    //     coWebsiteManager.resizeObserver.observe(container);
+    // });
 
-    function resizeDesktop() {
-        heightContainer.set(window.innerHeight);
-        startWidthContainer = parseInt(getComputedStyle(container).width);
-        const handleMouseDown = (e: { clientX: number }) => {
-            startX = e.clientX;
+    function resizeCowebsite() {
+        if (!vertical) {
+            heightContainer.set(window.innerHeight);
             startWidthContainer = parseInt(getComputedStyle(container).width);
-            document.addEventListener("mousemove", handleMouseMove);
-            document.addEventListener("mouseup", handleMouseUp);
-        };
-        resizeBar.addEventListener("mousedown", handleMouseDown);
-        const handleMouseMove = (e: { clientX: number }) => {
-            let newWidth = startWidthContainer - (e.clientX - startX);
-            widthContainer.set(newWidth);
-            finalWidth = newWidth + "px";
-            container.style.width = finalWidth;
-            const maxWidth = Math.min(newWidth, window.innerWidth * 0.75);
-            widthContainer.set(maxWidth);
-            if (maxWidth !== newWidth) {
-                container.style.width = maxWidth + "px";
+            const handleMouseDown = (e: { clientX: number }) => {
+                startX = e.clientX;
+                startWidthContainer = parseInt(getComputedStyle(container).width);
+                document.addEventListener("mousemove", handleMouseMove);
+                document.addEventListener("mouseup", handleMouseUp);
+            };
+            resizeBar.addEventListener("mousedown", handleMouseDown);
+            const handleMouseMove = (e: { clientX: number }) => {
+                let newWidth = startWidthContainer - (e.clientX - startX);
+                widthContainer.set(newWidth);
+                finalWidth = newWidth + "px";
+                container.style.width = finalWidth;
+                const maxWidth = Math.min(newWidth, window.innerWidth * 0.75);
+                widthContainer.set(maxWidth);
+                if (maxWidth !== newWidth) {
+                    container.style.width = maxWidth + "px";
+                }
+                waScaleManager.applyNewSize();
+                waScaleManager.refreshFocusOnTarget();
+            };
+            const handleMouseUp = () => {
+                document.removeEventListener("mousemove", handleMouseMove);
+                document.removeEventListener("mouseup", handleMouseUp);
+            };
+            return () => {
+                widthContainer;
+                resizeBar.removeEventListener("mousedown", handleMouseDown);
+                document.removeEventListener("mousemove", handleMouseMove);
+                document.removeEventListener("mouseup", handleMouseUp);
+            };
+        } else {
+            widthContainer.set(window.innerWidth);
+            startWidthContainer = parseInt(getComputedStyle(container).height);
+            function handleMouseDown(e: TouchEvent) {
+                let clientY = e.touches[0].clientY;
+                startY = clientY;
+                startHeight = parseInt(getComputedStyle(container).height);
+                document.addEventListener("touchmove", handleMouseMove, { passive: false });
+                document.addEventListener("touchend", handleMouseUp);
             }
-            waScaleManager.applyNewSize();
-            waScaleManager.refreshFocusOnTarget();
-        };
-        const handleMouseUp = () => {
-            document.removeEventListener("mousemove", handleMouseMove);
-            document.removeEventListener("mouseup", handleMouseUp);
-        };
-        return () => {
-            widthContainer;
-            resizeBar.removeEventListener("mousedown", handleMouseDown);
-            document.removeEventListener("mousemove", handleMouseMove);
-            document.removeEventListener("mouseup", handleMouseUp);
-        };
-    }
-
-    function resizeMobile() {
-        widthContainer.set(window.innerWidth);
-        startWidthContainer = parseInt(getComputedStyle(container).width);
-        function handleMouseDown(e: TouchEvent) {
-            let clientY = e.touches[0].clientY;
-            startY = clientY;
-            startHeight = parseInt(getComputedStyle(container).height);
-            document.addEventListener("touchmove", handleMouseMove, { passive: false });
-            document.addEventListener("touchend", handleMouseUp);
-        }
-        resizeBar.addEventListener("touchstart", handleMouseDown, false);
-        function handleMouseMove(e: TouchEvent) {
-            let clientY = e.touches[0].clientY;
-            let newHeight = startHeight + (clientY - startY);
-            heightContainer.set(newHeight);
-            finalHeight = newHeight + "px";
-            container.style.height = finalHeight;
-            const maxHeight = Math.min(newHeight, window.innerHeight * 0.75);
-            heightContainer.set(maxHeight);
-            if (maxHeight !== newHeight) {
-                container.style.height = maxHeight + "px";
+            resizeBar.addEventListener("touchstart", handleMouseDown, false);
+            function handleMouseMove(e: TouchEvent) {
+                let clientY = e.touches[0].clientY;
+                let newHeight = startHeight + (clientY - startY);
+                heightContainer.set(newHeight);
+                finalHeight = newHeight + "px";
+                container.style.height = finalHeight;
+                const maxHeight = Math.min(newHeight, window.innerHeight * 0.75);
+                heightContainer.set(maxHeight);
+                if (maxHeight !== newHeight) {
+                    container.style.height = maxHeight + "px";
+                }
+                resizeMin(newHeight);
+                waScaleManager.applyNewSize();
+                waScaleManager.refreshFocusOnTarget();
             }
-            resizeMin(newHeight);
-            waScaleManager.applyNewSize();
-            waScaleManager.refreshFocusOnTarget();
+            const handleMouseUp = () => {
+                document.removeEventListener("touchmove", handleMouseMove);
+                document.removeEventListener("touchend", handleMouseUp);
+            };
+            return () => {
+                resizeBar.removeEventListener("touchstart", handleMouseDown);
+                document.removeEventListener("touchmove", handleMouseMove);
+                document.removeEventListener("touchend", handleMouseUp);
+            };
         }
-        const handleMouseUp = () => {
-            document.removeEventListener("touchmove", handleMouseMove);
-            document.removeEventListener("touchend", handleMouseUp);
-        };
-        return () => {
-            resizeBar.removeEventListener("touchstart", handleMouseDown);
-            document.removeEventListener("touchmove", handleMouseMove);
-            document.removeEventListener("touchend", handleMouseUp);
-        };
     }
 
     function resizeMin(newValue: number) {
