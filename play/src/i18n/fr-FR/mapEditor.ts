@@ -267,6 +267,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         customEntityEditorForm: {
             imageName: "Nom de l'image",
             tags: "Tags",
+            writeTag: "Ecrire un tag...",
             objectType: "Type d'objet",
             floatingObject: "Objet flottant",
             floatingObjectDescription:

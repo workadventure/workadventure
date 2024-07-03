@@ -269,6 +269,7 @@ const mapEditor: BaseTranslation = {
         customEntityEditorForm: {
             imageName: "Image name",
             tags: "Tags",
+            writeTag: "Write tag...",
             objectType: "Object type",
             floatingObject: "Floating object",
             floatingObjectDescription:
