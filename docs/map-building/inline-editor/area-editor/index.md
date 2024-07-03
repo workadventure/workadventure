@@ -34,5 +34,7 @@ You can trigger an action when a user enters an area. There is a list of possibl
 - [Silent zone](silent.md)
 - [Focusable zone](focusable.md)
 - [Play a sound](play-sound.md)
+- [Personal area](personal-area.md)
+- [Restricted area](restricted-area.md)
 
 You can add multiple "Play sound" and "Open a link" actions to an area.

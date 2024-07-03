@@ -1,9 +1,9 @@
----
+[---
 
 sidebar_position: 50
 
 ---
-
+]()
 # Jitsi meeting property
 
 On your map, you can define special zones where a Jitsi meeting will be opened when a user enters the area.
