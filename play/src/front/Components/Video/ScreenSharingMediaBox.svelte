@@ -24,6 +24,8 @@
     let videoContainer: HTMLDivElement;
     let unsubscribeHighlightEmbedScreen: Unsubscriber;
     let isMobile: boolean;
+    let windowVar: Window;
+
 
     onMount(() => {
         calcHeightVideo();
@@ -94,6 +96,8 @@
     });
 </script>
 
+
+<svelte:window bind:this={windowVar}>
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="group/screenshare h-full w-full relative screen-sharing" id="screen-sharing" bind:this={videoContainer}>
     {#if $statusStore === "connecting"}
