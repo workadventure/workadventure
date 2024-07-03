@@ -374,7 +374,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             const newRoom = new MatrixChatRoom(room);
             this.roomList.set(room_id, newRoom);
             return newRoom;
-            x;
         } catch (error) {
             throw this.handleMatrixError(error);
         }
