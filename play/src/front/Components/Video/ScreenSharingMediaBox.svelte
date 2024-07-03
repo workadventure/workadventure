@@ -4,7 +4,7 @@
     import { Color } from "@workadventure/shared-utils";
     import { ArrowDownIcon, ArrowUpIcon } from "svelte-feather-icons";
     import { onDestroy, onMount } from "svelte";
-    import { Unsubscriber } from "svelte/store";
+    import { Unsubscriber, writable } from "svelte/store";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import type { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
@@ -22,16 +22,27 @@
     let embedScreen: Streamable;
     let menuDrop = false;
     let videoContainer: HTMLDivElement;
-    let isMobile = window.matchMedia("(max-width: 768px)").matches;
     let unsubscribeHighlightEmbedScreen: Unsubscriber;
+    let isMobile: boolean;
 
     onMount(() => {
-        if (!isMobile) {
-            calcHeightVideo();
-        }
+        calcHeightVideo();
+        updateScreenSize();
     });
 
-    // $: $highlightFullScreen && !isMobile, calcHeightVideo();
+    // Fonction pour mettre à jour le store lorsque la taille de la fenêtre change
+    function updateScreenSize() {
+        if (window.innerWidth < 768) {
+            isMobile = true;
+        } else {
+            isMobile = false;
+        }
+    }
+
+    // Écouter les événements de redimensionnement de la fenêtre
+    window.addEventListener("resize", updateScreenSize);
+
+    $: isMobile, calcHeightVideo();
 
     if (peer) {
         embedScreen = peer as unknown as Streamable;
@@ -50,9 +61,7 @@
                 videoContainer.style.width = "100%";
             }
         }
-        if (!isMobile) {
-            calcHeightVideo();
-        }
+        calcHeightVideo();
     }
 
     function untogglefFullScreen() {
@@ -64,8 +73,15 @@
     // $: $highlightedEmbedScreen === embedScreen, calcHeightVideo();
 
     function calcHeightVideo() {
-        if ($highlightedEmbedScreen === embedScreen && videoContainer) {
+        console.log(isMobile, "is mobile");
+        if ($highlightedEmbedScreen === embedScreen && videoContainer && !isMobile) {
+            // console.log("calcHeightVideo");
             videoContainer.style.height = `${$setHeightScreenShare}px`;
+        } else {
+            if (videoContainer) {
+                console.log("calcHeightVideo dans le mobile");
+                videoContainer.style.height = "100%";
+            }
         }
     }
 
@@ -154,7 +170,7 @@
 
         <div class={isHighlighted && menuDrop ? "block" : "hidden"}>
             <div
-                class="sm:w-30 sm:h-12 block flex flex-col justify-evenly top-0 bottom-0 right-0 left-0 m-auto h-28 w-60 z-20 rounded-lg bg-contrast/50 backdrop-blur absolute transition-all flex items-center justify-center cursor-pointer  cursor-pointer"
+                class="sm:w-30 sm:h-12 block flex flex-col justify-evenly top-0 bottom-0 right-0 left-0 m-auto h-28 w-60 z-20 rounded-lg bg-contrast/50 backdrop-blur absolute transition-all flex items-center justify-center cursor-pointer"
             >
                 <div
                     class="svg w-full hover:bg-white/10 flex justify-around items-center z-25 rounded-lg"
@@ -187,7 +203,7 @@
                 </div>
                 <div class="h-[1px] z-30 w-full bg-white/20" />
                 <div
-                    class="w-full hover:bg-white/10 flex justify-around cursor-pointer items-center z-25 rounded-lg"
+                    class="w-full hover:bg-white/10 flex justify-around cursor-pointer items-center z-25 rounded-lg bg-contrast/80 backdrop-blur opacity-100 "
                     on:click={toggleFullScreen}
                     on:click={() => (menuDrop = !menuDrop)}
                 >

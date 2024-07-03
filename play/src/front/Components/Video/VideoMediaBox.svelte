@@ -2,7 +2,7 @@
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
     import { Color } from "@workadventure/shared-utils";
-    import { onDestroy, onMount } from "svelte";
+    import { afterUpdate, onDestroy, onMount } from "svelte";
     import { Unsubscriber } from "svelte/store";
     import CancelablePromise from "cancelable-promise";
     import Debug from "debug";
@@ -35,7 +35,7 @@
     import MessageCircleIcon from "../Icons/MessageCircleIcon.svelte";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import ScreenShareIcon from "../Icons/ScreenShareIcon.svelte";
-    import { highlightFullScreen, setHeight, setHeightScreenShare } from "../../Stores/ActionsCamStore";
+    import { highlightFullScreen, setHeight, setHeightScreenShare, setWidth } from "../../Stores/ActionsCamStore";
     import ActionMediaBox from "./ActionMediaBox.svelte";
 
     // Extend the HTMLVideoElement interface to add the setSinkId method.
@@ -59,7 +59,7 @@
     let unsubscribeStreamStore: Unsubscriber;
     let unsubscribeConstraintStore: Unsubscriber;
     let embedScreen: Streamable;
-    let videoContainer: HTMLDivElement;
+    let cameraContainer: HTMLDivElement;
     let videoElement: HTMLVideoElementExt;
     // let minimized = isMediaBreakpointOnly("md");
     let noVideoTimeout: ReturnType<typeof setTimeout> | undefined;
@@ -87,15 +87,49 @@
     //     minimized = isMediaBreakpointOnly("md");
     // });
 
+    afterUpdate(() => {
+        calcHeightVideo();
+    });
+
+    function setHeightAction(node: any, p0: number) {
+        node.style.height = `${$setHeightScreenShare}px`;
+        return {
+            update(height: number) {
+                node.style.height = `${height}px`;
+            },
+        };
+    }
+
     $: $setHeightScreenShare, calcHeightVideo();
     $: $highlightedEmbedScreen, calcHeightVideo();
 
+    // function calcHeightVideo() {
+    //     let test = document.getElementById("test5");
+    //     if ($highlightedEmbedScreen === peer && cameraContainer) {
+    //         console.log("je suis dans la fonction calc video et je suis highlighted");
+    //         console.log(test, "ma ptn de cam et je suis dans le if");
+    //         cameraContainer.style.height = `${setHeightScreenShare}px`;
+
+    //         // cameraContainer.style.height = `${setHeightScreenShare}px`;
+    //         console.log($setHeightScreenShare, "px");
+    //     } else {
+    //         cameraContainer.style.height = "100%";
+    //     }
+    // }
+
     function calcHeightVideo() {
-        console.log("je suis dans la fonction calc video");
-        if ($highlightedEmbedScreen === peer && videoContainer) {
-            console.log("je suis dans le if de calc video");
-            console.log("setHeightScreenShare", $setHeightScreenShare, "setHeight ", $setHeight);
-            videoContainer.style.height = `${setHeight}px`;
+        if (!cameraContainer) {
+            return;
+        }
+        if ($highlightedEmbedScreen === peer) {
+            if (typeof setHeightScreenShare !== "undefined") {
+                cameraContainer.style.height = `${setHeightScreenShare}px`;
+                cameraContainer.style.width = `${document.documentElement.clientWidth}px`;
+            }
+        } else {
+            if (cameraContainer) {
+                cameraContainer.style.height = "100%";
+            }
         }
     }
 
@@ -112,15 +146,13 @@
 
     function toggleFullScreen() {
         highlightFullScreen.update((current) => !current);
-        if (videoContainer) {
+        if (cameraContainer) {
             if ($highlightFullScreen) {
-                console.log("toggleFullScreen height", document.documentElement.clientHeight);
-                console.log("toggleFullScreen width", document.documentElement.clientWidth);
-                videoContainer.style.height = `${document.documentElement.clientHeight}px`;
-                videoContainer.style.width = `${document.documentElement.clientWidth}px`;
+                cameraContainer.style.height = `${document.documentElement.clientHeight}px`;
+                cameraContainer.style.width = `${document.documentElement.clientWidth}px`;
             } else {
-                videoContainer.style.height = "100%";
-                videoContainer.style.width = "100%";
+                cameraContainer.style.height = "100%";
+                cameraContainer.style.width = "100%";
             }
         }
         if (!isMobile) {
@@ -131,6 +163,7 @@
     function untogglefFullScreen() {
         highlightedEmbedScreen.removeHighlight();
         highlightFullScreen.set(false);
+        calcHeightVideo();
     }
 
     // TODO: check the race condition when setting sinkId is solved.
@@ -141,9 +174,8 @@
     let sinkIdPromise = CancelablePromise.resolve();
 
     onMount(() => {
-        if (!isMobile) {
-            calcHeightVideo();
-        }
+        calcHeightVideo();
+
         // calcHeightVideo();
         // resizeObserver.observe(videoContainer);
 
@@ -212,7 +244,7 @@
 
             wasVideoEnabled = constraints?.video ?? false;
             if (!wasVideoEnabled && isHightlighted) highlightedEmbedScreen.removeHighlight();
-            // updateRatio();
+            updateRatio();
         });
     });
 
@@ -284,13 +316,12 @@
         });
     }
 
-    // function updateRatio() {
-    //     // TODO: remove this hack
-    //     setTimeout(() => {
-    //         aspectRatio = videoElement != undefined ? videoElement.videoWidth / videoElement.videoHeight : 1;
-
-    //     }, 1000);
-    // }
+    function updateRatio() {
+        // TODO: remove this hack
+        setTimeout(() => {
+            aspectRatio = videoElement != undefined ? videoElement.videoWidth / videoElement.videoHeight : 1;
+        }, 1000);
+    }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -303,14 +334,16 @@
  class:h-full={$embedScreenLayoutStore === LayoutMode.VideoChat}
 -->
 <div
-    class="group/screenshare flex justify-center h-full w-full relative aspect-video"
-    bind:this={videoContainer}
+    class="group/screenshare flex justify-center mx-auto relative aspect-video"
     on:click={() => analyticsClient.pinMeetingAction()}
+    use:setHeightAction={$setHeightScreenShare}
+    bind:this={cameraContainer}
+    id="test5"
 >
     <ActionMediaBox {embedScreen} trackStreamWraper={peer} {videoEnabled} />
 
     <div
-        class="aspect-video absolute z-20 rounded-lg transition-all bg-no-repeat bg-center bg-contrast/80 backdrop-blur{$mediaStreamConstraintsStore.audio
+        class="aspect-video z-20 rounded-lg transition-all h-full w-full bg-no-repeat bg-center aspect-video bg-contrast/80 backdrop-blur{$mediaStreamConstraintsStore.audio
             ? 'border-8 border-solid border-color rounded-lg'
             : ''}"
         style="background-image: url({loaderImg})"
@@ -320,6 +353,7 @@
         class:flex-row={!videoEnabled}
         class:relative={!videoEnabled}
         class:justify-center={$statusStore === "connecting" || $statusStore === "error"}
+        class:object-contain={isHightlighted || aspectRatio < 1}
     >
         {#if $statusStore === "connecting"}
             <div class="connecting-spinner" />
@@ -328,15 +362,17 @@
         {/if}
         <!-- svelte-ignore a11y-media-has-caption -->
 
-        <!-- Dans la video class:max-h-[230px]={videoEnabled && !isHightlighted}-->
+        <!-- Dans la video class:max-h-[230px]={videoEnabled && !isHightlighted}
+                    class:max-h-full={videoEnabled && !isHightlighted && $embedScreenLayoutStore === LayoutMode.Presentation}
+                                class:h-full={videoEnabled}
+
+-->
         <video
             bind:this={videoElement}
-            class="w-full h-full"
+            class="w-full h-full aspect-video"
             class:h-0={!videoEnabled}
             class:w-0={!videoEnabled}
             class:object-contain={isHightlighted || aspectRatio < 1}
-            class:max-h-full={videoEnabled && !isHightlighted && $embedScreenLayoutStore === LayoutMode.VideoChat}
-            class:h-full={videoEnabled}
             class:rounded-lg={videoEnabled}
             autoplay
             playsinline
@@ -611,13 +647,6 @@
 
     .background-color {
         background-color: #4156f6;
-    }
-    .isHighlighted {
-        height: 100%;
-        width: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
     }
 
     @container (max-width: 767px) {

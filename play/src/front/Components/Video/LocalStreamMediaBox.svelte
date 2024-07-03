@@ -20,10 +20,10 @@
     let isMobile = window.matchMedia("(max-width: 768px)").matches;
 
     onMount(() => {
-        if (!isMobile) {
-            calcHeightVideo();
-        }
+        calcHeightVideo();
     });
+
+    $: isMobile, calcHeightVideo();
 
     if (peer) {
         embedScreen = peer as unknown as Streamable;
@@ -42,9 +42,7 @@
                 videoContainer.style.width = "100%";
             }
         }
-        if (!isMobile) {
-            calcHeightVideo();
-        }
+        calcHeightVideo();
     }
 
     function untogglefFullScreen() {
@@ -56,8 +54,13 @@
     $: $highlightedEmbedScreen === embedScreen, calcHeightVideo();
 
     function calcHeightVideo() {
-        if ($highlightedEmbedScreen === peer && videoContainer) {
+        if ($highlightedEmbedScreen === peer && videoContainer && !isMobile) {
+            console.log("calcHeightVideo");
             videoContainer.style.height = `${$setHeightScreenShare}px`;
+        } else {
+            if (videoContainer) {
+                videoContainer.style.width = "100%";
+            }
         }
     }
 

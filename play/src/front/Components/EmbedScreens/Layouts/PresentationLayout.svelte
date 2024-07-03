@@ -18,6 +18,7 @@
         highlightFullScreen,
         setHeight,
         setHeightScreenShare,
+        setWidth,
     } from "../../../Stores/ActionsCamStore";
 
     const isMobile = window.matchMedia("(max-width: 767px)");
@@ -30,6 +31,7 @@
 
     const windowSize = writable({
         height: window.innerHeight,
+        width: window.innerWidth,
         camHeight: 0,
         screenShareHeight: 0,
     });
@@ -37,6 +39,7 @@
     const handleResize = () => {
         windowSize.set({
             height: window.innerHeight,
+            width: window.innerWidth,
             camHeight: camContainer?.offsetHeight || 0,
             screenShareHeight: highlightScreen?.offsetHeight || 0,
         });
@@ -62,10 +65,12 @@
 
     function resizeHeight() {
         let availableHeight = window.innerHeight - (camContainer?.offsetHeight || 0) - 72;
+        let availableWidth = window.innerWidth;
         if (availableHeight < 0) {
             availableHeight = 0;
         }
         setHeight.set(availableHeight);
+        setWidth.set(availableWidth);
         setHeightScreenShare.set(availableHeight);
     }
 

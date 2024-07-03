@@ -46,11 +46,8 @@
 {#if streamable instanceof VideoPeer}
     {#if $constraintStore || $statusStore === "error" || $statusStore === "connecting"}
         <div
-            class="media-container transition-all justify-center {isHightlighted
-                ? 'cam-share-receive'
-                : ''} relative h-full w-full"
+            class="media-container transition-all justify-center relative h-full w-full"
             class:hightlighted={isHightlighted}
-            class:max-w-sm={isHightlighted && !videoEnabled}
             class:mx-auto={isHightlighted && !videoEnabled}
             class:m-auto={!isHightlighted && !videoEnabled}
             class:aspect-video={!isHightlighted && !videoEnabled}
@@ -62,7 +59,7 @@
     {/if}
 {:else if streamable instanceof ScreenSharingPeer}
     <div
-        class="media-container {isHightlighted ? 'cam-share-receive' : ''} justify-center w-full
+        class="media-container justify-center w-full
             media-box-shape-color"
         class:clickable={isClickable}
     >
