@@ -10,7 +10,7 @@ import {
     emptyStringToUndefined,
 } from "@workadventure/shared-utils/src/EnvironmentVariables/EnvironmentVariableUtils";
 
-export const EnvironmentVariables = z.object({
+const BaseEnvironmentVariables = z.object({
     // Pusher related environment variables
     SECRET_KEY: z.string().min(1),
     API_URL: z.string().min(1),
@@ -145,12 +145,30 @@ export const EnvironmentVariables = z.object({
     GOOGLE_DRIVE_PICKER_CLIENT_ID: z.string().optional(),
     GOOGLE_DRIVE_PICKER_API_KEY: z.string().optional(),
     GOOGLE_DRIVE_PICKER_APP_ID: z.string().optional(),
-    MATRIX_DOMAIN: z.string().optional(),
-    MATRIX_API_URI: z.string().optional(),
-    MATRIX_PUBLIC_URI: z.string().optional(),
 
     EMBEDLY_KEY: z.string().optional(),
-    CHAT_TYPE: z.union([z.literal("PROXIMITY"), z.literal("MATRIX")]).default("PROXIMITY"),
 });
+
+export const EnvironmentVariables = z.intersection(
+    BaseEnvironmentVariables,
+    z.discriminatedUnion("CHAT_TYPE", [
+        z.object({
+            CHAT_TYPE: z.literal("PROXIMITY"),
+            MATRIX_DOMAIN: z.undefined(),
+            MATRIX_ADMIN_USER: z.undefined(),
+            MATRIX_ADMIN_PASSWORD: z.undefined(),
+            MATRIX_API_URI: z.undefined(),
+            MATRIX_PUBLIC_URI: z.undefined(),
+        }),
+        z.object({
+            CHAT_TYPE: z.literal("MATRIX"),
+            MATRIX_DOMAIN: z.string().min(1),
+            MATRIX_ADMIN_USER: z.string().min(1),
+            MATRIX_ADMIN_PASSWORD: z.string().min(1),
+            MATRIX_API_URI: z.string().min(1),
+            MATRIX_PUBLIC_URI: z.string().min(1),
+        }),
+    ])
+);
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

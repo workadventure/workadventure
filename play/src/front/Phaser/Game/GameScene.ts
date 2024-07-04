@@ -160,7 +160,7 @@ import { ChatConnectionInterface, ChatType } from "../../Chat/Connection/ChatCon
 import { proximityRoomConnection, selectedRoom } from "../../Chat/Stores/ChatStore";
 import { ProximityChatConnection } from "../../Chat/Connection/Proximity/ProximityChatConnection";
 import { ChatConnectionFactory } from "../../Chat/Connection/ConnectionFactory";
-import { SpaceProviderInterface } from "../../Space/SpaceProvider/SpacerProviderInterface";
+import { SpaceProviderInterface } from "../../Space/SpaceProvider/SpaceProviderInterface";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";

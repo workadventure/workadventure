@@ -60,5 +60,5 @@ export interface FrontConfigurationInterface {
     CARDS_ENABLED: boolean;
     EMBEDLY_KEY: string | undefined;
     MATRIX_PUBLIC_URI: string | undefined;
-    CHAT_TYPE: "MATRIX" | "PROXIMITY" | undefined;
+    CHAT_TYPE: "MATRIX" | "PROXIMITY";
 }

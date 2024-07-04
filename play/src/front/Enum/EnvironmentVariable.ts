@@ -76,4 +76,4 @@ export const PUBLIC_MAP_STORAGE_PREFIX = env.PUBLIC_MAP_STORAGE_PREFIX;
 //Chat ENV
 export const EMBEDLY_KEY = env.EMBEDLY_KEY;
 export const MATRIX_PUBLIC_URI = env.MATRIX_PUBLIC_URI;
-export const CHAT_TYPE: "MATRIX" | "PROXIMITY" | undefined = env.CHAT_TYPE;
+export const CHAT_TYPE: "MATRIX" | "PROXIMITY" = env.CHAT_TYPE;
