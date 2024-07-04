@@ -62,6 +62,7 @@
     });
 
     $: window.innerHeight, resizeHeight();
+    $: window.innerWidth, resizeHeight();
 
     function resizeHeight() {
         let availableHeight = window.innerHeight - (camContainer?.offsetHeight || 0) - 72;
@@ -71,6 +72,7 @@
         }
         setHeight.set(availableHeight);
         setWidth.set(availableWidth);
+        console.log($setWidth, "set width");
         setHeightScreenShare.set(availableHeight);
     }
 

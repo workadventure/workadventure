@@ -90,6 +90,8 @@
     }
 
     window.addEventListener("resize", updateScreenSize);
+    window.addEventListener("resize", calcHeightVideo);
+    window.addEventListener("change", calcHeightVideo);
 
     $: isMobile, calcHeightVideo();
 
@@ -110,6 +112,7 @@
     $: $highlightedEmbedScreen, calcHeightVideo();
 
     function calcHeightVideo() {
+        console.log("calcHeightVideo");
         if (!cameraContainer) {
             return;
         }
@@ -118,6 +121,10 @@
                 cameraContainer.style.height = `${$setHeightScreenShare}px`;
                 cameraContainer.style.width = `${document.documentElement.clientWidth}px`;
             }
+        } else if ($highlightedEmbedScreen === peer && !$highlightFullScreen && isMobile) {
+            cameraContainer.style.height = `${$setHeightScreenShare}px`;
+            cameraContainer.style.width = `${setWidth}px`;
+            videoElement.style.width = `${setWidth}px`;
         } else {
             if (cameraContainer) {
                 cameraContainer.style.height = "100%";
@@ -126,19 +133,21 @@
     }
 
     unsubscribeHighlightEmbedScreen = highlightedEmbedScreen.subscribe((value) => {
-        calcHeightVideo();
         if (value) {
             isHightlighted = true;
         } else {
             isHightlighted = false;
         }
+        calcHeightVideo();
     });
 
     $: isHighlighted = $highlightedEmbedScreen === embedScreen;
 
     function toggleFullScreen() {
         highlightFullScreen.update((current) => !current);
-        fullScreen = !fullScreen;
+        if (!isMobile) {
+            fullScreen = !fullScreen;
+        }
         calcHeightVideo();
     }
 
