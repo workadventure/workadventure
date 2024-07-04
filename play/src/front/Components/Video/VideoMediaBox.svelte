@@ -89,7 +89,6 @@
         }
     }
 
-    // Écouter les événements de redimensionnement de la fenêtre
     window.addEventListener("resize", updateScreenSize);
 
     $: isMobile, calcHeightVideo();
@@ -110,14 +109,11 @@
     $: $setHeightScreenShare, calcHeightVideo();
     $: $highlightedEmbedScreen, calcHeightVideo();
 
-    $: console.log(isMobile, "isMobile");
-
     function calcHeightVideo() {
         if (!cameraContainer) {
             return;
         }
         if ($highlightedEmbedScreen === peer && !$highlightFullScreen && !isMobile) {
-            console.log(" je suis passé dedans !");
             if (typeof setHeightScreenShare !== "undefined") {
                 cameraContainer.style.height = `${$setHeightScreenShare}px`;
                 cameraContainer.style.width = `${document.documentElement.clientWidth}px`;
