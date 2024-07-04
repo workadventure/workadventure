@@ -33,7 +33,8 @@
 </div>
 {#if displayInvitationRoomActions}
     <div class="tw-flex">
-        <button class="tw-text-blue-300" data-testid="acceptInvitationButton" on:click={() => joinRoom()}>Accept</button>
+        <button class="tw-text-blue-300" data-testid="acceptInvitationButton" on:click={() => joinRoom()}>Accept</button
+        >
         <button class="tw-text-red-500" on:click={() => leaveRoom()}>Decline</button>
     </div>
 {/if}
