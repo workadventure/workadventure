@@ -210,7 +210,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             connectedUserToUpdate.availabilityStatus.set(user.availabilityStatus);
         if (connectedUserToUpdate.spaceId)
             this.userConnected.set(connectedUserToUpdate.spaceId, {
-                id: user.chatID ?? connectedUserToUpdate.id,
+                id: connectedUserToUpdate.id === "" ? user.chatID : connectedUserToUpdate.id,
                 uuid: connectedUserToUpdate.uuid,
                 avatarUrl: connectedUserToUpdate.avatarUrl,
                 availabilityStatus: connectedUserToUpdate.availabilityStatus,
