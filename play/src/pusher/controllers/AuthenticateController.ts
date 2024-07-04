@@ -257,7 +257,7 @@ export class AuthenticateController extends BaseHttpController {
 
             let userInfo = null;
             try {
-                userInfo = await openIDClient.getUserInfo(req, res);
+                userInfo = await openIDClient.getUserInfo(req, res, playUri);
             } catch (err) {
                 //if no access on openid provider, return error
                 Sentry.captureException("An error occurred while connecting to OpenID Provider => " + err);
