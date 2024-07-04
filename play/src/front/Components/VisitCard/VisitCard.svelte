@@ -32,7 +32,7 @@
         return true;
     }
 
-    async function sendMessage() {
+    async function openChat() {
         if (!selectPlayerChatID) return;
 
         let room: ChatRoom | undefined = chatConnection.getDirectRoomFor(selectPlayerChatID);
@@ -76,7 +76,7 @@
                 <button
                     class="light tw-cursor-pointer tw-px-3 tw-mb-2 tw-mr-0"
                     data-testid="sendMessagefromVisitCardButton"
-                    on:click={sendMessage}>{$LL.menu.visitCard.sendMessage()}</button
+                    on:click={openChat}>{$LL.menu.visitCard.sendMessage()}</button
                 >
             {/if}
         </div>
