@@ -12,19 +12,16 @@ function createPeerStore<T>() {
     return {
         subscribe,
         getPeer(userId: number): T | undefined {
-            console.log("peerStore.getPeer: ", (userId));
             return get({ subscribe }).get(userId);
         },
         addPeer(userId: number, peer: T) {
             update((users) => {
-                console.log("peerStore.addPeer: ", (userId), (peer));
                 users.set(userId, peer);
                 return users;
             });
         },
         removePeer(userId: number) {
             update((users) => {
-                console.log("peerStore.removePeer: ", (userId));
                 const peerConnectionDeleted = users.delete(userId);
                 if (!peerConnectionDeleted) {
                     Sentry.captureException(new Error("Error deleting peer connection"));
@@ -36,7 +33,6 @@ function createPeerStore<T>() {
             set(new Map<number, T>());
         },
         getSize(): number {
-            console.log("peerStore.getSize: ", (get({ subscribe }).size));
             return get({ subscribe }).size;
         },
     };

@@ -12,19 +12,9 @@
     } from "../../../Stores/StreamableCollectionStore";
     import Loading from "../../Video/Loading.svelte";
     import { jitsiLoadingStore } from "../../../Streaming/BroadcastService";
-    import {
-        rightMode,
-        hideMode,
-        highlightFullScreen,
-        setHeight,
-        setHeightScreenShare,
-        setWidth,
-    } from "../../../Stores/ActionsCamStore";
+    import { highlightFullScreen, setHeight, setHeightScreenShare, setWidth } from "../../../Stores/ActionsCamStore";
 
-    const isMobile = window.matchMedia("(max-width: 767px)");
-    let isVertical: boolean;
     let currentHighlightedEmbedScreen: Streamable | undefined;
-    let isHightlighted = false;
     let camContainer: HTMLDivElement;
     let highlightScreen: HTMLDivElement;
     let unsubscribeHighlightEmbedScreen: Unsubscriber;
@@ -52,9 +42,6 @@
 
     onMount(() => {
         resizeHeight();
-        isMobile.addEventListener("change", (e: any) => handleTabletChange(e));
-        handleTabletChange(isMobile);
-
         window.addEventListener("resize", handleResize);
         return () => {
             window.removeEventListener("resize", handleResize);
@@ -72,26 +59,7 @@
         }
         setHeight.set(availableHeight);
         setWidth.set(availableWidth);
-        console.log($setWidth, "set width");
         setHeightScreenShare.set(availableHeight);
-    }
-
-    unsubscribeHighlightEmbedScreen = highlightedEmbedScreen.subscribe((value) => {
-        currentHighlightedEmbedScreen = value;
-        handleResize();
-        if (value) {
-            isHightlighted = true;
-        } else {
-            isHightlighted = false;
-        }
-    });
-
-    function handleTabletChange(e: MediaQueryList) {
-        if (e.matches) {
-            isVertical = true;
-        } else {
-            isVertical = false;
-        }
     }
 
     $: if ($highlightedEmbedScreen) modifySizeCamIfScreenShare();
@@ -115,39 +83,6 @@
     onDestroy(() => {
         if (unsubscribeHighlightEmbedScreen) unsubscribeHighlightEmbedScreen();
     });
-
-    // $: $rightMode, setRightMode();
-
-    // function setRightMode() {
-    //     if ($rightMode && !isVertical) {
-    //         let containerLayoutCam = document.getElementById("right-mode");
-    //         containerLayoutCam?.classList.add("right-mode-on");
-    //         // Cette div est nul mais dans l'idéé je veux faire qqch comme cela
-    //     } else {
-    //         let containerLayoutCam = document.getElementById("right-mode");
-    //         containerLayoutCam?.classList.remove("right-mode-on");
-    //     }
-    // }
-
-    // $: if ($hideMode && $highlightedEmbedScreen) setHideMode();
-
-    // function setHideMode() {
-    //     // ATTENTION NE PLUS RENDRE CLICKABLE LE SCREENSHARE CAR SINON PLUS RIEN
-
-    //     if ($hideMode && !isVertical) {
-    //         camContainer?.classList.add("hidden");
-
-    //         if (highlightScreen) {
-    //             highlightScreen.classList.add("fullscreen");
-    //         }
-    //     } else if (!$hideMode && !isVertical) {
-    //         if (highlightScreen) {
-    //             highlightScreen.style.transform = "scale(1)";
-    //         }
-    //     }
-    // }
-    $: console.log($streamableCollectionStore, "streamable");
-    $: console.log($myCameraStore, "camera");
 </script>
 
 <div class="presentation-layout flex flex-col-reverse md:flex-col">

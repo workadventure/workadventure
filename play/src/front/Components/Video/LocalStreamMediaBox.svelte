@@ -54,8 +54,7 @@
     $: $highlightedEmbedScreen === embedScreen, calcHeightVideo();
 
     function calcHeightVideo() {
-        if ($highlightedEmbedScreen === peer && videoContainer && !isMobile) {
-            console.log("calcHeightVideo");
+        if ($highlightedEmbedScreen === embedScreen && videoContainer && !isMobile) {
             videoContainer.style.height = `${$setHeightScreenShare}px`;
         } else {
             if (videoContainer) {

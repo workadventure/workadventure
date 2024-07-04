@@ -2,7 +2,7 @@
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
     import { Color } from "@workadventure/shared-utils";
-    import { afterUpdate, onDestroy, onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import { Unsubscriber } from "svelte/store";
     import CancelablePromise from "cancelable-promise";
     import Debug from "debug";
@@ -15,15 +15,12 @@
     import { LL } from "../../../i18n/i18n-svelte";
 
     import Woka from "../Woka/WokaFromUserId.svelte";
-    import { isMediaBreakpointOnly } from "../../Utils/BreakpointsUtils";
-    import { LayoutMode } from "../../WebRtc/LayoutManager";
     import {
         mediaStreamConstraintsStore,
         // requestedCameraState,
         selectDefaultSpeaker,
         speakerSelectedStore,
     } from "../../Stores/MediaStore";
-    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import loaderImg from "../images/loader.svg";
     import MicOffIcon from "../Icons/MicOffIcon.svelte";
@@ -35,9 +32,8 @@
     import MessageCircleIcon from "../Icons/MessageCircleIcon.svelte";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import ScreenShareIcon from "../Icons/ScreenShareIcon.svelte";
-    import { highlightFullScreen, setHeight, setHeightScreenShare, setWidth } from "../../Stores/ActionsCamStore";
+    import { highlightFullScreen, setHeightScreenShare } from "../../Stores/ActionsCamStore";
     import ActionMediaBox from "./ActionMediaBox.svelte";
-    import { boolean } from "zod";
 
     // Extend the HTMLVideoElement interface to add the setSinkId method.
     // See https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
@@ -62,7 +58,6 @@
     let embedScreen: Streamable;
     let cameraContainer: HTMLDivElement;
     let videoElement: HTMLVideoElementExt;
-    // let minimized = isMediaBreakpointOnly("md");
     let noVideoTimeout: ReturnType<typeof setTimeout> | undefined;
     let destroyed = false;
     let currentDeviceId: string | undefined;
@@ -94,25 +89,12 @@
     window.addEventListener("change", calcHeightVideo);
 
     $: isMobile, calcHeightVideo();
-
     $: videoEnabled = $constraintStore ? $constraintStore.video : false;
-
     $: isHighlighted = $highlightedEmbedScreen === peer;
-
-    function setHeightAction(node: any, p0: number) {
-        node.style.height = `${$setHeightScreenShare}px`;
-        return {
-            update(height: number) {
-                node.style.height = `${height}px`;
-            },
-        };
-    }
-
     $: $setHeightScreenShare, calcHeightVideo();
     $: $highlightedEmbedScreen, calcHeightVideo();
 
     function calcHeightVideo() {
-        console.log("calcHeightVideo");
         if (!cameraContainer) {
             return;
         }
@@ -123,10 +105,9 @@
             }
         } else if ($highlightedEmbedScreen === peer && !$highlightFullScreen && isMobile) {
             cameraContainer.style.height = `${$setHeightScreenShare}px`;
-            cameraContainer.style.width = `${setWidth}px`;
-            videoElement.style.width = `${setWidth}px`;
         } else {
-            if (cameraContainer) {
+            if (cameraContainer && $highlightFullScreen) {
+                cameraContainer.style.width = "100%";
                 cameraContainer.style.height = "100%";
             }
         }
@@ -138,16 +119,12 @@
         } else {
             isHightlighted = false;
         }
-        calcHeightVideo();
     });
 
     $: isHighlighted = $highlightedEmbedScreen === embedScreen;
 
     function toggleFullScreen() {
         highlightFullScreen.update((current) => !current);
-        if (!isMobile) {
-            fullScreen = !fullScreen;
-        }
         calcHeightVideo();
     }
 
@@ -322,11 +299,10 @@
  class:h-full={$embedScreenLayoutStore === LayoutMode.VideoChat}
 -->
 <div
-    class="group/screenshare w-full flex justify-center mx-auto aspect-video {fullScreen
-        ? 'h-[90%] fixed top-0 left-0'
-        : 'h-full relative'}"
+    class="group/screenshare flex justify-center mx-auto aspect-video {$highlightFullScreen
+        ? 'h-[100%] w-[100%] fixed top-0 left-0'
+        : 'h-full relative w-full'}"
     on:click={() => analyticsClient.pinMeetingAction()}
-    use:setHeightAction={$setHeightScreenShare}
     bind:this={cameraContainer}
     id="test5"
 >
@@ -574,6 +550,7 @@
                 class="w-full hover:bg-white/10 flex justify-around cursor-pointer items-center z-25 rounded-lg"
                 on:click={toggleFullScreen}
                 on:click={() => (menuDrop = !menuDrop)}
+                on:click={() => (fullScreen = !fullScreen)}
             >
                 {#if $highlightFullScreen}
                     <svg
