@@ -126,7 +126,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
                 priority: 1,
                 callback: () => {
                     requestVisitCardsStore.set(this.visitCardUrl);
-                    selectedChatIDRemotePlayerStore.set(this.chatID || null);
+                    selectedChatIDRemotePlayerStore.set(this.chatID ?? null);
                     actionsMenuStore.clear();
                 },
             });
