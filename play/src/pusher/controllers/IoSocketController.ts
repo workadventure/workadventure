@@ -875,12 +875,15 @@ export class IoSocketController {
                                         break;
                                     }
                                     case "searchTagsQuery": {
-                                        console.log("🔥🔥🔥🔥🔥")
-                                        console.log('on est dans le bon switch')
                                         const searchTagsAnswer = await socketManager.handleSearchTagsQuery(
                                             socket,
                                             message.message.queryMessage.query.searchTagsQuery
                                         );
+                                        answerMessage.answer = {
+                                            $case: "searchTagsAnswer",
+                                            searchTagsAnswer,
+                                        };
+                                        this.sendAnswerMessage(socket, answerMessage);
                                         break;
                                     }
                                     case "getMemberQuery": {

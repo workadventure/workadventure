@@ -802,6 +802,7 @@ export class SocketManager {
                 case "roomsFromSameWorldQuery":
                 case "searchMemberQuery":
                 case "getMemberQuery":
+                case "searchTagsQuery":
                 case "chatMembersQuery": {
                     break;
                 }
@@ -819,8 +820,8 @@ export class SocketManager {
                         e !== null && typeof e === "object"
                             ? e.toString()
                             : typeof e === "string"
-                            ? e
-                            : "Unknown error",
+                                ? e
+                                : "Unknown error",
                 },
             };
         }
@@ -904,7 +905,7 @@ export class SocketManager {
         if (bbbSettings === undefined) {
             throw new Error(
                 "Unable to join the conference because either " +
-                    "the BBB_URL or BBB_SECRET environment variables are not set."
+                "the BBB_URL or BBB_SECRET environment variables are not set."
             );
         }
 
@@ -951,8 +952,7 @@ export class SocketManager {
             joinViaHtml5: true,
         });
         console.log(
-            `User "${user.name}" (${user.uuid}) joined the BBB meeting "${meetingName}" as ${
-                isAdmin ? "Admin" : "Participant"
+            `User "${user.name}" (${user.uuid}) joined the BBB meeting "${meetingName}" as ${isAdmin ? "Admin" : "Participant"
             }.`
         );
 
@@ -1108,13 +1108,13 @@ export class SocketManager {
         if (!room) {
             console.error(
                 "In sendAdminMessage, could not find room with id '" +
-                    roomId +
-                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
+                roomId +
+                "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
             );
             Sentry.captureException(
                 "In sendAdminMessage, could not find room with id '" +
-                    roomId +
-                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
+                roomId +
+                "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
             );
             return;
         }
@@ -1123,13 +1123,13 @@ export class SocketManager {
         if (recipients.size === 0) {
             console.error(
                 "In sendAdminMessage, could not find user with id '" +
-                    recipientUuid +
-                    "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
+                recipientUuid +
+                "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
             );
             Sentry.captureException(
                 "In sendAdminMessage, could not find user with id '" +
-                    recipientUuid +
-                    "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
+                recipientUuid +
+                "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
             );
             return;
         }
@@ -1152,13 +1152,13 @@ export class SocketManager {
         if (!room) {
             console.error(
                 "In banUser, could not find room with id '" +
-                    roomId +
-                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
+                roomId +
+                "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
             );
             Sentry.captureException(
                 "In banUser, could not find room with id '" +
-                    roomId +
-                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
+                roomId +
+                "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
             );
             return;
         }
@@ -1167,13 +1167,13 @@ export class SocketManager {
         if (recipients.size === 0) {
             console.error(
                 "In banUser, could not find user with id '" +
-                    recipientUuid +
-                    "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
+                recipientUuid +
+                "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
             );
             Sentry.captureException(
                 "In banUser, could not find user with id '" +
-                    recipientUuid +
-                    "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
+                recipientUuid +
+                "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
             );
             return;
         }
@@ -1202,13 +1202,13 @@ export class SocketManager {
             //todo: this should cause the http call to return a 500
             console.error(
                 "In sendAdminRoomMessage, could not find room with id '" +
-                    roomId +
-                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
+                roomId +
+                "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
             );
             Sentry.captureException(
                 "In sendAdminRoomMessage, could not find room with id '" +
-                    roomId +
-                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
+                roomId +
+                "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
             );
             return;
         }
@@ -1232,13 +1232,13 @@ export class SocketManager {
             //todo: this should cause the http call to return a 500
             console.error(
                 "In dispatchWorldFullWarning, could not find room with id '" +
-                    roomId +
-                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
+                roomId +
+                "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
             );
             Sentry.captureException(
                 "In dispatchWorldFullWarning, could not find room with id '" +
-                    roomId +
-                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
+                roomId +
+                "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
             );
             return;
         }
