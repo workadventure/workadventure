@@ -660,13 +660,13 @@ class AdminApi implements AdminInterface {
         return axios
             .get(
                 ADMIN_API_URL +
-                "/api/ban" +
-                "?ipAddress=" +
-                encodeURIComponent(ipAddress) +
-                "&token=" +
-                encodeURIComponent(userUuid) +
-                "&roomUrl=" +
-                encodeURIComponent(roomUrl),
+                    "/api/ban" +
+                    "?ipAddress=" +
+                    encodeURIComponent(ipAddress) +
+                    "&token=" +
+                    encodeURIComponent(userUuid) +
+                    "&roomUrl=" +
+                    encodeURIComponent(roomUrl),
                 { headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" } }
             )
             .then((data) => {
@@ -1076,18 +1076,15 @@ class AdminApi implements AdminInterface {
         return MemberData.array().parse(response.data);
     }
 
-
     /**
      * @openapi
      * /api/tags:
      */
-    async searchTags(world: string, searchText: string): Promise<string[]> {
-        console.log("haaaaaaaa on y arrive")
-        console.log(searchText);
-        console.log(ADMIN_API_URL)
-        const response = await axios.get<string[]>(`${ADMIN_API_URL}/api/world/${world}/tags`, {
+    async searchTags(playUri: string | null, searchText: string): Promise<string[]> {
+        const response = await axios.get<string[]>(`${ADMIN_API_URL}/api/world/tags`, {
             headers: { Authorization: `${ADMIN_API_TOKEN}` },
             params: {
+                playUri,
                 searchText,
             },
         });

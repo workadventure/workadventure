@@ -806,9 +806,9 @@ export class RoomConnection implements RoomConnection {
             } catch (e) {
                 console.error(
                     "Unable to unserialize value received from server for a variable. " +
-                    'Value received: "' +
-                    serializedValue +
-                    '". Error: ',
+                        'Value received: "' +
+                        serializedValue +
+                        '". Error: ',
                     e
                 );
             }
@@ -1642,6 +1642,7 @@ export class RoomConnection implements RoomConnection {
         if (answer.$case !== "searchTagsAnswer") {
             throw new Error("Unexpected answer");
         }
+        console.log("Reponse: ", answer.searchTagsAnswer.tags);
         return answer.searchTagsAnswer.tags;
     }
 
