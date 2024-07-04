@@ -2,7 +2,6 @@
     import { createEventDispatcher } from "svelte";
     import Select from "svelte-select";
     import LL from "../../../i18n/i18n-svelte";
-    import { gameManager } from "../../Phaser/Game/GameManager";
     import { InputTagOption } from "./InputTagOption";
 
     const dispatch = createEventDispatcher();
@@ -14,6 +13,8 @@
     export let onBlur = () => {};
     export let handleChange = () => {};
     export let testId: string | undefined = undefined;
+    export let placeholder = "Select rights";
+    export let queryOptions: undefined | ((filterText: string) => Promise<string[]>) = undefined;
 
     let filterText = "";
 
@@ -24,19 +25,6 @@
             const prev = options.filter((i) => !i.created);
             options = [...prev, { value: filterText, label: filterText.toLowerCase(), created: true }];
         }
-    }
-
-    async function searchWorldTags(filterText: string) {
-        if (filterText.length < 1) return [];
-        const connection = gameManager.getCurrentGameScene().connection;
-        if (connection) {
-            try {
-                return await connection.queryTags(filterText);
-            } catch (error) {
-                console.error(error);
-            }
-        }
-        return [];
     }
 
     function _handleChange() {
@@ -56,14 +44,14 @@
         id="selector"
         on:filter={handleFilter}
         bind:filterText
-        loadOptions={searchWorldTags}
+        loadOptions={queryOptions}
         on:change={_handleChange}
         on:input={handleChange}
         on:select={handleChange}
         items={options}
         bind:value
         multiple={true}
-        placeholder="Select rights"
+        {placeholder}
         on:focus={onFocus}
         on:blur={onBlur}
         showChevron={true}
