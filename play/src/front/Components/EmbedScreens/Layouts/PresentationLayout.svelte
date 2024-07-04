@@ -5,16 +5,11 @@
     import CamerasContainer from "../CamerasContainer.svelte";
     import MediaBox from "../../Video/MediaBox.svelte";
     import { myCameraStore, proximityMeetingStore } from "../../../Stores/MyMediaStore";
-    import {
-        Streamable,
-        myJitsiCameraStore,
-        streamableCollectionStore,
-    } from "../../../Stores/StreamableCollectionStore";
+    import { myJitsiCameraStore, streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
     import Loading from "../../Video/Loading.svelte";
     import { jitsiLoadingStore } from "../../../Streaming/BroadcastService";
     import { highlightFullScreen, setHeight, setHeightScreenShare, setWidth } from "../../../Stores/ActionsCamStore";
 
-    let currentHighlightedEmbedScreen: Streamable | undefined;
     let camContainer: HTMLDivElement;
     let highlightScreen: HTMLDivElement;
     let unsubscribeHighlightEmbedScreen: Unsubscriber;
@@ -68,7 +63,7 @@
     function modifySizeCamIfScreenShare() {
         let containerCam = document.getElementById("container-media") as HTMLDivElement;
         if (containerCam) {
-            if (currentHighlightedEmbedScreen !== undefined && !$highlightFullScreen) {
+            if ($highlightedEmbedScreen !== undefined && !$highlightFullScreen) {
                 containerCam.style.transform = "scale(0.7)";
                 containerCam.style.marginTop = "-24px";
                 containerCam.style.marginBottom = "-8px";
@@ -83,6 +78,39 @@
     onDestroy(() => {
         if (unsubscribeHighlightEmbedScreen) unsubscribeHighlightEmbedScreen();
     });
+
+    // $: $rightMode, setRightMode();
+
+    // function setRightMode() {
+    //     if ($rightMode && !isVertical) {
+    //         let containerLayoutCam = document.getElementById("right-mode");
+    //         containerLayoutCam?.classList.add("right-mode-on");
+    //         // Cette div est nul mais dans l'idéé je veux faire qqch comme cela
+    //     } else {
+    //         let containerLayoutCam = document.getElementById("right-mode");
+    //         containerLayoutCam?.classList.remove("right-mode-on");
+    //     }
+    // }
+
+    // $: if ($hideMode && $highlightedEmbedScreen) setHideMode();
+
+    // function setHideMode() {
+    //     // ATTENTION NE PLUS RENDRE CLICKABLE LE SCREENSHARE CAR SINON PLUS RIEN
+
+    //     if ($hideMode && !isVertical) {
+    //         camContainer?.classList.add("hidden");
+
+    //         if (highlightScreen) {
+    //             highlightScreen.classList.add("fullscreen");
+    //         }
+    //     } else if (!$hideMode && !isVertical) {
+    //         if (highlightScreen) {
+    //             highlightScreen.style.transform = "scale(1)";
+    //         }
+    //     }
+    // }
+    $: console.log($streamableCollectionStore, "streamable");
+    $: console.log($myCameraStore, "camera");
 </script>
 
 <div class="presentation-layout flex flex-col-reverse md:flex-col">
