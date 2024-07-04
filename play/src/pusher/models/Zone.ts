@@ -210,13 +210,11 @@ export class Zone implements CustomJsonReplacerInterface {
                         switch (message.message.$case) {
                             case "userJoinedZoneMessage": {
                                 const userJoinedZoneMessage = message.message.userJoinedZoneMessage;
-                                console.log(userJoinedZoneMessage);
                                 const userDescriptor =
                                     UserDescriptor.createFromUserJoinedZoneMessage(userJoinedZoneMessage);
                                 this.users.set(userJoinedZoneMessage.userId, userDescriptor);
 
                                 const fromZone = userJoinedZoneMessage.fromZone;
-                                //TODO : modifier le userJoinedZoneMessage
                                 this.notifyUserEnter(userDescriptor, fromZone);
                                 break;
                             }
@@ -474,7 +472,6 @@ export class Zone implements CustomJsonReplacerInterface {
 
     public startListening(listener: Socket): void {
         const userData = listener.getUserData();
-        console.log({ userData });
         for (const [userId, user] of this.users.entries()) {
             if (userId !== userData.userId) {
                 this.socketListener.onUserEnters(user, listener);
