@@ -11,6 +11,7 @@
         widthContainer,
         heightContainer,
         coWebsiteManager,
+        testStore,
     } from "../../Stores/CoWebsiteStore";
     import FullScreenIcon from "../Icons/FullScreenIcon.svelte";
     import JitsiCowebsiteComponent from "../Cowebsites/JistiCowebsiteComponent.svelte";
@@ -64,6 +65,7 @@
 
     window.addEventListener("resize", () => {
         coWebsiteManager.setResizingFromCoWebsite(false);
+        // handleResize();
         waScaleManager.applyNewSize();
     });
 
@@ -71,15 +73,21 @@
         if (!vertical) {
             let widthOnMount = parseInt(getComputedStyle(container).width);
             widthContainer.set(widthOnMount);
-            console.log($widthContainer, "ON MOUNT");
+            // console.log($widthContainer, "ON MOUNT");
         } else {
             let heightOnMount = parseInt(getComputedStyle(container).height);
+            // heightOnMount = (heightOnMount / window.innerHeight) * 100;
             heightContainer.set(heightOnMount);
         }
         updateDynamicStyles();
         waScaleManager.applyNewSize();
         resizeCowebsite();
     });
+
+    // function handleResize() {
+    //     canvasWidth.set(window.innerWidth);
+    //     canvasHeight.set(window.innerHeight);
+    // }
 
     // $: vertical, waScaleManager.applyNewSize();
 
@@ -123,8 +131,9 @@
             resizeBar.addEventListener("mousedown", handleMouseDown);
             const handleMouseMove = (e: { clientX: number }) => {
                 let newWidth = startWidthContainer - (e.clientX - startX);
+                newWidth;
                 widthContainer.set(newWidth);
-                console.log($widthContainer, "HOLEHOLEHOLE");
+                // console.log($widthContainer, "HOLEHOLEHOLE");
                 finalWidth = newWidth + "px";
                 container.style.width = finalWidth;
                 const maxWidth = Math.min(newWidth, window.innerWidth * 0.75);

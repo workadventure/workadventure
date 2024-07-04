@@ -60,6 +60,28 @@ export class CoWebsiteManager {
     // private _onResize: Subject<void> = new Subject();
     // public onResize = this._onResize.asObservable();
 
+    constructor() {
+        // Ajouter des écouteurs d'événements pour la mise à jour des stores
+        window.addEventListener('resize', this.handleResize.bind(this));
+
+        // Nettoyer les écouteurs d'événements lorsque ce n'est plus nécessaire
+        this.cleanupStore = () => {
+            window.removeEventListener('resize', this.handleResize.bind(this));
+        };
+    }
+
+    cleanupStore() {
+        window.removeEventListener('resize', this.handleResize.bind(this));
+    }
+
+    handleResize() {
+        widthContainer.set(window.innerWidth);
+        heightContainer.set(window.innerHeight);
+        canvasWidth.set(window.innerWidth);
+        canvasHeight.set(window.innerHeight);
+    }
+
+
     get verticalMode(): boolean {
         return window.innerWidth < window.innerHeight;
     }
@@ -73,25 +95,31 @@ export class CoWebsiteManager {
     // c'est la la merde
 
     private calculateNewWidth() {
-        const currentWidth = get(widthContainer);
+        let currentWidthContainer = get(widthContainer);
+        console.log("currentWidth CONTAINER before function", currentWidthContainer);
+
+        let currentWidthCanvas = get(canvasWidth);
+        console.log("currentWidth CANVAS before function", currentWidthCanvas);
+
         if (!this.verticalMode && this.isResizingFromCoWebsite && get(coWebsites).length > 0) {
-            console.log("je suis dans le resize CO WEBSITE")
-            canvasWidth.set(window.innerWidth - currentWidth);
-            return window.innerWidth - currentWidth;
+            console.log("je suis dans le resize CO WEBSITE");
+            canvasWidth.set(window.innerWidth - get(widthContainer));
+            return window.innerWidth - get(widthContainer);
         } else if (!this.verticalMode && !this.isResizingFromCoWebsite && get(coWebsites).length > 0) {
-            return window.innerWidth - currentWidth;
+            canvasWidth.set(window.innerWidth - get(canvasWidth));
+            return window.innerWidth - get(canvasWidth);
         } else {
-            return window.innerWidth;
+            return window.innerWidth - currentWidthContainer;
         }
     }
 
+
     private calculateNewHeight() {
-        const currentHeight = get(heightContainer);
         if (this.isResizingFromCoWebsite && this.verticalMode && get(coWebsites).length > 0) {
-            canvasHeight.set(window.innerHeight - currentHeight);
-            return window.innerHeight - currentHeight;
+            canvasHeight.set(window.innerHeight - get(heightContainer));
+            return window.innerHeight - get(heightContainer);
         } else if (!this.isResizingFromCoWebsite && this.verticalMode && get(coWebsites).length > 0) {
-            return window.innerHeight - currentHeight;
+            return window.innerHeight - get(heightContainer);
         } else {
             return window.innerHeight;
         }
