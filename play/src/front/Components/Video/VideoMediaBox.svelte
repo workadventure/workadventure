@@ -37,6 +37,7 @@
     import ScreenShareIcon from "../Icons/ScreenShareIcon.svelte";
     import { highlightFullScreen, setHeight, setHeightScreenShare, setWidth } from "../../Stores/ActionsCamStore";
     import ActionMediaBox from "./ActionMediaBox.svelte";
+    import { boolean } from "zod";
 
     // Extend the HTMLVideoElement interface to add the setSinkId method.
     // See https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
@@ -71,7 +72,8 @@
     let isHighlighted = false;
     let menuDrop = false;
     let unsubscribeHighlightEmbedScreen: Unsubscriber;
-    let isMobile = window.matchMedia("(max-width: 768px)").matches;
+    let isMobile: boolean;
+    let fullScreen = false;
 
     const debug = Debug("VideoMediaBox");
 
@@ -79,17 +81,22 @@
         embedScreen = peer as unknown as Streamable;
     }
 
+    function updateScreenSize() {
+        if (window.innerWidth < 768) {
+            isMobile = true;
+        } else {
+            isMobile = false;
+        }
+    }
+
+    // Écouter les événements de redimensionnement de la fenêtre
+    window.addEventListener("resize", updateScreenSize);
+
+    $: isMobile, calcHeightVideo();
+
     $: videoEnabled = $constraintStore ? $constraintStore.video : false;
 
     $: isHighlighted = $highlightedEmbedScreen === peer;
-
-    // const resizeObserver = new ResizeObserver(() => {
-    //     minimized = isMediaBreakpointOnly("md");
-    // });
-
-    afterUpdate(() => {
-        calcHeightVideo();
-    });
 
     function setHeightAction(node: any, p0: number) {
         node.style.height = `${$setHeightScreenShare}px`;
@@ -103,27 +110,16 @@
     $: $setHeightScreenShare, calcHeightVideo();
     $: $highlightedEmbedScreen, calcHeightVideo();
 
-    // function calcHeightVideo() {
-    //     let test = document.getElementById("test5");
-    //     if ($highlightedEmbedScreen === peer && cameraContainer) {
-    //         console.log("je suis dans la fonction calc video et je suis highlighted");
-    //         console.log(test, "ma ptn de cam et je suis dans le if");
-    //         cameraContainer.style.height = `${setHeightScreenShare}px`;
-
-    //         // cameraContainer.style.height = `${setHeightScreenShare}px`;
-    //         console.log($setHeightScreenShare, "px");
-    //     } else {
-    //         cameraContainer.style.height = "100%";
-    //     }
-    // }
+    $: console.log(isMobile, "isMobile");
 
     function calcHeightVideo() {
         if (!cameraContainer) {
             return;
         }
-        if ($highlightedEmbedScreen === peer) {
+        if ($highlightedEmbedScreen === peer && !$highlightFullScreen && !isMobile) {
+            console.log(" je suis passé dedans !");
             if (typeof setHeightScreenShare !== "undefined") {
-                cameraContainer.style.height = `${setHeightScreenShare}px`;
+                cameraContainer.style.height = `${$setHeightScreenShare}px`;
                 cameraContainer.style.width = `${document.documentElement.clientWidth}px`;
             }
         } else {
@@ -146,18 +142,8 @@
 
     function toggleFullScreen() {
         highlightFullScreen.update((current) => !current);
-        if (cameraContainer) {
-            if ($highlightFullScreen) {
-                cameraContainer.style.height = `${document.documentElement.clientHeight}px`;
-                cameraContainer.style.width = `${document.documentElement.clientWidth}px`;
-            } else {
-                cameraContainer.style.height = "100%";
-                cameraContainer.style.width = "100%";
-            }
-        }
-        if (!isMobile) {
-            calcHeightVideo();
-        }
+        fullScreen = !fullScreen;
+        calcHeightVideo();
     }
 
     function untogglefFullScreen() {
@@ -174,11 +160,8 @@
     let sinkIdPromise = CancelablePromise.resolve();
 
     onMount(() => {
+        updateScreenSize();
         calcHeightVideo();
-
-        // calcHeightVideo();
-        // resizeObserver.observe(videoContainer);
-
         unsubscribeChangeOutput = speakerSelectedStore.subscribe((deviceId) => {
             if (deviceId !== undefined) {
                 setAudioOutput(deviceId);
@@ -334,7 +317,9 @@
  class:h-full={$embedScreenLayoutStore === LayoutMode.VideoChat}
 -->
 <div
-    class="group/screenshare flex justify-center mx-auto relative aspect-video"
+    class="group/screenshare w-full flex justify-center mx-auto aspect-video {fullScreen
+        ? 'h-[90%] fixed top-0 left-0'
+        : 'h-full relative'}"
     on:click={() => analyticsClient.pinMeetingAction()}
     use:setHeightAction={$setHeightScreenShare}
     bind:this={cameraContainer}
@@ -343,7 +328,7 @@
     <ActionMediaBox {embedScreen} trackStreamWraper={peer} {videoEnabled} />
 
     <div
-        class="aspect-video z-20 rounded-lg transition-all h-full w-full bg-no-repeat bg-center aspect-video bg-contrast/80 backdrop-blur{$mediaStreamConstraintsStore.audio
+        class="aspect-video z-20 rounded-lg transition-all h-full bg-no-repeat bg-center aspect-video bg-contrast/80 backdrop-blur{$mediaStreamConstraintsStore.audio
             ? 'border-8 border-solid border-color rounded-lg'
             : ''}"
         style="background-image: url({loaderImg})"
@@ -369,7 +354,7 @@
 -->
         <video
             bind:this={videoElement}
-            class="w-full h-full aspect-video"
+            class="h-full flex justify-center aspect-video"
             class:h-0={!videoEnabled}
             class:w-0={!videoEnabled}
             class:object-contain={isHightlighted || aspectRatio < 1}

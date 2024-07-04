@@ -24,15 +24,12 @@
     let videoContainer: HTMLDivElement;
     let unsubscribeHighlightEmbedScreen: Unsubscriber;
     let isMobile: boolean;
-    let windowVar: Window;
-
 
     onMount(() => {
         calcHeightVideo();
         updateScreenSize();
     });
 
-    // Fonction pour mettre à jour le store lorsque la taille de la fenêtre change
     function updateScreenSize() {
         if (window.innerWidth < 768) {
             isMobile = true;
@@ -41,7 +38,6 @@
         }
     }
 
-    // Écouter les événements de redimensionnement de la fenêtre
     window.addEventListener("resize", updateScreenSize);
 
     $: isMobile, calcHeightVideo();
@@ -75,13 +71,10 @@
     // $: $highlightedEmbedScreen === embedScreen, calcHeightVideo();
 
     function calcHeightVideo() {
-        console.log(isMobile, "is mobile");
         if ($highlightedEmbedScreen === embedScreen && videoContainer && !isMobile) {
-            // console.log("calcHeightVideo");
             videoContainer.style.height = `${$setHeightScreenShare}px`;
         } else {
             if (videoContainer) {
-                console.log("calcHeightVideo dans le mobile");
                 videoContainer.style.height = "100%";
             }
         }
@@ -96,8 +89,7 @@
     });
 </script>
 
-
-<svelte:window bind:this={windowVar}>
+<!-- <svelte:window bind:this={windowVar}> -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="group/screenshare h-full w-full relative screen-sharing" id="screen-sharing" bind:this={videoContainer}>
     {#if $statusStore === "connecting"}
@@ -172,10 +164,12 @@
             </svg>
         </div>
 
-        <div class={isHighlighted && menuDrop ? "block" : "hidden"}>
-            <div
-                class="sm:w-30 sm:h-12 block flex flex-col justify-evenly top-0 bottom-0 right-0 left-0 m-auto h-28 w-60 z-20 rounded-lg bg-contrast/50 backdrop-blur absolute transition-all flex items-center justify-center cursor-pointer"
-            >
+        <div
+            class={isHighlighted && menuDrop
+                ? "absolute top-0 bottom-0 right-0 left-0 m-auto h-28 w-60 z-20 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 flex items-center justify-center cursor-pointer"
+                : "hidden"}
+        >
+            <div class="block flex flex-col justify-evenly cursor-pointer h-full w-full">
                 <div
                     class="svg w-full hover:bg-white/10 flex justify-around items-center z-25 rounded-lg"
                     on:click={untogglefFullScreen}
@@ -207,7 +201,7 @@
                 </div>
                 <div class="h-[1px] z-30 w-full bg-white/20" />
                 <div
-                    class="w-full hover:bg-white/10 flex justify-around cursor-pointer items-center z-25 rounded-lg bg-contrast/80 backdrop-blur opacity-100 "
+                    class="w-full hover:bg-white/10 flex justify-around cursor-pointer items-center z-25 rounded-lg"
                     on:click={toggleFullScreen}
                     on:click={() => (menuDrop = !menuDrop)}
                 >
