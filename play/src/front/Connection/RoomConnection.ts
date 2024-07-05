@@ -850,6 +850,18 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    public emitPlayerChatID(chatID: string): void {
+        const message = SetPlayerDetailsMessageTsProto.fromPartial({
+            chatID,
+        });
+        this.send({
+            message: {
+                $case: "setPlayerDetailsMessage",
+                setPlayerDetailsMessage: message,
+            },
+        });
+    }
+
     public emitPlayerOutlineColor(color: number | null) {
         let message: SetPlayerDetailsMessageTsProto;
         if (color === null) {
@@ -1915,6 +1927,7 @@ export class RoomConnection implements RoomConnection {
             userUuid: message.userUuid,
             outlineColor: message.hasOutline ? message.outlineColor : undefined,
             variables: variables,
+            chatID: message.chatID,
         };
     }
 

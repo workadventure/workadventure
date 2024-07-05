@@ -91,6 +91,8 @@ message SetPlayerDetailsMessage {
   google.protobuf.BoolValue showVoiceIndicator = 5;
   AvailabilityStatus availabilityStatus = 6;
   SetPlayerVariableMessage setVariable = 7;
+  string chatID = 8;
+  
 }
 
 message UserMovesMessage {
@@ -534,6 +536,7 @@ message Member {
   optional string name = 2;
   optional string email = 3;
   optional string visitCardUrl = 4;
+  optional string chatID = 5;
 }
 
 message TurnCredentialsAnswer {
@@ -622,6 +625,7 @@ message UserJoinedMessage {
   bool hasOutline = 10;
   AvailabilityStatus availabilityStatus = 11;
   map<string, string> variables = 12;
+  optional string chatID = 13;
 }
 
 message UserLeftMessage {
@@ -927,6 +931,7 @@ message UserJoinedZoneMessage {
   bool hasOutline = 11;
   AvailabilityStatus availabilityStatus = 12;
   map<string, string> variables = 13;
+  optional string chatID=14;
 }
 
 message UserLeftZoneMessage {

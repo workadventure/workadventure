@@ -732,12 +732,15 @@ export class SocketManager implements ZoneEventListener {
 
         socketManager.forwardMessageToBack(client, pusherToBackMessage);
 
-        if (socketData.spaceUser.availabilityStatus !== playerDetailsMessage.availabilityStatus) {
+        if (
+            socketData.spaceUser.availabilityStatus !== playerDetailsMessage.availabilityStatus ||
+            socketData.spaceUser.chatID !== playerDetailsMessage.chatID
+        ) {
             socketData.spaceUser.availabilityStatus = playerDetailsMessage.availabilityStatus;
             const partialSpaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
                 availabilityStatus: playerDetailsMessage.availabilityStatus,
                 id: socketData.userId,
-                chatID: socketData.chatID,
+                chatID: playerDetailsMessage.chatID,
             });
             socketData.spaces.forEach((space) => {
                 space.updateUser(partialSpaceUser, socketData.world);
@@ -1567,6 +1570,7 @@ export class SocketManager implements ZoneEventListener {
                 name: memberFromApi.name ?? undefined,
                 email: memberFromApi.email ?? undefined,
                 visitCardUrl: memberFromApi.visitCardUrl ?? undefined,
+                chatID: memberFromApi.chatID ?? undefined,
             },
         };
     }

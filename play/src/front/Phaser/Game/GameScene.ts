@@ -1596,6 +1596,7 @@ export class GameScene extends DirtyScene {
                             availabilityStatus: availabilityStatusToJSON(message.availabilityStatus),
                             position: message.position,
                             variables: message.variables,
+                            chatID: message.chatID,
                         },
                     });
                 });

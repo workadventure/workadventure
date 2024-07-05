@@ -95,6 +95,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 case SyncState.Prepared:
                     this.connectionStatus.set("ONLINE");
                     this.initUserList();
+                    this.connection.emitPlayerChatID(this.client.getSafeUserId());
                     break;
                 case SyncState.Error:
                     this.connectionStatus.set("ON_ERROR");
@@ -209,7 +210,10 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             connectedUserToUpdate.availabilityStatus.set(user.availabilityStatus);
         if (connectedUserToUpdate.spaceId)
             this.userConnected.set(connectedUserToUpdate.spaceId, {
-                id: connectedUserToUpdate.id,
+                id:
+                    connectedUserToUpdate.id === "" || connectedUserToUpdate.id === "null"
+                        ? user.chatID ?? ""
+                        : connectedUserToUpdate.id,
                 uuid: connectedUserToUpdate.uuid,
                 avatarUrl: connectedUserToUpdate.avatarUrl,
                 availabilityStatus: connectedUserToUpdate.availabilityStatus,
@@ -221,7 +225,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 isMember:
                     user.tags && user.tags.length > 0 ? user.tags.includes("member") : connectedUserToUpdate.isMember,
                 visitCardUrl: user.visitCardUrl ?? connectedUserToUpdate.visitCardUrl,
-                color: user.color || connectedUserToUpdate.color,
+                color: user.color ?? connectedUserToUpdate.color,
                 spaceId: connectedUserToUpdate.spaceId,
             });
     }
@@ -309,6 +313,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         if (roomName === undefined) {
             throw new Error("Room name is undefined");
         }
+
         return {
             name: roomName.trim(),
             visibility: roomOptions.visibility as Visibility | undefined,
@@ -340,31 +345,41 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
         if (existingDirectRoom) return existingDirectRoom;
 
-        const { room_id } = await this.createRoom({
+        const createRoomOptions = {
             //TODO not clean code
             invite: [{ value: userToInvite, label: userToInvite }],
             is_direct: true,
-            //encrypt: true,
             preset: "trusted_private_chat",
             visibility: "private",
-        });
+        } as CreateRoomOptions;
 
-        await this.addDMRoomInAccountData(userToInvite, room_id);
-
-        //Wait Sync Event before use/update roomList otherwise room not exist in the client
-        await new Promise<void>((resolve, _) => {
-            this.client.once(ClientEvent.Sync, (state) => {
-                if (state === SyncState.Syncing) {
-                    resolve();
-                }
+        try {
+            const { room_id } = await this.client.createRoom({
+                visibility: "private" as Visibility | undefined,
+                invite: createRoomOptions.invite?.map((invitation) => invitation.value) ?? [],
+                is_direct: true,
+                initial_state: this.computeInitialState(createRoomOptions),
             });
-        });
 
-        const room = this.client.getRoom(room_id);
-        if (!room) return;
-        const newRoom = new MatrixChatRoom(room);
-        this.roomList.set(room_id, newRoom);
-        return newRoom;
+            await this.addDMRoomInAccountData(userToInvite, room_id);
+
+            //Wait Sync Event before use/update roomList otherwise room not exist in the client
+            await new Promise<void>((resolve, _) => {
+                this.client.once(ClientEvent.Sync, (state) => {
+                    if (state === SyncState.Syncing) {
+                        resolve();
+                    }
+                });
+            });
+
+            const room = this.client.getRoom(room_id);
+            if (!room) return;
+            const newRoom = new MatrixChatRoom(room);
+            this.roomList.set(room_id, newRoom);
+            return newRoom;
+        } catch (error) {
+            throw this.handleMatrixError(error);
+        }
     }
 
     getDirectRoomFor(userID: string): ChatRoom | undefined {
