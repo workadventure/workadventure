@@ -106,6 +106,7 @@
             cameraContainer.style.width = "100%";
             cameraContainer.style.marginTop = "80%";
         } else {
+            cameraContainer.style.marginTop = "0";
             cameraContainer.style.height = "100%";
             cameraContainer.style.width = "100%";
         }
