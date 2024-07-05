@@ -68,7 +68,6 @@
     let menuDrop = false;
     let unsubscribeHighlightEmbedScreen: Unsubscriber;
     let isMobile: boolean;
-    let isTablet: boolean;
     let fullScreen = false;
 
     const debug = Debug("VideoMediaBox");
@@ -80,10 +79,8 @@
     function updateScreenSize() {
         if (window.innerWidth < 768) {
             isMobile = true;
-            isTablet = false;
         } else if (window.innerWidth > 768 && window.innerWidth < 1024) {
             isMobile = false;
-            isTablet = true;
         }
     }
 
@@ -104,8 +101,10 @@
                 cameraContainer.style.height = `${$setHeightScreenShare}px`;
                 cameraContainer.style.width = `${document.documentElement.clientWidth}px`;
             }
-        } else if ($highlightedEmbedScreen === peer && !$highlightFullScreen && !isMobile) {
-            cameraContainer.style.height = `${$setHeightScreenShare}px`;
+        } else if ($highlightFullScreen && $highlightedEmbedScreen === peer && isMobile) {
+            cameraContainer.style.height = "auto";
+            cameraContainer.style.width = "100%";
+            cameraContainer.style.marginTop = "80%";
         } else {
             cameraContainer.style.height = "100%";
             cameraContainer.style.width = "100%";

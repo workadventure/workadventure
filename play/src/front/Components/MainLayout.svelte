@@ -99,8 +99,6 @@
             div.remove();
         }
     }
-
-    $: console.log("highlight full screen ", $highlightFullScreen);
 </script>
 
 <!-- Components ordered by z-index -->
