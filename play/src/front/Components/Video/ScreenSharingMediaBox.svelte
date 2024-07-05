@@ -4,7 +4,7 @@
     import { Color } from "@workadventure/shared-utils";
     import { ArrowDownIcon, ArrowUpIcon } from "svelte-feather-icons";
     import { onDestroy, onMount } from "svelte";
-    import { Unsubscriber, writable } from "svelte/store";
+    import { Unsubscriber } from "svelte/store";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import type { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
@@ -24,6 +24,7 @@
     let videoContainer: HTMLDivElement;
     let unsubscribeHighlightEmbedScreen: Unsubscriber;
     let isMobile: boolean;
+    let isTablet: boolean;
 
     onMount(() => {
         calcHeightVideo();
@@ -31,10 +32,12 @@
     });
 
     function updateScreenSize() {
-        if (window.innerWidth < 768) {
+        if (window.innerWidth < 768 && window.innerWidth > 425) {
             isMobile = true;
-        } else {
+            isTablet = false;
+        } else if (window.innerWidth > 768 && window.innerWidth < 1024) {
             isMobile = false;
+            isTablet = true;
         }
     }
 
@@ -51,7 +54,7 @@
     function toggleFullScreen() {
         highlightFullScreen.update((current) => !current);
         if (videoContainer) {
-            if ($highlightFullScreen) {
+            if ($highlightFullScreen && !isMobile && !isTablet) {
                 videoContainer.style.height = `${document.documentElement.clientHeight}px`;
                 videoContainer.style.width = `${document.documentElement.clientWidth}px`;
             } else {
@@ -65,13 +68,14 @@
     function untogglefFullScreen() {
         highlightedEmbedScreen.removeHighlight();
         highlightFullScreen.set(false);
+        calcHeightVideo();
     }
 
     $: $setHeightScreenShare, calcHeightVideo();
     // $: $highlightedEmbedScreen === embedScreen, calcHeightVideo();
 
     function calcHeightVideo() {
-        if ($highlightedEmbedScreen === embedScreen && videoContainer && !isMobile) {
+        if ($highlightedEmbedScreen === embedScreen && videoContainer && !isMobile && !isTablet) {
             videoContainer.style.height = `${$setHeightScreenShare}px`;
         } else {
             if (videoContainer) {

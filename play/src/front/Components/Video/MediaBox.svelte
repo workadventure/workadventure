@@ -92,38 +92,7 @@
     <div class="media-container {isHightlighted ? 'hightlighted' : 'flex h-full'}" class:clickable={isClickable}>
         <!-- Here for the resize o-->
         <div class="{isHightlighted ? 'cam-share-receive' : 'mx-auto'} flex justify-center screen-blocker">
-            <LocalStreamMediaBox peer={streamable} clickable={isClickable} cssClass="" />
+            <LocalStreamMediaBox peer={streamable} cssClass="" />
         </div>
     </div>
 {/if}
-
-<style>
-    /* @container (min-width: 768px) and (max-width: 1023px) {
-        .cam-share-receive {
-            aspect-ratio: 2.5;
-        }
-    }
-
-    @container (min-width: 1024px) and (max-width: 1279px) {
-        .cam-share-receive {
-            aspect-ratio: 2.5;
-        }
-    }
-
-    @container (min-width: 1280px) and (max-width: 1439px) {
-        .cam-share-receive {
-            aspect-ratio: 2.5;
-        }
-    }
-
-    @container (min-width: 1440px) and (max-width: 1919px) {
-        .cam-share-receive {
-            aspect-ratio: 3.1;
-        }
-    }
-    @container (min-width: 1920px) {
-        .cam-share-receive {
-            aspect-ratio: 2.6;
-        }
-    } */
-</style>

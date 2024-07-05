@@ -112,13 +112,13 @@
     import MenuBurgerIcon from "../Icons/MenuBurgerIcon.svelte";
     import PenIcon from "../Icons/PenIcon.svelte";
     import { StringUtils } from "../../Utils/StringUtils";
-    import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
     import { focusMode, rightMode, hideMode } from "../../Stores/ActionsCamStore";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
+    import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
 
     // gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
     let userName = gameManager.getPlayerName() || "";
-    export const className: string = "";
+    export const className = "";
     let microphoneActive = false;
     let cameraActive = false;
     let profileMenuIsDropped = false;
@@ -128,7 +128,6 @@
     let navigating = false;
     let camMenuIsDropped = false;
     let smallArrowVisible = true;
-    let layoutDom: HTMLDivElement;
     const sound = new Audio("/resources/objects/webrtc-out-button.mp3");
 
     function focusModeOn() {
@@ -490,10 +489,7 @@
 : "@container/actions w-full z-[301] bottom-0 sm:top-0 transition-all pointer-events-none bp-menu"} -->
 <svelte:window on:keydown={onKeyDown} />
 
-<div
-    class={"@container/actions w-full z-[301] bottom-0 sm:top-0 transition-all pointer-events-none bp-menu"}
-    bind:this={layoutDom}
->
+<div class={"@container/actions w-full z-[301] bottom-0 sm:top-0 transition-all pointer-events-none bp-menu"}>
     <div class="flex w-full p-2 space-x-2 @xl/actions:p-4 @xl/actions:space-x-4">
         <div
             class="justify-start flex-1 pointer-events-auto w-32"

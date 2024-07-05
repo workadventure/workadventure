@@ -9,8 +9,20 @@
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
 
     let isHightlighted = false;
-    let isMobile = window.matchMedia("(max-width: 768px)");
+    let isMobile: boolean;
     let unsubscribeHighlightEmbedScreen: Unsubscriber;
+
+    function updateScreenSize() {
+        if (window.innerWidth < 768) {
+            isMobile = true;
+            console.log("isMobile", isMobile);
+        } else {
+            isMobile = false;
+            console.log("isMobile", isMobile);
+        }
+    }
+
+    window.addEventListener("resize", updateScreenSize);
 
     unsubscribeHighlightEmbedScreen = highlightedEmbedScreen.subscribe((value) => {
         checkOverflow();
@@ -29,7 +41,7 @@
     function checkOverflow() {
         const camContainer = document.getElementById("cameras-container");
         if (camContainer) {
-            if (isMobile.matches && $highlightedEmbedScreen) {
+            if (isMobile && $highlightedEmbedScreen) {
                 if (camContainer.scrollWidth < camContainer.clientWidth) {
                     camContainer.style.justifyContent = "center";
                 } else {

@@ -8,8 +8,6 @@
     import { highlightFullScreen, setHeightScreenShare } from "../../Stores/ActionsCamStore";
     import { srcObject } from "./utils";
 
-    export let clickable = false;
-
     export let peer: ScreenSharingLocalMedia;
     let stream = peer.stream;
     export let cssClass: string | undefined;
@@ -17,11 +15,25 @@
     let menuDrop = false;
     let videoContainer: HTMLDivElement;
     let unsubscribeHighlightEmbedScreen: Unsubscriber;
-    let isMobile = window.matchMedia("(max-width: 768px)").matches;
+    let isMobile: boolean;
+    let isTablet: boolean;
 
     onMount(() => {
         calcHeightVideo();
+        updateScreenSize();
     });
+
+    function updateScreenSize() {
+        if (window.innerWidth < 768 && window.innerWidth > 425) {
+            isMobile = true;
+            isTablet = false;
+        } else if (window.innerWidth > 768 && window.innerWidth < 1024) {
+            isMobile = false;
+            isTablet = true;
+        }
+    }
+
+    window.addEventListener("resize", updateScreenSize);
 
     $: isMobile, calcHeightVideo();
 
@@ -34,7 +46,7 @@
     function toggleFullScreen() {
         highlightFullScreen.update((current) => !current);
         if (videoContainer) {
-            if ($highlightFullScreen) {
+            if ($highlightFullScreen && !isMobile && !isTablet) {
                 videoContainer.style.height = `${document.documentElement.clientHeight}px`;
                 videoContainer.style.width = `${document.documentElement.clientWidth}px`;
             } else {
@@ -51,14 +63,14 @@
     }
 
     $: $setHeightScreenShare, calcHeightVideo();
-    $: $highlightedEmbedScreen === embedScreen, calcHeightVideo();
+    // $: $highlightedEmbedScreen === embedScreen, calcHeightVideo();
 
     function calcHeightVideo() {
-        if ($highlightedEmbedScreen === embedScreen && videoContainer && !isMobile) {
+        if ($highlightedEmbedScreen === embedScreen && videoContainer && !isMobile && !isTablet) {
             videoContainer.style.height = `${$setHeightScreenShare}px`;
         } else {
             if (videoContainer) {
-                videoContainer.style.width = "100%";
+                videoContainer.style.height = "100%";
             }
         }
     }
