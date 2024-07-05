@@ -34,7 +34,7 @@
         if (isVisible) {
             connectedUsersFilter.setFilter({
                 $case: "spaceFilterEverybody",
-                spaceFilterEverybody: {},
+                spaceFilterEverybody: {}
             });
         } else {
             connectedUsersFilter.setFilter(undefined);
@@ -45,7 +45,7 @@
         chatVisibilityStoreUnsubscriber();
     });
 
-    let sideBarWidth;
+    let sideBarWidth = 335
 
     const handleMousedown = (e: MouseEvent) => {
         let dragX = e.clientX;
@@ -78,7 +78,8 @@
         }
     };
 
-    const handlePageResize = () => {};
+    const handlePageResize = () => {
+    };
 </script>
 
 <svelte:window on:keydown={onKeyDown} on:resize={handlePageResize} />
@@ -91,11 +92,12 @@
         transition:fly={{ duration: 200, x: -INITIAL_SIDEBAR_WIDTH }}
         class="chatWindow !tw-min-w-full sm:!tw-min-w-[360px] tw-overflow-hidden tw-bg-contrast/95 tw-backdrop-blur-md tw-p-4"
     >
-        <button class="close-window" data-testid="closeChatButton" on:click={closeChat}>&#215;</button>
+        <button class="close-window tw-z-[2000]" data-testid="closeChatButton" on:click={closeChat}>&#215;
+        </button>
         <Chat {sideBarWidth} />
 
         <div
-            class="tw-absolute tw-resize-x tw-right-1 tw-top-0 tw-bottom-0 tw-m-auto tw-w-1.5 tw-h-32 tw-bg-white tw-rounded tw-cursor-col-resize"
+            class="!tw-absolute !tw-resize-x !tw-right-1 !tw-top-0 !tw-bottom-0 !tw-m-auto !tw-w-1.5 !tw-h-32 !tw-bg-white !tw-rounded !tw-cursor-col-resize"
             id="resize-bar"
             on:mousedown={handleMousedown}
             on:dblclick={handleDbClick}
@@ -105,29 +107,29 @@
 {/if}
 
 <style lang="scss">
-    @import "../style/breakpoints.scss";
+  @import "../style/breakpoints.scss";
 
-    @include media-breakpoint-up(sm) {
-        .chatWindow {
-            width: 100% !important;
-        }
-    }
-
+  @include media-breakpoint-up(sm) {
     .chatWindow {
-        color: white;
-        display: flex;
-        flex-direction: column;
-        position: absolute !important;
-        top: 0;
-        min-width: 335px !important;
-        max-width: 100vw !important;
-
-        height: 100vh !important;
-        z-index: 2000;
-        pointer-events: auto;
-        .close-window {
-            cursor: pointer;
-            align-self: end;
-        }
+      width: 100% !important;
     }
+  }
+
+  .chatWindow {
+    color: white;
+    //display: flex;
+    //flex-direction: column;
+    position: absolute !important;
+    top: 0;
+    min-width: 335px !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    z-index: 2000;
+    pointer-events: auto;
+
+    .close-window {
+      pointer-events: auto !important;
+      cursor: pointer;
+    }
+  }
 </style>

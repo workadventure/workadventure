@@ -52,7 +52,7 @@
         if ($chatSearchBarValue === "" && connectedUsersFilter.getFilterType() !== "spaceFilterEverybody") {
             connectedUsersFilter.setFilter({
                 $case: "spaceFilterEverybody",
-                spaceFilterEverybody: {},
+                spaceFilterEverybody: {}
             });
 
             return;
@@ -61,8 +61,8 @@
         connectedUsersFilter.setFilter({
             $case: "spaceFilterContainName",
             spaceFilterContainName: {
-                value: $chatSearchBarValue,
-            },
+                value: $chatSearchBarValue
+            }
         });
     };
 
@@ -89,8 +89,8 @@
     $: isGuest = chat.isGuest;
 </script>
 
-<div class="tw-flex tw-flex-col tw-gap-2 tw-h-full ">
-    <div id="chatModal" class="tw-absolute tw-to-50%" />
+
+<div class="!tw-flex !tw-flex-col !tw-gap-2 !tw-flex-1 !tw-relative !tw-w-auto !tw-h-full">
     {#if $chatConnectionStatus === "CONNECTING"}
         <ChatLoader label={$LL.chat.connecting()} />
     {/if}
@@ -98,46 +98,51 @@
         <ChatError />
     {/if}
     {#if $chatConnectionStatus === "ONLINE"}
-        <nav class="nav">
-            <div class="background" class:chat={$navChat === "chat"} />
-            <ul>
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <li class:active={$navChat === "users"} on:click={() => navChat.set("users")}>
-                    {$LL.chat.users()}
-                </li>
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <li class:active={$navChat === "chat"} on:click={() => navChat.set("chat")}>{$LL.chat.chat()}</li>
-            </ul>
-        </nav>
-        <!-- searchbar -->
-        <div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid">
-            <div class="tw-p-3">
-                <input
-                    autocomplete="new-password"
-                    class="wa-searchbar tw-block tw-text-white tw-w-full placeholder:tw-text-sm tw-rounded-3xl tw-px-3 tw-py-1 tw-border-light-purple tw-border tw-border-solid tw-bg-transparent"
-                    placeholder={$navChat === "users" ? $LL.chat.searchUser() : $LL.chat.searchChat()}
-                    on:keydown={handleKeyDown}
-                    on:keyup={handleKeyUp}
-                    bind:value={$chatSearchBarValue}
-                />
+        <div class="tw-flex tw-flex-col tw-gap-2">
+            <nav class="nav">
+                <div class="background" class:chat={$navChat === "chat"} />
+                <ul>
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <li class:active={$navChat === "users"} on:click={() => navChat.set("users")}>
+                        {$LL.chat.users()}
+                    </li>
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <li class:active={$navChat === "chat"} on:click={() => navChat.set("chat")}>{$LL.chat.chat()}</li>
+                </ul>
+            </nav>
+            <!-- searchbar -->
+            <div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid">
+                <div class="tw-p-3">
+                    <input
+                        autocomplete="new-password"
+                        class="wa-searchbar tw-block tw-text-white tw-w-full placeholder:tw-text-sm tw-rounded-3xl tw-px-3 tw-py-1 tw-border-light-purple tw-border tw-border-solid tw-bg-transparent"
+                        placeholder={$navChat === "users" ? $LL.chat.searchUser() : $LL.chat.searchChat()}
+                        on:keydown={handleKeyDown}
+                        on:keyup={handleKeyUp}
+                        bind:value={$chatSearchBarValue}
+                    />
+                </div>
             </div>
         </div>
-        {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}
-            <button
-                data-testid="restoreEncryptionButton"
-                on:click|stopPropagation={initChatConnectionEncryption}
-                class="tw-text-red-500 tw-flex tw-gap-1 tw-border tw-border-solid tw-border-red-500 tw-rounded-md tw-justify-center"
-                ><IconShieldLock /> {$LL.chat.e2ee.encryptionNotConfigured()}</button
-            >
-        {/if}
-        {#if $navChat === "users"}
-            <RoomUserList />
-        {:else}
-            <RoomList {sideBarWidth} />
-        {/if}
-        {#if searchLoader}
-            <ChatLoader label={$LL.chat.loader()} />
-        {/if}
+        <div class="tw-flex tw-flex-col tw-gap-2 tw-flex-1 tw-min-h-0" class:!tw-flex-row={sideBarWidth > INITIAL_SIDEBAR_WIDTH*2}>
+            {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}
+                <button
+                    data-testid="restoreEncryptionButton"
+                    on:click|stopPropagation={initChatConnectionEncryption}
+                    class="tw-text-red-500 tw-flex tw-gap-1 tw-border tw-border-solid tw-border-red-500 tw-rounded-md tw-justify-center"
+                >
+                    <IconShieldLock /> {$LL.chat.e2ee.encryptionNotConfigured()}</button
+                >
+            {/if}
+            {#if $navChat === "users"}
+                <RoomUserList />
+            {:else}
+                <RoomList {sideBarWidth} />
+            {/if}
+            {#if searchLoader}
+                <ChatLoader label={$LL.chat.loader()} />
+            {/if}
+        </div>
     {/if}
 </div>
 

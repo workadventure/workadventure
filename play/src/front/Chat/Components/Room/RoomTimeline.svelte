@@ -70,6 +70,7 @@
     $: userConnected = $proximityRoomConnection?.userConnected;
 </script>
 
+<div class="tw-flex tw-flex-col tw-flex-1 tw-overflow-hidden">
 {#if room !== undefined}
     <button class="back-roomlist tw-p-0 tw-m-0" on:click={goBackAndClearSelectedChatMessage}>
         <IconArrowLeft />
@@ -130,6 +131,7 @@
     {/if}
     <MessageInput {room} />
 {/if}
+</div>
 
 <style>
     @keyframes bounce {
