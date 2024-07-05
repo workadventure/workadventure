@@ -68,6 +68,7 @@
     let menuDrop = false;
     let unsubscribeHighlightEmbedScreen: Unsubscriber;
     let isMobile: boolean;
+    let isTablet: boolean;
     let fullScreen = false;
 
     const debug = Debug("VideoMediaBox");
@@ -79,37 +80,35 @@
     function updateScreenSize() {
         if (window.innerWidth < 768) {
             isMobile = true;
-        } else {
+            isTablet = false;
+        } else if (window.innerWidth > 768 && window.innerWidth < 1024) {
             isMobile = false;
+            isTablet = true;
         }
     }
 
     window.addEventListener("resize", updateScreenSize);
     window.addEventListener("resize", calcHeightVideo);
-    window.addEventListener("change", calcHeightVideo);
 
     $: isMobile, calcHeightVideo();
     $: videoEnabled = $constraintStore ? $constraintStore.video : false;
     $: isHighlighted = $highlightedEmbedScreen === peer;
-    $: $setHeightScreenShare, calcHeightVideo();
-    $: $highlightedEmbedScreen, calcHeightVideo();
 
     function calcHeightVideo() {
         if (!cameraContainer) {
             return;
         }
+
         if ($highlightedEmbedScreen === peer && !$highlightFullScreen && !isMobile) {
             if (typeof setHeightScreenShare !== "undefined") {
                 cameraContainer.style.height = `${$setHeightScreenShare}px`;
                 cameraContainer.style.width = `${document.documentElement.clientWidth}px`;
             }
-        } else if ($highlightedEmbedScreen === peer && !$highlightFullScreen && isMobile) {
+        } else if ($highlightedEmbedScreen === peer && !$highlightFullScreen && !isMobile) {
             cameraContainer.style.height = `${$setHeightScreenShare}px`;
         } else {
-            if (cameraContainer && $highlightFullScreen) {
-                cameraContainer.style.width = "100%";
-                cameraContainer.style.height = "100%";
-            }
+            cameraContainer.style.height = "100%";
+            cameraContainer.style.width = "100%";
         }
     }
 

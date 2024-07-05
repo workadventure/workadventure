@@ -27,12 +27,12 @@
     let isTablet: boolean;
 
     onMount(() => {
-        calcHeightVideo();
         updateScreenSize();
+        calcHeightVideo();
     });
 
     function updateScreenSize() {
-        if (window.innerWidth < 768 && window.innerWidth > 425) {
+        if (window.innerWidth < 768) {
             isMobile = true;
             isTablet = false;
         } else if (window.innerWidth > 768 && window.innerWidth < 1024) {
@@ -42,6 +42,7 @@
     }
 
     window.addEventListener("resize", updateScreenSize);
+    window.addEventListener("resize", calcHeightVideo);
 
     $: isMobile, calcHeightVideo();
 
@@ -68,14 +69,12 @@
     function untogglefFullScreen() {
         highlightedEmbedScreen.removeHighlight();
         highlightFullScreen.set(false);
-        calcHeightVideo();
     }
 
     $: $setHeightScreenShare, calcHeightVideo();
-    // $: $highlightedEmbedScreen === embedScreen, calcHeightVideo();
 
     function calcHeightVideo() {
-        if ($highlightedEmbedScreen === embedScreen && videoContainer && !isMobile && !isTablet) {
+        if ($highlightedEmbedScreen === embedScreen && videoContainer && !isMobile) {
             videoContainer.style.height = `${$setHeightScreenShare}px`;
         } else {
             if (videoContainer) {
