@@ -78,4 +78,8 @@ export class AreasManager {
         const isGameMapHasSpecificAreas = this.gameMapAreas.isGameMapContainsSpecificAreas();
         mapEditorActivatedForThematics.set(isGameMapHasSpecificAreas);
     }
+
+    public getAreaByUd(areaId: string): Area | undefined {
+        return this.areas.find((area) => area.areaData.id === areaId);
+    }
 }

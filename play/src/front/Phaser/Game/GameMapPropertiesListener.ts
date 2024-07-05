@@ -22,6 +22,7 @@ import { inJitsiStore, inBbbStore, silentStore, inOpenWebsite, isSpeakerStore } 
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
 import { currentLiveStreamingNameStore } from "../../Stores/MegaphoneStore";
 import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
+import { Area } from "../Entity/Area";
 import { analyticsClient } from "./../../Administration/AnalyticsClient";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameScene } from "./GameScene";
@@ -399,11 +400,22 @@ export class GameMapPropertiesListener {
         });
 
         this.gameMapFrontWrapper.onEnterArea((newAreas) => {
-            this.onEnterAreasHandler(newAreas);
+            // Hide the area if the user has no access
+            const areas: Area[] = [];
+            for (const area of newAreas) {
+                const areaObject = this.gameMapFrontWrapper.areasManager.getAreaByUd(area.id);
+                if (areaObject) areas.push(areaObject);
+            }
+            this.onEnterAreasHandler(newAreas, areas);
         });
 
         this.gameMapFrontWrapper.onLeaveArea((oldAreas) => {
-            this.onLeaveAreasHandler(oldAreas);
+            const areas: Area[] = [];
+            for (const area of oldAreas) {
+                const areaObject = this.gameMapFrontWrapper.areasManager.getAreaByUd(area.id);
+                if (areaObject) areas.push(areaObject);
+            }
+            this.onLeaveAreasHandler(oldAreas, areas);
         });
 
         this.gameMapFrontWrapper.onUpdateArea((area, oldProperties, newProperties) => {
@@ -445,8 +457,8 @@ export class GameMapPropertiesListener {
         });
     }
 
-    private onEnterAreasHandler(areas: AreaData[]): void {
-        this.areasPropertiesListener.onEnterAreasHandler(areas);
+    private onEnterAreasHandler(areasData: AreaData[], areas?: Area[]): void {
+        this.areasPropertiesListener.onEnterAreasHandler(areasData, areas);
     }
 
     private onUpdateAreasHandler(
@@ -457,8 +469,8 @@ export class GameMapPropertiesListener {
         this.areasPropertiesListener.onUpdateAreasHandler(area, oldProperties, newProperties);
     }
 
-    private onLeaveAreasHandler(areas: AreaData[]): void {
-        this.areasPropertiesListener.onLeaveAreasHandler(areas);
+    private onLeaveAreasHandler(areasData: AreaData[], areas?: Area[]): void {
+        this.areasPropertiesListener.onLeaveAreasHandler(areasData, areas);
     }
 
     private handleOpenWebsitePropertiesOnEnter(place: ITiledPlace): void {
