@@ -40,11 +40,7 @@ export class AreasManager {
             return;
         }
         const areaToUpdate = this.areas[indexOfAreaToUpdate];
-        areaToUpdate.updateArea(
-            updatedArea,
-            !this.areaPermissions.isUserHasAreaAccess(updatedArea.id),
-            this.areaPermissions.isOverlappingArea(updatedArea.id)
-        );
+        areaToUpdate.updateArea(updatedArea, !this.areaPermissions.isUserHasAreaAccess(updatedArea.id));
         this.updateMapEditorOptionForSpecificAreas();
     }
 
