@@ -584,7 +584,7 @@
                         on:click={() => activeMobileMenu()}
                         class="bottom-action-button"
                     >
-                        <button id="menuIcon">
+                        <button id="burgerIcon">
                             <img
                                 draggable="false"
                                 src={burgerMenuImg}

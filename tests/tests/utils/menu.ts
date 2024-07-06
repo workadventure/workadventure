@@ -42,6 +42,7 @@ class Menu {
     }
 
     async openStatusList(page : Page){
+        await page.click('#burgerIcon');
         await page.click('#AvailabilityStatus');
     }
 
