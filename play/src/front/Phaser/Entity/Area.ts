@@ -27,11 +27,9 @@ export class Area extends Phaser.GameObjects.Rectangle {
         if (collide) {
             this.applyCollider();
         }
-
-        if (overlap) this.applyOverlap();
     }
 
-    public updateArea(newAreaData: AtLeast<AreaData, "id">, collide?: boolean, overlap?: boolean) {
+    public updateArea(newAreaData: AtLeast<AreaData, "id">, collide?: boolean) {
         merge(this.areaData, newAreaData);
         this.setPosition(this.areaData.x + this.areaData.width * 0.5, this.areaData.y + this.areaData.height * 0.5);
         this.setSize(this.areaData.width, this.areaData.height);
@@ -45,10 +43,7 @@ export class Area extends Phaser.GameObjects.Rectangle {
         } else if (this.areaCollider !== undefined) {
             this.areaCollider.destroy();
             this.areaCollider = undefined;
-        }
-
-        if (overlap) this.applyOverlap();
-        else if (this.areaOverlap !== undefined) this.areaOverlap.destroy();
+        } else if (this.areaOverlap !== undefined) this.areaOverlap.destroy();
         this.areaOverlap = undefined;
     }
 
@@ -70,16 +65,14 @@ export class Area extends Phaser.GameObjects.Rectangle {
         }
     }
 
-    private applyOverlap() {
-        if (this.areaCollider === undefined)
-            this.areaCollider = this.scene.physics.add.overlap(this.scene.CurrentPlayer, this, () =>
-                this.onOverLapAction()
-            );
+    public highLightArea(permanent = false) {
+        this.setVisible(true);
+        if (permanent === false) this.highlightTimeOut = setTimeout(() => this.setVisible(false), 1000);
     }
 
-    private highLightArea() {
-        this.setVisible(true);
-        this.highlightTimeOut = setTimeout(() => this.setVisible(false), 1000);
+    public unHighLightArea() {
+        this.setVisible(false);
+        if (this.highlightTimeOut) clearTimeout(this.highlightTimeOut);
     }
 
     private displayWarningMessageOnCollide() {
@@ -93,10 +86,5 @@ export class Area extends Phaser.GameObjects.Rectangle {
             this.displayWarningMessageOnCollide();
             this.collideTimeOut = setTimeout(() => (this.userHasCollideWithArea = false), 3000);
         }
-    }
-
-    private onOverLapAction() {
-        this.highLightArea();
-        this.collideTimeOut = setTimeout(() => (this.userHasCollideWithArea = false), 3000);
     }
 }
