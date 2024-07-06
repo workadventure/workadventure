@@ -27,6 +27,11 @@ export async function selectMedias(page: Page) {
 
   await page.click("text=Let's go!");
 
+  // TODO: improve it to check if the project is running on mobile
+  const mobileMenuVisible = await page.locator('#burgerIcon').isVisible();
+  if(mobileMenuVisible){
+      await page.click('#burgerIcon');
+  }
   await expect(page.locator("button#menuIcon").nth(0)).toBeVisible();
 }
 
