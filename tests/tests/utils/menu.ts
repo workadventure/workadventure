@@ -42,7 +42,11 @@ class Menu {
     }
 
     async openStatusList(page : Page){
-        await page.click('#burgerIcon');
+        // TODO: improve it to check if the project is running on mobile
+        const mobileMenuVisible = await page.locator('#burgerIcon').isVisible();
+        if(mobileMenuVisible){
+            await page.click('#burgerIcon');
+        }
         await page.click('#AvailabilityStatus');
     }
 
