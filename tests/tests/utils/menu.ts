@@ -42,7 +42,7 @@ class Menu {
     }
 
     async openStatusList(page : Page){
-        // TODO: improve it to check if the project is running on mobile
+        // If we are on mobile, we need to click on burger button to show the menu
         const mobileMenuVisible = await page.locator('#burgerIcon.tw-rotate-0').isVisible();
         if(mobileMenuVisible){
             await page.click('button#burgerIcon');

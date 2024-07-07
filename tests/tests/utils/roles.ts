@@ -4,8 +4,7 @@ export async function login(
     page: Page,
     userName = 'Alice',
     characterNumber = 2,
-    browserLanguage: string | null = 'en-US', 
-    isMobile = false
+    browserLanguage: string | null = 'en-US',
 ) {
   // window.localStorage.setItem('language', browserLanguage)
 
@@ -20,15 +19,17 @@ export async function login(
 
   await page.click('button.selectCharacterSceneFormSubmit');
 
-  await selectMedias(page, isMobile);
+  await selectMedias(page);
 }
 
-export async function selectMedias(page: Page, isMobile = false) {
+export async function selectMedias(page: Page) {
   await expect(page.locator('h2', { hasText: "Turn on your camera and microphone" })).toBeVisible();
 
   await page.click("text=Let's go!");
 
-  if(isMobile){
+  // If we are on mobile, we need to click on burger button to show the menu
+  const mobileMenuVisible = await page.locator('#burgerIcon.tw-rotate-0').isVisible();
+  if(mobileMenuVisible){
       await page.click('button#burgerIcon');
   }
   await expect(page.locator("button#menuIcon").nth(0)).toBeVisible();
