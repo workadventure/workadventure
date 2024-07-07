@@ -589,7 +589,7 @@
                                 draggable="false"
                                 src={burgerMenuImg}
                                 style="padding: 2px"
-                                alt={$LL.menu.icon.open.menu()}
+                                alt={$LL.menu.icon.open.mobile()}
                                 class="tw-transition-all tw-transform"
                                 class:tw-rotate-0={isActiveMobileMenu == false}
                                 class:tw-rotate-90={isActiveMobileMenu == true}

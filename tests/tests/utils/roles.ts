@@ -4,7 +4,8 @@ export async function login(
     page: Page,
     userName = 'Alice',
     characterNumber = 2,
-    browserLanguage: string | null = 'en-US'
+    browserLanguage: string | null = 'en-US', 
+    isMobile = false
 ) {
   // window.localStorage.setItem('language', browserLanguage)
 
@@ -19,18 +20,17 @@ export async function login(
 
   await page.click('button.selectCharacterSceneFormSubmit');
 
-  await selectMedias(page);
+  await selectMedias(page, isMobile);
 }
 
-export async function selectMedias(page: Page) {
+export async function selectMedias(page: Page, isMobile = false) {
   await expect(page.locator('h2', { hasText: "Turn on your camera and microphone" })).toBeVisible();
 
   await page.click("text=Let's go!");
 
-  // TODO: improve it to check if the project is running on mobile
-  const mobileMenuVisible = await page.locator('#burgerIcon').isVisible();
-  if(mobileMenuVisible){
-      await page.click('#burgerIcon');
+  if(isMobile){
+      await expect(page.locator("button#burgerIcon")).toBeVisible();
+      await page.click('button#burgerIcon');
   }
   await expect(page.locator("button#menuIcon").nth(0)).toBeVisible();
 }
