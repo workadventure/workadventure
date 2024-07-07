@@ -347,7 +347,7 @@ test.describe('Availability Status', () => {
                 await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
                // Login user "Bob"
                 const secondPageName = 'Bob'
-                await login(userBob, secondPageName);
+                await login(userBob, secondPageName, 3, 'en-US', project.name === "mobilechromium");
                 await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
                 await expect( page.locator('button.chat-btn + div>span.tw-animate-ping')).toBeHidden();
                 await newBrowser.close();
