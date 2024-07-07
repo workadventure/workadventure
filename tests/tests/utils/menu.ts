@@ -41,11 +41,10 @@ class Menu {
         await expect(await page.locator('.bottom-action-bar .bottom-action-button #megaphone')).toBeHidden({timeout: 30_000});
     }
 
-    async openStatusList(page : Page, isMobile = false){
+    async openStatusList(page : Page){
         // TODO: improve it to check if the project is running on mobile
-        const mobileMenuVisible = await page.locator('#burgerIcon').isVisible();
+        const mobileMenuVisible = await page.locator('#burgerIcon.tw-rotate-0').isVisible();
         if(mobileMenuVisible){
-            await expect(page.locator("button#burgerIcon")).toBeVisible();
             await page.click('button#burgerIcon');
         }
         await page.click('#AvailabilityStatus');

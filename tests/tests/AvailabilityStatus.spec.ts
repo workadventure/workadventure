@@ -19,7 +19,7 @@ test.describe('Availability Status', () => {
     
             await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     
-            await login(page, 'Alice', 2, 'en-US', browser.browserType().name() === "mobilechromium");
+            await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
             
 
             await Menu.clickOnStatus(page,statusName); 
@@ -36,7 +36,7 @@ test.describe('Availability Status', () => {
             await expect(page.getByText("Online")).toHaveCSS('opacity','0.5')
 
         })
-        test('should disable microphone and camera',async({ page, browser,browserName })=>{
+        test('should disable microphone and camera',async({ page, browser,browserName }, {project})=>{
             if(browserName === "webkit"){
                  //eslint-disable-next-line playwright/no-skipped-test
                 test.skip();
@@ -46,7 +46,7 @@ test.describe('Availability Status', () => {
     
             await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     
-            await login(page, 'Alice', 2, 'en-US', browser.browserType().name() === "mobilechromium");
+            await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
             
               // Because webkit in playwright does not support Camera/Microphone Permission by settings
 
@@ -75,7 +75,7 @@ test.describe('Availability Status', () => {
     
             await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     
-            await login(page, 'Alice', 2, 'en-US', browser.browserType().name() === "mobilechromium");
+            await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
 
             await Menu.turnOnCamera(page);
             await Menu.turnOffMicrophone(page)
@@ -91,7 +91,7 @@ test.describe('Availability Status', () => {
             await expect(page.getByAltText('Turn off webcam')).toBeVisible();
             await expect(page.getByAltText('Turn on microphone')).toBeVisible();
         })
-        test('should ask to change notification permission when you pass in Busy status and your browser notification permission is denied',async({ page, browser,context,browserName})=>{
+        test('should ask to change notification permission when you pass in Busy status and your browser notification permission is denied',async({ page, browser,context,browserName}, {project})=>{
             if(browserName === "firefox" || browserName === "webkit"){
                 //skip for firefox because of notification permission management
                 //eslint-disable-next-line playwright/no-skipped-test
@@ -104,7 +104,7 @@ test.describe('Availability Status', () => {
 
             await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     
-            await login(page, 'Alice', 2, 'en-US', browser.browserType().name() === "mobilechromium");
+            await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
             await Map.walkTo(page,'ArrowRight',500);
 
             await Menu.clickOnStatus(page,statusName);
@@ -117,7 +117,7 @@ test.describe('Availability Status', () => {
         })
         
         test.describe('busy interaction',async()=>{
-            test('should open a popup when a bubble is create...',async({ page, browserName,browser,context})=>{
+            test('should open a popup when a bubble is create...',async({ page, browserName,browser,context}, {project})=>{
                 if(browserName === "webkit"){
                      //eslint-disable-next-line playwright/no-skipped-test
                     test.skip();
@@ -126,7 +126,7 @@ test.describe('Availability Status', () => {
                 const statusName = "Busy";
                 await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
         
-                await login(page, 'Alice', 2, 'en-US', browser.browserType().name() === "mobilechromium");
+                await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
                 const positionToDiscuss = {
                     x: 3 * 32,
                     y: 4 * 32
@@ -139,7 +139,7 @@ test.describe('Availability Status', () => {
                 await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
                // Login user "Bob"
                 const secondPageName = 'Bob'
-                await login(userBob, secondPageName, 3, 'en-US', browser.browserType().name() === "mobilechromium");
+                await login(userBob, secondPageName, 3, 'en-US', project.name === "mobilechromium");
                 
                 await Menu.clickOnStatus(page,statusName); 
                // await Menu.closeNotificationPopUp(page);
@@ -167,7 +167,7 @@ test.describe('Availability Status', () => {
 
                 
             })
-            test('should return to online status after accept conversation',async({ page, browser,context,browserName})=>{
+            test('should return to online status after accept conversation',async({ page, browser,context,browserName}, {project})=>{
                 if(browserName === "webkit"){
                      //eslint-disable-next-line playwright/no-skipped-test
                     test.skip();
@@ -176,7 +176,7 @@ test.describe('Availability Status', () => {
                 const statusName = "Busy";
                 await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
         
-                await login(page, 'Alice', 2, 'en-US', browser.browserType().name() === "mobilechromium");
+                await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
 
                 const positionToDiscuss = {
                     x: 3 * 32,
@@ -193,7 +193,7 @@ test.describe('Availability Status', () => {
                 await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
                // Login user "Bob"
                 const secondPageName = 'Bob'
-                await login(userBob, secondPageName, 3, 'en-US', browser.browserType().name() === "mobilechromium");
+                await login(userBob, secondPageName, 3, 'en-US', project.name === "mobilechromium");
                 await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
                 
                 
@@ -207,7 +207,7 @@ test.describe('Availability Status', () => {
                 await expect(page.getByText("Online")).toHaveCSS('opacity','0.5')
                 await newBrowser.close();
             })
-            test('should keep busy status  after refuse conversation',async({ page, browser,browserName})=>{
+            test('should keep busy status  after refuse conversation',async({ page, browser,browserName}, {project})=>{
                 
                 if(browserName === "webkit"){
                      //eslint-disable-next-line playwright/no-skipped-test
@@ -218,7 +218,7 @@ test.describe('Availability Status', () => {
                 const statusName = "Busy";
                 await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
         
-                await login(page, 'Alice', 2, 'en-US', browser.browserType().name() === "mobilechromium");
+                await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
                 const positionToDiscuss = {
                     x: 3 * 32,
                     y: 4 * 32
@@ -234,7 +234,7 @@ test.describe('Availability Status', () => {
                 await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
                // Login user "Bob"
                 const secondPageName = 'Bob'
-                await login(userBob, secondPageName, 3, 'en-US', browser.browserType().name() === "mobilechromium");
+                await login(userBob, secondPageName, 3, 'en-US', project.name === "mobilechromium");
                 await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
                 
                 if((browserName === "firefox") && page.getByText(`Do you want to allow notification`).isVisible() ){
@@ -265,7 +265,7 @@ test.describe('Availability Status', () => {
     
             await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     
-            await login(page, 'Alice', 2, 'en-US', browser.browserType().name() === "mobilechromium");
+            await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
 
             await Menu.clickOnStatus(page,statusName);
 
@@ -278,7 +278,7 @@ test.describe('Availability Status', () => {
             await expect(page.getByText("Online")).toHaveCSS('opacity','0.5')
 
         })
-        test('should disable microphone and camera',async({ page, browser,browserName })=>{
+        test('should disable microphone and camera',async({ page, browser,browserName }, {project})=>{
             const statusName = "Back in a moment";
             if(browserName === "webkit"){
                  //eslint-disable-next-line playwright/no-skipped-test
@@ -287,7 +287,7 @@ test.describe('Availability Status', () => {
             }
             await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     
-            await login(page, 'Alice', 2, 'en-US', browser.browserType().name() === "mobilechromium");
+            await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
 
             await Menu.turnOnCamera(page);
             await Menu.turnOnMicrophone(page);
@@ -311,7 +311,7 @@ test.describe('Availability Status', () => {
     
             await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     
-            await login(page, 'Alice', 2, 'en-US', browser.browserType().name() === "mobilechromium");
+            await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
             
             await Menu.turnOnCamera(page);
             await Menu.turnOffMicrophone(page)
@@ -328,11 +328,11 @@ test.describe('Availability Status', () => {
             await expect(page.getByAltText('Turn on microphone')).toBeVisible();
         })
         test.describe('Back in a moment interaction',async()=>{
-            test('should not create a bubble',async({ page, browser,context})=>{
+            test('should not create a bubble',async({ page, browser,context}, {project})=>{
                 const statusName = "Back in a moment";
                 await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
         
-                await login(page, 'Alice', 2, 'en-US', browser.browserType().name() === "mobilechromium");
+                await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
                 const positionToDiscuss = {
                     x: 3 * 32,
                     y: 4 * 32
@@ -367,7 +367,7 @@ test.describe('Availability Status', () => {
     
             await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     
-            await login(page, 'Alice', 2, 'en-US', browser.browserType().name() === "mobilechromium");
+            await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
             
             await Menu.closeNotificationPopUp(page);
             await Menu.clickOnStatus(page,statusName);
@@ -382,7 +382,7 @@ test.describe('Availability Status', () => {
             await expect(page.getByText("Online")).toHaveCSS('opacity','0.5')
 
         })
-        test('should disable microphone and camera',async({ page, browser,browserName })=>{
+        test('should disable microphone and camera',async({ page, browser,browserName }, {project})=>{
             if(browserName === "webkit"){
                  //eslint-disable-next-line playwright/no-skipped-test
                 test.skip();
@@ -392,7 +392,7 @@ test.describe('Availability Status', () => {
 
             await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     
-            await login(page, 'Alice', 2, 'en-US', browser.browserType().name() === "mobilechromium");
+            await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
 
             await Menu.turnOnCamera(page);
             await Menu.turnOnMicrophone(page);
@@ -421,7 +421,7 @@ test.describe('Availability Status', () => {
     
             await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     
-            await login(page, 'Alice', 2, 'en-US', browser.browserType().name() === "mobilechromium");
+            await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
         
             await Menu.turnOnCamera(page);
             await Menu.turnOffMicrophone(page)
@@ -439,11 +439,11 @@ test.describe('Availability Status', () => {
             await expect(page.getByAltText('Turn on microphone')).toBeVisible();
         })
         test.describe('Do not disturb interaction',async()=>{
-            test('should not create a bubble ',async({ page, browser,context})=>{
+            test('should not create a bubble ',async({ page, browser,context}, {project})=>{
                 const statusName = "Do not disturb";
                 await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
         
-                await login(page, 'Alice', 2, 'en-US', browser.browserType().name() === "mobilechromium");
+                await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
                 const positionToDiscuss = {
                     x: 3 * 32,
                     y: 4 * 32
@@ -459,7 +459,7 @@ test.describe('Availability Status', () => {
                 await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
                // Login user "Bob"
                 const secondPageName = 'Bob'
-                await login(userBob, secondPageName, 3, 'en-US', browser.browserType().name() === "mobilechromium");
+                await login(userBob, secondPageName, 3, 'en-US', project.name === "mobilechromium");
 
                 await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
                 await expect( page.locator('button.chat-btn + div>span.tw-animate-ping')).toBeHidden();
