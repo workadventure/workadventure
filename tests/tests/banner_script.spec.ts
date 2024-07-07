@@ -19,7 +19,7 @@ test.describe('Modal', () => {
         );
 
         // Connection with Alice
-        await login(page, "Alice");
+        await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
 
         // Create banner with scripting API
         await evaluateScript(page, async () => {

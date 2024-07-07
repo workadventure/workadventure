@@ -43,11 +43,11 @@ test.describe("Map editor area with rights @oidc", () => {
     }
   );
 
-  test("Successfully set Area with right access", async ({ page, request }) => {
+  test("Successfully set Area with right access", async ({ page, request }, { project }) => {
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));
-    await login(page, "test", 3);
+    await login(page, "test", 2, "en-US", project.name === "mobilechromium");
     await oidcAdminTagLogin(page);
 
     await Menu.openMapEditor(page);
@@ -72,11 +72,11 @@ test.describe("Map editor area with rights @oidc", () => {
   test("MapEditor is disabled for basic user because there are no thematics", async ({
     page,
     request,
-  }) => {
+  }, { project }) => {
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));
-    await login(page, "test", 3);
+    await login(page, "test", 2, "en-US", project.name === "mobilechromium");
 
     await Menu.openMapEditor(page);
 
@@ -90,18 +90,18 @@ test.describe("Map editor area with rights @oidc", () => {
     page,
     browser,
     request,
-  }) => {
+  }, { project }) => {
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));
-    await login(page, "test", 3);
+    await login(page, "test", 2, "en-US", project.name === "mobilechromium");
     await oidcAdminTagLogin(page);
 
     // Second browser with member user trying to read the object
     const newBrowser = await browser.browserType().launch({});
     const page2 = await newBrowser.newPage();
     await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5);
+    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
     await oidcMemberTagLogin(page2);
 
     // Add area with admin rights
@@ -132,18 +132,18 @@ test.describe("Map editor area with rights @oidc", () => {
     page,
     browser,
     request,
-  }) => {
+  }, { project }) => {
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));
-    await login(page, "test", 3);
+    await login(page, "test", 3, "en-US", project.name === "mobilechromium");
     await oidcAdminTagLogin(page);
 
     // Second browser with member user trying to read the object
     const newBrowser = await browser.browserType().launch({});
     const page2 = await newBrowser.newPage();
     await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5);
+    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
     await oidcMemberTagLogin(page2);
 
     // Add area with admin rights
@@ -174,18 +174,18 @@ test.describe("Map editor area with rights @oidc", () => {
     page,
     browser,
     request,
-  }) => {
+  }, { project }) => {
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));
-    await login(page, "test", 3);
+    await login(page, "test", 3, "en-US", project.name === "mobilechromium");
     await oidcAdminTagLogin(page);
 
     // Second browser with member user trying to read the object
     const newBrowser = await browser.browserType().launch({});
     const page2 = await newBrowser.newPage();
     await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5);
+    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
     await oidcMemberTagLogin(page2);
 
     // Add area with admin rights
@@ -227,18 +227,18 @@ test.describe("Map editor area with rights @oidc", () => {
     page,
     browser,
     request,
-  }) => {
+  }, { project }) => {
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));
-    await login(page, "test", 3);
+    await login(page, "test", 3, "en-US", project.name === "mobilechromium");
     await oidcAdminTagLogin(page);
 
     // Second browser with member user trying to read the object
     const newBrowser = await browser.browserType().launch({});
     const page2 = await newBrowser.newPage();
     await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5);
+    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
     await oidcMemberTagLogin(page2);
 
     // Add area with admin rights
@@ -280,18 +280,18 @@ test.describe("Map editor area with rights @oidc", () => {
     page,
     browser,
     request,
-  }) => {
+  }, { project }) => {
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));
-    await login(page, "test", 3);
+    await login(page, "test", 3, "en-US", project.name === "mobilechromium");
     await oidcAdminTagLogin(page);
 
     // Second browser with member user trying to read the object
     const newBrowser = await browser.browserType().launch({});
     const page2 = await newBrowser.newPage();
     await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5);
+    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
     await oidcMemberTagLogin(page2);
 
     // Add area with admin rights
@@ -332,18 +332,18 @@ test.describe("Map editor area with rights @oidc", () => {
     page,
     browser,
     request,
-  }) => {
+  }, { project }) => {
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));
-    await login(page, "test", 3);
+    await login(page, "test", 3, "en-US", project.name === "mobilechromium");
     await oidcAdminTagLogin(page);
 
     // Second browser with member user trying to read the object
     const newBrowser = await browser.browserType().launch({});
     const page2 = await newBrowser.newPage();
     await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5);
+    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
     await oidcMemberTagLogin(page2);
 
     // Add area with admin rights
@@ -385,18 +385,18 @@ test.describe("Map editor area with rights @oidc", () => {
     page,
     browser,
     request,
-  }) => {
+  }, { project }) => {
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));
-    await login(page, "test", 3);
+    await login(page, "test", 3, "en-US", project.name === "mobilechromium");
     await oidcAdminTagLogin(page);
 
     // Second browser with member user trying to read the object
     const newBrowser = await browser.browserType().launch({});
     const page2 = await newBrowser.newPage();
     await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5);
+    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
     await oidcMemberTagLogin(page2);
 
     // Add area with admin rights
@@ -438,11 +438,11 @@ test.describe("Map editor area with rights @oidc", () => {
     page,
     browser,
     request,
-  }) => {
+  }, { project }) => {
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));
-    await login(page, "test", 3);
+    await login(page, "test", 3, "en-US", project.name === "mobilechromium");
     await oidcAdminTagLogin(page);
 
     await Menu.openMapEditor(page);
@@ -457,7 +457,7 @@ test.describe("Map editor area with rights @oidc", () => {
     const newBrowser = await browser.browserType().launch({});
     const page2 = await newBrowser.newPage();
     await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5);
+    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
     await oidcMemberTagLogin(page2);
 
     // Move to area and claim it
@@ -493,11 +493,11 @@ test.describe("Map editor area with rights @oidc", () => {
     page,
     browser,
     request,
-  }) => {
+  }, { project }) => {
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));
-    await login(page, "test", 3);
+    await login(page, "test", 3, "en-US", project.name === "mobilechromium");
     await oidcAdminTagLogin(page);
 
     await Menu.openMapEditor(page);
@@ -512,7 +512,7 @@ test.describe("Map editor area with rights @oidc", () => {
     const newBrowser = await browser.browserType().launch({});
     const page2 = await newBrowser.newPage();
     await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5);
+    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
 
     // Move to area and claim it
     await Map.teleportToPosition(

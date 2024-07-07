@@ -16,7 +16,7 @@ test.describe('Translation', () => {
       publicTestMapUrl("tests/mousewheel.json", "translate")
     );
 
-    await login(page);
+    await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
 
     await page.click('#menuIcon img:first-child');
     await page.click('button:has-text("Settings")');
