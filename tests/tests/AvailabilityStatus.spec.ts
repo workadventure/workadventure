@@ -16,17 +16,19 @@ test.describe('Availability Status', () => {
                return;
            }
             const statusName = "Busy";
+            const isMobileTest = project.name === "mobilechromium";
     
             await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     
-            await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+            await login(page, 'Alice', 2, 'en-US', isMobileTest);
             
 
+            await Menu.openStatusList(page, isMobileTest);
             await Menu.clickOnStatus(page,statusName); 
             if((browserName === "firefox") && page.getByText(`Do you want to allow notification`).isVisible() ){
                 await  page.locator("section:has(#notificationPermission) + footer>button.outline").click();
             }
-            await Menu.openStatusList(page);
+            await Menu.openStatusList(page, isMobileTest);
             await expect(page.getByText(statusName)).toHaveCSS('opacity','0.5')
         
         
@@ -43,10 +45,11 @@ test.describe('Availability Status', () => {
                 return;
             }
             const statusName = "Busy";
+            const isMobileTest = project.name === "mobilechromium";
     
             await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     
-            await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+            await login(page, 'Alice', 2, 'en-US', isMobileTest);
             
               // Because webkit in playwright does not support Camera/Microphone Permission by settings
 
@@ -56,6 +59,7 @@ test.describe('Availability Status', () => {
 
             //await Menu.closeNotificationPopUp(page);
 
+            await Menu.openStatusList(page, isMobileTest);
             await Menu.clickOnStatus(page,statusName); 
             //await Menu.closeNotificationPopUp(page);
 
@@ -75,7 +79,7 @@ test.describe('Availability Status', () => {
     
             await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     
-            await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+            await login(page, 'Alice', 2, 'en-US');
 
             await Menu.turnOnCamera(page);
             await Menu.turnOffMicrophone(page)
@@ -84,6 +88,7 @@ test.describe('Availability Status', () => {
             await expect(page.getByAltText('Turn off webcam')).toBeVisible();
             await expect(page.getByAltText('Turn on microphone')).toBeVisible();
 
+            await Menu.openStatusList(page);
             await Menu.clickOnStatus(page,statusName);
             //await Menu.closeNotificationPopUp(page);
             await Map.walkTo(page,'ArrowRight',100)
@@ -100,13 +105,15 @@ test.describe('Availability Status', () => {
             }
             
             const statusName = "Busy";
+            const isMobileTest = project.name === "mobilechromium";
 
 
             await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     
-            await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+            await login(page, 'Alice', 2, 'en-US', isMobileTest);
             await Map.walkTo(page,'ArrowRight',500);
 
+            await Menu.openStatusList(page, isMobileTest);
             await Menu.clickOnStatus(page,statusName);
 
             await expect(page.getByRole("button",{name:'continue without notification'})).toBeVisible();
@@ -124,9 +131,10 @@ test.describe('Availability Status', () => {
                     return;
                 }
                 const statusName = "Busy";
+                const isMobileTest = project.name === "mobilechromium";
                 await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
         
-                await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+                await login(page, 'Alice', 2, 'en-US', isMobileTest);
                 const positionToDiscuss = {
                     x: 3 * 32,
                     y: 4 * 32
@@ -139,8 +147,9 @@ test.describe('Availability Status', () => {
                 await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
                // Login user "Bob"
                 const secondPageName = 'Bob'
-                await login(userBob, secondPageName, 3, 'en-US', project.name === "mobilechromium");
+                await login(userBob, secondPageName, 3, 'en-US', isMobileTest);
                 
+                await Menu.openStatusList(page, isMobileTest);
                 await Menu.clickOnStatus(page,statusName); 
                // await Menu.closeNotificationPopUp(page);
 
@@ -174,9 +183,10 @@ test.describe('Availability Status', () => {
                     return;
                 }
                 const statusName = "Busy";
+                const isMobileTest = project.name === "mobilechromium";
                 await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
         
-                await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+                await login(page, 'Alice', 2, 'en-US', isMobileTest);
 
                 const positionToDiscuss = {
                     x: 3 * 32,
@@ -184,6 +194,7 @@ test.describe('Availability Status', () => {
                 };
                 await Map.teleportToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
 
+                await Menu.openStatusList(page, isMobileTest);
                 await Menu.clickOnStatus(page,statusName);
                 //await Menu.closeNotificationPopUp(page);
 
@@ -193,7 +204,7 @@ test.describe('Availability Status', () => {
                 await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
                // Login user "Bob"
                 const secondPageName = 'Bob'
-                await login(userBob, secondPageName, 3, 'en-US', project.name === "mobilechromium");
+                await login(userBob, secondPageName, 3, 'en-US', isMobileTest);
                 await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
                 
                 
@@ -203,7 +214,7 @@ test.describe('Availability Status', () => {
                 await expect(page.getByText(`${secondPageName} wants to discuss with you`)).toBeVisible();
                 
                 await page.locator('section:has(#acceptDiscussion) + footer>button.light').click();
-                await Menu.openStatusList(page);
+                await Menu.openStatusList(page, isMobileTest);
                 await expect(page.getByText("Online")).toHaveCSS('opacity','0.5')
                 await newBrowser.close();
             })
@@ -216,15 +227,17 @@ test.describe('Availability Status', () => {
                 }
 
                 const statusName = "Busy";
+                const isMobileTest = project.name === "mobilechromium";
                 await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
         
-                await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+                await login(page, 'Alice', 2, 'en-US', isMobileTest);
                 const positionToDiscuss = {
                     x: 3 * 32,
                     y: 4 * 32
                 };
                 await Map.teleportToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
 
+                await Menu.openStatusList(page, isMobileTest);
                 await Menu.clickOnStatus(page,statusName); 
                // await Menu.closeNotificationPopUp(page);
 
@@ -234,7 +247,7 @@ test.describe('Availability Status', () => {
                 await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
                // Login user "Bob"
                 const secondPageName = 'Bob'
-                await login(userBob, secondPageName, 3, 'en-US', project.name === "mobilechromium");
+                await login(userBob, secondPageName, 3, 'en-US', isMobileTest);
                 await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
                 
                 if((browserName === "firefox") && page.getByText(`Do you want to allow notification`).isVisible() ){
@@ -245,7 +258,7 @@ test.describe('Availability Status', () => {
 
                 //click on close button
                 await  page.locator("section:has(#acceptDiscussion) + footer>button.outline").click();
-                await Menu.openStatusList(page);
+                await Menu.openStatusList(page, isMobileTest);
                 await expect(page.getByText(statusName)).toHaveCSS('opacity','0.5')  
                 
                 await newBrowser.close();
@@ -262,14 +275,16 @@ test.describe('Availability Status', () => {
                 return;
             }
             const statusName = "Back in a moment";
+            const isMobileTest = project.name === "mobilechromium";
     
             await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     
-            await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+            await login(page, 'Alice', 2, 'en-US', isMobileTest);
 
+            await Menu.openStatusList(page, isMobileTest);
             await Menu.clickOnStatus(page,statusName);
 
-            await Menu.openStatusList(page);
+            await Menu.openStatusList(page, isMobileTest);
             
             await expect(page.getByText(statusName)).toHaveCSS('opacity','0.5')
 
@@ -280,6 +295,7 @@ test.describe('Availability Status', () => {
         })
         test('should disable microphone and camera',async({ page, browser,browserName }, {project})=>{
             const statusName = "Back in a moment";
+            const isMobileTest = project.name === "mobilechromium";
             if(browserName === "webkit"){
                  //eslint-disable-next-line playwright/no-skipped-test
                 test.skip();
@@ -287,13 +303,14 @@ test.describe('Availability Status', () => {
             }
             await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     
-            await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+            await login(page, 'Alice', 2, 'en-US', isMobileTest);
 
             await Menu.turnOnCamera(page);
             await Menu.turnOnMicrophone(page);
 
             //await Menu.closeNotificationPopUp(page);
 
+            await Menu.openStatusList(page, isMobileTest);
             await Menu.clickOnStatus(page,statusName); 
             //await Menu.closeNotificationPopUp(page);
 
@@ -311,7 +328,7 @@ test.describe('Availability Status', () => {
     
             await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     
-            await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+            await login(page, 'Alice', 2, 'en-US');
             
             await Menu.turnOnCamera(page);
             await Menu.turnOffMicrophone(page)
@@ -319,6 +336,7 @@ test.describe('Availability Status', () => {
             await expect(page.getByAltText('Turn off webcam')).toBeVisible();
             await expect(page.getByAltText('Turn on microphone')).toBeVisible();
 
+            await Menu.openStatusList(page);
             await Menu.clickOnStatus(page,statusName); 
 
             //move to trigger status change 
@@ -330,15 +348,17 @@ test.describe('Availability Status', () => {
         test.describe('Back in a moment interaction',async()=>{
             test('should not create a bubble',async({ page, browser,context}, {project})=>{
                 const statusName = "Back in a moment";
+                const isMobileTest = project.name === "mobilechromium";
                 await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
         
-                await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+                await login(page, 'Alice', 2, 'en-US', isMobileTest);
                 const positionToDiscuss = {
                     x: 3 * 32,
                     y: 4 * 32
                 };
                 await Map.teleportToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
             
+                await Menu.openStatusList(page, isMobileTest);
                 await Menu.clickOnStatus(page,statusName); 
 
                 const newBrowser = await browser.browserType().launch();
@@ -347,7 +367,7 @@ test.describe('Availability Status', () => {
                 await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
                // Login user "Bob"
                 const secondPageName = 'Bob'
-                await login(userBob, secondPageName, 3, 'en-US', project.name === "mobilechromium");
+                await login(userBob, secondPageName, 3, 'en-US', isMobileTest);
                 await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
                 await expect( page.locator('button.chat-btn + div>span.tw-animate-ping')).toBeHidden();
                 await newBrowser.close();
@@ -364,16 +384,18 @@ test.describe('Availability Status', () => {
                 return;
             }
             const statusName = "Do not disturb";
+            const isMobileTest = project.name === "mobilechromium";
     
             await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     
-            await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+            await login(page, 'Alice', 2, 'en-US', isMobileTest);
             
             await Menu.closeNotificationPopUp(page);
+            await Menu.openStatusList(page, isMobileTest);
             await Menu.clickOnStatus(page,statusName);
             await page.waitForTimeout(500);
 
-            await Menu.openStatusList(page);
+            await Menu.openStatusList(page, isMobileTest);
             await expect(page.getByText(statusName)).toHaveCSS('opacity','0.5')
         
             //move to trigger status change 
@@ -389,16 +411,18 @@ test.describe('Availability Status', () => {
                 return;
             }
             const statusName = "Do not disturb";
+            const isMobileTest = project.name === "mobilechromium";
 
             await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     
-            await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+            await login(page, 'Alice', 2, 'en-US', isMobileTest);
 
             await Menu.turnOnCamera(page);
             await Menu.turnOnMicrophone(page);
 
             //await Menu.closeNotificationPopUp(page);
 
+            await Menu.openStatusList(page, isMobileTest);
             await Menu.clickOnStatus(page,statusName); 
             //await Menu.closeNotificationPopUp(page);
 
@@ -421,7 +445,7 @@ test.describe('Availability Status', () => {
     
             await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     
-            await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+            await login(page, 'Alice', 2, 'en-US');
         
             await Menu.turnOnCamera(page);
             await Menu.turnOffMicrophone(page)
@@ -430,6 +454,7 @@ test.describe('Availability Status', () => {
             await expect(page.getByAltText('Turn off webcam')).toBeVisible();
             await expect(page.getByAltText('Turn on microphone')).toBeVisible();
 
+            await Menu.openStatusList(page);
             await Menu.clickOnStatus(page,statusName); 
 
             //move to trigger status change 
@@ -441,15 +466,17 @@ test.describe('Availability Status', () => {
         test.describe('Do not disturb interaction',async()=>{
             test('should not create a bubble ',async({ page, browser,context}, {project})=>{
                 const statusName = "Do not disturb";
+                const isMobileTest = project.name === "mobilechromium";
                 await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
         
-                await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+                await login(page, 'Alice', 2, 'en-US', isMobileTest);
                 const positionToDiscuss = {
                     x: 3 * 32,
                     y: 4 * 32
                 };
                 await Map.teleportToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
             
+                await Menu.openStatusList(page, isMobileTest);
                 await Menu.clickOnStatus(page,statusName); 
 
                 const newBrowser = await browser.browserType().launch();
@@ -459,7 +486,7 @@ test.describe('Availability Status', () => {
                 await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
                // Login user "Bob"
                 const secondPageName = 'Bob'
-                await login(userBob, secondPageName, 3, 'en-US', project.name === "mobilechromium");
+                await login(userBob, secondPageName, 3, 'en-US', isMobileTest);
 
                 await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
                 await expect( page.locator('button.chat-btn + div>span.tw-animate-ping')).toBeHidden();
