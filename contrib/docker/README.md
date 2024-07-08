@@ -78,6 +78,13 @@ For your environment to start, you will need to at least configure:
 - **DOMAIN**: your domain name (without any "https://" prefix)
 - **MAP_STORAGE_AUTHENTICATION_USER**: the username for the map-storage container 
 - **MAP_STORAGE_AUTHENTICATION_PASSWORD**: the password for the map-storage container
+- **CHAT_TYPE**: the type of chat to use. Set this variable to "MATRIX" if you are using a Matrix server for chat features, or "PROXIMITY" for proximity-based chat. The default value is "PROXIMITY".
+
+If you set **CHAT_TYPE** to "MATRIX", you will also need to configure the following variables:
+
+- **MATRIX_DOMAIN**: the domain of your Matrix server.
+- **MATRIX_ADMIN_USER**: the admin username for your Matrix server.
+- **MATRIX_ADMIN_PASSWORD**: the admin password for your Matrix server.
 
 Fill free to look the other environment variables and modify them according to your preferences.
 
