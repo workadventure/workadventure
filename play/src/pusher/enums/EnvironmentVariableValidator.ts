@@ -147,6 +147,7 @@ const BaseEnvironmentVariables = z.object({
     GOOGLE_DRIVE_PICKER_APP_ID: z.string().optional(),
 
     EMBEDLY_KEY: z.string().optional(),
+    CHAT_TYPE: z.union([z.literal("PROXIMITY"), z.literal("MATRIX")]).default("PROXIMITY"),
 });
 
 export const EnvironmentVariables = z.intersection(
