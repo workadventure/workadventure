@@ -34,7 +34,7 @@
         if (isVisible) {
             connectedUsersFilter.setFilter({
                 $case: "spaceFilterEverybody",
-                spaceFilterEverybody: {}
+                spaceFilterEverybody: {},
             });
         } else {
             connectedUsersFilter.setFilter(undefined);
@@ -50,7 +50,10 @@
     const handleMousedown = (e: MouseEvent) => {
         let dragX = e.clientX;
         document.onmousemove = (e) => {
-            container.style.width = container.offsetWidth + e.clientX - dragX + "px";
+            const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+            const newWidth = Math.min(container.offsetWidth + e.clientX - dragX, vw);
+            container.style.maxWidth = newWidth + "px";
+            container.style.width = newWidth + "px";
             dragX = e.clientX;
         };
         document.onmouseup = () => {
@@ -62,7 +65,11 @@
         let dragX = e.targetTouches[0].pageX;
 
         function onTouchMove(e: TouchEvent) {
-            container.style.width = container.offsetWidth + e.targetTouches[0].pageX - dragX + "px";
+            const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+            const newWidth = Math.min(container.offsetWidth + e.targetTouches[0].pageX - dragX, vw);
+
+            container.style.maxWidth = newWidth + "px";
+            container.style.width = newWidth + "px";
             dragX = e.targetTouches[0].pageX;
         }
 
@@ -75,16 +82,16 @@
 
     const handleDbClick = () => {
         if (container.style.width === document.documentElement.clientWidth + "px") {
+            container.style.maxWidth = INITIAL_SIDEBAR_WIDTH + "px";
             container.style.width = INITIAL_SIDEBAR_WIDTH + "px";
         } else {
+            container.style.maxWidth = document.documentElement.clientWidth + "px";
             container.style.width = document.documentElement.clientWidth + "px";
         }
     };
-
-    const handlePageResize = () => {};
 </script>
 
-<svelte:window on:keydown={onKeyDown} on:resize={handlePageResize} />
+<svelte:window on:keydown={onKeyDown} />
 {#if $chatVisibilityStore}
     <section
         bind:clientWidth={sideBarWidth}
@@ -92,13 +99,13 @@
         id="chat"
         data-testid="chat"
         transition:fly={{ duration: 200, x: -INITIAL_SIDEBAR_WIDTH }}
-        class="chatWindow !tw-min-w-full sm:!tw-min-w-[360px] tw-overflow-hidden tw-bg-contrast/95 tw-backdrop-blur-md tw-p-4"
+        class="chatWindow !tw-min-w-full sm:!tw-min-w-[360px] tw-bg-contrast/95 tw-backdrop-blur-md tw-p-4 "
     >
         <button class="close-window" data-testid="closeChatButton" on:click={closeChat}>&#215;</button>
         <Chat {sideBarWidth} />
 
         <div
-            class="tw-absolute tw-resize-x tw-right-1 tw-top-0 tw-bottom-0 tw-m-auto tw-w-1.5 tw-h-32 tw-bg-white tw-rounded tw-cursor-col-resize"
+            class="!tw-absolute !tw-right-1 !tw-top-0 !tw-bottom-0 !tw-m-auto !tw-w-1.5 !tw-h-32 !tw-bg-white !tw-rounded !tw-cursor-col-resize"
             id="resize-bar"
             on:mousedown={handleMousedown}
             on:dblclick={handleDbClick}
@@ -108,22 +115,25 @@
 {/if}
 
 <style lang="scss">
-  @import "../style/breakpoints.scss";
+    @import "../style/breakpoints.scss";
 
-  @include media-breakpoint-up(sm) {
-    .chatWindow {
-      width: 100% !important;
+    @include media-breakpoint-up(sm) {
+        .chatWindow {
+            width: 100% !important;
+        }
     }
-  }
 
     .chatWindow {
         color: white;
-        display: flex;
-        flex-direction: column;
+        //display: flex;
+        //flex-direction: column;
         position: absolute !important;
         top: 0;
         min-width: 335px !important;
-        max-width: 100vw !important;
+        width: 335px;
+        height: 100vh !important;
+        z-index: 2000;
+        pointer-events: auto;
 
         height: 100vh !important;
         z-index: 2000;
@@ -133,5 +143,4 @@
             align-self: end;
         }
     }
-  }
 </style>

@@ -93,106 +93,100 @@
 
     $: isGuest = chat.isGuest;
 
-    $: displayTwoColumnLayout = sideBarWidth >= CHAT_LAYOUT_LIMIT
+    $: displayTwoColumnLayout = sideBarWidth >= CHAT_LAYOUT_LIMIT;
 </script>
 
-<div class="tw-h-full tw-w-full tw-flex tw-flex-row tw-gap-4">
-    {#if $selectedRoom === undefined || sideBarWidth >= CHAT_LAYOUT_LIMIT}
-        <div class="tw-h-full tw-w-full tw-max-w-xs">
-            <button class="tw-p-0 tw-m-0  tw-text-gray-400" on:click={toggleDisplayRoomInvitations}>
-                {#if displayRoomInvitations}
-                    <IconChevronDown />
-                {:else}
-                    <IconChevronRight />
-                {/if}
-                Invitations
-            </button>
+{#if $selectedRoom === undefined || displayTwoColumnLayout}
+    <div
+        class="tw-w-full "
+        style={displayTwoColumnLayout ? `border-right:1px solid #4d4b67;padding-right:12px;max-width:335px ` : ``}
+    >
+        <button class="tw-p-0 tw-m-0  tw-text-gray-400" on:click={toggleDisplayRoomInvitations}>
             {#if displayRoomInvitations}
-                {#each filteredRoomInvitations as room (room.id)}
-                    <RoomInvitation {room} />
-                {/each}
-                {#if filteredRoomInvitations.length === 0}
-                    <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
-                {/if}
+                <IconChevronDown />
+            {:else}
+                <IconChevronRight />
             {/if}
+            Invitations
+        </button>
+        {#if displayRoomInvitations}
+            {#each filteredRoomInvitations as room (room.id)}
+                <RoomInvitation {room} />
+            {/each}
+            {#if filteredRoomInvitations.length === 0}
+                <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
+            {/if}
+        {/if}
 
-            <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={toggleDisplayDirectRooms}>
-                {#if displayDirectRooms}
+        <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={toggleDisplayDirectRooms}>
+            {#if displayDirectRooms}
+                <IconChevronDown />
+            {:else}
+                <IconChevronRight />
+            {/if}
+            {$LL.chat.people()}
+        </button>
+        {#if displayDirectRooms}
+            {#each filteredDirectRoom as room (room.id)}
+                <Room {room} />
+            {/each}
+            {#if filteredDirectRoom.length === 0}
+                <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
+            {/if}
+        {/if}
+
+        <div class="tw-flex tw-justify-between">
+            <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={toggleDisplayRooms}>
+                {#if displayRooms}
                     <IconChevronDown />
                 {:else}
                     <IconChevronRight />
                 {/if}
-                {$LL.chat.people()}
-            </button>
-            {#if displayDirectRooms}
-                {#each filteredDirectRoom as room (room.id)}
+                {$LL.chat.rooms()}</button
+            >
+            {#if $isGuest === false}
+                <button
+                    data-testid="openCreateRoomModalButton"
+                    class="tw-p-0 tw-m-0 tw-text-gray-400"
+                    on:click={openCreateRoomModal}
+                >
+                    <IconSquarePlus font-size={16} />
+                </button>
+            {/if}
+        </div>
+
+        {#if displayRooms}
+            <div class="tw-flex tw-flex-col tw-overflow-auto">
+                {#each filteredRooms as room (room.id)}
                     <Room {room} />
                 {/each}
-                {#if filteredDirectRoom.length === 0}
+                {#if filteredRooms.length === 0}
                     <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
                 {/if}
-            {/if}
-
-            <div class="tw-flex tw-justify-between">
-                <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={toggleDisplayRooms}>
-                    {#if displayRooms}
-                        <IconChevronDown />
-                    {:else}
-                        <IconChevronRight />
-                    {/if}
-                    {$LL.chat.rooms()}</button
-                >
-                {#if $isGuest === false}
-                    <button
-                        data-testid="openCreateRoomModalButton"
-                        class="tw-p-0 tw-m-0 tw-text-gray-400"
-                        on:click={openCreateRoomModal}
-                    >
-                        <IconSquarePlus font-size={16} />
-                    </button>
-                {/if}
             </div>
+        {/if}
 
-            {#if displayRooms}
-                <div class="tw-flex tw-flex-col tw-overflow-auto">
-                    {#each filteredRooms as room (room.id)}
-                        <Room {room} />
-                    {/each}
-                    {#if filteredRooms.length === 0}
-                        <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
-                    {/if}
-                </div>
-            {/if}
+        {#if $joignableRoom.length > 0}
+            Joignable Room :
+            {#each $joignableRoom as room (room.id)}
+                <JoignableRooms {room} />
+            {/each}
+        {/if}
 
-            {#if $joignableRoom.length > 0}
-                Joignable Room :
-                {#each $joignableRoom as room (room.id)}
-                    <JoignableRooms {room} />
-                {/each}
-            {/if}
-
-            {#if $proximityRoomConnection}
-                <div class="tw-flex tw-justify-between">
-                    <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={toggleDisplayProximityChat}>
-                        <IconChevronRight />
-                        {$LL.chat.proximity()}
-                    </button>
-                </div>
-            {/if}
-        </div>
-    {/if}
-    {#if $selectedRoom !== undefined}
-        <div
-            class="tw-flex tw-flex-col tw-h-full tw-w-full tw-flex-auto  {sideBarWidth >= CHAT_LAYOUT_LIMIT &&
-                'tw-pl-rtw-border-l-2 tw-border-solid tw-border-r-transparent tw-border-y-transparent tw-border-l-light-purple-alt tw-pl-4'} "
-        >
-            <RoomTimeline room={$selectedRoom} />
-        </div>
-    {:else if $selectedRoom === undefined && sideBarWidth >= CHAT_LAYOUT_LIMIT}
-        <div
-            class="tw-flex tw-flex-col tw-pl-4 tw-h-full tw-w-full tw-flex-auto tw-pl-rtw-border-l-2 tw-border-solid tw-border-r-transparent tw-border-y-transparent tw-border-l-light-purple-alt "
-        >
-            <p class="tw-self-center tw-text-md tw-text-gray-500">{$LL.chat.nothingToDisplay()}</p>
-        </div>
-    {/if}
-</div>
+        {#if $proximityRoomConnection}
+            <div class="tw-flex tw-justify-between">
+                <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={toggleDisplayProximityChat}>
+                    <IconChevronRight />
+                    {$LL.chat.proximity()}
+                </button>
+            </div>
+        {/if}
+    </div>
+{/if}
+{#if $selectedRoom !== undefined}
+    <RoomTimeline room={$selectedRoom} />
+{:else if $selectedRoom === undefined && sideBarWidth >= CHAT_LAYOUT_LIMIT}
+    <div class="tw-flex tw-flex-col tw-flex-1 tw-pl-4">
+        <p class="tw-self-center tw-text-md tw-text-gray-500">{$LL.chat.nothingToDisplay()}</p>
+    </div>
+{/if}
