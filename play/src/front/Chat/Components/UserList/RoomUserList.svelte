@@ -50,35 +50,42 @@
     ] as Array<[string, ChatUser[]]>;
 </script>
 
-{#each roomsWithUsers as [roomName, userInRoom] (roomName)}
-    {#if userInRoom && userInRoom.length > 0}
-        <div class="users tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple">
-            <div class="tw-px-4 tw-py-1 tw-flex tw-items-center">
-                <span
-                    class="{roomName !== DISCONNECTED_LABEL
-                        ? 'tw-bg-light-blue'
-                        : 'tw-bg-gray'} tw-text-dark-purple tw-min-w-[20px] tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
-                >
-                    {#if userInRoom?.length && userInRoom.length > 0 && roomName !== DISCONNECTED_LABEL}
-                        {userInRoom?.length}
-                    {/if}
-                </span>
-                <p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">
-                    {roomName}
-                </p>
-                <button
-                    data-testid="userByRooms{roomName === DISCONNECTED_LABEL ? '-disconnected' : ''}"
-                    class="tw-text-lighter-purple"
-                    on:click={() => shownRoomListStore.set($shownRoomListStore === roomName ? "" : roomName)}
-                >
-                    <IconChevronUp
-                        class={`tw-transform tw-transition ${$shownRoomListStore === roomName ? "" : "tw-rotate-180"}`}
-                    />
-                </button>
+<div class="tw-flex tw-flex-col tw-overflow-hidden">
+    {#each roomsWithUsers as [roomName, userInRoom] (roomName)}
+        {#if userInRoom && userInRoom.length > 0}
+            <div
+                class="tw-overflow-hidden users tw-flex tw-flex-col tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple"
+            >
+                <div class="tw-px-4 tw-py-3 tw-flex tw-items-center tw-flex-0">
+                    <span
+                        class="{roomName !== DISCONNECTED_LABEL
+                            ? 'tw-bg-light-blue'
+                            : 'tw-bg-gray'} tw-text-dark-purple tw-min-w-[20px] tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
+                    >
+                        {#if userInRoom?.length && userInRoom.length > 0 && roomName !== DISCONNECTED_LABEL}
+                            {userInRoom?.length}
+                        {/if}
+                    </span>
+                    <p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">
+                        {roomName}
+                    </p>
+                    <button
+                        class="tw-text-lighter-purple"
+                        on:click={() => shownRoomListStore.set($shownRoomListStore === roomName ? "" : roomName)}
+                    >
+                        <IconChevronUp
+                            class={`tw-transform tw-transition ${
+                                $shownRoomListStore === roomName ? "" : "tw-rotate-180"
+                            }`}
+                        />
+                    </button>
+                </div>
+                {#if $shownRoomListStore === roomName}
+                    <div class="tw-flex tw-flex-col tw-flex-1 tw-overflow-auto">
+                        <UserList userList={userInRoom} />
+                    </div>
+                {/if}
             </div>
-            {#if $shownRoomListStore === roomName}
-                <UserList userList={userInRoom} />
-            {/if}
-        </div>
-    {/if}
-{/each}
+        {/if}
+    {/each}
+</div>
