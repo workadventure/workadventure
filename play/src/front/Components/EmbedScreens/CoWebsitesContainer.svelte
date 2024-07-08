@@ -1,17 +1,15 @@
 <script lang="ts">
-    import { fly } from "svelte/transition";
-    import { afterUpdate, onDestroy, onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import {
-        canvasHeight,
-        canvasWidth,
         coWebsites,
         fullScreenCowebsite,
         totalTabWidth,
         totalTabWidthMobile,
-        widthContainer,
-        heightContainer,
         coWebsiteManager,
-        testStore,
+        widthContainerForWindow,
+        heightContainerForWindow,
+        resizeFromCowebsite,
+        canvasWidth,
     } from "../../Stores/CoWebsiteStore";
     import FullScreenIcon from "../Icons/FullScreenIcon.svelte";
     import JitsiCowebsiteComponent from "../Cowebsites/JistiCowebsiteComponent.svelte";
@@ -26,7 +24,7 @@
     import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
     import CoWebsiteTab from "./CoWebsiteTab.svelte";
 
-    let container: HTMLElement; // Move this line above the resizeDesktop function
+    let container: HTMLElement;
     let activeCowebsite = $coWebsites[0];
     let resizeBar: HTMLElement;
     let startY: number;
@@ -39,51 +37,71 @@
     let resizeBarHide = false;
     let styleTag: HTMLStyleElement;
     $: appearDropdownMenu = vertical
-        ? $totalTabWidthMobile > $widthContainer
-        : $totalTabWidth >= window.innerWidth - $widthContainer && window.innerWidth !== $widthContainer;
-    $: showArrow = $totalTabWidth > window.innerWidth - $widthContainer ? true : false;
+        ? $totalTabWidthMobile > $widthContainerForWindow
+        : $totalTabWidth >= window.innerWidth - $widthContainerForWindow &&
+          window.innerWidth !== $widthContainerForWindow;
+    $: showArrow = $totalTabWidth > window.innerWidth - $widthContainerForWindow ? true : false;
     let numberMaxOfCowebsite: number;
     let menuArrow = false;
     let isToggleFullScreen = false;
+
     // let windowWidth = window.innerWidth;
     // let windowHeight = window.innerHeight;
 
     // $: windowWidth, waScaleManager.applyNewSize();
     // $: windowHeight, waScaleManager.applyNewSize();
 
-    // function updateScreenSize() {
-    //     if (window.innerWidth < 768) {
-    //         vertical = true;
-    //         coWebsiteManager.setResizingFromCoWebsite(true);
-    //         console.log(vertical);
-    //     } else {
-    //         vertical = false;
-    //         coWebsiteManager.setResizingFromCoWebsite(true);
-    //         console.log(vertical);
-    //     }
-    // }
+    function updateScreenSize() {
+        if (window.innerWidth < 768) {
+            vertical = true;
+            // coWebsiteManager.setResizingFromCoWebsite(true);
+            // console.log(vertical);
+        } else {
+            vertical = false;
+            // coWebsiteManager.setResizingFromCoWebsite(true);
+            // console.log(vertical);
+        }
+    }
 
     window.addEventListener("resize", () => {
-        coWebsiteManager.setResizingFromCoWebsite(false);
-        // handleResize();
-        waScaleManager.applyNewSize();
+        getSizeOfCowebsiteWhenResizeWindow();
+        updateScreenSize();
+        resizeCowebsite();
+        // coWebsiteManager.setResizingFromCoWebsite(false);
+        resizeFromCowebsite.set(false);
+        getSizeFromWindowResize();
+        // waScaleManager.applyNewSize();
+        console.log("bonjour");
     });
 
     onMount(() => {
+        updateScreenSize();
         if (!vertical) {
             let widthOnMount = parseInt(getComputedStyle(container).width);
-            widthContainer.set(widthOnMount);
-            // console.log($widthContainer, "ON MOUNT");
+            widthContainerForWindow.set(widthOnMount);
+            // console.log($widthContainerForWindow, "WIDTH ON MOUNT");
         } else {
             let heightOnMount = parseInt(getComputedStyle(container).height);
-            // heightOnMount = (heightOnMount / window.innerHeight) * 100;
-            heightContainer.set(heightOnMount);
+            heightContainerForWindow.set(heightOnMount);
+            // console.log($heightContainerForWindow, "HEIGHT ON MOUNT");
         }
         updateDynamicStyles();
         waScaleManager.applyNewSize();
         resizeCowebsite();
     });
 
+    function getSizeOfCowebsiteWhenResizeWindow() {
+        if (vertical) {
+            let heightContainer = activeCowebsite.getHeightPercent() || 50;
+            heightContainer = (heightContainer / 100) * window.innerHeight;
+            console.log(heightContainer, "HEIGHT CONTAINER");
+            heightContainerForWindow.set(heightContainer);
+        } else {
+            let widthContainer = activeCowebsite.getWidthPercent() || window.innerWidth / 2;
+            console.log(widthContainer, "WIDTH CONTAINER");
+            widthContainerForWindow.set(widthContainer);
+        }
+    }
     // function handleResize() {
     //     canvasWidth.set(window.innerWidth);
     //     canvasHeight.set(window.innerHeight);
@@ -116,11 +134,42 @@
     //     coWebsiteManager.resizeObserver.observe(container);
     // });
 
+    // $: window.innerHeight, getSizeFromWindowResize();
+
+    function getSizeFromWindowResize() {
+        // console.log("je suis dans getSizeFromWindowResize");
+
+        // console.log($resizeFromCowebsite, "RESIZE FROM COWEBSITE");
+        if ($resizeFromCowebsite) {
+            return;
+        } else {
+            if (vertical) {
+                // let heightContainer = activeCowebsite.getHeightPercent() || 50;
+                // heightContainer = (heightContainer / 100) * window.innerHeight;
+
+                heightContainerForWindow.set($heightContainerForWindow);
+
+                console.log($heightContainerForWindow, "HEIGHT CONTAINER DE LA FONCTION OU IL Y A RIEN");
+                // heightContainerForWindow.set($heightContainer);
+                // heightContainerForWindow.set(heightContainer);
+                // resizeFromCowebsite.set(true);
+            } else {
+                // console.log($widthContainerForWindow, "WIDTH CONTAINER DE LA FONCTION OU IL Y A RIEN");
+                // resizeFromCowebsite.set(true);
+            }
+        }
+        // coWebsiteManager.setResizingFromCoWebsite(false);
+    }
+
     function resizeCowebsite() {
-        console.log("je suis dans resizeCowebsite");
-        coWebsiteManager.setResizingFromCoWebsite(true);
+        // console.log("je suis dans resizeCowebsite");
+        // coWebsiteManager.setResizingFromCoWebsite(true);
+        resizeFromCowebsite.set(true);
+        // console.log($resizeFromCowebsite, "RESIZE FROM COWEBSITE");
         if (!vertical) {
-            heightContainer.set(window.innerHeight);
+            // console.log("je suis dans resizeCowebsite ordi");
+
+            heightContainerForWindow.set(window.innerHeight);
             startWidthContainer = parseInt(getComputedStyle(container).width);
             const handleMouseDown = (e: { clientX: number }) => {
                 startX = e.clientX;
@@ -131,15 +180,15 @@
             resizeBar.addEventListener("mousedown", handleMouseDown);
             const handleMouseMove = (e: { clientX: number }) => {
                 let newWidth = startWidthContainer - (e.clientX - startX);
-                newWidth;
-                widthContainer.set(newWidth);
-                // console.log($widthContainer, "HOLEHOLEHOLE");
+                widthContainerForWindow.set(newWidth);
+                console.log($widthContainerForWindow, "WIDTH CONTAINER DANS LE RESIZE ORDI");
                 finalWidth = newWidth + "px";
                 container.style.width = finalWidth;
                 const maxWidth = Math.min(newWidth, window.innerWidth * 0.75);
-                widthContainer.set(maxWidth);
                 if (maxWidth !== newWidth) {
                     container.style.width = maxWidth + "px";
+                    widthContainerForWindow.set(maxWidth);
+                    console.log($widthContainerForWindow, "WIDTH CONTAINER DANS LE RESIZE ORDI POST MAX");
                 }
                 waScaleManager.applyNewSize();
                 waScaleManager.refreshFocusOnTarget();
@@ -149,13 +198,15 @@
                 document.removeEventListener("mouseup", handleMouseUp);
             };
             return () => {
-                widthContainer;
+                // widthContainerForWindow;
                 resizeBar.removeEventListener("mousedown", handleMouseDown);
                 document.removeEventListener("mousemove", handleMouseMove);
                 document.removeEventListener("mouseup", handleMouseUp);
             };
         } else {
-            widthContainer.set(window.innerWidth);
+            console.log("je suis dans resizeCowebsite mobile");
+
+            widthContainerForWindow.set(window.innerWidth);
             startWidthContainer = parseInt(getComputedStyle(container).height);
             function handleMouseDown(e: TouchEvent) {
                 let clientY = e.touches[0].clientY;
@@ -168,13 +219,19 @@
             function handleMouseMove(e: TouchEvent) {
                 let clientY = e.touches[0].clientY;
                 let newHeight = startHeight + (clientY - startY);
-                heightContainer.set(newHeight);
+                heightContainerForWindow.set(newHeight);
+                console.log($heightContainerForWindow, "HEIGHT CONTAINER DANS LE RESIZE MOBILE");
                 finalHeight = newHeight + "px";
                 container.style.height = finalHeight;
                 const maxHeight = Math.min(newHeight, window.innerHeight * 0.75);
-                heightContainer.set(maxHeight);
+                // heightContainer.set(maxHeight);
+                // heightContainerForWindow.set(maxHeight);
+                console.log($heightContainerForWindow, "HEIGHT MAX CONTAINER");
+                console.log(maxHeight, "MAX HEIGHT");
+                console.log(newHeight, "NEW HEIGHT");
                 if (maxHeight !== newHeight) {
                     container.style.height = maxHeight + "px";
+                    heightContainerForWindow.set(maxHeight);
                 }
                 resizeMin(newHeight);
                 waScaleManager.applyNewSize();
@@ -193,10 +250,13 @@
     }
 
     function resizeMin(newValue: number) {
-        const minHeight = window.innerHeight * 0.25;
+        const minHeight = window.innerHeight * 0.35;
         if (newValue > minHeight) {
-            widthContainer.set(newValue);
+            widthContainerForWindow.set(newValue);
+            // console.log($widthContainerForWindow, "WIDTH CONTAINER MIN RESIZE");
         } else {
+            console.log("je suis dans le else du RESIZE Min");
+            heightContainerForWindow.set(minHeight);
             container.style.height = `${minHeight}px`;
         }
     }
@@ -210,11 +270,10 @@
     }
 
     $: $totalTabWidthMobile, numberMaxCowebsite();
-    $: $widthContainer, numberMaxCowebsite();
+    $: $widthContainerForWindow, numberMaxCowebsite();
     $: isToggleFullScreen, numberMaxCowebsite();
-
-    // $: $widthContainer, waScaleManager.applyNewSize();
-    // $: $heightContainer, waScaleManager.applyNewSize();
+    // $: console.log($widthContainerForWindow, "WIDTH CONTAINER FOR WINDOW");
+    // $: console.log("is Vertical ?", vertical);
 
     $: {
         if (isToggleFullScreen) {
@@ -222,28 +281,28 @@
             numberMaxCowebsite();
         } else {
             menuArrow = true;
-            showArrow = true;
-            appearDropdownMenu = true;
+            // showArrow = true;
+            // appearDropdownMenu = true;
         }
     }
 
     function numberMaxCowebsite() {
         if (!vertical) {
-            numberMaxOfCowebsite = Math.floor((window.innerWidth - $canvasWidth) / 300);
+            numberMaxOfCowebsite = Math.floor($widthContainerForWindow / 300);
             if (numberMaxOfCowebsite < 1) {
-                appearDropdownMenu = false;
+                // appearDropdownMenu = false;
             }
             if (isToggleFullScreen) {
                 numberMaxOfCowebsite = Math.floor(window.innerWidth / 300);
                 if ($totalTabWidth < window.innerWidth) {
-                    appearDropdownMenu = false;
-                    showArrow = false;
+                    // appearDropdownMenu = false;
+                    // showArrow = false;
                 }
             }
         } else {
-            numberMaxOfCowebsite = Math.floor($canvasWidth / 220);
+            numberMaxOfCowebsite = Math.floor(window.innerWidth / 220);
             if (numberMaxOfCowebsite < 1) {
-                appearDropdownMenu = false;
+                // appearDropdownMenu = false;
             }
         }
     }
@@ -270,7 +329,7 @@
 
     const setActiveCowebsite = (coWebsite: CoWebsite) => {
         activeCowebsite = coWebsite;
-        appearDropdownMenu = false;
+        // appearDropdownMenu = false;
         menuArrow = false;
     };
 
@@ -281,27 +340,27 @@
     function toggleFullScreen() {
         if ($fullScreenCowebsite && !vertical) {
             fullScreenCowebsite.set(false);
-            container.style.width = `${$widthContainer - $canvasWidth}px`;
-            widthContainer.set(window.innerWidth - $canvasWidth);
+            container.style.width = `${$widthContainerForWindow - $canvasWidth}px`;
+            widthContainerForWindow.set(window.innerWidth - $canvasWidth);
             resizeBarHide = false;
             isToggleFullScreen = false;
         } else if ($fullScreenCowebsite && vertical) {
             fullScreenCowebsite.set(false);
-            container.style.height = `${$heightContainer - $canvasHeight}px`;
-            heightContainer.set(window.innerHeight - $canvasHeight);
+            // container.style.height = `${$heightContainerForWindow - $canvasHeight}px`;
+            // heightContainerForWindow.set(window.innerHeight - $canvasHeight);
             resizeBarHide = false;
             isToggleFullScreen = false;
         } else if (!$fullScreenCowebsite && !vertical) {
             fullScreenCowebsite.set(true);
-            widthContainer.set(window.innerWidth);
-            container.style.width = `${$widthContainer}px`;
+            widthContainerForWindow.set(window.innerWidth);
+            container.style.width = `${$widthContainerForWindow}px`;
             container.style.backgroundColor = "#1b2a40";
             resizeBarHide = true;
             isToggleFullScreen = true;
         } else {
             fullScreenCowebsite.set(true);
-            heightContainer.set(window.innerHeight);
-            container.style.height = `${$heightContainer}px`;
+            heightContainerForWindow.set(window.innerHeight);
+            container.style.height = `${$heightContainerForWindow}px`;
             resizeBarHide = true;
             isToggleFullScreen = true;
         }
@@ -341,15 +400,15 @@
     $: vertical, updateDynamicStyles();
 
     onDestroy(() => {
-        heightContainer.set(window.innerHeight);
-        widthContainer.set(window.innerWidth);
-        coWebsiteManager.setResizingFromCoWebsite(false);
+        heightContainerForWindow.set(window.innerHeight);
+        widthContainerForWindow.set(window.innerWidth);
+        // coWebsiteManager.setResizingFromCoWebsite(false);
+        resizeFromCowebsite.set(false);
         waScaleManager.applyNewSize();
 
         if (styleTag) {
             document.head.removeChild(styleTag);
         }
-        // mediaQuery.removeEventListener("change", handleTabletChange);
         subscription();
     });
 </script>
@@ -366,8 +425,8 @@
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div
                 class="aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer"
-                on:click={() => (appearDropdownMenu = !appearDropdownMenu)}
                 on:click={() => (menuArrow = !menuArrow)}
+                on:click={() => (appearDropdownMenu = !appearDropdownMenu)}
             >
                 {#if menuArrow}
                     <XIcon />
@@ -465,7 +524,7 @@
     <div
         class={vertical
             ? "absolute left-1 top-0 bottom-0 m-auto w-1.5 h-40 bg-white rounded cursor-col-resize responsive-resize-bar"
-            : "absolute  left-1 top-0 bottom-0 m-auto w-1.5 h-40 bg-white rounded cursor-col-resize"}
+            : "absolute left-1 top-0 bottom-0 m-auto w-1.5 h-40 bg-white rounded cursor-col-resize"}
         class:resize-bar={resizeBarHide}
         bind:this={resizeBar}
         on:mousedown={resizeCowebsite}

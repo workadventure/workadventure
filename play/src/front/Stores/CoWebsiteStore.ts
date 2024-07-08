@@ -49,91 +49,75 @@ export const totalTabWidthMobile = derived(coWebsites, ($coWebsites) => {
     return $coWebsites.length * 220;
 });
 
+export const widthContainerForWindow = writable(0);
+export const heightContainerForWindow = writable(0);
 export const widthContainer = writable(window.innerWidth);
 export const heightContainer = writable(window.innerHeight);
 export const fullScreenCowebsite = writable(false);
 export const canvasWidth = writable(window.innerWidth);
 export const canvasHeight = writable(window.innerHeight);
+export const resizeFromCowebsite = writable(false);
+export const isVerticalMode = writable(false);
 
 export class CoWebsiteManager {
 
-    // private _onResize: Subject<void> = new Subject();
-    // public onResize = this._onResize.asObservable();
-
-    constructor() {
-        // Ajouter des écouteurs d'événements pour la mise à jour des stores
-        window.addEventListener('resize', this.handleResize.bind(this));
-
-        // Nettoyer les écouteurs d'événements lorsque ce n'est plus nécessaire
-        this.cleanupStore = () => {
-            window.removeEventListener('resize', this.handleResize.bind(this));
-        };
-    }
-
-    cleanupStore() {
-        window.removeEventListener('resize', this.handleResize.bind(this));
-    }
-
-    handleResize() {
-        widthContainer.set(window.innerWidth);
-        heightContainer.set(window.innerHeight);
-        canvasWidth.set(window.innerWidth);
-        canvasHeight.set(window.innerHeight);
-    }
-
-
     get verticalMode(): boolean {
-        return window.innerWidth < window.innerHeight;
+        if (window.innerWidth < 768) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
-    private isResizingFromCoWebsite: boolean = false;
+    // private isResizingFromCoWebsite: boolean = false;
 
-    public setResizingFromCoWebsite(value: boolean) {
-        this.isResizingFromCoWebsite = value;
-    }
+    // public setResizingFromCoWebsite(value: boolean) {
+    //     this.isResizingFromCoWebsite = value;
+    // }
 
     // c'est la la merde
 
     private calculateNewWidth() {
-        let currentWidthContainer = get(widthContainer);
-        console.log("currentWidth CONTAINER before function", currentWidthContainer);
-
-        let currentWidthCanvas = get(canvasWidth);
-        console.log("currentWidth CANVAS before function", currentWidthCanvas);
-
-        if (!this.verticalMode && this.isResizingFromCoWebsite && get(coWebsites).length > 0) {
-            console.log("je suis dans le resize CO WEBSITE");
-            canvasWidth.set(window.innerWidth - get(widthContainer));
-            return window.innerWidth - get(widthContainer);
-        } else if (!this.verticalMode && !this.isResizingFromCoWebsite && get(coWebsites).length > 0) {
-            canvasWidth.set(window.innerWidth - get(canvasWidth));
-            return window.innerWidth - get(canvasWidth);
+        if (!this.verticalMode && get(resizeFromCowebsite) && get(coWebsites).length > 0) {
+            canvasWidth.set(window.innerWidth - get(widthContainerForWindow));
+            console.log("Width container from cowebsite :", get(widthContainerForWindow));
+            return window.innerWidth - get(widthContainerForWindow);
+        } else if (!this.verticalMode && !get(resizeFromCowebsite) && get(coWebsites).length > 0) {
+            console.log("Width container from window :", get(widthContainerForWindow));
+            return window.innerWidth - get(widthContainerForWindow);
         } else {
-            return window.innerWidth - currentWidthContainer;
+            return window.innerWidth;
         }
     }
 
 
     private calculateNewHeight() {
-        if (this.isResizingFromCoWebsite && this.verticalMode && get(coWebsites).length > 0) {
-            canvasHeight.set(window.innerHeight - get(heightContainer));
-            return window.innerHeight - get(heightContainer);
-        } else if (!this.isResizingFromCoWebsite && this.verticalMode && get(coWebsites).length > 0) {
-            return window.innerHeight - get(heightContainer);
+        if (get(resizeFromCowebsite) && this.verticalMode && get(coWebsites).length > 0) {
+            canvasHeight.set(window.innerHeight - get(heightContainerForWindow));
+            console.log("Height container from cowebsite :", get(heightContainerForWindow));
+            return window.innerHeight - get(heightContainerForWindow);
+        } else if (!get(resizeFromCowebsite) && this.verticalMode && get(coWebsites).length > 0) {
+            console.log("Height container from window :", get(heightContainerForWindow));
+            return window.innerHeight - get(heightContainerForWindow);
         } else {
+            // console.log("window.innerHeight JE SUIS DANS CE ELSE DE HEIGHT", window.innerHeight);
             return window.innerHeight;
         }
     }
 
-    public getGameSize(): { height: number; width: number } {
+    public getGameSize(): { height: number, width: number } {
         const height = this.calculateNewHeight();
         const width = this.calculateNewWidth();
+        console.log("Height", height);
+        console.log("Width", width);
 
         if (height !== undefined) {
             heightContainer.set(height);
+            console.log("Height container for window", get(heightContainerForWindow))
         }
         if (width !== undefined) {
             widthContainer.set(width);
+            console.log("Width container for window", get(widthContainerForWindow))
         }
 
         return {

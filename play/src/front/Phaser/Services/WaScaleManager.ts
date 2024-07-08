@@ -4,6 +4,8 @@ import { ResizableScene } from "../Login/ResizableScene";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import { HdpiManager } from "./HdpiManager";
 import ScaleManager = Phaser.Scale.ScaleManager;
+import { get } from "svelte/store";
+import { coWebsites } from "../../Stores/CoWebsiteStore";
 
 export const MAX_ZOOM_OUT_EXPLORER_MODE = 0.4;
 export const INITIAL_ZOOM_OUT_EXPLORER_MODE = 1;
@@ -33,13 +35,12 @@ export class WaScaleManager {
     }
 
     public applyNewSize(camera?: Phaser.Cameras.Scene2D.Camera) {
-        console.log("applyNewSize");
+        console.log("JE SUIS DANS APPLY NEW SIZE")
         if (this.scaleManager === undefined) {
             return;
         }
         const { width, height } = coWebsiteManager.getGameSize();
-        console.log("width", width);
-        console.log("height", height);
+        // console.log("applyNewSize height", height);
         const devicePixelRatio = window.devicePixelRatio ?? 1;
         const { game: gameSize, real: realSize } = this.hdpiManager.getOptimalGameSize({
             width: width * devicePixelRatio,
@@ -63,7 +64,7 @@ export class WaScaleManager {
             }
 
             const zoom =
-                this.hdpiManager.zoomModifier * this.hdpiManager.getOptimalZoomLevel(realSize.width * realSize.height);
+            this.hdpiManager.zoomModifier * this.hdpiManager.getOptimalZoomLevel(realSize.width * realSize.height);
             this.scaleManager.setZoom(this.actualZoom);
             camera?.setZoom(zoom);
         }
@@ -73,17 +74,12 @@ export class WaScaleManager {
         style.width = Math.ceil(realSize.width !== 0 ? realSize.width / devicePixelRatio : 0) + "px";
         style.height = Math.ceil(realSize.height !== 0 ? realSize.height / devicePixelRatio : 0) + "px";
 
+
         // Resize the game element at the same size at the canvas
         const gameStyle = HtmlUtils.getElementByIdOrFail<HTMLDivElement>("game").style;
         gameStyle.width = style.width;
         gameStyle.height = style.height;
 
-        // Resize the game element at the same size at the canvas
-        // By default, the scaleManager.resize() method will change the take the zoom into account in the displaySize.
-        // This is not what we want, we want the displaySize to be the real size of the game.
-        this.scaleManager.displaySize.width = realSize.width;
-        this.scaleManager.displaySize.height = realSize.height;
-        this.scaleManager.refresh(realSize.width, realSize.height);
 
         // Resize the game element at the same size at the canvas
         // By default, the scaleManager.resize() method will change the take the zoom into account in the displaySize.
@@ -91,6 +87,14 @@ export class WaScaleManager {
         this.scaleManager.displaySize.width = realSize.width;
         this.scaleManager.displaySize.height = realSize.height;
         this.scaleManager.refresh(realSize.width, realSize.height);
+
+
+        // // Resize the game element at the same size at the canvas
+        // // By default, the scaleManager.resize() method will change the take the zoom into account in the displaySize.
+        // // This is not what we want, we want the displaySize to be the real size of the game.
+        // this.scaleManager.displaySize.width = realSize.width;
+        // this.scaleManager.displaySize.height = realSize.height;
+        // this.scaleManager.refresh(realSize.width, realSize.height);
 
         // Note: onResize will be called twice (once here and once in Game.ts), but we have no better way.
         for (const scene of this.game.scene.getScenes(true)) {
