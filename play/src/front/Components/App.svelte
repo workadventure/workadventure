@@ -191,62 +191,15 @@
     });
 </script>
 
-<div class="wrapper">
-    <div class="map-container">
-        <div id="game" bind:this={gameDiv}>
+<div class="h-screen w-screen flex flex-col-reverse md:flex-row">
+    <div class="flex-1 flex-vertical flex-horizontal">
+        <div id="game" class="relative" bind:this={gameDiv}>
             <GameOverlay {game} />
         </div>
     </div>
     {#if $coWebsites.length > 0}
-        <div class="cowebsite-container">
+        <div class="flex-1 flex-vertical flex-horizontal">
             <CoWebsitesContainer />
         </div>
     {/if}
 </div>
-
-<style>
-    .wrapper {
-        position: absolute;
-        height: 100%;
-        width: 100%;
-    }
-
-    .map-container {
-        flex: 1;
-        position: fixed;
-    }
-
-    .cowebsite-container {
-        flex: 1;
-        position: relative;
-    }
-
-    @media (max-width: 768px) {
-        #game {
-            position: relative;
-        }
-        .wrapper {
-            display: flex;
-            flex-direction: column-reverse;
-            width: 100%;
-            height: 100%;
-        }
-
-        .map-container {
-            position: fixed;
-        }
-
-        .cowebsite-container {
-            position: relative;
-        }
-
-        #game {
-            position: relative;
-        }
-
-        .cowebsite-container {
-            width: 100%;
-            height: 50%;
-        }
-    }
-</style>

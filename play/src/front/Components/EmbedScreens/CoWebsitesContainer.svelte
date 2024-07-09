@@ -52,9 +52,11 @@
         if (window.innerWidth < 768) {
             vertical = true;
             resizeCowebsite();
+            console.log(vertical, "VERTICAL");
         } else {
             vertical = false;
             resizeCowebsite();
+            console.log(vertical, "VERTICAL");
         }
     }
 
@@ -82,9 +84,11 @@
         if (vertical) {
             heightFromResize.set($heightContainerForWindow);
             container.style.height = `${$heightContainerForWindow}px`;
+            container.style.width = "100%";
         } else {
             widthFromResize.set($widthContainerForWindow);
             container.style.width = `${$widthFromResize}px`;
+            container.style.height = "100%";
         }
     }
 
@@ -120,7 +124,6 @@
                 document.removeEventListener("mouseup", handleMouseUp);
             };
             return () => {
-                // widthContainerForWindow;
                 resizeBar.removeEventListener("mousedown", handleMouseDown);
                 document.removeEventListener("mousemove", handleMouseMove);
                 document.removeEventListener("mouseup", handleMouseUp);
@@ -251,6 +254,8 @@
     });
 
     function toggleFullScreen() {
+        console.log("toggleFullScreen");
+        console.log($fullScreenCowebsite, "FULLSCREEN");
         if ($fullScreenCowebsite && !vertical) {
             fullScreenCowebsite.set(false);
             container.style.width = `${$widthContainerForWindow - $canvasWidth}px`;
@@ -264,6 +269,7 @@
             resizeBarHide = false;
             isToggleFullScreen = false;
         } else if (!$fullScreenCowebsite && !vertical) {
+            console.log("toggleFullScreen");
             fullScreenCowebsite.set(true);
             widthContainerForWindow.set(window.innerWidth);
             container.style.width = `${$widthContainerForWindow}px`;
@@ -328,8 +334,8 @@
 <div
     id="cowebsites-container"
     class={vertical
-        ? "height-default-vertical w-full right-0 top-0 fixed bg-contrast/50 backdrop-blur left_panel responsive-container fullscreen"
-        : "width-default-horizontal h-full right-0 top-0 fixed bg-contrast/50 backdrop-blur left_panel flex-col pb-[76px]"}
+        ? "height-default-vertical w-full bg-contrast/50 backdrop-blur responsive-container fullscreen"
+        : "width-default-horizontal h-full bg-contrast/50 backdrop-blur flex-col pb-[76px]"}
     bind:this={container}
 >
     <div class="flex py-2 ml-3 items-center height-tab overflow-hidden">
