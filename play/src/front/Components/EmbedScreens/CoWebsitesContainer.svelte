@@ -12,7 +12,7 @@
         widthFromResize,
         heightFromResize,
         canvasHeight,
-        coWebsiteManager,
+        isVerticalMode,
     } from "../../Stores/CoWebsiteStore";
     import FullScreenIcon from "../Icons/FullScreenIcon.svelte";
     import JitsiCowebsiteComponent from "../Cowebsites/JistiCowebsiteComponent.svelte";
@@ -51,12 +51,12 @@
     function updateScreenSize() {
         if (window.innerWidth < 768) {
             vertical = true;
+            isVerticalMode.set(true);
             resizeCowebsite();
-            console.log(vertical, "VERTICAL");
         } else {
             vertical = false;
+            isVerticalMode.set(false);
             resizeCowebsite();
-            console.log(vertical, "VERTICAL");
         }
     }
 
@@ -75,7 +75,7 @@
             let heightOnMount = parseInt(getComputedStyle(container).height);
             heightContainerForWindow.set(heightOnMount);
         }
-        updateDynamicStyles();
+        // updateDynamicStyles();
         waScaleManager.applyNewSize();
         resizeCowebsite();
     });
@@ -129,7 +129,6 @@
                 document.removeEventListener("mouseup", handleMouseUp);
             };
         } else {
-            console.log("je suis dans resizeCowebsite mobile");
             widthContainerForWindow.set(window.innerWidth);
             heightContainerForWindow.set(window.innerHeight / 2);
             startWidthContainer = parseInt(getComputedStyle(container).height);
@@ -254,8 +253,6 @@
     });
 
     function toggleFullScreen() {
-        console.log("toggleFullScreen");
-        console.log($fullScreenCowebsite, "FULLSCREEN");
         if ($fullScreenCowebsite && !vertical) {
             fullScreenCowebsite.set(false);
             container.style.width = `${$widthContainerForWindow - $canvasWidth}px`;
@@ -269,7 +266,6 @@
             resizeBarHide = false;
             isToggleFullScreen = false;
         } else if (!$fullScreenCowebsite && !vertical) {
-            console.log("toggleFullScreen");
             fullScreenCowebsite.set(true);
             widthContainerForWindow.set(window.innerWidth);
             container.style.width = `${$widthContainerForWindow}px`;
@@ -285,38 +281,38 @@
         }
     }
 
-    function updateDynamicStyles() {
-        let widthPercent = activeCowebsite.getWidthPercent() || 50;
-        let heightPercent = activeCowebsite.getHeightPercent() || 50;
-        if (widthPercent < 25) {
-            widthPercent = 25;
-        } else if (widthPercent > 75) {
-            widthPercent = 75;
-        }
-        if (heightPercent < 25) {
-            heightPercent = 25;
-        } else if (heightPercent > 75) {
-            heightPercent = 75;
-        }
-        const cssVertical = `
-            .height-default-vertical {
-                width: 100%;
-                height: ${heightPercent}%;
-            }`;
-        const cssHorizontal = `
-            .width-default-horizontal {
-                height: 100%;
-                width: ${widthPercent}%;
-            }`;
-        if (!styleTag) {
-            styleTag = document.createElement("style");
-            document.head.appendChild(styleTag);
-        }
-        vertical ? (styleTag.textContent = cssVertical) : (styleTag.textContent = cssHorizontal);
-    }
+    // function updateDynamicStyles() {
+    //     let widthPercent = activeCowebsite.getWidthPercent() || 50;
+    //     let heightPercent = activeCowebsite.getHeightPercent() || 50;
+    //     if (widthPercent < 25) {
+    //         widthPercent = 25;
+    //     } else if (widthPercent > 75) {
+    //         widthPercent = 75;
+    //     }
+    //     if (heightPercent < 25) {
+    //         heightPercent = 25;
+    //     } else if (heightPercent > 75) {
+    //         heightPercent = 75;
+    //     }
+    //     const cssVertical = `
+    //         .height-default{
+    //             width: 100%;
+    //             height: ${heightPercent}%;
+    //         }`;
+    //     const cssHorizontal = `
+    //         .width-default{
+    //             height: 100%;
+    //             width: ${widthPercent}%;
+    //         }`;
+    //     if (!styleTag) {
+    //         styleTag = document.createElement("style");
+    //         document.head.appendChild(styleTag);
+    //     }
+    //     vertical ? (styleTag.textContent = cssVertical) : (styleTag.textContent = cssHorizontal);
+    // }
 
-    $: activeCowebsite, updateDynamicStyles();
-    $: vertical, updateDynamicStyles();
+    // $: activeCowebsite, updateDynamicStyles();
+    // $: vertical, updateDynamicStyles();
 
     onDestroy(() => {
         heightContainerForWindow.set(window.innerHeight);
@@ -334,8 +330,8 @@
 <div
     id="cowebsites-container"
     class={vertical
-        ? "height-default-vertical w-full bg-contrast/50 backdrop-blur responsive-container fullscreen"
-        : "width-default-horizontal h-full bg-contrast/50 backdrop-blur flex-col pb-[76px]"}
+        ? "height-default w-full bg-contrast/50 backdrop-blur responsive-container fullscreen"
+        : "width-default h-full bg-contrast/50 backdrop-blur flex-col pb-[76px]"}
     bind:this={container}
 >
     <div class="flex py-2 ml-3 items-center height-tab overflow-hidden">
@@ -438,7 +434,6 @@
         {/if}
     </div>
 
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
         class={vertical
             ? "absolute left-1 top-0 bottom-0 m-auto w-1.5 h-40 bg-white rounded cursor-col-resize responsive-resize-bar"
