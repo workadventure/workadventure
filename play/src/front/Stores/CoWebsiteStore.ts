@@ -50,6 +50,8 @@ export const totalTabWidthMobile = derived(coWebsites, ($coWebsites) => {
 });
 
 export const widthContainerForWindow = writable(0);
+export const widthFromResize = writable(0);
+export const heightFromResize = writable(0);
 export const heightContainerForWindow = writable(0);
 export const widthContainer = writable(window.innerWidth);
 export const heightContainer = writable(window.innerHeight);
@@ -69,21 +71,11 @@ export class CoWebsiteManager {
         }
     }
 
-    // private isResizingFromCoWebsite: boolean = false;
-
-    // public setResizingFromCoWebsite(value: boolean) {
-    //     this.isResizingFromCoWebsite = value;
-    // }
-
-    // c'est la la merde
-
     private calculateNewWidth() {
         if (!this.verticalMode && get(resizeFromCowebsite) && get(coWebsites).length > 0) {
             canvasWidth.set(window.innerWidth - get(widthContainerForWindow));
-            console.log("Width container from cowebsite :", get(widthContainerForWindow));
             return window.innerWidth - get(widthContainerForWindow);
         } else if (!this.verticalMode && !get(resizeFromCowebsite) && get(coWebsites).length > 0) {
-            console.log("Width container from window :", get(widthContainerForWindow));
             return window.innerWidth - get(widthContainerForWindow);
         } else {
             return window.innerWidth;
@@ -94,13 +86,10 @@ export class CoWebsiteManager {
     private calculateNewHeight() {
         if (get(resizeFromCowebsite) && this.verticalMode && get(coWebsites).length > 0) {
             canvasHeight.set(window.innerHeight - get(heightContainerForWindow));
-            console.log("Height container from cowebsite :", get(heightContainerForWindow));
             return window.innerHeight - get(heightContainerForWindow);
         } else if (!get(resizeFromCowebsite) && this.verticalMode && get(coWebsites).length > 0) {
-            console.log("Height container from window :", get(heightContainerForWindow));
             return window.innerHeight - get(heightContainerForWindow);
         } else {
-            // console.log("window.innerHeight JE SUIS DANS CE ELSE DE HEIGHT", window.innerHeight);
             return window.innerHeight;
         }
     }
@@ -108,16 +97,13 @@ export class CoWebsiteManager {
     public getGameSize(): { height: number, width: number } {
         const height = this.calculateNewHeight();
         const width = this.calculateNewWidth();
-        console.log("Height", height);
-        console.log("Width", width);
+
 
         if (height !== undefined) {
             heightContainer.set(height);
-            console.log("Height container for window", get(heightContainerForWindow))
         }
         if (width !== undefined) {
             widthContainer.set(width);
-            console.log("Width container for window", get(widthContainerForWindow))
         }
 
         return {

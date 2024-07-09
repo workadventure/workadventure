@@ -5,11 +5,13 @@
         fullScreenCowebsite,
         totalTabWidth,
         totalTabWidthMobile,
-        coWebsiteManager,
         widthContainerForWindow,
         heightContainerForWindow,
         resizeFromCowebsite,
         canvasWidth,
+        widthFromResize,
+        heightFromResize,
+        canvasHeight,
     } from "../../Stores/CoWebsiteStore";
     import FullScreenIcon from "../Icons/FullScreenIcon.svelte";
     import JitsiCowebsiteComponent from "../Cowebsites/JistiCowebsiteComponent.svelte";
@@ -45,33 +47,18 @@
     let menuArrow = false;
     let isToggleFullScreen = false;
 
-    // let windowWidth = window.innerWidth;
-    // let windowHeight = window.innerHeight;
-
-    // $: windowWidth, waScaleManager.applyNewSize();
-    // $: windowHeight, waScaleManager.applyNewSize();
-
     function updateScreenSize() {
         if (window.innerWidth < 768) {
             vertical = true;
-            // coWebsiteManager.setResizingFromCoWebsite(true);
-            // console.log(vertical);
         } else {
             vertical = false;
-            // coWebsiteManager.setResizingFromCoWebsite(true);
-            // console.log(vertical);
         }
     }
 
     window.addEventListener("resize", () => {
         getSizeOfCowebsiteWhenResizeWindow();
-        updateScreenSize();
-        resizeCowebsite();
-        // coWebsiteManager.setResizingFromCoWebsite(false);
         resizeFromCowebsite.set(false);
-        getSizeFromWindowResize();
-        // waScaleManager.applyNewSize();
-        console.log("bonjour");
+        updateScreenSize();
     });
 
     onMount(() => {
@@ -79,11 +66,9 @@
         if (!vertical) {
             let widthOnMount = parseInt(getComputedStyle(container).width);
             widthContainerForWindow.set(widthOnMount);
-            // console.log($widthContainerForWindow, "WIDTH ON MOUNT");
         } else {
             let heightOnMount = parseInt(getComputedStyle(container).height);
             heightContainerForWindow.set(heightOnMount);
-            // console.log($heightContainerForWindow, "HEIGHT ON MOUNT");
         }
         updateDynamicStyles();
         waScaleManager.applyNewSize();
@@ -92,83 +77,17 @@
 
     function getSizeOfCowebsiteWhenResizeWindow() {
         if (vertical) {
-            let heightContainer = activeCowebsite.getHeightPercent() || 50;
-            heightContainer = (heightContainer / 100) * window.innerHeight;
-            console.log(heightContainer, "HEIGHT CONTAINER");
-            heightContainerForWindow.set(heightContainer);
+            heightFromResize.set($heightContainerForWindow);
+            container.style.height = `${$heightContainerForWindow}px`;
         } else {
-            let widthContainer = activeCowebsite.getWidthPercent() || window.innerWidth / 2;
-            console.log(widthContainer, "WIDTH CONTAINER");
-            widthContainerForWindow.set(widthContainer);
+            widthFromResize.set($widthContainerForWindow);
+            container.style.width = `${$widthFromResize}px`;
         }
-    }
-    // function handleResize() {
-    //     canvasWidth.set(window.innerWidth);
-    //     canvasHeight.set(window.innerHeight);
-    // }
-
-    // $: vertical, waScaleManager.applyNewSize();
-
-    // $: mediaQuery.matches ? (vertical = true) : (vertical = false);
-
-    // function handleTabletChange() {
-    //     // console.log("je suis dans handleTabletChange");
-    //     waScaleManager.applyNewSize();
-    //     // console.log("je suis dans le wa scale manager");
-    //     // if (mediaQuery.matches) {
-    //     //     vertical = true;
-    //     // } else {
-    //     //     vertical = false;
-    //     // }
-    // }
-
-    // $: vertical, resizeCowebsite();
-
-    // coWebsiteManager.onResize.subscribe(() => {
-    //     console.log("JE SUIS DANS LE SUBSCRIBE DU COWEBSITE MANAGER");
-    //     waScaleManager.applyNewSize();
-    //     waScaleManager.refreshFocusOnTarget();
-    // });
-
-    // afterUpdate(() => {
-    //     coWebsiteManager.resizeObserver.observe(container);
-    // });
-
-    // $: window.innerHeight, getSizeFromWindowResize();
-
-    function getSizeFromWindowResize() {
-        // console.log("je suis dans getSizeFromWindowResize");
-
-        // console.log($resizeFromCowebsite, "RESIZE FROM COWEBSITE");
-        if ($resizeFromCowebsite) {
-            return;
-        } else {
-            if (vertical) {
-                // let heightContainer = activeCowebsite.getHeightPercent() || 50;
-                // heightContainer = (heightContainer / 100) * window.innerHeight;
-
-                heightContainerForWindow.set($heightContainerForWindow);
-
-                console.log($heightContainerForWindow, "HEIGHT CONTAINER DE LA FONCTION OU IL Y A RIEN");
-                // heightContainerForWindow.set($heightContainer);
-                // heightContainerForWindow.set(heightContainer);
-                // resizeFromCowebsite.set(true);
-            } else {
-                // console.log($widthContainerForWindow, "WIDTH CONTAINER DE LA FONCTION OU IL Y A RIEN");
-                // resizeFromCowebsite.set(true);
-            }
-        }
-        // coWebsiteManager.setResizingFromCoWebsite(false);
     }
 
     function resizeCowebsite() {
-        // console.log("je suis dans resizeCowebsite");
-        // coWebsiteManager.setResizingFromCoWebsite(true);
         resizeFromCowebsite.set(true);
-        // console.log($resizeFromCowebsite, "RESIZE FROM COWEBSITE");
         if (!vertical) {
-            // console.log("je suis dans resizeCowebsite ordi");
-
             heightContainerForWindow.set(window.innerHeight);
             startWidthContainer = parseInt(getComputedStyle(container).width);
             const handleMouseDown = (e: { clientX: number }) => {
@@ -188,7 +107,6 @@
                 if (maxWidth !== newWidth) {
                     container.style.width = maxWidth + "px";
                     widthContainerForWindow.set(maxWidth);
-                    console.log($widthContainerForWindow, "WIDTH CONTAINER DANS LE RESIZE ORDI POST MAX");
                 }
                 waScaleManager.applyNewSize();
                 waScaleManager.refreshFocusOnTarget();
@@ -253,7 +171,6 @@
         const minHeight = window.innerHeight * 0.35;
         if (newValue > minHeight) {
             widthContainerForWindow.set(newValue);
-            // console.log($widthContainerForWindow, "WIDTH CONTAINER MIN RESIZE");
         } else {
             console.log("je suis dans le else du RESIZE Min");
             heightContainerForWindow.set(minHeight);
@@ -272,8 +189,6 @@
     $: $totalTabWidthMobile, numberMaxCowebsite();
     $: $widthContainerForWindow, numberMaxCowebsite();
     $: isToggleFullScreen, numberMaxCowebsite();
-    // $: console.log($widthContainerForWindow, "WIDTH CONTAINER FOR WINDOW");
-    // $: console.log("is Vertical ?", vertical);
 
     $: {
         if (isToggleFullScreen) {
@@ -281,8 +196,8 @@
             numberMaxCowebsite();
         } else {
             menuArrow = true;
-            // showArrow = true;
-            // appearDropdownMenu = true;
+            showArrow = true;
+            appearDropdownMenu = true;
         }
     }
 
@@ -290,19 +205,19 @@
         if (!vertical) {
             numberMaxOfCowebsite = Math.floor($widthContainerForWindow / 300);
             if (numberMaxOfCowebsite < 1) {
-                // appearDropdownMenu = false;
+                appearDropdownMenu = false;
             }
             if (isToggleFullScreen) {
                 numberMaxOfCowebsite = Math.floor(window.innerWidth / 300);
                 if ($totalTabWidth < window.innerWidth) {
-                    // appearDropdownMenu = false;
-                    // showArrow = false;
+                    appearDropdownMenu = false;
+                    showArrow = false;
                 }
             }
         } else {
             numberMaxOfCowebsite = Math.floor(window.innerWidth / 220);
             if (numberMaxOfCowebsite < 1) {
-                // appearDropdownMenu = false;
+                appearDropdownMenu = false;
             }
         }
     }
@@ -329,7 +244,7 @@
 
     const setActiveCowebsite = (coWebsite: CoWebsite) => {
         activeCowebsite = coWebsite;
-        // appearDropdownMenu = false;
+        appearDropdownMenu = false;
         menuArrow = false;
     };
 
@@ -346,8 +261,8 @@
             isToggleFullScreen = false;
         } else if ($fullScreenCowebsite && vertical) {
             fullScreenCowebsite.set(false);
-            // container.style.height = `${$heightContainerForWindow - $canvasHeight}px`;
-            // heightContainerForWindow.set(window.innerHeight - $canvasHeight);
+            container.style.height = `${$heightContainerForWindow - $canvasHeight}px`;
+            heightContainerForWindow.set(window.innerHeight - $canvasHeight);
             resizeBarHide = false;
             isToggleFullScreen = false;
         } else if (!$fullScreenCowebsite && !vertical) {
@@ -402,7 +317,7 @@
     onDestroy(() => {
         heightContainerForWindow.set(window.innerHeight);
         widthContainerForWindow.set(window.innerWidth);
-        // coWebsiteManager.setResizingFromCoWebsite(false);
+        coWebsiteManager.setResizingFromCoWebsite(false);
         resizeFromCowebsite.set(false);
         waScaleManager.applyNewSize();
 
