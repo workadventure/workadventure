@@ -2,7 +2,6 @@ import type { AxiosResponse } from "axios";
 import axios, { isAxiosError } from "axios";
 import type { AdminApiData, MapDetailsData, RoomRedirect } from "@workadventure/messages";
 import {
-    MemberData,
     Capabilities,
     CompanionDetail,
     ErrorApiData,
@@ -12,6 +11,7 @@ import {
     isErrorApiErrorData,
     isMapDetailsData,
     isRoomRedirect,
+    MemberData,
     MucRoomDefinition,
     WokaDetail,
 } from "@workadventure/messages";
@@ -408,6 +408,16 @@ class AdminApi implements AdminInterface {
              *        in: "query"
              *        type: "string"
              *        example: "dog1"
+             *      - name: "locale"
+             *        required: false
+             *        in: "query"
+             *        type: "string"
+             *        example: "en"
+             *      - name: "chatID"
+             *        required: false
+             *        in: "query"
+             *        type: "string"
+             *        example: "7R88F7D8F78R8E7"
              *     responses:
              *       200:
              *         description: The details of the member
