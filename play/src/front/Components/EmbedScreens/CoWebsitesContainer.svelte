@@ -12,6 +12,7 @@
         widthFromResize,
         heightFromResize,
         canvasHeight,
+        coWebsiteManager,
     } from "../../Stores/CoWebsiteStore";
     import FullScreenIcon from "../Icons/FullScreenIcon.svelte";
     import JitsiCowebsiteComponent from "../Cowebsites/JistiCowebsiteComponent.svelte";
@@ -50,8 +51,10 @@
     function updateScreenSize() {
         if (window.innerWidth < 768) {
             vertical = true;
+            resizeCowebsite();
         } else {
             vertical = false;
+            resizeCowebsite();
         }
     }
 
@@ -89,6 +92,7 @@
         resizeFromCowebsite.set(true);
         if (!vertical) {
             heightContainerForWindow.set(window.innerHeight);
+            widthContainerForWindow.set(window.innerWidth / 2);
             startWidthContainer = parseInt(getComputedStyle(container).width);
             const handleMouseDown = (e: { clientX: number }) => {
                 startX = e.clientX;
@@ -100,7 +104,7 @@
             const handleMouseMove = (e: { clientX: number }) => {
                 let newWidth = startWidthContainer - (e.clientX - startX);
                 widthContainerForWindow.set(newWidth);
-                console.log($widthContainerForWindow, "WIDTH CONTAINER DANS LE RESIZE ORDI");
+                // console.log($widthContainerForWindow, "WIDTH CONTAINER DANS LE RESIZE ORDI");
                 finalWidth = newWidth + "px";
                 container.style.width = finalWidth;
                 const maxWidth = Math.min(newWidth, window.innerWidth * 0.75);
@@ -123,8 +127,8 @@
             };
         } else {
             console.log("je suis dans resizeCowebsite mobile");
-
             widthContainerForWindow.set(window.innerWidth);
+            heightContainerForWindow.set(window.innerHeight / 2);
             startWidthContainer = parseInt(getComputedStyle(container).height);
             function handleMouseDown(e: TouchEvent) {
                 let clientY = e.touches[0].clientY;
@@ -138,15 +142,10 @@
                 let clientY = e.touches[0].clientY;
                 let newHeight = startHeight + (clientY - startY);
                 heightContainerForWindow.set(newHeight);
-                console.log($heightContainerForWindow, "HEIGHT CONTAINER DANS LE RESIZE MOBILE");
+                // console.log($heightContainerForWindow, "HEIGHT CONTAINER DANS LE RESIZE MOBILE");
                 finalHeight = newHeight + "px";
                 container.style.height = finalHeight;
                 const maxHeight = Math.min(newHeight, window.innerHeight * 0.75);
-                // heightContainer.set(maxHeight);
-                // heightContainerForWindow.set(maxHeight);
-                console.log($heightContainerForWindow, "HEIGHT MAX CONTAINER");
-                console.log(maxHeight, "MAX HEIGHT");
-                console.log(newHeight, "NEW HEIGHT");
                 if (maxHeight !== newHeight) {
                     container.style.height = maxHeight + "px";
                     heightContainerForWindow.set(maxHeight);
@@ -172,7 +171,6 @@
         if (newValue > minHeight) {
             widthContainerForWindow.set(newValue);
         } else {
-            console.log("je suis dans le else du RESIZE Min");
             heightContainerForWindow.set(minHeight);
             container.style.height = `${minHeight}px`;
         }
@@ -317,7 +315,6 @@
     onDestroy(() => {
         heightContainerForWindow.set(window.innerHeight);
         widthContainerForWindow.set(window.innerWidth);
-        coWebsiteManager.setResizingFromCoWebsite(false);
         resizeFromCowebsite.set(false);
         waScaleManager.applyNewSize();
 
