@@ -40,11 +40,7 @@ export class AreasManager {
             return;
         }
         const areaToUpdate = this.areas[indexOfAreaToUpdate];
-        areaToUpdate.updateArea(
-            updatedArea,
-            !this.areaPermissions.isUserHasAreaAccess(updatedArea.id),
-            this.areaPermissions.isOverlappingArea(updatedArea.id)
-        );
+        areaToUpdate.updateArea(updatedArea, !this.areaPermissions.isUserHasAreaAccess(updatedArea.id));
         this.updateMapEditorOptionForSpecificAreas();
     }
 
@@ -77,5 +73,9 @@ export class AreasManager {
     private updateMapEditorOptionForSpecificAreas() {
         const isGameMapHasSpecificAreas = this.gameMapAreas.isGameMapContainsSpecificAreas();
         mapEditorActivatedForThematics.set(isGameMapHasSpecificAreas);
+    }
+
+    public getAreaByUd(areaId: string): Area | undefined {
+        return this.areas.find((area) => area.areaData.id === areaId);
     }
 }
