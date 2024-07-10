@@ -18,15 +18,18 @@
     import { HtmlUtils } from "../WebRtc/HtmlUtils";
     import { iframeListener } from "../Api/IframeListener";
     import { desktopApi } from "../Api/Desktop";
-    import { coWebsiteManager, coWebsites, fullScreenCowebsite } from "../Stores/CoWebsiteStore";
+    import { coWebsiteManager, coWebsites, fullScreenCowebsite, isVerticalMode } from "../Stores/CoWebsiteStore";
     import GameOverlay from "./GameOverlay.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
 
     let WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
     let game: Game;
     let gameDiv: HTMLDivElement;
-    // let styleTag: HTMLStyleElement;
-    // let activeCowebsite: CoWebsite;
+    let activeCowebsite = $coWebsites[0];
+    let cowebsiteContainer: HTMLDivElement;
+    let widthPercent = 50;
+    let heightPercent = 50;
+    let flexBasis: string | undefined;
 
     onMount(() => {
         if (SENTRY_DSN_FRONT != undefined) {
@@ -179,6 +182,8 @@
             // console.log("resize !!!!!!!!!!!!!!!!!!!!!");
             waScaleManager.applyNewSize();
             waScaleManager.refreshFocusOnTarget();
+            updateDynamicStyles();
+            updateScreenSize();
         });
 
         // coWebsiteManager.onResize is a singleton. No need to unsubscribe.
@@ -188,56 +193,80 @@
         //     waScaleManager.refreshFocusOnTarget();
         // });
 
+        updateScreenSize();
         iframeListener.init();
         desktopApi.init();
     });
+    // let parentStyles = "";
 
-    // function updateDynamicStyles() {
-    //     let width = activeCowebsite.getWidthPercent() || 50;
-    //     console.log(width, "width");
-    //     let height = activeCowebsite.getHeightPercent() || 50;
-    //     console.log(height, "height");
-
-    //     if (width < 25) {
-    //         width = 25;
-    //     } else if (width > 75) {
-    //         width = 75;
-    //     }
-    //     if (height < 25) {
-    //         height = 25;
-    //     } else if (height > 75) {
-    //         height = 75;
-    //     }
-
-    //     const cssVertical = `
-    //     .height-default{
-    //         width: 100%;
-    //         height: ${height}%;
-    //     }`;
-    //     const cssHorizontal = `
-    //     .width-default{
-    //         height: 100%;
-    //         width: ${width}%;
-    //     }`;
-    //     if (!styleTag) {
-    //         styleTag = document.createElement("style");
-    //         document.head.appendChild(styleTag);
-    //     }
-    //     $isVerticalMode ? (styleTag.textContent = cssVertical) : (styleTag.textContent = cssHorizontal);
+    // $: if ($coWebsites.length > 0) {
+    //     activeCowebsite = $coWebsites[0];
+    //     console.log("je suis ici", activeCowebsite);
+    //     let container = document.getElementById("cowebsiteContainer");
+    //     console.log(container, "container");
+    //     updateDynamicStyles();
+    // }
+    // function handleUpdateParentStyles(event: { detail: { css: string } }) {
+    //     parentStyles = event.detail.css;
     // }
 
-    // $: $coWebsites.length > 0 && $coWebsites.length < 2 ? updateDynamicStyles() : null;
+    function updateScreenSize() {
+        if (window.innerWidth < 768) {
+            isVerticalMode.set(true);
+        } else {
+            isVerticalMode.set(false);
+        }
+    }
+
+    $: if ($coWebsites.length > 0) {
+        activeCowebsite = $coWebsites[0];
+        if (!cowebsiteContainer) {
+            cowebsiteContainer = document.getElementById("cowebsiteContainer") as HTMLDivElement;
+            if (cowebsiteContainer) {
+                updateDynamicStyles();
+            }
+        } else {
+            updateDynamicStyles();
+        }
+    }
+
+    function updateDynamicStyles() {
+        widthPercent = activeCowebsite.getWidthPercent() || 50;
+        heightPercent = activeCowebsite.getHeightPercent() || 50;
+        console.log("heightPercent", widthPercent);
+
+        if (widthPercent < 25) widthPercent = 25;
+        else if (widthPercent > 75) widthPercent = 75;
+
+        if (heightPercent < 25) heightPercent = 25;
+        else if (heightPercent > 75) heightPercent = 75;
+
+        flexBasis = $isVerticalMode ? `${heightPercent}%` : `${widthPercent}%`;
+
+        if (!$isVerticalMode) {
+            console.log("je passe ici");
+            cowebsiteContainer.classList.add(`flex-[1_0_${widthPercent}%]`);
+        } else {
+            console.log("bonjour", heightPercent);
+            cowebsiteContainer.classList.add(`flex-[1_0_${widthPercent}%]`);
+        }
+    }
+
+    $: console.log($isVerticalMode, "isVerticalMode");
+    $: $coWebsites.length < 1 ? (flexBasis = undefined) : null;
 </script>
 
 <div class="h-screen w-screen flex flex-col-reverse md:flex-row">
-    <div class={$fullScreenCowebsite ? "hidden" : "flex-1"}>
+    <div class={$fullScreenCowebsite ? "hidden" : ""}>
         <div id="game" class="relative" bind:this={gameDiv}>
             <GameOverlay {game} />
         </div>
     </div>
     {#if $coWebsites.length > 0}
-        <div class="flex-1">
-            <CoWebsitesContainer />
+        <div bind:this={cowebsiteContainer} class="">
+            {#if flexBasis !== undefined}
+                <CoWebsitesContainer on:mount={updateDynamicStyles} />
+            {/if}
         </div>
     {/if}
 </div>

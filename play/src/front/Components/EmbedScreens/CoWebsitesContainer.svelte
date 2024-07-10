@@ -48,6 +48,8 @@
     let menuArrow = false;
     let isToggleFullScreen = false;
 
+    // const dispatch = createEventDispatcher();
+
     function updateScreenSize() {
         if (window.innerWidth < 768) {
             vertical = true;
@@ -75,7 +77,6 @@
             let heightOnMount = parseInt(getComputedStyle(container).height);
             heightContainerForWindow.set(heightOnMount);
         }
-        // updateDynamicStyles();
         waScaleManager.applyNewSize();
         resizeCowebsite();
     });
@@ -281,39 +282,6 @@
         }
     }
 
-    // function updateDynamicStyles() {
-    //     let widthPercent = activeCowebsite.getWidthPercent() || 50;
-    //     let heightPercent = activeCowebsite.getHeightPercent() || 50;
-    //     if (widthPercent < 25) {
-    //         widthPercent = 25;
-    //     } else if (widthPercent > 75) {
-    //         widthPercent = 75;
-    //     }
-    //     if (heightPercent < 25) {
-    //         heightPercent = 25;
-    //     } else if (heightPercent > 75) {
-    //         heightPercent = 75;
-    //     }
-    //     const cssVertical = `
-    //         .height-default{
-    //             width: 100%;
-    //             height: ${heightPercent}%;
-    //         }`;
-    //     const cssHorizontal = `
-    //         .width-default{
-    //             height: 100%;
-    //             width: ${widthPercent}%;
-    //         }`;
-    //     if (!styleTag) {
-    //         styleTag = document.createElement("style");
-    //         document.head.appendChild(styleTag);
-    //     }
-    //     vertical ? (styleTag.textContent = cssVertical) : (styleTag.textContent = cssHorizontal);
-    // }
-
-    // $: activeCowebsite, updateDynamicStyles();
-    // $: vertical, updateDynamicStyles();
-
     onDestroy(() => {
         heightContainerForWindow.set(window.innerHeight);
         widthContainerForWindow.set(window.innerWidth);
@@ -330,8 +298,8 @@
 <div
     id="cowebsites-container"
     class={vertical
-        ? "height-default w-full bg-contrast/50 backdrop-blur responsive-container fullscreen"
-        : "width-default h-full bg-contrast/50 backdrop-blur flex-col pb-[76px]"}
+        ? "h-full w-full bg-contrast/50 backdrop-blur responsive-container"
+        : "w-full h-full bg-contrast/50 backdrop-blur flex-col pb-[76px]"}
     bind:this={container}
 >
     <div class="flex py-2 ml-3 items-center height-tab overflow-hidden">
@@ -453,14 +421,9 @@
     .resize-bar {
         display: none;
     }
-    .fullscreen {
-        width: 100%;
-        background-color: #1b2941;
-    }
+
     @media (max-width: 768px) {
         #cowebsites-container {
-            width: 100%;
-            height: 50%;
             display: flex;
             flex-direction: column;
         }
