@@ -1,5 +1,6 @@
 <script lang="ts">
     import highlightWords from "highlight-words";
+    import { fade } from "svelte/transition";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { chatSearchBarValue, joignableRoom, selectedRoom } from "../../Stores/ChatStore";
     import Avatar from "../Avatar.svelte";
@@ -7,16 +8,29 @@
     export let room: { id: string; name: string | undefined };
     let displayInvitationRoomActions = false;
     const chat = gameManager.getCurrentGameScene().chatConnection;
+    let joinRoomError: string | undefined = undefined;
 
     function toggleDisplayInvitationRoomActions() {
         displayInvitationRoomActions = !displayInvitationRoomActions;
     }
 
     async function joinRoom() {
-        const newRoom = await chat.joinRoom(room.id);
-        joignableRoom.set([]);
-        chatSearchBarValue.set("");
-        selectedRoom.set(newRoom);
+        try {
+            const newRoom = await chat.joinRoom(room.id);
+            joignableRoom.set([]);
+            chatSearchBarValue.set("");
+            selectedRoom.set(newRoom);
+        } catch (error) {
+            console.error(error);
+            if (error instanceof Error) {
+                joinRoomError = error.message;
+            } else {
+                joinRoomError = "Unknown error";
+            }
+            setTimeout(() => {
+                joinRoomError = undefined;
+            }, 1000);
+        }
     }
 
     $: chunks = highlightWords({
@@ -46,4 +60,7 @@
     <div class="tw-flex">
         <button class="tw-text-blue-300" on:click={() => joinRoom()}>Join</button>
     </div>
+{/if}
+{#if joinRoomError}
+    <div transition:fade class="tw-flex tw-bg-red-500 tw-rounded-md tw-p-2">{joinRoomError}</div>
 {/if}
