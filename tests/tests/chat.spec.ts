@@ -31,7 +31,7 @@ test.describe('Chat @chat', () => {
         publicTestMapUrl("tests/E2E/livezone.json", "chat")
     );
     const nickname = getUniqueNickname('A');
-    await login(page, nickname, 2);
+    await login(page, nickname, 2, 'en-US', project.name === "mobilechromium");
 
     if(browserName === "webkit"){
       // Because webkit in playwright does not support Camera/Microphone Permission by settings
@@ -52,7 +52,7 @@ test.describe('Chat @chat', () => {
           publicTestMapUrl("tests/E2E/livezone.json", "chat")
       );
       const nickname2 = getUniqueNickname('B');
-      await login(page2, nickname2, 3);
+      await login(page2, nickname2, 3, 'en-US', project.name === "mobilechromium");
 
       if(browserName === "webkit"){
         // Because webkit in playwright does not support Camera/Microphone Permission by settings
@@ -220,7 +220,7 @@ test.describe('Use application into TimeLine @chat', () => {
         publicTestMapUrl("tests/E2E/livezone.json", "chat")
     );
     const nickname = getUniqueNickname('A');
-    await login(page, nickname, 2);
+    await login(page, nickname, 2, 'en-US', project.name === "mobilechromium");
 
     if(browserName === "webkit"){
       // Because webkit in playwright does not support Camera/Microphone Permission by settings

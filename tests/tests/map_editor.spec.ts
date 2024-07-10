@@ -39,11 +39,11 @@ test.describe("Map editor @oidc", () => {
         }
     });
 
-    test("Successfully set the megaphone feature", async ({page, browser, request, browserName}) => {
+    test("Successfully set the megaphone feature", async ({page, browser, request, browserName}, {project}) => {
         await resetWamMaps(request);
         await page.goto(Map.url("empty"));
         //await page.evaluate(() => localStorage.setItem('debug', '*'));
-        await login(page, "test", 3);
+        await login(page, "test", 3, "en-US", project.name === "mobilechromium");
         await oidcAdminTagLogin(page);
         // Because webkit in playwright does not support Camera/Microphone Permission by settings
         if (browserName === "webkit") {
@@ -56,7 +56,7 @@ test.describe("Map editor @oidc", () => {
         const page2 = await newBrowser.newPage();
         await page2.goto(Map.url("empty"));
         await page2.evaluate(() => localStorage.setItem("debug", "*"));
-        await login(page2, "test2", 5);
+        await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
         await oidcAdminTagLogin(page2);
 
         await Menu.openMapEditor(page);
@@ -113,14 +113,14 @@ test.describe("Map editor @oidc", () => {
         // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
     });
 
-    test('Successfully set "SpeakerZone" in the map editor', async ({page, browser, request}) => {
+    test('Successfully set "SpeakerZone" in the map editor', async ({page, browser, request}, {project}) => {
         // skip the test, speaker zone with Jitsi is deprecated
         await resetWamMaps(request);
 
         await page.goto(Map.url("empty"));
         //await page.evaluate(() => { localStorage.setItem('debug', '*'); });
         //await page.reload();
-        await login(page, "test", 3);
+        await login(page, "test", 2, "en-US", project.name === "mobilechromium");
         await oidcAdminTagLogin(page);
 
         await Menu.openMapEditor(page);
@@ -142,7 +142,7 @@ test.describe("Map editor @oidc", () => {
         const page2 = await newBrowser.newPage();
         await page2.goto(Map.url("empty"));
 
-        await login(page2, "test2", 5);
+        await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
         await oidcAdminTagLogin(page2);
         await Map.teleportToPosition(page2, 4 * 32, 7 * 32);
 
@@ -166,10 +166,10 @@ test.describe("Map editor @oidc", () => {
         });
     });
 
-    test("Successfully set start area in the map editor", async ({page, request}) => {
+    test("Successfully set start area in the map editor", async ({page, request}, {project}) => {
         await resetWamMaps(request);
         await page.goto(Map.url("start"));
-        await login(page, "test", 3);
+        await login(page, "test", 3, "en-US", project.name === "mobilechromium");
         await oidcAdminTagLogin(page);
 
         await Menu.openMapEditor(page);
@@ -180,11 +180,11 @@ test.describe("Map editor @oidc", () => {
         await Menu.closeMapEditor(page);
     });
 
-    test("Successfully set and working exit area in the map editor", async ({page, request}) => {
+    test("Successfully set and working exit area in the map editor", async ({page, request}, {project}) => {
         await resetWamMaps(request);
 
         await page.goto(Map.url("exit"));
-        await login(page, "test", 3);
+        await login(page, "test", 3, "en-US", project.name === "mobilechromium");
         await oidcAdminTagLogin(page);
 
         await Menu.openMapEditor(page);
@@ -213,11 +213,11 @@ test.describe("Map editor @oidc", () => {
     });
 
     // Test to set Klaxoon application in the area with the map editor
-    test("Successfully set Klaxoon's application in the area in the map editor", async ({page, browser, request}) => {
+    test("Successfully set Klaxoon's application in the area in the map editor", async ({page, browser, request}, {project}) => {
         await resetWamMaps(request);
 
         await page.goto(Map.url("empty"));
-        await login(page, "test", 3);
+        await login(page, "test", 3, "en-US", project.name === "mobilechromium");
         await oidcAdminTagLogin(page);
 
         //await Menu.openMapEditor(page);
@@ -248,11 +248,11 @@ test.describe("Map editor @oidc", () => {
         // TODO make same test with object editor
     });
 
-    test("Successfully set GoogleWorkspace's applications in the area in the map editor", async ({page, request}) => {
+    test("Successfully set GoogleWorkspace's applications in the area in the map editor", async ({page, request}, {project}) => {
         await resetWamMaps(request);
 
         await page.goto(Map.url("empty"));
-        await login(page, "test", 3);
+        await login(page, "test", 3, "en-US", project.name === "mobilechromium");
         await oidcAdminTagLogin(page);
 
         //await Menu.openMapEditor(page);
@@ -305,11 +305,11 @@ test.describe("Map editor @oidc", () => {
         await expect(page.locator("#cowebsite-thumbnail-2")).toBeVisible();
     });
 
-    test("Successfully set GoogleWorkspace's application entity in the map editor", async ({page, request}) => {
+    test("Successfully set GoogleWorkspace's application entity in the map editor", async ({page, request}, {project}) => {
         await resetWamMaps(request);
 
         await page.goto(Map.url("empty"));
-        await login(page, "test", 3);
+        await login(page, "test", 3, "en-US", project.name === "mobilechromium");
         await oidcAdminTagLogin(page);
 
         // open map editor
@@ -369,11 +369,11 @@ test.describe("Map editor @oidc", () => {
         await expect(page.locator(".actions-menu .actions button").nth(3)).toContainText("Open Google Drive");
     });
 
-    test("Successfully set Klaxoon's application entity in the map editor @local", async ({page, request}) => {
+    test("Successfully set Klaxoon's application entity in the map editor @local", async ({page, request}, {project}) => {
         await resetWamMaps(request);
 
         await page.goto(Map.url("empty"));
-        await login(page, "test", 3);
+        await login(page, "test", 3, "en-US", project.name === "mobilechromium");
         await oidcAdminTagLogin(page);
 
         // open map editor
@@ -410,11 +410,11 @@ test.describe("Map editor @oidc", () => {
     // Create test fir Google picker presentation
     // Create test for Google picker drive
 
-    test("Successfully upload a custom entity", async ({page, request}) => {
+    test("Successfully upload a custom entity", async ({page, request}, {project}) => {
         await resetWamMaps(request);
 
         await page.goto(Map.url("empty"));
-        await login(page, "test", 3);
+        await login(page, "test", 3, "en-US", project.name === "mobilechromium");
         await oidcAdminTagLogin(page);
 
         // open map editor
@@ -430,12 +430,12 @@ test.describe("Map editor @oidc", () => {
         expect(uploadedEntityElement).toContain(EntityEditor.getTestAssetName());
     });
 
-    test("Successfully upload and use custom entity in the map", async ({page, browser, request}) => {
+    test("Successfully upload and use custom entity in the map", async ({page, browser, request}, {project}) => {
         await resetWamMaps(request);
 
         // First browser + moved woka
         await page.goto(Map.url("empty"));
-        await login(page, "test", 3);
+        await login(page, "test", 3, "en-US", project.name === "mobilechromium");
         await oidcAdminTagLogin(page);
         await Map.teleportToPosition(page, 0, 0);
 
@@ -443,7 +443,7 @@ test.describe("Map editor @oidc", () => {
         const newBrowser = await browser.browserType().launch();
         const page2 = await newBrowser.newPage();
         await page2.goto(Map.url("empty"));
-        await login(page2, "test2", 3);
+        await login(page2, "test2", 3, "en-US", project.name === "mobilechromium");
         await oidcAdminTagLogin(page2);
 
         // open map editor
@@ -477,13 +477,13 @@ test.describe("Map editor @oidc", () => {
         await expect(page2.locator(".actions-menu .actions button").nth(0)).toContainText("Open Link");
     });
 
-    test("Successfully upload and edit asset name", async ({page, browser, request}) => {
+    test("Successfully upload and edit asset name", async ({page, browser, request}, {project}) => {
         // Init wam file
         await resetWamMaps(request);
 
         // First browser + moved woka
         await page.goto(Map.url("empty"));
-        await login(page, "test", 3);
+        await login(page, "test", 3, "en-US", project.name === "mobilechromium");
         await oidcAdminTagLogin(page);
         await Map.teleportToPosition(page, 0, 0);
 
@@ -491,7 +491,7 @@ test.describe("Map editor @oidc", () => {
         const newBrowser = await browser.browserType().launch();
         const page2 = await newBrowser.newPage();
         await page2.goto(Map.url("empty"));
-        await login(page2, "test2", 3);
+        await login(page2, "test2", 3, "en-US", project.name === "mobilechromium");
         await oidcAdminTagLogin(page2);
 
         // open map editor on both pages
@@ -523,12 +523,12 @@ test.describe("Map editor @oidc", () => {
         expect(uploadedEntityElement2).toContain(newEntityName);
     });
 
-    test("Successfully upload and remove custom entity", async ({page, browser, request}) => {
+    test("Successfully upload and remove custom entity", async ({page, browser, request}, {project}) => {
         await resetWamMaps(request);
 
         // First browser + moved woka
         await page.goto(Map.url("empty"));
-        await login(page, "test", 3);
+        await login(page, "test", 3, "en-US", project.name === "mobilechromium");
         await oidcAdminTagLogin(page);
 
         await Map.teleportToPosition(page, 0, 0);
@@ -537,7 +537,7 @@ test.describe("Map editor @oidc", () => {
         const newBrowser = await browser.browserType().launch();
         const page2 = await newBrowser.newPage();
         await page2.goto(Map.url("empty"));
-        await login(page2, "test2", 3);
+        await login(page2, "test2", 3, "en-US", project.name === "mobilechromium");
         await oidcAdminTagLogin(page2);
 
         // open map editor on both pages
@@ -563,10 +563,10 @@ test.describe("Map editor @oidc", () => {
         await expect(page2.getByTestId("entity-item")).toHaveCount(0);
     });
 
-    test("Successfully set searchable processus for entity and zone", async ({page, browser, request}) => {
+    test("Successfully set searchable processus for entity and zone", async ({page, browser, request}, {project}) => {
         await resetWamMaps(request);
         await page.goto(Map.url("empty"));
-        await login(page, "test", 3);
+        await login(page, "test", 3, "en-US", project.name === "mobilechromium");
         await oidcAdminTagLogin(page);
 
         // Open the map editor
@@ -622,11 +622,11 @@ test.describe("Map editor @oidc", () => {
         expect(await page.locator(".map-editor .sidebar .area-items .item").count()).toBe(1);
     });
 
-    test("Successfully test global message text and sound feature", async ({page, browser, request}) => {
+    test("Successfully test global message text and sound feature", async ({page, browser, request}, {project}) => {
         await resetWamMaps(request);
         await page.goto(Map.url("empty"));
 
-        await login(page, "test", 3);
+        await login(page, "test", 3, "en-US", project.name === "mobilechromium");
         await oidcAdminTagLogin(page);
 
         // Move user and not create discussion with the second user
@@ -637,7 +637,7 @@ test.describe("Map editor @oidc", () => {
         const page2 = await newBrowser.newPage();
         await page2.goto(Map.url("empty"));
         await page2.evaluate(() => localStorage.setItem("debug", "*"));
-        await login(page2, "test2", 5);
+        await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
 
         // Open the map editor and configure the megaphone to have accès to the global message
         await Menu.openMapEditor(page);

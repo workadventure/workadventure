@@ -18,7 +18,7 @@ test.describe('Scripting chat functions', () => {
             publicTestMapUrl("tests/E2E/empty.json", "scripting_chat")
         );
 
-        await login(page);
+        await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
 
         await expectOutViewport("#chatWindow", page);
 
@@ -94,7 +94,7 @@ test.describe('Scripting chat functions', () => {
             publicTestMapUrl("tests/E2E/empty.json", "scripting_chat")
         );
 
-        await login(page);
+        await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
         await Map.teleportToPosition(page, 32, 32);
 
         const newBrowser = await browser.browserType().launch();
@@ -113,7 +113,7 @@ test.describe('Scripting chat functions', () => {
             });
         });
 
-        await login(page2);
+        await login(page2, "Alice", 2, "en-US", project.name === "mobilechromium");
 
         const promise = evaluateScript(page2, async () => {
             return new Promise((resolve) => {

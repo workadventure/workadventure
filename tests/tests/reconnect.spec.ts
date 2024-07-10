@@ -17,7 +17,7 @@ test.describe('Connection', () => {
       publicTestMapUrl("tests/mousewheel.json", "reconnect")
     );
 
-    await login(page);
+    await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
 
     // Let's stop the play container
     const container = await findContainer('play');

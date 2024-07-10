@@ -28,7 +28,7 @@ test.describe('Meeting actions test', () => {
         // Go to the empty map
         await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
         // Login user "Alice"
-        await login(page, 'Alice');
+        await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
 
         // Move user
         await Map.walkTo(page, 'ArrowRight', 3000);
@@ -38,7 +38,7 @@ test.describe('Meeting actions test', () => {
         // Go to the empty map
         await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
         // Login user "Bob"
-        await login(userBob, 'Bob');
+        await login(userBob, 'Bob', 5, 'en-US', project.name === "mobilechromium");
         // Move user
         await Map.walkTo(userBob, 'ArrowRight', 3000);
 

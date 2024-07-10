@@ -21,7 +21,7 @@ test.describe('Areas', () => {
         await page.goto(
             publicTestMapUrl("tests/Areas/AreaFromTiledMap/map.json", "areas")
         );
-        await login(page, 'Alice');
+        await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
 
         await evaluateScript(page, async () => {
             console.log('Waiting for WA.onInit()');

@@ -28,11 +28,11 @@ test.describe("Map editor interacting with object @oidc", () => {
         }
     );
 
-    test("Success to interact with area", async ({page, browser, request, browserName}) => {
+    test("Success to interact with area", async ({page, browser, request, browserName}, { project }) => {
         // Go to the map
         await resetWamMaps(request);
         await page.goto(Map.url("empty"));
-        await login(page, "Bob", 3);
+        await login(page, "Bob", 2, "en-US", project.name === "mobilechromium");
         await oidcAdminTagLogin(page);
 
         // Create area on the map for the test
@@ -52,7 +52,7 @@ test.describe("Map editor interacting with object @oidc", () => {
 
     });
 
-    test("Success to interact with entity", async ({page, browser, request, browserName}) => {
+    test("Success to interact with entity", async ({page, browser, request, browserName}, { project }) => {
         // Skip the test on Webkit because the click up doesn't work
         if (browserName === "webkit") {
             //eslint-disable-next-line playwright/no-skipped-test
@@ -63,7 +63,7 @@ test.describe("Map editor interacting with object @oidc", () => {
         // Go to the map
         await resetWamMaps(request);
         await page.goto(Map.url("empty"));
-        await login(page, "Bob", 3);
+        await login(page, "Bob", 3, "en-US", project.name === "mobilechromium");
         await oidcAdminTagLogin(page);
 
         // Create entity on the map for the test

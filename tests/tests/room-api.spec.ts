@@ -67,7 +67,7 @@ test.describe('Room API', async () => {
         const newValue =  "New Value - " + Math.random().toString(36).substring(2,7);
 
         await gotoWait200(page, roomUrl+"?phaserMode="+RENDERER_MODE);
-        await login(page);
+        await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
 
         const textField = page
             .frameLocator('#cowebsite-buffer iframe')
@@ -114,7 +114,7 @@ test.describe('Room API', async () => {
         });
 
         await gotoWait200(page, roomUrl+"?phaserMode="+RENDERER_MODE);
-        await login(page);
+        await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
 
         const textField = page
             .frameLocator('#cowebsite-buffer iframe')
@@ -166,7 +166,7 @@ test.describe('Room API', async () => {
         })
 
         await page.goto(publicTestMapUrl("tests/E2E/empty.json", "room-api"));
-        await login(page);
+        await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
 
         await evaluateScript(page, async () => {
             await WA.onInit();
@@ -193,7 +193,7 @@ test.describe('Room API', async () => {
         }
 
         await page.goto(publicTestMapUrl("tests/E2E/empty.json", "room-api"));
-        await login(page);
+        await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
 
         let gotExpectedBroadcastNotification = false;
         page.on('console', async (msg) => {
