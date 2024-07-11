@@ -6,9 +6,10 @@
 
     const dispatch = createEventDispatcher();
 
-    export let label: string;
+    export let label: string | undefined = undefined;
     export let value: InputTagOption[] | undefined;
     export let options: InputTagOption[] = [];
+    export let placeholder: string | undefined = undefined;
     export let onFocus = () => {};
     export let onBlur = () => {};
     export let handleChange = () => {};
@@ -34,10 +35,12 @@
     }
 </script>
 
-<div class="input-tags tw-flex tw-flex-col tw-pb-5 tw-text-dark-purple">
-    <label for="selector" class="tw-text-white">
-        {label}
-    </label>
+<div class={"tw-flex tw-flex-col tw-pb-5 tw-text-dark-purple"}>
+    {#if label}
+        <label for="selector" class="tw-text-white">
+            {label}
+        </label>
+    {/if}
     <Select
         id="selector"
         on:filter={handleFilter}
@@ -48,13 +51,16 @@
         items={options}
         bind:value
         multiple={true}
-        placeholder="Select rights"
+        placeholder={placeholder ?? "Select rights"}
         on:focus={onFocus}
         on:blur={onBlur}
         showChevron={true}
-        --icons-color="var(--brand-blue)"
-        --text-color="var(--brand-blue)"
         listAutoWidth={false}
+        --clear-select-color="red"
+        --input-color="white"
+        --chevron-icon-colour="white"
+        containerStyles="background-color:unset"
+        inputStyles={"box-shadow:none !important;margin:0"}
         inputAttributes={{ "data-testid": testId }}
     >
         <div slot="item" let:item>

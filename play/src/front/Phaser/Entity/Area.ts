@@ -7,19 +7,20 @@ import LL from "../../../i18n/i18n-svelte";
 
 export class Area extends Phaser.GameObjects.Rectangle {
     private areaCollider: Phaser.Physics.Arcade.Collider | undefined = undefined;
+    private areaOverlap: Phaser.Physics.Arcade.Collider | undefined = undefined;
     private userHasCollideWithArea = false;
     private highlightTimeOut: undefined | NodeJS.Timeout = undefined;
     private collideTimeOut: undefined | NodeJS.Timeout = undefined;
 
-    constructor(public readonly scene: GameScene, public areaData: AreaData, collide?: boolean) {
+    constructor(public readonly scene: GameScene, public areaData: AreaData, collide?: boolean, overlap?: boolean) {
         super(
             scene,
             areaData.x + areaData.width * 0.5,
             areaData.y + areaData.height * 0.5,
             areaData.width,
             areaData.height,
-            0xff0000,
-            0.1
+            collide ? 0xff0000 : overlap ? 0x0000ff : 0x000000,
+            collide || overlap ? 0.1 : 0
         );
         this.scene.add.existing(this).setVisible(false);
         this.scene.physics.add.existing(this, true);
@@ -42,7 +43,8 @@ export class Area extends Phaser.GameObjects.Rectangle {
         } else if (this.areaCollider !== undefined) {
             this.areaCollider.destroy();
             this.areaCollider = undefined;
-        }
+        } else if (this.areaOverlap !== undefined) this.areaOverlap.destroy();
+        this.areaOverlap = undefined;
     }
 
     destroy(fromScene?: boolean) {
@@ -63,9 +65,14 @@ export class Area extends Phaser.GameObjects.Rectangle {
         }
     }
 
-    private highLightArea() {
+    public highLightArea(permanent = false) {
         this.setVisible(true);
-        this.highlightTimeOut = setTimeout(() => this.setVisible(false), 1000);
+        if (permanent === false) this.highlightTimeOut = setTimeout(() => this.setVisible(false), 1000);
+    }
+
+    public unHighLightArea() {
+        this.setVisible(false);
+        if (this.highlightTimeOut) clearTimeout(this.highlightTimeOut);
     }
 
     private displayWarningMessageOnCollide() {

@@ -18,7 +18,7 @@ test.describe('Mobile', () => {
         }
 
         await page.goto(Map.url("empty"));
-        await login(page, "Bob", 3);
+        await login(page, "Bob", 3, 'en-US', true);
 
         const positionToDiscuss = {
             x: 3 * 32,
@@ -39,7 +39,7 @@ test.describe('Mobile', () => {
         const pageAlice = await newBrowserAlice.newPage();
         await pageAlice.goto(Map.url("empty"));
         await pageAlice.evaluate(() => localStorage.setItem('debug', '*'));
-        await login(pageAlice, "Alice", 5);
+        await login(pageAlice, "Alice", 5, 'en-US', true);
 
         // Move Alice and create a bubble with another user
         // TODO: find a solution to test Joystick
@@ -59,7 +59,7 @@ test.describe('Mobile', () => {
         const pageJohn = await newBrowserJohn.newPage();
         await pageJohn.goto(Map.url("empty"));
         await pageJohn.evaluate(() => localStorage.setItem('debug', '*'));
-        await login(pageJohn, "John", 5);
+        await login(pageJohn, "John", 5, 'en-US', true);
 
         // Move John and create a bubble with another user
         // TODO: find a solution to test Joystick
@@ -94,7 +94,7 @@ test.describe('Mobile', () => {
         page.goto(
             publicTestMapUrl('tests/CoWebsite/cowebsite_jitsiroom.json', 'mobile')
         );
-        await login(page, "Bob", 3);
+        await login(page, "Bob", 3, 'en-US', true);
 
         // Move to open a cowebsite
         await page.locator('#body').press('ArrowRight', { delay: 3000 });

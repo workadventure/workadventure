@@ -13,4 +13,8 @@ export class AreaPermissions {
         }
         return this.gameMapAreas.isUserHasAreaAccess(areaId, this.userConnectedTags);
     }
+
+    public isOverlappingArea(areaId: string): boolean {
+        return this.gameMapAreas.isOverlappingArea(areaId);
+    }
 }

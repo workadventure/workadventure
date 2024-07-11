@@ -25,7 +25,7 @@ test.describe("Connection", () => {
     //Reconnect
     await context.setOffline(false);
 
-    await login(page);
+    await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
 
     await expect(page.locator("button#menuIcon")).toBeVisible({
       timeout: 180_000,

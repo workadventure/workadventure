@@ -269,6 +269,7 @@ const mapEditor: BaseTranslation = {
         customEntityEditorForm: {
             imageName: "Image name",
             tags: "Tags",
+            writeTag: "Write tag...",
             objectType: "Object type",
             floatingObject: "Floating object",
             floatingObjectDescription:
@@ -277,6 +278,9 @@ const mapEditor: BaseTranslation = {
             groundLevel: "Ground level",
             custom: "Custom",
             standing: "Standing",
+            collision: "Collision",
+            wokaAbove: "Woka above",
+            wokaBelow: "Woka below",
         },
         buttons: {
             editEntity: "Edit",

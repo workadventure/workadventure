@@ -19,7 +19,7 @@
     {#if $bannerStore != undefined}
         <p
             id={$bannerStore.id}
-            class="tw-m-0 tw-p-0 tw-h-10 tw-flex tw-justify-center tw-items-center"
+            class="tw-m-0 tw-max-h-20 tw-flex tw-justify-center tw-items-center tw-p-2"
             style={`background-color:${$bannerStore.bgColor}; color: ${$bannerStore.textColor};`}
         >
             {$bannerStore.text}

@@ -38,12 +38,18 @@ class Menu {
         await expect(await page.locator('.bottom-action-bar .bottom-action-button #megaphone')).toBeHidden({timeout: 30_000});
     }
 
-    async openStatusList(page : Page){
+    async openStatusList(page : Page, isMobile = false){
+        if(isMobile){
+            await expect(await page.locator('button#burgerIcon')).toBeVisible();
+            const mobileMenuVisible = await page.locator('button#burgerIcon img.tw-rotate-0').isVisible();
+            if(mobileMenuVisible){
+                await page.click('button#burgerIcon');
+            }
+        }
         await page.click('#AvailabilityStatus');
     }
 
     async clickOnStatus(page:Page,status: string){
-        await this.openStatusList(page);
         await expect(page.getByText(status)).toBeVisible();
         await page.getByText(status).click();
         //eslint-disable-next-line playwright/no-wait-for-timeout

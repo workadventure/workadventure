@@ -139,6 +139,14 @@ export class GameMapAreas {
         return areaRightTags.some((tag) => userConnectedTags.includes(tag));
     }
 
+    public isOverlappingArea(areaId: string): boolean {
+        const area = this.getArea(areaId);
+        if (area === undefined) {
+            return false;
+        }
+        return this.getPersonalAreaRightPropertyData(area) != undefined;
+    }
+
     public isGameMapContainsSpecificAreas(): boolean {
         let hasSpecificAreas = false;
         this.areas.forEach((area) => {
