@@ -34,7 +34,6 @@
     let activeCowebsite = $coWebsites[0];
     let cowebsiteContainer: HTMLDivElement;
     let widthPercent = 50;
-    let heightPercent = 50;
     let flexBasis: string | undefined;
 
     onMount(() => {
@@ -219,15 +218,11 @@
 
     function updateDynamicStyles() {
         widthPercent = activeCowebsite.getWidthPercent() || 50;
-        heightPercent = activeCowebsite.getHeightPercent() || 50;
 
         if (widthPercent < 25) widthPercent = 25;
         else if (widthPercent > 75) widthPercent = 75;
 
-        if (heightPercent < 25) heightPercent = 25;
-        else if (heightPercent > 75) heightPercent = 75;
-
-        flexBasis = $isVerticalMode ? `${heightPercent}%` : `${widthPercent}%`;
+        flexBasis = `${widthPercent}%`;
 
         if (!$isVerticalMode) {
             cowebsiteContainer.classList.add(`flex-[1_0_${widthPercent}%]`);
