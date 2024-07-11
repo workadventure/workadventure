@@ -90,6 +90,7 @@ test.describe("Map editor @oidc", () => {
         // Megaphone should be displayed and usable by all the current users
         await Menu.isThereMegaphoneButton(page);
         await Menu.isThereMegaphoneButton(page2);
+        await Menu.closeMapEditorConfigureMyRoomPopUp(page);
         await Menu.closeMapEditor(page);
         await Menu.toggleMegaphoneButton(page);
 
@@ -668,6 +669,7 @@ test.describe("Map editor @oidc", () => {
         // Megaphone should be displayed and usable by all the current users
         await Menu.isThereMegaphoneButton(page);
         await Menu.isThereMegaphoneButton(page2);
+        await Menu.closeMapEditorConfigureMyRoomPopUp(page);
         await Menu.closeMapEditor(page);
 
         // TODO : create this test in admin part (global message and text audio message if an admin feature)

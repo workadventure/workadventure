@@ -89,6 +89,10 @@ class Menu {
         await expect(page.getByRole('button',{name:'Continue without webcam'})).toBeVisible();
 
     }
+
+    async closeMapEditorConfigureMyRoomPopUp(page:Page){
+        await page.locator('.configure-my-room button.close-window').click();
+    }
 }
 
 export default new Menu();
