@@ -18,7 +18,13 @@
     import { HtmlUtils } from "../WebRtc/HtmlUtils";
     import { iframeListener } from "../Api/IframeListener";
     import { desktopApi } from "../Api/Desktop";
-    import { coWebsiteManager, coWebsites, fullScreenCowebsite, isVerticalMode } from "../Stores/CoWebsiteStore";
+    import {
+        coWebsiteManager,
+        coWebsites,
+        fullScreenCowebsite,
+        isResized,
+        isVerticalMode,
+    } from "../Stores/CoWebsiteStore";
     import GameOverlay from "./GameOverlay.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
 
@@ -186,29 +192,10 @@
             updateScreenSize();
         });
 
-        // coWebsiteManager.onResize is a singleton. No need to unsubscribe.
-        //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-        // coWebsiteManager.onResize.subscribe(() => {
-        //     waScaleManager.applyNewSize();
-        //     waScaleManager.refreshFocusOnTarget();
-        // });
-
         updateScreenSize();
         iframeListener.init();
         desktopApi.init();
     });
-    // let parentStyles = "";
-
-    // $: if ($coWebsites.length > 0) {
-    //     activeCowebsite = $coWebsites[0];
-    //     console.log("je suis ici", activeCowebsite);
-    //     let container = document.getElementById("cowebsiteContainer");
-    //     console.log(container, "container");
-    //     updateDynamicStyles();
-    // }
-    // function handleUpdateParentStyles(event: { detail: { css: string } }) {
-    //     parentStyles = event.detail.css;
-    // }
 
     function updateScreenSize() {
         if (window.innerWidth < 768) {
@@ -233,7 +220,6 @@
     function updateDynamicStyles() {
         widthPercent = activeCowebsite.getWidthPercent() || 50;
         heightPercent = activeCowebsite.getHeightPercent() || 50;
-        console.log("heightPercent", widthPercent);
 
         if (widthPercent < 25) widthPercent = 25;
         else if (widthPercent > 75) widthPercent = 75;
@@ -244,16 +230,19 @@
         flexBasis = $isVerticalMode ? `${heightPercent}%` : `${widthPercent}%`;
 
         if (!$isVerticalMode) {
-            console.log("je passe ici");
             cowebsiteContainer.classList.add(`flex-[1_0_${widthPercent}%]`);
         } else {
-            console.log("bonjour", heightPercent);
-            cowebsiteContainer.classList.add(`flex-[1_0_${widthPercent}%]`);
+            if (!$isResized) {
+                cowebsiteContainer.classList.add(`flex-[1_0_${widthPercent}%]`);
+            } else {
+                cowebsiteContainer.classList.remove(`flex-[1_0_${widthPercent}%]`);
+                cowebsiteContainer.classList.add(`flex-1`);
+            }
         }
     }
 
-    $: console.log($isVerticalMode, "isVerticalMode");
     $: $coWebsites.length < 1 ? (flexBasis = undefined) : null;
+    $: $isResized ? updateDynamicStyles() : null;
 </script>
 
 <div class="h-screen w-screen flex flex-col-reverse md:flex-row">

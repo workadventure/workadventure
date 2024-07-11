@@ -13,6 +13,7 @@
         heightFromResize,
         canvasHeight,
         isVerticalMode,
+        isResized,
     } from "../../Stores/CoWebsiteStore";
     import FullScreenIcon from "../Icons/FullScreenIcon.svelte";
     import JitsiCowebsiteComponent from "../Cowebsites/JistiCowebsiteComponent.svelte";
@@ -48,8 +49,6 @@
     let menuArrow = false;
     let isToggleFullScreen = false;
 
-    // const dispatch = createEventDispatcher();
-
     function updateScreenSize() {
         if (window.innerWidth < 768) {
             vertical = true;
@@ -79,6 +78,7 @@
         }
         waScaleManager.applyNewSize();
         resizeCowebsite();
+        numberMaxCowebsite();
     });
 
     function getSizeOfCowebsiteWhenResizeWindow() {
@@ -137,16 +137,21 @@
                 let clientY = e.touches[0].clientY;
                 startY = clientY;
                 startHeight = parseInt(getComputedStyle(container).height);
+                console.log(startHeight, "startHeight");
                 document.addEventListener("touchmove", handleMouseMove, { passive: false });
                 document.addEventListener("touchend", handleMouseUp);
             }
             resizeBar.addEventListener("touchstart", handleMouseDown, false);
             function handleMouseMove(e: TouchEvent) {
                 let clientY = e.touches[0].clientY;
+                console.log(clientY, "clientY");
                 let newHeight = startHeight + (clientY - startY);
+                console.log(startHeight + (clientY - startY), "startHeight + clientY - startY");
+                console.log(newHeight, "newHeight");
                 heightContainerForWindow.set(newHeight);
                 // console.log($heightContainerForWindow, "HEIGHT CONTAINER DANS LE RESIZE MOBILE");
                 finalHeight = newHeight + "px";
+                console.log(finalHeight, "finalHeight");
                 container.style.height = finalHeight;
                 const maxHeight = Math.min(newHeight, window.innerHeight * 0.75);
                 if (maxHeight !== newHeight) {
@@ -292,13 +297,14 @@
             document.head.removeChild(styleTag);
         }
         subscription();
+        isResized.set(false);
     });
 </script>
 
 <div
     id="cowebsites-container"
     class={vertical
-        ? "h-full w-full bg-contrast/50 backdrop-blur responsive-container"
+        ? "h-full w-full bg-contrast/50 backdrop-blur"
         : "w-full h-full bg-contrast/50 backdrop-blur flex-col pb-[76px]"}
     bind:this={container}
 >
@@ -375,7 +381,7 @@
             </div>
         {:else if vertical && appearDropdownMenu}
             <div
-                class="absolute md:fixed z-1800 top-[15%] left-0 bg-contrast/80 rounded-md max-h-[80vh] w-[220px] overflow-y-auto w-auto tab-drop-down"
+                class="absolute md:fixed z-1800 top-[15%] left-0 bg-contrast/80 rounded-md max-h-[80vh] w-[220px] overflow-y-auto tab-drop-down"
             >
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 {#each $coWebsites.slice(numberMaxOfCowebsite) as coWebsite (coWebsite.getId())}
@@ -412,6 +418,7 @@
         on:mousedown={addDivForResize}
         on:mouseup={removeDivForResize}
         on:touchstart={addDivForResize}
+        on:touchstart={() => isResized.set(true)}
         on:dragend={removeDivForResize}
         on:touchend={removeDivForResize}
     />

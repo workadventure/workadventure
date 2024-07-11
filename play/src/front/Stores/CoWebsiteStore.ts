@@ -60,6 +60,7 @@ export const canvasWidth = writable(window.innerWidth);
 export const canvasHeight = writable(window.innerHeight);
 export const resizeFromCowebsite = writable(false);
 export const isVerticalMode = writable(false);
+export const isResized = writable(false);
 
 export class CoWebsiteManager {
 
@@ -156,18 +157,6 @@ export class CoWebsiteManager {
     public cleanup(): void {
         this.closeCoWebsites
     }
-
-    // public resizeObserver = new ResizeObserver(() => {
-    //     this.fire();
-    // });
-
-    // private fire(): void {
-    //     this._onResize.next();
-    //     waScaleManager.applyNewSize();
-    //     // TODO: this line because the refresh focus should be emited with an event
-    //     waScaleManager.refreshFocusOnTarget(gameManager.getCurrentGameScene().cameras.main);
-    // }
-
 }
 
 export const coWebsiteManager = new CoWebsiteManager();
