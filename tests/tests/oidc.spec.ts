@@ -39,7 +39,7 @@ test.describe('OpenID connect @oidc', () => {
     await expect(isLogged).toBe(true);
 
     // Log out user
-    await oidcLogout(page);
+    await oidcLogout(page, false);
 
     // Let's check the sign in button is back here when we signed out
     await page.click('#menuIcon img:first-child');

@@ -18,11 +18,26 @@ test.describe('Translation', () => {
 
     await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
 
+    if(project.name === "mobilechromium"){
+      await expect(page.locator('button#burgerIcon')).toBeVisible();
+      const mobileMenuVisible = await page.locator('button#burgerIcon img.tw-rotate-0').isVisible();
+      if(mobileMenuVisible){
+          await page.click('button#burgerIcon');
+      }
+    }
     await page.click('#menuIcon img:first-child');
     await page.click('button:has-text("Settings")');
     await page.selectOption('.languages-switcher', 'fr-FR');
 
     await page.reload();
+    
+    if(project.name === "mobilechromium"){
+      await expect(page.locator('button#burgerIcon')).toBeVisible();
+      const mobileMenuVisible = await page.locator('button#burgerIcon img.tw-rotate-0').isVisible();
+      if(mobileMenuVisible){
+          await page.click('button#burgerIcon');
+      }
+    }
     await page.click('#menuIcon img:first-child');
     await expect(page.locator('button:has-text("Paramètres")')).toBeVisible();
   });
