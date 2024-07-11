@@ -167,11 +167,11 @@ test.describe("Iframe API", () => {
     page.close();
   });
 
-  test("test disable invite user button", async ({ page }) => {
+  test("test disable invite user button", async ({ page }, { project }) => {
     await page.goto(publicTestMapUrl("tests/E2E/empty.json", "iframe_script"));
 
     await page.evaluate(() => localStorage.setItem("debug", "*"));
-    await login(page, "Alice", 3);
+    await login(page, "Alice", 3, "en-US", project.name === "mobilechromium");
 
     // Create a script to evaluate function to disable map editor
     await evaluateScript(page, async () => {
@@ -211,7 +211,7 @@ test.describe("Iframe API", () => {
     await page.goto(publicTestMapUrl("tests/E2E/empty.json", "iframe_script"));
 
     await page.evaluate(() => localStorage.setItem("debug", "*"));
-    await login(page, "Alice", 3);
+    await login(page, "Alice", 3, "en-US", project.name === "mobilechromium");
 
     // Create a script to evaluate function to disable map editor
     await evaluateScript(page, async () => {
