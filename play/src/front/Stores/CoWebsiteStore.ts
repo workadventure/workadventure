@@ -1,7 +1,6 @@
 import { derived, get, writable } from "svelte/store";
 import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 
-
 export function createCoWebsiteStore() {
     const { subscribe, set, update } = writable<Array<CoWebsite>>([]);
 
@@ -63,7 +62,6 @@ export const isVerticalMode = writable(false);
 export const isResized = writable(false);
 
 export class CoWebsiteManager {
-
     get verticalMode(): boolean {
         if (window.innerWidth < 768) {
             return true;
@@ -83,7 +81,6 @@ export class CoWebsiteManager {
         }
     }
 
-
     private calculateNewHeight() {
         if (get(resizeFromCowebsite) && this.verticalMode && get(coWebsites).length > 0) {
             canvasHeight.set(window.innerHeight - get(heightContainerForWindow));
@@ -95,10 +92,9 @@ export class CoWebsiteManager {
         }
     }
 
-    public getGameSize(): { height: number, width: number } {
+    public getGameSize(): { height: number; width: number } {
         const height = this.calculateNewHeight();
         const width = this.calculateNewWidth();
-
 
         if (height !== undefined) {
             heightContainer.set(height);
@@ -155,7 +151,7 @@ export class CoWebsiteManager {
     }
 
     public cleanup(): void {
-        this.closeCoWebsites
+        this.closeCoWebsites();
     }
 }
 

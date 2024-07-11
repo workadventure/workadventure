@@ -133,16 +133,16 @@
             widthContainerForWindow.set(window.innerWidth);
             heightContainerForWindow.set(window.innerHeight / 2);
             startWidthContainer = parseInt(getComputedStyle(container).height);
-            function handleMouseDown(e: TouchEvent) {
+            const handleMouseDown = (e: TouchEvent) => {
                 let clientY = e.touches[0].clientY;
                 startY = clientY;
                 startHeight = parseInt(getComputedStyle(container).height);
                 console.log(startHeight, "startHeight");
                 document.addEventListener("touchmove", handleMouseMove, { passive: false });
                 document.addEventListener("touchend", handleMouseUp);
-            }
+            };
             resizeBar.addEventListener("touchstart", handleMouseDown, false);
-            function handleMouseMove(e: TouchEvent) {
+            const handleMouseMove = (e: TouchEvent) => {
                 let clientY = e.touches[0].clientY;
                 console.log(clientY, "clientY");
                 let newHeight = startHeight + (clientY - startY);
@@ -161,7 +161,7 @@
                 resizeMin(newHeight);
                 waScaleManager.applyNewSize();
                 waScaleManager.refreshFocusOnTarget();
-            }
+            };
             const handleMouseUp = () => {
                 document.removeEventListener("touchmove", handleMouseMove);
                 document.removeEventListener("touchend", handleMouseUp);
