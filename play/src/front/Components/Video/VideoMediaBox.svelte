@@ -35,6 +35,7 @@
     import { highlightFullScreen, setHeightScreenShare } from "../../Stores/ActionsCamStore";
     import VisitCard from "../VisitCard/VisitCard.svelte";
     import { requestVisitCardsStore } from "../../Stores/GameStore";
+    import { TrackStreamWrapperInterface } from "../../Streaming/Contract/TrackStreamWrapperInterface";
     import ActionMediaBox from "./ActionMediaBox.svelte";
 
     // Extend the HTMLVideoElement interface to add the setSinkId method.
@@ -47,6 +48,7 @@
     export let isHightlighted = false;
     export let peer: VideoPeer;
 
+    let trackStreamWraper: TrackStreamWrapperInterface;
     let streamStore = peer.streamStore;
     let volumeStore = peer.volumeStore;
     let name = peer.userName;
@@ -290,6 +292,10 @@
         }, 1000);
     }
 
+    function openBlockOrReportPopup() {
+        trackStreamWraper.blockOrReportUser();
+    }
+
     function showVisitCardFromCamMenu() {
         console.log("je suis dans cette fonction");
         console.log($requestVisitCardsStore, "requestVisitCardsStore");
@@ -471,7 +477,11 @@
                                     <div class="pl-2 cursor-pointer">Mute</div>
                                     <!-- trans -->
                                 </div>
-                                <div class="flex items-center px-4 py-1 hover:bg-danger cursor-pointer">
+                                <div
+                                    class="flex items-center px-4 py-1 hover:bg-danger cursor-pointer"
+                                    on:click={() => analyticsClient.reportMeetingAction()}
+                                    on:click|preventDefault|stopPropagation={() => openBlockOrReportPopup()}
+                                >
                                     <FlagIcon height="h-4" width="w-4" />
                                     <div class="pl-2 cursor-pointer">Report user</div>
                                     <!-- trans -->

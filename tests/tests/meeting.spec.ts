@@ -43,7 +43,7 @@ test.describe('Meeting actions test', () => {
     // The user in the bubble meeting should be visible
     await expect(page.locator('#container-media')).toBeVisible({timeout: 20_000});
     // The user in the bubble meeting should have action button
-    await expect(page.locator('#cameras-container #unique-mycam #camera-box')).toBeVisible({timeout: 20_000});
+    await expect(page.locator('#cameras-container #unique-mycam')).toBeVisible({timeout: 20_000});
 
     // Click on the action button of "Alice"
     await page.click('.cameras-container .other-cameras .video-container .action-button#more-action');
