@@ -6,7 +6,6 @@
     import { Unsubscriber } from "svelte/store";
     import CancelablePromise from "cancelable-promise";
     import Debug from "debug";
-    import { fly } from "svelte/transition";
     import { ArrowDownIcon, ArrowUpIcon } from "svelte-feather-icons";
     import { VideoPeer } from "../../WebRtc/VideoPeer";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
@@ -17,6 +16,7 @@
     import Woka from "../Woka/WokaFromUserId.svelte";
     import {
         mediaStreamConstraintsStore,
+        requestedMicrophoneState,
         // requestedCameraState,
         selectDefaultSpeaker,
         speakerSelectedStore,
@@ -33,6 +33,8 @@
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import ScreenShareIcon from "../Icons/ScreenShareIcon.svelte";
     import { highlightFullScreen, setHeightScreenShare } from "../../Stores/ActionsCamStore";
+    import VisitCard from "../VisitCard/VisitCard.svelte";
+    import { requestVisitCardsStore } from "../../Stores/GameStore";
     import ActionMediaBox from "./ActionMediaBox.svelte";
 
     // Extend the HTMLVideoElement interface to add the setSinkId method.
@@ -69,6 +71,7 @@
     let unsubscribeHighlightEmbedScreen: Unsubscriber;
     let isMobile: boolean;
     let fullScreen = false;
+    let showVisitCard = false;
 
     const debug = Debug("VideoMediaBox");
 
@@ -286,6 +289,13 @@
             aspectRatio = videoElement != undefined ? videoElement.videoWidth / videoElement.videoHeight : 1;
         }, 1000);
     }
+
+    function showVisitCardFromCamMenu() {
+        console.log("je suis dans cette fonction");
+        console.log($requestVisitCardsStore, "requestVisitCardsStore");
+        showVisitCard = !showVisitCard;
+        console.log("showVisitCard", showVisitCard);
+    }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -419,37 +429,51 @@
                         </div>
                         {#if showUserSubMenu}
                             <div
-                                class="rounded bg-contrast/80 justify-right font-normal py-1 absolute z-20 mt-1.5 right-0 text-right w-36 overflow-hidden"
-                                transition:fly={{ y: -25, duration: 50 }}
+                                class="rounded bg-contrast/80 font-normal py-1 absolute z-20 mt-1.5 right-0 text-right w-40 overflow-hidden cursor-pointer"
                             >
-                                <div class="flex items-center px-4 py-1 hover:bg-white/10">
+                                <div
+                                    class="flex items-center px-4 py-1 hover:bg-white/10 cursor-pointer"
+                                    on:click={() => highlightedEmbedScreen.highlight(embedScreen)}
+                                >
                                     <FullScreenIcon height="h-4" width="w-4" />
-                                    <div class="pl-2">Show wide</div>
+                                    <div class="pl-2 cursor-pointer">Show wide</div>
                                     <!-- trans -->
                                 </div>
-                                <div class="flex items-center px-4 py-1 hover:bg-white/10">
+                                <div
+                                    class="flex items-center px-4 py-1 hover:bg-white/10 cursor-pointer"
+                                    on:click={showVisitCardFromCamMenu}
+                                >
                                     <BusinessCardIcon height="h-4" width="w-4" />
-                                    <div class="pl-2">Business card</div>
+                                    <div class="pl-2 cursor-pointer">Business card</div>
+                                    {#if $requestVisitCardsStore && showVisitCard}
+                                        <VisitCard visitCardUrl={$requestVisitCardsStore} />
+                                    {/if}
                                     <!-- trans -->
                                 </div>
-                                <div class="flex items-center px-4 py-1 hover:bg-white/10">
+                                <div class="flex items-center px-4 py-1 hover:bg-white/10 cursor-pointer">
                                     <MessageCircleIcon height="h-4" width="w-4" />
-                                    <div class="pl-2">Send message</div>
+                                    <div class="pl-2 cursor-pointer">Send message</div>
                                     <!-- trans -->
                                 </div>
-                                <div class="flex items-center px-4 py-1 hover:bg-white/10">
+                                <div
+                                    class="flex items-center px-4 py-1 hover:bg-white/10 cursor-pointer"
+                                    on:click={() => requestedMicrophoneState.enableMicrophone()}
+                                >
                                     <VolumeIcon height="h-4" width="w-4" />
-                                    <div class="pl-2">Volume</div>
+                                    <div class="pl-2 cursor-pointer">Volume</div>
                                     <!-- trans -->
                                 </div>
-                                <div class="flex items-center px-4 py-1 hover:bg-white/10">
+                                <div
+                                    class="flex items-center px-4 py-1 hover:bg-white/10 cursor-pointer"
+                                    on:click={() => requestedMicrophoneState.disableMicrophone()}
+                                >
                                     <MicOffIcon height="h-4" width="w-4" />
-                                    <div class="pl-2">Mute</div>
+                                    <div class="pl-2 cursor-pointer">Mute</div>
                                     <!-- trans -->
                                 </div>
-                                <div class="flex items-center px-4 py-1 hover:bg-danger">
+                                <div class="flex items-center px-4 py-1 hover:bg-danger cursor-pointer">
                                     <FlagIcon height="h-4" width="w-4" />
-                                    <div class="pl-2">Report user</div>
+                                    <div class="pl-2 cursor-pointer">Report user</div>
                                     <!-- trans -->
                                 </div>
                             </div>

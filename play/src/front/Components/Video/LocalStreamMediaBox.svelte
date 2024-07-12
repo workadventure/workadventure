@@ -154,7 +154,7 @@
                 ? "absolute top-0 bottom-0 right-0 left-0 m-auto h-28 w-60 z-20 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 flex items-center justify-center cursor-pointer"
                 : "hidden"}
         >
-            <div class="block flex flex-col justify-evenly cursor-pointer h-full w-full">
+            <div class="flex flex-col justify-evenly cursor-pointer h-full w-full">
                 <div
                     class="svg w-full hover:bg-white/10 flex justify-around items-center z-25 rounded-lg"
                     on:click={untogglefFullScreen}

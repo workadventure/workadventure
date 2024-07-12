@@ -105,6 +105,7 @@
 
 <!-- TODO All 'cursor-default' will be deleted when Chat 1to1 will be released -->
 <div class="group py-3 rounded-lg hover:bg-white/10 transition-all">
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
         class="group wa-chat-item relative flex items-center ml-4 {user.isAdmin ? 'admin' : 'user'}  cursor-default"
         on:click|stopPropagation={() => openChat(user)}

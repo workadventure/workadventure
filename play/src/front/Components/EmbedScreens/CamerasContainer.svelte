@@ -73,7 +73,10 @@
     {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
         {#if !highlightedEmbedScreen || $highlightedEmbedScreen !== peer}
             {#key uniqueId}
-                <div class={isHightlighted ? "w-[230px] all-cameras-highlighted" : "w-full all-cameras m-auto"}>
+                <div
+                    class={isHightlighted ? "w-[230px] all-cameras-highlighted" : "w-full all-cameras m-auto"}
+                    id="camera-box"
+                >
                     <MediaBox streamable={peer} />
                 </div>
             {/key}
