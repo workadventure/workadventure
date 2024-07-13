@@ -400,6 +400,7 @@ export class GameMapPropertiesListener {
         });
 
         this.gameMapFrontWrapper.onEnterArea((newAreas) => {
+            if (!this.gameMapFrontWrapper.areasManager == undefined) return;
             // Hide the area if the user has no access
             const areas: Area[] = [];
             for (const area of newAreas) {
@@ -410,6 +411,7 @@ export class GameMapPropertiesListener {
         });
 
         this.gameMapFrontWrapper.onLeaveArea((oldAreas) => {
+            if (this.gameMapFrontWrapper.areasManager == undefined) return;
             const areas: Area[] = [];
             for (const area of oldAreas) {
                 const areaObject = this.gameMapFrontWrapper.areasManager.getAreaByUd(area.id);
