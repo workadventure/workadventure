@@ -15,6 +15,7 @@ import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils
 import { Jitsi } from "@workadventure/shared-utils";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { get } from "svelte/store";
+import { Member } from "@workadventure/messages";
 import { LL } from "../../../../i18n/i18n-svelte";
 import { analyticsClient } from "../../../Administration/AnalyticsClient";
 import { iframeListener } from "../../../Api/IframeListener";
@@ -40,9 +41,10 @@ import { gameManager } from "../GameManager";
 import { OpenCoWebsite } from "../GameMapPropertiesListener";
 import { GameScene } from "../GameScene";
 import { mapEditorAskToClaimPersonalAreaStore } from "../../../Stores/MapEditorStore";
-import { requestVisitCardsStore } from "../../../Stores/GameStore";
+import { requestVisitCardsStore, selectedChatIDRemotePlayerStore } from "../../../Stores/GameStore";
 import { isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
 import { MessageUserJoined } from "../../../Connection/ConnexionModels";
+import { Area } from "../../Entity/Area";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -59,21 +61,25 @@ export class AreasPropertiesListener {
         this.scene = scene;
     }
 
-    public onEnterAreasHandler(areas: AreaData[]): void {
-        for (const area of areas) {
+    public onEnterAreasHandler(areasData: AreaData[], areas?: Area[]): void {
+        for (const areaData of areasData) {
             // analytics event for area
-            analyticsClient.enterAreaMapEditor(area.id, area.name);
+            analyticsClient.enterAreaMapEditor(areaData.id, areaData.name);
 
-            if (!area.properties) {
+            if (!areaData.properties) {
                 continue;
             }
 
             // Add new notification to show at the user that he entered a new area
-            if (area.name && area.name !== "") {
-                notificationPlayingStore.playNotification(area.name, "icon-tool-area.png", area.id);
+            if (areaData.name && areaData.name !== "") {
+                notificationPlayingStore.playNotification(areaData.name, "icon-tool-area.png", areaData.id);
             }
-            for (const property of area.properties) {
-                this.addPropertyFilter(property, area);
+
+            // get area from area data
+            const area = areas?.find((area) => area.areaData.id === areaData.id);
+
+            for (const property of areaData.properties) {
+                this.addPropertyFilter(property, areaData, area);
             }
         }
     }
@@ -116,24 +122,27 @@ export class AreasPropertiesListener {
         }
     }
 
-    public onLeaveAreasHandler(areas: AreaData[]): void {
-        for (const area of areas) {
+    public onLeaveAreasHandler(areasData: AreaData[], areas?: Area[]): void {
+        for (const areaData of areasData) {
             // analytics event for area
-            analyticsClient.leaveAreaMapEditor(area.id, area.name);
+            analyticsClient.leaveAreaMapEditor(areaData.id, areaData.name);
 
-            if (!area.properties) {
+            if (!areaData.properties) {
                 continue;
             }
             // Remove notification for area
-            notificationPlayingStore.removeNotificationById(area.id);
+            notificationPlayingStore.removeNotificationById(areaData.id);
 
-            for (const property of area.properties) {
-                this.removePropertyFilter(property);
+            // get area from area data
+            const area = areas?.find((area) => area.areaData.id === areaData.id);
+
+            for (const property of areaData.properties) {
+                this.removePropertyFilter(property, area);
             }
         }
     }
 
-    private addPropertyFilter(property: AreaDataProperty, area: AreaData) {
+    private addPropertyFilter(property: AreaDataProperty, areaData: AreaData, area?: Area) {
         switch (property.type) {
             case "openWebsite": {
                 this.handleOpenWebsitePropertyOnEnter(property);
@@ -144,7 +153,13 @@ export class AreasPropertiesListener {
                 break;
             }
             case "focusable": {
-                this.handleFocusablePropertiesOnEnter(area.x, area.y, area.width, area.height, property);
+                this.handleFocusablePropertiesOnEnter(
+                    areaData.x,
+                    areaData.y,
+                    areaData.width,
+                    areaData.height,
+                    property
+                );
                 break;
             }
             case "jitsiRoomProperty": {
@@ -172,7 +187,7 @@ export class AreasPropertiesListener {
                 break;
             }
             case "personalAreaPropertyData": {
-                this.handlePersonalAreaPropertyOnEnter(property, area);
+                this.handlePersonalAreaPropertyOnEnter(property, areaData, area);
 
                 break;
             }
@@ -244,7 +259,7 @@ export class AreasPropertiesListener {
         }
     }
 
-    private removePropertyFilter(property: AreaDataProperty) {
+    private removePropertyFilter(property: AreaDataProperty, area?: Area) {
         switch (property.type) {
             case "openWebsite": {
                 this.handleOpenWebsitePropertiesOnLeave(property);
@@ -275,7 +290,7 @@ export class AreasPropertiesListener {
                 break;
             }
             case "personalAreaPropertyData": {
-                this.handlePersonalAreaPropertyOnLeave();
+                this.handlePersonalAreaPropertyOnLeave(area);
                 break;
             }
             default: {
@@ -521,27 +536,35 @@ export class AreasPropertiesListener {
         }
     }
 
-    private handlePersonalAreaPropertyOnEnter(property: PersonalAreaPropertyData, areaData: AreaData): void {
+    private handlePersonalAreaPropertyOnEnter(
+        property: PersonalAreaPropertyData,
+        areaData: AreaData,
+        area?: Area
+    ): void {
         if (property.ownerId !== null) {
-            this.displayPersonalAreaOwnerVisitCard(property.ownerId, areaData);
+            this.displayPersonalAreaOwnerVisitCard(property.ownerId, areaData, area);
         } else if (property.accessClaimMode === PersonalAreaAccessClaimMode.enum.dynamic) {
-            this.displayPersonalAreaClaimDialogBox(property, areaData);
+            this.displayPersonalAreaClaimDialogBox(property, areaData, area);
         }
     }
 
-    private displayPersonalAreaOwnerVisitCard(ownerId: string, areaData: AreaData) {
+    private displayPersonalAreaOwnerVisitCard(ownerId: string, areaData: AreaData, area?: Area) {
         const connectedUserUUID = localUserStore.getLocalUser()?.uuid;
         if (connectedUserUUID != ownerId) {
             const connection = this.scene.connection;
             if (connection && this.isPersonalAreaOwnerAway(ownerId, areaData)) {
                 connection
                     .queryMember(ownerId)
-                    .then((member) => {
+                    .then((member: Member) => {
                         if (member?.visitCardUrl) {
                             requestVisitCardsStore.set(member.visitCardUrl);
                         }
+                        if (member?.chatID) {
+                            selectedChatIDRemotePlayerStore.set(member?.chatID);
+                        }
                     })
                     .catch((error) => console.error(error));
+                area?.highLightArea(true);
             }
         }
     }
@@ -572,12 +595,13 @@ export class AreasPropertiesListener {
         return !isOwnerInsidePersonalArea;
     }
 
-    private displayPersonalAreaClaimDialogBox(property: PersonalAreaPropertyData, areaData: AreaData) {
+    private displayPersonalAreaClaimDialogBox(property: PersonalAreaPropertyData, areaData: AreaData, area?: Area) {
         const userHasAllowedTagToClaimTheArea =
             localUserStore.isLogged() &&
             (property.allowedTags.length === 0 ||
                 property.allowedTags.some((tag) => this.scene.connection?.hasTag(tag)));
         if (userHasAllowedTagToClaimTheArea) {
+            area?.highLightArea(true);
             mapEditorAskToClaimPersonalAreaStore.set(areaData);
         }
     }
@@ -680,11 +704,12 @@ export class AreasPropertiesListener {
         inJitsiStore.set(false);
     }
 
-    private handlePersonalAreaPropertyOnLeave(): void {
+    private handlePersonalAreaPropertyOnLeave(area?: Area): void {
         mapEditorAskToClaimPersonalAreaStore.set(undefined);
         if (get(requestVisitCardsStore)) {
             requestVisitCardsStore.set(null);
         }
+        area?.unHighLightArea();
     }
 
     private openCoWebsiteFunction(

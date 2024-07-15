@@ -13,6 +13,8 @@ describe("MatrixChatConnection", () => {
 
     const basicMockConnection: Connection = {
         queryChatMembers: vi.fn(),
+        emitBanPlayerMessage: vi.fn(),
+        emitPlayerChatID: vi.fn(),
     };
     const basicMockMatrixSecurity = {
         isEncryptionRequiredAndNotSet: false,
@@ -741,7 +743,7 @@ describe("MatrixChatConnection", () => {
 
             await matrixChatConnection.createDirectRoom(userId);
 
-            expect(matrixChatConnection["createRoom"]).toHaveBeenCalledOnce();
+            expect(mockMatrixClient["createRoom"]).toHaveBeenCalledOnce();
             expect(matrixChatConnection["addDMRoomInAccountData"]).toHaveBeenCalledOnce();
             //eslint-disable-next-line @typescript-eslint/unbound-method
             expect(mockMatrixClient.getRoom).toHaveBeenCalledOnce();

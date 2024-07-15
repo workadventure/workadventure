@@ -91,6 +91,8 @@ message SetPlayerDetailsMessage {
   google.protobuf.BoolValue showVoiceIndicator = 5;
   AvailabilityStatus availabilityStatus = 6;
   SetPlayerVariableMessage setVariable = 7;
+  string chatID = 8;
+  
 }
 
 message UserMovesMessage {
@@ -330,8 +332,8 @@ message ClientToServerMessage {
     MuteVideoEveryBodyParticipantMessage muteVideoEveryBodyParticipantMessage = 40;
     BanPlayerMessage banPlayerMessage = 41;
     UpdateChatIdMessage updateChatIdMessage = 42;
-    ProximityPublicMessage proximityPublicMessage = 43;
-    ProximityPrivateMessage proximityPrivateMessage = 44;
+    PublicEvent publicEvent = 43;
+    PrivateEvent privateEvent = 44;
   }
 }
 
@@ -540,6 +542,7 @@ message Member {
   optional string name = 2;
   optional string email = 3;
   optional string visitCardUrl = 4;
+  optional string chatID = 5;
 }
 
 message TurnCredentialsAnswer {
@@ -599,8 +602,8 @@ message SubMessage {
     MuteVideoEverybodyMessage muteVideoEverybodyMessage = 26;
     AskMuteMicrophoneMessage askMuteMicrophoneMessage = 27;
     AskMuteVideoMessage askMuteVideoMessage = 28;
-    ProximityPublicMessageToClientMessage proximityPublicMessageToClientMessage = 29;
-    ProximityPrivateMessageToClientMessage proximityPrivateMessageToClientMessage = 30;
+    PublicEvent publicEvent = 29;
+    PrivateEvent privateEvent = 30;
   }
 }
 
@@ -632,6 +635,7 @@ message UserJoinedMessage {
   bool hasOutline = 10;
   AvailabilityStatus availabilityStatus = 11;
   map<string, string> variables = 12;
+  optional string chatID = 13;
 }
 
 message UserLeftMessage {
@@ -833,28 +837,32 @@ message AskMutedVideoMessage {
   string message = 2;
 }
 
-message ProximityPublicMessage {
+message PublicEvent {
   string spaceName = 1;
-  string message = 2;
-}
-
-message ProximityPrivateMessage {
-  string spaceName = 1;
-  string receiverUserUuid = 2;
-  string message = 3;
-}
-
-message ProximityPublicMessageToClientMessage {
-  string spaceName = 1;
-  string message = 2;
+  SpaceEvent spaceEvent = 2;
   optional string senderUserUuid = 3;
 }
 
-message ProximityPrivateMessageToClientMessage {
+message SpaceEvent {
+  oneof event {
+    SpaceMessage spaceMessage = 1;
+    SpaceIsTyping spaceIsTyping = 2;
+  }
+}
+
+message SpaceMessage {
+  string message = 1;
+}
+
+message SpaceIsTyping {
+  bool isTyping = 1;
+}
+
+message PrivateEvent {
   string spaceName = 1;
   string receiverUserUuid = 2;
-  string message = 3;
-  optional string senderUserUuid = 4;
+  optional string senderUserUuid = 3;
+  SpaceMessage spaceMessage = 4;
 }
 
 /**
@@ -892,8 +900,8 @@ message ServerToClientMessage {
     MutedVideoMessage mutedVideoMessage = 34;
     AskMutedMessage askMutedMessage = 35;
     AskMutedVideoMessage askMutedVideoMessage = 36;
-    ProximityPublicMessageToClientMessage proximityPublicMessageToClientMessage = 37;
-    ProximityPrivateMessageToClientMessage proximityPrivateMessageToClientMessage = 38;
+    PublicEvent publicEvent = 37;
+    PrivateEvent privateEvent = 38;
   }
 }
 
@@ -933,6 +941,7 @@ message UserJoinedZoneMessage {
   bool hasOutline = 11;
   AvailabilityStatus availabilityStatus = 12;
   map<string, string> variables = 13;
+  optional string chatID=14;
 }
 
 message UserLeftZoneMessage {
@@ -998,8 +1007,8 @@ message PusherToBackMessage {
     MuteEveryBodyParticipantMessage muteEveryBodyParticipantMessage = 27;
     MuteVideoParticipantIdMessage muteVideoParticipantIdMessage = 28;
     MuteVideoEveryBodyParticipantMessage muteVideoEveryBodyParticipantMessage = 29;
-    ProximityPublicMessage proximityPublicMessage = 30;
-    ProximityPrivateMessage proximityPrivateMessage = 31;
+    PublicEvent publicEvent = 30;
+    PrivateEvent privateEvent = 31;
   }
 }
 
@@ -1198,8 +1207,8 @@ message PusherToBackSpaceMessage{
     MuteVideoEverybodyMessage muteVideoEverybodyMessage = 12;
     AskMuteMicrophoneMessage askMuteMicrophoneMessage = 13;
     AskMuteVideoMessage askMuteVideoMessage = 14;
-    ProximityPrivateMessageToClientMessage proximityPrivateMessageToClientMessage = 15;
-    ProximityPublicMessageToClientMessage proximityPublicMessageToClientMessage = 16;
+    PublicEvent publicEvent = 15;
+    PrivateEvent privateEvent = 16;
   }
 }
 
@@ -1217,8 +1226,8 @@ message BackToPusherSpaceMessage{
     MuteVideoEverybodyMessage muteVideoEverybodyMessage = 10;
     AskMuteMicrophoneMessage askMuteMicrophoneMessage = 11;
     AskMuteVideoMessage askMuteVideoMessage = 12;
-    ProximityPublicMessageToClientMessage proximityPublicMessageToClientMessage = 13;
-    ProximityPrivateMessageToClientMessage proximityPrivateMessageToClientMessage = 14;
+    PublicEvent publicEvent = 13;
+    PrivateEvent privateEvent = 14;
   }
 }
 

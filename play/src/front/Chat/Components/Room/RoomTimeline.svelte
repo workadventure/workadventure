@@ -70,66 +70,68 @@
     $: userConnected = $proximityRoomConnection?.userConnected;
 </script>
 
-{#if room !== undefined}
-    <button class="back-roomlist tw-p-0 tw-m-0" on:click={goBackAndClearSelectedChatMessage}>
-        <IconArrowLeft />
-    </button>
-    <ul
-        on:scroll={() => loadPreviousMessageOnScrollTop()}
-        bind:this={messageListRef}
-        class="tw-list-none tw-p-0 tw-flex-1 tw-overflow-auto tw-flex tw-flex-col"
-    >
-        {#if room.id === "proximity" && $userConnected !== undefined}
-            <div class="tw-flex tw-flex-row tw-items-center tw-gap-2">
-                {#each [...$userConnected] as [userId, user] (userId)}
-                    <div class="avatar">
-                        <Avatar avatarUrl={user.avatarUrl} fallbackName={user?.username} color={user?.color} />
-                    </div>
-                {/each}
-            </div>
-        {/if}
-        {#if $messages.length === 0}
-            <p class="tw-self-center tw-text-md tw-text-gray-500">{$LL.chat.nothingToDisplay()}</p>
-        {/if}
-        {#each $messages as message (message.id)}
-            <li data-event-id={message.id}>
-                <Message {message} reactions={$messageReaction.get(message.id)} />
-            </li>
-        {/each}
-    </ul>
-    {#if $typingMembers.length > 0}
-        <div class=" tw-flex tw-row tw-w-full tw-text-gray-300 tw-text-sm  tw-m-0 tw-px-2">
-            <!-- {$typingMembers.map(typingMember => typingMember.name).slice(0, NUMBER_OF_TYPING_MEMBER_TO_DISPLAY)} -->
-            {#each $typingMembers
-                .map((typingMember, index) => ({ ...typingMember, index }))
-                .slice(0, NUMBER_OF_TYPING_MEMBER_TO_DISPLAY) as typingMember (typingMember.id)}
-                {#if typingMember.avatarUrl || typingMember.name}
-                    <div class="-tw-ml-2é">
-                        <Avatar
-                            isChatAvatar={true}
-                            avatarUrl={typingMember.avatarUrl}
-                            fallbackName={typingMember.name ? typingMember.name : "Unknown"}
-                        />
-                    </div>
-                {/if}
-            {/each}
-
-            {#if $typingMembers.length > NUMBER_OF_TYPING_MEMBER_TO_DISPLAY}
-                <div
-                    class={`tw-rounded-full tw-h-6 tw-w-6 tw-text-center tw-uppercase tw-text-white tw-bg-gray-400 -tw-ml-1 chatAvatar`}
-                >
-                    +{$typingMembers.length - NUMBER_OF_TYPING_MEMBER_TO_DISPLAY}
+<div class="tw-flex tw-flex-col tw-flex-1 tw-overflow-hidden">
+    {#if room !== undefined}
+        <button class="back-roomlist tw-p-0 tw-m-0" on:click={goBackAndClearSelectedChatMessage}>
+            <IconArrowLeft />
+        </button>
+        <ul
+            on:scroll={() => loadPreviousMessageOnScrollTop()}
+            bind:this={messageListRef}
+            class="tw-list-none tw-p-0 tw-flex-1 tw-overflow-auto tw-flex tw-flex-col"
+        >
+            {#if room.id === "proximity" && $userConnected !== undefined}
+                <div class="tw-flex tw-flex-row tw-items-center tw-gap-2">
+                    {#each [...$userConnected] as [userId, user] (userId)}
+                        <div class="avatar">
+                            <Avatar avatarUrl={user.avatarUrl} fallbackName={user?.username} color={user?.color} />
+                        </div>
+                    {/each}
                 </div>
             {/if}
-            <div class="message tw-rounded-2xl tw-px-3 tw-rounded-bl-none tw-bg-primary tw-flex tw-text-lg tw-ml-1">
-                <div class="animate-bounce-1">.</div>
-                <div class="animate-bounce-2">.</div>
-                <div class="animate-bounce-3">.</div>
+            {#if $messages.length === 0}
+                <p class="tw-self-center tw-text-md tw-text-gray-500">{$LL.chat.nothingToDisplay()}</p>
+            {/if}
+            {#each $messages as message (message.id)}
+                <li data-event-id={message.id}>
+                    <Message {message} reactions={$messageReaction.get(message.id)} />
+                </li>
+            {/each}
+        </ul>
+        {#if $typingMembers.length > 0}
+            <div class="tw-flex tw-row tw-w-full tw-text-gray-300 tw-text-sm  tw-m-0 tw-px-2">
+                <!-- {$typingMembers.map(typingMember => typingMember.name).slice(0, NUMBER_OF_TYPING_MEMBER_TO_DISPLAY)} -->
+                {#each $typingMembers
+                    .map((typingMember, index) => ({ ...typingMember, index }))
+                    .slice(0, NUMBER_OF_TYPING_MEMBER_TO_DISPLAY) as typingMember (typingMember.id)}
+                    {#if typingMember.avatarUrl || typingMember.name}
+                        <div id={`typing-user-${typingMember.id}`} class="-tw-ml-2é">
+                            <Avatar
+                                isChatAvatar={true}
+                                avatarUrl={typingMember.avatarUrl}
+                                fallbackName={typingMember.name ? typingMember.name : "Unknown"}
+                            />
+                        </div>
+                    {/if}
+                {/each}
+
+                {#if $typingMembers.length > NUMBER_OF_TYPING_MEMBER_TO_DISPLAY}
+                    <div
+                        class={`tw-rounded-full tw-h-6 tw-w-6 tw-text-center tw-uppercase tw-text-white tw-bg-gray-400 -tw-ml-1 chatAvatar`}
+                    >
+                        +{$typingMembers.length - NUMBER_OF_TYPING_MEMBER_TO_DISPLAY}
+                    </div>
+                {/if}
+                <div class="message tw-rounded-2xl tw-px-3 tw-rounded-bl-none tw-bg-primary tw-flex tw-text-lg tw-ml-1">
+                    <div class="animate-bounce-1">.</div>
+                    <div class="animate-bounce-2">.</div>
+                    <div class="animate-bounce-3">.</div>
+                </div>
             </div>
-        </div>
+        {/if}
+        <MessageInput {room} />
     {/if}
-    <MessageInput {room} />
-{/if}
+</div>
 
 <style>
     @keyframes bounce {

@@ -11,7 +11,14 @@ class Menu {
         await expect(await page.getByRole('button', {name: 'toggle-map-editor'}).first()).toHaveClass(/border-top-light/);
     }
 
-    async openMenu(page: Page) {
+    async openMenu(page: Page, isMobile: boolean) {
+        if(isMobile){
+            await expect(page.locator('button#burgerIcon')).toBeVisible();
+            const mobileMenuVisible = await page.locator('button#burgerIcon img.tw-rotate-0').isVisible();
+            if(mobileMenuVisible){
+                await page.click('button#burgerIcon');
+            }
+        }
         await page.click('#menuIcon img:first-child');
         await expect(await page.locator('#menuIcon')).toHaveClass(/border-top-light/);
     }
@@ -38,12 +45,18 @@ class Menu {
         await expect(await page.locator('.bottom-action-bar .bottom-action-button #megaphone')).toBeHidden({timeout: 30_000});
     }
 
-    async openStatusList(page : Page){
+    async openStatusList(page : Page, isMobile = false){
+        if(isMobile){
+            await expect(await page.locator('button#burgerIcon')).toBeVisible();
+            const mobileMenuVisible = await page.locator('button#burgerIcon img.tw-rotate-0').isVisible();
+            if(mobileMenuVisible){
+                await page.click('button#burgerIcon');
+            }
+        }
         await page.click('#AvailabilityStatus');
     }
 
     async clickOnStatus(page:Page,status: string){
-        await this.openStatusList(page);
         await expect(page.getByText(status)).toBeVisible();
         await page.getByText(status).click();
         //eslint-disable-next-line playwright/no-wait-for-timeout
@@ -82,6 +95,10 @@ class Menu {
         await page.getByRole('button',{name:'Continue without webcam'}).click();
         await expect(page.getByRole('button',{name:'Continue without webcam'})).toBeVisible();
 
+    }
+
+    async closeMapEditorConfigureMyRoomPopUp(page:Page){
+        await page.locator('.configure-my-room button.close-window').click();
     }
 }
 

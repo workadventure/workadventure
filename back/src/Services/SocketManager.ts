@@ -51,10 +51,8 @@ import {
     WebRtcSignalToServerMessage,
     WebRtcStartMessage,
     Zone as ProtoZone,
-    ProximityPrivateMessage,
-    ProximityPublicMessageToClientMessage,
-    ProximityPrivateMessageToClientMessage,
-    ProximityPublicMessage,
+    PublicEvent,
+    PrivateEvent,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -455,6 +453,7 @@ export class SocketManager {
             availabilityStatus: user.getAvailabilityStatus(),
             characterTextures: user.characterTextures,
             position: ProtobufUtils.toPositionMessage(user.getPosition()),
+            chatID: user.chatID,
         };
         if (fromZone) {
             userJoinedZoneMessage.fromZone = SocketManager.toProtoZone(fromZone);
@@ -1563,37 +1562,13 @@ export class SocketManager {
         });
     }
 
-    handleProximityPublicSpaceMessage(
-        pusher: SpacesWatcher,
-        proximityPublicSpaceMessage: ProximityPublicMessageToClientMessage
-    ) {
-        const space = this.spaces.get(proximityPublicSpaceMessage.spaceName);
+    handlePublicEvent(pusher: SpacesWatcher, publicEvent: PublicEvent) {
+        const space = this.spaces.get(publicEvent.spaceName);
         if (!space) return;
         pusher.write({
             message: {
-                $case: "proximityPublicMessageToClientMessage",
-                proximityPublicMessageToClientMessage: {
-                    spaceName: proximityPublicSpaceMessage.spaceName,
-                    message: proximityPublicSpaceMessage.message,
-                },
-            },
-        });
-    }
-
-    handleProximityPrivateSpaceMessage(
-        pusher: SpacesWatcher,
-        proximityPrivateSpaceMessage: ProximityPrivateMessageToClientMessage
-    ) {
-        const space = this.spaces.get(proximityPrivateSpaceMessage.spaceName);
-        if (!space) return;
-        pusher.write({
-            message: {
-                $case: "proximityPrivateMessageToClientMessage",
-                proximityPrivateMessageToClientMessage: {
-                    spaceName: proximityPrivateSpaceMessage.spaceName,
-                    message: proximityPrivateSpaceMessage.message,
-                    receiverUserUuid: proximityPrivateSpaceMessage.receiverUserUuid,
-                },
+                $case: "publicEvent",
+                publicEvent,
             },
         });
     }
@@ -1782,46 +1757,47 @@ export class SocketManager {
         }
     }
 
-    // handle proximity public message
-    handleProximityPublicMessage(user: User, message: ProximityPublicMessage) {
+    // handle proximity typing message
+    handlePublicEventMessage(user: User, publicEvent: PublicEvent) {
         const group = user.group;
         if (!group) {
             return;
         }
+        const newEvent = {
+            ...publicEvent,
+            senderUserUuid: user.uuid,
+        };
         const receiverUsers = group.getUsers();
         for (const receiverUser of receiverUsers) {
             receiverUser.socket.write({
                 message: {
-                    $case: "proximityPublicMessageToClientMessage",
-                    proximityPublicMessageToClientMessage: {
-                        spaceName: message.spaceName,
-                        message: message.message,
-                        senderUserUuid: user.uuid,
-                    },
+                    $case: "publicEvent",
+                    publicEvent: newEvent,
                 },
             });
         }
     }
 
-    // handle proximity private message
-    handleProximityPrivateMessage(user: User, message: ProximityPrivateMessage, receiverUserUuid: string) {
+    handlePrivateEventMessage(user: User, privateEvent: PrivateEvent) {
         const group = user.group;
         if (!group) {
             return;
         }
-        const receiverUser = group.getUsers().find((user) => user.uuid === receiverUserUuid);
-        if (!receiverUser) {
+        const newEvent = {
+            ...privateEvent,
+            senderUserUuid: user.uuid,
+        };
+
+        const receiverUser = group.getUsers().find((user) => user.uuid === privateEvent.receiverUserUuid);
+        if (receiverUser == undefined) {
+            console.warn("receiverUser is undefined");
             return;
         }
+
         receiverUser.socket.write({
             message: {
-                $case: "proximityPrivateMessageToClientMessage",
-                proximityPrivateMessageToClientMessage: {
-                    spaceName: message.spaceName,
-                    message: message.message,
-                    senderUserUuid: user.uuid,
-                    receiverUserUuid: receiverUserUuid,
-                },
+                $case: "privateEvent",
+                privateEvent: newEvent,
             },
         });
     }

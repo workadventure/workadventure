@@ -94,7 +94,6 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
         const oldMatrixUserId: string | null = matrixUserIdFromLocalStorage;
 
         if (matrixLoginToken !== null) {
-            console.warn("retrieveMatrixConnectionDataFromLoginToken");
             const {
                 accessToken: accessTokenFromLoginToken,
                 refreshToken: refreshTokenFromLoginToken,
@@ -108,7 +107,6 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
         }
 
         if (accessToken === null && refreshToken === null) {
-            console.warn("registerMatrixGuestUser");
             const {
                 accessToken: accessTokenFromGuestUser,
                 refreshToken: refreshTokenFromGuestUser,

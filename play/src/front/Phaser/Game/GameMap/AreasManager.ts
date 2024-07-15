@@ -22,7 +22,14 @@ export class AreasManager {
     }
 
     public addArea(areaData: AreaData): void {
-        this.areas.push(new Area(this.scene, areaData, this.areaPermissions.isUserHasAreaAccess(areaData.id)));
+        this.areas.push(
+            new Area(
+                this.scene,
+                areaData,
+                this.areaPermissions.isUserHasAreaAccess(areaData.id),
+                this.areaPermissions.isOverlappingArea(areaData.id)
+            )
+        );
         this.updateMapEditorOptionForSpecificAreas();
     }
 
@@ -51,7 +58,14 @@ export class AreasManager {
     private initializeAreas() {
         const gameMapAreas = this.gameMapAreas.getAreas();
         gameMapAreas.forEach((areaData) =>
-            this.areas.push(new Area(this.scene, areaData, !this.areaPermissions.isUserHasAreaAccess(areaData.id)))
+            this.areas.push(
+                new Area(
+                    this.scene,
+                    areaData,
+                    !this.areaPermissions.isUserHasAreaAccess(areaData.id),
+                    this.areaPermissions.isOverlappingArea(areaData.id)
+                )
+            )
         );
         this.updateMapEditorOptionForSpecificAreas();
     }
@@ -59,5 +73,9 @@ export class AreasManager {
     private updateMapEditorOptionForSpecificAreas() {
         const isGameMapHasSpecificAreas = this.gameMapAreas.isGameMapContainsSpecificAreas();
         mapEditorActivatedForThematics.set(isGameMapHasSpecificAreas);
+    }
+
+    public getAreaByUd(areaId: string): Area | undefined {
+        return this.areas.find((area) => area.areaData.id === areaId);
     }
 }

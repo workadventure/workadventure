@@ -22,7 +22,7 @@ test.describe("Scripting chat functions", () => {
         publicTestMapUrl("tests/E2E/empty.json", "scripting_chat")
     );
 
-    await login(page);
+    await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
 
     // Test open chat scripting
     await expect(page.locator('#chat')).toBeHidden();
@@ -51,7 +51,6 @@ test.describe("Scripting chat functions", () => {
       .locator(".messageHeader")
     ).toContainText('Test machine');
 
-    /*
     // Test start typing
     await evaluateScript(page, async () => {
         return WA.chat.startTyping({
@@ -59,7 +58,12 @@ test.describe("Scripting chat functions", () => {
             author: "Eve",
         });
     });
-    await expect(page.frameLocator('iframe[title="WorkAdventureChat"]').getByText('Eve', { exact: true })).toBeVisible();
+    await expect(
+      page.locator('#chat')
+      .locator('#message')
+      .locator(`#typing-user-${btoa("Eve")}`)
+    ).toBeVisible();
+
     // Test stop typing
     await evaluateScript(page, async () => {
         return WA.chat.stopTyping({
@@ -67,8 +71,12 @@ test.describe("Scripting chat functions", () => {
             author: "Eve",
         });
     });
-    await expect.poll(() => page.frameLocator('iframe[title="WorkAdventureChat"]').getByText('Eve', { exact: true }).count()).toBe(0);
-    */
+    await expect(
+      page.locator('#chat')
+      .locator('#message')
+      .locator(`#typing-user-${btoa("Eve")}`)
+    ).toBeHidden();
+
     // Test close chat scripting
     await evaluateScript(page, async () => {
         return WA.chat.close();
@@ -98,7 +106,7 @@ test.describe("Scripting chat functions", () => {
     await bob.goto(
       publicTestMapUrl("tests/E2E/empty.json", "scripting_chat")
     );
-    await login(bob, "Bob");
+    await login(bob, "bob", 3, "en-US", project.name === "mobilechromium");
 
     // test to send bubblme message when entering proximity meeting
     await evaluateScript(bob, async () => {
@@ -118,7 +126,7 @@ test.describe("Scripting chat functions", () => {
     const newBrowser = await browser.browserType().launch();
     const alice = await newBrowser.newPage();
     await alice.goto(publicTestMapUrl("tests/E2E/empty.json", "scripting_chat"));
-    await login(alice, "Alice");
+    await login(alice, "Alice", 2, "en-US", project.name === "mobilechromium");
 
     // Move alice to the same position as bob
     await Map.teleportToPosition(alice, 32, 32);

@@ -104,7 +104,8 @@ class OpenIDClient {
 
     public getUserInfo(
         req: Request,
-        res: Response
+        res: Response,
+        playUri: string
     ): Promise<{
         tags: string[] | undefined;
         email: string;
@@ -140,19 +141,25 @@ class OpenIDClient {
                 res.clearCookie("code_verifier");
                 res.clearCookie("oidc_state");
 
-                return client.userinfo(tokenSet).then((res) => {
-                    return {
-                        ...res,
-                        email: res.email ?? "",
-                        sub: res.sub,
-                        access_token: tokenSet.access_token ?? "",
-                        username: res[OPID_USERNAME_CLAIM] as string,
-                        locale: res[OPID_LOCALE_CLAIM] as string,
-                        tags: res[OPID_TAGS_CLAIM] as string[],
-                        matrix_url: res.matrix_url as string | undefined,
-                        matrix_identity_provider: res.matrix_identity_provider as string | undefined,
-                    };
-                });
+                return client
+                    .userinfo(tokenSet, {
+                        params: {
+                            playUri,
+                        },
+                    })
+                    .then((res) => {
+                        return {
+                            ...res,
+                            email: res.email ?? "",
+                            sub: res.sub,
+                            access_token: tokenSet.access_token ?? "",
+                            username: res[OPID_USERNAME_CLAIM] as string,
+                            locale: res[OPID_LOCALE_CLAIM] as string,
+                            tags: res[OPID_TAGS_CLAIM] as string[],
+                            matrix_url: res.matrix_url as string | undefined,
+                            matrix_identity_provider: res.matrix_identity_provider as string | undefined,
+                        };
+                    });
             });
         });
     }
