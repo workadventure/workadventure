@@ -29,7 +29,7 @@ In order to use this package run the command in your terminal :
 npm run upload
 ```
 
-On the first run, the command will ask you the URL to the server and your Map Storage API key and if you want to push your map inside a directory or not.
+On the first run, the command will ask you the URL to the server and your Map Storage API key and if you want to push your map inside a directory.
 Where you get this depends on the kind of WorkAdventure server you are using.
 
 You can also use it with flags to upload your map but keep in mind that the secret variables will not be saved in .env and .env.secret files.
@@ -67,8 +67,8 @@ npm run upload -- -k your-api-key -u your-mapstorage-url -d your-directory
    There you can create a new token. (Don't forget to save it !)
 
 3. **Directory:**
-   You can also add a `directory name` if you want. It will be the folder where all your uploaded files will be stored in.
-   If you leave this blank, there will be no directory.
+   You also have to add a `directory name`, it will be the folder where all your uploaded files will be stored in.
+   If you want ot store your map in a specific directory, you can edit this in the .env file or if your don't put one, by default it will be your github name and github repository like this : `githubname-githubrepository`. The directory name appear in the URL of your map. This is done to avoid errors and push two maps with the same folder onto Workadventure servers.
 
 <!-- 4. Upload Mode :
    The upload mode is the way you want to host your map. If your following this tutorial it mean you want to be hosted so you need to enter 1 to choose this mode of storage.
@@ -161,7 +161,7 @@ Git. The Git repository offers the following advantages:
 - you can use a **CI/CD pipeline** (like "GitHub Actions") to automatically upload your map to the WorkAdventure server when you push changes to the repository.
 
 The map starter kit comes with a GitHub Actions workflow that is designed to upload your map to the WorkAdventure server
-when you push changes to the `master` branch of your repository.
+when you push changes to the `master` branch of your repository. And now upload on the WA server allows you to push and upload form a private repository
 
 :::caution Git is complex
 Git is a powerful tool, but it can be complex to use and is very targeted at developers. If you are not familiar with Git,
