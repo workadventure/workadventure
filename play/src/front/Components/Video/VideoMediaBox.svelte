@@ -282,9 +282,10 @@
     class="group/screenshare flex justify-center mx-auto aspect-video {$highlightFullScreen
         ? 'h-[100%] w-[100%] fixed top-0 left-0'
         : 'h-full relative w-full'}"
+    class:test-class-deux={!$mediaStreamConstraintsStore.audio}
     on:click={() => analyticsClient.pinMeetingAction()}
     bind:this={cameraContainer}
-    id="test5"
+    data-testid={!$mediaStreamConstraintsStore.audio && "test-class"}
 >
     <div
         class="aspect-video z-20 rounded-lg transition-all h-full bg-no-repeat bg-center bg-contrast/80 backdrop-blur{$mediaStreamConstraintsStore.audio
@@ -380,9 +381,11 @@
                 </div>
             {/if}
 
-            <div class="absolute bottom-4 left-4 z-30 responsive-dimension bg-contrast/90 rounded">
+            <div class="absolute bottom-4 left-2 z-30 responsive-dimension bg-contrast/90 rounded">
                 <div
-                    class="flex justify-between {$mediaStreamConstraintsStore.audio ? 'background-color rounded' : ''}"
+                    class="flex justify-between {$mediaStreamConstraintsStore.audio
+                        ? 'background-color bg-contrast/90 rounded'
+                        : ''} "
                 >
                     <div class="relative rounded backdrop-blur px-2 py-1 text-white text-sm pl-12 bold ">
                         <div class="absolute left-1 -top-1 z-30" style="image-rendering:pixelated">
@@ -400,9 +403,10 @@
                         {/if}
                     </div>
                     <div
-                        class="p-1 rounded-sm hover:bg-white/20 right-0 top-0 bottom-0 m-auto h-6 w-6 mr-1 transition-all pointer-events-auto {showUserSubMenu
+                        class="pt-1 rounded-sm hover:bg-white/20 right-0 top-0 bottom-0 m-auto h-6 transition-all pointer-events-auto {showUserSubMenu
                             ? 'bg-white/20 hover:bg-white/30'
                             : ''}"
+                        id="user-menu-btn"
                         on:click={() => (showUserSubMenu = !showUserSubMenu)}
                     >
                         <ChevronRightIcon
@@ -412,10 +416,9 @@
                             classList="aspect-ratio transition-all {showUserSubMenu ? 'rotate-180' : ''}"
                         />
                     </div>
+
                     {#if showUserSubMenu}
-                        <div class="">
-                            <ActionMediaBox {embedScreen} trackStreamWraper={peer} {videoEnabled} />
-                        </div>
+                        <ActionMediaBox {embedScreen} trackStreamWraper={peer} {videoEnabled} />
                     {/if}
                     <!--  -->
                 </div>

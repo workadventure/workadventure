@@ -21,7 +21,7 @@
     /* eslint-disable svelte/require-each-key */
 </script>
 
-<div class="flex justify-between w-8 h-6 items-center {classcss ?? ''}" class:active={display}>
+<div class="flex justify-between w-8 h-6 items-center {classcss ?? ''}" class:active={display} id="sound-meter-widget">
     {#if volume}
         {#each volume as bar}
             <div

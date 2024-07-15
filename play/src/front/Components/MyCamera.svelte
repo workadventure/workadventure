@@ -103,8 +103,9 @@
 <!-- style={small ? "width:100%" : "height:" + $heightCamWrapper + "px;"} -->
 
 <div
-    class="transition-all relative h-full w-full flex justify-start aspect-video m-auto dimension"
+    class="transition-all relative h-full w-full flex justify-start aspect-video m-auto"
     bind:this={cameraContainer}
+    data-testid={!$mediaStreamConstraintsStore.video && "test-class-video"}
 >
     <div class="z-[251] absolute aspect-ratio p-4 {small ? 'hidden' : ''}">
         {#if $mediaStreamConstraintsStore.audio}
@@ -160,8 +161,8 @@
 
             <div
                 class="aspect-video w-full absolute top-0 left-0 overflow-hidden z-20 rounded-lg transition-all bg-no-repeat bg-center bg-contrast/80 backdrop-blur{$mediaStreamConstraintsStore.audio
-                    ? 'border-6 border-solid border-color'
-                    : ''}"
+                    ? 'border-6 border-solid border-color '
+                    : 'media-box-micropohone-off'}"
                 style="background-image: url({loaderImg})"
             >
                 <div class="text-white/50 text-xxs absolute w-full h-6 left-0 text-center top-0 -bottom-20 m-auto z-10">

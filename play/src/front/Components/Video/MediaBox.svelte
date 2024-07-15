@@ -13,6 +13,7 @@
     import ScreenSharingMediaBox from "./ScreenSharingMediaBox.svelte";
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
     import JitsiMediaBox from "./JitsiMediaBox.svelte";
+    import { mediaStreamConstraintsStore, requestedMicrophoneState, silentStore } from "../../Stores/MediaStore";
 
     export let streamable: Streamable;
     export let isHightlighted = false;
@@ -39,8 +40,11 @@
 
     $: videoEnabled = $constraintStore ? $constraintStore.video : false;
     $: isHightlighted = $highlightedEmbedScreen === streamable;
+
+    $: console.log($mediaStreamConstraintsStore.audio);
 </script>
 
+<!-- svelte-ignore missing-declaration -->
 <!-- Bug with tansition : transition:fly={{ y: 50, duration: 150 }} -->
 
 {#if streamable instanceof VideoPeer}
@@ -52,6 +56,7 @@
             class:m-auto={!isHightlighted && !videoEnabled}
             class:aspect-video={!isHightlighted && !videoEnabled}
             class:clickable={isClickable}
+            id="video-media-box"
             in:fly={{ y: 50, duration: 150 }}
         >
             <VideoMediaBox peer={streamable} />
@@ -73,6 +78,7 @@
         class:flex={!isHightlighted}
         class:media-box-camera-on-size={!isHightlighted && streamable.getVideoTrack()}
         class:media-box-camera-off-size={!isHightlighted && !streamable.getVideoTrack()}
+        class:media-box-micropohone-off={!$mediaStreamConstraintsStore.audio}
         class:max-w-sm={isHightlighted && !streamable.getVideoTrack()}
         class:mx-auto={isHightlighted && !streamable.getVideoTrack()}
         class:m-auto={!isHightlighted && !streamable.getVideoTrack()}

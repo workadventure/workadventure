@@ -15,6 +15,7 @@
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { Streamable } from "../../Stores/StreamableCollectionStore";
     import reportImg from "./images/report.svg";
+    import { mediaStreamConstraintsStore } from "../../Stores/MediaStore";
 
     export let embedScreen: Streamable;
     export let trackStreamWraper: TrackStreamWrapperInterface;
@@ -66,7 +67,10 @@
     }
 </script>
 
-<div class="flex h-full w-full">
+<div
+    class="flex h-full w-full bg-contrast/90 rounded {$mediaStreamConstraintsStore.audio ? 'background-color' : ''}"
+    id="user-menu"
+>
     <!-- Pin -->
     {#if videoEnabled}
         <button
@@ -185,5 +189,9 @@
             opacity: 1;
             transform: scale(1.2);
         }
+    }
+
+    .background-color {
+        background-color: #4156f6;
     }
 </style>
