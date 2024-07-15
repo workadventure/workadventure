@@ -31,5 +31,5 @@
 </script>
 
 <div>
-    <InputTags label="Tags" value={[]} queryOptions={searchWorldTags}   {...$$props} />
+    <InputTags label="Tags" value={[]} queryOptions={searchWorldTags}   {...$$props} testId="worldTagsAutoCompleteInput" />
 </div>
