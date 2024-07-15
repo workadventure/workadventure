@@ -14,28 +14,14 @@
     import { LL } from "../../../i18n/i18n-svelte";
 
     import Woka from "../Woka/WokaFromUserId.svelte";
-    import {
-        mediaStreamConstraintsStore,
-        requestedMicrophoneState,
-        // requestedCameraState,
-        selectDefaultSpeaker,
-        speakerSelectedStore,
-    } from "../../Stores/MediaStore";
+    import { mediaStreamConstraintsStore, selectDefaultSpeaker, speakerSelectedStore } from "../../Stores/MediaStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import loaderImg from "../images/loader.svg";
     import MicOffIcon from "../Icons/MicOffIcon.svelte";
-    import FullScreenIcon from "../Icons/FullScreenIcon.svelte";
-    import BusinessCardIcon from "../Icons/BusinessCardIcon.svelte";
-    import VolumeIcon from "../Icons/VolumeIcon.svelte";
-    import FlagIcon from "../Icons/FlagIcon.svelte";
-    import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
-    import MessageCircleIcon from "../Icons/MessageCircleIcon.svelte";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import ScreenShareIcon from "../Icons/ScreenShareIcon.svelte";
     import { highlightFullScreen, setHeightScreenShare } from "../../Stores/ActionsCamStore";
-    import VisitCard from "../VisitCard/VisitCard.svelte";
-    import { requestVisitCardsStore } from "../../Stores/GameStore";
-    import { TrackStreamWrapperInterface } from "../../Streaming/Contract/TrackStreamWrapperInterface";
+    import ChevronRightIcon from "../Icons/ChevronRightIcon.svelte";
     import ActionMediaBox from "./ActionMediaBox.svelte";
 
     // Extend the HTMLVideoElement interface to add the setSinkId method.
@@ -48,7 +34,6 @@
     export let isHightlighted = false;
     export let peer: VideoPeer;
 
-    let trackStreamWraper: TrackStreamWrapperInterface;
     let streamStore = peer.streamStore;
     let volumeStore = peer.volumeStore;
     let name = peer.userName;
@@ -73,7 +58,6 @@
     let unsubscribeHighlightEmbedScreen: Unsubscriber;
     let isMobile: boolean;
     let fullScreen = false;
-    let showVisitCard = false;
 
     const debug = Debug("VideoMediaBox");
 
@@ -291,28 +275,9 @@
             aspectRatio = videoElement != undefined ? videoElement.videoWidth / videoElement.videoHeight : 1;
         }, 1000);
     }
-
-    function openBlockOrReportPopup() {
-        trackStreamWraper.blockOrReportUser();
-    }
-
-    function showVisitCardFromCamMenu() {
-        console.log("je suis dans cette fonction");
-        console.log($requestVisitCardsStore, "requestVisitCardsStore");
-        showVisitCard = !showVisitCard;
-        console.log("showVisitCard", showVisitCard);
-    }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- class="video-container transition-all relative h-full aspect-video" -->
-
-<!-- Dans la premiere div     style="height:{$heightCamWrapper}px;"-->
-<!-- <div class={$mediaStreamConstraintsStore.audio ? "border-4 border-solid border-color rounded-lg" : ""}>
-
-    class:video-off={!videoEnabled}
- class:h-full={$embedScreenLayoutStore === LayoutMode.VideoChat}
--->
 <div
     class="group/screenshare flex justify-center mx-auto aspect-video {$highlightFullScreen
         ? 'h-[100%] w-[100%] fixed top-0 left-0'
@@ -321,10 +286,8 @@
     bind:this={cameraContainer}
     id="test5"
 >
-    <ActionMediaBox {embedScreen} trackStreamWraper={peer} {videoEnabled} />
-
     <div
-        class="aspect-video z-20 rounded-lg transition-all h-full bg-no-repeat bg-center aspect-video bg-contrast/80 backdrop-blur{$mediaStreamConstraintsStore.audio
+        class="aspect-video z-20 rounded-lg transition-all h-full bg-no-repeat bg-center bg-contrast/80 backdrop-blur{$mediaStreamConstraintsStore.audio
             ? 'border-8 border-solid border-color rounded-lg'
             : ''}"
         style="background-image: url({loaderImg})"
@@ -341,13 +304,24 @@
         {:else if $statusStore === "error"}
             <div class="rtc-error" />
         {/if}
+
+        <div class="flex justify-start">
+            {#if $statusStore === "connected"}
+                <div class="z-[251] absolute aspect-ratio p-4">
+                    {#if $mediaStreamConstraintsStore.audio}
+                        <SoundMeterWidget
+                            volume={$volumeStore}
+                            classcss="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
+                            barColor={textColor}
+                        />
+                    {:else}
+                        <MicOffIcon />
+                    {/if}
+                </div>
+            {/if}
+        </div>
+
         <!-- svelte-ignore a11y-media-has-caption -->
-
-        <!-- Dans la video class:max-h-[230px]={videoEnabled && !isHightlighted}
-                    class:max-h-full={videoEnabled && !isHightlighted && $embedScreenLayoutStore === LayoutMode.Presentation}
-                                class:h-full={videoEnabled}
-
--->
         <video
             bind:this={videoElement}
             class="h-full flex justify-center aspect-video"
@@ -358,6 +332,7 @@
             autoplay
             playsinline
         />
+
         <div
             class={isHighlighted
                 ? "w-8 h-8 bg-contrast/80 flex rounded-sm z-10 opacity-0 group-hover/screenshare:opacity-100 absolute inset-0 mx-auto"
@@ -404,13 +379,12 @@
                     </div>
                 </div>
             {/if}
-            <div class="absolute bottom-4 left-4 z-30 responsive-dimension">
-                <div class="flex">
-                    <div
-                        class="relative rounded backdrop-blur px-4 py-1 text-white text-sm pl-12 pr-9 bold {$mediaStreamConstraintsStore.audio
-                            ? 'background-color'
-                            : 'bg-contrast/90'}"
-                    >
+
+            <div class="absolute bottom-4 left-4 z-30 responsive-dimension bg-contrast/90 rounded">
+                <div
+                    class="flex justify-between {$mediaStreamConstraintsStore.audio ? 'background-color rounded' : ''}"
+                >
+                    <div class="relative rounded backdrop-blur px-2 py-1 text-white text-sm pl-12 bold ">
                         <div class="absolute left-1 -top-1 z-30" style="image-rendering:pixelated">
                             <Woka
                                 userId={peer.userId}
@@ -420,95 +394,31 @@
                             />
                         </div>
                         {name}
-                        <div
-                            class="p-1 rounded-sm hover:bg-white/20 absolute right-0 top-0 bottom-0 m-auto h-6 w-6 mr-1 transition-all pointer-events-auto {showUserSubMenu
-                                ? 'bg-white/20 hover:bg-white/30'
-                                : ''}"
-                            on:click={() => (showUserSubMenu = !showUserSubMenu)}
-                        >
-                            <ChevronDownIcon
-                                strokeWidth="2.5"
-                                height="h-4"
-                                width="w-4"
-                                classList="aspect-ratio transition-all {showUserSubMenu ? 'rotate-180' : ''}"
-                            />
-                        </div>
-                        {#if showUserSubMenu}
-                            <div
-                                class="rounded bg-contrast/80 font-normal py-1 absolute z-20 mt-1.5 right-0 text-right w-40 overflow-hidden cursor-pointer"
-                            >
-                                <div
-                                    class="flex items-center px-4 py-1 hover:bg-white/10 cursor-pointer"
-                                    on:click={() => highlightedEmbedScreen.highlight(embedScreen)}
-                                >
-                                    <FullScreenIcon height="h-4" width="w-4" />
-                                    <div class="pl-2 cursor-pointer">Show wide</div>
-                                    <!-- trans -->
-                                </div>
-                                <div
-                                    class="flex items-center px-4 py-1 hover:bg-white/10 cursor-pointer"
-                                    on:click={showVisitCardFromCamMenu}
-                                >
-                                    <BusinessCardIcon height="h-4" width="w-4" />
-                                    <div class="pl-2 cursor-pointer">Business card</div>
-                                    {#if $requestVisitCardsStore && showVisitCard}
-                                        <VisitCard visitCardUrl={$requestVisitCardsStore} />
-                                    {/if}
-                                    <!-- trans -->
-                                </div>
-                                <div class="flex items-center px-4 py-1 hover:bg-white/10 cursor-pointer">
-                                    <MessageCircleIcon height="h-4" width="w-4" />
-                                    <div class="pl-2 cursor-pointer">Send message</div>
-                                    <!-- trans -->
-                                </div>
-                                <div
-                                    class="flex items-center px-4 py-1 hover:bg-white/10 cursor-pointer"
-                                    on:click={() => requestedMicrophoneState.enableMicrophone()}
-                                >
-                                    <VolumeIcon height="h-4" width="w-4" />
-                                    <div class="pl-2 cursor-pointer">Volume</div>
-                                    <!-- trans -->
-                                </div>
-                                <div
-                                    class="flex items-center px-4 py-1 hover:bg-white/10 cursor-pointer"
-                                    on:click={() => requestedMicrophoneState.disableMicrophone()}
-                                >
-                                    <MicOffIcon height="h-4" width="w-4" />
-                                    <div class="pl-2 cursor-pointer">Mute</div>
-                                    <!-- trans -->
-                                </div>
-                                <div
-                                    class="flex items-center px-4 py-1 hover:bg-danger cursor-pointer"
-                                    on:click={() => analyticsClient.reportMeetingAction()}
-                                    on:click|preventDefault|stopPropagation={() => openBlockOrReportPopup()}
-                                >
-                                    <FlagIcon height="h-4" width="w-4" />
-                                    <div class="pl-2 cursor-pointer">Report user</div>
-                                    <!-- trans -->
-                                </div>
-                            </div>
-                        {/if}
+
                         {#if $requestedScreenSharingState === true}
                             <ScreenShareIcon />
                         {/if}
                     </div>
+                    <div
+                        class="p-1 rounded-sm hover:bg-white/20 right-0 top-0 bottom-0 m-auto h-6 w-6 mr-1 transition-all pointer-events-auto {showUserSubMenu
+                            ? 'bg-white/20 hover:bg-white/30'
+                            : ''}"
+                        on:click={() => (showUserSubMenu = !showUserSubMenu)}
+                    >
+                        <ChevronRightIcon
+                            strokeWidth="2.5"
+                            height="h-4"
+                            width="w-4"
+                            classList="aspect-ratio transition-all {showUserSubMenu ? 'rotate-180' : ''}"
+                        />
+                    </div>
+                    {#if showUserSubMenu}
+                        <div class="">
+                            <ActionMediaBox {embedScreen} trackStreamWraper={peer} {videoEnabled} />
+                        </div>
+                    {/if}
+                    <!--  -->
                 </div>
-            </div>
-            <div
-                class="z-[251] absolute aspect-ratio right-3 w-8 p-1 flex items-center justify-center {$constraintStore &&
-                $constraintStore.audio !== false
-                    ? 'bottom-4'
-                    : 'bottom-3'}"
-            >
-                {#if $constraintStore && $constraintStore.audio !== false}
-                    <SoundMeterWidget
-                        volume={$volumeStore}
-                        classcss="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
-                        barColor={textColor}
-                    />
-                {:else}
-                    <MicOffIcon />
-                {/if}
             </div>
         {/if}
     </div>
@@ -548,7 +458,7 @@
             ? "absolute top-0 bottom-0 right-0 left-0 m-auto h-28 w-60 z-20 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 flex items-center justify-center cursor-pointer"
             : "hidden"}
     >
-        <div class="block flex flex-col justify-evenly cursor-pointer h-full w-full">
+        <div class="flex flex-col justify-evenly cursor-pointer h-full w-full">
             <div
                 class="svg w-full hover:bg-white/10 flex justify-around items-center z-25 rounded-lg"
                 on:click={untogglefFullScreen}

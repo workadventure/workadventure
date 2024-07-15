@@ -1,6 +1,5 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
-    import { Color } from "@workadventure/shared-utils";
     import { fly } from "svelte/transition";
     import {
         cameraEnergySavingStore,
@@ -12,7 +11,6 @@
     } from "../Stores/MediaStore";
     import { LL } from "../../i18n/i18n-svelte";
     import { inExternalServiceStore } from "../Stores/MyMediaStore";
-    import { gameManager } from "../Phaser/Game/GameManager";
     // import { heightCamWrapper } from "../Stores/EmbedScreensStore";
     import {
         requestedScreenSharingState,
@@ -34,9 +32,9 @@
     // import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
 
     let stream: MediaStream | null;
-    let userName = gameManager.getPlayerName();
-    let backgroundColor = Color.getColorByString(userName ?? "default");
-    let textColor = Color.getTextColorByBackgroundColor(backgroundColor);
+    // let userName = gameManager.getPlayerName();
+    // let backgroundColor = Color.getColorByString(userName ?? "default");
+    // let textColor = Color.getTextColorByBackgroundColor(backgroundColor);
 
     // Voir pour assigner un userId a un partage d'écran et ensuite si il est egale ai user id j'affiche l'icone
 
@@ -105,13 +103,20 @@
 <!-- style={small ? "width:100%" : "height:" + $heightCamWrapper + "px;"} -->
 
 <div
-    class="transition-all relative h-full w-full flex flex justify-center aspect-video m-auto dimension"
+    class="transition-all relative h-full w-full flex justify-start aspect-video m-auto dimension"
     bind:this={cameraContainer}
 >
+    <div class="z-[251] absolute aspect-ratio p-4 {small ? 'hidden' : ''}">
+        {#if $mediaStreamConstraintsStore.audio}
+            <SoundMeterWidget volume={$localVolumeStore} classcss="absolute" barColor="white" />
+        {:else}
+            <MicOffIcon />
+        {/if}
+    </div>
     <!--If we are in a silent zone-->
     {#if $silentStore}
         <div
-            class="z-[250] rounded-lg py-4 px-3 text-white border-[1px] border-solid border-danger flex flex-col items-center content-center justify-between media-box-camera-off-size bg-no-repeat bg-center bg-danger-1000/70 backdrop-blur rounded-xl text-center -translate-y-8"
+            class="z-[250] py-4 px-3 text-white border-[1px] border-solid border-danger flex flex-col items-center content-center justify-between media-box-camera-off-size bg-no-repeat bg-center bg-danger-1000/70 backdrop-blur rounded-xl text-center -translate-y-8"
         >
             <div class="flex flex-col -mt-20 leading-3">
                 <img src={silentImg} alt="Silent emoji" class="h-40 w-40" />
@@ -171,17 +176,6 @@
                     muted
                     playsinline
                 />
-                <div
-                    class="z-[251] absolute aspect-ratio right-4 w-8 p-1 flex items-center justify-center {small
-                        ? 'hidden'
-                        : ''} {$mediaStreamConstraintsStore.audio ? 'bottom-5' : 'bottom-3'}"
-                >
-                    {#if $mediaStreamConstraintsStore.audio}
-                        <SoundMeterWidget volume={$localVolumeStore} classcss="absolute" barColor="white" />
-                    {:else}
-                        <MicOffIcon />
-                    {/if}
-                </div>
             </div>
             <!-- If we do not have a video to display-->
         {:else if !$requestedCameraState && !$cameraEnergySavingStore}
@@ -205,17 +199,6 @@
                         {$LL.camera.my.nameTag()}
                     </span>
                 </div>
-                {#if $mediaStreamConstraintsStore.audio}
-                    <SoundMeterWidget
-                        volume={$localVolumeStore}
-                        classcss="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
-                        barColor={textColor}
-                    />
-                {:else}
-                    <div>
-                        <MicOffIcon />
-                    </div>
-                {/if}
             </div>
         {/if}
     {/if}
