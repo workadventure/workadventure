@@ -14,7 +14,7 @@
     export let handleChange = () => {};
     export let testId: string | undefined = undefined;
     export let placeholder = "Select rights";
-    export let queryOptions: undefined | ((filterText: string) => Promise<string[]>) = undefined;
+    export let queryOptions: undefined | ((filterText: string) => Promise<{ value: string; label: string; }[]>) = undefined;
 
     let filterText = "";
 
