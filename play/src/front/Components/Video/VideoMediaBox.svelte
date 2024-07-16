@@ -322,10 +322,52 @@
             {/if}
         </div>
 
+        <div class="fixed w-fit bottom-4 ml-4 z-30 responsive-dimension bg-contrast/90 rounded">
+            <div
+                class="flex justify-between {$mediaStreamConstraintsStore.audio
+                    ? 'background-color bg-contrast/90 rounded'
+                    : ''} "
+            >
+                <div class="relative rounded backdrop-blur px-2 py-1 text-white text-sm pl-12 bold ">
+                    <div class="absolute left-1 -top-1 z-30" style="image-rendering:pixelated">
+                        <Woka
+                            userId={peer.userId}
+                            placeholderSrc={""}
+                            customHeight="42&& !$cameraEnergySavingStorepx"
+                            customWidth="42px"
+                        />
+                    </div>
+                    {name}
+
+                    {#if $requestedScreenSharingState === true}
+                        <ScreenShareIcon />
+                    {/if}
+                </div>
+                <div
+                    class="pt-1 rounded-sm hover:bg-white/20 right-0 top-0 bottom-0 m-auto h-6 transition-all pointer-events-auto {showUserSubMenu
+                        ? 'bg-white/20 hover:bg-white/30'
+                        : ''}"
+                    id="user-menu-btn"
+                    on:click={() => (showUserSubMenu = !showUserSubMenu)}
+                >
+                    <ChevronRightIcon
+                        strokeWidth="2.5"
+                        height="h-4"
+                        width="w-4"
+                        classList="aspect-ratio transition-all {showUserSubMenu ? 'rotate-180' : ''}"
+                    />
+                </div>
+
+                {#if showUserSubMenu}
+                    <ActionMediaBox {embedScreen} trackStreamWraper={peer} {videoEnabled} />
+                {/if}
+            </div>
+        </div>
+
         <!-- svelte-ignore a11y-media-has-caption -->
         <video
             bind:this={videoElement}
-            class="h-full flex justify-center aspect-video"
+            class="h-full flex w-full justify-center aspect-video"
             class:h-0={!videoEnabled}
             class:w-0={!videoEnabled}
             class:object-contain={isHightlighted || aspectRatio < 1}
@@ -380,49 +422,6 @@
                     </div>
                 </div>
             {/if}
-
-            <div class="absolute bottom-4 left-2 z-30 responsive-dimension bg-contrast/90 rounded">
-                <div
-                    class="flex justify-between {$mediaStreamConstraintsStore.audio
-                        ? 'background-color bg-contrast/90 rounded'
-                        : ''} "
-                >
-                    <div class="relative rounded backdrop-blur px-2 py-1 text-white text-sm pl-12 bold ">
-                        <div class="absolute left-1 -top-1 z-30" style="image-rendering:pixelated">
-                            <Woka
-                                userId={peer.userId}
-                                placeholderSrc={""}
-                                customHeight="42&& !$cameraEnergySavingStorepx"
-                                customWidth="42px"
-                            />
-                        </div>
-                        {name}
-
-                        {#if $requestedScreenSharingState === true}
-                            <ScreenShareIcon />
-                        {/if}
-                    </div>
-                    <div
-                        class="pt-1 rounded-sm hover:bg-white/20 right-0 top-0 bottom-0 m-auto h-6 transition-all pointer-events-auto {showUserSubMenu
-                            ? 'bg-white/20 hover:bg-white/30'
-                            : ''}"
-                        id="user-menu-btn"
-                        on:click={() => (showUserSubMenu = !showUserSubMenu)}
-                    >
-                        <ChevronRightIcon
-                            strokeWidth="2.5"
-                            height="h-4"
-                            width="w-4"
-                            classList="aspect-ratio transition-all {showUserSubMenu ? 'rotate-180' : ''}"
-                        />
-                    </div>
-
-                    {#if showUserSubMenu}
-                        <ActionMediaBox {embedScreen} trackStreamWraper={peer} {videoEnabled} />
-                    {/if}
-                    <!--  -->
-                </div>
-            </div>
         {/if}
     </div>
     <div
