@@ -1,7 +1,7 @@
 import { expect, test, webkit } from '@playwright/test';
 import { login } from './utils/roles';
 import Map from "./utils/map";
-import { resetWamMaps } from './utils/map-editor/uploader';
+// import { resetWamMaps } from './utils/map-editor/uploader';
 import Menu from "./utils/menu";
 import MapEditor from "./utils/mapeditor";
 import AreaEditor from "./utils/map-editor/areaEditor";
