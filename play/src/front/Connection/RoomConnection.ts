@@ -71,6 +71,7 @@ import {
     UnwatchSpaceMessage,
     PublicEvent,
     PrivateEvent,
+    OauthRefreshToken,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -1520,6 +1521,7 @@ export class RoomConnection implements RoomConnection {
         });
         return spaceFilter;
     }
+
     public emitUserJoinSpace(spaceName: string) {
         const spaceFilter: SpaceFilterMessage = {
             filterName: "",
@@ -1694,6 +1696,19 @@ export class RoomConnection implements RoomConnection {
             throw new Error("Unexpected answer");
         }
         return answer.chatMembersAnswer;
+    }
+
+    public async getOauthRefreshToken(tokenToRefresh: string): Promise<OauthRefreshToken> {
+        const answer = await this.query({
+            $case: "oauthRefreshTokenQuery",
+            oauthRefreshTokenQuery: {
+                tokenToRefresh,
+            },
+        });
+        if (answer.$case !== "oauthRefreshTokenAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.oauthRefreshTokenAnswer;
     }
 
     public emitUpdateChatId(email: string, chatId: string) {

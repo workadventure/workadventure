@@ -1,4 +1,11 @@
-import type { AdminApiData, ErrorApiData, MapDetailsData, MemberData, RoomRedirect } from "@workadventure/messages";
+import type {
+    AdminApiData,
+    ErrorApiData,
+    MapDetailsData,
+    MemberData,
+    OauthRefreshToken,
+    RoomRedirect,
+} from "@workadventure/messages";
 import { Capabilities } from "@workadventure/messages";
 import { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
 import { ShortMapDescriptionList } from "./ShortMapDescription";
@@ -125,4 +132,6 @@ export interface AdminInterface {
     getWorldChatMembers(playUri: string, searchText: string): Promise<WorldChatMembersData>;
 
     updateChatId(userIdentifier: string, chatId: string): void;
+
+    refreshOauthToken(token: string): Promise<OauthRefreshToken>;
 }
