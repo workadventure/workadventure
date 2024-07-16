@@ -27,7 +27,7 @@ export async function selectMedias(page: Page) {
 
   await page.click("text=Save");
 
-  await expect(page.locator("div#main-layout")).toBeVisible();
+  await expect(page.locator("#main-layout")).toBeVisible();
 }
 
 export async function hideNoCamera(page: Page){

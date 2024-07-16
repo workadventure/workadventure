@@ -29,7 +29,7 @@ test.describe('Meeting actions test', () => {
     await login(page, 'Alice');
 
     // Move user
-    await Map.walkTo(page, 'ArrowRight', 6000);
+    await Map.walkTo(page, 'ArrowRight', 10000);
 
     const newBrowser = await browser.browserType().launch();
     const userBob = await newBrowser.newPage();
@@ -38,7 +38,7 @@ test.describe('Meeting actions test', () => {
     // Login user "Bob"
     await login(userBob, 'Bob');
     // Move user
-    await Map.walkTo(userBob, 'ArrowRight', 1000);
+    await Map.walkTo(userBob, 'ArrowRight', 5000);
 
     // The user in the bubble meeting should be visible
     await expect(page.locator('#container-media')).toBeVisible({timeout: 20_000});
