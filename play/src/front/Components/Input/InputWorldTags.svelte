@@ -20,7 +20,8 @@
                 });
                 result.push(customTag);
                 return result;
-            } catch () {
+            } catch (error) {
+                console.error(error);
                 return [customTag];
             }
         }
