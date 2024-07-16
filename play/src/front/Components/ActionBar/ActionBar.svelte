@@ -1357,13 +1357,15 @@
                         </div>
                         {#if adminMenuIsDropped}
                             <div
-                                class="absolute mt-2 top-14 @xl/actions:top-16 right-0 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 right-0 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all"
+                                class="absolute mt-2 top-14 @xl/actions:top-16 right-0 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-transparent before:border-b-contrast/80 transition-all"
+                                data-testid="btn-admin"
                                 transition:fly={{ y: 40, duration: 150 }}
                             >
                                 <ul class="p-0 m-0">
                                     {#if $mapEditorActivated}
                                         <li
                                             class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold"
+                                            id="toggle-map-editor"
                                             on:click={() => toggleMapEditorMode()}
                                         >
                                             <div

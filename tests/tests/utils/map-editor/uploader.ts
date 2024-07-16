@@ -33,8 +33,6 @@ export async function resetWamMaps(request: APIRequestContext) {
         throw new Error(`File not found: ${filePath}`);
     }
 
-
-
     const uploadFile1 = await request.post(new URL("upload", map_storage_url).toString(), {
         multipart: {
             file: fs.createReadStream(filePath),

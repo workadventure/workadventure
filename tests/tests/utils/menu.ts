@@ -10,13 +10,17 @@ class Menu {
     }
 
     async openMapEditor(page: Page) {
-        await page.getByRole('button', {name: 'toggle-map-editor'}).click();
-        await expect(await page.getByRole('button', {name: 'toggle-map-editor'}).first()).toHaveClass(/border-top-light/);
-    }
+        await page.getByTestId('action-admin');
+        await expect(page.locator('#action-admin')).toBeVisible();
+        await page.click('#action-admin');
 
-    async openMenu(page: Page) {
-        await page.click('#menuIcon img:first-child');
-        await expect(await page.locator('#menuIcon')).toHaveClass(/border-top-light/);
+        await page.getByTestId('btn-admin');
+        await expect(page.locator('#toggle-map-editor')).toBeVisible();
+        await page.click('#toggle-map-editor');
+
+        // Vérifiez que l'éditeur de carte est bien ouvert
+        await expect(page.locator('.map-editor')).toBeVisible();
+        // await page.getByRole('div', {name: 'toggle-map-editor'}).click();
     }
 
     async closeMenu(page: Page) {
@@ -25,7 +29,7 @@ class Menu {
     }
 
     async closeMapEditor(page: Page) {
-        await page.getByRole('button', {name: 'toggle-map-editor'}).click();
+        await page.getByRole('button', {name: 'close-window'}).click();
         await expect(await page.getByRole('button', {name: 'toggle-map-editor'}).first()).not.toHaveClass(/border-top-light/);
     }
 
