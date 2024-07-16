@@ -41,6 +41,8 @@ import {
     UserMovesMessage,
     ViewportMessage,
     WatchSpaceMessage,
+    OauthRefreshTokenQuery,
+    OauthRefreshTokenAnswer,
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import axios, { AxiosResponse, isAxiosError } from "axios";
@@ -1600,6 +1602,13 @@ export class SocketManager implements ZoneEventListener {
         } catch (e) {
             console.error("SocketManager => handleUpdateChatId => error while updating chat id", e);
         }
+    }
+
+    async handleOauthRefreshTokenQuery(
+        oauthRefreshTokenQuery: OauthRefreshTokenQuery
+    ): Promise<OauthRefreshTokenAnswer> {
+        const { token, message } = await adminService.refreshOauthToken(oauthRefreshTokenQuery.tokenToRefresh);
+        return { message, token };
     }
 
     // handle the public event for proximity message

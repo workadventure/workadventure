@@ -905,6 +905,18 @@ export class IoSocketController {
                                         this.sendAnswerMessage(socket, answerMessage);
                                         break;
                                     }
+                                    case "oauthRefreshTokenQuery": {
+                                        const oauthRefreshTokenAnswer =
+                                            await socketManager.handleOauthRefreshTokenQuery(
+                                                message.message.queryMessage.query.oauthRefreshTokenQuery
+                                            );
+                                        answerMessage.answer = {
+                                            $case: "oauthRefreshTokenAnswer",
+                                            oauthRefreshTokenAnswer,
+                                        };
+                                        this.sendAnswerMessage(socket, answerMessage);
+                                        break;
+                                    }
                                     default: {
                                         socketManager.forwardMessageToBack(socket, message.message);
                                     }

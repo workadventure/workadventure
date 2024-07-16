@@ -60,4 +60,5 @@ export interface FrontConfigurationInterface {
     CARDS_ENABLED: boolean;
     EMBEDLY_KEY: string | undefined;
     MATRIX_PUBLIC_URI: string | undefined;
+    WA_MODULE_EXTENSION_URL: string | undefined;
 }
