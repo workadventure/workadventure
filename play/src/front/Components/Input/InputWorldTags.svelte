@@ -2,11 +2,11 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import InputTags from "./InputTags.svelte";
 
-    async function searchWorldTags(filterText: string): Promise<{ value: string; label: string; }[]> {
+    async function searchWorldTags(filterText: string): Promise<{ value: string; label: string }[]> {
         const customTag = {
-                    value: filterText,
-                    label: `add a new tag: '${filterText}'`,
-                };
+            value: filterText,
+            label: `add a new tag: '${filterText}'`,
+        };
         if (filterText.length === 0) return [];
         const connection = gameManager.getCurrentGameScene().connection;
         if (connection) {
@@ -25,10 +25,16 @@
                 return [customTag];
             }
         }
-        return[customTag];
+        return [customTag];
     }
 </script>
 
 <div>
-    <InputTags label="Tags" value={[]} queryOptions={searchWorldTags}   {...$$props} testId="worldTagsAutoCompleteInput" />
+    <InputTags
+        label="Tags"
+        value={[]}
+        queryOptions={searchWorldTags}
+        {...$$props}
+        testId="worldTagsAutoCompleteInput"
+    />
 </div>
