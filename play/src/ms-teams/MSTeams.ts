@@ -1,8 +1,9 @@
-import axios, { AxiosInstance } from "axios";
+import axios, { AxiosError, AxiosInstance } from "axios";
 import { z } from "zod";
 import { AvailabilityStatus, OauthRefreshToken } from "@workadventure/messages";
 import { subscribe } from "svelte/internal";
-import { Unsubscriber } from "svelte/store";
+import { Unsubscriber, Updater } from "svelte/store";
+import { CalendarEventInterface } from "@workadventure/shared-utils";
 import { ExtensionModule, ExtensionModuleOptions } from "../extension-module/extension-module";
 import { TeamsActivity, TeamsAvailability } from "./MSTeamsInterface";
 
@@ -10,12 +11,73 @@ const MS_GRAPH_ENDPOINT = "https://graph.microsoft.com/v1.0";
 const MS_ME_ENDPOINT = "/me";
 const MS_ME_PRESENCE_ENDPOINT = "/me/presence";
 
+interface MSTeamsOnlineMeeting {
+    audioConferencing: {
+        conferenceId: string;
+        tollNumber: string;
+        tollFreeNumber: string;
+        dialinUrl: string;
+    };
+    chatInfo: {
+        threadId: string;
+        messageId: string;
+        replyChainMessageId: string;
+    };
+    creationDateTime: string;
+    startDateTime: string;
+    endDateTime: string;
+    id: string;
+    joinWebUrl: string;
+    subject: string;
+    joinMeetingIdSettings: {
+        isPasscodeRequired: boolean;
+        joinMeetingId: string;
+        passcode: string;
+    };
+    externalId: string;
+    videoTeleconferenceId: string;
+    allowedPresenters: string;
+}
+
+interface MSTeamsCalendarEvent {
+    id: string;
+    organizer: {
+        emailAddress: {
+            name: string;
+            address: string;
+        };
+    };
+    locations: {
+        displayName: string;
+    };
+    start: {
+        dateTime: string;
+        timeZone: string;
+    };
+    end: {
+        dateTime: string;
+        timeZone: string;
+    };
+    body: {
+        contentType: string;
+        content: string;
+    };
+    webLink: string;
+    onlineMeeting: {
+        joinUrl: string;
+    };
+}
+
 class MSTeams implements ExtensionModule {
     private msAxiosClient!: AxiosInstance;
     private teamsAvailability!: TeamsAvailability;
     private clientId!: string;
     private listenToTeamsStatusInterval: NodeJS.Timer | null = null;
     private listenToWorkadventureStatus: Unsubscriber | undefined = undefined;
+    private calendarEventsStoreUpdate?: (
+        this: void,
+        updater: Updater<Map<string, CalendarEventInterface>>
+    ) => void | undefined = undefined;
 
     init(roomMetadata: unknown, options?: ExtensionModuleOptions) {
         const microsoftTeamsMetadata = this.getMicrosoftTeamsMetadata(roomMetadata);
@@ -48,6 +110,9 @@ class MSTeams implements ExtensionModule {
                     this.setStatus(workadventureStatus);
                 }
             );
+        }
+        if (options?.calendarEventsStoreUpdate) {
+            this.calendarEventsStoreUpdate = options?.calendarEventsStoreUpdate;
         }
         console.info("Microsoft teams module for WorkAdventure initialized");
     }
@@ -246,6 +311,56 @@ class MSTeams implements ExtensionModule {
                 return "Busy";
             default:
                 return "Available";
+        }
+    }
+
+    // Update the calendar events
+    async updateCalendarEvents(): Promise<void> {
+        const myCalendarEvents = await this.getMyCalendarEvent();
+        const calendarEvents = new Map<string, CalendarEventInterface>();
+        for (const event of myCalendarEvents) {
+            const calendarEvent: CalendarEventInterface = {
+                id: event.id,
+                title: event.locations.displayName,
+                start: new Date(event.start.dateTime),
+                end: new Date(event.end.dateTime),
+                allDay: false,
+                resource: event.body,
+            };
+            calendarEvents.set(event.id, calendarEvent);
+        }
+        if (this.calendarEventsStoreUpdate !== undefined) {
+            this.calendarEventsStoreUpdate(() => {
+                return calendarEvents;
+            });
+        }
+    }
+
+    private async getMyCalendarEvent(): Promise<MSTeamsCalendarEvent[]> {
+        const today = new Date();
+        // Create date between 00:00 and 23:59
+        const startDateTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0);
+        const endDateTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
+        // Get all events between today 00:00 and 23:59
+        return await this.msAxiosClient.get(
+            `/me/calendar/events?startDateTime=${startDateTime.toISOString()}&endDateTime=${endDateTime.toISOString()}`
+        );
+    }
+
+    async createOrGetMeeting(meetingId: string): Promise<MSTeamsOnlineMeeting> {
+        try {
+            const dateNow = new Date();
+            return await this.msAxiosClient.post(`/me/onlineMeetings/createOrGet`, {
+                externalId: meetingId,
+                // Start date time, now
+                startDateTime: dateNow.toISOString(),
+                subject: "Meet Now",
+            });
+        } catch (e) {
+            if ((e as AxiosError).response?.status === 401) {
+                return await this.createOrGetMeeting(meetingId);
+            }
+            throw e;
         }
     }
 }

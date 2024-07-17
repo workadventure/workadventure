@@ -61,7 +61,11 @@
     };
 
     const unsubcribeToAvailabilityStatusStore = availabilityStatusStore.subscribe((newStatus: AvailabilityStatus) => {
-        statusChanger.changeStatusTo(newStatus);
+        try {
+            statusChanger.changeStatusTo(newStatus);
+        } catch (e) {
+            console.error("Error while changing status", e);
+        }
         buttonProps = {
             ...buttonProps,
             statusColorHex: getColorHexOfStatus($availabilityStatusStore),
