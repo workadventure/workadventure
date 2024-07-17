@@ -1,5 +1,6 @@
 <script lang="ts">
     import highlightWords from "highlight-words";
+    import { get } from "svelte/store";
     import { ChatRoom } from "../../Connection/ChatConnection";
     import NotificationBadge from "../NotificationBadge.svelte";
     import { chatSearchBarValue, selectedRoom } from "../../Stores/ChatStore";
@@ -16,10 +17,15 @@
         text: $roomName.match(/\[\d*]/) ? $roomName.substring(0, $roomName.search(/\[\d*]/)) : $roomName,
         query: $chatSearchBarValue,
     });
+
+    $: isSelected = $selectedRoom?.id === room.id;
 </script>
 
 <div
     class="tw-text-md tw-flex tw-gap-2 tw-flex-row tw-items-center hover:tw-bg-white hover:tw-bg-opacity-10 hover:tw-rounded-md hover:!tw-cursor-pointer tw-p-1"
+    class:tw-bg-white={isSelected}
+    class:tw-bg-opacity-10={isSelected}
+    class:tw-rounded-md={isSelected}
     on:click={() => selectedRoom.set(room)}
 >
     <div class="tw-relative">

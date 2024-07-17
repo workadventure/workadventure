@@ -68,13 +68,19 @@
     $: messages = room?.messages;
     $: messageReaction = room?.messageReactions;
     $: userConnected = $proximityRoomConnection?.userConnected;
+    $: roomName = room?.name;
 </script>
 
 <div class="tw-flex tw-flex-col tw-flex-1 tw-overflow-hidden">
     {#if room !== undefined}
-        <button class="back-roomlist tw-p-0 tw-m-0" on:click={goBackAndClearSelectedChatMessage}>
-            <IconArrowLeft />
-        </button>
+        <div class="tw-flex tw-items-center">
+            <button class="back-roomlist tw-p-0 tw-m-0" on:click={goBackAndClearSelectedChatMessage}>
+                <IconArrowLeft />
+            </button>
+            <span class="tw-flex-1" />
+            <p class="tw-m-0 tw-p-0 tw-text-gray-400">{$roomName}</p>
+            <span class="tw-flex-1" />
+        </div>
         <ul
             on:scroll={() => loadPreviousMessageOnScrollTop()}
             bind:this={messageListRef}
@@ -143,20 +149,25 @@
             transform: translateY(-25%);
         }
     }
+
     .animate-bounce-1 {
         animation: bounce 1s infinite;
     }
+
     .animate-bounce-2 {
         animation: bounce 1s infinite 0.1s;
     }
+
     .animate-bounce-3 {
         animation: bounce 1s infinite 0.2s;
     }
+
     .message {
         min-width: 0;
         overflow-wrap: anywhere;
         position: relative;
     }
+
     .chatAvatar {
         border-style: solid;
         border-color: rgb(27 42 65 / 0.95);
