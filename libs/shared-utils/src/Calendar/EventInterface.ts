@@ -4,5 +4,13 @@ export interface CalendarEventInterface {
     start: Date;
     end: Date;
     allDay: boolean;
-    resource?: unknown;
+    resource?: {
+        body?: {
+            content?: string;
+            contentType?: string;
+        },
+        onlineMeeting?: {
+            joinUrl?: string;
+        }
+    };
 }

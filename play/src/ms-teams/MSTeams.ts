@@ -113,6 +113,7 @@ class MSTeams implements ExtensionModule {
         }
         if (options?.calendarEventsStoreUpdate) {
             this.calendarEventsStoreUpdate = options?.calendarEventsStoreUpdate;
+            this.updateCalendarEvents().catch((e) => console.error("Error while updating calendar events", e));
         }
         console.info("Microsoft teams module for WorkAdventure initialized");
     }
@@ -316,23 +317,36 @@ class MSTeams implements ExtensionModule {
 
     // Update the calendar events
     async updateCalendarEvents(): Promise<void> {
-        const myCalendarEvents = await this.getMyCalendarEvent();
-        const calendarEvents = new Map<string, CalendarEventInterface>();
-        for (const event of myCalendarEvents) {
-            const calendarEvent: CalendarEventInterface = {
-                id: event.id,
-                title: event.locations.displayName,
-                start: new Date(event.start.dateTime),
-                end: new Date(event.end.dateTime),
-                allDay: false,
-                resource: event.body,
-            };
-            calendarEvents.set(event.id, calendarEvent);
-        }
-        if (this.calendarEventsStoreUpdate !== undefined) {
-            this.calendarEventsStoreUpdate(() => {
-                return calendarEvents;
-            });
+        try {
+            const myCalendarEvents = await this.getMyCalendarEvent();
+            const calendarEvents = new Map<string, CalendarEventInterface>();
+            for (const event of myCalendarEvents) {
+                const calendarEvent: CalendarEventInterface = {
+                    id: event.id,
+                    title: event.locations.displayName,
+                    start: new Date(event.start.dateTime),
+                    end: new Date(event.end.dateTime),
+                    allDay: false,
+                    resource: {
+                        body: event.body,
+                        onlineMeeting: event.onlineMeeting,
+                    }
+                };
+                calendarEvents.set(event.id, calendarEvent);
+            }
+            if (this.calendarEventsStoreUpdate !== undefined) {
+                this.calendarEventsStoreUpdate(() => {
+                    return calendarEvents;
+                });
+            }
+
+            // Update the calendar events every 10 minutes
+            setTimeout(() => {
+                this.updateCalendarEvents().catch((e) => console.error("Error while updating calendar events", e));
+            }, 1000 * 10 * 60);
+        } catch (e) {
+            console.error("Error while updating calendar events", e);
+            // TODO show error message
         }
     }
 
@@ -342,9 +356,17 @@ class MSTeams implements ExtensionModule {
         const startDateTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0);
         const endDateTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
         // Get all events between today 00:00 and 23:59
-        return await this.msAxiosClient.get(
-            `/me/calendar/events?startDateTime=${startDateTime.toISOString()}&endDateTime=${endDateTime.toISOString()}`
-        );
+        try {
+            const mSTeamsCalendarEventResponse = await this.msAxiosClient.get(
+                `/me/calendar/events?startDateTime=${startDateTime.toISOString()}&endDateTime=${endDateTime.toISOString()}`
+            );
+            return mSTeamsCalendarEventResponse.data.value;
+        } catch (e) {
+            if ((e as AxiosError).response?.status === 401) {
+                return await this.getMyCalendarEvent();
+            }
+            throw e;
+        }
     }
 
     async createOrGetMeeting(meetingId: string): Promise<MSTeamsOnlineMeeting> {
