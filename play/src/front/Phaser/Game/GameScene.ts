@@ -165,6 +165,7 @@ import { ProximityChatConnection } from "../../Chat/Connection/Proximity/Proximi
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
 import { ExtensionModuleStatusSynchronization } from "../../Rules/StatusRules/ExtensionModuleStatusSynchronization";
 import { ExtensionModule } from "../../../extension-module/extension-module";
+import { calendarEventsStore, isActivatedStore } from "../../Stores/CalendarStore";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -2056,7 +2057,10 @@ export class GameScene extends DirtyScene {
                     workadventureStatusStore: availabilityStatusStore,
                     onExtensionModuleStatusChange: ExtensionModuleStatusSynchronization.onStatusChange,
                     getOauthRefreshToken: this.connection?.getOauthRefreshToken.bind(this.connection),
+                    calendarEventsStoreUpdate: calendarEventsStore.update,
                 });
+                // TODO change that to check if the calendar synchro is enabled from admin
+                isActivatedStore.set(true);
             } catch (error) {
                 console.warn("Extension module initialization cancelled", error);
             }

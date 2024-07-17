@@ -40,6 +40,7 @@
     import megaphoneImg from "../images/megaphone.svg";
     import WorkAdventureImg from "../images/icon-workadventure-white.png";
     import worldImg from "../images/world.svg";
+    import calendarSvg from "../images/calendar.svg";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
@@ -99,6 +100,7 @@
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
+    import { isCalendarVisibleStore } from "../../Stores/CalendarStore";
     import AvailabilityStatusComponent from "./AvailabilityStatus/AvailabilityStatus.svelte";
     import { IconCheck, IconChevronDown, IconChevronUp } from "@wa-icons";
 
@@ -370,6 +372,10 @@
     function selectSpeaker(deviceId: string) {
         localUserStore.setSpeakerDeviceId(deviceId);
         speakerSelectedStore.set(deviceId);
+    }
+
+    function openExternalModuleCalendar() {
+        isCalendarVisibleStore.set(!$isCalendarVisibleStore);
     }
 
     let totalMessagesToSee = writable<number>(0);
@@ -838,6 +844,23 @@
 
                     <button id="menuIcon" class:border-top-light={$menuVisiblilityStore}>
                         <img draggable="false" src={menuImg} style="padding: 2px" alt={$LL.menu.icon.open.menu()} />
+                    </button>
+                </div>
+
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <div
+                    on:dragstart|preventDefault={noDrag}
+                    on:click={() => analyticsClient.openExternalModuleCalendar()}
+                    on:click={openExternalModuleCalendar}
+                    class="bottom-action-button"
+                >
+                    <button id="calendarIcon" class:border-top-light={$isCalendarVisibleStore}>
+                        <img draggable="false" src={calendarSvg} style="padding: 2px" alt="Calendar Icon" />
+                        <span
+                            class="tw-absolute tw-top-5 tw-text-white tw-rounded-full tw-px-1 tw-py-0.5 tw-text-xxs tw-font-bold tw-leading-none"
+                        >
+                            {new Date().getDate()}
+                        </span>
                     </button>
                 </div>
             </div>
