@@ -20,22 +20,23 @@
     function handleFilter() {
         if (value?.find((i) => i.label === filterText)) return;
         if (options?.find((i) => i.label === filterText)) return;
-        if (filterText.length > 0) {
+        if (filterText.trim().length > 0) {
             const prev = options.filter((i) => !i.created);
-            options = [...prev, { value: filterText, label: filterText.toLowerCase(), created: true }];
+            options = [...prev, { value: filterText, label: filterText, created: true }];
         }
     }
 
     function _handleChange() {
         options = options.map((i) => {
             delete i.created;
-            return { ...i, label: i.label.toLowerCase() };
+            return { ...i };
         });
         dispatch("change", value);
     }
 </script>
 
 <div class={"tw-flex tw-flex-col tw-pb-5 tw-text-dark-purple"}>
+    {console.debug(options)}
     {#if label}
         <label for="selector" class="tw-text-white">
             {label}
@@ -48,7 +49,7 @@
         on:change={_handleChange}
         on:input={handleChange}
         on:select={handleChange}
-        items={options}
+        items={filterText.trim().length === 0 ? [] : options}
         bind:value
         multiple={true}
         placeholder={placeholder ?? "Select rights"}
