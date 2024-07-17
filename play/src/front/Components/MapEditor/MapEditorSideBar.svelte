@@ -135,6 +135,7 @@
         top: 6%;
         left: 2rem;
         align-content: bottom;
+        z-index: 425;
         .tool-button {
             position: relative !important;
             display: flex;
