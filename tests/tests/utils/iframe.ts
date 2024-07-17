@@ -1,5 +1,5 @@
-import {FrameLocator, Page} from "@playwright/test";
+import {Locator, Page} from "@playwright/test";
 
-export function getCoWebsiteIframe(page: Page): FrameLocator {
-    return page.frameLocator('#cowebsite-buffer iframe');
-}
+export function getCoWebsiteDiv(page: Page): Locator {
+    return page.locator('#cowebsites-container');
+  }
