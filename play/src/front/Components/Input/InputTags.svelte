@@ -36,7 +36,6 @@
 </script>
 
 <div class={"tw-flex tw-flex-col tw-pb-5 tw-text-dark-purple"}>
-    {console.debug(options)}
     {#if label}
         <label for="selector" class="tw-text-white">
             {label}
