@@ -33,7 +33,8 @@ export class MatrixSecurity {
             return Promise.reject(new Error("E2EE is not available for this client"));
         }
         if (this.initializingEncryptionPromise) {
-            return Promise.reject(new Error("Encryption already initialized"));
+            console.info("Encryption already initialized");
+            return;
         }
 
         this.initializingEncryptionPromise = new Promise<void>((resolve, initializingEncryptionReject) => {
@@ -115,6 +116,7 @@ export class MatrixSecurity {
     updateMatrixClientStore(matrixClient: MatrixClient) {
         this.matrixClientStore = matrixClient;
     }
+
     static makeInputToKey(
         keyInfo: SecretStorage.SecretStorageKeyDescription
     ): (keyParams: KeyParams) => Promise<Uint8Array> {
@@ -127,6 +129,7 @@ export class MatrixSecurity {
             throw new Error("Invalid input, passphrase or recoveryKey need to be provided");
         };
     }
+
     private async restoreBackupMessages(keyBackupInfo: KeyBackupInfo) {
         try {
             if (!this.matrixClientStore) {
@@ -144,6 +147,7 @@ export class MatrixSecurity {
         }
         return;
     }
+
     private async restoreWithCachedKey(keyBackupInfo: KeyBackupInfo) {
         try {
             if (!this.matrixClientStore) {
@@ -156,6 +160,7 @@ export class MatrixSecurity {
             return false;
         }
     }
+
     private async restoreWithSecretStorage(keyBackupInfo: KeyBackupInfo) {
         try {
             if (!this.matrixClientStore) {

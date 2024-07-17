@@ -152,17 +152,6 @@ export class MatrixChatMessage implements ChatMessage {
             });
         } catch (error) {
             console.error(error);
-            /*
-                        this.room.getPendingEvents()
-            .filter((ev : MatrixEvent)=> ev.status === EventStatus.NOT_SENT && this.id === ev.getId())
-            .forEach((event)=>{
-                this.room.client.resendEvent(event,this.room)
-                .catch((error)=>{
-                    console.error(error);
-                    this.room.client.cancelPendingEvent(event);
-                });
-            });
-            */
         }
     }
 }
