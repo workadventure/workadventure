@@ -327,7 +327,10 @@ class MSTeams implements ExtensionModule {
                     start: new Date(event.start.dateTime),
                     end: new Date(event.end.dateTime),
                     allDay: false,
-                    resource: event.body,
+                    resource: {
+                        body: event.body,
+                        onlineMeeting: event.onlineMeeting,
+                    }
                 };
                 calendarEvents.set(event.id, calendarEvent);
             }
@@ -340,7 +343,7 @@ class MSTeams implements ExtensionModule {
             // Update the calendar events every 10 minutes
             setTimeout(() => {
                 this.updateCalendarEvents().catch((e) => console.error("Error while updating calendar events", e));
-            }, 1000 * 60 * 10);
+            }, 1000 * 10 * 60);
         } catch (e) {
             console.error("Error while updating calendar events", e);
             // TODO show error message
@@ -354,9 +357,10 @@ class MSTeams implements ExtensionModule {
         const endDateTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
         // Get all events between today 00:00 and 23:59
         try {
-            return await this.msAxiosClient.get(
+            const mSTeamsCalendarEventResponse = await this.msAxiosClient.get(
                 `/me/calendar/events?startDateTime=${startDateTime.toISOString()}&endDateTime=${endDateTime.toISOString()}`
             );
+            return mSTeamsCalendarEventResponse.data.value;
         } catch (e) {
             if ((e as AxiosError).response?.status === 401) {
                 return await this.getMyCalendarEvent();
