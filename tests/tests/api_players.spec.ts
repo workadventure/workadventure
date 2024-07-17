@@ -74,8 +74,8 @@ test.describe('API WA.players', () => {
     );
     await login(page);
 
-    await expect(getCoWebsiteIframe(page).locator('#onPlayerEntersException')).toHaveText('Yes');
-    await expect(getCoWebsiteIframe(page).locator('#onPlayerLeavesException')).toHaveText('Yes');
+    await expect(getCoWebsiteDiv(page).locator('#onPlayerEntersException')).toHaveText('Yes');
+    await expect(getCoWebsiteDiv(page).locator('#onPlayerLeavesException')).toHaveText('Yes');
   });
 
   test('Test that player B arriving after player A set his variables can read the variable.', async ({ page, browser }, { project }) => {

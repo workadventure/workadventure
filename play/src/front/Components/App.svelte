@@ -184,7 +184,6 @@
         }
 
         window.addEventListener("resize", function () {
-            // console.log("resize !!!!!!!!!!!!!!!!!!!!!");
             waScaleManager.applyNewSize();
             waScaleManager.refreshFocusOnTarget();
             updateDynamicStyles();
@@ -224,14 +223,13 @@
 
         flexBasis = `${widthPercent}%`;
 
-        if (!$isVerticalMode) {
-            cowebsiteContainer.classList.add(`flex-[1_0_${widthPercent}%]`);
-        } else {
-            if (!$isResized) {
-                cowebsiteContainer.classList.add(`flex-[1_0_${widthPercent}%]`);
-            } else {
-                cowebsiteContainer.classList.remove(`flex-[1_0_${widthPercent}%]`);
-                cowebsiteContainer.classList.add(`flex-1`);
+        if (cowebsiteContainer) {
+            cowebsiteContainer.style.flexBasis = flexBasis;
+            cowebsiteContainer.style.flexGrow = "1";
+            cowebsiteContainer.style.flexShrink = "0";
+
+            if ($isVerticalMode && $isResized) {
+                cowebsiteContainer.style.flex = "1";
             }
         }
     }
@@ -247,9 +245,9 @@
         </div>
     </div>
     {#if $coWebsites.length > 0}
-        <div bind:this={cowebsiteContainer} class="">
+        <div bind:this={cowebsiteContainer}>
             {#if flexBasis !== undefined}
-                <CoWebsitesContainer on:mount={updateDynamicStyles} />
+                <CoWebsitesContainer />
             {/if}
         </div>
     {/if}

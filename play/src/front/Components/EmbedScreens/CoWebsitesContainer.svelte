@@ -44,7 +44,8 @@
         ? $totalTabWidthMobile > $widthContainerForWindow
         : $totalTabWidth >= window.innerWidth - $widthContainerForWindow &&
           window.innerWidth !== $widthContainerForWindow;
-    $: showArrow = $totalTabWidth > window.innerWidth - $widthContainerForWindow ? true : false;
+    // $: showArrow = $totalTabWidth > window.innerWidth - $widthContainerForWindow ? true : false;
+    let showArrow: boolean;
     let numberMaxOfCowebsite: number;
     let menuArrow = false;
     let isToggleFullScreen = false;
@@ -65,10 +66,12 @@
         getSizeOfCowebsiteWhenResizeWindow();
         resizeFromCowebsite.set(false);
         updateScreenSize();
+        showArrow = $totalTabWidth > $widthContainerForWindow ? true : false;
     });
 
     onMount(() => {
         updateScreenSize();
+        resizeCowebsite();
         if (!vertical) {
             let widthOnMount = parseInt(getComputedStyle(container).width);
             widthContainerForWindow.set(widthOnMount);
@@ -77,8 +80,8 @@
             heightContainerForWindow.set(heightOnMount);
         }
         waScaleManager.applyNewSize();
-        resizeCowebsite();
         numberMaxCowebsite();
+        showArrow = $totalTabWidth > $widthContainerForWindow ? true : false;
     });
 
     function getSizeOfCowebsiteWhenResizeWindow() {
@@ -109,7 +112,6 @@
             const handleMouseMove = (e: { clientX: number }) => {
                 let newWidth = startWidthContainer - (e.clientX - startX);
                 widthContainerForWindow.set(newWidth);
-                // console.log($widthContainerForWindow, "WIDTH CONTAINER DANS LE RESIZE ORDI");
                 finalWidth = newWidth + "px";
                 container.style.width = finalWidth;
                 const maxWidth = Math.min(newWidth, window.innerWidth * 0.75);
@@ -137,21 +139,15 @@
                 let clientY = e.touches[0].clientY;
                 startY = clientY;
                 startHeight = parseInt(getComputedStyle(container).height);
-                console.log(startHeight, "startHeight");
                 document.addEventListener("touchmove", handleMouseMove, { passive: false });
                 document.addEventListener("touchend", handleMouseUp);
             };
             resizeBar.addEventListener("touchstart", handleMouseDown, false);
             const handleMouseMove = (e: TouchEvent) => {
                 let clientY = e.touches[0].clientY;
-                console.log(clientY, "clientY");
                 let newHeight = startHeight + (clientY - startY);
-                console.log(startHeight + (clientY - startY), "startHeight + clientY - startY");
-                console.log(newHeight, "newHeight");
                 heightContainerForWindow.set(newHeight);
-                // console.log($heightContainerForWindow, "HEIGHT CONTAINER DANS LE RESIZE MOBILE");
                 finalHeight = newHeight + "px";
-                console.log(finalHeight, "finalHeight");
                 container.style.height = finalHeight;
                 const maxHeight = Math.min(newHeight, window.innerHeight * 0.75);
                 if (maxHeight !== newHeight) {
@@ -202,15 +198,17 @@
             numberMaxCowebsite();
         } else {
             menuArrow = true;
-            showArrow = true;
+            numberMaxCowebsite();
             appearDropdownMenu = true;
         }
     }
 
     function numberMaxCowebsite() {
+        showArrow = $totalTabWidth > $widthContainerForWindow ? true : false;
         if (!vertical) {
             numberMaxOfCowebsite = Math.floor($widthContainerForWindow / 300);
             if (numberMaxOfCowebsite < 1) {
+                showArrow = false;
                 appearDropdownMenu = false;
             }
             if (isToggleFullScreen) {
