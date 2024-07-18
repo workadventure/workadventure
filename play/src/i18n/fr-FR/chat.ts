@@ -193,6 +193,12 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
         error: "Erreur lors de la création du salon",
     },
+    roomMenu: {
+        leaveRoom: {
+            label: "Quitter le salon",
+            notification: "Vous avez quitté le salon",
+        },
+    },
     e2ee: {
         encryptionNotConfigured: "Chiffrement non configuré",
         createRecoveryKey: {
