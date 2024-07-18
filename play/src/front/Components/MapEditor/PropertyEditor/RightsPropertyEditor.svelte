@@ -1,7 +1,7 @@
 <script lang="ts">
     import { RestrictedRightsPropertyData } from "@workadventure/map-editor";
     import { createEventDispatcher } from "svelte";
-    import InputWorldTags from "../../Input/InputWorldTags.svelte";
+    import InputRoomTags from "../../Input/InputRoomTags.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import { InputTagOption, toTags } from "../../Input/InputTagOption";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
@@ -43,7 +43,7 @@
             <IconInfoCircle font-size="18" />
             {$LL.mapEditor.properties.restrictedRightsProperties.rightWriteDescription()}
         </p>
-        <InputWorldTags
+        <InputRoomTags
             label={$LL.mapEditor.properties.restrictedRightsProperties.rightWriteTitle()}
             options={_tag}
             bind:value={writeTags}
@@ -54,7 +54,7 @@
             <IconInfoCircle font-size="18" />
             {$LL.mapEditor.properties.restrictedRightsProperties.rightReadDescription()}
         </p>
-        <InputWorldTags
+        <InputRoomTags
             label={$LL.mapEditor.properties.restrictedRightsProperties.rightReadTitle()}
             options={_tag}
             bind:value={readTags}

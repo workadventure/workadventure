@@ -1664,7 +1664,6 @@ export class RoomConnection implements RoomConnection {
         if (answer.$case !== "searchTagsAnswer") {
             throw new Error("Unexpected answer");
         }
-        console.log("Reponse: ", answer.searchTagsAnswer.tags);
         return answer.searchTagsAnswer.tags;
     }
 

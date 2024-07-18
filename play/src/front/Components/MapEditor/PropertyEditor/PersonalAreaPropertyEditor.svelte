@@ -3,7 +3,7 @@
     import { PersonalAreaAccessClaimMode, PersonalAreaPropertyData } from "@workadventure/map-editor";
     import { closeModal, openModal } from "svelte-modals";
     import LL from "../../../../i18n/i18n-svelte";
-    import InputWorldTags from "../../Input/InputWorldTags.svelte";
+    import InputRoomTags from "../../Input/InputRoomTags.svelte";
     import MemberAutocomplete from "../../Input/MemberAutocomplete.svelte";
     import { InputTagOption, toTags } from "../../Input/InputTagOption";
     import { gameManager } from "../../../Phaser/Game/GameManager";
@@ -175,7 +175,7 @@
                                 on:onSelect={({ detail: selectedUserId }) => setOwnerId(selectedUserId)}
                             />
                         {:else}
-                            <InputWorldTags
+                            <InputRoomTags
                                 label={$LL.mapEditor.properties.personalAreaConfiguration.allowedTags()}
                                 bind:value={_tags}
                                 handleChange={() => handleTagChange(_tags)}

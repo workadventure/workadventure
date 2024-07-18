@@ -12,7 +12,7 @@
         dispatch("change", value);
     }
 
-    async function searchWorldTags(filterText: string): Promise<{ value: string; label: string }[]> {
+    async function searchRoomTags(filterText: string): Promise<{ value: string; label: string }[]> {
         const customTag = {
             value: filterText,
             label: `add a new tag: '${filterText}'`,
@@ -40,5 +40,5 @@
 </script>
 
 <div>
-    <InputTags bind:value queryOptions={searchWorldTags} on:change={_handleChange} {...$$props} />
+    <InputTags bind:value queryOptions={searchRoomTags} on:change={_handleChange} {...$$props} />
 </div>
