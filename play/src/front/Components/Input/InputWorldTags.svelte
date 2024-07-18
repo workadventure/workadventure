@@ -1,6 +1,18 @@
 <script lang="ts">
+    import { createEventDispatcher } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import InputTags from "./InputTags.svelte";
+    import { InputTagOption } from "./InputTagOption";
+
+
+    const dispatch = createEventDispatcher();
+
+    export let value: InputTagOption[] | undefined;
+
+    
+    function _handleChange() {
+        dispatch("change", value);
+    }
 
     async function searchWorldTags(filterText: string): Promise<{ value: string; label: string }[]> {
         const customTag = {
@@ -31,10 +43,9 @@
 
 <div>
     <InputTags
-        label="Tags"
-        value={[]}
+        bind:value
         queryOptions={searchWorldTags}
+        on:change={_handleChange}
         {...$$props}
-        testId="worldTagsAutoCompleteInput"
     />
 </div>
