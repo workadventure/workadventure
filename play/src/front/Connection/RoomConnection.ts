@@ -1654,6 +1654,19 @@ export class RoomConnection implements RoomConnection {
         return answer.embeddableWebsiteAnswer;
     }
 
+    public async queryTags(searchText: string): Promise<string[]> {
+        const answer = await this.query({
+            $case: "searchTagsQuery",
+            searchTagsQuery: {
+                searchText,
+            },
+        });
+        if (answer.$case !== "searchTagsAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.searchTagsAnswer.tags;
+    }
+
     public async queryMembers(searchText: string): Promise<Member[]> {
         const answer = await this.query({
             $case: "searchMemberQuery",

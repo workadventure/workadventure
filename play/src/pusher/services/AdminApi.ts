@@ -1078,6 +1078,21 @@ class AdminApi implements AdminInterface {
 
     /**
      * @openapi
+     * /api/tags:
+     */
+    async searchTags(playUri: string | null, searchText: string): Promise<string[]> {
+        const response = await axios.get<string[]>(`${ADMIN_API_URL}/api/world/tags`, {
+            headers: { Authorization: `${ADMIN_API_TOKEN}` },
+            params: {
+                playUri,
+                searchText,
+            },
+        });
+        return response.data;
+    }
+
+    /**
+     * @openapi
      * /members/{memberUUID}:
      *   get:
      *     description: Get member by UUID

@@ -397,6 +397,10 @@ class LocalAdmin implements AdminInterface {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
 
+    searchTags(roomUrl: string, searchText: string): Promise<string[]> {
+        return Promise.resolve([]);
+    }
+
     getWorldChatMembers(playUri: string, searchText: string): Promise<WorldChatMembersData> {
         return Promise.reject(new Error("No admin backoffice set!"));
     }

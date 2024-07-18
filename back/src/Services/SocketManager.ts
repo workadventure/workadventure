@@ -801,6 +801,7 @@ export class SocketManager {
                 case "roomsFromSameWorldQuery":
                 case "searchMemberQuery":
                 case "getMemberQuery":
+                case "searchTagsQuery":
                 case "chatMembersQuery": {
                     break;
                 }
