@@ -66,6 +66,8 @@ interface MSTeamsCalendarEvent {
     onlineMeeting: {
         joinUrl: string;
     };
+    subject: string;
+    bodyPreview: string;
 }
 
 class MSTeams implements ExtensionModule {
@@ -319,24 +321,36 @@ class MSTeams implements ExtensionModule {
     async updateCalendarEvents(): Promise<void> {
         try {
             const myCalendarEvents = await this.getMyCalendarEvent();
-            const calendarEvents = new Map<string, CalendarEventInterface>();
+            const calendarEvents = [];
             for (const event of myCalendarEvents) {
                 const calendarEvent: CalendarEventInterface = {
                     id: event.id,
-                    title: event.locations.displayName,
+                    title: event.subject,
+                    description: event.bodyPreview,
                     start: new Date(event.start.dateTime),
                     end: new Date(event.end.dateTime),
                     allDay: false,
                     resource: {
                         body: event.body,
                         onlineMeeting: event.onlineMeeting,
-                    }
+                    },
                 };
-                calendarEvents.set(event.id, calendarEvent);
+                calendarEvents.push(calendarEvent);
             }
+
+            // Sort the calendar events by start date
+            calendarEvents.sort((a, b) => a.start.getTime() - b.start.getTime());
+
+            // Convert the calendar to map
+            const sortedCalendarEvents = new Map<string, CalendarEventInterface>();
+            for (const event of calendarEvents) {
+                sortedCalendarEvents.set(event.id, event);
+            }
+
+            // Update the calendar events store
             if (this.calendarEventsStoreUpdate !== undefined) {
                 this.calendarEventsStoreUpdate(() => {
-                    return calendarEvents;
+                    return sortedCalendarEvents;
                 });
             }
 
@@ -353,12 +367,20 @@ class MSTeams implements ExtensionModule {
     private async getMyCalendarEvent(): Promise<MSTeamsCalendarEvent[]> {
         const today = new Date();
         // Create date between 00:00 and 23:59
-        const startDateTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0);
+        const startDateTime = new Date(
+            today.getFullYear(),
+            today.getMonth(),
+            today.getDate(),
+            today.getHours(),
+            0,
+            0,
+            0
+        );
         const endDateTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
         // Get all events between today 00:00 and 23:59
         try {
             const mSTeamsCalendarEventResponse = await this.msAxiosClient.get(
-                `/me/calendar/events?startDateTime=${startDateTime.toISOString()}&endDateTime=${endDateTime.toISOString()}`
+                `/me/calendar/calendarView?$select=subject,body,bodyPreview,organizer,attendees,start,end,location,weblink,onlineMeeting&startDateTime=${startDateTime.toISOString()}&endDateTime=${endDateTime.toISOString()}`
             );
             return mSTeamsCalendarEventResponse.data.value;
         } catch (e) {
