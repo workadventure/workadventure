@@ -20,16 +20,16 @@
     function handleFilter() {
         if (value?.find((i) => i.label === filterText)) return;
         if (options?.find((i) => i.label === filterText)) return;
-        if (filterText.length > 0) {
+        if (filterText.trim().length > 0) {
             const prev = options.filter((i) => !i.created);
-            options = [...prev, { value: filterText, label: filterText.toLowerCase(), created: true }];
+            options = [...prev, { value: filterText, label: filterText, created: true }];
         }
     }
 
     function _handleChange() {
         options = options.map((i) => {
             delete i.created;
-            return { ...i, label: i.label.toLowerCase() };
+            return { ...i };
         });
         dispatch("change", value);
     }
@@ -48,7 +48,7 @@
         on:change={_handleChange}
         on:input={handleChange}
         on:select={handleChange}
-        items={options}
+        items={filterText.trim().length === 0 ? [] : options}
         bind:value
         multiple={true}
         placeholder={placeholder ?? "Select rights"}
