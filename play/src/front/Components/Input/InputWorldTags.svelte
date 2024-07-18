@@ -4,12 +4,10 @@
     import InputTags from "./InputTags.svelte";
     import { InputTagOption } from "./InputTagOption";
 
-
     const dispatch = createEventDispatcher();
 
     export let value: InputTagOption[] | undefined;
 
-    
     function _handleChange() {
         dispatch("change", value);
     }
@@ -42,10 +40,5 @@
 </script>
 
 <div>
-    <InputTags
-        bind:value
-        queryOptions={searchWorldTags}
-        on:change={_handleChange}
-        {...$$props}
-    />
+    <InputTags bind:value queryOptions={searchWorldTags} on:change={_handleChange} {...$$props} />
 </div>
