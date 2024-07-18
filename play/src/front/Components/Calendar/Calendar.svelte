@@ -5,6 +5,13 @@
     function closeCalendar() {
         isCalendarVisibleStore.set(false);
     }
+
+    function formatHour(date: Date) {
+        return date.toLocaleString("en-GB", {
+            hour: "2-digit",
+            minute: "2-digit",
+        });
+    }
 </script>
 
 <div class="calendar tw-bg-dark-blue/95">
@@ -13,30 +20,50 @@
 
         <div class="mapexplorer tw-flex tw-flex-col tw-overflow-auto">
             <div class="header-container">
-                <h3 class="tw-text-l tw-text-left">Your meeting today 📅</h3>
+                <h3 class="tw-text-l tw-text-left">
+                    {new Date().toLocaleString("en-EN", {
+                        month: "long",
+                        day: "2-digit",
+                        year: "numeric",
+                    })}
+                </h3>
+                <h4 class="tw-text-l tw-text-left">Your meeting today 🗓️</h4>
             </div>
-            <div class="tw-flex tw-flex-col tw-justify-center">
+            <div class="tw-flex tw-flex-col tw-justify-center tw-gap-4">
                 {#if $calendarEventsStore.size > 0}
                     {#each [...$calendarEventsStore.entries()] as [eventId, event] (eventId)}
-                        <div id={`event-id-${eventId}`} class="tw-flex tw-flex-col tw-justify-center tw-p-2 tw-mb-2 tw-bg-dark-blue/90 tw-rounded-md">
-                            {#if event.resource && event.resource.body?.contentType === "html" && event.resource.body?.content != undefined}
-                                {@html event.resource.body.content}
-                            {:else}
+                        <div class="tw-flex tw-flex-col tw-justify-center">
+                            <div class="tw-flex tw-flex-row tw-justify-start tw-w-full">
+                                <span class="tw-text-xs">{formatHour(event.start)}</span>
+                                <hr class="tw-border-gray-300 tw-mx-2 tw-w-full tw-opacity-30 tw-border-dashed" />
+                            </div>
+                            <div
+                                id={`event-id-${eventId}`}
+                                class="tw-flex tw-flex-col tw-justify-center tw-p-2 tw-bg-dark-blue/90 tw-rounded-md"
+                            >
                                 <div class="tw-flex tw-flex-col tw-justify-between tw-items-center">
                                     <h4 class="tw-text-l tw-text-left tw-font-bold">{event.title}</h4>
-                                    <p class="tw-text-xs tw-text-right">{event.start}</p>
-                                    <p class="tw-text-xs tw-text-right">{event.end}</p>
+                                    <p class="tw-text-xs tw-w-full tw-whitespace-pre-line tw-overflow-x-hidden">
+                                        {event.description}
+                                    </p>
                                     {#if event.resource && event.resource.onlineMeeting?.joinUrl}
-                                        <a href={event.resource.onlineMeeting?.joinUrl} class="tw-text-xs tw-text-right" target="_blank" >Click here to join the meeting</a>
+                                        <a
+                                            href={event.resource.onlineMeeting?.joinUrl}
+                                            class="tw-text-xs tw-text-right"
+                                            target="_blank">Click here to join the meeting</a
+                                        >
                                     {/if}
                                 </div>
-                            {/if}
+                            </div>
+                            <div class="tw-flex tw-flex-row tw-justify-start tw-w-full">
+                                <span class="tw-text-xs">{formatHour(event.end)}</span>
+                                <hr class="tw-border-gray-300 tw-mx-2 tw-w-full tw-opacity-30 tw-border-dashed" />
+                            </div>
                         </div>
                     {/each}
                 {/if}
             </div>
         </div>
-
     </div>
 </div>
 
