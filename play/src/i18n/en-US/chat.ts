@@ -192,6 +192,12 @@ const chat: BaseTranslation = {
         },
         error: "Error on room creation",
     },
+    roomMenu: {
+        leaveRoom: {
+            label: "Leave room",
+            notification: "You have left the room",
+        },
+    },
     e2ee: {
         encryptionNotConfigured: "Encryption not configured",
         createRecoveryKey: {

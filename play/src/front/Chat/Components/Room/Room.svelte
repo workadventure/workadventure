@@ -1,11 +1,11 @@
 <script lang="ts">
     import highlightWords from "highlight-words";
-    import { get } from "svelte/store";
     import { ChatRoom } from "../../Connection/ChatConnection";
     import NotificationBadge from "../NotificationBadge.svelte";
     import { chatSearchBarValue, selectedRoom } from "../../Stores/ChatStore";
     import Avatar from "../Avatar.svelte";
     import EncryptionBadge from "../EncryptionBadge.svelte";
+    import RoomMenu from "./RoomMenu/RoomMenu.svelte";
 
     export let room: ChatRoom;
 
@@ -37,9 +37,10 @@
             <EncryptionBadge />
         {/if}
     </div>
-    <p class="tw-m-0">
+    <p class="tw-m-0 tw-flex-1">
         {#each chunks as chunk (chunk.key)}
             <span class={`${chunk.match ? "tw-text-light-blue" : ""}  tw-cursor-default`}>{chunk.text}</span>
         {/each}
     </p>
+    <RoomMenu {room} />
 </div>
