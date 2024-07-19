@@ -201,12 +201,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             notification: "Vous avez quitté le salon",
         },
     },
-    roomMenu: {
-        leaveRoom: {
-            label: "Quitter le salon",
-            notification: "Vous avez quitté le salon",
-        },
-    },
     e2ee: {
         encryptionNotConfigured: "Chiffrement non configuré",
         createRecoveryKey: {

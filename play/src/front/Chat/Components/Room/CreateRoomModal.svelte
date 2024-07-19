@@ -132,7 +132,11 @@
                 --clear-select-color="red"
                 loadOptions={searchMembers}
                 placeholder={$LL.chat.createRoom.users()}
-            />
+            >
+                <div slot="item" let:item>
+                    {`${item.label} (${item.value})`}
+                </div>
+            </Select>
             <p class="tw-p-0 tw-m-0 tw-pl-1 tw-font-bold">{$LL.chat.createRoom.historyVisibility.label()}</p>
             {#each historyVisibilityOptions as historyVisibilityOption (historyVisibilityOption)}
                 <label class="tw-m-0">
