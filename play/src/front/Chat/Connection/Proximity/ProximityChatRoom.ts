@@ -270,4 +270,8 @@ export class ProximityChatRoom implements ChatRoom {
             return typingMembers.filter((user) => user.id !== id);
         });
     }
+
+    getSpaceName(): string | undefined {
+        return get(this._connection.spaceName);
+    }
 }

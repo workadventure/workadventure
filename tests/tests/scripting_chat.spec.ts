@@ -5,13 +5,8 @@ import { publicTestMapUrl } from "./utils/urls";
 import Chat from "./utils/chat";
 import Map from "./utils/map";
 
-//TODO update tests for new proximity chat !
 test.describe("Scripting chat functions", () => {
   test('can open / close chat + start / stop typing @chat', async ({ page}, { project }) => {
-    //eslint-disable-next-line playwright/no-skipped-test
-    test.skip();
-    return;
-
     // Skip test for mobile device
     if(project.name === "mobilechromium") {
         //eslint-disable-next-line playwright/no-skipped-test
@@ -26,10 +21,12 @@ test.describe("Scripting chat functions", () => {
 
     // Test open chat scripting
     await expect(page.locator('#chat')).toBeHidden();
+
     await evaluateScript(page, async () => {
         return WA.chat.open();
     });
     await expect(page.locator('#chat')).toBeVisible();
+    await expect(page.getByRole('button', {name: 'Proximity Chat'})).toBeVisible({ timeout: 60000 });
 
     // Open the time line
     await Chat.openTimeline(page);
@@ -60,7 +57,6 @@ test.describe("Scripting chat functions", () => {
     });
     await expect(
       page.locator('#chat')
-      .locator('#message')
       .locator(`#typing-user-${btoa("Eve")}`)
     ).toBeVisible();
 
@@ -73,7 +69,6 @@ test.describe("Scripting chat functions", () => {
     });
     await expect(
       page.locator('#chat')
-      .locator('#message')
       .locator(`#typing-user-${btoa("Eve")}`)
     ).toBeHidden();
 
@@ -85,10 +80,6 @@ test.describe("Scripting chat functions", () => {
   });
 
   test('can send message to bubble users @chat', async ({ page, browser}, { project }) => {
-    //eslint-disable-next-line playwright/no-skipped-test
-    test.skip();
-    return;
-
     // Skip test for mobile device
     if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
@@ -128,6 +119,11 @@ test.describe("Scripting chat functions", () => {
     await alice.goto(publicTestMapUrl("tests/E2E/empty.json", "scripting_chat"));
     await login(alice, "Alice", 2, "en-US", project.name === "mobilechromium");
 
+    // Open the chat and wait the matrix connection to be established
+    await Chat.open(alice, false);
+    await expect(alice.locator('#chat')).toBeVisible();
+    await expect(alice.getByRole('button', {name: 'Proximity Chat'})).toBeVisible({ timeout: 30000 });
+
     // Move alice to the same position as bob
     await Map.teleportToPosition(alice, 32, 32);
 
@@ -151,7 +147,7 @@ test.describe("Scripting chat functions", () => {
       alice.locator('#chat')
       .locator('#message')
       .nth(0)
-    ).toContainText('Bob join the discussion', { timeout: 30000 });
+    ).toContainText('bob join the discussion', { timeout: 30000 });
 
     // Check that alice also received the message
     await expect(
