@@ -209,8 +209,8 @@ export class SocketManager {
 
         if (TURN_STATIC_AUTH_SECRET) {
             const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
-            roomJoinedMessage.webrtcUserName = username;
-            roomJoinedMessage.webrtcPassword = password;
+            roomJoinedMessage.webRtcUserName = username;
+            roomJoinedMessage.webRtcPassword = password;
         }
 
         const serverToClientMessage: ServerToClientMessage = {
@@ -297,17 +297,20 @@ export class SocketManager {
             return;
         }
 
+        console.log("emitVideo => data", room.id);
         const webrtcSignalToClientMessage: Partial<WebRtcSignalToClientMessage> = {
             userId: user.id,
             signal: data.signal,
-            spaceName: `webrtc_${room.id}`,
+            webRtcSpaceName: `webrtc_${user.group ? user.group.getId() : "1"}-${Buffer.from(room.roomUrl).toString(
+                "base64"
+            )}`,
         };
 
         // TODO: only compute credentials if data.signal.type === "offer"
         if (TURN_STATIC_AUTH_SECRET) {
             const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
-            webrtcSignalToClientMessage.webrtcUserName = username;
-            webrtcSignalToClientMessage.webrtcPassword = password;
+            webrtcSignalToClientMessage.webRtcUserName = username;
+            webrtcSignalToClientMessage.webRtcPassword = password;
         }
 
         //if (!client.disconnecting) {
@@ -335,14 +338,16 @@ export class SocketManager {
         const webrtcSignalToClientMessage: Partial<WebRtcSignalToClientMessage> = {
             userId: user.id,
             signal: data.signal,
-            spaceName: `webrtc_${room.id}`,
+            webRtcSpaceName: `webrtc_${user.group ? user.group.getId() : "1"}-${Buffer.from(room.id).toString(
+                "base64"
+            )}`,
         };
 
         // TODO: only compute credentials if data.signal.type === "offer"
         if (TURN_STATIC_AUTH_SECRET) {
             const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
-            webrtcSignalToClientMessage.webrtcUserName = username;
-            webrtcSignalToClientMessage.webrtcPassword = password;
+            webrtcSignalToClientMessage.webRtcUserName = username;
+            webrtcSignalToClientMessage.webRtcPassword = password;
         }
 
         //if (!client.disconnecting) {
@@ -647,14 +652,15 @@ export class SocketManager {
             const webrtcStartMessage1: Partial<WebRtcStartMessage> = {
                 userId: otherUser.id,
                 initiator: true,
+                webRtcSpaceName: `webrtc_${group.getId()}-${Buffer.from(group.getRoomId()).toString("base64")}`,
             };
             if (TURN_STATIC_AUTH_SECRET) {
                 const { username, password } = this.getTURNCredentials(
                     otherUser.id.toString(),
                     TURN_STATIC_AUTH_SECRET
                 );
-                webrtcStartMessage1.webrtcUserName = username;
-                webrtcStartMessage1.webrtcPassword = password;
+                webrtcStartMessage1.webRtcUserName = username;
+                webrtcStartMessage1.webRtcPassword = password;
             }
 
             user.socket.write({
@@ -667,11 +673,12 @@ export class SocketManager {
             const webrtcStartMessage2: Partial<WebRtcStartMessage> = {
                 userId: user.id,
                 initiator: false,
+                webRtcSpaceName: `webrtc_${group.getId()}-${Buffer.from(group.getRoomId()).toString("base64")}`,
             };
             if (TURN_STATIC_AUTH_SECRET) {
                 const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
-                webrtcStartMessage2.webrtcUserName = username;
-                webrtcStartMessage2.webrtcPassword = password;
+                webrtcStartMessage2.webRtcUserName = username;
+                webrtcStartMessage2.webRtcPassword = password;
             }
 
             otherUser.socket.write({
