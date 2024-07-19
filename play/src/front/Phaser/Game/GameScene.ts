@@ -2041,12 +2041,12 @@ export class GameScene extends DirtyScene {
                 this.emoteManager = new EmoteManager(this, this.connection);
 
                 // Check WebRtc connection
-                if (onConnect.room.webrtcUserName && onConnect.room.webrtcPassword) {
+                if (onConnect.room.webRtcUserName && onConnect.room.webRtcPassword) {
                     try {
                         checkCoturnServer({
                             userId: onConnect.connection.getUserId(),
-                            webRtcUser: onConnect.room.webrtcUserName,
-                            webRtcPassword: onConnect.room.webrtcPassword,
+                            webRtcUser: onConnect.room.webRtcUserName,
+                            webRtcPassword: onConnect.room.webRtcPassword,
                         });
                     } catch (err) {
                         console.error("Check coturn server exception: ", err);
