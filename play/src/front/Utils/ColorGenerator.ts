@@ -1,8 +1,8 @@
 import { getColorRgbFromHue } from "../WebRtc/ColorGenerator";
 
-export function getColorByString(str: string): string | null {
+export function getColorByString(str?: string): string | null {
     let hash = 0;
-    if (str.length === 0) {
+    if (str == undefined || str.length === 0) {
         return null;
     }
     for (let i = 0; i < str.length; i++) {
