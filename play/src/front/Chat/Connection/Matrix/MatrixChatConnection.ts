@@ -336,6 +336,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 content: { history_visibility: roomOptions?.historyVisibility },
             });
         }
+        initial_state.push({ type: EventType.RoomGuestAccess, content: { guest_access: "can_join" } });
 
         return initial_state;
     }
