@@ -200,12 +200,6 @@ const chat: BaseTranslation = {
             notification: "You have left the room",
         },
     },
-    roomMenu: {
-        leaveRoom: {
-            label: "Leave room",
-            notification: "You have left the room",
-        },
-    },
     e2ee: {
         encryptionNotConfigured: "Encryption not configured",
         createRecoveryKey: {
