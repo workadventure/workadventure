@@ -191,6 +191,14 @@ const chat: BaseTranslation = {
             cancel: "Cancel",
         },
         error: "Error on room creation",
+        loadingCreation: "Room creation in progress",
+        creationSuccessNotification: "Room created",
+    },
+    roomMenu: {
+        leaveRoom: {
+            label: "Leave room",
+            notification: "You have left the room",
+        },
     },
     roomMenu: {
         leaveRoom: {

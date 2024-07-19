@@ -192,6 +192,14 @@ const chat: DeepPartial<Translation["chat"]> = {
             cancel: "Annuler",
         },
         error: "Erreur lors de la création du salon",
+        loadingCreation: "Salon en cours de création",
+        creationSuccessNotification: "Salon créé",
+    },
+    roomMenu: {
+        leaveRoom: {
+            label: "Quitter le salon",
+            notification: "Vous avez quitté le salon",
+        },
     },
     roomMenu: {
         leaveRoom: {
