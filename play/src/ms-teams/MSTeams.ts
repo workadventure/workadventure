@@ -228,7 +228,7 @@ class MSTeams implements ExtensionModule {
         }
 
         this.msAxiosClient
-            .post(`/users/${this.clientId}/presence/setUserPreferredPresence`, {
+            .post(this.getUrlForSettingUserPresence(), {
                 availability: newTeamsAvailability,
                 activity: newTeamsAvailability,
             })
@@ -236,6 +236,10 @@ class MSTeams implements ExtensionModule {
                 console.info(`Your presence status has been set to ${newTeamsAvailability}`);
             })
             .catch((e) => console.error(e));
+    }
+
+    private getUrlForSettingUserPresence() {
+        return `/users/${this.clientId}/presence/setUserPreferredPresence`;
     }
 
     joinMeeting() {
@@ -379,9 +383,8 @@ class MSTeams implements ExtensionModule {
         const endDateTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
         // Get all events between today 00:00 and 23:59
         try {
-            const mSTeamsCalendarEventResponse = await this.msAxiosClient.get(
-                `/me/calendar/calendarView?$select=subject,body,bodyPreview,organizer,attendees,start,end,location,weblink,onlineMeeting&startDateTime=${startDateTime.toISOString()}&endDateTime=${endDateTime.toISOString()}`
-            );
+            const calendarEventUrl = `/me/calendar/calendarView?$select=subject,body,bodyPreview,organizer,attendees,start,end,location,weblink,onlineMeeting&startDateTime=${startDateTime.toISOString()}&endDateTime=${endDateTime.toISOString()}`;
+            const mSTeamsCalendarEventResponse = await this.msAxiosClient.get(calendarEventUrl);
             return mSTeamsCalendarEventResponse.data.value;
         } catch (e) {
             if ((e as AxiosError).response?.status === 401) {
