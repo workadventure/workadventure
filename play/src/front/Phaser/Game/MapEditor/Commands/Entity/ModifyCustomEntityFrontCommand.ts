@@ -26,7 +26,7 @@ export class ModifyCustomEntityFrontCommand extends ModifyCustomEntityCommand im
         if (depthOffset !== undefined) {
             this.entitiesManager.updateEntitiesDepth(id, depthOffset);
         }
-        this.gameFrontWrapper.recomputeEntitiesAndAreasCollisionGrid();
+        this.gameFrontWrapper.recomputeEntitiesCollisionGrid();
         return super.execute();
     }
 

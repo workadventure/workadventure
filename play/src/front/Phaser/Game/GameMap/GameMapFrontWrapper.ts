@@ -82,7 +82,14 @@ export class GameMapFrontWrapper {
     public readonly dynamicAreas: Map<string, DynamicArea> = new Map<string, DynamicArea>();
 
     public collisionGrid: number[][];
+    /**
+     * A layer containing collide tiles mapping the collision zones of entities put with the map editor
+     */
     private entitiesCollisionLayer: Phaser.Tilemaps.TilemapLayer;
+    /**
+     * A layer containing collide tiles mapping the collision zones of restricted areas put with the map editor
+     */
+    private areasCollisionLayer: Phaser.Tilemaps.TilemapLayer;
 
     private perLayerCollisionGridCache: Map<number, (0 | 2 | 1)[][]> = new Map<number, (0 | 2 | 1)[][]>();
 
@@ -190,12 +197,22 @@ export class GameMapFrontWrapper {
         // NOTE: We cannot really proceed without it
         const phaserBlankCollisionsLayer = phaserMap.createBlankLayer("__entitiesCollisionLayer", terrains);
         if (!phaserBlankCollisionsLayer) {
-            throw new Error("Could not create collision layer");
+            throw new Error("Could not create entities collision layer");
         }
         this.entitiesCollisionLayer = phaserBlankCollisionsLayer;
         this.entitiesCollisionLayer.setDepth(-2).setCollisionByProperty({ collides: true }).setVisible(false);
 
         this.phaserLayers.push(this.entitiesCollisionLayer);
+
+        const phaserBlankCollisionsLayer2 = phaserMap.createBlankLayer("__areasCollisionLayer", terrains);
+        if (!phaserBlankCollisionsLayer2) {
+            throw new Error("Could not create areas collision layer");
+        }
+        this.areasCollisionLayer = phaserBlankCollisionsLayer2;
+        this.areasCollisionLayer.setDepth(-2).setCollisionByProperty({ collides: true }).setVisible(false);
+
+        this.phaserLayers.push(this.areasCollisionLayer);
+
         this.updateCollisionGrid(undefined, false);
     }
 
@@ -219,7 +236,7 @@ export class GameMapFrontWrapper {
         });
     }
 
-    public recomputeEntitiesAndAreasCollisionGrid() {
+    public recomputeEntitiesCollisionGrid() {
         const entities = this.entitiesManager.getEntities();
 
         this.entitiesCollisionLayer.fill(-1);
@@ -232,11 +249,22 @@ export class GameMapFrontWrapper {
             this.modifyToCollisionsLayer(entity.x, entity.y, entity.name, entityCollisionGrid, false);
         }
 
+        this.updateCollisionGrid(this.entitiesCollisionLayer, false);
+    }
+
+    public recomputeAreasCollisionGrid() {
+        //this.areasCollisionLayer.fill(-1);
+        for (let y = 0; y < (this.getMap()?.height ?? 0); y++) {
+            for (let x = 0; x < (this.getMap()?.width ?? 0); x++) {
+                this.areasCollisionLayer.removeTileAt(x, y, false);
+            }
+        }
+
         for (const area of this.areasManager.getCollidingAreas()) {
             this.registerCollisionArea(area);
         }
 
-        this.updateCollisionGrid(this.entitiesCollisionLayer, false);
+        this.updateCollisionGrid(this.areasCollisionLayer, false);
     }
 
     public initializeAreaManager(userConnectedTags: string[], userCanEdit: boolean) {
@@ -247,7 +275,7 @@ export class GameMapFrontWrapper {
             console.error("Unable to load AreasManager because gameMapAreas is undefined");
         }
         // Once we have the tags, we can compute the colliding layer again
-        this.recomputeEntitiesAndAreasCollisionGrid();
+        this.recomputeAreasCollisionGrid();
     }
 
     public setLayerVisibility(layerName: string, visible: boolean): void {
@@ -326,7 +354,7 @@ export class GameMapFrontWrapper {
 
         for (let y = yStart; y < yEnd; y += 1) {
             for (let x = xStart; x < xEnd; x += 1) {
-                const tile = this.entitiesCollisionLayer.putTileAt(this.existingTileIndex, x, y);
+                const tile = this.areasCollisionLayer.putTileAt(this.existingTileIndex, x, y);
                 tile.properties["collides"] = true;
             }
         }
@@ -354,7 +382,7 @@ export class GameMapFrontWrapper {
         }
         // go through all tilemap layers on map. Maintain order
         for (const layer of this.phaserLayers) {
-            if (!layer.visible && layer !== this.entitiesCollisionLayer) {
+            if (!layer.visible && layer !== this.entitiesCollisionLayer && layer !== this.areasCollisionLayer) {
                 continue;
             }
             if (!useCache) {

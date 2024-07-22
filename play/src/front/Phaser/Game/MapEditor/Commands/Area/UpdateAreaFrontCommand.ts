@@ -20,7 +20,7 @@ export class UpdateAreaFrontCommand extends UpdateAreaCommand implements FrontCo
         const returnVal = await super.execute();
         this.areaEditorTool.handleAreaUpdate(this.oldConfig, this.newConfig);
 
-        this.gameMapFrontWrapper.recomputeEntitiesAndAreasCollisionGrid();
+        this.gameMapFrontWrapper.recomputeAreasCollisionGrid();
 
         return returnVal;
     }

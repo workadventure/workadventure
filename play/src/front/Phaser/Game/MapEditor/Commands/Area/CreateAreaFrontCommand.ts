@@ -21,7 +21,7 @@ export class CreateAreaFrontCommand extends CreateAreaCommand implements FrontCo
     public async execute(): Promise<void> {
         await super.execute();
         this.areaEditorTool.handleAreaCreation(this.areaConfig, this.localCommand);
-        this.gameMapFrontWrapper.recomputeEntitiesAndAreasCollisionGrid();
+        this.gameMapFrontWrapper.recomputeAreasCollisionGrid();
     }
 
     public getUndoCommand(): DeleteAreaFrontCommand {

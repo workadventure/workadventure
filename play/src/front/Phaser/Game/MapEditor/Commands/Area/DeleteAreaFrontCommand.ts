@@ -23,6 +23,9 @@ export class DeleteAreaFrontCommand extends DeleteAreaCommand implements FrontCo
         const returnVal = super.execute();
 
         this.editorTool.handleAreaDeletion(this.areaId, area);
+
+        this.gameMapFrontWrapper.recomputeAreasCollisionGrid();
+
         return returnVal;
     }
 
