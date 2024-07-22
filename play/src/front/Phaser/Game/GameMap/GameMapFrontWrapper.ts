@@ -219,7 +219,7 @@ export class GameMapFrontWrapper {
         });
     }
 
-    public recomputeEntitiesCollisionGrid() {
+    public recomputeEntitiesAndAreasCollisionGrid() {
         const entities = this.entitiesManager.getEntities();
 
         this.entitiesCollisionLayer.fill(-1);
@@ -231,6 +231,11 @@ export class GameMapFrontWrapper {
             }
             this.modifyToCollisionsLayer(entity.x, entity.y, entity.name, entityCollisionGrid, false);
         }
+
+        for (const area of this.areasManager.getCollidingAreas()) {
+            this.registerCollisionArea(area);
+        }
+
         this.updateCollisionGrid(this.entitiesCollisionLayer, false);
     }
 
@@ -241,6 +246,8 @@ export class GameMapFrontWrapper {
         } else {
             console.error("Unable to load AreasManager because gameMapAreas is undefined");
         }
+        // Once we have the tags, we can compute the colliding layer again
+        this.recomputeEntitiesAndAreasCollisionGrid();
     }
 
     public setLayerVisibility(layerName: string, visible: boolean): void {
@@ -304,6 +311,24 @@ export class GameMapFrontWrapper {
         this.entitiesCollisionLayer.setCollisionByProperty({ collides: true });
         if (withGridUpdate) {
             this.updateCollisionGrid(this.entitiesCollisionLayer, false);
+        }
+    }
+
+    private registerCollisionArea(area: AreaData): void {
+        const tileWidth = this.getMap().tilewidth ?? 32;
+        const tileHeight = this.getMap().tileheight ?? 32;
+
+        const xStart = Math.floor(area.x / tileWidth);
+        const yStart = Math.floor(area.y / tileHeight);
+
+        const xEnd = Math.ceil((area.x + area.width) / tileWidth);
+        const yEnd = Math.ceil((area.y + area.height) / tileHeight);
+
+        for (let y = yStart; y < yEnd; y += 1) {
+            for (let x = xStart; x < xEnd; x += 1) {
+                const tile = this.entitiesCollisionLayer.putTileAt(this.existingTileIndex, x, y);
+                tile.properties["collides"] = true;
+            }
         }
     }
 
