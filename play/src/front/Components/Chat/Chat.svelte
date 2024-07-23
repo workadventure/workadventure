@@ -243,7 +243,7 @@
 <div id="chatWindow" class:show={$chatVisibilityStore}>
     <input type="text" bind:this={searchElement} on:keydown={search} style="display: none;" />
     {#if $chatVisibilityStore}<div class="hide">
-            <button class="close-window" on:click={closeChat}>&#215;</button>
+            <button class="close-window" on:click|preventDefault|stopPropagation={closeChat}>&#215;</button>
         </div>{/if}
     <iframe
         id="chatWorkAdventure"
