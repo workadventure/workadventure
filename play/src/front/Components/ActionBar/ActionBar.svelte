@@ -898,24 +898,29 @@
                     </button>
                 </div>
 
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div
-                    on:dragstart|preventDefault={noDrag}
-                    on:click={() => analyticsClient.openExternalModuleCalendar()}
-                    on:click={openExternalModuleCalendar}
-                    class="bottom-action-button"
-                >
-                    <button id="calendarIcon" class:border-top-light={$isCalendarVisibleStore}>
-                        <img draggable="false" src={calendarSvg} style="padding: 2px" alt="Calendar Icon" />
-                        <span
-                            class="tw-absolute tw-top-5 tw-text-white tw-rounded-full tw-px-1 tw-py-0.5 tw-text-xxs tw-font-bold tw-leading-none"
-                        >
-                            {new Date().getDate()}
-                        </span>
-                    </button>
+                    <!-- Calendar integration -->
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div
+                        on:dragstart|preventDefault={noDrag}
+                        on:click={() => analyticsClient.openExternalModuleCalendar()}
+                        on:click={openExternalModuleCalendar}
+                        class="bottom-action-button"
+                    >
+                        {#if !isMobile}
+                            <Tooltip text={$LL.actionbar.calendar()} />
+                        {/if}
+                        <button id="calendarIcon" class:border-top-light={$isCalendarVisibleStore}>
+                            <img draggable="false" src={calendarSvg} style="padding: 2px" alt={$LL.menu.icon.open.calendar()}/>
+                            <span
+                                class="tw-absolute tw-top-5 tw-text-white tw-rounded-full tw-px-1 tw-py-0.5 tw-text-xxs tw-font-bold tw-leading-none"
+                            >
+                                {new Date().getDate()}
+                            </span>
+                        </button>
+                    </div>
                 </div>
-            </div>
-<!-- Status part -->
+
+                <!-- Status part -->
                 <div class="bottom-action-section tw-flex tw-flex-initial">
                     <AvailabilityStatusComponent />
                 </div>
