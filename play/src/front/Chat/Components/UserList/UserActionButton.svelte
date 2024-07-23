@@ -1,8 +1,8 @@
 <script lang="ts">
     import { Readable } from "svelte/store";
-    import walk from "../../../../../public/static/svg/walk.svg";
-    import teleport from "../../../../../public/static/svg/teleport.svg";
-    import businessCard from "../../../../../public/static/svg/business-cards.svg";
+    import walk from "../../images/walk.svg";
+    import teleport from "../../images/teleport.svg";
+    import businessCard from "../../images/business-cards.svg";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { ChatUser } from "../../Connection/ChatConnection";
     import { scriptUtils } from "../../../Api/ScriptUtils";
@@ -54,7 +54,7 @@
         <IconMoreVertical />
     </button>
     <!-- on:mouseleave={closeChatUserMenu} -->
-    <div class={`wa-dropdown-menu ${chatMenuActive ? "" : "tw-invisible"}`} on:mouseleave={closeChatUserMenu}>
+    <div class={`wa-dropdown-menu`} class:tw-invisible={!chatMenuActive} on:mouseleave={closeChatUserMenu}>
         {#if isInTheSameMap}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <span
