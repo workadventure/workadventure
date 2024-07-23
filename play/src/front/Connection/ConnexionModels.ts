@@ -54,7 +54,7 @@ export interface WebRtcSignalReceivedMessageInterface {
     signal: SignalData;
     webRtcUser: string | undefined;
     webRtcPassword: string | undefined;
-    spaceName: string | undefined;
+    webRtcSpaceName: string | undefined;
 }
 
 export interface ViewportInterface {
@@ -78,8 +78,8 @@ export interface RoomJoinedMessageInterface {
     characterTextures: WokaTextureDescriptionInterface[];
     companionTexture?: CompanionTextureDescriptionInterface;
     commandsToApply?: EditMapCommandMessage[];
-    webrtcUserName: string;
-    webrtcPassword: string;
+    webRtcUserName: string;
+    webRtcPassword: string;
     applications?: Array<ApplicationDefinitionInterface> | undefined;
 }
 

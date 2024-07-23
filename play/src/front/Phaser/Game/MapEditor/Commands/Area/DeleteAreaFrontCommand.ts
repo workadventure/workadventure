@@ -4,6 +4,7 @@ import { FrontCommandInterface } from "../FrontCommandInterface";
 import { RoomConnection } from "../../../../../Connection/RoomConnection";
 import { TrashEditorTool } from "../../Tools/TrashEditorTool";
 import { VoidFrontCommand } from "../VoidFrontCommand";
+import { GameMapFrontWrapper } from "../../../GameMap/GameMapFrontWrapper";
 import { CreateAreaFrontCommand } from "./CreateAreaFrontCommand";
 
 export class DeleteAreaFrontCommand extends DeleteAreaCommand implements FrontCommandInterface {
@@ -11,7 +12,8 @@ export class DeleteAreaFrontCommand extends DeleteAreaCommand implements FrontCo
         gameMap: GameMap,
         areaId: string,
         commandId: string | undefined,
-        private editorTool: AreaEditorTool | TrashEditorTool
+        private editorTool: AreaEditorTool | TrashEditorTool,
+        private gameMapFrontWrapper: GameMapFrontWrapper
     ) {
         super(gameMap, areaId, commandId);
     }
@@ -21,6 +23,9 @@ export class DeleteAreaFrontCommand extends DeleteAreaCommand implements FrontCo
         const returnVal = super.execute();
 
         this.editorTool.handleAreaDeletion(this.areaId, area);
+
+        this.gameMapFrontWrapper.recomputeAreasCollisionGrid();
+
         return returnVal;
     }
 
@@ -28,7 +33,14 @@ export class DeleteAreaFrontCommand extends DeleteAreaCommand implements FrontCo
         if (!this.areaConfig) {
             return new VoidFrontCommand();
         }
-        return new CreateAreaFrontCommand(this.gameMap, this.areaConfig, undefined, this.editorTool, false);
+        return new CreateAreaFrontCommand(
+            this.gameMap,
+            this.areaConfig,
+            undefined,
+            this.editorTool,
+            false,
+            this.gameMapFrontWrapper
+        );
     }
 
     public emitEvent(roomConnection: RoomConnection): void {

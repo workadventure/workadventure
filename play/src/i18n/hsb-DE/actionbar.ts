@@ -11,6 +11,7 @@ const actionbar: BaseTranslation = {
     microphone: "něme šaltowanje startować/skónčić",
     emoji: "emojijowy meni wočinić/začinić",
     menu: "meni wočinić/začinić",
+    calendar: "kalender wočinić/začinić",
     bo: "pozadkowy běrow wočinić",
     subtitle: {
         microphone: "mikrofon",

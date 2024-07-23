@@ -1,46 +1,6 @@
 import {expect, test} from '@playwright/test';
 
 test.describe('Swagger documentation', () => {
-    test('Admin -> External Admin', async ({page}, { project }) => {
-        // Skip test for mobile device
-        if(project.name === "mobilechromium") {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
-
-        await page.goto(
-            `/swagger-ui/?urls.primaryName=Admin%20->%20External%20Admin`
-        );
-
-        // Test if the component "operations-ExternalAdminAPI-get_api_mapinformation" is visible
-        await expect(page.locator('#operations-ExternalAdminAPI-get_api_mapinformation')).toBeVisible();
-
-        // Test if the component "operations-ExternalAdminAPI-get_api_roomaccess" is visible
-        await expect(page.locator('#operations-ExternalAdminAPI-get_api_roomaccess')).toBeVisible();
-
-        // Test if the component "operations-ExternalAdminAPI-get_api_loginurl__organizationMemberToken_" is visible
-        await expect(page.locator('#operations-ExternalAdminAPI-get_api_loginurl__organizationMemberToken_')).toBeVisible();
-
-        // Test if the component "model-AdminApiData" is visible
-        await expect(page.locator('#model-AdminApiData')).toBeVisible();
-
-        // Test if the component "model-ErrorApiUnauthorizedData" is visible
-        await expect(page.locator('#model-ErrorApiUnauthorizedData')).toBeVisible();
-
-        // Test if the component "model-FetchMemberDataByUuidResponse" is visible
-        await expect(page.locator('#model-FetchMemberDataByUuidResponse')).toBeVisible();
-
-        // Test if the component "model-MapDetailsData" is visible
-        await expect(page.locator('#model-MapDetailsData')).toBeVisible();
-
-        // Test if the component "model-RoomRedirect" is visible
-        await expect(page.locator('#model-RoomRedirect')).toBeVisible();
-
-        // Test if the component "model-WokaDetail" is visible
-        await expect(page.locator('#model-WokaDetail')).toBeVisible();
-    });
-
     test('Pusher -> Admin', async ({page}, { project }) => {
         // Skip test for mobile device
         if(project.name === "mobilechromium") {

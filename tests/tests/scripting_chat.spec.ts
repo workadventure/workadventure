@@ -22,7 +22,7 @@ test.describe("Scripting chat functions", () => {
         publicTestMapUrl("tests/E2E/empty.json", "scripting_chat")
     );
 
-    await login(page);
+    await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
 
     // Test open chat scripting
     await expect(page.locator('#chat')).toBeHidden();
@@ -106,7 +106,7 @@ test.describe("Scripting chat functions", () => {
     await bob.goto(
       publicTestMapUrl("tests/E2E/empty.json", "scripting_chat")
     );
-    await login(bob, "Bob");
+    await login(bob, "bob", 3, "en-US", project.name === "mobilechromium");
 
     // test to send bubblme message when entering proximity meeting
     await evaluateScript(bob, async () => {
@@ -126,7 +126,7 @@ test.describe("Scripting chat functions", () => {
     const newBrowser = await browser.browserType().launch();
     const alice = await newBrowser.newPage();
     await alice.goto(publicTestMapUrl("tests/E2E/empty.json", "scripting_chat"));
-    await login(alice, "Alice");
+    await login(alice, "Alice", 2, "en-US", project.name === "mobilechromium");
 
     // Move alice to the same position as bob
     await Map.teleportToPosition(alice, 32, 32);

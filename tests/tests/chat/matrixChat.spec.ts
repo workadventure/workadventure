@@ -21,16 +21,18 @@ test.describe("Matrix chat tests @oidc", () => {
       await ChatUtils.resetMatrixDatabase();
     }
   );
-  test("Open matrix Chat", async ({ page }) => {
-    await login(page, "test", 3);
-    await oidcMatrixUserLogin(page);
+  test("Open matrix Chat", async ({ page }, { project }) => {
+    const isMobile = project.name === "mobilechromium";
+    await login(page, "test", 3, "us-US", isMobile);
+    await oidcMatrixUserLogin(page, isMobile);
     await ChatUtils.openChat(page);
     await expect(page.getByTestId("chat")).toBeAttached();
   });
 
-  test("Create a public chat room", async ({ page }) => {
-    await login(page, "test", 3);
-    await oidcMatrixUserLogin(page);
+  test("Create a public chat room", async ({ page }, { project }) => {
+    const isMobile = project.name === "mobilechromium";
+    await login(page, "test", 3, "us-US", isMobile);
+    await oidcMatrixUserLogin(page, isMobile);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const publicChatRoomName = ChatUtils.getRandomName();
@@ -39,9 +41,10 @@ test.describe("Matrix chat tests @oidc", () => {
     await expect(page.getByText(publicChatRoomName)).toBeAttached();
   });
 
-  test("Send messages in public chat room", async ({ page }) => {
-    await login(page, "test", 3);
-    await oidcMatrixUserLogin(page);
+  test("Send messages in public chat room", async ({ page }, { project }) => {
+    const isMobile = project.name === "mobilechromium";
+    await login(page, "test", 3, "us-US", isMobile);
+    await oidcMatrixUserLogin(page, isMobile);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const publicChatRoomName = ChatUtils.getRandomName();
@@ -54,9 +57,10 @@ test.describe("Matrix chat tests @oidc", () => {
     await expect(page.getByText(chatMessageContent)).toBeAttached();
   });
 
-  test("Reply to message", async ({ page }) => {
-    await login(page, "test", 3);
-    await oidcMatrixUserLogin(page);
+  test("Reply to message", async ({ page }, { project }) => {
+    const isMobile = project.name === "mobilechromium";
+    await login(page, "test", 3, "us-US", isMobile);
+    await oidcMatrixUserLogin(page, isMobile);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const publicChatRoomName = ChatUtils.getRandomName();
@@ -73,9 +77,10 @@ test.describe("Matrix chat tests @oidc", () => {
     await expect(page.getByText(chatMessageContent)).toHaveCount(2);
   });
 
-  test("React to message", async ({ page }) => {
-    await login(page, "test", 3);
-    await oidcMatrixUserLogin(page);
+  test("React to message", async ({ page }, { project }) => {
+    const isMobile = project.name === "mobilechromium";
+    await login(page, "test", 3, "us-US", isMobile);
+    await oidcMatrixUserLogin(page, isMobile);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const publicChatRoomName = ChatUtils.getRandomName();
@@ -94,9 +99,10 @@ test.describe("Matrix chat tests @oidc", () => {
     ).toBeAttached();
   });
 
-  test("Remove reaction to message", async ({ page }) => {
-    await login(page, "test", 3);
-    await oidcMatrixUserLogin(page);
+  test("Remove reaction to message", async ({ page }, { project }) => {
+    const isMobile = project.name === "mobilechromium";
+    await login(page, "test", 3, "us-US", isMobile);
+    await oidcMatrixUserLogin(page, isMobile);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const publicChatRoomName = ChatUtils.getRandomName();
@@ -116,9 +122,10 @@ test.describe("Matrix chat tests @oidc", () => {
     ).not.toBeAttached();
   });
 
-  test("Remove message", async ({ page }) => {
-    await login(page, "test", 3);
-    await oidcMatrixUserLogin(page);
+  test("Remove message", async ({ page }, { project }) => {
+    const isMobile = project.name === "mobilechromium";
+    await login(page, "test", 3, "us-US", isMobile);
+    await oidcMatrixUserLogin(page, isMobile);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const publicChatRoomName = ChatUtils.getRandomName();
@@ -133,9 +140,10 @@ test.describe("Matrix chat tests @oidc", () => {
     await expect(page.getByText(chatMessageContent)).not.toBeAttached();
   });
 
-  test("Edit message", async ({ page }) => {
-    await login(page, "test", 3);
-    await oidcMatrixUserLogin(page);
+  test("Edit message", async ({ page }, { project }) => {
+    const isMobile = project.name === "mobilechromium";
+    await login(page, "test", 3, "us-US", isMobile);
+    await oidcMatrixUserLogin(page, isMobile);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const publicChatRoomName = ChatUtils.getRandomName();
@@ -154,9 +162,10 @@ test.describe("Matrix chat tests @oidc", () => {
     await expect(page.getByText(chatMessageContent)).not.toBeAttached();
   });
 
-  test("Cancel edit message", async ({ page }) => {
-    await login(page, "test", 3);
-    await oidcMatrixUserLogin(page);
+  test("Cancel edit message", async ({ page }, { project }) => {
+    const isMobile = project.name === "mobilechromium";
+    await login(page, "test", 3, "us-US", isMobile);
+    await oidcMatrixUserLogin(page, isMobile);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const publicChatRoomName = ChatUtils.getRandomName();
@@ -175,9 +184,10 @@ test.describe("Matrix chat tests @oidc", () => {
     await expect(page.getByText(chatMessageContent)).toBeAttached();
   });
 
-  test("Create a private chat room", async ({ page }) => {
-    await login(page, "test", 3);
-    await oidcMatrixUserLogin(page);
+  test("Create a private chat room", async ({ page }, { project }) => {
+    const isMobile = project.name === "mobilechromium";
+    await login(page, "test", 3, "us-US", isMobile);
+    await oidcMatrixUserLogin(page, isMobile);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const privateChatRoom = ChatUtils.getRandomName();
@@ -190,9 +200,10 @@ test.describe("Matrix chat tests @oidc", () => {
   test("Create a private encrypted chat room (new user)", async ({
     page,
     context,
-  }) => {
-    await login(page, "test", 3);
-    await oidcMatrixUserLogin(page);
+  }, { project }) => {
+    const isMobile = project.name === "mobilechromium";
+    await login(page, "test", 3, "us-US", isMobile);
+    await oidcMatrixUserLogin(page, isMobile);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
@@ -207,9 +218,10 @@ test.describe("Matrix chat tests @oidc", () => {
   test("Send message in private chat room (new user)", async ({
     page,
     context,
-  }) => {
-    await login(page, "test", 3);
-    await oidcMatrixUserLogin(page);
+  }, { project }) => {
+    const isMobile = project.name === "mobilechromium";
+    await login(page, "test", 3, "us-US", isMobile);
+    await oidcMatrixUserLogin(page, isMobile);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
@@ -226,8 +238,9 @@ test.describe("Matrix chat tests @oidc", () => {
   });
 
   test("Retrieve encrypted message", async ({ page, context }, { project }) => {
-    await login(page, "test", 3);
-    await oidcMatrixUserLogin(page);
+    const isMobile = project.name === "mobilechromium";
+    await login(page, "test", 3, "us-US", isMobile);
+    await oidcMatrixUserLogin(page, isMobile);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
@@ -256,9 +269,9 @@ test.describe("Matrix chat tests @oidc", () => {
     if (project.name === "mobilechromium") {
       await ChatUtils.closeChat(page);
     }
-    await oidcLogout(page);
+    await oidcLogout(page, isMobile);
     await anonymLoginPromise;
-    await oidcMatrixUserLogin(page);
+    await oidcMatrixUserLogin(page, isMobile);
     await ChatUtils.restoreEncryption(page);
     await ChatUtils.openChat(page);
     await page.getByText(privateChatRoom).click();
@@ -269,8 +282,9 @@ test.describe("Matrix chat tests @oidc", () => {
     page,
     context,
   }, { project }) => {
-    await login(page, "test", 3);
-    await oidcMatrixUserLogin(page);
+    const isMobile = project.name === "mobilechromium";
+    await login(page, "test", 3, "en-US", isMobile);
+    await oidcMatrixUserLogin(page, isMobile);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
@@ -299,10 +313,10 @@ test.describe("Matrix chat tests @oidc", () => {
     if (project.name === "mobilechromium") {
       await ChatUtils.closeChat(page);
     }
-    await oidcLogout(page);
+    await oidcLogout(page, isMobile);
     await anonymLoginPromise;
 
-    await oidcMatrixUserLogin(page);
+    await oidcMatrixUserLogin(page, isMobile);
     await page.getByText("Cancel").click();
     await ChatUtils.openChat(page);
     await page.getByText(privateChatRoom).click();

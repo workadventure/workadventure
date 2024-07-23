@@ -139,6 +139,24 @@ export class GameMapAreas {
         return areaRightTags.some((tag) => userConnectedTags.includes(tag));
     }
 
+    public hasAreaAccess(area: AreaData, userConnectedTags: string[]) {
+        const areaRights = this.getAreaRightPropertyData(area);
+        if (areaRights === undefined) {
+            return true;
+        }
+
+        const areaRightTags = [...areaRights.writeTags, ...areaRights.readTags];
+        return areaRightTags.some((tag) => userConnectedTags.includes(tag));
+    }
+
+    public isOverlappingArea(areaId: string): boolean {
+        const area = this.getArea(areaId);
+        if (area === undefined) {
+            return false;
+        }
+        return this.getPersonalAreaRightPropertyData(area) != undefined;
+    }
+
     public isGameMapContainsSpecificAreas(): boolean {
         let hasSpecificAreas = false;
         this.areas.forEach((area) => {
@@ -423,5 +441,12 @@ export class GameMapAreas {
             }
         }
         return flattenedProperties;
+    }
+
+    /**
+     * Returns the list of all areas that the user has no access to.
+     */
+    public getCollidingAreas(userConnectedTags: string[]): AreaData[] {
+        return Array.from(this.areas.values()).filter((area) => !this.hasAreaAccess(area, userConnectedTags));
     }
 }

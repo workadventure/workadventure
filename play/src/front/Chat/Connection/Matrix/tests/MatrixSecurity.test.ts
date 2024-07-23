@@ -67,7 +67,7 @@ describe("MatrixSecurity", () => {
             //eslint-disable-next-line @typescript-eslint/unbound-method
             expect(mockMatrixClient.getCrypto).toHaveBeenCalledOnce();
         });
-        it("should reject promise when Encryption is already initialized", async () => {
+        it("should return void when Encryption is already initialized", async () => {
             const matrixSecurity = new MatrixSecurity(Promise.resolve());
 
             const mockMatrixClient = {
@@ -77,10 +77,9 @@ describe("MatrixSecurity", () => {
             } as unknown as MatrixClient;
 
             matrixSecurity.updateMatrixClientStore(mockMatrixClient);
-
-            await expect(matrixSecurity.initClientCryptoConfiguration()).rejects.toThrow(
-                "Encryption already initialized"
-            );
+            const consoleInfoSpy = vi.spyOn(console, "info");
+            await expect(matrixSecurity.initClientCryptoConfiguration()).resolves.toEqual(undefined);
+            expect(consoleInfoSpy).toHaveBeenCalled();
         });
         it("should call bootstrap / restore backup message function when crossSigning is not ready or keybackupinfo is null ", async () => {
             const mockCrypto = {

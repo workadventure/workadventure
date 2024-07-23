@@ -21,7 +21,7 @@ test.describe('API WA.players', () => {
     await page.goto(
       publicTestMapUrl(`tests/RemotePlayers/remote_players.json`, "api_players")
     );
-    await login(page, 'Alice');
+    await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
 
     const newBrowser = await browser.browserType().launch();
     const page2 = await newBrowser.newPage();
@@ -30,7 +30,7 @@ test.describe('API WA.players', () => {
         publicTestMapUrl(`tests/RemotePlayers/remote_players.json`, "api_players")
     );
 
-    await login(page2, 'Bob');
+    await login(page2, 'Bob', 3, 'en-US', project.name === "mobilechromium");
 
     const events = getCoWebsiteIframe(page).locator('#events');
     await expect(events).toContainText('New user: Bob', {
@@ -71,7 +71,7 @@ test.describe('API WA.players', () => {
     await page.goto(
         publicTestMapUrl(`tests/RemotePlayers/remote_players_no_init.json`, "api_players")
     );
-    await login(page);
+    await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
 
     await expect(getCoWebsiteIframe(page).locator('#onPlayerEntersException')).toHaveText('Yes');
     await expect(getCoWebsiteIframe(page).locator('#onPlayerLeavesException')).toHaveText('Yes');
@@ -89,7 +89,7 @@ test.describe('API WA.players', () => {
         publicTestMapUrl("tests/E2E/empty.json", "api_players")
     );
 
-    await login(page, "Alice");
+    await login(page, "Alice", 2, 'en-US', project.name === "mobilechromium");
 
     await evaluateScript(page, async () => {
       await WA.onInit();
@@ -108,7 +108,7 @@ test.describe('API WA.players', () => {
         publicTestMapUrl("tests/E2E/empty.json", "api_players")
     );
 
-    await login(page2, 'Bob');
+    await login(page2, 'Bob', 3, 'en-US', project.name === "mobilechromium");
 
     const myvar = await evaluateScript(page2, async () => {
       await WA.onInit();
@@ -124,7 +124,7 @@ test.describe('API WA.players', () => {
     await page2.close();
   });
 
-  const runPersistenceTest = async (page: Page, browser: Browser) => {
+  const runPersistenceTest = async (page: Page, browser: Browser, isMobile = false) => {
     await evaluateScript(page, async () => {
 
 
@@ -209,7 +209,7 @@ test.describe('API WA.players', () => {
         publicTestMapUrl("tests/E2E/empty.json", "api_players")
     );
 
-    await login(page2, 'Bob');
+    await login(page2, 'Bob', 3, 'en-US', isMobile);
 
     const readRemotePlayerVariable = async (playerName: string, variableName: string, targetPage: Page): Promise<unknown> => {
       return await evaluateScript(targetPage, async ({variableName, playerName}) => {
@@ -309,9 +309,9 @@ test.describe('API WA.players', () => {
         publicTestMapUrl("tests/E2E/empty.json", "api_players")
     );
 
-    await login(page, "Alice");
+    await login(page, "Alice", 2, 'en-US', project.name === "mobilechromium");
 
-    await runPersistenceTest(page, browser);
+    await runPersistenceTest(page, browser, project.name === "mobilechromium");
   });
 
   test('Test variable persistence for logged users. @oidc', async ({ page, browser }, { project }) => {
@@ -327,11 +327,11 @@ test.describe('API WA.players', () => {
         publicTestMapUrl("tests/E2E/empty.json", "api_players")
     );
 
-    await login(page, "Alice");
+    await login(page, "Alice", 2, 'en-US', project.name === "mobilechromium");
 
     await oidcLogin(page);
 
-    await runPersistenceTest(page, browser);
+    await runPersistenceTest(page, browser, project.name === "mobilechromium");
 
     await oidcLogout(page);
   });
@@ -348,7 +348,7 @@ test.describe('API WA.players', () => {
         publicTestMapUrl("tests/E2E/empty_2_frames.json", "api_players")
     );
 
-    await login(page, "Alice");
+    await login(page, "Alice", 2, 'en-US', project.name === "mobilechromium");
 
     await evaluateScript(page, async () => {
       await WA.onInit();
@@ -391,7 +391,7 @@ test.describe('API WA.players', () => {
         publicTestMapUrl("tests/E2E/empty.json", "api_players")
     );
 
-    await login(page, "Alice");
+    await login(page, "Alice", 2, 'en-US', project.name === "mobilechromium");
 
     /*console.log("PAGE 1 MY ID", await evaluateScript(page, async () => {
       await WA.onInit();
@@ -475,7 +475,7 @@ test.describe('API WA.players', () => {
         publicTestMapUrl("tests/E2E/empty.json", "api_players")
     );
 
-    await login(page, "Alice");
+    await login(page, "Alice", 2, 'en-US', project.name === "mobilechromium");
 
     // Test that a variable triggered locally can be listened locally
     let gotExpectedNotification = false;

@@ -267,6 +267,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         customEntityEditorForm: {
             imageName: "Nom de l'image",
             tags: "Tags",
+            writeTag: "Ecrire un tag...",
             objectType: "Type d'objet",
             floatingObject: "Objet flottant",
             floatingObjectDescription:
@@ -275,6 +276,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             groundLevel: "Au sol",
             custom: "Personnalisé",
             standing: "Debout",
+            collision: "Collision",
+            wokaAbove: "Woka devant",
+            wokaBelow: "Woka derrière",
         },
         buttons: {
             editEntity: "Editer",

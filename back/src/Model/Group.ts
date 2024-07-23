@@ -235,4 +235,8 @@ export class Group implements Movable, CustomJsonReplacerInterface {
         }
         return undefined;
     }
+
+    public getRoomId(): string {
+        return this.roomId;
+    }
 }

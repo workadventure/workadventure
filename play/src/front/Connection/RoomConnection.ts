@@ -568,8 +568,8 @@ export class RoomConnection implements RoomConnection {
                             companionTexture: roomJoinedMessage.companionTexture,
                             playerVariables,
                             commandsToApply,
-                            webrtcUserName: roomJoinedMessage.webrtcUserName,
-                            webrtcPassword: roomJoinedMessage.webrtcPassword,
+                            webRtcUserName: roomJoinedMessage.webRtcUserName,
+                            webRtcPassword: roomJoinedMessage.webRtcPassword,
                             applications: applications,
                         } as RoomJoinedMessageInterface,
                     });
@@ -617,13 +617,13 @@ export class RoomConnection implements RoomConnection {
                     this._webRtcSignalToClientMessageStream.next({
                         userId: message.webRtcSignalToClientMessage.userId,
                         signal: JSON.parse(message.webRtcSignalToClientMessage.signal),
-                        webRtcUser: message.webRtcSignalToClientMessage.webrtcUserName
-                            ? message.webRtcSignalToClientMessage.webrtcUserName
+                        webRtcUser: message.webRtcSignalToClientMessage.webRtcUserName
+                            ? message.webRtcSignalToClientMessage.webRtcUserName
                             : undefined,
-                        webRtcPassword: message.webRtcSignalToClientMessage.webrtcPassword
-                            ? message.webRtcSignalToClientMessage.webrtcPassword
+                        webRtcPassword: message.webRtcSignalToClientMessage.webRtcPassword
+                            ? message.webRtcSignalToClientMessage.webRtcPassword
                             : undefined,
-                        spaceName: message.webRtcSignalToClientMessage.spaceName ?? undefined,
+                        webRtcSpaceName: message.webRtcSignalToClientMessage.webRtcSpaceName ?? undefined,
                     });
                     break;
                 }
@@ -631,13 +631,13 @@ export class RoomConnection implements RoomConnection {
                     this._webRtcScreenSharingSignalToClientMessageStream.next({
                         userId: message.webRtcScreenSharingSignalToClientMessage.userId,
                         signal: JSON.parse(message.webRtcScreenSharingSignalToClientMessage.signal),
-                        webRtcUser: message.webRtcScreenSharingSignalToClientMessage.webrtcUserName
-                            ? message.webRtcScreenSharingSignalToClientMessage.webrtcUserName
+                        webRtcUser: message.webRtcScreenSharingSignalToClientMessage.webRtcUserName
+                            ? message.webRtcScreenSharingSignalToClientMessage.webRtcUserName
                             : undefined,
-                        webRtcPassword: message.webRtcScreenSharingSignalToClientMessage.webrtcPassword
-                            ? message.webRtcScreenSharingSignalToClientMessage.webrtcPassword
+                        webRtcPassword: message.webRtcScreenSharingSignalToClientMessage.webRtcPassword
+                            ? message.webRtcScreenSharingSignalToClientMessage.webRtcPassword
                             : undefined,
-                        spaceName: message.webRtcScreenSharingSignalToClientMessage.spaceName,
+                        webRtcSpaceName: message.webRtcScreenSharingSignalToClientMessage.webRtcSpaceName,
                     });
                     break;
                 }
@@ -645,11 +645,14 @@ export class RoomConnection implements RoomConnection {
                     this._webRtcStartMessageStream.next({
                         userId: message.webRtcStartMessage.userId,
                         initiator: message.webRtcStartMessage.initiator,
-                        webRtcUser: message.webRtcStartMessage.webrtcUserName
-                            ? message.webRtcStartMessage.webrtcUserName
+                        webRtcUser: message.webRtcStartMessage.webRtcUserName
+                            ? message.webRtcStartMessage.webRtcUserName
                             : undefined,
-                        webRtcPassword: message.webRtcStartMessage.webrtcPassword
-                            ? message.webRtcStartMessage.webrtcPassword
+                        webRtcPassword: message.webRtcStartMessage.webRtcPassword
+                            ? message.webRtcStartMessage.webRtcPassword
+                            : undefined,
+                        webRtcSpaceName: message.webRtcStartMessage.webRtcSpaceName
+                            ? message.webRtcStartMessage.webRtcSpaceName
                             : undefined,
                     });
                     break;
@@ -1654,6 +1657,19 @@ export class RoomConnection implements RoomConnection {
             throw new Error("Unexpected answer");
         }
         return answer.embeddableWebsiteAnswer;
+    }
+
+    public async queryTags(searchText: string): Promise<string[]> {
+        const answer = await this.query({
+            $case: "searchTagsQuery",
+            searchTagsQuery: {
+                searchText,
+            },
+        });
+        if (answer.$case !== "searchTagsAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.searchTagsAnswer.tags;
     }
 
     public async queryMembers(searchText: string): Promise<Member[]> {

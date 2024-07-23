@@ -91,7 +91,7 @@
                                         <button
                                             type="button"
                                             class="close-window top-right-btn"
-                                            on:click={closeCoWebsite}
+                                            on:click|preventDefault|stopPropagation={closeCoWebsite}
                                         >
                                             &times;
                                         </button>

@@ -417,6 +417,7 @@ message QueryMessage {
     TurnCredentialsQuery turnCredentialsQuery = 9;
     ChatMembersQuery chatMembersQuery = 10;
     OauthRefreshTokenQuery oauthRefreshTokenQuery = 11;
+    SearchTagsQuery searchTagsQuery = 12;
   }
 }
 
@@ -467,6 +468,9 @@ message OauthRefreshTokenQuery {
   string tokenToRefresh = 1;
 }
 
+message  SearchTagsQuery{
+  string searchText = 1;
+}
 
 message AnswerMessage {
   int32 id = 1;
@@ -483,6 +487,7 @@ message AnswerMessage {
     TurnCredentialsAnswer turnCredentialsAnswer = 11;
     ChatMembersAnswer chatMembersAnswer = 12;
     OauthRefreshTokenAnswer oauthRefreshTokenAnswer = 13;
+    SearchTagsAnswer searchTagsAnswer = 14;
   }
 }
 
@@ -562,6 +567,10 @@ message ChatMember {
   optional string email = 3;
   optional string chatId = 4;
   repeated string tags = 5;
+}
+
+message SearchTagsAnswer{
+  repeated string tags = 1; 
 }
 
 /*********** SERVER TO CLIENT MESSAGES *************/
@@ -691,8 +700,8 @@ message RoomJoinedMessage {
   repeated VariableMessage playerVariable = 10;
   repeated ApplicationMessage applications = 11;
   EditMapCommandsArrayMessage editMapCommandsArrayMessage = 13;
-  string webrtcUserName = 14;
-  string webrtcPassword = 15;
+  string webRtcUserName = 14;
+  string webRtcPassword = 15;
   bool canEdit = 16;
   MegaphoneSettings megaphoneSettings = 17;
   CompanionTextureMessage companionTexture = 18;
@@ -706,8 +715,9 @@ message MegaphoneSettings{
 message WebRtcStartMessage {
   int32 userId = 1;
   bool initiator = 3;
-  string webrtcUserName = 4;
-  string webrtcPassword = 5;
+  string webRtcUserName = 4;
+  string webRtcPassword = 5;
+  string webRtcSpaceName = 6;
 }
 
 message WebRtcDisconnectMessage {
@@ -717,9 +727,9 @@ message WebRtcDisconnectMessage {
 message WebRtcSignalToClientMessage {
   int32 userId = 1;
   string signal = 2;
-  string webrtcUserName = 4;
-  string webrtcPassword = 5;
-  optional string spaceName = 6;
+  string webRtcUserName = 4;
+  string webRtcPassword = 5;
+  string webRtcSpaceName = 6;
 }
 
 message TeleportMessageMessage{

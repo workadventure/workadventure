@@ -20,6 +20,7 @@ export interface ChatUser {
 }
 
 export type ChatRoomMembership = "ban" | "join" | "knock" | "leave" | "invite" | string;
+
 export interface ChatRoom {
     id: string;
     name: Readable<string>;
@@ -38,7 +39,6 @@ export interface ChatRoom {
     hasPreviousMessage: Readable<boolean>;
     loadMorePreviousMessages: () => Promise<void>;
     isEncrypted: Readable<boolean>;
-
     addIncomingUser?: (userId: number, userUuid: string, userName: string, color?: string) => void;
     addOutcomingUser?: (userId: number, userUuid: string, userName: string) => void;
     addNewMessage?: (message: string, senderUserUuid: string) => void;
@@ -91,6 +91,7 @@ export type ConnectionStatus = "ONLINE" | "ON_ERROR" | "CONNECTING" | "OFFLINE";
 
 export type spaceId = number;
 export type chatId = string;
+
 export interface ChatConnectionInterface {
     connectionStatus: Readable<ConnectionStatus>;
     userConnected: Readable<Map<spaceId, ChatUser>>;
@@ -98,25 +99,39 @@ export interface ChatConnectionInterface {
     directRooms: Readable<ChatRoom[]>;
     rooms: Readable<ChatRoom[]>;
     invitations: Readable<ChatRoom[]>;
+
     addUserFromSpace(user: SpaceUserExtended): void;
+
     updateUserFromSpace(user: PartialSpaceUser): void;
+
     disconnectSpaceUser(userId: number): void;
+
     sendBan: (uuid: string, username: string) => void;
     createRoom: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string }>;
+
     createDirectRoom(userChatId: string): Promise<ChatRoom | undefined>;
+
     getDirectRoomFor(uuserChatId: string): ChatRoom | undefined;
+
     searchUsers(searchText: string): Promise<void>;
+
     searchAccessibleRooms(searchText: string): Promise<
         {
             id: string;
             name: string | undefined;
         }[]
     >;
+
     joinRoom(roomId: string): Promise<ChatRoom | undefined>;
+
     destroy(): Promise<void>;
+
     searchChatUsers(searchText: string): Promise<{ id: string; name: string | undefined }[] | undefined>;
+
     isEncryptionRequiredAndNotSet: Readable<boolean>;
+
     initEndToEndEncryption(): Promise<void>;
+
     isGuest: Readable<boolean>;
     joinSpace?: (spaceId: string, spaceName: string) => void;
 }

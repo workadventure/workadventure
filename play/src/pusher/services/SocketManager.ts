@@ -29,7 +29,9 @@ import {
     RemoveSpaceFilterMessage,
     ReportPlayerMessage,
     SearchMemberAnswer,
+    SearchTagsAnswer,
     SearchMemberQuery,
+    SearchTagsQuery,
     ServerToAdminClientMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
@@ -1561,6 +1563,14 @@ export class SocketManager implements ZoneEventListener {
                 id: member.id,
                 email: member.email ?? undefined,
             })),
+        };
+    }
+
+    async handleSearchTagsQuery(client: Socket, searchTagsQuery: SearchTagsQuery): Promise<SearchTagsAnswer> {
+        const { roomId } = client.getUserData();
+        const tags = await adminService.searchTags(roomId, searchTagsQuery.searchText);
+        return {
+            tags,
         };
     }
 

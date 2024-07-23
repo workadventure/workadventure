@@ -24,7 +24,7 @@ export interface UserSimplePeerInterface {
     initiator?: boolean;
     webRtcUser?: string | undefined;
     webRtcPassword?: string | undefined;
-    spaceName?: string;
+    webRtcSpaceName?: string | undefined;
 }
 
 export type RemotePeer = VideoPeer | ScreenSharingPeer;
@@ -174,7 +174,7 @@ export class SimplePeer {
             user.initiator ? user.initiator : false,
             player,
             this.Connection,
-            user.spaceName
+            user.webRtcSpaceName
         );
 
         peer.toClose = false;

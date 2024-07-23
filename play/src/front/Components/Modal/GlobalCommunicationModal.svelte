@@ -170,7 +170,7 @@
 
 <div class="menu-container {isMobile ? 'mobile' : 'center'} tw-h-3/4" bind:this={mainModal}>
     <div class="tw-w-full tw-bg-dark-purple/95 tw-rounded" transition:fly={{ x: 1000, duration: 500 }}>
-        <button type="button" class="close-window" on:click={close}>&times</button>
+        <button type="button" class="close-window" on:click|preventDefault|stopPropagation={close}>&times</button>
         <header>
             <h2 class="tw-p-5 blue-title">Global communication</h2>
             {#if activeLiveMessage || inputSendTextActive || uploadAudioActive}

@@ -127,6 +127,8 @@ export interface AdminInterface {
 
     searchMembers(roomUrl: string, searchText: string): Promise<MemberData[]>;
 
+    searchTags(world: string, searchText: string): Promise<string[]>;
+
     getMember(memberUUID: string): Promise<MemberData>;
 
     getWorldChatMembers(playUri: string, searchText: string): Promise<WorldChatMembersData>;

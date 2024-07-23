@@ -288,6 +288,8 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         const propValues = Object.values(this.entityData.properties);
         for (const value of propValues) {
             if (value !== undefined && value !== null) {
+                // If the entity has a description property and it's empty, we don't consider it as a property
+                if (value.type === "entityDescriptionProperties" && value.description === "") continue;
                 return true;
             }
         }

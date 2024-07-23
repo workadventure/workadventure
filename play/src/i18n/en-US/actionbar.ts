@@ -13,6 +13,7 @@ const actionbar: BaseTranslation = {
     emoji: "Open / Close emoji",
     disableMegaphone: "Disable megaphone",
     menu: "Open / Close menu",
+    calendar: "Open / Close calendar",
     mapEditor: "Open / Close map manager",
     mapEditorMobileLocked: "Map editor is locked on mobile mode",
     mapEditorLocked: "Map editor is locked 🔐",

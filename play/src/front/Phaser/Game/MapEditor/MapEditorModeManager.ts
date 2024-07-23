@@ -490,7 +490,8 @@ export class MapEditorModeManager {
                 areaDataToClaim,
                 undefined,
                 oldAreaData,
-                this.editorTools.AreaEditor as AreaEditorTool
+                this.editorTools.AreaEditor as AreaEditorTool,
+                this.scene.getGameMapFrontWrapper()
             )
         ).catch((error) => console.error(error));
     }
