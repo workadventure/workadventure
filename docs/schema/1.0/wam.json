@@ -132,6 +132,9 @@
                         "volume": {
                           "type": "number",
                           "default": 1
+                        },
+                        "triggerMessage": {
+                          "type": "string"
                         }
                       },
                       "required": [

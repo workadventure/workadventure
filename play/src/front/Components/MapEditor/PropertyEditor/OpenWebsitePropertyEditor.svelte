@@ -716,30 +716,29 @@
             <input id="advancedOption" type="checkbox" class="input-switch" bind:checked={optionAdvancedActivated} />
         </div>
         <div class:active={optionAdvancedActivated} class="advanced-option tw-px-2">
-            {#if triggerOptionActivated}
-                {#if triggerOnActionChoosen}
-                    <div class="value-input tw-flex tw-flex-col">
-                        <label for="triggerMessage">{$LL.mapEditor.properties.linkProperties.triggerMessage()}</label>
-                        <input
-                            id="triggerMessage"
-                            type="text"
-                            bind:value={property.triggerMessage}
-                            on:change={onValueChange}
-                        />
-                    </div>
-                {/if}
-                <div class="value-switch">
-                    <label for="newTab">{$LL.mapEditor.properties.linkProperties.newTabLabel()}</label>
+            {#if (isArea && triggerOptionActivated && triggerOnActionChoosen) || !isArea}
+                <div class="value-input tw-flex tw-flex-col">
+                    <label for="triggerMessage">{$LL.mapEditor.properties.linkProperties.triggerMessage()}</label>
                     <input
-                        id="newTab"
-                        type="checkbox"
-                        class="input-switch"
-                        bind:checked={property.newTab}
-                        on:change={onNewTabValueChange}
-                        disabled={property.forceNewTab}
+                        id="triggerMessage"
+                        type="text"
+                        placeholder={$LL.trigger.object()}
+                        bind:value={property.triggerMessage}
+                        on:change={onValueChange}
                     />
                 </div>
             {/if}
+            <div class="value-switch">
+                <label for="newTab">{$LL.mapEditor.properties.linkProperties.newTabLabel()}</label>
+                <input
+                    id="newTab"
+                    type="checkbox"
+                    class="input-switch"
+                    bind:checked={property.newTab}
+                    on:change={onNewTabValueChange}
+                    disabled={property.forceNewTab}
+                />
+            </div>
             {#if property.forceNewTab == true}
                 <div class="tw-mb-3">
                     <span class="err tw-text-warning-900 tw-text-xs tw-italic">
