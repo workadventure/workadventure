@@ -8,6 +8,7 @@
     export let property: JitsiRoomPropertyData;
     export let triggerOnActionChoosen: boolean = property.trigger === "onaction";
     export let triggerOptionActivated = true;
+    export let isArea = false;
     let optionAdvancedActivated = false;
 
     const dispatch = createEventDispatcher();
@@ -129,18 +130,18 @@
                         <option value="onaction">{$LL.mapEditor.properties.jitsiProperties.triggerOnAction()}</option>
                     </select>
                 </div>
-
-                {#if triggerOnActionChoosen}
-                    <div class="value-input">
-                        <label for="triggerMessage">{$LL.mapEditor.properties.jitsiProperties.triggerMessage()}</label>
-                        <input
-                            id="triggerMessage"
-                            type="text"
-                            bind:value={property.triggerMessage}
-                            on:change={onValueChange}
-                        />
-                    </div>
-                {/if}
+            {/if}
+            {#if (isArea && triggerOptionActivated && triggerOnActionChoosen) || !isArea}
+                <div class="value-input tw-flex tw-flex-col">
+                    <label for="triggerMessage">{$LL.mapEditor.properties.linkProperties.triggerMessage()}</label>
+                    <input
+                        id="triggerMessage"
+                        type="text"
+                        placeholder={$LL.trigger.object()}
+                        bind:value={property.triggerMessage}
+                        on:change={onValueChange}
+                    />
+                </div>
             {/if}
             <button
                 on:click={() => {

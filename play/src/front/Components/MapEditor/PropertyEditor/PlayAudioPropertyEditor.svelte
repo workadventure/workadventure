@@ -6,6 +6,7 @@
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: PlayAudioPropertyData;
+    export let isArea = false;
     let optionAdvancedActivated = false;
 
     const dispatch = createEventDispatcher();
@@ -102,6 +103,18 @@
             <input id="advancedOption" type="checkbox" class="input-switch" bind:checked={optionAdvancedActivated} />
         </div>
         <div class:active={optionAdvancedActivated} class="advanced-option tw-px-2">
+            {#if isArea === false}
+                <div class="value-input tw-flex tw-flex-col">
+                    <label for="triggerMessage">{$LL.mapEditor.properties.linkProperties.triggerMessage()}</label>
+                    <input
+                        id="triggerMessage"
+                        type="text"
+                        placeholder={$LL.trigger.object()}
+                        bind:value={property.triggerMessage}
+                        on:change={onValueChange}
+                    />
+                </div>
+            {/if}
             <div class="value-input">
                 <label for="volume">{$LL.mapEditor.properties.audioProperties.volumeLabel()}</label>
                 <input
