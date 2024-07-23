@@ -14,7 +14,7 @@
             type="button"
             data-testid="closeModal"
             class="close-window !tw-bg-transparent !tw-border-none"
-            on:click={closeModal}
+            on:click|preventDefault|stopPropagation={closeModal}
             >&times
         </button>
         <div class="tw-p-8 tw-flex tw-flex-col tw-justify-center tw-items-center">

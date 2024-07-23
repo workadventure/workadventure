@@ -14,8 +14,8 @@ export class AreasManager {
     constructor(
         private scene: GameScene,
         private gameMapAreas: GameMapAreas,
-        userConnectedTags: string[],
-        userCanEdit: boolean
+        private userConnectedTags: string[],
+        private userCanEdit: boolean
     ) {
         this.areaPermissions = new AreaPermissions(gameMapAreas, userConnectedTags, userCanEdit);
         this.initializeAreas();
@@ -77,5 +77,15 @@ export class AreasManager {
 
     public getAreaByUd(areaId: string): Area | undefined {
         return this.areas.find((area) => area.areaData.id === areaId);
+    }
+
+    /**
+     * Returns the list of all areas that the user has no access to.
+     */
+    public getCollidingAreas(): AreaData[] {
+        if (this.userCanEdit) {
+            return [];
+        }
+        return this.gameMapAreas.getCollidingAreas(this.userConnectedTags);
     }
 }
