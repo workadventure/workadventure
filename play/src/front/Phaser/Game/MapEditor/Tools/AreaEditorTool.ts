@@ -133,7 +133,8 @@ export class AreaEditorTool extends MapEditorTool {
                         },
                         commandId,
                         undefined,
-                        this
+                        this,
+                        this.scene.getGameMapFrontWrapper()
                     )
                 );
                 break;
@@ -146,7 +147,14 @@ export class AreaEditorTool extends MapEditorTool {
                 };
                 // execute command locally
                 await this.mapEditorModeManager.executeLocalCommand(
-                    new CreateAreaFrontCommand(this.scene.getGameMap(), config, commandId, this, false)
+                    new CreateAreaFrontCommand(
+                        this.scene.getGameMap(),
+                        config,
+                        commandId,
+                        this,
+                        false,
+                        this.scene.getGameMapFrontWrapper()
+                    )
                 );
                 break;
             }
@@ -154,7 +162,13 @@ export class AreaEditorTool extends MapEditorTool {
                 const data = editMapCommandMessage.editMapMessage?.message.deleteAreaMessage;
                 // execute command locally
                 await this.mapEditorModeManager.executeLocalCommand(
-                    new DeleteAreaFrontCommand(this.scene.getGameMap(), data.id, commandId, this)
+                    new DeleteAreaFrontCommand(
+                        this.scene.getGameMap(),
+                        data.id,
+                        commandId,
+                        this,
+                        this.scene.getGameMapFrontWrapper()
+                    )
                 );
                 break;
             }
@@ -167,7 +181,8 @@ export class AreaEditorTool extends MapEditorTool {
             this.scene.getGameMap(),
             areaId,
             undefined,
-            editorTool ?? this
+            editorTool ?? this,
+            this.scene.getGameMapFrontWrapper()
         );
         if (isPersonalArea) {
             const entitiesInsideArea = this.getEntitiesInsideArea(areaId);
@@ -547,7 +562,8 @@ export class AreaEditorTool extends MapEditorTool {
                     },
                     undefined,
                     this,
-                    true
+                    true,
+                    this.scene.getGameMapFrontWrapper()
                 )
             )
             .catch((e) => console.error(e));
@@ -571,7 +587,8 @@ export class AreaEditorTool extends MapEditorTool {
                     },
                     undefined,
                     this,
-                    true
+                    true,
+                    this.scene.getGameMapFrontWrapper()
                 )
             )
             .catch((e) => console.error(e));
@@ -620,7 +637,16 @@ export class AreaEditorTool extends MapEditorTool {
             this.removeAreaEntities(newData.id);
         }
         this.mapEditorModeManager
-            .executeCommand(new UpdateAreaFrontCommand(gameMap, newData, undefined, oldData, this))
+            .executeCommand(
+                new UpdateAreaFrontCommand(
+                    gameMap,
+                    newData,
+                    undefined,
+                    oldData,
+                    this,
+                    this.scene.getGameMapFrontWrapper()
+                )
+            )
             .catch((error) => console.error(error));
     }
 
