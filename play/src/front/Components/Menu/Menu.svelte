@@ -129,9 +129,10 @@
         <h2 class="tw-p-5 blue-title">{$LL.menu.title()}</h2>
         <nav>
             {#each $subMenusStore as submenu, i (submenu.key + "_" + submenu.type)}
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class="menu-item-container {activeSubMenu === submenu ? 'active' : ''}"
-                    on:click|preventDefault={() => switchMenu(submenu)}
+                    on:click|preventDefault|stopPropagation={() => switchMenu(submenu)}
                 >
                     <button type="button" class="tw-flex menu-item">
                         {subMenuTranslations[i]}
@@ -142,7 +143,7 @@
         </nav>
     </div>
     <div class="menu-submenu-container tw-bg-dark-purple/95 tw-rounded" transition:fly={{ y: -1000, duration: 500 }}>
-        <button type="button" class="close-window" on:click={closeMenu}>&times;</button>
+        <button type="button" class="close-window" on:click|preventDefault|stopPropagation={closeMenu}>&times;</button>
         <h2>{activeSubMenuTranslation}</h2>
         <svelte:component this={activeComponent} {...props} />
     </div>

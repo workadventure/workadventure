@@ -33,7 +33,7 @@
 </script>
 
 <div class="configure-my-room" in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>
-    <button class="close-window" on:click={close}>&#215;</button>
+    <button class="close-window" on:click|preventDefault|stopPropagation={close}>&#215;</button>
     <div class="menu">
         <h3>{$LL.mapEditor.sideBar.configureMyRoom()}</h3>
         <ul>

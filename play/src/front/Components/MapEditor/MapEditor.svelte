@@ -35,7 +35,11 @@
             <button class="tw-absolute tw-right-10 tw-p-1 tw-cursor-pointer" on:click={hideMapEditor}
                 ><MinusIcon size="20" /></button
             >
-            <button class="close-window" data-testid="mapEditor-close-button" on:click={closeMapEditor}>&#215;</button>
+            <button
+                class="close-window"
+                data-testid="mapEditor-close-button"
+                on:click|preventDefault|stopPropagation={closeMapEditor}>&#215;</button
+            >
             {#if $mapEditorSelectedToolStore === EditorToolName.TrashEditor}
                 <TrashEditor />
             {/if}

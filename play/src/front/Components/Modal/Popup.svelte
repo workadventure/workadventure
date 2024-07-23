@@ -8,7 +8,10 @@
 
 {#if isOpen}
     <div class="popup-menu tw-min-h-fit tw-rounded-3xl tw-overflow-visible" transition:fly={{ x: 1000, duration: 500 }}>
-        <button type="button" class="close-window !tw-bg-transparent !tw-border-none " on:click={closeModal}
+        <button
+            type="button"
+            class="close-window !tw-bg-transparent !tw-border-none "
+            on:click|preventDefault|stopPropagation={closeModal}
             >&times
         </button>
         <div class="tw-p-8 tw-flex tw-flex-col tw-justify-center tw-items-center">
