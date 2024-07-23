@@ -1,35 +1,40 @@
 import { expect, test, webkit } from "@playwright/test";
 import { evaluateScript } from "./utils/scripting";
 import { login } from "./utils/roles";
-import { publicTestMapUrl } from "./utils/urls";
 import Chat from "./utils/chat";
 import Map from "./utils/map";
+import { oidcMatrixUserLogin, oidcMemberTagLogin } from "./utils/oidc";
+import { resetWamMaps } from "./utils/map-editor/uploader";
+import chatUtils from "./chat/chatUtils";
 
-//TODO update tests for new proximity chat !
 test.describe("Scripting chat functions", () => {
-  test('can open / close chat + start / stop typing @chat', async ({ page}, { project }) => {
-    //eslint-disable-next-line playwright/no-skipped-test
-    test.skip();
-    return;
+  test.beforeEach(
+    "Ignore tests on webkit because of issue with camera and microphone",
 
-    // Skip test for mobile device
-    if(project.name === "mobilechromium") {
+    async ({ browserName, request, page }, { project }) => {
+      //WebKit has issue with camera
+      if (webkit || project.name === "mobilechromium") {
         //eslint-disable-next-line playwright/no-skipped-test
         test.skip();
         return;
+      }
+      await resetWamMaps(request);
+      await page.goto(Map.url("empty"));
+      await chatUtils.resetMatrixDatabase();
     }
-    await page.goto(
-        publicTestMapUrl("tests/E2E/empty.json", "scripting_chat")
-    );
-
-    await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
+  );
+  test('can open / close chat + start / stop typing @chat', async ({ page}) => {
+    await login(page, "bob", 3, "us-US", false);
+    await oidcMatrixUserLogin(page, false);
 
     // Test open chat scripting
     await expect(page.locator('#chat')).toBeHidden();
+
     await evaluateScript(page, async () => {
         return WA.chat.open();
     });
     await expect(page.locator('#chat')).toBeVisible();
+    await expect(page.getByRole('button', {name: 'Proximity Chat'})).toBeVisible({ timeout: 60000 });
 
     // Open the time line
     await Chat.openTimeline(page);
@@ -60,7 +65,6 @@ test.describe("Scripting chat functions", () => {
     });
     await expect(
       page.locator('#chat')
-      .locator('#message')
       .locator(`#typing-user-${btoa("Eve")}`)
     ).toBeVisible();
 
@@ -73,7 +77,6 @@ test.describe("Scripting chat functions", () => {
     });
     await expect(
       page.locator('#chat')
-      .locator('#message')
       .locator(`#typing-user-${btoa("Eve")}`)
     ).toBeHidden();
 
@@ -84,30 +87,10 @@ test.describe("Scripting chat functions", () => {
     await expect(page.locator('#chat')).toBeHidden();
   });
 
-  test('can send message to bubble users @chat', async ({ page, browser}, { project }) => {
-    //eslint-disable-next-line playwright/no-skipped-test
-    test.skip();
-    return;
-
-    // Skip test for mobile device
-    if(project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
-    // It seems WebRTC fails to start on Webkit
-    if(browser.browserType() === webkit) {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
-
+  test('can send message to bubble users @chat', async ({ page, browser}) => {
     const bob = page;
-    await bob.goto(
-      publicTestMapUrl("tests/E2E/empty.json", "scripting_chat")
-    );
-    await login(bob, "bob", 3, "en-US", project.name === "mobilechromium");
-
+    await login(bob, "bob", 3, "us-US", false);
+    await oidcMatrixUserLogin(bob, false);
     // test to send bubblme message when entering proximity meeting
     await evaluateScript(bob, async () => {
       WA.player.proximityMeeting.onJoin().subscribe((user) => {
@@ -125,8 +108,9 @@ test.describe("Scripting chat functions", () => {
     // Open new page for alice
     const newBrowser = await browser.browserType().launch();
     const alice = await newBrowser.newPage();
-    await alice.goto(publicTestMapUrl("tests/E2E/empty.json", "scripting_chat"));
-    await login(alice, "Alice", 2, "en-US", project.name === "mobilechromium");
+    await alice.goto(Map.url("empty"));
+    await login(alice, "alice", 4, "us-US", false);
+    await oidcMemberTagLogin(alice, false);
 
     // Move alice to the same position as bob
     await Map.teleportToPosition(alice, 32, 32);
@@ -136,7 +120,7 @@ test.describe("Scripting chat functions", () => {
       bob.locator('#chat')
       .locator('#message')
       .nth(0)
-    ).toContainText('Alice join the discussion', { timeout: 30000 });
+    ).toContainText('alice join the discussion', { timeout: 30000 });
 
     // Check that bob received the message
     await expect(
@@ -151,7 +135,7 @@ test.describe("Scripting chat functions", () => {
       alice.locator('#chat')
       .locator('#message')
       .nth(0)
-    ).toContainText('Bob join the discussion', { timeout: 30000 });
+    ).toContainText('bob join the discussion', { timeout: 30000 });
 
     // Check that alice also received the message
     await expect(

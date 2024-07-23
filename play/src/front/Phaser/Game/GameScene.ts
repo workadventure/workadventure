@@ -2593,6 +2593,12 @@ ${escapedMessage}
                         room.addExternalMessage(chatMessage.message);
                         selectedRoom.set(room);
                         chatVisibilityStore.set(true);
+
+                        // Send the message to other users in the bubble
+                        // TODO: the message should be sent by not myself
+                        const spaceName = (room as ProximityChatRoom).getSpaceName();
+                        if (spaceName) this.connection?.emitProximityPublicMessage(spaceName, chatMessage.message);
+                        else console.warn("No space name found for the bubble chat");
                         break;
                     }
                 }
