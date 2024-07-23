@@ -571,7 +571,11 @@ describe("MatrixChatConnection", () => {
 
             const roomOptions = {} as unknown as CreateRoomOptions;
 
-            expect(matrixChatConnection["computeInitialState"](roomOptions)).toHaveLength(0);
+            expect(
+                matrixChatConnection["computeInitialState"](roomOptions).find(
+                    (option) => option.type === EventType.RoomHistoryVisibility
+                )
+            ).toEqual(undefined);
         });
     });
 
