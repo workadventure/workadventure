@@ -63,6 +63,7 @@ export const PlayAudioPropertyData = PropertyBase.extend({
     type: z.literal("playAudio"),
     audioLink: z.string(),
     volume: z.number().default(1).optional(),
+    triggerMessage: z.string().optional(),
 });
 
 export const OpenWebsitePropertyData = PropertyBase.extend({

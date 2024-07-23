@@ -569,6 +569,7 @@
                     {:else if property.type === "jitsiRoomProperty"}
                         <JitsiRoomPropertyEditor
                             {property}
+                            isArea={true}
                             on:close={() => {
                                 onDeleteProperty(property.id);
                             }}
@@ -577,6 +578,7 @@
                     {:else if property.type === "playAudio"}
                         <PlayAudioPropertyEditor
                             property={{ ...property, hideButtonLabel: true }}
+                            isArea={true}
                             on:close={() => {
                                 onDeleteProperty(property.id);
                             }}
