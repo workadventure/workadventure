@@ -428,6 +428,14 @@ class MSTeams implements ExtensionModule {
 
     // Create subscription to listen changes
     async createOrGetPresenceSubscription(): Promise<void> {
+        // Check if the subscription already exists
+        const subscriptions = await this.msAxiosClientV1.get(`/subscriptions`);
+        if (
+            subscriptions.data.value.length > 0 &&
+            subscriptions.data.value[0].resource === `/users/${this.clientId}/presences`
+        )
+            return;
+
         // Experiation date is 60 minutes, check the graph documentation for more information
         // https://docs.microsoft.com/en-us/graph/api/subscription-post-subscriptions?view=graph-rest-1.0
         const expirationDateTime = new Date();
@@ -445,6 +453,14 @@ class MSTeams implements ExtensionModule {
 
     // Create subscription to listen changes
     async createOrGetCalendarSubscription(): Promise<void> {
+        // Check if the subscription already exists
+        const subscriptions = await this.msAxiosClientBeta.get(`/subscriptions`);
+        if (
+            subscriptions.data.value.length > 0 &&
+            subscriptions.data.value[0].resource === `/users/${this.clientId}/calendar/events`
+        )
+            return;
+
         // Expiration date is 3 days for online meeting, check the graph documentation for more information
         // https://docs.microsoft.com/en-us/graph/api/subscription-post-subscriptions?view=graph-rest-1.0
         const expirationDateTime = new Date();
@@ -481,6 +497,14 @@ class MSTeams implements ExtensionModule {
         await this.msAxiosClientV1.patch(`/subscriptions/${subscriptionId}`, {
             expirationDateTime,
         });
+    }
+
+    async deletePresenceSubscription(subscriptionId: string): Promise<void> {
+        await this.msAxiosClientV1.delete(`/subscriptions/${subscriptionId}`);
+    }
+
+    async deleteCalendarSubscription(subscriptionId: string): Promise<void> {
+        await this.msAxiosClientBeta.delete(`/subscriptions/${subscriptionId}`);
     }
 }
 
