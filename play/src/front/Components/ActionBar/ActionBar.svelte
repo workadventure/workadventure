@@ -910,7 +910,12 @@
                             <Tooltip text={$LL.actionbar.calendar()} />
                         {/if}
                         <button id="calendarIcon" class:border-top-light={$isCalendarVisibleStore}>
-                            <img draggable="false" src={calendarSvg} style="padding: 2px" alt={$LL.menu.icon.open.calendar()}/>
+                            <img
+                                draggable="false"
+                                src={calendarSvg}
+                                style="padding: 2px"
+                                alt={$LL.menu.icon.open.calendar()}
+                            />
                             <span
                                 class="tw-absolute tw-top-5 tw-text-white tw-rounded-full tw-px-1 tw-py-0.5 tw-text-xxs tw-font-bold tw-leading-none"
                             >
