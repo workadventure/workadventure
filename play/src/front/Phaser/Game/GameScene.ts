@@ -2058,6 +2058,7 @@ export class GameScene extends DirtyScene {
                     onExtensionModuleStatusChange: ExtensionModuleStatusSynchronization.onStatusChange,
                     getOauthRefreshToken: this.connection?.getOauthRefreshToken.bind(this.connection),
                     calendarEventsStoreUpdate: calendarEventsStore.update,
+                    userAccessToken: localUserStore.getAuthToken()!,
                 });
                 // TODO change that to check if the calendar synchro is enabled from admin
                 isActivatedStore.set(true);

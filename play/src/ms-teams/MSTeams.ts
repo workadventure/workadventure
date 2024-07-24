@@ -6,6 +6,7 @@ import { Unsubscriber, Updater } from "svelte/store";
 import { CalendarEventInterface } from "@workadventure/shared-utils";
 import { ExtensionModule, ExtensionModuleOptions } from "../extension-module/extension-module";
 import { TeamsActivity, TeamsAvailability } from "./MSTeamsInterface";
+import { Subscribable } from "rxjs";
 
 const MS_GRAPH_ENDPOINT_V1 = "https://graph.microsoft.com/v1.0";
 const MS_GRAPH_ENDPOINT_BETA = "https://graph.microsoft.com/beta";
@@ -71,6 +72,18 @@ interface MSTeamsCalendarEvent {
     bodyPreview: string;
 }
 
+interface MSGraphSubscription {
+    id: string;
+    changeType: string;
+    clientState: string;
+    expirationDateTime: string;
+    resource: string;
+    applicationId: string;
+    notificationUrl: string;
+    lifecycleNotificationUrl: string;
+    creatorId: string;
+}
+
 class MSTeams implements ExtensionModule {
     private msAxiosClientV1!: AxiosInstance;
     private msAxiosClientBeta!: AxiosInstance;
@@ -84,6 +97,9 @@ class MSTeams implements ExtensionModule {
     ) => void | undefined = undefined;
     private userAccessToken!: string;
     private adminUrl!: string;
+
+    private unsubscribePresenceSubscription: Function | undefined = undefined;
+    private unsubscribeCalendarSubscription: Function | undefined = undefined;
 
     init(roomMetadata: unknown, options?: ExtensionModuleOptions) {
         const microsoftTeamsMetadata = this.getMicrosoftTeamsMetadata(roomMetadata);
@@ -118,6 +134,7 @@ class MSTeams implements ExtensionModule {
 
         if (microsoftTeamsMetadata.synchronizeStatus) {
             this.listenToTeamsStatusUpdate(options?.onExtensionModuleStatusChange);
+            this.initSubscription();
         }
 
         if (options?.workadventureStatusStore) {
@@ -268,6 +285,7 @@ class MSTeams implements ExtensionModule {
         if (this.listenToWorkadventureStatus !== undefined) {
             this.listenToWorkadventureStatus();
         }
+        this.destroySubscription().catch((e) => console.error("Error while destroying subscription", e));
     }
 
     private setMSTeamsClientId() {
@@ -337,7 +355,7 @@ class MSTeams implements ExtensionModule {
     }
 
     // Update the calendar events
-    async updateCalendarEvents(): Promise<void> {
+    private async updateCalendarEvents(): Promise<void> {
         try {
             const myCalendarEvents = await this.getMyCalendarEvent();
             const calendarEvents = [];
@@ -426,15 +444,39 @@ class MSTeams implements ExtensionModule {
         }
     }
 
+    private async initSubscription(): Promise<void> {
+        const responses = await Promise.all([this.createOrGetPresenceSubscription(), this.createOrGetCalendarSubscription()]);
+        if (responses[0] !== undefined) {
+            this.unsubscribePresenceSubscription = this.deletePresenceSubscription.bind(responses[0].id);
+        }
+        if (responses[1] !== undefined) {
+            this.unsubscribeCalendarSubscription = this.deleteCalendarSubscription.bind(responses[1].id);
+        }
+    }
+
+    async destroySubscription(): Promise<unknown> {
+        const promisesDestroySubscription = [];
+        if (this.unsubscribePresenceSubscription !== undefined) {
+            promisesDestroySubscription.push(this.unsubscribePresenceSubscription());
+        }
+        if (this.unsubscribeCalendarSubscription !== undefined) {
+            promisesDestroySubscription.push(this.unsubscribeCalendarSubscription());
+        }
+        return Promise.all(promisesDestroySubscription);
+    }
+
     // Create subscription to listen changes
-    async createOrGetPresenceSubscription(): Promise<void> {
+    private async createOrGetPresenceSubscription(): Promise<MSGraphSubscription> {
         // Check if the subscription already exists
         const subscriptions = await this.msAxiosClientV1.get(`/subscriptions`);
         if (
-            subscriptions.data.value.length > 0 &&
-            subscriptions.data.value[0].resource === `/users/${this.clientId}/presences`
-        )
-            return;
+            subscriptions.data.value.length > 0
+        ){
+            const presenceSubscription = subscriptions.data.value.find(
+                (subscription: MSGraphSubscription) => subscription.resource === `/users/${this.clientId}/presences`
+            );
+            return presenceSubscription;
+        }
 
         // Experiation date is 60 minutes, check the graph documentation for more information
         // https://docs.microsoft.com/en-us/graph/api/subscription-post-subscriptions?view=graph-rest-1.0
@@ -452,14 +494,15 @@ class MSTeams implements ExtensionModule {
     }
 
     // Create subscription to listen changes
-    async createOrGetCalendarSubscription(): Promise<void> {
+    private async createOrGetCalendarSubscription(): Promise<MSGraphSubscription> {
         // Check if the subscription already exists
         const subscriptions = await this.msAxiosClientBeta.get(`/subscriptions`);
-        if (
-            subscriptions.data.value.length > 0 &&
-            subscriptions.data.value[0].resource === `/users/${this.clientId}/calendar/events`
-        )
-            return;
+        if (subscriptions.data.value.length > 0){
+            const calendarSubscription = subscriptions.data.value.find(
+                (subscription: MSGraphSubscription) => subscription.resource === `/users/${this.clientId}/calendar/events`
+            );
+            return calendarSubscription;
+        }
 
         // Expiration date is 3 days for online meeting, check the graph documentation for more information
         // https://docs.microsoft.com/en-us/graph/api/subscription-post-subscriptions?view=graph-rest-1.0
@@ -476,7 +519,15 @@ class MSTeams implements ExtensionModule {
         });
     }
 
-    async reauthorizePresenceSubscription(subscriptionId: string): Promise<void> {
+    private async deletePresenceSubscription(subscriptionId: string): Promise<void> {
+        await this.msAxiosClientV1.delete(`/subscriptions/${subscriptionId}`);
+    }
+
+    private async deleteCalendarSubscription(subscriptionId: string): Promise<void> {
+        await this.msAxiosClientBeta.delete(`/subscriptions/${subscriptionId}`);
+    }
+
+    private async reauthorizePresenceSubscription(subscriptionId: string): Promise<void> {
         // Experiation date is 60 minutes, check the graph documentation for more information
         // https://docs.microsoft.com/en-us/graph/api/subscription-post-subscriptions?view=graph-rest-1.0
         const expirationDateTime = new Date();
@@ -487,7 +538,7 @@ class MSTeams implements ExtensionModule {
         });
     }
 
-    async reauthorizeCalendarSubscription(subscriptionId: string): Promise<void> {
+    private async reauthorizeCalendarSubscription(subscriptionId: string): Promise<void> {
         // Expiration date is 3 days for online meeting, check the graph documentation for more information
         // https://docs.microsoft.com/en-us/graph/api/subscription-post-subscriptions?view=graph-rest-1.0
         const expirationDateTime = new Date();
@@ -497,14 +548,6 @@ class MSTeams implements ExtensionModule {
         await this.msAxiosClientV1.patch(`/subscriptions/${subscriptionId}`, {
             expirationDateTime,
         });
-    }
-
-    async deletePresenceSubscription(subscriptionId: string): Promise<void> {
-        await this.msAxiosClientV1.delete(`/subscriptions/${subscriptionId}`);
-    }
-
-    async deleteCalendarSubscription(subscriptionId: string): Promise<void> {
-        await this.msAxiosClientBeta.delete(`/subscriptions/${subscriptionId}`);
     }
 }
 

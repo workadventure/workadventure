@@ -7,6 +7,7 @@ export interface ExtensionModuleOptions {
     onExtensionModuleStatusChange?: (workAdventureNewStatus: AvailabilityStatus) => void;
     getOauthRefreshToken?: (tokenToRefresh: string) => Promise<OauthRefreshToken>;
     calendarEventsStoreUpdate?: (this: void, updater: Updater<Map<string, CalendarEventInterface>>) => void;
+    userAccessToken: string;
 }
 
 export interface ExtensionModule {
