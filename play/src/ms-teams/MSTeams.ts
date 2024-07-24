@@ -82,7 +82,7 @@ class MSTeams implements ExtensionModule {
         this: void,
         updater: Updater<Map<string, CalendarEventInterface>>
     ) => void | undefined = undefined;
-    private userUuid!: string;
+    private userAccessToken!: string;
     private adminUrl!: string;
 
     init(roomMetadata: unknown, options?: ExtensionModuleOptions) {
@@ -443,11 +443,11 @@ class MSTeams implements ExtensionModule {
 
         return await this.msAxiosClientV1.post(`/subscriptions`, {
             changeType: "updated",
-            notificationUrl: `${this.adminUrl}/api/webhook/msgraph/notificationUrl/${this.userUuid}`,
-            lifecycleNotificationUrl: `${this.adminUrl}/api/webhook/msgraph/notificationUrl/${this.userUuid}`,
+            notificationUrl: `${this.adminUrl}/api/webhook/msgraph/notificationUrl/${this.userAccessToken}`,
+            lifecycleNotificationUrl: `${this.adminUrl}/api/webhook/msgraph/notificationUrl/${this.userAccessToken}`,
             resource: `/users/${this.clientId}/presences`,
             expirationDateTime,
-            clientState: `${this.userUuid}`,
+            clientState: `${this.userAccessToken}`,
         });
     }
 
@@ -468,11 +468,11 @@ class MSTeams implements ExtensionModule {
 
         return await this.msAxiosClientBeta.post(`/subscriptions`, {
             changeType: "created,updated,deleted",
-            notificationUrl: `${this.adminUrl}/api/webhook/msgraph/notificationUrl/${this.userUuid}`,
-            lifecycleNotificationUrl: `${this.adminUrl}/api/webhook/msgraph/notificationUrl/${this.userUuid}`,
+            notificationUrl: `${this.adminUrl}/api/webhook/msgraph/notificationUrl/${this.userAccessToken}`,
+            lifecycleNotificationUrl: `${this.adminUrl}/api/webhook/msgraph/notificationUrl/${this.userAccessToken}`,
             resource: `/users/${this.clientId}/onlineMeetings`,
             expirationDateTime,
-            clientState: `${this.userUuid}`,
+            clientState: `${this.userAccessToken}`,
         });
     }
 
