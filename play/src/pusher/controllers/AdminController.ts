@@ -14,6 +14,7 @@ export class AdminController extends BaseHttpController {
         this.getRoomsList();
         this.sendChatMessagePrompt();
         this.dispatchGlobalEvent();
+        this.dispatchExternalModuleEvent();
     }
 
     /**
@@ -290,6 +291,8 @@ export class AdminController extends BaseHttpController {
             for (const roomClient of roomClients) {
                 promises.push(
                     new Promise<void>((resolve, reject) => {
+                        console.log('dispatchGlobalEvent => body.name', body.name);
+                        console.log('dispatchGlobalEvent => body.data', body.data);
                         roomClient.dispatchGlobalEvent(
                             {
                                 name: body.name,
@@ -301,6 +304,7 @@ export class AdminController extends BaseHttpController {
                             },
                             (error, result) => {
                                 if (error) {
+                                    console.error("Error while dispatching global event: ", error);
                                     reject(error);
                                 } else {
                                     resolve();
@@ -394,6 +398,48 @@ export class AdminController extends BaseHttpController {
                 res.send("ok");
             });
             return;
+        });
+    }
+
+    dispatchExternalModuleEvent(): void {
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        this.app.post("/external-module/event", [adminToken], async (req: Request, res: Response) => {
+            const body = await req.json();
+
+            try {
+                if (typeof body.moduleId !== "string") {
+                    throw new Error("Incorrect roomId parameter");
+                } else if (body.message !== "object" ) {
+                    throw new Error("Incorrect eventName parameter");
+                }
+                const roomId: string = body.roomId;
+                const moduleId: string = body.moduleId;
+                const recipientUuid: string = body.moduleId;
+                const message: unknown = body.message;
+
+                await apiClientRepository.getClient(roomId).then((roomClient) => {
+                    return new Promise<void>((res, rej) => {
+                        roomClient.dispatchExternalModuleMessage(
+                            {
+                                moduleId,
+                                roomId,
+                                recipientUuid,
+                                message,
+                            },
+                            (err) => {
+                                err ? rej(err) : res();
+                            }
+                        );
+                    });
+                });
+            } catch (err) {
+                throw new Error("dispatchExternalModuleEvent => error" + err);
+            }
+
+            res.atomic(() => {
+                res.send("ok");
+            });
+            return
         });
     }
 }

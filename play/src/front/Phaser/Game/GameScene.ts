@@ -13,6 +13,7 @@ import {
     AvailabilityStatus,
     availabilityStatusToJSON,
     ErrorScreenMessage,
+    ExternalModuleMessage,
     PositionMessage_Direction,
     PrivateEvent,
     PublicEvent,
@@ -1982,6 +1983,12 @@ export class GameScene extends DirtyScene {
                         else room.removeTypingUser(publicEvent.senderUserUuid);
                 });
 
+                // The externalModuleMessage is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.externalModuleMessage.subscribe((externalModuleMessage: ExternalModuleMessage) => {
+                    console.warn("External module message received. Not implemented yet", externalModuleMessage);
+                });
+
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
                 // Analyze tags to find if we are admin. If yes, show console.
 
@@ -2059,6 +2066,8 @@ export class GameScene extends DirtyScene {
                     getOauthRefreshToken: this.connection?.getOauthRefreshToken.bind(this.connection),
                     calendarEventsStoreUpdate: calendarEventsStore.update,
                     userAccessToken: localUserStore.getAuthToken()!,
+                    roomId: this.roomUrl
+                    // TODO add callback to receive message and analyse that
                 });
                 // TODO change that to check if the calendar synchro is enabled from admin
                 isActivatedStore.set(true);

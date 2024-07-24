@@ -6,7 +6,6 @@ import { Unsubscriber, Updater } from "svelte/store";
 import { CalendarEventInterface } from "@workadventure/shared-utils";
 import { ExtensionModule, ExtensionModuleOptions } from "../extension-module/extension-module";
 import { TeamsActivity, TeamsAvailability } from "./MSTeamsInterface";
-import { Subscribable } from "rxjs";
 
 const MS_GRAPH_ENDPOINT_V1 = "https://graph.microsoft.com/v1.0";
 const MS_GRAPH_ENDPOINT_BETA = "https://graph.microsoft.com/beta";
@@ -97,6 +96,7 @@ class MSTeams implements ExtensionModule {
     ) => void | undefined = undefined;
     private userAccessToken!: string;
     private adminUrl!: string;
+    private roomId!: string;
 
     private unsubscribePresenceSubscription: Function | undefined = undefined;
     private unsubscribeCalendarSubscription: Function | undefined = undefined;
@@ -134,6 +134,8 @@ class MSTeams implements ExtensionModule {
 
         if (microsoftTeamsMetadata.synchronizeStatus) {
             this.listenToTeamsStatusUpdate(options?.onExtensionModuleStatusChange);
+            this.userAccessToken = options!.userAccessToken;
+            this.roomId = options!.roomId;
             this.initSubscription();
         }
 
@@ -489,7 +491,7 @@ class MSTeams implements ExtensionModule {
             lifecycleNotificationUrl: `${this.adminUrl}/api/webhook/msgraph/notificationUrl/${this.userAccessToken}`,
             resource: `/users/${this.clientId}/presences`,
             expirationDateTime,
-            clientState: `${this.userAccessToken}`,
+            clientState: `${this.roomId}`,
         });
     }
 
@@ -515,7 +517,7 @@ class MSTeams implements ExtensionModule {
             lifecycleNotificationUrl: `${this.adminUrl}/api/webhook/msgraph/notificationUrl/${this.userAccessToken}`,
             resource: `/users/${this.clientId}/onlineMeetings`,
             expirationDateTime,
-            clientState: `${this.userAccessToken}`,
+            clientState: `${this.roomId}`,
         });
     }
 

@@ -662,6 +662,10 @@ const roomManager = {
         socketManager.dispatchGlobalEvent(call.request.name, call.request.value);
         callback(null);
     },
+    /** Dispatch external module event */
+    dispatchExternalModuleMessage(call) {
+        socketManager.handleExternalModuleMessage(call.request);
+    }
 } satisfies RoomManagerServer;
 
 export { roomManager };

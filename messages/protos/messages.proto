@@ -914,6 +914,7 @@ message ServerToClientMessage {
     AskMutedVideoMessage askMutedVideoMessage = 36;
     PublicEvent publicEvent = 37;
     PrivateEvent privateEvent = 38;
+    ExternalModuleMessage externalModuleMessage = 39;
   }
 }
 
@@ -1158,6 +1159,13 @@ message RoomsList {
 message DispatchGlobalEventRequest {
   string name = 1;
   google.protobuf.Value value = 2;
+}
+
+message ExternalModuleMessage {
+  string moduleId = 1;
+  optional string recipientUuid = 2;
+  optional string roomId = 3;
+  google.protobuf.Value message = 4;
 }
 
 /********************************************************************************

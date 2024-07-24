@@ -8,6 +8,7 @@ export interface ExtensionModuleOptions {
     getOauthRefreshToken?: (tokenToRefresh: string) => Promise<OauthRefreshToken>;
     calendarEventsStoreUpdate?: (this: void, updater: Updater<Map<string, CalendarEventInterface>>) => void;
     userAccessToken: string;
+    roomId: string;
 }
 
 export interface ExtensionModule {
