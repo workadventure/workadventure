@@ -7,7 +7,8 @@ import { CalendarEventInterface } from "@workadventure/shared-utils";
 import { ExtensionModule, ExtensionModuleOptions } from "../extension-module/extension-module";
 import { TeamsActivity, TeamsAvailability } from "./MSTeamsInterface";
 
-const MS_GRAPH_ENDPOINT = "https://graph.microsoft.com/v1.0";
+const MS_GRAPH_ENDPOINT_V1 = "https://graph.microsoft.com/v1.0";
+const MS_GRAPH_ENDPOINT_BETA = "https://graph.microsoft.com/beta";
 const MS_ME_ENDPOINT = "/me";
 const MS_ME_PRESENCE_ENDPOINT = "/me/presence";
 
@@ -71,7 +72,8 @@ interface MSTeamsCalendarEvent {
 }
 
 class MSTeams implements ExtensionModule {
-    private msAxiosClient!: AxiosInstance;
+    private msAxiosClientV1!: AxiosInstance;
+    private msAxiosClientBeta!: AxiosInstance;
     private teamsAvailability!: TeamsAvailability;
     private clientId!: string;
     private listenToTeamsStatusInterval: NodeJS.Timer | null = null;
@@ -80,6 +82,8 @@ class MSTeams implements ExtensionModule {
         this: void,
         updater: Updater<Map<string, CalendarEventInterface>>
     ) => void | undefined = undefined;
+    private userUuid!: string;
+    private adminUrl!: string;
 
     init(roomMetadata: unknown, options?: ExtensionModuleOptions) {
         const microsoftTeamsMetadata = this.getMicrosoftTeamsMetadata(roomMetadata);
@@ -88,14 +92,25 @@ class MSTeams implements ExtensionModule {
             return;
         }
 
-        this.msAxiosClient = axios.create({
-            baseURL: MS_GRAPH_ENDPOINT,
+        this.msAxiosClientV1 = axios.create({
+            baseURL: MS_GRAPH_ENDPOINT_V1,
             headers: {
                 Authorization: `Bearer ${microsoftTeamsMetadata.accessToken}`,
                 "Content-Type": "application/json",
             },
         });
-        this.msAxiosClient.interceptors.response.use(null, (error) =>
+        this.msAxiosClientV1.interceptors.response.use(null, (error) =>
+            this.refreshTokenInterceptor(error, options?.getOauthRefreshToken)
+        );
+
+        this.msAxiosClientBeta = axios.create({
+            baseURL: MS_GRAPH_ENDPOINT_BETA,
+            headers: {
+                Authorization: `Bearer ${microsoftTeamsMetadata.accessToken}`,
+                "Content-Type": "application/json",
+            },
+        });
+        this.msAxiosClientBeta.interceptors.response.use(null, (error) =>
             this.refreshTokenInterceptor(error, options?.getOauthRefreshToken)
         );
 
@@ -137,7 +152,7 @@ class MSTeams implements ExtensionModule {
             const existingToken = parsedError.data.config.headers.Authorization.replace("Bearer ", "");
             getOauthRefreshToken(existingToken)
                 .then(({ token }) => {
-                    this.msAxiosClient.defaults.headers.common.Authorization = `Bearer ${token}`;
+                    this.msAxiosClientV1.defaults.headers.common.Authorization = `Bearer ${token}`;
                     console.info("Microsoft teams token has been refreshed");
                 })
                 .catch((error) => {
@@ -185,7 +200,7 @@ class MSTeams implements ExtensionModule {
 
     listenToTeamsStatusUpdate(onTeamsStatusChange?: (workAdventureNewStatus: AvailabilityStatus) => void) {
         this.listenToTeamsStatusInterval = setInterval(() => {
-            this.msAxiosClient
+            this.msAxiosClientV1
                 .get<unknown>(MS_ME_PRESENCE_ENDPOINT)
                 .then((response) => {
                     const userPresence = response.data;
@@ -227,7 +242,7 @@ class MSTeams implements ExtensionModule {
             return;
         }
 
-        this.msAxiosClient
+        this.msAxiosClientV1
             .post(this.getUrlForSettingUserPresence(), {
                 availability: newTeamsAvailability,
                 activity: newTeamsAvailability,
@@ -260,7 +275,7 @@ class MSTeams implements ExtensionModule {
             id: z.string(),
         });
 
-        this.msAxiosClient
+        this.msAxiosClientV1
             .get(MS_ME_ENDPOINT)
             .then((response) => {
                 const meResponse = meResponseObject.safeParse(response.data);
@@ -384,7 +399,7 @@ class MSTeams implements ExtensionModule {
         // Get all events between today 00:00 and 23:59
         try {
             const calendarEventUrl = `/me/calendar/calendarView?$select=subject,body,bodyPreview,organizer,attendees,start,end,location,weblink,onlineMeeting&startDateTime=${startDateTime.toISOString()}&endDateTime=${endDateTime.toISOString()}`;
-            const mSTeamsCalendarEventResponse = await this.msAxiosClient.get(calendarEventUrl);
+            const mSTeamsCalendarEventResponse = await this.msAxiosClientV1.get(calendarEventUrl);
             return mSTeamsCalendarEventResponse.data.value;
         } catch (e) {
             if ((e as AxiosError).response?.status === 401) {
@@ -397,7 +412,7 @@ class MSTeams implements ExtensionModule {
     async createOrGetMeeting(meetingId: string): Promise<MSTeamsOnlineMeeting> {
         try {
             const dateNow = new Date();
-            return await this.msAxiosClient.post(`/me/onlineMeetings/createOrGet`, {
+            return await this.msAxiosClientV1.post(`/me/onlineMeetings/createOrGet`, {
                 externalId: meetingId,
                 // Start date time, now
                 startDateTime: dateNow.toISOString(),
@@ -409,6 +424,63 @@ class MSTeams implements ExtensionModule {
             }
             throw e;
         }
+    }
+
+    // Create subscription to listen changes
+    async createOrGetPresenceSubscription(): Promise<void> {
+        // Experiation date is 60 minutes, check the graph documentation for more information
+        // https://docs.microsoft.com/en-us/graph/api/subscription-post-subscriptions?view=graph-rest-1.0
+        const expirationDateTime = new Date();
+        expirationDateTime.setMinutes(expirationDateTime.getMinutes() + 60);
+
+        return await this.msAxiosClientV1.post(`/subscriptions`, {
+            changeType: "updated",
+            notificationUrl: `${this.adminUrl}/api/webhook/msgraph/notificationUrl/${this.userUuid}`,
+            lifecycleNotificationUrl: `${this.adminUrl}/api/webhook/msgraph/notificationUrl/${this.userUuid}`,
+            resource: `/users/${this.clientId}/presences`,
+            expirationDateTime,
+            clientState: `${this.userUuid}`,
+        });
+    }
+
+    // Create subscription to listen changes
+    async createOrGetCalendarSubscription(): Promise<void> {
+        // Expiration date is 3 days for online meeting, check the graph documentation for more information
+        // https://docs.microsoft.com/en-us/graph/api/subscription-post-subscriptions?view=graph-rest-1.0
+        const expirationDateTime = new Date();
+        expirationDateTime.setDate(expirationDateTime.getDate() + 3);
+
+        return await this.msAxiosClientBeta.post(`/subscriptions`, {
+            changeType: "created,updated,deleted",
+            notificationUrl: `${this.adminUrl}/api/webhook/msgraph/notificationUrl/${this.userUuid}`,
+            lifecycleNotificationUrl: `${this.adminUrl}/api/webhook/msgraph/notificationUrl/${this.userUuid}`,
+            resource: `/users/${this.clientId}/onlineMeetings`,
+            expirationDateTime,
+            clientState: `${this.userUuid}`,
+        });
+    }
+
+    async reauthorizePresenceSubscription(subscriptionId: string): Promise<void> {
+        // Experiation date is 60 minutes, check the graph documentation for more information
+        // https://docs.microsoft.com/en-us/graph/api/subscription-post-subscriptions?view=graph-rest-1.0
+        const expirationDateTime = new Date();
+        expirationDateTime.setMinutes(expirationDateTime.getMinutes() + 60);
+        await this.msAxiosClientBeta.post(`/subscriptions/${subscriptionId}/reauthorize`);
+        await this.msAxiosClientBeta.patch(`/subscriptions/${subscriptionId}`, {
+            expirationDateTime,
+        });
+    }
+
+    async reauthorizeCalendarSubscription(subscriptionId: string): Promise<void> {
+        // Expiration date is 3 days for online meeting, check the graph documentation for more information
+        // https://docs.microsoft.com/en-us/graph/api/subscription-post-subscriptions?view=graph-rest-1.0
+        const expirationDateTime = new Date();
+        expirationDateTime.setDate(expirationDateTime.getDate() + 3);
+
+        await this.msAxiosClientV1.post(`/subscriptions/${subscriptionId}/reauthorize`);
+        await this.msAxiosClientV1.patch(`/subscriptions/${subscriptionId}`, {
+            expirationDateTime,
+        });
     }
 }
 
