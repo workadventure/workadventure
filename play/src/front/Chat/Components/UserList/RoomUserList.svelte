@@ -15,7 +15,7 @@
         if ($shownRoomListStore === "") shownRoomListStore.set($LL.chat.userList.isHere());
     });
 
-    $: userConnected = chat.userConnected;
+    $: userConnected = chat.connectedUsers;
     $: filteredUserConnected = Array.from($userConnected.values()).filter(({ username }) =>
         username ? username.toLocaleLowerCase().includes($chatSearchBarValue) : false
     );

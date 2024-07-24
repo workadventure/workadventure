@@ -1,9 +1,8 @@
-import { expect, test, webkit } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { evaluateScript } from "./utils/scripting";
 import { login } from "./utils/roles";
 import Chat from "./utils/chat";
 import Map from "./utils/map";
-import { oidcMatrixUserLogin, oidcMemberTagLogin } from "./utils/oidc";
 import { resetWamMaps } from "./utils/map-editor/uploader";
 import chatUtils from "./chat/chatUtils";
 
@@ -13,7 +12,7 @@ test.describe("Scripting chat functions", () => {
 
     async ({ browserName, request, page }, { project }) => {
       //WebKit has issue with camera
-      if (webkit || project.name === "mobilechromium") {
+      if (browserName === "webkit" || project.name === "mobilechromium") {
         //eslint-disable-next-line playwright/no-skipped-test
         test.skip();
         return;
@@ -25,7 +24,7 @@ test.describe("Scripting chat functions", () => {
   );
   test('can open / close chat + start / stop typing @chat', async ({ page}) => {
     await login(page, "bob", 3, "us-US", false);
-    await oidcMatrixUserLogin(page, false);
+    //await oidcMatrixUserLogin(page, false);
 
     // Test open chat scripting
     await expect(page.locator('#chat')).toBeHidden();
@@ -90,15 +89,17 @@ test.describe("Scripting chat functions", () => {
   test('can send message to bubble users @chat', async ({ page, browser}) => {
     const bob = page;
     await login(bob, "bob", 3, "us-US", false);
-    await oidcMatrixUserLogin(bob, false);
-    // test to send bubblme message when entering proximity meeting
+    //await oidcMatrixUserLogin(bob, false);
+    // test to send bubble message when entering proximity meeting
     await evaluateScript(bob, async () => {
       WA.player.proximityMeeting.onJoin().subscribe((user) => {
           console.log("Entering proximity meeting with", user);
-          WA.chat.sendChatMessage('Test message sent', {
-              scope: 'bubble',
-              author: "Test"
-          });
+          // Let's wait a bit to be sure the "bob entered the meeting" message is sent first
+          setTimeout(() => {
+              WA.chat.sendChatMessage('Test message sent', {
+                  scope: 'bubble'
+              });
+          }, 200);
       });
     });
 
@@ -110,7 +111,18 @@ test.describe("Scripting chat functions", () => {
     const alice = await newBrowser.newPage();
     await alice.goto(Map.url("empty"));
     await login(alice, "alice", 4, "us-US", false);
-    await oidcMemberTagLogin(alice, false);
+    //await oidcMemberTagLogin(alice, false);
+
+    const chatMessageReceivedPromise = evaluateScript(alice, async () => {
+        return new Promise((resolve) => {
+            WA.chat.onChatMessage((message, event) => {
+                resolve(message)
+            }, {
+                scope: "bubble"
+            });
+        });
+    });
+    //await alice.waitForTimeout(200);
 
     // Move alice to the same position as bob
     await Map.teleportToPosition(alice, 32, 32);
@@ -120,7 +132,7 @@ test.describe("Scripting chat functions", () => {
       bob.locator('#chat')
       .locator('#message')
       .nth(0)
-    ).toContainText('alice join the discussion', { timeout: 30000 });
+    ).toContainText('alice joined the discussion', { timeout: 30000 });
 
     // Check that bob received the message
     await expect(
@@ -129,13 +141,12 @@ test.describe("Scripting chat functions", () => {
       .nth(1)
     ).toContainText('Test message sent', { timeout: 30000 });
 
-    // TODO: Check that alice also received the message
     // Check that bob received the message
     await expect(
       alice.locator('#chat')
       .locator('#message')
       .nth(0)
-    ).toContainText('bob join the discussion', { timeout: 30000 });
+    ).toContainText('bob joined the discussion', { timeout: 30000 });
 
     // Check that alice also received the message
     await expect(
@@ -143,5 +154,8 @@ test.describe("Scripting chat functions", () => {
       .locator('#message')
       .nth(1)
     ).toContainText('Test message sent', { timeout: 30000 });
+
+    const chatMessageReceived = await chatMessageReceivedPromise;
+    expect(chatMessageReceived).toBe('Test message sent');
   });
 });

@@ -370,7 +370,7 @@ describe("MatrixChatConnection", () => {
 
             matrixChatConnection.updateUserFromSpace(userToUpdate);
 
-            expect(matrixChatConnection["userConnected"]).toHaveLength(0);
+            expect(matrixChatConnection["connectedUsers"]).toHaveLength(0);
         });
         it("should update availabilityStatus when is defined and !== 0", () => {
             const mockStartClient = vi.fn();
@@ -400,7 +400,7 @@ describe("MatrixChatConnection", () => {
                 availabilityStatus: writable(3),
             } as unknown as ChatUser;
 
-            matrixChatConnection["userConnected"].set(userSpaceId, user);
+            matrixChatConnection["connectedUsers"].set(userSpaceId, user);
 
             const userToUpdate = {
                 id: 1,
@@ -409,7 +409,7 @@ describe("MatrixChatConnection", () => {
 
             matrixChatConnection.updateUserFromSpace(userToUpdate);
             const availabilityStatusWritable: Writable<AvailabilityStatus> =
-                matrixChatConnection["userConnected"].get(userSpaceId)?.availabilityStatus || writable(0);
+                matrixChatConnection["connectedUsers"].get(userSpaceId)?.availabilityStatus || writable(0);
             const availabilityStatus = get(availabilityStatusWritable);
 
             expect(availabilityStatus).toBe(userToUpdate.availabilityStatus);
@@ -444,7 +444,7 @@ describe("MatrixChatConnection", () => {
                 availabilityStatus: writable(initialAvailabilityStatus),
             } as unknown as ChatUser;
 
-            matrixChatConnection["userConnected"].set(userSpaceId, user);
+            matrixChatConnection["connectedUsers"].set(userSpaceId, user);
 
             const userToUpdate = {
                 id: 1,
@@ -454,7 +454,7 @@ describe("MatrixChatConnection", () => {
             matrixChatConnection.updateUserFromSpace(userToUpdate);
 
             const availabilityStatusWritable: Writable<AvailabilityStatus> =
-                matrixChatConnection["userConnected"].get(userSpaceId)?.availabilityStatus || writable(0);
+                matrixChatConnection["connectedUsers"].get(userSpaceId)?.availabilityStatus || writable(0);
             const availabilityStatus = get(availabilityStatusWritable);
 
             expect(availabilityStatus).toBe(initialAvailabilityStatus);
