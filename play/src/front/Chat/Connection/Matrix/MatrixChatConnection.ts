@@ -25,7 +25,7 @@ import {
     Connection,
     ConnectionStatus,
     CreateRoomOptions,
-    spaceId,
+    userId,
 } from "../ChatConnection";
 import { SpaceUserExtended } from "../../../Space/SpaceFilter/SpaceFilter";
 import { selectedRoom } from "../../Stores/ChatStore";
@@ -49,7 +49,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     directRooms: Readable<ChatRoom[]>;
     invitations: Readable<ChatRoom[]>;
     rooms: Readable<ChatRoom[]>;
-    userConnected: MapStore<spaceId, ChatUser> = new MapStore<spaceId, ChatUser>();
+    connectedUsers: MapStore<userId, ChatUser> = new MapStore<userId, ChatUser>();
     userDisconnected: MapStore<chatId, ChatUser> = new MapStore<chatId, ChatUser>();
     isEncryptionRequiredAndNotSet: Writable<boolean>;
     isGuest!: Writable<boolean>;
@@ -159,7 +159,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 if (
                     inviter &&
                     (this.userDisconnected.has(inviter) ||
-                        Array.from(this.userConnected.values()).some((user: ChatUser) => user.id === inviter))
+                        Array.from(this.connectedUsers.values()).some((user: ChatUser) => user.id === inviter))
                 ) {
                     this.roomList.set(roomId, newRoom);
                     newRoom.joinRoom();
@@ -202,14 +202,14 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     }
 
     updateUserFromSpace(user: PartialSpaceUser): void {
-        const connectedUserToUpdate: ChatUser | undefined = this.userConnected.get(user.id);
+        const connectedUserToUpdate: ChatUser | undefined = this.connectedUsers.get(user.id);
 
         if (!connectedUserToUpdate) return;
 
         if (user.availabilityStatus && user.availabilityStatus !== 0)
             connectedUserToUpdate.availabilityStatus.set(user.availabilityStatus);
         if (connectedUserToUpdate.spaceId)
-            this.userConnected.set(connectedUserToUpdate.spaceId, {
+            this.connectedUsers.set(connectedUserToUpdate.spaceId, {
                 id:
                     connectedUserToUpdate.id === "" || connectedUserToUpdate.id === "null"
                         ? user.chatID ?? ""
@@ -249,7 +249,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             spaceId: user.id,
         };
 
-        const actualUser = this.userConnected.get(user.id);
+        const actualUser = this.connectedUsers.get(user.id);
         if (actualUser) {
             actualUser.availabilityStatus.set(user.availabilityStatus);
             updatedUser = {
@@ -268,11 +268,11 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             };
         }
 
-        this.userConnected.set(user.id, updatedUser);
+        this.connectedUsers.set(user.id, updatedUser);
     }
 
     disconnectSpaceUser(userId: number): void {
-        this.userConnected.delete(userId);
+        this.connectedUsers.delete(userId);
     }
 
     async getWorldChatMembers(searchText?: string): Promise<ChatMember[]> {

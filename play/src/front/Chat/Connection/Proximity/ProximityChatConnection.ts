@@ -8,7 +8,7 @@ import { ProximityChatRoom } from "./ProximityChatRoom";
 
 export class ProximityChatConnection implements ChatConnectionInterface {
     connectionStatus: Readable<ConnectionStatus> = writable("ONLINE");
-    userConnected: Writable<Map<number, ChatUser>> = writable(new Map());
+    connectedUsers: Writable<Map<number, ChatUser>> = writable(new Map());
     userDisconnected = writable(new Map());
     directRooms = writable([]);
     rooms: Writable<ChatRoom[]> = writable([]);
@@ -28,7 +28,7 @@ export class ProximityChatConnection implements ChatConnectionInterface {
 
     addUserFromSpace(user: SpaceUserExtended): void {
         // if the user isn't already in the list, don't add it
-        if (get(this.userConnected).has(user.id) == false) {
+        if (get(this.connectedUsers).has(user.id) == false) {
             return;
         }
 
@@ -49,14 +49,14 @@ export class ProximityChatConnection implements ChatConnectionInterface {
             avatarUrl: get(avataUrl),
         } as ChatUser;
 
-        this.userConnected.update((users) => {
+        this.connectedUsers.update((users) => {
             users.set(user.id, chatUser);
             return users;
         });
     }
     updateUserFromSpace(user: PartialSpaceUser): void {
         // if the user isn't already in the list, don't add it
-        if (get(this.userConnected).has(user.id) == false) {
+        if (get(this.connectedUsers).has(user.id) == false) {
             return;
         }
 
@@ -76,7 +76,7 @@ export class ProximityChatConnection implements ChatConnectionInterface {
             color: user.color,
             avatarUrl: get(avataUrl),
         } as ChatUser;
-        this.userConnected.update((users) => {
+        this.connectedUsers.update((users) => {
             users.set(user.id, chatUser);
             return users;
         });

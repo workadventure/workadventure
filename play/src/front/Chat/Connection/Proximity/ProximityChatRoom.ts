@@ -84,7 +84,7 @@ export class ProximityChatRoom implements ChatRoom {
         // Create message
         const newMessage = new ProximityChatMessage(
             uuidv4(),
-            get(this._connection.userConnected).get(this._userId) ?? this.unknowUser,
+            get(this._connection.connectedUsers).get(this._userId) ?? this.unknowUser,
             writable(newChatMessageContent),
             new Date(),
             true,
@@ -98,14 +98,9 @@ export class ProximityChatRoom implements ChatRoom {
         const spaceName = get(this._connection.spaceName);
         if (broadcast && spaceName != undefined) {
             this._connection.roomConnection.emitProximityPublicMessage(spaceName, message);
+        }
 
-            // Send bubble message to WorkAdventure scripting API
-            try {
-                iframeListener.sendUserInputChat(message, this._userId);
-            } catch (e) {
-                console.error("Error while sending message to WorkAdventure scripting API", e);
-            }
-        } else {
+        if (action === "proximity") {
             // Send local message to WorkAdventure scripting API
             try {
                 iframeListener.sendUserInputChat(message, undefined);
@@ -133,7 +128,7 @@ export class ProximityChatRoom implements ChatRoom {
         };
 
         if (userUuid === this._userUuid) return;
-        this._connection.userConnected.update((users) => {
+        this._connection.connectedUsers.update((users) => {
             users.set(userId, newChatUser);
             return users;
         });
@@ -143,23 +138,21 @@ export class ProximityChatRoom implements ChatRoom {
     addOutcomingUser(userId: number, userUuid: string, userName: string): void {
         this.sendMessage(get(LL).chat.timeLine.outcoming({ userName }), "outcoming", false);
 
-        this._connection.userConnected.update((users) => {
+        this._connection.connectedUsers.update((users) => {
             users.delete(userId);
             return users;
         });
         this.membersId = this.membersId.filter((id) => id !== userId.toString());
     }
 
-    addNewMessage(message: string, senderUserUuid: string): void {
+    addNewMessage(message: string, senderUserId: number): void {
         // Create content message
         const newChatMessageContent = {
             body: message,
             url: undefined,
         };
 
-        const sender: ChatUser | undefined = [...get(this._connection.userConnected).values()].find(
-            (user) => user.uuid === senderUserUuid
-        );
+        const sender: ChatUser | undefined = get(this._connection.connectedUsers).get(senderUserId);
         // Create message
         const newMessage = new ProximityChatMessage(
             uuidv4(),
@@ -172,6 +165,13 @@ export class ProximityChatRoom implements ChatRoom {
 
         // Add message to the list
         this.messages.push(newMessage);
+
+        // Send bubble message to WorkAdventure scripting API
+        try {
+            iframeListener.sendUserInputChat(message, senderUserId);
+        } catch (e) {
+            console.error("Error while sending message to WorkAdventure scripting API", e);
+        }
     }
 
     sendFiles(files: FileList): Promise<void> {
@@ -227,10 +227,8 @@ export class ProximityChatRoom implements ChatRoom {
         return Promise.resolve({});
     }
 
-    addTypingUser(senderUserUuid: string): void {
-        const sender: ChatUser | undefined = [...get(this._connection.userConnected).values()].find(
-            (user) => user.uuid === senderUserUuid
-        );
+    addTypingUser(senderUserId: number): void {
+        const sender: ChatUser | undefined = get(this._connection.connectedUsers).get(senderUserId);
         if (sender == undefined) return;
 
         this.typingMembers.update((typingMembers) => {
@@ -245,10 +243,8 @@ export class ProximityChatRoom implements ChatRoom {
         });
     }
 
-    removeTypingUser(senderUserUuid: string): void {
-        const sender: ChatUser | undefined = [...get(this._connection.userConnected).values()].find(
-            (user) => user.uuid === senderUserUuid
-        );
+    removeTypingUser(senderUserId: number): void {
+        const sender: ChatUser | undefined = get(this._connection.connectedUsers).get(senderUserId);
         if (sender == undefined) return;
 
         this.typingMembers.update((typingMembers) => {

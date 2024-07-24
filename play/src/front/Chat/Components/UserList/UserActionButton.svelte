@@ -17,7 +17,7 @@
 
     const isInTheSameMap = user.playUri === roomUrl;
 
-    const userList: Readable<Map<number, ChatUser>> = chatConnection.userConnected;
+    const userList: Readable<Map<number, ChatUser>> = chatConnection.connectedUsers;
 
     const me = Array.from($userList.values()).find((userInList) => {
         return userInList.id === localUserStore.getChatId();

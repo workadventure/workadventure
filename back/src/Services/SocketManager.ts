@@ -1772,7 +1772,7 @@ export class SocketManager {
         }
         const newEvent = {
             ...publicEvent,
-            senderUserUuid: user.uuid,
+            senderUserId: user.id,
         };
         const receiverUsers = group.getUsers();
         for (const receiverUser of receiverUsers) {
@@ -1792,10 +1792,10 @@ export class SocketManager {
         }
         const newEvent = {
             ...privateEvent,
-            senderUserUuid: user.uuid,
+            senderUserId: user.id,
         };
 
-        const receiverUser = group.getUsers().find((user) => user.uuid === privateEvent.receiverUserUuid);
+        const receiverUser = group.getUsers().find((user) => user.id === privateEvent.receiverUserId);
         if (receiverUser == undefined) {
             console.warn("receiverUser is undefined");
             return;
