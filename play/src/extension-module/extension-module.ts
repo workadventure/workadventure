@@ -1,6 +1,7 @@
-import { AvailabilityStatus, OauthRefreshToken } from "@workadventure/messages";
+import { AvailabilityStatus, ExternalModuleMessage, OauthRefreshToken } from "@workadventure/messages";
 import { Readable, Updater } from "svelte/store";
 import { CalendarEventInterface } from "@workadventure/shared-utils";
+import { Observable } from "rxjs";
 
 export interface ExtensionModuleOptions {
     workadventureStatusStore: Readable<AvailabilityStatus>;
@@ -9,6 +10,7 @@ export interface ExtensionModuleOptions {
     calendarEventsStoreUpdate?: (this: void, updater: Updater<Map<string, CalendarEventInterface>>) => void;
     userAccessToken: string;
     roomId: string;
+    externalModuleMessage?: Observable<ExternalModuleMessage>;
 }
 
 export interface ExtensionModule {

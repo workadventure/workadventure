@@ -1,6 +1,6 @@
 import axios, { AxiosError, AxiosInstance } from "axios";
 import { z } from "zod";
-import { AvailabilityStatus, OauthRefreshToken } from "@workadventure/messages";
+import { AvailabilityStatus, ExternalModuleMessage, OauthRefreshToken } from "@workadventure/messages";
 import { subscribe } from "svelte/internal";
 import { Unsubscriber, Updater } from "svelte/store";
 import { CalendarEventInterface } from "@workadventure/shared-utils";
@@ -88,7 +88,6 @@ class MSTeams implements ExtensionModule {
     private msAxiosClientBeta!: AxiosInstance;
     private teamsAvailability!: TeamsAvailability;
     private clientId!: string;
-    private listenToTeamsStatusInterval: NodeJS.Timer | null = null;
     private listenToWorkadventureStatus: Unsubscriber | undefined = undefined;
     private calendarEventsStoreUpdate?: (
         this: void,
@@ -98,8 +97,8 @@ class MSTeams implements ExtensionModule {
     private adminUrl!: string;
     private roomId!: string;
 
-    private unsubscribePresenceSubscription: Function | undefined = undefined;
-    private unsubscribeCalendarSubscription: Function | undefined = undefined;
+    private unsubscribePresenceSubscription: ((subscriptionId: string) => Promise<void>) | undefined = undefined;
+    private unsubscribeCalendarSubscription: ((subscriptionId: string) => Promise<void>) | undefined = undefined;
 
     init(roomMetadata: unknown, options?: ExtensionModuleOptions) {
         const microsoftTeamsMetadata = this.getMicrosoftTeamsMetadata(roomMetadata);
@@ -136,7 +135,7 @@ class MSTeams implements ExtensionModule {
             this.listenToTeamsStatusUpdate(options?.onExtensionModuleStatusChange);
             this.userAccessToken = options!.userAccessToken;
             this.roomId = options!.roomId;
-            this.initSubscription();
+            this.initSubscription().catch((e) => console.error("Error while initializing subscription", e));
         }
 
         if (options?.workadventureStatusStore) {
@@ -150,6 +149,33 @@ class MSTeams implements ExtensionModule {
         if (options?.calendarEventsStoreUpdate) {
             this.calendarEventsStoreUpdate = options?.calendarEventsStoreUpdate;
             this.updateCalendarEvents().catch((e) => console.error("Error while updating calendar events", e));
+        }
+
+        if (options?.externalModuleMessage) {
+            // The externalModuleMessage is completed in the RoomConnection. No need to unsubscribe.
+            //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+            options.externalModuleMessage.subscribe((externalModuleMessage: ExternalModuleMessage) => {
+                console.info("Message received from external module", externalModuleMessage);
+                const type = externalModuleMessage.message["@odata.type"];
+                switch (type) {
+                    case "#Microsoft.Graph.presence":
+                        // get the presence status
+                        if (options?.onExtensionModuleStatusChange)
+                            options?.onExtensionModuleStatusChange(
+                                this.mapTeamsStatusToWorkAdventureStatus(externalModuleMessage.message.availability)
+                            );
+                        break;
+                    case "#Microsoft.Graph.onlineMeetings":
+                        this.updateCalendarEvents().catch((e) =>
+                            console.error("Error while updating calendar events", e)
+                        );
+                        break;
+                    default:
+                        console.error("Unknown message type", type);
+                        break;
+                }
+                return externalModuleMessage;
+            });
         }
         console.info("Microsoft teams module for WorkAdventure initialized");
     }
@@ -218,36 +244,32 @@ class MSTeams implements ExtensionModule {
     }
 
     listenToTeamsStatusUpdate(onTeamsStatusChange?: (workAdventureNewStatus: AvailabilityStatus) => void) {
-        this.listenToTeamsStatusInterval = setInterval(() => {
-            this.msAxiosClientV1
-                .get<unknown>(MS_ME_PRESENCE_ENDPOINT)
-                .then((response) => {
-                    const userPresence = response.data;
-                    const userPresenceResponse = z
-                        .object({
-                            availability: TeamsAvailability,
-                            activity: TeamsActivity,
-                        })
-                        .safeParse(userPresence);
+        this.msAxiosClientV1
+            .get<unknown>(MS_ME_PRESENCE_ENDPOINT)
+            .then((response) => {
+                const userPresence = response.data;
+                const userPresenceResponse = z
+                    .object({
+                        availability: TeamsAvailability,
+                        activity: TeamsActivity,
+                    })
+                    .safeParse(userPresence);
 
-                    if (!userPresenceResponse.success) {
-                        throw new Error("Your presence status cannot be handled by this script");
-                    }
+                if (!userPresenceResponse.success) {
+                    throw new Error("Your presence status cannot be handled by this script");
+                }
 
-                    if (onTeamsStatusChange === undefined) {
-                        console.warn(
-                            "You are listening to Microsoft status changed but the onTeamsStatusChange option is not set"
-                        );
-                        return;
-                    }
-
-                    onTeamsStatusChange(
-                        this.mapTeamsStatusToWorkAdventureStatus(userPresenceResponse.data.availability)
+                if (onTeamsStatusChange === undefined) {
+                    console.warn(
+                        "You are listening to Microsoft status changed but the onTeamsStatusChange option is not set"
                     );
-                    this.teamsAvailability = userPresenceResponse.data.availability;
-                })
-                .catch((e) => console.error("Error while getting MSTeams status", e));
-        }, 10000);
+                    return;
+                }
+
+                onTeamsStatusChange(this.mapTeamsStatusToWorkAdventureStatus(userPresenceResponse.data.availability));
+                this.teamsAvailability = userPresenceResponse.data.availability;
+            })
+            .catch((e) => console.error("Error while getting MSTeams status", e));
     }
 
     setStatus(workadventureNewStatus: AvailabilityStatus) {
@@ -281,9 +303,6 @@ class MSTeams implements ExtensionModule {
     }
 
     destroy() {
-        if (this.listenToTeamsStatusInterval) {
-            clearInterval(this.listenToTeamsStatusInterval);
-        }
         if (this.listenToWorkadventureStatus !== undefined) {
             this.listenToWorkadventureStatus();
         }
@@ -392,11 +411,6 @@ class MSTeams implements ExtensionModule {
                     return sortedCalendarEvents;
                 });
             }
-
-            // Update the calendar events every 10 minutes
-            setTimeout(() => {
-                this.updateCalendarEvents().catch((e) => console.error("Error while updating calendar events", e));
-            }, 1000 * 10 * 60);
         } catch (e) {
             console.error("Error while updating calendar events", e);
             // TODO show error message
@@ -447,7 +461,10 @@ class MSTeams implements ExtensionModule {
     }
 
     private async initSubscription(): Promise<void> {
-        const responses = await Promise.all([this.createOrGetPresenceSubscription(), this.createOrGetCalendarSubscription()]);
+        const responses = await Promise.all([
+            this.createOrGetPresenceSubscription(),
+            this.createOrGetCalendarSubscription(),
+        ]);
         if (responses[0] !== undefined) {
             this.unsubscribePresenceSubscription = this.deletePresenceSubscription.bind(responses[0].id);
         }
@@ -459,10 +476,10 @@ class MSTeams implements ExtensionModule {
     async destroySubscription(): Promise<unknown> {
         const promisesDestroySubscription = [];
         if (this.unsubscribePresenceSubscription !== undefined) {
-            promisesDestroySubscription.push(this.unsubscribePresenceSubscription());
+            promisesDestroySubscription.push(this.unsubscribePresenceSubscription);
         }
         if (this.unsubscribeCalendarSubscription !== undefined) {
-            promisesDestroySubscription.push(this.unsubscribeCalendarSubscription());
+            promisesDestroySubscription.push(this.unsubscribeCalendarSubscription);
         }
         return Promise.all(promisesDestroySubscription);
     }
@@ -471,9 +488,7 @@ class MSTeams implements ExtensionModule {
     private async createOrGetPresenceSubscription(): Promise<MSGraphSubscription> {
         // Check if the subscription already exists
         const subscriptions = await this.msAxiosClientV1.get(`/subscriptions`);
-        if (
-            subscriptions.data.value.length > 0
-        ){
+        if (subscriptions.data.value.length > 0) {
             const presenceSubscription = subscriptions.data.value.find(
                 (subscription: MSGraphSubscription) => subscription.resource === `/users/${this.clientId}/presences`
             );
@@ -499,9 +514,10 @@ class MSTeams implements ExtensionModule {
     private async createOrGetCalendarSubscription(): Promise<MSGraphSubscription> {
         // Check if the subscription already exists
         const subscriptions = await this.msAxiosClientBeta.get(`/subscriptions`);
-        if (subscriptions.data.value.length > 0){
+        if (subscriptions.data.value.length > 0) {
             const calendarSubscription = subscriptions.data.value.find(
-                (subscription: MSGraphSubscription) => subscription.resource === `/users/${this.clientId}/calendar/events`
+                (subscription: MSGraphSubscription) =>
+                    subscription.resource === `/users/${this.clientId}/calendar/events`
             );
             return calendarSubscription;
         }

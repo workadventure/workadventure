@@ -664,8 +664,8 @@ const roomManager = {
     },
     /** Dispatch external module event */
     dispatchExternalModuleMessage(call) {
-        socketManager.handleExternalModuleMessage(call.request);
-    }
+        socketManager.handleExternalModuleMessage(call.request).catch((e) => console.error(e));
+    },
 } satisfies RoomManagerServer;
 
 export { roomManager };
