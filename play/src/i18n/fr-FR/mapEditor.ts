@@ -207,6 +207,14 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             error: "Veuillez entrer une URL Cards valide",
             disabled: "L'intégration Cards est désactivée.",
         },
+        matrixProperties: {
+            label: "lier une room Matrix",
+            description: "lier une room Matrix",
+            openAutomaticallyChatLabel: "Ouvrir le chat automatiquement",
+            localRoomLabel: "Sélectionner une room locale",
+            remoteRoomLabel: "Sélectionner une room locale",
+            createARoom: "Créer une nouvelle room",
+        },
     },
     areaEditor: {
         editInstructions: "Sélectionnez une zone pour modifier ses propriétés.",

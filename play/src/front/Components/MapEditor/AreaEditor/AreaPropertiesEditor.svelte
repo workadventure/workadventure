@@ -29,6 +29,7 @@
     import PersonalAreaPropertyEditor from "../PropertyEditor/PersonalAreaPropertyEditor.svelte";
     import RightsPropertyEditor from "../PropertyEditor/RightsPropertyEditor.svelte";
     import { IconChevronDown, IconChevronRight } from "../../Icons";
+    import MatrixRoomPropertyEditor from "../PropertyEditor/MatrixRoomPropertyEditor.svelte";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
@@ -198,6 +199,13 @@
                     allowedTags: [],
                     ownerId: null,
                 };
+            case "matrixRoomPropertyData":
+                return {
+                    id,
+                    type,
+                    matrixRoomId: "",
+                    shouldOpenAutomatically : false
+                };
             default:
                 throw new Error(`Unknown property type ${type}`);
         }
@@ -317,6 +325,7 @@
         hasplayAudioProperty = hasProperty("playAudio");
         hasPersonalAreaProperty = hasProperty("personalAreaPropertyData");
         hasRightsProperty = hasProperty("restrictedRightsPropertyData");
+        //hasMatrixRoom =  hasProperty("MatrixRoomData")
     }
 
     function openKlaxoonActivityPicker(app: AreaDataProperty) {
@@ -340,6 +349,8 @@
     function toggleDescriptionField() {
         showDescriptionField = !showDescriptionField;
     }
+
+ 
 </script>
 
 {#if $mapEditorSelectedAreaPreviewStore === undefined}
@@ -431,6 +442,13 @@
                 property="openWebsite"
                 on:click={() => {
                     onAddProperty("openWebsite");
+                }}
+            />
+
+            <AddPropertyButtonWrapper
+                property="matrixRoomPropertyData"
+                on:click={() => {
+                    onAddProperty("matrixRoomPropertyData");
                 }}
             />
         </div>
@@ -636,6 +654,14 @@
                     {:else if property.type === "personalAreaPropertyData"}
                         <PersonalAreaPropertyEditor
                             personalAreaPropertyData={property}
+                            on:close={({ detail }) => {
+                                onDeleteProperty(property.id, detail);
+                            }}
+                            on:change={({ detail }) => onUpdateProperty(property, detail)}
+                        />
+                    {:else if property.type === "matrixRoomPropertyData"}
+                        <MatrixRoomPropertyEditor
+                            {property}
                             on:close={({ detail }) => {
                                 onDeleteProperty(property.id, detail);
                             }}

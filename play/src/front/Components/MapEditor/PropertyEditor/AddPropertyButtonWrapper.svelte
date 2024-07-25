@@ -276,6 +276,19 @@
     />
 {/if}
 
+{#if property === "matrixRoomPropertyData"}
+    <AddPropertyButton
+        headerText={$LL.mapEditor.properties.matrixProperties.label()}
+        descriptionText={$LL.mapEditor.properties.matrixProperties.description()}
+        img={workerWhiteSvg}
+        style={`z-index: 310;${isActive ? "background-color: #4156f6;" : ""}`}
+        testId="matrixRoomPropertyData"
+        on:click={(event) => {
+            dispatch("click", event);
+        }}
+    />
+{/if}
+
 {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
     {#if property === "openWebsite" && subProperty === app.name}
         <AddPropertyButton

@@ -209,6 +209,14 @@ const mapEditor: BaseTranslation = {
             error: "Please enter a valid Cards URL",
             disabled: "Cards integration is disabled.",
         },
+        matrixProperties: {
+            label: "link Matrix room",
+            description: "link Matrix room to your area",
+            openAutomaticallyChatLabel: "Automatically open chat",
+            localRoomLabel: "Select a local room",
+            remoteRoomLabel: "Select a remote room",
+            createARoom: "Create a new room",
+        },
     },
     areaEditor: {
         editInstructions: "Click an area to modify its properties.",
