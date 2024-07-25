@@ -68,7 +68,15 @@ npm run upload -- -k your-api-key -u your-mapstorage-url -d your-directory
 
 3. **Directory:**
    You also have to add a `directory name`, it will be the folder where all your uploaded files will be stored in.
-   If you want ot store your map in a specific directory, you can edit this in the .env file or if your don't put one, by default it will be your github name and github repository like this : `githubname-githubrepository`. The directory name appear in the URL of your map. This is done to avoid errors and push two maps with the same folder onto Workadventure servers.
+   If you want ot store your map in a specific directory, you can edit this in the .env file.
+
+   By default it will be your github name and github repository like this : `githubname-githubrepository`. This is if you're `using github` and you forked the `map starter kit repository`.
+
+   If you're not using github, the script will ask you a directory name and if you leave it empty, by default the directory will be named "maps"
+
+   The directory name appear in the URL of your map.
+
+   Be careful if your not using github and you upload two separate maps with the same directory name, this will erase the first one so we recommand you to set a personal directory name.
 
 <!-- 4. Upload Mode :
    The upload mode is the way you want to host your map. If your following this tutorial it mean you want to be hosted so you need to enter 1 to choose this mode of storage.
