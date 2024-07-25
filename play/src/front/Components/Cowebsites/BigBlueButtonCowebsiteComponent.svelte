@@ -40,4 +40,5 @@
     allow={actualCowebsite.getAllowPolicy()}
     title="Big Blue Button Meeting"
     class="pixel bg-white h-full w-full z-index-0"
+    id="iframe"
 />

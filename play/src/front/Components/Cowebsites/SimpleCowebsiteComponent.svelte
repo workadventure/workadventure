@@ -26,4 +26,5 @@
     allow={actualCowebsite.getAllowPolicy()}
     title="Cowebsite"
     class="pixel bg-white h-full w-full z-index-0"
+    id="iframe"
 />

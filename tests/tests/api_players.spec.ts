@@ -2,7 +2,7 @@
 import {} from "../../play/packages/iframe-api-typings/iframe_api";
 import {expect, test, Browser, Page} from '@playwright/test';
 import { login } from './utils/roles';
-import {getCoWebsiteDiv} from "./utils/iframe";
+import {getCoWebsiteIframe} from "./utils/iframe";
 import {assertLogMessage, startRecordLogs} from "./utils/log";
 import {evaluateScript} from "./utils/scripting";
 import {oidcLogin, oidcLogout} from "./utils/oidc";
@@ -32,24 +32,23 @@ test.describe('API WA.players', () => {
 
     await login(page2, 'Bob');
 
-    const events = getCoWebsiteDiv(page).locator('#events');
-    console.log("EVENTS", await events.textContent());
+    const events = getCoWebsiteIframe(page).locator('#events');
     await expect(events).toContainText('New user: Bob', {
       timeout: 10000
     });
 
-    await getCoWebsiteDiv(page).locator('#listCurrentPlayers').click();
-    const list = getCoWebsiteDiv(page).locator('#list');
+    await getCoWebsiteIframe(page).locator('#listCurrentPlayers').click();
+    const list = getCoWebsiteIframe(page).locator('#list');
     await expect(list).toContainText('Bob');
 
-    await getCoWebsiteDiv(page2).locator('#listCurrentPlayers').click();
-    const list2 = getCoWebsiteDiv(page2).locator('#list');
+    await getCoWebsiteIframe(page2).locator('#listCurrentPlayers').click();
+    const list2 = getCoWebsiteIframe(page2).locator('#list');
     await expect(list2).toContainText('Alice');
 
     // Now, let's test variables
-    await getCoWebsiteDiv(page).locator('#the-variable').fill('yeah');
-    await getCoWebsiteDiv(page).locator('#the-variable').evaluate(e => e.blur());
-    const events2 = getCoWebsiteDiv(page2).locator('#events');
+    await getCoWebsiteIframe(page).locator('#the-variable').fill('yeah');
+    await getCoWebsiteIframe(page).locator('#the-variable').evaluate(e => e.blur());
+    const events2 = getCoWebsiteIframe(page2).locator('#events');
     await expect(events2).toContainText("User 'Alice' testVariable changed. New value: yeah (tracked globally)");
     await expect(events2).toContainText("User 'Alice' testVariable changed. New value: yeah (tracked locally)");
     await expect(events2).toContainText("Asserted value from event and from WA.players.state is the same");
@@ -57,7 +56,7 @@ test.describe('API WA.players', () => {
     await page2.close();
 
     await expect(events).toContainText('User left: Bob');
-    await getCoWebsiteDiv(page).locator('#listCurrentPlayers').click();
+    await getCoWebsiteIframe(page).locator('#listCurrentPlayers').click();
     await expect(list).not.toContainText('Bob');
   });
 
@@ -74,8 +73,8 @@ test.describe('API WA.players', () => {
     );
     await login(page);
 
-    await expect(getCoWebsiteDiv(page).locator('#onPlayerEntersException')).toHaveText('Yes');
-    await expect(getCoWebsiteDiv(page).locator('#onPlayerLeavesException')).toHaveText('Yes');
+    await expect(getCoWebsiteIframe(page).locator('#onPlayerEntersException')).toHaveText('Yes');
+    await expect(getCoWebsiteIframe(page).locator('#onPlayerLeavesException')).toHaveText('Yes');
   });
 
   test('Test that player B arriving after player A set his variables can read the variable.', async ({ page, browser }, { project }) => {

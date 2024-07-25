@@ -174,7 +174,7 @@
     });
 </script>
 
-<div bind:this={jitsiContainer} class="absolute w-full h-[50%] height pb-3 pr-6 md:pr-0 z-0" />
+<div bind:this={jitsiContainer} class="absolute w-full h-[50%] height pb-3 pr-6 md:pr-0 z-0" id="iframe" />
 
 <style>
     .height {
