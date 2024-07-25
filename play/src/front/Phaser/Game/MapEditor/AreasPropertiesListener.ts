@@ -15,6 +15,7 @@ import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils
 import { Jitsi } from "@workadventure/shared-utils";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { get } from "svelte/store";
+import { Member } from "@workadventure/messages";
 import { LL } from "../../../../i18n/i18n-svelte";
 import { analyticsClient } from "../../../Administration/AnalyticsClient";
 import { iframeListener } from "../../../Api/IframeListener";
@@ -40,7 +41,7 @@ import { gameManager } from "../GameManager";
 import { OpenCoWebsite } from "../GameMapPropertiesListener";
 import { GameScene } from "../GameScene";
 import { mapEditorAskToClaimPersonalAreaStore } from "../../../Stores/MapEditorStore";
-import { requestVisitCardsStore } from "../../../Stores/GameStore";
+import { requestVisitCardsStore, selectedChatIDRemotePlayerStore } from "../../../Stores/GameStore";
 import { isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
 import { MessageUserJoined } from "../../../Connection/ConnexionModels";
 import { Area } from "../../Entity/Area";
@@ -554,9 +555,12 @@ export class AreasPropertiesListener {
             if (connection && this.isPersonalAreaOwnerAway(ownerId, areaData)) {
                 connection
                     .queryMember(ownerId)
-                    .then((member) => {
+                    .then((member: Member) => {
                         if (member?.visitCardUrl) {
                             requestVisitCardsStore.set(member.visitCardUrl);
+                        }
+                        if (member?.chatID) {
+                            selectedChatIDRemotePlayerStore.set(member?.chatID);
                         }
                     })
                     .catch((error) => console.error(error));
@@ -764,8 +768,6 @@ export class AreasPropertiesListener {
     private handleSpeakerMegaphonePropertyOnEnter(property: SpeakerMegaphonePropertyData): void {
         if (property.name !== undefined && property.id !== undefined) {
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
-            // TODO remove this console.log after testing
-            console.info("handleSpeakerMegaphonePropertyOnEnter => joinSpace => uniqRoomName : ", uniqRoomName);
             currentLiveStreamingNameStore.set(uniqRoomName);
             this.scene.broadcastService.joinSpace(uniqRoomName, false);
             isSpeakerStore.set(true);
@@ -796,8 +798,6 @@ export class AreasPropertiesListener {
             );
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
-                // TODO remove this log after testing
-                console.info("handleListenerMegaphonePropertyOnEnter => joinSpace => uniqRoomName", uniqRoomName);
                 currentLiveStreamingNameStore.set(uniqRoomName);
                 this.scene.broadcastService.joinSpace(uniqRoomName, false);
                 if (property.chatEnabled) {
@@ -815,8 +815,6 @@ export class AreasPropertiesListener {
             );
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
-                // TODO remove this log after testing
-                console.info("handleListenerMegaphonePropertyOnLeave => uniqRoomName", uniqRoomName);
                 currentLiveStreamingNameStore.set(undefined);
                 this.scene.broadcastService.leaveSpace(uniqRoomName);
                 if (property.chatEnabled) {
@@ -827,12 +825,16 @@ export class AreasPropertiesListener {
     }
 
     private handleJoinMucRoom(name: string, type: string) {
-        iframeListener.sendJoinMucEventToChatIframe(`${this.scene.roomUrl}/${slugify(name)}`, name, type, false);
+        iframeListener
+            .sendJoinMucEventToChatIframe(`${this.scene.roomUrl}/${slugify(name)}`, name, type, false)
+            .catch((error) => console.error(error));
         chatZoneLiveStore.set(true);
     }
 
     private handleLeaveMucRoom(name: string) {
-        iframeListener.sendLeaveMucEventToChatIframe(`${this.scene.roomUrl}/${slugify(name)}`);
+        iframeListener
+            .sendLeaveMucEventToChatIframe(`${this.scene.roomUrl}/${slugify(name)}`)
+            .catch((error) => console.error(error));
         chatZoneLiveStore.set(false);
     }
 

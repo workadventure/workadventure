@@ -23,7 +23,6 @@
     let currentConfig: JitsiRoomConfigData = {};
 
     onMount(() => {
-        console.log("config", config);
         currentConfig = {};
         if (config !== undefined) {
             currentConfig = structuredClone(config);

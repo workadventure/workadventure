@@ -91,6 +91,8 @@ message SetPlayerDetailsMessage {
   google.protobuf.BoolValue showVoiceIndicator = 5;
   AvailabilityStatus availabilityStatus = 6;
   SetPlayerVariableMessage setVariable = 7;
+  string chatID = 8;
+  
 }
 
 message UserMovesMessage {
@@ -111,6 +113,11 @@ message ReportPlayerMessage {
 message BanPlayerMessage {
   string banUserUuid = 1;
   string banUserName = 2;
+}
+
+message UpdateChatIdMessage {
+  string email = 1;
+  string chatId = 2;
 }
 
 message EmotePromptMessage {
@@ -324,6 +331,9 @@ message ClientToServerMessage {
     MuteVideoParticipantIdMessage muteVideoParticipantIdMessage = 39;
     MuteVideoEveryBodyParticipantMessage muteVideoEveryBodyParticipantMessage = 40;
     BanPlayerMessage banPlayerMessage = 41;
+    UpdateChatIdMessage updateChatIdMessage = 42;
+    PublicEvent publicEvent = 43;
+    PrivateEvent privateEvent = 44;
   }
 }
 
@@ -405,6 +415,8 @@ message QueryMessage {
     SearchMemberQuery searchMemberQuery = 7;
     GetMemberQuery getMemberQuery = 8;
     TurnCredentialsQuery turnCredentialsQuery = 9;
+    ChatMembersQuery chatMembersQuery = 10;
+    SearchTagsQuery searchTagsQuery = 11;
   }
 }
 
@@ -447,6 +459,14 @@ message GetMemberQuery {
 message TurnCredentialsQuery {
 }
 
+message ChatMembersQuery {
+  string searchText = 1;
+}
+
+message  SearchTagsQuery{
+  string searchText = 1;
+}
+
 message AnswerMessage {
   int32 id = 1;
   oneof answer {
@@ -460,6 +480,8 @@ message AnswerMessage {
     SearchMemberAnswer searchMemberAnswer = 9;
     GetMemberAnswer getMemberAnswer = 10;
     TurnCredentialsAnswer turnCredentialsAnswer = 11;
+    ChatMembersAnswer chatMembersAnswer = 12;
+    SearchTagsAnswer searchTagsAnswer = 13;
   }
 }
 
@@ -510,16 +532,34 @@ message GetMemberAnswer {
   Member member = 1;
 }
 
+message ChatMembersAnswer {
+  int64 total = 1;
+  repeated ChatMember members = 2;
+}
+
 message Member {
   string id = 1;
   optional string name = 2;
   optional string email = 3;
   optional string visitCardUrl = 4;
+  optional string chatID = 5;
 }
 
 message TurnCredentialsAnswer {
   optional string webRtcUser = 1;
   optional string webRtcPassword = 2;
+}
+
+message ChatMember {
+  string uuid = 1;
+  optional string wokaName = 2;
+  optional string email = 3;
+  optional string chatId = 4;
+  repeated string tags = 5;
+}
+
+message SearchTagsAnswer{
+  repeated string tags = 1; 
 }
 
 /*********** SERVER TO CLIENT MESSAGES *************/
@@ -562,6 +602,8 @@ message SubMessage {
     MuteVideoEverybodyMessage muteVideoEverybodyMessage = 26;
     AskMuteMicrophoneMessage askMuteMicrophoneMessage = 27;
     AskMuteVideoMessage askMuteVideoMessage = 28;
+    PublicEvent publicEvent = 29;
+    PrivateEvent privateEvent = 30;
   }
 }
 
@@ -583,7 +625,6 @@ message GroupDeleteMessage {
 
 message UserJoinedMessage {
   int32 userId = 1;
-  string userJid = 2;
   string name = 3;
   repeated CharacterTextureMessage characterTextures = 4;
   PositionMessage position = 5;
@@ -594,6 +635,7 @@ message UserJoinedMessage {
   bool hasOutline = 10;
   AvailabilityStatus availabilityStatus = 11;
   map<string, string> variables = 12;
+  optional string chatID = 13;
 }
 
 message UserLeftMessage {
@@ -646,10 +688,9 @@ message RoomJoinedMessage {
   bool activatedInviteUser = 9;
   repeated VariableMessage playerVariable = 10;
   repeated ApplicationMessage applications = 11;
-  string userJid = 12;
   EditMapCommandsArrayMessage editMapCommandsArrayMessage = 13;
-  string webrtcUserName = 14;
-  string webrtcPassword = 15;
+  string webRtcUserName = 14;
+  string webRtcPassword = 15;
   bool canEdit = 16;
   MegaphoneSettings megaphoneSettings = 17;
   CompanionTextureMessage companionTexture = 18;
@@ -663,8 +704,9 @@ message MegaphoneSettings{
 message WebRtcStartMessage {
   int32 userId = 1;
   bool initiator = 3;
-  string webrtcUserName = 4;
-  string webrtcPassword = 5;
+  string webRtcUserName = 4;
+  string webRtcPassword = 5;
+  string webRtcSpaceName = 6;
 }
 
 message WebRtcDisconnectMessage {
@@ -674,8 +716,9 @@ message WebRtcDisconnectMessage {
 message WebRtcSignalToClientMessage {
   int32 userId = 1;
   string signal = 2;
-  string webrtcUserName = 4;
-  string webrtcPassword = 5;
+  string webRtcUserName = 4;
+  string webRtcPassword = 5;
+  string webRtcSpaceName = 6;
 }
 
 message TeleportMessageMessage{
@@ -795,6 +838,34 @@ message AskMutedVideoMessage {
   string message = 2;
 }
 
+message PublicEvent {
+  string spaceName = 1;
+  SpaceEvent spaceEvent = 2;
+  optional int32 senderUserId = 3;
+}
+
+message SpaceEvent {
+  oneof event {
+    SpaceMessage spaceMessage = 1;
+    SpaceIsTyping spaceIsTyping = 2;
+  }
+}
+
+message SpaceMessage {
+  string message = 1;
+}
+
+message SpaceIsTyping {
+  bool isTyping = 1;
+}
+
+message PrivateEvent {
+  string spaceName = 1;
+  int32 receiverUserId = 2;
+  optional int32 senderUserId = 3;
+  SpaceMessage spaceMessage = 4;
+}
+
 /**
  * Messages going from back and pusher to the front
  */
@@ -824,13 +895,14 @@ message ServerToClientMessage {
     GroupUsersUpdateMessage groupUsersUpdateMessage = 25;
     ErrorScreenMessage errorScreenMessage = 26;
     AnswerMessage answerMessage = 28;
-    XmppSettingsMessage xmppSettingsMessage = 29;
     MoveToPositionMessage moveToPositionMessage = 31;
     InvalidCompanionTextureMessage invalidCompanionTextureMessage = 32;
     MutedMessage mutedMessage = 33;
     MutedVideoMessage mutedVideoMessage = 34;
     AskMutedMessage askMutedMessage = 35;
     AskMutedVideoMessage askMutedVideoMessage = 36;
+    PublicEvent publicEvent = 37;
+    PrivateEvent privateEvent = 38;
   }
 }
 
@@ -852,14 +924,13 @@ message JoinRoomMessage {
   bool activatedInviteUser = 12;
   bool isLogged = 13;
   repeated ApplicationMessage applications = 14;
-  string userJid = 15;
   google.protobuf.StringValue lastCommandId = 16;
   bool canEdit = 17;
+  google.protobuf.StringValue chatID = 18;
 }
 
 message UserJoinedZoneMessage {
   int32 userId = 1;
-  string userJid = 2;
   string name = 3;
   repeated CharacterTextureMessage characterTextures = 4;
   PositionMessage position = 5;
@@ -871,6 +942,7 @@ message UserJoinedZoneMessage {
   bool hasOutline = 11;
   AvailabilityStatus availabilityStatus = 12;
   map<string, string> variables = 13;
+  optional string chatID=14;
 }
 
 message UserLeftZoneMessage {
@@ -936,6 +1008,8 @@ message PusherToBackMessage {
     MuteEveryBodyParticipantMessage muteEveryBodyParticipantMessage = 27;
     MuteVideoParticipantIdMessage muteVideoParticipantIdMessage = 28;
     MuteVideoEveryBodyParticipantMessage muteVideoEveryBodyParticipantMessage = 29;
+    PublicEvent publicEvent = 30;
+    PrivateEvent privateEvent = 31;
   }
 }
 
@@ -1100,11 +1174,12 @@ message MucRoomDefinitionMessage {
   bool subscribe = 4;
 }
 
-message XmppSettingsMessage{
-  string conferenceDomain = 2;
-  repeated MucRoomDefinitionMessage rooms = 3;
-  string jabberId = 4;
-  string jabberPassword = 5;
+message BanUserByUuidMessage{
+  string playUri = 1;
+  string uuidToBan = 2;
+  string name = 3;
+  string message = 4;
+  string byUserEmail = 5;
 }
 /*********************************************************************************
  * End Chat Messages
@@ -1133,6 +1208,8 @@ message PusherToBackSpaceMessage{
     MuteVideoEverybodyMessage muteVideoEverybodyMessage = 12;
     AskMuteMicrophoneMessage askMuteMicrophoneMessage = 13;
     AskMuteVideoMessage askMuteVideoMessage = 14;
+    PublicEvent publicEvent = 15;
+    PrivateEvent privateEvent = 16;
   }
 }
 
@@ -1150,6 +1227,8 @@ message BackToPusherSpaceMessage{
     MuteVideoEverybodyMessage muteVideoEverybodyMessage = 10;
     AskMuteMicrophoneMessage askMuteMicrophoneMessage = 11;
     AskMuteVideoMessage askMuteVideoMessage = 12;
+    PublicEvent publicEvent = 13;
+    PrivateEvent privateEvent = 14;
   }
 }
 
@@ -1179,6 +1258,7 @@ message SpaceUser{
   bool megaphoneState = 14; // used
   google.protobuf.StringValue jitsiParticipantId = 15; // used
   string uuid = 16; // used
+  google.protobuf.StringValue chatID = 17; // used
 }
 
 message PartialSpaceUser{
@@ -1198,6 +1278,7 @@ message PartialSpaceUser{
   google.protobuf.BoolValue megaphoneState = 14;
   google.protobuf.StringValue jitsiParticipantId = 15;
   string uuid = 16;
+  google.protobuf.StringValue chatID = 17;
 }
 
 message AddSpaceUserMessage{

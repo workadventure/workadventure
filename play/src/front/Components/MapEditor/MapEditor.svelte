@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { MinusIcon } from "svelte-feather-icons";
     import { fly } from "svelte/transition";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { gameManager } from "../../Phaser/Game/GameManager";
@@ -15,6 +14,7 @@
     import MapEditorSideBar from "./MapEditorSideBar.svelte";
     import TrashEditor from "./TrashEditor.svelte";
     import ConfigureMyRoom from "./WAMSettingsEditor.svelte";
+    import { IconMinus } from "@wa-icons";
 
     function closeMapEditor() {
         analyticsClient.toggleMapEditor(false);
@@ -33,7 +33,7 @@
     {:else if $mapEditorVisibilityStore}
         <div class="sidebar" in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>
             <button class="tw-absolute tw-right-10 tw-p-1 tw-cursor-pointer" on:click={hideMapEditor}
-                ><MinusIcon size="20" /></button
+                ><IconMinus font-size="14" /></button
             >
             <button
                 class="close-window"

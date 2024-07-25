@@ -1,15 +1,14 @@
 <script lang="ts">
     import { writable } from "svelte/store";
-    import { ChevronDownIcon, ChevronUpIcon } from "svelte-feather-icons";
     import { onMount } from "svelte";
     import { OpenWebsitePropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../i18n/i18n-svelte";
     import AreaToolImg from "../images/icon-tool-area.png";
     import EntityToolImg from "../images/icon-tool-entity.svg";
     import {
+        mapExplorationAreasStore,
         mapExplorationEntitiesStore,
         mapExplorationObjectSelectedStore,
-        mapExplorationAreasStore,
     } from "../../Stores/MapEditorStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { Entity } from "../../Phaser/ECS/Entity";
@@ -17,6 +16,7 @@
     import { ExplorerTool } from "../../Phaser/Game/MapEditor/Tools/ExplorerTool";
     import AddPropertyButtonWrapper from "../MapEditor/PropertyEditor/AddPropertyButtonWrapper.svelte";
     import { connectionManager } from "../../Connection/ConnectionManager";
+    import { IconChevronDown, IconChevronUp } from "@wa-icons";
 
     let filter = "";
     let selectFilters = writable<Array<string>>(new Array<string>());
@@ -236,9 +236,9 @@
                     {$LL.mapEditor.explorer.entitiesFound($entitiesListFiltered.size > 1)}</span
                 >
                 {#if entityListActive}
-                    <ChevronDownIcon class="tw-pointer-events-none" size="32" />
+                    <IconChevronDown class="tw-pointer-events-none" font-size="32" />
                 {:else}
-                    <ChevronUpIcon class="tw-pointer-events-none" size="32" />
+                    <IconChevronUp class="tw-pointer-events-none" font-size="32" />
                 {/if}
             {:else}
                 <p class="tw-m-0">{$LL.mapEditor.explorer.noEntitiesFound()}</p>
@@ -281,9 +281,9 @@
                     {$LL.mapEditor.explorer.areasFound($areasListFiltered.size > 1)}</span
                 >
                 {#if areaListActive}
-                    <ChevronDownIcon class="tw-pointer-events-none" size="32" />
+                    <IconChevronDown class="tw-pointer-events-none" font-size="32" />
                 {:else}
-                    <ChevronUpIcon class="tw-pointer-events-none" size="32" />
+                    <IconChevronUp class="tw-pointer-events-none" font-size="32" />
                 {/if}
             {:else}
                 <p class="tw-m-0">{$LL.mapEditor.explorer.noAreasFound()}</p>

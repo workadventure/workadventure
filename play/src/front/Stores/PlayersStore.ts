@@ -25,7 +25,6 @@ function createPlayersStore() {
                 update((users) => {
                     users.set(message.userId, {
                         userId: message.userId,
-                        userJid: message.userJid,
                         name: message.name,
                         characterTextures: message.characterTextures,
                         visitCardUrl: message.visitCardUrl,
@@ -33,6 +32,7 @@ function createPlayersStore() {
                         userUuid: message.userUuid,
                         availabilityStatus: message.availabilityStatus,
                         color: Color.getColorByString(message.name),
+                        chatID: message.chatID,
                     });
                     return users;
                 });
@@ -67,7 +67,6 @@ function createPlayersStore() {
             update((users) => {
                 users.set(newUserId, {
                     userId: newUserId,
-                    userJid: "fake",
                     name,
                     characterTextures: [],
                     visitCardUrl: null,

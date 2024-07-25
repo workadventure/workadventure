@@ -1,5 +1,4 @@
 <script>
-    // eslint-disable-next-line import/no-unresolved
     import { closeModal, Modals } from "svelte-modals";
 </script>
 
@@ -15,5 +14,7 @@
         right: 0;
         left: 0;
         background: rgba(0, 0, 0, 0.5);
+        z-index: 2000;
+        pointer-events: auto;
     }
 </style>

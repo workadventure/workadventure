@@ -1,14 +1,18 @@
 // @vitest-environment jsdom
-//@ts-ignore
-//@ts-ignore
-window.env = {
-    MAX_USERNAME_LENGTH: 10,
-    DEBUG_MODE: true,
-};
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { PositionMessage_Direction } from "@workadventure/messages";
 import { PlayerMovement } from "../../../../src/front/Phaser/Game/PlayerMovement";
+
+const MAX_EXTRAPOLATION_TIME = 100;
+const START_TICK = 42000;
+const END_TICK = 42200;
+
+vi.mock("../../../../src/front/Enum/EnvironmentVariable.ts", () => {
+    return {
+        MAX_EXTRAPOLATION_TIME: 100,
+    };
+});
 
 describe("Interpolation / Extrapolation", () => {
     it("should interpolate", () => {
@@ -17,7 +21,7 @@ describe("Interpolation / Extrapolation", () => {
                 x: 100,
                 y: 200,
             },
-            42000,
+            START_TICK,
             {
                 x: 200,
                 y: 100,
@@ -26,13 +30,14 @@ describe("Interpolation / Extrapolation", () => {
                 moving: true,
                 direction: PositionMessage_Direction.UP,
             },
-            42200
+            END_TICK
         );
 
-        expect(playerMovement.isOutdated(42100)).toBe(false);
-        expect(playerMovement.isOutdated(43000)).toBe(true);
+        expect(playerMovement.isOutdated(START_TICK + MAX_EXTRAPOLATION_TIME)).toBe(false);
+        43000;
+        expect(playerMovement.isOutdated(START_TICK + MAX_EXTRAPOLATION_TIME + 900)).toBe(true);
 
-        expect(playerMovement.getPosition(42100)).toEqual({
+        expect(playerMovement.getPosition(START_TICK + MAX_EXTRAPOLATION_TIME)).toEqual({
             x: 150,
             y: 150,
             oldX: 100,
@@ -41,7 +46,7 @@ describe("Interpolation / Extrapolation", () => {
             moving: true,
         });
 
-        expect(playerMovement.getPosition(42200)).toEqual({
+        expect(playerMovement.getPosition(START_TICK + MAX_EXTRAPOLATION_TIME * 2)).toEqual({
             x: 200,
             y: 100,
             oldX: 100,
@@ -50,7 +55,7 @@ describe("Interpolation / Extrapolation", () => {
             moving: true,
         });
 
-        expect(playerMovement.getPosition(42300)).toEqual({
+        expect(playerMovement.getPosition(START_TICK + MAX_EXTRAPOLATION_TIME * 3)).toEqual({
             x: 250,
             y: 50,
             oldX: 100,
@@ -66,7 +71,7 @@ describe("Interpolation / Extrapolation", () => {
                 x: 100,
                 y: 200,
             },
-            42000,
+            START_TICK,
             {
                 x: 200,
                 y: 100,
@@ -75,10 +80,10 @@ describe("Interpolation / Extrapolation", () => {
                 moving: false,
                 direction: PositionMessage_Direction.UP,
             },
-            42200
+            END_TICK
         );
 
-        expect(playerMovement.getPosition(42300)).toEqual({
+        expect(playerMovement.getPosition(START_TICK + MAX_EXTRAPOLATION_TIME * 3)).toEqual({
             x: 200,
             y: 100,
             oldX: 100,
@@ -94,7 +99,7 @@ describe("Interpolation / Extrapolation", () => {
                 x: 100,
                 y: 200,
             },
-            42000,
+            START_TICK,
             {
                 x: 200,
                 y: 100,
@@ -103,10 +108,10 @@ describe("Interpolation / Extrapolation", () => {
                 moving: false,
                 direction: PositionMessage_Direction.UP,
             },
-            42200
+            END_TICK
         );
 
-        expect(playerMovement.getPosition(42100)).toEqual({
+        expect(playerMovement.getPosition(START_TICK + MAX_EXTRAPOLATION_TIME)).toEqual({
             x: 150,
             y: 150,
             oldX: 100,

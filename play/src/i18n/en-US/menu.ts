@@ -16,6 +16,7 @@ const menu: BaseTranslation = {
     },
     visitCard: {
         close: "Close",
+        sendMessage: "Send message",
     },
     profile: {
         edit: {

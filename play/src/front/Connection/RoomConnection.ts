@@ -13,6 +13,7 @@ import {
     AskMuteVideoMessage,
     AvailabilityStatus,
     CharacterTextureMessage,
+    ChatMembersAnswer,
     ClientToServerMessage as ClientToServerMessageTsProto,
     CompanionTextureMessage,
     DeleteCustomEntityMessage,
@@ -21,6 +22,9 @@ import {
     EmoteEventMessage as EmoteEventMessageTsProto,
     ErrorMessage as ErrorMessageTsProto,
     ErrorScreenMessage as ErrorScreenMessageTsProto,
+    FollowAbortMessage,
+    FollowConfirmationMessage,
+    FollowRequestMessage,
     GroupDeleteMessage as GroupDeleteMessageTsProto,
     GroupUpdateMessage as GroupUpdateMessageTsProto,
     JitsiJwtAnswer,
@@ -49,9 +53,7 @@ import {
     ServerToClientMessage as ServerToClientMessageTsProto,
     SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
     SetPlayerVariableMessage_Scope,
-    SpaceFilterMessage,
     TokenExpiredMessage,
-    UnwatchSpaceMessage,
     UpdateSpaceFilterMessage,
     UpdateSpaceMetadataMessage,
     UpdateSpaceUserMessage,
@@ -61,14 +63,14 @@ import {
     UserLeftMessage as UserLeftMessageTsProto,
     UserMovedMessage as UserMovedMessageTsProto,
     ViewportMessage as ViewportMessageTsProto,
-    WatchSpaceMessage,
     WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
     WorldConnectionMessage,
-    XmppSettingsMessage,
-    FollowRequestMessage,
-    FollowConfirmationMessage,
-    FollowAbortMessage,
     TurnCredentialsAnswer,
+    SpaceFilterMessage,
+    WatchSpaceMessage,
+    UnwatchSpaceMessage,
+    PublicEvent,
+    PrivateEvent,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -110,13 +112,14 @@ import type {
     ViewportInterface,
     WebRtcSignalReceivedMessageInterface,
 } from "./ConnexionModels";
+import { localUserStore } from "./LocalUserStore";
 
 // This must be greater than IoSocketController's PING_INTERVAL
 const manualPingDelay = 100000;
 
 export class RoomConnection implements RoomConnection {
     private static websocketFactory: null | ((url: string) => any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
-    private readonly socket: WebSocket;
+    public readonly socket: WebSocket;
     private userId: number | null = null;
     private closed = false;
     private tags: string[] = [];
@@ -189,8 +192,6 @@ export class RoomConnection implements RoomConnection {
     public readonly playerDetailsUpdatedMessageStream = this._playerDetailsUpdatedMessageStream.asObservable();
     private readonly _connectionErrorStream = new Subject<CloseEvent>();
     public readonly connectionErrorStream = this._connectionErrorStream.asObservable();
-    private readonly _xmppSettingsMessageStream = new BehaviorSubject<XmppSettingsMessage | undefined>(undefined);
-    public readonly xmppSettingsMessageStream = this._xmppSettingsMessageStream.asObservable();
     // If this timeout triggers, we consider the connection is lost (no ping received)
     private timeout: ReturnType<typeof setInterval> | undefined = undefined;
     private readonly _moveToPositionMessageStream = new Subject<MoveToPositionMessageProto>();
@@ -231,6 +232,13 @@ export class RoomConnection implements RoomConnection {
     public readonly askMutedMessage = this._askMutedMessage.asObservable();
     private readonly _askMutedVideoMessage = new Subject<AskMutedVideoMessage>();
     public readonly askMutedVideoMessage = this._askMutedVideoMessage.asObservable();
+    private readonly _proximityPrivateMessageEvent = new Subject<PrivateEvent>();
+    public readonly proximityPrivateMessageEvent = this._proximityPrivateMessageEvent.asObservable();
+    private readonly _proximityPublicMessageEvent = new Subject<PublicEvent>();
+    public readonly proximityPublicMessageEvent = this._proximityPublicMessageEvent.asObservable();
+    private readonly _typingProximityEvent = new Subject<PublicEvent>();
+    public readonly typingProximityEvent = this._typingProximityEvent.asObservable();
+
     private queries = new Map<
         number,
         {
@@ -292,6 +300,8 @@ export class RoomConnection implements RoomConnection {
             url += "&lastCommandId=" + lastCommandId;
         }
         url += "&version=" + apiVersionHash;
+        url += "&chatID=" + localUserStore.getChatId();
+        url += "&roomName=" + gameManager.currentStartedRoom.roomName;
 
         if (RoomConnection.websocketFactory) {
             this.socket = RoomConnection.websocketFactory(url);
@@ -443,7 +453,8 @@ export class RoomConnection implements RoomConnection {
                                 currentLiveStreamingNameStore.set(undefined);
                                 const scene = gameManager.getCurrentGameScene();
                                 scene.broadcastService.leaveSpace(subMessage.kickOffMessage.spaceName);
-                                iframeListener.sendLeaveMucEventToChatIframe(`${scene.roomUrl}/${slugify(name)}`);
+
+                                void iframeListener.sendLeaveMucEventToChatIframe(`${scene.roomUrl}/${slugify(name)}`);
                                 chatZoneLiveStore.set(false);
                                 break;
                             }
@@ -556,8 +567,8 @@ export class RoomConnection implements RoomConnection {
                             companionTexture: roomJoinedMessage.companionTexture,
                             playerVariables,
                             commandsToApply,
-                            webrtcUserName: roomJoinedMessage.webrtcUserName,
-                            webrtcPassword: roomJoinedMessage.webrtcPassword,
+                            webRtcUserName: roomJoinedMessage.webRtcUserName,
+                            webRtcPassword: roomJoinedMessage.webRtcPassword,
                             applications: applications,
                         } as RoomJoinedMessageInterface,
                     });
@@ -605,12 +616,13 @@ export class RoomConnection implements RoomConnection {
                     this._webRtcSignalToClientMessageStream.next({
                         userId: message.webRtcSignalToClientMessage.userId,
                         signal: JSON.parse(message.webRtcSignalToClientMessage.signal),
-                        webRtcUser: message.webRtcSignalToClientMessage.webrtcUserName
-                            ? message.webRtcSignalToClientMessage.webrtcUserName
+                        webRtcUser: message.webRtcSignalToClientMessage.webRtcUserName
+                            ? message.webRtcSignalToClientMessage.webRtcUserName
                             : undefined,
-                        webRtcPassword: message.webRtcSignalToClientMessage.webrtcPassword
-                            ? message.webRtcSignalToClientMessage.webrtcPassword
+                        webRtcPassword: message.webRtcSignalToClientMessage.webRtcPassword
+                            ? message.webRtcSignalToClientMessage.webRtcPassword
                             : undefined,
+                        webRtcSpaceName: message.webRtcSignalToClientMessage.webRtcSpaceName ?? undefined,
                     });
                     break;
                 }
@@ -618,12 +630,13 @@ export class RoomConnection implements RoomConnection {
                     this._webRtcScreenSharingSignalToClientMessageStream.next({
                         userId: message.webRtcScreenSharingSignalToClientMessage.userId,
                         signal: JSON.parse(message.webRtcScreenSharingSignalToClientMessage.signal),
-                        webRtcUser: message.webRtcScreenSharingSignalToClientMessage.webrtcUserName
-                            ? message.webRtcScreenSharingSignalToClientMessage.webrtcUserName
+                        webRtcUser: message.webRtcScreenSharingSignalToClientMessage.webRtcUserName
+                            ? message.webRtcScreenSharingSignalToClientMessage.webRtcUserName
                             : undefined,
-                        webRtcPassword: message.webRtcScreenSharingSignalToClientMessage.webrtcPassword
-                            ? message.webRtcScreenSharingSignalToClientMessage.webrtcPassword
+                        webRtcPassword: message.webRtcScreenSharingSignalToClientMessage.webRtcPassword
+                            ? message.webRtcScreenSharingSignalToClientMessage.webRtcPassword
                             : undefined,
+                        webRtcSpaceName: message.webRtcScreenSharingSignalToClientMessage.webRtcSpaceName,
                     });
                     break;
                 }
@@ -631,11 +644,14 @@ export class RoomConnection implements RoomConnection {
                     this._webRtcStartMessageStream.next({
                         userId: message.webRtcStartMessage.userId,
                         initiator: message.webRtcStartMessage.initiator,
-                        webRtcUser: message.webRtcStartMessage.webrtcUserName
-                            ? message.webRtcStartMessage.webrtcUserName
+                        webRtcUser: message.webRtcStartMessage.webRtcUserName
+                            ? message.webRtcStartMessage.webRtcUserName
                             : undefined,
-                        webRtcPassword: message.webRtcStartMessage.webrtcPassword
-                            ? message.webRtcStartMessage.webrtcPassword
+                        webRtcPassword: message.webRtcStartMessage.webRtcPassword
+                            ? message.webRtcStartMessage.webRtcPassword
+                            : undefined,
+                        webRtcSpaceName: message.webRtcStartMessage.webRtcSpaceName
+                            ? message.webRtcStartMessage.webRtcSpaceName
                             : undefined,
                     });
                     break;
@@ -728,10 +744,6 @@ export class RoomConnection implements RoomConnection {
                     this.queries.delete(queryId);
                     break;
                 }
-                case "xmppSettingsMessage": {
-                    this._xmppSettingsMessageStream.next(message.xmppSettingsMessage);
-                    break;
-                }
                 case "mutedMessage": {
                     this._mutedMessage.next(message.mutedMessage);
                     break;
@@ -746,6 +758,29 @@ export class RoomConnection implements RoomConnection {
                 }
                 case "askMutedVideoMessage": {
                     this._askMutedVideoMessage.next(message.askMutedVideoMessage);
+                    break;
+                }
+                case "publicEvent": {
+                    switch (message.publicEvent.spaceEvent?.event?.$case) {
+                        case "spaceMessage": {
+                            this._proximityPublicMessageEvent.next(message.publicEvent);
+                            break;
+                        }
+                        case "spaceIsTyping": {
+                            this._typingProximityEvent.next(message.publicEvent);
+                            break;
+                        }
+                        default: {
+                            // Security check: if we forget a "case", the line below will catch the error at compile-time.
+                            //@ts-ignore
+                            const _exhaustiveCheck: never = message.publicEvent.spaceEvent?.event;
+                            break;
+                        }
+                    }
+                    break;
+                }
+                case "privateEvent": {
+                    this._proximityPrivateMessageEvent.next(message.privateEvent);
                     break;
                 }
                 default: {
@@ -809,6 +844,18 @@ export class RoomConnection implements RoomConnection {
     public emitPlayerStatusChange(availabilityStatus: AvailabilityStatus): void {
         const message = SetPlayerDetailsMessageTsProto.fromPartial({
             availabilityStatus,
+        });
+        this.send({
+            message: {
+                $case: "setPlayerDetailsMessage",
+                setPlayerDetailsMessage: message,
+            },
+        });
+    }
+
+    public emitPlayerChatID(chatID: string): void {
+        const message = SetPlayerDetailsMessageTsProto.fromPartial({
+            chatID,
         });
         this.send({
             message: {
@@ -1339,7 +1386,7 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitAskPosition(uuid: string, playUri: string) {
-        const bytes = ClientToServerMessageTsProto.encode({
+        this.send({
             message: {
                 $case: "askPositionMessage",
                 askPositionMessage: {
@@ -1347,42 +1394,34 @@ export class RoomConnection implements RoomConnection {
                     playUri,
                 },
             },
-        }).finish();
-
-        this.socket.send(bytes);
+        });
     }
 
     public emitAddSpaceFilter(filter: AddSpaceFilterMessage) {
-        const bytes = ClientToServerMessageTsProto.encode({
+        this.send({
             message: {
                 $case: "addSpaceFilterMessage",
                 addSpaceFilterMessage: filter,
             },
-        }).finish();
-
-        this.socket.send(bytes);
+        });
     }
 
     public emitUpdateSpaceFilter(filter: UpdateSpaceFilterMessage) {
-        const bytes = ClientToServerMessageTsProto.encode({
+        this.send({
             message: {
                 $case: "updateSpaceFilterMessage",
                 updateSpaceFilterMessage: filter,
             },
-        }).finish();
-
-        this.socket.send(bytes);
+        });
     }
 
     public emitRemoveSpaceFilter(filter: RemoveSpaceFilterMessage) {
-        const bytes = ClientToServerMessageTsProto.encode({
+        this.send({
             message: {
                 $case: "removeSpaceFilterMessage",
                 removeSpaceFilterMessage: filter,
             },
-        }).finish();
-
-        this.socket.send(bytes);
+        });
     }
 
     public async queryJitsiJwtToken(jitsiRoom: string): Promise<JitsiJwtAnswer> {
@@ -1472,6 +1511,23 @@ export class RoomConnection implements RoomConnection {
                 $case: "spaceFilterLiveStreaming",
                 spaceFilterLiveStreaming: {},
             },
+        };
+        this.send({
+            message: {
+                $case: "watchSpaceMessage",
+                watchSpaceMessage: WatchSpaceMessage.fromPartial({
+                    spaceName,
+                    spaceFilter,
+                }),
+            },
+        });
+        return spaceFilter;
+    }
+    public emitUserJoinSpace(spaceName: string) {
+        const spaceFilter: SpaceFilterMessage = {
+            filterName: "",
+            spaceName,
+            filter: undefined,
         };
         this.send({
             message: {
@@ -1601,6 +1657,19 @@ export class RoomConnection implements RoomConnection {
         return answer.embeddableWebsiteAnswer;
     }
 
+    public async queryTags(searchText: string): Promise<string[]> {
+        const answer = await this.query({
+            $case: "searchTagsQuery",
+            searchTagsQuery: {
+                searchText,
+            },
+        });
+        if (answer.$case !== "searchTagsAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.searchTagsAnswer.tags;
+    }
+
     public async queryMembers(searchText: string): Promise<Member[]> {
         const answer = await this.query({
             $case: "searchMemberQuery",
@@ -1628,6 +1697,32 @@ export class RoomConnection implements RoomConnection {
             throw new Error("Member is undefined.");
         }
         return answer.getMemberAnswer.member;
+    }
+
+    public async queryChatMembers(searchText: string): Promise<ChatMembersAnswer> {
+        const answer = await this.query({
+            $case: "chatMembersQuery",
+            chatMembersQuery: {
+                searchText,
+            },
+        });
+        if (answer.$case !== "chatMembersAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.chatMembersAnswer;
+    }
+
+    public emitUpdateChatId(email: string, chatId: string) {
+        if (chatId && email)
+            this.send({
+                message: {
+                    $case: "updateChatIdMessage",
+                    updateChatIdMessage: {
+                        email,
+                        chatId,
+                    },
+                },
+            });
     }
 
     public emitMuteParticipantIdSpace(spaceName: string, participantId: string) {
@@ -1718,6 +1813,69 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    public emitProximityPublicMessage(spaceName: string, message: string) {
+        if (!this.userId) {
+            console.warn("No user id defined to send a message to mute every video!");
+            return;
+        }
+
+        this.send({
+            message: {
+                $case: "publicEvent",
+                publicEvent: {
+                    spaceName,
+                    spaceEvent: {
+                        event: {
+                            $case: "spaceMessage",
+                            spaceMessage: {
+                                message,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    public emitProximityPrivateMessage(spaceName: string, message: string, receiverUserId: number) {
+        if (!this.userId) {
+            console.warn("No user id defined to send a message to mute every video!");
+            return;
+        }
+
+        this.send({
+            message: {
+                $case: "privateEvent",
+                privateEvent: {
+                    spaceName,
+                    receiverUserId,
+                    spaceMessage: {
+                        message,
+                    },
+                },
+            },
+        });
+    }
+
+    public emitTypingProximityMessage(spaceName: string, isTyping: boolean) {
+        this.send({
+            message: {
+                $case: "publicEvent",
+                publicEvent: {
+                    spaceName,
+                    spaceEvent: {
+                        event: {
+                            $case: "spaceIsTyping",
+                            spaceIsTyping: {
+                                isTyping,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+    }
+
     private toPositionMessage(
         x: number,
         y: number,
@@ -1776,7 +1934,6 @@ export class RoomConnection implements RoomConnection {
 
         return {
             userId: message.userId,
-            userJid: message.userJid,
             name: message.name,
             characterTextures,
             visitCardUrl: message.visitCardUrl,
@@ -1786,6 +1943,7 @@ export class RoomConnection implements RoomConnection {
             userUuid: message.userUuid,
             outlineColor: message.hasOutline ? message.outlineColor : undefined,
             variables: variables,
+            chatID: message.chatID,
         };
     }
 
@@ -1825,13 +1983,15 @@ export class RoomConnection implements RoomConnection {
         this._userJoinedMessageStream.complete();
         this._userLeftMessageStream.complete();
         this._refreshRoomMessageStream.complete();
+        this._followRequestMessageStream.complete();
+        this._followConfirmationMessageStream.complete();
+        this._followAbortMessageStream.complete();
         this._itemEventMessageStream.complete();
         this._emoteEventMessageStream.complete();
         this._variableMessageStream.complete();
         this._editMapCommandMessageStream.complete();
         this._playerDetailsUpdatedMessageStream.complete();
         this._connectionErrorStream.complete();
-        this._xmppSettingsMessageStream.complete();
         this._moveToPositionMessageStream.complete();
         this._joinMucRoomMessageStream.complete();
         this._leaveMucRoomMessageStream.complete();
@@ -1841,7 +2001,6 @@ export class RoomConnection implements RoomConnection {
         this._updateSpaceMetadataMessageStream.complete();
         this._megaphoneSettingsMessageStream.complete();
         this._receivedEventMessageStream.complete();
-        this._updateSpaceMetadataMessageStream.complete();
         this._muteMicrophoneMessage.complete();
         this._muteVideoMessage.complete();
         this._muteMicrophoneEverybodyMessage.complete();
@@ -1852,6 +2011,9 @@ export class RoomConnection implements RoomConnection {
         this._mutedVideoMessage.complete();
         this._askMutedMessage.complete();
         this._askMutedVideoMessage.complete();
+        this._proximityPrivateMessageEvent.complete();
+        this._proximityPublicMessageEvent.complete();
+        this._typingProximityEvent.complete();
     }
 
     private goToSelectYourWokaScene(): void {

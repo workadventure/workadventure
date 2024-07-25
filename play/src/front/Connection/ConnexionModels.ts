@@ -16,7 +16,6 @@ export interface MessageUserMovedInterface {
 
 export interface MessageUserJoined {
     userId: number;
-    userJid: string;
     name: string;
     characterTextures: WokaTextureDescriptionInterface[];
     position: PositionMessage;
@@ -26,6 +25,7 @@ export interface MessageUserJoined {
     userUuid: string;
     outlineColor: number | undefined;
     variables: Map<string, unknown>;
+    chatID?: string;
 }
 
 export interface PositionInterface {
@@ -54,6 +54,7 @@ export interface WebRtcSignalReceivedMessageInterface {
     signal: SignalData;
     webRtcUser: string | undefined;
     webRtcPassword: string | undefined;
+    webRtcSpaceName: string | undefined;
 }
 
 export interface ViewportInterface {
@@ -77,8 +78,8 @@ export interface RoomJoinedMessageInterface {
     characterTextures: WokaTextureDescriptionInterface[];
     companionTexture?: CompanionTextureDescriptionInterface;
     commandsToApply?: EditMapCommandMessage[];
-    webrtcUserName: string;
-    webrtcPassword: string;
+    webRtcUserName: string;
+    webRtcPassword: string;
     applications?: Array<ApplicationDefinitionInterface> | undefined;
 }
 

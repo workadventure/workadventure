@@ -8,7 +8,6 @@ import { WokaBodyPartOrder, CustomWokaPreviewer, WokaBodyPart } from "../Compone
 import type { WokaBodyPartSlotConfig } from "../Components/CustomizeWoka/WokaBodyPartSlot";
 import { WokaBodyPartSlot } from "../Components/CustomizeWoka/WokaBodyPartSlot";
 import { Button } from "../Components/Ui/Button";
-import { areCharacterTexturesValid } from "../../Connection/LocalUser";
 import type { WokaTextureDescriptionInterface } from "../Entity/PlayerTextures";
 import { Loader } from "../Components/Loader";
 import { localUserStore } from "../../Connection/LocalUserStore";
@@ -20,6 +19,7 @@ import { IconButton, IconButtonEvent } from "../Components/Ui/IconButton";
 import { selectCharacterCustomizeSceneVisibleStore } from "../../Stores/SelectCharacterStore";
 import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
 import { connectionManager } from "../../Connection/ConnectionManager";
+import { areCharacterTexturesValid } from "../../Connection/LocalUserUtils";
 import { SelectCharacterSceneName } from "./SelectCharacterScene";
 import { AbstractCharacterScene } from "./AbstractCharacterScene";
 import { EnableCameraSceneName } from "./EnableCameraScene";

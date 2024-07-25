@@ -17,6 +17,7 @@ const menu: DeepPartial<Translation["menu"]> = {
     },
     visitCard: {
         close: "Fermer",
+        sendMessage: "Envoyer un message",
     },
     profile: {
         edit: {

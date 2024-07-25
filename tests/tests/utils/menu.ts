@@ -1,12 +1,9 @@
 import {expect, Page} from "@playwright/test";
-import {expectInViewport} from "./viewport";
 
 class Menu {
     async openChat(page: Page) {
         await page.click('button.chat-btn');
-        await expectInViewport('#chatWindow', page);
-        await expect(page.locator('button.chat-btn')).toHaveClass(/border-top-light/);
-        await expect(page.locator('#chatWindow')).toHaveClass(/show/);
+        await expect(page.locator('#chat.chatWindow')).toBeVisible();
     }
 
     async openMapEditor(page: Page) {
@@ -14,7 +11,14 @@ class Menu {
         await expect(await page.getByRole('button', {name: 'toggle-map-editor'}).first()).toHaveClass(/border-top-light/);
     }
 
-    async openMenu(page: Page) {
+    async openMenu(page: Page, isMobile: boolean) {
+        if(isMobile){
+            await expect(page.locator('button#burgerIcon')).toBeVisible();
+            const mobileMenuVisible = await page.locator('button#burgerIcon img.tw-rotate-0').isVisible();
+            if(mobileMenuVisible){
+                await page.click('button#burgerIcon');
+            }
+        }
         await page.click('#menuIcon img:first-child');
         await expect(await page.locator('#menuIcon')).toHaveClass(/border-top-light/);
     }

@@ -14,6 +14,8 @@
     export let onBlur = () => {};
     export let handleChange = () => {};
     export let testId: string | undefined = undefined;
+    export let queryOptions: undefined | ((filterText: string) => Promise<{ value: string; label: string }[]>) =
+        undefined;
 
     let filterText = "";
 
@@ -45,6 +47,7 @@
         id="selector"
         on:filter={handleFilter}
         bind:filterText
+        loadOptions={queryOptions}
         on:change={_handleChange}
         on:input={handleChange}
         on:select={handleChange}

@@ -1,5 +1,0 @@
-{
-  "spec_dir": "tests",
-  "spec_files": ["**/*[tT]est.ts"],
-  "stopSpecOnExpectationFailure": false
-}

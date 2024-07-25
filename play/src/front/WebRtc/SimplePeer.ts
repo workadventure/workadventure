@@ -24,6 +24,7 @@ export interface UserSimplePeerInterface {
     initiator?: boolean;
     webRtcUser?: string | undefined;
     webRtcPassword?: string | undefined;
+    webRtcSpaceName?: string | undefined;
 }
 
 export type RemotePeer = VideoPeer | ScreenSharingPeer;
@@ -168,7 +169,13 @@ export class SimplePeer {
         this.lastWebrtcUserName = user.webRtcUser;
         this.lastWebrtcPassword = user.webRtcPassword;
 
-        const peer = new VideoPeer(user, user.initiator ? user.initiator : false, player, this.Connection);
+        const peer = new VideoPeer(
+            user,
+            user.initiator ? user.initiator : false,
+            player,
+            this.Connection,
+            user.webRtcSpaceName
+        );
 
         peer.toClose = false;
         // When a connection is established to a video stream, and if a screen sharing is taking place,

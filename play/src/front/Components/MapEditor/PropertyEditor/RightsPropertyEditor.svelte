@@ -1,11 +1,11 @@
 <script lang="ts">
-    import { InfoIcon } from "svelte-feather-icons";
     import { RestrictedRightsPropertyData } from "@workadventure/map-editor";
     import { createEventDispatcher } from "svelte";
-    import InputTags from "../../Input/InputTags.svelte";
+    import InputRoomTags from "../../Input/InputRoomTags.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import { InputTagOption, toTags } from "../../Input/InputTagOption";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
+    import { IconInfoCircle } from "@wa-icons";
 
     export let restrictedRightsPropertyData: RestrictedRightsPropertyData;
 
@@ -40,10 +40,10 @@
     </span>
     <span slot="content">
         <p class="help-text">
-            <InfoIcon size="18" />
+            <IconInfoCircle font-size="18" />
             {$LL.mapEditor.properties.restrictedRightsProperties.rightWriteDescription()}
         </p>
-        <InputTags
+        <InputRoomTags
             label={$LL.mapEditor.properties.restrictedRightsProperties.rightWriteTitle()}
             options={_tag}
             bind:value={writeTags}
@@ -51,10 +51,10 @@
             testId="writeTags"
         />
         <p class="help-text">
-            <InfoIcon size="18" />
+            <IconInfoCircle font-size="18" />
             {$LL.mapEditor.properties.restrictedRightsProperties.rightReadDescription()}
         </p>
-        <InputTags
+        <InputRoomTags
             label={$LL.mapEditor.properties.restrictedRightsProperties.rightReadTitle()}
             options={_tag}
             bind:value={readTags}

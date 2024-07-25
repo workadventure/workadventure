@@ -5,7 +5,6 @@
         recommendedActiveNotification,
     } from "../../../../Stores/AvailabilityStatusModalsStore";
     import LL from "../../../../../i18n/i18n-svelte";
-    import { iframeListener } from "../../../../Api/IframeListener";
     import { helpNotificationSettingsVisibleStore } from "../../../../Stores/HelpSettingsStore";
     import { localUserStore } from "../../../../Connection/LocalUserStore";
     import ConfirmationModal from "./ConfirmationModal.svelte";
@@ -16,7 +15,6 @@
                 .then((response) => {
                     if (response === "granted") {
                         localUserStore.setNotification(true);
-                        iframeListener.sendSettingsToChatIframe();
                         recommendedActiveNotification.close();
                     } else {
                         helpNotificationSettingsVisibleStore.set(true);
@@ -35,7 +33,7 @@
 </script>
 
 <ConfirmationModal props={confirmationModalProps}>
-    <div id="notificationPermission" class="tw-grow tw-text-center tw-text-xl ">
+    <div id="notificationPermission" class="tw-grow tw-text-center tw-text-xl">
         {$LL.statusModal.allowNotification()}
     </div>
 </ConfirmationModal>

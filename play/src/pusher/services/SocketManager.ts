@@ -1,43 +1,46 @@
 import Debug from "debug";
 import type { compressors } from "hyper-express";
 import {
+    AddSpaceFilterMessage,
     AdminMessage,
     AdminPusherToBackMessage,
     AdminRoomMessage,
+    BackToPusherSpaceMessage,
     BanMessage,
+    BanPlayerMessage,
+    ChatMembersAnswer,
+    ChatMembersQuery,
     EmoteEventMessage,
     ErrorApiData,
     ErrorMessage,
     ErrorScreenMessage,
+    GetMemberAnswer,
+    GetMemberQuery,
     JoinRoomMessage,
-    MucRoomDefinition,
+    MegaphoneStateMessage,
+    MemberData,
+    PartialSpaceUser,
     PlayerDetailsUpdatedMessage,
     PlayGlobalMessage,
+    PrivateEvent,
     PusherToBackMessage,
+    PusherToBackSpaceMessage,
+    QueryMessage,
+    RemoveSpaceFilterMessage,
     ReportPlayerMessage,
+    SearchMemberAnswer,
+    SearchTagsAnswer,
+    SearchMemberQuery,
+    SearchTagsQuery,
     ServerToAdminClientMessage,
     ServerToClientMessage,
-    UserMovesMessage,
-    ViewportMessage,
-    XmppSettingsMessage,
-    PusherToBackSpaceMessage,
-    BackToPusherSpaceMessage,
-    PartialSpaceUser,
-    AddSpaceFilterMessage,
-    UpdateSpaceFilterMessage,
-    RemoveSpaceFilterMessage,
     SetPlayerDetailsMessage,
     SpaceFilterMessage,
-    WatchSpaceMessage,
-    QueryMessage,
-    MegaphoneStateMessage,
+    UpdateSpaceFilterMessage,
     UpdateSpaceMetadataMessage,
-    BanPlayerMessage,
-    SearchMemberQuery,
-    SearchMemberAnswer,
-    MemberData,
-    GetMemberQuery,
-    GetMemberAnswer,
+    UserMovesMessage,
+    ViewportMessage,
+    WatchSpaceMessage,
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import axios, { AxiosResponse, isAxiosError } from "axios";
@@ -48,7 +51,7 @@ import type { BackSpaceConnection, SocketData } from "../models/Websocket/Socket
 import { ProtobufUtils } from "../models/Websocket/ProtobufUtils";
 import type { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../models/Zone";
 import type { AdminConnection, AdminSocketData } from "../models/Websocket/AdminSocketData";
-import { EJABBERD_DOMAIN, EMBEDDED_DOMAINS_WHITELIST } from "../enums/EnvironmentVariable";
+import { EMBEDDED_DOMAINS_WHITELIST } from "../enums/EnvironmentVariable";
 import { Space } from "../models/Space";
 import { UpgradeFailedData } from "../controllers/IoSocketController";
 import { emitInBatch } from "./IoSocketHelpers";
@@ -216,7 +219,6 @@ export class SocketManager implements ZoneEventListener {
         try {
             const joinRoomMessage: JoinRoomMessage = {
                 userUuid: socketData.userUuid,
-                userJid: socketData.userJid,
                 IPAddress: socketData.ipAddress,
                 roomId: socketData.roomId,
                 name: socketData.name,
@@ -233,6 +235,7 @@ export class SocketManager implements ZoneEventListener {
                 visitCardUrl: socketData.visitCardUrl ?? "", // TODO: turn this into an optional field
                 userRoomToken: socketData.userRoomToken ?? "", // TODO: turn this into an optional field
                 lastCommandId: socketData.lastCommandId ?? "", // TODO: turn this into an optional field
+                chatID: socketData.chatID,
             };
 
             debug("Calling joinRoom '" + socketData.roomId + "'");
@@ -395,7 +398,7 @@ export class SocketManager implements ZoneEventListener {
                                     const updateSpaceUserMessage = message.message.updateSpaceUserMessage;
                                     const space = this.spaces.get(updateSpaceUserMessage.spaceName);
                                     if (space && updateSpaceUserMessage.user) {
-                                        space.localUpdateUser(updateSpaceUserMessage.user);
+                                        space.localUpdateUser(updateSpaceUserMessage.user, socketData.world);
                                     }
                                     break;
                                 }
@@ -551,6 +554,33 @@ export class SocketManager implements ZoneEventListener {
                                     });
                                     break;
                                 }
+                                case "publicEvent": {
+                                    debug("[space] publicEvent received");
+                                    spaceStreamToBack.write({
+                                        message: {
+                                            $case: "publicEvent",
+                                            publicEvent: {
+                                                spaceName: message.message.publicEvent.spaceName,
+                                                spaceEvent: message.message.publicEvent.spaceEvent,
+                                                senderUserId: socketData.userId,
+                                            },
+                                        },
+                                    });
+                                    break;
+                                }
+                                case "privateEvent": {
+                                    debug("[space] privateEvent received");
+                                    spaceStreamToBack.write({
+                                        message: {
+                                            $case: "privateEvent",
+                                            privateEvent: {
+                                                ...message.message.privateEvent,
+                                                senderUserId: socketData.userId,
+                                            },
+                                        },
+                                    });
+                                    break;
+                                }
                                 default: {
                                     const _exhaustiveCheck: never = message.message;
                                 }
@@ -701,16 +731,21 @@ export class SocketManager implements ZoneEventListener {
             $case: "setPlayerDetailsMessage",
             setPlayerDetailsMessage: playerDetailsMessage,
         };
+
         socketManager.forwardMessageToBack(client, pusherToBackMessage);
 
-        if (socketData.spaceUser.availabilityStatus !== playerDetailsMessage.availabilityStatus) {
+        if (
+            socketData.spaceUser.availabilityStatus !== playerDetailsMessage.availabilityStatus ||
+            socketData.spaceUser.chatID !== playerDetailsMessage.chatID
+        ) {
             socketData.spaceUser.availabilityStatus = playerDetailsMessage.availabilityStatus;
             const partialSpaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
                 availabilityStatus: playerDetailsMessage.availabilityStatus,
                 id: socketData.userId,
+                chatID: playerDetailsMessage.chatID,
             });
             socketData.spaces.forEach((space) => {
-                space.updateUser(partialSpaceUser);
+                space.updateUser(partialSpaceUser, socketData.world);
             });
         }
     }
@@ -1130,38 +1165,6 @@ export class SocketManager implements ZoneEventListener {
         this.forwardMessageToBack(client, message);
     }
 
-    emitXMPPSettings(client: Socket): void {
-        const socketData = client.getUserData();
-        const xmppSettings: XmppSettingsMessage = {
-            conferenceDomain: "conference." + EJABBERD_DOMAIN,
-            rooms: socketData.mucRooms.map((definition: MucRoomDefinition) => {
-                if (!definition.name || !definition.url || !definition.type) {
-                    throw new Error("Name URL and type cannot be empty!");
-                }
-                return {
-                    name: definition.name,
-                    url: definition.url,
-                    type: definition.type,
-                    subscribe: definition.subscribe,
-                };
-            }),
-            jabberId: socketData.jabberId,
-            jabberPassword: socketData.jabberPassword ?? "",
-        };
-
-        if (!socketData.disconnecting) {
-            client.send(
-                ServerToClientMessage.encode({
-                    message: {
-                        $case: "xmppSettingsMessage",
-                        xmppSettingsMessage: xmppSettings,
-                    },
-                }).finish(),
-                true
-            );
-        }
-    }
-
     handleAddSpaceFilterMessage(client: Socket, addSpaceFilterMessage: AddSpaceFilterMessage) {
         const newFilter = addSpaceFilterMessage.spaceFilterMessage;
         const socketData = client.getUserData();
@@ -1169,13 +1172,11 @@ export class SocketManager implements ZoneEventListener {
             const space = socketData.spaces.find((space) => space.name === newFilter.spaceName);
             if (space) {
                 space.handleAddFilter(client, addSpaceFilterMessage);
-                let spacesFilter = socketData.spacesFilters.get(space.name);
+                let spacesFilter = socketData.spacesFilters.get(space.name) || [];
                 if (!spacesFilter) {
-                    spacesFilter = [newFilter];
-                } else {
-                    spacesFilter.push(newFilter);
+                    spacesFilter = [...spacesFilter, newFilter];
+                    socketData.spacesFilters.set(space.name, spacesFilter);
                 }
-                socketData.spacesFilters.set(space.name, spacesFilter);
             }
         }
     }
@@ -1233,7 +1234,7 @@ export class SocketManager implements ZoneEventListener {
             id: socketData.userId,
         });
         socketData.spaces.forEach((space) => {
-            space.updateUser(partialSpaceUser);
+            space.updateUser(partialSpaceUser, socketData.world);
         });
     }
 
@@ -1246,7 +1247,7 @@ export class SocketManager implements ZoneEventListener {
             id: socketData.userId,
         });
         socketData.spaces.forEach((space) => {
-            space.updateUser(partialSpaceUser);
+            space.updateUser(partialSpaceUser, socketData.world);
         });
     }
 
@@ -1259,7 +1260,7 @@ export class SocketManager implements ZoneEventListener {
             id: socketData.userId,
         });
         socketData.spaces.forEach((space) => {
-            space.updateUser(partialSpaceUser);
+            space.updateUser(partialSpaceUser, socketData.world);
         });
     }
 
@@ -1274,7 +1275,7 @@ export class SocketManager implements ZoneEventListener {
         socketData.spaces
             .filter((space) => !megaphoneStateMessage.spaceName || space.name === megaphoneStateMessage.spaceName)
             .forEach((space) => {
-                space.updateUser(partialSpaceUser);
+                space.updateUser(partialSpaceUser, socketData.world);
             });
     }
 
@@ -1286,7 +1287,7 @@ export class SocketManager implements ZoneEventListener {
                 jitsiParticipantId,
                 id: socketData.userId,
             });
-            space.updateUser(partialSpaceUser);
+            space.updateUser(partialSpaceUser, socketData.world);
         }
     }
 
@@ -1563,6 +1564,14 @@ export class SocketManager implements ZoneEventListener {
         };
     }
 
+    async handleSearchTagsQuery(client: Socket, searchTagsQuery: SearchTagsQuery): Promise<SearchTagsAnswer> {
+        const { roomId } = client.getUserData();
+        const tags = await adminService.searchTags(roomId, searchTagsQuery.searchText);
+        return {
+            tags,
+        };
+    }
+
     async handleGetMemberQuery(getMemberQuery: GetMemberQuery): Promise<GetMemberAnswer> {
         const memberFromApi = await adminService.getMember(getMemberQuery.uuid);
         return {
@@ -1571,8 +1580,60 @@ export class SocketManager implements ZoneEventListener {
                 name: memberFromApi.name ?? undefined,
                 email: memberFromApi.email ?? undefined,
                 visitCardUrl: memberFromApi.visitCardUrl ?? undefined,
+                chatID: memberFromApi.chatID ?? undefined,
             },
         };
+    }
+
+    async handleChatMembersQuery(client: Socket, chatMemberQuery: ChatMembersQuery): Promise<ChatMembersAnswer> {
+        const { roomId } = client.getUserData();
+        const { total, members } = await adminService.getWorldChatMembers(roomId, chatMemberQuery.searchText);
+        return {
+            total,
+            members,
+        };
+    }
+
+    handleUpdateChatId(email: string, chatId: string): void {
+        try {
+            adminService.updateChatId(email, chatId);
+        } catch (e) {
+            console.error("SocketManager => handleUpdateChatId => error while updating chat id", e);
+        }
+    }
+
+    // handle the public event for proximity message
+    handlePublicEvent(client: Socket, spaceName: string, message: PusherToBackMessage["message"]) {
+        const socketData = client.getUserData();
+        const space = socketData.spaces.find((space) => space.name === spaceName);
+        if (!space) {
+            this.forwardMessageToBack(client, message);
+            return;
+        }
+        if (message?.$case !== "publicEvent") return;
+        space.sendPublicEvent({
+            ...message.publicEvent,
+            senderUserId: socketData.userId,
+        });
+    }
+
+    handlePrivateEvent(client: Socket, spaceName: string, message: PusherToBackMessage["message"]) {
+        const socketData = client.getUserData();
+        const space = socketData.spaces.find((space) => space.name === spaceName);
+        if (!space) {
+            this.forwardMessageToBack(client, message);
+            return;
+        }
+
+        if (message?.$case !== "privateEvent") return;
+        if (!socketData.userId) {
+            throw new Error("User id not found");
+        }
+        const newPrivateEvent: PrivateEvent = {
+            ...message.privateEvent,
+            receiverUserId: socketData.userId,
+        };
+        space.sendPrivateEvent(newPrivateEvent);
     }
 }
 

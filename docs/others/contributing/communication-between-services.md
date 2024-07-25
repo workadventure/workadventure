@@ -39,7 +39,7 @@ graph LR
     B -->|ServerToClientMessage over WS| A
     B -->|RoomManager GRPC service| C[Back]
     C -->|MapStorage GRPC service| D[Map-Storage]
-    B -->|XMPP over WS| E[XMPP server]
+    B -->|Matrix protocol over HTTP| E[Matrix server]
     A -->|Ajax request to load maps| D
     C --> F[Redis]
 ```

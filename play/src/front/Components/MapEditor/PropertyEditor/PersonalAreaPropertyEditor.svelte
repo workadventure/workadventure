@@ -1,17 +1,16 @@
 <script lang="ts">
     import { createEventDispatcher, onMount } from "svelte";
-    import { InfoIcon } from "svelte-feather-icons";
     import { PersonalAreaAccessClaimMode, PersonalAreaPropertyData } from "@workadventure/map-editor";
-    // eslint-disable-next-line import/no-unresolved
     import { closeModal, openModal } from "svelte-modals";
     import LL from "../../../../i18n/i18n-svelte";
-    import InputTags from "../../Input/InputTags.svelte";
+    import InputRoomTags from "../../Input/InputRoomTags.svelte";
     import MemberAutocomplete from "../../Input/MemberAutocomplete.svelte";
     import { InputTagOption, toTags } from "../../Input/InputTagOption";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { mapEditorSelectedAreaPreviewStore } from "../../../Stores/MapEditorStore";
     import ActionPopupOnPersonalAreaWithEntities from "../ActionPopupOnPersonalAreaWithEntities.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
+    import { IconInfoCircle } from "@wa-icons";
 
     export let personalAreaPropertyData: PersonalAreaPropertyData;
 
@@ -122,7 +121,7 @@
         {#if personalAreaPropertyData !== undefined}
             <div class="tw-overflow-y-auto tw-overflow-x-hidden tw-flex tw-flex-col tw-gap-2">
                 <p class="help-text">
-                    <InfoIcon size="18" />
+                    <IconInfoCircle font-size="18" />
                     {$LL.mapEditor.properties.personalAreaConfiguration.description()}
                 </p>
                 {#if personalAreaOwner}
@@ -159,7 +158,7 @@
                             {/each}
                         </select>
                         <p class="help-text">
-                            <InfoIcon size="18" />
+                            <IconInfoCircle font-size="18" />
                             {$LL.mapEditor.properties.personalAreaConfiguration[
                                 `${personalAreaPropertyData.accessClaimMode}AccessDescription`
                             ]()}
@@ -176,7 +175,7 @@
                                 on:onSelect={({ detail: selectedUserId }) => setOwnerId(selectedUserId)}
                             />
                         {:else}
-                            <InputTags
+                            <InputRoomTags
                                 label={$LL.mapEditor.properties.personalAreaConfiguration.allowedTags()}
                                 bind:value={_tags}
                                 handleChange={() => handleTagChange(_tags)}

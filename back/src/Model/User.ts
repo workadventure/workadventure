@@ -33,7 +33,6 @@ export class User implements Movable, CustomJsonReplacerInterface {
 
     public constructor(
         public id: number,
-        public userJid: string,
         public readonly uuid: string,
         public readonly isLogged: boolean,
         public readonly IPAddress: string,
@@ -52,7 +51,8 @@ export class User implements Movable, CustomJsonReplacerInterface {
         private outlineColor?: number,
         private voiceIndicatorShown?: boolean,
         public readonly activatedInviteUser?: boolean,
-        public readonly applications?: ApplicationMessage[]
+        public readonly applications?: ApplicationMessage[],
+        public readonly chatID?: string
     ) {
         this.listenedZones = new Set<Zone>();
 
@@ -62,7 +62,6 @@ export class User implements Movable, CustomJsonReplacerInterface {
     public static async create(
         id: number,
         uuid: string,
-        userJid: string,
         isLogged: boolean,
         IPAddress: string,
         position: PointInterface,
@@ -81,7 +80,8 @@ export class User implements Movable, CustomJsonReplacerInterface {
         outlineColor?: number,
         voiceIndicatorShown?: boolean,
         activatedInviteUser?: boolean,
-        applications?: ApplicationMessage[]
+        applications?: ApplicationMessage[],
+        chatID?: string
     ): Promise<User> {
         const playersVariablesRepository = await getPlayersVariablesRepository();
         const variables = new PlayerVariables(uuid, roomUrl, roomGroup, playersVariablesRepository, isLogged);
@@ -89,7 +89,6 @@ export class User implements Movable, CustomJsonReplacerInterface {
 
         return new User(
             id,
-            userJid,
             uuid,
             isLogged,
             IPAddress,
@@ -108,7 +107,8 @@ export class User implements Movable, CustomJsonReplacerInterface {
             outlineColor,
             voiceIndicatorShown,
             activatedInviteUser,
-            applications
+            applications,
+            chatID
         );
     }
 

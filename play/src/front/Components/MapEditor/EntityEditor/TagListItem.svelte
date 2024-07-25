@@ -1,9 +1,9 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
-    import { IconChevronRight } from "@tabler/icons-svelte";
     import { EntityVariant } from "../../../Phaser/Game/MapEditor/Entities/EntityVariant";
     import LL from "../../../../i18n/i18n-svelte";
     import EntityImage from "./EntityItem/EntityImage.svelte";
+    import { IconChevronRight } from "@wa-icons";
 
     export let tag: string;
     export let entitiesPrefabsVariants: EntityVariant[];

@@ -1,16 +1,19 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    // eslint-disable-next-line import/no-unresolved
     import { closeModal } from "svelte-modals";
 
     export let isOpen = false;
 </script>
 
 {#if isOpen}
-    <div class="popup-menu tw-min-h-fit tw-rounded-3xl tw-overflow-visible" transition:fly={{ x: 1000, duration: 500 }}>
+    <div
+        class="popup-menu tw-w-[90%] tw-m-auto tw-left-0 tw-right-0 sm:tw-max-w-[668px] tw-min-h-fit tw-rounded-3xl"
+        transition:fly={{ y: -1000, delay: 0, duration: 300 }}
+    >
         <button
             type="button"
-            class="close-window !tw-bg-transparent !tw-border-none "
+            data-testid="closeModal"
+            class="close-window !tw-bg-transparent !tw-border-none"
             on:click|preventDefault|stopPropagation={closeModal}
             >&times
         </button>
@@ -31,19 +34,16 @@
 <style lang="scss">
     .popup-menu {
         position: absolute;
-        width: 668px;
         height: max-content !important;
-        z-index: 425;
-        word-break: break-all;
+        z-index: 2001;
         pointer-events: auto;
         color: whitesmoke;
         background-color: #1b2a41d9;
         backdrop-filter: blur(40px);
         top: 5%;
-        left: calc(50% - 334px);
 
         .close-window {
-            right: 0px;
+            right: 0;
             border-radius: 15px;
             box-shadow: none !important;
 
@@ -53,15 +53,14 @@
         }
     }
 
-    @media (max-height: 700px) {
+    /*@media (max-height: 700px) {
         .popup-menu {
             height: 100vh !important;
             top: 0;
-
             .footer {
                 position: fixed;
                 bottom: 0;
             }
         }
-    }
+    }*/
 </style>
