@@ -893,10 +893,10 @@
                             <Tooltip text={$LL.actionbar.menu()} />
                         {/if}
 
-                    <button id="menuIcon" class:border-top-light={$menuVisiblilityStore}>
-                        <img draggable="false" src={menuImg} style="padding: 2px" alt={$LL.menu.icon.open.menu()} />
-                    </button>
-                </div>
+                        <button id="menuIcon" class:border-top-light={$menuVisiblilityStore}>
+                            <img draggable="false" src={menuImg} style="padding: 2px" alt={$LL.menu.icon.open.menu()} />
+                        </button>
+                    </div>
 
                     <!-- Calendar integration -->
                     <!-- svelte-ignore a11y-click-events-have-key-events -->

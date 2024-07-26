@@ -124,7 +124,7 @@ import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 import type { AskPositionEvent } from "../../Api/Events/AskPositionEvent";
 import { _newChatMessageSubject, chatVisibilityStore, forceRefreshChatStore } from "../../Stores/ChatStore";
 import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
-import { gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
+import { extensionModuleStore, gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
 import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
@@ -1025,6 +1025,7 @@ export class GameScene extends DirtyScene {
         this.gameMapFrontWrapper?.close();
         this.followManager?.close();
         this.extensionModule?.destroy();
+        extensionModuleStore.set(undefined);
 
         LocalSpaceProviderSingleton.getInstance().destroy();
 
@@ -2064,6 +2065,7 @@ export class GameScene extends DirtyScene {
                 });
                 // TODO change that to check if the calendar synchro is enabled from admin
                 isActivatedStore.set(true);
+                extensionModuleStore.set(this.extensionModule);
             } catch (error) {
                 console.warn("Extension module initialization cancelled", error);
             }

@@ -4,40 +4,16 @@ import { AvailabilityStatus, OauthRefreshToken } from "@workadventure/messages";
 import { subscribe } from "svelte/internal";
 import { Unsubscriber, Updater } from "svelte/store";
 import { CalendarEventInterface } from "@workadventure/shared-utils";
+import { AreaData } from "@workadventure/map-editor";
 import { ExtensionModule, ExtensionModuleOptions } from "../extension-module/extension-module";
+import { notificationPlayingStore } from "../front/Stores/NotificationStore";
 import { TeamsActivity, TeamsAvailability } from "./MSTeamsInterface";
+import TeamsMeetingAreaPropertyEditor from "./components/TeamsMeetingAreaPropertyEditor.svelte";
+import AddTeamsMeetingAreaPropertyButton from "./components/AddTeamsMeetingAreaPropertyButton.svelte";
 
 const MS_GRAPH_ENDPOINT = "https://graph.microsoft.com/v1.0";
 const MS_ME_ENDPOINT = "/me";
 const MS_ME_PRESENCE_ENDPOINT = "/me/presence";
-
-interface MSTeamsOnlineMeeting {
-    audioConferencing: {
-        conferenceId: string;
-        tollNumber: string;
-        tollFreeNumber: string;
-        dialinUrl: string;
-    };
-    chatInfo: {
-        threadId: string;
-        messageId: string;
-        replyChainMessageId: string;
-    };
-    creationDateTime: string;
-    startDateTime: string;
-    endDateTime: string;
-    id: string;
-    joinWebUrl: string;
-    subject: string;
-    joinMeetingIdSettings: {
-        isPasscodeRequired: boolean;
-        joinMeetingId: string;
-        passcode: string;
-    };
-    externalId: string;
-    videoTeleconferenceId: string;
-    allowedPresenters: string;
-}
 
 interface MSTeamsCalendarEvent {
     id: string;
@@ -242,10 +218,6 @@ class MSTeams implements ExtensionModule {
         return `/users/${this.clientId}/presence/setUserPreferredPresence`;
     }
 
-    joinMeeting() {
-        console.log("joinTeamsMeeting : Not Implemented");
-    }
-
     destroy() {
         if (this.listenToTeamsStatusInterval) {
             clearInterval(this.listenToTeamsStatusInterval);
@@ -394,21 +366,48 @@ class MSTeams implements ExtensionModule {
         }
     }
 
-    async createOrGetMeeting(meetingId: string): Promise<MSTeamsOnlineMeeting> {
+    async createOrGetMeeting(meetingId: string): Promise<{ meetingUrl: string }> {
         try {
             const dateNow = new Date();
-            return await this.msAxiosClient.post(`/me/onlineMeetings/createOrGet`, {
+            const onlineMeetingUrl = "/me/onlineMeetings/createOrGet";
+            const response = await this.msAxiosClient.post(onlineMeetingUrl, {
                 externalId: meetingId,
                 // Start date time, now
                 startDateTime: dateNow.toISOString(),
                 subject: "Meet Now",
             });
+            return { meetingUrl: response.data.joinWebUrl };
         } catch (e) {
             if ((e as AxiosError).response?.status === 401) {
                 return await this.createOrGetMeeting(meetingId);
             }
             throw e;
         }
+    }
+
+    areaMapEditor() {
+        return {
+            AreaPropertyEditor: TeamsMeetingAreaPropertyEditor,
+            AddAreaPropertyButton: AddTeamsMeetingAreaPropertyButton,
+            handleAreaPropertyOnEnter: this.handleAreaPropertyOnEnter.bind(this),
+            handleAreaPropertyOnLeave: this.handleAreaPropertyOnLeave.bind(this),
+        };
+    }
+
+    private handleAreaPropertyOnEnter(area: AreaData) {
+        this.createOrGetMeeting(area.id)
+            .then(({ meetingUrl }) => {
+                notificationPlayingStore.playNotification("Opening Teams Meeting...");
+                window.open(meetingUrl, "_blank");
+            })
+            .catch((error) => {
+                console.error(error);
+                notificationPlayingStore.playNotification("Unable to join Teams Meeting");
+            });
+    }
+
+    private handleAreaPropertyOnLeave() {
+        console.debug("Leaving extension module area");
     }
 }
 

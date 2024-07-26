@@ -15,6 +15,7 @@
     import cardsPng from "../../images/applications/icon_cards.svg";
     import LL from "../../../../i18n/i18n-svelte";
     import { connectionManager } from "../../../Connection/ConnectionManager";
+    import { extensionModuleStore } from "../../../Stores/GameSceneStore";
     import AddPropertyButton from "./AddPropertyButton.svelte";
 
     export let property: AreaDataPropertiesKeys | EntityDataPropertiesKeys;
@@ -22,6 +23,10 @@
     export let isActive = false;
 
     const dispatch = createEventDispatcher();
+
+    let moduleExtensionMapEditor = $extensionModuleStore?.areaMapEditor
+        ? $extensionModuleStore.areaMapEditor()
+        : undefined;
 </script>
 
 {#if property === "personalAreaPropertyData"}
@@ -270,6 +275,15 @@
         img={cardsPng}
         style={`z-index: 100;${isActive ? "background-color: #4156f6;" : ""}`}
         disabled={!connectionManager.cardsToolActivated}
+        on:click={(event) => {
+            dispatch("click", event);
+        }}
+    />
+{/if}
+
+{#if property === "extensionModule" && moduleExtensionMapEditor !== undefined}
+    <svelte:component
+        this={moduleExtensionMapEditor.AddAreaPropertyButton}
         on:click={(event) => {
             dispatch("click", event);
         }}

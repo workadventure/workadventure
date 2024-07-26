@@ -29,6 +29,7 @@
     import PersonalAreaPropertyEditor from "../PropertyEditor/PersonalAreaPropertyEditor.svelte";
     import RightsPropertyEditor from "../PropertyEditor/RightsPropertyEditor.svelte";
     import { IconChevronDown, IconChevronRight } from "../../Icons";
+    import { extensionModuleStore } from "../../../Stores/GameSceneStore";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
@@ -198,6 +199,12 @@
                     allowedTags: [],
                     ownerId: null,
                 };
+            case "extensionModule":
+                return {
+                    id,
+                    type,
+                    data: null,
+                };
             default:
                 throw new Error(`Unknown property type ${type}`);
         }
@@ -340,6 +347,10 @@
     function toggleDescriptionField() {
         showDescriptionField = !showDescriptionField;
     }
+
+    let extensionModuleAreaMapEditor = $extensionModuleStore?.areaMapEditor
+        ? $extensionModuleStore.areaMapEditor()
+        : undefined;
 </script>
 
 {#if $mapEditorSelectedAreaPreviewStore === undefined}
@@ -431,6 +442,12 @@
                 property="openWebsite"
                 on:click={() => {
                     onAddProperty("openWebsite");
+                }}
+            />
+            <AddPropertyButtonWrapper
+                property="extensionModule"
+                on:click={() => {
+                    onAddProperty("extensionModule");
                 }}
             />
         </div>
@@ -640,6 +657,13 @@
                                 onDeleteProperty(property.id, detail);
                             }}
                             on:change={({ detail }) => onUpdateProperty(property, detail)}
+                        />
+                    {:else if property.type === "extensionModule" && extensionModuleAreaMapEditor !== undefined}
+                        <svelte:component
+                            this={extensionModuleAreaMapEditor.AreaPropertyEditor}
+                            on:close={() => {
+                                onDeleteProperty(property.id);
+                            }}
                         />
                     {/if}
                 </div>
