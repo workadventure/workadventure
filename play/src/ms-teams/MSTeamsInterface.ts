@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { AvailabilityStatus } from "@workadventure/messages";
 
 export const TeamsAvailability = z.enum([
     "Available",
@@ -34,14 +33,3 @@ export const TeamsActivity = z.enum([
 ]);
 
 export type TeamsActivity = z.infer<typeof TeamsActivity>;
-
-export interface InitMSTeamsOptions {
-    subscribeToStatusUpdates?: boolean;
-    onTeamsStatusChange: (workAdventureNewStatus: AvailabilityStatus) => void;
-}
-
-export interface MSTeamsIntegration {
-    init: (authenticationToken: string, options?: InitMSTeamsOptions) => boolean;
-    setTeamsStatus: (newStatus: AvailabilityStatus) => void;
-    joinTeamsMeeting: () => void;
-}

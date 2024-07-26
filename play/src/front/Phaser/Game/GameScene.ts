@@ -2050,6 +2050,7 @@ export class GameScene extends DirtyScene {
     private initExtensionModule() {
         (async () => {
             try {
+                //TODO rename env variable to MODULE_EXTENSION_URL
                 /*if (!WA_MODULE_EXTENSION_URL) {
                     return;
                 }

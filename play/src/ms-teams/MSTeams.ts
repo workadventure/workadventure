@@ -4,7 +4,7 @@ import { AvailabilityStatus, OauthRefreshToken } from "@workadventure/messages";
 import { subscribe } from "svelte/internal";
 import { Unsubscriber, Updater } from "svelte/store";
 import { CalendarEventInterface } from "@workadventure/shared-utils";
-import { AreaData } from "@workadventure/map-editor";
+import { AreaData, AreaDataProperties } from "@workadventure/map-editor";
 import { ExtensionModule, ExtensionModuleOptions } from "../extension-module/extension-module";
 import { notificationPlayingStore } from "../front/Stores/NotificationStore";
 import { TeamsActivity, TeamsAvailability } from "./MSTeamsInterface";
@@ -387,10 +387,16 @@ class MSTeams implements ExtensionModule {
 
     areaMapEditor() {
         return {
-            AreaPropertyEditor: TeamsMeetingAreaPropertyEditor,
-            AddAreaPropertyButton: AddTeamsMeetingAreaPropertyButton,
-            handleAreaPropertyOnEnter: this.handleAreaPropertyOnEnter.bind(this),
-            handleAreaPropertyOnLeave: this.handleAreaPropertyOnLeave.bind(this),
+            teams: {
+                AreaPropertyEditor: TeamsMeetingAreaPropertyEditor,
+                AddAreaPropertyButton: AddTeamsMeetingAreaPropertyButton,
+                handleAreaPropertyOnEnter: this.handleAreaPropertyOnEnter.bind(this),
+                handleAreaPropertyOnLeave: this.handleAreaPropertyOnLeave.bind(this),
+                shouldDisplayButton: (areaDataProperties: AreaDataProperties) =>
+                    !areaDataProperties.find(
+                        (property) => property.type === "extensionModule" && property.subtype === "teams"
+                    ),
+            },
         };
     }
 

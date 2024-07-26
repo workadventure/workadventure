@@ -92,6 +92,7 @@ export const OpenWebsitePropertyData = PropertyBase.extend({
 
 export const ExtensionModuleAreaProperty = PropertyBase.extend({
     type: z.literal("extensionModule"),
+    subtype: z.string(),
     data: z.unknown(),
 });
 

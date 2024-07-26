@@ -281,9 +281,9 @@
     />
 {/if}
 
-{#if property === "extensionModule" && moduleExtensionMapEditor !== undefined}
+{#if property === "extensionModule" && moduleExtensionMapEditor !== undefined && subProperty !== undefined}
     <svelte:component
-        this={moduleExtensionMapEditor.AddAreaPropertyButton}
+        this={moduleExtensionMapEditor[subProperty].AddAreaPropertyButton}
         on:click={(event) => {
             dispatch("click", event);
         }}

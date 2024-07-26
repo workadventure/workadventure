@@ -200,9 +200,13 @@
                     ownerId: null,
                 };
             case "extensionModule":
+                if (subtype === undefined) {
+                    throw new Error("Missing subtype for extensionModule");
+                }
                 return {
                     id,
                     type,
+                    subtype,
                     data: null,
                 };
             default:
@@ -444,12 +448,19 @@
                     onAddProperty("openWebsite");
                 }}
             />
-            <AddPropertyButtonWrapper
-                property="extensionModule"
-                on:click={() => {
-                    onAddProperty("extensionModule");
-                }}
-            />
+            {#if extensionModuleAreaMapEditor !== undefined}
+                {#each Object.entries(extensionModuleAreaMapEditor) as [subtype, _]}
+                    {#if extensionModuleAreaMapEditor[subtype].shouldDisplayButton(properties)}
+                        <AddPropertyButtonWrapper
+                            property="extensionModule"
+                            subProperty={subtype}
+                            on:click={() => {
+                                onAddProperty("extensionModule", subtype);
+                            }}
+                        />
+                    {/if}
+                {/each}
+            {/if}
         </div>
         <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-mt-2">
             <AddPropertyButtonWrapper
@@ -660,7 +671,7 @@
                         />
                     {:else if property.type === "extensionModule" && extensionModuleAreaMapEditor !== undefined}
                         <svelte:component
-                            this={extensionModuleAreaMapEditor.AreaPropertyEditor}
+                            this={extensionModuleAreaMapEditor[property.subtype].AreaPropertyEditor}
                             on:close={() => {
                                 onDeleteProperty(property.id);
                             }}
