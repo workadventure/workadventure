@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
     <style>
         body {
@@ -10,12 +11,25 @@
     <script src="<?php echo $_SERVER["FRONT_URL"] ?>/iframe_api.js"></script>
     <script>
         window.addEventListener('load', () => {
-            console.log('On load');
+            // console.log('On load');
+            console.log('Before WA init', "TEEEESSSSTTTTTT");
+            console.log('WA', WA);
+            console.log('WA. Players name', WA.players.name);
+            console.log('WA. Players list', WA.players.list);
+            console.log('WA. Players list FONCTION', WA.players.list());
+            // console.log('WA. Players list FONCTION', WA.players.);
+
+
+            WA.onInit().then(() => {
+                console.log('WA INIIIIIIIITTTTTTTT');
+            });
+
+
+
+
 
             WA.onInit().then(async () => {
-                console.log('After WA init');
-                await WA.players.configureTracking();
-
+                console.log('WA INIT');
                 for (const remotePlayer of WA.players.list()) {
                     remotePlayer.state.onVariableChange("testVariable").subscribe((value) => {
                         document.getElementById("events").innerText += "User '" + remotePlayer.name + "' testVariable changed. New value: " + value + " (tracked locally)\n";
@@ -26,8 +40,11 @@
                         }
                     });
                 }
+                await WA.players.configureTracking();
+
 
                 WA.players.onPlayerEnters.subscribe((remotePlayer) => {
+                    console.log("REMOTE PLAYER", remotePlayer);
                     document.getElementById("events").innerText += "New user: " + remotePlayer.name + "\n";
                     remotePlayer.state.onVariableChange("testVariable").subscribe((value) => {
                         document.getElementById("events").innerText += "User '" + remotePlayer.name + "' testVariable changed. New value: " + value + " (tracked locally)\n";
@@ -38,7 +55,11 @@
                     document.getElementById("events").innerText += "User left: " + remotePlayer.name + "\n";
                 });
 
-                WA.players.onPlayerMoves.subscribe(({ player, newPosition, oldPosition }) => {
+                WA.players.onPlayerMoves.subscribe(({
+                    player,
+                    newPosition,
+                    oldPosition
+                }) => {
                     document.getElementById("events").innerText += `User : ${player.name} moved from (${oldPosition.x}, ${oldPosition.y}) to (${newPosition.x}, ${newPosition.y})\n`;
                 });
 
@@ -46,6 +67,7 @@
                 document.getElementById('listCurrentPlayers').addEventListener('click', () => {
                     document.getElementById('list').innerHTML = '';
                     for (const player of WA.players.list()) {
+                        console.log("PLAYERS !!!!!!", player);
                         document.getElementById('list').innerHTML += "<li>User " + player.id + ": " + player.name + "</li>";
                     }
                 });
@@ -60,33 +82,37 @@
                     });
                 });
 
-                WA.players.onVariableChange("testVariable").subscribe(({ player, value }) => {
+                WA.players.onVariableChange("testVariable").subscribe(({
+                    player,
+                    value
+                }) => {
                     document.getElementById("events").innerText += "User '" + player.name + "' testVariable changed. New value: " + value + " (tracked globally)\n";
                 });
             });
         })
     </script>
 </head>
+
 <body>
-<p>Players list (updated when button is clicked)</p>
-<ul id="list">
+    <p>Players list (updated when button is clicked)</p>
+    <ul id="list">
 
-</ul>
-<br/>
-<button id="listCurrentPlayers">List current connected players</button>
+    </ul>
+    <br />
+    <button id="listCurrentPlayers">List current connected players</button>
 
-<hr/>
+    <hr />
 
-Change a variable associated to current player:
-<input id="the-variable" type="text" />
+    Change a variable associated to current player:
+    <input id="the-variable" type="text" />
 
-<hr/>
-<p>
-Events:
-<pre id="events">
-
-</pre>
-</p>
+    <hr />
+    <p>
+        Events:
+    <pre id="events">
+    </pre>
+    </p>
 
 </body>
+
 </html>

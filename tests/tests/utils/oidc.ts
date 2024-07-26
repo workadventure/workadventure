@@ -5,7 +5,7 @@ export async function oidcLogin(
     userName = 'User1',
     password = 'pwd'
 ) {
-    await page.click('#menuIcon img:first-child');
+    await page.click('#action-user');
     await page.click('a:has-text("Sign in")');
 
     await page.fill('#Input_Username', userName);
@@ -17,6 +17,6 @@ export async function oidcLogin(
 export async function oidcLogout(
     page: Page,
 ) {
-    await page.click('#menuIcon img:first-child');
-    await page.click('button:has-text("Log out")');
+    await page.click('#action-user');
+    await page.click('button:has-text("Déconnexion")');
 }

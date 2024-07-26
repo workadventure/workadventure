@@ -112,6 +112,7 @@
     import MenuBurgerIcon from "../Icons/MenuBurgerIcon.svelte";
     import PenIcon from "../Icons/PenIcon.svelte";
     import { StringUtils } from "../../Utils/StringUtils";
+    import { connectionManager } from "../../Connection/ConnectionManager";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
 
     // gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
@@ -438,6 +439,15 @@
             mapEditorModeStore.set(false);
         }
     });
+
+    function logOut() {
+        return connectionManager.logout();
+    }
+
+    // function logIn() {
+    //     console.log("login");
+    //     // return connectionManager.login();
+    // }
 
     // function playSoundClick() {
     //     sound.play().catch((e) => console.error(e));
@@ -1528,6 +1538,33 @@
                                     </div>
                                     <div>{$LL.actionbar.otherSettings()}</div>
                                 </button>
+                                {#if $userIsConnected && ENABLE_OPENID}
+                                    <button
+                                        class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
+                                        on:click={logOut}
+                                    >
+                                        <div
+                                            class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
+                                        >
+                                            <SettingsIcon />
+                                        </div>
+                                        <div>{$LL.menu.profile.logout()}</div>
+                                        <!-- <div>{$LL.actionbar.logout()}</div> -->
+                                    </button>
+                                {:else}
+                                    <button
+                                        class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
+                                        on:click={() => analyticsClient.login()}
+                                    >
+                                        <div
+                                            class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
+                                        >
+                                            <SettingsIcon />
+                                        </div>
+                                        <div>{$LL.menu.profile.login()}</div>
+                                        <!-- <div>{$LL.actionbar.login()}</div> -->
+                                    </button>
+                                {/if}
                             </div>
                         </div>
                     {/if}
@@ -1535,11 +1572,12 @@
                 <div
                     class="group/btn-burger relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 rounded-l-lg rounded-r-lg aspect-square block @lg:hidden"
                 >
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
                         on:click={() => (burgerOpen = !burgerOpen)}
                         on:blur={() => (burgerOpen = false)}
                         on:click|preventDefault={close}
-                        class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:w-12 @xl/actions:w-12 p-1 m-0 rounded hover:bg-white/10 flex items-center justify-center transition-all"
+                        class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:w-12 p-1 m-0 rounded hover:bg-white/10 flex items-center justify-center transition-all"
                     >
                         {#if !burgerOpen}
                             <MenuBurgerIcon />

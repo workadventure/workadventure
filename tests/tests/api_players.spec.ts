@@ -23,6 +23,8 @@ test.describe('API WA.players', () => {
     );
     await login(page, 'Alice');
 
+    console.log("C'EST OK POUR ALICE");
+
     const newBrowser = await browser.browserType().launch();
     const page2 = await newBrowser.newPage();
 
@@ -32,9 +34,26 @@ test.describe('API WA.players', () => {
 
     await login(page2, 'Bob');
 
+    await WA.onInit();
+
+    console.log("C'EST OK POUR BOB");
+
+    const iframe = getCoWebsiteIframe(page);
+    console.log('Iframe trouvé:', !!iframe);
+
+
+    const eventsLocator = iframe.locator('#events');
+    const isVisible = await eventsLocator.isVisible();
+    console.log('isVisible:', isVisible);
+    const textContent = await eventsLocator.evaluate(el => el.textContent);
+    console.log('Texte de #events:', textContent);
+
     const events = getCoWebsiteIframe(page).locator('#events');
+
+    console.log("EVENT", events);
+    await page.pause();
     await expect(events).toContainText('New user: Bob', {
-      timeout: 10000
+        timeout: 10000
     });
 
     await getCoWebsiteIframe(page).locator('#listCurrentPlayers').click();

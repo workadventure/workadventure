@@ -17,6 +17,7 @@ const actionbar: BaseTranslation = {
     accountType: "Compte gratuit",
     upgrade: "Changer",
     otherSettings: "Autres paramètres",
+    logout: "Se déconnecter",
     bo: "Back office",
     globalMessage: "Envoyer un message global",
     mapEditor: "Éditeur de carte",
