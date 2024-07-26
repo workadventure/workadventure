@@ -10,7 +10,6 @@
   "workspaces": [
     "play",
     "back",
-    "chat",
     "map-storage",
     "libs/*",
     "benchmark",

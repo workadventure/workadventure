@@ -188,7 +188,10 @@ export class AreasPropertiesListener {
             }
             case "personalAreaPropertyData": {
                 this.handlePersonalAreaPropertyOnEnter(property, areaData, area);
-
+                break;
+            }
+            case "extensionModule": {
+                this.handleExtensionModuleAreaPropertyOnEnter(areaData, property.subtype);
                 break;
             }
             default: {
@@ -291,6 +294,10 @@ export class AreasPropertiesListener {
             }
             case "personalAreaPropertyData": {
                 this.handlePersonalAreaPropertyOnLeave(area);
+                break;
+            }
+            case "extensionModule": {
+                this.handleExtensionModuleAreaPropertyOnLeave(property.subtype);
                 break;
             }
             default: {
@@ -710,6 +717,22 @@ export class AreasPropertiesListener {
             requestVisitCardsStore.set(null);
         }
         area?.unHighLightArea();
+    }
+
+    private handleExtensionModuleAreaPropertyOnLeave(subtype: string): void {
+        const areaMapEditor = this.scene.extensionModule?.areaMapEditor && this.scene.extensionModule?.areaMapEditor();
+        if (areaMapEditor === undefined) {
+            return;
+        }
+        areaMapEditor[subtype].handleAreaPropertyOnLeave();
+    }
+
+    private handleExtensionModuleAreaPropertyOnEnter(area: AreaData, subtype: string): void {
+        const areaMapEditor = this.scene.extensionModule?.areaMapEditor && this.scene.extensionModule?.areaMapEditor();
+        if (areaMapEditor === undefined) {
+            return;
+        }
+        areaMapEditor[subtype].handleAreaPropertyOnEnter(area);
     }
 
     private openCoWebsiteFunction(

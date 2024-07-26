@@ -7,6 +7,11 @@ import { CalendarEventInterface } from "@workadventure/shared-utils";
 import { ExtensionModule, ExtensionModuleOptions } from "../extension-module/extension-module";
 import { TeamsActivity, TeamsAvailability } from "./MSTeamsInterface";
 
+import { AreaData, AreaDataProperties } from "@workadventure/map-editor";
+import { notificationPlayingStore } from "../front/Stores/NotificationStore";
+import TeamsMeetingAreaPropertyEditor from "./components/TeamsMeetingAreaPropertyEditor.svelte";
+import AddTeamsMeetingAreaPropertyButton from "./components/AddTeamsMeetingAreaPropertyButton.svelte";
+
 const MS_GRAPH_ENDPOINT_V1 = "https://graph.microsoft.com/v1.0";
 const MS_GRAPH_ENDPOINT_BETA = "https://graph.microsoft.com/beta";
 const MS_ME_ENDPOINT = "/me";
@@ -449,15 +454,17 @@ class MSTeams implements ExtensionModule {
         }
     }
 
-    async createOrGetMeeting(meetingId: string): Promise<MSTeamsOnlineMeeting> {
+    async createOrGetMeeting(meetingId: string): Promise<{ meetingUrl: string }> {
         try {
             const dateNow = new Date();
-            return await this.msAxiosClientV1.post(`/me/onlineMeetings/createOrGet`, {
+            const onlineMeetingUrl = "/me/onlineMeetings/createOrGet";
+            const response = await this.msAxiosClientV1.post(onlineMeetingUrl, {
                 externalId: meetingId,
                 // Start date time, now
                 startDateTime: dateNow.toISOString(),
                 subject: "Meet Now",
             });
+            return { meetingUrl: response.data.joinWebUrl };
         } catch (e) {
             if ((e as AxiosError).response?.status === 401) {
                 return await this.createOrGetMeeting(meetingId);
@@ -669,6 +676,37 @@ class MSTeams implements ExtensionModule {
         await this.msAxiosClientV1.patch(`/subscriptions/${subscriptionId}`, {
             expirationDateTime,
         });
+    }
+    
+    areaMapEditor() {
+        return {
+            teams: {
+                AreaPropertyEditor: TeamsMeetingAreaPropertyEditor,
+                AddAreaPropertyButton: AddTeamsMeetingAreaPropertyButton,
+                handleAreaPropertyOnEnter: this.handleAreaPropertyOnEnter.bind(this),
+                handleAreaPropertyOnLeave: this.handleAreaPropertyOnLeave.bind(this),
+                shouldDisplayButton: (areaDataProperties: AreaDataProperties) =>
+                    !areaDataProperties.find(
+                        (property) => property.type === "extensionModule" && property.subtype === "teams"
+                    ),
+            },
+        };
+    }
+
+    private handleAreaPropertyOnEnter(area: AreaData) {
+        this.createOrGetMeeting(area.id)
+            .then(({ meetingUrl }) => {
+                notificationPlayingStore.playNotification("Opening Teams Meeting...");
+                window.open(meetingUrl, "_blank");
+            })
+            .catch((error) => {
+                console.error(error);
+                notificationPlayingStore.playNotification("Unable to join Teams Meeting");
+            });
+    }
+
+    private handleAreaPropertyOnLeave() {
+        console.debug("Leaving extension module area");
     }
 }
 

@@ -1859,7 +1859,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitProximityPrivateMessage(spaceName: string, message: string, receiverUserUuid: string) {
+    public emitProximityPrivateMessage(spaceName: string, message: string, receiverUserId: number) {
         if (!this.userId) {
             console.warn("No user id defined to send a message to mute every video!");
             return;
@@ -1870,7 +1870,7 @@ export class RoomConnection implements RoomConnection {
                 $case: "privateEvent",
                 privateEvent: {
                     spaceName,
-                    receiverUserUuid,
+                    receiverUserId,
                     spaceMessage: {
                         message,
                     },

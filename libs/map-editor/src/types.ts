@@ -63,6 +63,7 @@ export const PlayAudioPropertyData = PropertyBase.extend({
     type: z.literal("playAudio"),
     audioLink: z.string(),
     volume: z.number().default(1).optional(),
+    triggerMessage: z.string().optional(),
 });
 
 export const OpenWebsitePropertyData = PropertyBase.extend({
@@ -87,6 +88,12 @@ export const OpenWebsitePropertyData = PropertyBase.extend({
     regexUrl: z.string().optional(),
     targetEmbedableUrl: z.string().optional(),
     forceNewTab: z.boolean().optional().default(false),
+});
+
+export const ExtensionModuleAreaProperty = PropertyBase.extend({
+    type: z.literal("extensionModule"),
+    subtype: z.string(),
+    data: z.unknown(),
 });
 
 export const SpeakerMegaphonePropertyData = PropertyBase.extend({
@@ -140,6 +147,7 @@ export const AreaDataProperty = z.discriminatedUnion("type", [
     AreaDescriptionPropertyData,
     RestrictedRightsPropertyData,
     PersonalAreaPropertyData,
+    ExtensionModuleAreaProperty,
 ]);
 
 export const AreaDataProperties = z.array(AreaDataProperty);
@@ -349,6 +357,7 @@ export type AreaDescriptionPropertyData = z.infer<typeof AreaDescriptionProperty
 export type RestrictedRightsPropertyData = z.infer<typeof RestrictedRightsPropertyData>;
 export type PersonalAreaPropertyData = z.infer<typeof PersonalAreaPropertyData>;
 export type PersonalAreaAccessClaimMode = z.infer<typeof PersonalAreaAccessClaimMode>;
+export type ExtensionModuleAreaPropertyData = z.infer<typeof ExtensionModuleAreaProperty>;
 
 export enum GameMapProperties {
     ALLOW_API = "allowApi",

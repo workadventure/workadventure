@@ -5,6 +5,7 @@ import type { Player } from "../Player/Player";
 import LL from "../../../i18n/i18n-svelte";
 import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
 import { RemotePlayer } from "../Entity/RemotePlayer";
+import { Entity } from "../ECS/Entity";
 import type { ActivatableInterface } from "./ActivatableInterface";
 
 export class ActivatablesManager {
@@ -86,14 +87,22 @@ export class ActivatablesManager {
         if (isOutlineable(this.selectedActivatableObjectByDistance)) {
             this.selectedActivatableObjectByDistance?.characterCloseByOutline(this.outlineColor);
             if (this.selectedActivatableObjectByDistance instanceof RemotePlayer == false) {
-                this.selectedActivatableObjectByDistance.playText(
-                    "object",
-                    isMediaBreakpointUp("md") ? get(LL).trigger.mobile.object() : get(LL).trigger.object(),
-                    10000,
-                    () => {
-                        this.currentPlayer.scene.userInputManager.handleActivableEntity();
+                // TODO: improve this to show multiple trigger messages
+                let triggerMessage: string = isMediaBreakpointUp("md")
+                    ? get(LL).trigger.mobile.object()
+                    : get(LL).trigger.object();
+                if (this.selectedActivatableObjectByDistance instanceof Entity) {
+                    for (const property of this.selectedActivatableObjectByDistance.getEntityData().properties) {
+                        if (property.type === "entityDescriptionProperties") continue;
+                        if (property.triggerMessage) {
+                            triggerMessage = property.triggerMessage;
+                            break;
+                        }
                     }
-                );
+                }
+                this.selectedActivatableObjectByDistance.playText("object", triggerMessage, 10000, () => {
+                    this.currentPlayer.scene.userInputManager.handleActivableEntity();
+                });
             }
         }
     }

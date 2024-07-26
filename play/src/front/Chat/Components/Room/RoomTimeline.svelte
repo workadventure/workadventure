@@ -67,7 +67,7 @@
 
     $: messages = room?.messages;
     $: messageReaction = room?.messageReactions;
-    $: userConnected = $proximityRoomConnection?.userConnected;
+    $: connectedUsers = $proximityRoomConnection?.connectedUsers;
     $: roomName = room?.name;
 </script>
 
@@ -86,9 +86,9 @@
             bind:this={messageListRef}
             class="tw-list-none tw-p-0 tw-flex-1 tw-overflow-auto tw-flex tw-flex-col"
         >
-            {#if room.id === "proximity" && $userConnected !== undefined}
+            {#if room.id === "proximity" && $connectedUsers !== undefined}
                 <div class="tw-flex tw-flex-row tw-items-center tw-gap-2">
-                    {#each [...$userConnected] as [userId, user] (userId)}
+                    {#each [...$connectedUsers] as [userId, user] (userId)}
                         <div class="avatar">
                             <Avatar avatarUrl={user.avatarUrl} fallbackName={user?.username} color={user?.color} />
                         </div>
