@@ -42,7 +42,6 @@
     import worldImg from "../images/world.svg";
     import calendarSvg from "../images/calendar.svg";
     import burgerMenuImg from "../images/menu.svg";
-    import calendarSvg from "../images/calendar.svg";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";

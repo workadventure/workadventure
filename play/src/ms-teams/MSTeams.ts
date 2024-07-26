@@ -4,11 +4,11 @@ import { AvailabilityStatus, ExternalModuleMessage, OauthRefreshToken } from "@w
 import { subscribe } from "svelte/internal";
 import { Unsubscriber, Updater } from "svelte/store";
 import { CalendarEventInterface } from "@workadventure/shared-utils";
+import { AreaData, AreaDataProperties } from "@workadventure/map-editor";
 import { ExtensionModule, ExtensionModuleOptions } from "../extension-module/extension-module";
+import { notificationPlayingStore } from "../front/Stores/NotificationStore";
 import { TeamsActivity, TeamsAvailability } from "./MSTeamsInterface";
 
-import { AreaData, AreaDataProperties } from "@workadventure/map-editor";
-import { notificationPlayingStore } from "../front/Stores/NotificationStore";
 import TeamsMeetingAreaPropertyEditor from "./components/TeamsMeetingAreaPropertyEditor.svelte";
 import AddTeamsMeetingAreaPropertyButton from "./components/AddTeamsMeetingAreaPropertyButton.svelte";
 
@@ -16,34 +16,6 @@ const MS_GRAPH_ENDPOINT_V1 = "https://graph.microsoft.com/v1.0";
 const MS_GRAPH_ENDPOINT_BETA = "https://graph.microsoft.com/beta";
 const MS_ME_ENDPOINT = "/me";
 const MS_ME_PRESENCE_ENDPOINT = "/me/presence";
-
-interface MSTeamsOnlineMeeting {
-    audioConferencing: {
-        conferenceId: string;
-        tollNumber: string;
-        tollFreeNumber: string;
-        dialinUrl: string;
-    };
-    chatInfo: {
-        threadId: string;
-        messageId: string;
-        replyChainMessageId: string;
-    };
-    creationDateTime: string;
-    startDateTime: string;
-    endDateTime: string;
-    id: string;
-    joinWebUrl: string;
-    subject: string;
-    joinMeetingIdSettings: {
-        isPasscodeRequired: boolean;
-        joinMeetingId: string;
-        passcode: string;
-    };
-    externalId: string;
-    videoTeleconferenceId: string;
-    allowedPresenters: string;
-}
 
 interface MSTeamsCalendarEvent {
     id: string;
@@ -172,7 +144,7 @@ class MSTeams implements ExtensionModule {
                 });
 
                 // Initialize the subscription
-                this.initSubscription().catch((e) => console.error("Error while initializing subscription", e));
+                this.initSubscription();
             }
         }
 
@@ -473,9 +445,13 @@ class MSTeams implements ExtensionModule {
         }
     }
 
-    private async initSubscription(): Promise<void> {
-        this.createOrGetPresenceSubscription();
-        this.createOrGetCalendarSubscription();
+    private initSubscription(): void {
+        this.createOrGetPresenceSubscription().catch((e) =>
+            console.error("Error while creating presence subscription", e)
+        );
+        this.createOrGetCalendarSubscription().catch((e) =>
+            console.error("Error while creating calendar subscription", e)
+        );
 
         // All 10 minutes, check if the subscriptions are expired
         if (this.checkModuleSynschronisationInterval !== undefined)
@@ -530,7 +506,7 @@ class MSTeams implements ExtensionModule {
 
             // Reinitialize the subscription
             try {
-                await this.initSubscription();
+                this.initSubscription();
             } catch (e) {
                 // If there is an error, retry in 1 minutes
                 console.error("Error while reinitializing subscriptions", e);
@@ -677,7 +653,7 @@ class MSTeams implements ExtensionModule {
             expirationDateTime,
         });
     }
-    
+
     areaMapEditor() {
         return {
             teams: {

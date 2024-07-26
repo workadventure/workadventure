@@ -472,11 +472,6 @@ message  SearchTagsQuery{
   string searchText = 1;
 }
 
-message OauthRefreshTokenQuery {
-  string tokenToRefresh = 1;
-}
-
-
 message AnswerMessage {
   int32 id = 1;
   oneof answer {
