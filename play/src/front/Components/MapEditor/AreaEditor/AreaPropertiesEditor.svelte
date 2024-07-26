@@ -449,7 +449,7 @@
                 }}
             />
             {#if extensionModuleAreaMapEditor !== undefined}
-                {#each Object.entries(extensionModuleAreaMapEditor) as [subtype, _]}
+                {#each Object.entries(extensionModuleAreaMapEditor) as [subtype, index] (index)}
                     {#if extensionModuleAreaMapEditor[subtype].shouldDisplayButton(properties)}
                         <AddPropertyButtonWrapper
                             property="extensionModule"
