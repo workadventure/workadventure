@@ -22,7 +22,7 @@ const chat: BaseTranslation = {
         teleporting: "Teleporting ...",
         businessCard: "Business Card",
     },
-    connecting: "Connection to presence server ...",
+    connecting: "Connecting to server ...",
     waitingInit: "Waiting for server initialization ...",
     waitingData: "Waiting user data ...",
     searchUser: "Search for user, map, etc ...",
@@ -205,7 +205,7 @@ const chat: BaseTranslation = {
         createRecoveryKey: {
             title: "Chat recovery key creation",
             description:
-                "In order use end to end encryption in the chat, you need to create a recovery key. Please enter your passphrase bellow, a recovery key will be created.",
+                "In order use end to end encryption in the chat, you need to create a recovery key. Please enter your passphrase below, a recovery key will be created.",
             privateKeyDescription:
                 "This is your private key, save it somewhere to retrieve encrypted discussions after logged out.",
             error: "Something went wrong on generateRecoveryKeyFromPassphrase",

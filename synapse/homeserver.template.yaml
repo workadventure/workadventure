@@ -63,7 +63,7 @@ oidc_providers:
 #    skip_verification: true
 #    client_id: "4"
 #    client_secret: "SZL6NhyAyB60kHoB4iwoG0zH6cuItlqFVgHqEIJE"
-#    scopes: ["openid", "email"]
+#    scopes: ["openid", "email", "profile"]
 #
 #    user_profile_method: "userinfo_endpoint"
 #    user_mapping_provider:

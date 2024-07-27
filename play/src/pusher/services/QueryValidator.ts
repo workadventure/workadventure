@@ -79,7 +79,7 @@ export function validateWebsocketQuery<T extends ZodObject<ZodRawShape>>(
                     status: "error",
                     type: "error",
                     title: "400 Bad Request",
-                    subtitle: "Something wrong while connection!",
+                    subtitle: "Something wrong happened while connecting!",
                     image: "",
                     code: "WS_BAD_REQUEST",
                     details: messages.join("\n"),
