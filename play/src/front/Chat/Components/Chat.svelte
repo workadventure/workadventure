@@ -3,7 +3,6 @@
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue, joignableRoom, navChat } from "../Stores/ChatStore";
     import { CONNECTED_USER_FILTER_NAME, WORLD_SPACE_NAME } from "../../Space/Space";
-    import { LocalSpaceProviderSingleton } from "../../Space/SpaceProvider/SpaceStore";
     import { INITIAL_SIDEBAR_WIDTH } from "../../Stores/ChatStore";
     import RoomUserList from "./UserList/RoomUserList.svelte";
     import ChatLoader from "./ChatLoader.svelte";
@@ -43,10 +42,9 @@
     };
 
     const setConnectedUsersFilter = () => {
-        const SpaceProvider = LocalSpaceProviderSingleton.getInstance();
-        if (!SpaceProvider) return;
+        const spaceProvider = gameManager.getCurrentGameScene().spaceStore;
 
-        const allWorldUserSpace = SpaceProvider.get(WORLD_SPACE_NAME);
+        const allWorldUserSpace = spaceProvider.get(WORLD_SPACE_NAME);
         const connectedUsersFilter = allWorldUserSpace.getSpaceFilter(CONNECTED_USER_FILTER_NAME);
 
         if ($chatSearchBarValue === "" && connectedUsersFilter.getFilterType() !== "spaceFilterEverybody") {
