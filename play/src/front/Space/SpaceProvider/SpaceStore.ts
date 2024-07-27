@@ -6,7 +6,7 @@ import { SpaceProviderInterface } from "./SpaceProviderInterface";
 
 export class LocalSpaceProvider implements SpaceProviderInterface {
     constructor(
-        private socket: WebSocket | undefined = undefined,
+        private socket: WebSocket,
         private spaces: Map<string, SpaceInterface> = new Map<string, SpaceInterface>()
     ) {}
 
@@ -39,15 +39,5 @@ export class LocalSpaceProvider implements SpaceProviderInterface {
             space.destroy();
         });
         this.spaces.clear();
-    }
-}
-
-export class LocalSpaceProviderSingleton {
-    private static instance: LocalSpaceProvider | undefined = undefined;
-    static getInstance(socket: WebSocket | undefined = undefined): SpaceProviderInterface {
-        if (this.instance === undefined) {
-            this.instance = new LocalSpaceProvider(socket);
-        }
-        return this.instance;
     }
 }
