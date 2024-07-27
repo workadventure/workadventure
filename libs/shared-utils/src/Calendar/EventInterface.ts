@@ -9,9 +9,9 @@ export interface CalendarEventInterface {
         body?: {
             content?: string;
             contentType?: string;
-        },
+        };
         onlineMeeting?: {
             joinUrl?: string;
-        }
+        };
     };
 }

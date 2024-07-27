@@ -609,6 +609,34 @@
                         "ownerId"
                       ],
                       "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/id"
+                        },
+                        "buttonLabel": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/buttonLabel"
+                        },
+                        "hideButtonLabel": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/hideButtonLabel"
+                        },
+                        "type": {
+                          "type": "string",
+                          "const": "extensionModule"
+                        },
+                        "subtype": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "id",
+                        "type",
+                        "subtype"
+                      ],
+                      "additionalProperties": false
                     }
                   ]
                 }
