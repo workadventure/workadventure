@@ -43,6 +43,7 @@ export class StreamSpaceWatcher {
                             .getSpaceFilter(subMessage.addSpaceUserMessage.filterName)
                             .addUser(subMessage.addSpaceUserMessage.user)
                             .then((extendedUser) => {
+                                // FIXME: what is this?
                                 if (subMessage.addSpaceUserMessage.spaceName === WORLD_SPACE_NAME)
                                     chatConnection.addUserFromSpace(extendedUser);
                             })

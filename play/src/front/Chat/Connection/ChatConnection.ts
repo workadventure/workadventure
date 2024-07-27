@@ -133,7 +133,6 @@ export interface ChatConnectionInterface {
     initEndToEndEncryption(): Promise<void>;
 
     isGuest: Readable<boolean>;
-    joinSpace?: (spaceId: string, spaceName: string) => void;
 }
 
 export type Connection = Pick<RoomConnection, "queryChatMembers" | "emitPlayerChatID" | "emitBanPlayerMessage">;

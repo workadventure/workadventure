@@ -4,6 +4,7 @@ import { ChatConnectionInterface, ChatRoom, ChatUser, ConnectionStatus, CreateRo
 import { SpaceUserExtended } from "../../../Space/SpaceFilter/SpaceFilter";
 import { RoomConnection } from "../../../Connection/RoomConnection";
 import { gameManager } from "../../../Phaser/Game/GameManager";
+import { Space } from "../../../Space/Space";
 import { ProximityChatRoom } from "./ProximityChatRoom";
 
 export class ProximityChatConnection implements ChatConnectionInterface {
@@ -18,6 +19,8 @@ export class ProximityChatConnection implements ChatConnectionInterface {
 
     public spaceId: Writable<string | undefined> = writable(undefined);
     public spaceName: Writable<string | undefined> = writable(undefined);
+
+    private currentSpace: Space | undefined;
 
     constructor(private _roomConnection: RoomConnection, private _userId: number, private _userUuid: string) {
         this.rooms.update((rooms) => {
@@ -122,6 +125,8 @@ export class ProximityChatConnection implements ChatConnectionInterface {
     joinSpace(spaceId: string, spaceName: string): void {
         this.spaceId.set(spaceId);
         this.spaceName.set(spaceName);
+
+        this.currentSpace = new Space(spaceName, new Map(), undefined, undefined);
     }
 
     // method to get room connection

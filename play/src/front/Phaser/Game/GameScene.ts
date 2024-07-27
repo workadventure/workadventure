@@ -163,6 +163,7 @@ import { matrixSecurity } from "../../Chat/Connection/Matrix/MatrixSecurity";
 import { proximityRoomConnection, selectedRoom } from "../../Chat/Stores/ChatStore";
 import { ProximityChatConnection } from "../../Chat/Connection/Proximity/ProximityChatConnection";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
+import { ProximitySpaceManager } from "../../WebRtc/ProximitySpaceManager";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -297,6 +298,7 @@ export class GameScene extends DirtyScene {
     private playerVariablesManager!: PlayerVariablesManager;
     private scriptingEventsManager!: ScriptingEventsManager;
     private followManager!: FollowManager;
+    private proximitySpaceManager: ProximitySpaceManager;
     private objectsByType = new Map<string, ITiledMapObject[]>();
     private embeddedWebsiteManager!: EmbeddedWebsiteManager;
     private areaManager!: DynamicAreaManager;
@@ -1002,6 +1004,7 @@ export class GameScene extends DirtyScene {
         this.cameraManager?.destroy();
         this.mapEditorModeManager?.destroy();
         this._broadcastService?.destroy();
+        this.proximitySpaceManager?.destroy();
         this.peerStoreUnsubscriber?.();
         this.mapEditorModeStoreUnsubscriber?.();
         this.refreshPromptStoreStoreUnsubscriber?.();
@@ -1536,14 +1539,15 @@ export class GameScene extends DirtyScene {
 
                     this.chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
 
-                    // initialise the proximity chat connection
-                    proximityRoomConnection.set(
-                        new ProximityChatConnection(
-                            this.connection,
-                            this.connection.getUserId(),
-                            localUserStore.getLocalUser()?.uuid ?? "Unknown"
-                        )
+                    const proximityChatConnection = new ProximityChatConnection(
+                        this.connection,
+                        this.connection.getUserId(),
+                        localUserStore.getLocalUser()?.uuid ?? "Unknown"
                     );
+                    // initialise the proximity chat connection
+                    proximityRoomConnection.set(proximityChatConnection);
+
+                    this.proximitySpaceManager = new ProximitySpaceManager(this.connection, proximityChatConnection);
 
                     const chatId = localUserStore.getChatId();
                     const email: string | null = localUserStore.getLocalUser()?.email || null;
