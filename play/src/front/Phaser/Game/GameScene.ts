@@ -138,6 +138,7 @@ import {
     WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM,
 } from "../../Stores/MapEditorStore";
 import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
+import { LocalSpaceProvider } from "../../Space/SpaceProvider/SpaceStore";
 import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer, debugZoom } from "../../Utils/Debuggers";
 import { checkCoturnServer } from "../../Components/Video/utils";
 import { BroadcastService } from "../../Streaming/BroadcastService";
@@ -153,9 +154,8 @@ import { hideBubbleConfirmationModal } from "../../Rules/StatusRules/statusChang
 import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/statusChanger";
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import { getCoWebSite, openCoWebSite } from "../../Chat/Utils";
-import { LocalSpaceProviderSingleton } from "../../Space/SpaceProvider/SpaceStore";
 import { CONNECTED_USER_FILTER_NAME, WORLD_SPACE_NAME } from "../../Space/Space";
-import { StreamSpaceWatcherSingleton } from "../../Space/SpaceWatcher/SocketSpaceWatcher";
+import { StreamSpaceWatcher } from "../../Space/SpaceWatcher/SocketSpaceWatcher";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
 import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
@@ -297,6 +297,7 @@ export class GameScene extends DirtyScene {
     private playerVariablesManager!: PlayerVariablesManager;
     private scriptingEventsManager!: ScriptingEventsManager;
     private followManager!: FollowManager;
+    private streamSpaceWatcher: StreamSpaceWatcher | undefined;
     private objectsByType = new Map<string, ITiledMapObject[]>();
     private embeddedWebsiteManager!: EmbeddedWebsiteManager;
     private areaManager!: DynamicAreaManager;
@@ -328,6 +329,7 @@ export class GameScene extends DirtyScene {
         this.currentCompanionTextureReject = reject;
     });
     public chatConnection!: ChatConnectionInterface;
+    private _spaceStore: LocalSpaceProvider | undefined;
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
@@ -992,6 +994,8 @@ export class GameScene extends DirtyScene {
         layoutManagerActionStore.clearActions();
 
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
+        this.streamSpaceWatcher?.destroy();
+        this._spaceStore?.destroy();
         this.connection?.closeConnection();
         this.simplePeer?.closeAllConnections();
         this.simplePeer?.unregister();
@@ -1047,8 +1051,6 @@ export class GameScene extends DirtyScene {
         this.playersMovementEventDispatcher.cleanup();
         this.gameMapFrontWrapper?.close();
         this.followManager?.close();
-
-        LocalSpaceProviderSingleton.getInstance().destroy();
 
         //When we leave game, the camera is stop to be reopen after.
         // I think that we could keep camera status and the scene can manage camera setup
@@ -1521,39 +1523,41 @@ export class GameScene extends DirtyScene {
                     }
                 }
 
-                if (this.connection) {
-                    //We need to add an env parameter to switch between chat services
-                    const matrixClientWrapper = new MatrixClientWrapper(MATRIX_PUBLIC_URI ?? "", localUserStore);
-                    const matrixClientPromise = matrixClientWrapper.initMatrixClient();
+                //We need to add an env parameter to switch between chat services
+                const matrixClientWrapper = new MatrixClientWrapper(MATRIX_PUBLIC_URI ?? "", localUserStore);
+                const matrixClientPromise = matrixClientWrapper.initMatrixClient();
 
-                    matrixClientPromise
-                        .then((matrixClient) => {
-                            matrixSecurity.updateMatrixClientStore(matrixClient);
-                        })
-                        .catch((e) => {
-                            console.error(e);
-                        });
+                matrixClientPromise
+                    .then((matrixClient) => {
+                        matrixSecurity.updateMatrixClientStore(matrixClient);
+                    })
+                    .catch((e) => {
+                        console.error(e);
+                    });
 
-                    this.chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
+                this.chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
 
-                    // initialise the proximity chat connection
-                    proximityRoomConnection.set(
-                        new ProximityChatConnection(
-                            this.connection,
-                            this.connection.getUserId(),
-                            localUserStore.getLocalUser()?.uuid ?? "Unknown"
-                        )
-                    );
+                const proximityChatConnection = new ProximityChatConnection(
+                    this.connection,
+                    this.connection.getUserId(),
+                    localUserStore.getLocalUser()?.uuid ?? "Unknown"
+                );
 
-                    const chatId = localUserStore.getChatId();
-                    const email: string | null = localUserStore.getLocalUser()?.email || null;
-                    if (email && chatId) this.connection.emitUpdateChatId(email, chatId);
-                }
+                // initialise the proximity chat connection
+                proximityRoomConnection.set(proximityChatConnection);
 
-                const spaceProvider = LocalSpaceProviderSingleton.getInstance(onConnect.connection.socket);
-                StreamSpaceWatcherSingleton.getInstance(onConnect.connection.socket);
+                const chatId = localUserStore.getChatId();
+                const email: string | null = localUserStore.getLocalUser()?.email || null;
+                if (email && chatId) this.connection.emitUpdateChatId(email, chatId);
 
-                spaceProvider.add(WORLD_SPACE_NAME).watch(CONNECTED_USER_FILTER_NAME);
+                this._spaceStore = new LocalSpaceProvider(this.connection.socket);
+                this.streamSpaceWatcher = new StreamSpaceWatcher(
+                    this.connection,
+                    this._spaceStore,
+                    proximityChatConnection
+                );
+
+                this._spaceStore.add(WORLD_SPACE_NAME).watch(CONNECTED_USER_FILTER_NAME);
 
                 this.tryOpenMapEditorWithToolEditorParameter();
 
@@ -1800,7 +1804,14 @@ export class GameScene extends DirtyScene {
                         broadcastService: BroadcastService,
                         playSound: boolean
                     ) => {
-                        return new JitsiBroadcastSpace(connection, spaceName, spaceFilter, broadcastService, playSound);
+                        return new JitsiBroadcastSpace(
+                            connection,
+                            spaceName,
+                            spaceFilter,
+                            broadcastService,
+                            playSound,
+                            this.spaceStore
+                        );
                     }
                 );
                 this._broadcastService = broadcastService;
@@ -1817,7 +1828,7 @@ export class GameScene extends DirtyScene {
                             const oldMegaphoneUrl = get(megaphoneUrlStore);
 
                             if (oldMegaphoneUrl && megaphoneSettingsMessage.url !== oldMegaphoneUrl) {
-                                spaceProvider.delete(oldMegaphoneUrl);
+                                this._spaceStore.delete(oldMegaphoneUrl);
                             }
                             broadcastService.joinSpace(megaphoneSettingsMessage.url);
                             megaphoneUrlStore.set(megaphoneSettingsMessage.url);
@@ -3877,5 +3888,12 @@ ${escapedMessage}
 
     private disableCameraResistance(): void {
         this.cameraManager.disableResistanceZone();
+    }
+
+    get spaceStore(): Promise<LocalSpaceProvider> {
+        if (!this._spaceStore) {
+            throw new Error("_spaceStore not yet initialized");
+        }
+        return this._spaceStore;
     }
 }

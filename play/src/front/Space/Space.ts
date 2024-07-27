@@ -17,8 +17,12 @@ export class Space implements SpaceInterface {
     constructor(
         name: string,
         private metadata = new Map<string, unknown>(),
-        private socket: WebSocket | undefined = undefined,
-        private encoder: { encode: (messageCoded: ClientToServerMessage) => { finish: () => Uint8Array } },
+        // TODO: replace this by an instance of RoomConnection that is in charge of writing on the WebSocket.
+        // It is the sole duty of RoomConnection to write on websockets
+        private socket: WebSocket,
+        private encoder: {
+            encode: (messageCoded: ClientToServerMessage) => { finish: () => Uint8Array };
+        } = ClientToServerMessage,
         private filters: Map<string, SpaceFilterInterface> = new Map<string, SpaceFilterInterface>()
     ) {
         if (name === "") throw new SpaceNameIsEmptyError();
@@ -130,7 +134,6 @@ export class Space implements SpaceInterface {
 
     private send(message: ClientToServerMessage): void {
         const bytes = this.encoder.encode(message).finish();
-        if (!this.socket) return;
         if (this.socket.readyState === WebSocket.CLOSING || this.socket.readyState === WebSocket.CLOSED) {
             console.warn("Trying to send a message to the server, but the connection is closed. Message: ", message);
             return;

@@ -11,7 +11,6 @@ import { BroadcastService, jitsiLoadingStore } from "../BroadcastService";
 import { BroadcastSpace } from "../Common/BroadcastSpace";
 import { JITSI_DOMAIN, JITSI_MUC_DOMAIN, JITSI_XMPP_DOMAIN } from "../../Enum/EnvironmentVariable";
 import { SpaceInterface } from "../../Space/SpaceInterface";
-import { LocalSpaceProviderSingleton } from "../../Space/SpaceProvider/SpaceStore";
 import { SpaceProviderInterface } from "../../Space/SpaceProvider/SpaceProviderInterface";
 import { jitsiConferencesStore } from "./JitsiConferencesStore";
 import { JitsiConferenceWrapper } from "./JitsiConferenceWrapper";
@@ -44,7 +43,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
         private spaceFilter: SpaceFilterMessage,
         private broadcastService: BroadcastService,
         private playSound: boolean,
-        private spaceStore: SpaceProviderInterface = LocalSpaceProviderSingleton.getInstance()
+        private spaceStore: SpaceProviderInterface
     ) {
         super();
 
