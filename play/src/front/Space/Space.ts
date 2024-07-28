@@ -17,7 +17,7 @@ export class Space implements SpaceInterface {
     constructor(
         name: string,
         private metadata = new Map<string, unknown>(),
-        // TODO: replace this by an instance of RoomConnection that is in charge of writing on the WebSocket.
+        // FIXME: replace this by an instance of RoomConnection that is in charge of writing on the WebSocket.
         // It is the sole duty of RoomConnection to write on websockets
         private socket: WebSocket,
         private encoder: {
@@ -91,6 +91,7 @@ export class Space implements SpaceInterface {
     }
 
     private userJoinSpace() {
+        // FIXME: why to we create an empty filter here? Doesn't it look weird?
         const spaceFilter: SpaceFilterMessage = {
             filterName: "",
             spaceName: this.name,
@@ -120,6 +121,8 @@ export class Space implements SpaceInterface {
         });
     }
 
+    // FIXME: this looks like a hack.
+    // Any chance we can make the more generic?
     emitJitsiParticipantId(participantId: string) {
         this.send({
             message: {
