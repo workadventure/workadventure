@@ -1,8 +1,7 @@
 import { Readable, Writable } from "svelte/store";
-import { AvailabilityStatus, PartialSpaceUser } from "@workadventure/messages";
+import { AvailabilityStatus } from "@workadventure/messages";
 import { MapStore } from "@workadventure/store-utils";
 import { RoomConnection } from "../../Connection/RoomConnection";
-import { SpaceUserExtended } from "../../Space/SpaceFilter/SpaceFilter";
 
 export interface ChatUser {
     id: string;
@@ -99,12 +98,6 @@ export interface ChatConnectionInterface {
     directRooms: Readable<ChatRoom[]>;
     rooms: Readable<ChatRoom[]>;
     invitations: Readable<ChatRoom[]>;
-
-    addUserFromSpace(user: SpaceUserExtended): void;
-
-    updateUserFromSpace(user: PartialSpaceUser): void;
-
-    disconnectSpaceUser(userId: number): void;
 
     sendBan: (uuid: string, username: string) => void;
     createRoom: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string }>;

@@ -20,8 +20,9 @@ import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
 import { RoomMessageEventContent } from "matrix-js-sdk/lib/@types/events";
 import { ChatRoom, ChatRoomMembership } from "../ChatConnection";
 import { selectedChatMessageToReply } from "../../Stores/ChatStore";
-import { LocalSpaceProvider } from "../../../Space/SpaceProvider/SpaceStore";
 import { CONNECTED_USER_FILTER_NAME, WORLD_SPACE_NAME } from "../../../Space/Space";
+import { gameManager } from "../../../Phaser/Game/GameManager";
+import { SpaceProviderInterface } from "../../../Space/SpaceProvider/SpaceProviderInterface";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { matrixSecurity } from "./MatrixSecurity";
@@ -44,7 +45,10 @@ export class MatrixChatRoom implements ChatRoom {
     isEncrypted!: Writable<boolean>;
     typingMembers: Writable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
 
-    constructor(private matrixRoom: Room, private spaceStore: LocalSpaceProvider) {
+    constructor(
+        private matrixRoom: Room,
+        private spaceStore: SpaceProviderInterface = gameManager.getCurrentGameScene().spaceStore
+    ) {
         this.id = matrixRoom.roomId;
         this.name = writable(matrixRoom.name);
         this.type = this.getMatrixRoomType();
