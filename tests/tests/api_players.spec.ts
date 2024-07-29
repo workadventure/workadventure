@@ -23,7 +23,6 @@ test.describe('API WA.players', () => {
     );
     await login(page, 'Alice');
 
-    console.log("C'EST OK POUR ALICE");
 
     const newBrowser = await browser.browserType().launch();
     const page2 = await newBrowser.newPage();
@@ -34,12 +33,9 @@ test.describe('API WA.players', () => {
 
     await login(page2, 'Bob');
 
-    await WA.onInit();
-
-    console.log("C'EST OK POUR BOB");
 
     const iframe = getCoWebsiteIframe(page);
-    console.log('Iframe trouvé:', !!iframe);
+    console.log('Iframe trouvé:', iframe);
 
 
     const eventsLocator = iframe.locator('#events');
@@ -51,7 +47,6 @@ test.describe('API WA.players', () => {
     const events = getCoWebsiteIframe(page).locator('#events');
 
     console.log("EVENT", events);
-    await page.pause();
     await expect(events).toContainText('New user: Bob', {
         timeout: 10000
     });
@@ -77,6 +72,21 @@ test.describe('API WA.players', () => {
     await expect(events).toContainText('User left: Bob');
     await getCoWebsiteIframe(page).locator('#listCurrentPlayers').click();
     await expect(list).not.toContainText('Bob');
+
+    // await page.pause();
+    // await getCoWebsiteIframe(page2).locator('#the-variable').fill('yeah');
+    // await getCoWebsiteIframe(page2).locator('#the-variable').evaluate(e => e.blur());
+    // const events2 = getCoWebsiteIframe(page).locator('#events');
+    // await expect(events2).toContainText("User 'Bob' testVariable changed. New value: yeah (tracked globally)");
+    // await expect(events2).toContainText("User 'Bob' testVariable changed. New value: yeah (tracked locally)");
+    // await expect(events2).toContainText("Asserted value from event and from WA.players.state is the same");
+
+    // await page2.close();
+
+    // await expect(events).toContainText('User left: Alice');
+    // await getCoWebsiteIframe(page).locator('#listCurrentPlayers').click();
+    // await expect(list).not.toContainText('Alice');
+
   });
 
   test('exception if we forget to call WA.players.configureTracking', async ({ page }, { project }) => {

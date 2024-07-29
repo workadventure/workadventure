@@ -276,7 +276,6 @@ class AnalyticsClient {
     }
 
     login(): void {
-        console.log("login");
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture("wa_login");

@@ -402,7 +402,7 @@
         {:else if activeCowebsite instanceof BBBCoWebsite}
             <BigBlueButtonCowebsiteComponent actualCowebsite={activeCowebsite} />
         {:else if activeCowebsite instanceof SimpleCoWebsite}
-            <SimpleCowebsiteComponent actualCowebsite={activeCowebsite} />
+            <SimpleCowebsiteComponent actualCowebsite={activeCowebsite} allowApi={activeCowebsite.getAllowApi()} />
         {/if}
     </div>
 

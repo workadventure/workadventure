@@ -53,4 +53,8 @@ export class SimpleCoWebsite implements CoWebsite {
     getAllowPolicy(): string | undefined {
         return this.allowPolicy;
     }
+
+    getAllowApi(): boolean {
+        return this.allowApi ?? false;
+    }
 }

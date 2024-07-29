@@ -5,7 +5,7 @@
 
     export let actualCowebsite: SimpleCoWebsite;
     let iframeSimpleCowebsite: HTMLIFrameElement;
-    let allowApi: boolean;
+    export let allowApi: boolean;
 
     onMount(() => {
         if (allowApi) {
@@ -21,6 +21,7 @@
 </script>
 
 <iframe
+    bind:this={iframeSimpleCowebsite}
     src={actualCowebsite.getUrl().toString()}
     frameborder="0"
     allow={actualCowebsite.getAllowPolicy()}

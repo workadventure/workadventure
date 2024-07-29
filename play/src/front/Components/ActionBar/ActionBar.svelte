@@ -529,7 +529,7 @@
                 </div>
 
                 <div
-                    class="group/btn-users relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg last:rounded-r-lg p-2 p-2 aspect-square hidden sm:block"
+                    class="group/btn-users relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg last:rounded-r-lg p-2 aspect-square hidden sm:block"
                     on:click={toggleChat}
                 >
                     <div
@@ -1222,6 +1222,14 @@
                                     >
                                         {$LL.actionbar.login()}
                                     </a>
+                                {:else}
+                                    <button
+                                        on:click={() => analyticsClient.logout()}
+                                        on:click={logOut}
+                                        class="btn btn-secondary h-12 @sm/actions:h-10 @xl/actions:h-12 text-base @sm/actions:text-sm @xl/actions:text-base rounded select-none ml-2 !px-4 transition-all"
+                                    >
+                                        {$LL.menu.profile.logout()}
+                                    </button>
                                 {/if}
                             </div>
                         </div>
@@ -1538,33 +1546,6 @@
                                     </div>
                                     <div>{$LL.actionbar.otherSettings()}</div>
                                 </button>
-                                {#if $userIsConnected && ENABLE_OPENID}
-                                    <button
-                                        class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
-                                        on:click={logOut}
-                                    >
-                                        <div
-                                            class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
-                                        >
-                                            <SettingsIcon />
-                                        </div>
-                                        <div>{$LL.menu.profile.logout()}</div>
-                                        <!-- <div>{$LL.actionbar.logout()}</div> -->
-                                    </button>
-                                {:else}
-                                    <button
-                                        class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
-                                        on:click={() => analyticsClient.login()}
-                                    >
-                                        <div
-                                            class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
-                                        >
-                                            <SettingsIcon />
-                                        </div>
-                                        <div>{$LL.menu.profile.login()}</div>
-                                        <!-- <div>{$LL.actionbar.login()}</div> -->
-                                    </button>
-                                {/if}
                             </div>
                         </div>
                     {/if}
@@ -1685,6 +1666,15 @@
                         >
                             {$LL.actionbar.login()}
                         </a>
+                    {:else}
+                        {console.log("bonjour")}
+                        <button
+                            on:click={() => analyticsClient.logout()}
+                            on:click={logOut}
+                            class="btn btn-secondary btn-sm w-full justify-center"
+                        >
+                            <p>bonjour</p>
+                        </button>
                     {/if}
                 </div>
             {/if}
