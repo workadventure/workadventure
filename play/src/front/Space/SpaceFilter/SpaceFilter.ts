@@ -9,7 +9,7 @@ import {
 import { Subject } from "rxjs";
 import { Writable, get, writable } from "svelte/store";
 import { CharacterLayerManager } from "../../Phaser/Entity/CharacterLayerManager";
-import { RoomConnection } from "../../Connection/RoomConnection";
+import { gameManager } from "../../Phaser/Game/GameManager";
 
 export interface SpaceFilterInterface {
     userExist(userId: number): boolean;
@@ -66,7 +66,7 @@ export class SpaceFilter implements SpaceFilterInterface {
         private name: string,
         private spaceName: string,
         private filter: Filter = undefined,
-        private roomConnection: RoomConnection,
+        private roomConnection = gameManager.getCurrentGameScene().connection,
         readonly users: Writable<Map<number, SpaceUserExtended>> = writable(new Map<number, SpaceUserExtended>())
     ) {
         this.addSpaceFilter();
@@ -124,25 +124,25 @@ export class SpaceFilter implements SpaceFilterInterface {
 
         emitter = {
             emitKickOffUserMessage: (userId: string) => {
-                this.emitKickOffUserMessage(userId);
+                this.roomConnection?.emitKickOffUserMessage(userId, this.name);
             },
             emitMuteEveryBodySpace: () => {
-                this.emitMuteEveryBodySpace();
+                this.roomConnection?.emitMuteEveryBodySpace(this.name);
             },
             emitMuteParticipantIdSpace: (userId: string) => {
-                this.emitMuteParticipantIdSpace(userId);
+                this.roomConnection?.emitMuteParticipantIdSpace(this.name, userId);
             },
             emitMuteVideoEveryBodySpace: () => {
-                this.emitMuteVideoEveryBodySpace();
+                this.roomConnection?.emitMuteVideoEveryBodySpace(this.name);
             },
             emitMuteVideoParticipantIdSpace: (userId: string) => {
-                this.emitMuteVideoParticipantIdSpace(userId);
+                this.roomConnection?.emitMuteParticipantIdSpace(this.name, userId);
             },
             emitProximityPublicMessage: (message: string) => {
-                this.emitProximityPublicMessage(message);
+                this.roomConnection?.emitProximityPublicMessage(this.name, message);
             },
             emitProximityPrivateMessage: (message: string, receiverUserId: number) => {
-                this.emitProximityPrivateMessage(message, receiverUserId);
+                this.roomConnection?.emitProximityPrivateMessage(this.name, message, receiverUserId);
             },
         };
 
@@ -185,34 +185,6 @@ export class SpaceFilter implements SpaceFilterInterface {
                 spaceName: this.spaceName,
             },
         });
-    }
-
-    private emitKickOffUserMessage(userId: string) {
-        this.roomConnection.emitKickOffUserMessage(userId, this.spaceName);
-    }
-
-    private emitMuteEveryBodySpace() {
-        this.roomConnection.emitMuteEveryBodySpace(this.spaceName);
-    }
-
-    private emitMuteVideoEveryBodySpace() {
-        this.roomConnection.emitMuteVideoEveryBodySpace(this.spaceName);
-    }
-
-    private emitMuteParticipantIdSpace(userId: string) {
-        this.roomConnection.emitMuteParticipantIdSpace(userId, this.spaceName);
-    }
-
-    private emitMuteVideoParticipantIdSpace(userId: string) {
-        this.roomConnection.emitMuteVideoParticipantIdSpace(userId, this.spaceName);
-    }
-
-    private emitProximityPublicMessage(message: string) {
-        this.roomConnection.emitProximityPublicMessage(this.spaceName, message);
-    }
-
-    private emitProximityPrivateMessage(message: string, receiverUserId: number) {
-        this.roomConnection.emitProximityPrivateMessage(this.spaceName, message, receiverUserId);
     }
 
     getFilterType(): "spaceFilterEverybody" | "spaceFilterContainName" | "spaceFilterLiveStreaming" | undefined {

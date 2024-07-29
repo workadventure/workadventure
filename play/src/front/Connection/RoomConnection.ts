@@ -1522,6 +1522,7 @@ export class RoomConnection implements RoomConnection {
         return spaceFilter;
     }
     public emitUserJoinSpace(spaceName: string) {
+        // FIXME: why to we create an empty filter here? Doesn't it look weird?
         const spaceFilter: SpaceFilterMessage = {
             filterName: "",
             spaceName,

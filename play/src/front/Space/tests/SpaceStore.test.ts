@@ -15,6 +15,14 @@ vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
     };
 });
 
+vi.mock("../../Phaser/Game/GameManager", () => {
+    return {
+        gameManager: {
+            getCurrentGameScene: () => ({}),
+        },
+    };
+});
+
 describe("SpaceProviderInterface implementation", () => {
     describe("SpaceStore", () => {
         describe("SpaceStore Add", () => {
@@ -40,7 +48,7 @@ describe("SpaceProviderInterface implementation", () => {
                     [newSpace.getName(), newSpace],
                 ]);
 
-                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(undefined, spaceMap);
+                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(spaceMap);
                 expect(() => {
                     spaceStore.add(newSpace.getName());
                 }).toThrow(SpaceAlreadyExistError);
@@ -58,7 +66,7 @@ describe("SpaceProviderInterface implementation", () => {
                     [newSpace.getName(), newSpace],
                 ]);
 
-                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(undefined, spaceMap);
+                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(spaceMap);
 
                 const result: boolean = spaceStore.exist(newSpace.getName());
 
@@ -105,7 +113,7 @@ describe("SpaceProviderInterface implementation", () => {
                     [space2.getName(), space2],
                 ]);
 
-                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(undefined, spaceMap);
+                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(spaceMap);
 
                 spaceStore.delete(spaceToDelete.getName());
                 expect(spaceStore.getAll()).not.toContain(spaceToDelete);
@@ -150,7 +158,7 @@ describe("SpaceProviderInterface implementation", () => {
                     [space2.getName(), space2],
                 ]);
 
-                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(undefined, spaceMap);
+                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(spaceMap);
 
                 expect(spaceStore.getAll()).toContain(space1);
                 expect(spaceStore.getAll()).toContain(space3);
@@ -185,7 +193,7 @@ describe("SpaceProviderInterface implementation", () => {
                     [space1.getName(), space1],
                     [space2.getName(), space2],
                 ]);
-                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(undefined, spaceMap);
+                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(spaceMap);
                 spaceStore.destroy();
                 expect(spaceStore.getAll()).toHaveLength(0);
                 // eslint-disable-next-line @typescript-eslint/unbound-method

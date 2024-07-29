@@ -14,7 +14,7 @@ import {
     Visibility,
 } from "matrix-js-sdk";
 import { MapStore } from "@workadventure/store-utils";
-import { AvailabilityStatus, ChatMember, ChatMembersAnswer, PartialSpaceUser } from "@workadventure/messages";
+import { AvailabilityStatus, ChatMember, ChatMembersAnswer } from "@workadventure/messages";
 import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import {
@@ -25,11 +25,10 @@ import {
     Connection,
     ConnectionStatus,
     CreateRoomOptions,
-    userId,
 } from "../ChatConnection";
-import { SpaceUserExtended } from "../../../Space/SpaceFilter/SpaceFilter";
 import { selectedRoom } from "../../Stores/ChatStore";
-import { gameManager } from "../../../Phaser/Game/GameManager";
+import { CONNECTED_USER_FILTER_NAME, WORLD_SPACE_NAME } from "../../../Space/Space";
+import { SpaceProviderInterface } from "../../../Space/SpaceProvider/SpaceProviderInterface";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 import { chatUserFactory } from "./MatrixChatUser";
 import { MatrixSecurity, matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity";
@@ -50,7 +49,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     directRooms: Readable<ChatRoom[]>;
     invitations: Readable<ChatRoom[]>;
     rooms: Readable<ChatRoom[]>;
-    connectedUsers: MapStore<userId, ChatUser> = new MapStore<userId, ChatUser>();
+    connectedUsers: Readable<Map<number, ChatUser>>;
     userDisconnected: MapStore<chatId, ChatUser> = new MapStore<chatId, ChatUser>();
     isEncryptionRequiredAndNotSet: Writable<boolean>;
     isGuest!: Writable<boolean>;
@@ -58,6 +57,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     constructor(
         private connection: Connection,
         clientPromise: Promise<MatrixClient>,
+        private spaceStore: SpaceProviderInterface,
         private matrixSecurity: MatrixSecurity = defaultMatrixSecurity
     ) {
         this.connectionStatus = writable("CONNECTING");
@@ -80,6 +80,29 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         });
 
         this.isEncryptionRequiredAndNotSet = this.matrixSecurity.isEncryptionRequiredAndNotSet;
+
+        const usersFromSpace = this.spaceStore.get(WORLD_SPACE_NAME).getSpaceFilter(CONNECTED_USER_FILTER_NAME).users;
+        this.connectedUsers = derived(usersFromSpace, (users) => {
+            return Array.from(users.values()).reduce((acc, currentUser) => {
+                if (currentUser.id) {
+                    acc.set(currentUser.id, {
+                        uuid: currentUser.uuid,
+                        id: currentUser.chatID ?? "",
+                        avatarUrl: currentUser.getWokaBase64 ?? defaultWoka,
+                        availabilityStatus: writable(AvailabilityStatus.ONLINE),
+                        roomName: currentUser.roomName,
+                        playUri: currentUser.playUri,
+                        username: currentUser.name,
+                        isAdmin: currentUser.tags.includes("admin"),
+                        isMember: currentUser.tags.includes("member"),
+                        visitCardUrl: currentUser.visitCardUrl,
+                        color: currentUser.color ?? defaultColor,
+                        spaceId: currentUser.id,
+                    });
+                }
+                return acc;
+            }, new Map() as Map<number, ChatUser>);
+        });
 
         (async () => {
             this.client = await clientPromise;
@@ -131,7 +154,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             return;
         }
 
-        const matrixRoom = new MatrixChatRoom(room, gameManager.getCurrentGameScene().spaceStore);
+        const matrixRoom = new MatrixChatRoom(room);
         this.roomList.set(matrixRoom.id, matrixRoom);
     }
 
@@ -144,7 +167,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         const existingMatrixChatRoom = this.roomList.has(roomId);
         if (membership !== prevMembership && existingMatrixChatRoom) {
             if (membership === KnownMembership.Join) {
-                this.roomList.set(roomId, new MatrixChatRoom(room, gameManager.getCurrentGameScene().spaceStore));
+                this.roomList.set(roomId, new MatrixChatRoom(room));
                 return;
             }
             if (membership === KnownMembership.Leave || membership === KnownMembership.Ban) {
@@ -156,11 +179,11 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
             if (membership === KnownMembership.Invite) {
                 const inviter = room.getDMInviter();
-                const newRoom = new MatrixChatRoom(room, gameManager.getCurrentGameScene().spaceStore);
+                const newRoom = new MatrixChatRoom(room);
                 if (
                     inviter &&
                     (this.userDisconnected.has(inviter) ||
-                        Array.from(this.connectedUsers.values()).some((user: ChatUser) => user.id === inviter))
+                        Array.from(get(this.connectedUsers).values()).some((user: ChatUser) => user.id === inviter))
                 ) {
                     this.roomList.set(roomId, newRoom);
                     newRoom.joinRoom();
@@ -181,6 +204,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
         this.getWorldChatMembers()
             .then((members) => {
+                console.log({ members });
                 members.forEach((member) => {
                     if (member.chatId) {
                         this.userDisconnected.set(member.chatId, {
@@ -200,80 +224,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 });
             })
             .catch((error) => console.error(error));
-    }
-
-    updateUserFromSpace(user: PartialSpaceUser): void {
-        const connectedUserToUpdate: ChatUser | undefined = this.connectedUsers.get(user.id);
-
-        if (!connectedUserToUpdate) return;
-
-        if (user.availabilityStatus && user.availabilityStatus !== 0)
-            connectedUserToUpdate.availabilityStatus.set(user.availabilityStatus);
-        if (connectedUserToUpdate.spaceId)
-            this.connectedUsers.set(connectedUserToUpdate.spaceId, {
-                id:
-                    connectedUserToUpdate.id === "" || connectedUserToUpdate.id === "null"
-                        ? user.chatID ?? ""
-                        : connectedUserToUpdate.id,
-                uuid: connectedUserToUpdate.uuid,
-                avatarUrl: connectedUserToUpdate.avatarUrl,
-                availabilityStatus: connectedUserToUpdate.availabilityStatus,
-                roomName: user.roomName ?? connectedUserToUpdate.roomName,
-                playUri: user.playUri ?? connectedUserToUpdate.playUri,
-                username: user.name ?? connectedUserToUpdate.username,
-                isAdmin:
-                    user.tags && user.tags.length > 0 ? user.tags.includes("admin") : connectedUserToUpdate.isAdmin,
-                isMember:
-                    user.tags && user.tags.length > 0 ? user.tags.includes("member") : connectedUserToUpdate.isMember,
-                visitCardUrl: user.visitCardUrl ?? connectedUserToUpdate.visitCardUrl,
-                color: user.color ?? connectedUserToUpdate.color,
-                spaceId: connectedUserToUpdate.spaceId,
-            });
-    }
-
-    addUserFromSpace(user: SpaceUserExtended): void {
-        if (!user.chatID) return;
-        //TODO : Try to find why pusher send us availabilityStatus = 0
-        if (user.availabilityStatus === 0) user.availabilityStatus = AvailabilityStatus.ONLINE;
-        let updatedUser = {
-            uuid: user.uuid,
-            id: user.chatID,
-            avatarUrl: user.getWokaBase64 ?? defaultWoka,
-            availabilityStatus: writable(user.availabilityStatus),
-            roomName: user.roomName,
-            playUri: user.playUri,
-            username: user.name,
-            isAdmin: user.tags.includes("admin"),
-            isMember: user.tags.includes("member"),
-            visitCardUrl: user.visitCardUrl,
-            color: user.color ?? defaultColor,
-            spaceId: user.id,
-        };
-
-        const actualUser = this.connectedUsers.get(user.id);
-        if (actualUser) {
-            actualUser.availabilityStatus.set(user.availabilityStatus);
-            updatedUser = {
-                uuid: user.uuid,
-                id: user.chatID,
-                avatarUrl: user.getWokaBase64 ?? defaultWoka,
-                availabilityStatus: actualUser.availabilityStatus,
-                roomName: user.roomName,
-                playUri: user.playUri,
-                username: user.name,
-                isAdmin: user.tags.includes("admin"),
-                isMember: user.tags.includes("member"),
-                visitCardUrl: user.visitCardUrl,
-                color: user.color ?? defaultColor,
-                spaceId: user.id,
-            };
-        }
-
-        this.connectedUsers.set(user.id, updatedUser);
-    }
-
-    disconnectSpaceUser(userId: number): void {
-        this.connectedUsers.delete(userId);
     }
 
     async getWorldChatMembers(searchText?: string): Promise<ChatMember[]> {
@@ -376,7 +326,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
             const room = this.client.getRoom(room_id);
             if (!room) return;
-            const newRoom = new MatrixChatRoom(room, gameManager.getCurrentGameScene().spaceStore);
+            const newRoom = new MatrixChatRoom(room);
             this.roomList.set(room_id, newRoom);
             return newRoom;
         } catch (error) {
@@ -502,7 +452,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                         await this.addDMRoomInAccountData(dmInviterId, roomId);
                     }
 
-                    const matrixRoom = new MatrixChatRoom(roomAfterSync, gameManager.getCurrentGameScene().spaceStore);
+                    const matrixRoom = new MatrixChatRoom(roomAfterSync);
                     this.roomList.set(roomId, matrixRoom);
                     res(matrixRoom);
                     return;
