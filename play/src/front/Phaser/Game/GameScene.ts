@@ -1550,7 +1550,7 @@ export class GameScene extends DirtyScene {
                 const email: string | null = localUserStore.getLocalUser()?.email || null;
                 if (email && chatId) this.connection.emitUpdateChatId(email, chatId);
 
-                this._spaceStore = new LocalSpaceProvider(this.connection.socket);
+                this._spaceStore = new LocalSpaceProvider(this.connection);
                 this.streamSpaceWatcher = new StreamSpaceWatcher(
                     this.connection,
                     this._spaceStore,
@@ -1828,7 +1828,7 @@ export class GameScene extends DirtyScene {
                             const oldMegaphoneUrl = get(megaphoneUrlStore);
 
                             if (oldMegaphoneUrl && megaphoneSettingsMessage.url !== oldMegaphoneUrl) {
-                                this._spaceStore.delete(oldMegaphoneUrl);
+                                this.spaceStore.delete(oldMegaphoneUrl);
                             }
                             broadcastService.joinSpace(megaphoneSettingsMessage.url);
                             megaphoneUrlStore.set(megaphoneSettingsMessage.url);
@@ -3890,7 +3890,7 @@ ${escapedMessage}
         this.cameraManager.disableResistanceZone();
     }
 
-    get spaceStore(): Promise<LocalSpaceProvider> {
+    get spaceStore(): LocalSpaceProvider {
         if (!this._spaceStore) {
             throw new Error("_spaceStore not yet initialized");
         }

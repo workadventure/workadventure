@@ -1,10 +1,4 @@
-import {
-    ClientToServerMessage,
-    SpaceFilterMessage,
-    UnwatchSpaceMessage,
-    UpdateSpaceMetadataMessage,
-    WatchSpaceMessage,
-} from "@workadventure/messages";
+import { RoomConnection } from "../Connection/RoomConnection";
 import { SpaceInterface } from "./SpaceInterface";
 import { SpaceFilterAlreadyExistError, SpaceFilterDoesNotExistError, SpaceNameIsEmptyError } from "./Errors/SpaceError";
 import { SpaceFilter, SpaceFilterInterface } from "./SpaceFilter/SpaceFilter";
@@ -17,12 +11,7 @@ export class Space implements SpaceInterface {
     constructor(
         name: string,
         private metadata = new Map<string, unknown>(),
-        // FIXME: replace this by an instance of RoomConnection that is in charge of writing on the WebSocket.
-        // It is the sole duty of RoomConnection to write on websockets
-        private socket: WebSocket,
-        private encoder: {
-            encode: (messageCoded: ClientToServerMessage) => { finish: () => Uint8Array };
-        } = ClientToServerMessage,
+        private roomConnection: RoomConnection,
         private filters: Map<string, SpaceFilterInterface> = new Map<string, SpaceFilterInterface>()
     ) {
         if (name === "") throw new SpaceNameIsEmptyError();
@@ -45,14 +34,7 @@ export class Space implements SpaceInterface {
 
     watch(filterName: string): SpaceFilterInterface {
         if (this.filters.has(filterName)) throw new SpaceFilterAlreadyExistError(this.name, filterName);
-        const newFilter: SpaceFilterInterface = new SpaceFilter(
-            filterName,
-            this.name,
-            undefined,
-            (message: ClientToServerMessage) => {
-                this.send(message);
-            }
-        );
+        const newFilter: SpaceFilterInterface = new SpaceFilter(filterName, this.name, undefined, this.roomConnection);
         this.filters.set(newFilter.getName(), newFilter);
         return newFilter;
     }
@@ -80,72 +62,24 @@ export class Space implements SpaceInterface {
     }
 
     private userLeaveSpace() {
-        this.send({
-            message: {
-                $case: "unwatchSpaceMessage",
-                unwatchSpaceMessage: UnwatchSpaceMessage.fromPartial({
-                    spaceName: this.name,
-                }),
-            },
-        });
+        this.roomConnection.emitUnwatchSpace(this.name);
     }
 
     private userJoinSpace() {
-        // FIXME: why to we create an empty filter here? Doesn't it look weird?
-        const spaceFilter: SpaceFilterMessage = {
-            filterName: "",
-            spaceName: this.name,
-            filter: undefined,
-        };
-        this.send({
-            message: {
-                $case: "watchSpaceMessage",
-                watchSpaceMessage: WatchSpaceMessage.fromPartial({
-                    spaceName: this.name,
-                    spaceFilter,
-                }),
-            },
-        });
+        this.roomConnection.emitWatchSpace(this.name);
     }
 
     private updateSpaceMetadata(metadata: Map<string, unknown>) {
-        const metadataMap = Object.fromEntries(metadata);
-        this.send({
-            message: {
-                $case: "updateSpaceMetadataMessage",
-                updateSpaceMetadataMessage: UpdateSpaceMetadataMessage.fromPartial({
-                    spaceName: this.name,
-                    metadata: JSON.stringify(metadataMap),
-                }),
-            },
-        });
+        this.roomConnection.emitUpdateSpaceMetadata(this.name, Object.fromEntries(metadata.entries()));
     }
 
-    // FIXME: this looks like a hack.
-    // Any chance we can make the more generic?
+    // FIXME: this looks like a hack, it should not belong here.
+    // Any chance we can make this more generic?
     emitJitsiParticipantId(participantId: string) {
-        this.send({
-            message: {
-                $case: "jitsiParticipantIdSpaceMessage",
-                jitsiParticipantIdSpaceMessage: {
-                    spaceName: this.name,
-                    value: participantId,
-                },
-            },
-        });
-    }
-
-    private send(message: ClientToServerMessage): void {
-        const bytes = this.encoder.encode(message).finish();
-        if (this.socket.readyState === WebSocket.CLOSING || this.socket.readyState === WebSocket.CLOSED) {
-            console.warn("Trying to send a message to the server, but the connection is closed. Message: ", message);
-            return;
-        }
-
-        this.socket.send(bytes);
+        this.roomConnection.emitJitsiParticipantIdSpace(this.name, participantId);
     }
 
     destroy() {
-        if (this.socket) this.userLeaveSpace();
+        this.userLeaveSpace();
     }
 }
