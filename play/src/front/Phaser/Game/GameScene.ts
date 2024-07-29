@@ -163,6 +163,8 @@ import { matrixSecurity } from "../../Chat/Connection/Matrix/MatrixSecurity";
 import { proximityRoomConnection, selectedRoom } from "../../Chat/Stores/ChatStore";
 import { ProximityChatConnection } from "../../Chat/Connection/Proximity/ProximityChatConnection";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
+import { SpaceProviderInterface } from "../../Space/SpaceProvider/SpaceProviderInterface";
+
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -329,7 +331,7 @@ export class GameScene extends DirtyScene {
         this.currentCompanionTextureReject = reject;
     });
     public chatConnection!: ChatConnectionInterface;
-    private _spaceStore: LocalSpaceProvider | undefined;
+    private _spaceStore: SpaceProviderInterface | undefined;
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
@@ -1535,7 +1537,12 @@ export class GameScene extends DirtyScene {
                         console.error(e);
                     });
 
-                this.chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
+                this._spaceStore = new LocalSpaceProvider();
+                this.streamSpaceWatcher = new StreamSpaceWatcher(this.connection, this._spaceStore);
+
+                this._spaceStore.add(WORLD_SPACE_NAME).watch(CONNECTED_USER_FILTER_NAME);
+
+                this.chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise, this._spaceStore);
 
                 const proximityChatConnection = new ProximityChatConnection(
                     this.connection,
@@ -1549,15 +1556,6 @@ export class GameScene extends DirtyScene {
                 const chatId = localUserStore.getChatId();
                 const email: string | null = localUserStore.getLocalUser()?.email || null;
                 if (email && chatId) this.connection.emitUpdateChatId(email, chatId);
-
-                this._spaceStore = new LocalSpaceProvider(this.connection);
-                this.streamSpaceWatcher = new StreamSpaceWatcher(
-                    this.connection,
-                    this._spaceStore,
-                    proximityChatConnection
-                );
-
-                this._spaceStore.add(WORLD_SPACE_NAME).watch(CONNECTED_USER_FILTER_NAME);
 
                 this.tryOpenMapEditorWithToolEditorParameter();
 
@@ -1827,9 +1825,14 @@ export class GameScene extends DirtyScene {
                         ) {
                             const oldMegaphoneUrl = get(megaphoneUrlStore);
 
-                            if (oldMegaphoneUrl && megaphoneSettingsMessage.url !== oldMegaphoneUrl) {
-                                this.spaceStore.delete(oldMegaphoneUrl);
+                            if (
+                                this._spaceStore &&
+                                oldMegaphoneUrl &&
+                                megaphoneSettingsMessage.url !== oldMegaphoneUrl
+                            ) {
+                                this._spaceStore.delete(oldMegaphoneUrl);
                             }
+
                             broadcastService.joinSpace(megaphoneSettingsMessage.url);
                             megaphoneUrlStore.set(megaphoneSettingsMessage.url);
                         }
@@ -3890,7 +3893,8 @@ ${escapedMessage}
         this.cameraManager.disableResistanceZone();
     }
 
-    get spaceStore(): LocalSpaceProvider {
+    //get spaceStore(): Promise<SpaceProviderInterface> {
+    get spaceStore(): SpaceProviderInterface {
         if (!this._spaceStore) {
             throw new Error("_spaceStore not yet initialized");
         }
