@@ -13,7 +13,7 @@ test.describe('Areas', () => {
             test.skip();
             return;
         }
-      
+
         // This tests connects on a map with an area named "silent".
         // The Woka is out of the zone, but we move the zone to cover the Woka.
         // We check the silent zone applies to the Woka.
@@ -24,7 +24,7 @@ test.describe('Areas', () => {
         await login(page, 'Alice');
 
         await evaluateScript(page, async () => {
-            console.log('Waiting for WA.onInit()');
+            console.log('Waiting for WA.onInit');
             await WA.onInit();
 
             console.log('Getting the area');

@@ -228,7 +228,7 @@
             cowebsiteContainer.style.flexGrow = "1";
             cowebsiteContainer.style.flexShrink = "0";
 
-            if ($isVerticalMode && $isResized) {
+            if ($isVerticalMode || $isResized) {
                 cowebsiteContainer.style.flex = "1";
             }
         }
