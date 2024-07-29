@@ -325,9 +325,9 @@
         <div class="tab-bar flex items-center w-full overflow-x-auto">
             {#if !vertical}
                 <!-- 300 is corresponding to the width of a tab so we calculate to know if it will fit -->
-                {#each $coWebsites.slice(0, numberMaxOfCowebsite) as coWebsite (coWebsite.getId())}
+                {#each $coWebsites.slice(0, numberMaxOfCowebsite) as coWebsite, index (coWebsite.getId())}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div on:click={() => setActiveCowebsite(coWebsite)}>
+                    <div on:click={() => setActiveCowebsite(coWebsite)} id="tab{index + 1}">
                         <CoWebsiteTab
                             {coWebsite}
                             isLoading={true}

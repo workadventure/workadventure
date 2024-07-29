@@ -45,7 +45,6 @@ test.describe('API WA.players', () => {
 
     const events = getCoWebsiteIframe(page).locator('#events');
 
-    console.log("EVENT", events);
     await expect(events).toContainText('New user: Bob', {
         timeout: 10000
     });
@@ -551,33 +550,28 @@ test.describe('API WA.players', () => {
 
     await login(page, 'Alice');
     // Ouvrir le Site A dans le premier onglet
-    await page.click('text=Open Site A');
-    const frame = await getCoWebsiteIframe(page);
-    console.log(frame)
+    await page.locator('.siteA-page1');
 
     // Ouvrir le Site B dans le deuxième onglet
-    await page.click('text=Open Site B');
-    await page.frameLocator('iframe[name="cowebsite-frame"]').locator('text=Site B Page 1').waitFor();
+    await page.locator('.siteB-page1');
+    // await page.frameLocator('iframe[name="cowebsite-frame"]').locator('text=Site B Page 1').waitFor();
 
-    // Switch to Site A tab and click to go to Site A Page 2
-    await page.click('text=Tab Site A');
-    const siteAFrame = page.frame({ name: 'cowebsite-frame' });
-    await siteAFrame.click('text=Go to Site A Page 2');
-    await siteAFrame.waitForSelector('text=Site A Page 2');
+    //Swiching tabs and pages
+    await page.locator('#tab1').click();
+    const event = getCoWebsiteIframe(page).locator('.siteA-page1')
+    await expect(event).toContainText('Site A Page 1');
 
-    // Switch to Site B tab and click to go to Site B Page 2
-    await page.click('text=Tab Site B');
-    const siteBFrame = page.frame({ name: 'cowebsite-frame' });
-    await siteBFrame.click('text=Go to Site B Page 2');
-    await siteBFrame.waitForSelector('text=Site B Page 2');
+    await getCoWebsiteIframe(page).locator('.link-to-siteA-page2').click();
+    const eventpage = await getCoWebsiteIframe(page).locator('.siteA-page2');
+    await expect(eventpage).toContainText('Site A Page 2');
 
-    // Switch back to Site A tab and check if it is still on Site A Page 2
-    await page.click('text=Tab Site A');
-    await siteAFrame.waitForSelector('text=Site A Page 2');
+    await page.locator('#tab2').click();
+    const event2 = getCoWebsiteIframe(page).locator('.siteB-page1')
+    await expect(event2).toContainText('Site B Page 1');
 
-    // Switch back to Site B tab and check if it is still on Site B Page 2
-    await page.click('text=Tab Site B');
-    await siteBFrame.waitForSelector('text=Site B Page 2');
+    await getCoWebsiteIframe(page).locator('.link-to-siteB-page2').click();
+    const eventpage2 = await getCoWebsiteIframe(page).locator('.siteB-page2');
+    await expect(eventpage2).toContainText('Site B Page 2');
   });
 
 });
