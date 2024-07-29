@@ -1,4 +1,4 @@
-import { RoomConnection } from "../Connection/RoomConnection";
+import { gameManager } from "../Phaser/Game/GameManager";
 import { SpaceInterface } from "./SpaceInterface";
 import { SpaceFilterAlreadyExistError, SpaceFilterDoesNotExistError, SpaceNameIsEmptyError } from "./Errors/SpaceError";
 import { SpaceFilter, SpaceFilterInterface } from "./SpaceFilter/SpaceFilter";
@@ -11,7 +11,7 @@ export class Space implements SpaceInterface {
     constructor(
         name: string,
         private metadata = new Map<string, unknown>(),
-        private roomConnection: RoomConnection,
+        private roomConnection = gameManager.getCurrentGameScene().connection,
         private filters: Map<string, SpaceFilterInterface> = new Map<string, SpaceFilterInterface>()
     ) {
         if (name === "") throw new SpaceNameIsEmptyError();
@@ -34,7 +34,7 @@ export class Space implements SpaceInterface {
 
     watch(filterName: string): SpaceFilterInterface {
         if (this.filters.has(filterName)) throw new SpaceFilterAlreadyExistError(this.name, filterName);
-        const newFilter: SpaceFilterInterface = new SpaceFilter(filterName, this.name, undefined, this.roomConnection);
+        const newFilter: SpaceFilterInterface = new SpaceFilter(filterName, this.name);
         this.filters.set(newFilter.getName(), newFilter);
         return newFilter;
     }

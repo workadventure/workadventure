@@ -1,19 +1,16 @@
-import { describe, vi, expect, it, afterAll, beforeAll } from "vitest";
-import WS from "vitest-websocket-mock";
+import { describe, vi, expect, it } from "vitest";
 
 import {
     AddSpaceUserMessage,
     RemoveSpaceUserMessage,
-    ServerToClientMessage,
     UpdateSpaceMetadataMessage,
     UpdateSpaceUserMessage,
 } from "@workadventure/messages";
 import { Subject } from "rxjs";
-import { SpaceEvent, StreamSpaceWatcher } from "../SpaceWatcher/SocketSpaceWatcher";
+import { StreamSpaceWatcher } from "../SpaceWatcher/SocketSpaceWatcher";
 import { SpaceProviderInterface } from "../SpaceProvider/SpaceProviderInterface";
 import { SpaceInterface } from "../SpaceInterface";
 import { SpaceFilterInterface } from "../SpaceFilter/SpaceFilter";
-import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { RoomConnection } from "../../Connection/RoomConnection";
 
 vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
@@ -28,10 +25,6 @@ vi.mock("../../Phaser/Game/GameManager", () => {
     return {};
 });
 
-let serverSocket: WS;
-
-const port = 3333;
-
 class MockRoomConnection {
     public addSpaceUserMessageStream = new Subject<AddSpaceUserMessage>();
     public updateSpaceUserMessageStream = new Subject<UpdateSpaceUserMessage>();
@@ -42,17 +35,8 @@ class MockRoomConnection {
 }
 
 describe("StreamSpaceWatcher", () => {
-    beforeAll(() => {
-        serverSocket = new WS(`ws://localhost:${port}`);
-    });
-    afterAll(() => {
-        serverSocket.close();
-    });
-
-    it("should call addUserToSpace when stream addSpaceUserMessage receive a new message", async () => {
+    it("should call addUserToSpace when stream addSpaceUserMessage receive a new message", () => {
         const roomConnection = new MockRoomConnection();
-        //const mockSocket = new WebSocket(`ws://localhost:${port}`);
-        await serverSocket.connected;
 
         const addSpaceUserMessage: AddSpaceUserMessage = {
             spaceName: "space-name",
@@ -78,12 +62,7 @@ describe("StreamSpaceWatcher", () => {
             destroy: vi.fn(),
         };
 
-        const mockChatConnection: ChatConnectionInterface = {
-            disconnectSpaceUser: vi.fn(),
-            updateUserFromSpace: vi.fn(),
-        } as unknown as ChatConnectionInterface;
-
-        new StreamSpaceWatcher(roomConnection as unknown as RoomConnection, spaceProvider, mockChatConnection);
+        new StreamSpaceWatcher(roomConnection as unknown as RoomConnection, spaceProvider);
 
         roomConnection.addSpaceUserMessageStream.next(addSpaceUserMessage);
 
@@ -102,37 +81,13 @@ describe("StreamSpaceWatcher", () => {
         // eslint-disable-next-line @typescript-eslint/unbound-method
         expect(mockSpaceFilter.addUser).toHaveBeenCalledWith(addSpaceUserMessage.user);
     });
-    it("should call removeUserToSpace when stream removeSpaceUserMessage receive a new message", async () => {
-        const mockSocket = new WebSocket(`ws://localhost:${port}`);
-
-        await serverSocket.connected;
+    it("should call removeUserToSpace when stream removeSpaceUserMessage receive a new message", () => {
+        const roomConnection = new MockRoomConnection();
 
         const removeSpaceUserMessage: RemoveSpaceUserMessage = {
             spaceName: "space-name",
             filterName: "filter-name",
             userId: 1,
-        };
-
-        const message: MessageEvent = {
-            data: {
-                message: {
-                    $case: "batchMessage",
-                    batchMessage: {
-                        payload: [
-                            {
-                                message: {
-                                    $case: SpaceEvent.RemoveSpaceUser,
-                                    removeSpaceUserMessage,
-                                },
-                            },
-                        ],
-                    },
-                },
-            },
-        } as MessageEvent;
-
-        const decoder: { decode: (messageCoded: Uint8Array) => ServerToClientMessage } = {
-            decode: vi.fn().mockImplementation((obj) => message.data),
         };
 
         const mockSpaceFilter: SpaceFilterInterface = {
@@ -152,16 +107,10 @@ describe("StreamSpaceWatcher", () => {
             destroy: vi.fn(),
         };
 
-        const mockChatConnection: ChatConnectionInterface = {
-            disconnectSpaceUser: vi.fn(),
-            updateUserFromSpace: vi.fn(),
-        } as unknown as ChatConnectionInterface;
+        new StreamSpaceWatcher(roomConnection as unknown as RoomConnection, spaceProvider);
 
-        new StreamSpaceWatcher(spaceProvider, mockSocket, decoder, mockChatConnection);
+        roomConnection.removeSpaceUserMessageStream.next(removeSpaceUserMessage);
 
-        serverSocket.send(message);
-
-        expect(decoder.decode).toHaveBeenCalledOnce();
         // eslint-disable-next-line @typescript-eslint/unbound-method
         expect(spaceProvider.get).toHaveBeenCalledOnce();
         // eslint-disable-next-line @typescript-eslint/unbound-method
@@ -178,10 +127,8 @@ describe("StreamSpaceWatcher", () => {
         expect(mockSpaceFilter.removeUser).toHaveBeenCalledWith(removeSpaceUserMessage.userId);
     });
 
-    it("should call updateSpaceUserMessage when stream updateSpaceUserMessage receive a new message", async () => {
-        const mockSocket = new WebSocket(`ws://localhost:${port}`);
-
-        await serverSocket.connected;
+    it("should call updateSpaceUserMessage when stream updateSpaceUserMessage receive a new message", () => {
+        const roomConnection = new MockRoomConnection();
 
         const updateSpaceUserMessage: UpdateSpaceUserMessage = {
             spaceName: "space-name",
@@ -190,28 +137,6 @@ describe("StreamSpaceWatcher", () => {
                 id: 1,
             },
         } as UpdateSpaceUserMessage;
-
-        const message: MessageEvent = {
-            data: {
-                message: {
-                    $case: "batchMessage",
-                    batchMessage: {
-                        payload: [
-                            {
-                                message: {
-                                    $case: SpaceEvent.UpdateSpaceUser,
-                                    updateSpaceUserMessage,
-                                },
-                            },
-                        ],
-                    },
-                },
-            },
-        } as MessageEvent;
-
-        const decoder: { decode: (messageCoded: Uint8Array) => ServerToClientMessage } = {
-            decode: vi.fn().mockImplementation((obj) => message.data),
-        };
 
         const mockSpaceFilter: SpaceFilterInterface = {
             updateUserData: vi.fn(),
@@ -230,16 +155,10 @@ describe("StreamSpaceWatcher", () => {
             destroy: vi.fn(),
         };
 
-        const mockChatConnection: ChatConnectionInterface = {
-            disconnectSpaceUser: vi.fn(),
-            updateUserFromSpace: vi.fn(),
-        } as unknown as ChatConnectionInterface;
+        new StreamSpaceWatcher(roomConnection as unknown as RoomConnection, spaceProvider);
 
-        new StreamSpaceWatcher(spaceProvider, mockSocket, decoder, mockChatConnection);
+        roomConnection.updateSpaceUserMessageStream.next(updateSpaceUserMessage);
 
-        serverSocket.send(message);
-
-        expect(decoder.decode).toHaveBeenCalledOnce();
         // eslint-disable-next-line @typescript-eslint/unbound-method
         expect(spaceProvider.get).toHaveBeenCalledOnce();
         // eslint-disable-next-line @typescript-eslint/unbound-method
@@ -255,10 +174,8 @@ describe("StreamSpaceWatcher", () => {
         // eslint-disable-next-line @typescript-eslint/unbound-method
         expect(mockSpaceFilter.updateUserData).toHaveBeenCalledWith(updateSpaceUserMessage.user);
     });
-    it("should call updateSpaceMetadata when stream updateSpaceMetadata receive a new message", async () => {
-        const mockSocket = new WebSocket(`ws://localhost:${port}`);
-
-        await serverSocket.connected;
+    it("should call updateSpaceMetadata when stream updateSpaceMetadata receive a new message", () => {
+        const roomConnection = new MockRoomConnection();
 
         const updateSpaceMetadataMessage: UpdateSpaceMetadataMessage = {
             spaceName: "space-name",
@@ -266,28 +183,6 @@ describe("StreamSpaceWatcher", () => {
             metadata: JSON.stringify({
                 metadata: "test",
             }),
-        };
-
-        const message: MessageEvent = {
-            data: {
-                message: {
-                    $case: "batchMessage",
-                    batchMessage: {
-                        payload: [
-                            {
-                                message: {
-                                    $case: SpaceEvent.updateSpaceMetadata,
-                                    updateSpaceMetadataMessage,
-                                },
-                            },
-                        ],
-                    },
-                },
-            },
-        } as MessageEvent;
-
-        const decoder: { decode: (messageCoded: Uint8Array) => ServerToClientMessage } = {
-            decode: vi.fn().mockImplementation((obj) => message.data),
         };
 
         const mockSpace: SpaceInterface = {
@@ -302,16 +197,10 @@ describe("StreamSpaceWatcher", () => {
             destroy: vi.fn(),
         };
 
-        const mockChatConnection: ChatConnectionInterface = {
-            disconnectSpaceUser: vi.fn(),
-            updateUserFromSpace: vi.fn(),
-        } as unknown as ChatConnectionInterface;
+        new StreamSpaceWatcher(roomConnection as unknown as RoomConnection, spaceProvider);
 
-        new StreamSpaceWatcher(spaceProvider, mockSocket, decoder, mockChatConnection);
+        roomConnection.updateSpaceMetadataMessageStream.next(updateSpaceMetadataMessage);
 
-        serverSocket.send(message);
-
-        expect(decoder.decode).toHaveBeenCalledOnce();
         // eslint-disable-next-line @typescript-eslint/unbound-method
         expect(spaceProvider.get).toHaveBeenCalledOnce();
         // eslint-disable-next-line @typescript-eslint/unbound-method
