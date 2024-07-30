@@ -105,7 +105,7 @@
             {/each}
         </ul>
         {#if $typingMembers.length > 0}
-            <div class="tw-flex tw-row tw-w-full tw-text-gray-300 tw-text-sm  tw-m-0 tw-px-2">
+            <div class="tw-flex tw-row tw-w-full tw-text-gray-300 tw-text-sm  tw-m-0 tw-px-2 tw-mb-2">
                 <!-- {$typingMembers.map(typingMember => typingMember.name).slice(0, NUMBER_OF_TYPING_MEMBER_TO_DISPLAY)} -->
                 {#each $typingMembers
                     .map((typingMember, index) => ({ ...typingMember, index }))
