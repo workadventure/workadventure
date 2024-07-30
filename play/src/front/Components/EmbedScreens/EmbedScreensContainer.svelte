@@ -18,38 +18,37 @@
 //     let height = get(heightCamWrapper);
 
 //     /* eslint-disable @typescript-eslint/no-explicit-any */
-//     function startExpand(type: any, event: any): void { // eslint-disable-line @typescript-eslint/no-unused-vars
-//         expanding = type
-//         start = event.pageY
-//         initial = { y, height }
-//     }
+    //     function startExpand(type: any, event: any): void { // eslint-disable-line @typescript-eslint/no-unused-vars
+    //         expanding = type
+    //         start = event.pageY
+    //         initial = { y, height }
+    //     }
 
-//     function stopExpand() {
-//         expanding = null
-//         start = null
-//         initial = null
-//     }
+    //     function stopExpand() {
+    //         expanding = null
+    //         start = null
+    //         initial = null
+    //     }
 
-// /* eslint-disable @typescript-eslint/no-explicit-any */
-//     function expand(event: any) { // eslint-disable-line @typescript-eslint/no-unused-vars
-//         if (!expanding) return
-//         if (expanding == 'top') {
-//             const delta = start !== null ? start - event.pageY : 0;
-//             console.log(event.pageY);
-//             if (initial) {
-//                 y = initial.y - delta;
-//             }
-//             $heightCamWrapper = initial ? initial.height + delta : $heightCamWrapper;
-//             return
-//         }
+    // /* eslint-disable @typescript-eslint/no-explicit-any */
+    //     function expand(event: any) { // eslint-disable-line @typescript-eslint/no-unused-vars
+    //         if (!expanding) return
+    //         if (expanding == 'top') {
+    //             const delta = start !== null ? start - event.pageY : 0;
+    //             console.log(event.pageY);
+    //             if (initial) {
+    //                 y = initial.y - delta;
+    //             }
+    //             $heightCamWrapper = initial ? initial.height + delta : $heightCamWrapper;
+    //             return
+    //         }
 
-        // if (expanding == 'bottom') {
-        //     const delta = event.pageY - start
-        //     console.log(event.pageY);
-        //     $heightCamWrapper = initial.height + delta
-        //     return
-        // }
-
+    // if (expanding == 'bottom') {
+    //     const delta = event.pageY - start
+    //     console.log(event.pageY);
+    //     $heightCamWrapper = initial.height + delta
+    //     return
+    // }
 </script>
 
 <div

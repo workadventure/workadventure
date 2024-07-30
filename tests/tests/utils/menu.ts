@@ -15,8 +15,13 @@ class Menu {
     }
 
     async openMenu(page: Page) {
-        await page.click('#menuIcon img:first-child');
-        await expect(await page.locator('#menuIcon')).toHaveClass(/border-top-light/);
+        await page.click('#action-user');
+        await expect(await page.locator('#profile-menu')).toHaveClass(/backdrop-blur/);
+    }
+
+    async openMenuAdmin(page: Page) {
+        await page.click('#action-admin');
+        await expect(await page.locator('#admin-menu')).toHaveClass(/backdrop-blur/);
     }
 
     async closeMenu(page: Page) {

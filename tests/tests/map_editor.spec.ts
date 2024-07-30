@@ -42,7 +42,7 @@ test.describe('Map editor', () => {
     await page2.evaluate(() => localStorage.setItem('debug', '*'));
     await login(page2, "test2", 5);
 
-    await Menu.openMapEditor(page);
+    await Menu.openMenuAdmin(page);
     await MapEditor.openConfigureMyRoom(page);
     await ConfigureMyRoom.selectMegaphoneItemInCMR(page);
 
@@ -321,7 +321,7 @@ test.describe('Map editor', () => {
     await AreaEditor.addProperty(page, 'Open Google Drive');
     // fill Google Slides link
     await page.getByPlaceholder('https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview').first().fill('https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview');
-    
+
 
     await Menu.closeMapEditor(page);
 

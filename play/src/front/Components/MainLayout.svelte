@@ -9,7 +9,6 @@
     import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
     import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
     import { soundPlayingStore } from "../Stores/SoundPlayingStore";
-    import { hasEmbedScreen } from "../Stores/EmbedScreensStore";
     import {
         showLimitRoomModalStore,
         modalVisibilityStore,
@@ -121,9 +120,7 @@
             <HelpPopUpBlocked />
         {/if}
 
-        {#if $hasEmbedScreen}
-            <EmbedScreensContainer />
-        {/if}
+        <EmbedScreensContainer />
 
         {#if $soundPlayingStore}
             <AudioPlaying url={$soundPlayingStore} />

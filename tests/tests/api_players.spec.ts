@@ -33,7 +33,6 @@ test.describe('API WA.players', () => {
 
     await login(page2, 'Bob');
 
-
     const iframe = getCoWebsiteIframe(page);
 
 
