@@ -270,8 +270,10 @@
             resizeBarHide = false;
             isToggleFullScreen = false;
         } else if (!$fullScreenCowebsite && !vertical) {
+            console.log("full screen");
             fullScreenCowebsite.set(true);
             widthContainerForWindow.set(window.innerWidth);
+            console.log("widthContainerForWindow", $widthContainerForWindow);
             container.style.width = `${$widthContainerForWindow}px`;
             container.style.backgroundColor = "#1b2a40";
             resizeBarHide = true;
@@ -289,6 +291,7 @@
         heightContainerForWindow.set(window.innerHeight);
         widthContainerForWindow.set(window.innerWidth);
         resizeFromCowebsite.set(false);
+        fullScreenCowebsite.set(false);
         waScaleManager.applyNewSize();
 
         if (styleTag) {
@@ -356,7 +359,32 @@
                     class="ml-full aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer"
                     on:click={toggleFullScreen}
                 >
-                    <FullScreenIcon />
+                    {#if !$fullScreenCowebsite}
+                        <FullScreenIcon />
+                    {:else}
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="icon icon-tabler icon-tabler-arrows-minimize"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="#ffffff"
+                            fill="none"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M5 9l4 0l0 -4" />
+                            <path d="M3 3l6 6" />
+                            <path d="M5 15l4 0l0 4" />
+                            <path d="M3 21l6 -6" />
+                            <path d="M19 9l-4 0l0 -4" />
+                            <path d="M15 9l6 -6" />
+                            <path d="M19 15l-4 0l0 4" />
+                            <path d="M15 15l6 6" />
+                        </svg>
+                    {/if}
                 </div>
             </div>
         </div>

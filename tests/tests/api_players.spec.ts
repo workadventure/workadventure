@@ -33,14 +33,12 @@ test.describe('API WA.players', () => {
 
     await login(page2, 'Bob');
 
-    const iframe = getCoWebsiteIframe(page);
+    // const iframe = getCoWebsiteIframe(page);
 
 
-    const eventsLocator = iframe.locator('#events');
-    const isVisible = await eventsLocator.isVisible();
-    console.log('isVisible:', isVisible);
-    const textContent = await eventsLocator.evaluate(el => el.textContent);
-    console.log('Texte de #events:', textContent);
+    // const eventsLocator = iframe.locator('#events');
+    // const isVisible = await eventsLocator.isVisible();
+    // const textContent = await eventsLocator.evaluate(el => el.textContent);
 
     const events = getCoWebsiteIframe(page).locator('#events');
 

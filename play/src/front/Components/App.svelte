@@ -35,6 +35,7 @@
     let cowebsiteContainer: HTMLDivElement;
     let widthPercent = 50;
     let flexBasis: string | undefined;
+    let gameContainer: HTMLDivElement;
 
     onMount(() => {
         if (SENTRY_DSN_FRONT != undefined) {
@@ -234,12 +235,21 @@
         }
     }
 
+    function closeCoWebsiteFullScreen() {
+        gameContainer.classList.remove("hidden");
+        coWebsiteManager.closeCoWebsite(activeCowebsite);
+    }
+
+    $: if ($fullScreenCowebsite && $coWebsites.length < 1) {
+        closeCoWebsiteFullScreen();
+    }
+
     $: $coWebsites.length < 1 ? (flexBasis = undefined) : null;
     $: $isResized ? updateDynamicStyles() : null;
 </script>
 
 <div class="h-screen w-screen flex flex-col-reverse md:flex-row">
-    <div class={$fullScreenCowebsite ? "hidden" : ""}>
+    <div class={$fullScreenCowebsite ? "hidden" : ""} bind:this={gameContainer}>
         <div id="game" class="relative" bind:this={gameDiv}>
             <GameOverlay {game} />
         </div>
