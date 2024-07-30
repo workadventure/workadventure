@@ -77,6 +77,17 @@
     {/if}
 
     <section id="main-layout-main" class="pb-0 pointer-events-none">
+        <div class="popups">
+            {#each $popupStore.slice().reverse() as popup (popup.uuid)}
+                <div class="popupwrapper">
+                    <svelte:component
+                        this={popup.component}
+                        {...popup.props}
+                        on:close={() => popupStore.removePopup(popup.uuid)}
+                    />
+                </div>
+            {/each}
+        </div>
         <Lazy
             when={$showDesktopCapturerSourcePicker}
             component={() => import("./Video/DesktopCapturerSourcePicker.svelte")}
@@ -175,18 +186,6 @@
     {/if}
 
     <ActionBar />
-    <!-- svelte-ignore missing-declaration -->
-    <div class="popups">
-        {#each $popupStore.slice().reverse() as popup (popup.uuid)}
-            <div class="popupwrapper">
-                <svelte:component
-                    this={popup.component}
-                    {...popup.props}
-                    on:close={() => popupStore.removePopup(popup.uuid)}
-                />
-            </div>
-        {/each}
-    </div>
 
     <!-- audio when user have a message TODO delete it with new chat -->
     <audio id="newMessageSound" src="/resources/objects/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
@@ -204,7 +203,7 @@
     @import "../style/breakpoints.scss";
 
     .popups {
-        position: relative;
+        position: fixed;
         width: 100%;
         height: 100%;
     }
