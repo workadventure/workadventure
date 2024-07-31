@@ -1,11 +1,12 @@
+import { applyFieldMask } from "protobuf-fieldmask";
+import merge from "lodash/merge";
+import * as Sentry from "@sentry/node";
 import {
     AddSpaceUserMessage,
     BackToPusherSpaceMessage,
-    PartialSpaceUser,
     RemoveSpaceUserMessage,
     SpaceUser,
     UpdateSpaceMetadataMessage,
-    UpdateSpaceUserMessage,
 } from "@workadventure/messages";
 import Debug from "debug";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
@@ -39,67 +40,32 @@ export class Space implements CustomJsonReplacerInterface {
         });
         debug(`${this.name} : user => added ${spaceUser.id}`);
     }
-    public updateUser(watcher: SpacesWatcher, spaceUser: PartialSpaceUser) {
+    public updateUser(watcher: SpacesWatcher, spaceUser: SpaceUser, updateMask: string[]) {
         const usersList = this.usersList(watcher);
         const user = usersList.get(spaceUser.id);
-        if (user) {
-            if (spaceUser.tags.length > 0) {
-                user.tags = spaceUser.tags;
-            }
-            if (spaceUser.name) {
-                user.name = spaceUser.name;
-            }
-            if (spaceUser.playUri) {
-                user.playUri = spaceUser.playUri;
-            }
-            if (spaceUser.color) {
-                user.color = spaceUser.color;
-            }
-            if (spaceUser.characterTextures.length > 0) {
-                user.characterTextures = spaceUser.characterTextures;
-            }
-            if (spaceUser.isLogged !== undefined) {
-                user.isLogged = spaceUser.isLogged;
-            }
-            if (spaceUser.availabilityStatus !== undefined) {
-                user.availabilityStatus = spaceUser.availabilityStatus;
-            }
-            if (spaceUser.roomName) {
-                user.roomName = spaceUser.roomName;
-            }
-            if (spaceUser.visitCardUrl) {
-                user.visitCardUrl = spaceUser.visitCardUrl;
-            }
-            if (spaceUser.screenSharingState !== undefined) {
-                user.screenSharingState = spaceUser.screenSharingState;
-            }
-            if (spaceUser.microphoneState !== undefined) {
-                user.microphoneState = spaceUser.microphoneState;
-            }
-            if (spaceUser.cameraState !== undefined) {
-                user.cameraState = spaceUser.cameraState;
-            }
-            if (spaceUser.megaphoneState !== undefined) {
-                user.megaphoneState = spaceUser.megaphoneState;
-            }
-            if (spaceUser.jitsiParticipantId) {
-                user.jitsiParticipantId = spaceUser.jitsiParticipantId;
-            }
-            if (spaceUser.uuid) {
-                user.uuid = spaceUser.uuid;
-            }
-            usersList.set(spaceUser.id, user);
-            this.notifyWatchers(watcher, {
-                message: {
-                    $case: "updateSpaceUserMessage",
-                    updateSpaceUserMessage: UpdateSpaceUserMessage.fromPartial({
-                        spaceName: this.name,
-                        user: spaceUser,
-                    }),
-                },
-            });
-            debug(`${this.name} : user => updated ${spaceUser.id}`);
+        if (!user) {
+            console.error("User not found in this space", spaceUser);
+            Sentry.captureMessage(`User not found in this space ${spaceUser.id}`);
+            return;
         }
+
+        const updateValues = applyFieldMask(spaceUser, updateMask);
+
+        merge(user, updateValues);
+
+        usersList.set(spaceUser.id, user);
+        this.notifyWatchers(watcher, {
+            message: {
+                $case: "updateSpaceUserMessage",
+                updateSpaceUserMessage: {
+                    spaceName: this.name,
+                    user: spaceUser,
+                    updateMask,
+                    filterName: undefined,
+                },
+            },
+        });
+        debug(`${this.name} : user => updated ${spaceUser.id}`);
     }
     public removeUser(watcher: SpacesWatcher, id: number) {
         const usersList = this.usersList(watcher);

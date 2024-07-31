@@ -2,7 +2,6 @@ import { describe, expect, it, vi } from "vitest";
 import { mock } from "vitest-mock-extended";
 import {
     AvailabilityStatus,
-    PartialSpaceUser,
     PusherToBackSpaceMessage,
     SpaceFilterMessage,
     SpaceUser,
@@ -134,7 +133,7 @@ describe("Space", () => {
     it("should notify client and back that a user is updated", () => {
         eventsClient = [];
         eventsWatcher = [];
-        const spaceUser = PartialSpaceUser.fromPartial({
+        const spaceUser = SpaceUser.fromPartial({
             id: 1,
             uuid: "uuid-test",
             name: "test2",
@@ -151,7 +150,19 @@ describe("Space", () => {
             tags: [],
             visitCardUrl: "test",
         });
-        space.updateUser(spaceUser, "");
+        space.updateUser(spaceUser, [
+            "name",
+            "playUri",
+            "color",
+            "roomName",
+            "isLogged",
+            "availabilityStatus",
+            "cameraState",
+            "microphoneState",
+            "screenSharingState",
+            "megaphoneState",
+            "visitCardUrl",
+        ]);
         expect(eventsClient.some((message) => message.message?.$case === "updateSpaceUserMessage")).toBe(true);
         expect(eventsWatcher.some((message) => message.message?.$case === "updateSpaceUserMessage")).toBe(true);
 
