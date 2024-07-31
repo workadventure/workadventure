@@ -137,7 +137,7 @@ export class AreasPropertiesListener {
             const area = areas?.find((area) => area.areaData.id === areaData.id);
 
             for (const property of areaData.properties) {
-                this.removePropertyFilter(property, area);
+                this.removePropertyFilter(property, area, areaData);
             }
         }
     }
@@ -262,7 +262,7 @@ export class AreasPropertiesListener {
         }
     }
 
-    private removePropertyFilter(property: AreaDataProperty, area?: Area) {
+    private removePropertyFilter(property: AreaDataProperty, area?: Area, areaData?: AreaData) {
         switch (property.type) {
             case "openWebsite": {
                 this.handleOpenWebsitePropertiesOnLeave(property);
@@ -297,7 +297,7 @@ export class AreasPropertiesListener {
                 break;
             }
             case "extensionModule": {
-                this.handleExtensionModuleAreaPropertyOnLeave(property.subtype);
+                this.handleExtensionModuleAreaPropertyOnLeave(property.subtype, areaData);
                 break;
             }
             default: {
@@ -719,12 +719,12 @@ export class AreasPropertiesListener {
         area?.unHighLightArea();
     }
 
-    private handleExtensionModuleAreaPropertyOnLeave(subtype: string): void {
+    private handleExtensionModuleAreaPropertyOnLeave(subtype: string, area?: AreaData): void {
         const areaMapEditor = this.scene.extensionModule?.areaMapEditor && this.scene.extensionModule?.areaMapEditor();
         if (areaMapEditor === undefined) {
             return;
         }
-        areaMapEditor[subtype].handleAreaPropertyOnLeave();
+        areaMapEditor[subtype].handleAreaPropertyOnLeave(area);
     }
 
     private handleExtensionModuleAreaPropertyOnEnter(area: AreaData, subtype: string): void {

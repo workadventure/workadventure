@@ -44,7 +44,7 @@ const actionbar: BaseTranslation = {
             warning: "Status is warning ⚠️",
             sync: "Status is syncing 🔄",
         },
-    }
+    },
 };
 
 export default actionbar;

@@ -7,3 +7,4 @@ export const gameSceneIsLoadedStore = writable(false);
 export const gameSceneStore = writable<GameScene | undefined>(undefined);
 
 export const extensionModuleStore = writable<ExtensionModule | undefined>(undefined);
+export const extensionActivateComponentModuleStore = writable<boolean>(false);

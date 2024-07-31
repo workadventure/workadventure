@@ -2048,10 +2048,8 @@ export class GameScene extends DirtyScene {
     }
 
     private initExtensionModule() {
-        if( this._room.metadata != undefined && this._room.metadata?.hasOwnProperty('msteams')) {
+        if (this._room.metadata != undefined) {
             const parsedRoomMetadata = RoomMetadataType.safeParse(this._room.metadata);
-
-            console.log('initExtensionModule => parsedRoomMetadata', parsedRoomMetadata, this._room.metadata);
 
             if (!parsedRoomMetadata.success) {
                 console.error(
@@ -2061,8 +2059,7 @@ export class GameScene extends DirtyScene {
                 return;
             }
 
-            console.log("initExtensionModule => parsedRoomMetadata.data.msteams", parsedRoomMetadata.data.msteams);
-            if(parsedRoomMetadata.data.msteams === true) {
+            if (parsedRoomMetadata.data.msteams === true) {
                 (async () => {
                     try {
                         const extensionModule = await import("../../../ms-teams/MSTeams");
@@ -2078,7 +2075,7 @@ export class GameScene extends DirtyScene {
                             externalModuleMessage: this.connection!.externalModuleMessage,
                         });
                         // TODO change that to check if the calendar synchro is enabled from admin
-                        isActivatedStore.set(true);
+                        if (parsedRoomMetadata.data.teamsstings.calendar) isActivatedStore.set(true);
                         extensionModuleStore.set(this.extensionModule);
                     } catch (error) {
                         console.warn("Extension module initialization cancelled", error);

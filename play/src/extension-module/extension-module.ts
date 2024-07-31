@@ -10,6 +10,7 @@ export enum ExternalModuleStatus {
     ONLINE = "online",
     WARNING = "warning",
     SYNC = "sync",
+    OFFLINE = "offline",
 }
 
 export interface ExtensionModuleOptions {
@@ -26,7 +27,7 @@ export interface ExtensionModuleAreaProperty {
     AreaPropertyEditor: ComponentType;
     AddAreaPropertyButton: ComponentType;
     handleAreaPropertyOnEnter: (area: AreaData) => void;
-    handleAreaPropertyOnLeave: () => void;
+    handleAreaPropertyOnLeave: (area?: AreaData) => void;
     shouldDisplayButton: (areaProperties: AreaDataProperties) => boolean;
 }
 
@@ -34,13 +35,13 @@ export interface ExtensionModule {
     init: (roomMetadata: RoomMetadataType, options?: ExtensionModuleOptions) => void;
     joinMeeting: () => void;
     destroy: () => void;
-    areaMapEditor?: () => { [key: string]: ExtensionModuleAreaProperty };
-    getStatusStore?: () => Readable<ExternalModuleStatus>;
+    areaMapEditor?: () => { [key: string]: ExtensionModuleAreaProperty } | undefined;
+    statusStore?: Readable<ExternalModuleStatus>;
     checkModuleSynschronisation?: () => void;
+    components?: () => ComponentType[];
 }
 
-export const RoomMetadataType = z
-.object({
+export const RoomMetadataType = z.object({
     player: z.object({
         accessTokens: z.array(
             z.object({
@@ -54,7 +55,7 @@ export const RoomMetadataType = z
         communication: z.boolean(),
         status: z.boolean(),
         calendar: z.boolean(),
-    })
+    }),
 });
 
 export type RoomMetadataType = z.infer<typeof RoomMetadataType>;
