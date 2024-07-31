@@ -243,6 +243,23 @@ const chat: DeepPartial<Translation["chat"]> = {
         loadingCreation: "Salon en cours de création",
         creationSuccessNotification: "Salon créé",
     },
+    manageRoomUsers: {
+        roomOption: "Participants",
+        error: "Impossible d'envoyer les invitations",
+        title: "Inviter des participants",
+        invitations: "Invitations",
+        participants: "Participants",
+        join: "Présent",
+        invite: "Invité",
+        ban: "Banni",
+        kick: "Expulsé",
+        leave: "Parti",
+        buttons: {
+            sendInvitations: "Envoyer les invitations",
+            cancel: "Annuler",
+        },
+        sendInvitationsSuccessNotification: "Invitation(s) envoyée(s)",
+    },
     roomMenu: {
         leaveRoom: {
             label: "Quitter le salon",

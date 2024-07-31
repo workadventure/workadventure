@@ -242,6 +242,23 @@ const chat: BaseTranslation = {
         loadingCreation: "Room creation in progress",
         creationSuccessNotification: "Room created",
     },
+    manageRoomUsers: {
+        roomOption: "Participants",
+        error: "Unable send invitations",
+        title: "Invite participants",
+        invitations: "Invitations",
+        participants: "Participants",
+        join: "Joined",
+        invite: "Invited",
+        ban: "Banned",
+        kick: "Kicked",
+        leave: "Leaved",
+        buttons: {
+            sendInvitations: "Send invitations",
+            cancel: "Cancel",
+        },
+        sendInvitationsSuccessNotification: "Invitations sent successfully",
+    },
     roomMenu: {
         leaveRoom: {
             label: "Leave room",
