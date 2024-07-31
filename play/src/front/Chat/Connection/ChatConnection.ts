@@ -41,7 +41,7 @@ export interface ChatRoom {
     isEncrypted: Readable<boolean>;
     addIncomingUser?: (userId: number, userUuid: string, userName: string, color?: string) => void;
     addOutcomingUser?: (userId: number, userUuid: string, userName: string) => void;
-    addNewMessage?: (message: string, senderUserUuid: string) => void;
+    addNewMessage?: (message: string, senderUserId: number) => void;
     addExternalMessage?: (message: string, authorName?: string) => void;
     typingMembers: Readable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
     startTyping: () => Promise<object>;
@@ -89,12 +89,12 @@ export interface CreateRoomOptions {
 
 export type ConnectionStatus = "ONLINE" | "ON_ERROR" | "CONNECTING" | "OFFLINE";
 
-export type spaceId = number;
+export type userId = number;
 export type chatId = string;
 
 export interface ChatConnectionInterface {
     connectionStatus: Readable<ConnectionStatus>;
-    userConnected: Readable<Map<spaceId, ChatUser>>;
+    connectedUsers: Readable<Map<userId, ChatUser>>;
     userDisconnected: Readable<Map<chatId, ChatUser>>;
     directRooms: Readable<ChatRoom[]>;
     rooms: Readable<ChatRoom[]>;

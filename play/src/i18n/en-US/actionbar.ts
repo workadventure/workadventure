@@ -37,6 +37,14 @@ const actionbar: BaseTranslation = {
     },
     globalMessage: "Send a global message",
     roomList: "Open / Close room list",
+    externalModule: {
+        status: {
+            onLine: "Status is ok ✅",
+            offLine: "Status is offline ❌",
+            warning: "Status is warning ⚠️",
+            sync: "Status is syncing 🔄",
+        },
+    },
 };
 
 export default actionbar;

@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { writable } from "svelte/store";
+    import { Readable, Unsubscriber, writable } from "svelte/store";
     import { fly } from "svelte/transition";
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import { AvailabilityStatus } from "@workadventure/messages";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import {
@@ -42,6 +42,10 @@
     import worldImg from "../images/world.svg";
     import calendarSvg from "../images/calendar.svg";
     import burgerMenuImg from "../images/menu.svg";
+    import businessSvg from "../images/applications/business.svg";
+    import checkSvg from "../images/applications/check.svg";
+    import reloadSvg from "../images/applications/reload.svg";
+    import warningSvg from "../images/applications/warning.svg";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
@@ -101,7 +105,9 @@
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
-    import { isCalendarVisibleStore } from "../../Stores/CalendarStore";
+    import { isActivatedStore, isCalendarVisibleStore } from "../../Stores/CalendarStore";
+    import { ExternalModuleStatus } from "../../../extension-module/extension-module";
+    import { extensionActivateComponentModuleStore, extensionModuleStore } from "../../Stores/GameSceneStore";
     import AvailabilityStatusComponent from "./AvailabilityStatus/AvailabilityStatus.svelte";
     import { IconCheck, IconChevronDown, IconChevronUp } from "@wa-icons";
 
@@ -380,9 +386,18 @@
     }
 
     let totalMessagesToSee = writable<number>(0);
-
+    let externalModuleStatusStore: Readable<ExternalModuleStatus> | undefined;
+    let extensionModuleStoreSubscription: Unsubscriber | undefined;
     onMount(() => {
         resizeObserver.observe(mainHtmlDiv);
+        extensionModuleStoreSubscription = extensionModuleStore.subscribe((value) => {
+            externalModuleStatusStore = value?.statusStore;
+        });
+    });
+
+    onDestroy(() => {
+        resizeObserver.disconnect();
+        if (extensionModuleStoreSubscription) extensionModuleStoreSubscription();
     });
 
     function buttonActionBarTrigger(id: string) {
@@ -431,6 +446,10 @@
             if (openMobileMenuTimeout) clearTimeout(openMobileMenuTimeout);
             openMobileMenu = false;
         }
+    }
+
+    function showExternalModule() {
+        extensionActivateComponentModuleStore.set(true);
     }
 </script>
 
@@ -898,31 +917,87 @@
                         </button>
                     </div>
 
-                    <!-- Calendar integration -->
+                    <!-- Teams integration -->
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div
-                        on:dragstart|preventDefault={noDrag}
-                        on:click={() => analyticsClient.openExternalModuleCalendar()}
-                        on:click={openExternalModuleCalendar}
-                        class="bottom-action-button"
-                    >
-                        {#if !isMobile}
-                            <Tooltip text={$LL.actionbar.calendar()} />
-                        {/if}
-                        <button id="calendarIcon" class:border-top-light={$isCalendarVisibleStore}>
-                            <img
-                                draggable="false"
-                                src={calendarSvg}
-                                style="padding: 2px"
-                                alt={$LL.menu.icon.open.calendar()}
-                            />
-                            <span
-                                class="tw-absolute tw-top-5 tw-text-white tw-rounded-full tw-px-1 tw-py-0.5 tw-text-xxs tw-font-bold tw-leading-none"
-                            >
-                                {new Date().getDate()}
-                            </span>
-                        </button>
-                    </div>
+                    {#if $extensionModuleStore != undefined && $extensionModuleStore.statusStore != undefined}
+                        <div
+                            class="bottom-action-button"
+                            on:dragstart|preventDefault={noDrag}
+                            on:click={() => analyticsClient.openExternalModule()}
+                            on:click={showExternalModule}
+                        >
+                            {#if !isMobile && externalModuleStatusStore != undefined}
+                                {#if $externalModuleStatusStore === ExternalModuleStatus.ONLINE}
+                                    <Tooltip text={$LL.actionbar.externalModule.status.onLine()} />
+                                {:else if $externalModuleStatusStore === ExternalModuleStatus.WARNING}
+                                    <Tooltip text={$LL.actionbar.externalModule.status.warning()} />
+                                {:else if $externalModuleStatusStore === ExternalModuleStatus.SYNC}
+                                    <Tooltip text={$LL.actionbar.externalModule.status.sync()} />
+                                {:else}
+                                    <Tooltip text={$LL.actionbar.externalModule.status.offLine()} />
+                                {/if}
+                            {/if}
+                            <button id="teamsIcon" class="tw-relative">
+                                <img draggable="false" src={businessSvg} style="padding: 2px;" alt="Teams" />
+                                {#if externalModuleStatusStore != undefined}
+                                    <span
+                                        class="tw-absolute tw-right-0 tw-top-5 tw-text-white tw-rounded-full tw-px-1 tw-py-0.5 tw-text-xxs tw-font-bold tw-leading-none"
+                                    >
+                                        {#if $externalModuleStatusStore === ExternalModuleStatus.ONLINE}
+                                            <img
+                                                draggable="false"
+                                                src={checkSvg}
+                                                style="padding: 2px; width: 16px; opacity: 0.6;"
+                                                alt="Teams"
+                                            />
+                                        {:else if $externalModuleStatusStore === ExternalModuleStatus.WARNING}
+                                            <img
+                                                draggable="false"
+                                                src={warningSvg}
+                                                style="padding: 2px; width: 16px; opacity: 0.6;"
+                                                alt="Teams"
+                                            />
+                                        {:else if $externalModuleStatusStore === ExternalModuleStatus.SYNC}
+                                            <img
+                                                draggable="false"
+                                                src={reloadSvg}
+                                                style="padding: 2px; width: 16px; opacity: 0.6;"
+                                                alt="Teams"
+                                            />
+                                        {/if}
+                                    </span>
+                                {/if}
+                            </button>
+                        </div>
+                    {/if}
+
+                    <!-- Calendar integration -->
+                    {#if $isActivatedStore}
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <div
+                            on:dragstart|preventDefault={noDrag}
+                            on:click={() => analyticsClient.openExternalModuleCalendar()}
+                            on:click={openExternalModuleCalendar}
+                            class="bottom-action-button"
+                        >
+                            {#if !isMobile}
+                                <Tooltip text={$LL.actionbar.calendar()} />
+                            {/if}
+                            <button id="calendarIcon" class:border-top-light={$isCalendarVisibleStore}>
+                                <img
+                                    draggable="false"
+                                    src={calendarSvg}
+                                    style="padding: 2px"
+                                    alt={$LL.menu.icon.open.calendar()}
+                                />
+                                <span
+                                    class="tw-absolute tw-top-5 tw-text-white tw-rounded-full tw-px-1 tw-py-0.5 tw-text-xxs tw-font-bold tw-leading-none"
+                                >
+                                    {new Date().getDate()}
+                                </span>
+                            </button>
+                        </div>
+                    {/if}
                 </div>
 
                 <!-- Status part -->

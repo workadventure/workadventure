@@ -72,6 +72,7 @@ import {
     PublicEvent,
     PrivateEvent,
     OauthRefreshToken,
+    ExternalModuleMessage,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -239,6 +240,8 @@ export class RoomConnection implements RoomConnection {
     public readonly proximityPublicMessageEvent = this._proximityPublicMessageEvent.asObservable();
     private readonly _typingProximityEvent = new Subject<PublicEvent>();
     public readonly typingProximityEvent = this._typingProximityEvent.asObservable();
+    private readonly _externalModuleMessage = new Subject<ExternalModuleMessage>();
+    public readonly externalModuleMessage = this._externalModuleMessage.asObservable();
 
     private queries = new Map<
         number,
@@ -782,6 +785,10 @@ export class RoomConnection implements RoomConnection {
                 }
                 case "privateEvent": {
                     this._proximityPrivateMessageEvent.next(message.privateEvent);
+                    break;
+                }
+                case "externalModuleMessage": {
+                    this._externalModuleMessage.next(message.externalModuleMessage);
                     break;
                 }
                 default: {
@@ -1852,7 +1859,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitProximityPrivateMessage(spaceName: string, message: string, receiverUserUuid: string) {
+    public emitProximityPrivateMessage(spaceName: string, message: string, receiverUserId: number) {
         if (!this.userId) {
             console.warn("No user id defined to send a message to mute every video!");
             return;
@@ -1863,7 +1870,7 @@ export class RoomConnection implements RoomConnection {
                 $case: "privateEvent",
                 privateEvent: {
                     spaceName,
-                    receiverUserUuid,
+                    receiverUserId,
                     spaceMessage: {
                         message,
                     },
@@ -2029,6 +2036,7 @@ export class RoomConnection implements RoomConnection {
         this._proximityPrivateMessageEvent.complete();
         this._proximityPublicMessageEvent.complete();
         this._typingProximityEvent.complete();
+        this._externalModuleMessage.complete();
     }
 
     private goToSelectYourWokaScene(): void {

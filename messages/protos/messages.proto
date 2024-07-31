@@ -416,8 +416,8 @@ message QueryMessage {
     GetMemberQuery getMemberQuery = 8;
     TurnCredentialsQuery turnCredentialsQuery = 9;
     ChatMembersQuery chatMembersQuery = 10;
-    OauthRefreshTokenQuery oauthRefreshTokenQuery = 11;
-    SearchTagsQuery searchTagsQuery = 12;
+    SearchTagsQuery searchTagsQuery = 11;
+    OauthRefreshTokenQuery oauthRefreshTokenQuery = 12;
   }
 }
 
@@ -486,8 +486,8 @@ message AnswerMessage {
     GetMemberAnswer getMemberAnswer = 10;
     TurnCredentialsAnswer turnCredentialsAnswer = 11;
     ChatMembersAnswer chatMembersAnswer = 12;
-    OauthRefreshTokenAnswer oauthRefreshTokenAnswer = 13;
-    SearchTagsAnswer searchTagsAnswer = 14;
+    SearchTagsAnswer searchTagsAnswer = 13;
+    OauthRefreshTokenAnswer oauthRefreshTokenAnswer = 14;
   }
 }
 
@@ -570,7 +570,7 @@ message ChatMember {
 }
 
 message SearchTagsAnswer{
-  repeated string tags = 1; 
+  repeated string tags = 1;
 }
 
 /*********** SERVER TO CLIENT MESSAGES *************/
@@ -852,7 +852,7 @@ message AskMutedVideoMessage {
 message PublicEvent {
   string spaceName = 1;
   SpaceEvent spaceEvent = 2;
-  optional string senderUserUuid = 3;
+  optional int32 senderUserId = 3;
 }
 
 message SpaceEvent {
@@ -872,8 +872,8 @@ message SpaceIsTyping {
 
 message PrivateEvent {
   string spaceName = 1;
-  string receiverUserUuid = 2;
-  optional string senderUserUuid = 3;
+  int32 receiverUserId = 2;
+  optional int32 senderUserId = 3;
   SpaceMessage spaceMessage = 4;
 }
 
@@ -914,6 +914,7 @@ message ServerToClientMessage {
     AskMutedVideoMessage askMutedVideoMessage = 36;
     PublicEvent publicEvent = 37;
     PrivateEvent privateEvent = 38;
+    ExternalModuleMessage externalModuleMessage = 39;
   }
 }
 
@@ -1158,6 +1159,13 @@ message RoomsList {
 message DispatchGlobalEventRequest {
   string name = 1;
   google.protobuf.Value value = 2;
+}
+
+message ExternalModuleMessage {
+  string moduleId = 1;
+  optional string recipientUuid = 2;
+  optional string roomId = 3;
+  google.protobuf.Value message = 4;
 }
 
 /********************************************************************************

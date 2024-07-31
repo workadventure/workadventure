@@ -59,7 +59,7 @@ export interface JitsiEventEmitter {
     emitMuteParticipantIdSpace(userId: string): void;
     emitMuteVideoParticipantIdSpace(userId: string): void;
     emitProximityPublicMessage(message: string): void;
-    emitProximityPrivateMessage(message: string, receiverUserUuid: string): void;
+    emitProximityPrivateMessage(message: string, receiverUserId: number): void;
 }
 
 export class SpaceFilter implements SpaceFilterInterface {
@@ -142,8 +142,8 @@ export class SpaceFilter implements SpaceFilterInterface {
             emitProximityPublicMessage: (message: string) => {
                 this.emitProximityPublicMessage(message);
             },
-            emitProximityPrivateMessage: (message: string, receiverUserUuid: string) => {
-                this.emitProximityPrivateMessage(message, receiverUserUuid);
+            emitProximityPrivateMessage: (message: string, receiverUserId: number) => {
+                this.emitProximityPrivateMessage(message, receiverUserId);
             },
         };
 
@@ -280,13 +280,13 @@ export class SpaceFilter implements SpaceFilterInterface {
         });
     }
 
-    private emitProximityPrivateMessage(message: string, receiverUserUuid: string) {
+    private emitProximityPrivateMessage(message: string, receiverUserId: number) {
         this.sender({
             message: {
                 $case: "privateEvent",
                 privateEvent: {
                     spaceName: this.spaceName,
-                    receiverUserUuid,
+                    receiverUserId,
                     spaceMessage: {
                         message,
                     },

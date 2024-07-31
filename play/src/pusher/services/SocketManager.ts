@@ -564,7 +564,7 @@ export class SocketManager implements ZoneEventListener {
                                             publicEvent: {
                                                 spaceName: message.message.publicEvent.spaceName,
                                                 spaceEvent: message.message.publicEvent.spaceEvent,
-                                                senderUserUuid: socketData.userUuid,
+                                                senderUserId: socketData.userId,
                                             },
                                         },
                                     });
@@ -577,7 +577,7 @@ export class SocketManager implements ZoneEventListener {
                                             $case: "privateEvent",
                                             privateEvent: {
                                                 ...message.message.privateEvent,
-                                                senderUserUuid: socketData.userUuid,
+                                                senderUserId: socketData.userId,
                                             },
                                         },
                                     });
@@ -1622,7 +1622,7 @@ export class SocketManager implements ZoneEventListener {
         if (message?.$case !== "publicEvent") return;
         space.sendPublicEvent({
             ...message.publicEvent,
-            senderUserUuid: socketData.userUuid,
+            senderUserId: socketData.userId,
         });
     }
 
@@ -1635,9 +1635,12 @@ export class SocketManager implements ZoneEventListener {
         }
 
         if (message?.$case !== "privateEvent") return;
+        if (!socketData.userId) {
+            throw new Error("User id not found");
+        }
         const newPrivateEvent: PrivateEvent = {
             ...message.privateEvent,
-            receiverUserUuid: socketData.userUuid,
+            receiverUserId: socketData.userId,
         };
         space.sendPrivateEvent(newPrivateEvent);
     }

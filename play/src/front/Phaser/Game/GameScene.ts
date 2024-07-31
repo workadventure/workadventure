@@ -124,7 +124,7 @@ import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 import type { AskPositionEvent } from "../../Api/Events/AskPositionEvent";
 import { _newChatMessageSubject, chatVisibilityStore, forceRefreshChatStore } from "../../Stores/ChatStore";
 import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
-import { gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
+import { extensionModuleStore, gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
 import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
@@ -164,7 +164,7 @@ import { proximityRoomConnection, selectedRoom } from "../../Chat/Stores/ChatSto
 import { ProximityChatConnection } from "../../Chat/Connection/Proximity/ProximityChatConnection";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
 import { ExtensionModuleStatusSynchronization } from "../../Rules/StatusRules/ExtensionModuleStatusSynchronization";
-import { ExtensionModule } from "../../../extension-module/extension-module";
+import { ExtensionModule, RoomMetadataType } from "../../../extension-module/extension-module";
 import { calendarEventsStore, isActivatedStore } from "../../Stores/CalendarStore";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
@@ -1025,6 +1025,7 @@ export class GameScene extends DirtyScene {
         this.gameMapFrontWrapper?.close();
         this.followManager?.close();
         this.extensionModule?.destroy();
+        extensionModuleStore.set(undefined);
 
         LocalSpaceProviderSingleton.getInstance().destroy();
 
@@ -1946,7 +1947,9 @@ export class GameScene extends DirtyScene {
                 // The proximityPublicMessageToClientMessageStream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.proximityPublicMessageEvent.subscribe((publicEvent: PublicEvent) => {
-                    if (publicEvent.spaceEvent!.event?.$case != "spaceMessage") return;
+                    if (publicEvent.spaceEvent!.event?.$case != "spaceMessage") {
+                        return;
+                    }
 
                     const _proximityRoomConnection = get(proximityRoomConnection);
                     if (!_proximityRoomConnection) return;
@@ -1954,11 +1957,12 @@ export class GameScene extends DirtyScene {
                     const room = get(_proximityRoomConnection?.rooms)[0];
                     if (!room || !room.addNewMessage) return;
 
-                    // the user is me do not show the message
-                    const proximityUserUuid = publicEvent.senderUserUuid;
-                    if (proximityUserUuid == undefined || proximityUserUuid === localUserStore.getLocalUser()?.uuid)
+                    // The user sending the message is myself. Do not show the message.
+                    const proximityUserId = publicEvent.senderUserId;
+                    if (proximityUserId == undefined || proximityUserId === this.connection?.getUserId()) {
                         return;
-                    room.addNewMessage(publicEvent.spaceEvent!.event.spaceMessage.message, proximityUserUuid);
+                    }
+                    room.addNewMessage(publicEvent.spaceEvent!.event.spaceMessage.message, proximityUserId);
 
                     // if the proximity chat is not open, open it to see the message
                     chatVisibilityStore.set(true);
@@ -1976,10 +1980,10 @@ export class GameScene extends DirtyScene {
                     const room = get(_proximityRoomConnection?.rooms)[0];
                     if (!room || !(room instanceof ProximityChatRoom)) return;
 
-                    if (publicEvent.senderUserUuid != undefined)
+                    if (publicEvent.senderUserId != undefined)
                         if (publicEvent.spaceEvent!.event.spaceIsTyping.isTyping)
-                            room.addTypingUser(publicEvent.senderUserUuid);
-                        else room.removeTypingUser(publicEvent.senderUserUuid);
+                            room.addTypingUser(publicEvent.senderUserId);
+                        else room.removeTypingUser(publicEvent.senderUserId);
                 });
 
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
@@ -2044,27 +2048,41 @@ export class GameScene extends DirtyScene {
     }
 
     private initExtensionModule() {
-        (async () => {
-            try {
-                /*if (!WA_MODULE_EXTENSION_URL) {
-                    return;
-                }
-                const extensionModule = await import(WA_MODULE_EXTENSION_URL);*/
+        if (this._room.metadata != undefined) {
+            const parsedRoomMetadata = RoomMetadataType.safeParse(this._room.metadata);
 
-                const extensionModule = await import("../../../ms-teams/MSTeams");
-                this.extensionModule = extensionModule.default;
-                this.extensionModule.init(this._room.metadata, {
-                    workadventureStatusStore: availabilityStatusStore,
-                    onExtensionModuleStatusChange: ExtensionModuleStatusSynchronization.onStatusChange,
-                    getOauthRefreshToken: this.connection?.getOauthRefreshToken.bind(this.connection),
-                    calendarEventsStoreUpdate: calendarEventsStore.update,
-                });
-                // TODO change that to check if the calendar synchro is enabled from admin
-                isActivatedStore.set(true);
-            } catch (error) {
-                console.warn("Extension module initialization cancelled", error);
+            if (!parsedRoomMetadata.success) {
+                console.error(
+                    "Unable to initialize Microsoft teams module due to room metadata parsing error : ",
+                    parsedRoomMetadata.error
+                );
+                return;
             }
-        })().catch((error) => console.error(error));
+
+            if (parsedRoomMetadata.data.msteams === true) {
+                (async () => {
+                    try {
+                        const extensionModule = await import("../../../ms-teams/MSTeams");
+                        this.extensionModule = extensionModule.default;
+
+                        this.extensionModule.init(parsedRoomMetadata.data, {
+                            workadventureStatusStore: availabilityStatusStore,
+                            onExtensionModuleStatusChange: ExtensionModuleStatusSynchronization.onStatusChange,
+                            getOauthRefreshToken: this.connection?.getOauthRefreshToken.bind(this.connection),
+                            calendarEventsStoreUpdate: calendarEventsStore.update,
+                            userAccessToken: localUserStore.getAuthToken()!,
+                            roomId: this.roomUrl,
+                            externalModuleMessage: this.connection!.externalModuleMessage,
+                        });
+                        // TODO change that to check if the calendar synchro is enabled from admin
+                        if (parsedRoomMetadata.data.teamsstings.calendar) isActivatedStore.set(true);
+                        extensionModuleStore.set(this.extensionModule);
+                    } catch (error) {
+                        console.warn("Extension module initialization cancelled", error);
+                    }
+                })().catch((error) => console.error(error));
+            }
+        }
     }
 
     private subscribeToStores(): void {
@@ -2598,6 +2616,12 @@ ${escapedMessage}
                         room.addExternalMessage(chatMessage.message);
                         selectedRoom.set(room);
                         chatVisibilityStore.set(true);
+
+                        // Send the message to other users in the bubble
+                        // TODO: the message should be sent by not myself
+                        const spaceName = (room as ProximityChatRoom).getSpaceName();
+                        if (spaceName) this.connection?.emitProximityPublicMessage(spaceName, chatMessage.message);
+                        else console.warn("No space name found for the bubble chat");
                         break;
                     }
                 }

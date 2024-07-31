@@ -619,7 +619,7 @@ export class Space implements CustomJsonReplacerInterface {
     public sendPrivateEvent(message: PrivateEvent) {
         [...this.clientWatchers.values()].forEach((watcher) => {
             const socketData = watcher.getUserData();
-            if (socketData.userUuid === message.receiverUserUuid) {
+            if (socketData.userId === message.receiverUserId) {
                 socketData.emitInBatch({
                     message: {
                         $case: "privateEvent",
