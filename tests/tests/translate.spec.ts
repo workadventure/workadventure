@@ -18,12 +18,12 @@ test.describe('Translation', () => {
 
     await login(page);
 
-    await page.click('#menuIcon img:first-child');
+    await page.click('#action-user');
     await page.click('button:has-text("Settings")');
     await page.selectOption('.languages-switcher', 'fr-FR');
 
     await page.reload();
-    await page.click('#menuIcon img:first-child');
+    await page.click('#action-user');
     await expect(page.locator('button:has-text("Paramètres")')).toBeVisible();
   });
 });

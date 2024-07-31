@@ -2,9 +2,9 @@ import *  as fs from "fs";
 import { APIResponse, expect, test } from '@playwright/test';
 import { login } from './utils/roles';
 import {createZipFromDirectory} from "./utils/zip";
-import { gotoWait200 } from "./utils/containers";
 import {RENDERER_MODE} from "./utils/environment";
 import {map_storage_url, maps_domain} from "./utils/urls";
+import { gotoWait200 } from "./utils/containers";
 
 test.use({
     baseURL: map_storage_url,

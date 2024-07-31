@@ -14,7 +14,7 @@ test.describe('Iframe API', () => {
       test.skip();
       return;
     }
-    
+
     await page.goto(
       publicTestMapUrl("tests/Metadata/cowebsiteAllowApi.json", "iframe_script")
     );
@@ -25,16 +25,14 @@ test.describe('Iframe API', () => {
     //await expect(page.locator('p.other-text')).toHaveText('The iframe opened by a script works !', {useInnerText: true});
   });
 
-  test('can add a custom menu by scripting API', async ({
-    page
-  }, { project }) => {
+  test('can add a custom menu by scripting API', async ({ page }, { project }) => {
     // Skip test for mobile device
     if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
     }
-    
+
     await page.goto(
         publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
     );
@@ -42,17 +40,17 @@ test.describe('Iframe API', () => {
     await login(page);
 
     await evaluateScript(page, async () => {
-      
-      await WA.onInit();
 
-      
-      WA.ui.registerMenuCommand('custom callback menu', () => {
-        
-        WA.chat.sendChatMessage('Custom menu clicked', 'Mr Robot');
-      })
+        await WA.onInit();
 
-      
-      WA.ui.registerMenuCommand('custom iframe menu', {iframe: '../Metadata/customIframeMenu.html'});
+        console.log('BONCCHHOOOUUUUUUR')
+
+        WA.ui.registerMenuCommand('custom callback menu', () => {
+            WA.chat.sendChatMessage('Custom menu clicked', 'Mr Robot');
+            console.log('Custom menu clicked');
+        });
+
+        WA.ui.registerMenuCommand('custom iframe menu', {iframe: '../Metadata/customIframeMenu.html'});
     });
 
     await Menu.openMenu(page);
@@ -73,10 +71,10 @@ test.describe('Iframe API', () => {
 
     // Now, let's add a menu item and open an iframe
     await evaluateScript(page, async () => {
-      
+
       await WA.onInit();
 
-      
+
       const menu = WA.ui.registerMenuCommand('autoopen iframe menu', {iframe: '../Metadata/customIframeMenu.html'});
       await menu.open();
     });
@@ -90,10 +88,10 @@ test.describe('Iframe API', () => {
 
     // Now, let's test that we can open a default menu:
     await evaluateScript(page, async () => {
-      
+
       await WA.onInit();
 
-      
+
       const menu = await WA.ui.getMenuCommand('invite');
       await menu.open();
     });
@@ -108,7 +106,7 @@ test.describe('Iframe API', () => {
       test.skip();
       return;
     }
-    
+
     await page.goto(
         publicTestMapUrl("tests/E2E/empty.json", "iframe_script")+"#foo=bar"
     );
@@ -116,10 +114,10 @@ test.describe('Iframe API', () => {
     await login(page);
 
     const parameter = await evaluateScript(page, async () => {
-      
+
       await WA.onInit();
 
-      
+
       return WA.room.hashParameters.foo;
     });
 
@@ -142,9 +140,9 @@ test.describe('Iframe API', () => {
 
       // Create a script to evaluate function to disable map editor
       await evaluateScript(page, async () => {
-        
         await WA.onInit();
-        
+        console.log('WA', WA);
+        // iframeListener.iframeEvent('disableMapEditor');
         WA.controls.disableMapEditor();
       });
 
@@ -153,9 +151,7 @@ test.describe('Iframe API', () => {
 
       // Create a script to evaluate function to enable map editor
       await evaluateScript(page, async () => {
-        
         await WA.onInit();
-        
         WA.controls.restoreMapEditor();
       });
 
@@ -175,10 +171,12 @@ test.describe('Iframe API', () => {
 
     // Create a script to evaluate function to disable map editor
     await evaluateScript(page, async () => {
-      
-      await WA.onInit();
-      
-      WA.controls.disableInviteButton();
+
+        await WA.onInit();
+
+        await console.log('WA', WA.controls.disableInviteButton());
+        // console.log(WorkadventureControlsCommands.disableInviteButton());
+        await WA.controls.disableInviteButton();
     });
 
     // Check if the screen sharing is disabled
@@ -186,9 +184,9 @@ test.describe('Iframe API', () => {
 
     // Create a script to evaluate function to enable map editor
     await evaluateScript(page, async () => {
-      
+
       await WA.onInit();
-      
+
       WA.controls.restoreInviteButton();
     });
 
@@ -205,7 +203,7 @@ test.describe('Iframe API', () => {
       test.skip();
       return;
     }
-    
+
     await page.goto(
         publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
     );
@@ -215,9 +213,9 @@ test.describe('Iframe API', () => {
 
     // Create a script to evaluate function to disable map editor
     await evaluateScript(page, async () => {
-      
+
       await WA.onInit();
-      
+
       WA.controls.disableScreenSharing();
     });
 
@@ -235,9 +233,9 @@ test.describe('Iframe API', () => {
 
     // Create a script to evaluate function to enable map editor
     await evaluateScript(page, async () => {
-      
+
       await WA.onInit();
-      
+
       WA.controls.restoreScreenSharing();
     });
 
@@ -255,24 +253,30 @@ test.describe('Iframe API', () => {
       test.skip();
       return;
     }
-  
+
 
     await page.goto(
         publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
     );
 
+
+
     await page.evaluate(() => localStorage.setItem('debug', '*'));
     await login(page, 'Alice', 3);
 
+    // await page.pause();
+
     // Right click to move the user
-    await page.locator('canvas').click({
+    const element = await page.locator('app')
+
+    element.click({
       button: 'right',
       position: {
         x: 381,
         y: 121
       }
     });
- 
+
     // Create a script to evaluate function to disable map editor
     await evaluateScript(page, async () => {
       await WA.onInit();
@@ -299,5 +303,5 @@ test.describe('Iframe API', () => {
     page.close();
   });
 
-  // TDODO: disable and restore wheel zoom 
+  // TDODO: disable and restore wheel zoom
 });

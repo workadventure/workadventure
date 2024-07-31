@@ -46,7 +46,12 @@
     });
 </script>
 
-<div id="presentation-layout" bind:this={layoutDom} class:full-medias={displayFullMedias} class="flex flex-col">
+<div
+    id="presentation-layout"
+    bind:this={layoutDom}
+    class:full-medias={displayFullMedias}
+    class="flex flex-col cameras-container"
+>
     {#if displayFullMedias}
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
             <div id="full-medias" class="z-[300] relative mx-auto top-8 h-1/2 overflow-y-auto h-full">
