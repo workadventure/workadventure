@@ -14,6 +14,7 @@ import {
     ReceiptType,
     Room,
     RoomEvent,
+    RoomMember,
     RoomMemberEvent,
     TimelineWindow,
 } from "matrix-js-sdk";
@@ -177,6 +178,8 @@ export class MatrixChatRoom implements ChatRoom {
                     console.error(error);
                 });
             });
+
+        console.debug(matrixRoom.getMembers());
     }
 
     private async initMatrixRoomMessagesAndReactions() {
@@ -486,6 +489,16 @@ export class MatrixChatRoom implements ChatRoom {
             throw new Error("Failed to leave room");
         }
     }
+    async inviteUsers(userIds: string[]): Promise<void> {
+        const userInvitationPromises = userIds.map((userId) => this.matrixRoom.client.invite(this.id, userId));
+        try {
+            await Promise.all(userInvitationPromises);
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+        return;
+    }
 
     private getMatrixRoomType(): "direct" | "multiple" {
         const dmInviter = this.matrixRoom.getDMInviter();
@@ -522,6 +535,14 @@ export class MatrixChatRoom implements ChatRoom {
         } catch (error) {
             console.error(error);
         }
+    }
+
+    members() {
+        return this.matrixRoom.getMembers().map((member: RoomMember) => ({
+            id: member.userId,
+            name: member.name ?? member.userId,
+            membership: member.membership ?? "join",
+        }));
     }
 
     private async sendFile(file: File) {

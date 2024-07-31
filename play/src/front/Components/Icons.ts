@@ -34,6 +34,7 @@ export { default as IconMoreVertical } from "~icons/tabler/dots-vertical";
 export { default as IconDots } from "~icons/tabler/dots";
 export { default as IconShield } from "~icons/tabler/shield";
 export { default as IconUsers } from "~icons/tabler/users";
+export { default as IconUserPlus } from "~icons/tabler/userPlus";
 export { default as IconDotsCircle } from "~icons/tabler/dotsCircleHorizontal";
 export { default as IconLogout } from "~icons/tabler/logout";
 export { default as IconMessage } from "~icons/tabler/message";

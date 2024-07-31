@@ -425,6 +425,15 @@ export class ProximityChatRoom implements ChatRoom {
         }
     }
 
+    inviteUsers(userIds: string[]): Promise<void> {
+        return Promise.reject(new Error("Method not implemented"));
+    }
+
+    members(): { id: string; name: string; membership: ChatRoomMembership }[] {
+        console.info("Method not implemented");
+        return [];
+    }
+
     public leaveSpace(spaceName: string): void {
         if (!this._space) {
             console.error("Trying to leave a space that is not joined");
