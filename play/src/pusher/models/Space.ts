@@ -1,6 +1,5 @@
 import {
     AddSpaceFilterMessage,
-    PartialSpaceUser,
     PrivateEvent,
     PublicEvent,
     PusherToBackSpaceMessage,
@@ -10,6 +9,8 @@ import {
     SubMessage,
     UpdateSpaceFilterMessage,
 } from "@workadventure/messages";
+import { applyFieldMask } from "protobuf-fieldmask";
+import merge from "lodash/merge";
 import Debug from "debug";
 import * as Sentry from "@sentry/node";
 import { Socket } from "../services/SocketManager";
@@ -17,6 +18,8 @@ import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import { BackSpaceConnection, SocketData } from "./Websocket/SocketData";
 
 type SpaceUserExtended = { lowercaseName: string } & SpaceUser;
+
+type PartialSpaceUser = Partial<Omit<SpaceUser, "id">> & Pick<SpaceUser, "id">;
 
 const debug = Debug("space");
 
@@ -103,21 +106,22 @@ export class Space implements CustomJsonReplacerInterface {
         this.notifyAll(subMessage, user);
     }
 
-    public updateUser(spaceUser: PartialSpaceUser, world: string) {
+    public updateUser(spaceUser: PartialSpaceUser, updateMask: string[]) {
         const pusherToBackSpaceMessage: PusherToBackSpaceMessage = {
             message: {
                 $case: "updateSpaceUserMessage",
                 updateSpaceUserMessage: {
                     spaceName: this.name,
-                    user: spaceUser,
+                    user: SpaceUser.fromPartial(spaceUser),
                     filterName: undefined,
+                    updateMask,
                 },
             },
         };
         this.spaceStreamToPusher.write(pusherToBackSpaceMessage);
-        this.localUpdateUser(spaceUser, world);
+        this.localUpdateUser(spaceUser, updateMask);
     }
-    public localUpdateUser(spaceUser: PartialSpaceUser, world: string) {
+    public localUpdateUser(spaceUser: PartialSpaceUser, updateMask: string[]) {
         const user = this.users.get(spaceUser.id);
         let oldUser: SpaceUserExtended | undefined;
         if (!user) {
@@ -125,61 +129,9 @@ export class Space implements CustomJsonReplacerInterface {
             return;
         }
 
-        //const updatedUser = merge(user,spaceUser) as SpaceUserExtended;
+        const updateValues = applyFieldMask(spaceUser, updateMask);
 
-        if (user) {
-            oldUser = structuredClone(user);
-            if (spaceUser.tags.length > 0) {
-                user.tags = spaceUser.tags;
-            }
-            if (spaceUser.name) {
-                user.name = spaceUser.name;
-                user.lowercaseName = spaceUser.name.toLowerCase();
-            }
-            if (spaceUser.playUri) {
-                user.playUri = spaceUser.playUri;
-            }
-            if (spaceUser.color) {
-                user.color = spaceUser.color;
-            }
-            if (spaceUser.characterTextures.length > 0) {
-                user.characterTextures = spaceUser.characterTextures;
-            }
-            if (spaceUser.isLogged !== undefined) {
-                user.isLogged = spaceUser.isLogged;
-            }
-            if (spaceUser.availabilityStatus !== undefined) {
-                user.availabilityStatus = spaceUser.availabilityStatus;
-            }
-            if (spaceUser.roomName) {
-                user.roomName = spaceUser.roomName;
-            }
-            if (spaceUser.visitCardUrl) {
-                user.visitCardUrl = spaceUser.visitCardUrl;
-            }
-            if (spaceUser.screenSharingState !== undefined) {
-                user.screenSharingState = spaceUser.screenSharingState;
-            }
-            if (spaceUser.microphoneState !== undefined) {
-                user.microphoneState = spaceUser.microphoneState;
-            }
-            if (spaceUser.cameraState !== undefined) {
-                user.cameraState = spaceUser.cameraState;
-            }
-            if (spaceUser.megaphoneState !== undefined) {
-                user.megaphoneState = spaceUser.megaphoneState;
-            }
-            if (spaceUser.jitsiParticipantId) {
-                user.jitsiParticipantId = spaceUser.jitsiParticipantId;
-            }
-            if (spaceUser.uuid) {
-                user.uuid = spaceUser.uuid;
-            }
-
-            if (spaceUser.chatID) {
-                user.chatID = spaceUser.chatID;
-            }
-        }
+        merge(user, updateValues);
 
         if (spaceUser.name) user.lowercaseName = spaceUser.name.toLowerCase();
 
@@ -189,9 +141,10 @@ export class Space implements CustomJsonReplacerInterface {
             message: {
                 $case: "updateSpaceUserMessage",
                 updateSpaceUserMessage: {
-                    spaceName: `${this.name}`,
-                    user: spaceUser,
+                    spaceName: this.name,
+                    user: SpaceUser.fromPartial(spaceUser),
                     filterName: undefined,
+                    updateMask,
                 },
             },
         };
@@ -471,7 +424,7 @@ export class Space implements CustomJsonReplacerInterface {
         this.notifyMe(watcher, subMessage);
     }
 
-    private notifyMeUpdateUser(watcher: Socket, user: SpaceUserExtended, filterName: string | undefined) {
+    /*private notifyMeUpdateUser(watcher: Socket, user: SpaceUserExtended, filterName: string | undefined) {
         const subMessage: SubMessage = {
             message: {
                 $case: "updateSpaceUserMessage",
@@ -483,7 +436,7 @@ export class Space implements CustomJsonReplacerInterface {
             },
         };
         this.notifyMe(watcher, subMessage);
-    }
+    }*/
     private notifyMeRemoveUser(watcher: Socket, user: SpaceUserExtended, filterName: string | undefined) {
         const subMessage: SubMessage = {
             message: {
