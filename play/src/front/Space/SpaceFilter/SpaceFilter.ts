@@ -1,6 +1,5 @@
 import merge from "lodash/merge";
 import {
-    PartialSpaceUser,
     SpaceFilterContainName,
     SpaceFilterEverybody,
     SpaceFilterLiveStreaming,
@@ -30,7 +29,8 @@ export interface SpaceUserExtended extends SpaceUser {
     getWokaBase64: string;
     updateSubject: Subject<{
         newUser: SpaceUserExtended;
-        changes: PartialSpaceUser;
+        changes: SpaceUser;
+        updateMask: string[];
     }>;
     emitter: JitsiEventEmitter | undefined;
     spaceName: string;
@@ -158,7 +158,8 @@ export class SpaceFilter implements SpaceFilterInterface {
             getWokaBase64: wokaBase64,
             updateSubject: new Subject<{
                 newUser: SpaceUserExtended;
-                changes: PartialSpaceUser;
+                changes: SpaceUser;
+                updateMask: string[];
             }>(),
             emitter,
             spaceName,

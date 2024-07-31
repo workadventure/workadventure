@@ -27,7 +27,7 @@ export class StreamSpaceWatcher {
 
         this.updateSpaceUserMessageStreamSubscription = roomConnection.updateSpaceUserMessageStream.subscribe(
             (message) => {
-                if (!message.user || !message.filterName) return;
+                if (!message.user || !message.filterName || !message.updateMask) return;
 
                 spaceProvider.get(message.spaceName).getSpaceFilter(message.filterName).updateUserData(message.user);
             }
