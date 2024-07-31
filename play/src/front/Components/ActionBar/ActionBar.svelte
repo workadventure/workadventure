@@ -32,10 +32,10 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { chatVisibilityStore, chatZoneLiveStore } from "../../Stores/ChatStore";
     import {
+        proximityMeetingStore,
         inExternalServiceStore,
         myCameraStore,
         myMicrophoneStore,
-        proximityMeetingStore,
     } from "../../Stores/MyMediaStore";
     import {
         activeSubMenuStore,
@@ -47,8 +47,8 @@
         additionnalButtonsMenu,
         addClassicButtonActionBarEvent,
         addActionButtonActionBarEvent,
-        userIsConnected,
         mapEditorActivated,
+        userIsConnected,
     } from "../../Stores/MenuStore";
     import {
         emoteDataStore,
@@ -112,8 +112,8 @@
     import MenuBurgerIcon from "../Icons/MenuBurgerIcon.svelte";
     import PenIcon from "../Icons/PenIcon.svelte";
     import { StringUtils } from "../../Utils/StringUtils";
-    import { connectionManager } from "../../Connection/ConnectionManager";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
+    import { connectionManager } from "../../Connection/ConnectionManager";
 
     // gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
     let userName = gameManager.getPlayerName() || "";
@@ -440,12 +440,6 @@
         }
     });
 
-    $: console.log($silentStore, "silent store");
-    // function logIn() {
-    //     console.log("login");
-    //     // return connectionManager.login();
-    // }
-
     // function playSoundClick() {
     //     sound.play().catch((e) => console.error(e));
     // }
@@ -526,7 +520,7 @@
                 </div>
 
                 <div
-                    class="group/btn-users relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg last:rounded-r-lg p-2 aspect-square hidden sm:block"
+                    class="group/btn-users relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg last:rounded-r-lg p-2 p-2 aspect-square hidden sm:block"
                     on:click={toggleChat}
                 >
                     <div
@@ -744,7 +738,6 @@
                                 <div
                                     class="group/btn-follow bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 rounded-l-lg sm:rounded-l-none sm:first:rounded-l-lg sm:last:rounded-r-lg  aspect-square"
                                 >
-                                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                                     <div
                                         class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 rounded group-hover/btn-follow:bg-white/10 aspect-square flex items-center justify-center transition-all {$followStateStore ===
                                         'active'
@@ -769,7 +762,6 @@
                                         />
                                     {/if}
                                 </div>
-                                <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <div
                                     class="group/btn-lock relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 rounded-none sm:first:rounded-l-lg sm:last:rounded-r-lg aspect-square"
                                     class:disabled={$currentPlayerGroupLockStateStore}
@@ -808,13 +800,13 @@
                         {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore}
                             <!-- NAV : MICROPHONE START -->
                             {#if $myMicrophoneStore}
+                                <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <div
                                     class="group/btn-mic peer/mic relative bg-contrast/80 backdrop-blur p-2 sm:pr-0 sm:last:pr-2 aspect-square {$bottomActionBarVisibilityStore
                                         ? 'rounded-none sm:rounded-l-lg'
                                         : 'rounded-l-lg'}"
                                     class:disabled={!$requestedMicrophoneState || $silentStore}
                                 >
-                                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                                     <div
                                         class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 p-1 m-0 rounded group-[.disabled]/btn-mic:bg-danger hover:bg-white/10 flex items-center justify-center transition-all"
                                         on:click={() => analyticsClient.microphone()}
@@ -849,7 +841,6 @@
                                 ? 'opacity-100'
                                 : 'group-hover/hardware:opacity-100'}"
                         >
-                            <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div
                                 class="absolute bottom-1 left-0 right-0 m-auto hover:bg-white/10 h-5 w-5 flex items-center justify-center rounded-sm"
                                 on:click|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}
@@ -999,7 +990,6 @@
                                             {$LL.actionbar.subtitle.speaker()}
                                         </div>
                                         {#each $speakerListStore as speaker, index (index)}
-                                            <!-- svelte-ignore a11y-click-events-have-key-events -->
                                             <div
                                                 class="group flex items-center relative z-10 py-1 px-4 overflow-hidden {$speakerSelectedStore ===
                                                 speaker.deviceId
@@ -1232,116 +1222,119 @@
                         </div>
                     </div>
                 {/if}
-                <!-- {#if $mapEditorActivated || $userHasAccessToBackOfficeStore} -->
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div
-                    id="action-admin"
-                    class="items-center relative transition-all hidden @lg/actions:block"
-                    on:click={() => (adminMenuIsDropped = !adminMenuIsDropped)}
-                    on:click|preventDefault={close}
-                    on:blur={() => (adminMenuIsDropped = false)}
-                >
+                {#if $mapEditorActivated || $userHasAccessToBackOfficeStore}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
-                        class="group bg-contrast/80 backdrop-blur rounded-lg h-16 @sm/actions:h-14 @xl/actions:h-16 p-2 transition-all"
+                        id="action-admin"
+                        class="items-center relative transition-all hidden @lg/actions:block"
+                        on:click={() => (adminMenuIsDropped = !adminMenuIsDropped)}
+                        on:click|preventDefault={close}
+                        on:blur={() => (adminMenuIsDropped = false)}
                     >
                         <div
-                            class="flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded space-x-2 pl-4 pr-3"
+                            class="group bg-contrast/80 backdrop-blur rounded-lg h-16 @sm/actions:h-14 @xl/actions:h-16 p-2 transition-all"
                         >
-                            <AdminPanIcon />
-                            <div class="pr-2">
-                                <div
-                                    class="font-bold text-white leading-3 whitespace-nowrap select-none text-base @sm/actions:text-sm @xl/actions:text-base"
-                                >
-                                    {$LL.actionbar.admin()}
+                            <div
+                                class="flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded space-x-2 pl-4 pr-3"
+                            >
+                                <AdminPanIcon />
+                                <div class="pr-2">
+                                    <div
+                                        class="font-bold text-white leading-3 whitespace-nowrap select-none text-base @sm/actions:text-sm @xl/actions:text-base"
+                                    >
+                                        {$LL.actionbar.admin()}
+                                    </div>
                                 </div>
+                                <ChevronDownIcon
+                                    strokeWidth="2"
+                                    classList="h-4 w-4 aspect-square transition-all opacity-50 {adminMenuIsDropped
+                                        ? 'rotate-180'
+                                        : ''}"
+                                    height="16px"
+                                    width="16px"
+                                />
                             </div>
-                            <ChevronDownIcon
-                                strokeWidth="2"
-                                classList="h-4 w-4 aspect-square transition-all opacity-50 {adminMenuIsDropped
-                                    ? 'rotate-180'
-                                    : ''}"
-                                height="16px"
-                                width="16px"
-                            />
                         </div>
+                        {#if adminMenuIsDropped}
+                            <div
+                                class="absolute mt-2 top-14 @xl/actions:top-16 right-0 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 right-0 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all"
+                                id="admin-menu"
+                                transition:fly={{ y: 40, duration: 150 }}
+                            >
+                                <ul class="p-0 m-0">
+                                    {#if $mapEditorActivated}
+                                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                        <li
+                                            class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold"
+                                            id="map-editor"
+                                            on:click={() => toggleMapEditorMode()}
+                                        >
+                                            <div
+                                                class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
+                                            >
+                                                <svg
+                                                    width="20"
+                                                    height="20"
+                                                    viewBox="0 0 20 20"
+                                                    fill="none"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                >
+                                                    <path
+                                                        d="M12.5 3.5L16.5 7.5M10 6L5 1L1 5L6 10M5 6L3.5 7.5M14 10L19 15L15 19L10 14M14 15L12.5 16.5M1 19H5L18 6C18.5304 5.46957 18.8284 4.75015 18.8284 4C18.8284 3.24985 18.5304 2.53043 18 2C17.4696 1.46957 16.7501 1.17157 16 1.17157C15.2499 1.17157 14.5304 1.46957 14 2L1 15V19Z"
+                                                        stroke="white"
+                                                        stroke-width="2"
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                    />
+                                                </svg>
+                                                <!-- TODO Hugo : SVG inline -->
+                                            </div>
+                                            <div>{$LL.actionbar.mapEditor()}</div>
+                                        </li>
+                                    {/if}
+                                    {#if $userHasAccessToBackOfficeStore}
+                                        <li
+                                            class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold"
+                                            on:click={() => openBo()}
+                                        >
+                                            <div
+                                                class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
+                                            >
+                                                <AdjustmentsIcon />
+                                            </div>
+                                            <div>{$LL.actionbar.bo()}</div>
+                                        </li>
+                                    {/if}
+                                    <li
+                                        class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold"
+                                    >
+                                        <div
+                                            class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
+                                        >
+                                            <MessageGlobalIcon />
+                                        </div>
+                                        <div>{$LL.actionbar.globalMessage()}</div>
+                                    </li>
+                                    {#if $megaphoneCanBeUsedStore && !$silentStore && ($myMicrophoneStore || $myCameraStore)}
+                                        <li
+                                            class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold"
+                                        >
+                                            <div
+                                                class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
+                                            >
+                                                <MegaphoneIcon />
+                                            </div>
+                                            <div>{$LL.actionbar.megaphone()}</div>
+                                        </li>
+                                    {/if}
+                                </ul>
+                                {#if $streamingMegaphoneStore}
+                                    <MegaphoneConfirm />
+                                {/if}
+                            </div>
+                        {/if}
                     </div>
-                    {#if adminMenuIsDropped}
-                        <div
-                            class="absolute mt-2 top-14 @xl/actions:top-16 right-0 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-transparent before:border-b-contrast/80 transition-all"
-                            id="admin-menu"
-                            transition:fly={{ y: 40, duration: 150 }}
-                        >
-                            <ul class="p-0 m-0">
-                                <!-- {#if $mapEditorActivated} -->
-                                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                <li
-                                    class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold"
-                                    id="map-editor"
-                                    on:click={() => toggleMapEditorMode()}
-                                >
-                                    <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center">
-                                        <svg
-                                            width="20"
-                                            height="20"
-                                            viewBox="0 0 20 20"
-                                            fill="none"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                        >
-                                            <path
-                                                d="M12.5 3.5L16.5 7.5M10 6L5 1L1 5L6 10M5 6L3.5 7.5M14 10L19 15L15 19L10 14M14 15L12.5 16.5M1 19H5L18 6C18.5304 5.46957 18.8284 4.75015 18.8284 4C18.8284 3.24985 18.5304 2.53043 18 2C17.4696 1.46957 16.7501 1.17157 16 1.17157C15.2499 1.17157 14.5304 1.46957 14 2L1 15V19Z"
-                                                stroke="white"
-                                                stroke-width="2"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                            />
-                                        </svg>
-                                        <!-- TODO Hugo : SVG inline -->
-                                    </div>
-                                    <div>{$LL.actionbar.mapEditor()}</div>
-                                </li>
-                                <!-- {/if} -->
-                                {#if $userHasAccessToBackOfficeStore}
-                                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                    <li
-                                        class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold"
-                                        on:click={() => openBo()}
-                                    >
-                                        <div
-                                            class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
-                                        >
-                                            <AdjustmentsIcon />
-                                        </div>
-                                        <div>{$LL.actionbar.bo()}</div>
-                                    </li>
-                                {/if}
-                                <li
-                                    class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold"
-                                >
-                                    <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center">
-                                        <MessageGlobalIcon />
-                                    </div>
-                                    <div>{$LL.actionbar.globalMessage()}</div>
-                                </li>
-                                {#if $megaphoneCanBeUsedStore && !$silentStore && ($myMicrophoneStore || $myCameraStore)}
-                                    <li
-                                        class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold"
-                                    >
-                                        <div
-                                            class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
-                                        >
-                                            <MegaphoneIcon />
-                                        </div>
-                                        <div>{$LL.actionbar.megaphone()}</div>
-                                    </li>
-                                {/if}
-                            </ul>
-                            {#if $streamingMegaphoneStore}
-                                <MegaphoneConfirm />
-                            {/if}
-                        </div>
-                    {/if}
-                </div>
-                <!-- {/if} -->
+                {/if}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     id="action-user"
@@ -1535,6 +1528,7 @@
                                 </button>
                                 <button
                                     class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
+                                    id="settings"
                                     on:click={() => showMenuItem(SubMenusInterface.settings)}
                                 >
                                     <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center">
@@ -1549,12 +1543,11 @@
                 <div
                     class="group/btn-burger relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 rounded-l-lg rounded-r-lg aspect-square block @lg:hidden"
                 >
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
                         on:click={() => (burgerOpen = !burgerOpen)}
                         on:blur={() => (burgerOpen = false)}
                         on:click|preventDefault={close}
-                        class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:w-12 p-1 m-0 rounded hover:bg-white/10 flex items-center justify-center transition-all"
+                        class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:w-12 @xl/actions:w-12 p-1 m-0 rounded hover:bg-white/10 flex items-center justify-center transition-all"
                     >
                         {#if !burgerOpen}
                             <MenuBurgerIcon />

@@ -43,8 +43,6 @@ test.describe('Iframe API', () => {
 
         await WA.onInit();
 
-        console.log('BONCCHHOOOUUUUUUR')
-
         WA.ui.registerMenuCommand('custom callback menu', () => {
             WA.chat.sendChatMessage('Custom menu clicked', 'Mr Robot');
             console.log('Custom menu clicked');
@@ -55,7 +53,9 @@ test.describe('Iframe API', () => {
 
     await Menu.openMenu(page);
 
-    await page.click('button:has-text("custom iframe menu")');
+    await page.click('#settings')
+
+    await page.locator('.menu-item-container:has-text("custom iframe menu")').click();
 
     const iframeParagraph = page
         .frameLocator('.menu-submenu-container iframe')
@@ -72,31 +72,40 @@ test.describe('Iframe API', () => {
     // Now, let's add a menu item and open an iframe
     await evaluateScript(page, async () => {
 
-      await WA.onInit();
+        await WA.onInit();
 
-
-      const menu = WA.ui.registerMenuCommand('autoopen iframe menu', {iframe: '../Metadata/customIframeMenu.html'});
-      await menu.open();
+        const menu = WA.ui.registerMenuCommand('autoopen iframe menu', {iframe: '../Metadata/customIframeMenu.html'});
+        await menu.open();
     });
 
     const iframeParagraph2 = page
         .frameLocator('.menu-submenu-container iframe')
         .locator('p');
+
+    console.log(iframeParagraph2);
     await expect(iframeParagraph2).toHaveText('This is an iframe in a custom menu.');
 
-    await Menu.closeMenu(page);
+    await page.locator('#btn-chat').click();
+    // await Menu.closeMenu(page);
 
     // Now, let's test that we can open a default menu:
     await evaluateScript(page, async () => {
 
-      await WA.onInit();
+        await WA.onInit();
 
+        //WA don't work for now so i use the menu directly
+        // const menu = await WA.ui.getMenuCommand('invite');
+        // await menu.open();
 
-      const menu = await WA.ui.getMenuCommand('invite');
-      await menu.open();
     });
+    await page.locator('.menu-item-container:has-text("invite")').click();
 
-    await expect(page.locator('.menu-container')).toContainText("Share the link of the room");
+    const finalTextLocator = page.locator('.grow:has-text("Share the link of the room!")');
+
+    await expect(finalTextLocator).toContainText("Share the link of the room!");
+
+    await page.locator('#closeMenu').click();
+
   });
 
   test('base room properties', async ({ page }, { project }) => {
@@ -142,7 +151,7 @@ test.describe('Iframe API', () => {
       await evaluateScript(page, async () => {
         await WA.onInit();
         console.log('WA', WA);
-        // iframeListener.iframeEvent('disableMapEditor');
+        await page.pause();
         WA.controls.disableMapEditor();
       });
 
