@@ -10,7 +10,7 @@
     headerText="Open meeting"
     descriptionText="Open a new meeting in new tab"
     img={teamsLogo}
-    style={`z-index: 100`}
+    style={`z-index: 200`}
     on:click={(event) => {
         dispatch("click", event);
     }}

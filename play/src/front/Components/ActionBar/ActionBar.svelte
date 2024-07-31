@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { writable } from "svelte/store";
+    import { Readable, Unsubscriber, Writable, writable } from "svelte/store";
     import { fly } from "svelte/transition";
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import { AvailabilityStatus } from "@workadventure/messages";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import {
@@ -42,6 +42,10 @@
     import worldImg from "../images/world.svg";
     import calendarSvg from "../images/calendar.svg";
     import burgerMenuImg from "../images/menu.svg";
+    import businessSvg from "../images/applications/business.svg";
+    import checkSvg from "../images/applications/check.svg";
+    import reloadSvg from "../images/applications/reload.svg";
+    import warningSvg from "../images/applications/warning.svg";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
@@ -104,11 +108,16 @@
     import { isCalendarVisibleStore } from "../../Stores/CalendarStore";
     import AvailabilityStatusComponent from "./AvailabilityStatus/AvailabilityStatus.svelte";
     import { IconCheck, IconChevronDown, IconChevronUp } from "@wa-icons";
+    import { ExternalModuleStatus } from "../../../extension-module/extension-module";
+    import { Observable } from "rxjs";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
     let cameraActive = false;
     let microphoneActive = false;
+
+    let externalModuleStatusStore: Writable<ExternalModuleStatus> = writable(ExternalModuleStatus.ONLINE);
+    let externalModuleStatusSubscription: Unsubscriber|undefined;
 
     function screenSharingClick(): void {
         if ($silentStore) return;
@@ -383,7 +392,18 @@
 
     onMount(() => {
         resizeObserver.observe(mainHtmlDiv);
+        const currentGameScene = gameManager.getCurrentGameScene();
+        if (currentGameScene.extensionModule?.getStatusStore) {
+            externalModuleStatusSubscription = currentGameScene.extensionModule.getStatusStore().subscribe((value) => {
+                console.log("onMount", value);
+                externalModuleStatusStore.set(value)
+            }) 
+        }
     });
+
+    onDestroy(() => {
+        if(externalModuleStatusSubscription != undefined) externalModuleStatusSubscription();
+    })
 
     function buttonActionBarTrigger(id: string) {
         const button = $additionnalButtonsMenu.get(id) as AddButtonActionBarEvent;
@@ -430,6 +450,13 @@
         } else {
             if (openMobileMenuTimeout) clearTimeout(openMobileMenuTimeout);
             openMobileMenu = false;
+        }
+    }
+
+    function showExternalModule() {
+        const currentGameScene = gameManager.getCurrentGameScene();
+        if (currentGameScene.extensionModule?.checkModuleSynschronisation) {
+            currentGameScene.extensionModule.checkModuleSynschronisation();
         }
     }
 </script>
@@ -898,6 +925,63 @@
                         </button>
                     </div>
 
+                    <!-- Teams integration -->
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div
+                        class="bottom-action-button"
+                        on:dragstart|preventDefault={noDrag}
+                        on:click={() => analyticsClient.openExternalModule()}
+                        on:click={showExternalModule}
+                    >
+                        {#if !isMobile}
+                            {#if $externalModuleStatusStore === ExternalModuleStatus .ONLINE}
+                                <Tooltip text={$LL.actionbar.externalModule.status.onLine()} />
+                            {:else if $externalModuleStatusStore === ExternalModuleStatus.WARNING}
+                                <Tooltip text={$LL.actionbar.externalModule.status.warning()} />
+                            {:else if $externalModuleStatusStore === ExternalModuleStatus.SYNC}
+                                <Tooltip text={$LL.actionbar.externalModule.status.sync()} />
+                            {:else}
+                                <Tooltip text={$LL.actionbar.externalModule.status.offLine()} />
+                            {/if}
+                        {/if}
+                        <button id="teamsIcon"
+                            class="tw-relative"
+                        >
+                            <img
+                                draggable="false"
+                                src={businessSvg}
+                                style="padding: 2px;"
+                                alt="Teams"
+                            />
+                                <span
+                                    class="tw-absolute tw-right-0 tw-top-5 tw-text-white tw-rounded-full tw-px-1 tw-py-0.5 tw-text-xxs tw-font-bold tw-leading-none"
+                                >
+                                    {#if $externalModuleStatusStore === ExternalModuleStatus .ONLINE}
+                                        <img
+                                            draggable="false"
+                                            src={checkSvg}
+                                            style="padding: 2px; width: 16px; opacity: 0.6;"
+                                            alt="Teams"
+                                        />
+                                    {:else if $externalModuleStatusStore === ExternalModuleStatus.WARNING}
+                                        <img
+                                            draggable="false"
+                                            src={warningSvg}
+                                            style="padding: 2px; width: 16px; opacity: 0.6;"
+                                            alt="Teams"
+                                        />
+                                    {:else if $externalModuleStatusStore === ExternalModuleStatus.SYNC}
+                                        <img
+                                            draggable="false"
+                                            src={reloadSvg}
+                                            style="padding: 2px; width: 16px; opacity: 0.6;"
+                                            alt="Teams"
+                                        />
+                                    {/if}
+                                </span>
+                        </button>
+                    </div>
+
                     <!-- Calendar integration -->
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
@@ -923,6 +1007,8 @@
                             </span>
                         </button>
                     </div>
+
+
                 </div>
 
                 <!-- Status part -->

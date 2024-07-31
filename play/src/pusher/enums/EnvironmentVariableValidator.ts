@@ -150,8 +150,6 @@ export const EnvironmentVariables = z.object({
     MATRIX_PUBLIC_URI: z.string().optional(),
 
     EMBEDLY_KEY: z.string().optional(),
-
-    WA_MODULE_EXTENSION_URL: z.string().optional(),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

@@ -2,15 +2,17 @@ import axios, { AxiosError, AxiosInstance } from "axios";
 import { z } from "zod";
 import { AvailabilityStatus, ExternalModuleMessage, OauthRefreshToken } from "@workadventure/messages";
 import { subscribe } from "svelte/internal";
-import { Unsubscriber, Updater } from "svelte/store";
+import { Unsubscriber, Updater, writable } from "svelte/store";
 import { CalendarEventInterface } from "@workadventure/shared-utils";
 import { AreaData, AreaDataProperties } from "@workadventure/map-editor";
-import { ExtensionModule, ExtensionModuleOptions } from "../extension-module/extension-module";
+import { ExtensionModule, ExtensionModuleOptions, ExternalModuleStatus, RoomMetadataType } from "../extension-module/extension-module";
 import { notificationPlayingStore } from "../front/Stores/NotificationStore";
 import { TeamsActivity, TeamsAvailability } from "./MSTeamsInterface";
 
 import TeamsMeetingAreaPropertyEditor from "./components/TeamsMeetingAreaPropertyEditor.svelte";
 import AddTeamsMeetingAreaPropertyButton from "./components/AddTeamsMeetingAreaPropertyButton.svelte";
+import { Observable } from "rxjs";
+import { status } from "@grpc/grpc-js";
 
 const MS_GRAPH_ENDPOINT_V1 = "https://graph.microsoft.com/v1.0";
 const MS_GRAPH_ENDPOINT_BETA = "https://graph.microsoft.com/beta";
@@ -76,9 +78,12 @@ class MSTeams implements ExtensionModule {
 
     private checkModuleSynschronisationInterval: NodeJS.Timer | undefined = undefined;
 
-    init(roomMetadata: unknown, options?: ExtensionModuleOptions) {
-        const microsoftTeamsMetadata = this.getMicrosoftTeamsMetadata(roomMetadata);
-        if (microsoftTeamsMetadata === undefined) {
+    private teamsSynchronisationStore = writable<ExternalModuleStatus>(ExternalModuleStatus.SYNC);
+
+    init(roomMetadata: RoomMetadataType, options?: ExtensionModuleOptions) {
+        this.teamsSynchronisationStore.set(ExternalModuleStatus.SYNC);
+        const microsoftTeamsMetadata = roomMetadata.player.accessTokens[0];
+        if (roomMetadata.player.accessTokens.length === 0 && microsoftTeamsMetadata === undefined) {
             console.error("Microsoft teams metadata is undefined. Cancelling the initialization");
             return;
         }
@@ -86,7 +91,7 @@ class MSTeams implements ExtensionModule {
         this.msAxiosClientV1 = axios.create({
             baseURL: MS_GRAPH_ENDPOINT_V1,
             headers: {
-                Authorization: `Bearer ${microsoftTeamsMetadata.accessToken}`,
+                Authorization: `Bearer ${microsoftTeamsMetadata.token}`,
                 "Content-Type": "application/json",
             },
         });
@@ -97,7 +102,7 @@ class MSTeams implements ExtensionModule {
         this.msAxiosClientBeta = axios.create({
             baseURL: MS_GRAPH_ENDPOINT_BETA,
             headers: {
-                Authorization: `Bearer ${microsoftTeamsMetadata.accessToken}`,
+                Authorization: `Bearer ${microsoftTeamsMetadata.token}`,
                 "Content-Type": "application/json",
             },
         });
@@ -107,45 +112,43 @@ class MSTeams implements ExtensionModule {
 
         this.setMSTeamsClientId();
 
-        if (microsoftTeamsMetadata.synchronizeStatus) {
-            this.listenToTeamsStatusUpdate(options?.onExtensionModuleStatusChange);
-            this.userAccessToken = options!.userAccessToken;
-            this.roomId = options!.roomId;
+        this.listenToTeamsStatusUpdate(options?.onExtensionModuleStatusChange);
+        this.userAccessToken = options!.userAccessToken;
+        this.roomId = options!.roomId;
 
-            if (options?.externalModuleMessage) {
-                // The externalModuleMessage is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                options.externalModuleMessage.subscribe((externalModuleMessage: ExternalModuleMessage) => {
-                    console.info("Message received from external module", externalModuleMessage);
-                    const type = externalModuleMessage.message["@odata.type"];
-                    switch (type) {
-                        case "#Microsoft.Graph.presence":
-                            // get the presence status
-                            if (options?.onExtensionModuleStatusChange)
-                                options?.onExtensionModuleStatusChange(
-                                    this.mapTeamsStatusToWorkAdventureStatus(externalModuleMessage.message.availability)
-                                );
-                            break;
-                        case "#Microsoft.Graph.Event":
-                            this.updateCalendarEvents().catch((e) =>
-                                console.error("Error while updating calendar events", e)
+        if (options?.externalModuleMessage) {
+            // The externalModuleMessage is completed in the RoomConnection. No need to unsubscribe.
+            //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+            options.externalModuleMessage.subscribe((externalModuleMessage: ExternalModuleMessage) => {
+                console.info("Message received from external module", externalModuleMessage);
+                const type = externalModuleMessage.message["@odata.type"];
+                switch (type) {
+                    case "#Microsoft.Graph.presence":
+                        // get the presence status
+                        if (options?.onExtensionModuleStatusChange)
+                            options?.onExtensionModuleStatusChange(
+                                this.mapTeamsStatusToWorkAdventureStatus(externalModuleMessage.message.availability)
                             );
-                            break;
-                        case "#Microsoft.Graph.subscription":
-                            this.checkModuleSynschronisation().catch((e) =>
-                                console.error("Error while reauthorizing subscriptions", e)
-                            );
-                            break;
-                        default:
-                            console.error("Unknown message type", type);
-                            break;
-                    }
-                    return externalModuleMessage;
-                });
+                        break;
+                    case "#Microsoft.Graph.Event":
+                        this.updateCalendarEvents().catch((e) =>
+                            console.error("Error while updating calendar events", e)
+                        );
+                        break;
+                    case "#Microsoft.Graph.subscription":
+                        this.checkModuleSynschronisation().catch((e) =>
+                            console.error("Error while reauthorizing subscriptions", e)
+                        );
+                        break;
+                    default:
+                        console.error("Unknown message type", type);
+                        break;
+                }
+                return externalModuleMessage;
+            });
 
-                // Initialize the subscription
-                this.initSubscription();
-            }
+            // Initialize the subscription
+            this.initSubscription();
         }
 
         if (options?.workadventureStatusStore) {
@@ -161,6 +164,7 @@ class MSTeams implements ExtensionModule {
             this.updateCalendarEvents().catch((e) => console.error("Error while updating calendar events", e));
         }
         console.info("Microsoft teams module for WorkAdventure initialized");
+        this.teamsSynchronisationStore.set(ExternalModuleStatus.ONLINE);
     }
 
     private refreshTokenInterceptor(
@@ -188,42 +192,6 @@ class MSTeams implements ExtensionModule {
                 });
         }
         return error;
-    }
-
-    private getMicrosoftTeamsMetadata(
-        roomMetadata: unknown
-    ): { accessToken: string; synchronizeStatus: boolean } | undefined {
-        const parsedRoomMetadata = z
-            .object({
-                player: z.object({
-                    accessTokens: z.array(
-                        z.object({
-                            token: z.string(),
-                            provider: z.string(),
-                        })
-                    ),
-                }),
-                msteams: z.boolean(),
-            })
-            .safeParse(roomMetadata);
-
-        if (!parsedRoomMetadata.success) {
-            console.error(
-                "Unable to initialize Microsoft teams module due to room metadata parsing error : ",
-                parsedRoomMetadata.error
-            );
-            return;
-        }
-
-        //TODO access token verification
-        const msTeamsAccessToken = parsedRoomMetadata.data.player.accessTokens[0]?.token;
-        const synchronizeStatus = parsedRoomMetadata.data.msteams;
-        if (msTeamsAccessToken === undefined) {
-            console.warn("No Microsoft access token found for MSTeamsModule initialization");
-            return;
-        }
-
-        return { accessToken: msTeamsAccessToken, synchronizeStatus };
     }
 
     listenToTeamsStatusUpdate(onTeamsStatusChange?: (workAdventureNewStatus: AvailabilityStatus) => void) {
@@ -446,6 +414,7 @@ class MSTeams implements ExtensionModule {
     }
 
     private initSubscription(): void {
+        console.info("Init module synchronization");
         this.createOrGetPresenceSubscription().catch((e) =>
             console.error("Error while creating presence subscription", e)
         );
@@ -454,38 +423,51 @@ class MSTeams implements ExtensionModule {
         );
 
         // All 10 minutes, check if the subscriptions are expired
+        const checkModuleSynchronisationIntervalMinutes = 10 * 60 * 1000;
         if (this.checkModuleSynschronisationInterval !== undefined)
-            clearInterval(this.checkModuleSynschronisationInterval);
-        this.checkModuleSynschronisationInterval = setInterval(() => {
+            clearTimeout(this.checkModuleSynschronisationInterval);
+        this.checkModuleSynschronisationInterval = setTimeout(() => {
+            console.info("Check module synchronization");
             this.checkModuleSynschronisation().catch((e) =>
                 console.error("Error while reauthorizing subscriptions", e)
             );
-        }, 10 * 60 * 1000);
+        }, checkModuleSynchronisationIntervalMinutes);
     }
 
     // Check module synchronization
     // If there is an error, the interval will be set to 1 minutes and the synchronization will be retried
-    private async checkModuleSynschronisation(): Promise<void> {
+    async checkModuleSynschronisation(): Promise<void> {
+        this.teamsSynchronisationStore.set(ExternalModuleStatus.SYNC);
+        console.info("Check module synchronization");
         // Use interval with base value to 10 minutes. If there is an error, the interval will be set to 1 minutes
-        let checkModuleSynchronisationIntervalMinutes = 10 * 60 * 1000;
+        let checkModuleSynchronisationIntervalMinutes = 10  * 60 * 1000;
 
         // Get all subscription
         const subscriptions = await this.msAxiosClientBeta.get(`/subscriptions/`);
-        // Check if the subscription already exists
-        const promisesReauthorizeSubscription = [];
-        for (const subscription of subscriptions.data.value) {
-            if (new Date(subscription.expirationDateTime) < new Date()) {
-                if (subscription.resource === `/users/${this.clientId}/presences`) {
-                    promisesReauthorizeSubscription.push(this.reauthorizePresenceSubscription(subscription.id));
-                } else if (subscription.resource === `/me/events`) {
-                    promisesReauthorizeSubscription.push(this.reauthorizeCalendarSubscription(subscription.id));
-                }
-            }
-        }
+
         try {
-            // If there are expired subscription, reauthorize them
-            await Promise.all(promisesReauthorizeSubscription);
+            // If there is no subscription, reinitialize the subscription
+            if(subscriptions.data.value.length === 0) {
+                this.initSubscription();
+            }else{
+                // Check if the subscription already exists
+                const promisesReauthorizeSubscription = [];
+                for (const subscription of subscriptions.data.value) {
+                    if (new Date(subscription.expirationDateTime) < new Date()) {
+                        if (subscription.resource === `/users/${this.clientId}/presences`) {
+                            promisesReauthorizeSubscription.push(this.reauthorizePresenceSubscription(subscription.id));
+                        } else if (subscription.resource === `/me/events`) {
+                            promisesReauthorizeSubscription.push(this.reauthorizeCalendarSubscription(subscription.id));
+                        }
+                    }
+                }
+
+                // If there are expired subscription, reauthorize them
+                if(promisesReauthorizeSubscription.length > 0) await Promise.all(promisesReauthorizeSubscription);
+                this.teamsSynchronisationStore.set(ExternalModuleStatus.ONLINE);
+            }
         } catch (e) {
+            this.teamsSynchronisationStore.set(ExternalModuleStatus.WARNING);
             console.error("Error while reauthorizing subscriptions", e);
             // If there is an error, delete subscription
             const promisesDeleteSubscription = [];
@@ -515,11 +497,10 @@ class MSTeams implements ExtensionModule {
                 // TODO show error message
             }
         }
-
         // All 10 minutes, check if the subscriptions are expired
         if (this.checkModuleSynschronisationInterval !== undefined)
-            clearInterval(this.checkModuleSynschronisationInterval);
-        this.checkModuleSynschronisationInterval = setInterval(() => {
+            clearTimeout(this.checkModuleSynschronisationInterval);
+        this.checkModuleSynschronisationInterval = setTimeout(() => {
             this.checkModuleSynschronisation().catch((e) =>
                 console.error("Error while reauthorizing subscriptions", e)
             );
@@ -683,6 +664,10 @@ class MSTeams implements ExtensionModule {
 
     private handleAreaPropertyOnLeave() {
         console.debug("Leaving extension module area");
+    }
+
+    public getStatusStore(){
+        return this.teamsSynchronisationStore;
     }
 }
 

@@ -164,7 +164,7 @@ import { proximityRoomConnection, selectedRoom } from "../../Chat/Stores/ChatSto
 import { ProximityChatConnection } from "../../Chat/Connection/Proximity/ProximityChatConnection";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
 import { ExtensionModuleStatusSynchronization } from "../../Rules/StatusRules/ExtensionModuleStatusSynchronization";
-import { ExtensionModule } from "../../../extension-module/extension-module";
+import { ExtensionModule, RoomMetadataType } from "../../../extension-module/extension-module";
 import { calendarEventsStore, isActivatedStore } from "../../Stores/CalendarStore";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
@@ -2048,32 +2048,44 @@ export class GameScene extends DirtyScene {
     }
 
     private initExtensionModule() {
-        (async () => {
-            try {
-                //TODO rename env variable to MODULE_EXTENSION_URL
-                /*if (!WA_MODULE_EXTENSION_URL) {
-                    return;
-                }
-                const extensionModule = await import(WA_MODULE_EXTENSION_URL);*/
+        if( this._room.metadata != undefined && this._room.metadata?.hasOwnProperty('msteams')) {
+            const parsedRoomMetadata = RoomMetadataType.safeParse(this._room.metadata);
 
-                const extensionModule = await import("../../../ms-teams/MSTeams");
-                this.extensionModule = extensionModule.default;
-                this.extensionModule.init(this._room.metadata, {
-                    workadventureStatusStore: availabilityStatusStore,
-                    onExtensionModuleStatusChange: ExtensionModuleStatusSynchronization.onStatusChange,
-                    getOauthRefreshToken: this.connection?.getOauthRefreshToken.bind(this.connection),
-                    calendarEventsStoreUpdate: calendarEventsStore.update,
-                    userAccessToken: localUserStore.getAuthToken()!,
-                    roomId: this.roomUrl,
-                    externalModuleMessage: this.connection!.externalModuleMessage,
-                });
-                // TODO change that to check if the calendar synchro is enabled from admin
-                isActivatedStore.set(true);
-                extensionModuleStore.set(this.extensionModule);
-            } catch (error) {
-                console.warn("Extension module initialization cancelled", error);
+            console.log('initExtensionModule => parsedRoomMetadata', parsedRoomMetadata, this._room.metadata);
+
+            if (!parsedRoomMetadata.success) {
+                console.error(
+                    "Unable to initialize Microsoft teams module due to room metadata parsing error : ",
+                    parsedRoomMetadata.error
+                );
+                return;
             }
-        })().catch((error) => console.error(error));
+
+            console.log("initExtensionModule => parsedRoomMetadata.data.msteams", parsedRoomMetadata.data.msteams);
+            if(parsedRoomMetadata.data.msteams === true) {
+                (async () => {
+                    try {
+                        const extensionModule = await import("../../../ms-teams/MSTeams");
+                        this.extensionModule = extensionModule.default;
+
+                        this.extensionModule.init(parsedRoomMetadata.data, {
+                            workadventureStatusStore: availabilityStatusStore,
+                            onExtensionModuleStatusChange: ExtensionModuleStatusSynchronization.onStatusChange,
+                            getOauthRefreshToken: this.connection?.getOauthRefreshToken.bind(this.connection),
+                            calendarEventsStoreUpdate: calendarEventsStore.update,
+                            userAccessToken: localUserStore.getAuthToken()!,
+                            roomId: this.roomUrl,
+                            externalModuleMessage: this.connection!.externalModuleMessage,
+                        });
+                        // TODO change that to check if the calendar synchro is enabled from admin
+                        isActivatedStore.set(true);
+                        extensionModuleStore.set(this.extensionModule);
+                    } catch (error) {
+                        console.warn("Extension module initialization cancelled", error);
+                    }
+                })().catch((error) => console.error(error));
+            }
+        }
     }
 
     private subscribeToStores(): void {
