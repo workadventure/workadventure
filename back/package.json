@@ -59,6 +59,7 @@
     "mkdirp": "^1.0.4",
     "openapi3-ts": "^3.0.2",
     "prom-client": "^12.0.0",
+    "protobuf-fieldmask": "^2.0.0",
     "query-string": "^6.13.3",
     "redis": "^4.3.1",
     "source-map-support": "^0.5.21",

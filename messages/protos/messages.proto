@@ -3,6 +3,7 @@ syntax = "proto3";
 import "google/protobuf/wrappers.proto";
 import "google/protobuf/struct.proto";
 import "google/protobuf/any.proto";
+import "google/protobuf/field_mask.proto";
 
 /*********** PARTIAL MESSAGES **************/
 
@@ -1261,7 +1262,7 @@ message SpaceUser{
   google.protobuf.StringValue chatID = 17; // used
 }
 
-message PartialSpaceUser{
+/*message PartialSpaceUser{
   int32 id = 1;
   google.protobuf.StringValue name = 2;
   google.protobuf.StringValue playUri = 3;
@@ -1279,7 +1280,7 @@ message PartialSpaceUser{
   google.protobuf.StringValue jitsiParticipantId = 15;
   string uuid = 16;
   google.protobuf.StringValue chatID = 17;
-}
+}*/
 
 message AddSpaceUserMessage{
   string spaceName = 1;
@@ -1288,8 +1289,10 @@ message AddSpaceUserMessage{
 }
 message UpdateSpaceUserMessage{
   string spaceName = 1;
-  PartialSpaceUser user = 2;
+  SpaceUser user = 2;
+  // FIXME; is the filterName needed?
   google.protobuf.StringValue filterName = 3;
+  google.protobuf.FieldMask updateMask = 4;
 }
 message RemoveSpaceUserMessage{
   string spaceName = 1;
