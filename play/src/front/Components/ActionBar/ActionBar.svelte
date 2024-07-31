@@ -112,8 +112,8 @@
     import MenuBurgerIcon from "../Icons/MenuBurgerIcon.svelte";
     import PenIcon from "../Icons/PenIcon.svelte";
     import { StringUtils } from "../../Utils/StringUtils";
-    import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
     import { connectionManager } from "../../Connection/ConnectionManager";
+    import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
 
     // gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
     let userName = gameManager.getPlayerName() || "";
@@ -200,7 +200,9 @@
     }
 
     function toggleChat() {
+        console.log("toggleChat");
         if (!$chatVisibilityStore) {
+            console.log("je suis dans le chat pas visible");
             menuVisiblilityStore.set(false);
             activeSubMenuStore.activateByIndex(0);
         }
@@ -475,9 +477,14 @@
             transition:fly={{ delay: 500, y: -200, duration: 750 }}
         >
             <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <div class="flex relative transition-all duration-150 z-[2]" class:opacity-0={$chatVisibilityStore}>
+            <div
+                class="flex relative transition-all duration-150 z-[2] {$chatVisibilityStore ? 'hidden' : ''}"
+                class:opacity-0={$chatVisibilityStore}
+                id="chat-action"
+            >
                 <div
                     class="group/btn-message-circle relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg rounded-r-lg sm:rounded-r-none p-2 aspect-square"
+                    id="chat-btn"
                     on:click={() => analyticsClient.openedChat()}
                     on:click={toggleChat}
                     on:mouseenter={() => {
@@ -520,7 +527,7 @@
                 </div>
 
                 <div
-                    class="group/btn-users relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg last:rounded-r-lg p-2 p-2 aspect-square hidden sm:block"
+                    class="group/btn-users relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg last:rounded-r-lg p-2 aspect-square hidden sm:block"
                     on:click={toggleChat}
                 >
                     <div
