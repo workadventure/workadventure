@@ -3,6 +3,7 @@
     import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
     import { AvailabilityStatus } from "@workadventure/messages";
+    import { ExternalModuleStatus } from "@workadventure/shared-utils";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import {
         availabilityStatusStore,
@@ -106,7 +107,6 @@
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
     import { isActivatedStore, isCalendarVisibleStore } from "../../Stores/CalendarStore";
-    import { ExternalModuleStatus } from "../../../extension-module/extension-module";
     import { extensionActivateComponentModuleStore, extensionModuleStore } from "../../Stores/GameSceneStore";
     import AvailabilityStatusComponent from "./AvailabilityStatus/AvailabilityStatus.svelte";
     import { IconCheck, IconChevronDown, IconChevronUp } from "@wa-icons";

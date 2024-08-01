@@ -2,7 +2,7 @@
     import { fly } from "svelte/transition";
     import { Writable } from "svelte/store";
     import { createEventDispatcher } from "svelte";
-    import { ExternalModuleStatus } from "../../extension-module/extension-module";
+    import { ExternalModuleStatus } from "@workadventure/shared-utils";
     import LL from "../../i18n/i18n-svelte";
     import TeamsLogoPng from "./images/TeamsLogo.png";
 
