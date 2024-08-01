@@ -22,6 +22,7 @@ import { ChatRoom, ChatRoomMembership } from "../ChatConnection";
 import { selectedChatMessageToReply } from "../../Stores/ChatStore";
 import { LocalSpaceProviderSingleton } from "../../../Space/SpaceProvider/SpaceStore";
 import { WORLD_SPACE_NAME, CONNECTED_USER_FILTER_NAME } from "../../../Space/Space";
+import { gameManager } from "../../../Phaser/Game/GameManager";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { matrixSecurity } from "./MatrixSecurity";
@@ -44,7 +45,9 @@ export class MatrixChatRoom implements ChatRoom {
     isEncrypted!: Writable<boolean>;
     typingMembers: Writable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
 
-    constructor(private matrixRoom: Room, private spaceStore = LocalSpaceProviderSingleton.getInstance()) {
+    constructor(private matrixRoom: Room, private spaceStore = LocalSpaceProviderSingleton.getInstance(),private playNewMessageSound = ()=>{
+        gameManager.getCurrentGameScene().playSound("new-message");
+    } ) {
         this.id = matrixRoom.roomId;
         this.name = writable(matrixRoom.name);
         this.type = this.getMatrixRoomType();
@@ -203,6 +206,10 @@ export class MatrixChatRoom implements ChatRoom {
                         this.handleMessageModification(event);
                     } else {
                         this.handleNewMessage(event);
+                        const senderID = event.getSender();
+                        if(senderID!==this.matrixRoom.client.getSafeUserId()){
+                            this.playNewMessageSound();
+                        }
                     }
                 }
                 if (event.getType() === "m.reaction") {

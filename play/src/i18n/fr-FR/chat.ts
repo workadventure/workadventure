@@ -22,6 +22,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         walkTo: "Marcher jusqu'à",
         teleporting: "Téléportation ...",
         businessCard: "Carte de visite",
+        sendMessage: "Envoyer un message",
     },
     connecting: "Connexion au serveur ...",
     waitingInit: "Attente de l'initialisation du serveur ...",
