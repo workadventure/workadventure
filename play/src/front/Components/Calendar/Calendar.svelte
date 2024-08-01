@@ -1,6 +1,8 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
+    import { CalendarEventInterface } from "@workadventure/shared-utils";
     import { calendarEventsStore, isCalendarVisibleStore } from "../../Stores/CalendarStore";
+    import { gameManager } from "../../Phaser/Game/GameManager";
 
     function closeCalendar() {
         isCalendarVisibleStore.set(false);
@@ -11,6 +13,21 @@
             hour: "2-digit",
             minute: "2-digit",
         });
+    }
+
+    function openMeeting(event: CalendarEventInterface) {
+        const gameScene = gameManager.getCurrentGameScene();
+        if (!gameScene) return;
+
+        if (gameScene.extensionModule?.openPopupMeeting && event.resource?.onlineMeeting?.joinUrl)
+            gameScene.extensionModule.openPopupMeeting(
+                event.title,
+                event.resource?.onlineMeeting?.joinUrl,
+                event.id,
+                event.start,
+                event.end,
+                event.resource?.onlineMeeting?.passcode
+            );
     }
 </script>
 
@@ -46,9 +63,10 @@
                                     <p class="tw-text-xs tw-w-full tw-whitespace-pre-line tw-overflow-x-hidden">
                                         {event.description}
                                     </p>
-                                    {#if event.resource && event.resource.onlineMeeting?.joinUrl}
+                                    {#if event.resource && event.resource.onlineMeeting?.joinUrl != undefined}
                                         <a
-                                            href={event.resource.onlineMeeting?.joinUrl}
+                                            href={event.resource.onlineMeeting.joinUrl}
+                                            on:click|preventDefault|stopPropagation={() => openMeeting(event)}
                                             class="tw-text-xs tw-text-right"
                                             target="_blank">Click here to join the meeting</a
                                         >

@@ -12,6 +12,7 @@ export interface CalendarEventInterface {
         };
         onlineMeeting?: {
             joinUrl?: string;
+            passcode?: string;
         };
     };
 }

@@ -7,6 +7,7 @@
     const dispatch = createEventDispatcher();
 
     export let joinWebUrl: string;
+    export let meetingId: string;
     export let subject: string;
     export let startDateTime: Date;
     export let endDateTime: Date;
@@ -27,6 +28,7 @@
             window.open(appUrl, "_blank");
         }*/
         window.open(appUrl, "_blank");
+        dispatch("close");
     }
 </script>
 
@@ -35,6 +37,7 @@
         <h1 class="tw-p-2">Join your Teams meeting 🎉</h1>
         <img src={TeamsLogoPng} alt="Object" class="tw-w-32 tw-h-32 tw-mb-4 tw-object-contain" />
         <p class="tw-py-2 tw-m-0">subject: <span class="tw-font-bold">{subject}</span></p>
+        <p class="tw-py-2 tw-m-0">meetingId: {meetingId}</p>
         <p class="tw-py-2 tw-m-0">start: {startDateTime.toLocaleString()}</p>
         <p class="tw-py-2 tw-m-0">end: {endDateTime.toLocaleString()}</p>
         {#if passcode}
@@ -46,7 +49,12 @@
             Join on the Teams app ⌨️
         </button>
 
-        <a href={joinWebUrl} target="_blank" class="tw-bg-white tw-p-4 tw-rounded-xl tw-mb-4 tw-text-dark-purple">
+        <a
+            href={joinWebUrl}
+            target="_blank"
+            class="tw-bg-white tw-p-4 tw-rounded-xl tw-mb-4 tw-text-dark-purple"
+            on:click={closeModal}
+        >
             Open on a new tab 🌐
         </a>
     </div>

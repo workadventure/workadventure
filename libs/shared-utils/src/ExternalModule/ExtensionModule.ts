@@ -39,6 +39,7 @@ export interface ExtensionModule {
     statusStore?: Readable<ExternalModuleStatus>;
     checkModuleSynschronisation?: () => void;
     components?: () => ComponentType[];
+    openPopupMeeting?: (subject: string, joinWebUrl: string, meetingId: string, startDateTime: Date, endDateTime: Date, passcode?: string) => void;
 }
 
 export const RoomMetadataType = z.object({

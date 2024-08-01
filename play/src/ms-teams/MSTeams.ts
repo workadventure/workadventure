@@ -36,7 +36,6 @@ interface MSTeamsMeeting {
         joinMeetingId: string;
         passcode?: string;
     };
-    passcode?: string;
 }
 
 interface MSTeamsCalendarEvent {
@@ -688,25 +687,14 @@ class MSTeams implements ExtensionModule {
         notificationPlayingStore.playNotification("Opening Teams Meeting...", undefined, area.id);
         this.createOrGetMeeting(area.id)
             .then((data) => {
-                console.info("Opening Teams Meeting", data.joinUrl);
-
-                // Add the popup teams component to the store
-                const elementTarget = document.getElementById("main-layout-main");
-                if (elementTarget === null) throw new Error("Unable to find the main-layout-main element");
-
-                this.teamsPopupLuncher = new TeamsPopupLuncher({
-                    target: elementTarget,
-                    props: {
-                        joinWebUrl: data.joinWebUrl,
-                        passcode: data.passcode,
-                        subject: data.subject,
-                        startDateTime: new Date(data.startDateTime),
-                        endDateTime: new Date(data.endDateTime),
-                    },
-                });
-                this.teamsPopupLuncher.$on("close", () => {
-                    if (this.teamsPopupLuncher) this.teamsPopupLuncher.$destroy();
-                });
+                this.openPopupMeeting(
+                    data.subject,
+                    data.joinWebUrl,
+                    data.joinMeetingIdSettings.joinMeetingId,
+                    new Date(data.startDateTime),
+                    new Date(data.endDateTime),
+                    data.joinMeetingIdSettings.passcode
+                );
             })
             .catch((error) => {
                 console.error(error);
@@ -729,6 +717,36 @@ class MSTeams implements ExtensionModule {
 
     components() {
         return [TeamsPopupStatus];
+    }
+
+    openPopupMeeting(
+        subject: string,
+        joinWebUrl: string,
+        meetingId: string,
+        startDateTime: Date,
+        endDateTime: Date,
+        passcode: string | undefined
+    ) {
+        console.info("Opening Teams Meeting", joinWebUrl);
+
+        // Add the popup teams component to the store
+        const elementTarget = document.getElementById("main-layout-main");
+        if (elementTarget === null) throw new Error("Unable to find the main-layout-main element");
+
+        this.teamsPopupLuncher = new TeamsPopupLuncher({
+            target: elementTarget,
+            props: {
+                subject: subject,
+                joinWebUrl: joinWebUrl,
+                passcode: passcode,
+                meetingId: meetingId,
+                startDateTime: startDateTime,
+                endDateTime: endDateTime,
+            },
+        });
+        this.teamsPopupLuncher.$on("close", () => {
+            if (this.teamsPopupLuncher) this.teamsPopupLuncher.$destroy();
+        });
     }
 }
 
