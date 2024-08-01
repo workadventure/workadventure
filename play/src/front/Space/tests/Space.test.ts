@@ -23,7 +23,7 @@ vi.mock("../../Phaser/Game/GameManager", () => {
 });
 
 const defaultRoomConnectionMock = {
-    emitUserJoinSpace: vi.fn(),
+    emitWatchSpace: vi.fn(),
 } as unknown as RoomConnection;
 
 describe("Space test", () => {
@@ -61,15 +61,15 @@ describe("Space test", () => {
         const spaceName = "space-name";
         const metadata = new Map<string, unknown>();
         const mockRoomConnection = {
-            emitUserJoinSpace: vi.fn(),
+            emitWatchSpace: vi.fn(),
         };
 
         new Space(spaceName, metadata, mockRoomConnection as unknown as RoomConnection);
 
         // eslint-disable-next-line @typescript-eslint/unbound-method
-        expect(mockRoomConnection.emitUserJoinSpace).toHaveBeenCalledOnce();
+        expect(mockRoomConnection.emitWatchSpace).toHaveBeenCalledOnce();
         // eslint-disable-next-line @typescript-eslint/unbound-method
-        expect(mockRoomConnection.emitUserJoinSpace).toHaveBeenCalledWith(spaceName);
+        expect(mockRoomConnection.emitWatchSpace).toHaveBeenCalledWith(spaceName);
     });
 
     it("should emit leaveSpace event when you call destroy", () => {
@@ -77,17 +77,17 @@ describe("Space test", () => {
         const metadata = new Map<string, unknown>();
 
         const mockRoomConnection = {
-            emitUserJoinSpace: vi.fn(),
-            emitUnwatchSpaceLiveStreaming: vi.fn(),
+            emitWatchSpace: vi.fn(),
+            emitUnwatchSpace: vi.fn(),
         };
 
         const space = new Space(spaceName, metadata, mockRoomConnection as unknown as RoomConnection);
 
         space.destroy();
         // eslint-disable-next-line @typescript-eslint/unbound-method
-        expect(mockRoomConnection.emitUnwatchSpaceLiveStreaming).toHaveBeenCalledOnce();
+        expect(mockRoomConnection.emitUnwatchSpace).toHaveBeenCalledOnce();
         // eslint-disable-next-line @typescript-eslint/unbound-method
-        expect(mockRoomConnection.emitUnwatchSpaceLiveStreaming).toHaveBeenLastCalledWith(spaceName);
+        expect(mockRoomConnection.emitUnwatchSpace).toHaveBeenLastCalledWith(spaceName);
     });
     it("should add metadata when key is not in metadata map", () => {
         const spaceName = "space-name";
