@@ -92,7 +92,10 @@ export class ProximityChatRoom implements ChatRoom {
         private _userId: number,
         private spaceRegistry: SpaceRegistryInterface,
         private simplePeer: SimplePeer,
-        iframeListenerInstance: Pick<typeof iframeListener, "newChatMessageWritingStatusStream">
+        iframeListenerInstance: Pick<typeof iframeListener, "newChatMessageWritingStatusStream">,
+        private playNewMessageSound = ()=>{
+        gameManager.getCurrentGameScene().playSound("new-message");
+    }
     ) {
         this.typingMembers = writable([]);
 
@@ -212,6 +215,9 @@ export class ProximityChatRoom implements ChatRoom {
         // Add message to the list
         this.messages.push(newMessage);
 
+
+        this.playNewMessageSound();
+        
         // Send bubble message to WorkAdventure scripting API
         try {
             iframeListener.sendUserInputChat(message, senderUserId);

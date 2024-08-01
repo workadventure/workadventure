@@ -2,13 +2,15 @@
     import walk from "../../images/walk.svg";
     import teleport from "../../images/teleport.svg";
     import businessCard from "../../images/business-cards.svg";
-    import { ChatUser } from "../../Connection/ChatConnection";
+    import { ChatRoom, ChatUser } from "../../Connection/ChatConnection";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
     import { scriptUtils } from "../../../Api/ScriptUtils";
     import { requestVisitCardsStore } from "../../../Stores/GameStore";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import { gameManager } from "../../../Phaser/Game/GameManager";
+    import { IconForbid, IconMoreVertical ,IconMessage} from "@wa-icons";
+    import { navChat, selectedRoom } from "../../Stores/ChatStore";
+    import { localUserStore } from "../../../Connection/LocalUserStore";
     import { showReportScreenStore } from "../../../Stores/ShowReportScreenStore";
-    import { IconForbid, IconMoreVertical } from "@wa-icons";
 
     export let user: ChatUser;
 
@@ -41,6 +43,29 @@
         }
         closeChatUserMenu();
     };
+
+    let loadingDirectRoomAccess = true;
+
+    const openChat = async () => {
+
+        let room: ChatRoom | undefined = chatConnection.getDirectRoomFor(user.id);
+        if (!room)
+            try {
+                loadingDirectRoomAccess = true;
+                room = await chatConnection.createDirectRoom(user.id);
+            } catch (error) {
+                console.error(error);
+            } finally {
+                loadingDirectRoomAccess = false;
+            }
+
+        if (!room) return;
+
+        if (room.myMembership === "invite") room.joinRoom();
+
+        selectedRoom.set(room);
+        navChat.set("chat");
+    };
 </script>
 
 <div class="wa-dropdown">
@@ -48,7 +73,7 @@
         <IconMoreVertical />
     </button>
     <!-- on:mouseleave={closeChatUserMenu} -->
-    <div class={`wa-dropdown-menu`} class:tw-invisible={!chatMenuActive} on:mouseleave={closeChatUserMenu}>
+    <div class={`wa-dropdown-menu tw-fixed tw-mr-1`} class:tw-invisible={!chatMenuActive} on:mouseleave={closeChatUserMenu}>
         {#if isInTheSameMap}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <span
@@ -73,6 +98,15 @@
                 on:click|stopPropagation={() => showBusinessCard(user.visitCardUrl)}
                 ><img class="noselect" src={businessCard} alt="Business card" height="13" width="13" />
                 {$LL.chat.userList.businessCard()}</span
+            >
+        {/if}
+        {#if user.id}
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <span
+                class="sendMessage wa-dropdown-item"
+                on:click|stopPropagation={openChat}
+                ><IconMessage font-size="13" />
+                {$LL.chat.userList.sendMessage()}</span
             >
         {/if}
         <!-- svelte-ignore a11y-click-events-have-key-events -->

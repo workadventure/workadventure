@@ -13,7 +13,7 @@
 
     const NUMBER_OF_TYPING_MEMBER_TO_DISPLAY = 3;
     let typingMembers = room.typingMembers;
-    let messageListRef: HTMLUListElement;
+    let messageListRef: HTMLDivElement;
     let autoScroll = true;
     let onScrollTop = false;
 
@@ -21,6 +21,7 @@
         while (messageListRef.scrollTop === 0 && get(room.hasPreviousMessage)) {
             // eslint-disable-next-line no-await-in-loop
             await room.loadMorePreviousMessages();
+            messageListRef.scrollTop = 50;
         }
     }
 
@@ -42,6 +43,7 @@
     afterUpdate(() => {
         room.setTimelineAsRead();
         const oldFirstListItem = messageListRef.querySelector<HTMLLIElement>('li[data-first-li="true"]');
+        
         if (autoScroll) {
             scrollToMessageListBottom();
         }
@@ -71,7 +73,7 @@
     $: roomName = room?.name;
 </script>
 
-<div class="tw-flex tw-flex-col tw-flex-1 tw-overflow-hidden">
+<div class="tw-flex tw-flex-col tw-flex-1 tw-h-full">
     {#if room !== undefined}
         <div class="tw-flex tw-items-center">
             <button class="back-roomlist tw-p-0 tw-m-0" on:click={goBackAndClearSelectedChatMessage}>
@@ -81,10 +83,10 @@
             <p class="tw-m-0 tw-p-0 tw-text-gray-400">{$roomName}</p>
             <span class="tw-flex-1" />
         </div>
-        <ul
-            on:scroll={() => loadPreviousMessageOnScrollTop()}
-            bind:this={messageListRef}
-            class="tw-list-none tw-p-0 tw-flex-1 tw-overflow-auto tw-flex tw-flex-col"
+        <div bind:this={messageListRef} class="tw-flex tw-overflow-auto tw-h-full {$messages.length && "tw-items-end" } " on:scroll={() => loadPreviousMessageOnScrollTop()}>
+            <ul
+
+            class="tw-list-none tw-p-0 tw-flex-1 tw-flex tw-flex-col tw-max-h-full"
         >
             <!--{#if room.id === "proximity" && $connectedUsers !== undefined}-->
             <!--    <div class="tw-flex tw-flex-row tw-items-center tw-gap-2">-->
@@ -99,11 +101,13 @@
                 <p class="tw-self-center tw-text-md tw-text-gray-500">{$LL.chat.nothingToDisplay()}</p>
             {/if}
             {#each $messages as message (message.id)}
-                <li data-event-id={message.id}>
+                <li data-event-id={message.id} >
                     <Message {message} reactions={$messageReaction.get(message.id)} />
                 </li>
             {/each}
         </ul>
+        </div>
+
         {#if $typingMembers.length > 0}
             <div class="tw-flex tw-row tw-w-full tw-text-gray-300 tw-text-sm  tw-m-0 tw-px-2 tw-mb-2">
                 <!-- {$typingMembers.map(typingMember => typingMember.name).slice(0, NUMBER_OF_TYPING_MEMBER_TO_DISPLAY)} -->
