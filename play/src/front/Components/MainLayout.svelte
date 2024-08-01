@@ -50,6 +50,7 @@
     import MapList from "./Exploration/MapList.svelte";
     import WarningToast from "./WarningContainer/WarningToast.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
+    import { hasEmbedScreen } from "../Stores/EmbedScreensStore";
 
     let mainLayout: HTMLDivElement;
     // export let message: string;
@@ -62,6 +63,8 @@
         resizeObserver.observe(mainLayout);
         // ...
     });
+
+    $: console.log($hasEmbedScreen);
 </script>
 
 <!-- Components ordered by z-index -->
@@ -131,7 +134,13 @@
             <HelpPopUpBlocked />
         {/if}
 
-        <EmbedScreensContainer />
+        <!-- {#if $hasEmbedScreen}
+            <EmbedScreensContainer />
+        {/if} -->
+
+        {#if $showModalGlobalComminucationVisibilityStore}
+            <GlobalCommunicationModal />
+        {/if}
 
         {#if $soundPlayingStore}
             <AudioPlaying url={$soundPlayingStore} />
@@ -152,16 +161,9 @@
         {#if $modalVisibilityStore}
             <Modal />
         {/if}
-        {#if $modalVisibilityStore}
-            <Modal />
-        {/if}
 
         {#if $askDialogStore}
             <MuteDialogBox />
-        {/if}
-
-        {#if $showModalGlobalComminucationVisibilityStore}
-            <GlobalCommunicationModal />
         {/if}
 
         {#if $mapExplorationObjectSelectedStore}
@@ -186,7 +188,6 @@
     {/if}
 
     <ActionBar />
-
     <!-- audio when user have a message TODO delete it with new chat -->
     <audio id="newMessageSound" src="/resources/objects/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
 

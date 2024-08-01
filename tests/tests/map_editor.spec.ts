@@ -43,6 +43,7 @@ test.describe('Map editor', () => {
     await login(page2, "test2", 5);
 
     await Menu.openMenuAdmin(page);
+    await page.locator('#map-editor').click();
     await MapEditor.openConfigureMyRoom(page);
     await ConfigureMyRoom.selectMegaphoneItemInCMR(page);
 

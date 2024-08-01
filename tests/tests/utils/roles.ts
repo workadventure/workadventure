@@ -26,7 +26,7 @@ export async function selectMedias(page: Page) {
   await expect(page.locator('h2', { hasText: "Turn on your camera and microphone" })).toBeVisible();
 
   await page.click("text=Save");
-
+    await page.pause();
   await expect(page.locator("div#main-layout").nth(0)).toBeVisible();
 }
 

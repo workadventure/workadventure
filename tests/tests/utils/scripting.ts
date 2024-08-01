@@ -47,7 +47,6 @@ export async function evaluateScript<R, Arg>(page: Page, pageFunction: PageFunct
     //         throw new Error("Could not find WA object");
     //     }
     // });
-    console.log(frame, "FRAME");
     return frame.evaluate<R, Arg>(pageFunction, arg);
 }
 
