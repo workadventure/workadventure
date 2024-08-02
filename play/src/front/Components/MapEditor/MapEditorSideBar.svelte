@@ -69,12 +69,37 @@
     class="side-bar-container absolute right-[29rem] top-[10%] z-[500] pointer-events-auto "
     class:!right-20={!$mapEditorVisibilityStore}
 >
-    <div class="side-bar flex flex-col gap-4 w-fit h-fit absolute left-[2rem] align-bottom ">
-        <div class="first-side-bar bg-contrast/80 backdrop-blur rounded-lg">
-            {#each availableTools as tool (tool.toolName)}
-                <div class="tool-button relative flex p-0 ">
+    <div class="side-bar flex flex-col absolute left-[2rem] align-bottom">
+        {#each availableTools as tool, index (tool.toolName)}
+            {#if tool.toolName === EditorToolName.CloseMapEditor}
+                <div class="tool-button p-1 h-fit relative mt-4 flex bg-contrast/80 backdrop-blur rounded-lg">
                     <button
-                        class="flex justify-center items-center h-12 w-12 p-2 m-0 "
+                        class="close-button flex justify-start items-center h-12 w-12 p-2 m-0 hover:bg-white/10 hover:w-auto rounded-md transition-all duration-300"
+                        id={tool.toolName}
+                        on:click|preventDefault={() => switchTool(tool.toolName)}
+                        on:click|preventDefault={() => mapEditorVisibilityStore.set(false)}
+                        type="button"
+                    >
+                        <img
+                            src={tool.img}
+                            alt="open tool {tool.toolName}"
+                            class="object-contain scale-75 hover:scale-75 max-w-full max-h-full transition-transform duration-300"
+                        />
+                        <p class="ml-2 opacity-0 hover:opacity-100 transition-opacity duration-300 text-container">
+                            Close the world
+                        </p>
+                    </button>
+                </div>
+            {:else}
+                <div
+                    class="w-fit p-1 h-fit bg-contrast/80 backdrop-blur {index === 0
+                        ? 'rounded-t-lg'
+                        : index === availableTools.length - 2
+                        ? 'rounded-b-lg'
+                        : ''}"
+                >
+                    <button
+                        class="flex justify-center items-center h-12 w-12 p-2 m-0 hover:bg-white/10 rounded-md"
                         id={tool.toolName}
                         on:click|preventDefault={() => switchTool(tool.toolName)}
                         type="button"
@@ -86,35 +111,26 @@
                         />
                     </button>
                 </div>
-                <!-- <div class="">
-                    <Tooltip text={tool.tooltiptext} leftPosition="true" />
-                </div> -->
-            {/each}
-        </div>
-        <div class="second-side-bar bg-contrast/80 backdrop-blur rounded-lg">
-            {#each availableTools as tool (tool.toolName)}
-                <div class="tool-button relative flex p-0">
-                    <button
-                        class="flex justify-center items-center h-12 w-12 p-2 m-0"
-                        id={tool.toolName}
-                        on:click|preventDefault={() => switchTool(tool.toolName)}
-                        type="button"
-                    >
-                        <img
-                            src={tool.img}
-                            alt="open tool {tool.toolName}"
-                            class="object-contain scale-75 hover:scale-100 max-w-full max-h-full transition-transform duration-300"
-                        />
-                    </button>
-                    <!-- <div class="">
-                    <Tooltip text={tool.tooltiptext} leftPosition="true" />
-                </div> -->
-                </div>
-            {/each}
-        </div>
-
-        <div class="third-side-bar">
-
-        </div>
+            {/if}
+        {/each}
     </div>
 </section>
+
+<style>
+    .close-button {
+        width: 48px; /* Initial width to fit the cross */
+        left: 0;
+    }
+
+    .close-button:hover {
+        width: 200px; /* Adjust this width to fit the text */
+        left: -152px; /* Negative value to move the button left by the expanded amount */
+    }
+    .text-container {
+        display: none;
+    }
+    .close-button:hover .text-container {
+        display: inline; /* Show text on hover */
+        opacity: 1;
+    }
+</style>

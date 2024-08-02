@@ -78,9 +78,7 @@
     function explorationMode() {
         mapEditorVisibilityStore.set(false);
     }
-    function toggleSearchMode() {
-        showSearchMode = !showSearchMode;
-    }
+
     function addFilter(filterName: string) {
         selectFilters.update((filters) => {
             if (filters.includes(filterName)) {
@@ -129,6 +127,8 @@
         area.setStrokeStyle(2, 0x000000);
         gameManager.getCurrentGameScene().markDirty();
     }
+
+    $: console.log(showSearchMode, "showSearchMode");
 </script>
 
 <div class="flex flex-col">
@@ -169,7 +169,7 @@
             >
                 <button
                     class="add-property-button tooltip p-4 flex justify-center items-center w-full"
-                    on:click={toggleSearchMode}
+                    on:click={() => (showSearchMode = !showSearchMode)}
                 >
                     <div class="w-10 h-10 flex flex-wrap items-center justify-center">
                         <img draggable="false" class="max-w-[75%] max-h-[75%]" src={visioSvg} alt="info icon" />
@@ -191,65 +191,65 @@
                     on:input={onChangeFilterHandle}
                     placeholder={$LL.mapEditor.entityEditor.itemPicker.searchPlaceholder()}
                 />
-            </div>
 
-            <div class="flex flex-row overflow-y-hidden overflow-x-scroll">
-                <AddPropertyButtonWrapper
-                    property="jitsiRoomProperty"
-                    isActive={$selectFilters.includes("jitsiRoomProperty")}
-                    on:click={() => {
-                        addFilter("jitsiRoomProperty");
-                    }}
-                />
-                <AddPropertyButtonWrapper
-                    property="playAudio"
-                    isActive={$selectFilters.includes("playAudio")}
-                    on:click={() => {
-                        addFilter("playAudio");
-                    }}
-                />
-                <AddPropertyButtonWrapper
-                    property="openWebsite"
-                    isActive={$selectFilters.includes("openWebsite")}
-                    on:click={() => {
-                        addFilter("openWebsite");
-                    }}
-                />
-                <AddPropertyButtonWrapper
-                    property="speakerMegaphone"
-                    isActive={$selectFilters.includes("speakerMegaphone")}
-                    on:click={() => {
-                        addFilter("speakerMegaphone");
-                    }}
-                />
-                <AddPropertyButtonWrapper
-                    property="listenerMegaphone"
-                    isActive={$selectFilters.includes("listenerMegaphone")}
-                    on:click={() => {
-                        addFilter("listenerMegaphone");
-                    }}
-                />
-                <AddPropertyButtonWrapper
-                    property="exit"
-                    isActive={$selectFilters.includes("exit")}
-                    on:click={() => {
-                        addFilter("exit");
-                    }}
-                />
-                <AddPropertyButtonWrapper
-                    property="start"
-                    isActive={$selectFilters.includes("start")}
-                    on:click={() => {
-                        addFilter("silent");
-                    }}
-                />
-                <AddPropertyButtonWrapper
-                    property="focusable"
-                    isActive={$selectFilters.includes("focusable")}
-                    on:click={() => {
-                        addFilter("focusable");
-                    }}
-                />
+                <div class="flex flex-row overflow-y-hidden overflow-x-scroll">
+                    <AddPropertyButtonWrapper
+                        property="jitsiRoomProperty"
+                        isActive={$selectFilters.includes("jitsiRoomProperty")}
+                        on:click={() => {
+                            addFilter("jitsiRoomProperty");
+                        }}
+                    />
+                    <AddPropertyButtonWrapper
+                        property="playAudio"
+                        isActive={$selectFilters.includes("playAudio")}
+                        on:click={() => {
+                            addFilter("playAudio");
+                        }}
+                    />
+                    <AddPropertyButtonWrapper
+                        property="openWebsite"
+                        isActive={$selectFilters.includes("openWebsite")}
+                        on:click={() => {
+                            addFilter("openWebsite");
+                        }}
+                    />
+                    <AddPropertyButtonWrapper
+                        property="speakerMegaphone"
+                        isActive={$selectFilters.includes("speakerMegaphone")}
+                        on:click={() => {
+                            addFilter("speakerMegaphone");
+                        }}
+                    />
+                    <AddPropertyButtonWrapper
+                        property="listenerMegaphone"
+                        isActive={$selectFilters.includes("listenerMegaphone")}
+                        on:click={() => {
+                            addFilter("listenerMegaphone");
+                        }}
+                    />
+                    <AddPropertyButtonWrapper
+                        property="exit"
+                        isActive={$selectFilters.includes("exit")}
+                        on:click={() => {
+                            addFilter("exit");
+                        }}
+                    />
+                    <AddPropertyButtonWrapper
+                        property="start"
+                        isActive={$selectFilters.includes("start")}
+                        on:click={() => {
+                            addFilter("silent");
+                        }}
+                    />
+                    <AddPropertyButtonWrapper
+                        property="focusable"
+                        isActive={$selectFilters.includes("focusable")}
+                        on:click={() => {
+                            addFilter("focusable");
+                        }}
+                    />
+                </div>
             </div>
 
             <!-- svelte-ignore a11y-click-events-have-key-events -->
