@@ -935,7 +935,7 @@ export class IoSocketController {
 
     private processEventWhoNeedToBeForwardToBack(socket: Socket, message: ClientToServerMessage["message"]): void {
         if (!message) return;
-
+        let eventIsHandle = true;
         switch (message.$case) {
             case "userMovesMessage": {
                 socketManager.handleUserMovesMessage(socket, message.userMovesMessage);
@@ -1060,10 +1060,15 @@ export class IoSocketController {
                 return;
             }
             default: {
-                throw new Error(`Event : "${message.$case}" is not handle`);
+                eventIsHandle = false;
             }
         }
-        socketManager.forwardMessageToBack(socket, message as PusherToBackMessage["message"]);
+
+        if (eventIsHandle) {
+            throw new Error(`Event : "${message.$case}" is not handle`);
+        } else {
+            socketManager.forwardMessageToBack(socket, message as PusherToBackMessage["message"]);
+        }
     }
     private sendAnswerMessage(socket: compressors.WebSocket<SocketData>, answerMessage: AnswerMessage) {
         socket.send(
