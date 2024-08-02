@@ -326,7 +326,6 @@
     }
 
     function showMenuItem(key: MenuKeys | string) {
-        console.log("je suis dans showMenuItem");
         const menuItem = subMenusStore.findByKey(key);
         if ($menuVisiblilityStore) {
             menuVisiblilityStore.set(false);
@@ -355,7 +354,6 @@
     }
 
     function openEditCompanionScene() {
-        console.log("Hey companion");
         selectCompanionSceneVisibleStore.set(true);
         gameManager.leaveGame(SelectCompanionSceneName, new SelectCompanionScene());
     }

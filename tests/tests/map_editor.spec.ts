@@ -85,6 +85,7 @@ test.describe('Map editor', () => {
     // Check that the live message is displayed
     //await expect(page.locator('.menu-container #content-liveMessage h3')).toContainText('Live message', {timeout: 5_000});
     // Click on the button to start live message
+    await page.pause();
     await page.locator('.menu-container #content-liveMessage').getByRole('button', {name: 'Start a live message'}).click({timeout: 10_000});
     await page.locator('.menu-container #active-liveMessage').getByRole('button', {name: 'Start live message'}).click({timeout: 10_000});
 

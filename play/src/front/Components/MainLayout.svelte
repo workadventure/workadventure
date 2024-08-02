@@ -157,10 +157,6 @@
             <MuteDialogBox />
         {/if}
 
-        {#if $showModalGlobalComminucationVisibilityStore}
-            <GlobalCommunicationModal />
-        {/if}
-
         {#if $mapExplorationObjectSelectedStore}
             <ObjectDetails />
         {/if}
@@ -184,7 +180,12 @@
     {#if $mapEditorModeStore}
         <MapEditor />
     {/if}
+
     <ActionBar />
+
+    {#if $showModalGlobalComminucationVisibilityStore}
+        <GlobalCommunicationModal />
+    {/if}
     <!-- svelte-ignore missing-declaration -->
     <div class="popups">
         {#each $popupStore.slice().reverse() as popup (popup.uuid)}

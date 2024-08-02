@@ -92,7 +92,7 @@
                 </div>
             {:else}
                 <div
-                    class="w-fit p-1 h-fit bg-contrast/80 backdrop-blur {index === 0
+                    class="tool-button w-fit p-1 h-fit bg-contrast/80 backdrop-blur {index === 0
                         ? 'rounded-t-lg'
                         : index === availableTools.length - 2
                         ? 'rounded-b-lg'

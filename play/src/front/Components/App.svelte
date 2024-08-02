@@ -190,7 +190,6 @@
     });
 </script>
 
-<div class="bg-contrast h-screen w-screen absolute z-[2]" />
 <div class="main-container z-10 relative">
     <!-- Create the editor container -->
     <GameOverlay {game} />
