@@ -1503,14 +1503,12 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitWatchSpaceLiveStreaming(spaceName: string) {
+    public emitWatchSpace(spaceName: string) {
+        // FIXME: why to we create an empty filter here? Doesn't it look weird?
         const spaceFilter: SpaceFilterMessage = {
-            filterName: "watchSpaceLiveStreaming",
+            filterName: "",
             spaceName,
-            filter: {
-                $case: "spaceFilterLiveStreaming",
-                spaceFilterLiveStreaming: {},
-            },
+            filter: undefined,
         };
         this.send({
             message: {
@@ -1541,7 +1539,7 @@ export class RoomConnection implements RoomConnection {
         return spaceFilter;
     }
 
-    public emitUnwatchSpaceLiveStreaming(spaceName: string) {
+    public emitUnwatchSpace(spaceName: string) {
         this.send({
             message: {
                 $case: "unwatchSpaceMessage",
