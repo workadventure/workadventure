@@ -1065,9 +1065,9 @@ export class IoSocketController {
         }
 
         if (eventIsHandle) {
-            throw new Error(`Event : "${message.$case}" is not handle`);
-        } else {
             socketManager.forwardMessageToBack(socket, message as PusherToBackMessage["message"]);
+        } else {
+            throw new Error(`Event : "${message.$case}" is not handle`);
         }
     }
     private sendAnswerMessage(socket: compressors.WebSocket<SocketData>, answerMessage: AnswerMessage) {
