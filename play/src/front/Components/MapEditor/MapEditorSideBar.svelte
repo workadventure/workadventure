@@ -19,12 +19,14 @@
 
     const availableTools: { toolName: EditorToolName; img: string; tooltiptext: LocalizedString }[] = [];
 
+    $: console.log("mapEditorActivated", $mapEditorActivated);
+
     availableTools.push({
         toolName: EditorToolName.ExploreTheRoom,
         img: ExplorerImg,
         tooltiptext: $LL.mapEditor.sideBar.exploreTheRoom(),
     });
-    if ($mapEditorActivated) {
+    if (!$mapEditorActivated) {
         availableTools.push({
             toolName: EditorToolName.AreaEditor,
             img: AreaToolImg,
@@ -83,8 +85,9 @@
 <style lang="scss">
     .side-bar-container {
         position: absolute;
-        bottom: 0;
         right: 28rem;
+        top: 10%;
+        z-index: 500;
         pointer-events: auto;
     }
     .side-bar {
