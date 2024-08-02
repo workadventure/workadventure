@@ -1524,10 +1524,6 @@ export class GameScene extends DirtyScene {
                 }
 
                 if (this.connection) {
-                    const spaceProvider = LocalSpaceProviderSingleton.getInstance(onConnect.connection.socket);
-                    StreamSpaceWatcherSingleton.getInstance(onConnect.connection.socket);
-
-                    spaceProvider.add(WORLD_SPACE_NAME).watch(CONNECTED_USER_FILTER_NAME);
                     //We need to add an env parameter to switch between chat services
                     const matrixClientWrapper = new MatrixClientWrapper(MATRIX_PUBLIC_URI ?? "", localUserStore);
                     const matrixClientPromise = matrixClientWrapper.initMatrixClient();
@@ -1556,6 +1552,10 @@ export class GameScene extends DirtyScene {
                     if (email && chatId) this.connection.emitUpdateChatId(email, chatId);
                 }
 
+                const spaceProvider = LocalSpaceProviderSingleton.getInstance(onConnect.connection.socket);
+                StreamSpaceWatcherSingleton.getInstance(onConnect.connection.socket);
+
+                spaceProvider.add(WORLD_SPACE_NAME).watch(CONNECTED_USER_FILTER_NAME);
 
                 this.tryOpenMapEditorWithToolEditorParameter();
 
