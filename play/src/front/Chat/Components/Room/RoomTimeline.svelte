@@ -59,7 +59,7 @@
     });
 
     function scrollToMessageListBottom() {
-        messageListRef.scrollTo(0, messageListRef.scrollHeight);
+        messageListRef.scrollTop =  messageListRef.scrollHeight
     }
 
     function goBackAndClearSelectedChatMessage() {
