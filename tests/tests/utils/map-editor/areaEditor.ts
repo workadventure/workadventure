@@ -5,6 +5,8 @@ class AreaEditor {
         await page.locator('li:has-text("Megaphone")').click();
     }
     async drawArea(page: Page, topLeft: {x: number, y: number}, bottomRight: {x: number, y: number}) {
+        await page.pause();
+
         await page.mouse.move(topLeft.x, topLeft.y);
         await page.mouse.down();
         await page.mouse.move(bottomRight.x, bottomRight.y);
@@ -12,6 +14,7 @@ class AreaEditor {
     }
 
     async addProperty(page: Page, property: string) {
+        // await page.pause();
         await page.locator('.map-editor .sidebar .properties-buttons .add-property-button', {hasText: property}).click();
     }
 

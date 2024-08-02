@@ -45,7 +45,7 @@ test.describe('Iframe API', () => {
 
         WA.ui.registerMenuCommand('custom callback menu', () => {
             WA.chat.sendChatMessage('Custom menu clicked', 'Mr Robot');
-            console.log('Custom menu clicked');
+            // console.log('Custom menu clicked');
         });
 
         WA.ui.registerMenuCommand('custom iframe menu', {iframe: '../Metadata/customIframeMenu.html'});
@@ -82,7 +82,7 @@ test.describe('Iframe API', () => {
         .frameLocator('.menu-submenu-container iframe')
         .locator('p');
 
-    console.log(iframeParagraph2);
+    // console.log(iframeParagraph2);
     await expect(iframeParagraph2).toHaveText('This is an iframe in a custom menu.');
 
     await page.locator('#btn-chat').click();
@@ -147,11 +147,13 @@ test.describe('Iframe API', () => {
 
       await login(page);
 
+      await page.waitForTimeout(5000);
+
       // Create a script to evaluate function to disable map editor
       await evaluateScript(page, async () => {
         await WA.onInit();
-        console.log('WA', WA);
-        await page.pause();
+        // console.log('WA', WA);
+        // console.log('WA.controls', WA.controls, WA.controls.disableMapEditor);
         WA.controls.disableMapEditor();
       });
 
@@ -183,9 +185,9 @@ test.describe('Iframe API', () => {
 
         await WA.onInit();
 
-        await console.log('WA', WA.controls.disableInviteButton());
+        // await console.log('WA', WA.controls.disableInviteButton());
         // console.log(WorkadventureControlsCommands.disableInviteButton());
-        await WA.controls.disableInviteButton();
+        WA.controls.disableInviteButton();
     });
 
     // Check if the screen sharing is disabled
@@ -273,32 +275,29 @@ test.describe('Iframe API', () => {
     await page.evaluate(() => localStorage.setItem('debug', '*'));
     await login(page, 'Alice', 3);
 
-    // await page.pause();
-
     // Right click to move the user
-    const element = await page.locator('app')
-
-    element.click({
-      button: 'right',
-      position: {
-        x: 381,
-        y: 121
-      }
+    await page.locator('#app').click({
+        button: 'right',
+        position: {
+            x: 381,
+            y: 121
+        }
     });
 
     // Create a script to evaluate function to disable map editor
     await evaluateScript(page, async () => {
-      await WA.onInit();
-      WA.controls.disableRightClick();
+        await WA.onInit();
+        // console.log('WA', WA);
+        WA.controls.disableRightClick();
     });
 
     // Right click to move the user
     await page.locator('canvas').click({
-      button: 'right',
-      position: {
-        x: 246,
-        y: 295
-      }
+        button: 'right',
+        position: {
+            x: 246,
+            y: 295
+        }
     });
 
     // Create a script to evaluate function to enable map editor

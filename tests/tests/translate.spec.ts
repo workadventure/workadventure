@@ -4,7 +4,7 @@ import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('Translation', () => {
   test('can be switched to French', async ({
-    page,
+    page
   }, { project }) => {
     // Skip test for mobile device
     if(project.name === "mobilechromium") {

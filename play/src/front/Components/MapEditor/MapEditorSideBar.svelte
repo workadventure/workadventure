@@ -19,6 +19,8 @@
 
     const availableTools: { toolName: EditorToolName; img: string; tooltiptext: LocalizedString }[] = [];
 
+    $: console.log("mapEditorActivated", $mapEditorActivated);
+
     availableTools.push({
         toolName: EditorToolName.ExploreTheRoom,
         img: ExplorerImg,

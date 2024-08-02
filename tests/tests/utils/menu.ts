@@ -18,12 +18,13 @@ class Menu {
     }
 
     async openMenu(page: Page) {
-        await page.click('#action-user');
+        await page.locator('#action-admin').click({timeout: 10_000});
         await expect(await page.locator('#profile-menu')).toHaveClass(/backdrop-blur/);
     }
 
     async openMenuAdmin(page: Page) {
-        await page.click('#action-admin');
+        // await page.pause();
+        await page.locator('#action-admin').click();
         await expect(await page.locator('#admin-menu')).toHaveClass(/backdrop-blur/);
     }
 

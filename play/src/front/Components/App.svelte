@@ -248,12 +248,9 @@
     $: $isResized ? updateDynamicStyles() : null;
 </script>
 
-<div class="h-screen w-screen flex flex-col-reverse md:flex-row">
-    <div class={$fullScreenCowebsite ? "hidden" : ""} bind:this={gameContainer}>
-        <div id="game" class="relative" bind:this={gameDiv}>
-            <GameOverlay {game} />
-        </div>
-    </div>
+<div class="h-screen w-screen flex flex-col-reverse md:flex-row" bind:this={gameContainer}>
+    <GameOverlay {game} />
+    <div id="game" class="relative {$fullScreenCowebsite ? 'hidden' : ''}" bind:this={gameDiv} />
     {#if $coWebsites.length > 0}
         <div bind:this={cowebsiteContainer}>
             {#if flexBasis !== undefined}
