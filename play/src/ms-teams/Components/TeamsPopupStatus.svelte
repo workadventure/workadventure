@@ -2,8 +2,8 @@
     import { fly } from "svelte/transition";
     import { Writable } from "svelte/store";
     import { createEventDispatcher } from "svelte";
-    import { ExternalModuleStatus } from "@workadventure/shared-utils";
     import LL from "../../i18n/i18n-svelte";
+    import { ExternalModuleStatus } from "../../front/ExternalModule/ExtensionModule";
     import TeamsLogoPng from "./images/TeamsLogo.png";
 
     const dispatch = createEventDispatcher();

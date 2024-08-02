@@ -1,6 +1,6 @@
 import { writable } from "svelte/store";
-import { ExtensionModule } from "@workadventure/shared-utils";
 import { GameScene } from "../Phaser/Game/GameScene";
+import { ExtensionModule } from "../ExternalModule/ExtensionModule";
 
 export const gameSceneIsLoadedStore = writable(false);
 

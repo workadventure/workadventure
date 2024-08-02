@@ -29,7 +29,6 @@ import {
     GameMapProperties,
     WAMFileFormat,
 } from "@workadventure/map-editor";
-import { ExtensionModule, RoomMetadataType } from "@workadventure/shared-utils";
 import { userMessageManager } from "../../Administration/UserMessageManager";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
@@ -166,6 +165,7 @@ import { ProximityChatConnection } from "../../Chat/Connection/Proximity/Proximi
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
 import { ExtensionModuleStatusSynchronization } from "../../Rules/StatusRules/ExtensionModuleStatusSynchronization";
 import { calendarEventsStore, isActivatedStore } from "../../Stores/CalendarStore";
+import { ExtensionModule, RoomMetadataType } from "../../ExternalModule/ExtensionModule";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";

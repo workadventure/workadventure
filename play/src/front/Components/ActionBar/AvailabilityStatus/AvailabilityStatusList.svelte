@@ -3,13 +3,13 @@
     import { AvailabilityStatus } from "@workadventure/messages";
     import { Readable, Unsubscriber } from "svelte/store";
     import { onDestroy, onMount } from "svelte";
-    import { ExternalModuleStatus } from "@workadventure/shared-utils";
     import { resetAllStatusStoreExcept } from "../../../Rules/StatusRules/statusChangerFunctions";
     import { availabilityStatusMenuStore } from "../../../Stores/AvailabilityStatusMenuStore";
     import { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
     import { extensionModuleStore } from "../../../Stores/GameSceneStore";
 
     import businessSvg from "../../images/applications/business.svg";
+    import { ExternalModuleStatus } from "../../../ExternalModule/ExtensionModule";
     import AvailabilityStatusCircle from "./AvailabilityStatusCircle.svelte";
     import { AvailabilityStatusListPropsInterface } from "./Interfaces/AvailabilityStatusPropsInterface";
 

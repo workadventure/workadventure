@@ -3,15 +3,15 @@ import { z } from "zod";
 import { AvailabilityStatus, ExternalModuleMessage, OauthRefreshToken } from "@workadventure/messages";
 import { subscribe } from "svelte/internal";
 import { Unsubscriber, Updater, writable } from "svelte/store";
+import { CalendarEventInterface } from "@workadventure/shared-utils";
+import { AreaData, AreaDataProperties } from "@workadventure/map-editor";
+import { notificationPlayingStore } from "../front/Stores/NotificationStore";
 import {
-    CalendarEventInterface,
     ExtensionModule,
     ExtensionModuleOptions,
     ExternalModuleStatus,
     RoomMetadataType,
-} from "@workadventure/shared-utils";
-import { AreaData, AreaDataProperties } from "@workadventure/map-editor";
-import { notificationPlayingStore } from "../front/Stores/NotificationStore";
+} from "../front/ExternalModule/ExtensionModule";
 import { TeamsActivity, TeamsAvailability } from "./MSTeamsInterface";
 
 import TeamsMeetingAreaPropertyEditor from "./Components/TeamsMeetingAreaPropertyEditor.svelte";
