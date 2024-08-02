@@ -463,6 +463,13 @@ services:
         MATRIX_ADMIN_USER: '$MATRIX_ADMIN_USER'
         MATRIX_ADMIN_PASSWORD: '$MATRIX_ADMIN_PASSWORD'
         JWT_SECRET: '$SECRET_KEY'
+
+  mautrix-discord:
+    container_name: mautrix-discord
+    image: dock.mau.dev/mautrix/discord:<version>
+    restart: unless-stopped
+    volumes:
+    - .:/data
 #  coturn:
 #    image: coturn/coturn:4.5.2
 #    command:
