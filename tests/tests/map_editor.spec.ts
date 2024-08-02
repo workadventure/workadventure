@@ -321,7 +321,7 @@ test.describe('Map editor', () => {
     await AreaEditor.addProperty(page, 'Open Google Drive');
     // fill Google Slides link
     await page.getByPlaceholder('https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview').first().fill('https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview');
-    
+
 
     await Menu.closeMapEditor(page);
 

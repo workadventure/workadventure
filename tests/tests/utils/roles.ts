@@ -25,9 +25,9 @@ export async function login(
 export async function selectMedias(page: Page) {
   await expect(page.locator('h2', { hasText: "Turn on your camera and microphone" })).toBeVisible();
 
-  await page.click("text=Let's go!");
+  await page.click("text=Save");
 
-  await expect(page.locator("button#menuIcon").nth(0)).toBeVisible();
+  await expect(page.locator("#main-layout")).toBeVisible();
 }
 
 export async function hideNoCamera(page: Page){
