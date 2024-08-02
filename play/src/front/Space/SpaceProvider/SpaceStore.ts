@@ -1,18 +1,18 @@
-import { ClientToServerMessage } from "@workadventure/messages";
 import { SpaceInterface } from "../SpaceInterface";
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
 import { Space } from "../Space";
+import { RoomConnection } from "../../Connection/RoomConnection";
 import { SpaceProviderInterface } from "./SpaceProviderInterface";
 
 export class LocalSpaceProvider implements SpaceProviderInterface {
     constructor(
-        private socket: WebSocket,
+        private roomConnection: RoomConnection,
         private spaces: Map<string, SpaceInterface> = new Map<string, SpaceInterface>()
     ) {}
 
     add(spaceName: string, metadata: Map<string, unknown> = new Map<string, unknown>()): SpaceInterface {
         if (this.exist(spaceName)) throw new SpaceAlreadyExistError(spaceName);
-        const newSpace: SpaceInterface = new Space(spaceName, metadata, this.socket, ClientToServerMessage);
+        const newSpace: SpaceInterface = new Space(spaceName, metadata, this.roomConnection);
         this.spaces.set(newSpace.getName(), newSpace);
         return newSpace;
     }
