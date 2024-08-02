@@ -133,15 +133,15 @@
 
 <div class="flex flex-col">
     <div class="header-container">
-        <h3 class="text-l text-left">{$LL.mapEditor.explorer.title()}</h3>
+        <h3 class="text-center">{$LL.mapEditor.explorer.title()}</h3>
         {#if !showSearchMode}
-            <p in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>
+            <p class="text-left" in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>
                 {$LL.mapEditor.explorer.description()}
             </p>
         {/if}
     </div>
-    <div class="flex flex-col justify-center">
-        <div class="flex flex-wrap justify-center items-center">
+    <div class="flex justify-center">
+        <div class="flex flex-col w-full gap-4 ustify-center items-center">
             {#if !showSearchMode}
                 <div
                     class="properties-buttons flex flex-row z-10"
@@ -163,12 +163,12 @@
                 </div>
             {/if}
             <div
-                class="properties-buttons flex flex-row z-10"
+                class="properties-buttons w-full flex z-10 "
                 in:fly={{ x: 100, duration: 250, delay: 200 }}
                 out:fly={{ x: 100, duration: 200 }}
             >
                 <button
-                    class="add-property-button tooltip p-4 flex justify-center items-center"
+                    class="add-property-button tooltip p-4 flex justify-center items-center w-full"
                     on:click={toggleSearchMode}
                 >
                     <div class="w-10 h-10 flex flex-wrap items-center justify-center">

@@ -65,76 +65,56 @@
     }
 </script>
 
-<section class="side-bar-container" class:!right-20={!$mapEditorVisibilityStore}>
-    <!--put a section to avoid lower div to be affected by some css-->
-    <div class="side-bar">
-        {#each availableTools as tool (tool.toolName)}
-            <div class="tool-button">
-                <button
-                    id={tool.toolName}
-                    class:active={$mapEditorSelectedToolStore === tool.toolName}
-                    on:click|preventDefault={() => switchTool(tool.toolName)}
-                    type="button"><img src={tool.img} alt="open tool {tool.toolName}" /></button
-                >
-                <Tooltip text={tool.tooltiptext} leftPosition="true" />
-            </div>
-        {/each}
+<section
+    class="side-bar-container absolute right-[29rem] top-[10%] z-[500] pointer-events-auto "
+    class:!right-20={!$mapEditorVisibilityStore}
+>
+    <div class="side-bar flex flex-col gap-4 w-fit h-fit absolute left-[2rem] align-bottom ">
+        <div class="first-side-bar bg-contrast/80 backdrop-blur rounded-lg">
+            {#each availableTools as tool (tool.toolName)}
+                <div class="tool-button relative flex p-0 ">
+                    <button
+                        class="flex justify-center items-center h-12 w-12 p-2 m-0 "
+                        id={tool.toolName}
+                        on:click|preventDefault={() => switchTool(tool.toolName)}
+                        type="button"
+                    >
+                        <img
+                            src={tool.img}
+                            alt="open tool {tool.toolName}"
+                            class="object-contain scale-75 hover:scale-100 max-w-full max-h-full transition-transform duration-300"
+                        />
+                    </button>
+                </div>
+                <!-- <div class="">
+                    <Tooltip text={tool.tooltiptext} leftPosition="true" />
+                </div> -->
+            {/each}
+        </div>
+        <div class="second-side-bar bg-contrast/80 backdrop-blur rounded-lg">
+            {#each availableTools as tool (tool.toolName)}
+                <div class="tool-button relative flex p-0">
+                    <button
+                        class="flex justify-center items-center h-12 w-12 p-2 m-0"
+                        id={tool.toolName}
+                        on:click|preventDefault={() => switchTool(tool.toolName)}
+                        type="button"
+                    >
+                        <img
+                            src={tool.img}
+                            alt="open tool {tool.toolName}"
+                            class="object-contain scale-75 hover:scale-100 max-w-full max-h-full transition-transform duration-300"
+                        />
+                    </button>
+                    <!-- <div class="">
+                    <Tooltip text={tool.tooltiptext} leftPosition="true" />
+                </div> -->
+                </div>
+            {/each}
+        </div>
+
+        <div class="third-side-bar">
+
+        </div>
     </div>
 </section>
-
-<style lang="scss">
-    .side-bar-container {
-        position: absolute;
-        right: 28rem;
-        top: 10%;
-        z-index: 500;
-        pointer-events: auto;
-    }
-    .side-bar {
-        display: flex;
-        flex-direction: column;
-        width: fit-content;
-        height: fit-content;
-        position: absolute;
-        top: 6%;
-        left: 2rem;
-        align-content: bottom;
-        .tool-button {
-            position: relative !important;
-            display: flex;
-            padding: 0;
-            button {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                height: 3em;
-                width: 3em;
-                padding: 10px;
-                margin: 0;
-                background-color: rgb(27 27 41 / 0.95);
-                border-radius: 0;
-                img {
-                    object-fit: contain;
-                    max-width: 100%;
-                    max-height: 100%;
-                }
-            }
-            button.active {
-                border-left: 4px solid #56eaff;
-            }
-        }
-        .tool-button:first-child button {
-            border-top-left-radius: 0.5em;
-            border-top-right-radius: 0.5em;
-        }
-        .tool-button:last-child button {
-            border-bottom-left-radius: 0.5em;
-            border-bottom-right-radius: 0.5em;
-        }
-    }
-    #CloseMapEditor {
-        img {
-            width: 1.25rem;
-        }
-    }
-</style>

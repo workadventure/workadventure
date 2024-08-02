@@ -24,7 +24,7 @@
     import { notificationPlayingStore } from "../Stores/NotificationStore";
     import { popupStore } from "../Stores/PopupStore";
     import { askDialogStore } from "../Stores/MeetingStore";
-    import { mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
+    import { mapEditorModeStore, mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import HelpCameraSettingsPopup from "./HelpSettings/HelpCameraSettingsPopup.svelte";
@@ -50,6 +50,7 @@
     import Popup from "./Modal/Popup.svelte";
     import MapList from "./Exploration/MapList.svelte";
     import WarningToast from "./WarningContainer/WarningToast.svelte";
+    import MapEditor from "./MapEditor/MapEditor.svelte";
 
     let mainLayout: HTMLDivElement;
     // export let message: string;
@@ -180,7 +181,9 @@
     {#if $actionsMenuStore}
         <ActionsMenu />
     {/if}
-
+    {#if $mapEditorModeStore}
+        <MapEditor />
+    {/if}
     <ActionBar />
     <!-- svelte-ignore missing-declaration -->
     <div class="popups">
@@ -209,7 +212,6 @@
 
 <style lang="scss">
     @import "../style/breakpoints.scss";
-
     .popups {
         position: relative;
         width: 100%;
