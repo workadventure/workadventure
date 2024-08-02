@@ -11,8 +11,6 @@
     let container: HTMLElement;
 
     function closeChat() {
-        console.debug("closed");
-
         chatVisibilityStore.set(false);
     }
 
