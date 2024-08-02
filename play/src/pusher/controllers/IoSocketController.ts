@@ -935,6 +935,7 @@ export class IoSocketController {
 
     private processEventWhoNeedToBeForwardToBack(socket: Socket, message: ClientToServerMessage["message"]): void {
         if (!message) return;
+
         switch (message.$case) {
             case "userMovesMessage": {
                 socketManager.handleUserMovesMessage(socket, message.userMovesMessage);
@@ -1044,11 +1045,24 @@ export class IoSocketController {
                 socketManager.handlePrivateEvent(socket, message.privateEvent.spaceName, message);
                 break;
             }
+            case "itemEventMessage":
+            case "variableMessage":
+            case "webRtcSignalToServerMessage":
+            case "webRtcScreenSharingSignalToServerMessage":
+            case "emotePromptMessage":
+            case "followRequestMessage":
+            case "followConfirmationMessage":
+            case "followAbortMessage":
+            case "lockGroupPromptMessage":
+            case "pingMessage":
+            case "askPositionMessage": {
+                socketManager.forwardMessageToBack(socket, message as PusherToBackMessage["message"]);
+                return;
+            }
             default: {
                 throw new Error(`Event : "${message.$case}" is not handle`);
             }
         }
-
         socketManager.forwardMessageToBack(socket, message as PusherToBackMessage["message"]);
     }
     private sendAnswerMessage(socket: compressors.WebSocket<SocketData>, answerMessage: AnswerMessage) {
