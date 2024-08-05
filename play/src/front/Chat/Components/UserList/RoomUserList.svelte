@@ -8,7 +8,7 @@
     import { IconChevronUp } from "@wa-icons";
 
     const chat = gameManager.getCurrentGameScene().chatConnection;
-    const DISCONNECTED_LABEL = "disconnected";
+    const DISCONNECTED_LABEL = $LL.chat.userList.disconnected();
     const DISCONNECTED_USERS_LIMITATION = 200;
 
     onMount(() => {
