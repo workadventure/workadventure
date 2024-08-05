@@ -29,6 +29,7 @@ import {
 } from "../ChatConnection";
 import { SpaceUserExtended } from "../../../Space/SpaceFilter/SpaceFilter";
 import { selectedRoom } from "../../Stores/ChatStore";
+import { gameManager } from "../../../Phaser/Game/GameManager";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 import { chatUserFactory } from "./MatrixChatUser";
 import { MatrixSecurity, matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity";
@@ -130,7 +131,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             return;
         }
 
-        const matrixRoom = new MatrixChatRoom(room);
+        const matrixRoom = new MatrixChatRoom(room, gameManager.getCurrentGameScene().spaceStore);
         this.roomList.set(matrixRoom.id, matrixRoom);
     }
 
@@ -143,7 +144,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         const existingMatrixChatRoom = this.roomList.has(roomId);
         if (membership !== prevMembership && existingMatrixChatRoom) {
             if (membership === KnownMembership.Join) {
-                this.roomList.set(roomId, new MatrixChatRoom(room));
+                this.roomList.set(roomId, new MatrixChatRoom(room, gameManager.getCurrentGameScene().spaceStore));
                 return;
             }
             if (membership === KnownMembership.Leave || membership === KnownMembership.Ban) {
@@ -155,7 +156,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
             if (membership === KnownMembership.Invite) {
                 const inviter = room.getDMInviter();
-                const newRoom = new MatrixChatRoom(room);
+                const newRoom = new MatrixChatRoom(room, gameManager.getCurrentGameScene().spaceStore);
                 if (
                     inviter &&
                     (this.userDisconnected.has(inviter) ||
@@ -375,7 +376,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
             const room = this.client.getRoom(room_id);
             if (!room) return;
-            const newRoom = new MatrixChatRoom(room);
+            const newRoom = new MatrixChatRoom(room, gameManager.getCurrentGameScene().spaceStore);
             this.roomList.set(room_id, newRoom);
             return newRoom;
         } catch (error) {
@@ -501,7 +502,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                         await this.addDMRoomInAccountData(dmInviterId, roomId);
                     }
 
-                    const matrixRoom = new MatrixChatRoom(roomAfterSync);
+                    const matrixRoom = new MatrixChatRoom(roomAfterSync, gameManager.getCurrentGameScene().spaceStore);
                     this.roomList.set(roomId, matrixRoom);
                     res(matrixRoom);
                     return;

@@ -20,8 +20,8 @@ import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
 import { RoomMessageEventContent } from "matrix-js-sdk/lib/@types/events";
 import { ChatRoom, ChatRoomMembership } from "../ChatConnection";
 import { selectedChatMessageToReply } from "../../Stores/ChatStore";
-import { LocalSpaceProviderSingleton } from "../../../Space/SpaceProvider/SpaceStore";
-import { WORLD_SPACE_NAME, CONNECTED_USER_FILTER_NAME } from "../../../Space/Space";
+import { LocalSpaceProvider } from "../../../Space/SpaceProvider/SpaceStore";
+import { CONNECTED_USER_FILTER_NAME, WORLD_SPACE_NAME } from "../../../Space/Space";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { matrixSecurity } from "./MatrixSecurity";
@@ -44,7 +44,7 @@ export class MatrixChatRoom implements ChatRoom {
     isEncrypted!: Writable<boolean>;
     typingMembers: Writable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
 
-    constructor(private matrixRoom: Room, private spaceStore = LocalSpaceProviderSingleton.getInstance()) {
+    constructor(private matrixRoom: Room, private spaceStore: LocalSpaceProvider) {
         this.id = matrixRoom.roomId;
         this.name = writable(matrixRoom.name);
         this.type = this.getMatrixRoomType();
