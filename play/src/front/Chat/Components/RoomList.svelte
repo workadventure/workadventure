@@ -5,7 +5,7 @@
     import { onDestroy, onMount } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import LL from "../../../i18n/i18n-svelte";
-    import { chatSearchBarValue, joignableRoom, proximityRoomConnection, selectedRoom } from "../Stores/ChatStore";
+    import { chatSearchBarValue, joignableRoom, selectedRoom } from "../Stores/ChatStore";
     import { ChatRoom } from "../Connection/ChatConnection";
     import { INITIAL_SIDEBAR_WIDTH } from "../../Stores/ChatStore";
     import Room from "./Room/Room.svelte";
@@ -77,8 +77,7 @@
     }
 
     function toggleDisplayProximityChat() {
-        if ($proximityRoomConnection && get($proximityRoomConnection?.rooms).length > 0)
-            selectedRoom.set(get($proximityRoomConnection.rooms)[0]);
+        selectedRoom.set(gameManager.getCurrentGameScene().proximityChatRoom);
     }
 
     $: filteredDirectRoom = $directRooms.filter(({ name }) =>
@@ -172,14 +171,12 @@
             </div>
         {/if}
 
-        {#if $proximityRoomConnection}
-            <div class="tw-flex tw-justify-between">
-                <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={toggleDisplayProximityChat}>
-                    <IconChevronRight />
-                    {$LL.chat.proximity()}
-                </button>
-            </div>
-        {/if}
+        <div class="tw-flex tw-justify-between">
+            <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={toggleDisplayProximityChat}>
+                <IconChevronRight />
+                {$LL.chat.proximity()}
+            </button>
+        </div>
     </div>
 {/if}
 {#if $selectedRoom !== undefined}

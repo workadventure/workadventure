@@ -18,6 +18,8 @@ export interface ChatUser {
     spaceId: number | undefined;
 }
 
+export type PartialChatUser = Partial<ChatUser> & { id: string };
+
 export type ChatRoomMembership = "ban" | "join" | "knock" | "leave" | "invite" | string;
 
 export interface ChatRoom {
