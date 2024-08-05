@@ -166,7 +166,7 @@
 <div
     class="menu-container {isMobile
         ? 'mobile'
-        : 'center'}z-[1000] w-[90%] absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-xl"
+        : 'center'} w-[90%] z-[308] top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-xxl"
     bind:this={mainModal}
 >
     <div class="w-full bg-dark-purple/95 rounded" transition:fly={{ x: 1000, duration: 500 }}>
@@ -214,7 +214,6 @@
                 </a>
             {/if}
         </header>
-        <div />
         <div class="h-5/6 px-5 overflow-auto">
             {#if !activeLiveMessage && !inputSendTextActive && !uploadAudioActive}
                 <div class="flex flex-row justify-center">
@@ -243,7 +242,10 @@
                             />
                             {$LL.megaphone.modal.textMessage.title()}
                         </p>
-                        <p class="help-text"><InfoIcon size="18" /> {$LL.megaphone.modal.audioMessage.noAccess()}</p>
+                        <p class="help-text">
+                            <InfoIcon size="18" />
+                            {$LL.megaphone.modal.audioMessage.noAccess()}
+                        </p>
                         <button class="light max-w-fit" on:click={activateInputText} disabled={!$userIsAdminStore}>
                             {$LL.megaphone.modal.textMessage.button()}</button
                         >
@@ -260,7 +262,10 @@
                             />
                             {$LL.megaphone.modal.audioMessage.title()}
                         </p>
-                        <p class="help-text"><InfoIcon size="18" /> {$LL.megaphone.modal.audioMessage.noAccess()}</p>
+                        <p class="help-text">
+                            <InfoIcon size="18" />
+                            {$LL.megaphone.modal.audioMessage.noAccess()}
+                        </p>
                         <button class="light max-w-fit" on:click={activateUploadAudio} disabled={!$userIsAdminStore}>
                             {$LL.megaphone.modal.audioMessage.button()}</button
                         >
@@ -455,6 +460,7 @@
 
 <style lang="scss">
     .menu-container {
+        position: absolute !important;
         &.mobile {
             width: 100% !important;
             height: 100% !important;

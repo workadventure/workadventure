@@ -22,3 +22,4 @@ class MapEditor {
 }
 
 export default new MapEditor();
+

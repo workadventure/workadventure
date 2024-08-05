@@ -31,26 +31,26 @@
 
     export let game: Game;
 
-    const mediaQuery = window.matchMedia("(max-width: 768px)");
-    let gameOverlayStyle = document.getElementById("gameoverlay");
+    // const mediaQuery = window.matchMedia("(max-width: 768px)");
+    // let gameOverlayStyle = document.getElementById("gameoverlay");
 
-    onMount(() => {
-        mediaQuery.addEventListener("change", handleTabletChange);
-        handleTabletChange();
-        console.log(gameOverlayStyle);
-    });
+    // onMount(() => {
+    //     mediaQuery.addEventListener("change", handleTabletChange);
+    //     handleTabletChange();
+    //     console.log(gameOverlayStyle);
+    // });
 
-    function handleTabletChange() {
-        if (mediaQuery.matches) {
-            if (gameOverlayStyle) {
-                gameOverlayStyle.style.position = "fixed";
-            }
-        } else {
-            if (gameOverlayStyle) {
-                gameOverlayStyle.style.position = "absolute";
-            }
-        }
-    }
+    // function handleTabletChange() {
+    //     if (mediaQuery.matches) {
+    //         if (gameOverlayStyle) {
+    //             gameOverlayStyle.style.position = "fixed";
+    //         }
+    //     } else {
+    //         if (gameOverlayStyle) {
+    //             gameOverlayStyle.style.position = "absolute";
+    //         }
+    //     }
+    // }
 
     /**
      * When changing map from an exit on the current map, the Chat and the MainLayout are not really destroyed
@@ -59,52 +59,52 @@
      */
 </script>
 
-<div id="gameoverlay">
-    <!--Voir pour l'enlever juste en responsive-->
-    <!--Voir pour virer la position absolute-->
-    <!-- Preload image loader TODO HUGO : Better way ? -->
-    <link rel="preload" as="image" href={bgMap} />
-    <link rel="preload" as="image" href={defaultLoader} />
+<!-- <div id="gameoverlay" class="absolute h-full w-full z-[-3000]"> -->
+<!--Voir pour l'enlever juste en responsive-->
+<!--Voir pour virer la position absolute-->
+<!-- Preload image loader TODO HUGO : Better way ? -->
+<link rel="preload" as="image" href={bgMap} />
+<link rel="preload" as="image" href={defaultLoader} />
 
-    {#if $loaderVisibleStore}
-        <div class="bg-contrast">
-            <LoaderScene />
-        </div>
+{#if $loaderVisibleStore}
+    <div class="bg-contrast">
+        <LoaderScene />
+    </div>
+{/if}
+{#if $errorScreenStore !== undefined}
+    <div class="bg-contrast">
+        <ErrorScreen />
+    </div>
+{:else if $errorStore.length > 0}
+    <div class="bg-contrast">
+        <ErrorDialog />
+    </div>
+{:else if $loginSceneVisibleStore}
+    <div class="scrollable">
+        <LoginScene {game} />
+    </div>
+{:else if $selectCharacterSceneVisibleStore}
+    <div>
+        <SelectCharacterScene {game} />
+    </div>
+{:else if $selectCompanionSceneVisibleStore}
+    <div class="bg-contrast">
+        <SelectCompanionScene {game} />
+    </div>
+{:else if $enableCameraSceneVisibilityStore}
+    <div class="scrollable">
+        <EnableCameraScene {game} />
+    </div>
+{:else if $gameSceneIsLoadedStore && !$loaderVisibleStore && !$selectCharacterCustomizeSceneVisibleStore}
+    {#if $refreshPromptStore}
+        <RefreshPrompt />
     {/if}
-    {#if $errorScreenStore !== undefined}
-        <div class="bg-contrast">
-            <ErrorScreen />
-        </div>
-    {:else if $errorStore.length > 0}
-        <div class="bg-contrast">
-            <ErrorDialog />
-        </div>
-    {:else if $loginSceneVisibleStore}
-        <div class="scrollable">
-            <LoginScene {game} />
-        </div>
-    {:else if $selectCharacterSceneVisibleStore}
-        <div>
-            <SelectCharacterScene {game} />
-        </div>
-    {:else if $selectCompanionSceneVisibleStore}
-        <div class="bg-contrast">
-            <SelectCompanionScene {game} />
-        </div>
-    {:else if $enableCameraSceneVisibilityStore}
-        <div class="scrollable">
-            <EnableCameraScene {game} />
-        </div>
-    {:else if $gameSceneIsLoadedStore && !$loaderVisibleStore && !$selectCharacterCustomizeSceneVisibleStore}
-        {#if $refreshPromptStore}
-            <RefreshPrompt />
+    {#key $forceRefreshChatStore}
+        <Chat />
+        {#if $mapEditorModeStore}
+            <MapEditor />
         {/if}
-        {#key $forceRefreshChatStore}
-            <Chat />
-            {#if $mapEditorModeStore}
-                <MapEditor />
-            {/if}
-            <MainLayout />
-        {/key}
-    {/if}
-</div>
+        <MainLayout />
+    {/key}
+{/if}
+<!-- </div> -->

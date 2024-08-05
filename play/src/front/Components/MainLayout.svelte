@@ -64,13 +64,13 @@
         // ...
     });
 
-    $: console.log($hasEmbedScreen);
+    // $: console.log($hasEmbedScreen);
 </script>
 
 <!-- Components ordered by z-index -->
 <div
     id="main-layout"
-    class="@container/main-layout h-full w-full pointer-events-none {[...$coWebsites.values()].length === 0
+    class="@container/main-layout absolute h-full w-full pointer-events-none {[...$coWebsites.values()].length === 0
         ? 'not-cowebsite'
         : ''}"
     bind:this={mainLayout}
@@ -79,7 +79,7 @@
         <div class="bg-black/60 w-full h-full fixed left-0 right-0" />
     {/if}
 
-    <section id="main-layout-main" class="pb-0 pointer-events-none">
+    <section id="main-layout-main" class="pb-0 pointer-events-none h-full w-full">
         <div class="popups">
             {#each $popupStore.slice().reverse() as popup (popup.uuid)}
                 <div class="popupwrapper">
@@ -134,12 +134,8 @@
             <HelpPopUpBlocked />
         {/if}
 
-        <!-- {#if $hasEmbedScreen}
+        {#if $hasEmbedScreen}
             <EmbedScreensContainer />
-        {/if} -->
-
-        {#if $showModalGlobalComminucationVisibilityStore}
-            <GlobalCommunicationModal />
         {/if}
 
         {#if $soundPlayingStore}
@@ -182,6 +178,10 @@
             <WarningToast />
         {/if}
     </section>
+
+    {#if $showModalGlobalComminucationVisibilityStore}
+        <GlobalCommunicationModal />
+    {/if}
 
     {#if $actionsMenuStore}
         <ActionsMenu />
