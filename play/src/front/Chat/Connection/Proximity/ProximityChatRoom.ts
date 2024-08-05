@@ -14,7 +14,8 @@ import {
 import LL from "../../../../i18n/i18n-svelte";
 import { gameManager } from "../../../Phaser/Game/GameManager";
 import { iframeListener } from "../../../Api/IframeListener";
-import { ProximityChatConnection } from "./ProximityChatConnection";
+import { RoomConnection } from "../../../Connection/RoomConnection";
+import { Space } from "../../../Space/Space";
 
 export class ProximityChatMessage implements ChatMessage {
     isQuotedMessage = undefined;
@@ -57,8 +58,9 @@ export class ProximityChatRoom implements ChatRoom {
     hasPreviousMessage = writable(false);
     isEncrypted = writable(false);
     typingMembers: Writable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
+    private _space: Space | undefined;
 
-    unknowUser = {
+    private unknownUser = {
         id: "0",
         uuid: "0",
         availabilityStatus: writable(AvailabilityStatus.ONLINE),
@@ -70,7 +72,7 @@ export class ProximityChatRoom implements ChatRoom {
         spaceId: undefined,
     } as ChatUser;
 
-    constructor(private _connection: ProximityChatConnection, private _userId: number, private _userUuid: string) {
+    constructor(private roomConnection: RoomConnection, private _userId: number) {
         this.typingMembers = writable([]);
     }
 
@@ -84,7 +86,7 @@ export class ProximityChatRoom implements ChatRoom {
         // Create message
         const newMessage = new ProximityChatMessage(
             uuidv4(),
-            get(this._connection.connectedUsers).get(this._userId) ?? this.unknowUser,
+            get(this._connection.connectedUsers).get(this._userId) ?? this.unknownUser,
             writable(newChatMessageContent),
             new Date(),
             true,
@@ -127,7 +129,7 @@ export class ProximityChatRoom implements ChatRoom {
             spaceId: undefined,
         };
 
-        if (userUuid === this._userUuid) return;
+        //if (userUuid === this._userUuid) return;
         this._connection.connectedUsers.update((users) => {
             users.set(userId, newChatUser);
             return users;
@@ -156,7 +158,7 @@ export class ProximityChatRoom implements ChatRoom {
         // Create message
         const newMessage = new ProximityChatMessage(
             uuidv4(),
-            sender ?? this.unknowUser,
+            sender ?? this.unknownUser,
             writable(newChatMessageContent),
             new Date(),
             false,
@@ -201,8 +203,8 @@ export class ProximityChatRoom implements ChatRoom {
         const newMessage = new ProximityChatMessage(
             uuidv4(),
             {
-                ...this.unknowUser,
-                username: authorName ?? this.unknowUser.username,
+                ...this.unknownUser,
+                username: authorName ?? this.unknownUser.username,
             },
             writable(newChatMessageContent),
             new Date(),
@@ -269,5 +271,13 @@ export class ProximityChatRoom implements ChatRoom {
 
     getSpaceName(): string | undefined {
         return get(this._connection.spaceName);
+    }
+
+    get space(): Space | undefined {
+        return this._space;
+    }
+
+    set space(value: Space | undefined) {
+        this._space = value;
     }
 }
