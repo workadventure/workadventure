@@ -24,7 +24,7 @@
     import { notificationPlayingStore } from "../Stores/NotificationStore";
     import { popupStore } from "../Stores/PopupStore";
     import { askDialogStore } from "../Stores/MeetingStore";
-    import { mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
+    import { mapEditorModeStore, mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import HelpCameraSettingsPopup from "./HelpSettings/HelpCameraSettingsPopup.svelte";
@@ -51,6 +51,7 @@
     import WarningToast from "./WarningContainer/WarningToast.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
     import { hasEmbedScreen } from "../Stores/EmbedScreensStore";
+    import MapEditor from "./MapEditor/MapEditor.svelte";
 
     let mainLayout: HTMLDivElement;
     // export let message: string;
@@ -178,10 +179,6 @@
             <WarningToast />
         {/if}
     </section>
-
-    {#if $showModalGlobalComminucationVisibilityStore}
-        <GlobalCommunicationModal />
-    {/if}
 
     {#if $actionsMenuStore}
         <ActionsMenu />

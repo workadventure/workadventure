@@ -28,6 +28,8 @@
     import EnableCameraScene from "./EnableCamera/EnableCameraScene.svelte";
     import bgMap from "./images/map-exemple.png";
     import defaultLoader from "./images/Workadventure.gif";
+    import { showModalGlobalComminucationVisibilityStore } from "../Stores/ModalStore";
+    import GlobalCommunicationModal from "./Modal/GlobalCommunicationModal.svelte";
 
     export let game: Game;
 
@@ -104,6 +106,10 @@
         {#if $mapEditorModeStore}
             <MapEditor />
         {/if}
+        {#if $showModalGlobalComminucationVisibilityStore}
+            <GlobalCommunicationModal />
+        {/if}
+
         <MainLayout />
     {/key}
 {/if}
