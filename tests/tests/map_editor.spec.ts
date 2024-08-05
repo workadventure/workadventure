@@ -87,7 +87,6 @@ test.describe('Map editor', () => {
     // Check that the live message is displayed
     //await expect(page.locator('.menu-container #content-liveMessage h3')).toContainText('Live message', {timeout: 5_000});
     // Click on the button to start live message
-    await page.pause();
     await page.locator('.menu-container #content-liveMessage').getByRole('button', {name: 'Start a live message'}).click({timeout: 10_000});
     await page.locator('.menu-container #active-liveMessage').getByRole('button', {name: 'Start live message'}).click({timeout: 10_000});
 
@@ -125,6 +124,7 @@ test.describe('Map editor', () => {
 
     await Menu.openMapEditor(page);
     await MapEditor.openAreaEditor(page);
+    // await expect(page.locator('canvas')).toBeVisible();
     await AreaEditor.drawArea(page, {x: 1*32*1.5, y: 5}, {x: 9*32*1.5, y: 4*32*1.5});
     await AreaEditor.addProperty(page, 'Speaker zone');
     await AreaEditor.setSpeakerMegaphoneProperty(page, `${browser.browserType().name()}SpeakerZone`);
