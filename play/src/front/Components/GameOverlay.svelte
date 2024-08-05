@@ -59,7 +59,7 @@
      */
 </script>
 
-<div id="gameoverlay" class="z-[3000] absolute w-full h-ful">
+<div id="gameoverlay">
     <!--Voir pour l'enlever juste en responsive-->
     <!--Voir pour virer la position absolute-->
     <!-- Preload image loader TODO HUGO : Better way ? -->

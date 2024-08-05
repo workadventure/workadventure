@@ -70,7 +70,7 @@
 <!-- Components ordered by z-index -->
 <div
     id="main-layout"
-    class="@container/main-layout h-full w-full fixed pointer-events-none {[...$coWebsites.values()].length === 0
+    class="@container/main-layout h-full w-full pointer-events-none {[...$coWebsites.values()].length === 0
         ? 'not-cowebsite'
         : ''}"
     bind:this={mainLayout}
