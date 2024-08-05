@@ -433,9 +433,14 @@
             </div>
         {/if}
         {#if isArea}
-            <div>
-                <label class="m-0" for="trigger">{$LL.mapEditor.properties.linkProperties.trigger()}</label>
-                <select id="trigger" class="w-full m-0" bind:value={property.trigger} on:change={onTriggerValueChange}>
+            <div class="text-left m-4">
+                <label class="m-0 rounded-m" for="trigger">{$LL.mapEditor.properties.linkProperties.trigger()}</label>
+                <select
+                    id="trigger"
+                    class="w-full m-0 rounded-md"
+                    bind:value={property.trigger}
+                    on:change={onTriggerValueChange}
+                >
                     <option value={undefined}>{$LL.mapEditor.properties.linkProperties.triggerShowImmediately()}</option
                     >
                     {#if !property.newTab}
@@ -445,11 +450,12 @@
                 </select>
             </div>
         {/if}
-        <div class="value-input flex flex-col">
-            <label for="tabLink">{$LL.mapEditor.properties.linkProperties.linkLabel()}</label>
-            <div class="flex flex-row">
+        <div class="value-input flex flex-col m-4">
+            <label for="tabLink" class="text-left ">{$LL.mapEditor.properties.linkProperties.linkLabel()}</label>
+            <div class="flex flex-row mr-4">
                 <input
                     id="tabLink"
+                    class=" rounded-md mr-4"
                     type="url"
                     bind:this={linkElement}
                     placeholder={property.placeholder ?? $LL.mapEditor.properties.linkProperties.linkPlaceholder()}
@@ -493,16 +499,16 @@
             {/if}
         </div>
         {#if !property.hideButtonLabel}
-            <div class="value-input flex flex-col">
+            <div class="value-input flex flex-col mx-4">
                 <label for="linkButton">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
                 <input id="linkButton" type="text" bind:value={property.buttonLabel} on:change={onValueChange} />
             </div>
         {/if}
-        <div class="value-switch">
+        <div class="value-switch my-4">
             <label for="advancedOption">{$LL.mapEditor.properties.advancedOptions()}</label>
             <input id="advancedOption" type="checkbox" class="input-switch" bind:checked={optionAdvancedActivated} />
         </div>
-        <div class:active={optionAdvancedActivated} class="advanced-option px-2">
+        <div class:active={optionAdvancedActivated} class="advanced-option px-2 my-4">
             {#if triggerOnActionChoosen}
                 <div class="value-input flex flex-col">
                     <label for="triggerMessage">{$LL.mapEditor.properties.linkProperties.triggerMessage()}</label>

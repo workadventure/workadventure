@@ -14,8 +14,12 @@
     import CloseImg from "../images/close.png";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { mapEditorActivated } from "../../Stores/MenuStore";
+    import { writable } from "svelte/store";
+    import { onMount } from "svelte";
 
     const gameScene = gameManager.getCurrentGameScene();
+
+    let isSelected = writable<EditorToolName | null>(null);
 
     const availableTools: { toolName: EditorToolName; img: string; tooltiptext: LocalizedString }[] = [];
 
@@ -26,7 +30,7 @@
         img: ExplorerImg,
         tooltiptext: $LL.mapEditor.sideBar.exploreTheRoom(),
     });
-    if (!$mapEditorActivated) {
+    if ($mapEditorActivated) {
         availableTools.push({
             toolName: EditorToolName.AreaEditor,
             img: AreaToolImg,
@@ -58,10 +62,15 @@
         tooltiptext: $LL.mapEditor.sideBar.closeMapEditor(),
     });
 
+    onMount(() => {
+        isSelected.set(EditorToolName.ExploreTheRoom);
+    });
+
     function switchTool(newTool: EditorToolName) {
         mapEditorVisibilityStore.set(true);
         analyticsClient.openMapEditorTool(newTool);
         gameScene.getMapEditorModeManager().equipTool(newTool);
+        isSelected.set(newTool);
     }
 </script>
 
@@ -74,7 +83,10 @@
             {#if tool.toolName === EditorToolName.CloseMapEditor}
                 <div class="tool-button p-1 h-fit relative mt-4 flex bg-contrast/80 backdrop-blur rounded-lg">
                     <button
-                        class="close-button flex justify-start items-center h-12 w-12 p-2 m-0 hover:bg-white/10 hover:w-auto rounded-md transition-all duration-300"
+                        class="close-button flex justify-start items-center h-12 w-12 p-2 m-0 hover:bg-white/10 hover:w-auto rounded-md transition-all duration-300 {$isSelected ===
+                        tool.toolName
+                            ? 'bg-secondary'
+                            : ''}"
                         id={tool.toolName}
                         on:click|preventDefault={() => switchTool(tool.toolName)}
                         on:click|preventDefault={() => mapEditorVisibilityStore.set(false)}
@@ -99,7 +111,10 @@
                         : ''}"
                 >
                     <button
-                        class="flex justify-center items-center h-12 w-12 p-2 m-0 hover:bg-white/10 rounded-md"
+                        class="flex justify-center items-center h-12 w-12 p-2 m-0 hover:bg-white/10 rounded-md {$isSelected ===
+                        tool.toolName
+                            ? 'bg-secondary'
+                            : ''}"
                         id={tool.toolName}
                         on:click|preventDefault={() => switchTool(tool.toolName)}
                         type="button"
