@@ -61,7 +61,11 @@
     };
 
     const unsubcribeToAvailabilityStatusStore = availabilityStatusStore.subscribe((newStatus: AvailabilityStatus) => {
-        statusChanger.changeStatusTo(newStatus);
+        try {
+            statusChanger.changeStatusTo(newStatus);
+        } catch (e) {
+            console.error("Error while changing status", e);
+        }
         buttonProps = {
             ...buttonProps,
             statusColorHex: getColorHexOfStatus($availabilityStatusStore),
@@ -78,6 +82,7 @@
     });
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
     id="AvailabilityStatus"
     on:click|stopPropagation={toggleStatusPicker}

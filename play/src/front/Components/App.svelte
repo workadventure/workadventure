@@ -14,6 +14,7 @@
     import { refreshPromptStore } from "../Stores/RefreshPromptStore";
     import { forceRefreshChatStore } from "../Stores/ChatStore";
     import ChatSidebar from "../Chat/ChatSidebar.svelte";
+    import { isActivatedStore, isCalendarVisibleStore } from "../Stores/CalendarStore";
     import EnableCameraScene from "./EnableCamera/EnableCameraScene.svelte";
     import LoginScene from "./Login/LoginScene.svelte";
     import MainLayout from "./MainLayout.svelte";
@@ -24,6 +25,7 @@
     import MapEditor from "./MapEditor/MapEditor.svelte";
     import RefreshPrompt from "./RefreshPrompt.svelte";
     import SelectCharacterCustomizeScene from "./SelectCharacter/SelectCharacterCustomizeScene.svelte";
+    import Calendar from "./Calendar/Calendar.svelte";
 
     export let game: Game;
 
@@ -73,4 +75,7 @@
         {/if}
         <MainLayout />
     {/key}
+    {#if $isActivatedStore && $isCalendarVisibleStore}
+        <Calendar />
+    {/if}
 {/if}

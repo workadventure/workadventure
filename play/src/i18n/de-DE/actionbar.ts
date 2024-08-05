@@ -13,6 +13,7 @@ const actionbar: BaseTranslation = {
     emoji: "Emoji öffnen / schließen",
     disableMegaphone: "Megafon deaktivieren",
     menu: "Menü öffnen / schließen",
+    calendar: "Kalender öffnen / schließen",
     mapEditor: "Kartenmanager öffnen / schließen",
     mapEditorMobileLocked: "Karteneditor ist im mobilen Modus gesperrt",
     mapEditorLocked: "Karteneditor ist gesperrt 🔐",

@@ -137,7 +137,7 @@ export class AreasPropertiesListener {
             const area = areas?.find((area) => area.areaData.id === areaData.id);
 
             for (const property of areaData.properties) {
-                this.removePropertyFilter(property, area);
+                this.removePropertyFilter(property, area, areaData);
             }
         }
     }
@@ -188,7 +188,10 @@ export class AreasPropertiesListener {
             }
             case "personalAreaPropertyData": {
                 this.handlePersonalAreaPropertyOnEnter(property, areaData, area);
-
+                break;
+            }
+            case "extensionModule": {
+                this.handleExtensionModuleAreaPropertyOnEnter(areaData, property.subtype);
                 break;
             }
             default: {
@@ -259,7 +262,7 @@ export class AreasPropertiesListener {
         }
     }
 
-    private removePropertyFilter(property: AreaDataProperty, area?: Area) {
+    private removePropertyFilter(property: AreaDataProperty, area?: Area, areaData?: AreaData) {
         switch (property.type) {
             case "openWebsite": {
                 this.handleOpenWebsitePropertiesOnLeave(property);
@@ -291,6 +294,10 @@ export class AreasPropertiesListener {
             }
             case "personalAreaPropertyData": {
                 this.handlePersonalAreaPropertyOnLeave(area);
+                break;
+            }
+            case "extensionModule": {
+                this.handleExtensionModuleAreaPropertyOnLeave(property.subtype, areaData);
                 break;
             }
             default: {
@@ -710,6 +717,22 @@ export class AreasPropertiesListener {
             requestVisitCardsStore.set(null);
         }
         area?.unHighLightArea();
+    }
+
+    private handleExtensionModuleAreaPropertyOnLeave(subtype: string, area?: AreaData): void {
+        const areaMapEditor = this.scene.extensionModule?.areaMapEditor && this.scene.extensionModule?.areaMapEditor();
+        if (areaMapEditor === undefined) {
+            return;
+        }
+        areaMapEditor[subtype].handleAreaPropertyOnLeave(area);
+    }
+
+    private handleExtensionModuleAreaPropertyOnEnter(area: AreaData, subtype: string): void {
+        const areaMapEditor = this.scene.extensionModule?.areaMapEditor && this.scene.extensionModule?.areaMapEditor();
+        if (areaMapEditor === undefined) {
+            return;
+        }
+        areaMapEditor[subtype].handleAreaPropertyOnEnter(area);
     }
 
     private openCoWebsiteFunction(

@@ -5,6 +5,7 @@ import type {
     ErrorApiData,
     MapDetailsData,
     MemberData,
+    OauthRefreshToken,
     RoomRedirect,
 } from "@workadventure/messages";
 import { Capabilities, OpidWokaNamePolicy } from "@workadventure/messages";
@@ -404,8 +405,13 @@ class LocalAdmin implements AdminInterface {
     getWorldChatMembers(playUri: string, searchText: string): Promise<WorldChatMembersData> {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
+
     updateChatId(userIdentifier: string, chatId: string) {
         return Promise.resolve("No admin backoffice to updateChatID !");
+    }
+
+    refreshOauthToken(token: string): Promise<OauthRefreshToken> {
+        return Promise.reject(new Error("No admin backoffice set!"));
     }
 }
 
