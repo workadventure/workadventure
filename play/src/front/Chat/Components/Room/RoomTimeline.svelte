@@ -2,7 +2,7 @@
     import { afterUpdate, beforeUpdate, onMount } from "svelte";
     import { get } from "svelte/store";
     import { ChatRoom } from "../../Connection/ChatConnection";
-    import { proximityRoomConnection, selectedChatMessageToReply, selectedRoom } from "../../Stores/ChatStore";
+    import { selectedChatMessageToReply, selectedRoom } from "../../Stores/ChatStore";
     import Avatar from "../Avatar.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import Message from "./Message.svelte";
@@ -67,7 +67,7 @@
 
     $: messages = room?.messages;
     $: messageReaction = room?.messageReactions;
-    $: connectedUsers = $proximityRoomConnection?.connectedUsers;
+    //$: connectedUsers = $proximityRoomConnection?.connectedUsers;
     $: roomName = room?.name;
 </script>
 
@@ -86,15 +86,15 @@
             bind:this={messageListRef}
             class="tw-list-none tw-p-0 tw-flex-1 tw-overflow-auto tw-flex tw-flex-col"
         >
-            {#if room.id === "proximity" && $connectedUsers !== undefined}
-                <div class="tw-flex tw-flex-row tw-items-center tw-gap-2">
-                    {#each [...$connectedUsers] as [userId, user] (userId)}
-                        <div class="avatar">
-                            <Avatar avatarUrl={user.avatarUrl} fallbackName={user?.username} color={user?.color} />
-                        </div>
-                    {/each}
-                </div>
-            {/if}
+            <!--{#if room.id === "proximity" && $connectedUsers !== undefined}-->
+            <!--    <div class="tw-flex tw-flex-row tw-items-center tw-gap-2">-->
+            <!--        {#each [...$connectedUsers] as [userId, user] (userId)}-->
+            <!--            <div class="avatar">-->
+            <!--                <Avatar avatarUrl={user.avatarUrl} fallbackName={user?.username} color={user?.color} />-->
+            <!--            </div>-->
+            <!--        {/each}-->
+            <!--    </div>-->
+            <!--{/if}-->
             {#if $messages.length === 0}
                 <p class="tw-self-center tw-text-md tw-text-gray-500">{$LL.chat.nothingToDisplay()}</p>
             {/if}

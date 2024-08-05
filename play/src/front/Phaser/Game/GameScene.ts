@@ -160,8 +160,7 @@ import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
 import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
 import { matrixSecurity } from "../../Chat/Connection/Matrix/MatrixSecurity";
-import { proximityRoomConnection, selectedRoom } from "../../Chat/Stores/ChatStore";
-import { ProximityChatConnection } from "../../Chat/Connection/Proximity/ProximityChatConnection";
+import { selectedRoom } from "../../Chat/Stores/ChatStore";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
 import { SpaceProviderInterface } from "../../Space/SpaceProvider/SpaceProviderInterface";
 
@@ -332,6 +331,7 @@ export class GameScene extends DirtyScene {
     });
     public chatConnection!: ChatConnectionInterface;
     private _spaceStore: SpaceProviderInterface | undefined;
+    private _proximityChatRoom: ProximityChatRoom | undefined;
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
@@ -1544,14 +1544,7 @@ export class GameScene extends DirtyScene {
 
                 this.chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise, this._spaceStore);
 
-                const proximityChatConnection = new ProximityChatConnection(
-                    this.connection,
-                    this.connection.getUserId(),
-                    localUserStore.getLocalUser()?.uuid ?? "Unknown"
-                );
-
-                // initialise the proximity chat connection
-                proximityRoomConnection.set(proximityChatConnection);
+                this._proximityChatRoom = new ProximityChatRoom(this.connection, this.connection.getUserId());
 
                 const chatId = localUserStore.getChatId();
                 const email: string | null = localUserStore.getLocalUser()?.email || null;
@@ -1983,11 +1976,7 @@ export class GameScene extends DirtyScene {
                         return;
                     }
 
-                    const _proximityRoomConnection = get(proximityRoomConnection);
-                    if (!_proximityRoomConnection) return;
-
-                    const room = get(_proximityRoomConnection?.rooms)[0];
-                    if (!room || !room.addNewMessage) return;
+                    const room = this.proximityChatRoom;
 
                     // The user sending the message is myself. Do not show the message.
                     const proximityUserId = publicEvent.senderUserId;
@@ -2006,16 +1995,14 @@ export class GameScene extends DirtyScene {
                 this.connection.typingProximityEvent.subscribe((publicEvent: PublicEvent) => {
                     if (publicEvent.spaceEvent!.event?.$case != "spaceIsTyping") return;
 
-                    const _proximityRoomConnection = get(proximityRoomConnection);
-                    if (!_proximityRoomConnection) return;
-
-                    const room = get(_proximityRoomConnection?.rooms)[0];
-                    if (!room || !(room instanceof ProximityChatRoom)) return;
+                    const room = this.proximityChatRoom;
 
                     if (publicEvent.senderUserId != undefined)
-                        if (publicEvent.spaceEvent!.event.spaceIsTyping.isTyping)
+                        if (publicEvent.spaceEvent!.event.spaceIsTyping.isTyping) {
                             room.addTypingUser(publicEvent.senderUserId);
-                        else room.removeTypingUser(publicEvent.senderUserId);
+                        } else {
+                            room.removeTypingUser(publicEvent.senderUserId);
+                        }
                 });
 
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
@@ -2589,11 +2576,7 @@ ${escapedMessage}
             iframeListener.chatMessageStream.subscribe((chatMessage) => {
                 switch (chatMessage.options.scope) {
                     case "local": {
-                        const _proximityRoomConnection = get(proximityRoomConnection);
-                        if (!_proximityRoomConnection) return;
-
-                        const room = get(_proximityRoomConnection.rooms)[0];
-                        if (!room || !room.addExternalMessage) return;
+                        const room = this.proximityChatRoom;
 
                         room.addExternalMessage(chatMessage.message, chatMessage.options.author);
                         selectedRoom.set(room);
@@ -2601,11 +2584,7 @@ ${escapedMessage}
                         break;
                     }
                     case "bubble": {
-                        const _proximityRoomConnection = get(proximityRoomConnection);
-                        if (!_proximityRoomConnection) return;
-
-                        const room = get(_proximityRoomConnection.rooms)[0];
-                        if (!room || !room.addExternalMessage) return;
+                        const room = this.proximityChatRoom;
 
                         room.addExternalMessage(chatMessage.message);
                         selectedRoom.set(room);
@@ -2613,7 +2592,7 @@ ${escapedMessage}
 
                         // Send the message to other users in the bubble
                         // TODO: the message should be sent by not myself
-                        const spaceName = (room as ProximityChatRoom).getSpaceName();
+                        const spaceName = room.getSpaceName();
                         if (spaceName) this.connection?.emitProximityPublicMessage(spaceName, chatMessage.message);
                         else console.warn("No space name found for the bubble chat");
                         break;
@@ -2624,22 +2603,14 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.startTypingProximityMessageStream.subscribe((sartWriting) => {
-                const _proximityRoomConnection = get(proximityRoomConnection);
-                if (!_proximityRoomConnection) return;
-
-                const room = get(_proximityRoomConnection.rooms)[0];
-                if (!room || !(room instanceof ProximityChatRoom)) return;
+                const room = this.proximityChatRoom;
 
                 room.addExternalTypingUser(btoa(sartWriting.author ?? "unknow"), sartWriting.author ?? "unknow", null);
             })
         );
         this.iframeSubscriptionList.push(
             iframeListener.stopTypingProximityMessageStream.subscribe((stopWriting) => {
-                const _proximityRoomConnection = get(proximityRoomConnection);
-                if (!_proximityRoomConnection) return;
-
-                const room = get(_proximityRoomConnection.rooms)[0];
-                if (!room || !(room instanceof ProximityChatRoom)) return;
+                const room = this.proximityChatRoom;
 
                 room.removeExternalTypingUser(btoa(stopWriting.author ?? "unknow"));
             })
@@ -3899,5 +3870,12 @@ ${escapedMessage}
             throw new Error("_spaceStore not yet initialized");
         }
         return this._spaceStore;
+    }
+
+    get proximityChatRoom(): ProximityChatRoom {
+        if (!this._proximityChatRoom) {
+            throw new Error("_proximityChatRoom not yet initialized");
+        }
+        return this._proximityChatRoom;
     }
 }
