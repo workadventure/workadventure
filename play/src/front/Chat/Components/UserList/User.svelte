@@ -137,7 +137,7 @@
                 </p>
             </div>
         </div>
-        {#if $userStatus && !isMe}
+        {#if !isMe}
             <UserActionButton {user} />
         {/if}
     </div>

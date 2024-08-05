@@ -8,6 +8,8 @@
     import { IconChevronUp } from "@wa-icons";
 
     const USERS_BY_ROOM_LIMITATION = 200;
+    const DISCONNECTED_LABEL = $LL.chat.userList.disconnected();
+    const chat = gameManager.getCurrentGameScene().chatConnection;
 
     onMount(() => {
         if ($shownRoomListStore === "") shownRoomListStore.set($LL.chat.userList.isHere());
