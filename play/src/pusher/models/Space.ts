@@ -366,7 +366,9 @@ export class Space implements CustomJsonReplacerInterface {
 
     private filterOneUser(spaceFilters: SpaceFilterMessage, user: SpaceUserExtended): boolean {
         if (!spaceFilters.filter) {
-            Sentry.captureException("Empty filter received" + spaceFilters.spaceName);
+            // Sentry event is commented because the line below can cause a complete explosion of number of events sent
+            // to Sentry
+            //Sentry.captureException("Empty filter received" + spaceFilters.spaceName);
             console.error("Empty filter received");
             return false;
         }
