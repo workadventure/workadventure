@@ -384,7 +384,7 @@
                 </div>
             </div>
             <div
-                class="z-[251] absolute aspect-ratio right-3 w-8 p-1 flex items-center justify-center {$constraintStore &&
+                class="muted-video z-[251] absolute aspect-ratio right-3 w-8 p-1 flex items-center justify-center {$constraintStore &&
                 $constraintStore.audio !== false
                     ? 'bottom-4'
                     : 'bottom-3'}"

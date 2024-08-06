@@ -6,7 +6,7 @@ import {evaluateScript} from "./utils/scripting";
 import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('Areas', () => {
-    test('can edit Tiled area from scripting API', async ({ page, browser }, { project }) => {
+    test('can edit Tiled area from scripting API', async ({ page }, { project }) => {
         // Skip test for mobile device
         if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
@@ -24,10 +24,8 @@ test.describe('Areas', () => {
         await login(page, 'Alice');
 
         await evaluateScript(page, async () => {
-            console.log('Waiting for WA.onInit');
             await WA.onInit();
 
-            console.log('Getting the area');
             const silentArea = await WA.room.area.get('silent');
             // Let's move the silent area to cover the map
             silentArea.x = 0;
@@ -36,7 +34,6 @@ test.describe('Areas', () => {
             silentArea.height = 600;
             return;
         });
-
         await expect(page.getByText('Silent zone')).toBeVisible();
     });
 

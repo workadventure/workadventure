@@ -14,7 +14,7 @@ export function dockerCompose(command: string) {
         param += ' -f '+overrideDockerCompose;
     }
 
-    return execSync('docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml '+param+' '+command, {
+    return execSync('docker compose -f docker-compose.yaml -f docker-compose-oidc.yaml '+param+' '+command, {
         cwd: __dirname + '/../../../'
     });
 }
@@ -124,7 +124,7 @@ export function checkMapPlayService(): boolean {
     console.log('Checking play services',
         dockerCompose('logs --tail=1000 play').toString(),
     );
-    const isUp = dockerCompose('logs --tail=1000 play').indexOf('WorkAdventure Pusher started on port') !== -1 && 
+    const isUp = dockerCompose('logs --tail=1000 play').indexOf('WorkAdventure Pusher started on port') !== -1 &&
             dockerCompose('logs --tail=1000 play').indexOf('RoomAPI starting on port') !== -1;
     if(!isUp) upPlay();
     return isUp;

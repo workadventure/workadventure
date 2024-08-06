@@ -9,12 +9,7 @@
     import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
     import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
     import { soundPlayingStore } from "../Stores/SoundPlayingStore";
-    import {
-        showLimitRoomModalStore,
-        modalVisibilityStore,
-        modalPopupVisibilityStore,
-        showModalGlobalComminucationVisibilityStore,
-    } from "../Stores/ModalStore";
+    import { showLimitRoomModalStore, modalVisibilityStore, modalPopupVisibilityStore } from "../Stores/ModalStore";
     import { actionsMenuStore } from "../Stores/ActionsMenuStore";
     import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore";
     import { uiWebsitesStore } from "../Stores/UIWebsiteStore";
@@ -24,7 +19,7 @@
     import { notificationPlayingStore } from "../Stores/NotificationStore";
     import { popupStore } from "../Stores/PopupStore";
     import { askDialogStore } from "../Stores/MeetingStore";
-    import { mapEditorModeStore, mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
+    import { mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import HelpCameraSettingsPopup from "./HelpSettings/HelpCameraSettingsPopup.svelte";
@@ -44,14 +39,11 @@
     import HelpPopUpBlocked from "./HelpSettings/HelpPopUpBlocked.svelte";
     import Notification from "./UI/Notification.svelte";
     import MuteDialogBox from "./Video/AskedAction/MuteDialogBox.svelte";
-    import GlobalCommunicationModal from "./Modal/GlobalCommunicationModal.svelte";
     import ObjectDetails from "./Modal/ObjectDetails.svelte";
     import Popup from "./Modal/Popup.svelte";
     import MapList from "./Exploration/MapList.svelte";
     import WarningToast from "./WarningContainer/WarningToast.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
-    import { hasEmbedScreen } from "../Stores/EmbedScreensStore";
-    import MapEditor from "./MapEditor/MapEditor.svelte";
 
     let mainLayout: HTMLDivElement;
     // export let message: string;
@@ -135,9 +127,9 @@
             <HelpPopUpBlocked />
         {/if}
 
-        {#if $hasEmbedScreen}
-            <EmbedScreensContainer />
-        {/if}
+        <!-- {#if $hasEmbedScreen} -->
+        <EmbedScreensContainer />
+        <!-- {/if} -->
 
         {#if $soundPlayingStore}
             <AudioPlaying url={$soundPlayingStore} />

@@ -11,14 +11,14 @@ class Menu {
     }
 
     async openMapEditor(page: Page) {
-        await page.locator('#action-admin').click();
+        await page.locator('#action-admin').click({timeout: 10_000});
         await page.locator('#map-editor').click();
         await expect(await page.locator('#map-editor')).toBeHidden();
         // await expect(await page.getByRole('button', {name: 'toggle-map-editor'}).first()).toHaveClass(/border-top-light/);
     }
 
     async openMenu(page: Page) {
-        await page.locator('#action-admin').click({timeout: 10_000});
+        await page.locator('#action-user').click({timeout: 10_000});
         await expect(await page.locator('#profile-menu')).toHaveClass(/backdrop-blur/);
     }
 
