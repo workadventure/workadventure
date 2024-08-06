@@ -1,8 +1,9 @@
 import { get, writable } from "svelte/store";
 import { AvailabilityStatus } from "@workadventure/messages";
+import { describe, expect, it } from "vitest";
+import { UserProvideInterface } from "../UserProvider/UserProvideInterface";
+import { PartialChatUser } from "../Connection/ChatConnection";
 import { UserProviderMerger } from "./UserProviderMerger";
-import { UserProvideInterface } from "./UserProvideInterface";
-import { PartialChatUser } from "./Connection/ChatConnection";
 
 describe("UserProviderMerger", () => {
     it("should merge and sort users by room", () => {
@@ -51,6 +52,6 @@ describe("UserProviderMerger", () => {
         expect(get(usersByRoom.get("playUri1").users[0].availabilityStatus)).toBe(AvailabilityStatus.ONLINE);
         expect(usersByRoom.get("playUri1").users[1].username).toBe("Eve");
         expect(usersByRoom.get(undefined).users[0].username).toBe("Charlie");
-        expect(get(usersByRoom.get(undefined).users[0].availabilityStatus)).toBe(AvailabilityStatus.OFFLINE);
+        expect(get(usersByRoom.get(undefined).users[0].availabilityStatus)).toBe(AvailabilityStatus.UNCHANGED);
     });
 });

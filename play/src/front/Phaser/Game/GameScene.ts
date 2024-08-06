@@ -163,7 +163,10 @@ import { matrixSecurity } from "../../Chat/Connection/Matrix/MatrixSecurity";
 import { selectedRoom } from "../../Chat/Stores/ChatStore";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
 import { SpaceProviderInterface } from "../../Space/SpaceProvider/SpaceProviderInterface";
-
+import { WorldUserProvider } from "../../Chat/UserProvider/WorldUserProvider";
+import { MatrixUserProvider } from "../../Chat/UserProvider/MatrixUserProvider";
+import { UserProviderMerger } from "../../Chat/UserProviderMerger/UserProviderMerger";
+import { AdminUserProvider } from "../../Chat/UserProvider/AdminUserProvider";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -332,6 +335,7 @@ export class GameScene extends DirtyScene {
     public chatConnection!: ChatConnectionInterface;
     private _spaceStore: SpaceProviderInterface | undefined;
     private _proximityChatRoom: ProximityChatRoom | undefined;
+    private _userProviderMerger: UserProviderMerger | undefined;
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
@@ -1540,11 +1544,23 @@ export class GameScene extends DirtyScene {
                 this._spaceStore = new LocalSpaceProvider();
                 this.streamSpaceWatcher = new StreamSpaceWatcher(this.connection, this._spaceStore);
 
-                this._spaceStore.add(WORLD_SPACE_NAME).watch(CONNECTED_USER_FILTER_NAME);
+                const allUserInWorldFilter = this._spaceStore.add(WORLD_SPACE_NAME).watch(CONNECTED_USER_FILTER_NAME);
 
                 this.chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise, this._spaceStore);
 
                 this._proximityChatRoom = new ProximityChatRoom(this.connection, this.connection.getUserId());
+
+                //init merger
+
+                const adminUserProvider = new AdminUserProvider(this.connection.queryChatMembers(""));
+                const matrixUserProvider = new MatrixUserProvider(matrixClientPromise);
+                const worldUserProvider = new WorldUserProvider(allUserInWorldFilter);
+
+                this._userProviderMerger = new UserProviderMerger([
+                    adminUserProvider,
+                    matrixUserProvider,
+                    worldUserProvider,
+                ]);
 
                 const chatId = localUserStore.getChatId();
                 const email: string | null = localUserStore.getLocalUser()?.email || null;
@@ -3877,5 +3893,12 @@ ${escapedMessage}
             throw new Error("_proximityChatRoom not yet initialized");
         }
         return this._proximityChatRoom;
+    }
+
+    get userProviderMerger(): UserProviderMerger {
+        if (!this._userProviderMerger) {
+            throw new Error("_userProviderMerger not yet initialized");
+        }
+        return this._userProviderMerger;
     }
 }
