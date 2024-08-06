@@ -28,9 +28,9 @@ export class UserProviderMerger {
                 // Step one: sort users by chatId
                 for (const usersList of users) {
                     for (const user of usersList) {
-                        const chatUserList = usersByChatId.get(user.id);
+                        const chatUserList = usersByChatId.get(user.chatId);
                         if (!chatUserList) {
-                            usersByChatId.set(user.id, [user]);
+                            usersByChatId.set(user.chatId, [user]);
                         } else {
                             chatUserList.push(user);
                         }
@@ -42,7 +42,7 @@ export class UserProviderMerger {
                 for (const chatUserList of usersByChatId.values()) {
                     const mergedUser = chatUserList.reduce((acc, user) => {
                         return {
-                            id: user.id,
+                            chatId: user.chatId,
                             uuid: user.uuid || acc.uuid,
                             username: user.username || acc.username,
                             availabilityStatus: user.availabilityStatus || acc.availabilityStatus,
@@ -53,7 +53,7 @@ export class UserProviderMerger {
                             isMember: user.isMember || acc.isMember,
                             visitCardUrl: user.visitCardUrl || acc.visitCardUrl,
                             color: user.color || acc.color,
-                            spaceId: user.spaceId || acc.spaceId,
+                            id: user.id || acc.id,
                         };
                     });
                     const fullUser = {
@@ -62,7 +62,7 @@ export class UserProviderMerger {
                         availabilityStatus: mergedUser.availabilityStatus ?? writable(AvailabilityStatus.UNCHANGED),
                     };
 
-                    mergedUsers.set(mergedUser.id, fullUser);
+                    mergedUsers.set(mergedUser.chatId, fullUser);
                 }
 
                 // Step 3: sort users by room

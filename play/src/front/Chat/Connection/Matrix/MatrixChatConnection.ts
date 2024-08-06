@@ -47,6 +47,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     directRooms: Readable<ChatRoom[]>;
     invitations: Readable<ChatRoom[]>;
     rooms: Readable<ChatRoom[]>;
+    // TODO: remove this property.
     connectedUsers: Readable<Map<number, ChatUser>>;
     userDisconnected: MapStore<chatId, ChatUser> = new MapStore<chatId, ChatUser>();
     isEncryptionRequiredAndNotSet: Writable<boolean>;
@@ -157,7 +158,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 if (
                     inviter &&
                     (this.userDisconnected.has(inviter) ||
-                        Array.from(get(this.connectedUsers).values()).some((user: ChatUser) => user.id === inviter))
+                        Array.from(get(this.connectedUsers).values()).some((user: ChatUser) => user.chatId === inviter))
                 ) {
                     this.roomList.set(roomId, newRoom);
                     newRoom.joinRoom();
@@ -291,7 +292,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                         this.userDisconnected.set(member.chatId, {
                             availabilityStatus: writable(AvailabilityStatus.UNCHANGED),
                             avatarUrl: defaultWoka,
-                            id: member.chatId,
+                            chatId: member.chatId,
                             roomName: undefined,
                             playUri: undefined,
                             username: member.wokaName,
@@ -299,7 +300,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                             isMember: member.tags.includes("member"),
                             uuid: undefined,
                             color: defaultColor,
-                            spaceId: undefined,
+                            id: undefined,
                         });
                     });
                     res();
