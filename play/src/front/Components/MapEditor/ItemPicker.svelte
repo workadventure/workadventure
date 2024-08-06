@@ -132,29 +132,32 @@
     }
 </script>
 
-<div class="item-picker">
-    <h3>{$LL.mapEditor.entityEditor.title()}</h3>
-    <div class="item-filter">
+<div class="item-picker max-h-full flex flex-col align-middle w-[90%]">
+    <p class="text-start">{$LL.mapEditor.entityEditor.title()}</p>
+    <p class="text-start text-gray-400 opacity-80 mb-4">
+        Lorem ipsum dolor sit amet consectetur adipisicing elit. Officiis possimus modi earum eius repellat! Mollitia,
+        voluptates recusandae!
+    </p>
+    <div class="item-filter flex flex-row-reverse w-full">
         <input
-            class="filter-input h-8"
+            class="filter-input bg-contrast/80 h-10 rounded-s-full w-full border-none rounded-e-full mx-auto mb-2 mt-4 border-color"
             type="search"
             bind:value={filter}
             on:input={onNameChange}
             placeholder={$LL.mapEditor.entityEditor.itemPicker.searchPlaceholder()}
         />
-        <select class="tag-selector h-8" bind:value={selectedTag} on:change={() => onTagPick()}>
+        <select
+            class="tag-selector h-10 rounded-e-full mt-4 bg-contrast/80 border-none border-color"
+            bind:value={selectedTag}
+            on:change={() => onTagPick()}
+        >
             {#each tags as tag (tag)}
                 <option>{tag}</option>
             {/each}
         </select>
     </div>
-    <div class="item-variations">
-        {#if pickedItem}
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <p on:click|preventDefault={backToSelectObject} class="flex flex-row items-center text-xs m-0">
-                <ArrowLeftIcon size="12" class="cursor-pointer" />
-                <span class="ml-1 cursor-pointer">{$LL.mapEditor.entityEditor.itemPicker.backToSelectObject()}</span>
-            </p>
+    {#if pickedItem}
+        <div class="item-variations w-full">
             <div class="item-name">
                 {pickedItem?.name ?? "this entity"}
                 <img
@@ -165,33 +168,42 @@
                     on:click={backToSelectObject}
                 />
             </div>
-            <div class="item-variant-picker-container h-28">
-                {#each currentVariants as item (item.id)}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div
-                        class="pickable-item {item.imagePath === pickedVariant?.imagePath ? 'active' : ''}"
-                        on:click={() => onPickItemVariant(item)}
-                    >
-                        <img class="item-image" src={item.imagePath} alt={item.name} />
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <div class="flex flex-row-reverse justify-center w-full">
+                <div class="block">
+                    <div class="h-10 w-16 rounded-md bg-secondary flex justify-center align-middle">
+                        <button>Edit</button>
                     </div>
-                {/each}
-            </div>
-            <div class="color-container">
-                {#each variantColors as color (color)}
-                    <div class={currentColor === color ? "active" : ""}>
-                        <button
-                            class="color-selector"
-                            style="background-color: {color};"
-                            on:click={() => onColorChange(color)}
-                        />
+
+                    <div class="color-container">
+                        {#each variantColors as color (color)}
+                            <div class={currentColor === color ? "active" : ""}>
+                                <button
+                                    class="color-selector"
+                                    style="background-color: {color};"
+                                    on:click={() => onColorChange(color)}
+                                />
+                            </div>
+                        {/each}
                     </div>
-                {/each}
+                </div>
+                <div class="item-variant-picker-container h-28">
+                    {#each currentVariants as item (item.id)}
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <div
+                            class="pickable-item {item.imagePath === pickedVariant?.imagePath ? 'active' : ''}"
+                            on:click={() => onPickItemVariant(item)}
+                        >
+                            <img class="item-image" src={item.imagePath} alt={item.name} />
+                        </div>
+                    {/each}
+                </div>
             </div>
-        {:else}
-            <div class="item-name">{$LL.mapEditor.entityEditor.selectObject()}</div>
-            <div class="item-variant-picker-container h-28" />
-        {/if}
-    </div>
+        </div>
+    {:else}
+        <div class="item-name">{$LL.mapEditor.entityEditor.selectObject()}</div>
+        <div class="item-variant-picker-container h-28" />
+    {/if}
     <div class="item-picker-container">
         {#each rootItem as item (item.id)}
             <div class="pickable-item {item.id === pickedItem?.id ? 'active' : ''}" on:click={() => onPickItem(item)}>
@@ -202,89 +214,82 @@
 </div>
 
 <style lang="scss">
-    .item-picker {
-        max-height: 90vh;
-        display: flex;
-        flex-direction: column;
-        align-content: center;
-        .item-filter {
-            .filter-input {
-                max-width: 90%;
-                margin-bottom: 0;
-            }
-            .tag-selector {
-                max-width: 10%;
-                margin-bottom: 0;
-                position: absolute;
-                overflow-y: auto;
-            }
-        }
-        .item-variations {
-            margin-top: 10px;
-            margin-bottom: 30px;
-            .item-name {
-                font-weight: bold;
-            }
-        }
-        .item-picker-container,
-        .item-variant-picker-container {
-            display: flex;
-            justify-content: center;
-            width: 19em;
-            max-height: 80vh;
-            padding: 0.5em;
-            display: flex;
-            flex-wrap: wrap;
+    .item-filter {
+        .tag-selector {
+            max-width: 10%;
+            margin-bottom: 0;
+            position: absolute;
             overflow-y: auto;
-            pointer-events: auto;
-            .pickable-item {
-                flex: 0 0 4em;
-                height: 4em;
-                display: flex;
-                margin: 0 0.25rem;
-                cursor: pointer;
-                * {
-                    cursor: pointer;
-                }
-                .item-image {
-                    margin: auto;
-                    max-width: 3.6em;
-                    max-height: 3.6em;
-                }
-            }
-            .pickable-item:hover {
-                border-radius: 0.8em;
-                border: 0.2rem solid white;
-            }
-            .pickable-item.active {
-                border-radius: 0.8em;
-                border: 0.2rem solid yellow;
-            }
         }
-        .item-variant-picker-container {
-            overflow-y: hidden;
-            height: 5em;
-            min-height: 80px;
+    }
+    .item-variations {
+        margin-bottom: 30px;
+        margin-top: 10px;
+
+        .item-name {
+            font-weight: bold;
         }
-        .color-container {
+    }
+    .item-picker-container,
+    .item-variant-picker-container {
+        display: flex;
+        justify-content: center;
+        max-height: 80vh;
+        padding: 0.5em;
+        display: flex;
+        flex-wrap: wrap;
+        overflow-y: auto;
+        pointer-events: auto;
+        .pickable-item {
+            flex: 0 0 4em;
+            height: 4em;
             display: flex;
-            flex-wrap: wrap;
-            div {
-                .color-selector {
-                    border-radius: 1em;
-                    border: 0.1rem solid black;
-                    max-width: 1em;
-                }
+            margin: 0 0.25rem;
+            cursor: pointer;
+            * {
+                cursor: pointer;
             }
-            .active {
-                background-color: yellow;
-                padding: 0.05em;
-                border-radius: 0.5em;
+            .item-image {
+                margin: auto;
+                max-width: 3.6em;
+                max-height: 3.6em;
             }
         }
+        .pickable-item:hover {
+            border-radius: 0.8em;
+            border: 0.2rem solid white;
+        }
+        .pickable-item.active {
+            border-radius: 0.8em;
+            border: 0.2rem solid #4057f5;
+        }
+    }
+    .item-variant-picker-container {
+        overflow-y: hidden;
+        height: 5em;
+        min-height: 80px;
+    }
+    .color-container {
+        display: flex;
+        flex-wrap: wrap;
+
         div {
-            margin: auto;
-            width: fit-content;
+            .color-selector {
+                border-radius: 50%;
+                border: 0.1rem solid black;
+            }
         }
+        .active {
+            background-color: yellow;
+            padding: 0.05em;
+            border-radius: 0.5em;
+        }
+    }
+    div {
+        margin: auto;
+    }
+
+    .border-color {
+        border: 1px solid #899fbf;
     }
 </style>

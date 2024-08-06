@@ -175,7 +175,7 @@ const mapEditor: BaseTranslation = {
         description: "Draw a zone on the map to create a new one.",
     },
     entityEditor: {
-        title: "Put your object",
+        title: "Add object to your map",
         editing: "Editing: {name}",
         itemPicker: {
             searchPlaceholder: "Search",
