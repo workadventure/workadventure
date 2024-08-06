@@ -11,21 +11,21 @@ describe("UserProviderMerger", () => {
         const userProvider1: UserProvideInterface = {
             users: writable<PartialChatUser[]>([
                 {
-                    id: "1",
+                    chatId: "1",
                     username: "Alice",
                     roomName: "Room1",
                     playUri: "playUri1",
                     availabilityStatus: writable(AvailabilityStatus.ONLINE),
                 },
                 {
-                    id: "2",
+                    chatId: "2",
                     username: "Bob",
                     roomName: "Room2",
                     playUri: "playUri2",
                     availabilityStatus: writable(AvailabilityStatus.ONLINE),
                 },
                 {
-                    id: "5",
+                    chatId: "5",
                     username: "Eve",
                     roomName: "Room1",
                     playUri: "playUri1",
@@ -36,9 +36,9 @@ describe("UserProviderMerger", () => {
 
         const userProvider2: UserProvideInterface = {
             users: writable<PartialChatUser[]>([
-                { id: "2", username: "Charlie", isAdmin: true },
-                { id: "3", username: "Charlie" },
-                { id: "4", username: "Dave" },
+                { chatId: "2", username: "Charlie", isAdmin: true },
+                { chatId: "3", username: "Charlie" },
+                { chatId: "4", username: "Dave" },
             ]),
         };
 

@@ -14,9 +14,9 @@
 
     export let user: ChatUser;
 
-    $: ({ id, availabilityStatus, username = "", color, isAdmin, isMember, avatarUrl } = user);
+    $: ({ chatId, availabilityStatus, username = "", color, isAdmin, isMember, avatarUrl } = user);
 
-    $: isMe = user.id === localUserStore.getChatId();
+    $: isMe = user.chatId === localUserStore.getChatId();
 
     $: userStatus = isMe ? availabilityStatusStore : availabilityStatus;
 
@@ -48,8 +48,8 @@
     const openChat = async () => {
         if (isMe) return;
 
-        let room: ChatRoom | undefined = chatConnection.getDirectRoomFor(id);
-        if (!room) room = await chatConnection.createDirectRoom(id);
+        let room: ChatRoom | undefined = chatConnection.getDirectRoomFor(chatId);
+        if (!room) room = await chatConnection.createDirectRoom(chatId);
 
         if (!room) return;
 

@@ -13,7 +13,7 @@ export class WorldUserProvider implements UserProvideInterface {
             return Array.from(users.values()).map((currentUser) => {
                 return {
                     uuid: currentUser.uuid,
-                    id: currentUser.chatID ?? "",
+                    chatId: currentUser.chatID ?? "",
                     avatarUrl: currentUser.getWokaBase64,
                     availabilityStatus: writable(AvailabilityStatus.ONLINE),
                     roomName: currentUser.roomName,
@@ -23,7 +23,7 @@ export class WorldUserProvider implements UserProvideInterface {
                     isMember: currentUser.tags.includes("member"),
                     visitCardUrl: currentUser.visitCardUrl,
                     color: currentUser.color,
-                    spaceId: currentUser.id,
+                    id: currentUser.id,
                 };
             });
         });

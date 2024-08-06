@@ -4,7 +4,7 @@ import { MapStore } from "@workadventure/store-utils";
 import { RoomConnection } from "../../Connection/RoomConnection";
 
 export interface ChatUser {
-    id: string;
+    chatId: string;
     uuid?: string;
     availabilityStatus: Writable<AvailabilityStatus>;
     username: string | undefined;
@@ -15,10 +15,10 @@ export interface ChatUser {
     isMember?: boolean;
     visitCardUrl?: string;
     color: string | undefined;
-    spaceId: number | undefined;
+    id: number | undefined;
 }
 
-export type PartialChatUser = Partial<ChatUser> & { id: string };
+export type PartialChatUser = Partial<ChatUser> & { chatId: string };
 
 export type ChatRoomMembership = "ban" | "join" | "knock" | "leave" | "invite" | string;
 

@@ -4,7 +4,6 @@
     import { ChatUser } from "../../Connection/ChatConnection";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { chatSearchBarValue, shownRoomListStore } from "../../Stores/ChatStore";
-    import { localUserStore } from "../../../Connection/LocalUserStore";
     import UserList from "./UserList.svelte";
     import { IconChevronUp } from "@wa-icons";
 
@@ -22,7 +21,7 @@
 
             if (roomName === gameManager?.getCurrentGameScene()?.room?.roomName) roomName = $LL.chat.userList.isHere();
 
-            const mySpaceID = currentRoomWithUsers.users.find(({ id }) => id === localUserStore.getChatId())?.spaceId;
+            const myId = gameManager.getCurrentGameScene().connection?.getUserId();
 
             const users = currentRoomWithUsers.users
                 .filter(({ username }) => {
@@ -31,8 +30,8 @@
                         : false;
                 })
                 .sort((chatUserA: ChatUser, chatUserB: ChatUser) => {
-                    if (chatUserA.spaceId === mySpaceID) return -1;
-                    if (chatUserB.spaceId === mySpaceID) return 1;
+                    if (chatUserA.id === myId) return -1;
+                    if (chatUserB.id === myId) return 1;
                     return chatUserA.username?.localeCompare(chatUserB.username || "") || -1;
                 })
                 .slice(0, USERS_BY_ROOM_LIMITATION);
