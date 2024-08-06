@@ -3,7 +3,6 @@ import {expectInViewport} from "./viewport";
 
 class MapEditor {
     async openConfigureMyRoom(page: Page) {
-        await page.pause();
         await page.locator('section.side-bar-container .side-bar .tool-button button#WAMSettingsEditor').click();
         await expectInViewport('.map-editor .configure-my-room', page);
     }
@@ -22,4 +21,3 @@ class MapEditor {
 }
 
 export default new MapEditor();
-

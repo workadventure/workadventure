@@ -247,7 +247,7 @@ test.describe('Map editor', () => {
     }
 
     //await Menu.openMapEditor(page);
-    await page.getByRole('button', {name: 'toggle-map-editor'}).click();
+    await Menu.openMapEditor(page);
     await MapEditor.openAreaEditor(page);
     await AreaEditor.drawArea(page, {x: 13*32, y: 13*32}, {x: 15*32, y: 15*32});
     await AreaEditor.setAreaName(page, 'My app zone');
@@ -299,7 +299,7 @@ test.describe('Map editor', () => {
     }
 
     //await Menu.openMapEditor(page);
-    await page.getByRole('button', {name: 'toggle-map-editor'}).click();
+    await Menu.openMapEditor(page);
     await MapEditor.openAreaEditor(page);
     await AreaEditor.drawArea(page, {x: 13*32, y: 13*32}, {x: 15*32, y: 15*32});
 
@@ -362,7 +362,7 @@ test.describe('Map editor', () => {
     }
 
     // open map editor
-    await page.getByRole('button', {name: 'toggle-map-editor'}).click();
+    await Menu.openMapEditor(page);
     await MapEditor.openEntityEditor(page);
 
     // select entity and push it into the map
@@ -430,7 +430,7 @@ test.describe('Map editor', () => {
     }
 
     // open map editor
-    await page.getByRole('button', {name: 'toggle-map-editor'}).click();
+    await Menu.openMapEditor(page);
     await MapEditor.openEntityEditor(page);
 
     // select entity and push it into the map

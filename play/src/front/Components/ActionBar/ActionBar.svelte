@@ -1278,36 +1278,36 @@
                                 transition:fly={{ y: 40, duration: 150 }}
                             >
                                 <ul class="p-0 m-0">
-                                    <!-- {#if $mapEditorActivated} -->
-                                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                    <li
-                                        class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold"
-                                        id="map-editor"
-                                        on:click={() => toggleMapEditorMode()}
-                                    >
-                                        <div
-                                            class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
+                                    {#if $mapEditorActivated}
+                                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                        <li
+                                            class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold"
+                                            id="map-editor"
+                                            on:click={() => toggleMapEditorMode()}
                                         >
-                                            <svg
-                                                width="20"
-                                                height="20"
-                                                viewBox="0 0 20 20"
-                                                fill="none"
-                                                xmlns="http://www.w3.org/2000/svg"
+                                            <div
+                                                class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
                                             >
-                                                <path
-                                                    d="M12.5 3.5L16.5 7.5M10 6L5 1L1 5L6 10M5 6L3.5 7.5M14 10L19 15L15 19L10 14M14 15L12.5 16.5M1 19H5L18 6C18.5304 5.46957 18.8284 4.75015 18.8284 4C18.8284 3.24985 18.5304 2.53043 18 2C17.4696 1.46957 16.7501 1.17157 16 1.17157C15.2499 1.17157 14.5304 1.46957 14 2L1 15V19Z"
-                                                    stroke="white"
-                                                    stroke-width="2"
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                />
-                                            </svg>
-                                            <!-- TODO Hugo : SVG inline -->
-                                        </div>
-                                        <div>{$LL.actionbar.mapEditor()}</div>
-                                    </li>
-                                    <!-- {/if} -->
+                                                <svg
+                                                    width="20"
+                                                    height="20"
+                                                    viewBox="0 0 20 20"
+                                                    fill="none"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                >
+                                                    <path
+                                                        d="M12.5 3.5L16.5 7.5M10 6L5 1L1 5L6 10M5 6L3.5 7.5M14 10L19 15L15 19L10 14M14 15L12.5 16.5M1 19H5L18 6C18.5304 5.46957 18.8284 4.75015 18.8284 4C18.8284 3.24985 18.5304 2.53043 18 2C17.4696 1.46957 16.7501 1.17157 16 1.17157C15.2499 1.17157 14.5304 1.46957 14 2L1 15V19Z"
+                                                        stroke="white"
+                                                        stroke-width="2"
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                    />
+                                                </svg>
+                                                <!-- TODO Hugo : SVG inline -->
+                                            </div>
+                                            <div>{$LL.actionbar.mapEditor()}</div>
+                                        </li>
+                                    {/if}
                                     {#if $userHasAccessToBackOfficeStore}
                                         <li
                                             class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold"

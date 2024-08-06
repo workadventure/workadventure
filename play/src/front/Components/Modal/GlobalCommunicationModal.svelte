@@ -320,7 +320,7 @@
             {#if inputSendTextActive || uploadAudioActive}
                 <div id="active-globalMessage" class="flex flex-col p-5">
                     {#if inputSendTextActive}
-                        <h3>
+                        <h3 >
                             <img
                                 src={textMessageImg}
                                 class="h-8 w-8 mr-1"
@@ -358,7 +358,11 @@
             {#if activeLiveMessage}
                 <div id="active-liveMessage" class="flex flex-col p-5">
                     <h3>
-                        <img src={liveMessageImg} class="h-8 w-8 mr-1" alt={$LL.megaphone.modal.liveMessage.title()} />
+                        <img
+                            src={liveMessageImg}
+                            class="h-8 w-8 mr-1 text-white"
+                            alt={$LL.megaphone.modal.liveMessage.title()}
+                        />
                         {$LL.megaphone.modal.liveMessage.title()}
                     </h3>
                     <div class="flex flew-row justify-center">
@@ -447,7 +451,7 @@
                     </div>
                     <div class="flex flew-row justify-center">
                         <button
-                            class="light"
+                            class="light h-8 w-24 text-black bg-white rounded-md"
                             on:click={startLive}
                             disabled={!$requestedCameraState && !$requestedMicrophoneState}>Start live message</button
                         >
