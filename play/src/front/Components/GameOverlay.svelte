@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { onMount } from "svelte";
     import type { Game } from "../Phaser/Game/Game";
     import { errorStore } from "../Stores/ErrorStore";
     import { errorScreenStore } from "../Stores/ErrorScreenStore";
@@ -15,6 +14,7 @@
     import { refreshPromptStore } from "../Stores/RefreshPromptStore";
     import { forceRefreshChatStore } from "../Stores/ChatStore";
     import { loaderVisibleStore } from "../Stores/LoaderStore";
+    import { showModalGlobalComminucationVisibilityStore } from "../Stores/ModalStore";
     import LoginScene from "./Login/LoginScene.svelte";
     import MainLayout from "./MainLayout.svelte";
     import SelectCharacterScene from "./SelectCharacter/SelectCharacterScene.svelte";
@@ -28,7 +28,6 @@
     import EnableCameraScene from "./EnableCamera/EnableCameraScene.svelte";
     import bgMap from "./images/map-exemple.png";
     import defaultLoader from "./images/Workadventure.gif";
-    import { showModalGlobalComminucationVisibilityStore } from "../Stores/ModalStore";
     import GlobalCommunicationModal from "./Modal/GlobalCommunicationModal.svelte";
 
     export let game: Game;
