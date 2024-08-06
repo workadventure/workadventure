@@ -181,7 +181,7 @@ class MSTeams implements ExtensionModule {
                         );
                         break;
                     default:
-                        console.error("Unknown message type", type);
+                        console.warn("Unknown message type", type);
                         break;
                 }
                 return externalModuleMessage;
@@ -489,12 +489,15 @@ class MSTeams implements ExtensionModule {
     // If there is an error, the interval will be set to 1 minutes and the synchronization will be retried
     async checkModuleSynschronisation(): Promise<void> {
         if (!this.adminUrl) {
-            console.info("Admin URL is not defined. Subscription to Graph API webhook is not possible!");
+            console.info(
+                "Admin URL is not defined. Subscription to Graph API webhook is not possible!",
+                new Date().toLocaleString()
+            );
             return;
         }
         this.teamsSynchronisationStore.set(ExternalModuleStatus.SYNC);
-        console.info("Check module synchronization");
-        // Use interval with base value to 10 minutes. If there is an error, the interval will be set to 1 minutes
+        console.info("Check module synchronization", new Date().toLocaleString());
+        // Use interval with base value to 10 minutes. If there is an error, the interval will be set to 10 minutes
         let checkModuleSynchronisationIntervalMinutes = 10 * 60 * 1000;
 
         // Get all subscription
@@ -519,8 +522,8 @@ class MSTeams implements ExtensionModule {
 
                 // If there are expired subscription, reauthorize them
                 if (promisesReauthorizeSubscription.length > 0) await Promise.all(promisesReauthorizeSubscription);
-                this.teamsSynchronisationStore.set(ExternalModuleStatus.ONLINE);
             }
+            this.teamsSynchronisationStore.set(ExternalModuleStatus.ONLINE);
         } catch (e) {
             this.teamsSynchronisationStore.set(ExternalModuleStatus.WARNING);
             console.error("Error while reauthorizing subscriptions", e);
