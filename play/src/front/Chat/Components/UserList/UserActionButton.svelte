@@ -81,6 +81,7 @@
                 class="ban wa-dropdown-item tw-text-pop-red"
                 on:click|stopPropagation={() => {
                     if (user.username && user.uuid)
+                        // TODO : display the "ban" screen instead of directly banning the user
                         gameManager.getCurrentGameScene().connection?.emitBanPlayerMessage(user.uuid, user.username);
                 }}><IconForbid font-size="13" /> {$LL.chat.ban.title()}</span
             >

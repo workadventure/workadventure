@@ -126,12 +126,16 @@ export class SpaceFilter implements SpaceFilterInterface {
             emitKickOffUserMessage: (userId: string) => {
                 this.roomConnection?.emitKickOffUserMessage(userId, this.name);
             },
+            // FIXME: it is strange to have a emitMuteEveryBodySpace that is valid for anyone in a space applied to a specific user. It should be a method of the space instead.
+            // In fact, we should have a single "emitPublicMessage" on the space class with a typing that is a union of all possible messages addressed to everybody.
             emitMuteEveryBodySpace: () => {
                 this.roomConnection?.emitMuteEveryBodySpace(this.name);
             },
             emitMuteParticipantIdSpace: (userId: string) => {
                 this.roomConnection?.emitMuteParticipantIdSpace(this.name, userId);
             },
+            // FIXME: it is strange to have a emitMuteVideoEveryBodySpace that is valid for anyone in a space applied to a specific user. It should be a method of the space instead.
+            // In fact, we should have a single "emitPublicMessage" on the space class with a typing that is a union of all possible messages addressed to everybody.
             emitMuteVideoEveryBodySpace: () => {
                 this.roomConnection?.emitMuteVideoEveryBodySpace(this.name);
             },

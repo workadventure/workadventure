@@ -61,7 +61,7 @@ export class ProximityChatRoom implements ChatRoom {
     private _space: Space | undefined;
 
     private unknownUser = {
-        id: "0",
+        chatId: "0",
         uuid: "0",
         availabilityStatus: writable(AvailabilityStatus.ONLINE),
         username: "Unknown",
@@ -69,7 +69,7 @@ export class ProximityChatRoom implements ChatRoom {
         roomName: undefined,
         playUri: undefined,
         color: undefined,
-        spaceId: undefined,
+        id: undefined,
     } as ChatUser;
 
     constructor(private roomConnection: RoomConnection, private _userId: number) {
@@ -118,7 +118,7 @@ export class ProximityChatRoom implements ChatRoom {
             .getCurrentGameScene()
             .MapPlayersByKey.getNestedStore(userId, (item) => item.pictureStore);
         const newChatUser: ChatUser = {
-            id: userId.toString(),
+            chatId: userId.toString(),
             uuid: userUuid,
             availabilityStatus: writable(AvailabilityStatus.ONLINE),
             username: userName,
@@ -126,7 +126,7 @@ export class ProximityChatRoom implements ChatRoom {
             roomName: undefined,
             playUri: undefined,
             color: color,
-            spaceId: undefined,
+            id: undefined,
         };
 
         //if (userUuid === this._userUuid) return;
@@ -234,9 +234,9 @@ export class ProximityChatRoom implements ChatRoom {
         if (sender == undefined) return;
 
         this.typingMembers.update((typingMembers) => {
-            if (typingMembers.find((user) => user.id === sender.id) == undefined) {
+            if (typingMembers.find((user) => user.id === sender.chatId) == undefined) {
                 typingMembers.push({
-                    id: sender.id,
+                    id: sender.chatId,
                     name: sender.username ?? null,
                     avatarUrl: sender.avatarUrl ?? null,
                 });
@@ -250,7 +250,7 @@ export class ProximityChatRoom implements ChatRoom {
         if (sender == undefined) return;
 
         this.typingMembers.update((typingMembers) => {
-            return typingMembers.filter((user) => user.id !== sender.id);
+            return typingMembers.filter((user) => user.id !== sender.chatId);
         });
     }
 

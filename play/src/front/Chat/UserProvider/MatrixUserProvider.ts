@@ -7,6 +7,7 @@ import { UserProvideInterface } from "./UserProvideInterface";
 export class MatrixUserProvider implements UserProvideInterface {
     users: Writable<PartialChatUser[]> = writable([]);
     constructor(clientPromise: Promise<MatrixClient>) {
+        // TODO: use a readable instead of a writable to query the Matrix user list only when the user list is displayed.
         clientPromise
             .then((client) => {
                 const userFromMatrix = client
