@@ -11,7 +11,7 @@
 </script>
 
 <button
-    class="add-property-button tooltip p-4 flex justify-center items-center"
+    class="add-property-button bg-contrast tooltip p-4 flex justify-center items-center"
     {style}
     on:click={() => {
         if (disabled) return;
@@ -33,7 +33,7 @@
         --border-opacity: 1;
         border-color: rgb(77 75 103 / var(--border-opacity));
         --bg-opacity: 1;
-        background-color: rgb(27 27 41 / var(--bg-opacity));
+        // background-color: rgb(27 27 41 / var(--bg-opacity));
         --text-opacity: 1;
         color: gray;
         border-radius: 10px;

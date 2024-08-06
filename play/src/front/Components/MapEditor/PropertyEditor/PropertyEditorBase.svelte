@@ -10,7 +10,7 @@
     });
 </script>
 
-<div class="property-settings-container">
+<div class="property-settings-container mt-8">
     <div class="header">
         <slot name="header">_MISSING_</slot>
         <CloseButton

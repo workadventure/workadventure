@@ -77,9 +77,7 @@
     {/if}
     {#key $forceRefreshChatStore}
         <Chat />
-        {#if $mapEditorModeStore}
-            <MapEditor />
-        {/if}
+
         <MainLayout />
         <!--message=""-->
     {/key}

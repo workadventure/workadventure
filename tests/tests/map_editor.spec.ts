@@ -85,6 +85,7 @@ test.describe('Map editor', () => {
     // Check that the live message is displayed
     //await expect(page.locator('.menu-container #content-liveMessage h3')).toContainText('Live message', {timeout: 5_000});
     // Click on the button to start live message
+    await page.pause();
     await page.locator('.menu-container #content-liveMessage').getByRole('button', {name: 'Start a live message'}).click({timeout: 10_000});
     await page.locator('.menu-container #active-liveMessage').getByRole('button', {name: 'Start live message'}).click({timeout: 10_000});
 
@@ -321,7 +322,7 @@ test.describe('Map editor', () => {
     await AreaEditor.addProperty(page, 'Open Google Drive');
     // fill Google Slides link
     await page.getByPlaceholder('https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview').first().fill('https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview');
-    
+
 
     await Menu.closeMapEditor(page);
 

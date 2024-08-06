@@ -173,11 +173,13 @@ p.help-text{
     margin-top: 0.5em;
     align-items: center;
     height: 2.5em;
+    margin-left: 1em;
+    padding-right: 2em;
+
     justify-content: space-between;
     label {
       min-width: fit-content;
       margin-right: 0.5em;
-      flex-grow: 1;
     }
     input.input-switch {
       min-width: 0;

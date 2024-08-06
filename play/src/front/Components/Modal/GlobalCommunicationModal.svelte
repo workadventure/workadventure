@@ -162,7 +162,7 @@
 
 <svelte:window on:keydown={onKeyDown} />
 
-<div class="menu-container {isMobile ? 'mobile' : 'center'} h-3/4" bind:this={mainModal}>
+<div class="menu-container {isMobile ? 'mobile' : 'center'} h-3/4 z-[305]" bind:this={mainModal}>
     <div class="w-full bg-dark-purple/95 rounded" transition:fly={{ x: 1000, duration: 500 }}>
         <button type="button" class="close-window" on:click={close}>&times</button>
         <header>
