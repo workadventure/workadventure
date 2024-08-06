@@ -127,9 +127,15 @@ export class CoWebsiteManager {
     }
 
     public getCoWebsiteById(coWebsiteId: string): CoWebsite {
-        return get(coWebsites).find((coWebsite: CoWebsite) => {
+        const coWebsite = get(coWebsites).find((coWebsite: CoWebsite) => {
             return coWebsite.getId() === coWebsiteId;
-        })!;
+        });
+
+        if (!coWebsite) {
+            throw new Error(`CoWebsite with ID ${coWebsiteId} not found`);
+        }
+
+        return coWebsite;
     }
 
     public getCoWebsites() {

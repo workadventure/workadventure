@@ -32,27 +32,6 @@
 
     export let game: Game;
 
-    // const mediaQuery = window.matchMedia("(max-width: 768px)");
-    // let gameOverlayStyle = document.getElementById("gameoverlay");
-
-    // onMount(() => {
-    //     mediaQuery.addEventListener("change", handleTabletChange);
-    //     handleTabletChange();
-    //     console.log(gameOverlayStyle);
-    // });
-
-    // function handleTabletChange() {
-    //     if (mediaQuery.matches) {
-    //         if (gameOverlayStyle) {
-    //             gameOverlayStyle.style.position = "fixed";
-    //         }
-    //     } else {
-    //         if (gameOverlayStyle) {
-    //             gameOverlayStyle.style.position = "absolute";
-    //         }
-    //     }
-    // }
-
     /**
      * When changing map from an exit on the current map, the Chat and the MainLayout are not really destroyed
      * due to an internal issue of Svelte, we use a #key directive to force the destruction of the components.
@@ -60,9 +39,6 @@
      */
 </script>
 
-<!-- <div id="gameoverlay" class="absolute h-full w-full z-[-3000]"> -->
-<!--Voir pour l'enlever juste en responsive-->
-<!--Voir pour virer la position absolute-->
 <!-- Preload image loader TODO HUGO : Better way ? -->
 <link rel="preload" as="image" href={bgMap} />
 <link rel="preload" as="image" href={defaultLoader} />
