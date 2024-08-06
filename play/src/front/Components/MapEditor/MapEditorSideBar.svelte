@@ -2,7 +2,11 @@
     import { LocalizedString } from "typesafe-i18n";
     import { LL } from "../../../i18n/i18n-svelte";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
-    import { mapEditorSelectedToolStore, mapEditorVisibilityStore } from "../../Stores/MapEditorStore";
+    import {
+        mapEditorSelectedToolStore,
+        mapEditorVisibilityStore,
+        visibilitySideBar,
+    } from "../../Stores/MapEditorStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import AreaToolImg from "../images/icon-tool-area.png";
     // import FloorToolImg from "../images/icon-tool-floor.png";
@@ -22,8 +26,6 @@
     let isSelected = writable<EditorToolName | null>(null);
 
     const availableTools: { toolName: EditorToolName; img: string; tooltiptext: LocalizedString }[] = [];
-
-    $: console.log("mapEditorActivated", $mapEditorActivated);
 
     availableTools.push({
         toolName: EditorToolName.ExploreTheRoom,
@@ -64,6 +66,7 @@
 
     onMount(() => {
         isSelected.set(EditorToolName.ExploreTheRoom);
+        console.log(sideBar.offsetWidth, "value de la sidebar");
     });
 
     function switchTool(newTool: EditorToolName) {
@@ -72,16 +75,17 @@
         gameScene.getMapEditorModeManager().equipTool(newTool);
         isSelected.set(newTool);
     }
+
 </script>
 
 <section
-    class="side-bar-container absolute right-[29rem] top-[10%] z-[500] pointer-events-auto "
+    class="side-bar-container z-[500] pointer-events-auto"
     class:!right-20={!$mapEditorVisibilityStore}
 >
-    <div class="side-bar flex flex-col absolute left-[2rem] align-bottom">
+    <div class="side-bar flex flex-col relative align-bottom">
         {#each availableTools as tool, index (tool.toolName)}
             {#if tool.toolName === EditorToolName.CloseMapEditor}
-                <div class="tool-button p-1 h-fit relative mt-4 flex bg-contrast/80 backdrop-blur rounded-lg">
+                <div class="tool-button p-1 w-fit h-fit relative mt-4 flex bg-contrast/80 backdrop-blur rounded-lg">
                     <button
                         class="close-button flex justify-start items-center h-12 w-12 p-2 m-0 hover:bg-white/10 hover:w-auto rounded-md transition-all duration-300 {$isSelected ===
                         tool.toolName

@@ -2,7 +2,11 @@
     import { fly } from "svelte/transition";
     import { ArrowRightIcon } from "svelte-feather-icons";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
-    import { mapEditorSelectedToolStore, mapEditorVisibilityStore } from "../../Stores/MapEditorStore";
+    import {
+        mapEditorSelectedToolStore,
+        mapEditorVisibilityStore,
+        visibilitySideBar,
+    } from "../../Stores/MapEditorStore";
     import Explorer from "../Exploration/Explorer.svelte";
     import MapEditorSideBar from "./MapEditorSideBar.svelte";
     import EntityEditor from "./EntityEditor.svelte";
@@ -10,43 +14,38 @@
     import ConfigureMyRoom from "./WAMSettingsEditor.svelte";
     import TrashEditor from "./TrashEditor.svelte";
 
-    let resizeBar: HTMLDivElement;
     let container: HTMLDivElement;
+    let sideBar: HTMLDivElement;
 
     function hideMapEditor() {
         mapEditorVisibilityStore.set(false);
     }
+
     const handleMousedown = (e: MouseEvent) => {
         let dragX = e.clientX;
         document.onmousemove = (e) => {
             const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-            const newWidth = Math.min(container.offsetWidth - e.clientX + dragX, vw)
+            const minContainerWidth = 20 * 16; // 24rem en pixels (1rem = 16px)
+            const newWidth = Math.max(Math.min(container.offsetWidth - e.clientX + dragX, vw), minContainerWidth);
+            const newWidthSideBar = Math.min(sideBar.offsetWidth - e.clientX + dragX, vw);
+
             container.style.maxWidth = newWidth + "px";
-            container.style.width = newWidth + "px";
+            let widthContainer = (container.style.width = newWidth + "px");
             dragX = e.clientX;
+            const widthContainerInt = parseInt(widthContainer);
+
+            if (window.innerWidth < widthContainerInt + 100) {
+                visibilitySideBar.set(false);
+            } else {
+                visibilitySideBar.set(true);
+                sideBar.style.maxWidth = newWidthSideBar + "px";
+                sideBar.style.width = newWidthSideBar + "px";
+            }
         };
         document.onmouseup = () => {
             document.onmousemove = null;
         };
     };
-
-    // const handbleMousedown = (e) => {
-    //     let dragX = e.clientX;
-    //     document.onmousemove = function onMouseMove(e) {
-    //         console.log("width container", container.offsetWidth);
-    //         console.log("event", e.clientX);
-    //         console.log("drag", dragX);
-    //         console.log("result", container.offsetWidth - e.clientX + "px");
-    //         // const deltaX = e.clientX - dragX;
-    //         // const newWidth = initialWidth + deltaX;
-    //         container.style.width = container.offsetWidth + e.clientX - dragX + "px";
-
-    //         dragX = e.clientX;
-    //     };
-    //     document.onmouseup = () => {
-    //         document.onmousemove = document.onmouseup = null;
-    //     };
-    // };
 
     const handleDbClick = () => {
         if (container.style.width === document.documentElement.clientWidth + "px") {
@@ -57,7 +56,9 @@
     };
 </script>
 
-<MapEditorSideBar />
+<div bind:this={sideBar} class="fixed right-[24rem] top-[10%] {$visibilitySideBar ? '' : 'hidden'}">
+    <MapEditorSideBar />
+</div>
 <div
     class={`map-editor h-full backdrop-blur text-center bg-contrast/80 absolute top-0 right-0 w-[23rem] z-[425] pointer-events-auto text-white sidebar ${$mapEditorSelectedToolStore}`}
     bind:this={container}
@@ -69,7 +70,7 @@
             ><ArrowRightIcon size="20" /></button
         >
         <div
-            class="relative flex flex-col gap-4 sidebar h-full mt-12 px-2 w-fit"
+            class="relative flex flex-col gap-4 sidebar h-full mt-12 px-2 w-[90%] mx-auto"
             in:fly={{ x: 100, duration: 250, delay: 200 }}
             out:fly={{ x: 100, duration: 200 }}
         >
@@ -90,7 +91,6 @@
     {/if}
     <div
         class="absolute left-1 top-0 bottom-0 m-auto w-1.5 h-40 bg-white rounded cursor-col-resize"
-        bind:this={resizeBar}
         on:mousedown={handleMousedown}
         on:dblclick={handleDbClick}
     />

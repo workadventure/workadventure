@@ -82,3 +82,4 @@ export const mapExplorationModeStore = writable<boolean>(false);
 export const mapExplorationObjectSelectedStore = writable<Entity | AreaPreview | undefined>(undefined);
 export const mapExplorationEntitiesStore = writable<Map<string, Entity>>(new Map());
 export const mapExplorationAreasStore = writable<Map<string, AreaPreview> | undefined>(new Map());
+export const visibilitySideBar = writable(true)

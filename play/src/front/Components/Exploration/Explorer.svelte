@@ -131,7 +131,7 @@
     $: console.log(showSearchMode, "showSearchMode");
 </script>
 
-<div class="flex flex-col">
+<div class="flex flex-col w-[90%]">
     <div class="header-container">
         <h3 class="text-center">{$LL.mapEditor.explorer.title()}</h3>
         {#if !showSearchMode}
@@ -140,15 +140,15 @@
             </p>
         {/if}
     </div>
-    <div class="flex flex-col w-full gap-4 ustify-center items-center">
+    <div class="flex flex-col w-full gap-y-4 justify-center items-center">
         {#if !showSearchMode}
             <div
-                class="properties-buttons flex flex-row z-10"
+                class="properties-buttons w-full mt-8 flex z-10 "
                 in:fly={{ x: 100, duration: 250, delay: 200 }}
                 out:fly={{ x: 100, duration: 200 }}
             >
                 <button
-                    class="add-property-button bg-contrast/80 tooltip p-4 flex justify-center items-center"
+                    class="add-property-button w-full bg-contrast/80 tooltip p-4 flex justify-center items-center"
                     on:click={explorationMode}
                 >
                     <div class="w-10 h-10 flex flex-wrap items-center justify-center">
@@ -191,8 +191,8 @@
                 placeholder={$LL.mapEditor.entityEditor.itemPicker.searchPlaceholder()}
             />
 
-            <div class="overflow-visible overflow-x-auto h-full">
-                <div class="properties-buttons grid grid-cols-2 gap-4">
+            <div class="overflow-visible overflow-x-auto h-full w-full">
+                <div class="properties-buttons w-full grid-layout gap-4">
                     <AddPropertyButtonWrapper
                         property="jitsiRoomProperty"
                         isActive={$selectFilters.includes("jitsiRoomProperty")}
@@ -347,6 +347,11 @@
 </div>
 
 <style lang="scss">
+    .grid-layout {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 2fr));
+    }
+
     .add-property-button {
         --text-opacity: 1;
         color: gray;
