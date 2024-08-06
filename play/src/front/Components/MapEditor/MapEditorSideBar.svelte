@@ -66,7 +66,6 @@
 
     onMount(() => {
         isSelected.set(EditorToolName.ExploreTheRoom);
-        console.log(sideBar.offsetWidth, "value de la sidebar");
     });
 
     function switchTool(newTool: EditorToolName) {
