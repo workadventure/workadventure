@@ -466,10 +466,25 @@ services:
 
   mautrix-discord:
     container_name: mautrix-discord
-    image: dock.mau.dev/mautrix/discord:<version>
+    image: dock.mau.dev/mautrix/discord:latest
     restart: unless-stopped
+    ports:
+      - 29334:29334
     volumes:
-    - .:/data
+      - ./mautrix_discord_data:/data
+
+  mautrix-discord-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mautrix
+      POSTGRES_PASSWORD: mautrix_discord
+    volumes:
+      - mautrix_discord_db_data:/var/lib/postgresql/data
+
+volumes:
+  mautrix_discord_db_data:
+
 #  coturn:
 #    image: coturn/coturn:4.5.2
 #    command:
