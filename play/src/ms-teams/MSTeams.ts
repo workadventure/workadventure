@@ -12,6 +12,7 @@ import {
     ExternalModuleStatus,
     RoomMetadataType,
 } from "../front/ExternalModule/ExtensionModule";
+import { NODE_ENV } from "../front/Enum/EnvironmentVariable";
 import { TeamsActivity, TeamsAvailability } from "./MSTeamsInterface";
 
 import TeamsMeetingAreaPropertyEditor from "./Components/TeamsMeetingAreaPropertyEditor.svelte";
@@ -92,7 +93,7 @@ class MSTeams implements ExtensionModule {
         updater: Updater<Map<string, CalendarEventInterface>>
     ) => void | undefined = undefined;
     private userAccessToken!: string;
-    private adminUrl!: string;
+    private adminUrl?: string;
     private roomId!: string;
     private roomMetadata!: RoomMetadataType;
 
@@ -135,6 +136,7 @@ class MSTeams implements ExtensionModule {
         this.setMSTeamsClientId();
 
         this.userAccessToken = options!.userAccessToken;
+        this.adminUrl = options!.adminUrl;
         this.roomId = options!.roomId;
 
         if (roomMetadata.teamsstings.status) {
@@ -187,10 +189,27 @@ class MSTeams implements ExtensionModule {
         }
 
         // Initialize the subscription
-        this.initSubscription();
+        if (this.adminUrl != undefined) {
+            this.initSubscription();
+        } else {
+            console.info("Admin URL is not defined. Subscription to Graph API webhook is not possible!");
+        }
 
         console.info("Microsoft teams module for WorkAdventure initialized");
         this.teamsSynchronisationStore.set(ExternalModuleStatus.ONLINE);
+
+        // In development mode, we can't use the webhook because the server is not accessible from the internet
+        if ((this.adminUrl == undefined || this.adminUrl.indexOf("localhost") !== -1) && NODE_ENV !== "production") {
+            // So we replace the webhook by sending a call API every 10 minutes
+            setInterval(() => {
+                this.updateCalendarEvents().catch((e) => console.error("Error while updating calendar events", e));
+            }, 1000 * 10 * 10);
+
+            // So we replace the webhook by sending a call API every 10 seconds
+            setInterval(() => {
+                this.listenToTeamsStatusUpdate(options?.onExtensionModuleStatusChange);
+            }, 1000 * 10);
+        }
     }
 
     private refreshTokenInterceptor(
@@ -469,6 +488,10 @@ class MSTeams implements ExtensionModule {
     // Check module synchronization
     // If there is an error, the interval will be set to 1 minutes and the synchronization will be retried
     async checkModuleSynschronisation(): Promise<void> {
+        if (!this.adminUrl) {
+            console.info("Admin URL is not defined. Subscription to Graph API webhook is not possible!");
+            return;
+        }
         this.teamsSynchronisationStore.set(ExternalModuleStatus.SYNC);
         console.info("Check module synchronization");
         // Use interval with base value to 10 minutes. If there is an error, the interval will be set to 1 minutes
