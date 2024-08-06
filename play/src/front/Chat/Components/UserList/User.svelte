@@ -8,6 +8,7 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { chatSearchBarValue, navChat, selectedRoom } from "../../Stores/ChatStore";
     import { gameManager } from "../../../Phaser/Game/GameManager";
+    import { defaultColor, defaultWoka } from "../../Connection/Matrix/MatrixChatConnection";
     import UserActionButton from "./UserActionButton.svelte";
     import { IconLoader, IconShield, IconUsers } from "@wa-icons";
 
@@ -81,13 +82,13 @@
         <div class={`wa-chat-item ${isAdmin ? "admin" : "user"}  tw-cursor-default`}>
             <div
                 class={`tw-relative wa-avatar ${!$userStatus && "tw-opacity-50"}  tw-cursor-default`}
-                style={`background-color: ${color}`}
+            style={`background-color: ${color ?? defaultColor}`}
             >
                 <div class="wa-container tw-cursor-default">
                     <img
                         class="tw-w-full tw-cursor-default"
                         style="image-rendering: pixelated;"
-                        src={avatarUrl}
+                    src={avatarUrl ?? defaultWoka}
                         alt="Avatar"
                     />
                 </div>
