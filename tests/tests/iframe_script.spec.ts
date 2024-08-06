@@ -287,6 +287,7 @@ test.describe('Iframe API', () => {
     // Create a script to evaluate function to disable map editor
     await evaluateScript(page, async () => {
         await WA.onInit();
+
         // console.log('WA', WA);
         WA.controls.disableRightClick();
     });

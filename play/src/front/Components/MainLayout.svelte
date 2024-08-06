@@ -21,6 +21,7 @@
     import { askDialogStore } from "../Stores/MeetingStore";
     import { mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
+    import { hasEmbedScreen } from "../Stores/EmbedScreensStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import HelpCameraSettingsPopup from "./HelpSettings/HelpCameraSettingsPopup.svelte";
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
@@ -127,10 +128,6 @@
             <HelpPopUpBlocked />
         {/if}
 
-        <!-- {#if $hasEmbedScreen} -->
-        <EmbedScreensContainer />
-        <!-- {/if} -->
-
         {#if $soundPlayingStore}
             <AudioPlaying url={$soundPlayingStore} />
         {/if}
@@ -169,6 +166,10 @@
 
         {#if $warningMessageStore.length > 0}
             <WarningToast />
+        {/if}
+
+        {#if $hasEmbedScreen}
+            <EmbedScreensContainer />
         {/if}
     </section>
 
