@@ -6,6 +6,7 @@ import {findContainer, startContainer, stopContainer} from "./utils/containers";
 // import {createFileOfSize, deleteFile, fileExist} from "./utils/file";
 import Menu from "./utils/menu";
 import {publicTestMapUrl} from "./utils/urls";
+import { createFileOfSize } from './utils/file';
 
 const TIMEOUT_TO_GET_LIST = 60_000;
 
@@ -76,56 +77,58 @@ test.describe('Chat @chat', () => {
       await Map.goToRoom(page2, '#LiveZone_b');
       await Chat.chatZoneExist(page2, 'liveZone');
 
+
+
       // With Matrix integration feature not done in refonte
 
       // Open forum
-    //   await Chat.openChatZone(page);
-    //   await Chat.openChatZone(page2);
+      await Chat.openChatZone(page);
+      await Chat.openChatZone(page2);
 
 
     //   // Send a message
-    //   await Chat.AT_sendMessage(page, 'Hello, how are you ?');
-    //   await Chat.AT_checkLastMessageSent(page);
+      await Chat.AT_sendMessage(page, 'Hello, how are you ?');
+      await Chat.AT_checkLastMessageSent(page);
     //   // Receive the message
-    //   await Chat.AT_lastMessageContain(page2, 'Hello, how are you ?');
+      await Chat.AT_lastMessageContain(page2, 'Hello, how are you ?');
 
 
     //   // React to a message
-    //   await Chat.AT_reactLastMessage(page2);
+      await Chat.AT_reactLastMessage(page2);
     //   // Receive the reaction
-    //   await Chat.AT_checkReactLastMessageReceived(page);
+      await Chat.AT_checkReactLastMessageReceived(page);
 
 
     //   // Reply to a message
-    //   await Chat.AT_replyToLastMessage(page2, 'Fine, what about you ?');
+      await Chat.AT_replyToLastMessage(page2, 'Fine, what about you ?');
     //   // Receive the reply of the message
-    //   await Chat.AT_lastMessageContain(page, 'Fine, what about you ?');
-    //   await Chat.AT_lastMessageReplyContain(page, 'Hello, how are you ?');
+      await Chat.AT_lastMessageContain(page, 'Fine, what about you ?');
+      await Chat.AT_lastMessageReplyContain(page, 'Hello, how are you ?');
 
 
     //   // Generate bulk file
-    //   await createFileOfSize('./fileLittle.txt', 5_000_000);
+      await createFileOfSize('./fileLittle.txt', 5_000_000);
     //   // Send a file in a message
-    //   await Chat.AT_uploadFile(page, 'fileLittle.txt');
-    //   await Chat.AT_canSend(page);
-    //   await Chat.AT_send(page);
-    //   await Chat.AT_checkLastMessageSent(page);
-    //   await Chat.AT_lastMessageFileContain(page, 'fileLittle.txt');
+      await Chat.AT_uploadFile(page, 'fileLittle.txt');
+      await Chat.AT_canSend(page);
+      await Chat.AT_send(page);
+      await Chat.AT_checkLastMessageSent(page);
+      await Chat.AT_lastMessageFileContain(page, 'fileLittle.txt');
     //   // Receive the file
-    //   await Chat.AT_checkLastMessageReceived(page2);
-    //   await Chat.AT_lastMessageFileContain(page2, 'fileLittle.txt');
+      await Chat.AT_checkLastMessageReceived(page2);
+      await Chat.AT_lastMessageFileContain(page2, 'fileLittle.txt');
 
     //   // Generate bulk file
-    //   await createFileOfSize('./fileBig.txt', 15_485_760);
+      await createFileOfSize('./fileBig.txt', 15_485_760);
     //   // Try upload file but too big
-    //   await Chat.AT_uploadFile(page, 'fileBig.txt');
-    //   await Chat.AT_cantSend(page);
-    //   await Chat.AT_fileContainText(page, 'fileBig.txt is too big');
-    //   await Chat.AT_deleteFile(page);
+      await Chat.AT_uploadFile(page, 'fileBig.txt');
+      await Chat.AT_cantSend(page);
+      await Chat.AT_fileContainText(page, 'fileBig.txt is too big');
+      await Chat.AT_deleteFile(page);
 
       /*
       // TODO later : Manage admin in live zone based on our WorkAdventure role
-      await chat.locator('#activeThread #settings').click();
+    //   await chat.locator('#activeThread #settings').click();
       // Rank up user
       // Workaround to wait the end of svelte animation
       //eslint-disable-next-line playwright/no-wait-for-timeout

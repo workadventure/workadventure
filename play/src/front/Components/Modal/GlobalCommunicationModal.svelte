@@ -320,7 +320,7 @@
             {#if inputSendTextActive || uploadAudioActive}
                 <div id="active-globalMessage" class="flex flex-col p-5">
                     {#if inputSendTextActive}
-                        <h3 >
+                        <h3>
                             <img
                                 src={textMessageImg}
                                 class="h-8 w-8 mr-1"

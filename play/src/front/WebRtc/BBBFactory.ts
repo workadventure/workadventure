@@ -10,7 +10,7 @@ class BBBFactory {
             return;
         }
 
-        const coWebsite = new BBBCoWebsite(new URL(clientURL), false, undefined, );
+        const coWebsite = new BBBCoWebsite(new URL(clientURL), false, undefined);
         try {
             coWebsiteManager.addCoWebsiteToStore(coWebsite);
         } catch (e) {

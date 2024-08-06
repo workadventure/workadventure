@@ -123,7 +123,6 @@ export const defaultInterfaceConfig = {
 };
 
 export class JitsiCoWebsite extends SimpleCoWebsite {
-
     private jitsiApi?: JitsiApi;
     private loadPromise: CancelablePromise | undefined;
 
@@ -144,5 +143,4 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
     getDomain(): string {
         return this.domain;
     }
-
 }
