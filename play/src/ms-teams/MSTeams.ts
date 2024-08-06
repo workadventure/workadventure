@@ -509,7 +509,7 @@ class MSTeams implements ExtensionModule {
                 const promisesReauthorizeSubscription = [];
                 for (const subscription of subscriptions.data.value) {
                     if (new Date(subscription.expirationDateTime) < new Date()) {
-                        if (subscription.resource === `/users/${this.clientId}/presences`) {
+                        if (subscription.resource === `/communications/presences/${this.clientId}`) {
                             promisesReauthorizeSubscription.push(this.reauthorizePresenceSubscription(subscription.id));
                         } else if (subscription.resource === `/me/events`) {
                             promisesReauthorizeSubscription.push(this.reauthorizeCalendarSubscription(subscription.id));
@@ -528,7 +528,7 @@ class MSTeams implements ExtensionModule {
             const promisesDeleteSubscription = [];
             for (const subscription of subscriptions.data.value) {
                 if (new Date(subscription.expirationDateTime) < new Date()) {
-                    if (subscription.resource === `/users/${this.clientId}/presences`) {
+                    if (subscription.resource === `/communications/presences/${this.clientId}`) {
                         promisesDeleteSubscription.push(this.deletePresenceSubscription(subscription.id));
                     } else if (subscription.resource === `/me/events`) {
                         promisesDeleteSubscription.push(this.deleteCalendarSubscription(subscription.id));
@@ -568,7 +568,7 @@ class MSTeams implements ExtensionModule {
         const subscriptions = await this.msAxiosClientBeta.get(`/subscriptions/`);
         const promisesDeleteSubscription = [];
         for (const subscription of subscriptions.data.value) {
-            if (subscription.resource === `/users/${this.clientId}/presences`) {
+            if (subscription.resource === `/communications/presences/${this.clientId}`) {
                 promisesDeleteSubscription.push(this.deletePresenceSubscription(subscription.id));
             } else if (subscription.resource === `/me/events`) {
                 promisesDeleteSubscription.push(this.deleteCalendarSubscription(subscription.id));
@@ -583,7 +583,8 @@ class MSTeams implements ExtensionModule {
         const subscriptions = await this.msAxiosClientV1.get(`/subscriptions`);
         if (subscriptions.data.value.length > 0) {
             const presenceSubscription = subscriptions.data.value.find(
-                (subscription: MSGraphSubscription) => subscription.resource === `/users/${this.clientId}/presences`
+                (subscription: MSGraphSubscription) =>
+                    subscription.resource === `/communications/presences/${this.clientId}`
             );
             // Check if the subscription is expired
             if (presenceSubscription != undefined && new Date(presenceSubscription.expirationDateTime) < new Date()) {
@@ -612,7 +613,7 @@ class MSTeams implements ExtensionModule {
             changeType: "updated",
             notificationUrl: `${this.adminUrl}/api/webhook/msgraph/notificationUrl/${this.userAccessToken}`,
             lifecycleNotificationUrl: `${this.adminUrl}/api/webhook/msgraph/notificationUrl/${this.userAccessToken}`,
-            resource: `/users/${this.clientId}/presences`,
+            resource: `/communications/presences/${this.clientId}`,
             expirationDateTime,
             clientState: `${this.roomId}`,
         });
@@ -653,7 +654,7 @@ class MSTeams implements ExtensionModule {
             changeType: "created,updated,deleted",
             notificationUrl: `${this.adminUrl}/api/webhook/msgraph/notificationUrl/${this.userAccessToken}`,
             lifecycleNotificationUrl: `${this.adminUrl}/api/webhook/msgraph/notificationUrl/${this.userAccessToken}`,
-            resource: `/users/${this.clientId}/onlineMeetings`,
+            resource: `/me/events`,
             expirationDateTime,
             clientState: `${this.roomId}`,
         });
