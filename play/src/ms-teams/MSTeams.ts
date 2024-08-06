@@ -489,11 +489,14 @@ class MSTeams implements ExtensionModule {
     // If there is an error, the interval will be set to 1 minutes and the synchronization will be retried
     async checkModuleSynschronisation(): Promise<void> {
         if (!this.adminUrl) {
-            console.info("Admin URL is not defined. Subscription to Graph API webhook is not possible!", (new Date()).toLocaleString());
+            console.info(
+                "Admin URL is not defined. Subscription to Graph API webhook is not possible!",
+                new Date().toLocaleString()
+            );
             return;
         }
         this.teamsSynchronisationStore.set(ExternalModuleStatus.SYNC);
-        console.info("Check module synchronization", (new Date()).toLocaleString());
+        console.info("Check module synchronization", new Date().toLocaleString());
         // Use interval with base value to 10 minutes. If there is an error, the interval will be set to 10 minutes
         let checkModuleSynchronisationIntervalMinutes = 10 * 60 * 1000;
 

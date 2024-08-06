@@ -66,12 +66,15 @@
         <button class="tw-bg-dark-purple tw-p-4" on:click={closeModal}>
             {$LL.mapEditor.explorer.details.close()}
         </button>
-        <button class="light tw-p-4" 
-            on:click={goToReSync} 
+        <button
+            class="light tw-p-4"
+            on:click={goToReSync}
             disabled={$synchronisationStatusStore !== ExternalModuleStatus.ONLINE}
             class:tw-cursor-not-allowed={$synchronisationStatusStore !== ExternalModuleStatus.ONLINE}
-            class:tw-opacity-20={$synchronisationStatusStore !== ExternalModuleStatus.ONLINE} 
-        > Sync my Teams 🚀 </button>
+            class:tw-opacity-20={$synchronisationStatusStore !== ExternalModuleStatus.ONLINE}
+        >
+            Sync my Teams 🚀
+        </button>
     </div>
 </div>
 
