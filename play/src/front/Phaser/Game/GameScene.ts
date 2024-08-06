@@ -42,6 +42,7 @@ import { lazyLoadPlayerCharacterTextures } from "../Entity/PlayerTexturesLoading
 import { lazyLoadPlayerCompanionTexture } from "../Companion/CompanionTexturesLoadingManager";
 import { iframeListener } from "../../Api/IframeListener";
 import {
+    ADMIN_URL,
     DEBUG_MODE,
     ENABLE_MAP_EDITOR,
     ENABLE_OPENID,
@@ -2071,6 +2072,7 @@ export class GameScene extends DirtyScene {
                             getOauthRefreshToken: this.connection?.getOauthRefreshToken.bind(this.connection),
                             calendarEventsStoreUpdate: calendarEventsStore.update,
                             userAccessToken: localUserStore.getAuthToken()!,
+                            adminUrl: ADMIN_URL,
                             roomId: this.roomUrl,
                             externalModuleMessage: this.connection!.externalModuleMessage,
                         });

@@ -21,6 +21,7 @@ export interface ExtensionModuleOptions {
     userAccessToken: string;
     roomId: string;
     externalModuleMessage?: Observable<ExternalModuleMessage>;
+    adminUrl?: string;
 }
 
 export interface ExtensionModuleAreaProperty {
