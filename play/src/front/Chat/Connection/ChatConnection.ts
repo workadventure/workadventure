@@ -8,7 +8,7 @@ export interface ChatUser {
     uuid?: string;
     availabilityStatus: Writable<AvailabilityStatus>;
     username: string | undefined;
-    avatarUrl: string | null;
+    avatarUrl: string | undefined;
     roomName: string | undefined;
     playUri: string | undefined;
     isAdmin?: boolean;
@@ -95,40 +95,25 @@ export type chatId = string;
 
 export interface ChatConnectionInterface {
     connectionStatus: Readable<ConnectionStatus>;
-    connectedUsers: Readable<Map<userId, ChatUser>>;
-    userDisconnected: Readable<Map<chatId, ChatUser>>;
     directRooms: Readable<ChatRoom[]>;
     rooms: Readable<ChatRoom[]>;
     invitations: Readable<ChatRoom[]>;
-
-    sendBan: (uuid: string, username: string) => void;
     createRoom: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string }>;
-
     createDirectRoom(userChatId: string): Promise<ChatRoom | undefined>;
-
     getDirectRoomFor(uuserChatId: string): ChatRoom | undefined;
-
     searchUsers(searchText: string): Promise<void>;
-
     searchAccessibleRooms(searchText: string): Promise<
         {
             id: string;
             name: string | undefined;
         }[]
     >;
-
     joinRoom(roomId: string): Promise<ChatRoom | undefined>;
-
     destroy(): Promise<void>;
-
     searchChatUsers(searchText: string): Promise<{ id: string; name: string | undefined }[] | undefined>;
-
     isEncryptionRequiredAndNotSet: Readable<boolean>;
-
     initEndToEndEncryption(): Promise<void>;
-
     isGuest: Readable<boolean>;
-    joinSpace?: (spaceId: string, spaceName: string) => void;
 }
 
 export type Connection = Pick<RoomConnection, "queryChatMembers" | "emitPlayerChatID" | "emitBanPlayerMessage">;

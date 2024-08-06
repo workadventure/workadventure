@@ -99,7 +99,7 @@ export class ProximityChatRoom implements ChatRoom {
         // Use the room connection to send the message to other users of the space
         const spaceName = get(this._connection.spaceName);
         if (broadcast && spaceName != undefined) {
-            this._connection.roomConnection.emitProximityPublicMessage(spaceName, message);
+            this.roomConnection.emitProximityPublicMessage(spaceName, message);
         }
 
         if (action === "proximity") {

@@ -1,21 +1,24 @@
 import { AvailabilityStatus } from "@workadventure/messages";
 import { derived, Readable, writable } from "svelte/store";
-import { UserProvideInterface } from "./UserProvideInterface";
-import { chatId, ChatUser, PartialChatUser } from "./Connection/ChatConnection";
+import { UserProvideInterface } from "../UserProvider/UserProvideInterface";
+import { chatId, ChatUser, PartialChatUser } from "../Connection/ChatConnection";
 
 /**
  * Merges several UserProviders into one store that sorts users by room.
  */
+export type playUri = string;
+
 export class UserProviderMerger {
-    private usersByRoomStore: Readable<
+    usersByRoomStore: Readable<
         Map<
-            string,
+            playUri | undefined,
             {
                 roomName: string | undefined;
                 users: ChatUser[];
             }
         >
     >;
+
     constructor(private userProviders: UserProvideInterface[]) {
         this.usersByRoomStore = derived(
             this.userProviders.map((up) => up.users),
@@ -55,7 +58,8 @@ export class UserProviderMerger {
                     });
                     const fullUser = {
                         ...mergedUser,
-                        availabilityStatus: mergedUser.availabilityStatus ?? writable(AvailabilityStatus.OFFLINE),
+                        avatarUrl: mergedUser.avatarUrl ?? null,
+                        availabilityStatus: mergedUser.availabilityStatus ?? writable(AvailabilityStatus.UNCHANGED),
                     };
 
                     mergedUsers.set(mergedUser.id, fullUser);
@@ -63,7 +67,7 @@ export class UserProviderMerger {
 
                 // Step 3: sort users by room
                 const usersByRoom = new Map<
-                    string | undefined,
+                    playUri | undefined,
                     {
                         roomName: string | undefined;
                         users: ChatUser[];
@@ -83,7 +87,8 @@ export class UserProviderMerger {
                 }
 
                 return usersByRoom;
-            }
+            },
+            new Map()
         );
     }
 }

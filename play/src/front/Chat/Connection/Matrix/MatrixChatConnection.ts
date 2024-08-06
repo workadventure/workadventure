@@ -27,10 +27,8 @@ import {
     CreateRoomOptions,
 } from "../ChatConnection";
 import { selectedRoom } from "../../Stores/ChatStore";
-import { CONNECTED_USER_FILTER_NAME, WORLD_SPACE_NAME } from "../../../Space/Space";
 import { SpaceProviderInterface } from "../../../Space/SpaceProvider/SpaceProviderInterface";
 import { MatrixChatRoom } from "./MatrixChatRoom";
-import { chatUserFactory } from "./MatrixChatUser";
 import { MatrixSecurity, matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity";
 
 export const defaultWoka =
@@ -81,29 +79,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
         this.isEncryptionRequiredAndNotSet = this.matrixSecurity.isEncryptionRequiredAndNotSet;
 
-        const usersFromSpace = this.spaceStore.get(WORLD_SPACE_NAME).getSpaceFilter(CONNECTED_USER_FILTER_NAME).users;
-        this.connectedUsers = derived(usersFromSpace, (users) => {
-            return Array.from(users.values()).reduce((acc, currentUser) => {
-                if (currentUser.id) {
-                    acc.set(currentUser.id, {
-                        uuid: currentUser.uuid,
-                        id: currentUser.chatID ?? "",
-                        avatarUrl: currentUser.getWokaBase64 ?? defaultWoka,
-                        availabilityStatus: writable(AvailabilityStatus.ONLINE),
-                        roomName: currentUser.roomName,
-                        playUri: currentUser.playUri,
-                        username: currentUser.name,
-                        isAdmin: currentUser.tags.includes("admin"),
-                        isMember: currentUser.tags.includes("member"),
-                        visitCardUrl: currentUser.visitCardUrl,
-                        color: currentUser.color ?? defaultColor,
-                        spaceId: currentUser.id,
-                    });
-                }
-                return acc;
-            }, new Map() as Map<number, ChatUser>);
-        });
-
         (async () => {
             this.client = await clientPromise;
             await this.startMatrixClient();
@@ -118,7 +93,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             switch (state) {
                 case SyncState.Prepared:
                     this.connectionStatus.set("ONLINE");
-                    this.initUserList();
                     this.connection.emitPlayerChatID(this.client.getSafeUserId());
                     break;
                 case SyncState.Error:
@@ -191,48 +165,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 return;
             }
         }
-    }
-
-    private initUserList(): void {
-        this.client
-            .getUsers()
-            .filter((user) => user.userId !== this.client.getUserId())
-            .forEach((user) => {
-                user.avatarUrl = defaultWoka;
-                this.userDisconnected.set(user.userId, chatUserFactory(user, this.client));
-            });
-
-        this.getWorldChatMembers()
-            .then((members) => {
-                console.log({ members });
-                members.forEach((member) => {
-                    if (member.chatId) {
-                        this.userDisconnected.set(member.chatId, {
-                            availabilityStatus: writable(AvailabilityStatus.UNCHANGED),
-                            avatarUrl: defaultWoka,
-                            id: member.chatId,
-                            roomName: undefined,
-                            playUri: undefined,
-                            username: member.wokaName,
-                            isAdmin: member.tags.includes("admin"),
-                            isMember: member.tags.includes("member"),
-                            uuid: undefined,
-                            color: defaultColor,
-                            spaceId: undefined,
-                        });
-                    }
-                });
-            })
-            .catch((error) => console.error(error));
-    }
-
-    async getWorldChatMembers(searchText?: string): Promise<ChatMember[]> {
-        const { members } = await this.connection.queryChatMembers(searchText ?? "");
-        return members;
-    }
-
-    sendBan(uuid: string, username: string): void {
-        if (this.connection.emitBanPlayerMessage) this.connection.emitBanPlayerMessage(uuid, username);
     }
 
     //TODO createOptions only on matrix size
