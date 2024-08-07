@@ -4,7 +4,7 @@ import { v4 } from "uuid";
 
 export const bannerVisible = writable(true);
 export const currentBannerIndex = writable(0);
-
+export const showPopup = writable(false);
 interface Popup {
     uuid: string;
     component: typeof SvelteComponent;

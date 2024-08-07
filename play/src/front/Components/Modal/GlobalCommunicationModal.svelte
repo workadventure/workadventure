@@ -82,6 +82,7 @@
     }
 
     function activateLiveMessage() {
+        console.log("je suuis ici");
         streamingMegaphoneStore.set(true);
         activeLiveMessage = true;
         inputSendTextActive = false;
@@ -162,11 +163,33 @@
 
 <svelte:window on:keydown={onKeyDown} />
 
-<div class="menu-container {isMobile ? 'mobile' : 'center'} h-3/4" bind:this={mainModal}>
+<div
+    class="menu-container {isMobile
+        ? 'mobile'
+        : 'center'} w-[90%] z-[308] top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-xxl"
+    bind:this={mainModal}
+>
     <div class="w-full bg-dark-purple/95 rounded" transition:fly={{ x: 1000, duration: 500 }}>
-        <button type="button" class="close-window" on:click={close}>&times</button>
+        <div
+            class="group/btn-chat absolute bg-blue ml-4 top-4 transition-all backdrop-blur rounded-lg p-2 aspect-square"
+            id="btn-chat"
+        >
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <div
+                class="h-12 w-12 rounded hover:bg-danger aspect-square flex items-center justify-center transition-all"
+                on:click={close}
+            >
+                <button type="button" class="close-window justify-center">&times</button>
+            </div>
+        </div>
+        <!-- <div class="bg-contrast/80 ml-2 -right-20 top-4 transition-all backdrop-blur rounded-lg p-2 aspect-square">
+            <button type="button" class="close-window h-[16px] w-[16px] bg-red-500 justify-center" on:click={close}
+                >&times</button
+            >
+        </div> -->
         <header>
-            <h2 class="p-5 blue-title">Global communication</h2>
+            <h3 class="p-5 text-center text-white">Global communication</h3>
+
             {#if activeLiveMessage || inputSendTextActive || uploadAudioActive}
                 <!-- svelte-ignore a11y-invalid-attribute -->
                 <a
@@ -191,20 +214,19 @@
                 </a>
             {/if}
         </header>
-        <div />
         <div class="h-5/6 px-5 overflow-auto">
             {#if !activeLiveMessage && !inputSendTextActive && !uploadAudioActive}
                 <div class="flex flex-row justify-center">
                     <div id="content-liveMessage" class="flex flex-col px-5 w-1/3">
-                        <h3>
+                        <p class="text-white">
                             <img
                                 src={liveMessageImg}
                                 class="h-8 w-8 mr-1"
                                 alt={$LL.megaphone.modal.liveMessage.title()}
                             />
                             {$LL.megaphone.modal.liveMessage.title()}
-                        </h3>
-                        <button class="light max-w-fit" on:click={activateLiveMessage}
+                        </p>
+                        <button class="light max-w-fit text-black bg-white h-full" on:click={activateLiveMessage}
                             >{$LL.megaphone.modal.liveMessage.button()}</button
                         >
                         <p class="text-white text-sm whitespace-pre-line">
@@ -212,15 +234,18 @@
                         </p>
                     </div>
                     <div id="content-textMessage" class="flex flex-col px-5 w-1/3">
-                        <h3>
+                        <p class="text-white">
                             <img
                                 src={textMessageImg}
                                 class="h-8 w-8 mr-1"
                                 alt={$LL.megaphone.modal.textMessage.title()}
                             />
                             {$LL.megaphone.modal.textMessage.title()}
-                        </h3>
-                        <p class="help-text"><InfoIcon size="18" /> {$LL.megaphone.modal.audioMessage.noAccess()}</p>
+                        </p>
+                        <p class="help-text">
+                            <InfoIcon size="18" />
+                            {$LL.megaphone.modal.audioMessage.noAccess()}
+                        </p>
                         <button class="light max-w-fit" on:click={activateInputText} disabled={!$userIsAdminStore}>
                             {$LL.megaphone.modal.textMessage.button()}</button
                         >
@@ -229,15 +254,18 @@
                         </p>
                     </div>
                     <div id="content-soundMessage" class="flex flex-col px-5 w-1/3">
-                        <h3>
+                        <p class="text-white">
                             <img
                                 src={audioMessageImg}
                                 class="h-8 w-8 mr-1"
                                 alt={$LL.megaphone.modal.audioMessage.title()}
                             />
                             {$LL.megaphone.modal.audioMessage.title()}
-                        </h3>
-                        <p class="help-text"><InfoIcon size="18" /> {$LL.megaphone.modal.audioMessage.noAccess()}</p>
+                        </p>
+                        <p class="help-text">
+                            <InfoIcon size="18" />
+                            {$LL.megaphone.modal.audioMessage.noAccess()}
+                        </p>
                         <button class="light max-w-fit" on:click={activateUploadAudio} disabled={!$userIsAdminStore}>
                             {$LL.megaphone.modal.audioMessage.button()}</button
                         >
@@ -330,7 +358,11 @@
             {#if activeLiveMessage}
                 <div id="active-liveMessage" class="flex flex-col p-5">
                     <h3>
-                        <img src={liveMessageImg} class="h-8 w-8 mr-1" alt={$LL.megaphone.modal.liveMessage.title()} />
+                        <img
+                            src={liveMessageImg}
+                            class="h-8 w-8 mr-1 text-white"
+                            alt={$LL.megaphone.modal.liveMessage.title()}
+                        />
                         {$LL.megaphone.modal.liveMessage.title()}
                     </h3>
                     <div class="flex flew-row justify-center">
@@ -419,7 +451,7 @@
                     </div>
                     <div class="flex flew-row justify-center">
                         <button
-                            class="light"
+                            class="light h-8 w-24 text-black bg-white rounded-md"
                             on:click={startLive}
                             disabled={!$requestedCameraState && !$requestedMicrophoneState}>Start live message</button
                         >
@@ -432,6 +464,7 @@
 
 <style lang="scss">
     .menu-container {
+        position: absolute !important;
         &.mobile {
             width: 100% !important;
             height: 100% !important;

@@ -72,7 +72,11 @@
     import { userHasAccessToBackOfficeStore } from "../../Stores/GameStore";
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
     import { Emoji } from "../../Stores/Utils/emojiSchema";
-    import { megaphoneCanBeUsedStore } from "../../Stores/MegaphoneStore";
+    import {
+        liveStreamingEnabledStore,
+        megaphoneCanBeUsedStore,
+        requestedMegaphoneStore,
+    } from "../../Stores/MegaphoneStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { ADMIN_URL, ENABLE_OPENID } from "../../Enum/EnvironmentVariable";
     import Woka from "../Woka/WokaFromUserId.svelte";
@@ -112,6 +116,7 @@
     import MenuBurgerIcon from "../Icons/MenuBurgerIcon.svelte";
     import PenIcon from "../Icons/PenIcon.svelte";
     import { StringUtils } from "../../Utils/StringUtils";
+    import { connectionManager } from "../../Connection/ConnectionManager";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
 
     // gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
@@ -214,24 +219,24 @@
         }
     }
 
-    // function toggleGlobalMessage() { // eslint-disable-line @typescript-eslint/no-unused-vars
-    //     if ($requestedMegaphoneStore || $liveStreamingEnabledStore || $streamingMegaphoneStore) {
-    //         analyticsClient.stopMegaphone();
-    //         requestedMegaphoneStore.set(false);
-    //         streamingMegaphoneStore.set(false);
-    //         showModalGlobalComminucationVisibilityStore.set(false);
-    //         return;
-    //     }
-    //     if ($showModalGlobalComminucationVisibilityStore) {
-    //         showModalGlobalComminucationVisibilityStore.set(false);
-    //         return;
-    //     }
+    function toggleGlobalMessage() {
+        if ($requestedMegaphoneStore || $liveStreamingEnabledStore || $streamingMegaphoneStore) {
+            analyticsClient.stopMegaphone();
+            requestedMegaphoneStore.set(false);
+            streamingMegaphoneStore.set(false);
+            showModalGlobalComminucationVisibilityStore.set(false);
+            return;
+        }
+        if ($showModalGlobalComminucationVisibilityStore) {
+            showModalGlobalComminucationVisibilityStore.set(false);
+            return;
+        }
 
-    //     resetChatVisibility();
-    //     resetModalVisibility();
-    //     mapEditorModeStore.switchMode(false);
-    //     showModalGlobalComminucationVisibilityStore.set(true);
-    // }
+        resetChatVisibility();
+        resetModalVisibility();
+        mapEditorModeStore.switchMode(false);
+        showModalGlobalComminucationVisibilityStore.set(true);
+    }
 
     function toggleMapEditorMode() {
         if (isMobile) return;
@@ -464,9 +469,10 @@
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
-{#if !$chatVisibilityStore}
+{#if $chatVisibilityStore}
     <ChatOverlay />
 {/if}
+
 <div class="@container/actions w-full absolute z-[301] bottom-0 sm:top-0 transition-all pointer-events-none bp-menu">
     <div class="flex w-full p-2 space-x-2 @xl/actions:p-4 @xl/actions:space-x-4">
         <div
@@ -474,9 +480,14 @@
             transition:fly={{ delay: 500, y: -200, duration: 750 }}
         >
             <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <div class="flex relative transition-all duration-150 z-[2]" class:opacity-0={$chatVisibilityStore}>
+            <div
+                class="flex relative transition-all duration-150 z-[2] {$chatVisibilityStore ? 'hidden' : ''}"
+                class:opacity-0={$chatVisibilityStore}
+                data-testid="chat-action"
+            >
                 <div
                     class="group/btn-message-circle relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg rounded-r-lg sm:rounded-r-none p-2 aspect-square"
+                    data-testid="chat-btn"
                     on:click={() => analyticsClient.openedChat()}
                     on:click={toggleChat}
                     on:mouseenter={() => {
@@ -519,7 +530,7 @@
                 </div>
 
                 <div
-                    class="group/btn-users relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg last:rounded-r-lg p-2 p-2 aspect-square hidden sm:block"
+                    class="group/btn-users relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg last:rounded-r-lg p-2 aspect-square hidden sm:block"
                     on:click={toggleChat}
                 >
                     <div
@@ -1196,6 +1207,7 @@
                                         ENABLE_OPENID
                                             ? 'btn-ghost btn-light'
                                             : 'btn-secondary'}"
+                                        id="invite-btn"
                                     >
                                         {$LL.menu.sub.invite()}
                                     </button>
@@ -1208,14 +1220,23 @@
                                     >
                                         {$LL.actionbar.login()}
                                     </a>
+                                {:else}
+                                    <button
+                                        on:click={() => analyticsClient.logout()}
+                                        on:click={() => connectionManager.logout()}
+                                        class="btn btn-secondary h-12 @sm/actions:h-10 @xl/actions:h-12 text-base @sm/actions:text-sm @xl/actions:text-base rounded select-none ml-2 !px-4 transition-all"
+                                    >
+                                        {$LL.menu.profile.logout()}
+                                    </button>
                                 {/if}
                             </div>
                         </div>
                     </div>
                 {/if}
                 {#if $mapEditorActivated || $userHasAccessToBackOfficeStore}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
-                        id="action-admin"
+                        data-testid="action-admin"
                         class="items-center relative transition-all hidden @lg/actions:block"
                         on:click={() => (adminMenuIsDropped = !adminMenuIsDropped)}
                         on:click|preventDefault={close}
@@ -1247,13 +1268,16 @@
                         </div>
                         {#if adminMenuIsDropped}
                             <div
-                                class="absolute mt-2 top-14 @xl/actions:top-16 right-0 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 right-0 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all"
+                                class="absolute mt-2 top-14 @xl/actions:top-16 right-0 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all"
+                                data-testid="admin-menu"
                                 transition:fly={{ y: 40, duration: 150 }}
                             >
                                 <ul class="p-0 m-0">
                                     {#if $mapEditorActivated}
+                                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                                         <li
                                             class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold"
+                                            data-testid="map-editor"
                                             on:click={() => toggleMapEditorMode()}
                                         >
                                             <div
@@ -1294,6 +1318,8 @@
                                     {/if}
                                     <li
                                         class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold"
+                                        data-testid="global-message"
+                                        on:click={toggleGlobalMessage}
                                     >
                                         <div
                                             class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
@@ -1308,6 +1334,7 @@
                                         >
                                             <div
                                                 class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
+                                                data-testid="megaphone"
                                             >
                                                 <MegaphoneIcon />
                                             </div>
@@ -1322,8 +1349,9 @@
                         {/if}
                     </div>
                 {/if}
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
-                    id="action-user"
+                    data-testid="action-user"
                     class="flex items-center relative transition-all hidden @md/actions:flex"
                     on:click={() => (profileMenuIsDropped = !profileMenuIsDropped)}
                     on:click|preventDefault={close}
@@ -1377,7 +1405,8 @@
                     </div>
                     {#if profileMenuIsDropped}
                         <div
-                            class="absolute mt-2 top-14 @xl/actions:top-16 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 right-0 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all hidden @md/actions:block max-h-[calc(100vh-96px)] overflow-y-auto"
+                            class="absolute mt-2 top-14 @xl/actions:top-16 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 right-0 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-transparent before:border-b-contrast/80 transition-all hidden @md/actions:block max-h-[calc(100vh-96px)] overflow-y-auto"
+                            data-testid="profile-menu"
                             transition:fly={{ y: 40, duration: 150 }}
                         >
                             <div class="p-0 m-0 list-none">
@@ -1513,6 +1542,7 @@
                                 </button>
                                 <button
                                     class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
+                                    id="settings"
                                     on:click={() => showMenuItem(SubMenusInterface.settings)}
                                 >
                                     <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center">
@@ -1639,6 +1669,14 @@
                         >
                             {$LL.actionbar.login()}
                         </a>
+                    {:else}
+                        <button
+                            on:click={() => analyticsClient.logout()}
+                            on:click={() => connectionManager.logout()}
+                            class="btn btn-secondary btn-sm w-full justify-center"
+                        >
+                            {$LL.menu.profile.logout()}
+                        </button>
                     {/if}
                 </div>
             {/if}

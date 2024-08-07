@@ -86,7 +86,7 @@
             {/if}
             <div class="wa-dropdown">
                 <!-- toggle -->
-                <button class="m-0 btn btn-white btn-ghost">
+                <button class="m-0 btn btn-white btn-ghost open">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         class="icon icon-tabler icon-tabler-chevron-right"

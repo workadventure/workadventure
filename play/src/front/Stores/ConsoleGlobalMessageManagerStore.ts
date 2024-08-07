@@ -6,15 +6,20 @@ let message: string;
 
 export const consoleGlobalMessageManagerVisibleStore = writable(false);
 
-export const consoleGlobalMessageManagerVisibleStorePopup = consoleGlobalMessageManagerVisibleStore.subscribe((globalMessage) => {
-  if (globalMessage === true) {
-    popupStore.addPopup(PopUpMessage, {
-      message: message
-    },
-    "message");
-  } else {
-    popupStore.removePopup("message");
-  }
-});
+export const consoleGlobalMessageManagerVisibleStorePopup = consoleGlobalMessageManagerVisibleStore.subscribe(
+    (globalMessage) => {
+        if (globalMessage === true) {
+            popupStore.addPopup(
+                PopUpMessage,
+                {
+                    message: message,
+                },
+                "message"
+            );
+        } else {
+            popupStore.removePopup("message");
+        }
+    }
+);
 
 export const consoleGlobalMessageManagerFocusStore = writable(false);

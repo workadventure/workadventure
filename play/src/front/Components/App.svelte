@@ -1,10 +1,10 @@
 <script lang="ts">
+    /* eslint no-undef: 0 */
     import { onMount } from "svelte";
     import * as Sentry from "@sentry/svelte";
     import WebFontLoaderPlugin from "phaser3-rex-plugins/plugins/webfontloader-plugin.js";
     import OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
     import { DEBUG_MODE, SENTRY_DSN_FRONT, SENTRY_ENVIRONMENT, SENTRY_RELEASE } from "../Enum/EnvironmentVariable";
-    import { coWebsiteManager } from "../WebRtc/CoWebsiteManager";
     import { HdpiManager } from "../Phaser/Services/HdpiManager";
     import { EntryScene } from "../Phaser/Login/EntryScene";
     import { LoginScene } from "../Phaser/Login/LoginScene";
@@ -19,12 +19,24 @@
     import { HtmlUtils } from "../WebRtc/HtmlUtils";
     import { iframeListener } from "../Api/IframeListener";
     import { desktopApi } from "../Api/Desktop";
+    import {
+        coWebsiteManager,
+        coWebsites,
+        fullScreenCowebsite,
+        isResized,
+        isVerticalMode,
+    } from "../Stores/CoWebsiteStore";
     import GameOverlay from "./GameOverlay.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
 
     let WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
     let game: Game;
     let gameDiv: HTMLDivElement;
+    let activeCowebsite = $coWebsites[0];
+    let cowebsiteContainer: HTMLDivElement;
+    let widthPercent = 50;
+    let flexBasis: string | undefined;
+    let gameContainer: HTMLDivElement;
 
     onMount(() => {
         if (SENTRY_DSN_FRONT != undefined) {
@@ -176,30 +188,76 @@
         window.addEventListener("resize", function () {
             waScaleManager.applyNewSize();
             waScaleManager.refreshFocusOnTarget();
+            updateDynamicStyles();
+            updateScreenSize();
         });
 
-        // coWebsiteManager.onResize is a singleton. No need to unsubscribe.
-        //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-        coWebsiteManager.onResize.subscribe(() => {
-            waScaleManager.applyNewSize();
-            waScaleManager.refreshFocusOnTarget();
-        });
-
+        updateScreenSize();
         iframeListener.init();
         desktopApi.init();
     });
+
+    function updateScreenSize() {
+        if (window.innerWidth < 768) {
+            isVerticalMode.set(true);
+        } else {
+            isVerticalMode.set(false);
+        }
+    }
+
+    $: if ($coWebsites.length > 0) {
+        activeCowebsite = $coWebsites[0];
+        if (!cowebsiteContainer) {
+            cowebsiteContainer = document.getElementById("cowebsiteContainer") as HTMLDivElement;
+            if (cowebsiteContainer) {
+                updateDynamicStyles();
+            }
+        } else {
+            updateDynamicStyles();
+        }
+    }
+
+    function updateDynamicStyles() {
+        widthPercent = activeCowebsite.getWidthPercent() || 50;
+
+        if (widthPercent < 25) widthPercent = 25;
+        else if (widthPercent > 75) widthPercent = 75;
+
+        flexBasis = `${widthPercent}%`;
+
+        if (cowebsiteContainer) {
+            cowebsiteContainer.style.flexBasis = flexBasis;
+            cowebsiteContainer.style.flexGrow = "1";
+            cowebsiteContainer.style.flexShrink = "0";
+
+            if ($isVerticalMode || $isResized) {
+                cowebsiteContainer.style.flex = "1";
+            }
+        }
+    }
+
+    function closeCoWebsiteFullScreen() {
+        gameContainer.classList.remove("hidden");
+        coWebsiteManager.closeCoWebsite(activeCowebsite);
+    }
+
+    $: if ($fullScreenCowebsite && $coWebsites.length < 1) {
+        closeCoWebsiteFullScreen();
+    }
+
+    $: $coWebsites.length < 1 ? (flexBasis = undefined) : null;
+    $: $isResized ? updateDynamicStyles() : null;
 </script>
 
-<div class="bg-contrast h-screen w-screen absolute z-[2]" />
-<div class="bg-contrast h-screen w-screen absolute z-[2]" />
-<div class="main-container z-10 relative">
-    <!-- Create the editor container -->
-    <GameOverlay {game} />
-    <div id="game" bind:this={gameDiv} class="absolute top-0 -z-10" />
-    <GameOverlay {game} />
-    <div id="game" bind:this={gameDiv} class="absolute top-0 -z-10" />
-    <CoWebsitesContainer />
+<div class="h-screen w-screen flex flex-col-reverse md:flex-row" id="main-container" bind:this={gameContainer}>
+    <div id="game" class="relative {$fullScreenCowebsite ? 'hidden' : ''}" bind:this={gameDiv}>
+        <GameOverlay {game} />
+    </div>
+    {#if $coWebsites.length > 0}
+        <div bind:this={cowebsiteContainer}>
+            {#if flexBasis !== undefined}
+                <CoWebsitesContainer />
+            {/if}
+        </div>
+    {/if}
 </div>
-
-<style lang="scss">
-</style>

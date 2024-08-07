@@ -3,7 +3,7 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { connectionManager } from "../../Connection/ConnectionManager";
     import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
-    import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
+    import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
 
     function close(): void {
         errorStore.clearClosableMessages();
@@ -20,10 +20,12 @@
         if ((link = (event.target as HTMLAnchorElement).href) == undefined) return;
 
         const coWebsite = new SimpleCoWebsite(new URL(link), undefined, undefined, 75, true);
-        coWebsiteManager.addCoWebsiteToStore(coWebsite, undefined);
-        coWebsiteManager.loadCoWebsite(coWebsite).catch(() => {
-            console.error("Error during loading a co-website: " + coWebsite.getUrl());
-        });
+        coWebsiteManager.addCoWebsiteToStore(coWebsite);
+        // try {
+        //     coWebsiteManager.loadCoWebsite(coWebsite);
+        // } catch (e) {
+        //     console.error("Error during loading a co-website: " + coWebsite.getUrl(), e);
+        // }
     }
 </script>
 

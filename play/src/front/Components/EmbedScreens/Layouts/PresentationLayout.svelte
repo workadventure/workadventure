@@ -1,15 +1,15 @@
 <script lang="ts">
-    import { afterUpdate, onMount } from "svelte";
+    import { onMount } from "svelte";
     import { highlightedEmbedScreen } from "../../../Stores/HighlightedEmbedScreenStore";
     import CamerasContainer from "../CamerasContainer.svelte";
     import MediaBox from "../../Video/MediaBox.svelte";
-    import { coWebsiteManager } from "../../../WebRtc/CoWebsiteManager";
     import { isMediaBreakpointDown, isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
     import { myCameraStore, proximityMeetingStore } from "../../../Stores/MyMediaStore";
     import MyCamera from "../../MyCamera.svelte";
     import { myJitsiCameraStore, streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
     import Loading from "../../Video/Loading.svelte";
     import { jitsiLoadingStore } from "../../../Streaming/BroadcastService";
+    import { coWebsiteManager } from "../../../Stores/CoWebsiteStore";
 
     function closeCoWebsite() {
         if ($highlightedEmbedScreen?.type === "cowebsite") {
@@ -22,12 +22,6 @@
             });
         }
     }
-
-    afterUpdate(() => {
-        if ($highlightedEmbedScreen) {
-            coWebsiteManager.resizeAllIframes();
-        }
-    });
 
     let layoutDom: HTMLDivElement;
 
@@ -52,7 +46,12 @@
     });
 </script>
 
-<div id="presentation-layout" bind:this={layoutDom} class:full-medias={displayFullMedias} class="flex flex-col">
+<div
+    id="presentation-layout"
+    bind:this={layoutDom}
+    class:full-medias={displayFullMedias}
+    class="flex flex-col cameras-container"
+>
     {#if displayFullMedias}
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
             <div id="full-medias" class="z-[300] relative mx-auto top-8 h-1/2 overflow-y-auto h-full">

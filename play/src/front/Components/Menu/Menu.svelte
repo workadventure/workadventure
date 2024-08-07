@@ -164,7 +164,7 @@
                 </div>
             {/each}
         </nav>
-        <div class="absolute bottom-8 w-full px-4 hidden @md/main-layout:block">
+        <!-- <div class="absolute bottom-8 w-full px-4 hidden @md/main-layout:block">
             <div>
                 <a href="https://workadventu.re/contact/" target="_blank" class="btn btn-ghost btn-light btn-sm w-full">
                     <svg
@@ -190,7 +190,8 @@
                         <path d="M4 7l3.75 2.4" />
                         <path d="M20 7l-3.75 2.4" />
                     </svg>
-                    {$LL.menu.sub.report()} <!-- TODO Hugo : Icon and link -->
+                    {$LL.menu.sub.report()}
+                    TODO Hugo : Icon and link
                 </a>
             </div>
             <div>
@@ -212,15 +213,16 @@
                         <path d="M12 16v.01" />
                         <path d="M12 13a2 2 0 0 0 .914 -3.782a1.98 1.98 0 0 0 -2.414 .483" />
                     </svg>
-                    {$LL.menu.sub.report()} <!-- TODO Hugo : Icon and link -->
+                    {$LL.menu.sub.report()} TODO Hugo : Icon and link
                 </a>
             </div>
-        </div>
+        </div> -->
     </div>
     <div class="menu-submenu-container w-full !rounded-r-xl overflow-y relative h-full">
         <button
             type="button"
             class="btn btn-lg btn-ghost btn-light fixed @md/main-layout:absolute right-0 top-0 !p-[0.5rem] @md/main-layout:!p-[1.15rem] !rounded-none cursor-pointer m-0"
+            id="closeMenu"
             on:click={closeMenu}
         >
             <!-- TODO HUGO : I REMOVE class close-window -->
@@ -241,6 +243,7 @@
         </h2>
         <div
             class="bg-contrast/80 h-[calc(100%-5rem)] mt-0 @md/main-layout:mt-20 overflow-y-auto text-white pb-8 rounded-none @md/main-layout:rounded-tl overflow-y-scroll @md/main-layout:overflow-none"
+            id="submenu"
         >
             <svelte:component this={activeComponent} {...props} />
         </div>

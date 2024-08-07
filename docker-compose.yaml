@@ -46,7 +46,7 @@ services:
         environment:
             # On startup, we ask the messages container to regenerate the files.
             # Note: we need to use this "messages" container because of ARM64 processors that are not supported with protoc (used in "messages" container)
-            STARTUP_COMMAND_0: if [[ $(dpkg --print-architecture) == "arm64" ]]; then sudo apt-get update && sudo apt-get -y install build-essential python3; fi;
+            # STARTUP_COMMAND_0: if [[ $(dpkg --print-architecture) == "arm64" ]]; then sudo apt-get update && sudo apt-get -y install build-essential python3; fi;
             STARTUP_COMMAND_1: ../wait-proto.sh
             STARTUP_COMMAND_2: ../npm-install.sh
             STARTUP_COMMAND_3: npm run typesafe-i18n
@@ -278,6 +278,8 @@ services:
             ENABLE_BASIC_AUTHENTICATION: "true"
             AUTHENTICATION_USER: "john.doe"
             AUTHENTICATION_PASSWORD: "password"
+            ENABLE_BEARER_AUTHENTICATION: "true"
+            AUTHENTICATION_TOKEN: "1233"
             API_URL: back:50051
             # Sentry integration
             SENTRY_DSN: $SENTRY_DSN_MAPSTORAGE
@@ -455,28 +457,3 @@ services:
         healthcheck:
             #disable: true
             timeout: 5s
-
-#  coturn:
-#    image: coturn/coturn:4.5.2
-#    command:
-#      - turnserver
-#      #- -c=/etc/coturn/turnserver.conf
-#      - --log-file=stdout
-#      - --external-ip=$$(detect-external-ip)
-#      - --listening-port=3478
-#      - --min-port=10000
-#      - --max-port=10010
-#      - --tls-listening-port=5349
-#      - --listening-ip=0.0.0.0
-#      - --realm=coturn.workadventure.localhost
-#      - --server-name=coturn.workadventure.localhost
-#      - --lt-cred-mech
-#      # Enable Coturn "REST API" to validate temporary passwords.
-#      #- --use-auth-secret
-#      #- --static-auth-secret=SomeStaticAuthSecret
-#      #- --userdb=/var/lib/turn/turndb
-#      - --user=workadventure:WorkAdventure123
-#      # use real-valid certificate/privatekey files
-#      #- --cert=/root/letsencrypt/fullchain.pem
-#      #- --pkey=/root/letsencrypt/privkey.pem
-#    network_mode: host

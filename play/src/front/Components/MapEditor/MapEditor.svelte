@@ -58,7 +58,7 @@
         top: 0;
         right: 0;
         width: fit-content !important;
-        z-index: 425;
+        z-index: 800;
 
         pointer-events: auto;
         color: whitesmoke;

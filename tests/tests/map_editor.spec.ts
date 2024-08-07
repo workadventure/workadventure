@@ -42,6 +42,8 @@ test.describe('Map editor', () => {
     await page2.evaluate(() => localStorage.setItem('debug', '*'));
     await login(page2, "test2", 5);
 
+    // await page.pause();
+    // await Menu.openMenuAdmin(page);
     await Menu.openMapEditor(page);
     await MapEditor.openConfigureMyRoom(page);
     await ConfigureMyRoom.selectMegaphoneItemInCMR(page);
@@ -122,6 +124,7 @@ test.describe('Map editor', () => {
 
     await Menu.openMapEditor(page);
     await MapEditor.openAreaEditor(page);
+    // await expect(page.locator('canvas')).toBeVisible();
     await AreaEditor.drawArea(page, {x: 1*32*1.5, y: 5}, {x: 9*32*1.5, y: 4*32*1.5});
     await AreaEditor.addProperty(page, 'Speaker zone');
     await AreaEditor.setSpeakerMegaphoneProperty(page, `${browser.browserType().name()}SpeakerZone`);
@@ -244,7 +247,7 @@ test.describe('Map editor', () => {
     }
 
     //await Menu.openMapEditor(page);
-    await page.getByRole('button', {name: 'toggle-map-editor'}).click();
+    await Menu.openMapEditor(page);
     await MapEditor.openAreaEditor(page);
     await AreaEditor.drawArea(page, {x: 13*32, y: 13*32}, {x: 15*32, y: 15*32});
     await AreaEditor.setAreaName(page, 'My app zone');
@@ -296,7 +299,7 @@ test.describe('Map editor', () => {
     }
 
     //await Menu.openMapEditor(page);
-    await page.getByRole('button', {name: 'toggle-map-editor'}).click();
+    await Menu.openMapEditor(page);
     await MapEditor.openAreaEditor(page);
     await AreaEditor.drawArea(page, {x: 13*32, y: 13*32}, {x: 15*32, y: 15*32});
 
@@ -321,7 +324,7 @@ test.describe('Map editor', () => {
     await AreaEditor.addProperty(page, 'Open Google Drive');
     // fill Google Slides link
     await page.getByPlaceholder('https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview').first().fill('https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview');
-    
+
 
     await Menu.closeMapEditor(page);
 
@@ -359,7 +362,7 @@ test.describe('Map editor', () => {
     }
 
     // open map editor
-    await page.getByRole('button', {name: 'toggle-map-editor'}).click();
+    await Menu.openMapEditor(page);
     await MapEditor.openEntityEditor(page);
 
     // select entity and push it into the map
@@ -427,7 +430,7 @@ test.describe('Map editor', () => {
     }
 
     // open map editor
-    await page.getByRole('button', {name: 'toggle-map-editor'}).click();
+    await Menu.openMapEditor(page);
     await MapEditor.openEntityEditor(page);
 
     // select entity and push it into the map

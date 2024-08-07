@@ -15,7 +15,6 @@ import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { OpenCoWebsite } from "../GameMapPropertiesListener";
 import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
-import { coWebsiteManager } from "../../../WebRtc/CoWebsiteManager";
 import { SimpleCoWebsite } from "../../../WebRtc/CoWebsite/SimpleCoWebsite";
 import { analyticsClient } from "../../../Administration/AnalyticsClient";
 import { localUserStore } from "../../../Connection/LocalUserStore";
@@ -36,6 +35,7 @@ import { popupStore } from "../../../Stores/PopupStore";
 import JitsiPopup from "../../../Components/PopUp/PopUpJitsi.svelte";
 import PopUpTab from "../../../Components/PopUp/PopUpTab.svelte"; // Replace 'path/to/PopUpTab' with the actual path to the PopUpTab class
 import PopUpCowebsite from "../../../Components/PopUp/PopupCowebsite.svelte"; // Import the necessary module
+import { coWebsiteManager } from "../../../Stores/CoWebsiteStore";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -328,7 +328,7 @@ export class AreasPropertiesListener {
 
             coWebsiteOpen.coWebsite = coWebsite;
 
-            coWebsiteManager.addCoWebsiteToStore(coWebsite, property.position);
+            coWebsiteManager.addCoWebsiteToStore(coWebsite);
 
             //user in zone to open cowesite with only icon
             inOpenWebsite.set(true);
@@ -405,11 +405,11 @@ export class AreasPropertiesListener {
                 domainWithoutProtocol
             );
 
-            coWebsiteManager.addCoWebsiteToStore(coWebsite, 0);
-
-            coWebsiteManager.loadCoWebsite(coWebsite).catch((err) => {
+            try {
+                coWebsiteManager.addCoWebsiteToStore(coWebsite);
+            } catch (err) {
                 console.error(err);
-            });
+            }
 
             analyticsClient.enteredJitsi(roomName, this.scene.roomUrl);
 
@@ -534,7 +534,7 @@ export class AreasPropertiesListener {
 
         coWebsiteOpen.coWebsite = coWebsite;
 
-        coWebsiteManager.addCoWebsiteToStore(coWebsite, property.position);
+        coWebsiteManager.addCoWebsiteToStore(coWebsite);
 
         this.loadCoWebsiteFunction(coWebsite, actionId);
 
@@ -546,9 +546,12 @@ export class AreasPropertiesListener {
     }
 
     private loadCoWebsiteFunction(coWebsite: CoWebsite, actionId: string): void {
-        coWebsiteManager.loadCoWebsite(coWebsite).catch(() => {
-            console.error("Error during loading a co-website: " + coWebsite.getUrl());
-        });
+        // try {
+        //     coWebsiteManager.loadCoWebsite(coWebsite)
+        // }
+        // catch (e) {
+        //     console.error("Error during loading a co-website: " + coWebsite.getUrl(), e);
+        // };
         popupStore.removePopup(actionId);
     }
 
