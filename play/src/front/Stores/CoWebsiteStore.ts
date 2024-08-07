@@ -126,16 +126,10 @@ export class CoWebsiteManager {
         return id;
     }
 
-    public getCoWebsiteById(coWebsiteId: string): CoWebsite {
-        const coWebsite = get(coWebsites).find((coWebsite: CoWebsite) => {
+    public getCoWebsiteById(coWebsiteId: string): CoWebsite | undefined {
+        return get(coWebsites).find((coWebsite: CoWebsite) => {
             return coWebsite.getId() === coWebsiteId;
         });
-
-        if (!coWebsite) {
-            throw new Error(`CoWebsite with ID ${coWebsiteId} not found`);
-        }
-
-        return coWebsite;
     }
 
     public getCoWebsites() {
