@@ -8,6 +8,7 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { IconForbid, IconMoreVertical } from "@wa-icons";
+    import { showReportScreenStore } from "../../../Stores/ShowReportScreenStore";
 
     export let user: ChatUser;
 
@@ -80,9 +81,11 @@
             <span
                 class="ban wa-dropdown-item tw-text-pop-red"
                 on:click|stopPropagation={() => {
-                    if (user.username && user.uuid)
-                        // TODO : display the "ban" screen instead of directly banning the user
-                        gameManager.getCurrentGameScene().connection?.emitBanPlayerMessage(user.uuid, user.username);
+                    if (user.username && user.id){
+                        //TODO : fix error on open
+                        showReportScreenStore.set({ userId: user.id, userName: user.username});
+                    }
+                    
                 }}><IconForbid font-size="13" /> {$LL.chat.ban.title()}</span
             >
         {/if}
