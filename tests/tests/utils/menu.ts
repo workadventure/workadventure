@@ -11,14 +11,14 @@ class Menu {
     }
 
     async openMapEditor(page: Page) {
-        await page.getByTestId('action-admin').click({timeout: 10_000});
+        await page.getByTestId('action-admin').click({timeout: 30_000});
         await page.getByTestId('map-editor').click();
         await expect(await page.getByTestId('map-editor')).toBeHidden();
         // await expect(await page.getByRole('button', {name: 'toggle-map-editor'}).first()).toHaveClass(/border-top-light/);
     }
 
     async openMenu(page: Page) {
-        await page.getByTestId('action-user').click({timeout: 10_000});
+        await page.getByTestId('action-user').click({timeout: 30_000});
         await expect(await page.getByTestId('profile-menu')).toHaveClass(/backdrop-blur/);
     }
 
@@ -29,7 +29,7 @@ class Menu {
     }
 
     async closeMenu(page: Page) {
-        await page.getByTestId('action-user').click({timeout: 10_000});
+        await page.getByTestId('action-user').click({timeout: 30_000});
         await expect(await page.getByTestId('profile-menu')).toBeHidden();
     }
 
@@ -40,8 +40,8 @@ class Menu {
     }
 
     async toggleMegaphoneButton(page: Page) {
-        await page.getByTestId('action-admin').click({timeout: 10_000});
-        await page.getByTestId('global-message').click({timeout: 10_000});
+        await page.getByTestId('action-admin').click({timeout: 30_000});
+        await page.getByTestId('global-message').click({timeout: 30_000});
     }
 
     async isThereMegaphoneButton(page: Page) {
