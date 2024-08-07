@@ -13,12 +13,12 @@ import {
     RoomMetadataType,
 } from "../front/ExternalModule/ExtensionModule";
 import { NODE_ENV } from "../front/Enum/EnvironmentVariable";
+import { OpenCoWebsiteObject } from "../front/Chat/Utils";
 import { TeamsActivity, TeamsAvailability } from "./MSTeamsInterface";
 
 import TeamsMeetingAreaPropertyEditor from "./Components/TeamsMeetingAreaPropertyEditor.svelte";
 import AddTeamsMeetingAreaPropertyButton from "./Components/AddTeamsMeetingAreaPropertyButton.svelte";
 import TeamsPopupStatus from "./Components/TeamsPopupStatus.svelte";
-import TeamsPopupLuncher from "./Components/TeamsPopupLuncher.svelte";
 
 const MS_GRAPH_ENDPOINT_V1 = "https://graph.microsoft.com/v1.0";
 const MS_GRAPH_ENDPOINT_BETA = "https://graph.microsoft.com/beta";
@@ -98,13 +98,19 @@ class MSTeams implements ExtensionModule {
     private roomMetadata!: RoomMetadataType;
 
     private checkModuleSynschronisationInterval: NodeJS.Timer | undefined = undefined;
-
     private teamsSynchronisationStore = writable<ExternalModuleStatus>(ExternalModuleStatus.SYNC);
 
-    private teamsPopupLuncher: TeamsPopupLuncher | undefined = undefined;
+    private openCoWebSite?: (
+        openCoWebsiteObject: OpenCoWebsiteObject,
+        source: MessageEventSource | null
+    ) => Promise<{ id: string }>;
+    private closeCoWebSite?: (id: string) => unknown;
+    private cowebsiteOpenedId?: string;
 
     init(roomMetadata: RoomMetadataType, options?: ExtensionModuleOptions) {
         this.roomMetadata = roomMetadata;
+        this.openCoWebSite = options?.openCoWebSite;
+        this.closeCoWebSite = options?.closeCoWebsite;
         this.teamsSynchronisationStore.set(ExternalModuleStatus.SYNC);
         const microsoftTeamsMetadata = roomMetadata.player.accessTokens[0];
         if (roomMetadata.player.accessTokens.length === 0 && microsoftTeamsMetadata === undefined) {
@@ -711,10 +717,11 @@ class MSTeams implements ExtensionModule {
     }
 
     private handleAreaPropertyOnEnter(area: AreaData) {
+        console.debug("Enter extension module area");
         notificationPlayingStore.playNotification("Opening Teams Meeting...", undefined, area.id);
         this.createOrGetMeeting(area.id)
-            .then((data) => {
-                this.openPopupMeeting(
+            .then(async (data) => {
+                const cowebsiteOpened = await this.openPopupMeeting(
                     data.subject,
                     data.joinWebUrl,
                     data.joinMeetingIdSettings.joinMeetingId,
@@ -722,6 +729,7 @@ class MSTeams implements ExtensionModule {
                     new Date(data.endDateTime),
                     data.joinMeetingIdSettings.passcode
                 );
+                this.cowebsiteOpenedId = cowebsiteOpened.id;
             })
             .catch((error) => {
                 console.error(error);
@@ -731,11 +739,16 @@ class MSTeams implements ExtensionModule {
     }
 
     private handleAreaPropertyOnLeave(area?: AreaData) {
+        console.debug("Leaving extension module area");
         if (area) notificationPlayingStore.removeNotificationById(area.id);
 
-        if (this.teamsPopupLuncher) this.teamsPopupLuncher.$destroy();
-
-        console.debug("Leaving extension module area");
+        try {
+            if (this.cowebsiteOpenedId && this.closeCoWebSite) this.closeCoWebSite(this.cowebsiteOpenedId);
+        } catch (e) {
+            console.error("Error when we try to close the cowebsite", e);
+        } finally {
+            this.cowebsiteOpenedId = undefined;
+        }
     }
 
     get statusStore() {
@@ -746,34 +759,47 @@ class MSTeams implements ExtensionModule {
         return [TeamsPopupStatus];
     }
 
-    openPopupMeeting(
+    async openPopupMeeting(
         subject: string,
         joinWebUrl: string,
         meetingId: string,
         startDateTime: Date,
         endDateTime: Date,
         passcode: string | undefined
-    ) {
+    ): Promise<{ id: string }> {
         console.info("Opening Teams Meeting", joinWebUrl);
+        // Open cowebsite
+        const URITeamsIframeLink = new URL(`${this.adminUrl}/iframe/ask-to-join-meeting-ms-teams`);
+        URITeamsIframeLink.searchParams.append("joinMeetingId", meetingId);
+        URITeamsIframeLink.searchParams.append("joinUrl", joinWebUrl);
+        URITeamsIframeLink.searchParams.append("subject", subject);
+        URITeamsIframeLink.searchParams.append("startDateTime", startDateTime.toISOString());
+        URITeamsIframeLink.searchParams.append("endDateTime", endDateTime.toISOString());
+        if (passcode) {
+            URITeamsIframeLink.searchParams.append("passcode", passcode);
+        }
+        console.log("Opening Teams Meeting", URITeamsIframeLink.toString());
+        if (this.openCoWebSite)
+            return await this.openCoWebSite(
+                {
+                    url: URITeamsIframeLink.toString(),
+                    allowApi: true,
+                    widthPercent: 50,
+                    position: 1,
+                },
+                window
+            );
+        throw new Error("Open CoWebSite is not defined");
+    }
 
-        // Add the popup teams component to the store
-        const elementTarget = document.getElementById("main-layout-main");
-        if (elementTarget === null) throw new Error("Unable to find the main-layout-main element");
-
-        this.teamsPopupLuncher = new TeamsPopupLuncher({
-            target: elementTarget,
-            props: {
-                subject: subject,
-                joinWebUrl: joinWebUrl,
-                passcode: passcode,
-                meetingId: meetingId,
-                startDateTime: startDateTime,
-                endDateTime: endDateTime,
-            },
-        });
-        this.teamsPopupLuncher.$on("close", () => {
-            if (this.teamsPopupLuncher) this.teamsPopupLuncher.$destroy();
-        });
+    get meetingSynchronised() {
+        return this.roomMetadata.teamsstings.communication;
+    }
+    get calendarSynchronised() {
+        return this.roomMetadata.teamsstings.calendar;
+    }
+    get presenceSynchronised() {
+        return this.roomMetadata.teamsstings.status;
     }
 }
 

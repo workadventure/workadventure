@@ -153,7 +153,7 @@ import { askDialogStore } from "../../Stores/MeetingStore";
 import { hideBubbleConfirmationModal } from "../../Rules/StatusRules/statusChangerFunctions";
 import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/statusChanger";
 import { warningMessageStore } from "../../Stores/ErrorStore";
-import { getCoWebSite, openCoWebSite } from "../../Chat/Utils";
+import { closeCoWebsite, getCoWebSite, openCoWebSite, openCoWebSiteWithoutSource } from "../../Chat/Utils";
 import { LocalSpaceProviderSingleton } from "../../Space/SpaceProvider/SpaceStore";
 import { CONNECTED_USER_FILTER_NAME, WORLD_SPACE_NAME } from "../../Space/Space";
 import { StreamSpaceWatcherSingleton } from "../../Space/SpaceWatcher/SocketSpaceWatcher";
@@ -2075,6 +2075,8 @@ export class GameScene extends DirtyScene {
                             adminUrl: ADMIN_URL,
                             roomId: this.roomUrl,
                             externalModuleMessage: this.connection!.externalModuleMessage,
+                            openCoWebSite: openCoWebSiteWithoutSource,
+                            closeCoWebsite,
                         });
                         // TODO change that to check if the calendar synchro is enabled from admin
                         if (parsedRoomMetadata.data.teamsstings.calendar) isActivatedStore.set(true);
@@ -2901,13 +2903,7 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("closeCoWebsite", (coWebsiteId) => {
-            const coWebsite = coWebsiteManager.getCoWebsiteById(coWebsiteId);
-
-            if (!coWebsite) {
-                throw new Error("Unknown co-website");
-            }
-
-            return coWebsiteManager.closeCoWebsite(coWebsite);
+            return closeCoWebsite(coWebsiteId);
         });
 
         iframeListener.registerAnswerer("closeCoWebsites", () => {

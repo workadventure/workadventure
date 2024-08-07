@@ -9,6 +9,9 @@
     const dispatch = createEventDispatcher();
 
     export let synchronisationStatusStore: Writable<ExternalModuleStatus>;
+    export let meetingSynchronised = false;
+    export let calendarSynchronised = false;
+    export let presenceSynchronised = false;
 
     function closeModal() {
         dispatch("close");
@@ -31,9 +34,23 @@
                 {$LL.actionbar.externalModule.status.onLine()}
             </p>
             <ul>
-                <li>Meeting ✅</li>
-                <li>Calendar ✅</li>
-                <li>Presence ✅</li>
+                {#if meetingSynchronised}
+                    <li>Meeting ✅</li>
+                {:else}
+                    <li>Meeting ❌</li>
+                {/if}
+
+                {#if calendarSynchronised}
+                    <li>Calendar ✅</li>
+                {:else}
+                    <li>Calendar ❌</li>
+                {/if}
+
+                {#if presenceSynchronised}
+                    <li>Presence ✅</li>
+                {:else}
+                    <li>Presence ❌</li>
+                {/if}
             </ul>
         {/if}
 
@@ -42,9 +59,23 @@
                 {$LL.actionbar.externalModule.status.sync()}
             </p>
             <ul>
-                <li>Meeting 🔄</li>
-                <li>Calendar 🔄</li>
-                <li>Presence 🔄</li>
+                {#if meetingSynchronised}
+                    <li>Meeting 🔄</li>
+                {:else}
+                    <li>Meeting ❌</li>
+                {/if}
+
+                {#if calendarSynchronised}
+                    <li>Calendar 🔄</li>
+                {:else}
+                    <li>Calendar ❌</li>
+                {/if}
+
+                {#if presenceSynchronised}
+                    <li>Presence 🔄</li>
+                {:else}
+                    <li>Presence ❌</li>
+                {/if}
             </ul>
         {/if}
 
@@ -69,9 +100,9 @@
         <button
             class="light tw-p-4"
             on:click={goToReSync}
-            disabled={$synchronisationStatusStore !== ExternalModuleStatus.ONLINE}
-            class:tw-cursor-not-allowed={$synchronisationStatusStore !== ExternalModuleStatus.ONLINE}
-            class:tw-opacity-20={$synchronisationStatusStore !== ExternalModuleStatus.ONLINE}
+            disabled={$synchronisationStatusStore === ExternalModuleStatus.ONLINE}
+            class:tw-cursor-not-allowed={$synchronisationStatusStore === ExternalModuleStatus.ONLINE}
+            class:tw-opacity-20={$synchronisationStatusStore === ExternalModuleStatus.ONLINE}
         >
             Sync my Teams 🚀
         </button>
