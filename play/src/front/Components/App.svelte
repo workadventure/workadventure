@@ -1,4 +1,5 @@
 <script lang="ts">
+    /* eslint no-undef: 0 */
     import { onMount } from "svelte";
     import * as Sentry from "@sentry/svelte";
     import WebFontLoaderPlugin from "phaser3-rex-plugins/plugins/webfontloader-plugin.js";
