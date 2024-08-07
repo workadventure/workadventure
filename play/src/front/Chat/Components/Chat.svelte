@@ -9,10 +9,12 @@
     import ChatError from "./ChatError.svelte";
     import RoomList from "./RoomList.svelte";
     import { IconShieldLock } from "@wa-icons";
+    import { AdminUserProvider } from "../UserProvider/AdminUserProvider";
 
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
 
     const chat = gameManager.getCurrentGameScene().chatConnection;
+    const adminUserProvider = gameManager.getCurrentGameScene().adminUserProvider;
     const DONE_TYPING_INTERVAL = 2000;
     $: chatConnectionStatus = chat.connectionStatus;
 
@@ -30,9 +32,10 @@
 
             setConnectedUsersFilter();
 
-            chat.searchUsers(searchValue).finally(() => {
+            adminUserProvider.searchUsers(searchValue).finally(() => {
                 searchLoader = false;
             });
+
         }, DONE_TYPING_INTERVAL);
     };
 

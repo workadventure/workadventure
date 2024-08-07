@@ -15,6 +15,7 @@
 
     $: usersByRoom = gameManager.getCurrentGameScene().userProviderMerger.usersByRoomStore;
 
+    //TODO: use PlayUri instead roomName (entries instead values)
     $: roomsWithUsers = Array.from($usersByRoom.values())
         .reduce((roomsWithUsersAcc, currentRoomWithUsers) => {
             let roomName = currentRoomWithUsers.roomName ?? $LL.chat.userList.disconnected();
