@@ -5,11 +5,14 @@ import { RoomConnection } from "../../Connection/RoomConnection";
 import { SpaceProviderInterface } from "./SpaceProviderInterface";
 
 export class LocalSpaceProvider implements SpaceProviderInterface {
-    constructor(private spaces: Map<string, SpaceInterface> = new Map<string, SpaceInterface>()) {}
+    constructor(
+        private _connection: RoomConnection,
+        private spaces: Map<string, SpaceInterface> = new Map<string, SpaceInterface>()
+    ) {}
 
     add(spaceName: string, metadata: Map<string, unknown> = new Map<string, unknown>()): SpaceInterface {
         if (this.exist(spaceName)) throw new SpaceAlreadyExistError(spaceName);
-        const newSpace: SpaceInterface = new Space(spaceName, metadata);
+        const newSpace: SpaceInterface = new Space(spaceName, metadata, this._connection);
         this.spaces.set(newSpace.getName(), newSpace);
         return newSpace;
     }

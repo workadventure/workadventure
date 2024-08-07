@@ -56,9 +56,21 @@ export class UserProviderMerger {
                             id: user.id || acc.id,
                         };
                     });
+
+                    const defaultUser = {
+                        chatId: "",
+                        username: "",
+                        avatarUrl: undefined,
+                        roomName: undefined,
+                        playUri: undefined,
+                        color: undefined,
+                        id: undefined,
+                    };
+
                     const fullUser = {
+                        ...defaultUser,
                         ...mergedUser,
-                        avatarUrl: mergedUser.avatarUrl ?? null,
+                        username: mergedUser.username ?? "",
                         availabilityStatus: mergedUser.availabilityStatus ?? writable(AvailabilityStatus.UNCHANGED),
                     };
 

@@ -136,6 +136,7 @@ describe("StreamSpaceWatcher", () => {
             user: {
                 id: 1,
             },
+            updateMask: {},
         } as UpdateSpaceUserMessage;
 
         const mockSpaceFilter: SpaceFilterInterface = {

@@ -48,10 +48,17 @@ describe("UserProviderMerger", () => {
         const usersByRoom = get(userProviderMerger.usersByRoomStore);
 
         // Expected result
-        expect(usersByRoom.get("playUri1").roomName).toBe("Room1");
-        expect(get(usersByRoom.get("playUri1").users[0].availabilityStatus)).toBe(AvailabilityStatus.ONLINE);
-        expect(usersByRoom.get("playUri1").users[1].username).toBe("Eve");
-        expect(usersByRoom.get(undefined).users[0].username).toBe("Charlie");
-        expect(get(usersByRoom.get(undefined).users[0].availabilityStatus)).toBe(AvailabilityStatus.UNCHANGED);
+        expect(usersByRoom?.get("playUri1")?.roomName).toBe("Room1");
+
+        expect(get(usersByRoom.get("playUri1")?.users[0].availabilityStatus || writable())).toBe(
+            AvailabilityStatus.ONLINE
+        );
+
+        expect(usersByRoom?.get("playUri1")?.users[1].username).toBe("Eve");
+        expect(usersByRoom?.get(undefined)?.users[0].username).toBe("Charlie");
+
+        expect(get(usersByRoom.get(undefined)?.users[0].availabilityStatus || writable())).toBe(
+            AvailabilityStatus.UNCHANGED
+        );
     });
 });

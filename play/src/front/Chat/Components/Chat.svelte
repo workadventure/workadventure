@@ -9,7 +9,6 @@
     import ChatError from "./ChatError.svelte";
     import RoomList from "./RoomList.svelte";
     import { IconShieldLock } from "@wa-icons";
-    import { AdminUserProvider } from "../UserProvider/AdminUserProvider";
 
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
 
@@ -35,7 +34,6 @@
             adminUserProvider.searchUsers(searchValue).finally(() => {
                 searchLoader = false;
             });
-
         }, DONE_TYPING_INTERVAL);
     };
 
