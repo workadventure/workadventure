@@ -6,25 +6,26 @@ import {
     SpaceUser,
 } from "@workadventure/messages";
 import { Subject } from "rxjs";
-import { Writable, get, writable } from "svelte/store";
+import { Readable, get, readable, writable } from "svelte/store";
 import { CharacterLayerManager } from "../../Phaser/Entity/CharacterLayerManager";
 import { RoomConnection } from "../../Connection/RoomConnection";
 
 export interface SpaceFilterInterface {
     userExist(userId: number): boolean;
     addUser(user: SpaceUser): Promise<SpaceUserExtended>;
-    getUsers(): SpaceUserExtended[];
-    users: Writable<Map<number, SpaceUserExtended>>;
-    getUser(userId: number): SpaceUser | null;
+    usersStore: Readable<Map<number, SpaceUserExtended>>;
     removeUser(userId: number): void;
     updateUserData(userdata: Partial<SpaceUser>): void;
     setFilter(filter: Filter): void;
     getName(): string;
     getFilterType(): "spaceFilterEverybody" | "spaceFilterContainName" | "spaceFilterLiveStreaming" | undefined;
-    destroy(): void;
 }
 
-export interface SpaceUserExtended extends SpaceUser {
+type ReactiveSpaceUser = {
+    [K in keyof SpaceUser]: Readable<SpaceUser[K]>;
+};
+
+type SpaceUserExtended = SpaceUser & {
     wokaPromise: Promise<string> | undefined;
     getWokaBase64: string;
     updateSubject: Subject<{
@@ -34,7 +35,8 @@ export interface SpaceUserExtended extends SpaceUser {
     }>;
     emitter: JitsiEventEmitter | undefined;
     spaceName: string;
-}
+    reactiveUser: ReactiveSpaceUser;
+};
 
 export type Filter =
     | {
@@ -62,53 +64,64 @@ export interface JitsiEventEmitter {
 }
 
 export class SpaceFilter implements SpaceFilterInterface {
+    private setUsers: ((value: Map<number, SpaceUserExtended>) => void) | undefined;
+    readonly usersStore: Readable<Map<number, SpaceUserExtended>>;
+    private users : Map<number, SpaceUserExtended> = new Map<number, SpaceUserExtended>() ;
+
     constructor(
         private _name: string,
         private _spaceName: string,
         private _connection: RoomConnection,
         private _filter: Filter = undefined,
-        readonly users: Writable<Map<number, SpaceUserExtended>> = writable(new Map<number, SpaceUserExtended>())
     ) {
-        this.addSpaceFilter();
+        this.usersStore = readable(new Map<number, SpaceUserExtended>(), (set) => {
+            this.setUsers = set;
+        });
     }
     userExist(userId: number): boolean {
-        return get(this.users).has(userId);
+        return get(this.usersStore).has(userId);
     }
     async addUser(user: SpaceUser): Promise<SpaceUserExtended> {
         const extendSpaceUser = await this.extendSpaceUser(user, this._spaceName);
-        this.users.update((value) => {
-            if (!this.userExist(user.id)) value.set(user.id, extendSpaceUser);
-            return value;
-        });
+
+        if(!this.setUsers){
+            throw new Error("");
+        }
+
+        if (!this.userExist(user.id)){
+            this.users.set(user.id, extendSpaceUser);
+            this.setUsers(this.users);
+        } 
+
         return extendSpaceUser;
     }
 
-    getUser(userId: number): SpaceUser | null {
-        return get(this.users).get(userId) || null;
-    }
-
     getUsers(): SpaceUserExtended[] {
-        return Array.from(get(this.users).values());
+        return Array.from(get(this.usersStore).values());
     }
-    removeUser(userId: number): boolean {
-        let isDeleted = false;
-        this.users.update((value) => {
-            isDeleted = value.delete(userId);
-            return value;
-        });
+    removeUser(userId: number): void {
+        if(!this.setUsers){
+            throw new Error("");
+        }
 
-        return isDeleted;
+        this.users.delete(userId);
+        this.setUsers(this.users)
     }
 
     updateUserData(newData: Partial<SpaceUser>): void {
         if (!newData.id && newData.id !== 0) return;
-        const userToUpdate = get(this.users).get(newData.id);
+
+        if(!this.setUsers){
+            throw new Error("");
+        }
+
+        const userToUpdate = this.users.get(newData.id);
+
         if (!userToUpdate) return;
         merge(userToUpdate, newData);
-        this.users.update((value) => {
-            value.set(userToUpdate.id, userToUpdate);
-            return value;
-        });
+
+        this.setUsers(this.users);
+
     }
 
     setFilter(newFilter: Filter) {
@@ -152,8 +165,25 @@ export class SpaceFilter implements SpaceFilterInterface {
 
         const wokaBase64 = await CharacterLayerManager.wokaBase64(user.characterTextures);
 
+        /*const reactiveUser: Partial<ReactiveSpaceUser> = {};
+        for (const key in user) {
+            if(this.isKeyOf(reactiveUser,key)){
+                const storeKey: keyof ReactiveSpaceUser = key as keyof ReactiveSpaceUser;
+                reactiveUser[storeKey] = writable(user[key]);
+            }
+
+        }*/
+        /*const reactiveUser: any = {};
+        for (const key in user) {
+            reactiveUser[key] = writable(user[key]);
+        }*/
+        const reactiveUser = Object.fromEntries(
+            Object.entries(user).map(([key, value]) => [key, writable(value)])
+        ) as unknown as ReactiveSpaceUser;
+
         return {
             ...user,
+            reactiveUser,
             wokaPromise: undefined,
             getWokaBase64: wokaBase64,
             updateSubject: new Subject<{
@@ -165,6 +195,8 @@ export class SpaceFilter implements SpaceFilterInterface {
             spaceName,
         };
     }
+
+
     private removeSpaceFilter() {
         this._connection.emitRemoveSpaceFilter({
             spaceFilterMessage: {

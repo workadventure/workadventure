@@ -103,7 +103,7 @@ describe("SpaceFilter", () => {
                 undefined
             );
             await spaceFilter.addUser(user as SpaceUserExtended);
-            expect(get(spaceFilter.users).has(user.id)).toBeTruthy();
+            expect(get(spaceFilter.usersStore).has(user.id)).toBeTruthy();
         });
 
         it("should not overwrite user when you add a new user and he already exist", async () => {
@@ -132,7 +132,7 @@ describe("SpaceFilter", () => {
             );
             await spaceFilter.addUser(userWithSameID as SpaceUser);
 
-            const userInStore = get(spaceFilter.users).get(id);
+            const userInStore = get(spaceFilter.usersStore).get(id);
 
             expect(userInStore?.id).toEqual(id);
             expect(userInStore?.name).toBeUndefined();
