@@ -643,6 +643,16 @@ export class SocketManager {
     }
 
     private joinWebRtcRoom(user: User, group: Group) {
+        user.socket.write({
+            message: {
+                $case: "joinSpaceRequestMessage",
+                joinSpaceRequestMessage: {
+                    spaceName: group.spaceName,
+                },
+            },
+        });
+
+        // TODO: remove code below when WebRTC is managed in spaces
         for (const otherUser of group.getUsers()) {
             if (user === otherUser) {
                 continue;
@@ -711,6 +721,15 @@ export class SocketManager {
 
     //disconnect user
     private disConnectedUser(user: User, group: Group) {
+        user.socket.write({
+            message: {
+                $case: "leaveSpaceRequestMessage",
+                leaveSpaceRequestMessage: {
+                    spaceName: group.spaceName,
+                },
+            },
+        });
+
         // Most of the time, sending a disconnect event to one of the players is enough (the player will close the connection
         // which will be shut for the other player).
         // However! In the rare case where the WebRTC connection is not yet established, if we close the connection on one of the player,

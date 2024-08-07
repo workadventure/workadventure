@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/svelte";
 import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
 import { Readable, Writable, get, writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
@@ -16,6 +17,8 @@ import { gameManager } from "../../../Phaser/Game/GameManager";
 import { iframeListener } from "../../../Api/IframeListener";
 import { RoomConnection } from "../../../Connection/RoomConnection";
 import { Space } from "../../../Space/Space";
+import { SpaceInterface } from "../../../Space/SpaceInterface";
+import {SpaceRegistryInterface} from "../../../Space/SpaceRegistry/SpaceRegistryInterface";
 
 export class ProximityChatMessage implements ChatMessage {
     isQuotedMessage = undefined;
@@ -58,21 +61,21 @@ export class ProximityChatRoom implements ChatRoom {
     hasPreviousMessage = writable(false);
     isEncrypted = writable(false);
     typingMembers: Writable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
-    private _space: Space | undefined;
+    private _space: SpaceInterface | undefined;
 
     private unknownUser = {
         chatId: "0",
         uuid: "0",
         availabilityStatus: writable(AvailabilityStatus.ONLINE),
         username: "Unknown",
-        avatarUrl: null,
+        avatarUrl: undefined,
         roomName: undefined,
         playUri: undefined,
         color: undefined,
         id: undefined,
     } as ChatUser;
 
-    constructor(private roomConnection: RoomConnection, private _userId: number) {
+    constructor(private roomConnection: RoomConnection, private _userId: number, private spaceRegistry: SpaceRegistryInterface) {
         this.typingMembers = writable([]);
     }
 
@@ -277,7 +280,26 @@ export class ProximityChatRoom implements ChatRoom {
         return this._space;
     }
 
-    set space(value: Space | undefined) {
-        this._space = value;
+    public joinSpace(spaceName: string): void {
+        // FIXME: "add" is actually creating the Space.
+        // The name should be changed to "create" or "join" or something like that.
+        this._space = this.spaceRegistry.joinSpace(spaceName);
+
+        // TODO: we need to subscribe to the space to get the messages here.
+        // TODO: we need to change the Space object to allow subscribing to messages.
+    }
+
+    public leaveSpace(spaceName: string): void {
+        if (!this._space) {
+            console.error("Trying to leave a space that is not joined");
+            Sentry.captureMessage("Trying to leave a space that is not joined");
+            return;
+        }
+        if (this._space.getName() !== spaceName) {
+            console.error("Trying to leave a space different from the one joined");
+            Sentry.captureMessage("Trying to leave a space different from the one joined");
+            return;
+        }
+        this.spaceRegistry.leaveSpace(spaceName);
     }
 }

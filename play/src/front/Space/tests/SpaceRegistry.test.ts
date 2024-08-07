@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import { LocalSpaceProvider } from "../SpaceProvider/SpaceStore";
+import { SpaceRegistry } from "../SpaceRegistry/SpaceRegistry";
 import { SpaceInterface } from "../SpaceInterface";
-import { SpaceProviderInterface } from "../SpaceProvider/SpaceProviderInterface";
+import { SpaceRegistryInterface } from "../SpaceRegistry/SpaceRegistryInterface";
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
 import { Space } from "../Space";
 import { RoomConnection } from "../../Connection/RoomConnection";
@@ -28,8 +28,8 @@ const defaultRoomConnectionMock = {
 } as unknown as RoomConnection;
 
 describe("SpaceProviderInterface implementation", () => {
-    describe("SpaceStore", () => {
-        describe("SpaceStore Add", () => {
+    describe("SpaceRegistry", () => {
+        describe("SpaceRegistry Add", () => {
             it("should add a space when ...", () => {
                 const newSpace: Pick<SpaceInterface, "getName"> = {
                     getName(): string {
@@ -37,9 +37,9 @@ describe("SpaceProviderInterface implementation", () => {
                     },
                 };
 
-                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(defaultRoomConnectionMock);
-                spaceStore.add(newSpace.getName());
-                expect(spaceStore.get(newSpace.getName())).toBeInstanceOf(Space);
+                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(defaultRoomConnectionMock);
+                spaceRegistry.joinSpace(newSpace.getName());
+                expect(spaceRegistry.get(newSpace.getName())).toBeInstanceOf(Space);
             });
             it("should return a error when you try to add a space which already exist", () => {
                 const newSpace: SpaceInterface = {
@@ -52,13 +52,13 @@ describe("SpaceProviderInterface implementation", () => {
                     [newSpace.getName(), newSpace],
                 ]);
 
-                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(defaultRoomConnectionMock, spaceMap);
+                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(defaultRoomConnectionMock, spaceMap);
                 expect(() => {
-                    spaceStore.add(newSpace.getName());
+                    spaceRegistry.joinSpace(newSpace.getName());
                 }).toThrow(SpaceAlreadyExistError);
             });
         });
-        describe("SpaceStore exist", () => {
+        describe("SpaceRegistry exist", () => {
             it("should return true when space is in store", () => {
                 const newSpace: SpaceInterface = {
                     getName(): string {
@@ -70,9 +70,9 @@ describe("SpaceProviderInterface implementation", () => {
                     [newSpace.getName(), newSpace],
                 ]);
 
-                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(defaultRoomConnectionMock, spaceMap);
+                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(defaultRoomConnectionMock, spaceMap);
 
-                const result: boolean = spaceStore.exist(newSpace.getName());
+                const result: boolean = spaceRegistry.exist(newSpace.getName());
 
                 expect(result).toBeTruthy();
             });
@@ -82,12 +82,12 @@ describe("SpaceProviderInterface implementation", () => {
                         return "space-test";
                     },
                 } as SpaceInterface;
-                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(defaultRoomConnectionMock);
-                const result: boolean = spaceStore.exist(newSpace.getName());
+                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(defaultRoomConnectionMock);
+                const result: boolean = spaceRegistry.exist(newSpace.getName());
                 expect(result).toBeFalsy();
             });
         });
-        describe("SpaceStore delete", () => {
+        describe("SpaceRegistry delete", () => {
             it("should delete a space when space is in the store", () => {
                 const destroyMock = vi.fn();
 
@@ -117,10 +117,10 @@ describe("SpaceProviderInterface implementation", () => {
                     [space2.getName(), space2],
                 ]);
 
-                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(defaultRoomConnectionMock, spaceMap);
+                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(defaultRoomConnectionMock, spaceMap);
 
-                spaceStore.delete(spaceToDelete.getName());
-                expect(spaceStore.getAll()).not.toContain(spaceToDelete);
+                spaceRegistry.leaveSpace(spaceToDelete.getName());
+                expect(spaceRegistry.getAll()).not.toContain(spaceToDelete);
                 expect(destroyMock).toBeCalledTimes(1);
             });
             it("should return a error when you try to delete a space who is not in the space ", () => {
@@ -129,14 +129,14 @@ describe("SpaceProviderInterface implementation", () => {
                         return "space-test";
                     },
                 } as SpaceInterface;
-                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(defaultRoomConnectionMock);
+                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(defaultRoomConnectionMock);
 
                 expect(() => {
-                    spaceStore.delete(newSpace.getName());
+                    spaceRegistry.leaveSpace(newSpace.getName());
                 }).toThrow(SpaceDoesNotExistError);
             });
         });
-        describe("SpaceStore getAll", () => {
+        describe("SpaceRegistry getAll", () => {
             it("should delete a space when space is in the store", () => {
                 const space1: SpaceInterface = {
                     getName(): string {
@@ -162,14 +162,14 @@ describe("SpaceProviderInterface implementation", () => {
                     [space2.getName(), space2],
                 ]);
 
-                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(defaultRoomConnectionMock, spaceMap);
+                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(defaultRoomConnectionMock, spaceMap);
 
-                expect(spaceStore.getAll()).toContain(space1);
-                expect(spaceStore.getAll()).toContain(space3);
-                expect(spaceStore.getAll()).toContain(space3);
+                expect(spaceRegistry.getAll()).toContain(space1);
+                expect(spaceRegistry.getAll()).toContain(space3);
+                expect(spaceRegistry.getAll()).toContain(space3);
             });
         });
-        describe("SpaceStore destroy", () => {
+        describe("SpaceRegistry destroy", () => {
             it("should destroy space store", () => {
                 const space1: SpaceInterface = {
                     getName(): string {
@@ -197,9 +197,9 @@ describe("SpaceProviderInterface implementation", () => {
                     [space1.getName(), space1],
                     [space2.getName(), space2],
                 ]);
-                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(defaultRoomConnectionMock, spaceMap);
-                spaceStore.destroy();
-                expect(spaceStore.getAll()).toHaveLength(0);
+                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(defaultRoomConnectionMock, spaceMap);
+                spaceRegistry.destroy();
+                expect(spaceRegistry.getAll()).toHaveLength(0);
                 // eslint-disable-next-line @typescript-eslint/unbound-method
                 expect(space1.destroy).toHaveBeenCalledOnce();
                 // eslint-disable-next-line @typescript-eslint/unbound-method

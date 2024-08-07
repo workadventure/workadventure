@@ -9,5 +9,4 @@ export interface SpaceInterface {
     watch(filterName: string): SpaceFilterInterface;
     stopWatching(filterName: string): void;
     spaceFilterExist(filterName: string): boolean;
-    destroy(): void;
 }
