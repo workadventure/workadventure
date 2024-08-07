@@ -1545,13 +1545,11 @@ export class GameScene extends DirtyScene {
                 this._spaceStore = new LocalSpaceProvider(this.connection);
                 this.streamSpaceWatcher = new StreamSpaceWatcher(this.connection, this._spaceStore);
 
-                const allUserInWorldFilter = this._spaceStore.add(WORLD_SPACE_NAME).watch(CONNECTED_USER_FILTER_NAME);
+                const allUserSpace = this._spaceStore.add(WORLD_SPACE_NAME);
 
-                this.chatConnection = new MatrixChatConnection(
-                    this.connection,
-                    matrixClientPromise,
-                    allUserInWorldFilter
-                );
+                allUserSpace.watch(CONNECTED_USER_FILTER_NAME);
+
+                this.chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
 
                 this._proximityChatRoom = new ProximityChatRoom(this.connection, this.connection.getUserId());
 
@@ -1559,7 +1557,7 @@ export class GameScene extends DirtyScene {
 
                 this._adminUserProvider = new AdminUserProvider(this.connection);
                 const matrixUserProvider = new MatrixUserProvider(matrixClientPromise);
-                const worldUserProvider = new WorldUserProvider(allUserInWorldFilter);
+                const worldUserProvider = new WorldUserProvider(allUserSpace);
 
                 this._userProviderMerger = new UserProviderMerger([
                     this._adminUserProvider,

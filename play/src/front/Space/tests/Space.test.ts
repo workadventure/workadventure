@@ -170,8 +170,6 @@ describe("Space test", () => {
 
         const metadata = new Map<string, unknown>([["metadata-1", 4]]);
 
-        console.log("test", defaultRoomConnectionMock);
-
         const space = new Space(spaceName, metadata, defaultRoomConnectionMock);
 
         const spaceFilter = space.watch(spaceFilterName);
