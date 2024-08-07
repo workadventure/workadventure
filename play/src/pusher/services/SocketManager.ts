@@ -733,6 +733,12 @@ export class SocketManager implements ZoneEventListener {
     // Useless now, will be useful again if we allow editing details in game
     handleSetPlayerDetails(client: Socket, playerDetailsMessage: SetPlayerDetailsMessage): void {
         const socketData = client.getUserData();
+        const pusherToBackMessage: PusherToBackMessage["message"] = {
+            $case: "setPlayerDetailsMessage",
+            setPlayerDetailsMessage: playerDetailsMessage,
+        };
+
+        socketManager.forwardMessageToBack(client, pusherToBackMessage);
 
         if (
             socketData.spaceUser.availabilityStatus !== playerDetailsMessage.availabilityStatus ||
@@ -1233,6 +1239,8 @@ export class SocketManager implements ZoneEventListener {
     }
 
     handleCameraState(client: Socket, state: boolean) {
+        // FIXME: I don't understand how this can work if there are many pushers.
+        // People on other pushers will not get notified because the message is not propagated to the back
         const socketData = client.getUserData();
         socketData.cameraState = state;
         socketData.spaceUser.cameraState = state;
@@ -1246,6 +1254,8 @@ export class SocketManager implements ZoneEventListener {
     }
 
     handleMicrophoneState(client: Socket, state: boolean) {
+        // FIXME: I don't understand how this can work if there are many pushers.
+        // People on other pushers will not get notified because the message is not propagated to the back
         const socketData = client.getUserData();
         socketData.microphoneState = state;
         socketData.spaceUser.microphoneState = state;
@@ -1259,6 +1269,8 @@ export class SocketManager implements ZoneEventListener {
     }
 
     handleScreenSharingState(client: Socket, state: boolean) {
+        // FIXME: I don't understand how this can work if there are many pushers.
+        // People on other pushers will not get notified because the message is not propagated to the back
         const socketData = client.getUserData();
         socketData.screenSharingState = state;
         socketData.spaceUser.screenSharingState = state;
@@ -1272,6 +1284,8 @@ export class SocketManager implements ZoneEventListener {
     }
 
     handleMegaphoneState(client: Socket, megaphoneStateMessage: MegaphoneStateMessage) {
+        // FIXME: I don't understand how this can work if there are many pushers.
+        // People on other pushers will not get notified because the message is not propagated to the back
         const socketData = client.getUserData();
         socketData.megaphoneState = megaphoneStateMessage.value;
         socketData.spaceUser.megaphoneState = megaphoneStateMessage.value;
@@ -1287,6 +1301,8 @@ export class SocketManager implements ZoneEventListener {
     }
 
     handleJitsiParticipantIdSpace(client: Socket, spaceName: string, jitsiParticipantId: string) {
+        // FIXME: I don't understand how this can work if there are many pushers.
+        // People on other pushers will not get notified because the message is not propagated to the back
         const socketData = client.getUserData();
         const space = socketData.spaces.find((space) => space.name === spaceName);
         if (space) {
@@ -1494,8 +1510,12 @@ export class SocketManager implements ZoneEventListener {
     ) {
         const socketData = client.getUserData();
         const space = socketData.spaces.find((space) => space.name === spaceName);
-        if (!space) return;
-
+        // FIXME: the message should ALWAYS be forwarded to the back (because the same space  will live in many fronts)
+        // We probably need to refactor this part of the code into something more generic
+        if (!space) {
+            this.forwardMessageToBack(client, message);
+            return;
+        }
         space.kickOffUser(socketData, participantId);
     }
 
@@ -1507,7 +1527,12 @@ export class SocketManager implements ZoneEventListener {
     ) {
         const socketData = client.getUserData();
         const space = socketData.spaces.find((space) => space.name === spaceName);
-        if (!space) return;
+        // FIXME: the message should ALWAYS be forwarded to the back (because the same space  will live in many fronts)
+        // We probably need to refactor this part of the code into something more generic
+        if (!space) {
+            this.forwardMessageToBack(client, message);
+            return;
+        }
         space.muteMicrophoneUser(socketData, participantId);
     }
 
@@ -1519,7 +1544,12 @@ export class SocketManager implements ZoneEventListener {
     ) {
         const socketData = client.getUserData();
         const space = socketData.spaces.find((space) => space.name === spaceName);
-        if (!space) return;
+        // FIXME: the message should ALWAYS be forwarded to the back (because the same space  will live in many fronts)
+        // We probably need to refactor this part of the code into something more generic
+        if (!space) {
+            this.forwardMessageToBack(client, message);
+            return;
+        }
         space.muteVideoUser(socketData, participantId);
     }
 
@@ -1531,7 +1561,12 @@ export class SocketManager implements ZoneEventListener {
     ) {
         const socketData = client.getUserData();
         const space = socketData.spaces.find((space) => space.name === spaceName);
-        if (!space) return;
+        // FIXME: the message should ALWAYS be forwarded to the back (because the same space  will live in many fronts)
+        // We probably need to refactor this part of the code into something more generic
+        if (!space) {
+            this.forwardMessageToBack(client, message);
+            return;
+        }
         space.muteMicrophoneEverybodyUser(socketData, participantId);
     }
 
@@ -1543,7 +1578,12 @@ export class SocketManager implements ZoneEventListener {
     ) {
         const socketData = client.getUserData();
         const space = socketData.spaces.find((space) => space.name === spaceName);
-        if (!space) return;
+        // FIXME: the message should ALWAYS be forwarded to the back (because the same space  will live in many fronts)
+        // We probably need to refactor this part of the code into something more generic
+        if (!space) {
+            this.forwardMessageToBack(client, message);
+            return;
+        }
         space.muteVideoEverybodyUser(socketData, participantId);
     }
 
@@ -1601,9 +1641,12 @@ export class SocketManager implements ZoneEventListener {
     handlePublicEvent(client: Socket, spaceName: string, message: PusherToBackMessage["message"]) {
         const socketData = client.getUserData();
         const space = socketData.spaces.find((space) => space.name === spaceName);
-
-        if (!space) return;
-
+        // FIXME: the message should ALWAYS be forwarded to the back (because the same space  will live in many fronts)
+        // We probably need to refactor this part of the code into something more generic
+        if (!space) {
+            this.forwardMessageToBack(client, message);
+            return;
+        }
         if (message?.$case !== "publicEvent") return;
         space.sendPublicEvent({
             ...message.publicEvent,
@@ -1614,8 +1657,12 @@ export class SocketManager implements ZoneEventListener {
     handlePrivateEvent(client: Socket, spaceName: string, message: PusherToBackMessage["message"]) {
         const socketData = client.getUserData();
         const space = socketData.spaces.find((space) => space.name === spaceName);
-
-        if (!space) return;
+        // FIXME: the message should ALWAYS be forwarded to the back (because the same space  will live in many fronts)
+        // We probably need to refactor this part of the code into something more generic
+        if (!space) {
+            this.forwardMessageToBack(client, message);
+            return;
+        }
 
         if (message?.$case !== "privateEvent") return;
         if (!socketData.userId) {
