@@ -737,5 +737,13 @@ class AnalyticsClient {
             })
             .catch((e) => console.error(e));
     }
+
+    settingAudioVolume(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_setting_audio_volume");
+            })
+            .catch((e) => console.error(e));
+    }
 }
 export const analyticsClient = new AnalyticsClient();

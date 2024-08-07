@@ -58,6 +58,7 @@ const menu: BaseTranslation = {
         chatSounds: "Sounds of chat",
         cowebsiteTrigger: "Always ask before opening websites and Jitsi Meet rooms",
         ignoreFollowRequest: "Ignore requests to follow other users",
+        proximityDiscussionVolume: "Proximity discussion volume",
     },
     invite: {
         description: "Share the link of the room!",

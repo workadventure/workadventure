@@ -15,6 +15,7 @@
     } from "../../Enum/EnvironmentVariable";
     import { videoBandwidthStore } from "../../Stores/MediaStore";
     import { screenShareBandwidthStore } from "../../Stores/ScreenSharingStore";
+    import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
 
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification();
@@ -36,6 +37,8 @@
             : initialScreenShareBandwidth === PEER_SCREEN_SHARE_LOW_BANDWIDTH
             ? 1
             : 2;
+
+    let volumeProximityDiscussion = localUserStore.getVolumeProximityDiscussion();
 
     let previewCameraPrivacySettings = valueCameraPrivacySettings;
     let previewMicrophonePrivacySettings = valueMicrophonePrivacySettings;
@@ -159,6 +162,12 @@
             localUserStore.setMicrophonePrivacySettings(valueMicrophonePrivacySettings);
         }
     }
+
+    function updateVolumeProximityDiscussion() {
+        analyticsClient.settingAudioVolume();
+        localUserStore.setVolumeProximityDiscussion(volumeProximityDiscussion);
+        volumeProximityDiscussionStore.set(volumeProximityDiscussion);
+    }
 </script>
 
 <div>
@@ -211,6 +220,56 @@
                     step="1"
                     bind:value={valueScreenShareBandwidth}
                     on:change={updateScreenShareBandwidth}
+                />
+            </div>
+        </div>
+
+        <h3 class="blue-title">{$LL.menu.settings.proximityDiscussionVolume()}</h3>
+        <div class="tw-flex tw-w-full tw-justify-center">
+            <div class="tw-flex tw-flex-col tw-w-10/12 lg:tw-w-6/12">
+                <ul class="tw-flex tw-justify-between tw-w-full tw-px-[10px] tw-mb-5">
+                    <li class="tw-flex tw-justify-center tw-relative">
+                        <span class="tw-absolute">0</span>
+                    </li>
+                    <li class="tw-flex tw-justify-center tw-relative">
+                        <span class="tw-absolute">1</span>
+                    </li>
+                    <li class="tw-flex tw-justify-center tw-relative">
+                        <span class="tw-absolute">2</span>
+                    </li>
+                    <li class="tw-flex tw-justify-center tw-relative">
+                        <span class="tw-absolute">3</span>
+                    </li>
+                    <li class="tw-flex tw-justify-center tw-relative">
+                        <span class="tw-absolute">4</span>
+                    </li>
+                    <li class="tw-flex tw-justify-center tw-relative">
+                        <span class="tw-absolute">5</span>
+                    </li>
+                    <li class="tw-flex tw-justify-center tw-relative">
+                        <span class="tw-absolute">6</span>
+                    </li>
+                    <li class="tw-flex tw-justify-center tw-relative">
+                        <span class="tw-absolute">7</span>
+                    </li>
+                    <li class="tw-flex tw-justify-center tw-relative">
+                        <span class="tw-absolute">8</span>
+                    </li>
+                    <li class="tw-flex tw-justify-center tw-relative">
+                        <span class="tw-absolute">9</span>
+                    </li>
+                    <li class="tw-flex tw-justify-center tw-relative">
+                        <span class="tw-absolute">10</span>
+                    </li>
+                </ul>
+                <input
+                    type="range"
+                    class="tw-w-full"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    bind:value={volumeProximityDiscussion}
+                    on:change={updateVolumeProximityDiscussion}
                 />
             </div>
         </div>
