@@ -166,7 +166,7 @@
         speakerSelectedStore.set(deviceId);
     }
 
-    function playSoundClick() {
+    function soundClick() {
         sound.play().catch((e) => console.error(e));
     }
 </script>
@@ -453,7 +453,7 @@
                                                 selectSpeaker(speaker.deviceId);
                                                 speakerEdit = false;
                                             }}
-                                            on:click={playSoundClick}
+                                            on:click={soundClick}
                                         >
                                             <div
                                                 class="aspect-square h-6 rounded-full border border-solid border-white flex items-center justify-center {$speakerSelectedStore ===
