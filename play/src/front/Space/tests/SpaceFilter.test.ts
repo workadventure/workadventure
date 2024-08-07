@@ -284,7 +284,8 @@ describe("SpaceFilter", () => {
             } as unknown as RoomConnection;
 
             const spaceFilter = new SpaceFilter(spaceFilterName, spaceName, mockRoomConnection, undefined, userMap);
-            spaceFilter.destroy();
+            const unsubscribe = spaceFilter.usersStore.subscribe(() => {});
+            unsubscribe();
 
             // eslint-disable-next-line @typescript-eslint/unbound-method
             expect(mockRoomConnection.emitRemoveSpaceFilter).toHaveBeenCalledOnce();
@@ -295,6 +296,8 @@ describe("SpaceFilter", () => {
                     spaceName,
                 },
             });
+
+
         });
         it("emit updateSpaceFilter event when you update spaceFilter", () => {
             const spaceFilterName = "space-filter-name";

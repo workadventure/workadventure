@@ -8,7 +8,7 @@ import {
 } from "@workadventure/messages";
 import { Subject } from "rxjs";
 import { StreamSpaceWatcher } from "../SpaceWatcher/SocketSpaceWatcher";
-import { SpaceProviderInterface } from "../SpaceProvider/SpaceProviderInterface";
+import { SpaceRegistryInterface } from "../SpaceRegistry/SpaceRegistryInterface";
 import { SpaceInterface } from "../SpaceInterface";
 import { SpaceFilterInterface } from "../SpaceFilter/SpaceFilter";
 import { RoomConnection } from "../../Connection/RoomConnection";
@@ -53,9 +53,9 @@ describe("StreamSpaceWatcher", () => {
             getSpaceFilter: vi.fn().mockImplementation(() => mockSpaceFilter),
         } as unknown as SpaceInterface;
 
-        const spaceProvider: SpaceProviderInterface = {
-            add: vi.fn(),
-            delete: vi.fn(),
+        const spaceProvider: SpaceRegistryInterface = {
+            joinSpace: vi.fn(),
+            leaveSpace: vi.fn(),
             exist: vi.fn(),
             get: vi.fn().mockImplementation(() => mockSpace),
             getAll: vi.fn(),
@@ -98,9 +98,9 @@ describe("StreamSpaceWatcher", () => {
             getSpaceFilter: vi.fn().mockImplementation(() => mockSpaceFilter),
         } as unknown as SpaceInterface;
 
-        const spaceProvider: SpaceProviderInterface = {
-            add: vi.fn(),
-            delete: vi.fn(),
+        const spaceProvider: SpaceRegistryInterface = {
+            joinSpace: vi.fn(),
+            leaveSpace: vi.fn(),
             exist: vi.fn(),
             get: vi.fn().mockImplementation(() => mockSpace),
             getAll: vi.fn(),
@@ -147,9 +147,9 @@ describe("StreamSpaceWatcher", () => {
             getSpaceFilter: vi.fn().mockImplementation(() => mockSpaceFilter),
         } as unknown as SpaceInterface;
 
-        const spaceProvider: SpaceProviderInterface = {
-            add: vi.fn(),
-            delete: vi.fn(),
+        const spaceProvider: SpaceRegistryInterface = {
+            joinSpace: vi.fn(),
+            leaveSpace: vi.fn(),
             exist: vi.fn(),
             get: vi.fn().mockImplementation(() => mockSpace),
             getAll: vi.fn(),
@@ -189,9 +189,9 @@ describe("StreamSpaceWatcher", () => {
         const mockSpace: SpaceInterface = {
             setMetadata: vi.fn(),
         } as unknown as SpaceInterface;
-        const spaceProvider: SpaceProviderInterface = {
-            add: vi.fn(),
-            delete: vi.fn(),
+        const spaceProvider: SpaceRegistryInterface = {
+            joinSpace: vi.fn(),
+            leaveSpace: vi.fn(),
             exist: vi.fn(),
             get: vi.fn().mockImplementation(() => mockSpace),
             getAll: vi.fn(),

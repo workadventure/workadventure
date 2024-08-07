@@ -43,7 +43,7 @@
     };
 
     const setConnectedUsersFilter = () => {
-        const spaceProvider = gameManager.getCurrentGameScene().spaceStore;
+        const spaceProvider = gameManager.getCurrentGameScene().spaceRegistry;
 
         const allWorldUserSpace = spaceProvider.get(WORLD_SPACE_NAME);
         const connectedUsersFilter = allWorldUserSpace.getSpaceFilter(CONNECTED_USER_FILTER_NAME);

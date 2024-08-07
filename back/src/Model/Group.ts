@@ -22,6 +22,11 @@ export class Group implements Movable, CustomJsonReplacerInterface {
      * When outOfBounds = true, a user if out of the bounds of the group BUT still considered inside it (because we are in following mode)
      */
     private outOfBounds = false;
+    /**
+     * The space associated to this group.
+     * @private
+     */
+    private _spaceName: string;
 
     constructor(
         roomId: string,
@@ -45,6 +50,8 @@ export class Group implements Movable, CustomJsonReplacerInterface {
         this.y = y;
 
         this.currentZone = this.positionNotifier.enter(this);
+        // TODO: SECURE SPACES WITH JWT tokens.
+        this._spaceName = `${this.roomId}#${this.id}#${new Date().getTime()}`;
     }
 
     getUsers(): User[] {
@@ -238,5 +245,9 @@ export class Group implements Movable, CustomJsonReplacerInterface {
 
     public getRoomId(): string {
         return this.roomId;
+    }
+
+    public get spaceName(): string {
+        return this._spaceName;
     }
 }

@@ -7,23 +7,16 @@ export const chatUserFactory: (matrixChatUser: User, matrixClient: MatrixClient)
     matrixChatUser,
     matrixClient
 ) => {
-    const chatUser: ChatUser = {
-        chatId: "",
-        username: "",
+    return {
+        chatId: matrixChatUser.userId,
+        username: matrixChatUser.displayName,
         roomName: undefined,
         playUri: undefined,
-        avatarUrl: undefined,
+        avatarUrl: matrixClient.mxcUrlToHttp(matrixChatUser.avatarUrl ?? "", 48, 48) ?? undefined,
         color: undefined,
         id: undefined,
-        availabilityStatus: writable(AvailabilityStatus.ONLINE),
+        availabilityStatus: writable(mapMatrixPresenceToAvailabilityStatus(matrixChatUser.presence)),
     };
-    chatUser.chatId = matrixChatUser.userId;
-    chatUser.username = matrixChatUser.displayName;
-    chatUser.avatarUrl = matrixClient.mxcUrlToHttp(matrixChatUser.avatarUrl ?? "", 48, 48) ?? undefined;
-
-    chatUser.avatarUrl = matrixChatUser.avatarUrl ?? undefined;
-    chatUser.availabilityStatus.set(mapMatrixPresenceToAvailabilityStatus(matrixChatUser.presence));
-    return chatUser;
 };
 
 function mapMatrixPresenceToAvailabilityStatus(presence: string = SetPresence.Offline): AvailabilityStatus {

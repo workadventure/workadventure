@@ -11,7 +11,7 @@ import { BroadcastService, jitsiLoadingStore } from "../BroadcastService";
 import { BroadcastSpace } from "../Common/BroadcastSpace";
 import { JITSI_DOMAIN, JITSI_MUC_DOMAIN, JITSI_XMPP_DOMAIN } from "../../Enum/EnvironmentVariable";
 import { SpaceInterface } from "../../Space/SpaceInterface";
-import { SpaceProviderInterface } from "../../Space/SpaceProvider/SpaceProviderInterface";
+import { SpaceRegistryInterface } from "../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { jitsiConferencesStore } from "./JitsiConferencesStore";
 import { JitsiConferenceWrapper } from "./JitsiConferenceWrapper";
 import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
@@ -43,11 +43,11 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
         private spaceFilter: SpaceFilterMessage,
         private broadcastService: BroadcastService,
         private playSound: boolean,
-        private spaceStore: SpaceProviderInterface
+        private spaceRegistry: SpaceRegistryInterface
     ) {
         super();
 
-        this.space = this.spaceStore.add(spaceName);
+        this.space = this.spaceRegistry.joinSpace(spaceName);
 
         this.space.watch(spaceFilter.filterName).setFilter(spaceFilter.filter);
 
@@ -199,7 +199,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
                 jitsiLoadingStore.set(false);
             });
         jitsiConferencesStore.delete(this.space.getName());
-        this.spaceStore.delete(this.space.getName());
+        this.spaceRegistry.leaveSpace(this.space.getName());
         this.unsubscribes.forEach((unsubscribe) => unsubscribe());
     }
 }
