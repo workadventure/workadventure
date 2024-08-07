@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { createEventDispatcher, onDestroy, onMount } from "svelte";
+    import { createEventDispatcher, onMount } from "svelte";
     import CopyIcon from "../Icons/CopyIcon.svelte";
     import ExternalLinkIcon from "../Icons/ExternalLinkIcon.svelte";
     import XIcon from "../Icons/XIcon.svelte";
@@ -46,11 +46,6 @@
             cowebsiteName = cowebsiteName.charAt(0).toUpperCase() + cowebsiteName.slice(1);
             isDuplicable = true;
         }
-        // dispatch("tabMounted");
-    });
-
-    onDestroy(() => {
-        // dispatch("tabUnmounted");
     });
 
     function closeTab() {
@@ -76,7 +71,7 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
     class="text flex items-center px-2 rounded transition-all hover:stroke-white {active
-        ? 'text-contrast bg-white hover:bg-white/90 bg-white tab justify-between bg-contrast/80' // translate-y-2 rounded-b-none for animation but not working inside dropdown
+        ? 'text-contrast bg-white hover:bg-white/90 tab justify-between bg-contrast/80' // translate-y-2 rounded-b-none for animation but not working inside dropdown
         : 'text-white cursor-pointer hover:bg-white/10 tab'}"
     on:click={toggleActive}
     on:click={() => (active = !active)}
@@ -133,7 +128,7 @@
             {#if isDuplicable}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
-                    class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center"
+                    class="group hover:bg-contrast transition-all aspect-ratio h-8 w-8 rounded flex items-center justify-center"
                     on:click={copyUrl}
                 >
                     <ExternalLinkIcon
@@ -144,7 +139,7 @@
                 </div>
             {/if}
             <div
-                class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center"
+                class="group hover:bg-contrast transition-all aspect-ratio h-8 w-8 rounded flex items-center justify-center"
                 on:click={() => window.open(coWebsite.getUrl().toString(), "_blank")}
             >
                 <CopyIcon
@@ -155,7 +150,7 @@
             </div>
             {#if coWebsite.isClosable() === true}
                 <div
-                    class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center"
+                    class="group hover:bg-contrast transition-all aspect-ratio h-8 w-8 rounded flex items-center justify-center"
                     on:click={closeTab}
                 >
                     <XIcon

@@ -554,7 +554,7 @@ test.describe('API WA.players', () => {
     // await page.frameLocator('iframe[name="cowebsite-frame"]').locator('text=Site B Page 1').waitFor();
 
     //Swiching tabs and pages
-    await page.locator('#tab1').click();
+    await page.getByTestId('tab1').click();
     const event = getCoWebsiteIframe(page).locator('.siteA-page1')
     await expect(event).toContainText('Site A Page 1');
 
@@ -562,7 +562,7 @@ test.describe('API WA.players', () => {
     const eventpage = await getCoWebsiteIframe(page).locator('.siteA-page2');
     await expect(eventpage).toContainText('Site A Page 2');
 
-    await page.locator('#tab2').click();
+    await page.getByTestId('tab2').click();
     const event2 = getCoWebsiteIframe(page).locator('.siteB-page1')
     await expect(event2).toContainText('Site B Page 1');
 
