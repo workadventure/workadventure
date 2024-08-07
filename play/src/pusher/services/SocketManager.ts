@@ -754,7 +754,7 @@ export class SocketManager implements ZoneEventListener {
             if (socketData.spaceUser.availabilityStatus !== playerDetailsMessage.availabilityStatus) {
                 fieldMask.push("availabilityStatus");
             }
-            if (socketData.spaceUser.chatID !== playerDetailsMessage.chatID) {
+            if (socketData.spaceUser.chatID !== playerDetailsMessage.chatID && playerDetailsMessage.chatID!=='') {
                 fieldMask.push("chatID");
             }
             socketData.spaces.forEach((space) => {
