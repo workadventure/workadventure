@@ -82,7 +82,6 @@
                 class="ban wa-dropdown-item tw-text-pop-red"
                 on:click|stopPropagation={() => {
                     if (user.username && user.id) {
-                        //TODO : fix error on open
                         showReportScreenStore.set({ userId: user.id, userName: user.username });
                     }
                 }}><IconForbid font-size="13" /> {$LL.chat.ban.title()}</span
