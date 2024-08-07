@@ -40,9 +40,6 @@ export class Space implements SpaceInterface {
         this.filters.set(newFilter.getName(), newFilter);
         return newFilter;
     }
-    getAllSpacesFilter(): SpaceFilterInterface[] {
-        return Array.from(this.filters.values());
-    }
 
     getSpaceFilter(filterName: string): SpaceFilterInterface {
         const spaceFilter = this.filters.get(filterName);

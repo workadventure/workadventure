@@ -122,6 +122,7 @@ export class BroadcastService {
      * @param provider Provider name
      * @returns The broadcast connection or undefined if not found
      */
+    /*
     private canDisconnectProvider(provider: string): boolean {
         return this.broadcastSpaces
             .filter((space) => space.provider === provider)
@@ -131,6 +132,7 @@ export class BroadcastService {
                     .every((spaceFilter: SpaceFilterInterface) => spaceFilter.getUsers().length === 0)
             );
     }
+    */
 
     /**
      * Destroy the broadcast service
@@ -145,9 +147,9 @@ export class BroadcastService {
      * Check if the broadcast service can disconnect
      * @param provider Provider name
      */
-    public checkIfCanDisconnect(provider: string) {
+    public disconnectProvider(provider: string) {
         const providerConnection = this.broadcastConnections.get(provider);
-        if (this.canDisconnectProvider(provider) && providerConnection !== undefined) {
+        if (/*this.canDisconnectProvider(provider) && */ providerConnection !== undefined) {
             broadcastServiceLogger("Disconnecting from broadcast connection");
             providerConnection
                 .disconnect()
