@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { Subscription } from "rxjs";
-import { SpaceProviderInterface } from "../SpaceProvider/SpaceProviderInterface";
+import { SpaceRegistryInterface } from "../SpaceRegistry/SpaceRegistryInterface";
 import { RoomConnection } from "../../Connection/RoomConnection";
 
 export enum SpaceEvent {
@@ -14,7 +14,7 @@ export class StreamSpaceWatcher {
     private updateSpaceUserMessageStreamSubscription: Subscription;
     private removeSpaceUserMessageStreamSubscription: Subscription;
     private updateSpaceMetadataMessageStreamSubscription: Subscription;
-    constructor(roomConnection: RoomConnection, spaceProvider: SpaceProviderInterface) {
+    constructor(roomConnection: RoomConnection, spaceProvider: SpaceRegistryInterface) {
         this.addSpaceUserMessageStreamSubscription = roomConnection.addSpaceUserMessageStream.subscribe((message) => {
             if (!message.user || !message.filterName) return;
 

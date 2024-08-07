@@ -7,12 +7,16 @@ export const WORLD_SPACE_NAME = "allWorldUser";
 export const CONNECTED_USER_FILTER_NAME = "connected_users";
 export class Space implements SpaceInterface {
     private readonly name: string;
+    private filters: Map<string, SpaceFilterInterface> = new Map<string, SpaceFilterInterface>();
 
+    /**
+     * IMPORTANT: The only valid way to create a space is to use the SpaceRegistry.
+     * Do not call this constructor directly.
+     */
     constructor(
         name: string,
         private metadata = new Map<string, unknown>(),
-        private _connection: RoomConnection,
-        private filters: Map<string, SpaceFilterInterface> = new Map<string, SpaceFilterInterface>()
+        private _connection: RoomConnection
     ) {
         if (name === "") {
             throw new SpaceNameIsEmptyError();
@@ -77,6 +81,10 @@ export class Space implements SpaceInterface {
         this._connection.emitJitsiParticipantIdSpace(this.name, participantId);
     }
 
+    /**
+     * IMPORTANT: The only valid way to destroy a space is to use the SpaceRegistry.
+     * Do not call this method directly.
+     */
     destroy() {
         this.userLeaveSpace();
     }

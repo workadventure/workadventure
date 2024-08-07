@@ -867,6 +867,14 @@ message PrivateEvent {
   SpaceMessage spaceMessage = 4;
 }
 
+message JoinSpaceRequestMessage {
+  string spaceName = 1;
+}
+
+message LeaveSpaceRequestMessage {
+  string spaceName = 1;
+}
+
 /**
  * Messages going from back and pusher to the front
  */
@@ -904,6 +912,8 @@ message ServerToClientMessage {
     AskMutedVideoMessage askMutedVideoMessage = 36;
     PublicEvent publicEvent = 37;
     PrivateEvent privateEvent = 38;
+    JoinSpaceRequestMessage joinSpaceRequestMessage = 39;
+    LeaveSpaceRequestMessage leaveSpaceRequestMessage = 40;
   }
 }
 

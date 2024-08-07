@@ -138,7 +138,7 @@ import {
     WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM,
 } from "../../Stores/MapEditorStore";
 import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
-import { LocalSpaceProvider } from "../../Space/SpaceProvider/SpaceStore";
+import { SpaceRegistry } from "../../Space/SpaceRegistry/SpaceRegistry";
 import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer, debugZoom } from "../../Utils/Debuggers";
 import { checkCoturnServer } from "../../Components/Video/utils";
 import { BroadcastService } from "../../Streaming/BroadcastService";
@@ -162,7 +162,8 @@ import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWr
 import { matrixSecurity } from "../../Chat/Connection/Matrix/MatrixSecurity";
 import { selectedRoom } from "../../Chat/Stores/ChatStore";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
-import { SpaceProviderInterface } from "../../Space/SpaceProvider/SpaceProviderInterface";
+import { ProximitySpaceManager } from "../../WebRtc/ProximitySpaceManager";
+import { SpaceRegistryInterface } from "../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { WorldUserProvider } from "../../Chat/UserProvider/WorldUserProvider";
 import { MatrixUserProvider } from "../../Chat/UserProvider/MatrixUserProvider";
 import { UserProviderMerger } from "../../Chat/UserProviderMerger/UserProviderMerger";
@@ -302,6 +303,7 @@ export class GameScene extends DirtyScene {
     private scriptingEventsManager!: ScriptingEventsManager;
     private followManager!: FollowManager;
     private streamSpaceWatcher: StreamSpaceWatcher | undefined;
+    private proximitySpaceManager: ProximitySpaceManager | undefined;
     private objectsByType = new Map<string, ITiledMapObject[]>();
     private embeddedWebsiteManager!: EmbeddedWebsiteManager;
     private areaManager!: DynamicAreaManager;
@@ -333,7 +335,7 @@ export class GameScene extends DirtyScene {
         this.currentCompanionTextureReject = reject;
     });
     public chatConnection!: ChatConnectionInterface;
-    private _spaceStore: SpaceProviderInterface | undefined;
+    private _spaceRegistry: SpaceRegistryInterface | undefined;
     private _proximityChatRoom: ProximityChatRoom | undefined;
     private _userProviderMerger: UserProviderMerger | undefined;
 
@@ -974,7 +976,7 @@ export class GameScene extends DirtyScene {
 
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
         this.streamSpaceWatcher?.destroy();
-        this._spaceStore?.destroy();
+        this._spaceRegistry?.destroy();
         this.connection?.closeConnection();
         this.simplePeer?.closeAllConnections();
         this.simplePeer?.unregister();
@@ -985,6 +987,7 @@ export class GameScene extends DirtyScene {
         this.cameraManager?.destroy();
         this.mapEditorModeManager?.destroy();
         this._broadcastService?.destroy();
+        this.proximitySpaceManager?.destroy();
         this.peerStoreUnsubscriber?.();
         this.mapEditorModeStoreUnsubscriber?.();
         this.refreshPromptStoreStoreUnsubscriber?.();
@@ -1514,14 +1517,24 @@ export class GameScene extends DirtyScene {
                         console.error(e);
                     });
 
-                this._spaceStore = new LocalSpaceProvider(this.connection);
-                this.streamSpaceWatcher = new StreamSpaceWatcher(this.connection, this._spaceStore);
+                this._spaceRegistry = new SpaceRegistry(this.connection);
+                this.streamSpaceWatcher = new StreamSpaceWatcher(this.connection, this._spaceRegistry);
 
-                const allUserSpace = this._spaceStore.add(WORLD_SPACE_NAME);
+                // FIXME: we don't need to watch this until we take a look at the user list.
+                const allUserSpace = this._spaceRegistry
+                    .joinSpace(WORLD_SPACE_NAME)
+                    ;
 
-                this.chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
+                this.chatConnection = new MatrixChatConnection(
+                    this.connection,
+                    matrixClientPromise
+                );
 
-                this._proximityChatRoom = new ProximityChatRoom(this.connection, this.connection.getUserId());
+                this._proximityChatRoom = new ProximityChatRoom(
+                    this.connection,
+                    this.connection.getUserId(),
+                    this._spaceRegistry,
+                );
 
                 //init merger
 
@@ -1534,6 +1547,8 @@ export class GameScene extends DirtyScene {
                     matrixUserProvider,
                     worldUserProvider,
                 ]);
+
+                this.proximitySpaceManager = new ProximitySpaceManager(this.connection, this._proximityChatRoom);
 
                 const chatId = localUserStore.getChatId();
                 const email: string | null = localUserStore.getLocalUser()?.email || null;
@@ -1790,7 +1805,7 @@ export class GameScene extends DirtyScene {
                             spaceFilter,
                             broadcastService,
                             playSound,
-                            this.spaceStore
+                            this.spaceRegistry
                         );
                     }
                 );
@@ -1808,11 +1823,11 @@ export class GameScene extends DirtyScene {
                             const oldMegaphoneUrl = get(megaphoneUrlStore);
 
                             if (
-                                this._spaceStore &&
+                                this._spaceRegistry &&
                                 oldMegaphoneUrl &&
                                 megaphoneSettingsMessage.url !== oldMegaphoneUrl
                             ) {
-                                this._spaceStore.delete(oldMegaphoneUrl);
+                                this._spaceRegistry.leaveSpace(oldMegaphoneUrl);
                             }
 
                             broadcastService.joinSpace(megaphoneSettingsMessage.url);
@@ -3854,11 +3869,11 @@ ${escapedMessage}
     }
 
     //get spaceStore(): Promise<SpaceProviderInterface> {
-    get spaceStore(): SpaceProviderInterface {
-        if (!this._spaceStore) {
-            throw new Error("_spaceStore not yet initialized");
+    get spaceRegistry(): SpaceRegistryInterface {
+        if (!this._spaceRegistry) {
+            throw new Error("_spaceRegistry not yet initialized");
         }
-        return this._spaceStore;
+        return this._spaceRegistry;
     }
 
     get proximityChatRoom(): ProximityChatRoom {
