@@ -4,7 +4,9 @@
     import { notificationPlayingStore } from "../../../../Stores/NotificationStore";
     import LL from "../../../../../i18n/i18n-svelte";
     import RoomOption from "./RoomOption.svelte";
-    import { IconDotsCircle, IconLogout } from "@wa-icons";
+    import { IconDotsCircle, IconLogout, IconUserPlus } from "@wa-icons";
+    import { openModal } from "svelte-modals";
+    import InviteParticipantsModal from "../InviteParticipantsModal.svelte";
 
     export let room: ChatRoom;
 
@@ -47,6 +49,10 @@
         room.leaveRoom();
         notificationPlayingStore.playNotification($LL.chat.roomMenu.leaveRoom.notification());
     }
+
+    function openInviteParticipantsModal() {
+        openModal(InviteParticipantsModal, { room });
+    }
 </script>
 
 <button
@@ -63,6 +69,12 @@
     class:tw-absolue={optionButtonRef !== undefined}
     class:tw-hidden={hideOptions}
 >
+    <RoomOption
+        IconComponent={IconUserPlus}
+        title={$LL.chat.manageRoomUsers.roomOption()}
+        on:click={openInviteParticipantsModal}
+    />
+
     <RoomOption
         IconComponent={IconLogout}
         title={$LL.chat.roomMenu.leaveRoom.label()}

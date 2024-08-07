@@ -1,5 +1,5 @@
 import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
-import { Readable, Writable, get, writable } from "svelte/store";
+import { get, Readable, Writable, writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import { AvailabilityStatus } from "@workadventure/messages";
 import {
@@ -269,5 +269,14 @@ export class ProximityChatRoom implements ChatRoom {
 
     getSpaceName(): string | undefined {
         return get(this._connection.spaceName);
+    }
+
+    inviteUsers(userIds: string[]): Promise<void> {
+        return Promise.reject(new Error("Method not implemented"));
+    }
+
+    members(): { id: string; name: string; membership: ChatRoomMembership }[] {
+        console.info("Method not implemented");
+        return [];
     }
 }

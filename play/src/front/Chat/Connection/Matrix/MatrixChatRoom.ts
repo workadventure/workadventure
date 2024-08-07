@@ -10,6 +10,7 @@ import {
     ReceiptType,
     Room,
     RoomEvent,
+    RoomMember,
     RoomMemberEvent,
     TimelineWindow,
 } from "matrix-js-sdk";
@@ -21,7 +22,7 @@ import { RoomMessageEventContent } from "matrix-js-sdk/lib/@types/events";
 import { ChatRoom, ChatRoomMembership } from "../ChatConnection";
 import { selectedChatMessageToReply } from "../../Stores/ChatStore";
 import { LocalSpaceProviderSingleton } from "../../../Space/SpaceProvider/SpaceStore";
-import { WORLD_SPACE_NAME, CONNECTED_USER_FILTER_NAME } from "../../../Space/Space";
+import { CONNECTED_USER_FILTER_NAME, WORLD_SPACE_NAME } from "../../../Space/Space";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { matrixSecurity } from "./MatrixSecurity";
@@ -62,7 +63,6 @@ export class MatrixChatRoom implements ChatRoom {
         this.timelineWindow = new TimelineWindow(matrixRoom.client, matrixRoom.getLiveTimeline().getTimelineSet());
         this.isEncrypted = writable(matrixRoom.hasEncryptionStateEvent());
         this.typingMembers = writable([]);
-
         void this.matrixRoom.getMembersWithMembership(KnownMembership.Join).forEach((member) =>
             member.on(RoomMemberEvent.Typing, (event, member) => {
                 const typingMember = member.user;
@@ -134,6 +134,8 @@ export class MatrixChatRoom implements ChatRoom {
                     console.error(error);
                 });
             });
+
+        console.debug(matrixRoom.getMembers());
     }
 
     private async initMatrixRoomMessagesAndReactions() {
@@ -407,6 +409,16 @@ export class MatrixChatRoom implements ChatRoom {
     leaveRoom(): void {
         this.matrixRoom.client.leave(this.id).catch((error) => console.error("Unable to leave", error));
     }
+    async inviteUsers(userIds: string[]): Promise<void> {
+        const userInvitationPromises = userIds.map((userId) => this.matrixRoom.client.invite(this.id, userId));
+        try {
+            await Promise.all(userInvitationPromises);
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+        return;
+    }
 
     private getMatrixRoomType(): "direct" | "multiple" {
         const dmInviter = this.matrixRoom.getDMInviter();
@@ -443,6 +455,14 @@ export class MatrixChatRoom implements ChatRoom {
         } catch (error) {
             console.error(error);
         }
+    }
+
+    members() {
+        return this.matrixRoom.getMembers().map((member: RoomMember) => ({
+            id: member.userId,
+            name: member.name ?? member.userId,
+            membership: member.membership ?? "join",
+        }));
     }
 
     private async sendFile(file: File) {

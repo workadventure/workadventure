@@ -46,6 +46,8 @@ export interface ChatRoom {
     typingMembers: Readable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
     startTyping: () => Promise<object>;
     stopTyping: () => Promise<object>;
+    inviteUsers: (userIds: string[]) => Promise<void>;
+    members: () => { id: string; name: string; membership: ChatRoomMembership }[];
 }
 
 //Readonly attributes

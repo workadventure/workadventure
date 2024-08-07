@@ -8,12 +8,15 @@
     import LL from "../../../../i18n/i18n-svelte";
     import { IconAlertTriangle, IconHelpCircle, IconLoader } from "../../../Components/Icons";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
+    import { searchChatMembersRule } from "./searchChatMembersRule";
 
     export let isOpen: boolean;
     let createRoomOptions: CreateRoomOptions = { visibility: "public" };
     let createRoomError: string | undefined = undefined;
 
     const chat = gameManager.getCurrentGameScene().chatConnection;
+
+    const { searchMembers } = searchChatMembersRule();
 
     let loadingRoomCreation = false;
 
@@ -49,20 +52,6 @@
             case "joined":
                 return get(LL).chat.createRoom.historyVisibility.joined();
         }
-    }
-
-    async function searchMembers(filterText: string) {
-        try {
-            const chatUsers = await chat.searchChatUsers(filterText);
-            if (chatUsers === undefined) {
-                return [];
-            }
-            return chatUsers.map((user) => ({ value: user.id, label: user.name ?? user.id }));
-        } catch (error) {
-            console.error(error);
-        }
-
-        return [];
     }
 </script>
 
