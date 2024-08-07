@@ -18,7 +18,6 @@ import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { ChatConnectionInterface, ChatRoom, Connection, ConnectionStatus, CreateRoomOptions } from "../ChatConnection";
 import { selectedRoom } from "../../Stores/ChatStore";
-import { SpaceFilterInterface, SpaceUserExtended } from "../../../Space/SpaceFilter/SpaceFilter";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 import { MatrixSecurity, matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity";
 
@@ -44,7 +43,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     constructor(
         private connection: Connection,
         clientPromise: Promise<MatrixClient>,
-        private AllWorldUserspaceFilter: SpaceFilterInterface,
         private matrixSecurity: MatrixSecurity = defaultMatrixSecurity
     ) {
         this.connectionStatus = writable("CONNECTING");
@@ -141,15 +139,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             }
 
             if (membership === KnownMembership.Invite) {
-                const inviter = room.getDMInviter();
                 const newRoom = new MatrixChatRoom(room);
-                if (
-                    inviter &&
-                    this.AllWorldUserspaceFilter.getUsers().find((user: SpaceUserExtended) => inviter === user.chatID)
-                ) {
-                    this.roomList.set(roomId, newRoom);
-                    newRoom.joinRoom();
-                }
+                this.roomList.set(roomId, newRoom);
                 return;
             }
         }
