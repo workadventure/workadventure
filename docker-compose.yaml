@@ -255,6 +255,7 @@ services:
             SENTRY_RELEASE: $SENTRY_RELEASE
         volumes:
             - .:/usr/src/app
+        tmpfs: /tmp
         ports:
             - "9232:9229"
         labels:
@@ -287,6 +288,7 @@ services:
             PATH_PREFIX: ""
         volumes:
             - .:/usr/src/app
+        tmpfs: /tmp
         ports:
             - "9233:9229"
         labels:
@@ -324,6 +326,7 @@ services:
             UPLOAD_MAX_FILESIZE: "$UPLOAD_MAX_FILESIZE"
         volumes:
             - .:/usr/src/app
+        tmpfs: /tmp
         ports:
             - "9234:9229"
         labels:
