@@ -6,7 +6,8 @@
 
     import type { ActionsMenuAction, ActionsMenuData } from "../../Stores/ActionsMenuStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import bgMap from "../images/map-exemple.png";
+    import ProfilIcon from "../Icons/ProfilIcon.svelte";
+    import WokaFromUserId from "../Woka/WokaFromUserId.svelte";
 
     let actionsMenuData: ActionsMenuData | undefined;
     let sortedActions: ActionsMenuAction[] | undefined;
@@ -59,13 +60,23 @@
             <div class="pb-4 bg-contrast/80 backdrop-blur">
                 <div class="h-24 w-full relative mb-8">
                     <div class="flex">
-                        <div class="h-20 aspect-ratio bg-white rounded mt-6 ml-6 z-20 flex-none w-[20%]" />
+                        <div class="relative w-[20%] flex justify-center items-center">
+                            <div class="absolute bg-secondary rounded-3xl h-20 w-20 z-10" />
+                            <div class="aspect-ratio flex h-16 justify-center my-auto rounded z-20">
+                                <WokaFromUserId
+                                    userId={-1}
+                                    placeholderSrc={""}
+                                    customHeight="42&& !$cameraEnergySavingStorepx"
+                                    customWidth="64px"
+                                />
+                            </div>
+                        </div>
                         <div class="z-20 mt-6 flex-grow w-[80%]">
-                            <div class=""></div>
-                            <div class="h6 text-white pl-4">
+                            <div class="" />
+                            <div class="text-white pl-4">
                                 {actionsMenuData.menuName}
                             </div>
-                            <div class=""></div>
+                            <div class="" />
                             <p class="text-sm opacity-50 text-white px-4">
                                 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
                                 incididunt.
@@ -73,8 +84,16 @@
                         </div>
                     </div>
                 </div>
-                <p class="text-sm text-center opacity-50 text-white px-4">a.alexandre@workadventu.re</p>
-                <p class="text-sm text-center opacity-50 text-white px-4">a.alexandre@workadventu.re</p>
+                <div class="flex">
+                    <div class="flex flex-col items-end justify-center gap-y-4 w-[20%]">
+                        <ProfilIcon />
+                        <ProfilIcon />
+                    </div>
+                    <div class="flex-grow w-[80%]">
+                        <p class="text-sm opacity-50 text-white px-4">a.alexandre@workadventu.re</p>
+                        <p class="text-sm opacity-50 text-white px-4">a.alexandre@workadventu.re</p>
+                    </div>
+                </div>
             </div>
         {/if}
         <div class="flex items-center bg-contrast" class:margin-close={!actionsMenuData.menuName}>
