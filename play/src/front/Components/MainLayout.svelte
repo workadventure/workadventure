@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { onMount } from "svelte";
     import { emoteDataStoreLoading, emoteMenuStore } from "../Stores/EmoteStore";
     import { requestVisitCardsStore } from "../Stores/GameStore";
     import { helpCameraSettingsVisibleStore, helpWebRtcSettingsVisibleStore } from "../Stores/HelpSettingsStore";
@@ -14,7 +13,6 @@
     import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore";
     import { uiWebsitesStore } from "../Stores/UIWebsiteStore";
     import { coWebsites } from "../Stores/CoWebsiteStore";
-    import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
     import { proximityMeetingStore } from "../Stores/MyMediaStore";
     import { notificationPlayingStore } from "../Stores/NotificationStore";
     import { popupStore } from "../Stores/PopupStore";
@@ -45,20 +43,6 @@
     import MapList from "./Exploration/MapList.svelte";
     import WarningToast from "./WarningContainer/WarningToast.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
-
-    let mainLayout: HTMLDivElement;
-    // export let message: string;
-
-    const resizeObserver = new ResizeObserver(() => {
-        isMediaBreakpointUp("md");
-    });
-
-    onMount(() => {
-        resizeObserver.observe(mainLayout);
-        // ...
-    });
-
-    // $: console.log($hasEmbedScreen);
 </script>
 
 <!-- Components ordered by z-index -->
@@ -67,7 +51,6 @@
     class="@container/main-layout absolute h-full w-full pointer-events-none {[...$coWebsites.values()].length === 0
         ? 'not-cowebsite'
         : ''}"
-    bind:this={mainLayout}
 >
     {#if $modalVisibilityStore || $modalPopupVisibilityStore}
         <div class="bg-black/60 w-full h-full fixed left-0 right-0" />

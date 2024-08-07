@@ -69,7 +69,7 @@
         modalVisibilityStore,
         showModalGlobalComminucationVisibilityStore,
     } from "../../Stores/ModalStore";
-    import { userHasAccessToBackOfficeStore, userIsAdminStore } from "../../Stores/GameStore";
+    import { userHasAccessToBackOfficeStore } from "../../Stores/GameStore";
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
     import { Emoji } from "../../Stores/Utils/emojiSchema";
     import {
@@ -204,9 +204,7 @@
     }
 
     function toggleChat() {
-        console.log("toggleChat");
         if (!$chatVisibilityStore) {
-            console.log("je suis dans le chat pas visible");
             menuVisiblilityStore.set(false);
             activeSubMenuStore.activateByIndex(0);
         }
@@ -468,9 +466,6 @@
     // on:mouseleave={() => { !navigating ? helpActive = false : '' }}
 
      */
-
-    $: console.log($userIsAdminStore, "is admin ?");
-    $: console.log($mapEditorActivated, "map editor activated ?");
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
@@ -488,11 +483,11 @@
             <div
                 class="flex relative transition-all duration-150 z-[2] {$chatVisibilityStore ? 'hidden' : ''}"
                 class:opacity-0={$chatVisibilityStore}
-                id="chat-action"
+                data-testid="chat-action"
             >
                 <div
                     class="group/btn-message-circle relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg rounded-r-lg sm:rounded-r-none p-2 aspect-square"
-                    id="chat-btn"
+                    data-testid="chat-btn"
                     on:click={() => analyticsClient.openedChat()}
                     on:click={toggleChat}
                     on:mouseenter={() => {
@@ -1241,7 +1236,7 @@
                 {#if $mapEditorActivated || $userHasAccessToBackOfficeStore}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
-                        id="action-admin"
+                        data-testid="action-admin"
                         class="items-center relative transition-all hidden @lg/actions:block"
                         on:click={() => (adminMenuIsDropped = !adminMenuIsDropped)}
                         on:click|preventDefault={close}
@@ -1274,7 +1269,7 @@
                         {#if adminMenuIsDropped}
                             <div
                                 class="absolute mt-2 top-14 @xl/actions:top-16 right-0 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all"
-                                id="admin-menu"
+                                data-testid="admin-menu"
                                 transition:fly={{ y: 40, duration: 150 }}
                             >
                                 <ul class="p-0 m-0">
@@ -1282,7 +1277,7 @@
                                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                                         <li
                                             class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold"
-                                            id="map-editor"
+                                            data-testid="map-editor"
                                             on:click={() => toggleMapEditorMode()}
                                         >
                                             <div
@@ -1356,7 +1351,7 @@
                 {/if}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
-                    id="action-user"
+                    data-testid="action-user"
                     class="flex items-center relative transition-all hidden @md/actions:flex"
                     on:click={() => (profileMenuIsDropped = !profileMenuIsDropped)}
                     on:click|preventDefault={close}
@@ -1411,7 +1406,7 @@
                     {#if profileMenuIsDropped}
                         <div
                             class="absolute mt-2 top-14 @xl/actions:top-16 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 right-0 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-transparent before:border-b-contrast/80 transition-all hidden @md/actions:block max-h-[calc(100vh-96px)] overflow-y-auto"
-                            id="profile-menu"
+                            data-testid="profile-menu"
                             transition:fly={{ y: 40, duration: 150 }}
                         >
                             <div class="p-0 m-0 list-none">

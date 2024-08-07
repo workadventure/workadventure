@@ -11,25 +11,9 @@
     <script src="<?php echo $_SERVER["FRONT_URL"] ?>/iframe_api.js"></script>
     <script>
         window.addEventListener('load', () => {
-            // console.log('On load');
-            console.log('Before WA init', "TEEEESSSSTTTTTT");
-            console.log('WA', WA);
-            console.log('WA. Players name', WA.players.name);
-            console.log('WA. Players list', WA.players.list);
-            console.log('WA. Players list FONCTION', WA.players.list());
-            // console.log('WA. Players list FONCTION', WA.players.);
-
-
-            WA.onInit().then(() => {
-                console.log('WA INIIIIIIIITTTTTTTT');
-            });
-
-
-
-
-
             WA.onInit().then(async () => {
                 console.log('WA INIT');
+                await WA.players.configureTracking();
                 for (const remotePlayer of WA.players.list()) {
                     remotePlayer.state.onVariableChange("testVariable").subscribe((value) => {
                         document.getElementById("events").innerText += "User '" + remotePlayer.name + "' testVariable changed. New value: " + value + " (tracked locally)\n";
@@ -40,7 +24,6 @@
                         }
                     });
                 }
-                await WA.players.configureTracking();
 
 
                 WA.players.onPlayerEnters.subscribe((remotePlayer) => {
@@ -67,7 +50,6 @@
                 document.getElementById('listCurrentPlayers').addEventListener('click', () => {
                     document.getElementById('list').innerHTML = '';
                     for (const player of WA.players.list()) {
-                        console.log("PLAYERS !!!!!!", player);
                         document.getElementById('list').innerHTML += "<li>User " + player.id + ": " + player.name + "</li>";
                     }
                 });

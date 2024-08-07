@@ -4,33 +4,33 @@ import {expectInViewport} from "./viewport";
 class Menu {
 
     async openChat(page: Page) {
-        await page.click('div#chat-btn');
-        await expectInViewport('#chatWindow', page);
-        await expect(page.locator('div#chat-action')).toHaveClass(/hidden/);
-        await expect(page.locator('#chatWindow')).toHaveClass(/show/);
+        await page.getByTestId('chat-btn').click();
+        await expectInViewport('.chatWindow', page);
+        await expect(page.getByTestId('chat-action')).toHaveClass(/hidden/);
+        await expect(page.locator('.chatWindow')).toHaveClass(/show/);
     }
 
     async openMapEditor(page: Page) {
-        await page.locator('#action-admin').click({timeout: 10_000});
-        await page.locator('#map-editor').click();
-        await expect(await page.locator('#map-editor')).toBeHidden();
+        await page.getByTestId('action-admin').click({timeout: 10_000});
+        await page.getByTestId('map-editor').click();
+        await expect(await page.getByTestId('map-editor')).toBeHidden();
         // await expect(await page.getByRole('button', {name: 'toggle-map-editor'}).first()).toHaveClass(/border-top-light/);
     }
 
     async openMenu(page: Page) {
-        await page.locator('#action-user').click({timeout: 10_000});
-        await expect(await page.locator('#profile-menu')).toHaveClass(/backdrop-blur/);
+        await page.getByTestId('action-user').click({timeout: 10_000});
+        await expect(await page.getByTestId('profile-menu')).toHaveClass(/backdrop-blur/);
     }
 
     async openMenuAdmin(page: Page) {
         // await page.pause();
-        await page.locator('#action-admin').click();
-        await expect(await page.locator('#admin-menu')).toHaveClass(/backdrop-blur/);
+        await page.getByTestId('action-admin').click();
+        await expect(await page.getByTestId('admin-menu')).toHaveClass(/backdrop-blur/);
     }
 
     async closeMenu(page: Page) {
-        await page.locator('.menu-container').getByRole('button', { name: '×' }).click();
-        await expect(await page.locator('#menuIcon')).not.toHaveClass(/border-top-light/);
+        await page.getByTestId('action-user').click({timeout: 10_000});
+        await expect(await page.getByTestId('profile-menu')).toBeHidden();
     }
 
     async closeMapEditor(page: Page) {
@@ -40,7 +40,7 @@ class Menu {
     }
 
     async toggleMegaphoneButton(page: Page) {
-        await page.locator('#action-admin').click({timeout: 10_000});
+        await page.getByTestId('action-admin').click({timeout: 10_000});
         await page.getByTestId('global-message').click({timeout: 10_000});
     }
 
