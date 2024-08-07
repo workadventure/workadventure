@@ -8,7 +8,7 @@ import {
 import { Subject } from "rxjs";
 import { Writable, get, writable } from "svelte/store";
 import { CharacterLayerManager } from "../../Phaser/Entity/CharacterLayerManager";
-import { gameManager } from "../../Phaser/Game/GameManager";
+import { RoomConnection } from "../../Connection/RoomConnection";
 
 export interface SpaceFilterInterface {
     userExist(userId: number): boolean;
@@ -63,10 +63,10 @@ export interface JitsiEventEmitter {
 
 export class SpaceFilter implements SpaceFilterInterface {
     constructor(
-        private name: string,
-        private spaceName: string,
-        private filter: Filter = undefined,
-        private roomConnection = gameManager.getCurrentGameScene().connection,
+        private _name: string,
+        private _spaceName: string,
+        private _connection: RoomConnection,
+        private _filter: Filter = undefined,
         readonly users: Writable<Map<number, SpaceUserExtended>> = writable(new Map<number, SpaceUserExtended>())
     ) {
         this.addSpaceFilter();
@@ -75,7 +75,7 @@ export class SpaceFilter implements SpaceFilterInterface {
         return get(this.users).has(userId);
     }
     async addUser(user: SpaceUser): Promise<SpaceUserExtended> {
-        const extendSpaceUser = await this.extendSpaceUser(user, this.spaceName);
+        const extendSpaceUser = await this.extendSpaceUser(user, this._spaceName);
         this.users.update((value) => {
             if (!this.userExist(user.id)) value.set(user.id, extendSpaceUser);
             return value;
@@ -112,11 +112,11 @@ export class SpaceFilter implements SpaceFilterInterface {
     }
 
     setFilter(newFilter: Filter) {
-        this.filter = newFilter;
+        this._filter = newFilter;
         this.updateSpaceFilter();
     }
     getName(): string {
-        return this.name;
+        return this._name;
     }
 
     private async extendSpaceUser(user: SpaceUser, spaceName: string): Promise<SpaceUserExtended> {
@@ -124,29 +124,29 @@ export class SpaceFilter implements SpaceFilterInterface {
 
         emitter = {
             emitKickOffUserMessage: (userId: string) => {
-                this.roomConnection?.emitKickOffUserMessage(userId, this.name);
+                this._connection.emitKickOffUserMessage(userId, this._name);
             },
             // FIXME: it is strange to have a emitMuteEveryBodySpace that is valid for anyone in a space applied to a specific user. It should be a method of the space instead.
             // In fact, we should have a single "emitPublicMessage" on the space class with a typing that is a union of all possible messages addressed to everybody.
             emitMuteEveryBodySpace: () => {
-                this.roomConnection?.emitMuteEveryBodySpace(this.name);
+                this._connection.emitMuteEveryBodySpace(this._name);
             },
             emitMuteParticipantIdSpace: (userId: string) => {
-                this.roomConnection?.emitMuteParticipantIdSpace(this.name, userId);
+                this._connection.emitMuteParticipantIdSpace(this._name, userId);
             },
             // FIXME: it is strange to have a emitMuteVideoEveryBodySpace that is valid for anyone in a space applied to a specific user. It should be a method of the space instead.
             // In fact, we should have a single "emitPublicMessage" on the space class with a typing that is a union of all possible messages addressed to everybody.
             emitMuteVideoEveryBodySpace: () => {
-                this.roomConnection?.emitMuteVideoEveryBodySpace(this.name);
+                this._connection.emitMuteVideoEveryBodySpace(this._name);
             },
             emitMuteVideoParticipantIdSpace: (userId: string) => {
-                this.roomConnection?.emitMuteParticipantIdSpace(this.name, userId);
+                this._connection.emitMuteParticipantIdSpace(this._name, userId);
             },
             emitProximityPublicMessage: (message: string) => {
-                this.roomConnection?.emitProximityPublicMessage(this.name, message);
+                this._connection.emitProximityPublicMessage(this._name, message);
             },
             emitProximityPrivateMessage: (message: string, receiverUserId: number) => {
-                this.roomConnection?.emitProximityPrivateMessage(this.name, message, receiverUserId);
+                this._connection.emitProximityPrivateMessage(this._name, message, receiverUserId);
             },
         };
 
@@ -166,34 +166,34 @@ export class SpaceFilter implements SpaceFilterInterface {
         };
     }
     private removeSpaceFilter() {
-        this.roomConnection.emitRemoveSpaceFilter({
+        this._connection.emitRemoveSpaceFilter({
             spaceFilterMessage: {
-                filterName: this.name,
-                spaceName: this.spaceName,
+                filterName: this._name,
+                spaceName: this._spaceName,
             },
         });
     }
 
     private updateSpaceFilter() {
-        this.roomConnection.emitUpdateSpaceFilter({
+        this._connection.emitUpdateSpaceFilter({
             spaceFilterMessage: {
-                filterName: this.name,
-                spaceName: this.spaceName,
-                filter: this.filter,
+                filterName: this._name,
+                spaceName: this._spaceName,
+                filter: this._filter,
             },
         });
     }
     private addSpaceFilter() {
-        this.roomConnection.emitAddSpaceFilter({
+        this._connection.emitAddSpaceFilter({
             spaceFilterMessage: {
-                filterName: this.name,
-                spaceName: this.spaceName,
+                filterName: this._name,
+                spaceName: this._spaceName,
             },
         });
     }
 
     getFilterType(): "spaceFilterEverybody" | "spaceFilterContainName" | "spaceFilterLiveStreaming" | undefined {
-        return this.filter?.$case;
+        return this._filter?.$case;
     }
     destroy() {
         this.removeSpaceFilter();

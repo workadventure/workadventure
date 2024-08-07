@@ -336,7 +336,7 @@ export class GameScene extends DirtyScene {
     private _spaceStore: SpaceProviderInterface | undefined;
     private _proximityChatRoom: ProximityChatRoom | undefined;
     private _userProviderMerger: UserProviderMerger | undefined;
-    private _adminUserProvider:AdminUserProvider | undefined;
+    private _adminUserProvider: AdminUserProvider | undefined;
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
@@ -1542,12 +1542,16 @@ export class GameScene extends DirtyScene {
                         console.error(e);
                     });
 
-                this._spaceStore = new LocalSpaceProvider();
+                this._spaceStore = new LocalSpaceProvider(this.connection);
                 this.streamSpaceWatcher = new StreamSpaceWatcher(this.connection, this._spaceStore);
 
                 const allUserInWorldFilter = this._spaceStore.add(WORLD_SPACE_NAME).watch(CONNECTED_USER_FILTER_NAME);
 
-                this.chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise, allUserInWorldFilter);
+                this.chatConnection = new MatrixChatConnection(
+                    this.connection,
+                    matrixClientPromise,
+                    allUserInWorldFilter
+                );
 
                 this._proximityChatRoom = new ProximityChatRoom(this.connection, this.connection.getUserId());
 
