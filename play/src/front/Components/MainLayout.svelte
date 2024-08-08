@@ -20,8 +20,6 @@
     import { askDialogStore } from "../Stores/MeetingStore";
     import { mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
-    import { highlightFullScreen } from "../Stores/ActionsCamStore";
-    import { peerStore } from "../Stores/PeerStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import HelpCameraSettingsPopup from "./HelpSettings/HelpCameraSettingsPopup.svelte";
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
@@ -58,124 +56,115 @@
         <div class="bg-black/60 w-full h-full fixed left-0 right-0" />
     {/if}
 
-    <section id="main-layout-main" class="pb-0 pointer-events-none h-full w-full">
-        <div class="popups">
-            {#each $popupStore.slice().reverse() as popup (popup.uuid)}
-                <div class="popupwrapper">
-                    <svelte:component
-                        this={popup.component}
-                        {...popup.props}
-                        on:close={() => popupStore.removePopup(popup.uuid)}
-                    />
-                </div>
-            {/each}
-        </div>
-        <div class={$peerStore.size > 0 && $highlightFullScreen ? "hidden" : "action-bar"}>
-            <ActionBar />
-        </div>
-        <Lazy
-            when={$showDesktopCapturerSourcePicker}
-            component={() => import("./Video/DesktopCapturerSourcePicker.svelte")}
-        />
-
-        {#if $menuVisiblilityStore}
-            <Menu />
-        {/if}
-
-        {#if $banMessageStore.length > 0}
-            <BanMessageContainer />
-        {:else if $textMessageStore.length > 0}
-            <TextMessageContainer />
-        {/if}
-
-        {#if $notificationPlayingStore}
-            <div class="flex flex-col absolute w-auto right-0">
-                {#each [...$notificationPlayingStore.values()] as notification (notification.id)}
-                    <Notification {notification} />
+    <div class="flex flex-col min-h-screen sm:flex-col-reverse">
+        <section id="main-layout-main" class="pb-0 flex-1 pointer-events-none h-full w-full">
+            <div class="popups">
+                {#each $popupStore.slice().reverse() as popup (popup.uuid)}
+                    <div class="popupwrapper">
+                        <svelte:component
+                            this={popup.component}
+                            {...popup.props}
+                            on:close={() => popupStore.removePopup(popup.uuid)}
+                        />
+                    </div>
                 {/each}
             </div>
-        {/if}
 
-        {#if $warningBannerStore}
-            <WarningBanner />
-        {/if}
+            <Lazy
+                when={$showDesktopCapturerSourcePicker}
+                component={() => import("./Video/DesktopCapturerSourcePicker.svelte")}
+            />
 
-        {#if $showReportScreenStore !== userReportEmpty}
-            <ReportMenu />
-        {/if}
+            {#if $menuVisiblilityStore}
+                <Menu />
+            {/if}
 
-        {#if $helpCameraSettingsVisibleStore}
-            <HelpCameraSettingsPopup />
-        {/if}
+            {#if $banMessageStore.length > 0}
+                <BanMessageContainer />
+            {:else if $textMessageStore.length > 0}
+                <TextMessageContainer />
+            {/if}
 
-        {#if $helpWebRtcSettingsVisibleStore !== "hidden" && $proximityMeetingStore === true}
-            <HelpWebRtcSettingsPopup />
-        {/if}
+            {#if $notificationPlayingStore}
+                <div class="flex flex-col absolute w-auto right-0">
+                    {#each [...$notificationPlayingStore.values()] as notification (notification.id)}
+                        <Notification {notification} />
+                    {/each}
+                </div>
+            {/if}
 
-        {#if $helpSettingsPopupBlockedStore}
-            <HelpPopUpBlocked />
-        {/if}
+            {#if $warningBannerStore}
+                <WarningBanner />
+            {/if}
 
-        {#if $soundPlayingStore}
-            <AudioPlaying url={$soundPlayingStore} />
-        {/if}
+            {#if $showReportScreenStore !== userReportEmpty}
+                <ReportMenu />
+            {/if}
 
-        {#if $showLimitRoomModalStore}
-            <LimitRoomModal />
-        {/if}
+            {#if $helpCameraSettingsVisibleStore}
+                <HelpCameraSettingsPopup />
+            {/if}
 
-        {#if $requestVisitCardsStore}
-            <VisitCard visitCardUrl={$requestVisitCardsStore} />
-        {/if}
+            {#if $helpWebRtcSettingsVisibleStore !== "hidden" && $proximityMeetingStore === true}
+                <HelpWebRtcSettingsPopup />
+            {/if}
 
-        {#if $hasEmbedScreen}
-            <EmbedScreensContainer />
-        {/if}
+            {#if $helpSettingsPopupBlockedStore}
+                <HelpPopUpBlocked />
+            {/if}
 
-        {#if $uiWebsitesStore}
-            <UiWebsiteContainer />
-        {/if}
+            {#if $soundPlayingStore}
+                <AudioPlaying url={$soundPlayingStore} />
+            {/if}
 
-        {#if $modalVisibilityStore}
-            <Modal />
-        {/if}
+            {#if $showLimitRoomModalStore}
+                <LimitRoomModal />
+            {/if}
 
-        {#if $askDialogStore}
-            <MuteDialogBox />
-        {/if}
+            {#if $requestVisitCardsStore}
+                <VisitCard visitCardUrl={$requestVisitCardsStore} />
+            {/if}
 
-        {#if $mapExplorationObjectSelectedStore}
-            <ObjectDetails />
-        {/if}
+            {#if $hasEmbedScreen}
+                <EmbedScreensContainer />
+            {/if}
 
-        {#if $modalPopupVisibilityStore}
-            <Popup />
-        {/if}
+            {#if $uiWebsitesStore}
+                <UiWebsiteContainer />
+            {/if}
 
-        {#if $modalVisibilityStore}
-            <MapList />
-        {/if}
+            {#if $modalVisibilityStore}
+                <Modal />
+            {/if}
 
-        {#if $warningMessageStore.length > 0}
-            <WarningToast />
-        {/if}
-    </section>
+            {#if $askDialogStore}
+                <MuteDialogBox />
+            {/if}
+
+            {#if $mapExplorationObjectSelectedStore}
+                <ObjectDetails />
+            {/if}
+
+            {#if $modalPopupVisibilityStore}
+                <Popup />
+            {/if}
+
+            {#if $modalVisibilityStore}
+                <MapList />
+            {/if}
+
+            {#if $warningMessageStore.length > 0}
+                <WarningToast />
+            {/if}
+        </section>
+        <div class="">
+            <ActionBar />
+        </div>
+    </div>
 
     {#if $actionsMenuStore}
         <ActionsMenu />
     {/if}
-
-    <div class="popups">
-        {#each $popupStore.slice().reverse() as popup (popup.uuid)}
-            <div class="popupwrapper">
-                <svelte:component
-                    this={popup.component}
-                    {...popup.props}
-                    on:close={() => popupStore.removePopup(popup.uuid)}
-                />
-            </div>
-        {/each}
-    </div>
 
     <!-- audio when user have a message TODO delete it with new chat -->
     <audio id="newMessageSound" src="/resources/objects/new-message.mp3" style="width: 0;height: 0;opacity: 0" />

@@ -58,7 +58,6 @@
     //     return false;
     // }
     //     if ($screenSharingRequesterStore === userId) {
-    //         console.log("BONJOUR");
     //         return true;
     //     }
     //     return false;
@@ -97,10 +96,6 @@
         });
     });
 </script>
-
-<!-- Bug with tansition : transition:fly={{ y: 50, duration: 150 }} -->
-
-<!-- style={small ? "width:100%" : "height:" + $heightCamWrapper + "px;"} -->
 
 <div
     class="transition-all relative h-full w-full flex justify-start aspect-video m-auto"

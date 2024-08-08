@@ -3,6 +3,7 @@
     import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
     import { get, writable } from "svelte/store";
+    import { ArrowDownIcon } from "svelte-feather-icons";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import {
         cameraListStore,
@@ -25,7 +26,7 @@
     import HelpTooltip from "../Tooltip/HelpTooltip.svelte";
 
     import { LayoutMode } from "../../WebRtc/LayoutManager";
-    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
+    import { embedScreenLayoutStore, hasEmbedScreen } from "../../Stores/EmbedScreensStore";
     import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
@@ -116,7 +117,7 @@
     import MenuBurgerIcon from "../Icons/MenuBurgerIcon.svelte";
     import PenIcon from "../Icons/PenIcon.svelte";
     import { StringUtils } from "../../Utils/StringUtils";
-    import { focusMode, rightMode, hideMode } from "../../Stores/ActionsCamStore";
+    import { focusMode, rightMode, hideMode, highlightFullScreen } from "../../Stores/ActionsCamStore";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { connectionManager } from "../../Connection/ConnectionManager";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
@@ -137,22 +138,18 @@
 
     function focusModeOn() {
         focusMode.set(!get(focusMode));
-        console.log("focusMode", focusMode);
     }
 
     function rightModeOn() {
         rightMode.set(!get(rightMode));
-        console.log("rightMode", rightMode);
     }
 
     function lightModeOn() {
         focusMode.set(true);
-        console.log("focusMode", focusMode);
     }
 
     function hideModeOn() {
         hideMode.set(!get(hideMode));
-        console.log("hideMode", $hideMode);
     }
 
     function screenSharingClick(): void {
@@ -490,7 +487,12 @@
     <ChatOverlay />
 {/if}
 
-<div class="@container/actions w-full z-[301] bottom-0 sm:top-0 transition-all pointer-events-none bp-menu">
+<div
+    class="@container/actions w-full z-[301] bottom-0 sm:top-0 transition-all pointer-events-none bp-menu {$peerStore.size >
+        0 && $highlightFullScreen
+        ? 'hidden'
+        : ''}"
+>
     <div class="flex w-full p-2 space-x-2 @xl/actions:p-4 @xl/actions:space-x-4">
         <div
             class="justify-start flex-1 pointer-events-auto w-32"
@@ -503,7 +505,7 @@
                 data-testid="chat-action"
             >
                 <div
-                    class="group/btn-message-circle relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg rounded-r-lg sm:rounded-r-none p-2 aspect-square"
+                    class="group/btn-message-circle relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg rounded-r-lg sm:rounded-r-none p-2 aspect-square "
                     data-testid="chat-btn"
                     on:click={() => analyticsClient.openedChat()}
                     on:click={toggleChat}
@@ -1166,12 +1168,12 @@
 
                             {#if camMenuIsDropped}
                                 <div
-                                    class="absolute mt-2 top-14 test @xl/actions:top-16 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 left-24 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all hidden @md/actions:block max-h-[calc(100vh-96px)] overflow-y-auto"
+                                    class="absolute bottom-20 sm:right-20 sm:bottom-auto md:mt-2 md:top-14 @xl/actions:top-16 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 sm:left-24 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-transparent before:border-b-contrast/80 transition-all @md/actions:block max-h-[calc(100vh-96px)] overflow-y-auto"
                                     transition:fly={{ y: 40, duration: 150 }}
                                 >
-                                    <div class="p-0 m-0 list-none test">
+                                    <div class="p-0 m-0 list-none">
                                         <button
-                                            class="group test flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
+                                            class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
                                             on:click={lightModeOn}
                                         >
                                             <div
@@ -1216,6 +1218,12 @@
                                                 <div>{$LL.actionbar.hideMode()}</div>
                                             </button>
                                         {/if}
+                                    </div>
+                                    <div
+                                        class="flex justify-center hover:cursor-pointer"
+                                        on:click={() => (camMenuIsDropped = !camMenuIsDropped)}
+                                    >
+                                        <ArrowDownIcon />
                                     </div>
                                 </div>
                             {/if}
@@ -1718,6 +1726,47 @@
                 >
                     {$LL.actionbar.otherSettings()}
                 </button>
+
+                {#if $hasEmbedScreen}
+                    <div class="h-[1px] w-full bg-white/10 my-2 block @md/actions:hidden" />
+                    <div class="flex text-xxs uppercase text-white/50 px-4 py-2 relative justify-end">Camera</div>
+
+                    <button
+                        class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold"
+                        on:click={() => analyticsClient.screenSharing()}
+                        on:click={screenSharingClick}
+                        on:click={() => (burgerOpen = !burgerOpen)}
+                        on:mouseenter={() => {
+                            !navigating ? (helpActive = "share") : "";
+                        }}
+                        on:mouseleave={() => {
+                            !navigating ? (helpActive = undefined) : "";
+                        }}
+                    >
+                        {#if $requestedScreenSharingState}
+                            {$LL.actionbar.stopScreenSharing()}
+                        {:else}
+                            {$LL.actionbar.startScreenSharing()}
+                        {/if}
+                    </button>
+
+                    <button
+                        class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold"
+                        on:click={() => analyticsClient.screenSharing()}
+                        on:click={() => (camMenuIsDropped = !camMenuIsDropped)}
+                        on:click={() => (burgerOpen = !burgerOpen)}
+                        on:click={() => (smallArrowVisible = !smallArrowVisible)}
+                        on:mouseenter={() => {
+                            !navigating ? (helpActive = "share") : "";
+                        }}
+                        on:mouseleave={() => {
+                            !navigating ? (helpActive = undefined) : "";
+                        }}
+                    >
+                        <!-- <p>Screen Sharing Mode</p> -->
+                        {$LL.actionbar.screenSharingMode()}
+                    </button>
+                {/if}
             </div>
             <div class="h-[1px] w-full bg-white/10 my-2 block @md/actions:hidden" />
             <div class="flex text-xxs uppercase text-white/50 px-4 py-2 relative justify-end">Administrator</div>
@@ -1819,17 +1868,8 @@
     * {
         font-family: "Roboto Condensed";
     }
-    .translate-right {
-        transform: translateX(2rem);
-    }
+
     @include media-breakpoint-down(sm) {
-        //is equal to tailwind's sm breakpoint
-        .translate-right {
-            transform: translateX(0);
-        }
-        .move-menu {
-            transform: translateX(-3rem);
-        }
     }
 
     .focus-mode {

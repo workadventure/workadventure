@@ -67,9 +67,9 @@
 </script>
 
 <div
-    class="{isHightlighted ? 'highlight' : 'not-highlighted'} {$highlightFullScreen && $highlightedEmbedScreen
-        ? 'hidden'
-        : ''} "
+    class="{isHightlighted
+        ? 'flex justify-center gap-4 whitespace-nowrap relative overflow-x-auto overflow-y-hidden m-0 mx-auto my-0 w-full max-w-full'
+        : 'mt-12 sm:mt-0 not-highlighted'} {$highlightFullScreen && $highlightedEmbedScreen ? 'hidden' : ''} "
     id="cameras-container"
 >
     {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
@@ -97,21 +97,6 @@
 
 <!-- && !$megaphoneEnabledStore TODO HUGO -->
 <style>
-    .highlight {
-        display: flex;
-        justify-content: center;
-        margin: 0;
-        gap: 1rem;
-        white-space: nowrap;
-        position: relative;
-        overflow-x: auto;
-        overflow-y: hidden;
-        margin: 0 auto;
-        width: 100%;
-        max-width: 100%;
-        -webkit-overflow-scrolling: touch;
-    }
-
     .hidden {
         display: none !important;
     }
