@@ -251,8 +251,4 @@
     #main-layout {
         container-type: size;
     }
-
-    .action-bar {
-        z-index: 10;
-    }
 </style>
