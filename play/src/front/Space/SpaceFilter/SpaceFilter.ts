@@ -22,9 +22,11 @@ export interface SpaceFilterInterface {
 }
 
 type ReactiveSpaceUser = {
-    [K in keyof Omit<SpaceUser,"id">]: Readonly<Readable<SpaceUser[K]>>;
+    [K in keyof Omit<SpaceUser, "id">]: Readonly<Readable<SpaceUser[K]>>;
 } & {
-    id : number
+    id: number;
+    playUri: string | undefined;
+    roomName: string | undefined;
 };
 
 type SpaceUserExtended = SpaceUser & {
@@ -87,10 +89,10 @@ export class SpaceFilter implements SpaceFilterInterface {
     }
     async addUser(user: SpaceUser): Promise<SpaceUserExtended> {
         const extendSpaceUser = await this.extendSpaceUser(user, this._spaceName);
-        
+
         if (!this.userExist(user.id)) {
             this._users.set(user.id, extendSpaceUser);
-            if(this.setUsers){
+            if (this.setUsers) {
                 this.setUsers(this._users);
             }
         }
@@ -102,12 +104,12 @@ export class SpaceFilter implements SpaceFilterInterface {
         return Array.from(get(this.usersStore).values());
     }
     removeUser(userId: number): void {
-        if (!this.setUsers) {
-            throw new Error("");
+        if (!this.userExist(userId)) {
+            this._users.delete(userId);
+            if (this.setUsers) {
+                this.setUsers(this._users);
+            }
         }
-
-        this._users.delete(userId);
-        this.setUsers(this._users);
     }
 
     updateUserData(newData: Partial<SpaceUser>): void {
@@ -122,7 +124,7 @@ export class SpaceFilter implements SpaceFilterInterface {
         if (!userToUpdate) return;
 
         merge(userToUpdate, newData);
-        
+
         for (const key in newData) {
             // We allow ourselves a not 100% exact type cast here.
             // Technically, newData could contain any key, not only keys part of SpaceUser type (because additional keys
@@ -133,7 +135,10 @@ export class SpaceFilter implements SpaceFilterInterface {
             if (castKey in userToUpdate.reactiveUser) {
                 // Finally, we cast the "Readable" to "Writable" to be able to update the value. We know for sure it is
                 // writable because the only place that can create a "ReactiveSpaceUser" is the "extendSpaceUser" method.
-                (userToUpdate.reactiveUser[castKey] as Writable<unknown>).set(newData[castKey]);
+                const store = userToUpdate.reactiveUser[castKey];
+                if (typeof store === "object" && "set" in store) {
+                    (store as Writable<unknown>).set(newData[castKey]);
+                }
             }
         }
 
@@ -192,31 +197,37 @@ export class SpaceFilter implements SpaceFilterInterface {
             }>(),
             emitter,
             spaceName,
-        } as unknown as SpaceUserExtended
+        } as unknown as SpaceUserExtended;
 
-
-        extendedUser.reactiveUser =  new Proxy({id : extendedUser.id} as unknown as ReactiveSpaceUser,{
-            get(target : any, property : PropertyKey , receiver: unknown) {
-                if(typeof property !== 'string'){
-                    return Reflect.get(target,property,receiver);
-                }
-
-                if(target[property as keyof ReactiveSpaceUser]){
-                    return target[property as keyof ReactiveSpaceUser];
-                }else{
-                    if(property in extendedUser){
-                        //@ts-ignore
-                        target[property] = writable(extendedUser[property]);
-                        return target[property];
-                    }else{
-                        return Reflect.get(target,property,receiver);
+        extendedUser.reactiveUser = new Proxy(
+            {
+                id: extendedUser.id,
+                roomName: extendedUser.roomName,
+                playUri: extendedUser.playUri,
+            } as unknown as ReactiveSpaceUser,
+            {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                get(target: any, property: PropertyKey, receiver: unknown) {
+                    if (typeof property !== "string") {
+                        return Reflect.get(target, property, receiver);
                     }
-                    
-                }
-            },
-        });
 
-        return extendedUser ;
+                    if (target[property as keyof ReactiveSpaceUser]) {
+                        return target[property as keyof ReactiveSpaceUser];
+                    } else {
+                        if (property in extendedUser) {
+                            //@ts-ignore
+                            target[property] = writable(extendedUser[property]);
+                            return target[property];
+                        } else {
+                            return Reflect.get(target, property, receiver);
+                        }
+                    }
+                },
+            }
+        );
+
+        return extendedUser;
     }
 
     private removeSpaceFilter() {

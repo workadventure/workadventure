@@ -5,7 +5,6 @@ import { SpaceFilterMessage } from "@workadventure/messages";
 import { ConcatenateMapStore } from "@workadventure/store-utils";
 import { RoomConnection } from "../Connection/RoomConnection";
 import { screenWakeLock } from "../Utils/ScreenWakeLock";
-import { SpaceFilterInterface } from "../Space/SpaceFilter/SpaceFilter";
 import { BroadcastSpace } from "./Common/BroadcastSpace";
 import { BroadcastConnection } from "./Common/BroadcastConnection";
 import { TrackWrapper } from "./Common/TrackWrapper";

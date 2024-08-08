@@ -1,5 +1,4 @@
-import { Readable, derived, writable } from "svelte/store";
-import { AvailabilityStatus } from "@workadventure/messages";
+import { Readable, derived } from "svelte/store";
 import { PartialChatUser } from "../Connection/ChatConnection";
 import { SpaceInterface } from "../../Space/SpaceInterface";
 import { CONNECTED_USER_FILTER_NAME } from "../../Space/Space";
@@ -8,7 +7,7 @@ import { UserProvideInterface } from "./UserProvideInterface";
 export class WorldUserProvider implements UserProvideInterface {
     users: Readable<PartialChatUser[]>;
     constructor(allUsersInWorldSpace: SpaceInterface) {
-        const userFromSpace = allUsersInWorldSpace.getSpaceFilter(CONNECTED_USER_FILTER_NAME).users;
+        const userFromSpace = allUsersInWorldSpace.getSpaceFilter(CONNECTED_USER_FILTER_NAME).usersStore;
 
         this.users = derived(
             userFromSpace,
@@ -18,7 +17,7 @@ export class WorldUserProvider implements UserProvideInterface {
                         uuid: currentUser.uuid,
                         chatId: currentUser.chatID ?? "",
                         avatarUrl: currentUser.getWokaBase64,
-                        availabilityStatus: writable(AvailabilityStatus.ONLINE),
+                        availabilityStatus: currentUser.reactiveUser.availabilityStatus,
                         roomName: currentUser.roomName,
                         playUri: currentUser.playUri,
                         username: currentUser.name,

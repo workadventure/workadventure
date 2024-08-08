@@ -1,4 +1,4 @@
-import { Readable, Writable } from "svelte/store";
+import { Readable } from "svelte/store";
 import { AvailabilityStatus } from "@workadventure/messages";
 import { MapStore } from "@workadventure/store-utils";
 import { RoomConnection } from "../../Connection/RoomConnection";
@@ -6,7 +6,7 @@ import { RoomConnection } from "../../Connection/RoomConnection";
 export interface ChatUser {
     chatId: string;
     uuid?: string;
-    availabilityStatus: Writable<AvailabilityStatus>;
+    availabilityStatus: Readable<AvailabilityStatus>;
     username: string | undefined;
     avatarUrl: string | undefined;
     roomName: string | undefined;
