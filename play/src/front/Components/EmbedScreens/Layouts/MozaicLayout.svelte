@@ -18,9 +18,7 @@
     onMount(() => {
         resizeObserver.observe(layoutDom);
         highlightedEmbedScreen.removeHighlight();
-        console.log("MOUNTED MOZAIC LAYOUT");
     });
-    $: console.log(cardHeight);
 </script>
 
 <div id="mozaic-layout" class="flex justify-center content-center items-center lg:pt-9 pb-16" bind:this={layoutDom}>

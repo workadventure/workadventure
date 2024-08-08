@@ -25,7 +25,6 @@
 
     actionsMenuStoreUnsubscriber = actionsMenuStore.subscribe((value) => {
         actionsMenuData = value;
-        console.log(actionsMenuData);
         if (actionsMenuData) {
             sortedActions = [...actionsMenuData.actions.values()].sort((a, b) => {
                 const ap = a.priority ?? 0;

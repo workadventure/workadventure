@@ -372,7 +372,6 @@
     }
 
     function openEditCompanionScene() {
-        console.log("Hey companion");
         selectCompanionSceneVisibleStore.set(true);
         gameManager.leaveGame(SelectCompanionSceneName, new SelectCompanionScene());
     }

@@ -82,7 +82,6 @@
     }
 
     function activateLiveMessage() {
-        console.log("je suuis ici");
         streamingMegaphoneStore.set(true);
         activeLiveMessage = true;
         inputSendTextActive = false;
