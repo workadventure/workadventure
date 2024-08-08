@@ -192,7 +192,7 @@
     />
 </div>
 
-<style lang="scss">
+<style>
     @import "../style/breakpoints.scss";
 
     .popups {
