@@ -14,7 +14,7 @@
     import { refreshPromptStore } from "../Stores/RefreshPromptStore";
     import { forceRefreshChatStore } from "../Stores/ChatStore";
     import { loaderVisibleStore } from "../Stores/LoaderStore";
-    import EnableCameraScene from "./EnableCamera/EnableCameraScene.svelte";
+    import { showModalGlobalComminucationVisibilityStore } from "../Stores/ModalStore";
     import LoginScene from "./Login/LoginScene.svelte";
     import MainLayout from "./MainLayout.svelte";
     import SelectCharacterScene from "./SelectCharacter/SelectCharacterScene.svelte";
@@ -25,9 +25,10 @@
     import MapEditor from "./MapEditor/MapEditor.svelte";
     import RefreshPrompt from "./RefreshPrompt.svelte";
     import LoaderScene from "./Loader/LoaderScene.svelte";
-
+    import EnableCameraScene from "./EnableCamera/EnableCameraScene.svelte";
     import bgMap from "./images/map-exemple.png";
     import defaultLoader from "./images/Workadventure.gif";
+    import GlobalCommunicationModal from "./Modal/GlobalCommunicationModal.svelte";
 
     export let game: Game;
 
@@ -80,7 +81,11 @@
         {#if $mapEditorModeStore}
             <MapEditor />
         {/if}
+        {#if $showModalGlobalComminucationVisibilityStore}
+            <GlobalCommunicationModal />
+        {/if}
+
         <MainLayout />
-        <!--message=""-->
     {/key}
 {/if}
+<!-- </div> -->

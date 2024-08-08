@@ -6,6 +6,7 @@ const actionbar: BaseTranslation = {
     cancel: "Annuler",
     close: "Fermer",
     login: "Se connecter",
+    logout: "Se déconnecter",
     admin: "Admin",
     profil: "Modifier mon profil",
     woka: "Personnaliser mon avatar",

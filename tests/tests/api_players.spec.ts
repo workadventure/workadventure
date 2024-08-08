@@ -23,6 +23,7 @@ test.describe('API WA.players', () => {
     );
     await login(page, 'Alice');
 
+
     const newBrowser = await browser.browserType().launch();
     const page2 = await newBrowser.newPage();
 
@@ -32,9 +33,17 @@ test.describe('API WA.players', () => {
 
     await login(page2, 'Bob');
 
+    // const iframe = getCoWebsiteIframe(page);
+
+
+    // const eventsLocator = iframe.locator('#events');
+    // const isVisible = await eventsLocator.isVisible();
+    // const textContent = await eventsLocator.evaluate(el => el.textContent);
+
     const events = getCoWebsiteIframe(page).locator('#events');
+
     await expect(events).toContainText('New user: Bob', {
-      timeout: 10000
+        timeout: 10000
     });
 
     await getCoWebsiteIframe(page).locator('#listCurrentPlayers').click();
@@ -58,6 +67,21 @@ test.describe('API WA.players', () => {
     await expect(events).toContainText('User left: Bob');
     await getCoWebsiteIframe(page).locator('#listCurrentPlayers').click();
     await expect(list).not.toContainText('Bob');
+
+    // await page.pause();
+    // await getCoWebsiteIframe(page2).locator('#the-variable').fill('yeah');
+    // await getCoWebsiteIframe(page2).locator('#the-variable').evaluate(e => e.blur());
+    // const events2 = getCoWebsiteIframe(page).locator('#events');
+    // await expect(events2).toContainText("User 'Bob' testVariable changed. New value: yeah (tracked globally)");
+    // await expect(events2).toContainText("User 'Bob' testVariable changed. New value: yeah (tracked locally)");
+    // await expect(events2).toContainText("Asserted value from event and from WA.players.state is the same");
+
+    // await page2.close();
+
+    // await expect(events).toContainText('User left: Alice');
+    // await getCoWebsiteIframe(page).locator('#listCurrentPlayers').click();
+    // await expect(list).not.toContainText('Alice');
+
   });
 
   test('exception if we forget to call WA.players.configureTracking', async ({ page }, { project }) => {
@@ -343,7 +367,7 @@ test.describe('API WA.players', () => {
       test.skip();
       return;
     }
-    
+
     await page.goto(
         publicTestMapUrl("tests/E2E/empty_2_frames.json", "api_players")
     );
@@ -386,7 +410,7 @@ test.describe('API WA.players', () => {
       test.skip();
       return;
     }
-    
+
     await page.goto(
         publicTestMapUrl("tests/E2E/empty.json", "api_players")
     );
@@ -470,7 +494,7 @@ test.describe('API WA.players', () => {
       test.skip();
       return;
     }
-    
+
     await page.goto(
         publicTestMapUrl("tests/E2E/empty.json", "api_players")
     );
@@ -506,6 +530,45 @@ test.describe('API WA.players', () => {
     });
 
     await expect.poll(() => gotExpectedNotification).toBe(true);
+  });
+
+  test('cowebsites tab system', async ({ page }, { project }) => {
+
+    if(project.name === "mobilechromium") {
+        //eslint-disable-next-line playwright/no-skipped-test
+        test.skip();
+        return;
+    }
+
+    // Open the main page with the cowebsite container
+    await page.goto(
+        publicTestMapUrl(`tests/RemotePlayers/remote_players_cowebsite.json`, "api_players")
+    );
+
+    await login(page, 'Alice');
+    // Ouvrir le Site A dans le premier onglet
+    await page.locator('.siteA-page1');
+
+    // Ouvrir le Site B dans le deuxième onglet
+    await page.locator('.siteB-page1');
+    // await page.frameLocator('iframe[name="cowebsite-frame"]').locator('text=Site B Page 1').waitFor();
+
+    //Swiching tabs and pages
+    await page.getByTestId('tab1').click();
+    const event = getCoWebsiteIframe(page).locator('.siteA-page1')
+    await expect(event).toContainText('Site A Page 1');
+
+    await getCoWebsiteIframe(page).locator('.link-to-siteA-page2').click();
+    const eventpage = await getCoWebsiteIframe(page).locator('.siteA-page2');
+    await expect(eventpage).toContainText('Site A Page 2');
+
+    await page.getByTestId('tab2').click();
+    const event2 = getCoWebsiteIframe(page).locator('.siteB-page1')
+    await expect(event2).toContainText('Site B Page 1');
+
+    await getCoWebsiteIframe(page).locator('.link-to-siteB-page2').click();
+    const eventpage2 = await getCoWebsiteIframe(page).locator('.siteB-page2');
+    await expect(eventpage2).toContainText('Site B Page 2');
   });
 
 });

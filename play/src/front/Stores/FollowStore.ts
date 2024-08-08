@@ -92,10 +92,9 @@ export const followUsersColorStore = derived(
 );
 
 export const suscriptionFollowStore = followStateStore.subscribe((followState) => {
-  if (followState === "requesting" || followState === "active") {
-      popupStore.addPopup(PopUpFollow, {},
-      "popupFollow");
-  } else {
-    popupStore.removePopup("popupFollow");
-  }
+    if (followState === "requesting" || followState === "active") {
+        popupStore.addPopup(PopUpFollow, {}, "popupFollow");
+    } else {
+        popupStore.removePopup("popupFollow");
+    }
 });

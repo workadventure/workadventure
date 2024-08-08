@@ -178,7 +178,7 @@ const deviceChanged10SecondsAgoStore = readable(false, function start(set) {
  * A store containing whether the mouse is getting close the bottom right corner.
  */
 const mouseInCameraTriggerArea = readable(false, function start(set) {
-    console.info("JE VIENS DE PASSER SUR LA PARTIE DROITE");
+    // console.info("JE VIENS DE PASSER SUR LA PARTIE DROITE");
     /*let lastInTriggerArea = false;
     const gameDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>("game");
 

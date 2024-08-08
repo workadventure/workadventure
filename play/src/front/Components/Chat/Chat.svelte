@@ -237,6 +237,7 @@
     {#if $chatVisibilityStore}
         <div
             class="group/btn-chat absolute bg-contrast/80 ml-2 -right-20 top-4 transition-all backdrop-blur rounded-lg p-2 aspect-square"
+            id="btn-chat"
         >
             <div
                 class="h-12 w-12 rounded group-hover/btn-chat:bg-danger aspect-square flex items-center justify-center  transition-all"

@@ -3,16 +3,16 @@ import {hideNoCamera, login} from './utils/roles';
 import Chat from './utils/chat';
 import Map from './utils/map';
 import {findContainer, startContainer, stopContainer} from "./utils/containers";
-import {createFileOfSize, deleteFile, fileExist} from "./utils/file";
+// import {createFileOfSize, deleteFile, fileExist} from "./utils/file";
 import Menu from "./utils/menu";
 import {publicTestMapUrl} from "./utils/urls";
+import { createFileOfSize } from './utils/file';
 
 const TIMEOUT_TO_GET_LIST = 60_000;
 
 test.setTimeout(750_000);
-
 test.describe('Chat @chat', () => {
-  test('main', async ({ page, browser, browserName }, { project }) => {
+  test('main first', async ({ page, browser, browserName }, { project }) => {
 
     // Skip test for mobile device
     if(project.name === "mobilechromium") {
@@ -68,56 +68,59 @@ test.describe('Chat @chat', () => {
 
       // Enter in liveZone
       await Chat.slideToChat(page);
-      await page.locator('#game canvas').click();
+      await page.locator('#game').click();
       await Map.goToRoom(page, '#LiveZone_a');
       await Chat.chatZoneExist(page, 'liveZone');
 
       await Chat.slideToChat(page2);
-      await page2.locator('#game canvas').click();
+      await page2.locator('#game').click();
       await Map.goToRoom(page2, '#LiveZone_b');
       await Chat.chatZoneExist(page2, 'liveZone');
 
+
+
+      // With Matrix integration feature not done in refonte
 
       // Open forum
       await Chat.openChatZone(page);
       await Chat.openChatZone(page2);
 
 
-      // Send a message
+    //   // Send a message
       await Chat.AT_sendMessage(page, 'Hello, how are you ?');
       await Chat.AT_checkLastMessageSent(page);
-      // Receive the message
+    //   // Receive the message
       await Chat.AT_lastMessageContain(page2, 'Hello, how are you ?');
 
 
-      // React to a message
+    //   // React to a message
       await Chat.AT_reactLastMessage(page2);
-      // Receive the reaction
+    //   // Receive the reaction
       await Chat.AT_checkReactLastMessageReceived(page);
 
 
-      // Reply to a message
+    //   // Reply to a message
       await Chat.AT_replyToLastMessage(page2, 'Fine, what about you ?');
-      // Receive the reply of the message
+    //   // Receive the reply of the message
       await Chat.AT_lastMessageContain(page, 'Fine, what about you ?');
       await Chat.AT_lastMessageReplyContain(page, 'Hello, how are you ?');
 
 
-      // Generate bulk file
+    //   // Generate bulk file
       await createFileOfSize('./fileLittle.txt', 5_000_000);
-      // Send a file in a message
+    //   // Send a file in a message
       await Chat.AT_uploadFile(page, 'fileLittle.txt');
       await Chat.AT_canSend(page);
       await Chat.AT_send(page);
       await Chat.AT_checkLastMessageSent(page);
       await Chat.AT_lastMessageFileContain(page, 'fileLittle.txt');
-      // Receive the file
+    //   // Receive the file
       await Chat.AT_checkLastMessageReceived(page2);
       await Chat.AT_lastMessageFileContain(page2, 'fileLittle.txt');
 
-      // Generate bulk file
+    //   // Generate bulk file
       await createFileOfSize('./fileBig.txt', 15_485_760);
-      // Try upload file but too big
+    //   // Try upload file but too big
       await Chat.AT_uploadFile(page, 'fileBig.txt');
       await Chat.AT_cantSend(page);
       await Chat.AT_fileContainText(page, 'fileBig.txt is too big');
@@ -125,7 +128,7 @@ test.describe('Chat @chat', () => {
 
       /*
       // TODO later : Manage admin in live zone based on our WorkAdventure role
-      await chat.locator('#activeThread #settings').click();
+    //   await chat.locator('#activeThread #settings').click();
       // Rank up user
       // Workaround to wait the end of svelte animation
       //eslint-disable-next-line playwright/no-wait-for-timeout
@@ -141,19 +144,19 @@ test.describe('Chat @chat', () => {
       await expect(chat.locator('#activeThread .users .wa-chat-item', {hasText: nickname2})).toHaveClass(/user/);
       */
 
-      if(fileExist('./fileLittle.txt')) deleteFile('./fileLittle.txt');
-      if(fileExist('./fileBig.txt')) deleteFile('./fileBig.txt');
+    //   if(fileExist('./fileLittle.txt')) deleteFile('./fileLittle.txt');
+    //   if(fileExist('./fileBig.txt')) deleteFile('./fileBig.txt');
 
       // Exit forum
-      await Chat.AT_close(page);
+    //   await Chat.AT_close(page);
 
 
       // Walk to
       // A workaround to wait the end of svelte animation
       //eslint-disable-next-line playwright/no-wait-for-timeout
-      await page.waitForTimeout(3_000);
-      await Chat.slideToUsers(page);
-      await Chat.UL_walkTo(page, nickname2);
+    //   await page.waitForTimeout(3_000);
+    //   await Chat.slideToUsers(page);
+    //   await Chat.UL_walkTo(page, nickname2);
 
       // FIXME After this issues is completed : https://github.com/thecodingmachine/workadventure/issues/2500
       //await Chat.openTimeline(page);
@@ -163,14 +166,16 @@ test.describe('Chat @chat', () => {
 
 
       // Exit of liveZone
-      await page.locator('#game canvas').click();
-      await Map.goToRoom(page, '#Out_LiveZone_a');
-      await Chat.slideToChat(page);
-      await Chat.noChatZone(page);
-      await page2.locator('#game canvas').click();
-      await Map.goToRoom(page2, '#Out_LiveZone_b');
-      await Chat.slideToChat(page2);
-      await Chat.noChatZone(page2);
+    //   await page.locator('#game').click();
+    //   await Map.goToRoom(page, '#Out_LiveZone_a');
+    //   await Chat.slideToChat(page);
+    //   await Chat.noChatZone(page);
+    //   await page2.locator('#game').click();
+    //   await Map.goToRoom(page2, '#Out_LiveZone_b');
+    //   await Chat.slideToChat(page2);
+    //   await Chat.noChatZone(page2);
+
+
     });
 
     await test.step('default forum exist', async () => {

@@ -90,7 +90,7 @@
 
     <div class="wa-dropdown">
         <!-- toggle -->
-        <button class="m-0 btn btn-white btn-ghost">
+        <button class="m-0 btn btn-white btn-ghost open">
             <svg
                 xmlns="http://www.w3.org/2000/svg"
                 class="icon icon-tabler icon-tabler-chevron-right"
@@ -119,7 +119,7 @@
                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                     <path d="M9 6l6 6l-6 6" />
                 </svg>
-            </svg></button
-        >
+            </svg>
+        </button>
     </div>
 </div>

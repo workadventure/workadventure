@@ -97,7 +97,7 @@
 
 <div class="flex flex-wrap gap-x-4 items-center h-fit">
     <input type="checkbox" class="input-switch" bind:checked={enabled} on:change={partialSave} disabled={loading} />
-    <h3>{$LL.mapEditor.settings.megaphone.title()}</h3>
+    <h3 id="megaphone">{$LL.mapEditor.settings.megaphone.title()}</h3>
 </div>
 <p class="help-text h-fit">{$LL.mapEditor.settings.megaphone.description()}</p>
 {#if enabled}

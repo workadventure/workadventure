@@ -10,7 +10,7 @@ test.describe('Error pages', () => {
       test.skip();
       return;
     }
-    
+
     await page.goto(
       `/@/not/supported?phaserMode=${RENDERER_MODE}`
     );
@@ -25,7 +25,7 @@ test.describe('Error pages', () => {
       test.skip();
       return;
     }
-    
+
     await page.goto(
         publicTestMapUrl("does/not/exist", "error_pages")
     );
@@ -33,7 +33,7 @@ test.describe('Error pages', () => {
     await page.fill('input[name="loginSceneName"]', 'Alice');
     await page.click('button.loginSceneFormSubmit');
     await page.click('button.selectCharacterSceneFormSubmit');
-    await page.click("text=Let's go!");
+    await page.click("text=Save");
 
     await expect(page.getByText('An error occurred')).toBeVisible();
   });

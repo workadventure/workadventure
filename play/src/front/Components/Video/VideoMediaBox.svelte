@@ -493,7 +493,7 @@
             </div>
             <div class="h-[1px] z-30 w-full bg-white/20" />
             <div
-                class="w-full hover:bg-white/10 flex justify-around cursor-pointer items-center z-25 rounded-lg"
+                class="muted-video w-full hover:bg-white/10 flex justify-around cursor-pointer items-center z-25 rounded-lg"
                 on:click={toggleFullScreen}
                 on:click={() => (menuDrop = !menuDrop)}
                 on:click={() => (fullScreen = !fullScreen)}

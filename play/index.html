@@ -128,12 +128,12 @@
                 });
             </script>
         {{/logRocketId}}
-        
+
         {{#googleDrivePickerClientId}}
             <script type="text/javascript">
                 window.pickerInited = false;
                 window.gisInited = false;
-            
+
                 /**
                  * Callback after api.js is loaded.
                  */
@@ -149,7 +149,7 @@
                     await gapi.client.load('https://www.googleapis.com/discovery/v1/apis/drive/v3/rest');
                     pickerInited = true;
                 }
-            
+
                 /**
                  * Callback after Google Identity Services are loaded.
                  */

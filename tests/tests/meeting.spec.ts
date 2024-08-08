@@ -57,10 +57,7 @@ test.describe('Meeting actions test', () => {
     await userBob.click('.interact-menu .accept-request');
 
     // Check if the user has been muted
-    // Not sure but without test-class the test is not working
-    await page.getByTestId('test-class');
-    await expect(page.locator('#cameras-container #camera-box #video-media-box')).toBeVisible({timeout: 30_000});
-    // await expect(page.locator('#cameras-container #camera-box #video-media-box .media-box-camera-off-size')).toBeVisible({timeout: 20_000});
+    await expect(page.locator('.cameras-container .other-cameras .video-container .muted-video')).toBeVisible({timeout: 20_000});
     // Click on the mute video button
     await page.click('#cameras-container #camera-box #video-media-box .action-button#mute-video-user');
 
@@ -104,7 +101,7 @@ test.describe('Meeting actions test', () => {
     // For the moment skip the map editor part because it's broken so we can't create the speaker zone
 
     // Open the map editor
-    await Menu.openMapEditor(page);
+    await menu.openMapEditor(page);
     // Create a new area
     await MapEditor.openAreaEditor(page);
     // Draw the area

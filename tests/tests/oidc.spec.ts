@@ -42,8 +42,8 @@ test.describe('OpenID connect @oidc', () => {
     await oidcLogout(page);
 
     // Let's check the sign in button is back here when we signed out
-    await page.click('#menuIcon img:first-child');
-    await expect(page.locator('a:has-text("Sign in")')).toContainText("Sign in");
+    await page.click('#action-invite');
+    await expect(page.locator('a:has-text("Login")')).toContainText("Login");
 
     // Let's try to login using the scripting API
     await evaluateScript(page, async () => {

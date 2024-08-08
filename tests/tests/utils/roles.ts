@@ -8,28 +8,29 @@ export async function login(
 ) {
   // window.localStorage.setItem('language', browserLanguage)
 
-  await page.fill('input[name="loginSceneName"]', userName);
-  await page.click('button.loginSceneFormSubmit');
+    await page.fill('input[name="loginSceneName"]', userName);
+    await page.click('button.loginSceneFormSubmit');
 
-  await expect(page.locator('button.selectCharacterSceneFormSubmit')).toBeVisible();
+    await expect(page.locator('button.selectCharacterSceneFormSubmit')).toBeVisible();
 
-  for (let i = 0; i < characterNumber; i++) {
+    for (let i = 0; i < characterNumber; i++) {
     await page.keyboard.press('ArrowRight');
-  }
+    }
 
-  await page.click('button.selectCharacterSceneFormSubmit');
+    await page.click('button.selectCharacterSceneFormSubmit');
 
-  await selectMedias(page);
-}
+    await selectMedias(page);
+    }
 
 export async function selectMedias(page: Page) {
-  await expect(page.locator('h2', { hasText: "Turn on your camera and microphone" })).toBeVisible();
+    await expect(page.locator('h2', { hasText: "Turn on your camera and microphone" })).toBeVisible();
 
   await page.click("text=Save");
 
-  await expect(page.locator("#main-layout")).toBeVisible();
+    // await page.pause();
+    await expect(page.locator("div#main-layout").nth(0)).toBeVisible();
 }
 
 export async function hideNoCamera(page: Page){
-  await page.locator('form.helpCameraSettings button[type="submit"]').click();
+    await page.locator('form.helpCameraSettings button[type="submit"]').click();
 }

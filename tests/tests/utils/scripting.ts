@@ -30,24 +30,23 @@ export async function evaluateScript<R, Arg>(page: Page, pageFunction: PageFunct
     const frame = await getScriptFrame(page, title ?? "");
 
     // Let's wait for WA object to be available.
-    /*await frame.evaluate(async () => {
-        function later(delay) {
-            return new Promise(function(resolve) {
-                setTimeout(resolve, delay);
-            });
-        }
+    // await frame.evaluate(async () => {
+    //     function later(delay) {
+    //         return new Promise(function(resolve) {
+    //             setTimeout(resolve, delay);
+    //         });
+    //     }
 
-        for (let i = 0; i < 50; i++) {
-            if (WA) {
-                break;
-            }
-            await later(100);
-        }
-        if (WA === undefined) {
-            throw new Error("Could not find WA object");
-        }
-    });*/
-
+    //     for (let i = 0; i < 50; i++) {
+    //         if (WA) {
+    //             break;
+    //         }
+    //         await later(100);
+    //     }
+    //     if (WA === undefined) {
+    //         throw new Error("Could not find WA object");
+    //     }
+    // });
     return frame.evaluate<R, Arg>(pageFunction, arg);
 }
 

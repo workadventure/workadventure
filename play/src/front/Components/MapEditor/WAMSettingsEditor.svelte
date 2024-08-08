@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onDestroy, onMount } from "svelte";
     import { fly } from "svelte/transition";
     import { ChevronRightIcon } from "svelte-feather-icons";
     import { LL } from "../../../i18n/i18n-svelte";
@@ -11,6 +12,16 @@
     import { userIsAdminStore } from "../../Stores/GameStore";
     import Megaphone from "./ConfigureMyRoom/Megaphone.svelte";
     import RoomSettings from "./ConfigureMyRoom/RoomSettings.svelte";
+
+    let isVisible: boolean;
+
+    onMount(() => {
+        isVisible = true;
+    });
+
+    onDestroy(() => {
+        isVisible = false;
+    });
 
     function getCurrentComponent(): typeof Megaphone | typeof RoomSettings {
         switch ($mapEditorWamSettingsEditorToolCurrentMenuItemStore) {
@@ -33,8 +44,10 @@
 </script>
 
 <div class="configure-my-room" in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>
-    <button class="close-window" on:click={close}>&#215;</button>
-    <div class="menu">
+    <div class="hover:bg-white/10">
+        <button class="close-window {isVisible ? 'visible' : ''} " on:click={close}>&#215;</button>
+    </div>
+    <div class="menu mx-auto flex">
         <h3>{$LL.mapEditor.sideBar.configureMyRoom()}</h3>
         <ul>
             <!-- check if the user has right to update room settings -->
