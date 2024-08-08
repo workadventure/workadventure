@@ -1,7 +1,6 @@
 <script lang="ts">
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
-    import { Color } from "@workadventure/shared-utils";
     import { onDestroy, onMount } from "svelte";
     import { Unsubscriber } from "svelte/store";
     import CancelablePromise from "cancelable-promise";
@@ -37,8 +36,6 @@
     let streamStore = peer.streamStore;
     let volumeStore = peer.volumeStore;
     let name = peer.userName;
-    let backGroundColor = Color.getColorByString(peer.userName);
-    let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
     let statusStore = peer.statusStore;
     let constraintStore = peer.constraintsStore;
     let unsubscribeChangeOutput: Unsubscriber;
@@ -307,23 +304,23 @@
             <div class="rtc-error" />
         {/if}
 
-        <div class="flex justify-start">
-            {#if $statusStore === "connected"}
-                <div class="z-[251] absolute aspect-ratio p-4">
-                    {#if $mediaStreamConstraintsStore.audio}
-                        <SoundMeterWidget
-                            volume={$volumeStore}
-                            classcss="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
-                            barColor={textColor}
-                        />
-                    {:else}
-                        <MicOffIcon />
-                    {/if}
-                </div>
-            {/if}
-        </div>
+        {#if $statusStore === "connected"}
+            <div class="z-[251] absolute right-0 bottom-0 sm:right-auto sm:bottom-auto aspect-ratio p-4">
+                {#if $mediaStreamConstraintsStore.audio}
+                    <SoundMeterWidget
+                        volume={$volumeStore}
+                        classcss="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
+                        barColor="white"
+                    />
+                {:else}
+                    <MicOffIcon />
+                {/if}
+            </div>
+        {/if}
 
-        <div class="fixed w-fit h-fit bottom-4 ml-4 z-30 responsive-dimension bg-contrast/90 rounded">
+        <div
+            class="absolute w-fit h-fit bottom-0 left-0 sm:left-4 sm:bottom-4 z-30 responsive-dimension bg-contrast/90 rounded"
+        >
             <div
                 class="flex justify-between {$mediaStreamConstraintsStore.audio
                     ? 'background-color bg-contrast/90 rounded'
