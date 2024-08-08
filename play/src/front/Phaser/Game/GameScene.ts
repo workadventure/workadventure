@@ -1991,7 +1991,7 @@ export class GameScene extends DirtyScene {
                 // The proximityPublicMessageToClientMessageStream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.proximityPublicMessageEvent.subscribe((publicEvent: PublicEvent) => {
-                    if (publicEvent.spaceEvent!.event?.$case != "spaceMessage") {
+                    if (publicEvent.spaceEvent?.event?.$case != "spaceMessage") {
                         return;
                     }
 
@@ -2002,7 +2002,7 @@ export class GameScene extends DirtyScene {
                     if (proximityUserId == undefined || proximityUserId === this.connection?.getUserId()) {
                         return;
                     }
-                    room.addNewMessage(publicEvent.spaceEvent!.event.spaceMessage.message, proximityUserId);
+                    room.addNewMessage(publicEvent.spaceEvent?.event.spaceMessage.message, proximityUserId);
 
                     // if the proximity chat is not open, open it to see the message
                     chatVisibilityStore.set(true);
@@ -2012,12 +2012,12 @@ export class GameScene extends DirtyScene {
                 // the typingProximityMessageToClientMessageStream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.typingProximityEvent.subscribe((publicEvent: PublicEvent) => {
-                    if (publicEvent.spaceEvent!.event?.$case != "spaceIsTyping") return;
+                    if (publicEvent.spaceEvent?.event?.$case != "spaceIsTyping") return;
 
                     const room = this.proximityChatRoom;
 
                     if (publicEvent.senderUserId != undefined)
-                        if (publicEvent.spaceEvent!.event.spaceIsTyping.isTyping) {
+                        if (publicEvent.spaceEvent?.event.spaceIsTyping.isTyping) {
                             room.addTypingUser(publicEvent.senderUserId);
                         } else {
                             room.removeTypingUser(publicEvent.senderUserId);
