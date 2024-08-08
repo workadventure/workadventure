@@ -14,20 +14,10 @@ import {
     Visibility,
 } from "matrix-js-sdk";
 import { MapStore } from "@workadventure/store-utils";
-import { AvailabilityStatus, ChatMember, ChatMembersAnswer } from "@workadventure/messages";
 import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
-import {
-    ChatConnectionInterface,
-    chatId,
-    ChatRoom,
-    ChatUser,
-    Connection,
-    ConnectionStatus,
-    CreateRoomOptions,
-} from "../ChatConnection";
+import { ChatConnectionInterface, ChatRoom, Connection, ConnectionStatus, CreateRoomOptions } from "../ChatConnection";
 import { selectedRoom } from "../../Stores/ChatStore";
-import { SpaceProviderInterface } from "../../../Space/SpaceProvider/SpaceProviderInterface";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 import { MatrixSecurity, matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity";
 
@@ -47,16 +37,12 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     directRooms: Readable<ChatRoom[]>;
     invitations: Readable<ChatRoom[]>;
     rooms: Readable<ChatRoom[]>;
-    // TODO: remove this property.
-    connectedUsers: Readable<Map<number, ChatUser>>;
-    userDisconnected: MapStore<chatId, ChatUser> = new MapStore<chatId, ChatUser>();
     isEncryptionRequiredAndNotSet: Writable<boolean>;
     isGuest!: Writable<boolean>;
 
     constructor(
         private connection: Connection,
         clientPromise: Promise<MatrixClient>,
-        private spaceStore: SpaceProviderInterface,
         private matrixSecurity: MatrixSecurity = defaultMatrixSecurity
     ) {
         this.connectionStatus = writable("CONNECTING");
@@ -153,16 +139,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             }
 
             if (membership === KnownMembership.Invite) {
-                const inviter = room.getDMInviter();
                 const newRoom = new MatrixChatRoom(room);
-                if (
-                    inviter &&
-                    (this.userDisconnected.has(inviter) ||
-                        Array.from(get(this.connectedUsers).values()).some((user: ChatUser) => user.chatId === inviter))
-                ) {
-                    this.roomList.set(roomId, newRoom);
-                    newRoom.joinRoom();
-                }
+                this.roomList.set(roomId, newRoom);
                 return;
             }
         }
@@ -280,33 +258,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         if (directRooms.length > 0) return directRooms[0];
 
         return undefined;
-    }
-
-    searchUsers(searchText: string): Promise<void> {
-        return new Promise((res, rej) => {
-            this.connection
-                .queryChatMembers(searchText)
-                .then(({ members }: ChatMembersAnswer) => {
-                    members.forEach((member: ChatMember) => {
-                        if (!member.chatId || this.userDisconnected.has(member.chatId)) return;
-                        this.userDisconnected.set(member.chatId, {
-                            availabilityStatus: writable(AvailabilityStatus.UNCHANGED),
-                            avatarUrl: defaultWoka,
-                            chatId: member.chatId,
-                            roomName: undefined,
-                            playUri: undefined,
-                            username: member.wokaName,
-                            isAdmin: member.tags.includes("admin"),
-                            isMember: member.tags.includes("member"),
-                            uuid: undefined,
-                            color: defaultColor,
-                            id: undefined,
-                        });
-                    });
-                    res();
-                })
-                .catch((error) => rej(error));
-        });
     }
 
     async searchChatUsers(searchText: string) {

@@ -336,6 +336,7 @@ export class GameScene extends DirtyScene {
     private _spaceStore: SpaceProviderInterface | undefined;
     private _proximityChatRoom: ProximityChatRoom | undefined;
     private _userProviderMerger: UserProviderMerger | undefined;
+    private _adminUserProvider: AdminUserProvider | undefined;
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
@@ -1541,23 +1542,25 @@ export class GameScene extends DirtyScene {
                         console.error(e);
                     });
 
-                this._spaceStore = new LocalSpaceProvider();
+                this._spaceStore = new LocalSpaceProvider(this.connection);
                 this.streamSpaceWatcher = new StreamSpaceWatcher(this.connection, this._spaceStore);
 
-                const allUserInWorldFilter = this._spaceStore.add(WORLD_SPACE_NAME).watch(CONNECTED_USER_FILTER_NAME);
+                const allUserSpace = this._spaceStore.add(WORLD_SPACE_NAME);
 
-                this.chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise, this._spaceStore);
+                allUserSpace.watch(CONNECTED_USER_FILTER_NAME);
+
+                this.chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
 
                 this._proximityChatRoom = new ProximityChatRoom(this.connection, this.connection.getUserId());
 
                 //init merger
 
-                const adminUserProvider = new AdminUserProvider(this.connection.queryChatMembers(""));
+                this._adminUserProvider = new AdminUserProvider(this.connection);
                 const matrixUserProvider = new MatrixUserProvider(matrixClientPromise);
-                const worldUserProvider = new WorldUserProvider(allUserInWorldFilter);
+                const worldUserProvider = new WorldUserProvider(allUserSpace);
 
                 this._userProviderMerger = new UserProviderMerger([
-                    adminUserProvider,
+                    this._adminUserProvider,
                     matrixUserProvider,
                     worldUserProvider,
                 ]);
@@ -1988,7 +1991,7 @@ export class GameScene extends DirtyScene {
                 // The proximityPublicMessageToClientMessageStream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.proximityPublicMessageEvent.subscribe((publicEvent: PublicEvent) => {
-                    if (publicEvent.spaceEvent!.event?.$case != "spaceMessage") {
+                    if (publicEvent.spaceEvent?.event?.$case != "spaceMessage") {
                         return;
                     }
 
@@ -1999,7 +2002,7 @@ export class GameScene extends DirtyScene {
                     if (proximityUserId == undefined || proximityUserId === this.connection?.getUserId()) {
                         return;
                     }
-                    room.addNewMessage(publicEvent.spaceEvent!.event.spaceMessage.message, proximityUserId);
+                    room.addNewMessage(publicEvent.spaceEvent?.event.spaceMessage.message, proximityUserId);
 
                     // if the proximity chat is not open, open it to see the message
                     chatVisibilityStore.set(true);
@@ -2009,12 +2012,12 @@ export class GameScene extends DirtyScene {
                 // the typingProximityMessageToClientMessageStream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.typingProximityEvent.subscribe((publicEvent: PublicEvent) => {
-                    if (publicEvent.spaceEvent!.event?.$case != "spaceIsTyping") return;
+                    if (publicEvent.spaceEvent?.event?.$case != "spaceIsTyping") return;
 
                     const room = this.proximityChatRoom;
 
                     if (publicEvent.senderUserId != undefined)
-                        if (publicEvent.spaceEvent!.event.spaceIsTyping.isTyping) {
+                        if (publicEvent.spaceEvent?.event.spaceIsTyping.isTyping) {
                             room.addTypingUser(publicEvent.senderUserId);
                         } else {
                             room.removeTypingUser(publicEvent.senderUserId);
@@ -3900,5 +3903,11 @@ ${escapedMessage}
             throw new Error("_userProviderMerger not yet initialized");
         }
         return this._userProviderMerger;
+    }
+    get adminUserProvider(): AdminUserProvider {
+        if (!this._adminUserProvider) {
+            throw new Error("_userProviderMerger not yet initialized");
+        }
+        return this._adminUserProvider;
     }
 }

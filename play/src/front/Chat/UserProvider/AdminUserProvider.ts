@@ -1,40 +1,56 @@
 import { Writable, writable } from "svelte/store";
-import { AvailabilityStatus, ChatMembersAnswer } from "@workadventure/messages";
+import { AvailabilityStatus, ChatMember } from "@workadventure/messages";
 import { ChatUser, PartialChatUser } from "../Connection/ChatConnection";
+import { RoomConnection } from "../../Connection/RoomConnection";
 import { UserProvideInterface } from "./UserProvideInterface";
 
 export class AdminUserProvider implements UserProvideInterface {
-    users: Writable<PartialChatUser[]> = writable([]);
+    users: Writable<PartialChatUser[]>;
 
-    constructor(chatMembersPromise: Promise<ChatMembersAnswer>) {
-        // TODO: pass the connection in parameter.
-        // Make the request to the admin ONLY when the store is subscribed to.
-        // This means the store should be a readable and not a writable.
-        chatMembersPromise
-            .then(({ members }) => {
-                const userFromAdmin = members.reduce((userAcc, currentMember) => {
-                    if (currentMember.chatId)
-                        userAcc.push({
-                            availabilityStatus: writable(AvailabilityStatus.UNCHANGED),
-                            avatarUrl: undefined,
-                            chatId: currentMember.chatId,
-                            roomName: undefined,
-                            playUri: undefined,
-                            username: currentMember.wokaName,
-                            isAdmin: currentMember.tags.includes("admin"),
-                            isMember: currentMember.tags.includes("member"),
-                            uuid: undefined,
-                            color: undefined,
-                            id: undefined,
-                        });
+    constructor(private connection: RoomConnection) {
+        this.users = writable([] as PartialChatUser[], (set) => {
+            connection
+                .queryChatMembers("")
+                .then(({ members }) => {
+                    set(this.mapChatMembersToChatUser(members));
+                })
+                .catch((error) => {
+                    throw new Error("An error occurred while processing chat members: " + error);
+                });
+        });
+    }
 
-                    return userAcc;
-                }, [] as ChatUser[]);
+    searchUsers(username: string): Promise<void> {
+        return new Promise((res, rej) => {
+            this.connection
+                .queryChatMembers(username)
+                .then(({ members }) => {
+                    res();
+                    this.users.set(this.mapChatMembersToChatUser(members));
+                })
+                .catch((error) => {
+                    rej(new Error("An error occurred while processing chat members: " + error));
+                });
+        });
+    }
 
-                this.users.set(userFromAdmin);
-            })
-            .catch((error) => {
-                throw new Error("An error occurred while processing chat members: " + error);
-            });
+    private mapChatMembersToChatUser(chatMembers: ChatMember[]) {
+        return chatMembers.reduce((userAcc, currentMember) => {
+            if (currentMember.chatId)
+                userAcc.push({
+                    availabilityStatus: writable(AvailabilityStatus.UNCHANGED),
+                    avatarUrl: undefined,
+                    chatId: currentMember.chatId,
+                    roomName: undefined,
+                    playUri: undefined,
+                    username: currentMember.wokaName,
+                    isAdmin: currentMember.tags.includes("admin"),
+                    isMember: currentMember.tags.includes("member"),
+                    uuid: undefined,
+                    color: undefined,
+                    id: undefined,
+                });
+            return userAcc;
+        }, [] as ChatUser[]);
     }
 }

@@ -6,25 +6,30 @@ import {
     SpaceUser,
 } from "@workadventure/messages";
 import { Subject } from "rxjs";
-import { Writable, get, writable } from "svelte/store";
+import { Readable, get, readable, writable, Writable } from "svelte/store";
 import { CharacterLayerManager } from "../../Phaser/Entity/CharacterLayerManager";
-import { gameManager } from "../../Phaser/Game/GameManager";
+import { RoomConnection } from "../../Connection/RoomConnection";
 
 export interface SpaceFilterInterface {
     userExist(userId: number): boolean;
     addUser(user: SpaceUser): Promise<SpaceUserExtended>;
-    getUsers(): SpaceUserExtended[];
-    users: Writable<Map<number, SpaceUserExtended>>;
-    getUser(userId: number): SpaceUser | null;
+    usersStore: Readable<Map<number, SpaceUserExtended>>;
     removeUser(userId: number): void;
     updateUserData(userdata: Partial<SpaceUser>): void;
     setFilter(filter: Filter): void;
     getName(): string;
     getFilterType(): "spaceFilterEverybody" | "spaceFilterContainName" | "spaceFilterLiveStreaming" | undefined;
-    destroy(): void;
 }
 
-export interface SpaceUserExtended extends SpaceUser {
+type ReactiveSpaceUser = {
+    [K in keyof Omit<SpaceUser, "id">]: Readonly<Readable<SpaceUser[K]>>;
+} & {
+    id: number;
+    playUri: string | undefined;
+    roomName: string | undefined;
+};
+
+type SpaceUserExtended = SpaceUser & {
     wokaPromise: Promise<string> | undefined;
     getWokaBase64: string;
     updateSubject: Subject<{
@@ -34,7 +39,8 @@ export interface SpaceUserExtended extends SpaceUser {
     }>;
     emitter: JitsiEventEmitter | undefined;
     spaceName: string;
-}
+    reactiveUser: ReactiveSpaceUser;
+};
 
 export type Filter =
     | {
@@ -62,61 +68,89 @@ export interface JitsiEventEmitter {
 }
 
 export class SpaceFilter implements SpaceFilterInterface {
+    private setUsers: ((value: Map<number, SpaceUserExtended>) => void) | undefined;
+    readonly usersStore: Readable<Map<number, Readonly<SpaceUserExtended>>>;
+    private _users: Map<number, SpaceUserExtended> = new Map<number, SpaceUserExtended>();
+
     constructor(
-        private name: string,
-        private spaceName: string,
-        private filter: Filter = undefined,
-        private roomConnection = gameManager.getCurrentGameScene().connection,
-        readonly users: Writable<Map<number, SpaceUserExtended>> = writable(new Map<number, SpaceUserExtended>())
+        private _name: string,
+        private _spaceName: string,
+        private _connection: RoomConnection,
+        private _filter: Filter = undefined
     ) {
+        this.usersStore = readable(new Map<number, SpaceUserExtended>(), (set) => {
+            this.setUsers = set;
+            set(this._users);
+        });
         this.addSpaceFilter();
     }
     userExist(userId: number): boolean {
-        return get(this.users).has(userId);
+        return get(this.usersStore).has(userId);
     }
     async addUser(user: SpaceUser): Promise<SpaceUserExtended> {
-        const extendSpaceUser = await this.extendSpaceUser(user, this.spaceName);
-        this.users.update((value) => {
-            if (!this.userExist(user.id)) value.set(user.id, extendSpaceUser);
-            return value;
-        });
+        const extendSpaceUser = await this.extendSpaceUser(user, this._spaceName);
+
+        if (!this.userExist(user.id)) {
+            this._users.set(user.id, extendSpaceUser);
+            if (this.setUsers) {
+                this.setUsers(this._users);
+            }
+        }
+
         return extendSpaceUser;
     }
 
-    getUser(userId: number): SpaceUser | null {
-        return get(this.users).get(userId) || null;
-    }
-
     getUsers(): SpaceUserExtended[] {
-        return Array.from(get(this.users).values());
+        return Array.from(get(this.usersStore).values());
     }
-    removeUser(userId: number): boolean {
-        let isDeleted = false;
-        this.users.update((value) => {
-            isDeleted = value.delete(userId);
-            return value;
-        });
-
-        return isDeleted;
+    removeUser(userId: number): void {
+        if (!this.userExist(userId)) {
+            this._users.delete(userId);
+            if (this.setUsers) {
+                this.setUsers(this._users);
+            }
+        }
     }
 
     updateUserData(newData: Partial<SpaceUser>): void {
         if (!newData.id && newData.id !== 0) return;
-        const userToUpdate = get(this.users).get(newData.id);
+
+        if (!this.setUsers) {
+            throw new Error("");
+        }
+
+        const userToUpdate = this._users.get(newData.id);
+
         if (!userToUpdate) return;
+
         merge(userToUpdate, newData);
-        this.users.update((value) => {
-            value.set(userToUpdate.id, userToUpdate);
-            return value;
-        });
+
+        for (const key in newData) {
+            // We allow ourselves a not 100% exact type cast here.
+            // Technically, newData could contain any key, not only keys part of SpaceUser type (because additional keys
+            // are allowed in Javascript objects)
+            // However, we know for sure that the keys of newData are part of SpaceUser type, so we can safely cast them.
+            const castKey = key as keyof typeof newData;
+            // Out of security, we add a runtime check to ensure that the key is part of SpaceUser type
+            if (castKey in userToUpdate.reactiveUser) {
+                // Finally, we cast the "Readable" to "Writable" to be able to update the value. We know for sure it is
+                // writable because the only place that can create a "ReactiveSpaceUser" is the "extendSpaceUser" method.
+                const store = userToUpdate.reactiveUser[castKey];
+                if (typeof store === "object" && "set" in store) {
+                    (store as Writable<unknown>).set(newData[castKey]);
+                }
+            }
+        }
+
+        this.setUsers(this._users);
     }
 
     setFilter(newFilter: Filter) {
-        this.filter = newFilter;
+        this._filter = newFilter;
         this.updateSpaceFilter();
     }
     getName(): string {
-        return this.name;
+        return this._name;
     }
 
     private async extendSpaceUser(user: SpaceUser, spaceName: string): Promise<SpaceUserExtended> {
@@ -124,35 +158,35 @@ export class SpaceFilter implements SpaceFilterInterface {
 
         emitter = {
             emitKickOffUserMessage: (userId: string) => {
-                this.roomConnection?.emitKickOffUserMessage(userId, this.name);
+                this._connection.emitKickOffUserMessage(userId, this._name);
             },
             // FIXME: it is strange to have a emitMuteEveryBodySpace that is valid for anyone in a space applied to a specific user. It should be a method of the space instead.
             // In fact, we should have a single "emitPublicMessage" on the space class with a typing that is a union of all possible messages addressed to everybody.
             emitMuteEveryBodySpace: () => {
-                this.roomConnection?.emitMuteEveryBodySpace(this.name);
+                this._connection.emitMuteEveryBodySpace(this._name);
             },
             emitMuteParticipantIdSpace: (userId: string) => {
-                this.roomConnection?.emitMuteParticipantIdSpace(this.name, userId);
+                this._connection.emitMuteParticipantIdSpace(this._name, userId);
             },
             // FIXME: it is strange to have a emitMuteVideoEveryBodySpace that is valid for anyone in a space applied to a specific user. It should be a method of the space instead.
             // In fact, we should have a single "emitPublicMessage" on the space class with a typing that is a union of all possible messages addressed to everybody.
             emitMuteVideoEveryBodySpace: () => {
-                this.roomConnection?.emitMuteVideoEveryBodySpace(this.name);
+                this._connection.emitMuteVideoEveryBodySpace(this._name);
             },
             emitMuteVideoParticipantIdSpace: (userId: string) => {
-                this.roomConnection?.emitMuteParticipantIdSpace(this.name, userId);
+                this._connection.emitMuteParticipantIdSpace(this._name, userId);
             },
             emitProximityPublicMessage: (message: string) => {
-                this.roomConnection?.emitProximityPublicMessage(this.name, message);
+                this._connection.emitProximityPublicMessage(this._name, message);
             },
             emitProximityPrivateMessage: (message: string, receiverUserId: number) => {
-                this.roomConnection?.emitProximityPrivateMessage(this.name, message, receiverUserId);
+                this._connection.emitProximityPrivateMessage(this._name, message, receiverUserId);
             },
         };
 
         const wokaBase64 = await CharacterLayerManager.wokaBase64(user.characterTextures);
 
-        return {
+        const extendedUser = {
             ...user,
             wokaPromise: undefined,
             getWokaBase64: wokaBase64,
@@ -163,37 +197,68 @@ export class SpaceFilter implements SpaceFilterInterface {
             }>(),
             emitter,
             spaceName,
-        };
+        } as unknown as SpaceUserExtended;
+
+        extendedUser.reactiveUser = new Proxy(
+            {
+                id: extendedUser.id,
+                roomName: extendedUser.roomName,
+                playUri: extendedUser.playUri,
+            } as unknown as ReactiveSpaceUser,
+            {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                get(target: any, property: PropertyKey, receiver: unknown) {
+                    if (typeof property !== "string") {
+                        return Reflect.get(target, property, receiver);
+                    }
+
+                    if (target[property as keyof ReactiveSpaceUser]) {
+                        return target[property as keyof ReactiveSpaceUser];
+                    } else {
+                        if (property in extendedUser) {
+                            //@ts-ignore
+                            target[property] = writable(extendedUser[property]);
+                            return target[property];
+                        } else {
+                            return Reflect.get(target, property, receiver);
+                        }
+                    }
+                },
+            }
+        );
+
+        return extendedUser;
     }
+
     private removeSpaceFilter() {
-        this.roomConnection.emitRemoveSpaceFilter({
+        this._connection.emitRemoveSpaceFilter({
             spaceFilterMessage: {
-                filterName: this.name,
-                spaceName: this.spaceName,
+                filterName: this._name,
+                spaceName: this._spaceName,
             },
         });
     }
 
     private updateSpaceFilter() {
-        this.roomConnection.emitUpdateSpaceFilter({
+        this._connection.emitUpdateSpaceFilter({
             spaceFilterMessage: {
-                filterName: this.name,
-                spaceName: this.spaceName,
-                filter: this.filter,
+                filterName: this._name,
+                spaceName: this._spaceName,
+                filter: this._filter,
             },
         });
     }
     private addSpaceFilter() {
-        this.roomConnection.emitAddSpaceFilter({
+        this._connection.emitAddSpaceFilter({
             spaceFilterMessage: {
-                filterName: this.name,
-                spaceName: this.spaceName,
+                filterName: this._name,
+                spaceName: this._spaceName,
             },
         });
     }
 
     getFilterType(): "spaceFilterEverybody" | "spaceFilterContainName" | "spaceFilterLiveStreaming" | undefined {
-        return this.filter?.$case;
+        return this._filter?.$case;
     }
     destroy() {
         this.removeSpaceFilter();

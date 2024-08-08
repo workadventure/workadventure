@@ -59,8 +59,8 @@ describe("SpaceFilter", () => {
             const spaceFilter: SpaceFilterInterface = new SpaceFilter(
                 spaceFilterName,
                 spaceName,
-                undefined,
                 defaultRoomConnectionMock,
+                undefined,
                 userMap
             );
 
@@ -78,7 +78,6 @@ describe("SpaceFilter", () => {
             const spaceFilter: SpaceFilterInterface = new SpaceFilter(
                 spaceFilterName,
                 spaceName,
-                undefined,
                 defaultRoomConnectionMock
             );
 
@@ -100,11 +99,11 @@ describe("SpaceFilter", () => {
             const spaceFilter: SpaceFilterInterface = new SpaceFilter(
                 spaceFilterName,
                 spaceName,
-                undefined,
-                defaultRoomConnectionMock
+                defaultRoomConnectionMock,
+                undefined
             );
             await spaceFilter.addUser(user as SpaceUserExtended);
-            expect(get(spaceFilter.users).has(user.id)).toBeTruthy();
+            expect(get(spaceFilter.usersStore).has(user.id)).toBeTruthy();
         });
 
         it("should not overwrite user when you add a new user and he already exist", async () => {
@@ -127,13 +126,13 @@ describe("SpaceFilter", () => {
             const spaceFilter: SpaceFilterInterface = new SpaceFilter(
                 spaceFilterName,
                 spaceName,
-                undefined,
                 defaultRoomConnectionMock,
+                undefined,
                 userMap
             );
             await spaceFilter.addUser(userWithSameID as SpaceUser);
 
-            const userInStore = get(spaceFilter.users).get(id);
+            const userInStore = get(spaceFilter.usersStore).get(id);
 
             expect(userInStore?.id).toEqual(id);
             expect(userInStore?.name).toBeUndefined();
@@ -163,8 +162,8 @@ describe("SpaceFilter", () => {
             const spaceFilter: SpaceFilterInterface = new SpaceFilter(
                 spaceFilterName,
                 spaceName,
-                undefined,
                 defaultRoomConnectionMock,
+                undefined,
                 userMap
             );
 
@@ -200,8 +199,8 @@ describe("SpaceFilter", () => {
             const spaceFilter: SpaceFilterInterface = new SpaceFilter(
                 spaceFilterName,
                 spaceName,
-                undefined,
                 defaultRoomConnectionMock,
+                undefined,
                 userMap
             );
 
@@ -235,8 +234,8 @@ describe("SpaceFilter", () => {
             const spaceFilter: SpaceFilterInterface = new SpaceFilter(
                 spaceFilterName,
                 spaceName,
-                undefined,
                 defaultRoomConnectionMock,
+                undefined,
                 userMap
             );
 
@@ -260,7 +259,7 @@ describe("SpaceFilter", () => {
                 emitRemoveSpaceFilter: vi.fn(),
             } as unknown as RoomConnection;
 
-            new SpaceFilter(spaceFilterName, spaceName, undefined, mockRoomConnection, userMap);
+            new SpaceFilter(spaceFilterName, spaceName, mockRoomConnection, undefined, userMap);
 
             // eslint-disable-next-line @typescript-eslint/unbound-method
             expect(mockRoomConnection.emitAddSpaceFilter).toHaveBeenCalledOnce();
@@ -284,7 +283,7 @@ describe("SpaceFilter", () => {
                 emitRemoveSpaceFilter: vi.fn(),
             } as unknown as RoomConnection;
 
-            const spaceFilter = new SpaceFilter(spaceFilterName, spaceName, undefined, mockRoomConnection, userMap);
+            const spaceFilter = new SpaceFilter(spaceFilterName, spaceName, mockRoomConnection, undefined, userMap);
             spaceFilter.destroy();
 
             // eslint-disable-next-line @typescript-eslint/unbound-method
@@ -313,7 +312,7 @@ describe("SpaceFilter", () => {
                 emitUpdateSpaceFilter: vi.fn(),
             } as unknown as RoomConnection;
 
-            const spaceFilter = new SpaceFilter(spaceFilterName, spaceName, undefined, mockRoomConnection, userMap);
+            const spaceFilter = new SpaceFilter(spaceFilterName, spaceName, mockRoomConnection, undefined, userMap);
 
             spaceFilter.setFilter(newFilter);
 

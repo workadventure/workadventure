@@ -15,11 +15,11 @@
 
     $: usersByRoom = gameManager.getCurrentGameScene().userProviderMerger.usersByRoomStore;
 
-    $: roomsWithUsers = Array.from($usersByRoom.values())
-        .reduce((roomsWithUsersAcc, currentRoomWithUsers) => {
+    $: roomsWithUsers = Array.from($usersByRoom.entries())
+        .reduce((roomsWithUsersAcc, [currentPlayUri, currentRoomWithUsers]) => {
             let roomName = currentRoomWithUsers.roomName ?? $LL.chat.userList.disconnected();
 
-            if (roomName === gameManager?.getCurrentGameScene()?.room?.roomName) roomName = $LL.chat.userList.isHere();
+            if (currentPlayUri === gameManager?.getCurrentGameScene()?.roomUrl) roomName = $LL.chat.userList.isHere();
 
             const myId = gameManager.getCurrentGameScene().connection?.getUserId();
 

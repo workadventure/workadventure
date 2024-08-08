@@ -57,7 +57,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
 
         // When the user leaves the space, we leave the Jitsi conference
         this.unsubscribes.push(
-            this.space.getSpaceFilter(spaceFilter.filterName).users.subscribe((users) => {
+            this.space.getSpaceFilter(spaceFilter.filterName).usersStore.subscribe((users) => {
                 if (users.size === 0) {
                     if (this.conference !== undefined) {
                         limit(() => this.conference?.leave("Nobody is streaming anymore ..."))
@@ -70,7 +70,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
                             })
                             .finally(() => {
                                 jitsiLoadingStore.set(false);
-                                broadcastService.checkIfCanDisconnect(this.provider);
+                                broadcastService.disconnectProvider(this.provider);
                             });
                     }
                 } else {
@@ -142,7 +142,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
         if (this.associatedStreamStoreTimeOut) clearTimeout(this.associatedStreamStoreTimeOut);
         this.associatedStreamStoreTimeOut = setTimeout(() => {
             const associatedStreamStore: Readable<Map<string, JitsiTrackWrapper>> = derived(
-                [jitsiConference.streamStore, this.space.getSpaceFilter(this.spaceFilter.filterName).users],
+                [jitsiConference.streamStore, this.space.getSpaceFilter(this.spaceFilter.filterName).usersStore],
                 ([$streamStore, $users]) => {
                     const filtered = new Map<string, JitsiTrackWrapper>();
                     for (const [participantId, stream] of $streamStore) {
@@ -195,7 +195,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
                 console.error(e);
             })
             .finally(() => {
-                this.broadcastService.checkIfCanDisconnect(this.provider);
+                this.broadcastService.disconnectProvider(this.provider);
                 jitsiLoadingStore.set(false);
             });
         jitsiConferencesStore.delete(this.space.getName());

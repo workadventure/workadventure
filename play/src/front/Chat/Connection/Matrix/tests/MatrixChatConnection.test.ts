@@ -6,7 +6,6 @@ import { MatrixChatConnection } from "../MatrixChatConnection";
 import { Connection, CreateRoomOptions } from "../../ChatConnection";
 import { MatrixChatRoom } from "../MatrixChatRoom";
 import { MatrixSecurity } from "../MatrixSecurity";
-import { SpaceProviderInterface } from "../../../../Space/SpaceProvider/SpaceProviderInterface";
 
 vi.mock("../../../../Phaser/Game/GameManager", () => {
     return {
@@ -25,15 +24,6 @@ vi.mock("../../../../Phaser/Entity/CharacterLayerManager", () => {
         },
     };
 });
-const defaultSpaceStoreMock = {
-    get: () => {
-        return {
-            getSpaceFilter: () => {
-                return [];
-            },
-        };
-    },
-} as unknown as SpaceProviderInterface;
 
 describe("MatrixChatConnection", () => {
     const flushPromises = () => new Promise(setImmediate);
@@ -80,7 +70,6 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = new MatrixChatConnection(
                 basicMockConnection,
                 clientPromise,
-                defaultSpaceStoreMock,
                 basicMockMatrixSecurity
             );
 
@@ -108,7 +97,6 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = new MatrixChatConnection(
                 basicMockConnection,
                 clientPromise,
-                defaultSpaceStoreMock,
                 basicMockMatrixSecurity
             );
 
@@ -136,7 +124,6 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = new MatrixChatConnection(
                 basicMockConnection,
                 clientPromise,
-                defaultSpaceStoreMock,
                 basicMockMatrixSecurity
             );
 
@@ -169,7 +156,6 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = new MatrixChatConnection(
                 basicMockConnection,
                 clientPromise,
-                defaultSpaceStoreMock,
                 mockMatrixSecurity
             );
 
@@ -191,7 +177,6 @@ describe("MatrixChatConnection", () => {
                 const matrixChatConnection = new MatrixChatConnection(
                     basicMockConnection,
                     clientPromise,
-                    defaultSpaceStoreMock,
                     mockMatrixSecurity
                 );
 
@@ -206,12 +191,7 @@ describe("MatrixChatConnection", () => {
 
             const startMatrixClientSpy = vi.spyOn(MatrixChatConnection.prototype, "startMatrixClient");
 
-            new MatrixChatConnection(
-                basicMockConnection,
-                clientPromise,
-                defaultSpaceStoreMock,
-                basicMockMatrixSecurity
-            );
+            new MatrixChatConnection(basicMockConnection, clientPromise, basicMockMatrixSecurity);
 
             clientPromise
                 .then(() => {
@@ -224,12 +204,7 @@ describe("MatrixChatConnection", () => {
 
             const startMatrixClientSpy = vi.spyOn(MatrixChatConnection.prototype, "startMatrixClient");
 
-            new MatrixChatConnection(
-                basicMockConnection,
-                clientPromise,
-                defaultSpaceStoreMock,
-                basicMockMatrixSecurity
-            );
+            new MatrixChatConnection(basicMockConnection, clientPromise, basicMockMatrixSecurity);
 
             clientPromise.catch(() => {
                 expect(startMatrixClientSpy).not.toHaveBeenCalled();
@@ -254,7 +229,6 @@ describe("MatrixChatConnection", () => {
                 const matrixChatConnection = new MatrixChatConnection(
                     basicMockConnection,
                     clientPromise,
-                    defaultSpaceStoreMock,
                     basicMockMatrixSecurity
                 );
 
@@ -284,7 +258,6 @@ describe("MatrixChatConnection", () => {
                 const matrixChatConnection = new MatrixChatConnection(
                     basicMockConnection,
                     clientPromise,
-                    defaultSpaceStoreMock,
                     basicMockMatrixSecurity
                 );
 
@@ -314,7 +287,6 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = new MatrixChatConnection(
                 basicMockConnection,
                 clientPromise,
-                defaultSpaceStoreMock,
                 basicMockMatrixSecurity
             );
 
@@ -342,7 +314,6 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = new MatrixChatConnection(
                 basicMockConnection,
                 clientPromise,
-                defaultSpaceStoreMock,
                 basicMockMatrixSecurity
             );
 
@@ -370,7 +341,6 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = new MatrixChatConnection(
                 basicMockConnection,
                 clientPromise,
-                defaultSpaceStoreMock,
                 basicMockMatrixSecurity
             );
 
@@ -408,7 +378,6 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = new MatrixChatConnection(
                 basicMockConnection,
                 clientPromise,
-                defaultSpaceStoreMock,
                 basicMockMatrixSecurity
             );
 
@@ -438,7 +407,6 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = new MatrixChatConnection(
                 basicMockConnection,
                 clientPromise,
-                defaultSpaceStoreMock,
                 basicMockMatrixSecurity
             );
 
@@ -468,7 +436,6 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = new MatrixChatConnection(
                 basicMockConnection,
                 clientPromise,
-                defaultSpaceStoreMock,
                 basicMockMatrixSecurity
             );
 
@@ -499,7 +466,6 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = new MatrixChatConnection(
                 basicMockConnection,
                 clientPromise,
-                defaultSpaceStoreMock,
                 basicMockMatrixSecurity
             );
 
@@ -531,7 +497,6 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = new MatrixChatConnection(
                 basicMockConnection,
                 clientPromise,
-                defaultSpaceStoreMock,
                 basicMockMatrixSecurity
             );
 
@@ -560,7 +525,6 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = new MatrixChatConnection(
                 basicMockConnection,
                 clientPromise,
-                defaultSpaceStoreMock,
                 basicMockMatrixSecurity
             );
 
@@ -590,7 +554,6 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = new MatrixChatConnection(
                 basicMockConnection,
                 clientPromise,
-                defaultSpaceStoreMock,
                 basicMockMatrixSecurity
             );
 
@@ -621,7 +584,6 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = new MatrixChatConnection(
                 basicMockConnection,
                 clientPromise,
-                defaultSpaceStoreMock,
                 basicMockMatrixSecurity
             );
 
@@ -667,7 +629,6 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = new MatrixChatConnection(
                 basicMockConnection,
                 clientPromise,
-                defaultSpaceStoreMock,
                 basicMockMatrixSecurity
             );
 
@@ -721,7 +682,6 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = new MatrixChatConnection(
                 basicMockConnection,
                 clientPromise,
-                defaultSpaceStoreMock,
                 basicMockMatrixSecurity
             );
 
@@ -770,7 +730,6 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = new MatrixChatConnection(
                 basicMockConnection,
                 clientPromise,
-                defaultSpaceStoreMock,
                 basicMockMatrixSecurity
             );
 
@@ -832,7 +791,6 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = new MatrixChatConnection(
                 basicMockConnection,
                 clientPromise,
-                defaultSpaceStoreMock,
                 basicMockMatrixSecurity
             );
 
@@ -885,7 +843,6 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = new MatrixChatConnection(
                 basicMockConnection,
                 clientPromise,
-                defaultSpaceStoreMock,
                 basicMockMatrixSecurity
             );
 
@@ -935,7 +892,6 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = new MatrixChatConnection(
                 basicMockConnection,
                 clientPromise,
-                defaultSpaceStoreMock,
                 basicMockMatrixSecurity
             );
 
@@ -980,7 +936,6 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = new MatrixChatConnection(
                 basicMockConnection,
                 clientPromise,
-                defaultSpaceStoreMock,
                 basicMockMatrixSecurity
             );
 
@@ -1036,7 +991,6 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = new MatrixChatConnection(
                 basicMockConnection,
                 clientPromise,
-                defaultSpaceStoreMock,
                 basicMockMatrixSecurity
             );
 

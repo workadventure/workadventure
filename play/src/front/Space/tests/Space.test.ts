@@ -24,6 +24,7 @@ vi.mock("../../Phaser/Game/GameManager", () => {
 
 const defaultRoomConnectionMock = {
     emitWatchSpace: vi.fn(),
+    emitAddSpaceFilter: vi.fn(),
 } as unknown as RoomConnection;
 
 describe("Space test", () => {

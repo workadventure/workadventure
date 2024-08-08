@@ -1,4 +1,4 @@
-import { gameManager } from "../Phaser/Game/GameManager";
+import { RoomConnection } from "../Connection/RoomConnection";
 import { SpaceInterface } from "./SpaceInterface";
 import { SpaceFilterAlreadyExistError, SpaceFilterDoesNotExistError, SpaceNameIsEmptyError } from "./Errors/SpaceError";
 import { SpaceFilter, SpaceFilterInterface } from "./SpaceFilter/SpaceFilter";
@@ -11,10 +11,12 @@ export class Space implements SpaceInterface {
     constructor(
         name: string,
         private metadata = new Map<string, unknown>(),
-        private roomConnection = gameManager.getCurrentGameScene().connection,
+        private _connection: RoomConnection,
         private filters: Map<string, SpaceFilterInterface> = new Map<string, SpaceFilterInterface>()
     ) {
-        if (name === "") throw new SpaceNameIsEmptyError();
+        if (name === "") {
+            throw new SpaceNameIsEmptyError();
+        }
         this.name = name;
 
         this.userJoinSpace();
@@ -34,12 +36,9 @@ export class Space implements SpaceInterface {
 
     watch(filterName: string): SpaceFilterInterface {
         if (this.filters.has(filterName)) throw new SpaceFilterAlreadyExistError(this.name, filterName);
-        const newFilter: SpaceFilterInterface = new SpaceFilter(filterName, this.name);
+        const newFilter: SpaceFilterInterface = new SpaceFilter(filterName, this.name, this._connection);
         this.filters.set(newFilter.getName(), newFilter);
         return newFilter;
-    }
-    getAllSpacesFilter(): SpaceFilterInterface[] {
-        return Array.from(this.filters.values());
     }
 
     getSpaceFilter(filterName: string): SpaceFilterInterface {
@@ -55,28 +54,28 @@ export class Space implements SpaceInterface {
     }
 
     stopWatching(filterName: string) {
-        const filter: SpaceFilterInterface | undefined = this.filters.get(filterName);
+        const filter: SpaceFilter | undefined = this.filters.get(filterName);
         if (!filter) throw new SpaceFilterDoesNotExistError(this.name, filterName);
         filter.destroy();
         this.filters.delete(filterName);
     }
 
     private userLeaveSpace() {
-        this.roomConnection.emitUnwatchSpace(this.name);
+        this._connection.emitUnwatchSpace(this.name);
     }
 
     private userJoinSpace() {
-        this.roomConnection.emitWatchSpace(this.name);
+        this._connection.emitWatchSpace(this.name);
     }
 
     private updateSpaceMetadata(metadata: Map<string, unknown>) {
-        this.roomConnection.emitUpdateSpaceMetadata(this.name, Object.fromEntries(metadata.entries()));
+        this._connection.emitUpdateSpaceMetadata(this.name, Object.fromEntries(metadata.entries()));
     }
 
     // FIXME: this looks like a hack, it should not belong here.
     // Any chance we can make this more generic?
     emitJitsiParticipantId(participantId: string) {
-        this.roomConnection.emitJitsiParticipantIdSpace(this.name, participantId);
+        this._connection.emitJitsiParticipantIdSpace(this.name, participantId);
     }
 
     destroy() {

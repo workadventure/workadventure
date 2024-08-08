@@ -4,6 +4,7 @@ import { SpaceInterface } from "../SpaceInterface";
 import { SpaceProviderInterface } from "../SpaceProvider/SpaceProviderInterface";
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
 import { Space } from "../Space";
+import { RoomConnection } from "../../Connection/RoomConnection";
 
 vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
     return {
@@ -22,6 +23,9 @@ vi.mock("../../Phaser/Game/GameManager", () => {
         },
     };
 });
+const defaultRoomConnectionMock = {
+    emitWatchSpace: vi.fn(),
+} as unknown as RoomConnection;
 
 describe("SpaceProviderInterface implementation", () => {
     describe("SpaceStore", () => {
@@ -33,7 +37,7 @@ describe("SpaceProviderInterface implementation", () => {
                     },
                 };
 
-                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider();
+                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(defaultRoomConnectionMock);
                 spaceStore.add(newSpace.getName());
                 expect(spaceStore.get(newSpace.getName())).toBeInstanceOf(Space);
             });
@@ -48,7 +52,7 @@ describe("SpaceProviderInterface implementation", () => {
                     [newSpace.getName(), newSpace],
                 ]);
 
-                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(spaceMap);
+                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(defaultRoomConnectionMock, spaceMap);
                 expect(() => {
                     spaceStore.add(newSpace.getName());
                 }).toThrow(SpaceAlreadyExistError);
@@ -66,7 +70,7 @@ describe("SpaceProviderInterface implementation", () => {
                     [newSpace.getName(), newSpace],
                 ]);
 
-                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(spaceMap);
+                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(defaultRoomConnectionMock, spaceMap);
 
                 const result: boolean = spaceStore.exist(newSpace.getName());
 
@@ -78,7 +82,7 @@ describe("SpaceProviderInterface implementation", () => {
                         return "space-test";
                     },
                 } as SpaceInterface;
-                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider();
+                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(defaultRoomConnectionMock);
                 const result: boolean = spaceStore.exist(newSpace.getName());
                 expect(result).toBeFalsy();
             });
@@ -113,7 +117,7 @@ describe("SpaceProviderInterface implementation", () => {
                     [space2.getName(), space2],
                 ]);
 
-                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(spaceMap);
+                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(defaultRoomConnectionMock, spaceMap);
 
                 spaceStore.delete(spaceToDelete.getName());
                 expect(spaceStore.getAll()).not.toContain(spaceToDelete);
@@ -125,7 +129,7 @@ describe("SpaceProviderInterface implementation", () => {
                         return "space-test";
                     },
                 } as SpaceInterface;
-                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider();
+                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(defaultRoomConnectionMock);
 
                 expect(() => {
                     spaceStore.delete(newSpace.getName());
@@ -158,7 +162,7 @@ describe("SpaceProviderInterface implementation", () => {
                     [space2.getName(), space2],
                 ]);
 
-                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(spaceMap);
+                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(defaultRoomConnectionMock, spaceMap);
 
                 expect(spaceStore.getAll()).toContain(space1);
                 expect(spaceStore.getAll()).toContain(space3);
@@ -193,7 +197,7 @@ describe("SpaceProviderInterface implementation", () => {
                     [space1.getName(), space1],
                     [space2.getName(), space2],
                 ]);
-                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(spaceMap);
+                const spaceStore: SpaceProviderInterface = new LocalSpaceProvider(defaultRoomConnectionMock, spaceMap);
                 spaceStore.destroy();
                 expect(spaceStore.getAll()).toHaveLength(0);
                 // eslint-disable-next-line @typescript-eslint/unbound-method
