@@ -44,7 +44,7 @@
                         year: "numeric",
                     })}
                 </h3>
-                <h4 class="tw-text-l tw-text-left">Your meeting today 🗓️</h4>
+                <h4 class="tw-text-l tw-text-left">Your meeting today 🗓️ ({$calendarEventsStore.size})</h4>
             </div>
             <div class="tw-flex tw-flex-col tw-justify-center tw-gap-4">
                 {#if $calendarEventsStore.size > 0}

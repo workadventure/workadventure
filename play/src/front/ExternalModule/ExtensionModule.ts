@@ -5,6 +5,7 @@ import { ComponentType } from "svelte";
 import { AreaData, AreaDataProperties } from "@workadventure/map-editor";
 import { Observable } from "rxjs";
 import { z } from "zod";
+import { OpenCoWebsiteObject } from "../Chat/Utils";
 
 export enum ExternalModuleStatus {
     ONLINE = "online",
@@ -22,6 +23,11 @@ export interface ExtensionModuleOptions {
     roomId: string;
     externalModuleMessage?: Observable<ExternalModuleMessage>;
     adminUrl?: string;
+    openCoWebSite?: (
+        openCoWebsiteObject: OpenCoWebsiteObject,
+        source: MessageEventSource | null
+    ) => Promise<{ id: string }>;
+    closeCoWebsite?: (id: string) => unknown;
 }
 
 export interface ExtensionModuleAreaProperty {
@@ -48,6 +54,9 @@ export interface ExtensionModule {
         endDateTime: Date,
         passcode?: string
     ) => void;
+    meetingSynchronised?: boolean;
+    calendarSynchronised?: boolean;
+    presenceSynchronised?: boolean;
 }
 
 export const RoomMetadataType = z.object({
