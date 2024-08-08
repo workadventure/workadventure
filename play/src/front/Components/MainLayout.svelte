@@ -193,8 +193,6 @@
 </div>
 
 <style>
-    @import "../style/breakpoints.scss";
-
     .popups {
         position: fixed;
         position: fixed;
