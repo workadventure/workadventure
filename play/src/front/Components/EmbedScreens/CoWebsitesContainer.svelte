@@ -270,8 +270,10 @@
             resizeBarHide = false;
             isToggleFullScreen = false;
         } else if (!$fullScreenCowebsite && !vertical) {
+            console.log("full screen");
             fullScreenCowebsite.set(true);
             widthContainerForWindow.set(window.innerWidth);
+            console.log("widthContainerForWindow", $widthContainerForWindow);
             container.style.width = `${$widthContainerForWindow}px`;
             container.style.backgroundColor = "#1b2a40";
             resizeBarHide = true;

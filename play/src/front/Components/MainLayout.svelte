@@ -8,7 +8,6 @@
     import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
     import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
     import { soundPlayingStore } from "../Stores/SoundPlayingStore";
-    import { hasEmbedScreen } from "../Stores/EmbedScreensStore";
     import { showLimitRoomModalStore, modalVisibilityStore, modalPopupVisibilityStore } from "../Stores/ModalStore";
     import { actionsMenuStore } from "../Stores/ActionsMenuStore";
     import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore";
@@ -20,6 +19,7 @@
     import { askDialogStore } from "../Stores/MeetingStore";
     import { mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
+    import { hasEmbedScreen } from "../Stores/EmbedScreensStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import HelpCameraSettingsPopup from "./HelpSettings/HelpCameraSettingsPopup.svelte";
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
@@ -166,6 +166,20 @@
         <ActionsMenu />
     {/if}
 
+    <ActionBar />
+    <!-- svelte-ignore missing-declaration -->
+    <div class="popups">
+        {#each $popupStore.slice().reverse() as popup (popup.uuid)}
+            <div class="popupwrapper">
+                <svelte:component
+                    this={popup.component}
+                    {...popup.props}
+                    on:close={() => popupStore.removePopup(popup.uuid)}
+                />
+            </div>
+        {/each}
+    </div>
+
     <!-- audio when user have a message TODO delete it with new chat -->
     <audio id="newMessageSound" src="/resources/objects/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
 
@@ -182,6 +196,7 @@
     @import "../style/breakpoints.scss";
 
     .popups {
+        position: fixed;
         position: fixed;
         width: 100%;
         height: 100%;

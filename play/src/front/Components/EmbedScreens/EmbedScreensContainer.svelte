@@ -3,9 +3,9 @@
     // import { LayoutMode } from "../../WebRtc/LayoutManager";
     // import { embedScreenLayoutStore, heightCamWrapper } from "../../Stores/EmbedScreensStore";
     // import { emoteMenuSubStore } from "../../Stores/EmoteStore";
+    import { focusMode, rightMode, lightMode } from "../../Stores/ActionsCamStore";
     import PresentationLayout from "./Layouts/PresentationLayout.svelte";
     // import MozaicLayout from "./Layouts/MozaicLayout.svelte";
-    import { focusMode, rightMode, lightMode } from "../../Stores/ActionsCamStore";
 
     // DO for the focus mode
 
@@ -26,27 +26,25 @@
      * Hugo :
      * Goal : make a resizable cam height
      * Doesn't work properly : buggy */
+    /*
+    export let y = 20
 
-    // export let y = 20;
+//     let expanding: `top` | "bottom" | undefined | null;
+//     let start: number | null, initial: { y: number, height: number } | null;
+//     let height = get(heightCamWrapper);
 
-    // let expanding: `top` | "bottom" | undefined | null;
-    // let start: number | null, initial: { y: number; height: number } | null;p
-    // let height = $heightCamWrapper;
-    // let delta: number;
+//     /* eslint-disable @typescript-eslint/no-explicit-any */
+    //     function startExpand(type: any, event: any): void { // eslint-disable-line @typescript-eslint/no-unused-vars
+    //         expanding = type
+    //         start = event.pageY
+    //         initial = { y, height }
+    //     }
 
-    // //     /* eslint-disable @typescript-eslint/no-explicit-any */
-    // function startExpand(type: any, event: any): void {
-    //     // eslint-disable-line @typescript-eslint/no-unused-vars
-    //     expanding = type;
-    //     start = event.pageY;
-    //     initial = { y, height };
-    // }
-
-    // function stopExpand() {
-    //     expanding = null;
-    //     start = null;
-    //     initial = null;
-    // }
+    //     function stopExpand() {
+    //         expanding = null
+    //         start = null
+    //         initial = null
+    //     }
 
     // /* eslint-disable @typescript-eslint/no-explicit-any */
     // function expand(event: any) {
@@ -62,15 +60,11 @@
     //         return;
     //     }
 
-    //     if (expanding == "bottom") {
-    //         if (start) {
-    //             delta = event.pageY - start;
-    //         }
-
-    //         console.log(event.pageY);
-    //         $heightCamWrapper = (initial?.height ?? 0) + delta;
-    //         return;
-    //     }
+    // if (expanding == 'bottom') {
+    //     const delta = event.pageY - start
+    //     console.log(event.pageY);
+    //     $heightCamWrapper = initial.height + delta
+    //     return
     // }
 </script>
 
