@@ -14,8 +14,8 @@
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { Streamable } from "../../Stores/StreamableCollectionStore";
-    import reportImg from "./images/report.svg";
     import { mediaStreamConstraintsStore } from "../../Stores/MediaStore";
+    import reportImg from "./images/report.svg";
 
     export let embedScreen: Streamable;
     export let trackStreamWraper: TrackStreamWrapperInterface;
@@ -74,7 +74,6 @@
     <!-- Pin -->
     {#if videoEnabled}
         <button
-            id="pin"
             class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"
             on:click={() => analyticsClient.pinMeetingAction()}
             on:click|preventDefault|stopPropagation={() => pin()}
@@ -98,7 +97,6 @@
     <!-- Mute audio every body -->
     {#if $userIsAdminStore}
         <button
-            id="mute-audio-everybody"
             class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"
             on:click={() => analyticsClient.muteMicrophoneEverybodyMeetingAction()}
             on:click|preventDefault|stopPropagation={() => muteAudioEveryBody()}
@@ -122,7 +120,6 @@
     <!-- Mute video every body -->
     {#if $userIsAdminStore}
         <button
-            id="mute-video-everybody"
             class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"
             on:click={() => analyticsClient.muteVideoEverybodyMeetingAction()}
             on:click|preventDefault|stopPropagation={() => muteVideoEveryBody()}
@@ -147,7 +144,6 @@
 
     <!-- Send private message -->
     <button
-        id="send-private-message"
         class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"
         on:click={() => analyticsClient.sendPrivateMessageMeetingAction()}
         on:click|preventDefault|stopPropagation={() => sendPrivateMessage()}
@@ -158,7 +154,6 @@
 
     <!-- Show visit card-->
     <button
-        id="visit-card"
         class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"
         on:click={() => analyticsClient.sendPrivateMessageMeetingAction()}
         on:click|preventDefault|stopPropagation={() => visitCard()}
@@ -170,7 +165,6 @@
     <!-- Block or report user -->
     {#if trackStreamWraper instanceof VideoPeer}
         <button
-            id="block-or-report-user"
             class="action-button flex flex-row items-center justify-center p-0 mr-1 cursor-pointer"
             on:click={() => analyticsClient.reportMeetingAction()}
             on:click|preventDefault|stopPropagation={() => openBlockOrReportPopup()}

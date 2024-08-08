@@ -9,11 +9,11 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { JitsiTrackStreamWrapper } from "../../Streaming/Jitsi/JitsiTrackStreamWrapper";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
+    import { mediaStreamConstraintsStore } from "../../Stores/MediaStore";
     import VideoMediaBox from "./VideoMediaBox.svelte";
     import ScreenSharingMediaBox from "./ScreenSharingMediaBox.svelte";
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
     import JitsiMediaBox from "./JitsiMediaBox.svelte";
-    import { mediaStreamConstraintsStore, requestedMicrophoneState, silentStore } from "../../Stores/MediaStore";
 
     export let streamable: Streamable;
     export let isHightlighted = false;
@@ -40,8 +40,6 @@
 
     $: videoEnabled = $constraintStore ? $constraintStore.video : false;
     $: isHightlighted = $highlightedEmbedScreen === streamable;
-
-    $: console.log($mediaStreamConstraintsStore.audio);
 </script>
 
 <!-- svelte-ignore missing-declaration -->

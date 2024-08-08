@@ -73,9 +73,6 @@
         }
     }
 
-    window.addEventListener("resize", updateScreenSize);
-    window.addEventListener("resize", calcHeightVideo);
-
     $: isMobile, calcHeightVideo();
     $: videoEnabled = $constraintStore ? $constraintStore.video : false;
     $: isHighlighted = $highlightedEmbedScreen === peer;
@@ -130,6 +127,8 @@
     let sinkIdPromise = CancelablePromise.resolve();
 
     onMount(() => {
+        window.addEventListener("resize", updateScreenSize);
+        window.addEventListener("resize", calcHeightVideo);
         updateScreenSize();
         calcHeightVideo();
         unsubscribeChangeOutput = speakerSelectedStore.subscribe((deviceId) => {
@@ -213,6 +212,8 @@
         }
         if (unsubscribeHighlightEmbedScreen) unsubscribeHighlightEmbedScreen();
         highlightFullScreen.set(false);
+        window.removeEventListener("resize", updateScreenSize);
+        window.removeEventListener("resize", calcHeightVideo);
     });
 
     //sets the ID of the audio device to use for output
@@ -322,7 +323,7 @@
             {/if}
         </div>
 
-        <div class="fixed w-fit bottom-4 ml-4 z-30 responsive-dimension bg-contrast/90 rounded">
+        <div class="fixed w-fit h-fit bottom-4 ml-4 z-30 responsive-dimension bg-contrast/90 rounded">
             <div
                 class="flex justify-between {$mediaStreamConstraintsStore.audio
                     ? 'background-color bg-contrast/90 rounded'

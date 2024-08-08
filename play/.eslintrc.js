@@ -42,7 +42,6 @@ module.exports = {
     "ignorePatterns": ["**/generated/*.ts"],
     "rules": {
         "no-unused-vars": "off",
-        "no-undef": "off",
         "eol-last": ["error", "always"],
         "@typescript-eslint/no-explicit-any": "error",
         "no-throw-literal": "error",

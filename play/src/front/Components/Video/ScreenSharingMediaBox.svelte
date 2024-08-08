@@ -26,11 +26,6 @@
     let isMobile: boolean;
     let isTablet: boolean;
 
-    onMount(() => {
-        updateScreenSize();
-        calcHeightVideo();
-    });
-
     function updateScreenSize() {
         if (window.innerWidth < 768) {
             isMobile = true;
@@ -40,9 +35,6 @@
             isTablet = true;
         }
     }
-
-    window.addEventListener("resize", updateScreenSize);
-    window.addEventListener("resize", calcHeightVideo);
 
     $: isMobile, calcHeightVideo();
 
@@ -87,8 +79,17 @@
         calcHeightVideo();
     });
 
+    onMount(() => {
+        updateScreenSize();
+        calcHeightVideo();
+        window.addEventListener("resize", updateScreenSize);
+        window.addEventListener("resize", calcHeightVideo);
+    });
+
     onDestroy(() => {
         if (unsubscribeHighlightEmbedScreen) unsubscribeHighlightEmbedScreen();
+        window.removeEventListener("resize", updateScreenSize);
+        window.removeEventListener("resize", calcHeightVideo);
     });
 </script>
 

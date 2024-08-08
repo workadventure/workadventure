@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { afterUpdate, onDestroy } from "svelte";
+    import { afterUpdate, onDestroy, onMount } from "svelte";
     import { Unsubscriber } from "svelte/store";
     import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
     import MediaBox from "../Video/MediaBox.svelte";
@@ -15,14 +15,10 @@
     function updateScreenSize() {
         if (window.innerWidth < 768) {
             isMobile = true;
-            console.log("isMobile", isMobile);
         } else {
             isMobile = false;
-            console.log("isMobile", isMobile);
         }
     }
-
-    window.addEventListener("resize", updateScreenSize);
 
     unsubscribeHighlightEmbedScreen = highlightedEmbedScreen.subscribe((value) => {
         checkOverflow();
@@ -37,7 +33,6 @@
         checkOverflow();
     });
 
-    // voir pour le justify content qui ne fonctionne pas au pin de la cam
     function checkOverflow() {
         const camContainer = document.getElementById("cameras-container");
         if (camContainer) {
@@ -56,11 +51,18 @@
             }
         }
     }
-    window.addEventListener("load", checkOverflow);
-    window.addEventListener("resize", checkOverflow);
+
+    onMount(() => {
+        window.addEventListener("resize", updateScreenSize);
+        window.addEventListener("load", checkOverflow);
+        window.addEventListener("resize", checkOverflow);
+    });
 
     onDestroy(() => {
         if (unsubscribeHighlightEmbedScreen) unsubscribeHighlightEmbedScreen();
+        window.removeEventListener("load", checkOverflow);
+        window.removeEventListener("resize", checkOverflow);
+        window.removeEventListener("resize", updateScreenSize);
     });
 </script>
 

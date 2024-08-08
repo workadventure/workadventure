@@ -27,7 +27,7 @@
     import { askDialogStore } from "../Stores/MeetingStore";
     import { mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
-    import { focusMode, highlightFullScreen } from "../Stores/ActionsCamStore";
+    import { highlightFullScreen } from "../Stores/ActionsCamStore";
     import { peerStore } from "../Stores/PeerStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import HelpCameraSettingsPopup from "./HelpSettings/HelpCameraSettingsPopup.svelte";
@@ -68,37 +68,37 @@
         // ...
     });
 
-    $: $focusMode, setFocusMode();
+    // $: $focusMode, setFocusMode();
 
-    function setFocusMode() {
-        if ($focusMode === true) {
-            addFocusModeStyle();
-        } else {
-            removeFocusModeStyle();
-        }
-    }
+    // function setFocusMode() {
+    //     if ($focusMode === true) {
+    //         addFocusModeStyle();
+    //     } else {
+    //         removeFocusModeStyle();
+    //     }
+    // }
 
-    function addFocusModeStyle() {
-        console.log("je suis dans le addDivForResize");
-        const div = document.createElement("div");
-        div.id = "focus-mode-active";
-        div.style.backgroundColor = "blue";
-        div.style.opacity = "0.5";
-        div.style.width = "100%";
-        div.style.height = "100%";
-        div.style.position = "absolute";
-        div.style.top = "0";
-        div.style.right = "0";
-        div.style.zIndex = "10";
-        document.body.appendChild(div);
-    }
+    // function addFocusModeStyle() {
+    //     console.log("je suis dans le addDivForResize");
+    //     const div = document.createElement("div");
+    //     div.id = "focus-mode-active";
+    //     div.style.backgroundColor = "blue";
+    //     div.style.opacity = "0.5";
+    //     div.style.width = "100%";
+    //     div.style.height = "100%";
+    //     div.style.position = "absolute";
+    //     div.style.top = "0";
+    //     div.style.right = "0";
+    //     div.style.zIndex = "10";
+    //     document.body.appendChild(div);
+    // }
 
-    function removeFocusModeStyle() {
-        const div = document.getElementById("focus-mode-active");
-        if (div) {
-            div.remove();
-        }
-    }
+    // function removeFocusModeStyle() {
+    //     const div = document.getElementById("focus-mode-active");
+    //     if (div) {
+    //         div.remove();
+    //     }
+    // }
 </script>
 
 <!-- Components ordered by z-index -->

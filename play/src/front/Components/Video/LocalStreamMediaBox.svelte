@@ -18,11 +18,6 @@
     let isMobile: boolean;
     let isTablet: boolean;
 
-    onMount(() => {
-        calcHeightVideo();
-        updateScreenSize();
-    });
-
     function updateScreenSize() {
         if (window.innerWidth < 768) {
             isMobile = true;
@@ -32,9 +27,6 @@
             isTablet = true;
         }
     }
-
-    window.addEventListener("resize", updateScreenSize);
-    window.addEventListener("resize", calcHeightVideo);
 
     $: isMobile, calcHeightVideo();
 
@@ -79,8 +71,17 @@
         calcHeightVideo();
     });
 
+    onMount(() => {
+        calcHeightVideo();
+        updateScreenSize();
+        window.addEventListener("resize", updateScreenSize);
+        window.addEventListener("resize", calcHeightVideo);
+    });
+
     onDestroy(() => {
         if (unsubscribeHighlightEmbedScreen) unsubscribeHighlightEmbedScreen();
+        window.removeEventListener("resize", updateScreenSize);
+        window.removeEventListener("resize", calcHeightVideo);
     });
 </script>
 
@@ -89,7 +90,6 @@
 <div
     class="group/screenshare m-0 relative w-full h-full rounded-lg {cssClass ? cssClass : ''} container-class"
     class:hide={!stream}
-    id="screen-sharing"
     bind:this={videoContainer}
 >
     {#if stream}

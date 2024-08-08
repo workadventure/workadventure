@@ -8,7 +8,7 @@
     import { myJitsiCameraStore, streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
     import Loading from "../../Video/Loading.svelte";
     import { jitsiLoadingStore } from "../../../Streaming/BroadcastService";
-    import { highlightFullScreen, setHeight, setHeightScreenShare, setWidth } from "../../../Stores/ActionsCamStore";
+    import { highlightFullScreen, setHeightScreenShare } from "../../../Stores/ActionsCamStore";
 
     let camContainer: HTMLDivElement;
     let highlightScreen: HTMLDivElement;
@@ -43,17 +43,11 @@
         };
     });
 
-    $: window.innerHeight, resizeHeight();
-    $: window.innerWidth, resizeHeight();
-
     function resizeHeight() {
         let availableHeight = window.innerHeight - (camContainer?.offsetHeight || 0) - 72;
-        let availableWidth = window.innerWidth;
         if (availableHeight < 0) {
             availableHeight = 0;
         }
-        setHeight.set(availableHeight);
-        setWidth.set(availableWidth);
         setHeightScreenShare.set(availableHeight);
     }
 
@@ -61,16 +55,15 @@
     $: if ($highlightFullScreen) modifySizeCamIfScreenShare();
 
     function modifySizeCamIfScreenShare() {
-        let containerCam = document.getElementById("container-media") as HTMLDivElement;
-        if (containerCam) {
+        if (camContainer) {
             if ($highlightedEmbedScreen !== undefined && !$highlightFullScreen) {
-                containerCam.style.transform = "scale(0.7)";
-                containerCam.style.marginTop = "-24px";
-                containerCam.style.marginBottom = "-8px";
+                camContainer.style.transform = "scale(0.7)";
+                camContainer.style.marginTop = "-24px";
+                camContainer.style.marginBottom = "-8px";
             } else {
-                containerCam.style.transform = "scale(1)";
-                containerCam.style.marginTop = "0px";
-                containerCam.style.marginBottom = "0px";
+                camContainer.style.transform = "scale(1)";
+                camContainer.style.marginTop = "0px";
+                camContainer.style.marginBottom = "0px";
             }
         }
     }
@@ -113,7 +106,7 @@
 
 <div class="presentation-layout flex flex-col-reverse md:flex-col">
     {#if $streamableCollectionStore.size > 0 || $myCameraStore}
-        <div class="justify-end md:justify-center" id="container-media" bind:this={camContainer}>
+        <div class="justify-end md:justify-center" bind:this={camContainer}>
             {#if $jitsiLoadingStore}
                 <Loading />
             {/if}

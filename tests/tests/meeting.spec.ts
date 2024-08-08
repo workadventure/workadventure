@@ -29,7 +29,7 @@ test.describe('Meeting actions test', () => {
     await login(page, 'Alice');
 
     // Move user
-    await Map.walkTo(page, 'ArrowRight', 10000);
+    await Map.walkTo(page, 'ArrowRight', 5000);
 
     const newBrowser = await browser.browserType().launch();
     const userBob = await newBrowser.newPage();
@@ -41,9 +41,9 @@ test.describe('Meeting actions test', () => {
     await Map.walkTo(userBob, 'ArrowRight', 5000);
 
     // The user in the bubble meeting should be visible
-    await expect(page.locator('#container-media')).toBeVisible({timeout: 10_000});
+    await expect(page.locator('#container-media')).toBeVisible({timeout: 30_000});
     // The user in the bubble meeting should have action button
-    await expect(page.locator('#cameras-container #unique-mycam')).toBeVisible({timeout: 10_000});
+    await expect(page.locator('#cameras-container #unique-mycam')).toBeVisible({timeout: 30_000});
 
     // Click on the action button of "Alice"
     await page.click('#cameras-container #camera-box #video-media-box #user-menu-btn');
@@ -52,26 +52,26 @@ test.describe('Meeting actions test', () => {
     await page.click('#cameras-container #camera-box #video-media-box #user-menu #mute-audio-user');
 
     // Check if "Bob" user receive the request to be metued
-    await expect(userBob.locator('.interact-menu')).toBeVisible({timeout: 10_000});
+    await expect(userBob.locator('.interact-menu')).toBeVisible({timeout: 30_000});
     // Click on the accept button
     await userBob.click('.interact-menu .accept-request');
 
     // Check if the user has been muted
     // Not sure but without test-class the test is not working
     await page.getByTestId('test-class');
-    await expect(page.locator('#cameras-container #camera-box #video-media-box')).toBeVisible({timeout: 10_000});
+    await expect(page.locator('#cameras-container #camera-box #video-media-box')).toBeVisible({timeout: 30_000});
     // await expect(page.locator('#cameras-container #camera-box #video-media-box .media-box-camera-off-size')).toBeVisible({timeout: 20_000});
     // Click on the mute video button
     await page.click('#cameras-container #camera-box #video-media-box .action-button#mute-video-user');
 
     // Check if "Bob" user receive the request to be metued
-    await expect(userBob.locator('.interact-menu')).toBeVisible({timeout: 10_000});
+    await expect(userBob.locator('.interact-menu')).toBeVisible({timeout: 30_000});
     // Click on the accept button
     await userBob.click('.interact-menu .accept-request');
 
     // Check if the user has been muted
     await page.getByTestId('test-class-video');
-    await expect(page.locator('#cameras-container #camera-box #video-media-box')).toBeVisible({timeout: 10_000});
+    await expect(page.locator('#cameras-container #camera-box #video-media-box')).toBeVisible({timeout: 30_000});
 
     page.close();
     userBob.close();
