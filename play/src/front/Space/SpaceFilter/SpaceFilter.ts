@@ -22,7 +22,9 @@ export interface SpaceFilterInterface {
 }
 
 type ReactiveSpaceUser = {
-    [K in keyof SpaceUser]: Readonly<Readable<SpaceUser[K]>>;
+    [K in keyof Omit<SpaceUser,"id">]: Readonly<Readable<SpaceUser[K]>>;
+} & {
+    id : number
 };
 
 type SpaceUserExtended = SpaceUser & {
@@ -65,8 +67,8 @@ export interface JitsiEventEmitter {
 
 export class SpaceFilter implements SpaceFilterInterface {
     private setUsers: ((value: Map<number, SpaceUserExtended>) => void) | undefined;
-    readonly usersStore: Readable<Map<number, SpaceUserExtended>>;
-    private users: Map<number, SpaceUserExtended> = new Map<number, SpaceUserExtended>();
+    readonly usersStore: Readable<Map<number, Readonly<SpaceUserExtended>>>;
+    private _users: Map<number, SpaceUserExtended> = new Map<number, SpaceUserExtended>();
 
     constructor(
         private _name: string,
@@ -76,21 +78,21 @@ export class SpaceFilter implements SpaceFilterInterface {
     ) {
         this.usersStore = readable(new Map<number, SpaceUserExtended>(), (set) => {
             this.setUsers = set;
+            set(this._users);
         });
+        this.addSpaceFilter();
     }
     userExist(userId: number): boolean {
         return get(this.usersStore).has(userId);
     }
     async addUser(user: SpaceUser): Promise<SpaceUserExtended> {
         const extendSpaceUser = await this.extendSpaceUser(user, this._spaceName);
-
-        if (!this.setUsers) {
-            throw new Error("");
-        }
-
+        
         if (!this.userExist(user.id)) {
-            this.users.set(user.id, extendSpaceUser);
-            this.setUsers(this.users);
+            this._users.set(user.id, extendSpaceUser);
+            if(this.setUsers){
+                this.setUsers(this._users);
+            }
         }
 
         return extendSpaceUser;
@@ -104,8 +106,8 @@ export class SpaceFilter implements SpaceFilterInterface {
             throw new Error("");
         }
 
-        this.users.delete(userId);
-        this.setUsers(this.users);
+        this._users.delete(userId);
+        this.setUsers(this._users);
     }
 
     updateUserData(newData: Partial<SpaceUser>): void {
@@ -115,10 +117,12 @@ export class SpaceFilter implements SpaceFilterInterface {
             throw new Error("");
         }
 
-        const userToUpdate = this.users.get(newData.id);
+        const userToUpdate = this._users.get(newData.id);
 
         if (!userToUpdate) return;
+
         merge(userToUpdate, newData);
+        
         for (const key in newData) {
             // We allow ourselves a not 100% exact type cast here.
             // Technically, newData could contain any key, not only keys part of SpaceUser type (because additional keys
@@ -126,14 +130,14 @@ export class SpaceFilter implements SpaceFilterInterface {
             // However, we know for sure that the keys of newData are part of SpaceUser type, so we can safely cast them.
             const castKey = key as keyof typeof newData;
             // Out of security, we add a runtime check to ensure that the key is part of SpaceUser type
-            if (userToUpdate.reactiveUser[castKey]) {
+            if (castKey in userToUpdate.reactiveUser) {
                 // Finally, we cast the "Readable" to "Writable" to be able to update the value. We know for sure it is
                 // writable because the only place that can create a "ReactiveSpaceUser" is the "extendSpaceUser" method.
                 (userToUpdate.reactiveUser[castKey] as Writable<unknown>).set(newData[castKey]);
             }
         }
 
-        this.setUsers(this.users);
+        this.setUsers(this._users);
     }
 
     setFilter(newFilter: Filter) {
@@ -177,13 +181,8 @@ export class SpaceFilter implements SpaceFilterInterface {
 
         const wokaBase64 = await CharacterLayerManager.wokaBase64(user.characterTextures);
 
-        const reactiveUser = Object.fromEntries(
-            Object.entries(user).map(([key, value]) => [key, writable(value)])
-        ) as unknown as ReactiveSpaceUser;
-
-        return {
+        const extendedUser = {
             ...user,
-            reactiveUser,
             wokaPromise: undefined,
             getWokaBase64: wokaBase64,
             updateSubject: new Subject<{
@@ -193,7 +192,31 @@ export class SpaceFilter implements SpaceFilterInterface {
             }>(),
             emitter,
             spaceName,
-        };
+        } as unknown as SpaceUserExtended
+
+
+        extendedUser.reactiveUser =  new Proxy({id : extendedUser.id} as unknown as ReactiveSpaceUser,{
+            get(target : any, property : PropertyKey , receiver: unknown) {
+                if(typeof property !== 'string'){
+                    return Reflect.get(target,property,receiver);
+                }
+
+                if(target[property as keyof ReactiveSpaceUser]){
+                    return target[property as keyof ReactiveSpaceUser];
+                }else{
+                    if(property in extendedUser){
+                        //@ts-ignore
+                        target[property] = writable(extendedUser[property]);
+                        return target[property];
+                    }else{
+                        return Reflect.get(target,property,receiver);
+                    }
+                    
+                }
+            },
+        });
+
+        return extendedUser ;
     }
 
     private removeSpaceFilter() {
