@@ -1,3 +1,5 @@
+import { Observable, Subject } from "rxjs";
+import { SpaceEvent } from "@workadventure/messages";
 import { RoomConnection } from "../Connection/RoomConnection";
 import { SpaceInterface } from "./SpaceInterface";
 import { SpaceFilterAlreadyExistError, SpaceFilterDoesNotExistError, SpaceNameIsEmptyError } from "./Errors/SpaceError";
@@ -5,25 +7,38 @@ import { SpaceFilter, SpaceFilterInterface } from "./SpaceFilter/SpaceFilter";
 
 export const WORLD_SPACE_NAME = "allWorldUser";
 export const CONNECTED_USER_FILTER_NAME = "connected_users";
+
+type PublicSpaceEvent = SpaceEvent["event"];
+
+type PublicEventRxjsEvent<V extends PublicSpaceEvent> = {
+    spaceName: string;
+    sender: number;
+    type: V["$case"];
+    event: V["event"];
+};
+
+type PublicEventsObservables = Partial<{
+    [K in PublicEventRxjsEvent["type"]]: Observable<PublicEventRxjsEvent<K>>;
+}>;
+
 export class Space implements SpaceInterface {
     private readonly name: string;
     private filters: Map<string, SpaceFilterInterface> = new Map<string, SpaceFilterInterface>();
+    private readonly publicEventsObservables: PublicEventsObservables = {};
 
     /**
      * IMPORTANT: The only valid way to create a space is to use the SpaceRegistry.
      * Do not call this constructor directly.
      */
-    constructor(
-        name: string,
-        private metadata = new Map<string, unknown>(),
-        private _connection: RoomConnection
-    ) {
+    constructor(name: string, private metadata = new Map<string, unknown>(), private _connection: RoomConnection) {
         if (name === "") {
             throw new SpaceNameIsEmptyError();
         }
         this.name = name;
 
         this.userJoinSpace();
+
+        // TODO: The public and private messages should be forwarded to a special method here from the Registry.
     }
 
     getName(): string {
@@ -73,6 +88,13 @@ export class Space implements SpaceInterface {
 
     private updateSpaceMetadata(metadata: Map<string, unknown>) {
         this._connection.emitUpdateSpaceMetadata(this.name, Object.fromEntries(metadata.entries()));
+    }
+
+    private observePublicEvent<K extends keyof SpaceEvent>(key: K) {
+        if (!this.publicEventsObservables[key]) {
+            this.publicEventsObservables[key] = new Subject<PublicEventRxjsEvent<K>>();
+        }
+        return this.publicEventsObservables[key];
     }
 
     // FIXME: this looks like a hack, it should not belong here.
