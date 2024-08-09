@@ -52,7 +52,6 @@
 
     function updateScreenSize() {
         if (window.innerWidth <= 768) {
-            console.log("vertical");
             vertical = true;
             isVerticalMode.set(true);
             resizeCowebsite();
