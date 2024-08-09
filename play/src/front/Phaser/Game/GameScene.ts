@@ -154,8 +154,7 @@ import { hideBubbleConfirmationModal } from "../../Rules/StatusRules/statusChang
 import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/statusChanger";
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import { getCoWebSite, openCoWebSite } from "../../Chat/Utils";
-import { CONNECTED_USER_FILTER_NAME, WORLD_SPACE_NAME } from "../../Space/Space";
-import { StreamSpaceWatcher } from "../../Space/SpaceWatcher/SocketSpaceWatcher";
+import { WORLD_SPACE_NAME } from "../../Space/Space";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
 import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
@@ -302,7 +301,6 @@ export class GameScene extends DirtyScene {
     private playerVariablesManager!: PlayerVariablesManager;
     private scriptingEventsManager!: ScriptingEventsManager;
     private followManager!: FollowManager;
-    private streamSpaceWatcher: StreamSpaceWatcher | undefined;
     private proximitySpaceManager: ProximitySpaceManager | undefined;
     private objectsByType = new Map<string, ITiledMapObject[]>();
     private embeddedWebsiteManager!: EmbeddedWebsiteManager;
@@ -1003,7 +1001,6 @@ export class GameScene extends DirtyScene {
         layoutManagerActionStore.clearActions();
 
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
-        this.streamSpaceWatcher?.destroy();
         this._spaceRegistry?.destroy();
         this.connection?.closeConnection();
         this.simplePeer?.closeAllConnections();
@@ -1546,22 +1543,15 @@ export class GameScene extends DirtyScene {
                     });
 
                 this._spaceRegistry = new SpaceRegistry(this.connection);
-                this.streamSpaceWatcher = new StreamSpaceWatcher(this.connection, this._spaceRegistry);
 
                 // FIXME: we don't need to watch this until we take a look at the user list.
-                const allUserSpace = this._spaceRegistry
-                    .joinSpace(WORLD_SPACE_NAME)
-                    ;
-
-                this.chatConnection = new MatrixChatConnection(
-                    this.connection,
-                    matrixClientPromise
-                );
+                const allUserSpace = this._spaceRegistry.joinSpace(WORLD_SPACE_NAME);
+                this.chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
 
                 this._proximityChatRoom = new ProximityChatRoom(
                     this.connection,
                     this.connection.getUserId(),
-                    this._spaceRegistry,
+                    this._spaceRegistry
                 );
 
                 //init merger

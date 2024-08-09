@@ -1,25 +1,12 @@
-import { Observable, Subject } from "rxjs";
-import { SpaceEvent } from "@workadventure/messages";
+import { Subject } from "rxjs";
+import { PublicEvent } from "@workadventure/messages";
 import { RoomConnection } from "../Connection/RoomConnection";
-import { SpaceInterface } from "./SpaceInterface";
+import { PublicEventsObservables, SpaceInterface } from "./SpaceInterface";
 import { SpaceFilterAlreadyExistError, SpaceFilterDoesNotExistError, SpaceNameIsEmptyError } from "./Errors/SpaceError";
 import { SpaceFilter, SpaceFilterInterface } from "./SpaceFilter/SpaceFilter";
 
 export const WORLD_SPACE_NAME = "allWorldUser";
 export const CONNECTED_USER_FILTER_NAME = "connected_users";
-
-type PublicSpaceEvent = SpaceEvent["event"];
-
-type PublicEventRxjsEvent<V extends PublicSpaceEvent> = {
-    spaceName: string;
-    sender: number;
-    type: V["$case"];
-    event: V["event"];
-};
-
-type PublicEventsObservables = Partial<{
-    [K in PublicEventRxjsEvent["type"]]: Observable<PublicEventRxjsEvent<K>>;
-}>;
 
 export class Space implements SpaceInterface {
     private readonly name: string;
@@ -90,11 +77,41 @@ export class Space implements SpaceInterface {
         this._connection.emitUpdateSpaceMetadata(this.name, Object.fromEntries(metadata.entries()));
     }
 
-    private observePublicEvent<K extends keyof SpaceEvent>(key: K) {
-        if (!this.publicEventsObservables[key]) {
-            this.publicEventsObservables[key] = new Subject<PublicEventRxjsEvent<K>>();
+    public observePublicEvent<K extends keyof PublicEventsObservables>(
+        key: K
+    ): NonNullable<PublicEventsObservables[K]> {
+        let observable = this.publicEventsObservables[key];
+        if (!observable) {
+            this.publicEventsObservables[key] = observable = new Subject() as Required<PublicEventsObservables>[K];
+            return observable;
         }
-        return this.publicEventsObservables[key];
+        return observable;
+    }
+
+    public dispatchPublicMessage(message: PublicEvent) {
+        const spaceEvent = message.spaceEvent;
+        if (spaceEvent === undefined) {
+            throw new Error("Received a message without spaceEvent");
+        }
+        const spaceInnerEvent = spaceEvent.event;
+        if (spaceInnerEvent === undefined) {
+            throw new Error("Received a message without event");
+        }
+        const sender = message.senderUserId;
+        if (sender === undefined) {
+            throw new Error("Received a message without senderUserId");
+        }
+        const subject = this.publicEventsObservables[spaceInnerEvent.$case];
+        if (subject) {
+            subject.next({
+                // We are hitting a limitation of TypeScript documented here: https://stackoverflow.com/questions/67513032/helper-function-to-un-discriminate-a-discriminated-union
+                //@ts-ignore
+                spaceName: message.spaceName,
+                //@ts-ignore
+                sender,
+                ...spaceInnerEvent,
+            });
+        }
     }
 
     // FIXME: this looks like a hack, it should not belong here.
