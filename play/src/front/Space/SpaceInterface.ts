@@ -20,4 +20,5 @@ export interface SpaceInterface {
     stopWatching(filterName: string): void;
     spaceFilterExist(filterName: string): boolean;
     observePublicEvent<K extends keyof PublicEventsObservables>(key: K): NonNullable<PublicEventsObservables[K]>;
+    emitPublicMessage(message: NonNullable<SpaceEvent["event"]>): void;
 }

@@ -15,7 +15,6 @@ import {
     ErrorScreenMessage,
     PositionMessage_Direction,
     PrivateEvent,
-    PublicEvent,
     SpaceFilterMessage,
 } from "@workadventure/messages";
 import { z } from "zod";
@@ -1960,43 +1959,8 @@ export class GameScene extends DirtyScene {
                 // The proximityPrivateMessageToClientMessageStream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.proximityPrivateMessageEvent.subscribe((privateEvent: PrivateEvent) => {
+                    // TODO: MOVE THIS HANDLING TO THE SPACE CLASS
                     console.info("proximity private message not implemented yet!");
-                });
-
-                // The proximityPublicMessageToClientMessageStream is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.proximityPublicMessageEvent.subscribe((publicEvent: PublicEvent) => {
-                    if (publicEvent.spaceEvent?.event?.$case != "spaceMessage") {
-                        return;
-                    }
-
-                    const room = this.proximityChatRoom;
-
-                    // The user sending the message is myself. Do not show the message.
-                    const proximityUserId = publicEvent.senderUserId;
-                    if (proximityUserId == undefined || proximityUserId === this.connection?.getUserId()) {
-                        return;
-                    }
-                    room.addNewMessage(publicEvent.spaceEvent?.event.spaceMessage.message, proximityUserId);
-
-                    // if the proximity chat is not open, open it to see the message
-                    chatVisibilityStore.set(true);
-                    if (get(selectedRoom) == undefined) selectedRoom.set(room);
-                });
-
-                // the typingProximityMessageToClientMessageStream is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.typingProximityEvent.subscribe((publicEvent: PublicEvent) => {
-                    if (publicEvent.spaceEvent?.event?.$case != "spaceIsTyping") return;
-
-                    const room = this.proximityChatRoom;
-
-                    if (publicEvent.senderUserId != undefined)
-                        if (publicEvent.spaceEvent?.event.spaceIsTyping.isTyping) {
-                            room.addTypingUser(publicEvent.senderUserId);
-                        } else {
-                            room.removeTypingUser(publicEvent.senderUserId);
-                        }
                 });
 
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
