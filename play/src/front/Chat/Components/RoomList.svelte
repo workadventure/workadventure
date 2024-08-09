@@ -100,7 +100,7 @@
 
 {#if $selectedRoom === undefined || displayTwoColumnLayout}
     <div
-        class="tw-w-full"
+        class="tw-w-full tw-overflow-auto"
         style={displayTwoColumnLayout ? `border-right:1px solid #4d4b67;padding-right:12px;max-width:335px ` : ``}
     >
         {#if $chatConnectionStatus === "CONNECTING"}
