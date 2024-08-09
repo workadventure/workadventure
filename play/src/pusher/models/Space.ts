@@ -352,7 +352,7 @@ export class Space implements CustomJsonReplacerInterface {
             const userData = watcher.getUserData();
             const currentSpaceFilterList = userData.spacesFilters.get(this.name) ?? [];
             userData.spacesFilters.set(this.name, [...(currentSpaceFilterList || []), newFilter]);
-            this.delta(watcher, this.users, newData, newFilter.filterName);
+            this.delta(watcher, new Map(), newData, newFilter.filterName);
         }
     }
 

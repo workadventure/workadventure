@@ -54,9 +54,8 @@ export class Space implements SpaceInterface {
     }
 
     stopWatching(filterName: string) {
-        const filter: SpaceFilter | undefined = this.filters.get(filterName);
+        const filter: SpaceFilterInterface | undefined = this.filters.get(filterName);
         if (!filter) throw new SpaceFilterDoesNotExistError(this.name, filterName);
-        filter.destroy();
         this.filters.delete(filterName);
     }
 
