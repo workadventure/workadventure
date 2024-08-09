@@ -6,9 +6,11 @@ import { UserProvideInterface } from "./UserProvideInterface";
 
 export class AdminUserProvider implements UserProvideInterface {
     users: Writable<PartialChatUser[]>;
+    private _setUsers: ((value: PartialChatUser[]) => void) | undefined;
 
     constructor(private connection: RoomConnection) {
         this.users = writable([] as PartialChatUser[], (set) => {
+            this._setUsers = set;
             connection
                 .queryChatMembers("")
                 .then(({ members }) => {
@@ -16,20 +18,6 @@ export class AdminUserProvider implements UserProvideInterface {
                 })
                 .catch((error) => {
                     throw new Error("An error occurred while processing chat members: " + error);
-                });
-        });
-    }
-
-    searchUsers(username: string): Promise<void> {
-        return new Promise((res, rej) => {
-            this.connection
-                .queryChatMembers(username)
-                .then(({ members }) => {
-                    res();
-                    this.users.set(this.mapChatMembersToChatUser(members));
-                })
-                .catch((error) => {
-                    rej(new Error("An error occurred while processing chat members: " + error));
                 });
         });
     }
@@ -52,5 +40,21 @@ export class AdminUserProvider implements UserProvideInterface {
                 });
             return userAcc;
         }, [] as ChatUser[]);
+    }
+
+    setFilter(searchText: string): Promise<void> {
+        return new Promise((res, rej) => {
+            this.connection
+                .queryChatMembers(searchText)
+                .then(({ members }) => {
+                    if (this._setUsers) {
+                        this._setUsers(this.mapChatMembersToChatUser(members));
+                        res();
+                    }
+                })
+                .catch((error) => {
+                    rej(new Error("An error occurred while processing chat members: " + error));
+                });
+        });
     }
 }

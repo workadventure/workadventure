@@ -145,7 +145,7 @@ describe("", () => {
         await flushPromises();
 
         expect(get(spaceFilter.usersStore)).toBe(spaceFilter["_users"]);
-        expect(spaceFilter["setUsers"]).toBeDefined();
+        expect(spaceFilter["_setUsers"]).toBeDefined();
     });
 
     it("should define reactive property after... ", async () => {

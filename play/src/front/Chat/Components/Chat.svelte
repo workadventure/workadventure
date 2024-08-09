@@ -2,7 +2,6 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue, joignableRoom, navChat } from "../Stores/ChatStore";
-    import { CONNECTED_USER_FILTER_NAME, WORLD_SPACE_NAME } from "../../Space/Space";
     import { INITIAL_SIDEBAR_WIDTH } from "../../Stores/ChatStore";
     import RoomUserList from "./UserList/RoomUserList.svelte";
     import ChatLoader from "./ChatLoader.svelte";
@@ -12,8 +11,9 @@
 
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
 
-    const chat = gameManager.getCurrentGameScene().chatConnection;
-    const adminUserProvider = gameManager.getCurrentGameScene().adminUserProvider;
+    const gameScene = gameManager.getCurrentGameScene();
+    const chat = gameScene.chatConnection;
+    const userProviderMerger = gameScene.userProviderMerger;
     const DONE_TYPING_INTERVAL = 2000;
     $: chatConnectionStatus = chat.connectionStatus;
 
@@ -29,9 +29,7 @@
                 searchAccessibleRooms();
             }
 
-            setConnectedUsersFilter();
-
-            adminUserProvider.searchUsers(searchValue).finally(() => {
+            userProviderMerger.setFilter($chatSearchBarValue).finally(() => {
                 searchLoader = false;
             });
         }, DONE_TYPING_INTERVAL);
@@ -40,29 +38,6 @@
     const handleKeyDown = () => {
         if (searchValue === "") joignableRoom.set([]);
         clearTimeout(typingTimer);
-    };
-
-    const setConnectedUsersFilter = () => {
-        const spaceProvider = gameManager.getCurrentGameScene().spaceStore;
-
-        const allWorldUserSpace = spaceProvider.get(WORLD_SPACE_NAME);
-        const connectedUsersFilter = allWorldUserSpace.getSpaceFilter(CONNECTED_USER_FILTER_NAME);
-
-        if ($chatSearchBarValue === "" && connectedUsersFilter.getFilterType() !== "spaceFilterEverybody") {
-            connectedUsersFilter.setFilter({
-                $case: "spaceFilterEverybody",
-                spaceFilterEverybody: {},
-            });
-
-            return;
-        }
-
-        connectedUsersFilter.setFilter({
-            $case: "spaceFilterContainName",
-            spaceFilterContainName: {
-                value: $chatSearchBarValue,
-            },
-        });
     };
 
     const searchAccessibleRooms = () => {
