@@ -1,7 +1,7 @@
 import { writable } from "svelte/store";
 import { ChatMessage as NewChatMessage, ChatRoom, ChatConnectionInterface } from "../Connection/ChatConnection";
 
-export const navChat = writable<"chat" | "users">("chat");
+export const navChat = writable<"chat" | "users" | "settings">("chat");
 
 export const shownRoomListStore = writable<string>("");
 export const chatSearchBarValue = writable<string>("");

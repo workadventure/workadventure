@@ -1,0 +1,16 @@
+oidc_providers:
+  - name: Discord
+    client_id: 1268134259147931648
+    client_secret: INVYsk8F1Uu76MY3QPqsjkcQRvla1WoA
+    redirect_uri: 
+      - http://pusher.workadventure.localhost/third-party-login/discord/callback
+
+  # Exemple for Google
+
+  # - name: Google
+  #   client_id: YOUR_GOOGLE_CLIENT_ID
+  #   client_secret: YOUR_GOOGLE_CLIENT_SECRET
+  #   redirect_uri: YOUR_GOOGLE_REDIRECT_URI
+
+
+# Add more OIDC providers if needed
