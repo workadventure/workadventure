@@ -1,5 +1,5 @@
 import { Subject } from "rxjs";
-import { PublicEvent } from "@workadventure/messages";
+import { PublicEvent, SpaceEvent } from "@workadventure/messages";
 import { RoomConnection } from "../Connection/RoomConnection";
 import { PublicEventsObservables, SpaceInterface } from "./SpaceInterface";
 import { SpaceFilterAlreadyExistError, SpaceFilterDoesNotExistError, SpaceNameIsEmptyError } from "./Errors/SpaceError";
@@ -73,21 +73,23 @@ export class Space implements SpaceInterface {
         this._connection.emitWatchSpace(this.name);
     }
 
-    private updateSpaceMetadata(metadata: Map<string, unknown>) {
+    public updateSpaceMetadata(metadata: Map<string, unknown>) {
         this._connection.emitUpdateSpaceMetadata(this.name, Object.fromEntries(metadata.entries()));
     }
 
     public observePublicEvent<K extends keyof PublicEventsObservables>(
         key: K
     ): NonNullable<PublicEventsObservables[K]> {
-        let observable = this.publicEventsObservables[key];
+        const observable = this.publicEventsObservables[key];
         if (!observable) {
-            this.publicEventsObservables[key] = observable = new Subject() as Required<PublicEventsObservables>[K];
-            return observable;
+            return (this.publicEventsObservables[key] = new Subject() as NonNullable<PublicEventsObservables[K]>);
         }
         return observable;
     }
 
+    /**
+     * Take a message received by the RoomConnection and dispatch it to the right observable.
+     */
     public dispatchPublicMessage(message: PublicEvent) {
         const spaceEvent = message.spaceEvent;
         if (spaceEvent === undefined) {
@@ -114,6 +116,10 @@ export class Space implements SpaceInterface {
         }
     }
 
+    public emitPublicMessage(message: NonNullable<SpaceEvent["event"]>): void {
+        this._connection.emitSpacePublicEvent(this.name, message);
+    }
+
     // FIXME: this looks like a hack, it should not belong here.
     // Any chance we can make this more generic?
     emitJitsiParticipantId(participantId: string) {
@@ -126,5 +132,9 @@ export class Space implements SpaceInterface {
      */
     destroy() {
         this.userLeaveSpace();
+
+        for (const subscription of Object.values(this.publicEventsObservables)) {
+            subscription.complete();
+        }
     }
 }

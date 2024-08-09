@@ -284,7 +284,7 @@ describe("", () => {
 
         await flushPromises();
 
-        expect(subscriber).toHaveBeenCalledTimes(1);
+        expect(subscriber).toHaveBeenCalledOnce();
         expect(subscriber).toHaveBeenLastCalledWith({
             spaceName: "space1",
             sender: 1,
