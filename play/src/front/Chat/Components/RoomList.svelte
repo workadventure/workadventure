@@ -98,14 +98,16 @@
 
 {#if $selectedRoom === undefined || displayTwoColumnLayout}
     <div
-        class="tw-w-full "
+        class="tw-w-full tw-overflow-auto"
         style={displayTwoColumnLayout ? `border-right:1px solid #4d4b67;padding-right:12px;max-width:335px ` : ``}
     >
         {#if $joignableRoom.length > 0}
             <p class="tw-p-0 tw-m-0 tw-text-gray-400">{$LL.chat.availableRooms()}</p>
-            {#each $joignableRoom as room (room.id)}
-                <JoignableRooms {room} />
-            {/each}
+            <div class="tw-flex tw-flex-col tw-overflow-auto tw-max-h-80">
+                {#each $joignableRoom as room (room.id)}
+                    <JoignableRooms {room} />
+                {/each}
+            </div>
         {/if}
         <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={toggleDisplayRoomInvitations}>
             {#if displayRoomInvitations}
@@ -116,12 +118,14 @@
             Invitations
         </button>
         {#if displayRoomInvitations}
-            {#each filteredRoomInvitations as room (room.id)}
-                <RoomInvitation {room} />
-            {/each}
-            {#if filteredRoomInvitations.length === 0}
-                <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
-            {/if}
+            <div class="tw-flex tw-flex-col tw-overflow-auto tw-max-h-80">
+                {#each filteredRoomInvitations as room (room.id)}
+                    <RoomInvitation {room} />
+                {/each}
+                {#if filteredRoomInvitations.length === 0}
+                    <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
+                {/if}
+            </div>
         {/if}
 
         <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={toggleDisplayDirectRooms}>
@@ -162,7 +166,7 @@
         </div>
 
         {#if displayRooms}
-            <div class="tw-flex tw-flex-col tw-overflow-auto">
+            <div class="tw-flex tw-flex-col tw-overflow-auto tw-max-h-80">
                 {#each filteredRooms as room (room.id)}
                     <Room {room} />
                 {/each}
