@@ -42,6 +42,7 @@ import { lazyLoadPlayerCharacterTextures } from "../Entity/PlayerTexturesLoading
 import { lazyLoadPlayerCompanionTexture } from "../Companion/CompanionTexturesLoadingManager";
 import { iframeListener } from "../../Api/IframeListener";
 import {
+    ADMIN_URL,
     DEBUG_MODE,
     ENABLE_MAP_EDITOR,
     ENABLE_OPENID,
@@ -124,7 +125,7 @@ import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 import type { AskPositionEvent } from "../../Api/Events/AskPositionEvent";
 import { _newChatMessageSubject, chatVisibilityStore, forceRefreshChatStore } from "../../Stores/ChatStore";
 import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
-import { gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
+import { extensionModuleStore, gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
 import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
@@ -152,7 +153,7 @@ import { askDialogStore } from "../../Stores/MeetingStore";
 import { hideBubbleConfirmationModal } from "../../Rules/StatusRules/statusChangerFunctions";
 import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/statusChanger";
 import { warningMessageStore } from "../../Stores/ErrorStore";
-import { getCoWebSite, openCoWebSite } from "../../Chat/Utils";
+import { closeCoWebsite, getCoWebSite, openCoWebSite, openCoWebSiteWithoutSource } from "../../Chat/Utils";
 import { LocalSpaceProviderSingleton } from "../../Space/SpaceProvider/SpaceStore";
 import { CONNECTED_USER_FILTER_NAME, WORLD_SPACE_NAME } from "../../Space/Space";
 import { StreamSpaceWatcherSingleton } from "../../Space/SpaceWatcher/SocketSpaceWatcher";
@@ -163,6 +164,9 @@ import { matrixSecurity } from "../../Chat/Connection/Matrix/MatrixSecurity";
 import { proximityRoomConnection, selectedRoom } from "../../Chat/Stores/ChatStore";
 import { ProximityChatConnection } from "../../Chat/Connection/Proximity/ProximityChatConnection";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
+import { ExtensionModuleStatusSynchronization } from "../../Rules/StatusRules/ExtensionModuleStatusSynchronization";
+import { calendarEventsStore, isActivatedStore } from "../../Stores/CalendarStore";
+import { ExtensionModule, RoomMetadataType } from "../../ExternalModule/ExtensionModule";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -328,6 +332,7 @@ export class GameScene extends DirtyScene {
         this.currentCompanionTextureReject = reject;
     });
     public chatConnection!: ChatConnectionInterface;
+    public extensionModule: ExtensionModule | undefined = undefined;
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
@@ -537,33 +542,6 @@ export class GameScene extends DirtyScene {
 
     //hook create scene
     create(): void {
-        /*getMatrixClient()
-            .then(async (clientResult) => {
-                if (isSuccess(clientResult)) {
-                    const client = clientResult.value;
-                    const rooms = await client.getJoinedRooms();
-                    console.warn("rooms", rooms);
-                    console.warn("user id", client.getUserId());
-
-                    client.on("Room.timeline", (event, room, toStartOfTimeline, removed, data) => {
-                        console.warn("Room.timeline", event, room, toStartOfTimeline, removed, data);
-                    });
-
-                    client.on("RoomState.events", (event, state) => {
-                        console.warn("RoomState.events", event, state);
-                    });
-                } else {
-                    if (clientResult.error.type === "no-matrix-credentials") {
-                        console.warn("no matrix credentials");
-                    } else if (clientResult.error.type === "no-matrix-server") {
-                        console.warn("NO MATRIX SERVER CONFIGURED");
-                    } else {
-                        console.error("matrix error", clientResult.error.error);
-                    }
-                }
-            })
-            .catch((e) => console.error(e));*/
-
         this.input.topOnly = false;
         this.preloading = false;
         this.cleanupDone = false;
@@ -1047,6 +1025,8 @@ export class GameScene extends DirtyScene {
         this.playersMovementEventDispatcher.cleanup();
         this.gameMapFrontWrapper?.close();
         this.followManager?.close();
+        this.extensionModule?.destroy();
+        extensionModuleStore.set(undefined);
 
         LocalSpaceProviderSingleton.getInstance().destroy();
 
@@ -1072,6 +1052,7 @@ export class GameScene extends DirtyScene {
             this.hideTimeout = undefined;
         }
     }
+
     /**
      * @param time
      * @param delta The delta time in ms since the last frame. This is a smoothed and capped value based on the FPS rate.
@@ -1548,6 +1529,8 @@ export class GameScene extends DirtyScene {
                     const chatId = localUserStore.getChatId();
                     const email: string | null = localUserStore.getLocalUser()?.email || null;
                     if (email && chatId) this.connection.emitUpdateChatId(email, chatId);
+
+                    this.initExtensionModule();
                 }
 
                 const spaceProvider = LocalSpaceProviderSingleton.getInstance(onConnect.connection.socket);
@@ -2063,6 +2046,47 @@ export class GameScene extends DirtyScene {
                 gameSceneIsLoadedStore.set(true);
             })
             .catch((e) => console.error(e));
+    }
+
+    private initExtensionModule() {
+        if (this._room.metadata != undefined) {
+            const parsedRoomMetadata = RoomMetadataType.safeParse(this._room.metadata);
+
+            if (!parsedRoomMetadata.success) {
+                console.error(
+                    "Unable to initialize Microsoft teams module due to room metadata parsing error : ",
+                    parsedRoomMetadata.error
+                );
+                return;
+            }
+
+            if (parsedRoomMetadata.data.msteams === true) {
+                (async () => {
+                    try {
+                        const extensionModule = await import("../../../ms-teams/MSTeams");
+                        this.extensionModule = extensionModule.default;
+
+                        this.extensionModule.init(parsedRoomMetadata.data, {
+                            workadventureStatusStore: availabilityStatusStore,
+                            onExtensionModuleStatusChange: ExtensionModuleStatusSynchronization.onStatusChange,
+                            getOauthRefreshToken: this.connection?.getOauthRefreshToken.bind(this.connection),
+                            calendarEventsStoreUpdate: calendarEventsStore.update,
+                            userAccessToken: localUserStore.getAuthToken()!,
+                            adminUrl: ADMIN_URL,
+                            roomId: this.roomUrl,
+                            externalModuleMessage: this.connection!.externalModuleMessage,
+                            openCoWebSite: openCoWebSiteWithoutSource,
+                            closeCoWebsite,
+                        });
+                        // TODO change that to check if the calendar synchro is enabled from admin
+                        if (parsedRoomMetadata.data.teamsstings.calendar) isActivatedStore.set(true);
+                        extensionModuleStore.set(this.extensionModule);
+                    } catch (error) {
+                        console.warn("Extension module initialization cancelled", error);
+                    }
+                })().catch((error) => console.error(error));
+            }
+        }
     }
 
     private subscribeToStores(): void {
@@ -2879,13 +2903,7 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("closeCoWebsite", (coWebsiteId) => {
-            const coWebsite = coWebsiteManager.getCoWebsiteById(coWebsiteId);
-
-            if (!coWebsite) {
-                throw new Error("Unknown co-website");
-            }
-
-            return coWebsiteManager.closeCoWebsite(coWebsite);
+            return closeCoWebsite(coWebsiteId);
         });
 
         iframeListener.registerAnswerer("closeCoWebsites", () => {

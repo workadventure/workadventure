@@ -1,11 +1,17 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { AvailabilityStatus } from "@workadventure/messages";
+    import { Readable, Unsubscriber } from "svelte/store";
+    import { onDestroy, onMount } from "svelte";
     import { resetAllStatusStoreExcept } from "../../../Rules/StatusRules/statusChangerFunctions";
     import { availabilityStatusMenuStore } from "../../../Stores/AvailabilityStatusMenuStore";
     import { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
-    import { AvailabilityStatusListPropsInterface } from "./Interfaces/AvailabilityStatusPropsInterface";
+    import { extensionModuleStore } from "../../../Stores/GameSceneStore";
+
+    import businessSvg from "../../images/applications/business.svg";
+    import { ExternalModuleStatus } from "../../../ExternalModule/ExtensionModule";
     import AvailabilityStatusCircle from "./AvailabilityStatusCircle.svelte";
+    import { AvailabilityStatusListPropsInterface } from "./Interfaces/AvailabilityStatusPropsInterface";
 
     export let props: AvailabilityStatusListPropsInterface;
 
@@ -26,6 +32,21 @@
     const handleOutsideClick = () => {
         if ($availabilityStatusMenuStore) availabilityStatusMenuStore.closeAvailabilityStatusMenu();
     };
+
+    const openTeamsDoc = () => {
+        // TODO open the doc to sync teams
+    };
+    let externalModuleStatusStore: Readable<ExternalModuleStatus> | undefined;
+    let extensionModuleStoreSubscription: Unsubscriber | undefined;
+    onMount(() => {
+        if ($extensionModuleStore) externalModuleStatusStore = $extensionModuleStore.statusStore;
+        extensionModuleStoreSubscription = extensionModuleStore.subscribe((value) => {
+            externalModuleStatusStore = value?.statusStore;
+        });
+    });
+    onDestroy(() => {
+        if (extensionModuleStoreSubscription) extensionModuleStoreSubscription();
+    });
 </script>
 
 <svelte:window on:click={handleOutsideClick} on:touchend={handleOutsideClick} />
@@ -37,7 +58,19 @@
             before:tw-border-b-contrast/80 tw-transition-all before:tw-rotate-180"
     transition:fly={{ y: 40, duration: 150 }}
 >
-    <div class="tw-flex tw-flex-row tw-justify-around tw-text-xs tw-pb-3 tw-pt-2">
+    <div class="tw-flex tw-flex-row tw-justify-between tw-text-xs tw-p-2 tw-pb-3 hover:tw-bg-dark-purple/80">
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <p class="tw-opacity-80 tw-cursor-pointer tw-m-0 tw-p-0" on:click={openTeamsDoc}>
+            Teams presence synchronized
+            <span class="tw-text-xxxs"
+                >{externalModuleStatusStore == undefined || $externalModuleStatusStore === ExternalModuleStatus.OFFLINE
+                    ? "❌"
+                    : "✅"}</span
+            >
+        </p>
+        <img draggable="false" src={businessSvg} class="tw-w-6" style="padding: 2px;" alt="Teams" />
+    </div>
+    <div class="tw-flex tw-flex-row tw-justify-between tw-text-xs tw-p-2 tw-pb-0">
         <div class="tw-font-bold tw-opacity-80">{listStatusTitle.toUpperCase()}</div>
         <svg width="18px" height="18px" viewBox="0 0 24.00 24.00" fill="none" xmlns="http://www.w3.org/2000/svg"
             ><g id="SVGRepo_bgCarrier" stroke-width="0" /><g

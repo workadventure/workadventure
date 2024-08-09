@@ -13,6 +13,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             openEmoji: "Obre la finestra emergent de l'emoji seleccionat",
             closeEmoji: "Tanca el menú d'emojis",
             mobile: "Obrir menú mòbil",
+            calendar: "Obrir calendari",
         },
     },
     visitCard: {

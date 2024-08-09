@@ -13,6 +13,7 @@ const actionbar: BaseTranslation = {
     emoji: "Open / Close emoji",
     disableMegaphone: "Disable megaphone",
     menu: "Open / Close menu",
+    calendar: "Open / Close calendar",
     mapEditor: "Open / Close map manager",
     mapEditorMobileLocked: "Map editor is locked on mobile mode",
     mapEditorLocked: "Map editor is locked 🔐",
@@ -36,6 +37,14 @@ const actionbar: BaseTranslation = {
     },
     globalMessage: "Send a global message",
     roomList: "Open / Close room list",
+    externalModule: {
+        status: {
+            onLine: "Status is ok ✅",
+            offLine: "Status is offline ❌",
+            warning: "Status is warning ⚠️",
+            sync: "Status is syncing 🔄",
+        },
+    },
 };
 
 export default actionbar;

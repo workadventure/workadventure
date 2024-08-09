@@ -29,6 +29,7 @@
     import PersonalAreaPropertyEditor from "../PropertyEditor/PersonalAreaPropertyEditor.svelte";
     import RightsPropertyEditor from "../PropertyEditor/RightsPropertyEditor.svelte";
     import { IconChevronDown, IconChevronRight } from "../../Icons";
+    import { extensionModuleStore } from "../../../Stores/GameSceneStore";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
@@ -198,6 +199,16 @@
                     allowedTags: [],
                     ownerId: null,
                 };
+            case "extensionModule":
+                if (subtype === undefined) {
+                    throw new Error("Missing subtype for extensionModule");
+                }
+                return {
+                    id,
+                    type,
+                    subtype,
+                    data: null,
+                };
             default:
                 throw new Error(`Unknown property type ${type}`);
         }
@@ -340,6 +351,10 @@
     function toggleDescriptionField() {
         showDescriptionField = !showDescriptionField;
     }
+
+    let extensionModuleAreaMapEditor = $extensionModuleStore?.areaMapEditor
+        ? $extensionModuleStore.areaMapEditor()
+        : undefined;
 </script>
 
 {#if $mapEditorSelectedAreaPreviewStore === undefined}
@@ -433,6 +448,19 @@
                     onAddProperty("openWebsite");
                 }}
             />
+            {#if extensionModuleAreaMapEditor !== undefined}
+                {#each Object.entries(extensionModuleAreaMapEditor) as [subtype, index] (index)}
+                    {#if extensionModuleAreaMapEditor[subtype].shouldDisplayButton(properties)}
+                        <AddPropertyButtonWrapper
+                            property="extensionModule"
+                            subProperty={subtype}
+                            on:click={() => {
+                                onAddProperty("extensionModule", subtype);
+                            }}
+                        />
+                    {/if}
+                {/each}
+            {/if}
         </div>
         <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-mt-2">
             <AddPropertyButtonWrapper
@@ -640,6 +668,13 @@
                                 onDeleteProperty(property.id, detail);
                             }}
                             on:change={({ detail }) => onUpdateProperty(property, detail)}
+                        />
+                    {:else if property.type === "extensionModule" && extensionModuleAreaMapEditor !== undefined}
+                        <svelte:component
+                            this={extensionModuleAreaMapEditor[property.subtype].AreaPropertyEditor}
+                            on:close={() => {
+                                onDeleteProperty(property.id);
+                            }}
                         />
                     {/if}
                 </div>

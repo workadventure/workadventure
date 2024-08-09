@@ -71,6 +71,8 @@ import {
     UnwatchSpaceMessage,
     PublicEvent,
     PrivateEvent,
+    OauthRefreshToken,
+    ExternalModuleMessage,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -238,6 +240,8 @@ export class RoomConnection implements RoomConnection {
     public readonly proximityPublicMessageEvent = this._proximityPublicMessageEvent.asObservable();
     private readonly _typingProximityEvent = new Subject<PublicEvent>();
     public readonly typingProximityEvent = this._typingProximityEvent.asObservable();
+    private readonly _externalModuleMessage = new Subject<ExternalModuleMessage>();
+    public readonly externalModuleMessage = this._externalModuleMessage.asObservable();
 
     private queries = new Map<
         number,
@@ -781,6 +785,10 @@ export class RoomConnection implements RoomConnection {
                 }
                 case "privateEvent": {
                     this._proximityPrivateMessageEvent.next(message.privateEvent);
+                    break;
+                }
+                case "externalModuleMessage": {
+                    this._externalModuleMessage.next(message.externalModuleMessage);
                     break;
                 }
                 default: {
@@ -1523,6 +1531,7 @@ export class RoomConnection implements RoomConnection {
         });
         return spaceFilter;
     }
+
     public emitUserJoinSpace(spaceName: string) {
         const spaceFilter: SpaceFilterMessage = {
             filterName: "",
@@ -1710,6 +1719,19 @@ export class RoomConnection implements RoomConnection {
             throw new Error("Unexpected answer");
         }
         return answer.chatMembersAnswer;
+    }
+
+    public async getOauthRefreshToken(tokenToRefresh: string): Promise<OauthRefreshToken> {
+        const answer = await this.query({
+            $case: "oauthRefreshTokenQuery",
+            oauthRefreshTokenQuery: {
+                tokenToRefresh,
+            },
+        });
+        if (answer.$case !== "oauthRefreshTokenAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.oauthRefreshTokenAnswer;
     }
 
     public emitUpdateChatId(email: string, chatId: string) {
@@ -2014,6 +2036,7 @@ export class RoomConnection implements RoomConnection {
         this._proximityPrivateMessageEvent.complete();
         this._proximityPublicMessageEvent.complete();
         this._typingProximityEvent.complete();
+        this._externalModuleMessage.complete();
     }
 
     private goToSelectYourWokaScene(): void {

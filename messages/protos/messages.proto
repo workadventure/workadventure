@@ -92,7 +92,7 @@ message SetPlayerDetailsMessage {
   AvailabilityStatus availabilityStatus = 6;
   SetPlayerVariableMessage setVariable = 7;
   string chatID = 8;
-  
+
 }
 
 message UserMovesMessage {
@@ -417,6 +417,7 @@ message QueryMessage {
     TurnCredentialsQuery turnCredentialsQuery = 9;
     ChatMembersQuery chatMembersQuery = 10;
     SearchTagsQuery searchTagsQuery = 11;
+    OauthRefreshTokenQuery oauthRefreshTokenQuery = 12;
   }
 }
 
@@ -463,6 +464,10 @@ message ChatMembersQuery {
   string searchText = 1;
 }
 
+message OauthRefreshTokenQuery {
+  string tokenToRefresh = 1;
+}
+
 message  SearchTagsQuery{
   string searchText = 1;
 }
@@ -482,6 +487,7 @@ message AnswerMessage {
     TurnCredentialsAnswer turnCredentialsAnswer = 11;
     ChatMembersAnswer chatMembersAnswer = 12;
     SearchTagsAnswer searchTagsAnswer = 13;
+    OauthRefreshTokenAnswer oauthRefreshTokenAnswer = 14;
   }
 }
 
@@ -537,6 +543,11 @@ message ChatMembersAnswer {
   repeated ChatMember members = 2;
 }
 
+message OauthRefreshTokenAnswer {
+  string message = 1;
+  string token = 2;
+}
+
 message Member {
   string id = 1;
   optional string name = 2;
@@ -559,7 +570,7 @@ message ChatMember {
 }
 
 message SearchTagsAnswer{
-  repeated string tags = 1; 
+  repeated string tags = 1;
 }
 
 /*********** SERVER TO CLIENT MESSAGES *************/
@@ -903,6 +914,7 @@ message ServerToClientMessage {
     AskMutedVideoMessage askMutedVideoMessage = 36;
     PublicEvent publicEvent = 37;
     PrivateEvent privateEvent = 38;
+    ExternalModuleMessage externalModuleMessage = 39;
   }
 }
 
@@ -942,7 +954,7 @@ message UserJoinedZoneMessage {
   bool hasOutline = 11;
   AvailabilityStatus availabilityStatus = 12;
   map<string, string> variables = 13;
-  optional string chatID=14;
+  optional string chatID = 14;
 }
 
 message UserLeftZoneMessage {
@@ -1147,6 +1159,13 @@ message RoomsList {
 message DispatchGlobalEventRequest {
   string name = 1;
   google.protobuf.Value value = 2;
+}
+
+message ExternalModuleMessage {
+  string moduleId = 1;
+  optional string recipientUuid = 2;
+  optional string roomId = 3;
+  google.protobuf.Value message = 4;
 }
 
 /********************************************************************************

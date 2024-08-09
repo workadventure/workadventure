@@ -737,5 +737,21 @@ class AnalyticsClient {
             })
             .catch((e) => console.error(e));
     }
+
+    openExternalModuleCalendar(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa-opened-external-module-calendar");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    openExternalModule(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa-opened-external-module");
+            })
+            .catch((e) => console.error(e));
+    }
 }
 export const analyticsClient = new AnalyticsClient();

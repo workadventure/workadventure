@@ -53,6 +53,7 @@ import {
     Zone as ProtoZone,
     PublicEvent,
     PrivateEvent,
+    ExternalModuleMessage,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -809,7 +810,8 @@ export class SocketManager {
                 case "searchMemberQuery":
                 case "getMemberQuery":
                 case "searchTagsQuery":
-                case "chatMembersQuery": {
+                case "chatMembersQuery":
+                case "oauthRefreshTokenQuery": {
                     break;
                 }
                 default: {
@@ -1807,6 +1809,61 @@ export class SocketManager {
                 privateEvent: newEvent,
             },
         });
+    }
+
+    async handleExternalModuleMessage(externalModuleMessage: ExternalModuleMessage) {
+        console.log("externalModuleMessage", externalModuleMessage);
+        if (!externalModuleMessage.roomId) {
+            console.error("externalModuleMessage has no roomId. This feature isn't implemented yet.");
+            Sentry.captureMessage("externalModuleMessage has no roomId. This feature isn't implemented yet.");
+            return;
+        }
+        if (!externalModuleMessage.recipientUuid) {
+            console.error("externalModuleMessage has no recipientUuid. This feature isn't implemented yet.");
+            Sentry.captureMessage("externalModuleMessage has no recipientUuid. This feature isn't implemented yet.");
+            return;
+        }
+        const roomId = externalModuleMessage.roomId;
+        const recipientUuid = externalModuleMessage.recipientUuid;
+
+        const room = await this.roomsPromises.get(externalModuleMessage.roomId);
+        if (!room) {
+            console.info(
+                "In handleExternalModuleMessage, could not find room with id '" +
+                    roomId +
+                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
+            );
+            Sentry.captureMessage(
+                "In handleExternalModuleMessage, could not find room with id '" +
+                    roomId +
+                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
+            );
+            return;
+        }
+
+        const recipients = room.getUsersByUuid(recipientUuid);
+        if (recipients.size === 0) {
+            console.info(
+                "In handleExternalModuleMessage, could not find user with id '" +
+                    recipientUuid +
+                    "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
+            );
+            Sentry.captureMessage(
+                "In handleExternalModuleMessage, could not find user with id '" +
+                    recipientUuid +
+                    "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
+            );
+            return;
+        }
+
+        for (const recipient of recipients) {
+            recipient.socket.write({
+                message: {
+                    $case: "externalModuleMessage",
+                    externalModuleMessage: externalModuleMessage,
+                },
+            });
+        }
     }
 }
 
