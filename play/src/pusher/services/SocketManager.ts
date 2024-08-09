@@ -744,7 +744,6 @@ export class SocketManager implements ZoneEventListener {
             socketData.spaceUser.availabilityStatus !== playerDetailsMessage.availabilityStatus ||
             socketData.spaceUser.chatID !== playerDetailsMessage.chatID
         ) {
-            socketData.spaceUser.availabilityStatus = playerDetailsMessage.availabilityStatus;
             const partialSpaceUser: SpaceUser = SpaceUser.fromPartial({
                 availabilityStatus: playerDetailsMessage.availabilityStatus,
                 id: socketData.userId,
@@ -754,7 +753,7 @@ export class SocketManager implements ZoneEventListener {
             if (socketData.spaceUser.availabilityStatus !== playerDetailsMessage.availabilityStatus) {
                 fieldMask.push("availabilityStatus");
             }
-            if (socketData.spaceUser.chatID !== playerDetailsMessage.chatID && playerDetailsMessage.chatID!=='') {
+            if (socketData.spaceUser.chatID !== playerDetailsMessage.chatID && playerDetailsMessage.chatID !== "") {
                 fieldMask.push("chatID");
             }
             socketData.spaces.forEach((space) => {
@@ -1181,6 +1180,7 @@ export class SocketManager implements ZoneEventListener {
     handleAddSpaceFilterMessage(client: Socket, addSpaceFilterMessage: AddSpaceFilterMessage) {
         const newFilter = addSpaceFilterMessage.spaceFilterMessage;
         const socketData = client.getUserData();
+
         if (newFilter) {
             const space = socketData.spaces.find((space) => space.name === newFilter.spaceName);
             if (space) {

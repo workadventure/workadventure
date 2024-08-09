@@ -154,7 +154,7 @@ import { hideBubbleConfirmationModal } from "../../Rules/StatusRules/statusChang
 import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/statusChanger";
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import { getCoWebSite, openCoWebSite } from "../../Chat/Utils";
-import { CONNECTED_USER_FILTER_NAME, WORLD_SPACE_NAME } from "../../Space/Space";
+import { WORLD_SPACE_NAME } from "../../Space/Space";
 import { StreamSpaceWatcher } from "../../Space/SpaceWatcher/SocketSpaceWatcher";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
@@ -336,7 +336,6 @@ export class GameScene extends DirtyScene {
     private _spaceStore: SpaceProviderInterface | undefined;
     private _proximityChatRoom: ProximityChatRoom | undefined;
     private _userProviderMerger: UserProviderMerger | undefined;
-    private _adminUserProvider: AdminUserProvider | undefined;
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
@@ -546,33 +545,6 @@ export class GameScene extends DirtyScene {
 
     //hook create scene
     create(): void {
-        /*getMatrixClient()
-            .then(async (clientResult) => {
-                if (isSuccess(clientResult)) {
-                    const client = clientResult.value;
-                    const rooms = await client.getJoinedRooms();
-                    console.warn("rooms", rooms);
-                    console.warn("user id", client.getUserId());
-
-                    client.on("Room.timeline", (event, room, toStartOfTimeline, removed, data) => {
-                        console.warn("Room.timeline", event, room, toStartOfTimeline, removed, data);
-                    });
-
-                    client.on("RoomState.events", (event, state) => {
-                        console.warn("RoomState.events", event, state);
-                    });
-                } else {
-                    if (clientResult.error.type === "no-matrix-credentials") {
-                        console.warn("no matrix credentials");
-                    } else if (clientResult.error.type === "no-matrix-server") {
-                        console.warn("NO MATRIX SERVER CONFIGURED");
-                    } else {
-                        console.error("matrix error", clientResult.error.error);
-                    }
-                }
-            })
-            .catch((e) => console.error(e));*/
-
         this.input.topOnly = false;
         this.preloading = false;
         this.cleanupDone = false;
@@ -1547,20 +1519,18 @@ export class GameScene extends DirtyScene {
 
                 const allUserSpace = this._spaceStore.add(WORLD_SPACE_NAME);
 
-                allUserSpace.watch(CONNECTED_USER_FILTER_NAME);
-
                 this.chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
 
                 this._proximityChatRoom = new ProximityChatRoom(this.connection, this.connection.getUserId());
 
                 //init merger
 
-                this._adminUserProvider = new AdminUserProvider(this.connection);
+                const adminUserProvider = new AdminUserProvider(this.connection);
                 const matrixUserProvider = new MatrixUserProvider(matrixClientPromise);
                 const worldUserProvider = new WorldUserProvider(allUserSpace);
 
                 this._userProviderMerger = new UserProviderMerger([
-                    this._adminUserProvider,
+                    adminUserProvider,
                     matrixUserProvider,
                     worldUserProvider,
                 ]);
@@ -3903,11 +3873,5 @@ ${escapedMessage}
             throw new Error("_userProviderMerger not yet initialized");
         }
         return this._userProviderMerger;
-    }
-    get adminUserProvider(): AdminUserProvider {
-        if (!this._adminUserProvider) {
-            throw new Error("_userProviderMerger not yet initialized");
-        }
-        return this._adminUserProvider;
     }
 }
