@@ -63,10 +63,12 @@
     }
 
     window.addEventListener("resize", () => {
-        getSizeOfCowebsiteWhenResizeWindow();
-        resizeFromCowebsite.set(false);
-        updateScreenSize();
-        showArrow = $totalTabWidth > $widthContainerForWindow ? true : false;
+        if ($coWebsites.length > 1) {
+            getSizeOfCowebsiteWhenResizeWindow();
+            resizeFromCowebsite.set(false);
+            updateScreenSize();
+            showArrow = $totalTabWidth > $widthContainerForWindow ? true : false;
+        }
     });
 
     onMount(() => {
@@ -297,6 +299,8 @@
         }
         subscription();
         isResized.set(false);
+        canvasHeight.set(window.innerHeight);
+        canvasWidth.set(window.innerWidth);
     });
 </script>
 
@@ -448,7 +452,7 @@
     />
 </div>
 
-<style>
+<style lang="scss">
     .resize-bar {
         display: none;
     }

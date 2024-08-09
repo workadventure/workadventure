@@ -12,7 +12,7 @@
     import { actionsMenuStore } from "../Stores/ActionsMenuStore";
     import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore";
     import { uiWebsitesStore } from "../Stores/UIWebsiteStore";
-    import { coWebsites } from "../Stores/CoWebsiteStore";
+    import { canvasHeight, canvasWidth, coWebsites } from "../Stores/CoWebsiteStore";
     import { proximityMeetingStore } from "../Stores/MyMediaStore";
     import { notificationPlayingStore } from "../Stores/NotificationStore";
     import { popupStore } from "../Stores/PopupStore";
@@ -43,6 +43,16 @@
     import MapList from "./Exploration/MapList.svelte";
     import WarningToast from "./WarningContainer/WarningToast.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
+
+    window.addEventListener("resize", () => {
+        console.log("resize du main layout");
+        if ($coWebsites.length < 1) {
+            canvasWidth.set(window.innerWidth);
+            canvasHeight.set(window.innerHeight);
+        }
+    });
+
+    $: console.log($canvasWidth, "canvaWidth");
 </script>
 
 <!-- Components ordered by z-index -->
@@ -166,7 +176,6 @@
         <ActionsMenu />
     {/if}
 
-    <ActionBar />
     <!-- svelte-ignore missing-declaration -->
     <div class="popups">
         {#each $popupStore.slice().reverse() as popup (popup.uuid)}
@@ -192,7 +201,9 @@
     />
 </div>
 
-<style>
+<style lang="scss">
+    @import "../style/breakpoints.scss";
+
     .popups {
         position: fixed;
         position: fixed;

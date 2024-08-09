@@ -121,6 +121,9 @@
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { connectionManager } from "../../Connection/ConnectionManager";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
+    import { canvasWidth } from "../../Stores/CoWebsiteStore";
+    import { size } from "lodash";
+    import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
 
     // gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
     let userName = gameManager.getPlayerName() || "";
@@ -479,6 +482,15 @@
     //     resetModalVisibility();
     //     roomListVisibilityStore.set(true);
     // }*/
+
+    window.addEventListener("resize", () => {
+        // console.log($canvasWidth, "canvasWidth");
+    });
+
+    // $: console.log($canvasWidth, "canvasWidth");
+    $: console.log($hasEmbedScreen, "hasEmbedScreen");
+    $: console.log($peerStore.size, "peerStore.size");
+    $: console.log($streamableCollectionStore.size, "highlightFullScreen");
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
@@ -487,10 +499,10 @@
 {/if}
 
 <div
-    class="@container/actions w-full z-[301] bottom-0 sm:top-0 transition-all pointer-events-none bp-menu {$peerStore.size >
+    class="@container/actions position-responsive w-full z-[301] transition-all pointer-events-none bp-menu {$peerStore.size >
         0 && $highlightFullScreen
         ? 'hidden'
-        : ''}"
+        : ''} {$canvasWidth < 640 ? 'absolute bottom-0' : 'relative top-0 bottom-auto'}"
 >
     <div class="flex w-full p-2 space-x-2 @xl/actions:p-4 @xl/actions:space-x-4">
         <div
@@ -504,7 +516,10 @@
                 data-testid="chat-action"
             >
                 <div
-                    class="group/btn-message-circle relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg rounded-r-lg sm:rounded-r-none p-2 aspect-square "
+                    class="group/btn-message-circle relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg  p-2 aspect-square {$canvasWidth <
+                        768 && $hasEmbedScreen
+                        ? 'rounded-r-lg'
+                        : ''}"
                     data-testid="chat-btn"
                     on:click={() => analyticsClient.openedChat()}
                     on:click={toggleChat}
@@ -548,7 +563,10 @@
                 </div>
 
                 <div
-                    class="group/btn-users relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg last:rounded-r-lg p-2 aspect-square hidden sm:block"
+                    class="group/btn-users relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg last:rounded-r-lg p-2 aspect-square {$canvasWidth <
+                        768 && $hasEmbedScreen
+                        ? 'hidden'
+                        : 'block'}"
                     on:click={toggleChat}
                 >
                     <div
@@ -577,7 +595,10 @@
                         <div class="flex items-center">
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div
-                                class="group/btn-emoji bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square hidden sm:block"
+                                class="group/btn-emoji bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square {$canvasWidth <
+                                768
+                                    ? 'hidden'
+                                    : 'block'}"
                                 on:click={toggleEmojiPicker}
                                 on:click={(helpActive = undefined)}
                                 on:mouseenter={() => {
@@ -617,7 +638,7 @@
                                             class="content-[''] absolute -top-1 left-0 right-0 m-auto w-2 h-1"
                                         />
                                         <div
-                                            class="bottom-action-bar bg-contrast/80 transition-all backdrop-blur rounded-lg px-3 flex flex-col items-stretch items-center pointer-events-auto justify-center m-auto bottom-6 md:bottom-4 z-[251] transition-transform duration-300 sm:flex-row"
+                                            class="bottom-action-bar bg-contrast/80 transition-all backdrop-blur rounded-lg px-3 flex flex-col items-stretch items-center pointer-events-auto justify-center m-auto bottom-6 md:bottom-4 z-[251] transition-transform duration-300 md:flex-row"
                                         >
                                             <div class="flex animate flex-row flex items-center">
                                                 <div class="py-1 flex">
@@ -707,7 +728,10 @@
                             {#if $bottomActionBarVisibilityStore}
                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <div
-                                    class="group/btn-layout bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square hidden sm:block"
+                                    class="group/btn-layout bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg aspect-square {$canvasWidth <
+                                    768
+                                        ? 'hidden'
+                                        : 'block'}"
                                 >
                                     <div
                                         class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 rounded btn-layout/btn-more:bg-white/10 aspect-square flex items-center justify-center transition-all"
@@ -764,7 +788,10 @@
                                     </div>
                                 </div>
                                 <div
-                                    class="group/btn-follow bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 rounded-l-lg sm:rounded-l-none sm:first:rounded-l-lg sm:last:rounded-r-lg aspect-square"
+                                    class="group/btn-follow bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2  md:first:rounded-l-lg md:last:rounded-r-lg aspect-square {$canvasWidth <
+                                    768
+                                        ? 'rounded-l-lg'
+                                        : ''}"
                                 >
                                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                                     <div
@@ -793,7 +820,10 @@
                                 </div>
                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <div
-                                    class="group/btn-lock relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 rounded-none sm:first:rounded-l-lg sm:last:rounded-r-lg aspect-square"
+                                    class="group/btn-lock relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 aspect-square {$hasEmbedScreen &&
+                                    $canvasWidth < 640
+                                        ? ''
+                                        : 'rounded-r-lg'}"
                                     class:disabled={$currentPlayerGroupLockStateStore}
                                     on:click={() => analyticsClient.lockDiscussion()}
                                     on:click={lockClick}
@@ -832,8 +862,9 @@
                             {#if $myMicrophoneStore}
                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <div
-                                    class="group/btn-mic peer/mic relative bg-contrast/80 backdrop-blur p-2 sm:pr-0 sm:last:pr-2 aspect-square {$bottomActionBarVisibilityStore
-                                        ? 'rounded-none sm:rounded-l-lg'
+                                    class="group/btn-mic peer/mic relative bg-contrast/80 backdrop-blur p-2 sm:pr-0 sm:last:pr-2 aspect-square {$peerStore.size >
+                                        0 && $canvasWidth < 640
+                                        ? 'rounded-none'
                                         : 'rounded-l-lg'}"
                                     class:disabled={!$requestedMicrophoneState || $silentStore}
                                 >
@@ -1077,7 +1108,10 @@
                         {#if $myCameraStore && !$silentStore}
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div
-                                class="group/btn-cam relative bg-contrast/80 backdrop-blur p-2 sm:pr-0 sm:last:pr-2 rounded-r-lg sm:rounded-none sm:first:rounded-l-lg sm:last:rounded-r-lg aspect-square"
+                                class="group/btn-cam relative bg-contrast/80 backdrop-blur p-2 aspect-square {$peerStore.size >
+                                    0 && $canvasWidth > 640
+                                    ? 'rounded-none'
+                                    : 'rounded-r-lg'}"
                                 class:disabled={!$requestedCameraState || $silentStore}
                             >
                                 <div
@@ -1111,7 +1145,10 @@
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         {#if $bottomActionBarVisibilityStore}
                             <div
-                                class="group/btn-screen-share relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square hidden sm:block"
+                                class="group/btn-screen-share relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square {$canvasWidth <
+                                    768 && $canvasWidth > 640
+                                    ? 'rounded-r-lg pr-2'
+                                    : ''} {$canvasWidth < 640 ? 'hidden' : ''}"
                                 on:click={() => analyticsClient.screenSharing()}
                                 on:click={screenSharingClick}
                                 on:mouseenter={() => {
@@ -1141,7 +1178,10 @@
                                 {/if}
                             </div>
                             <div
-                                class="group/btn-menu-cam relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square hidden sm:block"
+                                class="group/btn-menu-cam relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square {$canvasWidth <
+                                768
+                                    ? 'hidden'
+                                    : 'block'}"
                                 on:click={() => (camMenuIsDropped = !camMenuIsDropped)}
                                 on:click={() => (smallArrowVisible = !smallArrowVisible)}
                             >
@@ -1866,12 +1906,5 @@
     @import "../../style/breakpoints.scss";
     * {
         font-family: "Roboto Condensed";
-    }
-
-    @include media-breakpoint-down(sm) {
-    }
-
-    .focus-mode {
-        background-color: red;
     }
 </style>
