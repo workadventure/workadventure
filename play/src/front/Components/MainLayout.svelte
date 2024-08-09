@@ -45,14 +45,14 @@
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
 
     window.addEventListener("resize", () => {
-        console.log("resize du main layout");
+        // console.log("resize du main layout");
         if ($coWebsites.length < 1) {
             canvasWidth.set(window.innerWidth);
             canvasHeight.set(window.innerHeight);
         }
     });
 
-    $: console.log($canvasWidth, "canvaWidth");
+    // $: console.log($canvasWidth, "canvaWidth");
 </script>
 
 <!-- Components ordered by z-index -->

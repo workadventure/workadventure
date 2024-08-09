@@ -501,7 +501,7 @@
     class="@container/actions position-responsive w-full z-[301] transition-all pointer-events-none bp-menu {$peerStore.size >
         0 && $highlightFullScreen
         ? 'hidden'
-        : ''} {$canvasWidth < 640 ? 'absolute bottom-0' : 'relative top-0 bottom-auto'}"
+        : ''} {$canvasWidth < 768 ? 'absolute bottom-0' : 'relative top-0 bottom-auto'}"
 >
     <div class="flex w-full p-2 space-x-2 @xl/actions:p-4 @xl/actions:space-x-4">
         <div
@@ -588,7 +588,7 @@
         <div
             class="@xxs/actions:justify-center justify-end main-action justify-center pointer-events-auto min-w-32 @sm/actions:min-w-[192px] max-w-[424px]"
         >
-            <div class="flex justify-center relative space-x-0 @sm/actions:space-x-2 @xl/actions:space-x-4">
+            <div class="flex justify-center relative space-x-0 @md/actions:space-x-2 @xl/actions:space-x-4">
                 {#if !$silentStore}
                     <div in:fly={{ delay: 750, y: -200, duration: 750 }}>
                         <div class="flex items-center">
@@ -820,7 +820,7 @@
                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <div
                                     class="group/btn-lock relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 aspect-square {$hasEmbedScreen &&
-                                    $canvasWidth < 640
+                                    $canvasWidth < 768
                                         ? ''
                                         : 'rounded-r-lg'}"
                                     class:disabled={$currentPlayerGroupLockStateStore}
@@ -862,7 +862,7 @@
                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <div
                                     class="group/btn-mic peer/mic relative bg-contrast/80 backdrop-blur p-2 sm:pr-0 sm:last:pr-2 aspect-square {$peerStore.size >
-                                        0 && $canvasWidth < 640
+                                        0 && $canvasWidth < 768
                                         ? 'rounded-none'
                                         : 'rounded-l-lg'}"
                                     class:disabled={!$requestedMicrophoneState || $silentStore}
@@ -1108,7 +1108,7 @@
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div
                                 class="group/btn-cam relative bg-contrast/80 backdrop-blur p-2 aspect-square {$peerStore.size >
-                                    0 && $canvasWidth > 640
+                                    0 && $canvasWidth > 768
                                     ? 'rounded-none'
                                     : 'rounded-r-lg'}"
                                 class:disabled={!$requestedCameraState || $silentStore}
@@ -1145,9 +1145,9 @@
                         {#if $bottomActionBarVisibilityStore}
                             <div
                                 class="group/btn-screen-share relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square {$canvasWidth <
-                                    768 && $canvasWidth > 640
+                                    768 && $canvasWidth > 768
                                     ? 'rounded-r-lg pr-2'
-                                    : ''} {$canvasWidth < 640 ? 'hidden' : ''}"
+                                    : ''} {$canvasWidth < 768 ? 'hidden' : ''}"
                                 on:click={() => analyticsClient.screenSharing()}
                                 on:click={screenSharingClick}
                                 on:mouseenter={() => {
@@ -1725,7 +1725,7 @@
     </div>
     {#if burgerOpen}
         <div
-            class="w-48 bg-contrast/80 absolute {$canvasWidth < 640
+            class="w-48 bg-contrast/80 absolute {$canvasWidth < 768
                 ? 'bottom-20'
                 : 'bottom-auto top-18'} right-2 top-auto z-[1000] py-4 rounded-lg text-right text-white no-underline pointer-events-auto block @lg:hidden before:content-[''] before:absolute before:w-0 before:h-0 sm:before:-top-[14px] sm:before:bottom-auto before:-bottom-4 before:top-auto before:rotate-180 sm:before:rotate-0 before:right-5 before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all"
             transition:fly={{ y: 40, duration: 150 }}

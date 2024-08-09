@@ -12,11 +12,15 @@
     let isMobile: boolean;
     let unsubscribeHighlightEmbedScreen: Unsubscriber;
 
+    let bottomActionBar = false;
+
     function updateScreenSize() {
-        if (window.innerWidth < 768) {
+        if (window.innerWidth <= 768) {
             isMobile = true;
+            bottomActionBar = true;
         } else {
             isMobile = false;
+            bottomActionBar = false;
         }
     }
 
@@ -69,7 +73,9 @@
 <div
     class="{isHightlighted
         ? 'flex justify-center gap-4 whitespace-nowrap relative overflow-x-auto overflow-y-hidden m-0 mx-auto my-0 w-full max-w-full'
-        : 'mt-12 sm:mt-0 not-highlighted'} {$highlightFullScreen && $highlightedEmbedScreen ? 'hidden' : ''} "
+        : 'not-highlighted mt-0'} {$highlightFullScreen && $highlightedEmbedScreen ? 'hidden' : ''} {bottomActionBar
+        ? 'mt-12'
+        : ''} "
     id="cameras-container"
 >
     {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}

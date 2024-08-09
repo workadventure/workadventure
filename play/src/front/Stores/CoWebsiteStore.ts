@@ -63,7 +63,7 @@ export const isResized = writable(false);
 
 export class CoWebsiteManager {
     get verticalMode(): boolean {
-        if (window.innerWidth < 768) {
+        if (window.innerWidth <= 768) {
             return true;
         } else {
             return false;

@@ -51,7 +51,8 @@
     let isToggleFullScreen = false;
 
     function updateScreenSize() {
-        if (window.innerWidth < 768) {
+        if (window.innerWidth <= 768) {
+            console.log("vertical");
             vertical = true;
             isVerticalMode.set(true);
             resizeCowebsite();
@@ -63,7 +64,7 @@
     }
 
     window.addEventListener("resize", () => {
-        if ($coWebsites.length > 1) {
+        if ($coWebsites.length > 0) {
             getSizeOfCowebsiteWhenResizeWindow();
             resizeFromCowebsite.set(false);
             updateScreenSize();
