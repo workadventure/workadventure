@@ -20,7 +20,9 @@ export enum AreaPreviewEvent {
     Updated = "AreaPreview:Updated",
     Delete = "AreaPreview:Delete",
 }
+
 const DEFAULT_COLOR = 0x0000ff;
+
 export class AreaPreview extends Phaser.GameObjects.Rectangle {
     private squares: SizeAlteringSquare[];
 
@@ -87,6 +89,20 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
         this.scene.add.existing(this);
     }
 
+    public get description(): string | undefined {
+        const descriptionProperty: AreaDescriptionPropertyData | undefined = this.areaData.properties.find(
+            (p) => p.type === "areaDescriptionProperties"
+        ) as AreaDescriptionPropertyData | undefined;
+        return descriptionProperty?.description;
+    }
+
+    public get searchable(): boolean | undefined {
+        const descriptionProperty: AreaDescriptionPropertyData | undefined = this.areaData.properties.find(
+            (p) => p.type === "areaDescriptionProperties"
+        ) as AreaDescriptionPropertyData | undefined;
+        return descriptionProperty?.searchable;
+    }
+
     public update(time: number, dt: number): void {
         if (this.selected) {
             this.squares.forEach((square, index) => {
@@ -109,10 +125,6 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
         this.showSizeAlteringSquares(value);
     }
 
-    private showPropertiesIcon(value: boolean) {
-        this.propertiesIcon.forEach((icon: GameObjects.Image) => icon.setVisible(value));
-    }
-
     public setVisible(value: boolean): this {
         this.visible = value;
         this.showPropertiesIcon(value);
@@ -125,6 +137,106 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     public updatePreview(dataToModify: AtLeast<AreaData, "id">): void {
         _.merge(this.areaData, dataToModify);
         this.drawAreaPreviewFromAreaData(dataToModify);
+    }
+
+    public getSize(): number {
+        return this.displayWidth * this.displayHeight;
+    }
+
+    public addProperty(property: AreaDataProperty): void {
+        const oldAreaData = structuredClone(this.areaData);
+        this.areaData.properties.push(property);
+        this.emit(AreaPreviewEvent.Updated, this.areaData, oldAreaData);
+    }
+
+    public updateProperty(changes: AtLeast<AreaDataProperty, "id">, removeAreaEntities?: boolean): void {
+        const oldAreaData = structuredClone(this.areaData);
+        const property = this.areaData.properties.find((property) => property.id === changes.id);
+        if (property) {
+            _.mergeWith(property, changes, (_, targetProperty) => {
+                if (targetProperty instanceof Array) {
+                    return targetProperty;
+                }
+                return;
+            });
+        }
+        this.emit(AreaPreviewEvent.Updated, this.areaData, oldAreaData, removeAreaEntities);
+    }
+
+    public deleteProperty(id: string, removeAreaEntities?: boolean): boolean {
+        const oldAreaData = structuredClone(this.areaData);
+        const index = this.areaData.properties.findIndex((property) => property.id === id);
+        if (index !== -1) {
+            this.areaData.properties.splice(index, 1);
+            this.emit(AreaPreviewEvent.Updated, this.areaData, oldAreaData, removeAreaEntities);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public getProperties(): AreaDataProperties {
+        return this.areaData.properties;
+    }
+
+    public destroy(): void {
+        super.destroy();
+        this.squares.forEach((square) => square.destroy());
+    }
+
+    public getPosition(): { x: number; y: number } {
+        return { x: this.x, y: this.y };
+    }
+
+    public getAreaData(): AreaData {
+        return this.areaData;
+    }
+
+    public setAreaName(name: string): void {
+        const oldAreaData = structuredClone(this.areaData);
+        this.areaData.name = name;
+        const data = { id: this.areaData.id, name: this.areaData.name };
+        this.emit(AreaPreviewEvent.Updated, data, oldAreaData);
+    }
+
+    public getId(): string {
+        return this.areaData.id;
+    }
+
+    public changeColor(color: string | number | Phaser.Types.Display.InputColorObject) {
+        this.setFillStyle(Phaser.Display.Color.ValueToColor(color).color, 0.5);
+        this.updateSquaresPositions();
+    }
+
+    public resetColor() {
+        if (this.areaData != undefined) {
+            this.propertiesIcon.forEach((icon: GameObjects.Image) => icon.destroy());
+            let counter = 0;
+            if (this.areaData.properties.length > 0) {
+                for (const property of this.areaData.properties) {
+                    const iconProperties = this.getPropertyIcons(property.type);
+
+                    const icon = new GameObjects.Image(
+                        this.scene,
+                        (this.getTopLeft().x ?? 0) + 10 + counter * 15,
+                        (this.getTopLeft().y ?? 0) + 10,
+                        `icon${iconProperties.name}`
+                    );
+                    icon.setScale(0.12);
+                    icon.setDepth(this.depth + 1);
+                    icon.setVisible(true);
+                    this.setFillStyle(Phaser.Display.Color.ValueToColor(iconProperties.color).color, 0.5);
+                    counter++;
+                }
+            } else {
+                this.setFillStyle(Phaser.Display.Color.ValueToColor(DEFAULT_COLOR).color, 0.5);
+            }
+        }
+        this.updateSquaresPositions();
+    }
+
+    private showPropertiesIcon(value: boolean) {
+        this.propertiesIcon.forEach((icon: GameObjects.Image) => icon.setVisible(value));
     }
 
     private drawAreaPreviewFromAreaData(areaData: AreaData | AtLeast<AreaData, "id">): void {
@@ -158,46 +270,6 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
         this.displayWidth = this.areaData.width;
         this.displayHeight = this.areaData.height;
         this.updateSquaresPositions();
-    }
-
-    public getSize(): number {
-        return this.displayWidth * this.displayHeight;
-    }
-
-    public addProperty(property: AreaDataProperty): void {
-        const oldAreaData = structuredClone(this.areaData);
-        this.areaData.properties.push(property);
-        this.emit(AreaPreviewEvent.Updated, this.areaData, oldAreaData);
-    }
-
-    public updateProperty(changes: AtLeast<AreaDataProperty, "id">): void {
-        const oldAreaData = structuredClone(this.areaData);
-        const property = this.areaData.properties.find((property) => property.id === changes.id);
-        if (property) {
-            _.merge(property, changes);
-        }
-        this.emit(AreaPreviewEvent.Updated, this.areaData, oldAreaData);
-    }
-
-    public deleteProperty(id: string): boolean {
-        const oldAreaData = structuredClone(this.areaData);
-        const index = this.areaData.properties.findIndex((property) => property.id === id);
-        if (index !== -1) {
-            this.areaData.properties.splice(index, 1);
-            this.emit(AreaPreviewEvent.Updated, this.areaData, oldAreaData);
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public getProperties(): AreaDataProperties {
-        return this.areaData.properties;
-    }
-
-    public destroy(): void {
-        super.destroy();
-        this.squares.forEach((square) => square.destroy());
     }
 
     private showSizeAlteringSquares(show = true): void {
@@ -404,25 +476,6 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
         };
     }
 
-    public getPosition(): { x: number; y: number } {
-        return { x: this.x, y: this.y };
-    }
-
-    public getAreaData(): AreaData {
-        return this.areaData;
-    }
-
-    public setAreaName(name: string): void {
-        const oldAreaData = structuredClone(this.areaData);
-        this.areaData.name = name;
-        const data = { id: this.areaData.id, name: this.areaData.name };
-        this.emit(AreaPreviewEvent.Updated, data, oldAreaData);
-    }
-
-    public getId(): string {
-        return this.areaData.id;
-    }
-
     private getPropertyIcons(name: string) {
         switch (name) {
             case "focusable":
@@ -466,51 +519,5 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                     color: "FFFFFF",
                 };
         }
-    }
-
-    public changeColor(color: string | number | Phaser.Types.Display.InputColorObject) {
-        this.setFillStyle(Phaser.Display.Color.ValueToColor(color).color, 0.5);
-        this.updateSquaresPositions();
-    }
-
-    public resetColor() {
-        if (this.areaData != undefined) {
-            this.propertiesIcon.forEach((icon: GameObjects.Image) => icon.destroy());
-            let counter = 0;
-            if (this.areaData.properties.length > 0) {
-                for (const property of this.areaData.properties) {
-                    const iconProperties = this.getPropertyIcons(property.type);
-
-                    const icon = new GameObjects.Image(
-                        this.scene,
-                        (this.getTopLeft().x ?? 0) + 10 + counter * 15,
-                        (this.getTopLeft().y ?? 0) + 10,
-                        `icon${iconProperties.name}`
-                    );
-                    icon.setScale(0.12);
-                    icon.setDepth(this.depth + 1);
-                    icon.setVisible(true);
-                    this.setFillStyle(Phaser.Display.Color.ValueToColor(iconProperties.color).color, 0.5);
-                    counter++;
-                }
-            } else {
-                this.setFillStyle(Phaser.Display.Color.ValueToColor(DEFAULT_COLOR).color, 0.5);
-            }
-        }
-        this.updateSquaresPositions();
-    }
-
-    public get description(): string | undefined {
-        const descriptionProperty: AreaDescriptionPropertyData | undefined = this.areaData.properties.find(
-            (p) => p.type === "areaDescriptionProperties"
-        ) as AreaDescriptionPropertyData | undefined;
-        return descriptionProperty?.description;
-    }
-
-    public get searchable(): boolean | undefined {
-        const descriptionProperty: AreaDescriptionPropertyData | undefined = this.areaData.properties.find(
-            (p) => p.type === "areaDescriptionProperties"
-        ) as AreaDescriptionPropertyData | undefined;
-        return descriptionProperty?.searchable;
     }
 }

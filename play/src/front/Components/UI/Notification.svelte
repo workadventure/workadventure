@@ -6,11 +6,14 @@
     import cameraOffImg from "../images/cam.svg";
     import jistiImg from "../images/jitsi.png";
     import waImg from "../images/icon-workadventure-white.png";
+    import AreaToolImg from "../images/icon-tool-area.png";
 
     const icons = new Map<string, string>([
         ["microphone-off.png", microphoneOffImg],
         ["camera-off.png", cameraOffImg],
         ["jitsi.png", jistiImg],
+        ["jitsi.png", jistiImg],
+        ["icon-tool-area.png", AreaToolImg],
     ]);
 
     export let notification: Notification;
@@ -24,7 +27,7 @@
 </script>
 
 <div class="notification-playing bg-dark-blue/95 mt-1" transition:fly={{ x: 210, duration: 500 }}>
-    <img src={icons.get(notification.icon) ?? waImg} alt="Audio playing" class="bg-medium-purple rounded-full h-14" />
+    <img src={notification.icon ? icons.get(notification.icon) : waImg} alt="Audio playing" class="bg-medium-purple rounded-full h-14" />
     <p>{notification.text}</p>
 </div>
 

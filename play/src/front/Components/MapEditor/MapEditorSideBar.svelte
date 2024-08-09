@@ -1,54 +1,57 @@
 <script lang="ts">
     import { LocalizedString } from "typesafe-i18n";
+    import { fly } from "svelte/transition";
     import { LL } from "../../../i18n/i18n-svelte";
+    import { gameManager } from "../../Phaser/Game/GameManager";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
     import { mapEditorSelectedToolStore, mapEditorVisibilityStore } from "../../Stores/MapEditorStore";
-    import { gameManager } from "../../Phaser/Game/GameManager";
-    import AreaToolImg from "../images/icon-tool-area.png";
-    // import FloorToolImg from "../images/icon-tool-floor.png";
-    import EntityToolImg from "../images/icon-tool-entity.svg";
-    import Tooltip from "../Util/Tooltip.svelte";
-    import ConfigureImg from "../images/configure.svg";
-    import TrashImg from "../images/trash.svg";
-    import ExplorerImg from "../images/explorer.svg";
-    import CloseImg from "../images/close.png";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import { mapEditorActivated } from "../../Stores/MenuStore";
-
-    const gameScene = gameManager.getCurrentGameScene();
+    import { mapEditorActivated, mapEditorActivatedForThematics } from "../../Stores/MenuStore";
+    import Tooltip from "../Util/Tooltip.svelte";
+    import AreaToolImg from "../images/icon-tool-area.png";
+    import CloseImg from "../images/close.png";
+    import ConfigureImg from "../images/configure.svg";
+    import EntityToolImg from "../images/icon-tool-entity.svg";
+    import TrashImg from "../images/trash.svg";
+    import MagnifyingGlassSvg from "../images/loupe.svg";
 
     const availableTools: { toolName: EditorToolName; img: string; tooltiptext: LocalizedString }[] = [];
 
     availableTools.push({
         toolName: EditorToolName.ExploreTheRoom,
-        img: ExplorerImg,
+        img: MagnifyingGlassSvg,
         tooltiptext: $LL.mapEditor.sideBar.exploreTheRoom(),
     });
+
+    const entityEditorTool = {
+        toolName: EditorToolName.EntityEditor,
+        img: EntityToolImg,
+        tooltiptext: $LL.mapEditor.sideBar.entityEditor(),
+    };
+    const trashEditorTool = {
+        toolName: EditorToolName.TrashEditor,
+        img: TrashImg,
+        tooltiptext: $LL.mapEditor.sideBar.trashEditor(),
+    };
+
+    if ($mapEditorActivatedForThematics && !$mapEditorActivated) {
+        availableTools.push(entityEditorTool);
+        availableTools.push(trashEditorTool);
+    }
+
     if ($mapEditorActivated) {
         availableTools.push({
             toolName: EditorToolName.AreaEditor,
             img: AreaToolImg,
             tooltiptext: $LL.mapEditor.sideBar.areaEditor(),
         });
-        availableTools.push(
-            {
-                toolName: EditorToolName.EntityEditor,
-                img: EntityToolImg,
-                tooltiptext: $LL.mapEditor.sideBar.entityEditor(),
-            }
-            // NOTE: Hide it untill FloorEditing is done
-            // { toolName: EditorToolName.FloorEditor, img: FloorToolImg, tooltiptext: $LL.mapEditor.sideBar.tileEditor() }
-        );
+        availableTools.push(entityEditorTool);
         availableTools.push({
             toolName: EditorToolName.WAMSettingsEditor,
             img: ConfigureImg,
             tooltiptext: $LL.mapEditor.sideBar.configureMyRoom(),
         });
-        availableTools.push({
-            toolName: EditorToolName.TrashEditor,
-            img: TrashImg,
-            tooltiptext: $LL.mapEditor.sideBar.trashEditor(),
-        });
+        availableTools.push(trashEditorTool);
     }
     availableTools.push({
         toolName: EditorToolName.CloseMapEditor,
@@ -59,9 +62,45 @@
     function switchTool(newTool: EditorToolName) {
         mapEditorVisibilityStore.set(true);
         analyticsClient.openMapEditorTool(newTool);
-        gameScene.getMapEditorModeManager().equipTool(newTool);
+        gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(newTool);
     }
 </script>
+
+<div
+    class="!flex !fixed justify-center !w-full !h-fit -top-4"
+    in:fly={{ y: 100, duration: 250, delay: 200 }}
+    out:fly={{ y: 100, duration: 200 }}
+>
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <div
+        class="flex items-center !h-fit !w-fit rounded-2xl bg-dark-purple/80 backdrop-blur-lg text-white p-4 pt-6 gap-2"
+    >
+        {#each availableTools as tool (tool.toolName)}
+            {#if $mapEditorSelectedToolStore === tool.toolName}
+                <img src={tool.img} class="w-fit h-4" alt="open tool {tool.toolName}" />
+            {/if}
+        {/each}
+        {#if $mapEditorSelectedToolStore === EditorToolName.ExploreTheRoom}
+            {$LL.mapEditor.sideBar.exploreTheRoomActivated()}
+        {:else if $mapEditorSelectedToolStore === EditorToolName.AreaEditor}
+            {$LL.mapEditor.sideBar.areaEditorActivated()}
+        {:else if $mapEditorSelectedToolStore === EditorToolName.EntityEditor}
+            {$LL.mapEditor.sideBar.entityEditorActivated()}
+        {:else if $mapEditorSelectedToolStore === EditorToolName.TrashEditor}
+            {$LL.mapEditor.sideBar.trashEditorActivated()}
+        {:else if $mapEditorSelectedToolStore === EditorToolName.WAMSettingsEditor}
+            {$LL.mapEditor.sideBar.configureMyRoomActivated()}
+        {:else}
+            {$LL.mapEditor.sideBar.mapManagerActivated()}
+        {/if}
+        <img
+            src={CloseImg}
+            class="h-4 ml-4 pointer-events-auto cursor-pointer"
+            alt={$LL.mapEditor.sideBar.closeMapEditor()}
+            on:click|preventDefault={() => switchTool(EditorToolName.CloseMapEditor)}
+        />
+    </div>
+</div>
 
 <section class="side-bar-container" class:!right-20={!$mapEditorVisibilityStore}>
     <!--put a section to avoid lower div to be affected by some css-->
@@ -97,6 +136,7 @@
         top: 6%;
         left: 2rem;
         align-content: bottom;
+        z-index: 425;
         .tool-button {
             position: relative !important;
             display: flex;

@@ -44,6 +44,10 @@ export class GameMap {
         this.wam = wam; // upgrade if necessary
         this.flatLayers = flattenGroupLayersMap(this.map);
         this.tiledObjects = GameMap.getObjectsFromLayers(this.flatLayers);
+        if (this.wam) {
+            this.gameMapAreas = new GameMapAreas(this.wam);
+            this.gameMapEntities = new GameMapEntities(this.wam);
+        }
 
         for (const tileset of this.map.tilesets) {
             if ("tiles" in tileset) {
@@ -67,13 +71,6 @@ export class GameMap {
                     }
                 }
             }
-        }
-    }
-
-    public initialize(): void {
-        if (this.wam) {
-            this.gameMapAreas = new GameMapAreas(this.wam);
-            this.gameMapEntities = new GameMapEntities(this.wam);
         }
     }
 

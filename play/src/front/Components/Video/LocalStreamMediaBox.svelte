@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { ArrowDownIcon, ArrowUpIcon } from "svelte-feather-icons";
+    import {IconArrowDown, IconArrowUp} from "@wa-icons";
     import { onDestroy, onMount } from "svelte";
     import { Unsubscriber } from "svelte/store";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
@@ -112,9 +112,9 @@
                 on:click={() => (menuDrop = !menuDrop)}
             >
                 {#if menuDrop}
-                    <ArrowUpIcon class="w-4 h-4 m-auto flex items-center text-white" />
+                    <IconArrowUp class="w-4 h-4 m-auto flex items-center text-white" />
                 {:else}
-                    <ArrowDownIcon class="w-4 h-4 m-auto flex items-center text-white" />
+                    <IconArrowDown class="w-4 h-4 m-auto flex items-center text-white" />
                 {/if}
             </div>
         </div>

@@ -1,7 +1,6 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
-    import { InfoIcon } from "svelte-feather-icons";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { showModalGlobalComminucationVisibilityStore } from "../../Stores/ModalStore";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
@@ -29,8 +28,13 @@
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { StringUtils } from "../../Utils/StringUtils";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import { requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
+    import {
+        currentLiveStreamingNameStore,
+        megaphoneUrlStore,
+        requestedMegaphoneStore,
+    } from "../../Stores/MegaphoneStore";
     import { userIsAdminStore } from "../../Stores/GameStore";
+    import { IconInfoCircle } from "@wa-icons";
 
     let mainModal: HTMLDivElement;
 
@@ -86,20 +90,21 @@
         activeLiveMessage = true;
         inputSendTextActive = false;
         uploadAudioActive = false;
+        analyticsClient.openMegaphone();
     }
 
     function activateInputText() {
-        analyticsClient.globalMessage();
         activeLiveMessage = false;
         inputSendTextActive = true;
         uploadAudioActive = false;
+        analyticsClient.openGlobalMessage();
     }
 
     function activateUploadAudio() {
-        analyticsClient.globalMessage();
         activeLiveMessage = false;
         inputSendTextActive = false;
         uploadAudioActive = true;
+        analyticsClient.openGlobalAudio();
     }
 
     function back() {
@@ -154,7 +159,8 @@
     }
 
     function startLive() {
-        analyticsClient.openMegaphone();
+        analyticsClient.startMegaphone();
+        currentLiveStreamingNameStore.set($megaphoneUrlStore);
         requestedMegaphoneStore.set(true);
         close();
     }
@@ -182,7 +188,7 @@
             </div>
         </div>
         <!-- <div class="bg-contrast/80 ml-2 -right-20 top-4 transition-all backdrop-blur rounded-lg p-2 aspect-square">
-            <button type="button" class="close-window h-[16px] w-[16px] bg-red-500 justify-center" on:click={close}
+            <button type="button" class="close-window h-[16px] w-[16px] bg-red-500 justify-center" on:click|preventDefault|stopPropagation={close}
                 >&times</button
             >
         </div> -->
@@ -242,9 +248,10 @@
                             {$LL.megaphone.modal.textMessage.title()}
                         </p>
                         <p class="help-text">
-                            <InfoIcon size="18" />
+                            <IconInfoCircle font-size="18" />
                             {$LL.megaphone.modal.audioMessage.noAccess()}
                         </p>
+                        <button class="light max-w-fit" on:click={activateInputText} disabled={!$userIsAdminStore}>
                         <button class="light max-w-fit" on:click={activateInputText} disabled={!$userIsAdminStore}>
                             {$LL.megaphone.modal.textMessage.button()}</button
                         >
@@ -262,7 +269,7 @@
                             {$LL.megaphone.modal.audioMessage.title()}
                         </p>
                         <p class="help-text">
-                            <InfoIcon size="18" />
+                            <IconInfoCircle font-size="18" />
                             {$LL.megaphone.modal.audioMessage.noAccess()}
                         </p>
                         <button class="light max-w-fit" on:click={activateUploadAudio} disabled={!$userIsAdminStore}>
@@ -452,7 +459,8 @@
                         <button
                             class="light h-8 w-24 text-black bg-white rounded-md"
                             on:click={startLive}
-                            disabled={!$requestedCameraState && !$requestedMicrophoneState}>Start live message</button
+                            disabled={!$requestedCameraState && !$requestedMicrophoneState}
+                            >{$LL.megaphone.modal.liveMessage.startMegaphone()}</button
                         >
                     </div>
                 </div>

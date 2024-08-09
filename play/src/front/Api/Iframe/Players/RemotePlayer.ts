@@ -4,8 +4,7 @@ import type { AddPlayerEvent } from "../../Events/AddPlayerEvent";
 import type { PlayerPosition } from "../../Events/PlayerPosition";
 import { ActionsMenuAction } from "../ui";
 import { queryWorkadventure, sendToWorkadventure } from "../IframeApiContribution";
-
-export const remotePlayers = new Map<number, RemotePlayer>();
+import { PublicPlayerState, ReadOnlyPublicPlayerState } from "../PublicPlayerState";
 
 export interface RemotePlayerInterface {
     /**
@@ -39,7 +38,7 @@ export interface RemotePlayerInterface {
     /**
      * An object storing players variables
      */
-    readonly state: ReadOnlyState;
+    readonly state: ReadOnlyPublicPlayerState;
 
     /**
      * Send an event to the player.
@@ -48,10 +47,6 @@ export interface RemotePlayerInterface {
     sendEvent(key: string, value: unknown): Promise<void>;
 }
 
-export type ReadOnlyState = { onVariableChange(key: string): Observable<unknown> } & {
-    readonly [key: string]: unknown;
-};
-
 export class RemotePlayer implements RemotePlayerInterface {
     private _playerId: number;
     private _name: string;
@@ -59,9 +54,9 @@ export class RemotePlayer implements RemotePlayerInterface {
     private _availabilityStatus: string;
     private _outlineColor: number | undefined;
     private _position: PlayerPosition;
-    private _variables: Map<string, unknown>;
-    private _variablesSubjects = new Map<string, Subject<unknown>>();
-    public readonly state: ReadOnlyState;
+    private _variables: { [key in keyof PublicPlayerState]?: PublicPlayerState[key] } = {};
+    private _variablesSubjects: { [key in keyof PublicPlayerState]?: Subject<PublicPlayerState[key]> } = {};
+    public readonly state: ReadOnlyPublicPlayerState;
     private actions: Map<string, ActionsMenuAction> = new Map<string, ActionsMenuAction>();
 
     public constructor(addPlayerEvent: AddPlayerEvent) {
@@ -71,16 +66,18 @@ export class RemotePlayer implements RemotePlayerInterface {
         this._availabilityStatus = addPlayerEvent.availabilityStatus;
         this._outlineColor = addPlayerEvent.outlineColor;
         this._position = addPlayerEvent.position;
-        this._variables = addPlayerEvent.variables;
+        // We don't know the type of the variables sent to us, but act as if we do.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        this._variables = Object.fromEntries(addPlayerEvent.variables) as any;
         const variableSubjects = this._variablesSubjects;
         const variables = this._variables;
         this.state = new Proxy(
             {
-                onVariableChange(key: string): Observable<unknown> {
-                    let subject = variableSubjects.get(key);
+                onVariableChange<K extends keyof PublicPlayerState>(key: K): Observable<PublicPlayerState[K]> {
+                    let subject = variableSubjects[key];
                     if (subject === undefined) {
-                        subject = new Subject<unknown>();
-                        variableSubjects.set(key, subject);
+                        subject = new Subject<PublicPlayerState[K]>();
+                        variableSubjects[key] = subject;
                     }
                     return subject.asObservable();
                 },
@@ -90,13 +87,13 @@ export class RemotePlayer implements RemotePlayerInterface {
                     if (p in target) {
                         return Reflect.get(target, p, receiver);
                     }
-                    return variables.get(p.toString());
+                    return variables[p.toString()];
                 },
                 has(target, p: PropertyKey): boolean {
                     if (p in target) {
                         return true;
                     }
-                    return variables.has(p.toString());
+                    return p.toString() in variables;
                 },
             }
         );
@@ -139,14 +136,14 @@ export class RemotePlayer implements RemotePlayerInterface {
 
     public destroy() {
         this._position$.complete();
-        for (const subject of this._variablesSubjects.values()) {
-            subject.complete();
+        for (const subject of Object.values(this._variablesSubjects)) {
+            subject?.complete();
         }
     }
 
-    public setVariable(name: string, value: unknown): void {
-        this._variables.set(name, value);
-        const observable = this._variablesSubjects.get(name);
+    public setVariable<K extends keyof PublicPlayerState>(name: K, value: PublicPlayerState[K]): void {
+        this._variables[name] = value;
+        const observable = this._variablesSubjects[name];
         if (observable) {
             observable.next(value);
         }

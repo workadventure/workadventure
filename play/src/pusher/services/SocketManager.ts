@@ -1,41 +1,51 @@
 import Debug from "debug";
 import type { compressors } from "hyper-express";
 import {
+    AddSpaceFilterMessage,
     AdminMessage,
     AdminPusherToBackMessage,
     AdminRoomMessage,
+    BackToPusherSpaceMessage,
     BanMessage,
+    BanPlayerMessage,
+    ChatMembersAnswer,
+    ChatMembersQuery,
     EmoteEventMessage,
     ErrorApiData,
     ErrorMessage,
     ErrorScreenMessage,
+    GetMemberAnswer,
+    GetMemberQuery,
     JoinRoomMessage,
-    MucRoomDefinition,
+    MegaphoneStateMessage,
+    MemberData,
+    PartialSpaceUser,
     PlayerDetailsUpdatedMessage,
     PlayGlobalMessage,
+    PrivateEvent,
     PusherToBackMessage,
+    PusherToBackSpaceMessage,
+    QueryMessage,
+    RemoveSpaceFilterMessage,
     ReportPlayerMessage,
+    SearchMemberAnswer,
+    SearchTagsAnswer,
+    SearchMemberQuery,
+    SearchTagsQuery,
     ServerToAdminClientMessage,
     ServerToClientMessage,
-    UserMovesMessage,
-    ViewportMessage,
-    XmppSettingsMessage,
-    PusherToBackSpaceMessage,
-    BackToPusherSpaceMessage,
-    PartialSpaceUser,
-    AddSpaceFilterMessage,
-    UpdateSpaceFilterMessage,
-    RemoveSpaceFilterMessage,
     SetPlayerDetailsMessage,
     SpaceFilterMessage,
-    WatchSpaceMessage,
-    QueryMessage,
-    MegaphoneStateMessage,
+    UpdateSpaceFilterMessage,
     UpdateSpaceMetadataMessage,
-    BanPlayerMessage,
+    UserMovesMessage,
+    ViewportMessage,
+    WatchSpaceMessage,
+    OauthRefreshTokenQuery,
+    OauthRefreshTokenAnswer,
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
-import axios, { isAxiosError } from "axios";
+import axios, { AxiosResponse, isAxiosError } from "axios";
 import { z } from "zod";
 import { PusherRoom } from "../models/PusherRoom";
 import type { BackSpaceConnection, SocketData } from "../models/Websocket/SocketData";
@@ -43,7 +53,7 @@ import type { BackSpaceConnection, SocketData } from "../models/Websocket/Socket
 import { ProtobufUtils } from "../models/Websocket/ProtobufUtils";
 import type { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../models/Zone";
 import type { AdminConnection, AdminSocketData } from "../models/Websocket/AdminSocketData";
-import { EJABBERD_DOMAIN, EMBEDDED_DOMAINS_WHITELIST } from "../enums/EnvironmentVariable";
+import { EMBEDDED_DOMAINS_WHITELIST } from "../enums/EnvironmentVariable";
 import { Space } from "../models/Space";
 import { UpgradeFailedData } from "../controllers/IoSocketController";
 import { emitInBatch } from "./IoSocketHelpers";
@@ -62,7 +72,7 @@ export type SocketUpgradeFailed = compressors.WebSocket<UpgradeFailedData>;
 export class SocketManager implements ZoneEventListener {
     private rooms: Map<string, PusherRoom> = new Map<string, PusherRoom>();
     private spaces: Map<string, Space> = new Map<string, Space>();
-    private spaceStreamsToPusher: Map<number, Promise<BackSpaceConnection>> = new Map<
+    private spaceStreamsToBack: Map<number, Promise<BackSpaceConnection>> = new Map<
         number,
         Promise<BackSpaceConnection>
     >();
@@ -211,7 +221,6 @@ export class SocketManager implements ZoneEventListener {
         try {
             const joinRoomMessage: JoinRoomMessage = {
                 userUuid: socketData.userUuid,
-                userJid: socketData.userJid,
                 IPAddress: socketData.ipAddress,
                 roomId: socketData.roomId,
                 name: socketData.name,
@@ -228,19 +237,20 @@ export class SocketManager implements ZoneEventListener {
                 visitCardUrl: socketData.visitCardUrl ?? "", // TODO: turn this into an optional field
                 userRoomToken: socketData.userRoomToken ?? "", // TODO: turn this into an optional field
                 lastCommandId: socketData.lastCommandId ?? "", // TODO: turn this into an optional field
+                chatID: socketData.chatID,
             };
 
             debug("Calling joinRoom '" + socketData.roomId + "'");
             const apiClient = await apiClientRepository.getClient(socketData.roomId);
-            const streamToPusher = apiClient.joinRoom();
+            const streamToBack = apiClient.joinRoom();
             clientEventsEmitter.emitClientJoin(socketData.userUuid, socketData.roomId);
 
-            socketData.backConnection = streamToPusher;
+            socketData.backConnection = streamToBack;
 
-            streamToPusher
+            streamToBack
                 .on("data", (message: ServerToClientMessage) => {
                     if (!message.message) {
-                        console.error("Empty message returned on streamToPusher");
+                        console.error("Empty message returned on streamToBack");
                         return;
                     }
                     switch (message.message.$case) {
@@ -309,7 +319,7 @@ export class SocketManager implements ZoneEventListener {
                     joinRoomMessage,
                 },
             };
-            streamToPusher.write(pusherToBackMessage);
+            streamToBack.write(pusherToBackMessage);
 
             const pusherRoom = await this.getOrCreateRoom(socketData.roomId);
             pusherRoom.mucRooms = socketData.mucRooms;
@@ -327,12 +337,12 @@ export class SocketManager implements ZoneEventListener {
     ): Promise<void> {
         try {
             const backId = apiClientRepository.getIndex(spaceName);
-            const spaceStreamToPusherPromise = this.spaceStreamsToPusher.get(backId);
-            if (!spaceStreamToPusherPromise) {
+            const spaceStreamToBackPromise = this.spaceStreamsToBack.get(backId);
+            if (!spaceStreamToBackPromise) {
                 throw new Error("Space stream to pusher not found");
             }
-            await spaceStreamToPusherPromise.then((spaceStreamToPusher) => {
-                spaceStreamToPusher.write({
+            await spaceStreamToBackPromise.then((spaceStreamToBack) => {
+                spaceStreamToBack.write({
                     message: {
                         $case: "updateSpaceMetadataMessage",
                         updateSpaceMetadataMessage: UpdateSpaceMetadataMessage.fromPartial({
@@ -357,16 +367,24 @@ export class SocketManager implements ZoneEventListener {
 
         try {
             const backId = apiClientRepository.getIndex(spaceName);
-            let spaceStreamToPusherPromise = this.spaceStreamsToPusher.get(backId);
-            const isNewSpaceStream = spaceStreamToPusherPromise === undefined;
-            if (!spaceStreamToPusherPromise) {
-                spaceStreamToPusherPromise = (async () => {
+            let spaceStreamToBackPromise = this.spaceStreamsToBack.get(backId);
+            if (!spaceStreamToBackPromise) {
+                spaceStreamToBackPromise = (async () => {
+                    const cleanupSpaceStreamToBack = () => {
+                        this.spaceStreamsToBack.delete(backId);
+                        for (const space of this.spaces.values()) {
+                            if (space.backId === backId) {
+                                this.spaces.delete(space.name);
+                            }
+                        }
+                    };
+
                     const apiSpaceClient = await apiClientRepository.getSpaceClient(spaceName);
-                    const spaceStreamToPusher = apiSpaceClient.watchSpace() as BackSpaceConnection;
-                    spaceStreamToPusher
+                    const spaceStreamToBack = apiSpaceClient.watchSpace() as BackSpaceConnection;
+                    spaceStreamToBack
                         .on("data", (message: BackToPusherSpaceMessage) => {
                             if (!message.message) {
-                                console.warn("spaceStreamToPusher => Empty message received.", message);
+                                console.warn("spaceStreamToBack => Empty message received.", message);
                                 return;
                             }
                             switch (message.message.$case) {
@@ -382,7 +400,7 @@ export class SocketManager implements ZoneEventListener {
                                     const updateSpaceUserMessage = message.message.updateSpaceUserMessage;
                                     const space = this.spaces.get(updateSpaceUserMessage.spaceName);
                                     if (space && updateSpaceUserMessage.user) {
-                                        space.localUpdateUser(updateSpaceUserMessage.user);
+                                        space.localUpdateUser(updateSpaceUserMessage.user, socketData.world);
                                     }
                                     break;
                                 }
@@ -417,35 +435,32 @@ export class SocketManager implements ZoneEventListener {
                                     break;
                                 }
                                 case "pingMessage": {
-                                    if (spaceStreamToPusher) {
-                                        if (spaceStreamToPusher.pingTimeout) {
-                                            clearTimeout(spaceStreamToPusher.pingTimeout);
-                                            spaceStreamToPusher.pingTimeout = undefined;
-                                        }
-                                        const pusherToBackMessage: PusherToBackSpaceMessage = {
-                                            message: {
-                                                $case: "pongMessage",
-                                                pongMessage: {},
-                                            },
-                                        } as PusherToBackSpaceMessage;
-                                        spaceStreamToPusher.write(pusherToBackMessage);
-
-                                        spaceStreamToPusher.pingTimeout = setTimeout(() => {
-                                            if (spaceStreamToPusher) {
-                                                debug("[space] spaceStreamToPusher closed, no ping received");
-                                                spaceStreamToPusher.end();
-                                            }
-                                        }, 1000 * 60);
-                                    } else {
-                                        throw new Error(
-                                            "spaceStreamToPusher => Message received but can't answer to it"
-                                        );
+                                    console.log("SocketManager => handleJoinSpace => pingMessage");
+                                    if (spaceStreamToBack.pingTimeout) {
+                                        clearTimeout(spaceStreamToBack.pingTimeout);
+                                        spaceStreamToBack.pingTimeout = undefined;
                                     }
+                                    const pusherToBackMessage: PusherToBackSpaceMessage = {
+                                        message: {
+                                            $case: "pongMessage",
+                                            pongMessage: {},
+                                        },
+                                    } as PusherToBackSpaceMessage;
+                                    spaceStreamToBack.write(pusherToBackMessage);
+
+                                    spaceStreamToBack.pingTimeout = setTimeout(() => {
+                                        console.error("Error spaceStreamToBack timed out for back:", backId);
+                                        Sentry.captureException(
+                                            "Error spaceStreamToBack timed out for back: " + backId
+                                        );
+                                        spaceStreamToBack.end();
+                                        cleanupSpaceStreamToBack();
+                                    }, 1000 * 60);
                                     break;
                                 }
                                 case "kickOffMessage": {
                                     debug("[space] kickOffSMessage received");
-                                    spaceStreamToPusher.write({
+                                    spaceStreamToBack.write({
                                         message: {
                                             $case: "kickOffMessage",
                                             kickOffMessage: {
@@ -459,7 +474,7 @@ export class SocketManager implements ZoneEventListener {
                                 }
                                 case "muteMicrophoneMessage": {
                                     debug("[space] muteMicrophoneMessage received");
-                                    spaceStreamToPusher.write({
+                                    spaceStreamToBack.write({
                                         message: {
                                             $case: "muteMicrophoneMessage",
                                             muteMicrophoneMessage: {
@@ -473,7 +488,7 @@ export class SocketManager implements ZoneEventListener {
                                 }
                                 case "muteVideoMessage": {
                                     debug("[space] muteVideoMessage received");
-                                    spaceStreamToPusher.write({
+                                    spaceStreamToBack.write({
                                         message: {
                                             $case: "muteVideoMessage",
                                             muteVideoMessage: {
@@ -487,7 +502,7 @@ export class SocketManager implements ZoneEventListener {
                                 }
                                 case "muteMicrophoneEverybodyMessage": {
                                     debug("[space] muteMicrophoneEverybodyMessage received");
-                                    spaceStreamToPusher.write({
+                                    spaceStreamToBack.write({
                                         message: {
                                             $case: "muteMicrophoneEverybodyMessage",
                                             muteMicrophoneEverybodyMessage: {
@@ -501,7 +516,7 @@ export class SocketManager implements ZoneEventListener {
                                 }
                                 case "muteVideoEverybodyMessage": {
                                     debug("[space] muteVideoEverybodyMessage received");
-                                    spaceStreamToPusher.write({
+                                    spaceStreamToBack.write({
                                         message: {
                                             $case: "muteVideoEverybodyMessage",
                                             muteVideoEverybodyMessage: {
@@ -515,7 +530,7 @@ export class SocketManager implements ZoneEventListener {
                                 }
                                 case "askMuteMicrophoneMessage": {
                                     debug("[space] askMuteMicrophoneMessage received");
-                                    spaceStreamToPusher.write({
+                                    spaceStreamToBack.write({
                                         message: {
                                             $case: "askMuteMicrophoneMessage",
                                             askMuteMicrophoneMessage: {
@@ -529,7 +544,7 @@ export class SocketManager implements ZoneEventListener {
                                 }
                                 case "askMuteVideoMessage": {
                                     debug("[space] askMuteVideoMessage received");
-                                    spaceStreamToPusher.write({
+                                    spaceStreamToBack.write({
                                         message: {
                                             $case: "askMuteVideoMessage",
                                             askMuteVideoMessage: {
@@ -541,15 +556,42 @@ export class SocketManager implements ZoneEventListener {
                                     });
                                     break;
                                 }
+                                case "publicEvent": {
+                                    debug("[space] publicEvent received");
+                                    spaceStreamToBack.write({
+                                        message: {
+                                            $case: "publicEvent",
+                                            publicEvent: {
+                                                spaceName: message.message.publicEvent.spaceName,
+                                                spaceEvent: message.message.publicEvent.spaceEvent,
+                                                senderUserId: socketData.userId,
+                                            },
+                                        },
+                                    });
+                                    break;
+                                }
+                                case "privateEvent": {
+                                    debug("[space] privateEvent received");
+                                    spaceStreamToBack.write({
+                                        message: {
+                                            $case: "privateEvent",
+                                            privateEvent: {
+                                                ...message.message.privateEvent,
+                                                senderUserId: socketData.userId,
+                                            },
+                                        },
+                                    });
+                                    break;
+                                }
                                 default: {
                                     const _exhaustiveCheck: never = message.message;
                                 }
                             }
                         })
                         .on("end", () => {
-                            debug("[space] spaceStreamsToPusher ended");
-                            this.spaceStreamsToPusher.delete(backId);
-                            this.spaces.delete(spaceName);
+                            debug("[space] spaceStreamsToBack ended");
+                            if (spaceStreamToBack.pingTimeout) clearTimeout(spaceStreamToBack.pingTimeout);
+                            cleanupSpaceStreamToBack();
                         })
                         .on("error", (err: Error) => {
                             console.error(
@@ -569,12 +611,12 @@ export class SocketManager implements ZoneEventListener {
                                     err
                             );
                         });
-                    return spaceStreamToPusher;
+                    return spaceStreamToBack;
                 })();
-                this.spaceStreamsToPusher.set(backId, spaceStreamToPusherPromise);
+                this.spaceStreamsToBack.set(backId, spaceStreamToBackPromise);
             }
 
-            const spaceStreamToPusher = await spaceStreamToPusherPromise;
+            const spaceStreamToBack = await spaceStreamToBackPromise;
 
             if (filter) {
                 socketData.spacesFilters.set(spaceName, [filter]);
@@ -582,11 +624,21 @@ export class SocketManager implements ZoneEventListener {
 
             let space: Space | undefined = this.spaces.get(spaceName);
             if (!space) {
-                space = new Space(spaceName, spaceStreamToPusher, backId, client);
+                space = new Space(spaceName, spaceStreamToBack, backId, client);
                 this.spaces.set(spaceName, space);
+
+                spaceStreamToBack.write({
+                    message: {
+                        $case: "watchSpaceMessage",
+                        watchSpaceMessage: WatchSpaceMessage.fromPartial({
+                            spaceName,
+                        }),
+                    },
+                });
             } else {
                 space.addClientWatcher(client);
             }
+            space.addUser(socketData.spaceUser);
             socketData.spaces.push(space);
 
             // client.spacesFilters = [
@@ -595,21 +647,6 @@ export class SocketManager implements ZoneEventListener {
             //         .setFiltername(new StringValue().setValue(uuid()))
             //         .setSpacefiltercontainname(new SpaceFilterContainName().setValue("test")),
             // ];
-
-            if (!isNewSpaceStream) {
-                space.addUser(socketData.spaceUser);
-            } else {
-                spaceStreamToPusher.write({
-                    message: {
-                        $case: "watchSpaceMessage",
-                        watchSpaceMessage: WatchSpaceMessage.fromPartial({
-                            spaceName,
-                            user: socketData.spaceUser,
-                        }),
-                    },
-                });
-                space.localAddUser(socketData.spaceUser);
-            }
         } catch (e) {
             Sentry.captureException(`An error occurred on "join_space" event ${e}`);
             console.error(`An error occurred on "join_space" event ${e}`);
@@ -696,16 +733,21 @@ export class SocketManager implements ZoneEventListener {
             $case: "setPlayerDetailsMessage",
             setPlayerDetailsMessage: playerDetailsMessage,
         };
+
         socketManager.forwardMessageToBack(client, pusherToBackMessage);
 
-        if (socketData.spaceUser.availabilityStatus !== playerDetailsMessage.availabilityStatus) {
+        if (
+            socketData.spaceUser.availabilityStatus !== playerDetailsMessage.availabilityStatus ||
+            socketData.spaceUser.chatID !== playerDetailsMessage.chatID
+        ) {
             socketData.spaceUser.availabilityStatus = playerDetailsMessage.availabilityStatus;
             const partialSpaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
                 availabilityStatus: playerDetailsMessage.availabilityStatus,
                 id: socketData.userId,
+                chatID: playerDetailsMessage.chatID,
             });
             socketData.spaces.forEach((space) => {
-                space.updateUser(partialSpaceUser);
+                space.updateUser(partialSpaceUser, socketData.world);
             });
         }
     }
@@ -798,12 +840,12 @@ export class SocketManager implements ZoneEventListener {
             this.spaces.delete(space.name);
             debug("Space %s is empty. Deleting.", space.name);
             if ([...this.spaces.values()].filter((_space) => _space.backId === space.backId).length === 0) {
-                const spaceStreamPusher = this.spaceStreamsToPusher.get(space.backId);
-                if (spaceStreamPusher) {
-                    spaceStreamPusher
+                const spaceStreamBack = this.spaceStreamsToBack.get(space.backId);
+                if (spaceStreamBack) {
+                    spaceStreamBack
                         .then((connection) => connection.end())
                         .catch((e) => console.error("ERROR WHILE CLOSING CONNECTION", e));
-                    this.spaceStreamsToPusher.delete(space.backId);
+                    this.spaceStreamsToBack.delete(space.backId);
                     debug("Connection to back %d useless. Ending.", space.backId);
                 }
             }
@@ -1109,7 +1151,7 @@ export class SocketManager implements ZoneEventListener {
         const socketData = client.getUserData();
         if (!socketData.canEdit) {
             Sentry.captureException(
-                new Error(`Security esception, the client try to update the map: ${JSON.stringify(socketData)}`)
+                new Error(`Security exception, the client tried to update the map: ${JSON.stringify(socketData)}`)
             );
             // Emit error message
             socketData.emitInBatch({
@@ -1125,38 +1167,6 @@ export class SocketManager implements ZoneEventListener {
         this.forwardMessageToBack(client, message);
     }
 
-    emitXMPPSettings(client: Socket): void {
-        const socketData = client.getUserData();
-        const xmppSettings: XmppSettingsMessage = {
-            conferenceDomain: "conference." + EJABBERD_DOMAIN,
-            rooms: socketData.mucRooms.map((definition: MucRoomDefinition) => {
-                if (!definition.name || !definition.url || !definition.type) {
-                    throw new Error("Name URL and type cannot be empty!");
-                }
-                return {
-                    name: definition.name,
-                    url: definition.url,
-                    type: definition.type,
-                    subscribe: definition.subscribe,
-                };
-            }),
-            jabberId: socketData.jabberId,
-            jabberPassword: socketData.jabberPassword ?? "",
-        };
-
-        if (!socketData.disconnecting) {
-            client.send(
-                ServerToClientMessage.encode({
-                    message: {
-                        $case: "xmppSettingsMessage",
-                        xmppSettingsMessage: xmppSettings,
-                    },
-                }).finish(),
-                true
-            );
-        }
-    }
-
     handleAddSpaceFilterMessage(client: Socket, addSpaceFilterMessage: AddSpaceFilterMessage) {
         const newFilter = addSpaceFilterMessage.spaceFilterMessage;
         const socketData = client.getUserData();
@@ -1164,13 +1174,11 @@ export class SocketManager implements ZoneEventListener {
             const space = socketData.spaces.find((space) => space.name === newFilter.spaceName);
             if (space) {
                 space.handleAddFilter(client, addSpaceFilterMessage);
-                let spacesFilter = socketData.spacesFilters.get(space.name);
+                let spacesFilter = socketData.spacesFilters.get(space.name) || [];
                 if (!spacesFilter) {
-                    spacesFilter = [newFilter];
-                } else {
-                    spacesFilter.push(newFilter);
+                    spacesFilter = [...spacesFilter, newFilter];
+                    socketData.spacesFilters.set(space.name, spacesFilter);
                 }
-                socketData.spacesFilters.set(space.name, spacesFilter);
             }
         }
     }
@@ -1228,7 +1236,7 @@ export class SocketManager implements ZoneEventListener {
             id: socketData.userId,
         });
         socketData.spaces.forEach((space) => {
-            space.updateUser(partialSpaceUser);
+            space.updateUser(partialSpaceUser, socketData.world);
         });
     }
 
@@ -1241,7 +1249,7 @@ export class SocketManager implements ZoneEventListener {
             id: socketData.userId,
         });
         socketData.spaces.forEach((space) => {
-            space.updateUser(partialSpaceUser);
+            space.updateUser(partialSpaceUser, socketData.world);
         });
     }
 
@@ -1254,7 +1262,7 @@ export class SocketManager implements ZoneEventListener {
             id: socketData.userId,
         });
         socketData.spaces.forEach((space) => {
-            space.updateUser(partialSpaceUser);
+            space.updateUser(partialSpaceUser, socketData.world);
         });
     }
 
@@ -1269,7 +1277,7 @@ export class SocketManager implements ZoneEventListener {
         socketData.spaces
             .filter((space) => !megaphoneStateMessage.spaceName || space.name === megaphoneStateMessage.spaceName)
             .forEach((space) => {
-                space.updateUser(partialSpaceUser);
+                space.updateUser(partialSpaceUser, socketData.world);
             });
     }
 
@@ -1281,7 +1289,7 @@ export class SocketManager implements ZoneEventListener {
                 jitsiParticipantId,
                 id: socketData.userId,
             });
-            space.updateUser(partialSpaceUser);
+            space.updateUser(partialSpaceUser, socketData.world);
         }
     }
 
@@ -1440,16 +1448,30 @@ export class SocketManager implements ZoneEventListener {
             }
         };
 
+        const isAllowed = (response: AxiosResponse) => {
+            const headers = response.headers;
+            if (!headers) {
+                return true;
+            }
+            let xFrameOption = headers["x-frame-options"];
+            if (!xFrameOption) {
+                return true;
+            }
+            xFrameOption = xFrameOption.toLowerCase();
+
+            return xFrameOption !== "deny" && xFrameOption !== "sameorigin";
+        };
+
         await axios
             .head(url, { timeout: 5_000 })
             // Klaxoon
-            .then((response) => emitAnswerMessage(true, !response.headers["x-frame-options"]))
+            .then((response) => emitAnswerMessage(true, isAllowed(response)))
             .catch(async (error) => {
                 // If response from server is "Method not allowed", we try to do a GET request
                 if (isAxiosError(error) && error.response?.status === 405) {
                     await axios
                         .get(url, { timeout: 5_000 })
-                        .then((response) => emitAnswerMessage(true, !response.headers["x-frame-options"]))
+                        .then((response) => emitAnswerMessage(true, isAllowed(response)))
                         .catch((error) => processError(error));
                 } else {
                     processError(error);
@@ -1530,6 +1552,97 @@ export class SocketManager implements ZoneEventListener {
             return;
         }
         space.muteVideoEverybodyUser(socketData, participantId);
+    }
+
+    async handleSearchMemberQuery(client: Socket, searchMemberQuery: SearchMemberQuery): Promise<SearchMemberAnswer> {
+        const { roomId } = client.getUserData();
+        const members = await adminService.searchMembers(roomId, searchMemberQuery.searchText);
+        return {
+            members: members.map((member: MemberData) => ({
+                name: member.name ?? undefined,
+                id: member.id,
+                email: member.email ?? undefined,
+            })),
+        };
+    }
+
+    async handleSearchTagsQuery(client: Socket, searchTagsQuery: SearchTagsQuery): Promise<SearchTagsAnswer> {
+        const { roomId } = client.getUserData();
+        const tags = await adminService.searchTags(roomId, searchTagsQuery.searchText);
+        return {
+            tags,
+        };
+    }
+
+    async handleGetMemberQuery(getMemberQuery: GetMemberQuery): Promise<GetMemberAnswer> {
+        const memberFromApi = await adminService.getMember(getMemberQuery.uuid);
+        return {
+            member: {
+                id: memberFromApi.id,
+                name: memberFromApi.name ?? undefined,
+                email: memberFromApi.email ?? undefined,
+                visitCardUrl: memberFromApi.visitCardUrl ?? undefined,
+                chatID: memberFromApi.chatID ?? undefined,
+            },
+        };
+    }
+
+    async handleChatMembersQuery(client: Socket, chatMemberQuery: ChatMembersQuery): Promise<ChatMembersAnswer> {
+        const { roomId } = client.getUserData();
+        const { total, members } = await adminService.getWorldChatMembers(roomId, chatMemberQuery.searchText);
+        return {
+            total,
+            members,
+        };
+    }
+
+    handleUpdateChatId(email: string, chatId: string): void {
+        try {
+            adminService.updateChatId(email, chatId);
+        } catch (e) {
+            console.error("SocketManager => handleUpdateChatId => error while updating chat id", e);
+        }
+    }
+
+    async handleOauthRefreshTokenQuery(
+        oauthRefreshTokenQuery: OauthRefreshTokenQuery
+    ): Promise<OauthRefreshTokenAnswer> {
+        const { token, message } = await adminService.refreshOauthToken(oauthRefreshTokenQuery.tokenToRefresh);
+        return { message, token };
+    }
+
+    // handle the public event for proximity message
+    handlePublicEvent(client: Socket, spaceName: string, message: PusherToBackMessage["message"]) {
+        const socketData = client.getUserData();
+        const space = socketData.spaces.find((space) => space.name === spaceName);
+        if (!space) {
+            this.forwardMessageToBack(client, message);
+            return;
+        }
+        if (message?.$case !== "publicEvent") return;
+        space.sendPublicEvent({
+            ...message.publicEvent,
+            senderUserId: socketData.userId,
+        });
+    }
+
+    handlePrivateEvent(client: Socket, spaceName: string, message: PusherToBackMessage["message"]) {
+        const socketData = client.getUserData();
+        const space = socketData.spaces.find((space) => space.name === spaceName);
+        if (!space) {
+            this.forwardMessageToBack(client, message);
+            return;
+        }
+
+        if (message?.$case !== "privateEvent") return;
+        if (!socketData.userId) {
+            throw new Error("User id not found");
+        }
+        const newPrivateEvent: PrivateEvent = {
+            ...message.privateEvent,
+            receiverUserId: socketData.userId,
+        };
+        space.sendPrivateEvent(newPrivateEvent);
     }
 }
 

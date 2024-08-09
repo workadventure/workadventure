@@ -21,6 +21,7 @@ WA.camera.set(
     height?: number,
     lock: boolean = false,
     smooth: boolean = false,
+    duration?: number,
 ): void
 ```
 
@@ -28,6 +29,7 @@ Set camera to look at given spot.
 Setting `width` and `height` will adjust zoom.
 Set `lock` to true to lock camera in this position.
 Set `smooth` to true for smooth transition.
+Set `duration` to number in millisecond for smooth transition.
 
 ### Listen to camera updates
 

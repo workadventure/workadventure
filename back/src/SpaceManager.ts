@@ -53,7 +53,7 @@ const spaceManager = {
                         break;
                     }
                     case "pongMessage": {
-                        pusher.receivedPong();
+                        pusher.clearPongTimeout();
                         break;
                     }
                     case "kickOffMessage": {
@@ -96,6 +96,13 @@ const spaceManager = {
                         socketManager.handleMuteVideoSpaceUserMessage(pusher, message.message.askMuteVideoMessage);
                         break;
                     }
+                    case "publicEvent": {
+                        socketManager.handlePublicEvent(pusher, message.message.publicEvent);
+                        break;
+                    }
+                    case "privateEvent": {
+                        break;
+                    }
                     default: {
                         const _exhaustiveCheck: never = message.message;
                     }
@@ -121,6 +128,7 @@ const spaceManager = {
             })
             .on("end", () => {
                 socketManager.handleUnwatchAllSpaces(pusher);
+                pusher.end();
                 debug("watchSpace => ended %s", pusher.id);
                 call.end();
             });

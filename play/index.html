@@ -13,7 +13,7 @@
         />
         <meta
             http-equiv="Content-Security-Policy"
-            content="default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src data: * 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; font-src * data: ; frame-src *; style-src * 'unsafe-inline';" />
+            content="default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src data: * 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; font-src * data: ; frame-src *; style-src * 'unsafe-inline'; worker-src 'self' blob:;" />
         <meta http-equiv="X-UA-Compatible" content="ie=edge" />
 
         <!-- TRACK CODE -->
@@ -164,6 +164,7 @@
     </head>
     <body id="body" style="margin: 0;background-color:rgb(27, 42, 65);">
         <input type="hidden" id="authToken" value="{{ authToken }}" name="authToken">
+        <input type="hidden" id="matrixLoginToken" value="{{ matrixLoginToken }}" name="matrixLoginToken">
         <div id="app"></div>
         <script type="module" src="/src/svelte.ts"></script>
     </body>

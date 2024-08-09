@@ -10,6 +10,7 @@
         startWithAudioMuted: false,
         startWithVideoMuted: false,
     };
+    let jitsiRoomAdminTag = "";
 
     type JitsiRoomConfigDataKeys = "startWithAudioMuted" | "startWithVideoMuted";
 
@@ -25,6 +26,7 @@
         currentConfig = {};
         if (config !== undefined) {
             currentConfig = structuredClone(config);
+            jitsiRoomAdminTag = config.jitsiRoomAdminTag ?? "";
         }
     });
 
@@ -49,8 +51,10 @@
     function validate() {
         visibilityValue = false;
         let returnValue: JitsiRoomConfigData = structuredClone(currentConfig);
-
-        dispatch("change", returnValue);
+        dispatch("change", {
+            ...returnValue,
+            jitsiRoomAdminTag: jitsiRoomAdminTag == "" ? null : jitsiRoomAdminTag,
+        });
     }
 
     function onKeyDown(e: KeyboardEvent) {
@@ -64,7 +68,7 @@
 
 <div class="menu-container center">
     <div class="w-full bg-dark-purple/95 rounded" transition:fly={{ x: 1000, duration: 500 }}>
-        <button type="button" class="close-window" on:click={close}>&times</button>
+        <button type="button" class="close-window" on:click|preventDefault|stopPropagation={close}>&times</button>
         <select class="tag-selector" bind:value={selectedKey} on:change={() => onSelectedKey()}>
             <option value="">{$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.addConfig()}</option>
             {#each defaultConfigKeys as configKey (configKey)}
@@ -94,6 +98,12 @@
                     {/if}
                 </div>
             {/each}
+            <div class="config-element">
+                <label class="config-element-label" for="jitsiAdminTag">
+                    {$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.jitsiRoomAdminTag()}
+                </label>
+                <input id="jitsiAdminTag" type="text" bind:value={jitsiRoomAdminTag} />
+            </div>
         </div>
         <div class="action-buttons">
             <button on:click={close}>{$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.cancel()}</button>

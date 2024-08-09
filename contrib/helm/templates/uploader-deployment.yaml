@@ -54,6 +54,10 @@ spec:
             - secretRef:
                 name: {{ .Values.uploader.externalSecretName }}
             {{- end }}
+          {{- if .Values.uploader.extraEnvVars }}
+          env:
+            {{- include "common.tplvalues.render" (dict "value" .Values.uploader.extraEnvVars "context" $) | nindent 12 }}
+          {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.uploader.service.port }}

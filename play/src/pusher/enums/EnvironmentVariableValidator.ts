@@ -3,11 +3,11 @@ import { z } from "zod";
 import {
     AbsoluteOrRelativeUrl,
     BoolAsString,
+    emptyStringToUndefined,
     PositiveIntAsString,
+    toArray,
     toBool,
     toNumber,
-    toArray,
-    emptyStringToUndefined,
 } from "@workadventure/shared-utils/src/EnvironmentVariables/EnvironmentVariableUtils";
 
 export const EnvironmentVariables = z.object({
@@ -58,8 +58,6 @@ export const EnvironmentVariables = z.object({
     USERNAME_POLICY: z.string().optional(),
     DISABLE_ANONYMOUS: BoolAsString.optional().transform((val) => toBool(val, false)),
     PROMETHEUS_AUTHORIZATION_TOKEN: z.string().optional(),
-    EJABBERD_DOMAIN: z.string().optional(),
-    EJABBERD_JWT_SECRET: z.string().optional(),
     ENABLE_CHAT: BoolAsString.optional().transform((val) => toBool(val, true)),
     ENABLE_CHAT_UPLOAD: BoolAsString.optional().transform((val) => toBool(val, true)),
     ENABLE_CHAT_ONLINE_LIST: BoolAsString.optional().transform((val) => toBool(val, true)),
@@ -87,8 +85,8 @@ export const EnvironmentVariables = z.object({
     POSTHOG_API_KEY: z.string().optional(),
     POSTHOG_URL: z.string().url().optional().or(z.literal("")),
     FALLBACK_LOCALE: z.string().optional(),
-    CHAT_URL: AbsoluteOrRelativeUrl,
     OPID_WOKA_NAME_POLICY: OpidWokaNamePolicy.optional(),
+    OPID_TAGS_CLAIM: z.string().optional(),
     ENABLE_REPORT_ISSUES_MENU: BoolAsString.optional().transform((val) => toBool(val, false)),
     REPORT_ISSUES_URL: z.string().url().optional().or(z.literal("")),
     LOGROCKET_ID: z.string().optional(),
@@ -127,10 +125,16 @@ export const EnvironmentVariables = z.object({
     GOOGLE_SHEETS_ENABLED: BoolAsString.optional().transform((val) => toBool(val, false)),
     GOOGLE_SLIDES_ENABLED: BoolAsString.optional().transform((val) => toBool(val, false)),
     ERASER_ENABLED: BoolAsString.optional().transform((val) => toBool(val, false)),
+    EXCALIDRAW_ENABLED: BoolAsString.optional().transform((val) => toBool(val, false)),
+    EXCALIDRAW_DOMAINS: z
+        .string()
+        .optional()
+        .transform((val) => toArray(val)),
     EMBEDDED_DOMAINS_WHITELIST: z
         .string()
         .optional()
         .transform((val) => toArray(val)),
+    CARDS_ENABLED: BoolAsString.optional().transform((val) => toBool(val, false)),
 
     // Limit bandwidth environment variables
     PEER_VIDEO_LOW_BANDWIDTH: PositiveIntAsString.optional(),
@@ -141,6 +145,11 @@ export const EnvironmentVariables = z.object({
     GOOGLE_DRIVE_PICKER_CLIENT_ID: z.string().optional(),
     GOOGLE_DRIVE_PICKER_API_KEY: z.string().optional(),
     GOOGLE_DRIVE_PICKER_APP_ID: z.string().optional(),
+    MATRIX_DOMAIN: z.string().optional(),
+    MATRIX_API_URI: z.string().optional(),
+    MATRIX_PUBLIC_URI: z.string().optional(),
+
+    EMBEDLY_KEY: z.string().optional(),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

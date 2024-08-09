@@ -6,6 +6,7 @@ import type { UserInputHandlerInterface } from "../../Interfaces/UserInputHandle
 import type { GameScene } from "../Game/GameScene";
 import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { isActivatable } from "../Game/ActivatableInterface";
+import { mapManagerActivated } from "../../Stores/MenuStore";
 
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private gameScene: GameScene;
@@ -21,12 +22,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         deltaY: number,
         deltaZ: number
     ): void {
-        // Calculate the velocity of the zoom
-        const velocity = deltaY / 53;
-        // Calculate the zoom factor
-        const zoomFactor = 1 - velocity * 0.1;
-        // Apply the zoom
-        this.gameScene.zoomByFactor(zoomFactor, velocity);
+        this.gameScene.handleMouseWheel(deltaY);
     }
 
     public handlePointerUpEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
@@ -58,20 +54,14 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             }
         }
         const camera = this.gameScene.getCameraManager().getCamera();
-        const index = this.gameScene
-            .getGameMap()
-            .getTileIndexAt(pointer.x + camera.scrollX, pointer.y + camera.scrollY);
-        const startTile = this.gameScene
-            .getGameMap()
-            .getTileIndexAt(this.gameScene.CurrentPlayer.x, this.gameScene.CurrentPlayer.y);
         this.gameScene
-            .getPathfindingManager()
-            .findPath(startTile, index, true, true)
-            .then((path) => {
-                // Remove first step as it is for the tile we are currently standing on
-                path.shift();
-                this.gameScene.CurrentPlayer.setPathToFollow(path).catch(() => {});
-            })
+            .moveTo(
+                {
+                    x: pointer.x + camera.scrollX,
+                    y: pointer.y + camera.scrollY,
+                },
+                true
+            )
             .catch((reason) => {
                 console.warn(reason);
             });
@@ -85,6 +75,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         this.gameScene.getMapEditorModeManager()?.handleKeyDownEvent(event);
         switch (event.code) {
             case "KeyE": {
+                if (get(mapManagerActivated) == false) return event;
                 mapEditorModeStore.switchMode(!get(mapEditorModeStore));
                 break;
             }
@@ -103,11 +94,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         switch (event.key) {
             // SPACE
             case " ": {
-                const activatableManager = this.gameScene.getActivatablesManager();
-                const activatable = activatableManager.getSelectedActivatableObject();
-                if (activatable && activatable.isActivatable() && activatableManager.isSelectingByDistanceEnabled()) {
-                    activatable.activate();
-                }
+                this.handleActivableEntity();
                 break;
             }
             default: {
@@ -115,6 +102,16 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             }
         }
         return event;
+    }
+
+    public handleActivableEntity() {
+        const activatableManager = this.gameScene.getActivatablesManager();
+        const activatable = activatableManager.getSelectedActivatableObject();
+        if (activatable && activatable.isActivatable() && activatableManager.isSelectingByDistanceEnabled()) {
+            activatable.activate();
+            activatable.destroyText("object");
+        }
+        this.gameScene.CurrentPlayer.handlePressSpacePlayerTextCallback();
     }
 
     public addSpaceEventListener(callback: () => void): void {

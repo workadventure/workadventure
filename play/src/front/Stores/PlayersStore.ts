@@ -3,7 +3,6 @@ import { AvailabilityStatus } from "@workadventure/messages";
 import { Color } from "@workadventure/shared-utils";
 import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 import type { RoomConnection } from "../Connection/RoomConnection";
-import { localUserStore } from "../Connection/LocalUserStore";
 
 let idCount = 0;
 
@@ -26,7 +25,6 @@ function createPlayersStore() {
                 update((users) => {
                     users.set(message.userId, {
                         userId: message.userId,
-                        userJid: message.userJid,
                         name: message.name,
                         characterTextures: message.characterTextures,
                         visitCardUrl: message.visitCardUrl,
@@ -34,7 +32,7 @@ function createPlayersStore() {
                         userUuid: message.userUuid,
                         availabilityStatus: message.availabilityStatus,
                         color: Color.getColorByString(message.name),
-                        isLogged: localUserStore.isLogged(),
+                        chatID: message.chatID,
                     });
                     return users;
                 });
@@ -69,14 +67,12 @@ function createPlayersStore() {
             update((users) => {
                 users.set(newUserId, {
                     userId: newUserId,
-                    userJid: "fake",
                     name,
                     characterTextures: [],
                     visitCardUrl: null,
                     availabilityStatus: AvailabilityStatus.ONLINE,
                     userUuid: "dummy",
                     color: Color.getColorByString(name),
-                    isLogged: localUserStore.isLogged(),
                 });
                 return users;
             });

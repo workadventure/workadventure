@@ -21,7 +21,6 @@
     import SelectCompanionScene from "./SelectCompanion/SelectCompanionScene.svelte";
     import ErrorDialog from "./UI/ErrorDialog.svelte";
     import ErrorScreen from "./UI/ErrorScreen.svelte";
-    import Chat from "./Chat/Chat.svelte";
     import MapEditor from "./MapEditor/MapEditor.svelte";
     import RefreshPrompt from "./RefreshPrompt.svelte";
     import LoaderScene from "./Loader/LoaderScene.svelte";
@@ -29,6 +28,9 @@
     import bgMap from "./images/map-exemple.png";
     import defaultLoader from "./images/Workadventure.gif";
     import GlobalCommunicationModal from "./Modal/GlobalCommunicationModal.svelte";
+    import {isActivatedStore, isCalendarVisibleStore} from "../Stores/CalendarStore";
+    import Calendar from "./Calendar/Calendar.svelte";
+    import ChatSidebar from "../Chat/ChatSidebar.svelte";
 
     export let game: Game;
 
@@ -77,7 +79,7 @@
         <RefreshPrompt />
     {/if}
     {#key $forceRefreshChatStore}
-        <Chat />
+        <ChatSidebar />
         {#if $mapEditorModeStore}
             <MapEditor />
         {/if}
@@ -87,5 +89,8 @@
 
         <MainLayout />
     {/key}
+    {#if $isActivatedStore && $isCalendarVisibleStore}
+        <Calendar />
+    {/if}
 {/if}
 <!-- </div> -->

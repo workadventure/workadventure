@@ -14,7 +14,14 @@ class Chat {
         await expect(page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow div.users')).toContainText(name, {timeout});
     }
 
-    async open(page: Page) {
+    async open(page: Page, isMobile: boolean) {
+        if(isMobile){
+            await expect(page.locator('button#burgerIcon')).toBeVisible();
+            const mobileMenuVisible = await page.locator('button#burgerIcon img.tw-rotate-0').isVisible();
+            if(mobileMenuVisible){
+                await page.click('button#burgerIcon');
+            }
+        }
         await expect(page.locator("button#menuIcon")).toBeVisible();
         await page.click('button.chat-btn');
         await expectInViewport('#chatWindow', page);
@@ -40,11 +47,12 @@ class Chat {
     }
 
     async openTimeline(page: Page){
-        await this.get(page).locator('#timeline #openTimeline').click();
+        await page.getByRole('button', {name: 'Proximity Chat'}).click();
+        await expect(page.locator('#chat.chatWindow')).toBeVisible();
     }
 
     async closeTimeline(page: Page){
-        await this.get(page).locator('#activeTimeline .exit').click();
+        await page.locator('button.back-roomlist').click();
     }
 
     async UL_walkTo(page: Page, nickname: string){

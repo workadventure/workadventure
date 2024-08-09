@@ -9,6 +9,7 @@ import { apiCallback } from "./registeredCallbacks";
 import type { ButtonClickedCallback, ButtonDescriptor } from "./Ui/ButtonDescriptor";
 import { Popup } from "./Ui/Popup";
 import { ActionMessage } from "./Ui/ActionMessage";
+import { PlayerMessage } from "./Ui/PlayerMessage";
 import { Menu } from "./Ui/Menu";
 import type { UIWebsiteCommands } from "./Ui/UIWebsite";
 import website from "./Ui/UIWebsite";
@@ -28,6 +29,7 @@ const popupCallbacks: Map<number, Map<number, ButtonClickedCallback>> = new Map<
 const menus: Map<string, Menu> = new Map<string, Menu>();
 const menuCallbacks: Map<string, (command: string) => void> = new Map();
 const actionMessages = new Map<string, ActionMessage>();
+const playerMessages = new Map<string, PlayerMessage>();
 
 interface MenuDescriptor {
     callback?: (commandDescriptor: string) => void;
@@ -44,6 +46,12 @@ export type MenuOptions = RequireOnlyOne<MenuDescriptor, "callback" | "iframe">;
 export interface ActionMessageOptions {
     message: string;
     type?: "message" | "warning";
+    callback: () => void;
+}
+
+export interface PlayerMessageOptions {
+    message: string;
+    type?: "message";
     callback: () => void;
 }
 
@@ -112,6 +120,10 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
                 const actionMessage = actionMessages.get(event.uuid);
                 if (actionMessage) {
                     actionMessage.triggerCallback();
+                }
+                const playerMessage = playerMessages.get(event.uuid);
+                if (playerMessage) {
+                    playerMessage.triggerCallback();
                 }
             },
         }),
@@ -288,6 +300,21 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
         });
         actionMessages.set(actionMessage.uuid, actionMessage);
         return actionMessage;
+    }
+
+    /**
+     * Displays a player message at the top of the user head (that will disappear when space bar is pressed).
+     * {@link https://workadventu.re/map-building/api-ui.md#awaiting-user-confirmation-with-space-bar | Website documentation}
+     *
+     * @param {PlayerMessageOptions} playerMessageOptions player options
+     * @returns {PlayerMessage} Trigger player message
+     */
+    public displayPlayerMessage(playerMessageOptions: PlayerMessageOptions): PlayerMessage {
+        const playerMessage = new PlayerMessage(playerMessageOptions, () => {
+            playerMessages.delete(playerMessage.uuid);
+        });
+        playerMessages.set(playerMessage.uuid, playerMessage);
+        return playerMessage;
     }
 
     get website(): UIWebsiteCommands {

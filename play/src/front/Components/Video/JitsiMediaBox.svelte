@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { Color } from "@workadventure/shared-utils";
     import { Readable, Unsubscriber } from "svelte/store";
     import type JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
     import { onDestroy, onMount } from "svelte";
@@ -9,6 +10,10 @@
     import SoundMeterWidgetWrapper from "../SoundMeterWidgetWrapper.svelte";
     import { JitsiTrackStreamWrapper } from "../../Streaming/Jitsi/JitsiTrackStreamWrapper";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
+    import { LayoutMode } from "../../WebRtc/LayoutManager";
+    import LL from "../../../i18n/i18n-svelte";
+    import Woka from "../Woka/Woka.svelte";
     import UserTag from "./UserTag.svelte";
     import JitsiVideoElement from "./JitsiVideoElement.svelte";
     import JitsiAudioElement from "./JitsiAudioElement.svelte";
@@ -22,6 +27,8 @@
     const audioTrackStore: Readable<JitsiTrack | undefined> = peer.audioTrackStore;
 
     let embedScreen: Streamable;
+    let backGroundColor = Color.getColorByString(peer.jitsiTrackWrapper.spaceUser?.name ?? "");
+    let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
 
     if (peer) {
         embedScreen = peer as unknown as Streamable;
@@ -66,7 +73,7 @@
         />
     {/if}
     {#if $videoTrackStore}
-        <div class="rounded-sm overflow-hidden flex w-full flex-col h-full">
+        <div class="rounded-sm overflow-hidden flex justify-center flex-col w-full h-full">
             <JitsiVideoElement
                 jitsiTrack={$videoTrackStore}
                 isLocal={$videoTrackStore?.isLocal()}
@@ -126,15 +133,32 @@
         </div>
     {/if}
     {#if peer.jitsiTrackWrapper.spaceUser}
-        {#await peer.jitsiTrackWrapper.spaceUser?.getWokaBase64()}
+        {#await peer.jitsiTrackWrapper.spaceUser?.getWokaBase64}
             <div />
         {:then wokaBase64}
-            <UserTag
-                isMe={peer.jitsiTrackWrapper.isLocal}
-                name={peer.jitsiTrackWrapper.spaceUser?.name ?? ""}
-                wokaSrc={wokaBase64}
-                minimal={!!$videoTrackStore}
-            />
+            {#if $embedScreenLayoutStore === LayoutMode.VideoChat && $videoTrackStore == undefined}
+                <div
+                    id="tag"
+                    style="background-color: {backGroundColor}; color: {textColor};"
+                    class="flex flex-col justify-center items-center content-center !h-full w-full gap-2"
+                >
+                    <Woka src={wokaBase64} customHeight={`100px`} customWidth={`100px`} />
+                    <span
+                        class="font-semibold text-sm not-italic break-words px-2 overflow-y-auto max-h-10"
+                    >
+                        {peer.jitsiTrackWrapper.isLocal
+                            ? $LL.camera.my.nameTag()
+                            : peer.jitsiTrackWrapper.spaceUser?.name}
+                    </span>
+                </div>
+            {:else}
+                <UserTag
+                    isMe={peer.jitsiTrackWrapper.isLocal}
+                    name={peer.jitsiTrackWrapper.spaceUser?.name ?? ""}
+                    wokaSrc={wokaBase64}
+                    minimal={!!$videoTrackStore}
+                />
+            {/if}
         {/await}
     {/if}
 </div>

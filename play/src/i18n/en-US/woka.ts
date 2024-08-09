@@ -8,6 +8,7 @@ const woka: BaseTranslation = {
             back: "Back",
             finish: "Finish",
             next: "Next",
+            backTodefaultWoka: "Back to default WOKA",
         },
     },
     selectWoka: {

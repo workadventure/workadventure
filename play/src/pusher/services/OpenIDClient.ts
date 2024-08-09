@@ -13,6 +13,7 @@ import {
     OPID_SCOPE,
     OPID_PROMPT,
     SECRET_KEY,
+    OPID_TAGS_CLAIM,
 } from "../enums/EnvironmentVariable";
 
 class OpenIDClient {
@@ -103,8 +104,18 @@ class OpenIDClient {
 
     public getUserInfo(
         req: Request,
-        res: Response
-    ): Promise<{ email: string; sub: string; access_token: string; username: string; locale: string }> {
+        res: Response,
+        playUri: string
+    ): Promise<{
+        tags: string[] | undefined;
+        email: string;
+        sub: string;
+        access_token: string;
+        username: string;
+        locale: string;
+        matrix_url: string | undefined;
+        matrix_identity_provider: string | undefined;
+    }> {
         const fullUrl = req.url;
         const cookies = req.cookies;
 
@@ -130,16 +141,25 @@ class OpenIDClient {
                 res.clearCookie("code_verifier");
                 res.clearCookie("oidc_state");
 
-                return client.userinfo(tokenSet).then((res) => {
-                    return {
-                        ...res,
-                        email: res.email ?? "",
-                        sub: res.sub,
-                        access_token: tokenSet.access_token ?? "",
-                        username: res[OPID_USERNAME_CLAIM] as string,
-                        locale: res[OPID_LOCALE_CLAIM] as string,
-                    };
-                });
+                return client
+                    .userinfo(tokenSet, {
+                        params: {
+                            playUri,
+                        },
+                    })
+                    .then((res) => {
+                        return {
+                            ...res,
+                            email: res.email ?? "",
+                            sub: res.sub,
+                            access_token: tokenSet.access_token ?? "",
+                            username: res[OPID_USERNAME_CLAIM] as string,
+                            locale: res[OPID_LOCALE_CLAIM] as string,
+                            tags: res[OPID_TAGS_CLAIM] as string[],
+                            matrix_url: res.matrix_url as string | undefined,
+                            matrix_identity_provider: res.matrix_identity_provider as string | undefined,
+                        };
+                    });
             });
         });
     }

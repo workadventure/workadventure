@@ -135,7 +135,7 @@
 }
 
 .mozaic-full-size {
-    @apply md:h-[60vh] md:w-[70vw];
+    @apply md:h-[60vh] md:w-[75vw];
     &.media-box-camera-off-size{
         @apply md:h-[4vh];
     }

@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const isCameraFollowPlayerEvent = z.object({
     smooth: z.boolean(),
+    duration: z.optional(z.number()),
 });
 
 /**

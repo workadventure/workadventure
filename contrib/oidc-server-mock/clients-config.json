@@ -7,7 +7,7 @@
     "AllowAccessTokensViaBrowser": true,
     "RedirectUris": ["http://*.workadventure.localhost", "https://*.test.workadventu.re"],
     "RequirePkce": false,
-    "AllowedScopes": ["openid", "profile", "email", "some-custom-identity", "some-app-scope-1"],
+    "AllowedScopes": ["openid", "profile", "email", "tags-scope", "some-app-scope-1"],
     "IdentityTokenLifetime": 3600,
     "AccessTokenLifetime": 3600,
     "RequireClientSecret": false
@@ -19,7 +19,7 @@
     "AllowedGrantTypes": ["authorization_code"],
     "AllowAccessTokensViaBrowser": true,
     "RedirectUris": ["http://*.workadventure.localhost", "https://*.test.workadventu.re"],
-    "AllowedScopes": ["openid", "profile", "email", "some-custom-identity", "some-app-scope-1"],
+    "AllowedScopes": ["openid", "profile", "email", "tags-scope", "some-app-scope-1"],
     "IdentityTokenLifetime": 3600,
     "AccessTokenLifetime": 3600,
     "RequireClientSecret": false

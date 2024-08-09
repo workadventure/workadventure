@@ -60,7 +60,7 @@
         </button>
     </section>
     <section class="action flex flex-row justify-center">
-        <button href="/" class="outline mr-2 selectCompanionSceneFormBack" on:click|preventDefault={noCompanion}
+        <button class="outline mr-2 selectCompanionSceneFormBack" on:click|preventDefault={noCompanion}
             >{$LL.companion.select.any()}</button
         >
         <button

@@ -2,16 +2,18 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const menu: DeepPartial<Translation["menu"]> = {
-    title: "Menu",
+    title: "Menü",
     icon: {
         open: {
-            menu: "Menu öffnen",
+            menu: "Menü öffnen",
             invite: "Einladung anzeigen",
             register: "Registrieren",
             chat: "Chat öffnen",
             userlist: "Benutzerliste",
-            openEmoji: "Open emoji selected popup",
-            closeEmoji: "Close emoji menu",
+            openEmoji: "Emoji-Popup öffnen",
+            closeEmoji: "Emoji-Menü schließen",
+            mobile: "Mobiles Menü öffnen",
+            calendar: "Kalender öffnen",
         },
     },
     visitCard: {
@@ -45,15 +47,17 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
         privacySettings: {
             title: "Abwesenheitsmodus",
-            explanation: "Falls der WorkAdventure Tab nicht aktiv ist, wird in den „Abwesenheitsmodus“ umgeschaltet.",
+            explanation: "Falls der WorkAdventure-Tab nicht aktiv ist, wird in den „Abwesenheitsmodus“ umgeschaltet.",
             cameraToggle: "Kamera im „Abwesenheitsmodus“ aktiviert lassen.",
             microphoneToggle: "Mikrofon im „Abwesenheitsmodus“ aktiviert lassen.",
         },
         save: "Speichern",
+        otherSettings: "Andere Einstellungen",
         fullscreen: "Vollbild",
         notifications: "Benachrichtigungen",
-        cowebsiteTrigger: "Jedes mal nachfragen bevor Webseiten oder Jitsi Meet Räume geöffnet werden",
-        ignoreFollowRequest: "Ignoriere Folgen-Anfragen anderer Nutzer",
+        chatSounds: "Chat-Sounds",
+        cowebsiteTrigger: "Jedes Mal nachfragen, bevor Webseiten oder Jitsi-Meet-Räume geöffnet werden",
+        ignoreFollowRequest: "Folgeanfragen anderer Benutzer ignorieren",
     },
     invite: {
         description: "Link zu diesem Raum teilen!",
@@ -73,18 +77,19 @@ const menu: DeepPartial<Translation["menu"]> = {
         uploadInfo: "Datei hochladen",
         error: "Keine Datei ausgewählt. Du musst vor dem Versenden eine Datei hochladen.",
         errorUpload:
-            "Fehler beim Hochladen der Datei. Bitte überprüfen Sie Ihre Datei und versuchen Sie es erneut. Wenn das Problem weiterhin besteht, wenden Sie sich an den Administrator.",
+            "Fehler beim Hochladen der Datei. Bitte überprüfe deine Datei und versuche es erneut. Wenn das Problem weiterhin besteht, wende dich an den Administrator.",
+        dragAndDrop: "Datei hierher ziehen oder klicken, um sie hochzuladen 🎧",
     },
     contact: {
         gettingStarted: {
             title: "Erste Schritte",
             description:
-                "Mit WorkAdventure kannst du eine Onlinewelt erschaffen in der du dich spontan mit Anderen treffen und unterhalten kannst. Erstelle als erstes deine eigene Karte. Es steht dir eine große Auswahl an vorgefertigten Karten von unserem Team zur Verfügung.",
+                "Mit WorkAdventure kannst du eine Onlinewelt erschaffen, in der du dich spontan mit anderen treffen und unterhalten kannst. Erstelle als erstes deine eigene Karte. Es steht dir eine große Auswahl an vorgefertigten Karten von unserem Team zur Verfügung.",
         },
         createMap: {
-            title: "Eigene Karte erstellen ",
+            title: "Eigene Karte erstellen",
             description:
-                "Du kannst auch deine eigene Karte erstellen. Folge dazu unserer Schritt-für-Schritt Anleitung.",
+                "Du kannst auch deine eigene Karte erstellen. Folge dazu unserer Schritt-für-Schritt-Anleitung.",
         },
     },
     about: {

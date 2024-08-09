@@ -241,10 +241,23 @@ export class UserInputManager {
         eventsMap.set(UserInputEvent.JoystickMove, this.joystickEvents.any());
         this.keysCode.forEach((d) => {
             if (d.keyInstance?.isDown) {
+                // Fix mac keyboard issue
+                // Prevents the input from being triggered when the focus is on an input field
+                if (
+                    d.keyInstance.originalEvent.target instanceof HTMLInputElement ||
+                    d.keyInstance.originalEvent.target instanceof HTMLTextAreaElement
+                ) {
+                    d.keyInstance.reset();
+                    return;
+                }
                 eventsMap.set(d.event, true);
             }
         });
         return eventsMap;
+    }
+
+    handleActivableEntity() {
+        this.userInputHandler.handleActivableEntity();
     }
 
     addSpaceEventListener(callback: () => void) {
@@ -260,6 +273,20 @@ export class UserInputManager {
         this.joystick = undefined;
     }
 
+    private isMoveKey(keyCode: number): boolean {
+        return [
+            Phaser.Input.Keyboard.KeyCodes.Z,
+            Phaser.Input.Keyboard.KeyCodes.W,
+            Phaser.Input.Keyboard.KeyCodes.Q,
+            Phaser.Input.Keyboard.KeyCodes.A,
+            Phaser.Input.Keyboard.KeyCodes.S,
+            Phaser.Input.Keyboard.KeyCodes.D,
+            Phaser.Input.Keyboard.KeyCodes.UP,
+            Phaser.Input.Keyboard.KeyCodes.LEFT,
+            Phaser.Input.Keyboard.KeyCodes.DOWN,
+            Phaser.Input.Keyboard.KeyCodes.RIGHT,
+        ].includes(keyCode);
+    }
     private bindInputEventHandlers() {
         this.scene.input.on(
             Phaser.Input.Events.POINTER_WHEEL,

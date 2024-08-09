@@ -1,23 +1,88 @@
 import type { AreaData } from "@workadventure/map-editor";
 import { EditMapCommandMessage } from "@workadventure/messages";
-import { MapEditorModeManager } from "../MapEditorModeManager";
-import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
-import { DeleteAreaFrontCommand } from "../Commands/Area/DeleteAreaFrontCommand";
+import { get } from "svelte/store";
+import { userIsAdminStore, userIsEditorStore } from "../../../../Stores/GameStore";
 import { mapEditorSelectedAreaPreviewStore, mapEditorVisibilityStore } from "../../../../Stores/MapEditorStore";
+import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
 import { SizeAlteringSquare } from "../../../Components/MapEditor/SizeAlteringSquare";
 import { Entity } from "../../../ECS/Entity";
+import { MapEditorModeManager } from "../MapEditorModeManager";
 import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
+import { AreaEditorTool } from "./AreaEditorTool";
 
 export class TrashEditorTool extends EntityRelatedEditorTool {
-    private areaPreviews: AreaPreview[] = [];
     protected ctrlKey?: Phaser.Input.Keyboard.Key;
+    private areaPreviews: AreaPreview[] = [];
     private active = false;
 
-    constructor(mapEditorModeManager: MapEditorModeManager) {
+    constructor(mapEditorModeManager: MapEditorModeManager, private areaEditorTool: AreaEditorTool) {
         super(mapEditorModeManager);
 
         this.active = false;
         this.ctrlKey = this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.CTRL);
+    }
+
+    public handleAreaDeletion(id: string, areaData: AreaData | undefined): void {
+        this.scene.getGameMapFrontWrapper().listenAreaDeletion(areaData);
+
+        if (!this.active) {
+            return;
+        }
+
+        this.deleteAreaPreview(id);
+        this.scene.markDirty();
+        mapEditorSelectedAreaPreviewStore.set(undefined);
+    }
+
+    public handleAreaCreation(config: AreaData, localCommand: boolean): void {
+        this.scene.getGameMapFrontWrapper().listenAreaCreation(config);
+
+        if (!this.active) {
+            return;
+        }
+
+        this.createAreaPreview(config);
+        this.scene.markDirty();
+    }
+
+    public handleAreaPreviewCreation(config: AreaData, localCommand: boolean): void {
+        console.info("handleAreaPreviewCreation => No create area preview in trash mode");
+    }
+
+    public activate() {
+        super.activate();
+        this.areaPreviews = this.createAreaPreviews();
+        this.bindEventHandlers();
+        this.active = true;
+        this.setAreaPreviewsVisibility(this.getAreaPreviewVisibileFromUserPermissions());
+        this.updateAreaPreviews();
+        this.scene.markDirty();
+        mapEditorVisibilityStore.set(false);
+    }
+
+    public clear() {
+        super.clear();
+        this.areaPreviews.forEach((preview) => preview.destroy());
+        this.unbindEventHandlers();
+        this.active = false;
+        this.setAreaPreviewsVisibility(false);
+        this.scene.markDirty();
+    }
+
+    handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): Promise<void> {
+        return Promise.resolve(undefined);
+    }
+
+    protected bindEventHandlers(): void {
+        this.scene.input.on(Phaser.Input.Events.POINTER_UP, this.pointerUpEventHandler);
+        this.scene.input.on(Phaser.Input.Events.POINTER_OVER, this.pointerHoverEventHandler);
+        this.scene.input.on(Phaser.Input.Events.POINTER_OUT, this.pointerOutEventHandler);
+    }
+
+    protected unbindEventHandlers(): void {
+        this.scene.input.off(Phaser.Input.Events.POINTER_UP, this.pointerUpEventHandler);
+        this.scene.input.off(Phaser.Input.Events.POINTER_OVER, this.pointerHoverEventHandler);
+        this.scene.input.off(Phaser.Input.Events.POINTER_OUT, this.pointerOutEventHandler);
     }
 
     private createAreaPreviews(): AreaPreview[] {
@@ -78,19 +143,9 @@ export class TrashEditorTool extends EntityRelatedEditorTool {
     }
 
     private bindAreaPreviewEventHandlers(areaPreview: AreaPreview): void {
-        areaPreview.on(AreaPreviewEvent.Delete, () => {
-            this.mapEditorModeManager
-                .executeCommand(
-                    new DeleteAreaFrontCommand(
-                        this.scene.getGameMap(),
-                        areaPreview.getAreaData().id,
-                        undefined,
-                        this,
-                        true
-                    )
-                )
-                .catch((e) => console.error(e));
-        });
+        areaPreview.on(AreaPreviewEvent.Delete, () =>
+            this.areaEditorTool.handleDeleteAreaFrontCommandExecution(areaPreview.getAreaData().id, this)
+        );
     }
 
     private deleteAreaPreview(id: string): boolean {
@@ -110,6 +165,9 @@ export class TrashEditorTool extends EntityRelatedEditorTool {
         const firstGameObject = gameObjects[0];
 
         if (firstGameObject && firstGameObject instanceof Entity) {
+            if (!this.isAllowedToRemoveGameObject(firstGameObject)) {
+                return;
+            }
             firstGameObject.delete();
             return;
         }
@@ -167,66 +225,14 @@ export class TrashEditorTool extends EntityRelatedEditorTool {
         return [...areaPreviews, ...sizeAlteringSquares];
     }
 
-    protected bindEventHandlers(): void {
-        this.scene.input.on(Phaser.Input.Events.POINTER_UP, this.pointerUpEventHandler);
-        this.scene.input.on(Phaser.Input.Events.POINTER_OVER, this.pointerHoverEventHandler);
-        this.scene.input.on(Phaser.Input.Events.POINTER_OUT, this.pointerOutEventHandler);
-    }
-
-    protected unbindEventHandlers(): void {
-        this.scene.input.off(Phaser.Input.Events.POINTER_UP, this.pointerUpEventHandler);
-        this.scene.input.off(Phaser.Input.Events.POINTER_OVER, this.pointerHoverEventHandler);
-        this.scene.input.off(Phaser.Input.Events.POINTER_OUT, this.pointerOutEventHandler);
-    }
-
-    public handleAreaDeletion(id: string, areaData: AreaData | undefined): void {
-        this.scene.getGameMapFrontWrapper().listenAreaDeletion(areaData);
-
-        if (!this.active) {
-            return;
+    private getAreaPreviewVisibileFromUserPermissions(): boolean {
+        if (get(userIsAdminStore) || get(userIsEditorStore)) {
+            return true;
         }
-
-        this.deleteAreaPreview(id);
-        this.scene.markDirty();
-        mapEditorSelectedAreaPreviewStore.set(undefined);
+        return false;
     }
 
-    public handleAreaCreation(config: AreaData, localCommand: boolean): void {
-        this.scene.getGameMapFrontWrapper().listenAreaCreation(config);
-
-        if (!this.active) {
-            return;
-        }
-
-        this.createAreaPreview(config);
-        this.scene.markDirty();
-    }
-
-    public handleAreaPreviewCreation(config: AreaData, localCommand: boolean): void {
-        console.info("handleAreaPreviewCreation => No create area preview in trash mode");
-    }
-
-    public activate() {
-        super.activate();
-        this.areaPreviews = this.createAreaPreviews();
-        this.bindEventHandlers();
-        this.active = true;
-        this.setAreaPreviewsVisibility(true);
-        this.updateAreaPreviews();
-        this.scene.markDirty();
-        mapEditorVisibilityStore.set(false);
-    }
-
-    public clear() {
-        super.clear();
-        this.areaPreviews.forEach((preview) => preview.destroy());
-        this.unbindEventHandlers();
-        this.active = false;
-        this.setAreaPreviewsVisibility(false);
-        this.scene.markDirty();
-    }
-
-    handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): Promise<void> {
-        return Promise.resolve(undefined);
+    private isAllowedToRemoveGameObject(gameObject: Entity) {
+        return gameObject.canEdit;
     }
 }

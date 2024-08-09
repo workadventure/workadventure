@@ -9,7 +9,7 @@ import pLimit from "p-limit";
 import * as Sentry from "@sentry/node";
 import { fileSystem } from "../fileSystem";
 import { FileSystemInterface } from "../Upload/FileSystemInterface";
-import { ENABLE_WEB_HOOK } from "../Enum/EnvironmentVariable";
+import { ENABLE_WEB_HOOK, MAX_SIMULTANEOUS_FS_READS } from "../Enum/EnvironmentVariable";
 import { mapPathUsingDomain } from "./PathMapper";
 import { WebHookService } from "./WebHookService";
 
@@ -24,6 +24,8 @@ export class MapListService {
     private limiters: Map<string, pLimit.Limit>;
 
     public static readonly CACHE_NAME = "__cache.json";
+
+    private static maxReadLimit = pLimit(MAX_SIMULTANEOUS_FS_READS);
 
     constructor(private fileSystem: FileSystemInterface, private webHookService: WebHookService) {
         this.limiters = new Map<string, pLimit.Limit>();
@@ -44,8 +46,17 @@ export class MapListService {
 
         const promises: Promise<{ wamFilePath: string; wam: WAMFileFormat }>[] = [];
         for (const wamFilePath of files) {
-            promises.push(this.readWamFile(wamFilePath, domain));
+            promises.push(
+                MapListService.maxReadLimit(async () => {
+                    return this.readWamFile(wamFilePath, domain);
+                })
+            );
         }
+
+        /*const promises: Promise<{ wamFilePath: string; wam: WAMFileFormat }>[] = [];
+        for (const wamFilePath of files) {
+            promises.push(this.readWamFile(wamFilePath, domain));
+        }*/
 
         const settledPromises = await Promise.allSettled(promises);
         for (const outcome of settledPromises) {

@@ -9,6 +9,12 @@
     const dispatch = createEventDispatcher();
 
     function onValueChange() {
+        // Replace all special characters or spaces with an empty string
+        property.name = property.name
+            .trim()
+            .replace(/[^a-zA-Z0-9 !@#$%^&*]/g, "")
+            .replaceAll(" ", "")
+            .toLowerCase();
         dispatch("change");
     }
 </script>

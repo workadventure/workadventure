@@ -1,7 +1,12 @@
 import type { AxiosResponse } from "axios";
 import axios, { isAxiosError } from "axios";
-import type { AdminApiData, MapDetailsData, RoomRedirect } from "@workadventure/messages";
 import {
+    AdminApiData,
+    isOauthRefreshToken,
+    MapDetailsData,
+    OauthRefreshToken,
+    RoomRedirect,
+    MemberData,
     Capabilities,
     CompanionDetail,
     ErrorApiData,
@@ -24,11 +29,13 @@ import {
     ADMIN_API_TOKEN,
     ADMIN_API_URL,
     OPID_PROFILE_SCREEN_PROVIDER,
+    ADMIN_URL,
 } from "../enums/EnvironmentVariable";
 import type { AdminInterface } from "./AdminInterface";
 import type { AuthTokenData } from "./JWTTokenManager";
 import { jwtTokenManager } from "./JWTTokenManager";
 import { ShortMapDescriptionList } from "./ShortMapDescription";
+import { WorldChatMembersData } from "./WorldChatMembersData";
 
 export interface AdminBannedData {
     is_banned: boolean;
@@ -86,13 +93,6 @@ export const isFetchMemberDataByUuidSuccessResponse = z.object({
         example: false,
     }),*/
     userRoomToken: extendApi(z.optional(z.string()), { description: "", example: "" }),
-    jabberId: extendApi(z.string().nullable().optional(), {
-        description: "The jid (JabberID) that can be used to connect this particular user to its XMPP server",
-        example: "john.doe@myxpppserver.example.com/uuid",
-    }),
-    jabberPassword: extendApi(z.string().nullable().optional(), {
-        description: "The password to connect to the XMPP server of this user",
-    }),
     mucRooms: extendApi(z.nullable(z.array(MucRoomDefinition)), {
         description: "The MUC room is a room of message",
     }),
@@ -105,13 +105,25 @@ export const isFetchMemberDataByUuidSuccessResponse = z.object({
     canEdit: extendApi(z.boolean().nullable().optional(), {
         description: "True if the user can edit the map",
     }),
+    world: extendApi(z.string(), {
+        description: "name of the world",
+    }),
+    chatID: extendApi(z.string().optional(), {
+        description: "ChatId of user",
+    }),
 });
 
+export const isFetchWorldChatMembers = z.object({
+    total: z.number().positive(),
+    members: z.array(isFetchMemberDataByUuidSuccessResponse),
+});
 export type FetchMemberDataByUuidSuccessResponse = z.infer<typeof isFetchMemberDataByUuidSuccessResponse>;
 
 export const isFetchMemberDataByUuidResponse = z.union([isFetchMemberDataByUuidSuccessResponse, ErrorApiData]);
 
 export type FetchMemberDataByUuidResponse = z.infer<typeof isFetchMemberDataByUuidResponse>;
+
+export type FetchWorldChatMembers = z.infer<typeof isFetchWorldChatMembers>;
 
 class AdminApi implements AdminInterface {
     private capabilities: Capabilities = {};
@@ -348,7 +360,9 @@ class AdminApi implements AdminInterface {
         ipAddress: string,
         characterTextureIds: string[],
         companionTextureId?: string,
-        locale?: string
+        locale?: string,
+        tags?: string[],
+        chatID?: string
     ): Promise<FetchMemberDataByUuidResponse> {
         try {
             /**
@@ -413,7 +427,8 @@ class AdminApi implements AdminInterface {
                     characterTextureIds,
                     companionTextureId,
                     accessToken,
-                    isLogged: accessToken ? "1" : "0", // deprecated, use accessToken instead
+                    isLogged: accessToken ? "1" : "0", // deprecated, use accessToken instead,
+                    chatID,
                 },
                 headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
             });
@@ -698,7 +713,13 @@ class AdminApi implements AdminInterface {
          *                     type: string
          *                     description: Name of a room
          *                     example: "My office"
-         *                   url:
+         *                     required: true
+         *                   roomUrl:
+         *                     type: string
+         *                     description: URL of a room
+         *                     example: "http://example.com/@/teamSlug/worldSlug/room2Slug"
+         *                     required: true
+         *                   wamUrl:
          *                     type: string
          *                     description: URL of a room
          *                     example: "http://example.com/@/teamSlug/worldSlug/room2Slug"
@@ -982,6 +1003,170 @@ class AdminApi implements AdminInterface {
             );
         }
         return;
+    }
+
+    async getWorldChatMembers(playUri: string, searchText = ""): Promise<WorldChatMembersData> {
+        /**
+         * @openapi
+         * /api/chat/members:
+         *   get:
+         *     tags: ["AdminAPI"]
+         *     description: Get the list of members to be displayed in the chat
+         *     security:
+         *      - Bearer: []
+         *     produces:
+         *      - "application/json"
+         *     parameters:
+         *      - name: "roomUrl"
+         *        in: "query"
+         *        description: "The URL of the room"
+         *        type: "string"
+         *        required: true
+         *        example: "https://play.workadventu.re/@/teamSlug/worldSlug/roomSlug"
+         *      - name: "searchText"
+         *        in: "query"
+         *        description: "An optional search text to filter the members"
+         *        type: "string"
+         *        example: "john"
+         *     responses:
+         *       200:
+         *         description: The list of members
+         *         schema:
+         *             $ref: "#/definitions/WorldChatMembersData"
+         *       404:
+         *         description: Error while retrieving the data
+         *         schema:
+         *             $ref: '#/definitions/ErrorApiErrorData'
+         */
+        const response = await axios.get<unknown>(`${ADMIN_API_URL}/api/chat/members`, {
+            headers: { Authorization: `${ADMIN_API_TOKEN}` },
+            params: {
+                playUri,
+                searchText,
+            },
+        });
+
+        return WorldChatMembersData.parse(response.data);
+    }
+
+    /**
+     * @openapi
+     * /api/members:
+     *   get:
+     *     description: Search members from search term.
+     *     tags:
+     *      - Admin endpoint
+     *     parameters:
+     *      - name: "playUri"
+     *        in: "request"
+     *        required: true
+     *        type: "string"
+     *        description: The room url
+     *      - name: "searchText"
+     *        in: "request"
+     *        description: search text use for user search (name, email, etc)
+     *        required: true
+     *        type: "string"
+     *     responses:
+     *       200:
+     *        description: Member list or empty list.
+     *        schema:
+     *            $ref: '#/definitions/MemberData'
+     */
+    async searchMembers(playUri: string | null, searchText: string): Promise<MemberData[]> {
+        const response = await axios.get<unknown>(ADMIN_API_URL + "/api/members", {
+            params: { playUri, searchText },
+            headers: { Authorization: `${ADMIN_API_TOKEN}` },
+        });
+        return MemberData.array().parse(response.data);
+    }
+
+    /**
+     * @openapi
+     * /api/tags:
+     */
+    async searchTags(playUri: string | null, searchText: string): Promise<string[]> {
+        const response = await axios.get<string[]>(`${ADMIN_API_URL}/api/world/tags`, {
+            headers: { Authorization: `${ADMIN_API_TOKEN}` },
+            params: {
+                playUri,
+                searchText,
+            },
+        });
+        return response.data;
+    }
+
+    /**
+     * @openapi
+     * /members/{memberUUID}:
+     *   get:
+     *     description: Get member by UUID
+     *     tags:
+     *      - Admin endpoint
+     *     parameters:
+     *      - name: "memberUUID"
+     *        in: "path"
+     *        required: true
+     *        type: "string"
+     *        description: The member UUID
+     *     responses:
+     *       200:
+     *        schema:
+     *            $ref: '#/definitions/MemberData'
+     *        404:
+     *        description: No member found.
+     */
+    async getMember(memberUUID: string): Promise<MemberData> {
+        const response = await axios.get<MemberData>(`${ADMIN_API_URL}/api/members/${memberUUID}`, {
+            headers: { Authorization: `${ADMIN_API_TOKEN}` },
+        });
+        return response.data;
+    }
+
+    updateChatId(userIdentifier: string, chatId: string): void {
+        axios
+            .put(
+                `${ADMIN_URL}/api/members/${userIdentifier}/chatId`,
+                {
+                    chatId,
+                    userIdentifier,
+                },
+                {
+                    headers: { Authorization: `${ADMIN_API_TOKEN}` },
+                }
+            )
+            .catch((e) => {
+                console.error(e);
+            });
+    }
+
+    /**
+     * @openapi
+     * /oauth/refreshtoken/{token}:
+     *   get:
+     *     description: Get the refreshed token from expired one
+     *     tags:
+     *      - Admin endpoint
+     *     parameters:
+     *      - name: "token"
+     *        in: "path"
+     *        required: true
+     *        type: "string"
+     *        description: The expired refresh
+     *     responses:
+     *       200:
+     *        schema:
+     *            $ref: '#/definitions/OauthRefreshToken'
+     */
+    async refreshOauthToken(token: string): Promise<OauthRefreshToken> {
+        const response = await axios.get(`${ADMIN_URL}/oauth/refreshtoken/${token}`, {
+            headers: { Authorization: `${ADMIN_API_TOKEN}` },
+        });
+        const refreshTokenResponse = isOauthRefreshToken.safeParse(response);
+        if (refreshTokenResponse.error) {
+            throw new Error("Unable to parse refreshTokenResponse");
+        }
+        return refreshTokenResponse.data;
     }
 }
 

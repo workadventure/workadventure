@@ -4,7 +4,7 @@ import axios from "axios";
 import {StartedTestContainer} from "testcontainers";
 import {createClient} from "redis";
 import {describe, expect, jest, it, beforeAll, afterAll} from '@jest/globals';
-import {CHAT_URL} from "../src/Enum/EnvironmentVariable";
+import {PLAY_URL} from "../src/Enum/EnvironmentVariable";
 import {verifyResponseHeaders} from "./utils/verifyResponseHeaders";
 import {uploadFile} from "./utils/uploadFile";
 import {download} from "./utils/download";
@@ -16,8 +16,8 @@ import startTestServer from "./startTestServer";
 const APP_PORT = 7373
 
 jest.mock('../src/Enum/EnvironmentVariable', () => ({
-    get CHAT_URL() {
-        return "http://chat.location"
+    get PLAY_URL() {
+        return "http://play.location"
     }
 }))
 
@@ -37,7 +37,7 @@ describe("Redis Uploader tests", () => {
             REDIS_PORT: redisPort.toString(),
             ENABLE_CHAT_UPLOAD: "true",
             UPLOADER_URL: UPLOADER_URL,
-            CHAT_URL: CHAT_URL
+            PLAY_URL: PLAY_URL
          })
         await isPortReachable(APP_PORT, {host: "localhost"})
     })

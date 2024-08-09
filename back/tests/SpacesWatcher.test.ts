@@ -45,7 +45,7 @@ describe("SpacesWatcher", () => {
         const spaceSocketToPusher = mock<SpaceSocket>({
             write(chunk: BackToPusherSpaceMessage): boolean {
                 if (chunk?.message?.$case === "pingMessage") {
-                    setTimeout(() => watcher?.receivedPong(), 0);
+                    setTimeout(() => watcher?.clearPongTimeout(), 0);
                 }
                 return true;
             },

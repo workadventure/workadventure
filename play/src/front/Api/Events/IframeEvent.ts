@@ -1,13 +1,13 @@
 import { z } from "zod";
 import {
-    KLAXOON_ACTIVITY_PICKER_EVENT,
     isBanEvent,
+    isChatEvent,
+    isChatMessage,
     isKlaxoonEvent,
-    isXmppSettingsMessageEvent,
+    KLAXOON_ACTIVITY_PICKER_EVENT,
 } from "@workadventure/shared-utils";
 import { isStartWritingEvent, isStopWritingEvent } from "@workadventure/shared-utils/src/Events/WritingEvent";
 import { isUpdateWritingStatusChatListEvent } from "@workadventure/shared-utils/src/Events/UpdateWritingStatusChatListEvent";
-import { isChatEvent, isChatMessage } from "../../../../../libs/shared-utils/src/Events/ChatEvent";
 import { isClosePopupEvent } from "./ClosePopupEvent";
 import { isGoToPageEvent } from "./GoToPageEvent";
 import { isLoadPageEvent } from "./LoadPageEvent";
@@ -37,7 +37,7 @@ import { isAddActionsMenuKeyToRemotePlayerEvent } from "./AddActionsMenuKeyToRem
 import { isRemoveActionsMenuKeyFromRemotePlayerEvent } from "./RemoveActionsMenuKeyFromRemotePlayerEvent";
 import { isSetAreaPropertyEvent } from "./SetAreaPropertyEvent";
 import { isCreateUIWebsiteEvent, isModifyUIWebsiteEvent, isUIWebsiteEvent } from "./Ui/UIWebsiteEvent";
-import { isDynamicAreaEvent, isCreateDynamicAreaEvent } from "./CreateDynamicAreaEvent";
+import { isCreateDynamicAreaEvent, isDynamicAreaEvent } from "./CreateDynamicAreaEvent";
 import { isUserInputChatEvent } from "./UserInputChatEvent";
 import { isEnterLeaveEvent } from "./EnterLeaveEvent";
 import { isChangeLayerEvent } from "./ChangeLayerEvent";
@@ -302,10 +302,6 @@ export const isIframeEventWrapper = z.union([
         data: isRemoveButtonActionBarEvent,
     }),
     z.object({
-        type: z.literal("chatReady"),
-        data: z.undefined(),
-    }),
-    z.object({
         type: z.literal("openBanner"),
         data: isBannerEvent,
     }),
@@ -361,6 +357,14 @@ export const isIframeEventWrapper = z.union([
         type: z.literal("restoreInviteUserButton"),
         data: z.undefined(),
     }),
+    z.object({
+        type: z.literal("disableRoomList"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("restoreRoomList"),
+        data: z.undefined(),
+    }),
 ]);
 
 export type IframeEvent = z.infer<typeof isIframeEventWrapper>;
@@ -385,6 +389,14 @@ export const isIframeResponseEvent = z.union([
     z.object({
         type: z.literal("leaveProximityMeetingEvent"),
         data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("onFollowed"),
+        data: isParticipantProximityMeetingEvent,
+    }),
+    z.object({
+        type: z.literal("onUnfollowed"),
+        data: isParticipantProximityMeetingEvent,
     }),
     z.object({
         type: z.literal("enterEvent"),
@@ -486,10 +498,6 @@ export const isIframeResponseEvent = z.union([
         type: z.literal("availabilityStatus"),
         data: z.number(),
     }),
-    z.object({
-        type: z.literal("xmppSettingsMessage"),
-        data: isXmppSettingsMessageEvent,
-    }),
 
     // TODO will be deleted if timeline is becoming a MUC room
     z.object({
@@ -582,7 +590,15 @@ export const iframeQueryMapTypeGuards = {
         query: isTriggerActionMessageEvent,
         answer: z.undefined(),
     },
+    triggerPlayerMessage: {
+        query: isTriggerActionMessageEvent,
+        answer: z.undefined(),
+    },
     removeActionMessage: {
+        query: isMessageReferenceEvent,
+        answer: z.undefined(),
+    },
+    removePlayerMessage: {
         query: isMessageReferenceEvent,
         answer: z.undefined(),
     },
@@ -660,6 +676,14 @@ export const iframeQueryMapTypeGuards = {
     },
     playSoundInBubble: {
         query: isPlaySoundInBubbleEvent,
+        answer: z.undefined(),
+    },
+    followMe: {
+        query: z.undefined(),
+        answer: z.undefined(),
+    },
+    stopLeading: {
+        query: z.undefined(),
         answer: z.undefined(),
     },
 };

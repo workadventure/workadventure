@@ -9,6 +9,7 @@ export const isAddPlayerEvent = z.object({
     outlineColor: z.number().optional(),
     position: isPlayerPosition,
     variables: z.map(z.string(), z.unknown()),
+    chatID: z.string().optional().nullable(),
 });
 
 export const isRemotePlayerChangedEvent = isAddPlayerEvent

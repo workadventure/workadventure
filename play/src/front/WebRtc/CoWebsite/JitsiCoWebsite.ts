@@ -1,7 +1,7 @@
 import CancelablePromise from "cancelable-promise";
 import { z } from "zod";
 import { get } from "svelte/store";
-import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
+import { inJitsiStore, requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { SimpleCoWebsite } from "./SimpleCoWebsite";
 
 export const JitsiConfig = z

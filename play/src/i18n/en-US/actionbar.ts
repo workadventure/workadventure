@@ -15,6 +15,7 @@ const actionbar: BaseTranslation = {
     rightMode: "Right mode",
     hideMode: "Hide mode",
     lightMode: "Light mode",
+    calendar: "Open / Close calendar",
     woka: "Customize your avatar",
     companion: "Add companion",
     quest: "Achievements",
@@ -27,7 +28,7 @@ const actionbar: BaseTranslation = {
     bo: "Back office",
     globalMessage: "Send global message",
     mapEditor: "Map editor",
-    app: "Ouvrir / Fermer les applications",
+    app: "Open / close applications",
     camera: {
         disabled: "Your camera is disabled",
         activate: "Activate your camera",
@@ -37,10 +38,12 @@ const actionbar: BaseTranslation = {
         activate: "Activate your microphone",
     },
     status: {
-        online: "Online",
-        away: "Away",
-        disturb: "Do not disturb",
-        offline: "Offline",
+        ONLINE: "Online",
+        AWAY: "Away",
+        BACK_IN_A_MOMENT: "Back in a moment",
+        DO_NOT_DISTURB: "Do not disturb",
+        BUSY: "Busy",
+        OFFLINE: "Offline",
     },
     subtitle: {
         camera: "Camera",
@@ -64,6 +67,10 @@ const actionbar: BaseTranslation = {
             title: "Ask to follow",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
+        unfollow: {
+            title: "Stop following",
+            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        },
         lock: {
             title: "Lock conversation",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
@@ -79,6 +86,20 @@ const actionbar: BaseTranslation = {
         share: {
             title: "Share your screen",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        },
+    },
+    listStatusTitle: {
+        enable: "Change your status",
+        inMeeting: "Have a good meeting 🤓",
+        inSilentZone: "Enjoy the silent zone 😁",
+    },
+    roomList: "Open / Close room list",
+    externalModule: {
+        status: {
+            onLine: "Status is ok ✅",
+            offLine: "Status is offline ❌",
+            warning: "Status is warning ⚠️",
+            sync: "Status is syncing 🔄",
         },
     },
 };

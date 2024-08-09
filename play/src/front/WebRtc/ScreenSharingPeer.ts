@@ -5,6 +5,7 @@ import type { RoomConnection } from "../Connection/RoomConnection";
 import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import { screenShareBandwidthStore } from "../Stores/ScreenSharingStore";
+import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
 import type { PeerStatus } from "./VideoPeer";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import {
@@ -33,7 +34,7 @@ export class ScreenSharingPeer extends Peer {
     constructor(
         user: UserSimplePeerInterface,
         initiator: boolean,
-        public readonly userName: string,
+        public readonly player: RemotePlayerData,
         private connection: RoomConnection,
         stream: MediaStream | null
     ) {

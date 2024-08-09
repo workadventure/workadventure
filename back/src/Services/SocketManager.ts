@@ -1,8 +1,13 @@
 import crypto from "crypto";
 import {
+    AddSpaceUserMessage,
     AnswerMessage,
+    AskPositionMessage,
     BanUserMessage,
     BatchToPusherMessage,
+    ChatMessagePrompt,
+    EditMapCommandMessage,
+    EditMapCommandsArrayMessage,
     EmoteEventMessage,
     EmotePromptMessage,
     FollowAbortMessage,
@@ -16,40 +21,39 @@ import {
     JoinBBBMeetingAnswer,
     JoinBBBMeetingQuery,
     JoinRoomMessage,
+    KickOffMessage,
     LockGroupPromptMessage,
+    MuteMicrophoneEverybodyMessage,
+    MuteMicrophoneMessage,
+    MuteVideoEverybodyMessage,
+    MuteVideoMessage,
     PlayerDetailsUpdatedMessage,
     QueryMessage,
+    RemoveSpaceUserMessage,
     RoomDescription,
     RoomJoinedMessage,
     RoomsList,
+    SendEventQuery,
     SendUserMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
     SubToPusherMessage,
+    TurnCredentialsAnswer,
+    UnwatchSpaceMessage,
+    UpdateMapToNewestWithKeyMessage,
+    UpdateSpaceMetadataMessage,
+    UpdateSpaceUserMessage,
     UserJoinedZoneMessage,
     UserMovesMessage,
     VariableMessage,
+    WatchSpaceMessage,
     WebRtcSignalToClientMessage,
     WebRtcSignalToServerMessage,
     WebRtcStartMessage,
     Zone as ProtoZone,
-    AskPositionMessage,
-    EditMapCommandMessage,
-    ChatMessagePrompt,
-    UpdateMapToNewestWithKeyMessage,
-    EditMapCommandsArrayMessage,
-    WatchSpaceMessage,
-    UnwatchSpaceMessage,
-    UpdateSpaceUserMessage,
-    AddSpaceUserMessage,
-    RemoveSpaceUserMessage,
-    SendEventQuery,
-    UpdateSpaceMetadataMessage,
-    KickOffMessage,
-    MuteMicrophoneMessage,
-    MuteVideoMessage,
-    MuteMicrophoneEverybodyMessage,
-    MuteVideoEverybodyMessage,
+    PublicEvent,
+    PrivateEvent,
+    ExternalModuleMessage,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -182,7 +186,6 @@ export class SocketManager {
         }
 
         const roomJoinedMessage: Partial<RoomJoinedMessage> = {
-            userJid: joinRoomMessage.userJid,
             tag: joinRoomMessage.tag,
             userRoomToken: joinRoomMessage.userRoomToken,
             characterTextures: joinRoomMessage.characterTextures,
@@ -207,8 +210,8 @@ export class SocketManager {
 
         if (TURN_STATIC_AUTH_SECRET) {
             const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
-            roomJoinedMessage.webrtcUserName = username;
-            roomJoinedMessage.webrtcPassword = password;
+            roomJoinedMessage.webRtcUserName = username;
+            roomJoinedMessage.webRtcPassword = password;
         }
 
         const serverToClientMessage: ServerToClientMessage = {
@@ -295,16 +298,20 @@ export class SocketManager {
             return;
         }
 
+        console.log("emitVideo => data", room.id);
         const webrtcSignalToClientMessage: Partial<WebRtcSignalToClientMessage> = {
             userId: user.id,
             signal: data.signal,
+            webRtcSpaceName: `webrtc_${user.group ? user.group.getId() : "1"}-${Buffer.from(room.roomUrl).toString(
+                "base64"
+            )}`,
         };
 
         // TODO: only compute credentials if data.signal.type === "offer"
         if (TURN_STATIC_AUTH_SECRET) {
             const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
-            webrtcSignalToClientMessage.webrtcUserName = username;
-            webrtcSignalToClientMessage.webrtcPassword = password;
+            webrtcSignalToClientMessage.webRtcUserName = username;
+            webrtcSignalToClientMessage.webRtcPassword = password;
         }
 
         //if (!client.disconnecting) {
@@ -332,13 +339,16 @@ export class SocketManager {
         const webrtcSignalToClientMessage: Partial<WebRtcSignalToClientMessage> = {
             userId: user.id,
             signal: data.signal,
+            webRtcSpaceName: `webrtc_${user.group ? user.group.getId() : "1"}-${Buffer.from(room.id).toString(
+                "base64"
+            )}`,
         };
 
         // TODO: only compute credentials if data.signal.type === "offer"
         if (TURN_STATIC_AUTH_SECRET) {
             const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
-            webrtcSignalToClientMessage.webrtcUserName = username;
-            webrtcSignalToClientMessage.webrtcPassword = password;
+            webrtcSignalToClientMessage.webRtcUserName = username;
+            webrtcSignalToClientMessage.webRtcPassword = password;
         }
 
         //if (!client.disconnecting) {
@@ -444,12 +454,12 @@ export class SocketManager {
         }
         const userJoinedZoneMessage: Partial<UserJoinedZoneMessage> = {
             userId: user.id,
-            userJid: user.userJid,
             userUuid: user.uuid,
             name: user.name,
             availabilityStatus: user.getAvailabilityStatus(),
             characterTextures: user.characterTextures,
             position: ProtobufUtils.toPositionMessage(user.getPosition()),
+            chatID: user.chatID,
         };
         if (fromZone) {
             userJoinedZoneMessage.fromZone = SocketManager.toProtoZone(fromZone);
@@ -643,14 +653,15 @@ export class SocketManager {
             const webrtcStartMessage1: Partial<WebRtcStartMessage> = {
                 userId: otherUser.id,
                 initiator: true,
+                webRtcSpaceName: `webrtc_${group.getId()}-${Buffer.from(group.getRoomId()).toString("base64")}`,
             };
             if (TURN_STATIC_AUTH_SECRET) {
                 const { username, password } = this.getTURNCredentials(
                     otherUser.id.toString(),
                     TURN_STATIC_AUTH_SECRET
                 );
-                webrtcStartMessage1.webrtcUserName = username;
-                webrtcStartMessage1.webrtcPassword = password;
+                webrtcStartMessage1.webRtcUserName = username;
+                webrtcStartMessage1.webRtcPassword = password;
             }
 
             user.socket.write({
@@ -663,11 +674,12 @@ export class SocketManager {
             const webrtcStartMessage2: Partial<WebRtcStartMessage> = {
                 userId: user.id,
                 initiator: false,
+                webRtcSpaceName: `webrtc_${group.getId()}-${Buffer.from(group.getRoomId()).toString("base64")}`,
             };
             if (TURN_STATIC_AUTH_SECRET) {
                 const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
-                webrtcStartMessage2.webrtcUserName = username;
-                webrtcStartMessage2.webrtcPassword = password;
+                webrtcStartMessage2.webRtcUserName = username;
+                webrtcStartMessage2.webRtcPassword = password;
             }
 
             otherUser.socket.write({
@@ -784,10 +796,22 @@ export class SocketManager {
                     };
                     break;
                 }
+                case "turnCredentialsQuery": {
+                    const answer = this.handleTurnCredentialsQuery(user.id.toString());
+                    answerMessage.answer = {
+                        $case: "turnCredentialsAnswer",
+                        turnCredentialsAnswer: answer,
+                    };
+                    break;
+                }
                 case "embeddableWebsiteQuery":
                 case "roomTagsQuery":
-                case "roomsFromSameWorldQuery": {
-                    // Nothing to do, the message will never be received in the back
+                case "roomsFromSameWorldQuery":
+                case "searchMemberQuery":
+                case "getMemberQuery":
+                case "searchTagsQuery":
+                case "chatMembersQuery":
+                case "oauthRefreshTokenQuery": {
                     break;
                 }
                 default: {
@@ -1400,9 +1424,6 @@ export class SocketManager {
         }
         pusher.watchSpace(space.name);
         space.addWatcher(pusher);
-        if (watchSpaceMessage.user) {
-            space.addUser(pusher, watchSpaceMessage.user);
-        }
     }
 
     handleUnwatchSpaceMessage(pusher: SpacesWatcher, unwatchSpaceMessage: UnwatchSpaceMessage) {
@@ -1417,7 +1438,8 @@ export class SocketManager {
         pusher.spacesWatched.forEach((spaceName) => {
             const space = this.spaces.get(spaceName);
             if (!space) {
-                throw new Error("Cant unwatch space, space not found");
+                console.error("Cant unwatch space, space not found");
+                return;
             }
             this.removeSpaceWatcher(pusher, space);
         });
@@ -1439,12 +1461,14 @@ export class SocketManager {
             space.addUser(pusher, addSpaceUserMessage.user);
         }
     }
+
     handleUpdateSpaceUserMessage(pusher: SpacesWatcher, updateSpaceUserMessage: UpdateSpaceUserMessage) {
         const space = this.spaces.get(updateSpaceUserMessage.spaceName);
         if (space && updateSpaceUserMessage.user) {
             space.updateUser(pusher, updateSpaceUserMessage.user);
         }
     }
+
     handleRemoveSpaceUserMessage(pusher: SpacesWatcher, removeSpaceUserMessage: RemoveSpaceUserMessage) {
         const space = this.spaces.get(removeSpaceUserMessage.spaceName);
         if (space) {
@@ -1547,8 +1571,30 @@ export class SocketManager {
         });
     }
 
+    handlePublicEvent(pusher: SpacesWatcher, publicEvent: PublicEvent) {
+        const space = this.spaces.get(publicEvent.spaceName);
+        if (!space) return;
+        pusher.write({
+            message: {
+                $case: "publicEvent",
+                publicEvent,
+            },
+        });
+    }
+
     private handleSendEventQuery(gameRoom: GameRoom, user: User, sendEventQuery: SendEventQuery) {
         gameRoom.dispatchEvent(sendEventQuery.name, sendEventQuery.data, user.id, sendEventQuery.targetUserIds);
+    }
+
+    private handleTurnCredentialsQuery(userId: string): TurnCredentialsAnswer {
+        if (TURN_STATIC_AUTH_SECRET) {
+            const { username, password } = this.getTURNCredentials(userId, TURN_STATIC_AUTH_SECRET);
+            return {
+                webRtcUser: username,
+                webRtcPassword: password,
+            };
+        }
+        return {};
     }
 
     async dispatchEvent(roomUrl: string, name: string, value: unknown, targetUserIds: number[]): Promise<void> {
@@ -1717,6 +1763,106 @@ export class SocketManager {
                 },
             };
             mutedUser.socket.write(serverToClientMessage);
+        }
+    }
+
+    // handle proximity typing message
+    handlePublicEventMessage(user: User, publicEvent: PublicEvent) {
+        const group = user.group;
+        if (!group) {
+            return;
+        }
+        const newEvent = {
+            ...publicEvent,
+            senderUserId: user.id,
+        };
+        const receiverUsers = group.getUsers();
+        for (const receiverUser of receiverUsers) {
+            receiverUser.socket.write({
+                message: {
+                    $case: "publicEvent",
+                    publicEvent: newEvent,
+                },
+            });
+        }
+    }
+
+    handlePrivateEventMessage(user: User, privateEvent: PrivateEvent) {
+        const group = user.group;
+        if (!group) {
+            return;
+        }
+        const newEvent = {
+            ...privateEvent,
+            senderUserId: user.id,
+        };
+
+        const receiverUser = group.getUsers().find((user) => user.id === privateEvent.receiverUserId);
+        if (receiverUser == undefined) {
+            console.warn("receiverUser is undefined");
+            return;
+        }
+
+        receiverUser.socket.write({
+            message: {
+                $case: "privateEvent",
+                privateEvent: newEvent,
+            },
+        });
+    }
+
+    async handleExternalModuleMessage(externalModuleMessage: ExternalModuleMessage) {
+        console.log("externalModuleMessage", externalModuleMessage);
+        if (!externalModuleMessage.roomId) {
+            console.error("externalModuleMessage has no roomId. This feature isn't implemented yet.");
+            Sentry.captureMessage("externalModuleMessage has no roomId. This feature isn't implemented yet.");
+            return;
+        }
+        if (!externalModuleMessage.recipientUuid) {
+            console.error("externalModuleMessage has no recipientUuid. This feature isn't implemented yet.");
+            Sentry.captureMessage("externalModuleMessage has no recipientUuid. This feature isn't implemented yet.");
+            return;
+        }
+        const roomId = externalModuleMessage.roomId;
+        const recipientUuid = externalModuleMessage.recipientUuid;
+
+        const room = await this.roomsPromises.get(externalModuleMessage.roomId);
+        if (!room) {
+            console.info(
+                "In handleExternalModuleMessage, could not find room with id '" +
+                    roomId +
+                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
+            );
+            Sentry.captureMessage(
+                "In handleExternalModuleMessage, could not find room with id '" +
+                    roomId +
+                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
+            );
+            return;
+        }
+
+        const recipients = room.getUsersByUuid(recipientUuid);
+        if (recipients.size === 0) {
+            console.info(
+                "In handleExternalModuleMessage, could not find user with id '" +
+                    recipientUuid +
+                    "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
+            );
+            Sentry.captureMessage(
+                "In handleExternalModuleMessage, could not find user with id '" +
+                    recipientUuid +
+                    "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
+            );
+            return;
+        }
+
+        for (const recipient of recipients) {
+            recipient.socket.write({
+                message: {
+                    $case: "externalModuleMessage",
+                    externalModuleMessage: externalModuleMessage,
+                },
+            });
         }
     }
 }

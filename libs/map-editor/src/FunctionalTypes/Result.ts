@@ -15,3 +15,22 @@ export function failure<E>(error: E) {
         error,
     } as Failure<E>;
 }
+
+export function isSuccess<T, E>(result: Result<T, E>): result is Success<T> {
+    return result.ok;
+}
+
+export function isFailure<T, E>(result: Result<T, E>): result is Failure<E> {
+    return !result.ok;
+}
+
+/**
+ * Returns the result or throw an error if the result is a failure.
+ */
+export function resultOrThrow<T, E>(result: Result<T, E>): T {
+    if (result.ok) {
+        return result.value;
+    } else {
+        throw result.error;
+    }
+}

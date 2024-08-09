@@ -1,25 +1,24 @@
 <script lang="ts">
-    import type { Unsubscriber } from "svelte/store";
+    import { get, Readable, Unsubscriber, writable } from "svelte/store";
     import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
-    import { get, writable } from "svelte/store";
-    import { ArrowDownIcon } from "svelte-feather-icons";
+    import {IconArrowDown, IconCheck, IconChevronDown, IconChevronUp} from "@wa-icons";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import {
+        availabilityStatusStore,
         cameraListStore,
         microphoneListStore,
-        speakerListStore,
-        requestedCameraState,
-        requestedMicrophoneState,
         requestedCameraDeviceIdStore,
+        requestedCameraState,
         requestedMicrophoneDeviceIdStore,
-        usedCameraDeviceIdStore,
-        usedMicrophoneDeviceIdStore,
+        requestedMicrophoneState,
         silentStore,
+        speakerListStore,
         speakerSelectedStore,
         streamingMegaphoneStore,
+        usedCameraDeviceIdStore,
+        usedMicrophoneDeviceIdStore,
         enableCameraSceneVisibilityStore,
-        availabilityStatusStore,
     } from "../../Stores/MediaStore";
     import tooltipArrow from "../images/arrow-top.svg";
 
@@ -33,21 +32,22 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { chatVisibilityStore, chatZoneLiveStore } from "../../Stores/ChatStore";
     import {
-        proximityMeetingStore,
         inExternalServiceStore,
         myCameraStore,
         myMicrophoneStore,
+        proximityMeetingStore,
     } from "../../Stores/MyMediaStore";
     import {
         activeSubMenuStore,
-        menuVisiblilityStore,
+        addActionButtonActionBarEvent,
+        addClassicButtonActionBarEvent,
+        additionnalButtonsMenu,
         inviteUserActivated,
+        menuVisiblilityStore,
+        roomListActivated,
         SubMenusInterface,
         MenuKeys,
         subMenusStore,
-        additionnalButtonsMenu,
-        addClassicButtonActionBarEvent,
-        addActionButtonActionBarEvent,
         mapEditorActivated,
         userIsConnected,
     } from "../../Stores/MenuStore";
@@ -68,6 +68,7 @@
     import {
         modalIframeStore,
         modalVisibilityStore,
+        roomListVisibilityStore,
         showModalGlobalComminucationVisibilityStore,
     } from "../../Stores/ModalStore";
     import { userHasAccessToBackOfficeStore } from "../../Stores/GameStore";
@@ -79,6 +80,10 @@
         requestedMegaphoneStore,
     } from "../../Stores/MegaphoneStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
+    import { isActivatedStore, isCalendarVisibleStore } from "../../Stores/CalendarStore";
+    import { extensionActivateComponentModuleStore, extensionModuleStore } from "../../Stores/GameSceneStore";
+    import { ExternalModuleStatus } from "../../ExternalModule/ExtensionModule";
+    import AvailabilityStatusComponent from "./AvailabilityStatus/AvailabilityStatus.svelte";
     import { ADMIN_URL, ENABLE_OPENID } from "../../Enum/EnvironmentVariable";
     import Woka from "../Woka/WokaFromUserId.svelte";
     import Companion from "../Companion/Companion.svelte";
@@ -110,7 +115,6 @@
     import AchievementIcon from "../Icons/AchievementIcon.svelte";
     import CamSettingsIcon from "../Icons/CamSettingsIcon.svelte";
     import SettingsIcon from "../Icons/SettingsIcon.svelte";
-    import ChatOverlay from "../Chat/ChatOverlay.svelte";
     import ChevronUpIcon from "../Icons/ChevronUpIcon.svelte";
     import CheckIcon from "../Icons/CheckIcon.svelte";
     import XIcon from "../Icons/XIcon.svelte";
@@ -135,7 +139,7 @@
     let navigating = false;
     let camMenuIsDropped = false;
     let smallArrowVisible = true;
-    const sound = new Audio("/resources/objects/webrtc-out-button.mp3");
+    //const sound = new Audio("/resources/objects/webrtc-out-button.mp3");
 
     function focusModeOn() {
         focusMode.set(!get(focusMode));
@@ -229,6 +233,7 @@
             menuVisiblilityStore.set(false);
             activeSubMenuStore.activateByIndex(0);
         }
+
         chatVisibilityStore.set(!$chatVisibilityStore);
     }
 
@@ -414,7 +419,7 @@
         chatVisibilityStore.set(false);
     }
 
-    function noDrag() {
+    function noDrag(): boolean {
         return false;
     }
 
@@ -435,16 +440,24 @@
         speakerSelectedStore.set(deviceId);
     }
 
+    function openExternalModuleCalendar() {
+        isCalendarVisibleStore.set(!$isCalendarVisibleStore);
+    }
+
     let subscribers = new Array<Unsubscriber>();
     let totalMessagesToSee = writable<number>(0);
+    let externalModuleStatusStore: Readable<ExternalModuleStatus> | undefined;
+    let extensionModuleStoreSubscription: Unsubscriber | undefined;
     onMount(() => {
-        //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-        iframeListener.chatTotalMessagesToSeeStream.subscribe((total) => totalMessagesToSee.set(total));
         //resizeObserver.observe(mainHtmlDiv);
-        sound.load();
+        extensionModuleStoreSubscription = extensionModuleStore.subscribe((value) => {
+            externalModuleStatusStore = value?.statusStore;
+        });
     });
 
     onDestroy(() => {
+        //resizeObserver.disconnect();
+        if (extensionModuleStoreSubscription) extensionModuleStoreSubscription();
         // subscribers.map((subscriber) => subscriber());
         subscribers.forEach((subscriber) => subscriber());
         // unsubscribechatTotalMessagesToSeeStream?.unsubscribe();
@@ -480,12 +493,40 @@
     //     resetModalVisibility();
     //     roomListVisibilityStore.set(true);
     // }*/
+
+    const onClickOutside = () => {
+        if ($emoteMenuSubStore) emoteMenuSubStore.closeEmoteMenu();
+    };
+
+    let isActiveMobileMenu = false;
+    let openMobileMenu = false;
+    let openMobileMenuTimeout: ReturnType<typeof setTimeout> | undefined;
+    let closeAfterunusedTimeout: ReturnType<typeof setTimeout> | undefined;
+    function activeMobileMenu() {
+        isActiveMobileMenu = !isActiveMobileMenu;
+        if (isActiveMobileMenu) {
+            if (openMobileMenuTimeout) clearTimeout(openMobileMenuTimeout);
+            openMobileMenuTimeout = setTimeout(() => {
+                openMobileMenu = true;
+            }, 200);
+            if (closeAfterunusedTimeout) clearTimeout(closeAfterunusedTimeout);
+            closeAfterunusedTimeout = setTimeout(() => {
+                if (openMobileMenuTimeout) clearTimeout(openMobileMenuTimeout);
+                isActiveMobileMenu = false;
+                openMobileMenu = false;
+            }, 30000);
+        } else {
+            if (openMobileMenuTimeout) clearTimeout(openMobileMenuTimeout);
+            openMobileMenu = false;
+        }
+    }
+
+    function showExternalModule() {
+        extensionActivateComponentModuleStore.set(true);
+    }
 </script>
 
-<svelte:window on:keydown={onKeyDown} />
-{#if $chatVisibilityStore}
-    <ChatOverlay />
-{/if}
+<svelte:window on:keydown={onKeyDown} on:click={onClickOutside} on:touchend={onClickOutside} />
 
 <div
     class="@container/actions position-responsive w-full z-[301] transition-all pointer-events-none bp-menu {$peerStore.size >
@@ -801,10 +842,18 @@
                                         <FollowIcon />
                                     </div>
                                     {#if helpActive === "follow" || !emoteMenuSubStore}
-                                        <HelpTooltip
-                                            title={$LL.actionbar.help.follow.title()}
-                                            desc={$LL.actionbar.help.follow.desc()}
-                                        />
+                                        {#if $followStateStore === "active"}
+                                            <HelpTooltip
+                                                    title={$LL.actionbar.help.unfollow.title()}
+                                                    desc={$LL.actionbar.help.unfollow.desc()}
+                                            />
+                                        {:else}
+                                            <HelpTooltip
+                                                    title={$LL.actionbar.help.follow.title()}
+                                                    desc={$LL.actionbar.help.follow.desc()}
+                                            />
+                                        {/if}
+
                                     {/if}
                                 </div>
                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -897,12 +946,21 @@
                                     class="absolute bottom-1 left-0 right-0 m-auto hover:bg-white/10 h-5 w-5 flex items-center justify-center rounded-sm"
                                     on:click|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}
                                 >
-                                    <ChevronUpIcon
-                                        height="h-4"
-                                        width="w-4"
-                                        classList="aspect-square transition-all {cameraActive ? '' : 'rotate-180'}"
-                                        strokeWidth="2"
-                                    />
+                                    {#if cameraActive}
+                                        <ChevronUpIcon
+                                            height="h-4"
+                                            width="w-4"
+                                            classList="aspect-square transition-all {cameraActive ? '' : 'rotate-180'}"
+                                            strokeWidth="2"
+                                        />
+                                    {:else}
+                                        <ChevronDownIcon
+                                                height="h-4"
+                                                width="w-4"
+                                                classList="aspect-square transition-all {cameraActive ? '' : 'rotate-180'}"
+                                                strokeWidth="2"
+                                        />
+                                    {/if}
                                 </div>
                             </div>
                         {/if}
@@ -1081,7 +1139,6 @@
                                 {/if}
                                 <div class="relative z-10 flex px-4 py-3 bg-contrast">
                                     <button
-                                        href="#"
                                         class="btn btn-xs btn-ghost btn-light justify-center w-full mr-3"
                                         on:click={openEnableCameraScene}>{$LL.actionbar.test()}</button
                                     >
@@ -1251,7 +1308,7 @@
                                         class="flex justify-center hover:cursor-pointer"
                                         on:click={() => (camMenuIsDropped = !camMenuIsDropped)}
                                     >
-                                        <ArrowDownIcon />
+                                        <IconArrowDown />
                                     </div>
                                 </div>
                             {/if}
@@ -1516,19 +1573,19 @@
                                     {#if $availabilityStatusStore === 1}
                                         <div class="aspect-square h-2 w-2 bg-success rounded-full mr-2" />
                                         <div class="text-success hidden @xl/actions:block">
-                                            {$LL.actionbar.status.online()}
+                                            {$LL.actionbar.status.ONLINE()}
                                         </div>
                                     {/if}
                                     {#if $availabilityStatusStore === 2}
                                         <div class="aspect-square h-2 w-2 bg-warning rounded-full mr-2" />
                                         <div class="text-warning hidden @xl/actions:block">
-                                            {$LL.actionbar.status.away()}
+                                            {$LL.actionbar.status.AWAY()}
                                         </div>
                                     {/if}
                                     {#if $availabilityStatusStore === 3}
                                         <div class="aspect-square h-2 w-2 bg-danger rounded-full mr-2" />
                                         <div class="text-danger hidden @xl/actions:block">
-                                            {$LL.actionbar.status.disturb()}
+                                            {$LL.actionbar.status.DO_NOT_DISTURB()}
                                         </div>
                                     {/if}
                                 </div>
@@ -1573,7 +1630,7 @@
                                     <div
                                         class="mr-3 grow text-left {$availabilityStatusStore === 1 ? '' : 'opacity-50'}"
                                     >
-                                        {$LL.actionbar.status.online()}
+                                        {$LL.actionbar.status.ONLINE()}
                                     </div>
                                     {#if $availabilityStatusStore === 1}
                                         <div class="">
@@ -1589,7 +1646,7 @@
                                     <div
                                         class="mr-3 grow text-left {$availabilityStatusStore === 2 ? '' : 'opacity-50'}"
                                     >
-                                        {$LL.actionbar.status.away()}
+                                        {$LL.actionbar.status.AWAY()}
                                     </div>
                                     {#if $availabilityStatusStore === 2}
                                         <div class="">
@@ -1605,7 +1662,7 @@
                                     <div
                                         class="mr-3 grow text-left {$availabilityStatusStore === 3 ? '' : 'opacity-50'}"
                                     >
-                                        {$LL.actionbar.status.disturb()}
+                                        {$LL.actionbar.status.DO_NOT_DISTURB()}
                                     </div>
                                     {#if $availabilityStatusStore === 3}
                                         <div class="">
@@ -1621,7 +1678,7 @@
                                     <div
                                         class="mr-3 grow text-left {$availabilityStatusStore === 4 ? '' : 'opacity-50'}"
                                     >
-                                        {$LL.actionbar.status.offline()}
+                                        {$LL.actionbar.status.OFFLINE()}
                                     </div>
                                     {#if $availabilityStatusStore === 4}
                                         <div class="">

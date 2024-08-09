@@ -1,14 +1,23 @@
 <script lang="ts">
     import { emoteDataStoreLoading, emoteMenuStore } from "../Stores/EmoteStore";
     import { requestVisitCardsStore } from "../Stores/GameStore";
-    import { helpCameraSettingsVisibleStore, helpWebRtcSettingsVisibleStore } from "../Stores/HelpSettingsStore";
+    import {
+        helpCameraSettingsVisibleStore,
+        helpNotificationSettingsVisibleStore,
+        helpWebRtcSettingsVisibleStore,
+    } from "../Stores/HelpSettingsStore";
     import { helpSettingsPopupBlockedStore } from "../Stores/HelpSettingsPopupBlockedStore";
     import { menuVisiblilityStore, warningBannerStore } from "../Stores/MenuStore";
     import { showReportScreenStore, userReportEmpty } from "../Stores/ShowReportScreenStore";
     import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
     import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
     import { soundPlayingStore } from "../Stores/SoundPlayingStore";
-    import { showLimitRoomModalStore, modalVisibilityStore, modalPopupVisibilityStore } from "../Stores/ModalStore";
+    import {
+        modalVisibilityStore,
+        roomListVisibilityStore,
+        showLimitRoomModalStore,
+        showModalGlobalComminucationVisibilityStore,
+    } from "../Stores/ModalStore";
     import { actionsMenuStore } from "../Stores/ActionsMenuStore";
     import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore";
     import { uiWebsitesStore } from "../Stores/UIWebsiteStore";
@@ -17,12 +26,21 @@
     import { notificationPlayingStore } from "../Stores/NotificationStore";
     import { popupStore } from "../Stores/PopupStore";
     import { askDialogStore } from "../Stores/MeetingStore";
-    import { mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
+    import {
+        bubbleModalVisibility,
+        changeStatusConfirmationModalVisibility,
+        notificationPermissionModalVisibility,
+    } from "../Stores/AvailabilityStatusModalsStore";
+    import { mapEditorAskToClaimPersonalAreaStore, mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
+    import { extensionActivateComponentModuleStore, extensionModuleStore } from "../Stores/GameSceneStore";
+    import { gameManager } from "../Phaser/Game/GameManager";
     import { hasEmbedScreen } from "../Stores/EmbedScreensStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import HelpCameraSettingsPopup from "./HelpSettings/HelpCameraSettingsPopup.svelte";
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
+    import HelpNotificationSettingsPopup from "./HelpSettings/HelpNotificationSettingPopup.svelte";
+    import LayoutActionManager from "./LayoutActionManager/LayoutActionManager.svelte";
     import Menu from "./Menu/Menu.svelte";
     import ReportMenu from "./ReportMenu/ReportMenu.svelte";
     import VisitCard from "./VisitCard/VisitCard.svelte";
@@ -38,10 +56,17 @@
     import HelpPopUpBlocked from "./HelpSettings/HelpPopUpBlocked.svelte";
     import Notification from "./UI/Notification.svelte";
     import MuteDialogBox from "./Video/AskedAction/MuteDialogBox.svelte";
+    import ChangeStatusConfirmationModal from "./ActionBar/AvailabilityStatus/Modals/ChangeStatusConfirmationModal.svelte";
+    import BubbleConfirmationModal from "./ActionBar/AvailabilityStatus/Modals/BubbleConfirmationModal.svelte";
+    import NotificationPermissionModal from "./ActionBar/AvailabilityStatus/Modals/NotificationPermissionModal.svelte";
+    import GlobalCommunicationModal from "./Modal/GlobalCommunicationModal.svelte";
     import ObjectDetails from "./Modal/ObjectDetails.svelte";
-    import Popup from "./Modal/Popup.svelte";
     import MapList from "./Exploration/MapList.svelte";
     import WarningToast from "./WarningContainer/WarningToast.svelte";
+    import ClaimPersonalAreaDialogBox from "./MapEditor/ClaimPersonalAreaDialogBox.svelte";
+    import MainModal from "./Modal/MainModal.svelte";
+
+    let mainLayout: HTMLDivElement;
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
 
     window.addEventListener("resize", () => {
@@ -59,7 +84,7 @@
         ? 'not-cowebsite'
         : ''}"
 >
-    {#if $modalVisibilityStore || $modalPopupVisibilityStore}
+    {#if $modalVisibilityStore}
         <div class="bg-black/60 w-full h-full fixed left-0 right-0" />
     {/if}
 
@@ -112,6 +137,10 @@
                 <HelpCameraSettingsPopup />
             {/if}
 
+        {#if $helpNotificationSettingsVisibleStore}
+            <HelpNotificationSettingsPopup />
+        {/if}
+
             {#if $helpWebRtcSettingsVisibleStore !== "hidden" && $proximityMeetingStore === true}
                 <HelpWebRtcSettingsPopup />
             {/if}
@@ -148,12 +177,12 @@
                 <MuteDialogBox />
             {/if}
 
+        {#if $mapEditorAskToClaimPersonalAreaStore}
+            <ClaimPersonalAreaDialogBox />
+        {/if}
+
             {#if $mapExplorationObjectSelectedStore}
                 <ObjectDetails />
-            {/if}
-
-            {#if $modalPopupVisibilityStore}
-                <Popup />
             {/if}
 
             {#if $modalVisibilityStore}
@@ -163,6 +192,33 @@
             {#if $warningMessageStore.length > 0}
                 <WarningToast />
             {/if}
+
+        {#if $extensionActivateComponentModuleStore}
+            {#if $extensionModuleStore != undefined && $extensionModuleStore.components != undefined}
+                {#each $extensionModuleStore.components() as ExternalModuleComponent, index (index)}
+                    <svelte:component
+                        this={ExternalModuleComponent}
+                        synchronisationStatusStore={gameManager.getCurrentGameScene().extensionModule?.statusStore}
+                        meetingSynchronised={gameManager.getCurrentGameScene().extensionModule?.meetingSynchronised}
+                        calendarSynchronised={gameManager.getCurrentGameScene().extensionModule?.calendarSynchronised}
+                        presenceSynchronised={gameManager.getCurrentGameScene().extensionModule?.presenceSynchronised}
+                        on:checkmodulecynschronisation={() => {
+                            if (
+                                $extensionModuleStore != undefined &&
+                                $extensionModuleStore.checkModuleSynschronisation != undefined
+                            )
+                                $extensionModuleStore.checkModuleSynschronisation();
+                            extensionActivateComponentModuleStore.set(false);
+                        }}
+                        on:close={() => {
+                            extensionActivateComponentModuleStore.set(false);
+                        }}
+                    />
+                {/each}
+            {/if}
+        {/if}
+
+        <MainModal />
         </section>
         <div class="">
             <ActionBar />
@@ -186,6 +242,16 @@
         {/each}
     </div>
 
+    {#if $changeStatusConfirmationModalVisibility}
+        <ChangeStatusConfirmationModal />
+    {/if}
+
+    {#if $bubbleModalVisibility}
+        <BubbleConfirmationModal />
+    {/if}
+    {#if $notificationPermissionModalVisibility}
+        <NotificationPermissionModal />
+    {/if}
     <!-- audio when user have a message TODO delete it with new chat -->
     <audio id="newMessageSound" src="/resources/objects/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
 

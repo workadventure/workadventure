@@ -7,6 +7,7 @@ export const isCameraSetEvent = z.object({
     height: z.optional(z.number()),
     lock: z.boolean(),
     smooth: z.boolean(),
+    duration: z.optional(z.number()),
 });
 
 /**
