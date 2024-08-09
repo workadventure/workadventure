@@ -120,10 +120,9 @@
     import { focusMode, rightMode, hideMode, highlightFullScreen } from "../../Stores/ActionsCamStore";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { connectionManager } from "../../Connection/ConnectionManager";
-    import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
     import { canvasWidth } from "../../Stores/CoWebsiteStore";
-    import { size } from "lodash";
     import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
+    import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
 
     // gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
     let userName = gameManager.getPlayerName() || "";
@@ -1726,7 +1725,9 @@
     </div>
     {#if burgerOpen}
         <div
-            class="w-48 bg-contrast/80 absolute right-2 top-auto bottom-20 sm:bottom-auto sm:top-18 z-[1000] py-4 rounded-lg text-right text-white no-underline pointer-events-auto block @lg:hidden before:content-[''] before:absolute before:w-0 before:h-0 sm:before:-top-[14px] sm:before:bottom-auto before:-bottom-4 before:top-auto before:rotate-180 sm:before:rotate-0 before:right-5 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all"
+            class="w-48 bg-contrast/80 absolute {$canvasWidth < 640
+                ? 'bottom-20'
+                : 'bottom-auto top-18'} right-2 top-auto z-[1000] py-4 rounded-lg text-right text-white no-underline pointer-events-auto block @lg:hidden before:content-[''] before:absolute before:w-0 before:h-0 sm:before:-top-[14px] sm:before:bottom-auto before:-bottom-4 before:top-auto before:rotate-180 sm:before:rotate-0 before:right-5 before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all"
             transition:fly={{ y: 40, duration: 150 }}
         >
             <div class="block @md/actions:hidden">
@@ -1766,7 +1767,7 @@
                     {$LL.actionbar.otherSettings()}
                 </button>
 
-                {#if $hasEmbedScreen}
+                {#if $peerStore.size > 0}
                     <div class="h-[1px] w-full bg-white/10 my-2 block @md/actions:hidden" />
                     <div class="flex text-xxs uppercase text-white/50 px-4 py-2 relative justify-end">Camera</div>
 
