@@ -1,6 +1,8 @@
+import * as Sentry from "@sentry/svelte";
 import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
 import { Readable, Writable, get, writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
+import { Subscription } from "rxjs";
 import { AvailabilityStatus } from "@workadventure/messages";
 import {
     ChatMessage,
@@ -15,7 +17,11 @@ import LL from "../../../../i18n/i18n-svelte";
 import { gameManager } from "../../../Phaser/Game/GameManager";
 import { iframeListener } from "../../../Api/IframeListener";
 import { RoomConnection } from "../../../Connection/RoomConnection";
-import { Space } from "../../../Space/Space";
+import { SpaceInterface } from "../../../Space/SpaceInterface";
+import { SpaceRegistryInterface } from "../../../Space/SpaceRegistry/SpaceRegistryInterface";
+import { chatVisibilityStore } from "../../../Stores/ChatStore";
+import { selectedRoom } from "../../Stores/ChatStore";
+import { SpaceFilterInterface } from "../../../Space/SpaceFilter/SpaceFilter";
 
 export class ProximityChatMessage implements ChatMessage {
     isQuotedMessage = undefined;
@@ -58,21 +64,28 @@ export class ProximityChatRoom implements ChatRoom {
     hasPreviousMessage = writable(false);
     isEncrypted = writable(false);
     typingMembers: Writable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
-    private _space: Space | undefined;
+    private _space: SpaceInterface | undefined;
+    private _spaceWatcher: SpaceFilterInterface | undefined;
+    private spaceMessageSubscription: Subscription | undefined;
+    private spaceIsTypingSubscription: Subscription | undefined;
 
     private unknownUser = {
         chatId: "0",
         uuid: "0",
         availabilityStatus: writable(AvailabilityStatus.ONLINE),
         username: "Unknown",
-        avatarUrl: null,
+        avatarUrl: undefined,
         roomName: undefined,
         playUri: undefined,
         color: undefined,
         id: undefined,
     } as ChatUser;
 
-    constructor(private roomConnection: RoomConnection, private _userId: number) {
+    constructor(
+        private roomConnection: RoomConnection,
+        private _userId: number,
+        private spaceRegistry: SpaceRegistryInterface
+    ) {
         this.typingMembers = writable([]);
     }
 
@@ -122,7 +135,7 @@ export class ProximityChatRoom implements ChatRoom {
             uuid: userUuid,
             availabilityStatus: writable(AvailabilityStatus.ONLINE),
             username: userName,
-            avatarUrl: get(playerWokaPictureStore) ?? null,
+            avatarUrl: get(playerWokaPictureStore) ?? undefined,
             roomName: undefined,
             playUri: undefined,
             color: color,
@@ -147,7 +160,7 @@ export class ProximityChatRoom implements ChatRoom {
         this.membersId = this.membersId.filter((id) => id !== userId.toString());
     }
 
-    addNewMessage(message: string, senderUserId: number): void {
+    private addNewMessage(message: string, senderUserId: number): void {
         // Create content message
         const newChatMessageContent = {
             body: message,
@@ -217,19 +230,27 @@ export class ProximityChatRoom implements ChatRoom {
     }
 
     startTyping(): Promise<object> {
-        const spaceName = get(this._connection.spaceName);
-        if (spaceName == undefined) return Promise.resolve({});
-        this._connection.roomConnection.emitTypingProximityMessage(spaceName, true);
+        this._space?.emitPublicMessage({
+            $case: "spaceIsTyping",
+            spaceIsTyping: {
+                isTyping: true,
+            },
+        });
+
         return Promise.resolve({});
     }
     stopTyping(): Promise<object> {
-        const spaceName = get(this._connection.spaceName);
-        if (spaceName == undefined) return Promise.resolve({});
-        this._connection.roomConnection.emitTypingProximityMessage(spaceName, false);
+        this._space?.emitPublicMessage({
+            $case: "spaceIsTyping",
+            spaceIsTyping: {
+                isTyping: false,
+            },
+        });
+
         return Promise.resolve({});
     }
 
-    addTypingUser(senderUserId: number): void {
+    private addTypingUser(senderUserId: number): void {
         const sender: ChatUser | undefined = get(this._connection.connectedUsers).get(senderUserId);
         if (sender == undefined) return;
 
@@ -245,7 +266,7 @@ export class ProximityChatRoom implements ChatRoom {
         });
     }
 
-    removeTypingUser(senderUserId: number): void {
+    private removeTypingUser(senderUserId: number): void {
         const sender: ChatUser | undefined = get(this._connection.connectedUsers).get(senderUserId);
         if (sender == undefined) return;
 
@@ -273,11 +294,48 @@ export class ProximityChatRoom implements ChatRoom {
         return get(this._connection.spaceName);
     }
 
-    get space(): Space | undefined {
+    /*get space(): Space | undefined {
         return this._space;
+    }*/
+
+    public joinSpace(spaceName: string): void {
+        this._space = this.spaceRegistry.joinSpace(spaceName);
+        // TODO: turn "watch" into "createWatcher" that takes a filter in parameter. The name should be generated automatically and not exposed to the user.
+        this._spaceWatcher = this._space.watch("all_users");
+
+        this.spaceMessageSubscription?.unsubscribe();
+        this.spaceMessageSubscription = this._space.observePublicEvent("spaceMessage").subscribe((event) => {
+            this.addNewMessage(event.spaceMessage.message, event.sender);
+
+            // if the proximity chat is not open, open it to see the message
+            chatVisibilityStore.set(true);
+            if (get(selectedRoom) == undefined) selectedRoom.set(this);
+        });
+
+        this.spaceIsTypingSubscription?.unsubscribe();
+        this.spaceIsTypingSubscription = this._space.observePublicEvent("spaceIsTyping").subscribe((event) => {
+            if (event.spaceIsTyping.isTyping) {
+                this.addTypingUser(event.sender);
+            } else {
+                this.removeTypingUser(event.sender);
+            }
+        });
     }
 
-    set space(value: Space | undefined) {
-        this._space = value;
+    public leaveSpace(spaceName: string): void {
+        if (!this._space) {
+            console.error("Trying to leave a space that is not joined");
+            Sentry.captureMessage("Trying to leave a space that is not joined");
+            return;
+        }
+        if (this._space.getName() !== spaceName) {
+            console.error("Trying to leave a space different from the one joined");
+            Sentry.captureMessage("Trying to leave a space different from the one joined");
+            return;
+        }
+        this._space.stopWatching("all_users");
+        this.spaceRegistry.leaveSpace(spaceName);
+        this.spaceMessageSubscription?.unsubscribe();
+        this.spaceIsTypingSubscription?.unsubscribe();
     }
 }

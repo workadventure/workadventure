@@ -29,7 +29,7 @@ type ReactiveSpaceUser = {
     roomName: string | undefined;
 };
 
-type SpaceUserExtended = SpaceUser & {
+export type SpaceUserExtended = SpaceUser & {
     wokaPromise: Promise<string> | undefined;
     getWokaBase64: string;
     updateSubject: Subject<{
