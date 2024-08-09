@@ -1,12 +1,57 @@
 <script lang="ts">
     import {PUSHER_URL} from '../../../Enum/EnvironmentVariable'
+    import { gameManager } from "../../../Phaser/Game/GameManager";
+
+    interface discordServeur {
+        id: string;
+        name: string;
+        icon: string;
+        owner: boolean;
+        permissions: number;
+        features: string[];
+    }
    
     export const redirectUri = PUSHER_URL + '/third-party-login/login/discord'
+    let servers: Array<discordServeur> = [];
+
+    const discordTokens = gameManager.getCurrentGameScene().room.metadata.player.accessTokens.find(token => token.provider === 'Discord')
+
+    console.log("--------------------------")
+    console.log(discordTokens);
+
+    async function fetchDiscordServers() {
+        if (!discordTokens) {
+            console.error('No Discord token available');
+            return;
+        }
+
+        try {
+            const response = await fetch('https://discord.com/api/v10/users/@me/guilds', {
+                headers: {
+                    'Authorization': `Bearer ${discordTokens.token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch Discord servers');
+            }
+
+            servers = await response.json();
+        } catch (error) {
+            console.error('Error fetching Discord servers:', error);
+        }
+    }
+
+    function handleButtonClick() {
+        fetchDiscordServers();
+    }
 
 </script>
 
 <div class=" tw-flex tw-flex-col tw-w-full tw-gap-2">
-    <a  href={redirectUri}
+    <!-- <a  href={redirectUri} -->
+    <button
+    on:click={handleButtonClick}
     class="tw-w-full tw-p-2 tw-bg-[#4156F6] tw-text-white tw-no-underline tw-rounded-md tw-text-center tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white tw-flex tw-flex-row tw-items-center tw-gap-2">
     <svg width="21" height="16" viewBox="0 0 21 16" fill="none" xmlns="http://www.w3.org/2000/svg">
         <g clip-path="url(#clip0_4009_21095)">
@@ -24,10 +69,19 @@
         <span class="tw-cursor-pointer">
             Connect to Discord
         </span>
-    </a>
+    </button>
+    <!-- </a> -->
     <p class=" tw-text-sm tw-text-gray-500">
         Lorem ipsum odor amet, consectetuer adipiscing elit. Tincidunt nisl sed laoreet praesent nascetur nunc. Bibendum ad per arcu sodales, hac etiam eu porta egestas. See the docs
     </p>
+
+    {#if servers.length > 0}
+    <ul>
+        {#each servers as server}
+            <li>{server.name}</li>
+        {/each}
+    </ul>
+{/if}
 </div>
 
 <style>
