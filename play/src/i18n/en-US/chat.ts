@@ -21,6 +21,7 @@ const chat: BaseTranslation = {
         walkTo: "Walk to",
         teleporting: "Teleporting ...",
         businessCard: "Business Card",
+        sendMessage: "Send Message",
     },
     connecting: "Connecting to server ...",
     waitingInit: "Waiting for server initialization ...",

@@ -8,7 +8,7 @@
     import { IconChevronUp } from "@wa-icons";
 
     const chat = gameManager.getCurrentGameScene().chatConnection;
-    const DISCONNECTED_LABEL = "disconnected";
+    const DISCONNECTED_LABEL = $LL.chat.userList.disconnected();
     const DISCONNECTED_USERS_LIMITATION = 200;
 
     onMount(() => {
@@ -43,8 +43,11 @@
 
     $: roomsWithUsers = [
         ...Array.from(usersByRoom?.entries() || []).sort(
-            ([aKey, _aValue]: [string, ChatUser[]], [bKey, _bValue]: [string, ChatUser[]]) =>
-                aKey === $LL.chat.userList.isHere() ? -1 : aKey.localeCompare(bKey)
+            ([aKey, _aValue]: [string, ChatUser[]], [bKey, _bValue]: [string, ChatUser[]]) => {
+                if (aKey === $LL.chat.userList.isHere()) return -1;
+                if (bKey === $LL.chat.userList.isHere()) return 1;
+                return aKey.localeCompare(bKey);
+            }
         ),
         [DISCONNECTED_LABEL, filteredUserDisconnected ?? []],
     ] as Array<[string, ChatUser[]]>;
