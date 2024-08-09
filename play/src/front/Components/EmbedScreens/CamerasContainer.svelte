@@ -7,20 +7,17 @@
     import MyCamera from "../MyCamera.svelte";
     import { myCameraStore } from "../../Stores/MyMediaStore";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
+    import { canvasWidth } from "../../Stores/CoWebsiteStore";
 
     let isHightlighted = false;
     let isMobile: boolean;
     let unsubscribeHighlightEmbedScreen: Unsubscriber;
 
-    let bottomActionBar = false;
-
     function updateScreenSize() {
         if (window.innerWidth <= 768) {
             isMobile = true;
-            bottomActionBar = true;
         } else {
             isMobile = false;
-            bottomActionBar = false;
         }
     }
 
@@ -73,7 +70,7 @@
 <div
     class="{isHightlighted
         ? 'flex justify-center gap-4 whitespace-nowrap relative overflow-x-auto overflow-y-hidden m-0 mx-auto my-0 w-full max-w-full'
-        : 'not-highlighted mt-0'} {$highlightFullScreen && $highlightedEmbedScreen ? 'hidden' : ''} {bottomActionBar
+        : 'not-highlighted mt-0'} {$highlightFullScreen && $highlightedEmbedScreen ? 'hidden' : ''} {$canvasWidth < 768
         ? 'mt-12'
         : ''} "
     id="cameras-container"

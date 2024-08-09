@@ -290,7 +290,7 @@
 
     onDestroy(() => {
         heightContainerForWindow.set(window.innerHeight);
-        widthContainerForWindow.set(window.innerWidth);
+        widthContainerForWindow.set(0);
         resizeFromCowebsite.set(false);
         fullScreenCowebsite.set(false);
         waScaleManager.applyNewSize();

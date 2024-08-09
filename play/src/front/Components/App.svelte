@@ -198,7 +198,7 @@
     });
 
     function updateScreenSize() {
-        if (window.innerWidth < 768) {
+        if (window.innerWidth <= 768) {
             isVerticalMode.set(true);
             updateDynamicStyles();
         } else {
