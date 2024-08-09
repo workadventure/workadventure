@@ -121,7 +121,6 @@
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { connectionManager } from "../../Connection/ConnectionManager";
     import { canvasWidth } from "../../Stores/CoWebsiteStore";
-    import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
 
     // gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
@@ -481,15 +480,6 @@
     //     resetModalVisibility();
     //     roomListVisibilityStore.set(true);
     // }*/
-
-    window.addEventListener("resize", () => {
-        // console.log($canvasWidth, "canvasWidth");
-    });
-
-    // $: console.log($canvasWidth, "canvasWidth");
-    $: console.log($hasEmbedScreen, "hasEmbedScreen");
-    $: console.log($peerStore.size, "peerStore.size");
-    $: console.log($streamableCollectionStore.size, "highlightFullScreen");
 </script>
 
 <svelte:window on:keydown={onKeyDown} />

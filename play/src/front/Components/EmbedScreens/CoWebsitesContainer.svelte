@@ -315,7 +315,7 @@
         {#if showArrow}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div
-                class="aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer"
+                class="h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer"
                 on:click={() => (menuArrow = !menuArrow)}
                 on:click={() => (appearDropdownMenu = !appearDropdownMenu)}
             >
@@ -358,7 +358,7 @@
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div class="flex justify-end w-full">
                 <div
-                    class="ml-full aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer"
+                    class="ml-full h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer"
                     on:click={toggleFullScreen}
                 >
                     {#if !$fullScreenCowebsite}
