@@ -1,7 +1,7 @@
 import { get } from "svelte/store";
 import type CancelablePromise from "cancelable-promise";
 import type { PositionMessage, PositionMessage_Direction } from "@workadventure/messages";
-import { requestVisitCardsStore } from "../../Stores/GameStore";
+import { requestVisitCardsStore, selectedChatIDRemotePlayerStore } from "../../Stores/GameStore";
 import type { ActionsMenuAction } from "../../Stores/ActionsMenuStore";
 import { actionsMenuStore } from "../../Stores/ActionsMenuStore";
 import { Character } from "../Entity/Character";
@@ -38,7 +38,8 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         moving: boolean,
         visitCardUrl: string | null,
         companionTexturePromise?: CancelablePromise<string>,
-        activationRadius?: number
+        activationRadius?: number,
+        private chatID: string | undefined = undefined
     ) {
         super(Scene, x, y, texturesPromise, name, direction, moving, 1, true, companionTexturePromise);
 
@@ -129,6 +130,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
                 priority: 1,
                 callback: () => {
                     requestVisitCardsStore.set(this.visitCardUrl);
+                    selectedChatIDRemotePlayerStore.set(this.chatID ?? null);
                     actionsMenuStore.clear();
                 },
             });

@@ -11,10 +11,13 @@ const menu: BaseTranslation = {
             userlist: "User list",
             openEmoji: "Open emoji selected popup",
             closeEmoji: "Close emoji menu",
+            mobile: "Open mobile menu",
+            calendar: "Open calendar",
         },
     },
     visitCard: {
         close: "Close",
+        sendMessage: "Send message",
     },
     profile: {
         edit: {

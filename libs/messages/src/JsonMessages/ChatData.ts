@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isApplicationDefinitionInterface } from "./ApplicationDefinitionInterface";
 
 export const isUserData = z.object({
   uuid: z.string(),
@@ -20,6 +21,9 @@ export const isUserData = z.object({
   googleSlidesToolActivated: z.boolean().optional().default(false),
   eraserToolActivated: z.boolean().optional().default(false),
   klaxoonToolClientId: z.string().optional(),
+  excalidrawToolActivated: z.boolean().optional().default(false),
+  excalidrawToolDomains: z.array(z.string()).optional().default(['excalidraw.com']),
+  applications: z.array(isApplicationDefinitionInterface).optional(),
 });
 
 export type UserData = z.infer<typeof isUserData>;

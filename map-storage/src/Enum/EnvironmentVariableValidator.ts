@@ -67,6 +67,11 @@ export const EnvironmentVariables = z.object({
             "The (optional) API token to use when calling the webhook. The token will be sent in the Authorization header of the POST request."
         )
         .transform(emptyStringToUndefined),
+    MAX_SIMULTANEOUS_FS_READS: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 100))
+        .describe(
+            "The maximum number of simultaneous file system (local or S3) reads when regenerating the cache file. Defaults to 100."
+        ),
     SENTRY_DSN: z
         .string()
         .optional()
@@ -123,6 +128,22 @@ export const EnvironmentVariables = z.object({
         ),
     AUTHENTICATION_USER: z.string().optional().transform(emptyStringToUndefined),
     AUTHENTICATION_PASSWORD: z.string().optional().transform(emptyStringToUndefined),
+    WAM_TEMPLATE_URL: z
+        .string()
+        .url()
+        .or(z.literal(""))
+        .optional()
+        .describe("The URL to fetch an empty WAM template")
+        .transform(emptyStringToUndefined),
+    ENTITY_COLLECTION_URLS: z
+        .string()
+        .url()
+        .or(z.literal(""))
+        .optional()
+        .describe(
+            "A comma separated list of entity collection URLs to be used when a new TMJ map is uploaded. Note: ignored if WAM_TEMPLATE_URL is set."
+        )
+        .transform(emptyStringToUndefined),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

@@ -136,12 +136,13 @@
             class="mt-0 @md/main-layout:mt-24 mr-16 @md/main-layout:mr-0 flex flex-row @md/main-layout:flex-col items-stretch @md/main-layout:items-start overflow-hidden overflow-x-scroll @md/main-layout:overflow-auto px-4 @md/main-layout:px-0"
         >
             {#each $subMenusStore as submenu, i (submenu.key + "_" + submenu.type)}
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class="menu-item-container group flex py-4 px-4 relative transition-all w-auto @md/main-layout:w-full @md/main-layout:hover:pl-6 hover:opacity-100 cursor-pointer before:z-1 before:transition-all before:content-[''] before:absolute before:h-full before:w-0 before:top-0 before:right-0 before:bg-contrast/80 {activeSubMenu ===
                     submenu
                         ? 'active before:w-full opacity-100 hover:pl-4'
                         : 'opacity-60'}"
-                    on:click|preventDefault={() => switchMenu(submenu)}
+                    on:click|preventDefault|stopPropagation={() => switchMenu(submenu)}
                     transition:fly={{ delay: i * 75, x: 200, duration: 150 }}
                 >
                     <button type="button" class="menu-item m-0 relative z-10 bold block @md/main-layout:flex">
@@ -223,7 +224,7 @@
             type="button"
             class="btn btn-lg btn-ghost btn-light fixed @md/main-layout:absolute right-0 top-0 !p-[0.5rem] @md/main-layout:!p-[1.15rem] !rounded-none cursor-pointer m-0"
             id="closeMenu"
-            on:click={closeMenu}
+            on:click|preventDefault|stopPropagation={closeMenu}
         >
             <!-- TODO HUGO : I REMOVE class close-window -->
             <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">

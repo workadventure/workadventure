@@ -1,77 +1,49 @@
 import type { BaseTranslation } from "../i18n-types";
 
 const actionbar: BaseTranslation = {
-    edit: "Edit",
-    cancel: "Cancel",
-    close: "Close",
-    login: "Login",
-    admin: "Admin",
-    profil: "Edit profil",
-    woka: "Customize your avatar",
-    companion: "Add companion",
-    quest: "Achievements",
-    megaphone: "Use megaphone",
-    test: "Test my settings",
-    editCamMic: "Edit cam / mic",
-    accountType: "Basic account",
-    upgrade: "Upgrade",
-    otherSettings: "Other settings",
-    bo: "Back office",
-    globalMessage: "Send global message",
-    mapEditor: "Map editor",
-    app: "Ouvrir / Fermer les applications",
-    camera: {
-        disabled: "Your camera is disabled",
-        activate: "Activate your camera",
-    },
-    microphone: {
-        disabled: "Your microphone is disabled",
-        activate: "Activate your microphone",
-    },
-    status: {
-        online: "Online",
-        away: "Away",
-        disturb: "Do not disturb",
-        offline: "Offline",
-    },
+    chat: "Chat öffnen / schließen",
+    follow: "Folgen",
+    unfollow: "Entfolgen",
+    lock: "Diskussion sperren / entsperren",
+    screensharing: "Bildschirmfreigabe starten / stoppen",
+    layout: "Kachelansicht umschalten",
+    disableLayout: "Nicht verfügbar, wenn nur eine Person im Meeting ist",
+    camera: "Kamera starten / stoppen",
+    microphone: "Mikrofon stummschalten / einschalten",
+    emoji: "Emoji öffnen / schließen",
+    disableMegaphone: "Megafon deaktivieren",
+    menu: "Menü öffnen / schließen",
+    calendar: "Kalender öffnen / schließen",
+    mapEditor: "Kartenmanager öffnen / schließen",
+    mapEditorMobileLocked: "Karteneditor ist im mobilen Modus gesperrt",
+    mapEditorLocked: "Karteneditor ist gesperrt 🔐",
+    bo: "Back Office öffnen",
     subtitle: {
-        camera: "Camera",
-        microphone: "Microphone",
-        speaker: "Audio output",
+        microphone: "Mikrofon",
+        speaker: "Lautsprecher",
     },
+    app: "Anwendungen öffnen / schließen",
+    listStatusTitle: {
+        enable: "Ändere deinen Status",
+        inMeeting: "Viel Spaß im Meeting 🤓",
+        inSilentZone: "Genieße die stille Zone 😁",
+    },
+
+    status: {
+        ONLINE: "Online",
+        BACK_IN_A_MOMENT: "Bin gleich zurück",
+        DO_NOT_DISTURB: "Nicht stören",
+        BUSY: "Beschäftigt",
+    },
+    globalMessage: "Sende eine globale Nachricht",
+    roomList: "Raumliste öffnen / schließen",
     help: {
-        chat: {
-            title: "Send text message",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-        },
-        users: {
-            title: "Display user's list",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-        },
-        emoji: {
-            title: "Display an emoji",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-        },
         follow: {
-            title: "Ask to follow",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            title: "Folgen",
         },
-        lock: {
-            title: "Lock conversation",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-        },
-        mic: {
-            title: "Enable/disable your microphone",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-        },
-        cam: {
-            title: "Enable/disable your camera",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-        },
-        share: {
-            title: "Share your screen",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-        },
-    },
+        unfollow: {
+            title: "Entfolgen",
+        }
+    }
 };
 export default actionbar;

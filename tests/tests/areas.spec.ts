@@ -21,7 +21,7 @@ test.describe('Areas', () => {
         await page.goto(
             publicTestMapUrl("tests/Areas/AreaFromTiledMap/map.json", "areas")
         );
-        await login(page, 'Alice');
+        await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
 
         await evaluateScript(page, async () => {
             await WA.onInit();
@@ -34,7 +34,7 @@ test.describe('Areas', () => {
             silentArea.height = 600;
             return;
         });
-        await expect(page.getByText('Silent zone')).toBeVisible();
+        await expect(page.getByText('Silent zone',{exact:true})).toBeVisible();
     });
 
 });

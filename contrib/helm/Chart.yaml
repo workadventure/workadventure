@@ -27,3 +27,6 @@ dependencies:
   - name: redis
     version: 17.11.7
     repository: https://charts.bitnami.com/bitnami
+  - name: common
+    version: 2.x.x
+    repository: oci://registry-1.docker.io/bitnamicharts

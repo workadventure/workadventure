@@ -11,11 +11,11 @@ const camera: DeepPartial<Translation["camera"]> = {
         permissionDenied: "Zugriff verweigert",
         content: "Der Zugriff auf Kamera und Mikrofon muss im Browser freigegeben werden.",
         firefoxContent:
-            'Bitte klicke auf "Diese Entscheidungen speichern" Schaltfläche um erneute Nachfragen nach der Freigabe in Firefox zu verhindern.',
+            'Bitte klicke auf die Schaltfläche "Diese Entscheidung speichern", um erneute Nachfragen nach der Freigabe in Firefox zu verhindern.',
         refresh: "Aktualisieren",
         continue: "Ohne Kamera fortfahren",
         screen: {
-            firefox: "/resources/help-setting-camera-permission/de-DE-chrome.png",
+            firefox: "/resources/help-setting-camera-permission/de-DE-firefox.png",
             chrome: "/resources/help-setting-camera-permission/de-DE-chrome.png",
         },
     },
@@ -24,7 +24,7 @@ const camera: DeepPartial<Translation["camera"]> = {
         titlePending: "Verbinde mit dem Video-Relay-Server",
         error: '"TURN"-Server nicht erreichbar',
         content:
-            "Eine Verbindung zum Video-Relay-Server konnte nicht hergetellt werden. Sie sind möglicherweise nicht in der Lage, mit anderen Benutzern zu kommunizieren.",
+            "Eine Verbindung zum Video-Relay-Server konnte nicht hergestellt werden. Sie sind möglicherweise nicht in der Lage, mit anderen Benutzern zu kommunizieren.",
         solutionVpn:
             "Wenn Sie eine Verbindung über ein VPN herstellen, trennen Sie bitte die Verbindung zu Ihrem VPN und aktualisieren Sie die Webseite.",
         solutionHotspot:

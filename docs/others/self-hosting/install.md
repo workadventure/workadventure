@@ -96,7 +96,7 @@ solution on Kubernetes if you want.
 If you have specific needs for a custom deployment, the WorkAdventure company can offer paid support. Don't hesitate to
 contact us at hello@workadventu.re. We also provide support to integrate WorkAdventure in your existing application.
 
-Click here to see the [Docker Compose install guide](../../contrib/docker/README.md).
+Click here to see the [Docker Compose install guide](../../../contrib/docker/README.md).
 
 ### Helm chart for Kubernetes
 
@@ -106,7 +106,7 @@ The Helm Chart is well tested on each release and is known to work.
 It is newer than the Docker Compose install and might change more frequently in the coming month. Therefore,
 we do not (yet) guarantee the absence of breaking changes between minor versions.
 
-Click here to see the [Helm chart install guide](../../contrib/helm/README.md).
+Click here to see the [Helm chart install guide](../../../contrib/helm/README.md).
 
 ### Alternative installation methods
 

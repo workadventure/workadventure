@@ -2,7 +2,7 @@
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
     import { Color } from "@workadventure/shared-utils";
-    import { ArrowDownIcon, ArrowUpIcon } from "svelte-feather-icons";
+    import {IconArrowDown, IconArrowUp} from "@wa-icons";
     import { onDestroy, onMount } from "svelte";
     import { Unsubscriber } from "svelte/store";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
@@ -14,8 +14,8 @@
 
     export let peer: ScreenSharingPeer;
     let streamStore = peer.streamStore;
-    let name = peer.userName;
-    let backGroundColor = Color.getColorByString(peer.userName);
+    let name = peer.player.name;
+    let backGroundColor = Color.getColorByString(peer.player.name);
     let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
     let statusStore = peer.statusStore;
     let isHighlighted = true;
@@ -123,9 +123,9 @@
                 on:click={() => (menuDrop = !menuDrop)}
             >
                 {#if menuDrop}
-                    <ArrowUpIcon class="w-4 h-4 m-auto flex items-center text-white" />
+                    <IconArrowUp class="w-4 h-4 m-auto flex items-center text-white" />
                 {:else}
-                    <ArrowDownIcon class="w-4 h-4 m-auto flex items-center text-white" />
+                    <IconArrowDown class="w-4 h-4 m-auto flex items-center text-white" />
                 {/if}
             </div>
 

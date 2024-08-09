@@ -3,7 +3,7 @@ import { writable } from "svelte/store";
 export type Notification = {
     id: string;
     text: string;
-    icon: string;
+    icon?: string;
 };
 
 /**
@@ -14,10 +14,10 @@ function createNotificationStore() {
 
     return {
         subscribe,
-        playNotification: (text: string, icon: string) => {
+        playNotification: (text: string, icon?: string, id?: string) => {
             update((list) => {
                 list.add({
-                    id: crypto.randomUUID(),
+                    id: id ?? crypto.randomUUID(),
                     text,
                     icon,
                 });
@@ -27,6 +27,15 @@ function createNotificationStore() {
         removeNotification(notification: Notification) {
             update((list) => {
                 list.delete(notification);
+                return list;
+            });
+        },
+        removeNotificationById(id: string) {
+            update((list) => {
+                const notification = Array.from(list).find((n) => n.id === id);
+                if (notification) {
+                    list.delete(notification);
+                }
                 return list;
             });
         },

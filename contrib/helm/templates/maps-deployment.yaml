@@ -55,6 +55,10 @@ spec:
             - secretRef:
                 name: {{ .Values.maps.externalSecretName }}
             {{- end }}
+          {{- if .Values.maps.extraEnvVars }}
+          env:
+            {{- include "common.tplvalues.render" (dict "value" .Values.maps.extraEnvVars "context" $) | nindent 12 }}
+          {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.maps.service.port }}

@@ -5,7 +5,6 @@
     import { Unsubscriber } from "svelte/store";
     import CancelablePromise from "cancelable-promise";
     import Debug from "debug";
-    import { ArrowDownIcon, ArrowUpIcon } from "svelte-feather-icons";
     import { VideoPeer } from "../../WebRtc/VideoPeer";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
@@ -22,6 +21,7 @@
     import { highlightFullScreen, setHeightScreenShare } from "../../Stores/ActionsCamStore";
     import ChevronRightIcon from "../Icons/ChevronRightIcon.svelte";
     import ActionMediaBox from "./ActionMediaBox.svelte";
+    import {IconArrowDown, IconArrowUp} from "@wa-icons";
 
     // Extend the HTMLVideoElement interface to add the setSinkId method.
     // See https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
@@ -35,7 +35,7 @@
 
     let streamStore = peer.streamStore;
     let volumeStore = peer.volumeStore;
-    let name = peer.userName;
+    let name = peer.player.name;
     let statusStore = peer.statusStore;
     let constraintStore = peer.constraintsStore;
     let unsubscribeChangeOutput: Unsubscriber;
@@ -381,9 +381,9 @@
             on:click={() => (menuDrop = !menuDrop)}
         >
             {#if menuDrop}
-                <ArrowUpIcon class="w-4 h-4 m-auto flex items-center text-white" />
+                <IconArrowUp class="w-4 h-4 m-auto flex items-center text-white" />
             {:else}
-                <ArrowDownIcon class="w-4 h-4 m-auto flex items-center text-white" />
+                <IconArrowDown class="w-4 h-4 m-auto flex items-center text-white" />
             {/if}
         </div>
 

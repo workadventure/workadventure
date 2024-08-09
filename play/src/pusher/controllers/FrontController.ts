@@ -160,7 +160,7 @@ export class FrontController extends BaseHttpController {
         });
 
         // @deprecated
-        this.app.get("/register", (req: Request, res: Response) => {
+        this.app.get("/register/*", (req: Request, res: Response) => {
             return this.displayFront(req, res, this.getFullUrl(req));
         });
 

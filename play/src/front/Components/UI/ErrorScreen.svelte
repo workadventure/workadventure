@@ -6,6 +6,8 @@
     import { connectionManager } from "../../Connection/ConnectionManager";
 
     import reload from "../images/reload.png";
+    import LL from "../../../i18n/i18n-svelte";
+    import { userIsConnected } from "../../Stores/MenuStore";
 
     let errorScreen = $errorScreenStore;
     let logoErrorParent: HTMLDivElement;
@@ -51,6 +53,10 @@
         return gameManager.currentStartedRoom.backgroundColor;
     }
 
+    function logout() {
+        connectionManager.logout();
+    }
+
     $: detailsStylized = (details ?? "").replace("{time}", `${timeVar / 1000}`);
 
     onMount(() => {
@@ -88,6 +94,11 @@
                     {#if $errorScreenStore.type === "retry"}<img src={reload} alt="" class="reload" />{/if}
                     {$errorScreenStore.buttonTitle}
                 </button>
+                {#if $userIsConnected}
+                    <button type="button" class="light button" on:click={logout}>
+                        {$LL.menu.profile.logout()}
+                    </button>
+                {/if}
             {/if}
         </div>
     </main>

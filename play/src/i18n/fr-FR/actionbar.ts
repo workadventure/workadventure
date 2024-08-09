@@ -20,6 +20,7 @@ const actionbar: BaseTranslation = {
     companion: "Ajouter un compagnon",
     quest: "Mes badges",
     megaphone: "Utiliser le mégaphone",
+    calendar: "Ouvrir / Fermer le calendrier",
     test: "Tester ma configuration",
     editCamMic: "Modifier ma camera / micro",
     accountType: "Compte gratuit",
@@ -37,11 +38,13 @@ const actionbar: BaseTranslation = {
         disabled: "Votre micro est désactivé",
         activate: "Activer votre micro",
     },
+
     status: {
-        online: "En ligne",
-        away: "Absent",
-        disturb: "Ne pas déranger",
-        offline: "Hors ligne",
+        ONLINE: "En ligne",
+        AWAY: "Absent",
+        BACK_IN_A_MOMENT: "De retour dans un moment",
+        DO_NOT_DISTURB: "Ne pas déranger",
+        BUSY: "Occupé",
     },
     subtitle: {
         camera: "Camera",
@@ -80,6 +83,20 @@ const actionbar: BaseTranslation = {
         share: {
             title: "Partager votre écran",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        },
+    },
+    listStatusTitle: {
+        enable: "Changer de statut",
+        inMeeting: "Bonne réunion 🤓",
+        inSilentZone: "Profitez de la zone silencieuse 😁",
+    },
+    roomList: "Ouvrir / Fermer la liste des salons",
+    externalModule: {
+        status: {
+            onLine: "Le statut est ok ✅",
+            offLine: "Le statut est hors ligne ❌",
+            warning: "Le statut est en avertissement ⚠️",
+            sync: "Le statut est en synchronisation 🔄",
         },
     },
 };

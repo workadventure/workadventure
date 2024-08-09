@@ -36,3 +36,10 @@ export const isUserRoomToken = z.object({
   }),
   exp: z.number(),
 });
+
+export const isOauthRefreshToken = z.object({
+  message: z.string(),
+  token: z.string(),
+});
+
+export type OauthRefreshToken = z.infer<typeof isOauthRefreshToken>;

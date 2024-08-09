@@ -477,10 +477,10 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
-    addNewParticipant(): void {
+    addNewParticipant(peerId: string, userId: number, uuid: string): void {
         this.posthogPromise
             ?.then((posthog) => {
-                posthog.capture("wa_spontaneous_discussion");
+                posthog.capture("wa_spontaneous_discussion", { peerId, userId, uuid });
             })
             .catch((e) => console.error(e));
     }
@@ -710,6 +710,46 @@ class AnalyticsClient {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture("wa-opened-room-list");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    openedPopup(targetRectangle: string, id: number): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_opened_popup", { targetRectangle, id });
+            })
+            .catch((e) => console.error(e));
+    }
+
+    openGlobalMessage(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_action_globalmessage");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    openGlobalAudio(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_action_globalaudio");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    openExternalModuleCalendar(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa-opened-external-module-calendar");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    openExternalModule(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa-opened-external-module");
             })
             .catch((e) => console.error(e));
     }

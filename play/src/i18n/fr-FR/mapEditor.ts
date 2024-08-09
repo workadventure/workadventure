@@ -13,6 +13,13 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         trashEditor: "Corbeille",
         exploreTheRoom: "Explorer le salon",
         closeMapEditor: "Fermer l'éditeur de carte",
+        mapManagerActivated: "Gestionnaire de carte activé",
+        mapExplorerActivated: "Survol de la carte",
+        exploreTheRoomActivated: "Exploration de la carte activée",
+        areaEditorActivated: "Édition de zone activée",
+        entityEditorActivated: "Édition d'objets activée",
+        trashEditorActivated: "Corbeille activée",
+        configureMyRoomActivated: "Configuration de la salle activée",
     },
     properties: {
         silentProperty: {
@@ -51,6 +58,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 addConfig: "Ajouter une option",
                 startWithAudioMuted: "Démarrer avec le microphone désactivé",
                 startWithVideoMuted: "Démarrer avec la vidéo désactivée",
+                jitsiRoomAdminTag: "Tag modérateur du meeting",
                 cancel: "Annuler",
                 validate: "Valider",
             },
@@ -88,6 +96,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             errorInvalidUrl: 'Veuillez entrer une URL valide (commençant par "https://")',
             findOutMoreHere: "En savoir plus ici",
             openPickerSelector: "Ouvrir le sélecteur",
+            forcedInNewTab: "Ouverture forcée dans un nouvel onglet",
         },
         advancedOptions: "Options avancées",
         speakerMegaphoneProperties: {
@@ -158,6 +167,45 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             error: "Veuillez entrer une URL Google Drive valide",
             disabled: "L'intégration Google Drive est désactivée.",
         },
+        restrictedRightsProperties: {
+            label: "Ajouter des droits",
+            rightTitle: "Droit d'accès et d'édion via les tags utilisateur",
+            rightWriteTitle: "Droits d'édition",
+            rightWriteDescription:
+                "Les droits d'édition définissent qui peut modifier la zone. Les utilisateurs correspondant à l'un de ces tags peuvent créer, mettre à jour ou supprimer un objet dans la zone.",
+            rightReadTitle: "Droits d'accès",
+            rightReadDescription:
+                "Les droits d'accès définissent qui peut interagir avec la zone. Les utilisateurs correspondant à l'un de ces tags peuvent entrer dans la zone et utiliser les objets qui s'y trouvent.",
+        },
+        personalAreaConfiguration: {
+            label: "Zone personnelle",
+            description:
+                "La définition d'une zone personnelle permet à l'utilisateur de revendiquer cette zone comme son propre espace. En tant qu'administrateur, vous pouvez définir/révoquer un espace à un utilisateur.",
+            accessClaimMode: "Mode d'attribution de l'accès",
+            dynamicAccessClaimMode: "Dynamique",
+            staticAccessClaimMode: "Statique",
+            dynamicAccessDescription:
+                "Définir les tags d'utilisateur autorisées à revendiquer la propriété de la zone.",
+            staticAccessDescription: "Définir l'utilisateur qui est le propriétaire de la zone.",
+            allowedTags: "Tags utilisateur autorisés",
+            allowedUser: "Utilisateur autorisé",
+            owner: "Propriétaire",
+            revokeAccess: "Révoquer l'accès",
+        },
+        excalidrawProperties: {
+            label: "Ouvrir Excalidraw",
+            description:
+                "Un outil de dessin à la main virtuel (preque comme un tableau blanc). Collaboratif et chiffré de bout en bout.",
+            error: "Veuillez entrer une URL Excalidraw valide",
+            disabled: "L'intégration Excalidraw est désactivée.",
+        },
+        cardsProperties: {
+            label: "Ouvrir Cards",
+            description:
+                "Simplifiez l'accès aux savoirs de vos équipes, clients et partenaires ! Format digeste, accessible sur tous supports.",
+            error: "Veuillez entrer une URL Cards valide",
+            disabled: "L'intégration Cards est désactivée.",
+        },
     },
     areaEditor: {
         editInstructions: "Sélectionnez une zone pour modifier ses propriétés.",
@@ -167,12 +215,25 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         areaDescriptionPlaceholder: "Description de la zone",
         areaSerchable: "Recherchable dans le mode exploration",
         addDescriptionField: "Ajouter une description",
+        actionPopupOnPersonalAreaWithEntities: {
+            title: "Action requise",
+            description: "Cette zone personnelle contient un ou plusieurs objets. Que souhaitez-vous faire avec ?",
+            buttons: {
+                keep: "Conserver",
+                remove: "Supprimer",
+                cancel: "Annuler",
+            },
+        },
     },
     areaEditorInstructions: {
         title: "Comment ca marche ?",
         description: "Dessinez une zone sur la carte afin d'en créer une nouvelle.",
     },
     entityEditor: {
+        header: {
+            title: "Ajouter un objet",
+            description: "Recherchez, téléchargez ou sélectionnez un objet existant et ajoutez-le à la carte.",
+        },
         title: "Outil d'édition d'entités",
         editing: "Edition : {name}",
         itemPicker: {
@@ -193,6 +254,40 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         objectDescriptionPlaceholder: "Description de l'objet",
         objectSearchable: "Recherchable dans le mode exploration",
         addDescriptionField: "Ajouter une description",
+        uploadEntity: {
+            title: "Ajouter votre image",
+            description: "Glissez-déposer ou choisissez votre image afin de l'ajouter sur la carte",
+            dragDrop: "Glissez-déposer ou",
+            chooseFile: "Choisir ",
+            errorOnFileFormat: "Format du fichier non supporté",
+            errorOnFileNumber: "Dépot multiple de fichier non supporté",
+        },
+        images: "Image{{s}}",
+        noImage: "Aucune image",
+        customEntityEditorForm: {
+            imageName: "Nom de l'image",
+            tags: "Tags",
+            writeTag: "Ecrire un tag...",
+            objectType: "Type d'objet",
+            floatingObject: "Objet flottant",
+            floatingObjectDescription:
+                "Un objet flottant peut être placé librement sur la carte. Autrement, il sera aligné sur la grille de la carte.",
+            depth: "Profondeur",
+            groundLevel: "Au sol",
+            custom: "Personnalisé",
+            standing: "Debout",
+            collision: "Collision",
+            wokaAbove: "Woka devant",
+            wokaBelow: "Woka derrière",
+        },
+        buttons: {
+            editEntity: "Editer",
+            back: "Retour",
+            cancel: "Annuler",
+            delete: "Supprimer",
+            save: "Enregister",
+            upload: "Charger",
+        },
     },
     settings: {
         loading: "Chargement en cours",
@@ -224,10 +319,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         title: "Explorateur de carte",
         description:
             "Permet d'explorer la salle. Vous pourrez vous déplacer dans la salle et interagir avec les objets. Deux modes sont disponibles : 'Exploration' et 'Recherche'. Le mode 'Recherche' vous proposera de rechercher ou de filtrer les entités et les zones de la salle. Le mode 'Exploration' vous permettra de vous déplacer librement dans la salle.",
-        explorationModeTitle: "Mode exploration",
-        explorationModeDescription: "Naviguer dans la carte et interagir avec les entités et les zones 🚶‍♂️",
-        searchModeTitle: "Mode recherche",
-        searchModeDescription: "Rechercher ou filtrer les entités et les zones dans la carte 🧐",
         noEntitiesFound: "Aucune entité trouvée dans la carte 🙅‍♂️",
         entitiesFound: "Entités trouvées",
         noAreasFound: "Aucune zone trouvée dans la carte 🙅‍♀️",
@@ -237,14 +328,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             close: "Fermer",
             moveToEntity: "Aller à l'entité {name}",
             moveToArea: "Aller à la zone {name}",
-        },
-        popup: {
-            title: "Est-ce que tu veux continuer avec le Map Explorer ? 🤔",
-            content:
-                "Le mode exploreur permet de visualiser la carte, trouver des objets et des zones. Il existe 2 systèmes dans le mode exploreur, le système d'exploration libre ou le système de recherche d'objets et de zone. La vidéo ci-dessus vous montre comment utiliser le mode exploreur 💪",
-            notAskAgain: "Ne plus demander",
-            close: "Fermer",
-            continue: "Continuer",
+            errorMovingToObject: "L'objet n'est pas accessible pour le moment 🚫",
         },
     },
     listRoom: {

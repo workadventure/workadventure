@@ -1,4 +1,3 @@
-import { get } from "svelte/store";
 import {
     AreaData,
     AreaDataProperties,
@@ -7,30 +6,44 @@ import {
     JitsiRoomPropertyData,
     ListenerMegaphonePropertyData,
     OpenWebsitePropertyData,
+    PersonalAreaAccessClaimMode,
+    PersonalAreaPropertyData,
     PlayAudioPropertyData,
     SpeakerMegaphonePropertyData,
 } from "@workadventure/map-editor";
-import { Jitsi } from "@workadventure/shared-utils";
 import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
+import { Jitsi } from "@workadventure/shared-utils";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
-import { OpenCoWebsite } from "../GameMapPropertiesListener";
-import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
-import { SimpleCoWebsite } from "../../../WebRtc/CoWebsite/SimpleCoWebsite";
-import { analyticsClient } from "../../../Administration/AnalyticsClient";
-import { localUserStore } from "../../../Connection/LocalUserStore";
-import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../../WebRtc/LayoutManager";
+import { get } from "svelte/store";
+import { Member } from "@workadventure/messages";
 import { LL } from "../../../../i18n/i18n-svelte";
-import { GameScene } from "../GameScene";
-import { inJitsiStore, inOpenWebsite, isSpeakerStore, silentStore } from "../../../Stores/MediaStore";
-import { JitsiCoWebsite } from "../../../WebRtc/CoWebsite/JitsiCoWebsite";
-import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../../Enum/EnvironmentVariable";
-import { scriptUtils } from "../../../Api/ScriptUtils";
-import { audioManagerFileStore, audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
-import { currentLiveStreamingNameStore } from "../../../Stores/MegaphoneStore";
-import { gameManager } from "../GameManager";
+import { analyticsClient } from "../../../Administration/AnalyticsClient";
 import { iframeListener } from "../../../Api/IframeListener";
-import { chatZoneLiveStore } from "../../../Stores/ChatStore";
+import { scriptUtils } from "../../../Api/ScriptUtils";
+import { localUserStore } from "../../../Connection/LocalUserStore";
 import { Room } from "../../../Connection/Room";
+import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../../Enum/EnvironmentVariable";
+import { audioManagerFileStore, audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
+import { chatZoneLiveStore } from "../../../Stores/ChatStore";
+/**
+ * @DEPRECATED - This is the old way to show trigger message
+ import { layoutManagerActionStore } from "../../../Stores/LayoutManagerStore";
+ */
+import { inJitsiStore, inOpenWebsite, isSpeakerStore, silentStore } from "../../../Stores/MediaStore";
+import { currentLiveStreamingNameStore } from "../../../Stores/MegaphoneStore";
+import { notificationPlayingStore } from "../../../Stores/NotificationStore";
+import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
+import { JitsiCoWebsite } from "../../../WebRtc/CoWebsite/JitsiCoWebsite";
+import { SimpleCoWebsite } from "../../../WebRtc/CoWebsite/SimpleCoWebsite";
+import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../../WebRtc/LayoutManager";
+import { gameManager } from "../GameManager";
+import { OpenCoWebsite } from "../GameMapPropertiesListener";
+import { GameScene } from "../GameScene";
+import { mapEditorAskToClaimPersonalAreaStore } from "../../../Stores/MapEditorStore";
+import { requestVisitCardsStore, selectedChatIDRemotePlayerStore } from "../../../Stores/GameStore";
+import { isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
+import { MessageUserJoined } from "../../../Connection/ConnexionModels";
+import { Area } from "../../Entity/Area";
 import { popupStore } from "../../../Stores/PopupStore";
 import JitsiPopup from "../../../Components/PopUp/PopUpJitsi.svelte";
 import PopUpTab from "../../../Components/PopUp/PopUpTab.svelte"; // Replace 'path/to/PopUpTab' with the actual path to the PopUpTab class
@@ -46,20 +59,31 @@ export class AreasPropertiesListener {
     private openedCoWebsites = new Map<string, OpenCoWebsite>();
     private coWebsitesActionTriggers = new Map<string, string>();
 
+    private actionTriggerCallback: Map<string, () => void> = new Map<string, () => void>();
+
     constructor(scene: GameScene) {
         this.scene = scene;
     }
 
-    public onEnterAreasHandler(areas: AreaData[]): void {
-        for (const area of areas) {
+    public onEnterAreasHandler(areasData: AreaData[], areas?: Area[]): void {
+        for (const areaData of areasData) {
             // analytics event for area
-            analyticsClient.enterAreaMapEditor(area.id, area.name);
+            analyticsClient.enterAreaMapEditor(areaData.id, areaData.name);
 
-            if (!area.properties) {
+            if (!areaData.properties) {
                 continue;
             }
-            for (const property of area.properties) {
-                this.addPropertyFilter(property, area);
+
+            // Add new notification to show at the user that he entered a new area
+            if (areaData.name && areaData.name !== "") {
+                notificationPlayingStore.playNotification(areaData.name, "icon-tool-area.png", areaData.id);
+            }
+
+            // get area from area data
+            const area = areas?.find((area) => area.areaData.id === areaData.id);
+
+            for (const property of areaData.properties) {
+                this.addPropertyFilter(property, areaData, area);
             }
         }
     }
@@ -102,21 +126,27 @@ export class AreasPropertiesListener {
         }
     }
 
-    public onLeaveAreasHandler(areas: AreaData[]): void {
-        for (const area of areas) {
+    public onLeaveAreasHandler(areasData: AreaData[], areas?: Area[]): void {
+        for (const areaData of areasData) {
             // analytics event for area
-            analyticsClient.leaveAreaMapEditor(area.id, area.name);
+            analyticsClient.leaveAreaMapEditor(areaData.id, areaData.name);
 
-            if (!area.properties) {
+            if (!areaData.properties) {
                 continue;
             }
-            for (const property of area.properties) {
-                this.removePropertyFilter(property);
+            // Remove notification for area
+            notificationPlayingStore.removeNotificationById(areaData.id);
+
+            // get area from area data
+            const area = areas?.find((area) => area.areaData.id === areaData.id);
+
+            for (const property of areaData.properties) {
+                this.removePropertyFilter(property, area, areaData);
             }
         }
     }
 
-    private addPropertyFilter(property: AreaDataProperty, area: AreaData) {
+    private addPropertyFilter(property: AreaDataProperty, areaData: AreaData, area?: Area) {
         switch (property.type) {
             case "openWebsite": {
                 this.handleOpenWebsitePropertyOnEnter(property);
@@ -127,7 +157,13 @@ export class AreasPropertiesListener {
                 break;
             }
             case "focusable": {
-                this.handleFocusablePropertiesOnEnter(area.x, area.y, area.width, area.height, property);
+                this.handleFocusablePropertiesOnEnter(
+                    areaData.x,
+                    areaData.y,
+                    areaData.width,
+                    areaData.height,
+                    property
+                );
                 break;
             }
             case "jitsiRoomProperty": {
@@ -152,6 +188,14 @@ export class AreasPropertiesListener {
                     url = `${property.url}#${property.areaName}`;
                 }
                 this.handleExitPropertyOnEnter(url);
+                break;
+            }
+            case "personalAreaPropertyData": {
+                this.handlePersonalAreaPropertyOnEnter(property, areaData, area);
+                break;
+            }
+            case "extensionModule": {
+                this.handleExtensionModuleAreaPropertyOnEnter(areaData, property.subtype);
                 break;
             }
             default: {
@@ -209,6 +253,12 @@ export class AreasPropertiesListener {
                 this.handleExitPropertyOnEnter(url);
                 break;
             }
+            case "personalAreaPropertyData": {
+                newProperty = newProperty as typeof oldProperty;
+                this.handlePersonalAreaPropertyOnLeave();
+                this.handlePersonalAreaPropertyOnEnter(newProperty, area);
+                break;
+            }
             case "silent":
             default: {
                 break;
@@ -216,7 +266,7 @@ export class AreasPropertiesListener {
         }
     }
 
-    private removePropertyFilter(property: AreaDataProperty) {
+    private removePropertyFilter(property: AreaDataProperty, area?: Area, areaData?: AreaData) {
         switch (property.type) {
             case "openWebsite": {
                 this.handleOpenWebsitePropertiesOnLeave(property);
@@ -246,6 +296,14 @@ export class AreasPropertiesListener {
                 this.handleListenerMegaphonePropertyOnLeave(property);
                 break;
             }
+            case "personalAreaPropertyData": {
+                this.handlePersonalAreaPropertyOnLeave(area);
+                break;
+            }
+            case "extensionModule": {
+                this.handleExtensionModuleAreaPropertyOnLeave(property.subtype, areaData);
+                break;
+            }
             default: {
                 break;
             }
@@ -259,15 +317,19 @@ export class AreasPropertiesListener {
     }
 
     private handleOpenWebsitePropertyOnEnter(property: OpenWebsitePropertyData): void {
+        if (!property.link) {
+            return;
+        }
+
         const actionId = "openWebsite-" + (Math.random() + 1).toString(36).substring(7);
 
-        if (property.newTab && property.link != undefined) {
+        if (property.newTab) {
             const forceTrigger = localUserStore.getForceCowebsiteTrigger();
             if (forceTrigger || property.trigger === ON_ACTION_TRIGGER_BUTTON) {
                 this.coWebsitesActionTriggers.set(property.id, actionId);
                 let message = property.triggerMessage;
                 if (message === undefined) {
-                    message = get(LL).trigger.newTab();
+                    message = isMediaBreakpointUp("md") ? get(LL).trigger.mobile.newTab() : get(LL).trigger.newTab();
                 }
 
                 popupStore.addPopup(
@@ -282,6 +344,32 @@ export class AreasPropertiesListener {
                     },
                     actionId
                 );
+
+                // Create callback and play text message
+                // NEW CODE BEFORE REDESIGN. TODO: choose if we keep it
+                /*const callback = () => {
+                    scriptUtils.openTab(property.link as string), this.scene.CurrentPlayer.destroyText(actionId);
+                    this.scene.userInputManager.removeSpaceEventListener(callback);
+                    this.actionTriggerCallback.delete(actionId);
+                };
+                this.scene.CurrentPlayer.playText(actionId, `${message}`, -1, callback);
+                this.scene.userInputManager?.addSpaceEventListener(callback);
+                this.actionTriggerCallback.set(actionId, callback);*/
+
+                /**
+                 * @DEPRECATED - This is the old way to show trigger message
+                 layoutManagerActionStore.addAction({
+                 uuid: actionId,
+                 type: "message",
+                        message: message,
+                        click: () => {
+                            popupStore.removePopup(actionId);
+                            scriptUtils.openTab(property.link as string);
+                        },
+                        userInputManager: this.scene.userInputManager,
+                    },
+                    actionId
+                );*/
             } else {
                 scriptUtils.openTab(property.link);
             }
@@ -301,10 +389,11 @@ export class AreasPropertiesListener {
         if (localUserStore.getForceCowebsiteTrigger() || property.trigger === ON_ACTION_TRIGGER_BUTTON) {
             let message = property.triggerMessage;
             if (!message) {
-                message = get(LL).trigger.cowebsite();
+                message = isMediaBreakpointUp("md") ? get(LL).trigger.mobile.cowebsite() : get(LL).trigger.cowebsite();
             }
 
             this.coWebsitesActionTriggers.set(property.id, actionId);
+
 
             popupStore.addPopup(
                 PopUpCowebsite,
@@ -317,9 +406,41 @@ export class AreasPropertiesListener {
                 },
                 actionId
             );
+
+            // Create callback and play text message
+            // TODO: This is the new popups before the new design. Choose if we keep it or not.
+            /*const callback = () => {
+                this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
+                this.scene.CurrentPlayer.destroyText(actionId);
+                this.scene.userInputManager.removeSpaceEventListener(callback);
+                this.actionTriggerCallback.delete(actionId);
+            };
+            this.scene.CurrentPlayer.playText(actionId, `${message}`, -1, callback);
+            this.scene.userInputManager?.addSpaceEventListener(callback);
+            this.actionTriggerCallback.set(actionId, callback);*/
+
+            /**
+             * @DEPRECATED - This is the old way to show trigger message
+             layoutManagerActionStore.addAction({
+             uuid: actionId,
+             type: "message",
+                    message: message,
+                    click: () => {
+                        this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
+                    },
+                    userInputManager: this.scene.userInputManager,
+                },
+                actionId
+            );*/
         } else if (property.trigger === ON_ICON_TRIGGER_BUTTON) {
+            let url = property.link ?? "";
+            try {
+                url = scriptUtils.getWebsiteUrl(property.link ?? "");
+            } catch (e) {
+                console.error("Error on getWebsiteUrl: ", e);
+            }
             const coWebsite = new SimpleCoWebsite(
-                new URL(property.link ?? "", this.scene.mapUrlFile),
+                new URL(url, this.scene.mapUrlFile),
                 property.allowAPI,
                 property.policy,
                 property.width,
@@ -413,7 +534,19 @@ export class AreasPropertiesListener {
 
             analyticsClient.enteredJitsi(roomName, this.scene.roomUrl);
 
+
             popupStore.removePopup("jitsi");
+            // TODO: this is the code to remove the new design popup before the "new design"
+            /*this.scene.CurrentPlayer.destroyText("jitsi");
+            const callback = this.actionTriggerCallback.get("jitsi");
+            if (callback) {
+                this.scene.userInputManager.removeSpaceEventListener(callback);
+                this.actionTriggerCallback.delete("jitsi");
+            }*/
+            /**
+             * @DEPRECATED - This is the old way to show trigger message
+             layoutManagerActionStore.removeAction("jitsi");
+             */
         };
 
         const jitsiTriggerValue = property.trigger;
@@ -421,8 +554,9 @@ export class AreasPropertiesListener {
         if (forceTrigger || jitsiTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
             let message = property.triggerMessage;
             if (message === undefined) {
-                message = get(LL).trigger.jitsiRoom();
+                message = isMediaBreakpointUp("md") ? get(LL).trigger.mobile.jitsiRoom() : get(LL).trigger.jitsiRoom();
             }
+
             popupStore.addPopup(
                 JitsiPopup,
                 {
@@ -434,8 +568,103 @@ export class AreasPropertiesListener {
                 },
                 "jitsi"
             );
+            //TODO: bode below is old "new design" popups before the new design. Choose i we keep it.
+            // Create callback and play text message
+            /*const callback = () => {
+                openJitsiRoomFunction().catch((e) => console.error(e));
+                this.scene.CurrentPlayer.destroyText("jitsi");
+                this.scene.userInputManager.removeSpaceEventListener(callback);
+                this.actionTriggerCallback.delete("jitsi");
+            };
+            this.scene.CurrentPlayer.playText("jitsi", `${message}`, -1, callback);
+            this.scene.userInputManager?.addSpaceEventListener(callback);
+            this.actionTriggerCallback.set("jitsi", callback);*/
+
+            /**
+             * @DEPRECATED - This is the old way to show trigger message
+             layoutManagerActionStore.addAction({
+             uuid: "jitsi",
+             type: "message",
+                    message: message,
+                    callback: () => {
+                        openJitsiRoomFunction().catch((e) => console.error(e));
+                    },
+                    userInputManager: this.scene.userInputManager,
+                },
+                "jitsi"
+            );*/
         } else {
             openJitsiRoomFunction().catch((e) => console.error(e));
+        }
+    }
+
+    private handlePersonalAreaPropertyOnEnter(
+        property: PersonalAreaPropertyData,
+        areaData: AreaData,
+        area?: Area
+    ): void {
+        if (property.ownerId !== null) {
+            this.displayPersonalAreaOwnerVisitCard(property.ownerId, areaData, area);
+        } else if (property.accessClaimMode === PersonalAreaAccessClaimMode.enum.dynamic) {
+            this.displayPersonalAreaClaimDialogBox(property, areaData, area);
+        }
+    }
+
+    private displayPersonalAreaOwnerVisitCard(ownerId: string, areaData: AreaData, area?: Area) {
+        const connectedUserUUID = localUserStore.getLocalUser()?.uuid;
+        if (connectedUserUUID != ownerId) {
+            const connection = this.scene.connection;
+            if (connection && this.isPersonalAreaOwnerAway(ownerId, areaData)) {
+                connection
+                    .queryMember(ownerId)
+                    .then((member: Member) => {
+                        if (member?.visitCardUrl) {
+                            requestVisitCardsStore.set(member.visitCardUrl);
+                        }
+                        if (member?.chatID) {
+                            selectedChatIDRemotePlayerStore.set(member?.chatID);
+                        }
+                    })
+                    .catch((error) => console.error(error));
+                area?.highLightArea(true);
+            }
+        }
+    }
+
+    private isPersonalAreaOwnerAway(areaOwnerId: string, areaData: AreaData) {
+        const playerMap = this.scene.getRemotePlayersRepository().getPlayers();
+        let ownerOnMap: MessageUserJoined | undefined = undefined;
+        for (const player of playerMap.values()) {
+            if (player.userUuid === areaOwnerId) {
+                ownerOnMap = player;
+            }
+        }
+        if (ownerOnMap === undefined) {
+            return true;
+        }
+        const { position: userPosition } = ownerOnMap;
+
+        const isOwnerInsidePersonalArea = this.scene.getGameMapFrontWrapper().isInsideAreaByCoordinates(
+            {
+                x: areaData.x,
+                y: areaData.y,
+                width: areaData.width,
+                height: areaData.height,
+            },
+            { x: userPosition.x, y: userPosition.y }
+        );
+
+        return !isOwnerInsidePersonalArea;
+    }
+
+    private displayPersonalAreaClaimDialogBox(property: PersonalAreaPropertyData, areaData: AreaData, area?: Area) {
+        const userHasAllowedTagToClaimTheArea =
+            localUserStore.isLogged() &&
+            (property.allowedTags.length === 0 ||
+                property.allowedTags.some((tag) => this.scene.connection?.hasTag(tag)));
+        if (userHasAllowedTagToClaimTheArea) {
+            area?.highLightArea(true);
+            mapEditorAskToClaimPersonalAreaStore.set(areaData);
         }
     }
 
@@ -471,7 +700,6 @@ export class AreasPropertiesListener {
 
         const actionStore = get(popupStore);
         const actionTriggerUuid = this.coWebsitesActionTriggers.get(property.id);
-
         if (!actionTriggerUuid) {
             return;
         }
@@ -484,6 +712,26 @@ export class AreasPropertiesListener {
         if (action) {
             popupStore.removePopup(actionTriggerUuid);
         }
+
+        this.scene.CurrentPlayer.destroyText(actionTriggerUuid);
+        const callback = this.actionTriggerCallback.get(actionTriggerUuid);
+        if (callback) {
+            this.scene.userInputManager.removeSpaceEventListener(callback);
+            this.actionTriggerCallback.delete(actionTriggerUuid);
+        }
+
+        /**
+         * @DEPRECATED - This is the old way to show trigger message
+         const actionStore = get(layoutManagerActionStore);
+         const action =
+         actionStore && actionStore.length > 0
+         ? actionStore.find((action) => action.uuid === actionTriggerUuid)
+         : undefined;
+
+         if (action) {
+            popupStore.removePopup(actionTriggerUuid);
+         }
+         */
 
         this.coWebsitesActionTriggers.delete(property.id);
     }
@@ -511,6 +759,17 @@ export class AreasPropertiesListener {
 
     private handleJitsiRoomPropertyOnLeave(property: JitsiRoomPropertyData): void {
         popupStore.removePopup("jitsi");
+        // TODO: this is the code of the new old popups replaced by the new design. TODO: choose if we keep those.
+        /*this.scene.CurrentPlayer.destroyText("jitsi");
+        const callback = this.actionTriggerCallback.get("jitsi");
+        if (callback) {
+            this.scene.userInputManager.removeSpaceEventListener(callback);
+            this.actionTriggerCallback.delete("jitsi");
+        }*/
+        /**
+         * @DEPRECATED - This is the old way to show trigger message
+         layoutManagerActionStore.removeAction("jitsi");
+         */
         coWebsiteManager.getCoWebsites().forEach((coWebsite) => {
             if (coWebsite instanceof JitsiCoWebsite) {
                 coWebsiteManager.closeCoWebsite(coWebsite);
@@ -519,13 +778,47 @@ export class AreasPropertiesListener {
         inJitsiStore.set(false);
     }
 
+    private handlePersonalAreaPropertyOnLeave(area?: Area): void {
+        mapEditorAskToClaimPersonalAreaStore.set(undefined);
+        if (get(requestVisitCardsStore)) {
+            requestVisitCardsStore.set(null);
+        }
+        area?.unHighLightArea();
+    }
+
+    private handleExtensionModuleAreaPropertyOnLeave(subtype: string, area?: AreaData): void {
+        const areaMapEditor = this.scene.extensionModule?.areaMapEditor && this.scene.extensionModule?.areaMapEditor();
+        if (areaMapEditor === undefined) {
+            return;
+        }
+        areaMapEditor[subtype].handleAreaPropertyOnLeave(area);
+    }
+
+    private handleExtensionModuleAreaPropertyOnEnter(area: AreaData, subtype: string): void {
+        const areaMapEditor = this.scene.extensionModule?.areaMapEditor && this.scene.extensionModule?.areaMapEditor();
+        if (areaMapEditor === undefined) {
+            return;
+        }
+        areaMapEditor[subtype].handleAreaPropertyOnEnter(area);
+    }
+
     private openCoWebsiteFunction(
         property: OpenWebsitePropertyData,
         coWebsiteOpen: OpenCoWebsite,
         actionId: string
     ): void {
+        // Check URl and get the correct one
+        let urlStr = property.link ?? "";
+        try {
+            urlStr = scriptUtils.getWebsiteUrl(property.link ?? "");
+        } catch (e) {
+            console.error("Error on getWebsiteUrl: ", e);
+        }
+
+        // Create the co-website to be opened
+        const url = new URL(urlStr, this.scene.mapUrlFile);
         const coWebsite = new SimpleCoWebsite(
-            new URL(property.link ?? "", this.scene.mapUrlFile),
+            url,
             property.allowAPI,
             property.policy,
             property.width,
@@ -542,10 +835,25 @@ export class AreasPropertiesListener {
         inOpenWebsite.set(true);
 
         // analytics event for open website
-        analyticsClient.openedWebsite(coWebsite.getUrl());
+        analyticsClient.openedWebsite(url);
     }
 
     private loadCoWebsiteFunction(coWebsite: CoWebsite, actionId: string): void {
+        // TODO: this is the code of the old new popups
+        /*coWebsiteManager.loadCoWebsite(coWebsite).catch(() => {
+            console.error("Error during loading a co-website: " + coWebsite.getUrl());
+        });
+
+        this.scene.CurrentPlayer.destroyText(actionId);
+        const callback = this.actionTriggerCallback.get(actionId);
+        if (callback) {
+            this.scene.userInputManager.removeSpaceEventListener(callback);
+            this.actionTriggerCallback.delete(actionId);
+        }*/
+        /**
+         * @DEPRECATED - This is the old way to show trigger message
+         layoutManagerActionStore.removeAction(actionId);
+         */
         // try {
         //     coWebsiteManager.loadCoWebsite(coWebsite)
         // }
@@ -558,8 +866,6 @@ export class AreasPropertiesListener {
     private handleSpeakerMegaphonePropertyOnEnter(property: SpeakerMegaphonePropertyData): void {
         if (property.name !== undefined && property.id !== undefined) {
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
-            // TODO remove this console.log after testing
-            console.info("handleSpeakerMegaphonePropertyOnEnter => uniqRoomName : ", uniqRoomName);
             currentLiveStreamingNameStore.set(uniqRoomName);
             this.scene.broadcastService.joinSpace(uniqRoomName, false);
             isSpeakerStore.set(true);
@@ -574,8 +880,6 @@ export class AreasPropertiesListener {
         if (property.name !== undefined && property.id !== undefined) {
             isSpeakerStore.set(false);
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
-            // TODO remove this console.log after testing
-            console.info("handleSpeakerMegaphonePropertyOnEnter => uniqRoomName : ", uniqRoomName);
             currentLiveStreamingNameStore.set(undefined);
             this.scene.broadcastService.leaveSpace(uniqRoomName);
             if (property.chatEnabled) {
@@ -592,8 +896,6 @@ export class AreasPropertiesListener {
             );
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
-                // TODO remove this console.log after testing
-                console.info("handleListenerMegaphonePropertyOnEnter => uniqRoomName", uniqRoomName);
                 currentLiveStreamingNameStore.set(uniqRoomName);
                 this.scene.broadcastService.joinSpace(uniqRoomName, false);
                 if (property.chatEnabled) {
@@ -611,8 +913,6 @@ export class AreasPropertiesListener {
             );
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
-                // TODO remove this console.log after testing
-                console.info("handleListenerMegaphonePropertyOnLeave => uniqRoomName", uniqRoomName);
                 currentLiveStreamingNameStore.set(undefined);
                 this.scene.broadcastService.leaveSpace(uniqRoomName);
                 if (property.chatEnabled) {
@@ -623,12 +923,16 @@ export class AreasPropertiesListener {
     }
 
     private handleJoinMucRoom(name: string, type: string) {
-        iframeListener.sendJoinMucEventToChatIframe(`${this.scene.roomUrl}/${slugify(name)}`, name, type, false);
+        iframeListener
+            .sendJoinMucEventToChatIframe(`${this.scene.roomUrl}/${slugify(name)}`, name, type, false)
+            .catch((error) => console.error(error));
         chatZoneLiveStore.set(true);
     }
 
     private handleLeaveMucRoom(name: string) {
-        iframeListener.sendLeaveMucEventToChatIframe(`${this.scene.roomUrl}/${slugify(name)}`);
+        iframeListener
+            .sendLeaveMucEventToChatIframe(`${this.scene.roomUrl}/${slugify(name)}`)
+            .catch((error) => console.error(error));
         chatZoneLiveStore.set(false);
     }
 

@@ -37,21 +37,38 @@ The two compulsory parameters you need to provide are:
 > one in an appropriate secret, by using CertManager to generate certificates automatically
 > or by using Traefik as a reverse proxy properly configured to generate certificates).
 
-There is a corresponding `xxx-secret-env.yaml` file and a `xxx-env.yaml` file, which contains 
-all environments variables. There are many pre initialized variables in the template files
+For each pod, there is a corresponding `xxx.env` entry in the `values.yaml` file (that will map to a `ConfigMap`),
+and a `xxx.secretEnv` entry (that will map to a `Secret`). There are many pre initialized variables in the template files
 (all variables relative to the URLs). Additional entries can be easily added in the corresponding 
 sections of the values file.
 
-There are the `commonEnv` and `commonSecretEnv` sections, which are used in all services.
+Furthermore, the `commonEnv` and `commonSecretEnv` sections can be used to add environment variables in all pods.
 
 If you don't provide a `secretKey` (used to encode JWT tokens), the image will generate one for you.
 
-Please use the original [docker-compose file](../docker/docker-compose.prod.yaml) for reference. Look at the [original configuration template](../docker/.env.prod.template) for more informations about the available variables.
+Please use the original [docker-compose file](../docker/docker-compose.prod.yaml) for reference. Look at the [original configuration template](../docker/.env.prod.template) for more information about the available variables.
 
 ## Upload your map
 
-Open your browser and go to https://< your-domain >/map-storage/.
+Before starting using WorkAdventure, you will need to upload your first map.
 
-You will be asked to authenticate. The user is 'admin' and the password is the one you set in the value `mapstorage.secretEnv.AUTHENTICATION_PASSWORD`
+#### Uploading from the map starter kit
 
-You can upload a map as a zip file here. But it is highly recommended to use the [workadventure map starter kit](https://docs.workadventu.re/map-building/tiled-editor/) to create and maintain your maps.
+Design your own map using the [map starter kit](https://github.com/workadventure/map-starter-kit).
+When you are happy with the result, [follow the steps in the "upload your map documentation"](https://docs.workadventu.re/map-building/tiled-editor/publish/wa-hosted)
+
+#### Checking everything worked
+
+Open your browser and go to `https://<your-domain>/map-storage/` (or `https://map-storage.<your-domain>` if you are 
+using `singleDomain: false` in `values.yaml`).
+
+You will be asked to authenticate. Use the credentials you configured in the `.env` file.
+
+> **Note**
+> Right now, authentication is limited to a single user credential in the map-storage container,
+> hard coded in the `.env` file. This is not ideal, but works for now (the map-storage container
+> is quite new). Contributions are welcome if you want to improve this.
+
+You should see a link to the map you just uploaded.
+
+Are you connected? Congratulations! Share the URL with your friends and start using WorkAdventure!

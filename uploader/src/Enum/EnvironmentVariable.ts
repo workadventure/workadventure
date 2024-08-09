@@ -15,9 +15,9 @@ const REDIS_DB_NUMBER = process.env.REDIS_DB_NUMBER;
 const REDIS_PASSWORD = process.env.REDIS_PASSWORD;
 
 const UPLOADER_URL = process.env.UPLOADER_URL;
-const CHAT_URL = process.env.CHAT_URL;
+const PLAY_URL = process.env.PLAY_URL;
 
-export const ALLOWED_CORS_ORIGIN = process.env.ALLOWED_CORS_ORIGIN || CHAT_URL || "*";
+export const ALLOWED_CORS_ORIGIN = process.env.ALLOWED_CORS_ORIGIN || PLAY_URL || "*";
 export const DEBUG_ERROR_MESSAGES = process.env.DEBUG_ERROR_MESSAGES || "";
 
 export {
@@ -25,7 +25,7 @@ export {
     UPLOAD_MAX_FILESIZE,
     ADMIN_API_URL,
     UPLOADER_URL,
-    CHAT_URL,
+    PLAY_URL,
 
     AWS_ACCESS_KEY_ID,
     AWS_SECRET_ACCESS_KEY,

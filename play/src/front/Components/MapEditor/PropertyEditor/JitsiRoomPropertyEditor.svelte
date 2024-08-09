@@ -7,6 +7,8 @@
 
     export let property: JitsiRoomPropertyData;
     export let triggerOnActionChoosen: boolean = property.trigger === "onaction";
+    export let triggerOptionActivated = true;
+    export let isArea = false;
     let optionAdvancedActivated = false;
 
     const dispatch = createEventDispatcher();
@@ -112,22 +114,25 @@
                     />
                 </div>
             {/if}
-            <div>
+            {#if triggerOptionActivated}
+                <div>
                 <label class="m-0" for="trigger">{$LL.mapEditor.properties.jitsiProperties.trigger()}</label>
                 <select id="trigger" class=" m-0 w-full" bind:value={property.trigger} on:change={onTriggerValueChange}>
-                    <option value={undefined}
-                        >{$LL.mapEditor.properties.jitsiProperties.triggerShowImmediately()}</option
-                    >
-                    <option value="onicon">{$LL.mapEditor.properties.jitsiProperties.triggerOnClick()}</option>
-                    <option value="onaction">{$LL.mapEditor.properties.jitsiProperties.triggerOnAction()}</option>
-                </select>
-            </div>
-            {#if triggerOnActionChoosen}
-                <div class="value-input">
-                    <label for="triggerMessage">{$LL.mapEditor.properties.jitsiProperties.triggerMessage()}</label>
+                        <option value={undefined}
+                            >{$LL.mapEditor.properties.jitsiProperties.triggerShowImmediately()}</option
+                        >
+                        <option value="onicon">{$LL.mapEditor.properties.jitsiProperties.triggerOnClick()}</option>
+                        <option value="onaction">{$LL.mapEditor.properties.jitsiProperties.triggerOnAction()}</option>
+                    </select>
+                </div>
+            {/if}
+            {#if (isArea && triggerOptionActivated && triggerOnActionChoosen) || !isArea}
+                <div class="value-input tw-flex tw-flex-col">
+                    <label for="triggerMessage">{$LL.mapEditor.properties.linkProperties.triggerMessage()}</label>
                     <input
                         id="triggerMessage"
                         type="text"
+                        placeholder={$LL.trigger.object()}
                         bind:value={property.triggerMessage}
                         on:change={onValueChange}
                     />

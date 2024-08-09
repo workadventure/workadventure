@@ -16,8 +16,8 @@
 </script>
 
 <main
-    class="warningMain flex justify-center absolute bottom-4 left-4 right-4 "
-    transition:fly={{ y: 200, duration: 500 }}
+        class="warningMain flex justify-center absolute bottom-4 left-4 right-4 "
+        transition:fly={{ y: 200, duration: 500 }}
 >
     <div class="backdrop-blur rounded-lg overflow-hidden">
         {#if $bannerStore != undefined}
@@ -26,25 +26,25 @@
                     {$bannerStore.text}&nbsp;
                     {#if $bannerStore.link}
                         <a
-                            class=" underline"
-                            style={`color: ${$bannerStore.textColor};`}
-                            href={$bannerStore.link.url}
-                            target="_blank"
-                            rel="noreferrer"
+                                class=" underline"
+                                style={`color: ${$bannerStore.textColor};`}
+                                href={$bannerStore.link.url}
+                                target="_blank"
+                                rel="noreferrer"
                         >
                             {$bannerStore.link.label}
                         </a>
                     {/if}
                 </div>
                 <div
-                    class="absolute w-full h-full z-0 {$bannerStore.bgColor ? '' : 'bg-contrast/50'}"
-                    style={`background-color:${$bannerStore.bgColor};`}
+                        class="absolute w-full h-full z-0 {$bannerStore.bgColor ? '' : 'bg-contrast/50'}"
+                        style={`background-color:${$bannerStore.bgColor};`}
                 />
                 {#if $bannerStore.closable}
                     <button
-                        class="btn btn-ghost relative z-10 ml-4 !py-1"
-                        style={`color: ${$bannerStore.bgColor};background:${$bannerStore.textColor};`}
-                        on:click|preventDefault={closeBanner}
+                            class="btn btn-ghost relative z-10 ml-4 !py-1"
+                            style={`color: ${$bannerStore.bgColor};background:${$bannerStore.textColor};`}
+                            on:click|preventDefault={closeBanner}
                     >
                         {$LL.actionbar.understand()}
                     </button>
@@ -67,29 +67,29 @@
 </main>
 
 <style lang="scss">
-    main.warningMain {
-        pointer-events: auto;
-        width: 100%;
-        background-color: #f9e81e;
-        color: #14304c;
-        text-align: center;
-        position: absolute;
+  main.warningMain {
+    pointer-events: auto;
+    width: 100%;
+    background-color: #f9e81e;
+    color: #14304c;
+    text-align: center;
+    position: absolute;
 
-        top: 0;
-        left: 0;
-        right: 0;
-        margin-left: auto;
-        margin-right: auto;
-        font-family: Lato;
-        min-width: 300px;
-        opacity: 0.9;
-        z-index: 700;
-        h2 {
-            padding: 5px;
-        }
-
-        a {
-            color: #ff475a;
-        }
+    top: 0;
+    left: 0;
+    right: 0;
+    margin-left: auto;
+    margin-right: auto;
+    font-family: Lato;
+    min-width: 300px;
+    opacity: 0.9;
+    z-index: 700;
+    h2 {
+      padding: 5px;
     }
+
+    a {
+      color: #ff475a;
+    }
+  }
 </style>

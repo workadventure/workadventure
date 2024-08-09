@@ -15,6 +15,8 @@ const radius = 17.5;
 export class MobileJoystick extends VirtualJoystick {
     private resizeCallback: () => void;
 
+    private setimeout: NodeJS.Timeout | null = null;
+
     constructor(scene: Phaser.Scene) {
         super(scene, {
             x: -1000,
@@ -37,31 +39,57 @@ export class MobileJoystick extends VirtualJoystick {
             enable: true,
             dir: "8dir",
         });
-        this.visible = false;
+
+        // Disable the joystick by default
         this.enable = false;
+
+        // Show the joeytick at the bottom middle of the screen
+        const { width, height } = this.scene.game.canvas;
+        this.x = width / 2;
+        this.y = height - 200;
+
+        // Add opacity
+        this.base.setAlpha(0.3);
+        this.thumb.setAlpha(0.3);
 
         this.resizeCallback = this.resize.bind(this);
         this.scene.scale.on(Phaser.Scale.Events.RESIZE, this.resizeCallback);
     }
 
     public showAt(x: number, y: number): void {
+        // Show the joystick at the given position
         this.x = x;
         this.y = y;
-        this.visible = true;
+
+        // The joystick is used by the player
         this.enable = true;
+        this.visible = true;
     }
 
     public hide(): void {
-        this.visible = false;
+        // The joystick is not used by the player
         this.enable = false;
+
+        // After 30 seconds, disable the joystick
+        if (this.setimeout) clearTimeout(this.setimeout);
+        this.setimeout = setTimeout(() => {
+            this.visible = false;
+        }, 30000);
     }
 
     public resize() {
+        // scale the joystick to the current zoom level
         this.base.setDisplaySize(this.getDisplaySizeByElement(baseSize), this.getDisplaySizeByElement(baseSize));
         this.thumb.setDisplaySize(this.getDisplaySizeByElement(thumbSize), this.getDisplaySizeByElement(thumbSize));
         this.setRadius(
             (radius / (waScaleManager.zoomModifier * waScaleManager.uiScalingFactor)) * window.devicePixelRatio
         );
+
+        // TODO: change it to apply the good ratio of the canvas
+        // Show the joeytick at the bottom middle of the screen
+        const { width, height } = this.scene.game.canvas;
+        this.showAt(width / 2, height - 200);
+        this.hide();
     }
 
     private getDisplaySizeByElement(element: integer): integer {

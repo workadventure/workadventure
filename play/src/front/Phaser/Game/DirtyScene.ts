@@ -13,6 +13,8 @@ export abstract class DirtyScene extends ResizableScene {
     protected dirty = true;
     private objectListChanged = true;
     private physicsEnabled = false;
+    private lastCameraOffsetX = 0;
+    private lastCameraOffsetY = 0;
 
     /**
      * Track all objects added to the scene and adds a callback each time an animation is added.
@@ -57,6 +59,15 @@ export abstract class DirtyScene extends ResizableScene {
             if (!objectMoving && this.physicsEnabled) {
                 this.physics.disableUpdate();
                 this.physicsEnabled = false;
+            }
+
+            if (
+                this.cameras.main.scrollX !== this.lastCameraOffsetX ||
+                this.cameras.main.scrollY !== this.lastCameraOffsetY
+            ) {
+                this.dirty = true;
+                this.lastCameraOffsetX = this.cameras.main.scrollX;
+                this.lastCameraOffsetY = this.cameras.main.scrollY;
             }
         });
     }

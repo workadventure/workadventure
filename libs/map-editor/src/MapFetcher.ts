@@ -21,13 +21,7 @@ class MapFetcher {
             throw new Error("Both mapUrl and wamUrl are undefined. Can't get mapUrl.");
         }
         const mapPath = (await this.fetchWamFile(wamUrl, internalMapStorageUrl, stripPrefix)).mapUrl;
-        try {
-            new URL(mapPath);
-            return mapPath;
-        } catch (e) {
-            console.info("Map URL is not a valid URL, trying to normalize it", e);
-            return this.normalizeMapUrl(mapPath, wamUrl);
-        }
+        return new URL(mapPath, wamUrl).toString();
     }
 
     normalizeMapUrl(mapUrl: string, wamUrl: string): string {

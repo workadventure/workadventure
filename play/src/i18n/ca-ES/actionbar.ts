@@ -16,6 +16,7 @@ const actionbar: BaseTranslation = {
     accountType: "Basic account",
     upgrade: "Upgrade",
     otherSettings: "Other settings",
+    calendar: "Open / Close calendar",
     bo: "Back office",
     globalMessage: "Send global message",
     mapEditor: "Map editor",
@@ -54,6 +55,10 @@ const actionbar: BaseTranslation = {
         },
         follow: {
             title: "Ask to follow",
+            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        },
+        unfollow: {
+            title: "Stop following",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
         lock: {

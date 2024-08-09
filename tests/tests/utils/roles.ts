@@ -4,7 +4,8 @@ export async function login(
     page: Page,
     userName = 'Alice',
     characterNumber = 2,
-    browserLanguage: string | null = 'en-US'
+    browserLanguage: string | null = 'en-US',
+    isMobile = false
 ) {
   // window.localStorage.setItem('language', browserLanguage)
 
@@ -19,16 +20,22 @@ export async function login(
 
     await page.click('button.selectCharacterSceneFormSubmit');
 
-    await selectMedias(page);
+  await selectMedias(page, isMobile);
     }
 
-export async function selectMedias(page: Page) {
+export async function selectMedias(page: Page, isMobile = false) {
     await expect(page.locator('h2', { hasText: "Turn on your camera and microphone" })).toBeVisible();
 
   await page.click("text=Save");
 
-    // await page.pause();
-    await expect(page.locator("div#main-layout").nth(0)).toBeVisible();
+  if(isMobile){
+      await expect(await page.locator('button#burgerIcon')).toBeVisible();
+      const mobileMenuVisible = await page.locator('button#burgerIcon img.tw-rotate-0').isVisible();
+      if(mobileMenuVisible){
+          await page.click('button#burgerIcon');
+      }
+  }
+  await expect(page.locator("div#main-layout").nth(0)).toBeVisible();
 }
 
 export async function hideNoCamera(page: Page){
