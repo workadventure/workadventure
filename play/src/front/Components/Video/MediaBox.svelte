@@ -8,6 +8,8 @@
     import type { ObtainedMediaStreamConstraints } from "../../WebRtc/P2PMessages/ConstraintMessage";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { JitsiTrackStreamWrapper } from "../../Streaming/Jitsi/JitsiTrackStreamWrapper";
+    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
+    import { mediaStreamConstraintsStore } from "../../Stores/MediaStore";
     import VideoMediaBox from "./VideoMediaBox.svelte";
     import ScreenSharingMediaBox from "./ScreenSharingMediaBox.svelte";
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
@@ -16,9 +18,6 @@
     export let streamable: Streamable;
     export let isHightlighted = false;
     export let isClickable = false;
-    export let mozaicSolo = false;
-    export let mozaicDuo = false;
-    export let mozaicQuarter = false;
 
     let constraintStore: Readable<ObtainedMediaStreamConstraints | null>;
     if (streamable instanceof VideoPeer) {
@@ -38,41 +37,36 @@
     onDestroy(() => {
         gameScene.reposition();
     });
+
     $: videoEnabled = $constraintStore ? $constraintStore.video : false;
+    $: isHightlighted = $highlightedEmbedScreen === streamable;
 </script>
+
+<!-- svelte-ignore missing-declaration -->
+<!-- Bug with tansition : transition:fly={{ y: 50, duration: 150 }} -->
 
 {#if streamable instanceof VideoPeer}
     {#if $constraintStore || $statusStore === "error" || $statusStore === "connecting"}
         <div
-            class="transition-all relative h-full aspect-video w-fit"
+            class="media-container transition-all justify-center relative h-full w-full"
             class:hightlighted={isHightlighted}
-            class:mr-6={isHightlighted && videoEnabled}
-            class:max-w-sm={isHightlighted && !videoEnabled}
             class:mx-auto={isHightlighted && !videoEnabled}
             class:m-auto={!isHightlighted && !videoEnabled}
             class:aspect-video={!isHightlighted && !videoEnabled}
             class:clickable={isClickable}
-            class:mozaic-duo={mozaicDuo}
-            class:mozaic-full-width={mozaicSolo}
-            class:mozaic-quarter={mozaicQuarter}
-            transition:fly={{ y: 50, duration: 150 }}
+            id="video-media-box"
+            in:fly={{ y: 50, duration: 150 }}
         >
-            <VideoMediaBox peer={streamable} clickable={isClickable} />
+            <VideoMediaBox peer={streamable} />
         </div>
     {/if}
 {:else if streamable instanceof ScreenSharingPeer}
     <div
-        class="media-container {isHightlighted ? 'hightlighted mr-6' : 'flex'}
-     media-box-shape-color
-"
+        class="media-container justify-center w-full
+            media-box-shape-color"
         class:clickable={isClickable}
-        class:mozaic-duo={mozaicDuo}
-        class:mozaic-full-width={mozaicSolo}
-        class:mozaic-quarter={mozaicQuarter}
     >
-        <div class="{isHightlighted ? 'h-[41vw] mr-6' : 'mx-auto'} w-full h-full flex screen-blocker">
-            <ScreenSharingMediaBox peer={streamable} clickable={isClickable} />
-        </div>
+        <ScreenSharingMediaBox peer={streamable} />
     </div>
 {:else if streamable instanceof JitsiTrackStreamWrapper}
     <div
@@ -82,14 +76,12 @@
         class:flex={!isHightlighted}
         class:media-box-camera-on-size={!isHightlighted && streamable.getVideoTrack()}
         class:media-box-camera-off-size={!isHightlighted && !streamable.getVideoTrack()}
+        class:media-box-micropohone-off={!$mediaStreamConstraintsStore.audio}
         class:max-w-sm={isHightlighted && !streamable.getVideoTrack()}
         class:mx-auto={isHightlighted && !streamable.getVideoTrack()}
         class:m-auto={!isHightlighted && !streamable.getVideoTrack()}
         class:h-12={!isHightlighted && !streamable.getVideoTrack()}
         class:clickable={isClickable}
-        class:mozaic-full-width={mozaicSolo}
-        class:mozaic-duo={mozaicDuo}
-        class:mozaic-quarter={mozaicQuarter}
     >
         <div
             class="w-full flex screen-blocker"
@@ -101,27 +93,10 @@
         </div>
     </div>
 {:else}
-    <div
-        class="media-container  {isHightlighted ? 'hightlighted mr-6' : 'flex h-full aspect-ratio'}"
-        class:clickable={isClickable}
-        class:mozaic-full-width={mozaicSolo}
-        class:mozaic-duo={mozaicDuo}
-        class:mozaic-quarter={mozaicQuarter}
-    >
-        <div class="{isHightlighted ? 'h-[41vw] mr-6' : 'mx-auto'}   w-full h-full flex screen-blocker">
-            <LocalStreamMediaBox peer={streamable} clickable={isClickable} cssClass="" />
+    <div class="media-container {isHightlighted ? 'hightlighted' : 'flex h-full'}" class:clickable={isClickable}>
+        <!-- Here for the resize o-->
+        <div class="{isHightlighted ? 'cam-share-receive' : 'mx-auto'} flex justify-center screen-blocker">
+            <LocalStreamMediaBox peer={streamable} cssClass="" />
         </div>
     </div>
 {/if}
-
-<style lang="scss">
-    @import "../../style/breakpoints.scss";
-
-    //Classes factorizing tailwind's ones are defined in video-ui.scss
-
-    .media-container {
-        &.clickable {
-            cursor: pointer;
-        }
-    }
-</style>

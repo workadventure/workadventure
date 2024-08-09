@@ -51,7 +51,7 @@
     let isToggleFullScreen = false;
 
     function updateScreenSize() {
-        if (window.innerWidth < 768) {
+        if (window.innerWidth <= 768) {
             vertical = true;
             isVerticalMode.set(true);
             resizeCowebsite();
@@ -63,10 +63,12 @@
     }
 
     window.addEventListener("resize", () => {
-        getSizeOfCowebsiteWhenResizeWindow();
-        resizeFromCowebsite.set(false);
-        updateScreenSize();
-        showArrow = $totalTabWidth > $widthContainerForWindow ? true : false;
+        if ($coWebsites.length > 0) {
+            getSizeOfCowebsiteWhenResizeWindow();
+            resizeFromCowebsite.set(false);
+            updateScreenSize();
+            showArrow = $totalTabWidth > $widthContainerForWindow ? true : false;
+        }
     });
 
     onMount(() => {
@@ -270,10 +272,8 @@
             resizeBarHide = false;
             isToggleFullScreen = false;
         } else if (!$fullScreenCowebsite && !vertical) {
-            console.log("full screen");
             fullScreenCowebsite.set(true);
             widthContainerForWindow.set(window.innerWidth);
-            console.log("widthContainerForWindow", $widthContainerForWindow);
             container.style.width = `${$widthContainerForWindow}px`;
             container.style.backgroundColor = "#1b2a40";
             resizeBarHide = true;
@@ -289,7 +289,7 @@
 
     onDestroy(() => {
         heightContainerForWindow.set(window.innerHeight);
-        widthContainerForWindow.set(window.innerWidth);
+        widthContainerForWindow.set(0);
         resizeFromCowebsite.set(false);
         fullScreenCowebsite.set(false);
         waScaleManager.applyNewSize();
@@ -299,6 +299,8 @@
         }
         subscription();
         isResized.set(false);
+        canvasHeight.set(window.innerHeight);
+        canvasWidth.set(window.innerWidth);
     });
 </script>
 
@@ -313,7 +315,7 @@
         {#if showArrow}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div
-                class="aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer"
+                class="h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer"
                 on:click={() => (menuArrow = !menuArrow)}
                 on:click={() => (appearDropdownMenu = !appearDropdownMenu)}
             >
@@ -356,7 +358,7 @@
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div class="flex justify-end w-full">
                 <div
-                    class="ml-full aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer"
+                    class="ml-full h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer"
                     on:click={toggleFullScreen}
                 >
                     {#if !$fullScreenCowebsite}
@@ -450,7 +452,7 @@
     />
 </div>
 
-<style>
+<style lang="scss">
     .resize-bar {
         display: none;
     }

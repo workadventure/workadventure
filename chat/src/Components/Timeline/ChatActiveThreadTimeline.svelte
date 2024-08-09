@@ -124,7 +124,6 @@
 
     let subscribers = new Array<Unsubscriber>();
 
-    let emojiContainer: HTMLElement;
     let picker: EmojiButton;
 
     let elements: NodeListOf<Element>;
@@ -696,7 +695,7 @@
     <!--MESSAGE FORM-->
     <div class="wa-message-form fixed bottom-0 w-full z-20">
         <div class="emote-menu-container">
-            <div class="emote-menu" id="emote-picker" bind:this={emojiContainer} />
+            <div class="emote-menu" id="emote-picker" />
         </div>
 
         {#if applicationMenuIsOpenned}

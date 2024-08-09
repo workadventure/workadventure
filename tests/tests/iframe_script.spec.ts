@@ -147,13 +147,9 @@ test.describe('Iframe API', () => {
 
       await login(page);
 
-      await page.waitForTimeout(5000);
-
       // Create a script to evaluate function to disable map editor
       await evaluateScript(page, async () => {
         await WA.onInit();
-        // console.log('WA', WA);
-        // console.log('WA.controls', WA.controls, WA.controls.disableMapEditor);
         WA.controls.disableMapEditor();
       });
 

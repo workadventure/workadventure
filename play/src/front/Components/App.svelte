@@ -198,10 +198,12 @@
     });
 
     function updateScreenSize() {
-        if (window.innerWidth < 768) {
+        if (window.innerWidth <= 768) {
             isVerticalMode.set(true);
+            updateDynamicStyles();
         } else {
             isVerticalMode.set(false);
+            updateDynamicStyles();
         }
     }
 
@@ -249,7 +251,7 @@
     $: $isResized ? updateDynamicStyles() : null;
 </script>
 
-<div class="h-screen w-screen flex flex-col-reverse md:flex-row" id="main-container" bind:this={gameContainer}>
+<div class="h-screen w-screen responsive-position" id="main-container" bind:this={gameContainer}>
     <div id="game" class="relative {$fullScreenCowebsite ? 'hidden' : ''}" bind:this={gameDiv}>
         <GameOverlay {game} />
     </div>
@@ -261,3 +263,16 @@
         </div>
     {/if}
 </div>
+
+<style>
+    .responsive-position {
+        display: flex;
+        flex-direction: column-reverse;
+    }
+    @media (min-width: 768px) {
+        .responsive-position {
+            display: flex;
+            flex-direction: row;
+        }
+    }
+</style>

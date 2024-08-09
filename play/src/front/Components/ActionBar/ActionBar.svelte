@@ -2,7 +2,8 @@
     import type { Unsubscriber } from "svelte/store";
     import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
-    import { writable } from "svelte/store";
+    import { get, writable } from "svelte/store";
+    import { ArrowDownIcon } from "svelte-feather-icons";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import {
         cameraListStore,
@@ -25,7 +26,7 @@
     import HelpTooltip from "../Tooltip/HelpTooltip.svelte";
 
     import { LayoutMode } from "../../WebRtc/LayoutManager";
-    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
+    import { embedScreenLayoutStore, hasEmbedScreen } from "../../Stores/EmbedScreensStore";
     import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
@@ -116,12 +117,15 @@
     import MenuBurgerIcon from "../Icons/MenuBurgerIcon.svelte";
     import PenIcon from "../Icons/PenIcon.svelte";
     import { StringUtils } from "../../Utils/StringUtils";
+    import { focusMode, rightMode, hideMode, highlightFullScreen } from "../../Stores/ActionsCamStore";
+    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { connectionManager } from "../../Connection/ConnectionManager";
+    import { canvasWidth } from "../../Stores/CoWebsiteStore";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
 
     // gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
     let userName = gameManager.getPlayerName() || "";
-
+    export const className = "";
     let microphoneActive = false;
     let cameraActive = false;
     let profileMenuIsDropped = false;
@@ -129,7 +133,25 @@
     let burgerOpen = false;
     let helpActive: string | undefined = undefined;
     let navigating = false;
+    let camMenuIsDropped = false;
+    let smallArrowVisible = true;
     const sound = new Audio("/resources/objects/webrtc-out-button.mp3");
+
+    function focusModeOn() {
+        focusMode.set(!get(focusMode));
+    }
+
+    function rightModeOn() {
+        rightMode.set(!get(rightMode));
+    }
+
+    function lightModeOn() {
+        focusMode.set(true);
+    }
+
+    function hideModeOn() {
+        hideMode.set(!get(hideMode));
+    }
 
     function screenSharingClick(): void {
         if ($silentStore) return;
@@ -146,7 +168,6 @@
             requestedCameraState.disableWebcam();
         } else {
             requestedCameraState.enableWebcam();
-            // layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone"); Voir avec Hugo
         }
     }
 
@@ -156,16 +177,16 @@
             requestedMicrophoneState.disableMicrophone();
         } else {
             requestedMicrophoneState.enableMicrophone();
-            // layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone"); Voir avec Hugo
         }
     }
 
+    // Still needed ?
     function switchLayoutMode() {
-        if ($embedScreenLayoutStore === LayoutMode.Presentation) {
-            $embedScreenLayoutStore = LayoutMode.VideoChat;
-        } else {
-            $embedScreenLayoutStore = LayoutMode.Presentation;
-        }
+        // if ($embedScreenLayoutStore === LayoutMode.Presentation) {
+        //     $embedScreenLayoutStore = LayoutMode.VideoChat;
+        // } else {
+        //     $embedScreenLayoutStore = LayoutMode.Presentation;
+        // }
     }
 
     function followClick() {
@@ -352,7 +373,6 @@
     }
 
     function openEditCompanionScene() {
-        console.log("Hey companion");
         selectCompanionSceneVisibleStore.set(true);
         gameManager.leaveGame(SelectCompanionSceneName, new SelectCompanionScene());
     }
@@ -459,13 +479,7 @@
     //     resetChatVisibility();
     //     resetModalVisibility();
     //     roomListVisibilityStore.set(true);
-    // }
-
-
-    // on:mouseenter={() => { if (!navigating) helpActive = !!"chat"; }}
-    // on:mouseleave={() => { !navigating ? helpActive = false : '' }}
-
-     */
+    // }*/
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
@@ -473,7 +487,12 @@
     <ChatOverlay />
 {/if}
 
-<div class="@container/actions w-full absolute z-[301] bottom-0 sm:top-0 transition-all pointer-events-none bp-menu">
+<div
+    class="@container/actions position-responsive w-full z-[301] transition-all pointer-events-none bp-menu {$peerStore.size >
+        0 && $highlightFullScreen
+        ? 'hidden'
+        : ''} {$canvasWidth < 768 ? 'absolute bottom-0' : 'relative top-0 bottom-auto'}"
+>
     <div class="flex w-full p-2 space-x-2 @xl/actions:p-4 @xl/actions:space-x-4">
         <div
             class="justify-start flex-1 pointer-events-auto w-32"
@@ -486,7 +505,10 @@
                 data-testid="chat-action"
             >
                 <div
-                    class="group/btn-message-circle relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg rounded-r-lg sm:rounded-r-none p-2 aspect-square"
+                    class="group/btn-message-circle relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg  p-2 aspect-square {$canvasWidth <
+                        768 && $hasEmbedScreen
+                        ? 'rounded-r-lg'
+                        : ''}"
                     data-testid="chat-btn"
                     on:click={() => analyticsClient.openedChat()}
                     on:click={toggleChat}
@@ -530,7 +552,10 @@
                 </div>
 
                 <div
-                    class="group/btn-users relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg last:rounded-r-lg p-2 aspect-square hidden sm:block"
+                    class="group/btn-users relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg last:rounded-r-lg p-2 aspect-square {$canvasWidth <
+                        768 && $hasEmbedScreen
+                        ? 'hidden'
+                        : 'block'}"
                     on:click={toggleChat}
                 >
                     <div
@@ -553,13 +578,16 @@
         <div
             class="@xxs/actions:justify-center justify-end main-action justify-center pointer-events-auto min-w-32 @sm/actions:min-w-[192px] max-w-[424px]"
         >
-            <div class="flex justify-center relative space-x-0 @sm/actions:space-x-2 @xl/actions:space-x-4">
+            <div class="flex justify-center relative space-x-0 @md/actions:space-x-2 @xl/actions:space-x-4">
                 {#if !$silentStore}
                     <div in:fly={{ delay: 750, y: -200, duration: 750 }}>
                         <div class="flex items-center">
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div
-                                class="group/btn-emoji bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square hidden sm:block"
+                                class="group/btn-emoji bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square {$canvasWidth <
+                                768
+                                    ? 'hidden'
+                                    : 'block'}"
                                 on:click={toggleEmojiPicker}
                                 on:click={(helpActive = undefined)}
                                 on:mouseenter={() => {
@@ -599,7 +627,7 @@
                                             class="content-[''] absolute -top-1 left-0 right-0 m-auto w-2 h-1"
                                         />
                                         <div
-                                            class="bottom-action-bar bg-contrast/80 transition-all backdrop-blur rounded-lg px-3 flex flex-col items-stretch items-center pointer-events-auto justify-center m-auto bottom-6 md:bottom-4 z-[251] transition-transform duration-300 sm:flex-row"
+                                            class="bottom-action-bar bg-contrast/80 transition-all backdrop-blur rounded-lg px-3 flex flex-col items-stretch items-center pointer-events-auto justify-center m-auto bottom-6 md:bottom-4 z-[251] transition-transform duration-300 md:flex-row"
                                         >
                                             <div class="flex animate flex-row flex items-center">
                                                 <div class="py-1 flex">
@@ -689,7 +717,10 @@
                             {#if $bottomActionBarVisibilityStore}
                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <div
-                                    class="group/btn-layout bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg  aspect-square hidden sm:block"
+                                    class="group/btn-layout bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg aspect-square {$canvasWidth <
+                                    768
+                                        ? 'hidden'
+                                        : 'block'}"
                                 >
                                     <div
                                         class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 rounded btn-layout/btn-more:bg-white/10 aspect-square flex items-center justify-center transition-all"
@@ -746,8 +777,12 @@
                                     </div>
                                 </div>
                                 <div
-                                    class="group/btn-follow bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 rounded-l-lg sm:rounded-l-none sm:first:rounded-l-lg sm:last:rounded-r-lg  aspect-square"
+                                    class="group/btn-follow bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2  md:first:rounded-l-lg md:last:rounded-r-lg aspect-square {$canvasWidth <
+                                    768
+                                        ? 'rounded-l-lg'
+                                        : ''}"
                                 >
+                                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                                     <div
                                         class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 rounded group-hover/btn-follow:bg-white/10 aspect-square flex items-center justify-center transition-all {$followStateStore ===
                                         'active'
@@ -772,8 +807,12 @@
                                         />
                                     {/if}
                                 </div>
+                                <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <div
-                                    class="group/btn-lock relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 rounded-none sm:first:rounded-l-lg sm:last:rounded-r-lg aspect-square"
+                                    class="group/btn-lock relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 aspect-square {$hasEmbedScreen &&
+                                    $canvasWidth < 768
+                                        ? ''
+                                        : 'rounded-r-lg'}"
                                     class:disabled={$currentPlayerGroupLockStateStore}
                                     on:click={() => analyticsClient.lockDiscussion()}
                                     on:click={lockClick}
@@ -812,8 +851,9 @@
                             {#if $myMicrophoneStore}
                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <div
-                                    class="group/btn-mic peer/mic relative bg-contrast/80 backdrop-blur p-2 sm:pr-0 sm:last:pr-2 aspect-square {$bottomActionBarVisibilityStore
-                                        ? 'rounded-none sm:rounded-l-lg'
+                                    class="group/btn-mic peer/mic relative bg-contrast/80 backdrop-blur p-2 sm:pr-0 sm:last:pr-2 aspect-square {$peerStore.size >
+                                        0 && $canvasWidth < 768
+                                        ? 'rounded-none'
                                         : 'rounded-l-lg'}"
                                     class:disabled={!$requestedMicrophoneState || $silentStore}
                                 >
@@ -846,23 +886,26 @@
                         <!-- NAV : MICROPHONE END -->
                         <!--{#if $microphoneListStore.length > 1 || $cameraListStore.length > 1 || $speakerListStore.length > 0}
                         {/if}-->
-                        <div
-                            class="absolute h-3 w-7 rounded-b bg-contrast/80 backdrop-blur left-0 right-0 m-auto p-1 z-10 opacity-0 transition-all -bottom-3 hidden sm:block {cameraActive
-                                ? 'opacity-100'
-                                : 'group-hover/hardware:opacity-100'}"
-                        >
+                        {#if smallArrowVisible}
                             <div
-                                class="absolute bottom-1 left-0 right-0 m-auto hover:bg-white/10 h-5 w-5 flex items-center justify-center rounded-sm"
-                                on:click|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}
+                                class="absolute h-3 w-7 rounded-b bg-contrast/80 backdrop-blur left-0 right-0 m-auto p-1 z-10 opacity-0 transition-all -bottom-3 hidden sm:block {cameraActive
+                                    ? 'opacity-100'
+                                    : 'group-hover/hardware:opacity-100'}"
                             >
-                                <ChevronUpIcon
-                                    height="h-4"
-                                    width="w-4"
-                                    classList="aspect-square transition-all {cameraActive ? '' : 'rotate-180'}"
-                                    strokeWidth="2"
-                                />
+                                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                <div
+                                    class="absolute bottom-1 left-0 right-0 m-auto hover:bg-white/10 h-5 w-5 flex items-center justify-center rounded-sm"
+                                    on:click|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}
+                                >
+                                    <ChevronUpIcon
+                                        height="h-4"
+                                        width="w-4"
+                                        classList="aspect-square transition-all {cameraActive ? '' : 'rotate-180'}"
+                                        strokeWidth="2"
+                                    />
+                                </div>
                             </div>
-                        </div>
+                        {/if}
                         {#if cameraActive}
                             <div
                                 class="absolute top-20 left-1/2 transform -translate-x-1/2 text-white rounded-lg w-64 overflow-hidden before:content-[''] before:absolute before:w-full before:h-full before:z-1 before:left-0 before:top-0 before:rounded-lg before:bg-contrast/80 before:backdrop-blur after:content-[''] after:absolute after:z-0 after:w-full after:bg-transparent after:h-full after:-top-4 after:-left-0 transition-all"
@@ -1000,6 +1043,7 @@
                                             {$LL.actionbar.subtitle.speaker()}
                                         </div>
                                         {#each $speakerListStore as speaker, index (index)}
+                                            <!-- svelte-ignore a11y-click-events-have-key-events -->
                                             <div
                                                 class="group flex items-center relative z-10 py-1 px-4 overflow-hidden {$speakerSelectedStore ===
                                                 speaker.deviceId
@@ -1053,7 +1097,10 @@
                         {#if $myCameraStore && !$silentStore}
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div
-                                class="group/btn-cam relative bg-contrast/80 backdrop-blur p-2 sm:pr-0 sm:last:pr-2 rounded-r-lg sm:rounded-none sm:first:rounded-l-lg sm:last:rounded-r-lg aspect-square"
+                                class="group/btn-cam relative bg-contrast/80 backdrop-blur p-2 aspect-square {$peerStore.size >
+                                    0 && $canvasWidth > 768
+                                    ? 'rounded-none'
+                                    : 'rounded-r-lg'}"
                                 class:disabled={!$requestedCameraState || $silentStore}
                             >
                                 <div
@@ -1087,7 +1134,10 @@
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         {#if $bottomActionBarVisibilityStore}
                             <div
-                                class="group/btn-screen-share relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square hidden sm:block"
+                                class="group/btn-screen-share relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square {$canvasWidth <
+                                    768 && $canvasWidth > 768
+                                    ? 'rounded-r-lg pr-2'
+                                    : ''} {$canvasWidth < 768 ? 'hidden' : ''}"
                                 on:click={() => analyticsClient.screenSharing()}
                                 on:click={screenSharingClick}
                                 on:mouseenter={() => {
@@ -1116,7 +1166,97 @@
                                     />
                                 {/if}
                             </div>
+                            <div
+                                class="group/btn-menu-cam relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square {$canvasWidth <
+                                768
+                                    ? 'hidden'
+                                    : 'block'}"
+                                on:click={() => (camMenuIsDropped = !camMenuIsDropped)}
+                                on:click={() => (smallArrowVisible = !smallArrowVisible)}
+                            >
+                                <div
+                                    class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 p-1 m-0 rounded group-[.disabled]/btn-screen-share:bg-secondary hover:bg-white/10 flex items-center justify-center transition-all {$requestedScreenSharingState &&
+                                    !$silentStore
+                                        ? 'bg-secondary hover:bg-danger'
+                                        : ''}"
+                                >
+                                    {#if $requestedScreenSharingState && !$silentStore}
+                                        <ScreenShareOffIcon />
+                                    {:else}
+                                        <ScreenShareIcon />
+                                    {/if}
+                                </div>
+                                {#if helpActive === "share" || !emoteMenuSubStore}
+                                    <HelpTooltip
+                                        title={$LL.actionbar.help.share.title()}
+                                        desc={$LL.actionbar.help.share.desc()}
+                                    />
+                                {/if}
+                            </div>
+
+                            {#if camMenuIsDropped}
+                                <div
+                                    class="absolute bottom-20 sm:right-20 sm:bottom-auto md:mt-2 md:top-14 @xl/actions:top-16 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 sm:left-24 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-transparent before:border-b-contrast/80 transition-all @md/actions:block max-h-[calc(100vh-96px)] overflow-y-auto"
+                                    transition:fly={{ y: 40, duration: 150 }}
+                                >
+                                    <div class="p-0 m-0 list-none">
+                                        <button
+                                            class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
+                                            on:click={lightModeOn}
+                                        >
+                                            <div
+                                                class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
+                                            >
+                                                <ProfilIcon />
+                                            </div>
+                                            <div>{$LL.actionbar.lightMode()}</div>
+                                        </button>
+                                        <button
+                                            class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
+                                            on:click={focusModeOn}
+                                        >
+                                            <div
+                                                class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
+                                            >
+                                                <ProfilIcon />
+                                            </div>
+                                            <div>{$LL.actionbar.focusMode()}</div>
+                                        </button>
+                                        <button
+                                            class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
+                                            on:click={rightModeOn}
+                                        >
+                                            <div
+                                                class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
+                                            >
+                                                <ProfilIcon />
+                                            </div>
+                                            <div>{$LL.actionbar.rightMode()}</div>
+                                        </button>
+                                        {#if $highlightedEmbedScreen}
+                                            <button
+                                                class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
+                                                on:click={hideModeOn}
+                                            >
+                                                <div
+                                                    class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
+                                                >
+                                                    <ProfilIcon />
+                                                </div>
+                                                <div>{$LL.actionbar.hideMode()}</div>
+                                            </button>
+                                        {/if}
+                                    </div>
+                                    <div
+                                        class="flex justify-center hover:cursor-pointer"
+                                        on:click={() => (camMenuIsDropped = !camMenuIsDropped)}
+                                    >
+                                        <ArrowDownIcon />
+                                    </div>
+                                </div>
+                            {/if}
                         {/if}
+
                         <!-- NAV : SCREENSHARING END -->
                     </div>
                 </div>
@@ -1575,7 +1715,9 @@
     </div>
     {#if burgerOpen}
         <div
-            class="w-48 bg-contrast/80 absolute right-2 top-auto bottom-20 sm:bottom-auto sm:top-18 z-[1000] py-4 rounded-lg text-right text-white no-underline pointer-events-auto block @lg:hidden before:content-[''] before:absolute before:w-0 before:h-0 sm:before:-top-[14px] sm:before:bottom-auto before:-bottom-4 before:top-auto before:rotate-180 sm:before:rotate-0 before:right-5 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all"
+            class="w-48 bg-contrast/80 absolute {$canvasWidth < 768
+                ? 'bottom-20'
+                : 'bottom-auto top-18'} right-2 top-auto z-[1000] py-4 rounded-lg text-right text-white no-underline pointer-events-auto block @lg:hidden before:content-[''] before:absolute before:w-0 before:h-0 sm:before:-top-[14px] sm:before:bottom-auto before:-bottom-4 before:top-auto before:rotate-180 sm:before:rotate-0 before:right-5 before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all"
             transition:fly={{ y: 40, duration: 150 }}
         >
             <div class="block @md/actions:hidden">
@@ -1614,6 +1756,47 @@
                 >
                     {$LL.actionbar.otherSettings()}
                 </button>
+
+                {#if $peerStore.size > 0}
+                    <div class="h-[1px] w-full bg-white/10 my-2 block @md/actions:hidden" />
+                    <div class="flex text-xxs uppercase text-white/50 px-4 py-2 relative justify-end">Camera</div>
+
+                    <button
+                        class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold"
+                        on:click={() => analyticsClient.screenSharing()}
+                        on:click={screenSharingClick}
+                        on:click={() => (burgerOpen = !burgerOpen)}
+                        on:mouseenter={() => {
+                            !navigating ? (helpActive = "share") : "";
+                        }}
+                        on:mouseleave={() => {
+                            !navigating ? (helpActive = undefined) : "";
+                        }}
+                    >
+                        {#if $requestedScreenSharingState}
+                            {$LL.actionbar.stopScreenSharing()}
+                        {:else}
+                            {$LL.actionbar.startScreenSharing()}
+                        {/if}
+                    </button>
+
+                    <button
+                        class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold"
+                        on:click={() => analyticsClient.screenSharing()}
+                        on:click={() => (camMenuIsDropped = !camMenuIsDropped)}
+                        on:click={() => (burgerOpen = !burgerOpen)}
+                        on:click={() => (smallArrowVisible = !smallArrowVisible)}
+                        on:mouseenter={() => {
+                            !navigating ? (helpActive = "share") : "";
+                        }}
+                        on:mouseleave={() => {
+                            !navigating ? (helpActive = undefined) : "";
+                        }}
+                    >
+                        <!-- <p>Screen Sharing Mode</p> -->
+                        {$LL.actionbar.screenSharingMode()}
+                    </button>
+                {/if}
             </div>
             <div class="h-[1px] w-full bg-white/10 my-2 block @md/actions:hidden" />
             <div class="flex text-xxs uppercase text-white/50 px-4 py-2 relative justify-end">Administrator</div>
@@ -1714,17 +1897,5 @@
     @import "../../style/breakpoints.scss";
     * {
         font-family: "Roboto Condensed";
-    }
-    .translate-right {
-        transform: translateX(2rem);
-    }
-    @include media-breakpoint-down(sm) {
-        //is equal to tailwind's sm breakpoint
-        .translate-right {
-            transform: translateX(0);
-        }
-        .move-menu {
-            transform: translateX(-3rem);
-        }
     }
 </style>

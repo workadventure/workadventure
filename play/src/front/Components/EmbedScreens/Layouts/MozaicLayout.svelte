@@ -1,4 +1,4 @@
-<script lang="ts">
+<!-- <script lang="ts">
     import { onMount } from "svelte";
     import { highlightedEmbedScreen } from "../../../Stores/HighlightedEmbedScreenStore";
     import { myJitsiCameraStore, streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
@@ -19,7 +19,6 @@
         resizeObserver.observe(layoutDom);
         highlightedEmbedScreen.removeHighlight();
     });
-    $: console.log(cardHeight);
 </script>
 
 <div id="mozaic-layout" class="flex justify-center content-center items-center lg:pt-9 pb-16" bind:this={layoutDom}>
@@ -57,4 +56,4 @@
 </div>
 
 <style lang="scss">
-</style>
+</style> -->

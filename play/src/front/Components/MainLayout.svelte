@@ -12,7 +12,7 @@
     import { actionsMenuStore } from "../Stores/ActionsMenuStore";
     import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore";
     import { uiWebsitesStore } from "../Stores/UIWebsiteStore";
-    import { coWebsites } from "../Stores/CoWebsiteStore";
+    import { canvasHeight, canvasWidth, coWebsites } from "../Stores/CoWebsiteStore";
     import { proximityMeetingStore } from "../Stores/MyMediaStore";
     import { notificationPlayingStore } from "../Stores/NotificationStore";
     import { popupStore } from "../Stores/PopupStore";
@@ -43,6 +43,13 @@
     import MapList from "./Exploration/MapList.svelte";
     import WarningToast from "./WarningContainer/WarningToast.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
+
+    window.addEventListener("resize", () => {
+        if ($coWebsites.length < 1) {
+            canvasWidth.set(window.innerWidth);
+            canvasHeight.set(window.innerHeight);
+        }
+    });
 </script>
 
 <!-- Components ordered by z-index -->
@@ -56,111 +63,129 @@
         <div class="bg-black/60 w-full h-full fixed left-0 right-0" />
     {/if}
 
-    <section id="main-layout-main" class="pb-0 pointer-events-none h-full w-full">
-        <div class="popups">
-            {#each $popupStore.slice().reverse() as popup (popup.uuid)}
-                <div class="popupwrapper">
-                    <svelte:component
-                        this={popup.component}
-                        {...popup.props}
-                        on:close={() => popupStore.removePopup(popup.uuid)}
-                    />
-                </div>
-            {/each}
-        </div>
-        <Lazy
-            when={$showDesktopCapturerSourcePicker}
-            component={() => import("./Video/DesktopCapturerSourcePicker.svelte")}
-        />
-
-        {#if $menuVisiblilityStore}
-            <Menu />
-        {/if}
-
-        {#if $banMessageStore.length > 0}
-            <BanMessageContainer />
-        {:else if $textMessageStore.length > 0}
-            <TextMessageContainer />
-        {/if}
-
-        {#if $notificationPlayingStore}
-            <div class="flex flex-col absolute w-auto right-0">
-                {#each [...$notificationPlayingStore.values()] as notification (notification.id)}
-                    <Notification {notification} />
+    <div class="flex flex-col min-h-screen sm:flex-col-reverse">
+        <section id="main-layout-main" class="pb-0 flex-1 pointer-events-none h-full w-full">
+            <div class="popups">
+                {#each $popupStore.slice().reverse() as popup (popup.uuid)}
+                    <div class="popupwrapper">
+                        <svelte:component
+                            this={popup.component}
+                            {...popup.props}
+                            on:close={() => popupStore.removePopup(popup.uuid)}
+                        />
+                    </div>
                 {/each}
             </div>
-        {/if}
 
-        {#if $warningBannerStore}
-            <WarningBanner />
-        {/if}
+            <Lazy
+                when={$showDesktopCapturerSourcePicker}
+                component={() => import("./Video/DesktopCapturerSourcePicker.svelte")}
+            />
 
-        {#if $showReportScreenStore !== userReportEmpty}
-            <ReportMenu />
-        {/if}
+            {#if $menuVisiblilityStore}
+                <Menu />
+            {/if}
 
-        {#if $helpCameraSettingsVisibleStore}
-            <HelpCameraSettingsPopup />
-        {/if}
+            {#if $banMessageStore.length > 0}
+                <BanMessageContainer />
+            {:else if $textMessageStore.length > 0}
+                <TextMessageContainer />
+            {/if}
 
-        {#if $helpWebRtcSettingsVisibleStore !== "hidden" && $proximityMeetingStore === true}
-            <HelpWebRtcSettingsPopup />
-        {/if}
+            {#if $notificationPlayingStore}
+                <div class="flex flex-col absolute w-auto right-0">
+                    {#each [...$notificationPlayingStore.values()] as notification (notification.id)}
+                        <Notification {notification} />
+                    {/each}
+                </div>
+            {/if}
 
-        {#if $helpSettingsPopupBlockedStore}
-            <HelpPopUpBlocked />
-        {/if}
+            {#if $warningBannerStore}
+                <WarningBanner />
+            {/if}
 
-        {#if $soundPlayingStore}
-            <AudioPlaying url={$soundPlayingStore} />
-        {/if}
+            {#if $showReportScreenStore !== userReportEmpty}
+                <ReportMenu />
+            {/if}
 
-        {#if $showLimitRoomModalStore}
-            <LimitRoomModal />
-        {/if}
+            {#if $helpCameraSettingsVisibleStore}
+                <HelpCameraSettingsPopup />
+            {/if}
 
-        {#if $requestVisitCardsStore}
-            <VisitCard visitCardUrl={$requestVisitCardsStore} />
-        {/if}
+            {#if $helpWebRtcSettingsVisibleStore !== "hidden" && $proximityMeetingStore === true}
+                <HelpWebRtcSettingsPopup />
+            {/if}
 
-        {#if $uiWebsitesStore}
-            <UiWebsiteContainer />
-        {/if}
+            {#if $helpSettingsPopupBlockedStore}
+                <HelpPopUpBlocked />
+            {/if}
 
-        {#if $modalVisibilityStore}
-            <Modal />
-        {/if}
+            {#if $soundPlayingStore}
+                <AudioPlaying url={$soundPlayingStore} />
+            {/if}
 
-        {#if $askDialogStore}
-            <MuteDialogBox />
-        {/if}
+            {#if $showLimitRoomModalStore}
+                <LimitRoomModal />
+            {/if}
 
-        {#if $mapExplorationObjectSelectedStore}
-            <ObjectDetails />
-        {/if}
+            {#if $requestVisitCardsStore}
+                <VisitCard visitCardUrl={$requestVisitCardsStore} />
+            {/if}
 
-        {#if $modalPopupVisibilityStore}
-            <Popup />
-        {/if}
+            {#if $hasEmbedScreen}
+                <EmbedScreensContainer />
+            {/if}
 
-        {#if $modalVisibilityStore}
-            <MapList />
-        {/if}
+            {#if $uiWebsitesStore}
+                <UiWebsiteContainer />
+            {/if}
 
-        {#if $warningMessageStore.length > 0}
-            <WarningToast />
-        {/if}
+            {#if $modalVisibilityStore}
+                <Modal />
+            {/if}
 
-        {#if $hasEmbedScreen}
-            <EmbedScreensContainer />
-        {/if}
-    </section>
+            {#if $askDialogStore}
+                <MuteDialogBox />
+            {/if}
+
+            {#if $mapExplorationObjectSelectedStore}
+                <ObjectDetails />
+            {/if}
+
+            {#if $modalPopupVisibilityStore}
+                <Popup />
+            {/if}
+
+            {#if $modalVisibilityStore}
+                <MapList />
+            {/if}
+
+            {#if $warningMessageStore.length > 0}
+                <WarningToast />
+            {/if}
+        </section>
+        <div class="">
+            <ActionBar />
+        </div>
+    </div>
 
     {#if $actionsMenuStore}
         <ActionsMenu />
     {/if}
 
-    <ActionBar />
+    <!-- svelte-ignore missing-declaration -->
+    <div class="popups">
+        {#each $popupStore.slice().reverse() as popup (popup.uuid)}
+            <div class="popupwrapper">
+                <svelte:component
+                    this={popup.component}
+                    {...popup.props}
+                    on:close={() => popupStore.removePopup(popup.uuid)}
+                />
+            </div>
+        {/each}
+    </div>
+
     <!-- audio when user have a message TODO delete it with new chat -->
     <audio id="newMessageSound" src="/resources/objects/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
 
@@ -177,6 +202,7 @@
     @import "../style/breakpoints.scss";
 
     .popups {
+        position: fixed;
         position: fixed;
         width: 100%;
         height: 100%;
@@ -226,5 +252,9 @@
     .popupwrapper:nth-child(12),
     .popupwrapper:nth-child(13) {
         display: none;
+    }
+
+    #main-layout {
+        container-type: size;
     }
 </style>
