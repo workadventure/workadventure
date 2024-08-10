@@ -40,9 +40,6 @@ export interface ChatRoom {
     hasPreviousMessage: Readable<boolean>;
     loadMorePreviousMessages: () => Promise<void>;
     isEncrypted: Readable<boolean>;
-    addIncomingUser?: (userId: number, userUuid: string, userName: string, color?: string) => void;
-    addOutcomingUser?: (userId: number, userUuid: string, userName: string) => void;
-    addExternalMessage?: (message: string, authorName?: string) => void;
     typingMembers: Readable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
     startTyping: () => Promise<object>;
     stopTyping: () => Promise<object>;

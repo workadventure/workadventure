@@ -26,7 +26,7 @@ export class Group implements Movable, CustomJsonReplacerInterface {
      * The space associated to this group.
      * @private
      */
-    private _spaceName: string;
+    private readonly _spaceName: string;
 
     constructor(
         roomId: string,
@@ -41,6 +41,9 @@ export class Group implements Movable, CustomJsonReplacerInterface {
         this.id = Group.nextId;
         Group.nextId++;
 
+        // TODO: SECURE SPACES WITH JWT tokens.
+        this._spaceName = `${this.roomId}#${this.id}#${new Date().getTime()}`;
+
         users.forEach((user: User) => {
             this.join(user);
         });
@@ -50,8 +53,6 @@ export class Group implements Movable, CustomJsonReplacerInterface {
         this.y = y;
 
         this.currentZone = this.positionNotifier.enter(this);
-        // TODO: SECURE SPACES WITH JWT tokens.
-        this._spaceName = `${this.roomId}#${this.id}#${new Date().getTime()}`;
     }
 
     getUsers(): User[] {

@@ -160,12 +160,12 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
 
             this._connected = true;
 
-            const proximityRoomChat = gameManager.getCurrentGameScene().proximityChatRoom;
+            /*const proximityRoomChat = gameManager.getCurrentGameScene().proximityChatRoom;
 
             if (proximityRoomChat.addIncomingUser != undefined) {
                 const color = playersStore.getPlayerById(this.userId)?.color;
                 proximityRoomChat.addIncomingUser(this.userId, this.userUuid, this.player.name, color ?? undefined);
-            }
+            }*/
 
             this.newMessageSubscription = newChatMessageSubject.subscribe((newMessage) => {
                 if (!newMessage) return;
