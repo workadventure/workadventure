@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/svelte";
 import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
-import { Readable, Writable, get, writable } from "svelte/store";
+import { Readable, Writable, get, writable, Unsubscriber } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import { Subscription } from "rxjs";
 import { AvailabilityStatus } from "@workadventure/messages";
@@ -21,7 +21,7 @@ import { SpaceInterface } from "../../../Space/SpaceInterface";
 import { SpaceRegistryInterface } from "../../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { chatVisibilityStore } from "../../../Stores/ChatStore";
 import { selectedRoom } from "../../Stores/ChatStore";
-import { SpaceFilterInterface } from "../../../Space/SpaceFilter/SpaceFilter";
+import { SpaceFilterInterface, SpaceUserExtended } from "../../../Space/SpaceFilter/SpaceFilter";
 
 export class ProximityChatMessage implements ChatMessage {
     isQuotedMessage = undefined;
@@ -68,6 +68,8 @@ export class ProximityChatRoom implements ChatRoom {
     private _spaceWatcher: SpaceFilterInterface | undefined;
     private spaceMessageSubscription: Subscription | undefined;
     private spaceIsTypingSubscription: Subscription | undefined;
+    private users: Map<number, SpaceUserExtended> | undefined;
+    private usersUnsubscriber: Unsubscriber | undefined;
 
     private unknownUser = {
         chatId: "0",
@@ -99,7 +101,7 @@ export class ProximityChatRoom implements ChatRoom {
         // Create message
         const newMessage = new ProximityChatMessage(
             uuidv4(),
-            get(this._connection.connectedUsers).get(this._userId) ?? this.unknownUser,
+            this.users?.get(this._userId) ?? this.unknownUser,
             writable(newChatMessageContent),
             new Date(),
             true,
@@ -302,6 +304,7 @@ export class ProximityChatRoom implements ChatRoom {
         this._space = this.spaceRegistry.joinSpace(spaceName);
         // TODO: turn "watch" into "createWatcher" that takes a filter in parameter. The name should be generated automatically and not exposed to the user.
         this._spaceWatcher = this._space.watch("all_users");
+        this.usersUnsubscriber = this._spaceWatcher.usersStore.subscribe((users) => (this.users = users));
 
         this.spaceMessageSubscription?.unsubscribe();
         this.spaceMessageSubscription = this._space.observePublicEvent("spaceMessage").subscribe((event) => {
@@ -333,6 +336,10 @@ export class ProximityChatRoom implements ChatRoom {
             Sentry.captureMessage("Trying to leave a space different from the one joined");
             return;
         }
+        if (this.usersUnsubscriber) {
+            this.usersUnsubscriber();
+        }
+        this.users = undefined;
         this._space.stopWatching("all_users");
         this.spaceRegistry.leaveSpace(spaceName);
         this.spaceMessageSubscription?.unsubscribe();

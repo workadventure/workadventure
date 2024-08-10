@@ -5,6 +5,7 @@ import { Readable, get, readable, writable, Writable } from "svelte/store";
 import { CharacterLayerManager } from "../../Phaser/Entity/CharacterLayerManager";
 import { RoomConnection } from "../../Connection/RoomConnection";
 
+// FIXME: refactor from the standpoint of the consumer. addUser, removeUser should be removed...
 export interface SpaceFilterInterface {
     userExist(userId: number): boolean;
     addUser(user: SpaceUser): Promise<SpaceUserExtended>;
