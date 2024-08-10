@@ -103,4 +103,8 @@ export class UserProviderMerger {
             new Map()
         );
     }
+
+    setFilter(searchText: string): Promise<void[]> {
+        return Promise.all(this.userProviders.map((userProvider) => userProvider.setFilter(searchText)));
+    }
 }

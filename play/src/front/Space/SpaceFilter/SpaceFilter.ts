@@ -1,10 +1,5 @@
 import merge from "lodash/merge";
-import {
-    SpaceFilterContainName,
-    SpaceFilterEverybody,
-    SpaceFilterLiveStreaming,
-    SpaceUser,
-} from "@workadventure/messages";
+import { SpaceFilterMessage, SpaceUser } from "@workadventure/messages";
 import { Subject } from "rxjs";
 import { Readable, get, readable, writable, Writable } from "svelte/store";
 import { CharacterLayerManager } from "../../Phaser/Entity/CharacterLayerManager";
@@ -18,7 +13,7 @@ export interface SpaceFilterInterface {
     updateUserData(userdata: Partial<SpaceUser>): void;
     setFilter(filter: Filter): void;
     getName(): string;
-    getFilterType(): "spaceFilterEverybody" | "spaceFilterContainName" | "spaceFilterLiveStreaming" | undefined;
+    getFilterType(): NonNullable<SpaceFilterMessage["filter"]>["$case"];
 }
 
 type ReactiveSpaceUser = {
@@ -42,20 +37,7 @@ type SpaceUserExtended = SpaceUser & {
     reactiveUser: ReactiveSpaceUser;
 };
 
-export type Filter =
-    | {
-          $case: "spaceFilterEverybody";
-          spaceFilterEverybody: SpaceFilterEverybody;
-      }
-    | {
-          $case: "spaceFilterContainName";
-          spaceFilterContainName: SpaceFilterContainName;
-      }
-    | {
-          $case: "spaceFilterLiveStreaming";
-          spaceFilterLiveStreaming: SpaceFilterLiveStreaming;
-      }
-    | undefined;
+export type Filter = SpaceFilterMessage["filter"];
 
 export interface JitsiEventEmitter {
     emitKickOffUserMessage(userId: string): void;
@@ -68,9 +50,10 @@ export interface JitsiEventEmitter {
 }
 
 export class SpaceFilter implements SpaceFilterInterface {
-    private setUsers: ((value: Map<number, SpaceUserExtended>) => void) | undefined;
+    private _setUsers: ((value: Map<number, SpaceUserExtended>) => void) | undefined;
     readonly usersStore: Readable<Map<number, Readonly<SpaceUserExtended>>>;
     private _users: Map<number, SpaceUserExtended> = new Map<number, SpaceUserExtended>();
+    private isSubscribe = false;
 
     constructor(
         private _name: string,
@@ -79,10 +62,16 @@ export class SpaceFilter implements SpaceFilterInterface {
         private _filter: Filter = undefined
     ) {
         this.usersStore = readable(new Map<number, SpaceUserExtended>(), (set) => {
-            this.setUsers = set;
+            this.addSpaceFilter();
+            this._setUsers = set;
             set(this._users);
+            this.isSubscribe = true;
+
+            return () => {
+                this.removeSpaceFilter();
+                this.isSubscribe = false;
+            };
         });
-        this.addSpaceFilter();
     }
     userExist(userId: number): boolean {
         return get(this.usersStore).has(userId);
@@ -92,8 +81,8 @@ export class SpaceFilter implements SpaceFilterInterface {
 
         if (!this.userExist(user.id)) {
             this._users.set(user.id, extendSpaceUser);
-            if (this.setUsers) {
-                this.setUsers(this._users);
+            if (this._setUsers) {
+                this._setUsers(this._users);
             }
         }
 
@@ -106,8 +95,8 @@ export class SpaceFilter implements SpaceFilterInterface {
     removeUser(userId: number): void {
         if (!this.userExist(userId)) {
             this._users.delete(userId);
-            if (this.setUsers) {
-                this.setUsers(this._users);
+            if (this._setUsers) {
+                this._setUsers(this._users);
             }
         }
     }
@@ -115,7 +104,7 @@ export class SpaceFilter implements SpaceFilterInterface {
     updateUserData(newData: Partial<SpaceUser>): void {
         if (!newData.id && newData.id !== 0) return;
 
-        if (!this.setUsers) {
+        if (!this._setUsers) {
             throw new Error("");
         }
 
@@ -123,6 +112,7 @@ export class SpaceFilter implements SpaceFilterInterface {
 
         if (!userToUpdate) return;
 
+        //TODO : Use fieldMask to update user
         merge(userToUpdate, newData);
 
         for (const key in newData) {
@@ -142,12 +132,14 @@ export class SpaceFilter implements SpaceFilterInterface {
             }
         }
 
-        this.setUsers(this._users);
+        this._setUsers(this._users);
     }
 
     setFilter(newFilter: Filter) {
         this._filter = newFilter;
-        this.updateSpaceFilter();
+        if (this.isSubscribe) {
+            this.updateSpaceFilter();
+        }
     }
     getName(): string {
         return this._name;
@@ -253,14 +245,12 @@ export class SpaceFilter implements SpaceFilterInterface {
             spaceFilterMessage: {
                 filterName: this._name,
                 spaceName: this._spaceName,
+                filter: this._filter,
             },
         });
     }
 
     getFilterType(): "spaceFilterEverybody" | "spaceFilterContainName" | "spaceFilterLiveStreaming" | undefined {
         return this._filter?.$case;
-    }
-    destroy() {
-        this.removeSpaceFilter();
     }
 }
