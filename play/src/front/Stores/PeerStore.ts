@@ -2,6 +2,7 @@ import { get, readable, writable } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import type { VideoPeer } from "../WebRtc/VideoPeer";
 import type { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
+import { localUserStore } from "../Connection/LocalUserStore";
 
 /**
  * A generic store that contains the list of (video or screenSharing) peers we are connected to.
@@ -88,3 +89,5 @@ function createScreenSharingStreamStore() {
 }
 
 export const screenSharingStreamStore = createScreenSharingStreamStore();
+
+export const volumeProximityDiscussionStore = writable(localUserStore.getVolumeProximityDiscussion());
