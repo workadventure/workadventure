@@ -14,7 +14,6 @@ import {
     ChatUser,
 } from "../ChatConnection";
 import LL from "../../../../i18n/i18n-svelte";
-import { gameManager } from "../../../Phaser/Game/GameManager";
 import { iframeListener } from "../../../Api/IframeListener";
 import { RoomConnection } from "../../../Connection/RoomConnection";
 import { SpaceInterface } from "../../../Space/SpaceInterface";
@@ -22,6 +21,7 @@ import { SpaceRegistryInterface } from "../../../Space/SpaceRegistry/SpaceRegist
 import { chatVisibilityStore } from "../../../Stores/ChatStore";
 import { selectedRoom } from "../../Stores/ChatStore";
 import { SpaceFilterInterface, SpaceUserExtended } from "../../../Space/SpaceFilter/SpaceFilter";
+import { mapExtendedSpaceUserToChatUser } from "../../UserProvider/ChatUserMapper";
 
 export class ProximityChatMessage implements ChatMessage {
     isQuotedMessage = undefined;
@@ -70,6 +70,8 @@ export class ProximityChatRoom implements ChatRoom {
     private spaceIsTypingSubscription: Subscription | undefined;
     private users: Map<number, SpaceUserExtended> | undefined;
     private usersUnsubscriber: Unsubscriber | undefined;
+    private spaceWatcherUserJoinedObserver: Subscription | undefined;
+    private spaceWatcherUserLeftObserver: Subscription | undefined;
 
     private unknownUser = {
         chatId: "0",
@@ -98,10 +100,16 @@ export class ProximityChatRoom implements ChatRoom {
             url: undefined,
         };
 
+        const spaceUser = this.users?.get(this._userId);
+        let chatUser: ChatUser = this.unknownUser;
+        if (spaceUser) {
+            chatUser = mapExtendedSpaceUserToChatUser(spaceUser);
+        }
+
         // Create message
         const newMessage = new ProximityChatMessage(
             uuidv4(),
-            this.users?.get(this._userId) ?? this.unknownUser,
+            chatUser,
             writable(newChatMessageContent),
             new Date(),
             true,
@@ -112,9 +120,13 @@ export class ProximityChatRoom implements ChatRoom {
         this.messages.push(newMessage);
 
         // Use the room connection to send the message to other users of the space
-        const spaceName = get(this._connection.spaceName);
-        if (broadcast && spaceName != undefined) {
-            this.roomConnection.emitProximityPublicMessage(spaceName, message);
+        if (broadcast) {
+            this._space?.emitPublicMessage({
+                $case: "spaceMessage",
+                spaceMessage: {
+                    message: message,
+                },
+            });
         }
 
         if (action === "proximity") {
@@ -127,41 +139,31 @@ export class ProximityChatRoom implements ChatRoom {
         }
     }
 
-    addIncomingUser(userId: number, userUuid: string, userName: string, color?: string): void {
-        this.sendMessage(get(LL).chat.timeLine.incoming({ userName }), "incoming", false);
-        const playerWokaPictureStore = gameManager
-            .getCurrentGameScene()
-            .MapPlayersByKey.getNestedStore(userId, (item) => item.pictureStore);
-        const newChatUser: ChatUser = {
-            chatId: userId.toString(),
-            uuid: userUuid,
-            availabilityStatus: writable(AvailabilityStatus.ONLINE),
-            username: userName,
-            avatarUrl: get(playerWokaPictureStore) ?? undefined,
-            roomName: undefined,
-            playUri: undefined,
-            color: color,
-            id: undefined,
-        };
+    private addIncomingUser(spaceUser: SpaceUserExtended): void {
+        this.sendMessage(get(LL).chat.timeLine.incoming({ userName: spaceUser.name }), "incoming", false);
+        /*const newChatUser = mapExtendedSpaceUserToChatUser(spaceUser);
 
         //if (userUuid === this._userUuid) return;
         this._connection.connectedUsers.update((users) => {
             users.set(userId, newChatUser);
             return users;
         });
-        this.membersId.push(userId.toString());
+        this.membersId.push(userId.toString());*/
     }
 
-    addOutcomingUser(userId: number, userUuid: string, userName: string): void {
-        this.sendMessage(get(LL).chat.timeLine.outcoming({ userName }), "outcoming", false);
+    private addOutcomingUser(spaceUser: SpaceUserExtended): void {
+        this.sendMessage(get(LL).chat.timeLine.outcoming({ userName: spaceUser.name }), "outcoming", false);
 
-        this._connection.connectedUsers.update((users) => {
+        /*this._connection.connectedUsers.update((users) => {
             users.delete(userId);
             return users;
         });
-        this.membersId = this.membersId.filter((id) => id !== userId.toString());
+        this.membersId = this.membersId.filter((id) => id !== userId.toString());*/
     }
 
+    /**
+     * Add a message from a remote user to the proximity chat.
+     */
     private addNewMessage(message: string, senderUserId: number): void {
         // Create content message
         const newChatMessageContent = {
@@ -169,11 +171,16 @@ export class ProximityChatRoom implements ChatRoom {
             url: undefined,
         };
 
-        const sender: ChatUser | undefined = get(this._connection.connectedUsers).get(senderUserId);
+        const spaceUser = this.users?.get(senderUserId);
+        let chatUser: ChatUser = this.unknownUser;
+        if (spaceUser) {
+            chatUser = mapExtendedSpaceUserToChatUser(spaceUser);
+        }
+
         // Create message
         const newMessage = new ProximityChatMessage(
             uuidv4(),
-            sender ?? this.unknownUser,
+            chatUser,
             writable(newChatMessageContent),
             new Date(),
             false,
@@ -207,7 +214,7 @@ export class ProximityChatRoom implements ChatRoom {
         return Promise.resolve();
     }
 
-    addExternalMessage(message: string, authorName?: string): void {
+    addExternalMessage(type: "local" | "bubble", message: string, authorName?: string): void {
         // Create content message
         const newChatMessageContent = {
             body: message,
@@ -229,6 +236,16 @@ export class ProximityChatRoom implements ChatRoom {
 
         // Add message to the list
         this.messages.push(newMessage);
+
+        // If type is bubble, we need to forward the message to the other users
+        if (type === "bubble") {
+            this._space?.emitPublicMessage({
+                $case: "spaceMessage",
+                spaceMessage: {
+                    message: message,
+                },
+            });
+        }
     }
 
     startTyping(): Promise<object> {
@@ -253,15 +270,17 @@ export class ProximityChatRoom implements ChatRoom {
     }
 
     private addTypingUser(senderUserId: number): void {
-        const sender: ChatUser | undefined = get(this._connection.connectedUsers).get(senderUserId);
-        if (sender == undefined) return;
+        const sender = this.users?.get(senderUserId);
+        if (sender === undefined) {
+            return;
+        }
 
         this.typingMembers.update((typingMembers) => {
-            if (typingMembers.find((user) => user.id === sender.chatId) == undefined) {
+            if (typingMembers.find((user) => user.id === sender.chatID) == undefined) {
                 typingMembers.push({
-                    id: sender.chatId,
-                    name: sender.username ?? null,
-                    avatarUrl: sender.avatarUrl ?? null,
+                    id: sender.chatID ?? "",
+                    name: sender.name ?? null,
+                    avatarUrl: sender.getWokaBase64 ?? null,
                 });
             }
             return typingMembers;
@@ -269,11 +288,13 @@ export class ProximityChatRoom implements ChatRoom {
     }
 
     private removeTypingUser(senderUserId: number): void {
-        const sender: ChatUser | undefined = get(this._connection.connectedUsers).get(senderUserId);
-        if (sender == undefined) return;
+        const sender = this.users?.get(senderUserId);
+        if (sender === undefined) {
+            return;
+        }
 
         this.typingMembers.update((typingMembers) => {
-            return typingMembers.filter((user) => user.id !== sender.chatId);
+            return typingMembers.filter((user) => user.id !== sender.chatID);
         });
     }
 
@@ -292,19 +313,19 @@ export class ProximityChatRoom implements ChatRoom {
         });
     }
 
-    getSpaceName(): string | undefined {
-        return get(this._connection.spaceName);
-    }
-
-    /*get space(): Space | undefined {
-        return this._space;
-    }*/
-
     public joinSpace(spaceName: string): void {
         this._space = this.spaceRegistry.joinSpace(spaceName);
         // TODO: turn "watch" into "createWatcher" that takes a filter in parameter. The name should be generated automatically and not exposed to the user.
         this._spaceWatcher = this._space.watch("all_users");
         this.usersUnsubscriber = this._spaceWatcher.usersStore.subscribe((users) => (this.users = users));
+
+        this.spaceWatcherUserJoinedObserver = this._spaceWatcher.observeUserJoined.subscribe((spaceUser) => {
+            this.addIncomingUser(spaceUser);
+        });
+
+        this.spaceWatcherUserLeftObserver = this._spaceWatcher.observeUserLeft.subscribe((spaceUser) => {
+            this.addOutcomingUser(spaceUser);
+        });
 
         this.spaceMessageSubscription?.unsubscribe();
         this.spaceMessageSubscription = this._space.observePublicEvent("spaceMessage").subscribe((event) => {
@@ -336,6 +357,8 @@ export class ProximityChatRoom implements ChatRoom {
             Sentry.captureMessage("Trying to leave a space different from the one joined");
             return;
         }
+        this.spaceWatcherUserJoinedObserver?.unsubscribe();
+        this.spaceWatcherUserLeftObserver?.unsubscribe();
         if (this.usersUnsubscriber) {
             this.usersUnsubscriber();
         }

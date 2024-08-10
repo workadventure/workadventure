@@ -1,6 +1,6 @@
 import merge from "lodash/merge";
 import { SpaceFilterMessage, SpaceUser } from "@workadventure/messages";
-import { Subject } from "rxjs";
+import { Observable, Subject } from "rxjs";
 import { Readable, get, readable, writable, Writable } from "svelte/store";
 import { CharacterLayerManager } from "../../Phaser/Entity/CharacterLayerManager";
 import { RoomConnection } from "../../Connection/RoomConnection";
@@ -9,12 +9,23 @@ import { RoomConnection } from "../../Connection/RoomConnection";
 export interface SpaceFilterInterface {
     userExist(userId: number): boolean;
     addUser(user: SpaceUser): Promise<SpaceUserExtended>;
-    usersStore: Readable<Map<number, SpaceUserExtended>>;
+    readonly usersStore: Readable<Map<number, SpaceUserExtended>>;
     removeUser(userId: number): void;
     updateUserData(userdata: Partial<SpaceUser>): void;
     setFilter(filter: Filter): void;
     getName(): string;
     getFilterType(): NonNullable<SpaceFilterMessage["filter"]>["$case"];
+
+    /**
+     * Use this observer to get a description of new users.
+     * It can be easier than subscribing to the usersStore and trying to deduce who the new user is.
+     */
+    readonly observeUserJoined: Observable<SpaceUserExtended>;
+    /**
+     * Use this observer to get a description of users who left.
+     * It can be easier than subscribing to the usersStore and trying to deduce who the gone user is.
+     */
+    readonly observeUserLeft: Observable<SpaceUserExtended>;
 }
 
 type ReactiveSpaceUser = {
@@ -55,6 +66,8 @@ export class SpaceFilter implements SpaceFilterInterface {
     readonly usersStore: Readable<Map<number, Readonly<SpaceUserExtended>>>;
     private _users: Map<number, SpaceUserExtended> = new Map<number, SpaceUserExtended>();
     private isSubscribe = false;
+    public readonly observeUserJoined = new Subject<SpaceUserExtended>();
+    public readonly observeUserLeft = new Subject<SpaceUserExtended>();
 
     constructor(
         private _name: string,
@@ -85,6 +98,7 @@ export class SpaceFilter implements SpaceFilterInterface {
             if (this._setUsers) {
                 this._setUsers(this._users);
             }
+            this.observeUserJoined.next(extendSpaceUser);
         }
 
         return extendSpaceUser;
@@ -94,11 +108,13 @@ export class SpaceFilter implements SpaceFilterInterface {
         return Array.from(get(this.usersStore).values());
     }
     removeUser(userId: number): void {
-        if (!this.userExist(userId)) {
+        const user = this._users.get(userId);
+        if (user) {
             this._users.delete(userId);
             if (this._setUsers) {
                 this._setUsers(this._users);
             }
+            this.observeUserLeft.next(user);
         }
     }
 

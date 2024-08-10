@@ -4,6 +4,7 @@ import { SpaceInterface } from "../../Space/SpaceInterface";
 import { CONNECTED_USER_FILTER_NAME } from "../../Space/Space";
 import { SpaceFilterInterface } from "../../Space/SpaceFilter/SpaceFilter";
 import { UserProvideInterface } from "./UserProvideInterface";
+import { mapExtendedSpaceUserToChatUser } from "./ChatUserMapper";
 
 export class WorldUserProvider implements UserProvideInterface {
     users: Readable<PartialChatUser[]>;
@@ -20,22 +21,7 @@ export class WorldUserProvider implements UserProvideInterface {
         this.users = derived(
             this._filter.usersStore,
             (users) => {
-                return Array.from(users.values()).map((currentUser) => {
-                    return {
-                        uuid: currentUser.uuid,
-                        chatId: currentUser.chatID ?? "",
-                        avatarUrl: currentUser.getWokaBase64,
-                        availabilityStatus: currentUser.reactiveUser.availabilityStatus,
-                        roomName: currentUser.roomName,
-                        playUri: currentUser.playUri,
-                        username: currentUser.name,
-                        isAdmin: currentUser.tags.includes("admin"),
-                        isMember: currentUser.tags.includes("member"),
-                        visitCardUrl: currentUser.visitCardUrl,
-                        color: currentUser.color,
-                        id: currentUser.id,
-                    };
-                });
+                return Array.from(users.values()).map(mapExtendedSpaceUserToChatUser);
             },
             []
         );

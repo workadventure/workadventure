@@ -2536,7 +2536,7 @@ ${escapedMessage}
                     case "local": {
                         const room = this.proximityChatRoom;
 
-                        room.addExternalMessage(chatMessage.message, chatMessage.options.author);
+                        room.addExternalMessage("local", chatMessage.message, chatMessage.options.author);
                         selectedRoom.set(room);
                         chatVisibilityStore.set(true);
                         break;
@@ -2544,16 +2544,9 @@ ${escapedMessage}
                     case "bubble": {
                         const room = this.proximityChatRoom;
 
-                        room.addExternalMessage(chatMessage.message);
+                        room.addExternalMessage("bubble", chatMessage.message);
                         selectedRoom.set(room);
                         chatVisibilityStore.set(true);
-
-                        // Send the message to other users in the bubble
-                        // TODO: the message should be sent by not myself
-                        const spaceName = room.getSpaceName();
-                        if (spaceName) this.connection?.emitProximityPublicMessage(spaceName, chatMessage.message);
-                        else console.warn("No space name found for the bubble chat");
-                        break;
                     }
                 }
             })
