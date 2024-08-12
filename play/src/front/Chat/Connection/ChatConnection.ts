@@ -43,6 +43,8 @@ export interface ChatRoom {
     typingMembers: Readable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
     startTyping: () => Promise<object>;
     stopTyping: () => Promise<object>;
+    //TODO: Rename with a more generic name ?
+    isSpaceRoom :  boolean;
 }
 
 //Readonly attributes
@@ -82,18 +84,20 @@ export interface CreateRoomOptions {
     invite?: { value: string; label: string }[];
     preset?: "private_chat" | "public_chat" | "trusted_private_chat";
     encrypt?: boolean;
+    parentSpaceID?:string;
 }
 
 export type ConnectionStatus = "ONLINE" | "ON_ERROR" | "CONNECTING" | "OFFLINE";
 
 export type userId = number;
 export type chatId = string;
-
+export type ChatSpaceRoom = ChatRoom;
 export interface ChatConnectionInterface {
     connectionStatus: Readable<ConnectionStatus>;
     directRooms: Readable<ChatRoom[]>;
     rooms: Readable<ChatRoom[]>;
     invitations: Readable<ChatRoom[]>;
+    roomBySpaceRoom:Readable<Map<ChatSpaceRoom | undefined, ChatRoom[]>>
     createRoom: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string }>;
     createDirectRoom(userChatId: string): Promise<ChatRoom | undefined>;
     getDirectRoomFor(uuserChatId: string): ChatRoom | undefined;

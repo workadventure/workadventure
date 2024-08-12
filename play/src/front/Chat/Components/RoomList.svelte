@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { get } from "svelte/store";
+    import { get, writable } from "svelte/store";
     // eslint-disable-next-line import/no-unresolved
     import { openModal } from "svelte-modals";
     import { onDestroy, onMount } from "svelte";
@@ -26,10 +26,13 @@
     let directRooms = chat.directRooms;
     let rooms = chat.rooms;
     let roomInvitations = chat.invitations;
+    let roomBySpace = chat.roomBySpaceRoom;
 
     let displayDirectRooms = false;
     let displayRooms = false;
     let displayRoomInvitations = false;
+
+    let spaceOpenState = writable(new Map<string,boolean>());
 
     onMount(() => {
         expandOrCollapseRoomsIfEmpty();
@@ -75,8 +78,10 @@
         displayRoomInvitations = !displayRoomInvitations;
     }
 
-    function openCreateRoomModal() {
-        openModal(CreateRoomModal);
+    function openCreateRoomModal(parentSpaceID : string | undefined) {
+        openModal(CreateRoomModal,{
+            parentSpaceID 
+        });
     }
 
     function toggleDisplayProximityChat() {
@@ -93,7 +98,17 @@
         get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase())
     );
 
-    const isGuest = chat.isGuest;
+    $:filteredRoomBySpaceWithoutDefaultRoom = Array.from($roomBySpace.entries()).reduce((acc,[space,roomList])=>{
+        if(!space) return acc; 
+        acc.set(space,roomList.filter((room)=>get(room.name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase())))
+        console.log(acc);
+        return acc;
+    },new Map<ChatRoom,ChatRoom[]>());
+
+    
+
+    $: roomsFromDefaultSpaceRoom = Array.from($roomBySpace.get(undefined)?.values()||[]);
+    $: isGuest = chat.isGuest;
 
     $: displayTwoColumnLayout = sideBarWidth >= CHAT_LAYOUT_LIMIT;
 </script>
@@ -143,10 +158,22 @@
                 {:else}
                     <IconChevronRight />
                 {/if}
-                {$LL.chat.people()}
-            </button>
-            {#if displayDirectRooms}
-                {#each filteredDirectRoom as room (room.id)}
+                {$LL.chat.rooms()}</button
+            >
+            {#if $isGuest === false}
+                <button
+                    data-testid="openCreateRoomModalButton"
+                    class="tw-p-0 tw-m-0 tw-text-gray-400"
+                    on:click={openCreateRoomModal}
+                >
+                    <IconSquarePlus font-size={16} />
+                </button>
+            {/if}
+        </div>
+
+        {#if displayRooms}
+            <div class="tw-flex tw-flex-col tw-overflow-auto">
+                {#each roomsFromDefaultSpaceRoom as room (room.id)}
                     <Room {room} />
                 {/each}
                 {#if filteredDirectRoom.length === 0}
@@ -154,6 +181,47 @@
                 {/if}
             {/if}
 
+        <!--roomBySpace-->
+        {#each Array.from(filteredRoomBySpaceWithoutDefaultRoom) as [space,roomList] (space) }
+        <div class="tw-flex tw-justify-between">
+            <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={()=>{
+                    spaceOpenState.update((state)=>{
+                        const newState =  ($spaceOpenState.get(space.id)===undefined)? true: !$spaceOpenState.get(space.id);
+                        state.set(space.id,newState);
+                        return state
+                    })     
+            }}>
+                {#if displayRooms}
+                    <IconChevronDown />
+                {:else}
+                    <IconChevronRight />
+                {/if}
+                {get(space.name)}</button
+            >
+            {#if $isGuest === false}
+                <button
+                    data-testid="openCreateRoomModalButton"
+                    class="tw-p-0 tw-m-0 tw-text-gray-400"
+                    on:click={()=>openCreateRoomModal(space.id)}
+                >
+                    <IconSquarePlus font-size={16} />
+                </button>
+            {/if}
+        </div>
+
+        {#if $spaceOpenState.get(space.id) || false}
+            <div class="tw-flex tw-flex-col tw-overflow-auto">
+                {#each roomList as room (room)}
+                    <Room {room} />
+                {/each}
+                {#if roomList.length === 0}
+                    <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
+                {/if}
+            </div>
+        {/if}
+        {/each}
+
+        {#if $proximityRoomConnection}
             <div class="tw-flex tw-justify-between">
                 <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={toggleDisplayRooms}>
                     {#if displayRooms}
