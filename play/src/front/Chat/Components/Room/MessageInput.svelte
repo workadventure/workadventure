@@ -10,7 +10,7 @@
     export let room: ChatRoom;
 
     let message = "";
-    let messageInput: HTMLTextAreaElement;
+    let messageInput: HTMLDivElement;
     let emojiButtonRef: HTMLButtonElement;
     let stopTypingTimeOutID: undefined | ReturnType<typeof setTimeout>;
     const TYPINT_TIMEOUT = 10000;
@@ -51,7 +51,7 @@
 
     function sendMessage(messageToSend: string) {
         room?.sendMessage(messageToSend);
-        messageInput.value = "";
+        messageInput.innerText = "";
         message = "";
         if (stopTypingTimeOutID) {
             clearTimeout(stopTypingTimeOutID);
@@ -82,6 +82,15 @@
         emojiPicker.isPickerVisible() ? emojiPicker.hidePicker() : emojiPicker.showPicker(emojiButtonRef);
     }
 
+    function onPasteHandler(event: ClipboardEvent) {
+        event.preventDefault(); // Prevent the default paste action
+
+        if (!event.clipboardData) return;
+
+        const text = event.clipboardData.getData("text");
+
+        document.execCommand("insertText", false, text);
+    }
     $: quotedMessageContent = $selectedChatMessageToReply?.content;
 </script>
 
@@ -96,13 +105,15 @@
     </div>
 {/if}
 <div class="tw-flex tw-items-center tw-gap-1 tw-border tw-border-solid tw-rounded-xl tw-pr-1 tw-border-light-purple">
-    <textarea
+    <div
         data-testid="messageInput"
-        bind:value={message}
+        bind:textContent={message}
+        contenteditable="true"
         bind:this={messageInput}
         on:keydown={sendMessageOrEscapeLine}
         on:input={onInputHandler}
-        class="tw-w-full tw-rounded-xl wa-searchbar tw-block tw-text-white placeholder:tw-text-sm tw-px-3 tw-py-1 tw-border-light-purple tw-border tw-bg-transparent tw-resize-none tw-m-0 tw-pr-5 tw-border-none tw-outline-none tw-shadow-none focus:tw-ring-0"
+        on:paste={onPasteHandler}
+        class="!tw-m-0 tw-px-2 tw-max-h-36 tw-overflow-auto tw-w-full tw-h-full tw-rounded-xl wa-searchbar tw-block tw-text-white placeholder:tw-text-sm  tw-border-light-purple tw-border !tw-bg-transparent tw-resize-none tw-border-none tw-outline-none tw-shadow-none focus:tw-ring-0"
         placeholder={$LL.chat.enter()}
     />
     <button
