@@ -22,6 +22,7 @@
     import googleDocsSvg from "../../images/applications/icon_google_docs.svg";
     import googleSheetsSvg from "../../images/applications/icon_google_sheets.svg";
     import googleSlidesSvg from "../../images/applications/icon_google_slides.svg";
+    import googleDriveSvg from "../../images/applications/icon_google_drive.svg";
     import eraserSvg from "../../images/applications/icon_eraser.svg";
     import excalidrawSvg from "../../images/applications/icon_excalidraw.svg";
     import cardPng from "../../images/applications/icon_cards.svg";
@@ -610,6 +611,13 @@
                 alt={$LL.mapEditor.properties.googleSlidesProperties.description()}
             />
             {$LL.mapEditor.properties.googleSlidesProperties.label()}
+        {:else if property.application === "googleDrive"}
+            <img
+                class="tw-w-6 tw-mr-1"
+                src={googleDriveSvg}
+                alt={$LL.mapEditor.properties.googleDriveProperties.description()}
+            />
+            {$LL.mapEditor.properties.googleDriveProperties.label()}
         {:else if property.application === "eraser"}
             <img class="tw-w-6 tw-mr-1" src={eraserSvg} alt={$LL.mapEditor.properties.eraserProperties.description()} />
             {$LL.mapEditor.properties.eraserProperties.label()}
