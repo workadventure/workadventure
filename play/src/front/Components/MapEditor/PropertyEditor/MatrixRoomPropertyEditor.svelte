@@ -25,7 +25,7 @@
                     property.matrixRoomId = answer.chatRoomID;
                     dispatch("change");
                 })
-                .catch(error=>console.log(error));
+                .catch(error=>console.error(error));
              
         }
 

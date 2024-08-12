@@ -1061,7 +1061,7 @@ export class IoSocketController {
                     socketManager.leaveSpaces(socket);
                     socketManager
                         .leaveChatRoomArea(socket)
-                        .catch(error=>console.log(error));
+                        .catch(error=>console.error(error));
                     //TODO : utile ?
                     socketData.currentChatRoomArea = "";
                 } catch (e) {
