@@ -61,7 +61,9 @@ export class Space implements SpaceInterface {
     getSpaceFilter(filterName: string): SpaceFilter {
         const spaceFilter = this.filters.get(filterName);
         if (!spaceFilter) {
-            throw new Error("Something went wrong with filterName");
+            throw new Error(
+                `Could not find spaceFilter named "${filterName}". Maybe it was destroyed just before a message was received?`
+            );
         }
         return spaceFilter;
     }
@@ -74,11 +76,11 @@ export class Space implements SpaceInterface {
     }
 
     private userLeaveSpace() {
-        this._connection.emitUnwatchSpace(this.name);
+        this._connection.emitLeaveSpace(this.name);
     }
 
     private userJoinSpace() {
-        this._connection.emitWatchSpace(this.name);
+        this._connection.emitJoinSpace(this.name);
     }
 
     public updateSpaceMetadata(metadata: Map<string, unknown>) {

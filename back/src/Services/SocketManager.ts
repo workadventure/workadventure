@@ -39,20 +39,20 @@ import {
     SetPlayerDetailsMessage,
     SubToPusherMessage,
     TurnCredentialsAnswer,
-    UnwatchSpaceMessage,
     UpdateMapToNewestWithKeyMessage,
     UpdateSpaceMetadataMessage,
     UpdateSpaceUserMessage,
     UserJoinedZoneMessage,
     UserMovesMessage,
     VariableMessage,
-    WatchSpaceMessage,
     WebRtcSignalToClientMessage,
     WebRtcSignalToServerMessage,
     WebRtcStartMessage,
     Zone as ProtoZone,
     PublicEvent,
     PrivateEvent,
+    LeaveSpaceMessage,
+    JoinSpaceMessage,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -1434,18 +1434,18 @@ export class SocketManager {
         return true;
     }
 
-    handleWatchSpaceMessage(pusher: SpacesWatcher, watchSpaceMessage: WatchSpaceMessage) {
-        let space: Space | undefined = this.spaces.get(watchSpaceMessage.spaceName);
+    handleJoinSpaceMessage(pusher: SpacesWatcher, joinSpaceMessage: JoinSpaceMessage) {
+        let space: Space | undefined = this.spaces.get(joinSpaceMessage.spaceName);
         if (!space) {
-            space = new Space(watchSpaceMessage.spaceName);
-            this.spaces.set(watchSpaceMessage.spaceName, space);
+            space = new Space(joinSpaceMessage.spaceName);
+            this.spaces.set(joinSpaceMessage.spaceName, space);
         }
         pusher.watchSpace(space.name);
         space.addWatcher(pusher);
     }
 
-    handleUnwatchSpaceMessage(pusher: SpacesWatcher, unwatchSpaceMessage: UnwatchSpaceMessage) {
-        const space: Space | undefined = this.spaces.get(unwatchSpaceMessage.spaceName);
+    handleLeaveSpaceMessage(pusher: SpacesWatcher, leaveSpaceMessage: LeaveSpaceMessage) {
+        const space: Space | undefined = this.spaces.get(leaveSpaceMessage.spaceName);
         if (!space) {
             throw new Error("Cant unwatch space, space not found");
         }

@@ -28,7 +28,7 @@ class MockRoomConnection {
     public removeSpaceUserMessageStream = new Subject<RemoveSpaceUserMessage>();
     public updateSpaceMetadataMessageStream = new Subject<UpdateSpaceMetadataMessage>();
 
-    public emitWatchSpace() {}
+    public emitJoinSpace() {}
     // Add any other methods or properties that need to be mocked
 }
 
