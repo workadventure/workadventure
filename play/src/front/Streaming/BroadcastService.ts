@@ -1,7 +1,6 @@
 import { writable } from "svelte/store";
 import debug from "debug";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
-import { SpaceFilterMessage } from "@workadventure/messages";
 import { ConcatenateMapStore } from "@workadventure/store-utils";
 import { RoomConnection } from "../Connection/RoomConnection";
 import { screenWakeLock } from "../Utils/ScreenWakeLock";
@@ -16,7 +15,6 @@ const broadcastServiceLogger = debug("BroadcastService");
 export type BroadcastSpaceFactory = (
     connection: RoomConnection,
     spaceName: string,
-    spaceFilter: SpaceFilterMessage,
     broadcastService: BroadcastService,
     playSound: boolean
 ) => BroadcastSpace;
@@ -43,18 +41,9 @@ export class BroadcastService {
     ): BroadcastSpace {
         const spaceNameSlugify = slugify(spaceName);
 
-        const spaceFilter: SpaceFilterMessage = {
-            filterName: "watchSpaceLiveStreaming",
-            spaceName: spaceNameSlugify,
-            filter: {
-                $case: "spaceFilterLiveStreaming",
-                spaceFilterLiveStreaming: {},
-            },
-        };
-
         const broadcastSpace = broadcastSpaceFactory
-            ? broadcastSpaceFactory(this.roomConnection, spaceNameSlugify, spaceFilter, this, playSound)
-            : this.defaultBroadcastSpaceFactory(this.roomConnection, spaceNameSlugify, spaceFilter, this, playSound);
+            ? broadcastSpaceFactory(this.roomConnection, spaceNameSlugify, this, playSound)
+            : this.defaultBroadcastSpaceFactory(this.roomConnection, spaceNameSlugify, this, playSound);
 
         this.broadcastSpaces.push(broadcastSpace);
 

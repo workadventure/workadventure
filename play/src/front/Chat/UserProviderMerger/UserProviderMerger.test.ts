@@ -32,6 +32,9 @@ describe("UserProviderMerger", () => {
                     availabilityStatus: writable(AvailabilityStatus.ONLINE),
                 },
             ]),
+            setFilter: () => {
+                return Promise.resolve();
+            },
         };
 
         const userProvider2: UserProvideInterface = {
@@ -40,6 +43,9 @@ describe("UserProviderMerger", () => {
                 { chatId: "3", username: "Charlie" },
                 { chatId: "4", username: "Dave" },
             ]),
+            setFilter: () => {
+                return Promise.resolve();
+            },
         };
 
         const userProviderMerger = new UserProviderMerger([userProvider1, userProvider2]);

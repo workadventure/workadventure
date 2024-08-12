@@ -1,6 +1,7 @@
 import { Subject } from "rxjs";
 import { SpaceEvent } from "@workadventure/messages";
 import { SpaceFilterInterface } from "./SpaceFilter/SpaceFilter";
+import { AllUsersSpaceFilterInterface } from "./SpaceFilter/AllUsersSpaceFilter";
 
 export type PublicSpaceEvent = NonNullable<SpaceEvent["event"]>;
 
@@ -15,10 +16,9 @@ export interface SpaceInterface {
     getName(): string;
     setMetadata(metadata: Map<string, unknown>): void;
     getMetadata(): Map<string, unknown>;
-    getSpaceFilter(filterName: string): SpaceFilterInterface;
-    watch(filterName: string): SpaceFilterInterface;
-    stopWatching(filterName: string): void;
-    spaceFilterExist(filterName: string): boolean;
+    watchAllUsers(): AllUsersSpaceFilterInterface;
+    watchLiveStreamingUsers(): SpaceFilterInterface;
+    stopWatching(spaceFilter: SpaceFilterInterface): void;
     observePublicEvent<K extends keyof PublicEventsObservables>(key: K): NonNullable<PublicEventsObservables[K]>;
     emitPublicMessage(message: NonNullable<SpaceEvent["event"]>): void;
 }

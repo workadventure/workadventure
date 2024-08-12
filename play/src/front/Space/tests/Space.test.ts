@@ -1,7 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { Space } from "../Space";
-import { SpaceFilterAlreadyExistError, SpaceNameIsEmptyError } from "../Errors/SpaceError";
-import { SpaceFilterInterface } from "../SpaceFilter/SpaceFilter";
+import { SpaceNameIsEmptyError } from "../Errors/SpaceError";
 import { RoomConnection } from "../../Connection/RoomConnection";
 
 vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
@@ -141,61 +140,5 @@ describe("Space test", () => {
         const result = space.getMetadata();
 
         expect(result).toStrictEqual(newMetadata);
-    });
-
-    it("should return a error when spaceName exist", () => {
-        const spaceName = "space-name";
-        const spaceFilterName = "space-filter-name";
-
-        const metadata = new Map<string, unknown>([["metadata-1", 4]]);
-
-        const filter: Partial<SpaceFilterInterface> = {};
-        const spaceFilterMap = new Map<string, Partial<SpaceFilterInterface>>([[spaceFilterName, filter]]);
-
-        const space = new Space(
-            spaceName,
-            metadata,
-            defaultRoomConnectionMock,
-            spaceFilterMap as Map<string, SpaceFilterInterface>
-        );
-
-        expect(() => {
-            space.watch(spaceFilterName);
-        }).toThrow(SpaceFilterAlreadyExistError);
-    });
-
-    it("should return a spacefilter when spaceName  not exist", () => {
-        const spaceName = "space-name";
-        const spaceFilterName = "space-filter-name";
-
-        const metadata = new Map<string, unknown>([["metadata-1", 4]]);
-
-        const space = new Space(spaceName, metadata, defaultRoomConnectionMock);
-
-        const spaceFilter = space.watch(spaceFilterName);
-        expect(spaceFilter).toBeDefined();
-        if (!spaceFilter) return;
-
-        expect(spaceFilter.getName()).toBe(spaceFilterName);
-        expect(spaceFilter.getUsers()).toHaveLength(0);
-    });
-    it("should call filterDestroy when you stop watching filter", () => {
-        const spaceName = "space-name";
-        const spaceFilterName = "space-filter-name";
-        const metadata = new Map<string, unknown>([["metadata-1", 4]]);
-
-        const filter: Partial<SpaceFilterInterface> = {
-            destroy: vi.fn(),
-        };
-        const spaceFilterMap = new Map<string, Partial<SpaceFilterInterface>>([[spaceFilterName, filter]]);
-        const space = new Space(
-            spaceName,
-            metadata,
-            defaultRoomConnectionMock,
-            spaceFilterMap as Map<string, SpaceFilterInterface>
-        );
-        space.stopWatching(spaceFilterName);
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        expect(filter.destroy).toHaveBeenCalledOnce();
     });
 });

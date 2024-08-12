@@ -2,16 +2,18 @@ import { Subject } from "rxjs";
 import { PublicEvent, SpaceEvent } from "@workadventure/messages";
 import { RoomConnection } from "../Connection/RoomConnection";
 import { PublicEventsObservables, SpaceInterface } from "./SpaceInterface";
-import { SpaceFilterAlreadyExistError, SpaceFilterDoesNotExistError, SpaceNameIsEmptyError } from "./Errors/SpaceError";
+import { SpaceFilterDoesNotExistError, SpaceNameIsEmptyError } from "./Errors/SpaceError";
 import { SpaceFilter, SpaceFilterInterface } from "./SpaceFilter/SpaceFilter";
+import { AllUsersSpaceFilter, AllUsersSpaceFilterInterface } from "./SpaceFilter/AllUsersSpaceFilter";
+import { LiveStreamingUsersSpaceFilter } from "./SpaceFilter/LiveStreamingUsersSpaceFilter";
 
 export const WORLD_SPACE_NAME = "allWorldUser";
-export const CONNECTED_USER_FILTER_NAME = "connected_users";
 
 export class Space implements SpaceInterface {
     private readonly name: string;
-    private filters: Map<string, SpaceFilterInterface> = new Map<string, SpaceFilterInterface>();
+    private filters: Map<string, SpaceFilter> = new Map<string, SpaceFilter>();
     private readonly publicEventsObservables: PublicEventsObservables = {};
+    private filterNumber = 0;
 
     /**
      * IMPORTANT: The only valid way to create a space is to use the SpaceRegistry.
@@ -40,14 +42,23 @@ export class Space implements SpaceInterface {
         });
     }
 
-    watch(filterName: string): SpaceFilterInterface {
-        if (this.filters.has(filterName)) throw new SpaceFilterAlreadyExistError(this.name, filterName);
-        const newFilter: SpaceFilterInterface = new SpaceFilter(filterName, this.name, this._connection);
-        this.filters.set(newFilter.getName(), newFilter);
+    watchAllUsers(): AllUsersSpaceFilterInterface {
+        const filterName = `allUsers_${this.filterNumber}`;
+        this.filterNumber += 1;
+        const newFilter = new AllUsersSpaceFilter(filterName, this.name, this._connection);
+        this.filters.set(filterName, newFilter);
         return newFilter;
     }
 
-    getSpaceFilter(filterName: string): SpaceFilterInterface {
+    watchLiveStreamingUsers(): SpaceFilterInterface {
+        const filterName = `liveStreamingUsers_${this.filterNumber}`;
+        this.filterNumber += 1;
+        const newFilter = new LiveStreamingUsersSpaceFilter(filterName, this.name, this._connection);
+        this.filters.set(filterName, newFilter);
+        return newFilter;
+    }
+
+    getSpaceFilter(filterName: string): SpaceFilter {
         const spaceFilter = this.filters.get(filterName);
         if (!spaceFilter) {
             throw new Error("Something went wrong with filterName");
@@ -55,12 +66,9 @@ export class Space implements SpaceInterface {
         return spaceFilter;
     }
 
-    spaceFilterExist(filterName: string): boolean {
-        return this.filters.has(filterName);
-    }
-
-    stopWatching(filterName: string) {
-        const filter: SpaceFilterInterface | undefined = this.filters.get(filterName);
+    stopWatching(spaceFilter: SpaceFilterInterface): void {
+        const filterName = spaceFilter.getName();
+        const filter = this.filters.get(filterName);
         if (!filter) throw new SpaceFilterDoesNotExistError(this.name, filterName);
         this.filters.delete(filterName);
     }
@@ -117,7 +125,7 @@ export class Space implements SpaceInterface {
     }
 
     public emitPublicMessage(message: NonNullable<SpaceEvent["event"]>): void {
-        this._connection.emitSpacePublicEvent(this.name, message);
+        this._connection.emitPublicSpaceEvent(this.name, message);
     }
 
     // FIXME: this looks like a hack, it should not belong here.

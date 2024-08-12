@@ -1,20 +1,18 @@
 import merge from "lodash/merge";
 import { SpaceFilterMessage, SpaceUser } from "@workadventure/messages";
-import { Observable, Subject } from "rxjs";
+import { Observable, Subject, Subscriber } from "rxjs";
 import { Readable, get, readable, writable, Writable } from "svelte/store";
 import { CharacterLayerManager } from "../../Phaser/Entity/CharacterLayerManager";
 import { RoomConnection } from "../../Connection/RoomConnection";
 
 // FIXME: refactor from the standpoint of the consumer. addUser, removeUser should be removed...
 export interface SpaceFilterInterface {
-    userExist(userId: number): boolean;
-    addUser(user: SpaceUser): Promise<SpaceUserExtended>;
+    //userExist(userId: number): boolean;
+    //addUser(user: SpaceUser): Promise<SpaceUserExtended>;
     readonly usersStore: Readable<Map<number, SpaceUserExtended>>;
-    removeUser(userId: number): void;
-    updateUserData(userdata: Partial<SpaceUser>): void;
-    setFilter(filter: Filter): void;
+    //removeUser(userId: number): void;
+    //updateUserData(userdata: Partial<SpaceUser>): void;
     getName(): string;
-    getFilterType(): NonNullable<SpaceFilterMessage["filter"]>["$case"];
 
     /**
      * Use this observer to get a description of new users.
@@ -61,29 +59,50 @@ export interface JitsiEventEmitter {
     emitProximityPrivateMessage(message: string, receiverUserId: number): void;
 }
 
-export class SpaceFilter implements SpaceFilterInterface {
+export abstract class SpaceFilter implements SpaceFilterInterface {
     private _setUsers: ((value: Map<number, SpaceUserExtended>) => void) | undefined;
     readonly usersStore: Readable<Map<number, Readonly<SpaceUserExtended>>>;
     private _users: Map<number, SpaceUserExtended> = new Map<number, SpaceUserExtended>();
     private isSubscribe = false;
-    public readonly observeUserJoined = new Subject<SpaceUserExtended>();
-    public readonly observeUserLeft = new Subject<SpaceUserExtended>();
+    private _addUserSubscriber: Subscriber<SpaceUserExtended> | undefined;
+    private _leftUserSubscriber: Subscriber<SpaceUserExtended> | undefined;
+    public readonly observeUserJoined: Observable<SpaceUserExtended>;
+    public readonly observeUserLeft: Observable<SpaceUserExtended>;
+    private registerRefCount = 0;
 
-    constructor(
+    protected constructor(
         private _name: string,
         private _spaceName: string,
         private _connection: RoomConnection,
-        private _filter: Filter = undefined
+        private _filter: Filter
     ) {
         this.usersStore = readable(new Map<number, SpaceUserExtended>(), (set) => {
-            this.addSpaceFilter();
+            this.registerSpaceFilter();
             this._setUsers = set;
             set(this._users);
             this.isSubscribe = true;
 
             return () => {
-                this.removeSpaceFilter();
+                this.unregisterSpaceFilter();
                 this.isSubscribe = false;
+            };
+        });
+
+        this.observeUserJoined = new Observable<SpaceUserExtended>((subscriber) => {
+            this.registerSpaceFilter();
+            this._addUserSubscriber = subscriber;
+
+            return () => {
+                this.unregisterSpaceFilter();
+            };
+        });
+
+        this.observeUserLeft = new Observable<SpaceUserExtended>((subscriber) => {
+            this.registerSpaceFilter();
+            this._leftUserSubscriber = subscriber;
+
+            return () => {
+                this.unregisterSpaceFilter();
             };
         });
     }
@@ -98,7 +117,9 @@ export class SpaceFilter implements SpaceFilterInterface {
             if (this._setUsers) {
                 this._setUsers(this._users);
             }
-            this.observeUserJoined.next(extendSpaceUser);
+            if (this._addUserSubscriber) {
+                this._addUserSubscriber.next(extendSpaceUser);
+            }
         }
 
         return extendSpaceUser;
@@ -114,7 +135,9 @@ export class SpaceFilter implements SpaceFilterInterface {
             if (this._setUsers) {
                 this._setUsers(this._users);
             }
-            this.observeUserLeft.next(user);
+            if (this._leftUserSubscriber) {
+                this._leftUserSubscriber.next(user);
+            }
         }
     }
 
@@ -152,7 +175,7 @@ export class SpaceFilter implements SpaceFilterInterface {
         this._setUsers(this._users);
     }
 
-    setFilter(newFilter: Filter) {
+    protected setFilter(newFilter: Filter) {
         this._filter = newFilter;
         if (this.isSubscribe) {
             this.updateSpaceFilter();
@@ -188,9 +211,9 @@ export class SpaceFilter implements SpaceFilterInterface {
             emitProximityPublicMessage: (message: string) => {
                 this._connection.emitProximityPublicMessage(this._name, message);
             },
-            emitProximityPrivateMessage: (message: string, receiverUserId: number) => {
+            /*emitProximityPrivateMessage: (message: string, receiverUserId: number) => {
                 this._connection.emitProximityPrivateMessage(this._name, message, receiverUserId);
-            },
+            },*/
         };
 
         const wokaBase64 = await CharacterLayerManager.wokaBase64(user.characterTextures);
@@ -239,13 +262,16 @@ export class SpaceFilter implements SpaceFilterInterface {
         return extendedUser;
     }
 
-    private removeSpaceFilter() {
-        this._connection.emitRemoveSpaceFilter({
-            spaceFilterMessage: {
-                filterName: this._name,
-                spaceName: this._spaceName,
-            },
-        });
+    private unregisterSpaceFilter() {
+        this.registerRefCount--;
+        if (this.registerRefCount === 0) {
+            this._connection.emitRemoveSpaceFilter({
+                spaceFilterMessage: {
+                    filterName: this._name,
+                    spaceName: this._spaceName,
+                },
+            });
+        }
     }
 
     private updateSpaceFilter() {
@@ -257,17 +283,16 @@ export class SpaceFilter implements SpaceFilterInterface {
             },
         });
     }
-    private addSpaceFilter() {
-        this._connection.emitAddSpaceFilter({
-            spaceFilterMessage: {
-                filterName: this._name,
-                spaceName: this._spaceName,
-                filter: this._filter,
-            },
-        });
-    }
-
-    getFilterType(): "spaceFilterEverybody" | "spaceFilterContainName" | "spaceFilterLiveStreaming" | undefined {
-        return this._filter?.$case;
+    private registerSpaceFilter() {
+        if (this.registerRefCount === 0) {
+            this._connection.emitAddSpaceFilter({
+                spaceFilterMessage: {
+                    filterName: this._name,
+                    spaceName: this._spaceName,
+                    filter: this._filter,
+                },
+            });
+        }
+        this.registerRefCount++;
     }
 }

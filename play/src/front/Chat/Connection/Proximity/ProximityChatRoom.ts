@@ -165,6 +165,11 @@ export class ProximityChatRoom implements ChatRoom {
      * Add a message from a remote user to the proximity chat.
      */
     private addNewMessage(message: string, senderUserId: number): void {
+        // Ignore messages from the current user
+        if (senderUserId === this._userId) {
+            return;
+        }
+
         // Create content message
         const newChatMessageContent = {
             body: message,
@@ -315,9 +320,11 @@ export class ProximityChatRoom implements ChatRoom {
 
     public joinSpace(spaceName: string): void {
         this._space = this.spaceRegistry.joinSpace(spaceName);
-        // TODO: turn "watch" into "createWatcher" that takes a filter in parameter. The name should be generated automatically and not exposed to the user.
-        this._spaceWatcher = this._space.watch("all_users");
-        this.usersUnsubscriber = this._spaceWatcher.usersStore.subscribe((users) => (this.users = users));
+
+        this._spaceWatcher = this._space.watchAllUsers();
+        this.usersUnsubscriber = this._spaceWatcher.usersStore.subscribe((users) => {
+            this.users = users;
+        });
 
         this.spaceWatcherUserJoinedObserver = this._spaceWatcher.observeUserJoined.subscribe((spaceUser) => {
             this.addIncomingUser(spaceUser);
@@ -363,7 +370,6 @@ export class ProximityChatRoom implements ChatRoom {
             this.usersUnsubscriber();
         }
         this.users = undefined;
-        this._space.stopWatching("all_users");
         this.spaceRegistry.leaveSpace(spaceName);
         this.spaceMessageSubscription?.unsubscribe();
         this.spaceIsTypingSubscription?.unsubscribe();

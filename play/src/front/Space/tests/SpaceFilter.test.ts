@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { SpaceUser } from "@workadventure/messages";
 import { get, Writable, writable } from "svelte/store";
 import { AtLeast } from "@workadventure/map-editor";
-import { Filter, SpaceFilter, SpaceFilterInterface, SpaceUserExtended } from "../SpaceFilter/SpaceFilter";
+import { Filter, AbstractSpaceFilter, SpaceFilterInterface, SpaceUserExtended } from "../SpaceFilter/SpaceFilter";
 import { RoomConnection } from "../../Connection/RoomConnection";
 
 vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
@@ -56,7 +56,7 @@ describe("SpaceFilter", () => {
                 new Map<number, SpaceUserExtended>([[user.id ?? 0, user as SpaceUserExtended]])
             );
 
-            const spaceFilter: SpaceFilterInterface = new SpaceFilter(
+            const spaceFilter: SpaceFilterInterface = new AbstractSpaceFilter(
                 spaceFilterName,
                 spaceName,
                 defaultRoomConnectionMock,
@@ -75,7 +75,7 @@ describe("SpaceFilter", () => {
                 id: 0,
             };
 
-            const spaceFilter: SpaceFilterInterface = new SpaceFilter(
+            const spaceFilter: SpaceFilterInterface = new AbstractSpaceFilter(
                 spaceFilterName,
                 spaceName,
                 defaultRoomConnectionMock
@@ -96,7 +96,7 @@ describe("SpaceFilter", () => {
                 id,
             };
 
-            const spaceFilter: SpaceFilterInterface = new SpaceFilter(
+            const spaceFilter: SpaceFilterInterface = new AbstractSpaceFilter(
                 spaceFilterName,
                 spaceName,
                 defaultRoomConnectionMock,
@@ -123,7 +123,7 @@ describe("SpaceFilter", () => {
                 new Map<number, SpaceUserExtended>([[user.id, user as SpaceUserExtended]])
             );
 
-            const spaceFilter: SpaceFilterInterface = new SpaceFilter(
+            const spaceFilter: SpaceFilterInterface = new AbstractSpaceFilter(
                 spaceFilterName,
                 spaceName,
                 defaultRoomConnectionMock,
@@ -159,7 +159,7 @@ describe("SpaceFilter", () => {
                 new Map<number, SpaceUserExtended>([[user.id, user as SpaceUserExtended]])
             );
 
-            const spaceFilter: SpaceFilterInterface = new SpaceFilter(
+            const spaceFilter: SpaceFilterInterface = new AbstractSpaceFilter(
                 spaceFilterName,
                 spaceName,
                 defaultRoomConnectionMock,
@@ -196,7 +196,7 @@ describe("SpaceFilter", () => {
                 new Map<number, SpaceUserExtended>([[user.id, user as SpaceUserExtended]])
             );
 
-            const spaceFilter: SpaceFilterInterface = new SpaceFilter(
+            const spaceFilter: SpaceFilterInterface = new AbstractSpaceFilter(
                 spaceFilterName,
                 spaceName,
                 defaultRoomConnectionMock,
@@ -231,7 +231,7 @@ describe("SpaceFilter", () => {
                 new Map<number, SpaceUserExtended>([[user.id, user as SpaceUserExtended]])
             );
 
-            const spaceFilter: SpaceFilterInterface = new SpaceFilter(
+            const spaceFilter: SpaceFilterInterface = new AbstractSpaceFilter(
                 spaceFilterName,
                 spaceName,
                 defaultRoomConnectionMock,
@@ -259,7 +259,7 @@ describe("SpaceFilter", () => {
                 emitRemoveSpaceFilter: vi.fn(),
             } as unknown as RoomConnection;
 
-            new SpaceFilter(spaceFilterName, spaceName, mockRoomConnection, undefined, userMap);
+            new AbstractSpaceFilter(spaceFilterName, spaceName, mockRoomConnection, undefined, userMap);
 
             // eslint-disable-next-line @typescript-eslint/unbound-method
             expect(mockRoomConnection.emitAddSpaceFilter).toHaveBeenCalledOnce();
@@ -283,7 +283,13 @@ describe("SpaceFilter", () => {
                 emitRemoveSpaceFilter: vi.fn(),
             } as unknown as RoomConnection;
 
-            const spaceFilter = new SpaceFilter(spaceFilterName, spaceName, mockRoomConnection, undefined, userMap);
+            const spaceFilter = new AbstractSpaceFilter(
+                spaceFilterName,
+                spaceName,
+                mockRoomConnection,
+                undefined,
+                userMap
+            );
             const unsubscribe = spaceFilter.usersStore.subscribe(() => {});
             unsubscribe();
 
@@ -296,8 +302,6 @@ describe("SpaceFilter", () => {
                     spaceName,
                 },
             });
-
-
         });
         it("emit updateSpaceFilter event when you update spaceFilter", () => {
             const spaceFilterName = "space-filter-name";
@@ -315,7 +319,13 @@ describe("SpaceFilter", () => {
                 emitUpdateSpaceFilter: vi.fn(),
             } as unknown as RoomConnection;
 
-            const spaceFilter = new SpaceFilter(spaceFilterName, spaceName, mockRoomConnection, undefined, userMap);
+            const spaceFilter = new AbstractSpaceFilter(
+                spaceFilterName,
+                spaceName,
+                mockRoomConnection,
+                undefined,
+                userMap
+            );
 
             spaceFilter.setFilter(newFilter);
 
