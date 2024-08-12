@@ -1498,6 +1498,42 @@ export class SocketManager implements ZoneEventListener {
     async handleChangeChatRoomAreaName(roomID : string,newName : string):Promise<void>{
         return matrixProvider.changeRoomName(roomID,newName);
     }
+
+
+    async handleCreateChatRoomForAreaQuery(chatMemberQuery: CreateChatRoomForAreaQuery): Promise<CreateChatRoomForAreaAnswer>{
+    const chatRoomID =  await matrixProvider.createRoomForArea();
+        return {
+            chatRoomID 
+        };
+    }
+
+    async leaveChatRoomArea(socket : Socket):Promise<void>{
+        const {chatID,currentChatRoomArea} = socket.getUserData();
+
+        if(!chatID || !currentChatRoomArea){
+            //TODO : msg error
+            return Promise.reject(new Error(""));
+        }
+        
+        return matrixProvider.kickUserFromRoom(chatID,currentChatRoomArea)
+        
+    }
+
+    handleLeaveChatRoomArea(socket : Socket){
+        const socketData = socket.getUserData();
+        socketData.currentChatRoomArea = undefined;
+    }
+
+
+    async handleEnterChatRoomArea(socket : Socket, roomID : string) : Promise<void>{
+        const socketData = socket.getUserData();
+        if(socketData.currentChatRoomArea!==roomID && socketData.currentChatRoomArea){
+            //TODO : utile ? permet de ne pas etre dans 2 room d'area en meme temps 
+            await this.leaveChatRoomArea(socket);
+        }
+
+        socketData.currentChatRoomArea = roomID;
+    }
 }
 
 
