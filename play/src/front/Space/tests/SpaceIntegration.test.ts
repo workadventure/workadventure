@@ -11,7 +11,6 @@ import { describe, expect, it, vi, assert } from "vitest";
 import { get } from "svelte/store";
 import { SpaceRegistry } from "../SpaceRegistry/SpaceRegistry";
 import { RoomConnection } from "../../Connection/RoomConnection";
-import { SpaceFilter } from "../SpaceFilter/SpaceFilter";
 
 class MockRoomConnection {
     public addSpaceUserMessageStream = new Subject<AddSpaceUserMessage>();
@@ -43,9 +42,8 @@ describe("", () => {
         const spaceRegistry = new SpaceRegistry(roomConnection);
 
         const spaceName = "space1";
-        const spaceFilterName = "spaceFilter1";
 
-        spaceRegistry.joinSpace(spaceName).watch(spaceFilterName);
+        spaceRegistry.joinSpace(spaceName).watchAllUsers();
 
         // eslint-disable-next-line @typescript-eslint/unbound-method
         expect(roomConnection.emitWatchSpace).toHaveBeenCalledOnce();
@@ -62,7 +60,7 @@ describe("", () => {
         const spaceFilterName = "spaceFilter1";
 
         const space = spaceRegistry.joinSpace(spaceName);
-        const spaceFilter = space.watch(spaceFilterName) as unknown as SpaceFilter;
+        const spaceFilter = space.watchAllUsers(spaceFilterName) as unknown as AbstractSpaceFilter;
 
         const userFromMessage = {
             id: 1,
@@ -107,7 +105,7 @@ describe("", () => {
         const spaceFilterName = "spaceFilter1";
 
         const space = spaceRegistry.joinSpace(spaceName);
-        const spaceFilter = space.watch(spaceFilterName) as unknown as SpaceFilter;
+        const spaceFilter = space.watchAllUsers(spaceFilterName) as unknown as AbstractSpaceFilter;
 
         const userFromMessage = {
             id: 1,
@@ -151,7 +149,7 @@ describe("", () => {
         const spaceFilterName = "spaceFilter1";
 
         const space = spaceRegistry.joinSpace(spaceName);
-        const spaceFilter = space.watch(spaceFilterName) as unknown as SpaceFilter;
+        const spaceFilter = space.watchAllUsers(spaceFilterName) as unknown as AllUsersSpaceFilter;
 
         const userFromMessage = {
             id: 1,
@@ -198,7 +196,7 @@ describe("", () => {
         const spaceFilterName = "spaceFilter1";
 
         const space = spaceRegistry.joinSpace(spaceName);
-        const spaceFilter = space.watch(spaceFilterName) as unknown as SpaceFilter;
+        const spaceFilter = space.watchAllUsers(spaceFilterName) as unknown as AbstractSpaceFilter;
 
         const userFromMessage = {
             id: 1,

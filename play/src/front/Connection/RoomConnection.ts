@@ -74,6 +74,7 @@ import {
     JoinSpaceRequestMessage,
     LeaveSpaceRequestMessage,
     SpaceEvent,
+    PrivateSpaceEvent,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -1739,6 +1740,7 @@ export class RoomConnection implements RoomConnection {
             });
     }
 
+    // FIXME: Move this event to spaces
     public emitMuteParticipantIdSpace(spaceName: string, participantId: string) {
         this.send({
             message: {
@@ -1751,6 +1753,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    // FIXME: Move this event to spaces
     public emitMuteEveryBodySpace(spaceName: string) {
         if (!this.userId) {
             console.warn("No user id defined to send a message to mute every microphone!");
@@ -1767,6 +1770,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    // FIXME: Move this event to spaces
     public emitMuteVideoParticipantIdSpace(spaceName: string, participantId: string) {
         this.send({
             message: {
@@ -1779,6 +1783,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    // FIXME: Move this event to spaces
     public emitMuteVideoEveryBodySpace(spaceName: string) {
         if (!this.userId) {
             console.warn("No user id defined to send a message to mute every video!");
@@ -1827,7 +1832,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitSpacePublicEvent(spaceName: string, spaceEvent: NonNullable<SpaceEvent["event"]>): void {
+    public emitPublicSpaceEvent(spaceName: string, spaceEvent: NonNullable<SpaceEvent["event"]>): void {
         this.send({
             message: {
                 $case: "publicEvent",
@@ -1837,6 +1842,25 @@ export class RoomConnection implements RoomConnection {
                         event: spaceEvent,
                     },
                 } satisfies PublicEvent,
+            },
+        });
+    }
+
+    public emitPrivateSpaceEvent(
+        spaceName: string,
+        spaceEvent: NonNullable<PrivateSpaceEvent["event"]>,
+        receiverUserId: number
+    ): void {
+        this.send({
+            message: {
+                $case: "privateEvent",
+                privateEvent: {
+                    spaceName,
+                    receiverUserId,
+                    spaceEvent: {
+                        event: spaceEvent,
+                    },
+                } satisfies PrivateEvent,
             },
         });
     }
@@ -1866,7 +1890,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitProximityPrivateMessage(spaceName: string, message: string, receiverUserId: number) {
+    /*public emitProximityPrivateMessage(spaceName: string, message: string, receiverUserId: number) {
         if (!this.userId) {
             console.warn("No user id defined to send a message to mute every video!");
             return;
@@ -1884,7 +1908,7 @@ export class RoomConnection implements RoomConnection {
                 },
             },
         });
-    }
+    }*/
 
     public emitTypingProximityMessage(spaceName: string, isTyping: boolean) {
         this.send({

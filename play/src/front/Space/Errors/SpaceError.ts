@@ -25,12 +25,6 @@ export class SpaceNameIsEmptyError extends Error {
     }
 }
 
-export class SpaceFilterAlreadyExistError extends Error {
-    constructor(spaceName: string, filterName: string) {
-        super(`filter ${filterName} already exists in space ${spaceName} `);
-    }
-}
-
 export class SpaceFilterDoesNotExistError extends Error {
     constructor(spaceName: string, filterName: string) {
         super(`filter ${filterName} does not exist in space ${spaceName} `);

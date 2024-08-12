@@ -19,7 +19,9 @@ export class SpaceRegistry implements SpaceRegistryInterface {
 
     constructor(private roomConnection: RoomConnection, private spaces: Map<string, Space> = new Map<string, Space>()) {
         this.addSpaceUserMessageStreamSubscription = roomConnection.addSpaceUserMessageStream.subscribe((message) => {
-            if (!message.user || !message.filterName) return;
+            if (!message.user || !message.filterName) {
+                throw new Error("addSpaceUserMessage is missing a user or a filterName");
+            }
 
             this.spaces
                 .get(message.spaceName)
@@ -30,7 +32,9 @@ export class SpaceRegistry implements SpaceRegistryInterface {
 
         this.updateSpaceUserMessageStreamSubscription = roomConnection.updateSpaceUserMessageStream.subscribe(
             (message) => {
-                if (!message.user || !message.filterName || !message.updateMask) return;
+                if (!message.user || !message.filterName || !message.updateMask) {
+                    throw new Error("updateSpaceUserMessage is missing a user or a filterName or an updateMask");
+                }
 
                 this.spaces.get(message.spaceName)?.getSpaceFilter(message.filterName).updateUserData(message.user);
             }
@@ -38,7 +42,9 @@ export class SpaceRegistry implements SpaceRegistryInterface {
 
         this.removeSpaceUserMessageStreamSubscription = roomConnection.removeSpaceUserMessageStream.subscribe(
             (message) => {
-                if (!message.userId || !message.filterName) return;
+                if (!message.userId || !message.filterName) {
+                    throw new Error("removeSpaceUserMessage is missing a userId or a filterName");
+                }
 
                 this.spaces.get(message.spaceName)?.getSpaceFilter(message.filterName).removeUser(message.userId);
             }

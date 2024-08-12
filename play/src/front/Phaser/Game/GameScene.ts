@@ -15,7 +15,6 @@ import {
     ErrorScreenMessage,
     PositionMessage_Direction,
     PrivateEvent,
-    SpaceFilterMessage,
 } from "@workadventure/messages";
 import { z } from "zod";
 import { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
@@ -1784,14 +1783,12 @@ export class GameScene extends DirtyScene {
                     (
                         connection: RoomConnection,
                         spaceName: string,
-                        spaceFilter: SpaceFilterMessage,
                         broadcastService: BroadcastService,
                         playSound: boolean
                     ) => {
                         return new JitsiBroadcastSpace(
                             connection,
                             spaceName,
-                            spaceFilter,
                             broadcastService,
                             playSound,
                             this.spaceRegistry
@@ -1825,21 +1822,6 @@ export class GameScene extends DirtyScene {
                     }
                 });
                 this._broadcastService = broadcastService;
-
-                // The megaphoneSettingsMessageStream is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.megaphoneSettingsMessageStream.subscribe((megaphoneSettingsMessage) => {
-                    if (megaphoneSettingsMessage) {
-                        megaphoneCanBeUsedStore.set(megaphoneSettingsMessage.enabled);
-                        if (
-                            megaphoneSettingsMessage.url &&
-                            get(availabilityStatusStore) !== AvailabilityStatus.DO_NOT_DISTURB
-                        ) {
-                            broadcastService.joinSpace(megaphoneSettingsMessage.url);
-                            megaphoneUrlStore.set(megaphoneSettingsMessage.url);
-                        }
-                    }
-                });
 
                 // The muteMicrophoneSpaceUserMessage is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
