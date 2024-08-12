@@ -1,4 +1,5 @@
 import axios from "axios";
+import { EventType } from "matrix-js-sdk";
 import { MATRIX_API_URI, MATRIX_DOMAIN } from "../enums/EnvironmentVariable";
 
 class MatrixProvider {
@@ -60,6 +61,56 @@ class MatrixProvider {
                     return Promise.reject(new Error("Failed with status " + response.status));
                 }
             });
+    }
+
+    async createRoomForArea():Promise<string>{
+        //Creer un space avec toutes les areas ? 
+        //et ne pas les afficher cote front ?
+
+        //visibility private ? donc envoi d'invitation a chaque entrée dans la zone ou
+        //public ? 
+        return await axios.post(`${MATRIX_API_URI}_matrix/client/r0/createRoom`,{
+        
+                visibility : "public",
+                initial_state : [
+                    {
+                        type: EventType.RoomHistoryVisibility,
+                        content: { history_visibility: "joined" },
+                    }
+                ] 
+            }
+            ,     {
+                headers: {
+                    Authorization: "Bearer " + (await this.getAccessToken()),
+                },
+            }
+        ).then((response)=>{
+            if (response.status === 200) {
+                return Promise.resolve(response.data.room_id);
+            } else {
+                return Promise.reject(new Error("Failed with status " + response.status));
+            }
+        })
+    }
+
+    async kickUserFromRoom(userID:string , roomID : string):Promise<void>{
+
+        return await axios.post(`${MATRIX_API_URI}_matrix/client/r0/rooms/${roomID}/kick`,{
+            reason: "deconnection",
+            user_id: userID
+            }
+            ,     {
+                headers: {
+                    Authorization: "Bearer " + (await this.getAccessToken()),
+                },
+            }
+        ).then((response)=>{
+            if (response.status === 200) {
+                return Promise.resolve();
+            } else {
+                return Promise.reject(new Error("Failed with status " + response.status));
+            }
+        })
     }
 }
 

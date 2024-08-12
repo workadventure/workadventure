@@ -579,9 +579,9 @@ export class AreasPropertiesListener {
         }
     }
 
-    private async handleMatrixRoomAreaOnEnter(property: MatrixRoomPropertyData, areaData: AreaData) {
+    private handleMatrixRoomAreaOnEnter(property: MatrixRoomPropertyData, areaData: AreaData) {
     
-        const room  = get(this.scene.chatConnection.rooms).filter((room) => property.matrixRoomId === room.id)[0];
+        const room  = get(this.scene.chatConnection.rooms).find((room) => property.matrixRoomId === room.id);
         
         if(!room){
             this
@@ -593,6 +593,9 @@ export class AreasPropertiesListener {
                     navChat.set("chat");
                     chatZoneLiveStore.set(true);
                     if (property.shouldOpenAutomatically) chatVisibilityStore.set(true);
+                    if(this.scene.connection){
+                        this.scene.connection.emitEnterChatRoomArea(property.matrixRoomId);
+                    }
                 })
                 .catch(()=>{
                     console.error('failed to join the new room');
@@ -601,15 +604,20 @@ export class AreasPropertiesListener {
                 return;
         }
 
-        console.log({room},property.matrixRoomId);
 
         if (room) {
             selectedRoom.set(room);
             navChat.set("chat");
             chatZoneLiveStore.set(true);
             if (property.shouldOpenAutomatically) chatVisibilityStore.set(true);
+            if(this.scene.connection){
+                this.scene.connection.emitEnterChatRoomArea(property.matrixRoomId);
+            }
             return;
         }
+
+
+            
     }
     private displayPersonalAreaOwnerVisitCard(ownerId: string, areaData: AreaData, area?: Area) {
         const connectedUserUUID = localUserStore.getLocalUser()?.uuid;
@@ -788,6 +796,20 @@ export class AreasPropertiesListener {
             selectedRoom.set(undefined);
         }
         chatZoneLiveStore.set(false);
+
+        get(this
+        .scene
+        .chatConnection
+        .rooms)
+        .find(room=>room.id===property.matrixRoomId)
+        ?.leaveRoom();
+
+        if(this.scene.connection){
+            this
+            .scene
+            .connection
+            .emitLeaveChatRoomArea();
+        }
     }
 
     private openCoWebsiteFunction(

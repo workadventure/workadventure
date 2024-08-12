@@ -120,6 +120,13 @@ message UpdateChatIdMessage {
   string chatId = 2;
 }
 
+message EnterChatRoomAreaMessage {
+  string roomID = 1;
+}
+
+message LeaveChatRoomAreaMessage {
+}
+
 message EmotePromptMessage {
   string emote = 2;
 }
@@ -320,6 +327,8 @@ message ClientToServerMessage {
     UpdateChatIdMessage updateChatIdMessage = 42;
     PublicEventFrontToPusher publicEvent = 43;
     PrivateEventFrontToPusher privateEvent = 44;
+    EnterChatRoomAreaMessage enterChatRoomAreaMessage = 45;
+    LeaveChatRoomAreaMessage leaveChatRoomAreaMessage = 46;
   }
 }
 
@@ -402,7 +411,8 @@ message QueryMessage {
     GetMemberQuery getMemberQuery = 8;
     TurnCredentialsQuery turnCredentialsQuery = 9;
     ChatMembersQuery chatMembersQuery = 10;
-    SearchTagsQuery searchTagsQuery = 11;
+    CreateChatRoomForAreaQuery createChatRoomForAreaQuery = 11;
+    SearchTagsQuery searchTagsQuery = 12;
   }
 }
 
@@ -449,6 +459,10 @@ message ChatMembersQuery {
   string searchText = 1;
 }
 
+message CreateChatRoomForAreaQuery{
+  string areaID = 1;
+}
+
 message  SearchTagsQuery{
   string searchText = 1;
 }
@@ -467,7 +481,8 @@ message AnswerMessage {
     GetMemberAnswer getMemberAnswer = 10;
     TurnCredentialsAnswer turnCredentialsAnswer = 11;
     ChatMembersAnswer chatMembersAnswer = 12;
-    SearchTagsAnswer searchTagsAnswer = 13;
+    CreateChatRoomForAreaAnswer createChatRoomForAreaAnswer = 13;
+    SearchTagsAnswer searchTagsAnswer = 14;
   }
 }
 
@@ -522,6 +537,11 @@ message ChatMembersAnswer {
   int64 total = 1;
   repeated ChatMember members = 2;
 }
+
+message CreateChatRoomForAreaAnswer{
+  string chatRoomID = 1;
+}
+
 
 message Member {
   string id = 1;

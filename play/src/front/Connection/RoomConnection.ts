@@ -65,6 +65,7 @@ import {
     PublicEventFrontToPusher,
     PrivateEventFrontToPusher,
     SpaceUser,
+    CreateChatRoomForAreaAnswer,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -1560,6 +1561,21 @@ export class RoomConnection implements RoomConnection {
         return answer.chatMembersAnswer;
     }
 
+    public async queryCreateChatRoomForArea(areaID: string): Promise<CreateChatRoomForAreaAnswer> {
+        const answer = await this.query({
+            $case: "createChatRoomForAreaQuery",
+            createChatRoomForAreaQuery: {
+                areaID,
+            },
+        });
+
+        if (answer.$case !== "createChatRoomForAreaAnswer") {
+            throw new Error("Unexpected answer");
+        }
+
+        return answer.createChatRoomForAreaAnswer;
+    }
+
     public emitUpdateChatId(email: string, chatId: string) {
         if (chatId && email)
             this.send({
@@ -1571,6 +1587,94 @@ export class RoomConnection implements RoomConnection {
                     },
                 },
             });
+    }
+
+    public emitMuteParticipantIdSpace(spaceName: string, participantId: string) {
+        this.send({
+            message: {
+                $case: "muteParticipantIdMessage",
+                muteParticipantIdMessage: {
+                    spaceName,
+                    mutedUserUuid: participantId,
+                },
+            },
+        });
+    }
+
+    public emitMuteEveryBodySpace(spaceName: string) {
+        if (!this.userId) {
+            console.warn("No user id defined to send a message to mute every microphone!");
+            return;
+        }
+        this.send({
+            message: {
+                $case: "muteEveryBodyParticipantMessage",
+                muteEveryBodyParticipantMessage: {
+                    spaceName,
+                    senderUserId: this.userId.toString(),
+                },
+            },
+        });
+    }
+
+    public emitMuteVideoParticipantIdSpace(spaceName: string, participantId: string) {
+        this.send({
+            message: {
+                $case: "muteVideoParticipantIdMessage",
+                muteVideoParticipantIdMessage: {
+                    spaceName,
+                    mutedUserUuid: participantId,
+                },
+            },
+        });
+    }
+
+    public emitMuteVideoEveryBodySpace(spaceName: string) {
+        if (!this.userId) {
+            console.warn("No user id defined to send a message to mute every video!");
+            return;
+        }
+        this.send({
+            message: {
+                $case: "muteVideoEveryBodyParticipantMessage",
+                muteVideoEveryBodyParticipantMessage: {
+                    spaceName,
+                    userId: this.userId.toString(),
+                },
+            },
+        });
+    }
+
+    public emitKickOffUserMessage(userId: string, spaceName: string): void {
+        this.send({
+            message: {
+                $case: "kickOffUserMessage",
+                kickOffUserMessage: {
+                    userId,
+                    spaceName,
+                },
+            },
+        });
+    }
+
+    public emitEnterChatRoomArea(roomID: string): void {
+        this.send({
+            message: {
+                $case: "enterChatRoomAreaMessage",
+                enterChatRoomAreaMessage: {
+                    roomID,
+                },
+            },
+        });
+    }
+
+    public emitLeaveChatRoomArea(): void {
+        this.send({
+            message: {
+                $case: "leaveChatRoomAreaMessage",
+                leaveChatRoomAreaMessage:{}
+            },
+        });
     }
 
     private resetPingTimeout(): void {

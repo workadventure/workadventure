@@ -1,30 +1,37 @@
 <script lang="ts">
     import { MatrixRoomPropertyData } from "@workadventure/map-editor";
-    import { createEventDispatcher } from "svelte";
+    import { createEventDispatcher, onMount } from "svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import PropertyEditorBase from "./PropertyEditorBase.svelte";
-    import Room from "../../../Chat/Components/Room/Room.svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    import { get } from "svelte/store";
-    import { bubble } from "svelte/internal";
+    import PropertyEditorBase from "./PropertyEditorBase.svelte";
+  
 
 
     export let property: MatrixRoomPropertyData;
-    let roomType : "local" | "remote" =  "local";
 
-    const chat = gameManager.getCurrentGameScene().chatConnection;
-    $: roomList = chat.rooms
+    const gameScene = gameManager.getCurrentGameScene();
+    const roomConnection = gameScene.connection;
 
     const dispatch = createEventDispatcher();
 
-    function onRoomTypeChange(event) {
-		roomType = event.currentTarget.value;
-	}
-
     function onValueChange() {
-        console.log({property})
         dispatch("change");
     }
+
+    onMount(()=>{
+            if(!property.matrixRoomId && roomConnection){
+                roomConnection.queryCreateChatRoomForArea(property.id)
+                .then((answer)=>{
+                    property.matrixRoomId = answer.chatRoomID;
+                    dispatch("change");
+                })
+                .catch(error=>console.log(error));
+             
+        }
+
+
+    });
+
 </script>
 
 <PropertyEditorBase
@@ -41,34 +48,6 @@
         {$LL.mapEditor.properties.matrixProperties.label()}
     </span>
     <span slot="content">
-        <div class="value-input">
-            <fieldset>
-                <legend>Type de room (à modifier) : </legend>
-                <div>
-                    <input type="radio" id="localRoom" name="typeOfRoom" value="local" checked={roomType==="local"} on:change={onRoomTypeChange}> <label for="localRoom">{ $LL.mapEditor.properties.matrixProperties.localRoomLabel()}</label>
-                </div>
-                <div>
-                    <input type="radio" id="remoteRoom" name="typeOfRoom" value="remote" checked={roomType==="remote"} on:change={onRoomTypeChange}> <label for="remoteRoom">{ $LL.mapEditor.properties.matrixProperties.remoteRoomLabel()}</label>
-                </div>
-            </fieldset>
-        </div>
-
-        {#if roomType === "local"}
-            <!--input select avec room dispo + bouton créer une room-->
-            <select bind:value={property.matrixRoomId}  on:change={onValueChange} name="rooms" id="room-select">
-                <option value="">--Please choose an option--</option>
-                {#each $roomList as room (room.id)}
-                    <option value={room.id}>{get(room.name)}</option>
-                {/each}
-            </select>
-
-            <button>{$LL.mapEditor.properties.matrixProperties.createARoom()}</button>
-
-        {:else if roomType === "remote"} 
-            <!--input text-->
-            <input bind:value={property.matrixRoomId}  on:change={onValueChange} type="text" id="roomId" name="roomId" required minlength="4"/>
-        {/if}
-
         <div class="value-input">
             <label for="openAutomaticallyChatLabel">{$LL.mapEditor.properties.matrixProperties.openAutomaticallyChatLabel()}</label>
             <input
