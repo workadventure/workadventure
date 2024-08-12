@@ -31,6 +31,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     searchChat: "Rechercher un canal, un message, etc ...",
     people: "Personnes",
     rooms: "Salons",
+    invitations: "Invitations",
     availableRooms: "Salon(s) disponible(s)",
     proximity: "Bulle de discussion",
     role: {
