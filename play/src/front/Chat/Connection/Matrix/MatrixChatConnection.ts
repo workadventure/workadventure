@@ -151,7 +151,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     private onRoomStateEventUpdate(event: RoomState) {
         const roomID = event.roomId;
         const room = this.client.getRoom(roomID);
-        console.log({ event });
         if (room && this.spaceRoomList.has(roomID)) {
             this.spaceRoomList.set(roomID, new MatrixChatRoom(room));
         }

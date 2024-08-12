@@ -101,7 +101,6 @@
     $:filteredRoomBySpaceWithoutDefaultRoom = Array.from($roomBySpace.entries()).reduce((acc,[space,roomList])=>{
         if(!space) return acc; 
         acc.set(space,roomList.filter((room)=>get(room.name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase())))
-        console.log(acc);
         return acc;
     },new Map<ChatRoom,ChatRoom[]>());
 
