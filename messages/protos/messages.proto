@@ -318,8 +318,8 @@ message ClientToServerMessage {
     AddSpaceFilterMessage addSpaceFilterMessage = 25;
     RemoveSpaceFilterMessage removeSpaceFilterMessage = 26;
     UpdateSpaceFilterMessage updateSpaceFilterMessage = 27;
-    WatchSpaceMessage watchSpaceMessage = 28;
-    UnwatchSpaceMessage unwatchSpaceMessage = 29;
+    JoinSpaceMessage joinSpaceMessage = 28;
+    LeaveSpaceMessage leaveSpaceMessage = 29;
     CameraStateMessage cameraStateMessage = 30;
     MicrophoneStateMessage microphoneStateMessage = 31;
     MegaphoneStateMessage megaphoneStateMessage = 32;
@@ -880,10 +880,16 @@ message PrivateEvent {
   PrivateSpaceEvent spaceEvent = 4;
 }
 
+/**
+ * Messages going from server to the client to ask the client to join a space
+ */
 message JoinSpaceRequestMessage {
   string spaceName = 1;
 }
 
+/**
+ * Messages going from server to the client to ask the client to leave a space
+ */
 message LeaveSpaceRequestMessage {
   string spaceName = 1;
 }
@@ -1218,8 +1224,8 @@ message BanUserByUuidMessage{
  ********************************************************************************/
 message PusherToBackSpaceMessage{
   oneof message {
-    WatchSpaceMessage watchSpaceMessage = 1;
-    UnwatchSpaceMessage unwatchSpaceMessage = 2;
+    JoinSpaceMessage joinSpaceMessage = 1;
+    LeaveSpaceMessage leaveSpaceMessage = 2;
     AddSpaceUserMessage addSpaceUserMessage = 3;
     UpdateSpaceUserMessage updateSpaceUserMessage = 4;
     RemoveSpaceUserMessage removeSpaceUserMessage = 5;
@@ -1256,13 +1262,14 @@ message BackToPusherSpaceMessage{
   }
 }
 
-message WatchSpaceMessage{
+/**
+ * Message sent by the user to join a space as a participant.
+ */
+message JoinSpaceMessage{
   string spaceName = 1;
-  SpaceFilterMessage spaceFilter = 2;
 }
-message UnwatchSpaceMessage{
+message LeaveSpaceMessage{
   string spaceName = 1;
-  int32 userId = 2;
 }
 
 message SpaceUser{

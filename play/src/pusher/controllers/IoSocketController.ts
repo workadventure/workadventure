@@ -749,16 +749,12 @@ export class IoSocketController {
                             socketManager.handleSetPlayerDetails(socket, message.message.setPlayerDetailsMessage);
                             break;
                         }
-                        case "watchSpaceMessage": {
-                            message.message.watchSpaceMessage.spaceName = `${socket.getUserData().world}.${
-                                message.message.watchSpaceMessage.spaceName
+                        case "joinSpaceMessage": {
+                            message.message.joinSpaceMessage.spaceName = `${socket.getUserData().world}.${
+                                message.message.joinSpaceMessage.spaceName
                             }`;
 
-                            void socketManager.handleJoinSpace(
-                                socket,
-                                message.message.watchSpaceMessage.spaceName,
-                                message.message.watchSpaceMessage.spaceFilter
-                            );
+                            await socketManager.handleJoinSpace(socket, message.message.joinSpaceMessage.spaceName);
                             break;
                         }
                         case "updateSpaceMetadataMessage": {
@@ -787,11 +783,11 @@ export class IoSocketController {
                             );
                             break;
                         }
-                        case "unwatchSpaceMessage": {
-                            message.message.unwatchSpaceMessage.spaceName = `${socket.getUserData().world}.${
-                                message.message.unwatchSpaceMessage.spaceName
+                        case "leaveSpaceMessage": {
+                            message.message.leaveSpaceMessage.spaceName = `${socket.getUserData().world}.${
+                                message.message.leaveSpaceMessage.spaceName
                             }`;
-                            void socketManager.handleLeaveSpace(socket, message.message.unwatchSpaceMessage.spaceName);
+                            socketManager.handleLeaveSpace(socket, message.message.leaveSpaceMessage.spaceName);
                             break;
                         }
                         case "cameraStateMessage": {

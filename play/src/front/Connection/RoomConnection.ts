@@ -66,9 +66,6 @@ import {
     WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
     WorldConnectionMessage,
     TurnCredentialsAnswer,
-    SpaceFilterMessage,
-    WatchSpaceMessage,
-    UnwatchSpaceMessage,
     PublicEvent,
     PrivateEvent,
     JoinSpaceRequestMessage,
@@ -1519,50 +1516,24 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitWatchSpace(spaceName: string) {
-        // FIXME: why to we create an empty filter here? Doesn't it look weird?
-        const spaceFilter: SpaceFilterMessage = {
-            filterName: "",
-            spaceName,
-            filter: undefined,
-        };
+    public emitJoinSpace(spaceName: string): void {
         this.send({
             message: {
-                $case: "watchSpaceMessage",
-                watchSpaceMessage: WatchSpaceMessage.fromPartial({
+                $case: "joinSpaceMessage",
+                joinSpaceMessage: {
                     spaceName,
-                    spaceFilter,
-                }),
+                },
             },
         });
-        return spaceFilter;
-    }
-    public emitUserJoinSpace(spaceName: string) {
-        // FIXME: why to we create an empty filter here? Doesn't it look weird?
-        const spaceFilter: SpaceFilterMessage = {
-            filterName: "",
-            spaceName,
-            filter: undefined,
-        };
-        this.send({
-            message: {
-                $case: "watchSpaceMessage",
-                watchSpaceMessage: WatchSpaceMessage.fromPartial({
-                    spaceName,
-                    spaceFilter,
-                }),
-            },
-        });
-        return spaceFilter;
     }
 
-    public emitUnwatchSpace(spaceName: string) {
+    public emitLeaveSpace(spaceName: string): void {
         this.send({
             message: {
-                $case: "unwatchSpaceMessage",
-                unwatchSpaceMessage: UnwatchSpaceMessage.fromPartial({
+                $case: "leaveSpaceMessage",
+                leaveSpaceMessage: {
                     spaceName,
-                }),
+                },
             },
         });
     }

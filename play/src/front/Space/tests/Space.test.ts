@@ -22,7 +22,7 @@ vi.mock("../../Phaser/Game/GameManager", () => {
 });
 
 const defaultRoomConnectionMock = {
-    emitWatchSpace: vi.fn(),
+    emitJoinSpace: vi.fn(),
     emitAddSpaceFilter: vi.fn(),
 } as unknown as RoomConnection;
 
@@ -61,15 +61,15 @@ describe("Space test", () => {
         const spaceName = "space-name";
         const metadata = new Map<string, unknown>();
         const mockRoomConnection = {
-            emitWatchSpace: vi.fn(),
+            emitJoinSpace: vi.fn(),
         };
 
         new Space(spaceName, metadata, mockRoomConnection as unknown as RoomConnection);
 
         // eslint-disable-next-line @typescript-eslint/unbound-method
-        expect(mockRoomConnection.emitWatchSpace).toHaveBeenCalledOnce();
+        expect(mockRoomConnection.emitJoinSpace).toHaveBeenCalledOnce();
         // eslint-disable-next-line @typescript-eslint/unbound-method
-        expect(mockRoomConnection.emitWatchSpace).toHaveBeenCalledWith(spaceName);
+        expect(mockRoomConnection.emitJoinSpace).toHaveBeenCalledWith(spaceName);
     });
 
     it("should emit leaveSpace event when you call destroy", () => {
@@ -77,17 +77,17 @@ describe("Space test", () => {
         const metadata = new Map<string, unknown>();
 
         const mockRoomConnection = {
-            emitWatchSpace: vi.fn(),
-            emitUnwatchSpace: vi.fn(),
+            emitJoinSpace: vi.fn(),
+            emitLeaveSpace: vi.fn(),
         };
 
         const space = new Space(spaceName, metadata, mockRoomConnection as unknown as RoomConnection);
 
         space.destroy();
         // eslint-disable-next-line @typescript-eslint/unbound-method
-        expect(mockRoomConnection.emitUnwatchSpace).toHaveBeenCalledOnce();
+        expect(mockRoomConnection.emitLeaveSpace).toHaveBeenCalledOnce();
         // eslint-disable-next-line @typescript-eslint/unbound-method
-        expect(mockRoomConnection.emitUnwatchSpace).toHaveBeenLastCalledWith(spaceName);
+        expect(mockRoomConnection.emitLeaveSpace).toHaveBeenLastCalledWith(spaceName);
     });
     it("should add metadata when key is not in metadata map", () => {
         const spaceName = "space-name";
