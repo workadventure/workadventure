@@ -214,6 +214,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             localRoomLabel: "Sélectionner une room locale",
             remoteRoomLabel: "Sélectionner une room locale",
             createARoom: "Créer une nouvelle room",
+            roomNameLabel: "Nom du salon",
+            roomNameLabelPlaceholder: "Mon Salon",
+            defaultChatRoomAreaName:"Salon de zone",
         },
     },
     areaEditor: {

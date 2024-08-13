@@ -216,6 +216,9 @@ const mapEditor: BaseTranslation = {
             localRoomLabel: "Select a local room",
             remoteRoomLabel: "Select a remote room",
             createARoom: "Create a new room",
+            roomNameLabel: "Display name of room",
+            roomNameLabelPlaceholder: "My room",
+            defaultChatRoomAreaName:"Room Area",
         },
     },
     areaEditor: {

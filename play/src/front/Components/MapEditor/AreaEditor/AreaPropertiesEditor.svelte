@@ -204,7 +204,8 @@
                     id,
                     type,
                     matrixRoomId: "",
-                    shouldOpenAutomatically : false
+                    shouldOpenAutomatically : false,
+                    displayName:""
                 };
             default:
                 throw new Error(`Unknown property type ${type}`);

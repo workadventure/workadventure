@@ -1,6 +1,6 @@
 <script lang="ts">
     import { MatrixRoomPropertyData } from "@workadventure/map-editor";
-    import { createEventDispatcher, onMount } from "svelte";
+    import { createEventDispatcher, onDestroy, onMount } from "svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
@@ -8,8 +8,9 @@
 
 
     export let property: MatrixRoomPropertyData;
-
-    const gameScene = gameManager.getCurrentGameScene();
+    let oldName = property.displayName;
+    
+;    const gameScene = gameManager.getCurrentGameScene();
     const roomConnection = gameScene.connection;
 
     const dispatch = createEventDispatcher();
@@ -26,12 +27,24 @@
                     dispatch("change");
                 })
                 .catch(error=>console.error(error));
-             
         }
 
 
     });
 
+    onDestroy(()=>{
+        //case no name choose
+        if(property.displayName ==="" && oldName===""  && roomConnection){
+            roomConnection.emitChatRoomAreaNameChange(property.matrixRoomId,$LL.mapEditor.properties.matrixProperties.defaultChatRoomAreaName());
+            dispatch("change");
+            return;
+        }
+        if(oldName!==property.displayName && roomConnection){
+            roomConnection.emitChatRoomAreaNameChange(property.matrixRoomId,property.displayName);
+            dispatch("change");
+            return;
+        }
+    })
 </script>
 
 <PropertyEditorBase
@@ -48,6 +61,16 @@
         {$LL.mapEditor.properties.matrixProperties.label()}
     </span>
     <span slot="content">
+        <div class="area-name-container">
+            <label for="objectName">{$LL.mapEditor.properties.matrixProperties.roomNameLabel()}</label>
+            <input
+                id="objectName"
+                type="text"
+                placeholder={$LL.mapEditor.properties.matrixProperties.roomNameLabelPlaceholder()}
+                bind:value={property.displayName}
+                on:change={onValueChange}
+            />
+        </div>
         <div class="value-input">
             <label for="openAutomaticallyChatLabel">{$LL.mapEditor.properties.matrixProperties.openAutomaticallyChatLabel()}</label>
             <input

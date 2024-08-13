@@ -124,6 +124,11 @@ message LeaveChatRoomAreaMessage {
   string roomID = 1;
 }
 
+message ChangeChatRoomAreaNameMessage{
+  string roomID = 1;
+  string name = 2;
+}
+
 message EmotePromptMessage {
   string emote = 2;
 }
