@@ -2063,7 +2063,7 @@ export class GameScene extends DirtyScene {
             if (parsedRoomMetadata.data.msteams === true) {
                 (async () => {
                     try {
-                        const extensionModule = await import("../../../ms-teams/MSTeams");
+                        const extensionModule = await import("../../../external-modules/ms-teams/MSTeams");
                         this.extensionModule = extensionModule.default;
 
                         this.extensionModule.init(parsedRoomMetadata.data, {
@@ -2078,7 +2078,7 @@ export class GameScene extends DirtyScene {
                             openCoWebSite: openCoWebSiteWithoutSource,
                             closeCoWebsite,
                         });
-                        // TODO change that to check if the calendar synchro is enabled from admin
+
                         if (parsedRoomMetadata.data.teamsstings.calendar) isActivatedStore.set(true);
                         extensionModuleStore.set(this.extensionModule);
                     } catch (error) {

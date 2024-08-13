@@ -5,15 +5,15 @@ import { subscribe } from "svelte/internal";
 import { Unsubscriber, Updater, writable } from "svelte/store";
 import { CalendarEventInterface } from "@workadventure/shared-utils";
 import { AreaData, AreaDataProperties } from "@workadventure/map-editor";
-import { notificationPlayingStore } from "../front/Stores/NotificationStore";
+import { notificationPlayingStore } from "../../front/Stores/NotificationStore";
 import {
     ExtensionModule,
     ExtensionModuleOptions,
     ExternalModuleStatus,
     RoomMetadataType,
-} from "../front/ExternalModule/ExtensionModule";
-import { NODE_ENV } from "../front/Enum/EnvironmentVariable";
-import { OpenCoWebsiteObject } from "../front/Chat/Utils";
+} from "../../front/ExternalModule/ExtensionModule";
+import { NODE_ENV } from "../../front/Enum/EnvironmentVariable";
+import { OpenCoWebsiteObject } from "../../front/Chat/Utils";
 import { TeamsActivity, TeamsAvailability } from "./MSTeamsInterface";
 
 import TeamsMeetingAreaPropertyEditor from "./Components/TeamsMeetingAreaPropertyEditor.svelte";
@@ -613,7 +613,7 @@ class MSTeams implements ExtensionModule {
             }
         }
 
-        // Experiation date is 60 minutes, check the graph documentation for more information
+        // Expiration date is 60 minutes, check the graph documentation for more information
         // https://docs.microsoft.com/en-us/graph/api/subscription-post-subscriptions?view=graph-rest-1.0
         const expirationDateTime = new Date();
         expirationDateTime.setMinutes(expirationDateTime.getMinutes() + 3);
@@ -678,7 +678,7 @@ class MSTeams implements ExtensionModule {
     }
 
     private async reauthorizePresenceSubscription(subscriptionId: string): Promise<void> {
-        // Experiation date is 60 minutes, check the graph documentation for more information
+        // Expiration date is 60 minutes, check the graph documentation for more information
         // https://docs.microsoft.com/en-us/graph/api/subscription-post-subscriptions?view=graph-rest-1.0
         const expirationDateTime = new Date();
         expirationDateTime.setMinutes(expirationDateTime.getMinutes() + 60);

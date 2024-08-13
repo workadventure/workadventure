@@ -205,10 +205,7 @@
                 {#each $extensionModuleStore.components() as ExternalModuleComponent, index (index)}
                     <svelte:component
                         this={ExternalModuleComponent}
-                        synchronisationStatusStore={gameManager.getCurrentGameScene().extensionModule?.statusStore}
-                        meetingSynchronised={gameManager.getCurrentGameScene().extensionModule?.meetingSynchronised}
-                        calendarSynchronised={gameManager.getCurrentGameScene().extensionModule?.calendarSynchronised}
-                        presenceSynchronised={gameManager.getCurrentGameScene().extensionModule?.presenceSynchronised}
+                        extensionModule={gameManager.getCurrentGameScene().extensionModule}
                         on:checkmodulecynschronisation={() => {
                             if (
                                 $extensionModuleStore != undefined &&

@@ -1812,7 +1812,6 @@ export class SocketManager {
     }
 
     async handleExternalModuleMessage(externalModuleMessage: ExternalModuleMessage) {
-        console.log("externalModuleMessage", externalModuleMessage);
         if (!externalModuleMessage.roomId) {
             console.error("externalModuleMessage has no roomId. This feature isn't implemented yet.");
             Sentry.captureMessage("externalModuleMessage has no roomId. This feature isn't implemented yet.");

@@ -1,6 +1,6 @@
 <script>
     import { createEventDispatcher } from "svelte";
-    import PropertyEditorBase from "../../front/Components/MapEditor/PropertyEditor/PropertyEditorBase.svelte";
+    import PropertyEditorBase from "../../../front/Components/MapEditor/PropertyEditor/PropertyEditorBase.svelte";
 
     const dispatch = createEventDispatcher();
 </script>

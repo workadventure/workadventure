@@ -1,7 +1,7 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { createEventDispatcher } from "svelte";
-    import LL from "../../i18n/i18n-svelte";
+    import LL from "../../../i18n/i18n-svelte";
     import TeamsLogoPng from "./images/TeamsLogo.png";
 
     const dispatch = createEventDispatcher();
