@@ -145,7 +145,7 @@ class MSTeams implements ExtensionModule {
         this.adminUrl = options!.adminUrl;
         this.roomId = options!.roomId;
 
-        if (roomMetadata.teamsstings.status) {
+        if (roomMetadata.teamsstings?.status) {
             this.listenToTeamsStatusUpdate(options?.onExtensionModuleStatusChange);
             if (options?.workadventureStatusStore) {
                 this.listenToWorkadventureStatus = subscribe(
@@ -157,7 +157,7 @@ class MSTeams implements ExtensionModule {
             }
         }
 
-        if (roomMetadata.teamsstings.calendar && options?.calendarEventsStoreUpdate) {
+        if (roomMetadata.teamsstings?.calendar && options?.calendarEventsStoreUpdate) {
             this.calendarEventsStoreUpdate = options?.calendarEventsStoreUpdate;
             this.updateCalendarEvents().catch((e) => console.error("Error while updating calendar events", e));
         }
@@ -468,13 +468,13 @@ class MSTeams implements ExtensionModule {
         console.info("Init module synchronization check");
 
         // Initialize the subscription for presence
-        if (this.roomMetadata.teamsstings.status)
+        if (this.roomMetadata.teamsstings?.status)
             this.createOrGetPresenceSubscription().catch((e) =>
                 console.error("Error while creating presence subscription", e)
             );
 
         // Initialize the subscription for calendar
-        if (this.roomMetadata.teamsstings.calendar)
+        if (this.roomMetadata.teamsstings?.calendar)
             this.createOrGetCalendarSubscription().catch((e) =>
                 console.error("Error while creating calendar subscription", e)
             );
@@ -701,7 +701,7 @@ class MSTeams implements ExtensionModule {
     }
 
     areaMapEditor() {
-        if (!this.roomMetadata.teamsstings.communication) return;
+        if (!this.roomMetadata.teamsstings?.communication) return;
         return {
             teams: {
                 AreaPropertyEditor: TeamsMeetingAreaPropertyEditor,
@@ -793,13 +793,13 @@ class MSTeams implements ExtensionModule {
     }
 
     get meetingSynchronised() {
-        return this.roomMetadata.teamsstings.communication;
+        return this.roomMetadata.teamsstings?.communication;
     }
     get calendarSynchronised() {
-        return this.roomMetadata.teamsstings.calendar;
+        return this.roomMetadata.teamsstings?.calendar;
     }
     get presenceSynchronised() {
-        return this.roomMetadata.teamsstings.status;
+        return this.roomMetadata.teamsstings?.status;
     }
 }
 

@@ -2060,11 +2060,15 @@ export class GameScene extends DirtyScene {
                 return;
             }
 
-            if (parsedRoomMetadata.data.msteams === true) {
+            for (const module of parsedRoomMetadata.data.modules ?? []) {
                 (async () => {
                     try {
-                        const extensionModule = await import("../../../external-modules/ms-teams/MSTeams");
+                        const extensionModule = await import(`../../../external-modules/${module}/index`);
                         this.extensionModule = extensionModule.default;
+
+                        if (!this.extensionModule) {
+                            throw new Error("Extension module not found or not exported");
+                        }
 
                         this.extensionModule.init(parsedRoomMetadata.data, {
                             workadventureStatusStore: availabilityStatusStore,
@@ -2079,10 +2083,12 @@ export class GameScene extends DirtyScene {
                             closeCoWebsite,
                         });
 
-                        if (parsedRoomMetadata.data.teamsstings.calendar) isActivatedStore.set(true);
+                        if (this.extensionModule.calendarSynchronised) isActivatedStore.set(true);
                         extensionModuleStore.set(this.extensionModule);
                     } catch (error) {
                         console.warn("Extension module initialization cancelled", error);
+                    } finally {
+                        console.info(`Extension module ${module} initialization finished`);
                     }
                 })().catch((error) => console.error(error));
             }

@@ -16,18 +16,18 @@ export enum ExternalModuleStatus {
 
 export interface ExtensionModuleOptions {
     workadventureStatusStore: Readable<AvailabilityStatus>;
+    userAccessToken: string;
+    roomId: string;
     onExtensionModuleStatusChange?: (workAdventureNewStatus: AvailabilityStatus) => void;
     getOauthRefreshToken?: (tokenToRefresh: string) => Promise<OauthRefreshToken>;
     calendarEventsStoreUpdate?: (this: void, updater: Updater<Map<string, CalendarEventInterface>>) => void;
-    userAccessToken: string;
-    roomId: string;
-    externalModuleMessage?: Observable<ExternalModuleMessage>;
-    adminUrl?: string;
     openCoWebSite?: (
         openCoWebsiteObject: OpenCoWebsiteObject,
         source: MessageEventSource | null
     ) => Promise<{ id: string }>;
     closeCoWebsite?: (id: string) => unknown;
+    externalModuleMessage?: Observable<ExternalModuleMessage>;
+    adminUrl?: string;
 }
 
 export interface ExtensionModuleAreaProperty {
@@ -43,7 +43,6 @@ export interface ExtensionModule {
     joinMeeting: () => void;
     destroy: () => void;
     areaMapEditor?: () => { [key: string]: ExtensionModuleAreaProperty } | undefined;
-    statusStore?: Readable<ExternalModuleStatus>;
     checkModuleSynschronisation?: () => void;
     components?: () => ComponentType[];
     openPopupMeeting?: (
@@ -54,6 +53,7 @@ export interface ExtensionModule {
         endDateTime: Date,
         passcode?: string
     ) => void;
+    statusStore?: Readable<ExternalModuleStatus>;
     meetingSynchronised?: boolean;
     calendarSynchronised?: boolean;
     presenceSynchronised?: boolean;
@@ -68,12 +68,14 @@ export const RoomMetadataType = z.object({
             })
         ),
     }),
-    msteams: z.boolean(),
-    teamsstings: z.object({
-        communication: z.boolean(),
-        status: z.boolean(),
-        calendar: z.boolean(),
-    }),
+    modules: z.enum(["ms-teams"]).array(),
+    teamsstings: z
+        .object({
+            communication: z.boolean(),
+            status: z.boolean(),
+            calendar: z.boolean(),
+        })
+        .nullable(),
 });
 
 export type RoomMetadataType = z.infer<typeof RoomMetadataType>;
