@@ -288,6 +288,45 @@ class MatrixProvider {
             throw new Error("Failed with error: " + (error as Error).message);
         }
     }
+
+    async inviteUserToRoom(userID:string , roomID : string):Promise<void>{
+        return await axios.post(`${MATRIX_API_URI}_matrix/client/r0/rooms/${roomID}/invite`,{
+            user_id: userID
+            }
+            ,     {
+                headers: {
+                    Authorization: "Bearer " + (await this.getAccessToken()),
+                },
+            }
+        ).then((response)=>{
+            if (response.status === 200) {
+                return Promise.resolve();
+            } else {
+                return Promise.reject(new Error("Failed with status " + response.status));
+            }
+        })
+    }
+
+    private async overrideRateLimitForAdminAccount(){
+        //env var
+        const adminChatID = "@admin:matrix.workadventure.localhost";
+        return await axios.post(`${MATRIX_API_URI}_synapse/admin/v1/users/${adminChatID}/override_ratelimit`,{
+            message_per_second: 0,
+            burst_count:0
+            },{
+                headers: {
+                    Authorization: "Bearer " + (await this.getAccessToken()),
+                },
+            }
+        ).then((response)=>{
+            if (response.status === 200) {
+                return Promise.resolve();
+            } else {
+                return Promise.reject(new Error("Failed with status " + response.status));
+            }
+        })
+    }
 }
+
 
 export const matrixProvider = new MatrixProvider();
