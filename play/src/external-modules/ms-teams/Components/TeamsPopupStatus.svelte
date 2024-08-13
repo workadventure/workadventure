@@ -3,14 +3,14 @@
     import { Readable } from "svelte/store";
     import { createEventDispatcher, onMount } from "svelte";
     import LL from "../../../i18n/i18n-svelte";
-    import { ExternalModuleStatus, ExtensionModule } from "../../../front/ExternalModule/ExtensionModule";
+    import { MSTeamsExtensionModule, TeamsModuleStatus } from "../index";
     import TeamsLogoPng from "./images/TeamsLogo.png";
 
     const dispatch = createEventDispatcher();
 
-    export let extensionModule: ExtensionModule;
+    export let extensionModule: MSTeamsExtensionModule;
 
-    let synchronisationStatusStore: Readable<ExternalModuleStatus> | undefined;
+    let synchronisationStatusStore: Readable<TeamsModuleStatus> | undefined;
     let meetingSynchronised = false;
     let calendarSynchronised = false;
     let presenceSynchronised = false;
@@ -38,7 +38,7 @@
             Teams is a Microsoft 365 app that helps your team stay connected and organized. You can chat, meet, call,
             and collaborate all in one place.
         </p>
-        {#if synchronisationStatusStore != undefined && $synchronisationStatusStore === ExternalModuleStatus.ONLINE}
+        {#if synchronisationStatusStore != undefined && $synchronisationStatusStore === TeamsModuleStatus.ONLINE}
             <p class="tw-p-0 tw-m-0">
                 {$LL.actionbar.externalModule.status.onLine()}
             </p>
@@ -63,7 +63,7 @@
             </ul>
         {/if}
 
-        {#if synchronisationStatusStore != undefined && $synchronisationStatusStore === ExternalModuleStatus.SYNC}
+        {#if synchronisationStatusStore != undefined && $synchronisationStatusStore === TeamsModuleStatus.SYNC}
             <p class="tw-p-0 tw-m-0">
                 {$LL.actionbar.externalModule.status.sync()}
             </p>
@@ -88,13 +88,13 @@
             </ul>
         {/if}
 
-        {#if synchronisationStatusStore != undefined && $synchronisationStatusStore === ExternalModuleStatus.WARNING}
+        {#if synchronisationStatusStore != undefined && $synchronisationStatusStore === TeamsModuleStatus.WARNING}
             <p class="tw-p-0 tw-m-0">
                 {$LL.actionbar.externalModule.status.warning()}
             </p>
         {/if}
 
-        {#if synchronisationStatusStore != undefined && $synchronisationStatusStore === ExternalModuleStatus.OFFLINE}
+        {#if synchronisationStatusStore != undefined && $synchronisationStatusStore === TeamsModuleStatus.OFFLINE}
             <p class="tw-p-0 tw-m-0">
                 {$LL.actionbar.externalModule.status.offLine()}
             </p>
@@ -109,9 +109,9 @@
         <button
             class="light tw-p-4"
             on:click={goToReSync}
-            disabled={$synchronisationStatusStore === ExternalModuleStatus.ONLINE}
-            class:tw-cursor-not-allowed={$synchronisationStatusStore === ExternalModuleStatus.ONLINE}
-            class:tw-opacity-20={$synchronisationStatusStore === ExternalModuleStatus.ONLINE}
+            disabled={$synchronisationStatusStore === TeamsModuleStatus.ONLINE}
+            class:tw-cursor-not-allowed={$synchronisationStatusStore === TeamsModuleStatus.ONLINE}
+            class:tw-opacity-20={$synchronisationStatusStore === TeamsModuleStatus.ONLINE}
         >
             Sync my Teams 🚀
         </button>

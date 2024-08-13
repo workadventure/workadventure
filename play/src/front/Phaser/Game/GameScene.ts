@@ -1026,7 +1026,7 @@ export class GameScene extends DirtyScene {
         this.gameMapFrontWrapper?.close();
         this.followManager?.close();
         this.extensionModule?.destroy();
-        extensionModuleStore.set(undefined);
+        extensionModuleStore.set([]);
 
         LocalSpaceProviderSingleton.getInstance().destroy();
 
@@ -2072,19 +2072,19 @@ export class GameScene extends DirtyScene {
 
                         this.extensionModule.init(parsedRoomMetadata.data, {
                             workadventureStatusStore: availabilityStatusStore,
-                            onExtensionModuleStatusChange: ExtensionModuleStatusSynchronization.onStatusChange,
-                            getOauthRefreshToken: this.connection?.getOauthRefreshToken.bind(this.connection),
-                            calendarEventsStoreUpdate: calendarEventsStore.update,
                             userAccessToken: localUserStore.getAuthToken()!,
-                            adminUrl: ADMIN_URL,
                             roomId: this.roomUrl,
                             externalModuleMessage: this.connection!.externalModuleMessage,
+                            onExtensionModuleStatusChange: ExtensionModuleStatusSynchronization.onStatusChange,
+                            calendarEventsStoreUpdate: calendarEventsStore.update,
                             openCoWebSite: openCoWebSiteWithoutSource,
                             closeCoWebsite,
+                            getOauthRefreshToken: this.connection?.getOauthRefreshToken.bind(this.connection),
+                            adminUrl: ADMIN_URL,
                         });
 
                         if (this.extensionModule.calendarSynchronised) isActivatedStore.set(true);
-                        extensionModuleStore.set(this.extensionModule);
+                        extensionModuleStore.add(this.extensionModule);
                     } catch (error) {
                         console.warn("Extension module initialization cancelled", error);
                     } finally {

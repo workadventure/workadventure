@@ -201,23 +201,28 @@
         {/if}
 
         {#if $extensionActivateComponentModuleStore}
-            {#if $extensionModuleStore != undefined && $extensionModuleStore.components != undefined}
-                {#each $extensionModuleStore.components() as ExternalModuleComponent, index (index)}
-                    <svelte:component
-                        this={ExternalModuleComponent}
-                        extensionModule={gameManager.getCurrentGameScene().extensionModule}
-                        on:checkmodulecynschronisation={() => {
-                            if (
-                                $extensionModuleStore != undefined &&
-                                $extensionModuleStore.checkModuleSynschronisation != undefined
-                            )
-                                $extensionModuleStore.checkModuleSynschronisation();
-                            extensionActivateComponentModuleStore.set(false);
-                        }}
-                        on:close={() => {
-                            extensionActivateComponentModuleStore.set(false);
-                        }}
-                    />
+            {#if $extensionModuleStore.length > 0}
+                {#each $extensionModuleStore as externalModule}
+                    {#if externalModule.components != undefined}
+                        {#each externalModule.components() as ExternalModuleComponent, index (index)}
+                            <svelte:component
+                                this={ExternalModuleComponent}
+                                extensionModule={gameManager.getCurrentGameScene().extensionModule}
+                                // move it into the component
+                                on:checkmodulecynschronisation={() => {
+                                    if (
+                                        externalModule != undefined &&
+                                        externalModule.checkModuleSynschronisation != undefined
+                                    )
+                                        externalModule.checkModuleSynschronisation();
+                                    extensionActivateComponentModuleStore.set(false);
+                                }}
+                                on:close={() => {
+                                    extensionActivateComponentModuleStore.set(false);
+                                }}
+                            />
+                        {/each}
+                    {/if}
                 {/each}
             {/if}
         {/if}
