@@ -1657,15 +1657,19 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitEnterChatRoomArea(roomID: string): void {
-        this.send({
-            message: {
-                $case: "enterChatRoomAreaMessage",
-                enterChatRoomAreaMessage: {
-                    roomID,
-                },
+    public async queryEnterChatRoomArea(roomID: string): Promise<void> {
+        const answer = await this.query({
+            $case: "enterChatRoomAreaQuery",
+            enterChatRoomAreaQuery: {
+                roomID
             },
         });
+
+        if (answer.$case !== "enterChatRoomAreaAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        
+        return;
     }
 
     public emitLeaveChatRoomArea(roomID: string): void {

@@ -5,6 +5,15 @@ import { MATRIX_API_URI, MATRIX_DOMAIN } from "../enums/EnvironmentVariable";
 class MatrixProvider {
     private accessToken: string | undefined;
     private lastAccessTokenDate: number = Date.now();
+
+    constructor(){
+        //TODO: DELETE and move in synapse config or ...
+        this
+            .overrideRateLimitForAdminAccount()
+            .then(()=>console.log('overrideRateLimitForAdminAccount'))
+            .catch((error)=>console.error(error));
+    }
+
     getMatrixIdFromEmail(email: string): string {
         return "@" + this.getBareMatrixIdFromEmail(email) + ":" + MATRIX_DOMAIN;
     }
@@ -64,14 +73,11 @@ class MatrixProvider {
     }
 
     async createRoomForArea():Promise<string>{
-        //Creer un space avec toutes les areas ? 
-        //et ne pas les afficher cote front ?
+        //TODO : Creer un space avec toutes les areas ? et ne pas les afficher cote front ?
 
-        //visibility private ? donc envoi d'invitation a chaque entrée dans la zone ou
-        //public ? 
         return await axios.post(`${MATRIX_API_URI}_matrix/client/r0/createRoom`,{
         
-                visibility : "public",
+                visibility : "private",
                 initial_state : [
                     {
                         type: EventType.RoomHistoryVisibility,
@@ -112,6 +118,45 @@ class MatrixProvider {
             }
         })
     }
+
+    async inviteUserToRoom(userID:string , roomID : string):Promise<void>{
+        return await axios.post(`${MATRIX_API_URI}_matrix/client/r0/rooms/${roomID}/invite`,{
+            user_id: userID
+            }
+            ,     {
+                headers: {
+                    Authorization: "Bearer " + (await this.getAccessToken()),
+                },
+            }
+        ).then((response)=>{
+            if (response.status === 200) {
+                return Promise.resolve();
+            } else {
+                return Promise.reject(new Error("Failed with status " + response.status));
+            }
+        })
+    }
+
+    private async overrideRateLimitForAdminAccount(){
+        //env var
+        const adminChatID = "@admin:matrix.workadventure.localhost";
+        return await axios.post(`${MATRIX_API_URI}_synapse/admin/v1/users/${adminChatID}/override_ratelimit`,{
+            message_per_second: 0,
+            burst_count:0
+            },{
+                headers: {
+                    Authorization: "Bearer " + (await this.getAccessToken()),
+                },
+            }
+        ).then((response)=>{
+            if (response.status === 200) {
+                return Promise.resolve();
+            } else {
+                return Promise.reject(new Error("Failed with status " + response.status));
+            }
+        })
+    }
 }
+
 
 export const matrixProvider = new MatrixProvider();

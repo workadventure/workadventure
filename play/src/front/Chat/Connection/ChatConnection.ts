@@ -116,7 +116,9 @@ export interface ChatConnectionInterface {
             name: string | undefined;
         }[]
     >;
-    joinRoom(roomId: string): Promise<ChatRoom | undefined>;
+
+    joinRoom(roomId: string): Promise<ChatRoom>;
+
     destroy(): Promise<void>;
     searchChatUsers(searchText: string): Promise<{ id: string; name: string | undefined }[] | undefined>;
     isEncryptionRequiredAndNotSet: Readable<boolean>;

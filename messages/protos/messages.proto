@@ -120,10 +120,6 @@ message UpdateChatIdMessage {
   string chatId = 2;
 }
 
-message EnterChatRoomAreaMessage {
-  string roomID = 1;
-}
-
 message LeaveChatRoomAreaMessage {
   string roomID = 1;
 }
@@ -414,6 +410,7 @@ message QueryMessage {
     ChatMembersQuery chatMembersQuery = 10;
     CreateChatRoomForAreaQuery createChatRoomForAreaQuery = 11;
     SearchTagsQuery searchTagsQuery = 12;
+    EnterChatRoomAreaQuery enterChatRoomAreaQuery = 13;
   }
 }
 
@@ -468,6 +465,10 @@ message  SearchTagsQuery{
   string searchText = 1;
 }
 
+message EnterChatRoomAreaQuery{
+  string roomID = 1;
+}
+
 message AnswerMessage {
   int32 id = 1;
   oneof answer {
@@ -484,6 +485,7 @@ message AnswerMessage {
     ChatMembersAnswer chatMembersAnswer = 12;
     CreateChatRoomForAreaAnswer createChatRoomForAreaAnswer = 13;
     SearchTagsAnswer searchTagsAnswer = 14;
+    EnterChatRoomAreaAnswer enterChatRoomAreaAnswer = 15;
   }
 }
 
@@ -543,6 +545,9 @@ message CreateChatRoomForAreaAnswer{
   string chatRoomID = 1;
 }
 
+message EnterChatRoomAreaAnswer{
+
+}
 
 message Member {
   string id = 1;

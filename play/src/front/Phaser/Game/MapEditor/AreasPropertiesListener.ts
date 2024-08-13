@@ -51,6 +51,7 @@ import { isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
 import { MessageUserJoined } from "../../../Connection/ConnexionModels";
 import { navChat, selectedRoom } from "../../../Chat/Stores/ChatStore";
 import { Area } from "../../Entity/Area";
+import { ChatRoom } from "../../../Chat/Connection/ChatConnection";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -566,6 +567,25 @@ export class AreasPropertiesListener {
         }
     }
 
+    private handleMatrixRoomAreaOnEnter(property: MatrixRoomPropertyData, areaData: AreaData) {
+        if(this.scene.connection){
+            this.scene.connection
+                .queryEnterChatRoomArea(property.matrixRoomId)
+                .then(()=>{ 
+                    return this.scene.chatConnection.joinRoom(property.matrixRoomId);
+
+                })
+                .then((room : ChatRoom)=>{
+                    if(!room) return; 
+                    selectedRoom.set(room);
+                    navChat.set("chat");
+                    chatZoneLiveStore.set(true);
+                    if (property.shouldOpenAutomatically) chatVisibilityStore.set(true);
+                });
+                return;
+        }
+    }
+
     private handlePersonalAreaPropertyOnEnter(
         property: PersonalAreaPropertyData,
         areaData: AreaData,
@@ -577,48 +597,8 @@ export class AreasPropertiesListener {
         } else if (property.accessClaimMode === PersonalAreaAccessClaimMode.enum.dynamic) {
             this.displayPersonalAreaClaimDialogBox(property, areaData, area);
         }
-    }
-
-    private handleMatrixRoomAreaOnEnter(property: MatrixRoomPropertyData, areaData: AreaData) {
+    }      
     
-        const room  = get(this.scene.chatConnection.rooms).find((room) => property.matrixRoomId === room.id);
-        
-        if(!room){
-            this
-                .scene
-                .chatConnection
-                .joinRoom(property.matrixRoomId)
-                .then((newRoom)=>{
-                    selectedRoom.set(newRoom);
-                    navChat.set("chat");
-                    chatZoneLiveStore.set(true);
-                    if (property.shouldOpenAutomatically) chatVisibilityStore.set(true);
-                    if(this.scene.connection){
-                        this.scene.connection.emitEnterChatRoomArea(property.matrixRoomId);
-                    }
-                })
-                .catch(()=>{
-                    console.error('failed to join the new room');
-                });
-
-                return;
-        }
-
-
-        if (room) {
-            selectedRoom.set(room);
-            navChat.set("chat");
-            chatZoneLiveStore.set(true);
-            if (property.shouldOpenAutomatically) chatVisibilityStore.set(true);
-            if(this.scene.connection){
-                this.scene.connection.emitEnterChatRoomArea(property.matrixRoomId);
-            }
-            return;
-        }
-
-
-            
-    }
     private displayPersonalAreaOwnerVisitCard(ownerId: string, areaData: AreaData, area?: Area) {
         const connectedUserUUID = localUserStore.getLocalUser()?.uuid;
         if (connectedUserUUID != ownerId) {
