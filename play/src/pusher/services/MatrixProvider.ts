@@ -307,6 +307,24 @@ class MatrixProvider {
         })
     }
 
+    async changeRoomName(roomID : string , name : string ):Promise<void>{
+        return await axios.put(`${MATRIX_API_URI}_matrix/client/r0/rooms/${roomID}/state/m.room.name`,{
+            name
+            }
+            ,     {
+                headers: {
+                    Authorization: "Bearer " + (await this.getAccessToken()),
+                },
+            }
+        ).then((response)=>{
+            if (response.status === 200) {
+                return Promise.resolve();
+            } else {
+                return Promise.reject(new Error("Failed with status " + response.status));
+            }
+        })
+    }
+
     private async overrideRateLimitForAdminAccount(){
         //env var
         const adminChatID = "@admin:matrix.workadventure.localhost";

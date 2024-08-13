@@ -1537,9 +1537,12 @@ export class SocketManager implements ZoneEventListener {
             //TODO : error msg
             return Promise.reject("");
         }
-        await matrixProvider.inviteUserToRoom(socketData.chatID,roomID).catch((error)=>console.error(error));
         socketData.currentChatRoomArea.push(roomID);
-        return Promise.resolve();
+        return matrixProvider.inviteUserToRoom(socketData.chatID,roomID).catch((error)=>console.error(error));
+    }
+
+    async handleChangeChatRoomAreaName(roomID : string,newName : string):Promise<void>{
+        return matrixProvider.changeRoomName(roomID,newName);
     }
 }
 

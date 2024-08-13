@@ -833,6 +833,13 @@ export class IoSocketController {
                             );
                             break;
                         }
+                        case "changeChatRoomAreaNameMessage":{
+                            socketManager.handleChangeChatRoomAreaName(
+                                message.message.changeChatRoomAreaNameMessage.roomID,
+                                message.message.changeChatRoomAreaNameMessage.name
+                            );
+                            break;
+                        }
                         case "queryMessage": {
                             try {
                                 const answerMessage: AnswerMessage = {
