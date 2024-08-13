@@ -125,6 +125,7 @@ message EnterChatRoomAreaMessage {
 }
 
 message LeaveChatRoomAreaMessage {
+  string roomID = 1;
 }
 
 message EmotePromptMessage {
