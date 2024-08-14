@@ -1,5 +1,5 @@
 import axios from "axios";
-import { EventType } from "matrix-js-sdk";
+import { EventType, Visibility } from "matrix-js-sdk";
 import { MATRIX_API_URI, MATRIX_DOMAIN } from "../enums/EnvironmentVariable";
 
 //env var
@@ -343,6 +343,61 @@ class MatrixProvider {
                 return Promise.reject(new Error("Failed with status " + response.status));
             }
         })
+    }
+
+    //TODO : try to find a solution to call this function 1 time 
+    //TODO:Rename and split in 2 functions
+    private async createChatSpaceAreaAndSetID() : Promise<string>{
+        const isChatSpaceAreaExist = await this.isChatSpaceAreaExist();
+        if(isChatSpaceAreaExist){
+            console.log('matrixSpaceAreaID :>>>>>>>>>>>>>>>>>>>>',isChatSpaceAreaExist)
+            return Promise.resolve(isChatSpaceAreaExist)
+        }; 
+        //cas particulier de createRoom 
+        return await axios.post(`${MATRIX_API_URI}_matrix/client/r0/createRoom`,{
+            //preset: "public_chat",
+            visibility : "public",
+            room_alias_name: this.roomAreaSpaceName,
+            name: "Room Area Space",
+            creation_content: {
+            type: "m.space"
+        }
+    }
+        ,     {
+            headers: {
+                Authorization: "Bearer " + (await this.getAccessToken()),
+            },
+        }
+    ).then((response)=>{
+        if (response.status === 200) {
+            return Promise.resolve(response.data.room_id);
+        } else {
+            return Promise.reject(new Error("Failed with status " + response.status));
+        }
+    })
+    }
+
+
+    private async isChatSpaceAreaExist() : Promise<string|undefined> {
+            
+        return axios.get(`${MATRIX_API_URI}_matrix/client/r0/directory/room/%23${this.roomAreaSpaceName}:${MATRIX_DOMAIN}`, {
+            headers: {
+                Authorization: "Bearer " + (await this.getAccessToken()),
+            },
+        }).then((response) => {
+            if (response.status === 200) {
+                // Space exists if we get a 200 OK response
+                return Promise.resolve(response.data.room_id);
+            } else {
+                return Promise.resolve(undefined);
+            }
+        }).catch((error) => {
+            console.error(error);
+            return Promise.resolve(undefined);
+        });
+            
+
+        
     }
 }
 
