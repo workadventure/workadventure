@@ -12,6 +12,7 @@ import { Space } from "../../src/pusher/models/Space";
 import { BackSpaceConnection } from "../../src/pusher/models/Websocket/SocketData";
 import { Socket } from "../../src/pusher/services/SocketManager";
 import { Zone } from "../../src/pusher/models/Zone";
+import { EventProcessor } from "../../src/pusher/models/EventProcessor";
 describe("Space", () => {
     let eventsWatcher: PusherToBackSpaceMessage[] = [];
     const backSpaceConnection = mock<BackSpaceConnection>({
@@ -102,7 +103,7 @@ describe("Space", () => {
     const client = mock<Socket>({
         getUserData: vi.fn().mockReturnValue(clientData),
     });
-    const space = new Space("test", backSpaceConnection, 1, client);
+    const space = new Space("test", "localTest", backSpaceConnection, 1, client, new EventProcessor());
     it("should return true because Space is empty", () => {
         expect(space.isEmpty()).toBe(true);
     });

@@ -1,18 +1,35 @@
-import {SpaceFilterInterface, SpaceUserExtended} from "../SpaceFilter/SpaceFilter";
-
+import { Unsubscriber } from "svelte/store";
+import { SpaceFilterInterface, SpaceUserExtended } from "../SpaceFilter/SpaceFilter";
 
 /**
  * Waits for the user whose id is "id" to be present in the space.
  */
-export function lookupUserById(id: number, spaceFilter: SpaceFilterInterface, timeout ?: number ): Promise<SpaceUserExtended> {
+export function lookupUserById(
+    id: number,
+    spaceFilter: SpaceFilterInterface,
+    timeout?: number
+): Promise<SpaceUserExtended> {
+    console.log("LOOKING UP USER BY ID", id);
     const promise = new Promise<SpaceUserExtended>((resolve, reject) => {
-        const unsubscribe = spaceFilter.usersStore.subscribe(users => {
+        let instantUnsubscribe = false;
+        let unsubscribe: Unsubscriber | undefined;
+        // eslint-disable-next-line prefer-const
+        unsubscribe = spaceFilter.usersStore.subscribe((users) => {
+            console.log("USERS", users);
             const user = users.get(id);
             if (user) {
                 resolve(user);
-                unsubscribe();
+                // If the user is immediately found, the unsubscribe variable is not initialized yet.
+                if (unsubscribe) {
+                    unsubscribe();
+                } else {
+                    instantUnsubscribe = true;
+                }
             }
         });
+        if (instantUnsubscribe && unsubscribe) {
+            unsubscribe();
+        }
     });
 
     if (!timeout) {
@@ -21,11 +38,13 @@ export function lookupUserById(id: number, spaceFilter: SpaceFilterInterface, ti
 
     const timeoutPromise = new Promise<SpaceUserExtended>((resolve, reject) => {
         setTimeout(() => {
-            reject(new Error("Promise timed out while waiting for user with id " + id + " to be present in the space."));
+            reject(
+                new Error("Promise timed out while waiting for user with id " + id + " to be present in the space.")
+            );
         }, timeout);
     });
 
-    return Promise.all([promise, timeoutPromise]).then(([user]) => user);
+    return Promise.race([promise, timeoutPromise]);
 }
 
 /**

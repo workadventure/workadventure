@@ -225,13 +225,17 @@ const roomManager = {
                             //     socketManager.handleMuteVideoEveryBodyParticipantMessage(user);
                             //     break;
                             // }
-                            case "publicEvent": {
-                                socketManager.handlePublicEventMessage(user, message.message.publicEvent);
-                                break;
-                            }
+                            // case "publicEvent": {
+                            //     socketManager.handlePublicEventMessage(user, message.message.publicEvent);
+                            //     break;
+                            // }
+                            // case "privateEvent": {
+                            //     socketManager.handlePrivateEventMessage(user, message.message.privateEvent);
+                            //     break;
+                            // }
+                            case "publicEvent":
                             case "privateEvent": {
-                                socketManager.handlePrivateEventMessage(user, message.message.privateEvent);
-                                break;
+                                throw new Error("Cannot reach here, this is handled by the space manager");
                             }
                             default: {
                                 const _exhaustiveCheck: never = message.message;

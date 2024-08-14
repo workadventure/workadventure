@@ -3,14 +3,9 @@ import axios from "axios";
 import type { AreaData, AtLeast, EntityDimensions, WAMEntityData } from "@workadventure/map-editor";
 import {
     AddSpaceFilterMessage,
-    AddSpaceUserMessage,
     AnswerMessage,
     apiVersionHash,
     ApplicationMessage,
-    AskMutedMessage,
-    AskMutedVideoMessage,
-    AskMuteMicrophoneMessage,
-    AskMuteVideoMessage,
     AvailabilityStatus,
     CharacterTextureMessage,
     ChatMembersAnswer,
@@ -36,19 +31,12 @@ import {
     ModifyCustomEntityMessage,
     MoveToPositionMessage as MoveToPositionMessageProto,
     MucRoomDefinitionMessage,
-    MutedMessage,
-    MutedVideoMessage,
-    MuteMicrophoneEverybodyMessage,
-    MuteMicrophoneMessage,
-    MuteVideoEverybodyMessage,
-    MuteVideoMessage,
     PlayerDetailsUpdatedMessage as PlayerDetailsUpdatedMessageTsProto,
     PositionMessage as PositionMessageTsProto,
     PositionMessage_Direction,
     QueryMessage,
     RefreshRoomMessage,
     RemoveSpaceFilterMessage,
-    RemoveSpaceUserMessage,
     RoomShortDescription,
     ServerToClientMessage as ServerToClientMessageTsProto,
     SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
@@ -56,7 +44,6 @@ import {
     TokenExpiredMessage,
     UpdateSpaceFilterMessage,
     UpdateSpaceMetadataMessage,
-    UpdateSpaceUserMessage,
     UpdateWAMSettingsMessage,
     UploadEntityMessage,
     UserJoinedMessage as UserJoinedMessageTsProto,
@@ -75,6 +62,8 @@ import {
     UpdateSpaceUserPusherToFrontMessage,
     AddSpaceUserPusherToFrontMessage,
     RemoveSpaceUserPusherToFrontMessage,
+    PublicEventFrontToPusher,
+    PrivateEventFrontToPusher,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -216,26 +205,6 @@ export class RoomConnection implements RoomConnection {
     public readonly megaphoneSettingsMessageStream = this._megaphoneSettingsMessageStream.asObservable();
     private readonly _receivedEventMessageStream = new Subject<ReceiveEventEvent>();
     public readonly receivedEventMessageStream = this._receivedEventMessageStream.asObservable();
-    private readonly _muteMicrophoneMessage = new Subject<MuteMicrophoneMessage>();
-    public readonly muteMicrophoneMessage = this._muteMicrophoneMessage.asObservable();
-    private readonly _muteVideoMessage = new Subject<MuteVideoMessage>();
-    public readonly muteVideoMessage = this._muteVideoMessage.asObservable();
-    private readonly _muteMicrophoneEverybodyMessage = new Subject<MuteMicrophoneEverybodyMessage>();
-    public readonly muteMicrophoneEverybodyMessage = this._muteMicrophoneEverybodyMessage.asObservable();
-    private readonly _muteVideoEverybodyMessage = new Subject<MuteVideoEverybodyMessage>();
-    public readonly muteVideoEverybodyMessage = this._muteVideoEverybodyMessage.asObservable();
-    private readonly _askMuteVideoMessage = new Subject<AskMuteVideoMessage>();
-    public readonly askMuteVideoMessage = this._askMuteVideoMessage.asObservable();
-    private readonly _askMuteMicrophoneMessage = new Subject<AskMuteMicrophoneMessage>();
-    public readonly askMuteMicrophoneMessage = this._askMuteMicrophoneMessage.asObservable();
-    private readonly _mutedMessage = new Subject<MutedMessage>();
-    public readonly mutedMessage = this._mutedMessage.asObservable();
-    private readonly _mutedVideoMessage = new Subject<MutedVideoMessage>();
-    public readonly mutedVideoMessage = this._mutedVideoMessage.asObservable();
-    private readonly _askMutedMessage = new Subject<AskMutedMessage>();
-    public readonly askMutedMessage = this._askMutedMessage.asObservable();
-    private readonly _askMutedVideoMessage = new Subject<AskMutedVideoMessage>();
-    public readonly askMutedVideoMessage = this._askMutedVideoMessage.asObservable();
     private readonly _spacePrivateMessageEvent = new Subject<PrivateEvent>();
     public readonly spacePrivateMessageEvent = this._spacePrivateMessageEvent.asObservable();
     private readonly _spacePublicMessageEvent = new Subject<PublicEvent>();
@@ -463,43 +432,6 @@ export class RoomConnection implements RoomConnection {
 
                                 void iframeListener.sendLeaveMucEventToChatIframe(`${scene.roomUrl}/${slugify(name)}`);
                                 chatZoneLiveStore.set(false);
-                                break;
-                            }
-                            case "muteMicrophoneMessage": {
-                                if (subMessage.muteMicrophoneMessage.userId !== this.userId?.toString()) break;
-
-                                this._muteMicrophoneMessage.next(subMessage.muteMicrophoneMessage);
-                                break;
-                            }
-                            case "muteVideoMessage": {
-                                if (subMessage.muteVideoMessage.userId !== this.userId?.toString()) break;
-
-                                this._muteVideoMessage.next(subMessage.muteVideoMessage);
-                                break;
-                            }
-                            case "muteMicrophoneEverybodyMessage": {
-                                // If the sender receive this message, ignore it
-                                if (subMessage.muteMicrophoneEverybodyMessage.userId === this.userId?.toString()) break;
-                                this._muteMicrophoneEverybodyMessage.next(subMessage.muteMicrophoneEverybodyMessage);
-                                break;
-                            }
-                            case "muteVideoEverybodyMessage": {
-                                // If the sender receive this message, ignore it
-                                if (subMessage.muteVideoEverybodyMessage.userId === this.userId?.toString()) break;
-
-                                this._muteVideoEverybodyMessage.next(subMessage.muteVideoEverybodyMessage);
-                                break;
-                            }
-                            case "askMuteMicrophoneMessage": {
-                                if (subMessage.askMuteMicrophoneMessage.userId !== this.userId?.toString()) break;
-
-                                this._askMuteMicrophoneMessage.next(subMessage.askMuteMicrophoneMessage);
-                                break;
-                            }
-                            case "askMuteVideoMessage": {
-                                if (subMessage.askMuteVideoMessage.userId !== this.userId?.toString()) break;
-
-                                this._askMuteVideoMessage.next(subMessage.askMuteVideoMessage);
                                 break;
                             }
                             case "publicEvent": {
@@ -752,22 +684,6 @@ export class RoomConnection implements RoomConnection {
                         query.resolve(message.answerMessage.answer);
                     }
                     this.queries.delete(queryId);
-                    break;
-                }
-                case "mutedMessage": {
-                    this._mutedMessage.next(message.mutedMessage);
-                    break;
-                }
-                case "mutedVideoMessage": {
-                    this._mutedVideoMessage.next(message.mutedVideoMessage);
-                    break;
-                }
-                case "askMutedMessage": {
-                    this._askMutedMessage.next(message.askMutedMessage);
-                    break;
-                }
-                case "askMutedVideoMessage": {
-                    this._askMutedVideoMessage.next(message.askMutedVideoMessage);
                     break;
                 }
                 case "joinSpaceRequestMessage": {
@@ -1722,7 +1638,7 @@ export class RoomConnection implements RoomConnection {
                     spaceEvent: {
                         event: spaceEvent,
                     },
-                } satisfies PublicEvent,
+                } satisfies PublicEventFrontToPusher,
             },
         });
     }
@@ -1741,7 +1657,7 @@ export class RoomConnection implements RoomConnection {
                     spaceEvent: {
                         event: spaceEvent,
                     },
-                } satisfies PrivateEvent,
+                } satisfies PrivateEventFrontToPusher,
             },
         });
     }
@@ -1935,16 +1851,6 @@ export class RoomConnection implements RoomConnection {
         this._updateSpaceMetadataMessageStream.complete();
         this._megaphoneSettingsMessageStream.complete();
         this._receivedEventMessageStream.complete();
-        this._muteMicrophoneMessage.complete();
-        this._muteVideoMessage.complete();
-        this._muteMicrophoneEverybodyMessage.complete();
-        this._muteVideoEverybodyMessage.complete();
-        this._askMuteVideoMessage.complete();
-        this._askMuteMicrophoneMessage.complete();
-        this._mutedMessage.complete();
-        this._mutedVideoMessage.complete();
-        this._askMutedMessage.complete();
-        this._askMutedVideoMessage.complete();
         this._spacePrivateMessageEvent.complete();
         this._spacePublicMessageEvent.complete();
         this._joinSpaceRequestMessage.complete();

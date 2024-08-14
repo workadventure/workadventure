@@ -3,7 +3,9 @@ import merge from "lodash/merge";
 import * as Sentry from "@sentry/node";
 import {
     AddSpaceUserMessage,
-    BackToPusherSpaceMessage, PrivateEvent, PublicEvent,
+    BackToPusherSpaceMessage,
+    PrivateEvent,
+    PublicEvent,
     RemoveSpaceUserMessage,
     SpaceUser,
     UpdateSpaceMetadataMessage,
@@ -29,15 +31,18 @@ export class Space implements CustomJsonReplacerInterface {
     public addUser(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser) {
         const usersList = this.usersList(sourceWatcher);
         usersList.set(spaceUser.id, spaceUser);
-        this.notifyWatchers({
-            message: {
-                $case: "addSpaceUserMessage",
-                addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
-                    spaceName: this.name,
-                    user: spaceUser,
-                }),
+        this.notifyWatchers(
+            {
+                message: {
+                    $case: "addSpaceUserMessage",
+                    addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
+                        spaceName: this.name,
+                        user: spaceUser,
+                    }),
+                },
             },
-        }, sourceWatcher);
+            sourceWatcher
+        );
         debug(`${this.name} : user => added ${spaceUser.id}`);
     }
     public updateUser(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser, updateMask: string[]) {
@@ -54,32 +59,37 @@ export class Space implements CustomJsonReplacerInterface {
         merge(user, updateValues);
 
         usersList.set(spaceUser.id, user);
-        this.notifyWatchers({
-            message: {
-                $case: "updateSpaceUserMessage",
-                updateSpaceUserMessage: {
-                    spaceName: this.name,
-                    user: spaceUser,
-                    updateMask,
-                    filterName: undefined,
+        this.notifyWatchers(
+            {
+                message: {
+                    $case: "updateSpaceUserMessage",
+                    updateSpaceUserMessage: {
+                        spaceName: this.name,
+                        user: spaceUser,
+                        updateMask,
+                    },
                 },
             },
-        }, sourceWatcher);
+            sourceWatcher
+        );
         debug(`${this.name} : user => updated ${spaceUser.id}`);
     }
     public removeUser(sourceWatcher: SpacesWatcher, id: number) {
         const usersList = this.usersList(sourceWatcher);
         usersList.delete(id);
 
-        this.notifyWatchers({
-            message: {
-                $case: "removeSpaceUserMessage",
-                removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
-                    spaceName: this.name,
-                    userId: id,
-                }),
+        this.notifyWatchers(
+            {
+                message: {
+                    $case: "removeSpaceUserMessage",
+                    removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
+                        spaceName: this.name,
+                        userId: id,
+                    }),
+                },
             },
-        }, sourceWatcher);
+            sourceWatcher
+        );
         debug(`${this.name} : user => removed ${id}`);
     }
 
@@ -141,7 +151,7 @@ export class Space implements CustomJsonReplacerInterface {
     /**
      * Notify all watchers expect the one that sent the message
      */
-    private notifyWatchers(message: BackToPusherSpaceMessage, exceptWatcher?: SpacesWatcher|undefined) {
+    private notifyWatchers(message: BackToPusherSpaceMessage, exceptWatcher?: SpacesWatcher | undefined) {
         for (const watcher_ of this.users.keys()) {
             if (exceptWatcher && watcher_.id === exceptWatcher.id) {
                 continue;
@@ -179,7 +189,7 @@ export class Space implements CustomJsonReplacerInterface {
                 $case: "publicEvent",
                 publicEvent,
             },
-        })
+        });
     }
 
     public dispatchPrivateEvent(privateEvent: PrivateEvent) {

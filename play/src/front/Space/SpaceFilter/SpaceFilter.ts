@@ -1,10 +1,10 @@
 import merge from "lodash/merge";
-import {PrivateSpaceEvent, SpaceFilterMessage, SpaceUser} from "@workadventure/messages";
+import { PrivateSpaceEvent, SpaceFilterMessage, SpaceUser } from "@workadventure/messages";
 import { Observable, Subject, Subscriber } from "rxjs";
 import { Readable, get, readable, writable, Writable } from "svelte/store";
 import { CharacterLayerManager } from "../../Phaser/Entity/CharacterLayerManager";
 import { RoomConnection } from "../../Connection/RoomConnection";
-import {SpaceInterface} from "../SpaceInterface";
+import { SpaceInterface } from "../SpaceInterface";
 
 // FIXME: refactor from the standpoint of the consumer. addUser, removeUser should be removed...
 export interface SpaceFilterInterface {
@@ -43,7 +43,7 @@ export type SpaceUserExtended = SpaceUser & {
         changes: SpaceUser;
         updateMask: string[];
     }>;
-    emitPrivateEvent:(message: NonNullable<PrivateSpaceEvent["event"]>) => void;
+    emitPrivateEvent: (message: NonNullable<PrivateSpaceEvent["event"]>) => void;
     //emitter: JitsiEventEmitter | undefined;
     space: SpaceInterface;
     reactiveUser: ReactiveSpaceUser;
@@ -201,7 +201,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
             }>(),
             //emitter,
             emitPrivateEvent: (message: NonNullable<PrivateSpaceEvent["event"]>) => {
-                this._connection.emitPrivateSpaceEvent(this._name, message, user.id);
+                this._connection.emitPrivateSpaceEvent(this._space.getName(), message, user.id);
             },
             space: this._space,
         } as unknown as SpaceUserExtended;

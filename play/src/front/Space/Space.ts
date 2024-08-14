@@ -1,7 +1,7 @@
 import { Subject } from "rxjs";
-import { PublicEvent, SpaceEvent } from "@workadventure/messages";
+import { PrivateEvent, PublicEvent, SpaceEvent } from "@workadventure/messages";
 import { RoomConnection } from "../Connection/RoomConnection";
-import { PublicEventsObservables, SpaceInterface } from "./SpaceInterface";
+import { PrivateEventsObservables, PublicEventsObservables, SpaceInterface } from "./SpaceInterface";
 import { SpaceFilterDoesNotExistError, SpaceNameIsEmptyError } from "./Errors/SpaceError";
 import { SpaceFilter, SpaceFilterInterface } from "./SpaceFilter/SpaceFilter";
 import { AllUsersSpaceFilter, AllUsersSpaceFilterInterface } from "./SpaceFilter/AllUsersSpaceFilter";
@@ -13,6 +13,7 @@ export class Space implements SpaceInterface {
     private readonly name: string;
     private filters: Map<string, SpaceFilter> = new Map<string, SpaceFilter>();
     private readonly publicEventsObservables: PublicEventsObservables = {};
+    private readonly privateEventsObservables: PrivateEventsObservables = {};
     private filterNumber = 0;
 
     /**
@@ -97,6 +98,16 @@ export class Space implements SpaceInterface {
         return observable;
     }
 
+    public observePrivateEvent<K extends keyof PrivateEventsObservables>(
+        key: K
+    ): NonNullable<PrivateEventsObservables[K]> {
+        const observable = this.privateEventsObservables[key];
+        if (!observable) {
+            return (this.privateEventsObservables[key] = new Subject() as NonNullable<PrivateEventsObservables[K]>);
+        }
+        return observable;
+    }
+
     /**
      * Take a message received by the RoomConnection and dispatch it to the right observable.
      */
@@ -110,10 +121,37 @@ export class Space implements SpaceInterface {
             throw new Error("Received a message without event");
         }
         const sender = message.senderUserId;
+
+        const subject = this.publicEventsObservables[spaceInnerEvent.$case];
+        if (subject) {
+            subject.next({
+                // We are hitting a limitation of TypeScript documented here: https://stackoverflow.com/questions/67513032/helper-function-to-un-discriminate-a-discriminated-union
+                //@ts-ignore
+                spaceName: message.spaceName,
+                //@ts-ignore
+                sender,
+                ...spaceInnerEvent,
+            });
+        }
+    }
+
+    /**
+     * Take a message received by the RoomConnection and dispatch it to the right observable.
+     */
+    public dispatchPrivateMessage(message: PrivateEvent) {
+        const spaceEvent = message.spaceEvent;
+        if (spaceEvent === undefined) {
+            throw new Error("Received a message without spaceEvent");
+        }
+        const spaceInnerEvent = spaceEvent.event;
+        if (spaceInnerEvent === undefined) {
+            throw new Error("Received a message without event");
+        }
+        const sender = message.senderUserId;
         if (sender === undefined) {
             throw new Error("Received a message without senderUserId");
         }
-        const subject = this.publicEventsObservables[spaceInnerEvent.$case];
+        const subject = this.privateEventsObservables[spaceInnerEvent.$case];
         if (subject) {
             subject.next({
                 // We are hitting a limitation of TypeScript documented here: https://stackoverflow.com/questions/67513032/helper-function-to-un-discriminate-a-discriminated-union
@@ -144,6 +182,9 @@ export class Space implements SpaceInterface {
         this.userLeaveSpace();
 
         for (const subscription of Object.values(this.publicEventsObservables)) {
+            subscription.complete();
+        }
+        for (const subscription of Object.values(this.privateEventsObservables)) {
             subscription.complete();
         }
     }

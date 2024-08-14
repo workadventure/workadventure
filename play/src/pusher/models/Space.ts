@@ -1,5 +1,7 @@
 import {
     AddSpaceFilterMessage,
+    NonUndefinedFields,
+    noUndefined,
     PrivateEvent,
     PublicEvent,
     PusherToBackSpaceMessage,
@@ -16,12 +18,13 @@ import * as Sentry from "@sentry/node";
 import { Socket } from "../services/SocketManager";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import { BackSpaceConnection, SocketData } from "./Websocket/SocketData";
+import { EventProcessor } from "./EventProcessor";
 
-type SpaceUserExtended = {
-    lowercaseName: string,
+export type SpaceUserExtended = {
+    lowercaseName: string;
     // If the user is connected to this pusher, we store the socket to be able to contact the user directly.
     // Useful to forward public and private event that are dispatched even if the space is not watched.
-    client: Socket | undefined,
+    client: Socket | undefined;
 } & SpaceUser;
 
 type PartialSpaceUser = Partial<Omit<SpaceUser, "id">> & Pick<SpaceUser, "id">;
@@ -37,10 +40,11 @@ export class Space implements CustomJsonReplacerInterface {
     constructor(
         public readonly name: string,
         // The local name is the name of the space in the browser (i.e. the name without the "world" prefix)
-        private readonly localName :string,
+        private readonly localName: string,
         private spaceStreamToPusher: BackSpaceConnection,
         public backId: number,
-        watcher: Socket
+        watcher: Socket,
+        private eventProcessor: EventProcessor
     ) {
         this.users = new Map<number, SpaceUserExtended>();
         this.metadata = new Map<string, unknown>();
@@ -470,107 +474,40 @@ export class Space implements CustomJsonReplacerInterface {
         this.notifyAllUsers(subMessage, 0);
     }
 
-    // FIXME: remove this method and all others similar
-    public muteMicrophoneUser(senderDara: SocketData, userId: string) {
-        let subMessage: SubMessage = {
-            message: {
-                $case: "muteMicrophoneMessage",
-                muteMicrophoneMessage: {
-                    spaceName: this.name,
-                    userId,
-                    filterName: undefined,
-                },
-            },
-        };
-        if (!senderDara.tags.includes("admin")) {
-            subMessage = {
+    public sendPublicEvent(message: NonUndefinedFields<PublicEvent>) {
+        const spaceEvent = noUndefined(message.spaceEvent);
+
+        // FIXME: this should be unnecessary because of the noUndefined call above
+        // noUndefined does not seem to return an appropriate type
+        if (!spaceEvent.event) {
+            throw new Error("Event is required in spaceEvent");
+        }
+
+        const sender = this.users.get(message.senderUserId);
+
+        if (!sender) {
+            throw new Error(`Public message sender ${message.senderUserId} not found in space ${this.name}`);
+        }
+
+        this.notifyAllUsers(
+            {
                 message: {
-                    $case: "askMuteMicrophoneMessage",
-                    askMuteMicrophoneMessage: {
-                        spaceName: this.name,
-                        userId,
-                        filterName: undefined,
+                    $case: "publicEvent",
+                    publicEvent: {
+                        senderUserId: message.senderUserId,
+                        spaceEvent: {
+                            event: this.eventProcessor.processPublicEvent(spaceEvent.event, sender),
+                        },
+                        // The name of the space in the browser is the local name (i.e. the name without the "world" prefix)
+                        spaceName: this.localName,
                     },
                 },
-            };
-        }
-        this.notifyAllUsers(subMessage, 0);
-    }
-
-    public muteVideoUser(senderDara: SocketData, userId: string) {
-        let subMessage: SubMessage = {
-            message: {
-                $case: "muteVideoMessage",
-                muteVideoMessage: {
-                    spaceName: this.name,
-                    userId,
-                    filterName: undefined,
-                },
             },
-        };
-        if (!senderDara.tags.includes("admin")) {
-            subMessage = {
-                message: {
-                    $case: "askMuteVideoMessage",
-                    askMuteVideoMessage: {
-                        spaceName: this.name,
-                        userId,
-                        filterName: undefined,
-                    },
-                },
-            };
-        }
-        this.notifyAllUsers(subMessage, 0);
+            message.senderUserId
+        );
     }
 
-    public muteMicrophoneEverybodyUser(senderDara: SocketData, userId: string) {
-        if (!senderDara.tags.includes("admin")) return;
-        const subMessage: SubMessage = {
-            message: {
-                $case: "muteMicrophoneEverybodyMessage",
-                muteMicrophoneEverybodyMessage: {
-                    spaceName: this.name,
-                    userId,
-                    filterName: undefined,
-                },
-            },
-        };
-        this.notifyAllUsers(subMessage, 0);
-    }
-
-    public muteVideoEverybodyUser(senderDara: SocketData, userId: string) {
-        if (!senderDara.tags.includes("admin")) return;
-        const subMessage: SubMessage = {
-            message: {
-                $case: "muteVideoEverybodyMessage",
-                muteVideoEverybodyMessage: {
-                    spaceName: this.name,
-                    userId,
-                    filterName: undefined,
-                },
-            },
-        };
-        this.notifyAllUsers(subMessage, 0);
-    }
-
-    public sendPublicEvent(message: PublicEvent) {
-        if (message.senderUserId === undefined) {
-            throw new Error("senderUserId is required to send a public event");
-        }
-
-        this.notifyAllUsers({
-            message: {
-                $case: "publicEvent",
-                publicEvent: {
-                    ...message,
-                    // The name of the space in the browser is the local name (i.e. the name without the "world" prefix)
-                    spaceName: this.localName,
-                },
-            },
-        }, message.senderUserId);
-    }
-
-    public sendPrivateEvent(message: PrivateEvent) {
+    public sendPrivateEvent(message: NonUndefinedFields<PrivateEvent>) {
         // [...this.clientWatchers.values()].forEach((watcher) => {
         //     const socketData = watcher.getUserData();
         //     if (socketData.userId === message.receiverUserId) {
@@ -582,11 +519,35 @@ export class Space implements CustomJsonReplacerInterface {
         //         });
         //     }
         // });
-        this.users.get(message.receiverUserId)?.client?.getUserData().emitInBatch({
+        const spaceEvent = noUndefined(message.spaceEvent);
+
+        // FIXME: this should be unnecessary because of the noUndefined call above
+        // noUndefined does not seem to return an appropriate type
+        if (!spaceEvent.event) {
+            throw new Error("Event is required in spaceEvent");
+        }
+
+        const receiver = this.users.get(message.receiverUserId);
+
+        if (!receiver) {
+            throw new Error(`Private message receiver ${message.receiverUserId} not found in space ${this.name}`);
+        }
+
+        const sender = this.users.get(message.senderUserId);
+
+        if (!sender) {
+            throw new Error(`Private message sender ${message.senderUserId} not found in space ${this.name}`);
+        }
+
+        receiver.client?.getUserData().emitInBatch({
             message: {
                 $case: "privateEvent",
                 privateEvent: {
-                    ...message,
+                    senderUserId: message.senderUserId,
+                    receiverUserId: message.receiverUserId,
+                    spaceEvent: {
+                        event: this.eventProcessor.processPrivateEvent(spaceEvent.event, sender, receiver),
+                    },
                     // The name of the space in the browser is the local name (i.e. the name without the "world" prefix)
                     spaceName: this.localName,
                 },
@@ -607,7 +568,7 @@ export class Space implements CustomJsonReplacerInterface {
 
         for (const user of this.users.values()) {
             if (user.client && user.id !== senderId) {
-                console.log("Notifying ",user.id,` (${user.client.getUserData().userId}) of `, subMessage)
+                console.log("Notifying ", user.id, ` (${user.client.getUserData().userId}) of `, subMessage);
                 user.client.getUserData().emitInBatch(subMessage);
             }
         }
@@ -615,7 +576,7 @@ export class Space implements CustomJsonReplacerInterface {
 
     public forwardMessageToSpaceBack(pusherToBackSpaceMessage: PusherToBackSpaceMessage["message"]) {
         this.spaceStreamToPusher.write({
-            message: pusherToBackSpaceMessage
+            message: pusherToBackSpaceMessage,
         });
     }
 }

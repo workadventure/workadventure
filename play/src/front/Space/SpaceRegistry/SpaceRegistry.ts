@@ -16,6 +16,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     private removeSpaceUserMessageStreamSubscription: Subscription;
     private updateSpaceMetadataMessageStreamSubscription: Subscription;
     private proximityPublicMessageEventSubscription: Subscription;
+    private proximityPrivateMessageEventSubscription: Subscription;
 
     constructor(private roomConnection: RoomConnection, private spaces: Map<string, Space> = new Map<string, Space>()) {
         this.addSpaceUserMessageStreamSubscription = roomConnection.addSpaceUserMessageStream.subscribe((message) => {
@@ -69,18 +70,27 @@ export class SpaceRegistry implements SpaceRegistryInterface {
             }
         );
 
-        this.proximityPublicMessageEventSubscription = roomConnection.spacePublicMessageEvent.subscribe(
-            (message) => {
-                const space = this.spaces.get(message.spaceName);
-                if (!space) {
-                    console.warn(`Received a public message for a space that does not exist: "${message.spaceName}". This should not happen unless the space was left a few milliseconds before.`);
-                    return;
-                }
-                space.dispatchPublicMessage(message);
+        this.proximityPublicMessageEventSubscription = roomConnection.spacePublicMessageEvent.subscribe((message) => {
+            const space = this.spaces.get(message.spaceName);
+            if (!space) {
+                console.warn(
+                    `Received a public message for a space that does not exist: "${message.spaceName}". This should not happen unless the space was left a few milliseconds before.`
+                );
+                return;
             }
-        );
+            space.dispatchPublicMessage(message);
+        });
 
-        // FIXME: listen to private messages too!
+        this.proximityPrivateMessageEventSubscription = roomConnection.spacePrivateMessageEvent.subscribe((message) => {
+            const space = this.spaces.get(message.spaceName);
+            if (!space) {
+                console.warn(
+                    `Received a private message for a space that does not exist: "${message.spaceName}". This should not happen unless the space was left a few milliseconds before.`
+                );
+                return;
+            }
+            space.dispatchPrivateMessage(message);
+        });
     }
 
     joinSpace(spaceName: string, metadata: Map<string, unknown> = new Map<string, unknown>()): SpaceInterface {
@@ -117,6 +127,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         this.removeSpaceUserMessageStreamSubscription.unsubscribe();
         this.updateSpaceMetadataMessageStreamSubscription.unsubscribe();
         this.proximityPublicMessageEventSubscription.unsubscribe();
+        this.proximityPrivateMessageEventSubscription.unsubscribe();
 
         for (const space of this.spaces.values()) {
             space.destroy();

@@ -1,7 +1,7 @@
 import { get } from "svelte/store";
 import type { Subscription } from "rxjs";
 import * as Sentry from "@sentry/svelte";
-import {Deferred} from "ts-deferred";
+import { Deferred } from "ts-deferred";
 import type {
     WebRtcDisconnectMessageInterface,
     WebRtcSignalReceivedMessageInterface,
@@ -13,7 +13,7 @@ import { peerStore, screenSharingPeerStore } from "../Stores/PeerStore";
 import { batchGetUserMediaStore } from "../Stores/MediaStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { nbSoundPlayedInBubbleStore } from "../Stores/ApparentMediaContraintStore";
-import {SpaceFilterInterface} from "../Space/SpaceFilter/SpaceFilter";
+import { SpaceFilterInterface } from "../Space/SpaceFilter/SpaceFilter";
 import { askDialogStore } from "../Stores/MeetingStore";
 import { RemotePlayersRepository } from "../Phaser/Game/RemotePlayersRepository";
 import { mediaManager, NotificationType } from "./MediaManager";
@@ -176,7 +176,7 @@ export class SimplePeer {
             user.initiator ? user.initiator : false,
             player,
             this.Connection,
-            this.spaceFilterDeferred.promise,
+            this.spaceFilterDeferred.promise
         );
 
         peer.toClose = false;
@@ -278,7 +278,7 @@ export class SimplePeer {
             this.closeScreenSharingConnection(userId);
 
             // Close the ask dialog by user ID
-            askDialogStore.closeDialogByUserId(peer.userUuid);
+            askDialogStore.closeDialogByUserId(peer.userId);
         } catch (err) {
             console.error("An error occurred in closeConnection", err);
         }
