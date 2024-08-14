@@ -63,17 +63,17 @@ export const RoomMetadataType = z.object({
     player: z.object({
         accessTokens: z.array(
             z.object({
-                token: z.string(),
                 provider: z.string(),
+                token: z.string(),
             })
         ),
     }),
-    msteams: z.boolean(),
+    msteams: z.boolean().optional(),
     teamsstings: z.object({
         communication: z.boolean(),
         status: z.boolean(),
         calendar: z.boolean(),
-    }),
+    }).optional(),
 });
 
 export type RoomMetadataType = z.infer<typeof RoomMetadataType>;

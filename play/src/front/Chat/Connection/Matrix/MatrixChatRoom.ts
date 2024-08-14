@@ -377,6 +377,7 @@ export class MatrixChatRoom implements ChatRoom {
     }
 
     sendMessage(message: string) {
+        console.log("Sending message", message);
         this.matrixRoom.client
             .sendMessage(this.matrixRoom.roomId, this.getMessageContent(message))
             .then(() => {
