@@ -15,13 +15,13 @@ import {
 } from "../ChatConnection";
 import LL from "../../../../i18n/i18n-svelte";
 import { iframeListener } from "../../../Api/IframeListener";
-import { RoomConnection } from "../../../Connection/RoomConnection";
 import { SpaceInterface } from "../../../Space/SpaceInterface";
 import { SpaceRegistryInterface } from "../../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { chatVisibilityStore } from "../../../Stores/ChatStore";
 import { selectedRoom } from "../../Stores/ChatStore";
 import { SpaceFilterInterface, SpaceUserExtended } from "../../../Space/SpaceFilter/SpaceFilter";
 import { mapExtendedSpaceUserToChatUser } from "../../UserProvider/ChatUserMapper";
+import {SimplePeer} from "../../../WebRtc/SimplePeer";
 
 export class ProximityChatMessage implements ChatMessage {
     isQuotedMessage = undefined;
@@ -86,9 +86,9 @@ export class ProximityChatRoom implements ChatRoom {
     } as ChatUser;
 
     constructor(
-        private roomConnection: RoomConnection,
         private _userId: number,
-        private spaceRegistry: SpaceRegistryInterface
+        private spaceRegistry: SpaceRegistryInterface,
+        private simplePeer: SimplePeer,
     ) {
         this.typingMembers = writable([]);
     }
@@ -351,6 +351,8 @@ export class ProximityChatRoom implements ChatRoom {
                 this.removeTypingUser(event.sender);
             }
         });
+
+        this.simplePeer.setSpaceFilter(this._spaceWatcher);
     }
 
     public leaveSpace(spaceName: string): void {
@@ -373,5 +375,7 @@ export class ProximityChatRoom implements ChatRoom {
         this.spaceRegistry.leaveSpace(spaceName);
         this.spaceMessageSubscription?.unsubscribe();
         this.spaceIsTypingSubscription?.unsubscribe();
+
+        this.simplePeer.setSpaceFilter(undefined);
     }
 }

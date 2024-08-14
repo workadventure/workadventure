@@ -301,9 +301,6 @@ export class SocketManager {
         const webrtcSignalToClientMessage: Partial<WebRtcSignalToClientMessage> = {
             userId: user.id,
             signal: data.signal,
-            webRtcSpaceName: `webrtc_${user.group ? user.group.getId() : "1"}-${Buffer.from(room.roomUrl).toString(
-                "base64"
-            )}`,
         };
 
         // TODO: only compute credentials if data.signal.type === "offer"
@@ -338,9 +335,6 @@ export class SocketManager {
         const webrtcSignalToClientMessage: Partial<WebRtcSignalToClientMessage> = {
             userId: user.id,
             signal: data.signal,
-            webRtcSpaceName: `webrtc_${user.group ? user.group.getId() : "1"}-${Buffer.from(room.id).toString(
-                "base64"
-            )}`,
         };
 
         // TODO: only compute credentials if data.signal.type === "offer"
@@ -663,7 +657,6 @@ export class SocketManager {
             const webrtcStartMessage1: Partial<WebRtcStartMessage> = {
                 userId: otherUser.id,
                 initiator: true,
-                webRtcSpaceName: `webrtc_${group.getId()}-${Buffer.from(group.getRoomId()).toString("base64")}`,
             };
             if (TURN_STATIC_AUTH_SECRET) {
                 const { username, password } = this.getTURNCredentials(
@@ -684,7 +677,6 @@ export class SocketManager {
             const webrtcStartMessage2: Partial<WebRtcStartMessage> = {
                 userId: user.id,
                 initiator: false,
-                webRtcSpaceName: `webrtc_${group.getId()}-${Buffer.from(group.getRoomId()).toString("base64")}`,
             };
             if (TURN_STATIC_AUTH_SECRET) {
                 const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
@@ -1602,13 +1594,18 @@ export class SocketManager {
 
     handlePublicEvent(pusher: SpacesWatcher, publicEvent: PublicEvent) {
         const space = this.spaces.get(publicEvent.spaceName);
-        if (!space) return;
-        pusher.write({
-            message: {
-                $case: "publicEvent",
-                publicEvent,
-            },
-        });
+        if (!space) {
+            throw new Error(`Could not find space ${publicEvent.spaceName} to dispatch public event`);
+        }
+        space.dispatchPublicEvent(publicEvent);
+    }
+
+    handlePrivateEvent(pusher: SpacesWatcher, privateEvent: PrivateEvent) {
+        const space = this.spaces.get(privateEvent.spaceName);
+        if (!space) {
+            throw new Error(`Could not find space ${privateEvent.spaceName} to dispatch public event`);
+        }
+        space.dispatchPrivateEvent(privateEvent);
     }
 
     private handleSendEventQuery(gameRoom: GameRoom, user: User, sendEventQuery: SendEventQuery) {

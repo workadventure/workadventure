@@ -15,6 +15,8 @@ import { TrackInterface } from "../Streaming/Contract/TrackInterface";
 import { showReportScreenStore } from "../Stores/ShowReportScreenStore";
 import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
 import { iframeListener } from "../Api/IframeListener";
+import {SpaceFilterInterface, SpaceUserExtended} from "../Space/SpaceFilter/SpaceFilter";
+import {lookupUserById} from "../Space/Utils/UserLookup";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { blackListManager } from "./BlackListManager";
@@ -55,7 +57,7 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
         initiator: boolean,
         public readonly player: RemotePlayerData,
         private connection: RoomConnection,
-        private spaceName?: string
+        private spaceFilter: Promise<SpaceFilterInterface>,
     ) {
         const bandwidth = get(videoBandwidthStore);
         super({
@@ -380,37 +382,12 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
     isLocal(): boolean {
         throw new Error("Method not implemented.");
     }
-    // FIXME: this method does not belong here.
-    // Move the mute audio/video to the space public/private events
-    muteAudioParticipant(): void {
-        this.connection.emitMuteParticipantIdSpace("peer", this.userUuid);
-    }
-    // FIXME: this method does not belong here.
-    // Move the mute audio/video to the space public/private events
-    muteAudioEveryBody(): void {
-        this.connection.emitMuteEveryBodySpace("peer");
-    }
-    // FIXME: this method does not belong here.
-    // Move the mute audio/video to the space public/private events
-    muteVideoParticipant(): void {
-        this.connection.emitMuteVideoParticipantIdSpace("peer", this.userUuid);
-    }
-    // FIXME: this method does not belong here.
-    // Move the mute audio/video to the space public/private events
-    muteVideoEverybody(): void {
-        this.connection.emitMuteVideoEveryBodySpace("peer");
-    }
-    // FIXME: this method does not belong here.
-    // Move the mute audio/video to the space public/private events
-    ban() {
-        throw new Error("Method not implemented.");
-    }
-    // FIXME: this method does not belong here.
-    // Move the mute audio/video to the space public/private events
-    kickoff(): void {
-        this.connection.emitKickOffUserMessage(this.userUuid, "peer");
-    }
     blockOrReportUser(): void {
         showReportScreenStore.set({ userId: this.userId, userName: this.player.name });
+    }
+
+    public async getExtendedSpaceUser(): Promise<SpaceUserExtended> {
+        const spaceFilter = await this.spaceFilter;
+        return lookupUserById(this.userId, spaceFilter, 30_000);
     }
 }

@@ -1,4 +1,5 @@
 import { RoomConnection } from "../../Connection/RoomConnection";
+import {SpaceInterface} from "../SpaceInterface";
 import { SpaceFilter, SpaceFilterInterface } from "./SpaceFilter";
 
 export interface AllUsersSpaceFilterInterface extends SpaceFilterInterface {
@@ -6,8 +7,8 @@ export interface AllUsersSpaceFilterInterface extends SpaceFilterInterface {
 }
 
 export class AllUsersSpaceFilter extends SpaceFilter {
-    constructor(_name: string, _spaceName: string, _connection: RoomConnection) {
-        super(_name, _spaceName, _connection, {
+    constructor(_name: string, _space: SpaceInterface, _connection: RoomConnection) {
+        super(_name, _space, _connection, {
             $case: "spaceFilterEverybody",
             spaceFilterEverybody: {},
         });

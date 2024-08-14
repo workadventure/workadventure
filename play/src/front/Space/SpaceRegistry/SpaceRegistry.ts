@@ -20,6 +20,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     constructor(private roomConnection: RoomConnection, private spaces: Map<string, Space> = new Map<string, Space>()) {
         this.addSpaceUserMessageStreamSubscription = roomConnection.addSpaceUserMessageStream.subscribe((message) => {
             if (!message.user || !message.filterName) {
+                console.error(message);
                 throw new Error("addSpaceUserMessage is missing a user or a filterName");
             }
 
@@ -68,11 +69,18 @@ export class SpaceRegistry implements SpaceRegistryInterface {
             }
         );
 
-        this.proximityPublicMessageEventSubscription = roomConnection.proximityPublicMessageEvent.subscribe(
+        this.proximityPublicMessageEventSubscription = roomConnection.spacePublicMessageEvent.subscribe(
             (message) => {
-                this.spaces.get(message.spaceName)?.dispatchPublicMessage(message);
+                const space = this.spaces.get(message.spaceName);
+                if (!space) {
+                    console.warn(`Received a public message for a space that does not exist: "${message.spaceName}". This should not happen unless the space was left a few milliseconds before.`);
+                    return;
+                }
+                space.dispatchPublicMessage(message);
             }
         );
+
+        // FIXME: listen to private messages too!
     }
 
     joinSpace(spaceName: string, metadata: Map<string, unknown> = new Map<string, unknown>()): SpaceInterface {

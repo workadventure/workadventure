@@ -27,7 +27,12 @@
     const audioTrackStore: Readable<JitsiTrack | undefined> = peer.audioTrackStore;
 
     let embedScreen: EmbedScreen;
-    let backGroundColor = Color.getColorByString(peer.jitsiTrackWrapper.spaceUser?.name ?? "");
+    let backGroundColor = "#000000";
+    peer.jitsiTrackWrapper.spaceUser.then((spaceUser) => {
+        backGroundColor = Color.getColorByString(spaceUser.name);
+    }).catch(() => {
+        console.error("Error getting spaceUser");
+    });
     let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
 
     if (peer) {
@@ -72,7 +77,7 @@
     {#if $myJitsiCameraStore?.uniqueId != peer.uniqueId}
         <ActionMediaBox
             {embedScreen}
-            trackStreamWraper={peer}
+            trackStreamWrapper={peer}
             videoEnabled={$videoTrackStore ? $videoTrackStore?.isActive() : false}
         />
     {/if}
@@ -107,35 +112,33 @@
             {/if}
         </div>
     {/if}
-    {#if peer.jitsiTrackWrapper.spaceUser}
-        {#await peer.jitsiTrackWrapper.spaceUser?.getWokaBase64}
-            <div />
-        {:then wokaBase64}
-            {#if $embedScreenLayoutStore === LayoutMode.VideoChat && $videoTrackStore == undefined}
-                <div
-                    id="tag"
-                    style="background-color: {backGroundColor}; color: {textColor};"
-                    class="tw-flex tw-flex-col tw-justify-center tw-items-center tw-content-center !tw-h-full tw-w-full tw-gap-2"
+    {#await peer.jitsiTrackWrapper.spaceUser}
+        <div />
+    {:then spaceUser}
+        {#if $embedScreenLayoutStore === LayoutMode.VideoChat && $videoTrackStore === undefined}
+            <div
+                id="tag"
+                style="background-color: {backGroundColor}; color: {textColor};"
+                class="tw-flex tw-flex-col tw-justify-center tw-items-center tw-content-center !tw-h-full tw-w-full tw-gap-2"
+            >
+                <Woka src={spaceUser.getWokaBase64} customHeight={`100px`} customWidth={`100px`} />
+                <span
+                    class="tw-font-semibold tw-text-sm tw-not-italic tw-break-words tw-px-2 tw-overflow-y-auto tw-max-h-10"
                 >
-                    <Woka src={wokaBase64} customHeight={`100px`} customWidth={`100px`} />
-                    <span
-                        class="tw-font-semibold tw-text-sm tw-not-italic tw-break-words tw-px-2 tw-overflow-y-auto tw-max-h-10"
-                    >
-                        {peer.jitsiTrackWrapper.isLocal
-                            ? $LL.camera.my.nameTag()
-                            : peer.jitsiTrackWrapper.spaceUser?.name}
-                    </span>
-                </div>
-            {:else}
-                <UserTag
-                    isMe={peer.jitsiTrackWrapper.isLocal}
-                    name={peer.jitsiTrackWrapper.spaceUser?.name ?? ""}
-                    wokaSrc={wokaBase64}
-                    minimal={!!$videoTrackStore}
-                />
-            {/if}
-        {/await}
-    {/if}
+                    {peer.jitsiTrackWrapper.isLocal
+                        ? $LL.camera.my.nameTag()
+                        : spaceUser.name}
+                </span>
+            </div>
+        {:else}
+            <UserTag
+                isMe={peer.jitsiTrackWrapper.isLocal}
+                name={spaceUser.name}
+                wokaSrc={spaceUser.getWokaBase64}
+                minimal={!!$videoTrackStore}
+            />
+        {/if}
+    {/await}
 </div>
 
 <style lang="scss">

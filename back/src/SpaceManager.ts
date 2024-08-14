@@ -101,6 +101,7 @@ const spaceManager = {
                         break;
                     }
                     case "privateEvent": {
+                        socketManager.handlePrivateEvent(pusher, message.message.privateEvent);
                         break;
                     }
                     default: {

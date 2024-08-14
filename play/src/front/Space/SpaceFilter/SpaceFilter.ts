@@ -1,9 +1,10 @@
 import merge from "lodash/merge";
-import { SpaceFilterMessage, SpaceUser } from "@workadventure/messages";
+import {PrivateSpaceEvent, SpaceFilterMessage, SpaceUser} from "@workadventure/messages";
 import { Observable, Subject, Subscriber } from "rxjs";
 import { Readable, get, readable, writable, Writable } from "svelte/store";
 import { CharacterLayerManager } from "../../Phaser/Entity/CharacterLayerManager";
 import { RoomConnection } from "../../Connection/RoomConnection";
+import {SpaceInterface} from "../SpaceInterface";
 
 // FIXME: refactor from the standpoint of the consumer. addUser, removeUser should be removed...
 export interface SpaceFilterInterface {
@@ -42,22 +43,23 @@ export type SpaceUserExtended = SpaceUser & {
         changes: SpaceUser;
         updateMask: string[];
     }>;
-    emitter: JitsiEventEmitter | undefined;
-    spaceName: string;
+    emitPrivateEvent:(message: NonNullable<PrivateSpaceEvent["event"]>) => void;
+    //emitter: JitsiEventEmitter | undefined;
+    space: SpaceInterface;
     reactiveUser: ReactiveSpaceUser;
 };
 
 export type Filter = SpaceFilterMessage["filter"];
 
-export interface JitsiEventEmitter {
-    emitKickOffUserMessage(userId: string): void;
-    emitMuteEveryBodySpace(): void;
-    emitMuteVideoEveryBodySpace(): void;
-    emitMuteParticipantIdSpace(userId: string): void;
-    emitMuteVideoParticipantIdSpace(userId: string): void;
-    emitProximityPublicMessage(message: string): void;
-    emitProximityPrivateMessage(message: string, receiverUserId: number): void;
-}
+// export interface JitsiEventEmitter {
+//     emitKickOffUserMessage(userId: string): void;
+//     emitMuteEveryBodySpace(): void;
+//     emitMuteVideoEveryBodySpace(): void;
+//     emitMuteParticipantIdSpace(userId: string): void;
+//     emitMuteVideoParticipantIdSpace(userId: string): void;
+//     emitProximityPublicMessage(message: string): void;
+//     emitProximityPrivateMessage(message: string, receiverUserId: number): void;
+// }
 
 export abstract class SpaceFilter implements SpaceFilterInterface {
     private _setUsers: ((value: Map<number, SpaceUserExtended>) => void) | undefined;
@@ -72,7 +74,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
 
     protected constructor(
         private _name: string,
-        private _spaceName: string,
+        private _space: SpaceInterface,
         private _connection: RoomConnection,
         private _filter: Filter
     ) {
@@ -110,7 +112,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
         return get(this.usersStore).has(userId);
     }
     async addUser(user: SpaceUser): Promise<SpaceUserExtended> {
-        const extendSpaceUser = await this.extendSpaceUser(user, this._spaceName);
+        const extendSpaceUser = await this.extendSpaceUser(user);
 
         if (!this.userExist(user.id)) {
             this._users.set(user.id, extendSpaceUser);
@@ -185,37 +187,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
         return this._name;
     }
 
-    private async extendSpaceUser(user: SpaceUser, spaceName: string): Promise<SpaceUserExtended> {
-        let emitter = undefined;
-
-        emitter = {
-            emitKickOffUserMessage: (userId: string) => {
-                this._connection.emitKickOffUserMessage(userId, this._name);
-            },
-            // FIXME: it is strange to have a emitMuteEveryBodySpace that is valid for anyone in a space applied to a specific user. It should be a method of the space instead.
-            // In fact, we should have a single "emitPublicMessage" on the space class with a typing that is a union of all possible messages addressed to everybody.
-            emitMuteEveryBodySpace: () => {
-                this._connection.emitMuteEveryBodySpace(this._name);
-            },
-            emitMuteParticipantIdSpace: (userId: string) => {
-                this._connection.emitMuteParticipantIdSpace(this._name, userId);
-            },
-            // FIXME: it is strange to have a emitMuteVideoEveryBodySpace that is valid for anyone in a space applied to a specific user. It should be a method of the space instead.
-            // In fact, we should have a single "emitPublicMessage" on the space class with a typing that is a union of all possible messages addressed to everybody.
-            emitMuteVideoEveryBodySpace: () => {
-                this._connection.emitMuteVideoEveryBodySpace(this._name);
-            },
-            emitMuteVideoParticipantIdSpace: (userId: string) => {
-                this._connection.emitMuteParticipantIdSpace(this._name, userId);
-            },
-            emitProximityPublicMessage: (message: string) => {
-                this._connection.emitProximityPublicMessage(this._name, message);
-            },
-            /*emitProximityPrivateMessage: (message: string, receiverUserId: number) => {
-                this._connection.emitProximityPrivateMessage(this._name, message, receiverUserId);
-            },*/
-        };
-
+    private async extendSpaceUser(user: SpaceUser): Promise<SpaceUserExtended> {
         const wokaBase64 = await CharacterLayerManager.wokaBase64(user.characterTextures);
 
         const extendedUser = {
@@ -227,8 +199,11 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
                 changes: SpaceUser;
                 updateMask: string[];
             }>(),
-            emitter,
-            spaceName,
+            //emitter,
+            emitPrivateEvent: (message: NonNullable<PrivateSpaceEvent["event"]>) => {
+                this._connection.emitPrivateSpaceEvent(this._name, message, user.id);
+            },
+            space: this._space,
         } as unknown as SpaceUserExtended;
 
         extendedUser.reactiveUser = new Proxy(
@@ -268,7 +243,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
             this._connection.emitRemoveSpaceFilter({
                 spaceFilterMessage: {
                     filterName: this._name,
-                    spaceName: this._spaceName,
+                    spaceName: this._space.getName(),
                 },
             });
         }
@@ -278,7 +253,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
         this._connection.emitUpdateSpaceFilter({
             spaceFilterMessage: {
                 filterName: this._name,
-                spaceName: this._spaceName,
+                spaceName: this._space.getName(),
                 filter: this._filter,
             },
         });
@@ -288,7 +263,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
             this._connection.emitAddSpaceFilter({
                 spaceFilterMessage: {
                     filterName: this._name,
-                    spaceName: this._spaceName,
+                    spaceName: this._space.getName(),
                     filter: this._filter,
                 },
             });

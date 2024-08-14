@@ -149,11 +149,6 @@ message LockGroupPromptMessage {
   bool lock = 1;
 }
 
-message KickOffUserMessage {
-  string userId = 1;
-  string spaceName = 2;
-}
-
 /*********** MAP EDITOR MESSAGES *************/
 
 message EditMapMessage {
@@ -326,11 +321,6 @@ message ClientToServerMessage {
     ScreenSharingStateMessage screenSharingStateMessage = 33;
     JitsiParticipantIdSpaceMessage  jitsiParticipantIdSpaceMessage = 34;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 35;
-    KickOffUserMessage kickOffUserMessage = 36;
-    MuteParticipantIdMessage muteParticipantIdMessage = 37;
-    MuteEveryBodyParticipantMessage muteEveryBodyParticipantMessage = 38;
-    MuteVideoParticipantIdMessage muteVideoParticipantIdMessage = 39;
-    MuteVideoEveryBodyParticipantMessage muteVideoEveryBodyParticipantMessage = 40;
     BanPlayerMessage banPlayerMessage = 41;
     UpdateChatIdMessage updateChatIdMessage = 42;
     PublicEvent publicEvent = 43;
@@ -590,9 +580,9 @@ message SubMessage {
     EditMapCommandMessage editMapCommandMessage = 13;
     JoinMucRoomMessage joinMucRoomMessage = 14;
     LeaveMucRoomMessage leaveMucRoomMessage = 15;
-    AddSpaceUserMessage addSpaceUserMessage = 16;
-    UpdateSpaceUserMessage updateSpaceUserMessage = 17;
-    RemoveSpaceUserMessage removeSpaceUserMessage = 18;
+    AddSpaceUserPusherToFrontMessage addSpaceUserMessage = 16;
+    UpdateSpaceUserPusherToFrontMessage updateSpaceUserMessage = 17;
+    RemoveSpaceUserPusherToFrontMessage removeSpaceUserMessage = 18;
     MegaphoneSettings megaphoneSettingsMessage = 19;
     ReceivedEventMessage receivedEventMessage = 20;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 21;
@@ -707,7 +697,6 @@ message WebRtcStartMessage {
   bool initiator = 3;
   string webRtcUserName = 4;
   string webRtcPassword = 5;
-  string webRtcSpaceName = 6;
 }
 
 message WebRtcDisconnectMessage {
@@ -719,7 +708,6 @@ message WebRtcSignalToClientMessage {
   string signal = 2;
   string webRtcUserName = 4;
   string webRtcPassword = 5;
-  string webRtcSpaceName = 6;
 }
 
 message TeleportMessageMessage{
@@ -790,6 +778,7 @@ message MegaphoneStateMessage {
   optional string spaceName = 2;
 }
 
+// FIXME: refactor this with a simple "patch"
 message JitsiParticipantIdSpaceMessage {
   string spaceName = 1;
   string value = 2;
@@ -799,25 +788,14 @@ message MegaphoneEnabledMessage {
   bool value = 1;
 }
 
-message MuteParticipantIdMessage {
-  string spaceName = 1;
-  string mutedUserUuid = 2;
-}
-
-message MuteEveryBodyParticipantMessage {
-  string spaceName = 1;
-  string senderUserId = 2;
-}
-
 message MutedMessage {
   string userUuid = 1;
   string message = 2;
 }
 
-// FIXME remove this message
-message MuteVideoParticipantIdMessage {
-  string spaceName = 1;
-  string mutedUserUuid = 2;
+// A request sent within a space to mute the audio of a specific user
+message MuteAudioPrivateMessage {
+
 }
 
 // A request sent within a space to mute the video of a specific user
@@ -825,10 +803,13 @@ message MuteVideoPrivateMessage {
 
 }
 
+message MuteAudioForEverybodyPublicMessage {
+}
 
-message MuteVideoEveryBodyParticipantMessage {
-  string spaceName = 1;
-  string userId = 2;
+message MuteVideoForEverybodyPublicMessage {
+}
+
+message KickOffUserPrivateMessage {
 }
 
 message MutedVideoMessage {
@@ -856,12 +837,16 @@ message SpaceEvent {
   oneof event {
     SpaceMessage spaceMessage = 1;
     SpaceIsTyping spaceIsTyping = 2;
+    MuteAudioForEverybodyPublicMessage muteAudioForEverybody = 3;
+    MuteVideoForEverybodyPublicMessage muteVideoForEverybody = 4;
   }
 }
 
 message PrivateSpaceEvent {
   oneof event {
-      MuteVideoPrivateMessage muteVideoPrivateMessage = 1;
+    MuteVideoPrivateMessage muteVideo = 1;
+    MuteAudioPrivateMessage muteAudio = 2;
+    KickOffUserPrivateMessage kickOffUser = 3;
   }
 }
 
@@ -929,8 +914,6 @@ message ServerToClientMessage {
     MutedVideoMessage mutedVideoMessage = 34;
     AskMutedMessage askMutedMessage = 35;
     AskMutedVideoMessage askMutedVideoMessage = 36;
-    PublicEvent publicEvent = 37;
-    PrivateEvent privateEvent = 38;
     JoinSpaceRequestMessage joinSpaceRequestMessage = 39;
     LeaveSpaceRequestMessage leaveSpaceRequestMessage = 40;
   }
@@ -1033,11 +1016,6 @@ message PusherToBackMessage {
     AskPositionMessage askPositionMessage = 22;
     EditMapCommandMessage editMapCommandMessage = 23;
     PingMessage pingMessage = 24;
-    KickOffUserMessage kickOffUserMessage = 25;
-    MuteParticipantIdMessage muteParticipantIdMessage = 26;
-    MuteEveryBodyParticipantMessage muteEveryBodyParticipantMessage = 27;
-    MuteVideoParticipantIdMessage muteVideoParticipantIdMessage = 28;
-    MuteVideoEveryBodyParticipantMessage muteVideoEveryBodyParticipantMessage = 29;
     PublicEvent publicEvent = 30;
     PrivateEvent privateEvent = 31;
   }
@@ -1231,6 +1209,7 @@ message PusherToBackSpaceMessage{
     RemoveSpaceUserMessage removeSpaceUserMessage = 5;
     PingMessage pongMessage = 6;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 7;
+    // FIXME: remove those
     KickOffMessage kickOffMessage = 8;
     MuteMicrophoneMessage muteMicrophoneMessage = 9;
     MuteVideoMessage muteVideoMessage = 10;
@@ -1312,22 +1291,45 @@ message SpaceUser{
   google.protobuf.StringValue chatID = 17;
 }*/
 
+/**
+ * Message adding a user to a space (front to pusher, pusher to back-space, back-space to pusher)
+ */
 message AddSpaceUserMessage{
   string spaceName = 1;
   SpaceUser user = 2;
-  google.protobuf.StringValue filterName = 3;
 }
+message AddSpaceUserPusherToFrontMessage{
+  string spaceName = 1;
+  SpaceUser user = 2;
+  string filterName = 3;
+}
+
+/**
+ * Message updating a user in a space (front to pusher, pusher to back-space, back-space to pusher)
+ */
 message UpdateSpaceUserMessage{
   string spaceName = 1;
   SpaceUser user = 2;
-  // FIXME; is the filterName needed?
-  google.protobuf.StringValue filterName = 3;
   google.protobuf.FieldMask updateMask = 4;
 }
+message UpdateSpaceUserPusherToFrontMessage{
+  string spaceName = 1;
+  SpaceUser user = 2;
+  string filterName = 3;
+  google.protobuf.FieldMask updateMask = 4;
+}
+
+/**
+ * Message removing a user from a space (front to pusher, pusher to back-space, back-space to pusher)
+ */
 message RemoveSpaceUserMessage{
   string spaceName = 1;
   int32 userId = 2;
-  google.protobuf.StringValue filterName = 3;
+}
+message RemoveSpaceUserPusherToFrontMessage{
+  string spaceName = 1;
+  int32 userId = 2;
+  string filterName = 3;
 }
 message UpdateSpaceMetadataMessage{
   string spaceName = 1;

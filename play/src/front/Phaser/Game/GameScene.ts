@@ -14,7 +14,6 @@ import {
     availabilityStatusToJSON,
     ErrorScreenMessage,
     PositionMessage_Direction,
-    PrivateEvent,
 } from "@workadventure/messages";
 import { z } from "zod";
 import { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
@@ -1518,12 +1517,6 @@ export class GameScene extends DirtyScene {
                 const allUserSpace = this._spaceRegistry.joinSpace(WORLD_SPACE_NAME);
                 this.chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
 
-                this._proximityChatRoom = new ProximityChatRoom(
-                    this.connection,
-                    this.connection.getUserId(),
-                    this._spaceRegistry
-                );
-
                 //init merger
 
                 const adminUserProvider = new AdminUserProvider(this.connection);
@@ -1536,7 +1529,6 @@ export class GameScene extends DirtyScene {
                     worldUserProvider,
                 ]);
 
-                this.proximitySpaceManager = new ProximitySpaceManager(this.connection, this._proximityChatRoom);
 
                 const chatId = localUserStore.getChatId();
                 const email: string | null = localUserStore.getLocalUser()?.email || null;
@@ -1716,6 +1708,14 @@ export class GameScene extends DirtyScene {
                         console.warn("Connection to peers not started!");
                     }
                 });*/
+
+                this._proximityChatRoom = new ProximityChatRoom(
+                    this.connection.getUserId(),
+                    this._spaceRegistry,
+                    this.simplePeer,
+                );
+                this.proximitySpaceManager = new ProximitySpaceManager(this.connection, this._proximityChatRoom);
+
 
                 userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
 
@@ -1936,13 +1936,6 @@ export class GameScene extends DirtyScene {
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.errorMessageStream.subscribe((errorMessage) => {
                     warningMessageStore.addWarningMessage(errorMessage.message);
-                });
-
-                // The proximityPrivateMessageToClientMessageStream is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.proximityPrivateMessageEvent.subscribe((privateEvent: PrivateEvent) => {
-                    // TODO: MOVE THIS HANDLING TO THE SPACE CLASS
-                    console.info("proximity private message not implemented yet!");
                 });
 
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);

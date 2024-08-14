@@ -45,7 +45,7 @@ export class Space implements SpaceInterface {
     watchAllUsers(): AllUsersSpaceFilterInterface {
         const filterName = `allUsers_${this.filterNumber}`;
         this.filterNumber += 1;
-        const newFilter = new AllUsersSpaceFilter(filterName, this.name, this._connection);
+        const newFilter = new AllUsersSpaceFilter(filterName, this, this._connection);
         this.filters.set(filterName, newFilter);
         return newFilter;
     }
@@ -53,7 +53,7 @@ export class Space implements SpaceInterface {
     watchLiveStreamingUsers(): SpaceFilterInterface {
         const filterName = `liveStreamingUsers_${this.filterNumber}`;
         this.filterNumber += 1;
-        const newFilter = new LiveStreamingUsersSpaceFilter(filterName, this.name, this._connection);
+        const newFilter = new LiveStreamingUsersSpaceFilter(filterName, this, this._connection);
         this.filters.set(filterName, newFilter);
         return newFilter;
     }

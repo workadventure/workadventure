@@ -146,15 +146,16 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
                     const filtered = new Map<string, JitsiTrackWrapper>();
                     for (const [participantId, stream] of $streamStore) {
                         let found = false;
-                        if (stream.spaceUser !== undefined) {
-                            if ($users.has(stream.spaceUser.id)) {
+                        const spaceUser = stream.getImmediateSpaceUser();
+                        if (spaceUser !== undefined) {
+                            if ($users.has(spaceUser.id)) {
                                 filtered.set(participantId, stream);
                             }
                             continue;
                         }
                         for (const user of $users.values()) {
                             if (user.jitsiParticipantId === stream.uniqueId) {
-                                stream.spaceUser = user;
+                                stream.setSpaceUser(user);
                                 filtered.set(participantId, stream);
                                 found = true;
                                 break;
