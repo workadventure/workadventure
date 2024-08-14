@@ -28,12 +28,9 @@
                 })
                 .catch(error=>console.error(error));
         }
-
-
     });
 
     onDestroy(()=>{
-        //case no name choose
         if(property.displayName ==="" && oldName===""  && roomConnection){
             roomConnection.emitChatRoomAreaNameChange(property.matrixRoomId,$LL.mapEditor.properties.matrixProperties.defaultChatRoomAreaName());
             dispatch("change");
