@@ -1,7 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { Space } from "../Space";
-import { SpaceFilterAlreadyExistError, SpaceNameIsEmptyError } from "../Errors/SpaceError";
-import { SpaceFilterInterface } from "../SpaceFilter/SpaceFilter";
+import { SpaceNameIsEmptyError } from "../Errors/SpaceError";
 import { RoomConnection } from "../../Connection/RoomConnection";
 
 vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
@@ -23,7 +22,7 @@ vi.mock("../../Phaser/Game/GameManager", () => {
 });
 
 const defaultRoomConnectionMock = {
-    emitWatchSpace: vi.fn(),
+    emitJoinSpace: vi.fn(),
     emitAddSpaceFilter: vi.fn(),
 } as unknown as RoomConnection;
 
@@ -62,15 +61,15 @@ describe("Space test", () => {
         const spaceName = "space-name";
         const metadata = new Map<string, unknown>();
         const mockRoomConnection = {
-            emitWatchSpace: vi.fn(),
+            emitJoinSpace: vi.fn(),
         };
 
         new Space(spaceName, metadata, mockRoomConnection as unknown as RoomConnection);
 
         // eslint-disable-next-line @typescript-eslint/unbound-method
-        expect(mockRoomConnection.emitWatchSpace).toHaveBeenCalledOnce();
+        expect(mockRoomConnection.emitJoinSpace).toHaveBeenCalledOnce();
         // eslint-disable-next-line @typescript-eslint/unbound-method
-        expect(mockRoomConnection.emitWatchSpace).toHaveBeenCalledWith(spaceName);
+        expect(mockRoomConnection.emitJoinSpace).toHaveBeenCalledWith(spaceName);
     });
 
     it("should emit leaveSpace event when you call destroy", () => {
@@ -78,17 +77,17 @@ describe("Space test", () => {
         const metadata = new Map<string, unknown>();
 
         const mockRoomConnection = {
-            emitWatchSpace: vi.fn(),
-            emitUnwatchSpace: vi.fn(),
+            emitJoinSpace: vi.fn(),
+            emitLeaveSpace: vi.fn(),
         };
 
         const space = new Space(spaceName, metadata, mockRoomConnection as unknown as RoomConnection);
 
         space.destroy();
         // eslint-disable-next-line @typescript-eslint/unbound-method
-        expect(mockRoomConnection.emitUnwatchSpace).toHaveBeenCalledOnce();
+        expect(mockRoomConnection.emitLeaveSpace).toHaveBeenCalledOnce();
         // eslint-disable-next-line @typescript-eslint/unbound-method
-        expect(mockRoomConnection.emitUnwatchSpace).toHaveBeenLastCalledWith(spaceName);
+        expect(mockRoomConnection.emitLeaveSpace).toHaveBeenLastCalledWith(spaceName);
     });
     it("should add metadata when key is not in metadata map", () => {
         const spaceName = "space-name";
@@ -141,61 +140,5 @@ describe("Space test", () => {
         const result = space.getMetadata();
 
         expect(result).toStrictEqual(newMetadata);
-    });
-
-    it("should return a error when spaceName exist", () => {
-        const spaceName = "space-name";
-        const spaceFilterName = "space-filter-name";
-
-        const metadata = new Map<string, unknown>([["metadata-1", 4]]);
-
-        const filter: Partial<SpaceFilterInterface> = {};
-        const spaceFilterMap = new Map<string, Partial<SpaceFilterInterface>>([[spaceFilterName, filter]]);
-
-        const space = new Space(
-            spaceName,
-            metadata,
-            defaultRoomConnectionMock,
-            spaceFilterMap as Map<string, SpaceFilterInterface>
-        );
-
-        expect(() => {
-            space.watch(spaceFilterName);
-        }).toThrow(SpaceFilterAlreadyExistError);
-    });
-
-    it("should return a spacefilter when spaceName  not exist", () => {
-        const spaceName = "space-name";
-        const spaceFilterName = "space-filter-name";
-
-        const metadata = new Map<string, unknown>([["metadata-1", 4]]);
-
-        const space = new Space(spaceName, metadata, defaultRoomConnectionMock);
-
-        const spaceFilter = space.watch(spaceFilterName);
-        expect(spaceFilter).toBeDefined();
-        if (!spaceFilter) return;
-
-        expect(spaceFilter.getName()).toBe(spaceFilterName);
-        expect(spaceFilter.getUsers()).toHaveLength(0);
-    });
-    it("should call filterDestroy when you stop watching filter", () => {
-        const spaceName = "space-name";
-        const spaceFilterName = "space-filter-name";
-        const metadata = new Map<string, unknown>([["metadata-1", 4]]);
-
-        const filter: Partial<SpaceFilterInterface> = {
-            destroy: vi.fn(),
-        };
-        const spaceFilterMap = new Map<string, Partial<SpaceFilterInterface>>([[spaceFilterName, filter]]);
-        const space = new Space(
-            spaceName,
-            metadata,
-            defaultRoomConnectionMock,
-            spaceFilterMap as Map<string, SpaceFilterInterface>
-        );
-        space.stopWatching(spaceFilterName);
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        expect(filter.destroy).toHaveBeenCalledOnce();
     });
 });

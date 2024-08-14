@@ -39,7 +39,6 @@ import {
     UpdateSpaceMetadataMessage,
     UserMovesMessage,
     ViewportMessage,
-    WatchSpaceMessage,
     SpaceUser,
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
@@ -356,11 +355,7 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    public async handleJoinSpace(
-        client: Socket,
-        spaceName: string,
-        filter: SpaceFilterMessage | undefined = undefined
-    ): Promise<void> {
+    public async handleJoinSpace(client: Socket, spaceName: string): Promise<void> {
         const socketData = client.getUserData();
 
         try {
@@ -622,10 +617,6 @@ export class SocketManager implements ZoneEventListener {
 
             const spaceStreamToBack = await spaceStreamToBackPromise;
 
-            if (filter) {
-                socketData.spacesFilters.set(spaceName, [filter]);
-            }
-
             let space: Space | undefined = this.spaces.get(spaceName);
             if (!space) {
                 space = new Space(spaceName, spaceStreamToBack, backId, client);
@@ -633,10 +624,10 @@ export class SocketManager implements ZoneEventListener {
 
                 spaceStreamToBack.write({
                     message: {
-                        $case: "watchSpaceMessage",
-                        watchSpaceMessage: WatchSpaceMessage.fromPartial({
+                        $case: "joinSpaceMessage",
+                        joinSpaceMessage: {
                             spaceName,
-                        }),
+                        },
                     },
                 });
             } else {

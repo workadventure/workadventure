@@ -39,20 +39,20 @@ import {
     SetPlayerDetailsMessage,
     SubToPusherMessage,
     TurnCredentialsAnswer,
-    UnwatchSpaceMessage,
     UpdateMapToNewestWithKeyMessage,
     UpdateSpaceMetadataMessage,
     UpdateSpaceUserMessage,
     UserJoinedZoneMessage,
     UserMovesMessage,
     VariableMessage,
-    WatchSpaceMessage,
     WebRtcSignalToClientMessage,
     WebRtcSignalToServerMessage,
     WebRtcStartMessage,
     Zone as ProtoZone,
     PublicEvent,
     PrivateEvent,
+    LeaveSpaceMessage,
+    JoinSpaceMessage,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -643,6 +643,17 @@ export class SocketManager {
     }
 
     private joinWebRtcRoom(user: User, group: Group) {
+        user.socket.write({
+            message: {
+                $case: "joinSpaceRequestMessage",
+                joinSpaceRequestMessage: {
+                    // FIXME: before fixing the fact that spaceName is undefined, let's try to understand why I don't have any info about the user in the error caught above
+                    spaceName: group.spaceName,
+                },
+            },
+        });
+
+        // TODO: remove code below when WebRTC is managed in spaces
         for (const otherUser of group.getUsers()) {
             if (user === otherUser) {
                 continue;
@@ -711,6 +722,15 @@ export class SocketManager {
 
     //disconnect user
     private disConnectedUser(user: User, group: Group) {
+        user.socket.write({
+            message: {
+                $case: "leaveSpaceRequestMessage",
+                leaveSpaceRequestMessage: {
+                    spaceName: group.spaceName,
+                },
+            },
+        });
+
         // Most of the time, sending a disconnect event to one of the players is enough (the player will close the connection
         // which will be shut for the other player).
         // However! In the rare case where the WebRTC connection is not yet established, if we close the connection on one of the player,
@@ -1414,18 +1434,18 @@ export class SocketManager {
         return true;
     }
 
-    handleWatchSpaceMessage(pusher: SpacesWatcher, watchSpaceMessage: WatchSpaceMessage) {
-        let space: Space | undefined = this.spaces.get(watchSpaceMessage.spaceName);
+    handleJoinSpaceMessage(pusher: SpacesWatcher, joinSpaceMessage: JoinSpaceMessage) {
+        let space: Space | undefined = this.spaces.get(joinSpaceMessage.spaceName);
         if (!space) {
-            space = new Space(watchSpaceMessage.spaceName);
-            this.spaces.set(watchSpaceMessage.spaceName, space);
+            space = new Space(joinSpaceMessage.spaceName);
+            this.spaces.set(joinSpaceMessage.spaceName, space);
         }
         pusher.watchSpace(space.name);
         space.addWatcher(pusher);
     }
 
-    handleUnwatchSpaceMessage(pusher: SpacesWatcher, unwatchSpaceMessage: UnwatchSpaceMessage) {
-        const space: Space | undefined = this.spaces.get(unwatchSpaceMessage.spaceName);
+    handleLeaveSpaceMessage(pusher: SpacesWatcher, leaveSpaceMessage: LeaveSpaceMessage) {
+        const space: Space | undefined = this.spaces.get(leaveSpaceMessage.spaceName);
         if (!space) {
             throw new Error("Cant unwatch space, space not found");
         }

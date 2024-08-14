@@ -66,11 +66,12 @@ import {
     WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
     WorldConnectionMessage,
     TurnCredentialsAnswer,
-    SpaceFilterMessage,
-    WatchSpaceMessage,
-    UnwatchSpaceMessage,
     PublicEvent,
     PrivateEvent,
+    JoinSpaceRequestMessage,
+    LeaveSpaceRequestMessage,
+    SpaceEvent,
+    PrivateSpaceEvent,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -236,6 +237,10 @@ export class RoomConnection implements RoomConnection {
     public readonly proximityPrivateMessageEvent = this._proximityPrivateMessageEvent.asObservable();
     private readonly _proximityPublicMessageEvent = new Subject<PublicEvent>();
     public readonly proximityPublicMessageEvent = this._proximityPublicMessageEvent.asObservable();
+    private readonly _joinSpaceRequestMessage = new Subject<JoinSpaceRequestMessage>();
+    public readonly joinSpaceRequestMessage = this._joinSpaceRequestMessage.asObservable();
+    private readonly _leaveSpaceRequestMessage = new Subject<LeaveSpaceRequestMessage>();
+    public readonly leaveSpaceRequestMessage = this._leaveSpaceRequestMessage.asObservable();
     private readonly _typingProximityEvent = new Subject<PublicEvent>();
     public readonly typingProximityEvent = this._typingProximityEvent.asObservable();
 
@@ -781,6 +786,14 @@ export class RoomConnection implements RoomConnection {
                 }
                 case "privateEvent": {
                     this._proximityPrivateMessageEvent.next(message.privateEvent);
+                    break;
+                }
+                case "joinSpaceRequestMessage": {
+                    this._joinSpaceRequestMessage.next(message.joinSpaceRequestMessage);
+                    break;
+                }
+                case "leaveSpaceRequestMessage": {
+                    this._leaveSpaceRequestMessage.next(message.leaveSpaceRequestMessage);
                     break;
                 }
                 default: {
@@ -1503,50 +1516,24 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitWatchSpace(spaceName: string) {
-        // FIXME: why to we create an empty filter here? Doesn't it look weird?
-        const spaceFilter: SpaceFilterMessage = {
-            filterName: "",
-            spaceName,
-            filter: undefined,
-        };
+    public emitJoinSpace(spaceName: string): void {
         this.send({
             message: {
-                $case: "watchSpaceMessage",
-                watchSpaceMessage: WatchSpaceMessage.fromPartial({
+                $case: "joinSpaceMessage",
+                joinSpaceMessage: {
                     spaceName,
-                    spaceFilter,
-                }),
+                },
             },
         });
-        return spaceFilter;
-    }
-    public emitUserJoinSpace(spaceName: string) {
-        // FIXME: why to we create an empty filter here? Doesn't it look weird?
-        const spaceFilter: SpaceFilterMessage = {
-            filterName: "",
-            spaceName,
-            filter: undefined,
-        };
-        this.send({
-            message: {
-                $case: "watchSpaceMessage",
-                watchSpaceMessage: WatchSpaceMessage.fromPartial({
-                    spaceName,
-                    spaceFilter,
-                }),
-            },
-        });
-        return spaceFilter;
     }
 
-    public emitUnwatchSpace(spaceName: string) {
+    public emitLeaveSpace(spaceName: string): void {
         this.send({
             message: {
-                $case: "unwatchSpaceMessage",
-                unwatchSpaceMessage: UnwatchSpaceMessage.fromPartial({
+                $case: "leaveSpaceMessage",
+                leaveSpaceMessage: {
                     spaceName,
-                }),
+                },
             },
         });
     }
@@ -1724,6 +1711,7 @@ export class RoomConnection implements RoomConnection {
             });
     }
 
+    // FIXME: Move this event to spaces
     public emitMuteParticipantIdSpace(spaceName: string, participantId: string) {
         this.send({
             message: {
@@ -1736,6 +1724,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    // FIXME: Move this event to spaces
     public emitMuteEveryBodySpace(spaceName: string) {
         if (!this.userId) {
             console.warn("No user id defined to send a message to mute every microphone!");
@@ -1752,6 +1741,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    // FIXME: Move this event to spaces
     public emitMuteVideoParticipantIdSpace(spaceName: string, participantId: string) {
         this.send({
             message: {
@@ -1764,6 +1754,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    // FIXME: Move this event to spaces
     public emitMuteVideoEveryBodySpace(spaceName: string) {
         if (!this.userId) {
             console.warn("No user id defined to send a message to mute every video!");
@@ -1812,6 +1803,40 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    public emitPublicSpaceEvent(spaceName: string, spaceEvent: NonNullable<SpaceEvent["event"]>): void {
+        this.send({
+            message: {
+                $case: "publicEvent",
+                publicEvent: {
+                    spaceName,
+                    spaceEvent: {
+                        event: spaceEvent,
+                    },
+                } satisfies PublicEvent,
+            },
+        });
+    }
+
+    public emitPrivateSpaceEvent(
+        spaceName: string,
+        spaceEvent: NonNullable<PrivateSpaceEvent["event"]>,
+        receiverUserId: number
+    ): void {
+        this.send({
+            message: {
+                $case: "privateEvent",
+                privateEvent: {
+                    spaceName,
+                    receiverUserId,
+                    spaceEvent: {
+                        event: spaceEvent,
+                    },
+                } satisfies PrivateEvent,
+            },
+        });
+    }
+
+    // FIXME: remove this method in favor of emitSpacePublicEvent
     public emitProximityPublicMessage(spaceName: string, message: string) {
         if (!this.userId) {
             console.warn("No user id defined to send a message to mute every video!");
@@ -1836,7 +1861,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitProximityPrivateMessage(spaceName: string, message: string, receiverUserId: number) {
+    /*public emitProximityPrivateMessage(spaceName: string, message: string, receiverUserId: number) {
         if (!this.userId) {
             console.warn("No user id defined to send a message to mute every video!");
             return;
@@ -1854,7 +1879,7 @@ export class RoomConnection implements RoomConnection {
                 },
             },
         });
-    }
+    }*/
 
     public emitTypingProximityMessage(spaceName: string, isTyping: boolean) {
         this.send({
@@ -2012,6 +2037,8 @@ export class RoomConnection implements RoomConnection {
         this._askMutedVideoMessage.complete();
         this._proximityPrivateMessageEvent.complete();
         this._proximityPublicMessageEvent.complete();
+        this._joinSpaceRequestMessage.complete();
+        this._leaveSpaceRequestMessage.complete();
         this._typingProximityEvent.complete();
     }
 

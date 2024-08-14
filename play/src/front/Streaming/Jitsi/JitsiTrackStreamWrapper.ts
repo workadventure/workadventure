@@ -86,12 +86,4 @@ export class JitsiTrackStreamWrapper implements TrackStreamWrapperInterface {
     public blockOrReportUser(): void {
         console.info("Not implemented yet!");
     }
-
-    public sendProximityPublicMessage(message: string): void {
-        console.info("Not implemented yet!", message);
-    }
-
-    public sendProximityPrivateMessage(message: string): void {
-        console.info("Not implemented yet!", message);
-    }
 }

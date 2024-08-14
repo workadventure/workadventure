@@ -4,23 +4,28 @@ import {
     RemoveSpaceUserMessage,
     UpdateSpaceMetadataMessage,
     SpaceUser,
+    PublicEvent,
 } from "@workadventure/messages";
 import { Subject } from "rxjs";
 import { describe, expect, it, vi, assert } from "vitest";
 import { get } from "svelte/store";
-import { LocalSpaceProvider } from "../SpaceProvider/SpaceStore";
+import { SpaceRegistry } from "../SpaceRegistry/SpaceRegistry";
 import { RoomConnection } from "../../Connection/RoomConnection";
-import { StreamSpaceWatcher } from "../SpaceWatcher/SocketSpaceWatcher";
-import { SpaceFilter } from "../SpaceFilter/SpaceFilter";
+import { SpaceUserExtended } from "../SpaceFilter/SpaceFilter";
+
+/* eslint @typescript-eslint/unbound-method: 0 */
 
 class MockRoomConnection {
     public addSpaceUserMessageStream = new Subject<AddSpaceUserMessage>();
     public updateSpaceUserMessageStream = new Subject<UpdateSpaceUserMessage>();
     public removeSpaceUserMessageStream = new Subject<RemoveSpaceUserMessage>();
     public updateSpaceMetadataMessageStream = new Subject<UpdateSpaceMetadataMessage>();
+    public proximityPublicMessageEvent = new Subject<PublicEvent>();
     public emitUserJoinSpace = vi.fn();
     public emitAddSpaceFilter = vi.fn();
-    public emitWatchSpace = vi.fn();
+    public emitRemoveSpaceFilter = vi.fn();
+    public emitJoinSpace = vi.fn();
+    public emitLeaveSpace = vi.fn();
     // Add any other methods or properties that need to be mocked
 }
 
@@ -39,33 +44,39 @@ const flushPromises = () => new Promise(setImmediate);
 describe("", () => {
     it("should emit event when you create space and spaceFilter", () => {
         const roomConnection = new MockRoomConnection() as unknown as RoomConnection;
-        const spaceStore = new LocalSpaceProvider(roomConnection);
-
-        new StreamSpaceWatcher(roomConnection, spaceStore);
+        const spaceRegistry = new SpaceRegistry(roomConnection);
 
         const spaceName = "space1";
-        const spaceFilterName = "spaceFilter1";
 
-        spaceStore.add(spaceName).watch(spaceFilterName);
+        const space = spaceRegistry.joinSpace(spaceName);
 
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        expect(roomConnection.emitWatchSpace).toHaveBeenCalledOnce();
+        expect(roomConnection.emitJoinSpace).toHaveBeenCalledOnce();
 
-        // eslint-disable-next-line @typescript-eslint/unbound-method
+        const filter = space.watchAllUsers();
+
+        const unsubscribeUserStore = filter.usersStore.subscribe(() => {});
+
         expect(roomConnection.emitAddSpaceFilter).toHaveBeenCalledOnce();
+
+        const observeUserLeft = filter.observeUserJoined.subscribe(() => {});
+
+        expect(roomConnection.emitAddSpaceFilter).toHaveBeenCalledOnce();
+
+        unsubscribeUserStore();
+
+        expect(roomConnection.emitRemoveSpaceFilter).not.toHaveBeenCalled();
+        observeUserLeft.unsubscribe();
+        expect(roomConnection.emitRemoveSpaceFilter).toHaveBeenCalledOnce();
     });
 
     it("should add user inSpaceFilter._users when receive AddSpaceUserMessage", async () => {
         const roomConnection = new MockRoomConnection();
-        const spaceStore = new LocalSpaceProvider(roomConnection as unknown as RoomConnection);
-
-        new StreamSpaceWatcher(roomConnection as unknown as RoomConnection, spaceStore);
+        const spaceRegistry = new SpaceRegistry(roomConnection as unknown as RoomConnection);
 
         const spaceName = "space1";
-        const spaceFilterName = "spaceFilter1";
 
-        const space = spaceStore.add(spaceName);
-        const spaceFilter = space.watch(spaceFilterName) as unknown as SpaceFilter;
+        const space = spaceRegistry.joinSpace(spaceName);
+        const spaceFilter = space.watchAllUsers();
 
         const userFromMessage = {
             id: 1,
@@ -89,76 +100,34 @@ describe("", () => {
 
         const addSpaceUserMessage: AddSpaceUserMessage = {
             spaceName,
-            filterName: spaceFilterName,
+            filterName: spaceFilter.getName(),
             user: userFromMessage,
         };
+
+        let users: Map<number, SpaceUserExtended> = new Map();
+        const unsubscribe = spaceFilter.usersStore.subscribe((newUsers) => {
+            users = newUsers;
+        });
 
         roomConnection.addSpaceUserMessageStream.next(addSpaceUserMessage);
 
         await flushPromises();
 
-        const userToCompare = spaceFilter["_users"].get(userFromMessage.id);
+        const userToCompare = users.get(userFromMessage.id);
 
         expect(userToCompare).toBeDefined();
-    });
 
-    it("(spaceFilter) should synchro usersStore to _users and set setUsers function at the first subscription", async () => {
-        const roomConnection = new MockRoomConnection();
-        const spaceStore = new LocalSpaceProvider(roomConnection as unknown as RoomConnection);
-
-        new StreamSpaceWatcher(roomConnection as unknown as RoomConnection, spaceStore);
-
-        const spaceName = "space1";
-        const spaceFilterName = "spaceFilter1";
-
-        const space = spaceStore.add(spaceName);
-        const spaceFilter = space.watch(spaceFilterName) as unknown as SpaceFilter;
-
-        const userFromMessage = {
-            id: 1,
-            name: "",
-            playUri: "",
-            color: "",
-            characterTextures: [],
-            isLogged: false,
-            availabilityStatus: 0,
-            roomName: undefined,
-            visitCardUrl: undefined,
-            tags: [],
-            cameraState: false,
-            microphoneState: false,
-            screenSharingState: false,
-            megaphoneState: false,
-            jitsiParticipantId: undefined,
-            uuid: "",
-            chatID: undefined,
-        };
-
-        const addSpaceUserMessage: AddSpaceUserMessage = {
-            spaceName,
-            filterName: spaceFilterName,
-            user: userFromMessage,
-        };
-
-        roomConnection.addSpaceUserMessageStream.next(addSpaceUserMessage);
-
-        await flushPromises();
-
-        expect(get(spaceFilter.usersStore)).toBe(spaceFilter["_users"]);
-        expect(spaceFilter["_setUsers"]).toBeDefined();
+        unsubscribe();
     });
 
     it("should define reactive property after... ", async () => {
         const roomConnection = new MockRoomConnection();
-        const spaceStore = new LocalSpaceProvider(roomConnection as unknown as RoomConnection);
-
-        new StreamSpaceWatcher(roomConnection as unknown as RoomConnection, spaceStore);
+        const spaceRegistry = new SpaceRegistry(roomConnection as unknown as RoomConnection);
 
         const spaceName = "space1";
-        const spaceFilterName = "spaceFilter1";
 
-        const space = spaceStore.add(spaceName);
-        const spaceFilter = space.watch(spaceFilterName) as unknown as SpaceFilter;
+        const space = spaceRegistry.joinSpace(spaceName);
+        const spaceFilter = space.watchAllUsers();
 
         const userFromMessage = {
             id: 1,
@@ -182,7 +151,7 @@ describe("", () => {
 
         const addSpaceUserMessage: AddSpaceUserMessage = {
             spaceName,
-            filterName: spaceFilterName,
+            filterName: spaceFilter.getName(),
             user: userFromMessage,
         };
 
@@ -199,15 +168,12 @@ describe("", () => {
 
     it("... ", async () => {
         const roomConnection = new MockRoomConnection();
-        const spaceStore = new LocalSpaceProvider(roomConnection as unknown as RoomConnection);
-
-        new StreamSpaceWatcher(roomConnection as unknown as RoomConnection, spaceStore);
+        const spaceRegistry = new SpaceRegistry(roomConnection as unknown as RoomConnection);
 
         const spaceName = "space1";
-        const spaceFilterName = "spaceFilter1";
 
-        const space = spaceStore.add(spaceName);
-        const spaceFilter = space.watch(spaceFilterName) as unknown as SpaceFilter;
+        const space = spaceRegistry.joinSpace(spaceName);
+        const spaceFilter = space.watchAllUsers();
 
         const userFromMessage = {
             id: 1,
@@ -231,7 +197,7 @@ describe("", () => {
 
         const addSpaceUserMessage: AddSpaceUserMessage = {
             spaceName,
-            filterName: spaceFilterName,
+            filterName: spaceFilter.getName(),
             user: userFromMessage,
         };
 
@@ -247,7 +213,7 @@ describe("", () => {
             spaceName,
             user: spaceUserUpdate,
             updateMask: ["chatID"],
-            filterName: spaceFilterName,
+            filterName: spaceFilter.getName(),
         };
 
         const userToCompare = get(spaceFilter.usersStore).get(userFromMessage.id);
@@ -264,5 +230,45 @@ describe("", () => {
         expect(subscriber).toHaveBeenLastCalledWith("new@id.fr");
 
         unsubscriber();
+    });
+
+    it("should forward public events to the space", async () => {
+        const roomConnection = new MockRoomConnection();
+        const spaceRegistry = new SpaceRegistry(roomConnection as unknown as RoomConnection);
+
+        const spaceName = "space1";
+
+        const space = spaceRegistry.joinSpace(spaceName);
+
+        const subscriber = vi.fn();
+
+        const unsubscriber = space.observePublicEvent("spaceMessage").subscribe(subscriber);
+
+        roomConnection.proximityPublicMessageEvent.next({
+            spaceName: "space1",
+            senderUserId: 1,
+            spaceEvent: {
+                event: {
+                    $case: "spaceMessage",
+                    spaceMessage: {
+                        message: "Hello",
+                    },
+                },
+            },
+        });
+
+        await flushPromises();
+
+        expect(subscriber).toHaveBeenCalledOnce();
+        expect(subscriber).toHaveBeenLastCalledWith({
+            spaceName: "space1",
+            sender: 1,
+            $case: "spaceMessage",
+            spaceMessage: {
+                message: "Hello",
+            },
+        });
+
+        unsubscriber.unsubscribe();
     });
 });

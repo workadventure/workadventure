@@ -116,21 +116,6 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
 
         this._constraintsStore = writable<ObtainedMediaStreamConstraints | null>(null);
 
-        // TODO: refactor this with a space later when we enter a group
-        // Define the spaceId and spaceName
-        // By convention, the video peer space name id defined by the prefix "webrct_"
-        let _spaceId = v4(),
-            _spaceName = _spaceId;
-        if (this.spaceName) {
-            _spaceId = this.spaceName.replace("webrct_", "");
-            _spaceName = this.spaceName;
-        } else if (this.user.webRtcUser) {
-            (_spaceId = this.user.webRtcUser.split(":")[0]),
-                (_spaceName = `webrct_${this.user.webRtcUser.split(":")[0]}`);
-        }
-        // Join the space for proximity meeting
-        this.connection.emitUserJoinSpace(_spaceName);
-
         //start listen signal for the peer connection
         this.on("signal", (data: unknown) => {
             this.sendWebrtcSignal(data);
@@ -160,12 +145,12 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
 
             this._connected = true;
 
-            const proximityRoomChat = gameManager.getCurrentGameScene().proximityChatRoom;
+            /*const proximityRoomChat = gameManager.getCurrentGameScene().proximityChatRoom;
 
             if (proximityRoomChat.addIncomingUser != undefined) {
                 const color = playersStore.getPlayerById(this.userId)?.color;
                 proximityRoomChat.addIncomingUser(this.userId, this.userUuid, this.player.name, color ?? undefined);
-            }
+            }*/
 
             this.newMessageSubscription = newChatMessageSubject.subscribe((newMessage) => {
                 if (!newMessage) return;
@@ -342,14 +327,6 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
             this.newMessageSubscription?.unsubscribe();
             this.newWritingStatusMessageSubscription?.unsubscribe();
 
-            // TODO: refactor this with a space later when we enter a group
-            /*const proximityMeeting = get(proximityRoomConnection);
-            if (proximityMeeting) {
-                const proximityRoomChat = get(proximityMeeting.rooms)[0];
-                if (proximityRoomChat.addOutcomingUser != undefined)
-                    proximityRoomChat.addOutcomingUser(this.userId, this.userUuid, this.player.name);
-            }*/
-
             if (this.localStreamStoreSubscribe) this.localStreamStoreSubscribe();
             if (this.apparentMediaConstraintStoreSubscribe) this.apparentMediaConstraintStoreSubscribe();
             if (this.volumeStoreSubscribe) this.volumeStoreSubscribe();
@@ -403,31 +380,37 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
     isLocal(): boolean {
         throw new Error("Method not implemented.");
     }
+    // FIXME: this method does not belong here.
+    // Move the mute audio/video to the space public/private events
     muteAudioParticipant(): void {
         this.connection.emitMuteParticipantIdSpace("peer", this.userUuid);
     }
+    // FIXME: this method does not belong here.
+    // Move the mute audio/video to the space public/private events
     muteAudioEveryBody(): void {
         this.connection.emitMuteEveryBodySpace("peer");
     }
+    // FIXME: this method does not belong here.
+    // Move the mute audio/video to the space public/private events
     muteVideoParticipant(): void {
         this.connection.emitMuteVideoParticipantIdSpace("peer", this.userUuid);
     }
+    // FIXME: this method does not belong here.
+    // Move the mute audio/video to the space public/private events
     muteVideoEverybody(): void {
         this.connection.emitMuteVideoEveryBodySpace("peer");
     }
+    // FIXME: this method does not belong here.
+    // Move the mute audio/video to the space public/private events
     ban() {
         throw new Error("Method not implemented.");
     }
+    // FIXME: this method does not belong here.
+    // Move the mute audio/video to the space public/private events
     kickoff(): void {
         this.connection.emitKickOffUserMessage(this.userUuid, "peer");
     }
     blockOrReportUser(): void {
         showReportScreenStore.set({ userId: this.userId, userName: this.player.name });
-    }
-    sendProximityPublicMessage(message: string): void {
-        this.connection.emitProximityPublicMessage("peer", message);
-    }
-    sendProximityPrivateMessage(message: string): void {
-        this.connection.emitProximityPrivateMessage("peer", message, this.userId);
     }
 }

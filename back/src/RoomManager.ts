@@ -279,7 +279,8 @@ const roomManager = {
             closeConnection();
         });
 
-        call.on("error", (err: Error) => {
+        call.on("error", (err: unknown) => {
+            // Note: it seems "end" is called before "error" and therefore, user is null
             console.error("An error occurred in joinRoom stream for user", user?.name, ":", err);
             Sentry.captureException(
                 `An error occurred in joinRoom stream for user ${JSON.stringify(user?.name)}: ${JSON.stringify(err)}`

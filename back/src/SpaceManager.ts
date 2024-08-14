@@ -25,12 +25,12 @@ const spaceManager = {
             }
             try {
                 switch (message.message.$case) {
-                    case "watchSpaceMessage": {
-                        socketManager.handleWatchSpaceMessage(pusher, message.message.watchSpaceMessage);
+                    case "joinSpaceMessage": {
+                        socketManager.handleJoinSpaceMessage(pusher, message.message.joinSpaceMessage);
                         break;
                     }
-                    case "unwatchSpaceMessage": {
-                        socketManager.handleUnwatchSpaceMessage(pusher, message.message.unwatchSpaceMessage);
+                    case "leaveSpaceMessage": {
+                        socketManager.handleLeaveSpaceMessage(pusher, message.message.leaveSpaceMessage);
                         break;
                     }
                     case "addSpaceUserMessage": {
