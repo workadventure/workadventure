@@ -21,6 +21,7 @@
         name: string;
         id: string;
         isSync: boolean;
+        isBridging: boolean;
     }
 
     // const redirectUri = PUSHER_URL + '/third-party-login/login/discord'
@@ -33,7 +34,6 @@
     $: qrCodeUrl = undefined as string | undefined;
     $: needManualToken = false;
     let manualDiscordToken = '';
-    let discirdTokenInput;
 
 
     // const discordBotId ='@discordbot:matrix.workadventure.localhost'
@@ -57,156 +57,206 @@
                     return {
                         name :match[1] ,
                         id:match[2] ,
-                        isSync:( match[3].includes("never"))?false:true
+                        isSync:( match[3].includes("never"))?false:true,
+                        isBridging: false
                     }
                 });
     }
     async function getLastMessage(room: ChatRoom): Promise<ChatMessageContent>{
             const allMessages = await getThirdNextMessage(room);
             const lastMessage = allMessages[allMessages.length-1];
+            console.log('receive :', get(lastMessage.content).body);
             return get(lastMessage.content);
     }
 
     async function getThirdNextMessage(room: ChatRoom): Promise<readonly ChatMessage[]>{
         await storeToPromise(room.messages)
-        await storeToPromise(room.messages)
-        return  storeToPromise(room.messages)
+        await storeToPromise(room.messages) 
+        // await storeToPromise(room.messages) 
+        return storeToPromise(room.messages)
     }
 
+    let resolveSendToken: (value: void | PromiseLike<void>) => void;
+
+    let awaitForStep : Promise<void> = new Promise((resolve) => {
+        resolveSendToken = resolve;
+    });
+
     async function sendDiscordToken(): Promise<void>{
-        return new Promise((resolve) => {
-            resolve();
-        });
+            resolveSendToken();
+    }
+
+    let discordbotRoom : ChatRoom | undefined;
+
+    function handleCheckboxChange(server: discordServeur) {
+        if(server.isSync){
+            server.isBridging = true;
+            if(discordbotRoom)discordbotRoom.sendMessage(`guilds bridge ${server.id} --entire`);
+
+            // TODO: Await the response from the bot to confirm the server is bridged and past is Bridging to false
+            // TODO: add loador when  isBridging equal to true
+        }else{
+            server.isBridging = true;
+            if(discordbotRoom)discordbotRoom.sendMessage(`guilds unbridge ${server.id}`);
+            
+            // TODO: Await the response from the bot to confirm the server is bridged and past is Bridging to false
+            // TODO: add loador when  isBridging equal to true
+        }
     }
     
     onMount(async() => {
+        // TODO add discord bot Id in a env file
         const discordBotId ='@discordbot:matrix.workadventure.localhost'
-        const discordbotRoom = await chatConnection.createDirectRoom(discordBotId);
+        discordbotRoom = await chatConnection.createDirectRoom(discordBotId);
 
         if(!discordbotRoom)return;
 
-        storeToPromise(discordbotRoom.messages).then(async (messages) => {
-            let lastMessage = messages[messages.length-1];
+        // storeToPromise(discordbotRoom.messages).then(async (messages) => {
+        //     let lastMessage = messages[messages.length-1];
 
-            if(get(lastMessage.content).body.includes('You\'re logged in as')){
-                bridgeConnected = true;
-                // step = 'getServers';
-                getUserDiscordServer(discordbotRoom);
-            }
-            else{
-                bridgeConnected = false;
-                // step = 'getQrCode';
-                console.log('await store');
-                
+        //     if(get(lastMessage.content).body.includes('You\'re logged in as')){
+        //         bridgeConnected = true;
+        //         // step = 'getServers';
+        //         getUserDiscordServer(discordbotRoom);
+        //     }
+        //     else{
+        //         // step = 'getQrCode';
+        //         // discordbotRoom.sendMessage('login-qr');
+        //         // const { url, body } = await getLastMessage(discordbotRoom);
+        //         // qrCodeUrl = url                
+        //         bridgeConnected = false;
+        //         let nextMessageIsError = true;
+        //         let message = '';   
+        //         do{
+        //             discordbotRoom.sendMessage('login-qr');
+        //             const { url, body } = await getLastMessage(discordbotRoom);
+        //             console.log('le qr code reçu est: ', url);
+        //             qrCodeUrl = url;
+        //             let qrResponse;
+        //             let messageIsExpected = false;
+        //             do{
+        //                 qrResponse = await getLastMessage(discordbotRoom);
+        //                 console.log('expectedMessage/QR Response:', qrResponse.body);
+        //                 // nextMessageIsError = qrResponse.body.includes('websocket: close sent');
+        //                 //check if the message is an error
+        //                 if(qrResponse.body.includes('websocket: close sent')){
+        //                     messageIsExpected = true;
+        //                 }
+        //                 else if(qrResponse.url){
+        //                     messageIsExpected = false;
+        //                 }
+        //                 else if(qrResponse.body.includes('Error logging in: HTTP 400 Bad Request')){
+        //                     messageIsExpected = true;
+        //                 }
+        //                 else {
+        //                     messageIsExpected = false;
+        //                 }
+        //                 console.log('messageIsExpected 🤯🤯🤯:', messageIsExpected);
+        //             }while(!messageIsExpected)
+        //         }while (nextMessageIsError)
 
-                discordbotRoom.sendMessage('login-qr');
-                const {url} = await getLastMessage(discordbotRoom);
-                qrCodeUrl = url
-                
-                let nextMessageIsError = false;
-                let message = '';   
-                do{
-                    const {url,body} = await getLastMessage(discordbotRoom);
-                    //check if the message is an error
-                    nextMessageIsError = body.includes('websocket: close sent');
-                    console.log('websocket closed');
-                    message = body;
-                    if(message.includes('Error logging in: HTTP 400 Bad Request')){
-                        console.log('Error cause of CAPTCHAs');
-                    }
-                    else if(message.includes("websocket: close sent")){
-                        console.log('websocket closed');
-                    }
-                    if(nextMessageIsError)discordbotRoom.sendMessage('login-qr')
-                }while (nextMessageIsError)
+        //         console.log('Sortie de boucle ', nextMessageIsError);
 
-                if(message.includes('Successfully logged in as')){
-                    bridgeConnected = true;
-                    console.log('tout va bien');
-                    getUserDiscordServer(discordbotRoom);
-                }else if(message.includes('CAPTCHAs')){
-                    needManualToken = true;
-                    console.log('need manual token');
-                    qrCodeUrl = undefined;
-                    //catcha management 
-                    // sendDiscordToken().then(() => {
-                    //     console.log('token sent');
-                    // })
-
-                }
-
-            }
-
-            console.log('messages:', get(messages[messages.length-1].content).body);
-        });
-        // unsubscribeBotMessage = discordbotRoom.messages.subscribe((messages) => {
-        //     if(isFirstMessqge){
-        //         isFirstMessqge=false;
-        //         return;
+        //         if(message.includes('Successfully logged in as')){
+        //             bridgeConnected = true;
+        //             console.log('tout va bien');
+        //             getUserDiscordServer(discordbotRoom);
+        //         }else if(message.includes('CAPTCHAs')){
+        //             needManualToken = true;
+        //             console.log('need manual token');
+        //             qrCodeUrl = undefined;
+        //             //catcha management 
+        //             // sendDiscordToken().then(() => {
+        //             //     console.log('token sent');
+        //             // })
+        //         }
         //     }
 
-        //         const lastMessage = messages[messages.length-1];
+            // console.log('messages:', get(messages[messages.length-1].content).body);
+        // });
 
-        //         if (lastMessage.sender?.id !== discordBotId) return;
+        unsubscribeBotMessage = discordbotRoom.messages.subscribe((messages) => {
+            if(isFirstMessqge){
+                isFirstMessqge=false;
+                return;
+            }
+            if(!discordbotRoom)return;
 
-        //         console.log('step: ', step);
-        //         console.log('message reçu !', get(lastMessage.content));    
-        //         switch (step){
-        //             case 'checkLogin':
-        //                 if(get(lastMessage.content).body.includes('You\'re logged in as')){
-        //                     bridgeConnected = true;
-        //                     step = 'getServers';
-        //                     discordbotRoom.sendMessage('guild status');
-        //                 }
-        //                 else{
-        //                     console.log('Discord bot isn\'t connected');
-        //                     bridgeConnected = false;
-        //                     step = 'getQrCode';
-        //                     discordbotRoom.sendMessage('login-qr');
-        //                     // connectToBridge();
-        //                 }
-        //                 break;
-        //             case 'getServers':
-        //                 const messageServers = get(lastMessage.content).body;
+                const lastMessage = messages[messages.length-1];
 
-        //                 const regex = /^\* (.*) \(`(\d+)`\) - (.*)$/mg;
+                if (lastMessage.sender?.id !== discordBotId) return;
 
-        //                 const matches = messageServers.matchAll(regex);
+                console.log('step: ', step);
+                console.log('message reçu !', get(lastMessage.content));    
+                switch (step){
+                    case 'checkLogin':
+                        if(get(lastMessage.content).body.includes('You\'re logged in as') ||get(lastMessage.content).body.includes('You\'re already logged in') || get(lastMessage.content).body.includes('Successfully logged in as') || get(lastMessage.content).body.includes('Connecting to Discord as user')){
+                            bridgeConnected = true;
+                            step = 'getServers';
+                            discordbotRoom.sendMessage('guild status');
+                        }
+                        else{
+                            console.log('Discord bot isn\'t connected');
+                            bridgeConnected = false;
+                            step = 'getQrCode';
+                            discordbotRoom.sendMessage('login-qr');
+                            // connectToBridge();
+                        }
+                        break;
+                    case 'getServers':
+                        needManualToken = false;
+                        qrCodeUrl = undefined;
+                        const messageServers = get(lastMessage.content).body;
 
-        //                 servers = Array.from(matches).map((match)=>{
-        //                     return {
-        //                             name :match[1] ,
-        //                             id:match[2] ,
-        //                             isSync:( match[3].includes("never"))?false:true
-        //                         }
-        //                     });
-        //                 break;
-        //             case 'getQrCode':
-        //                 // qrCodeLogin = get(lastMessage.content).url;
-        //                 step = 'waitLoginResponse';
-        //                 break;
+                        const regex = /^\* (.*) \(`(\d+)`\) - (.*)$/mg;
+
+                        const matches = messageServers.matchAll(regex);
+
+                        servers = Array.from(matches).map((match)=>{
+                            return {
+                                    name :match[1] ,
+                                    id:match[2] ,
+                                    isSync:( match[3].includes("never"))?false:true,
+                                    isBridging : false
+                                }
+                            });
+                        if(unsubscribeBotMessage)unsubscribeBotMessage();
+                        break;
+                    case 'getQrCode':
+                        qrCodeUrl = get(lastMessage.content).url;
+                        step = 'waitLoginResponse';
+                        break;
                     
-        //             case 'waitLoginResponse':
-        //                 if(get(lastMessage.content).body.includes('Successfully logged in as')){
-        //                     step = 'getServers';
-        //                     discordbotRoom.sendMessage('guild status');
-        //                 }
-        //                 else{
-        //                     step = 'getQrCode';
-        //                     discordbotRoom.sendMessage('login-qr');
-        //                 }
-        //                 break;
-                    
-        //         }
-
-        //     })
+                    case 'waitLoginResponse':
+                        if(get(lastMessage.content).body.includes('Successfully logged in as')){
+                            step = 'getServers';
+                            discordbotRoom.sendMessage('guild status');
+                        }
+                        else if(get(lastMessage.content).body.includes('CAPTCHAs')){
+                            needManualToken = true;
+                            (async() => {
+                                const token = await awaitForStep;
+                                discordbotRoom.sendMessage(`login-token user ${manualDiscordToken}`);
+                            })().catch((error) => {
+                                console.error('Error sending message to Discord bot:', error);
+                            });
+                            step='checkLogin'
+                            qrCodeUrl = undefined;
+                        }
+                        else{
+                            step = 'getQrCode';
+                            discordbotRoom.sendMessage('login-qr');
+                        }
+                        break;
+                }
+            })
 
         discordbotRoom.sendMessage('ping');
     });
 
 
     // export let servers: Array<discordServeur> = [];
-    export let selectedServers: Array<string> = [];
+    // export let selectedServers: Array<string> = [];
 
     const parsedRoomMetadata = RoomMetadataType.safeParse(gameManager.getCurrentGameScene().room.metadata);
     if (!parsedRoomMetadata.success) {
@@ -320,13 +370,6 @@
     //     });
     //     // window.location.href = redirectUri; // nop because we neeed the largest scopes token that oauth not provide
     // }
-    function handleCheckboxChange(serverId: string) {
-        if (selectedServers.includes(serverId)) {
-            selectedServers = selectedServers.filter((id) => id !== serverId);
-            return;
-        }
-        selectedServers.push(serverId)
-    }
     // function handleSync() {
     //     // if (!discordTokens) return;
     //     sendMessageToDiscordBot('login-qr').then((response) => {
@@ -381,7 +424,7 @@
         <div class="tw-flex tw-flex-col tw-gap-2 tw-p-6 tw-rounded-xl tw-fixed tw-top-1/2 tw-left-1/2 -tw-translate-x-1/2 -tw-translate-y-1/2 tw-backdrop-blur-lg tw-z-50 "
         transition:fade={{ delay: 250, duration: 300 }}
         >
-            {#if qrCodeUrl}
+            {#if qrCodeUrl && !needManualToken}
                 <div class="tw-flex tw-justify-end">
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <span class=" tw-cursor-pointer"
@@ -396,9 +439,9 @@
 
             {#if needManualToken}
                 <div class="tw-flex tw-flex-col tw-items-center">
-                    <input type="text" value={manualDiscordToken} bind:this={discirdTokenInput}>
+                    <input type="text" bind:value={manualDiscordToken}>
                     <button on:click={sendDiscordToken} class="tw-w-full tw-p-2 tw-bg-secondary-800  tw-text-white tw-no-underline tw-rounded-md tw-text-center tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white tw-flex tw-flex-row tw-items-center">
-                        Regenerate
+                        Send
                     </button>
                 </div>
             {/if}
@@ -449,11 +492,15 @@
             <input 
             type="checkbox" 
             bind:checked={server.isSync}
-            on:change={() => handleCheckboxChange(server.id)} 
+            on:change={() => handleCheckboxChange(server)} 
             class="tw-mr-[10%]"
             />
         </li>
     {/each}
+
+    <!-- <button on:click={handleSync} class="tw-w-full tw-p-2 tw-bg-secondary-800  tw-text-white tw-no-underline tw-rounded-md tw-text-center tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white tw-flex tw-flex-row tw-items-center tw-gap-2 tw-sticky tw-bottom-6">
+        Syncronize Server
+    </button> -->
 
     <!-- {#if discordTokens}
         {#if servers.length < 0}

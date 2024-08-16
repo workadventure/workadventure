@@ -152,20 +152,28 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 if (currentRoom && currentRoom === roomId) selectedRoom.set(undefined);
                 return;
             }
-
-            if (membership === KnownMembership.Invite) {
-                const inviter = room.getDMInviter();
-                const newRoom = new MatrixChatRoom(room);
-                if (
-                    inviter &&
-                    (this.userDisconnected.has(inviter) ||
-                        Array.from(this.connectedUsers.values()).some((user: ChatUser) => user.id === inviter))
-                ) {
-                    this.roomList.set(roomId, newRoom);
-                    newRoom.joinRoom();
-                }
-                return;
+        }
+        if (membership === KnownMembership.Invite) {
+            const inviter = room.getDMInviter();
+            const newRoom = new MatrixChatRoom(room);
+            if (
+                inviter &&
+                (this.userDisconnected.has(inviter) ||
+                    Array.from(this.connectedUsers.values()).some((user: ChatUser) => user.id === inviter))
+            ) {
+                this.roomList.set(roomId, newRoom);
+                newRoom.joinRoom();
             }
+
+            // TODO add discord bot Id in a env file
+            console.log("inviter", inviter);
+            //TODO Find id of the inviter
+            const inviterId = member.events.member.getSender();
+            if (inviter && inviterId == '@discordbot:matrix.workadventure.localhost'){
+                this.roomList.set(roomId, newRoom);
+                newRoom.joinRoom();
+            }
+            return;
         }
     }
 

@@ -7,11 +7,12 @@ export function storeToPromise<T>(store: Readable<T>): Promise<T> {
        //let numberofCalls = 0;
         unsubscribe = store.subscribe((value) => {
             if (isSubscribeFirstCall) {
-                console.log("First call of subscribe, ignore it",get(value[value.length-1].content));
+                // console.log("First call of subscribe, ignore it",get(value[value.length-1].content));
                 //numberofCalls++;
                 isSubscribeFirstCall = false;
             }else{
-                console.log("first msg >>>>>>>>>>>>>>",get(value[value.length-1].content));
+                console.log( store.length );
+                // console.log("first msg >>>>>>>>>>>>>>",get(value[value.length-1].content));
                 resolve(value); 
                 if (unsubscribe) {
                     unsubscribe();
