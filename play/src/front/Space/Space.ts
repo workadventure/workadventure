@@ -1,11 +1,11 @@
 import { Subject } from "rxjs";
 import { PrivateEvent, PublicEvent, SpaceEvent } from "@workadventure/messages";
-import { RoomConnection } from "../Connection/RoomConnection";
 import { PrivateEventsObservables, PublicEventsObservables, SpaceInterface } from "./SpaceInterface";
 import { SpaceFilterDoesNotExistError, SpaceNameIsEmptyError } from "./Errors/SpaceError";
 import { SpaceFilter, SpaceFilterInterface } from "./SpaceFilter/SpaceFilter";
 import { AllUsersSpaceFilter, AllUsersSpaceFilterInterface } from "./SpaceFilter/AllUsersSpaceFilter";
 import { LiveStreamingUsersSpaceFilter } from "./SpaceFilter/LiveStreamingUsersSpaceFilter";
+import { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegistry";
 
 export const WORLD_SPACE_NAME = "allWorldUser";
 
@@ -20,7 +20,11 @@ export class Space implements SpaceInterface {
      * IMPORTANT: The only valid way to create a space is to use the SpaceRegistry.
      * Do not call this constructor directly.
      */
-    constructor(name: string, private metadata = new Map<string, unknown>(), private _connection: RoomConnection) {
+    constructor(
+        name: string,
+        private metadata = new Map<string, unknown>(),
+        private _connection: RoomConnectionForSpacesInterface
+    ) {
         if (name === "") {
             throw new SpaceNameIsEmptyError();
         }

@@ -3,8 +3,8 @@ import { PrivateSpaceEvent, SpaceFilterMessage, SpaceUser } from "@workadventure
 import { Observable, Subject, Subscriber } from "rxjs";
 import { Readable, get, readable, writable, Writable } from "svelte/store";
 import { CharacterLayerManager } from "../../Phaser/Entity/CharacterLayerManager";
-import { RoomConnection } from "../../Connection/RoomConnection";
 import { SpaceInterface } from "../SpaceInterface";
+import { RoomConnectionForSpacesInterface } from "../SpaceRegistry/SpaceRegistry";
 
 // FIXME: refactor from the standpoint of the consumer. addUser, removeUser should be removed...
 export interface SpaceFilterInterface {
@@ -75,7 +75,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
     protected constructor(
         private _name: string,
         private _space: SpaceInterface,
-        private _connection: RoomConnection,
+        private _connection: RoomConnectionForSpacesInterface,
         private _filter: Filter
     ) {
         this.usersStore = readable(new Map<number, SpaceUserExtended>(), (set) => {
@@ -108,13 +108,10 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
             };
         });
     }
-    userExist(userId: number): boolean {
-        return get(this.usersStore).has(userId);
-    }
     async addUser(user: SpaceUser): Promise<SpaceUserExtended> {
         const extendSpaceUser = await this.extendSpaceUser(user);
 
-        if (!this.userExist(user.id)) {
+        if (!this._users.has(user.id)) {
             this._users.set(user.id, extendSpaceUser);
             if (this._setUsers) {
                 this._setUsers(this._users);
@@ -146,10 +143,6 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
     updateUserData(newData: Partial<SpaceUser>): void {
         if (!newData.id && newData.id !== 0) return;
 
-        if (!this._setUsers) {
-            throw new Error("");
-        }
-
         const userToUpdate = this._users.get(newData.id);
 
         if (!userToUpdate) return;
@@ -174,7 +167,9 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
             }
         }
 
-        this._setUsers(this._users);
+        if (this._setUsers) {
+            this._setUsers(this._users);
+        }
     }
 
     protected setFilter(newFilter: Filter) {

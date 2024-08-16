@@ -24,7 +24,6 @@ export class Group implements Movable, CustomJsonReplacerInterface {
     private outOfBounds = false;
     /**
      * The space associated to this group.
-     * @private
      */
     private readonly _spaceName: string;
 

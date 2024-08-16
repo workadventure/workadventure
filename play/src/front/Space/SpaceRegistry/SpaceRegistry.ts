@@ -7,10 +7,35 @@ import { RoomConnection } from "../../Connection/RoomConnection";
 import { SpaceRegistryInterface } from "./SpaceRegistryInterface";
 
 /**
+ * The subset of properties of RoomConnection that are used by the SpaceRegistry / Space / SpaceFilter class.
+ * This interface has a single purpose: making the creation of test doubles easier in unit tests.
+ */
+export type RoomConnectionForSpacesInterface = Pick<
+    RoomConnection,
+    | "addSpaceUserMessageStream"
+    | "updateSpaceUserMessageStream"
+    | "removeSpaceUserMessageStream"
+    | "updateSpaceMetadataMessageStream"
+    | "spacePublicMessageEvent"
+    | "spacePrivateMessageEvent"
+    | "emitPrivateSpaceEvent"
+    | "emitPublicSpaceEvent"
+    | "emitRemoveSpaceFilter"
+    | "emitAddSpaceFilter"
+    | "emitUpdateSpaceFilter"
+    | "emitLeaveSpace"
+    | "emitJoinSpace"
+    | "emitUpdateSpaceMetadata"
+    // FIXME: looks like a hack
+    | "emitJitsiParticipantIdSpace"
+>;
+
+/**
  * This class is in charge of creating, joining, leaving and deleting Spaces.
  * It acts both as a factory and a registry.
  */
 export class SpaceRegistry implements SpaceRegistryInterface {
+    private spaces: Map<string, Space> = new Map<string, Space>();
     private addSpaceUserMessageStreamSubscription: Subscription;
     private updateSpaceUserMessageStreamSubscription: Subscription;
     private removeSpaceUserMessageStreamSubscription: Subscription;
@@ -18,7 +43,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     private proximityPublicMessageEventSubscription: Subscription;
     private proximityPrivateMessageEventSubscription: Subscription;
 
-    constructor(private roomConnection: RoomConnection, private spaces: Map<string, Space> = new Map<string, Space>()) {
+    constructor(private roomConnection: RoomConnectionForSpacesInterface) {
         this.addSpaceUserMessageStreamSubscription = roomConnection.addSpaceUserMessageStream.subscribe((message) => {
             if (!message.user || !message.filterName) {
                 console.error(message);

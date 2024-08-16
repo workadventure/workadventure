@@ -421,7 +421,7 @@ export class RoomConnection implements RoomConnection {
                                 });
                                 break;
                             }
-                            // FIXME: remove all this
+                            // FIXME: not sure where kickOffMessage belongs
                             case "kickOffMessage": {
                                 if (subMessage.kickOffMessage.userId !== this.userId?.toString()) break;
 
@@ -1658,70 +1658,6 @@ export class RoomConnection implements RoomConnection {
                         event: spaceEvent,
                     },
                 } satisfies PrivateEventFrontToPusher,
-            },
-        });
-    }
-
-    // FIXME: remove this method in favor of emitSpacePublicEvent
-    public emitProximityPublicMessage(spaceName: string, message: string) {
-        if (!this.userId) {
-            console.warn("No user id defined to send a message to mute every video!");
-            return;
-        }
-
-        this.send({
-            message: {
-                $case: "publicEvent",
-                publicEvent: {
-                    spaceName,
-                    spaceEvent: {
-                        event: {
-                            $case: "spaceMessage",
-                            spaceMessage: {
-                                message,
-                            },
-                        },
-                    },
-                },
-            },
-        });
-    }
-
-    /*public emitProximityPrivateMessage(spaceName: string, message: string, receiverUserId: number) {
-        if (!this.userId) {
-            console.warn("No user id defined to send a message to mute every video!");
-            return;
-        }
-
-        this.send({
-            message: {
-                $case: "privateEvent",
-                privateEvent: {
-                    spaceName,
-                    receiverUserId,
-                    spaceMessage: {
-                        message,
-                    },
-                },
-            },
-        });
-    }*/
-
-    public emitTypingProximityMessage(spaceName: string, isTyping: boolean) {
-        this.send({
-            message: {
-                $case: "publicEvent",
-                publicEvent: {
-                    spaceName,
-                    spaceEvent: {
-                        event: {
-                            $case: "spaceIsTyping",
-                            spaceIsTyping: {
-                                isTyping,
-                            },
-                        },
-                    },
-                },
             },
         });
     }

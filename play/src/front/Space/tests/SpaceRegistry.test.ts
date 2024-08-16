@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
-import { SpaceRegistry } from "../SpaceRegistry/SpaceRegistry";
+import { RoomConnectionForSpacesInterface, SpaceRegistry } from "../SpaceRegistry/SpaceRegistry";
 import { SpaceInterface } from "../SpaceInterface";
 import { SpaceRegistryInterface } from "../SpaceRegistry/SpaceRegistryInterface";
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
 import { Space } from "../Space";
-import { RoomConnection } from "../../Connection/RoomConnection";
+import { MockRoomConnectionForSpaces } from "./MockRoomConnectionForSpaces";
 
 vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
     return {
@@ -23,9 +23,7 @@ vi.mock("../../Phaser/Game/GameManager", () => {
         },
     };
 });
-const defaultRoomConnectionMock = {
-    emitJoinSpace: vi.fn(),
-} as unknown as RoomConnection;
+const defaultRoomConnectionMock: RoomConnectionForSpacesInterface = new MockRoomConnectionForSpaces();
 
 describe("SpaceProviderInterface implementation", () => {
     describe("SpaceRegistry", () => {
@@ -48,11 +46,8 @@ describe("SpaceProviderInterface implementation", () => {
                     },
                 } as SpaceInterface;
 
-                const spaceMap: Map<string, SpaceInterface> = new Map<string, SpaceInterface>([
-                    [newSpace.getName(), newSpace],
-                ]);
-
-                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(defaultRoomConnectionMock, spaceMap);
+                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(defaultRoomConnectionMock);
+                spaceRegistry.joinSpace(newSpace.getName());
                 expect(() => {
                     spaceRegistry.joinSpace(newSpace.getName());
                 }).toThrow(SpaceAlreadyExistError);
@@ -66,11 +61,9 @@ describe("SpaceProviderInterface implementation", () => {
                     },
                 } as SpaceInterface;
 
-                const spaceMap: Map<string, SpaceInterface> = new Map<string, SpaceInterface>([
-                    [newSpace.getName(), newSpace],
-                ]);
+                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(defaultRoomConnectionMock);
 
-                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(defaultRoomConnectionMock, spaceMap);
+                spaceRegistry.joinSpace(newSpace.getName());
 
                 const result: boolean = spaceRegistry.exist(newSpace.getName());
 
@@ -89,39 +82,16 @@ describe("SpaceProviderInterface implementation", () => {
         });
         describe("SpaceRegistry delete", () => {
             it("should delete a space when space is in the store", () => {
-                const destroyMock = vi.fn();
+                const roomConnectionMock = new MockRoomConnectionForSpaces();
+                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(roomConnectionMock);
 
-                const spaceToDelete: SpaceInterface = {
-                    getName(): string {
-                        return "space-to-delete";
-                    },
-                    destroy: destroyMock,
-                } as unknown as SpaceInterface;
+                spaceRegistry.joinSpace("space-test1");
+                spaceRegistry.joinSpace("space-test2");
+                spaceRegistry.joinSpace("space-to-delete");
 
-                const space1: SpaceInterface = {
-                    getName(): string {
-                        return "space-test1";
-                    },
-                    destroy: destroyMock,
-                } as unknown as SpaceInterface;
-
-                const space2: SpaceInterface = {
-                    getName(): string {
-                        return "space-test2";
-                    },
-                    destroy: destroyMock,
-                } as unknown as SpaceInterface;
-                const spaceMap: Map<string, SpaceInterface> = new Map<string, SpaceInterface>([
-                    [spaceToDelete.getName(), spaceToDelete],
-                    [space1.getName(), space1],
-                    [space2.getName(), space2],
-                ]);
-
-                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(defaultRoomConnectionMock, spaceMap);
-
-                spaceRegistry.leaveSpace(spaceToDelete.getName());
-                expect(spaceRegistry.getAll()).not.toContain(spaceToDelete);
-                expect(destroyMock).toBeCalledTimes(1);
+                spaceRegistry.leaveSpace("space-to-delete");
+                expect(spaceRegistry.getAll().find((space) => space.getName() === "space-to-delete")).toBeUndefined();
+                expect(roomConnectionMock.emitLeaveSpace).toHaveBeenCalledOnce();
             });
             it("should return a error when you try to delete a space who is not in the space ", () => {
                 const newSpace: SpaceInterface = {
@@ -136,76 +106,19 @@ describe("SpaceProviderInterface implementation", () => {
                 }).toThrow(SpaceDoesNotExistError);
             });
         });
-        describe("SpaceRegistry getAll", () => {
-            it("should delete a space when space is in the store", () => {
-                const space1: SpaceInterface = {
-                    getName(): string {
-                        return "space-test1";
-                    },
-                } as SpaceInterface;
-
-                const space2: SpaceInterface = {
-                    getName(): string {
-                        return "space-test2";
-                    },
-                } as SpaceInterface;
-
-                const space3: SpaceInterface = {
-                    getName(): string {
-                        return "space-to-delete";
-                    },
-                } as SpaceInterface;
-
-                const spaceMap: Map<string, SpaceInterface> = new Map<string, SpaceInterface>([
-                    [space3.getName(), space3],
-                    [space1.getName(), space1],
-                    [space2.getName(), space2],
-                ]);
-
-                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(defaultRoomConnectionMock, spaceMap);
-
-                expect(spaceRegistry.getAll()).toContain(space1);
-                expect(spaceRegistry.getAll()).toContain(space3);
-                expect(spaceRegistry.getAll()).toContain(space3);
-            });
-        });
         describe("SpaceRegistry destroy", () => {
             it("should destroy space store", () => {
-                const space1: SpaceInterface = {
-                    getName(): string {
-                        return "space-test1";
-                    },
-                    destroy: vi.fn(),
-                } as unknown as SpaceInterface;
+                const roomConnectionMock = new MockRoomConnectionForSpaces();
+                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(roomConnectionMock);
 
-                const space2: SpaceInterface = {
-                    getName(): string {
-                        return "space-test2";
-                    },
-                    destroy: vi.fn(),
-                } as unknown as SpaceInterface;
+                spaceRegistry.joinSpace("space-test1");
+                spaceRegistry.joinSpace("space-test2");
+                spaceRegistry.joinSpace("space-test3");
 
-                const space3: SpaceInterface = {
-                    getName(): string {
-                        return "space-to-delete";
-                    },
-                    destroy: vi.fn(),
-                } as unknown as SpaceInterface;
-
-                const spaceMap: Map<string, SpaceInterface> = new Map<string, SpaceInterface>([
-                    [space3.getName(), space3],
-                    [space1.getName(), space1],
-                    [space2.getName(), space2],
-                ]);
-                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(defaultRoomConnectionMock, spaceMap);
                 spaceRegistry.destroy();
                 expect(spaceRegistry.getAll()).toHaveLength(0);
                 // eslint-disable-next-line @typescript-eslint/unbound-method
-                expect(space1.destroy).toHaveBeenCalledOnce();
-                // eslint-disable-next-line @typescript-eslint/unbound-method
-                expect(space2.destroy).toHaveBeenCalledOnce();
-                // eslint-disable-next-line @typescript-eslint/unbound-method
-                expect(space3.destroy).toHaveBeenCalledOnce();
+                expect(roomConnectionMock.emitLeaveSpace).toHaveBeenCalledTimes(3);
             });
         });
     });

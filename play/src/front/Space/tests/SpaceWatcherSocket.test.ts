@@ -1,14 +1,9 @@
 import { describe, vi, expect, it } from "vitest";
 
-import {
-    AddSpaceUserMessage,
-    RemoveSpaceUserMessage,
-    UpdateSpaceMetadataMessage,
-    UpdateSpaceUserMessage,
-} from "@workadventure/messages";
-import { Subject } from "rxjs";
+import { UpdateSpaceMetadataMessage } from "@workadventure/messages";
 import { SpaceRegistry } from "../SpaceRegistry/SpaceRegistry";
 import { RoomConnection } from "../../Connection/RoomConnection";
+import { MockRoomConnectionForSpaces } from "./MockRoomConnectionForSpaces";
 
 vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
     return {
@@ -22,19 +17,9 @@ vi.mock("../../Phaser/Game/GameManager", () => {
     return {};
 });
 
-class MockRoomConnection {
-    public addSpaceUserMessageStream = new Subject<AddSpaceUserMessage>();
-    public updateSpaceUserMessageStream = new Subject<UpdateSpaceUserMessage>();
-    public removeSpaceUserMessageStream = new Subject<RemoveSpaceUserMessage>();
-    public updateSpaceMetadataMessageStream = new Subject<UpdateSpaceMetadataMessage>();
-
-    public emitJoinSpace() {}
-    // Add any other methods or properties that need to be mocked
-}
-
 describe("SpaceRegistry", () => {
     it("should call updateSpaceMetadata when stream updateSpaceMetadata receive a new message", () => {
-        const roomConnection = new MockRoomConnection();
+        const roomConnection = new MockRoomConnectionForSpaces();
 
         const updateSpaceMetadataMessage: UpdateSpaceMetadataMessage = {
             spaceName: "space-name",

@@ -1,10 +1,11 @@
 import {
-    AddSpaceUserMessage,
-    UpdateSpaceUserMessage,
-    RemoveSpaceUserMessage,
     UpdateSpaceMetadataMessage,
     SpaceUser,
     PublicEvent,
+    PrivateEvent,
+    AddSpaceUserPusherToFrontMessage,
+    RemoveSpaceUserPusherToFrontMessage,
+    UpdateSpaceUserPusherToFrontMessage,
 } from "@workadventure/messages";
 import { Subject } from "rxjs";
 import { describe, expect, it, vi, assert } from "vitest";
@@ -16,16 +17,17 @@ import { SpaceUserExtended } from "../SpaceFilter/SpaceFilter";
 /* eslint @typescript-eslint/unbound-method: 0 */
 
 class MockRoomConnection {
-    public addSpaceUserMessageStream = new Subject<AddSpaceUserMessage>();
-    public updateSpaceUserMessageStream = new Subject<UpdateSpaceUserMessage>();
-    public removeSpaceUserMessageStream = new Subject<RemoveSpaceUserMessage>();
+    public addSpaceUserMessageStream = new Subject<AddSpaceUserPusherToFrontMessage>();
+    public updateSpaceUserMessageStream = new Subject<UpdateSpaceUserPusherToFrontMessage>();
+    public removeSpaceUserMessageStream = new Subject<RemoveSpaceUserPusherToFrontMessage>();
     public updateSpaceMetadataMessageStream = new Subject<UpdateSpaceMetadataMessage>();
-    public proximityPublicMessageEvent = new Subject<PublicEvent>();
     public emitUserJoinSpace = vi.fn();
     public emitAddSpaceFilter = vi.fn();
     public emitRemoveSpaceFilter = vi.fn();
     public emitJoinSpace = vi.fn();
     public emitLeaveSpace = vi.fn();
+    public spacePublicMessageEvent = new Subject<PublicEvent>();
+    public spacePrivateMessageEvent = new Subject<PrivateEvent>();
     // Add any other methods or properties that need to be mocked
 }
 
@@ -98,7 +100,7 @@ describe("", () => {
             chatID: undefined,
         };
 
-        const addSpaceUserMessage: AddSpaceUserMessage = {
+        const addSpaceUserMessage: AddSpaceUserPusherToFrontMessage = {
             spaceName,
             filterName: spaceFilter.getName(),
             user: userFromMessage,
@@ -149,7 +151,7 @@ describe("", () => {
             chatID: "chat@id.fr",
         };
 
-        const addSpaceUserMessage: AddSpaceUserMessage = {
+        const addSpaceUserMessage: AddSpaceUserPusherToFrontMessage = {
             spaceName,
             filterName: spaceFilter.getName(),
             user: userFromMessage,
@@ -195,7 +197,7 @@ describe("", () => {
             chatID: "chat@id.fr",
         };
 
-        const addSpaceUserMessage: AddSpaceUserMessage = {
+        const addSpaceUserMessage: AddSpaceUserPusherToFrontMessage = {
             spaceName,
             filterName: spaceFilter.getName(),
             user: userFromMessage,
@@ -209,7 +211,7 @@ describe("", () => {
             id: 1,
             chatID: "new@id.fr",
         });
-        const updateSpaceUserMessage: UpdateSpaceUserMessage = {
+        const updateSpaceUserMessage: UpdateSpaceUserPusherToFrontMessage = {
             spaceName,
             user: spaceUserUpdate,
             updateMask: ["chatID"],
@@ -244,7 +246,7 @@ describe("", () => {
 
         const unsubscriber = space.observePublicEvent("spaceMessage").subscribe(subscriber);
 
-        roomConnection.proximityPublicMessageEvent.next({
+        roomConnection.spacePublicMessageEvent.next({
             spaceName: "space1",
             senderUserId: 1,
             spaceEvent: {
@@ -266,6 +268,47 @@ describe("", () => {
             $case: "spaceMessage",
             spaceMessage: {
                 message: "Hello",
+            },
+        });
+
+        unsubscriber.unsubscribe();
+    });
+
+    it("should forward private events to the space", async () => {
+        const roomConnection = new MockRoomConnection();
+        const spaceRegistry = new SpaceRegistry(roomConnection as unknown as RoomConnection);
+
+        const spaceName = "space1";
+
+        const space = spaceRegistry.joinSpace(spaceName);
+
+        const subscriber = vi.fn();
+
+        const unsubscriber = space.observePrivateEvent("muteVideo").subscribe(subscriber);
+
+        roomConnection.spacePrivateMessageEvent.next({
+            spaceName: "space1",
+            senderUserId: 1,
+            receiverUserId: 2,
+            spaceEvent: {
+                event: {
+                    $case: "muteVideo",
+                    muteVideo: {
+                        force: true,
+                    },
+                },
+            },
+        });
+
+        await flushPromises();
+
+        expect(subscriber).toHaveBeenCalledOnce();
+        expect(subscriber).toHaveBeenLastCalledWith({
+            spaceName: "space1",
+            sender: 1,
+            $case: "muteVideo",
+            muteVideo: {
+                force: true,
             },
         });
 
