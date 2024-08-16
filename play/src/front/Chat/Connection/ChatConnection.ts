@@ -44,7 +44,7 @@ export interface ChatRoom {
     startTyping: () => Promise<object>;
     stopTyping: () => Promise<object>;
     //TODO: Rename with a more generic name ?
-    isSpaceRoom :  boolean;
+    isSpaceRoom: boolean;
 }
 
 //Readonly attributes
@@ -84,7 +84,7 @@ export interface CreateRoomOptions {
     invite?: { value: string; label: string }[];
     preset?: "private_chat" | "public_chat" | "trusted_private_chat";
     encrypt?: boolean;
-    parentSpaceID?:string;
+    parentSpaceID?: string;
 }
 
 export type ConnectionStatus = "ONLINE" | "ON_ERROR" | "CONNECTING" | "OFFLINE";
@@ -97,7 +97,7 @@ export interface ChatConnectionInterface {
     directRooms: Readable<ChatRoom[]>;
     rooms: Readable<ChatRoom[]>;
     invitations: Readable<ChatRoom[]>;
-    roomBySpaceRoom:Readable<Map<ChatSpaceRoom | undefined, ChatRoom[]>>
+    roomBySpaceRoom: Readable<Map<ChatSpaceRoom | undefined, ChatRoom[]>>;
     createRoom: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string }>;
     createDirectRoom(userChatId: string): Promise<ChatRoom | undefined>;
     getDirectRoomFor(uuserChatId: string): ChatRoom | undefined;

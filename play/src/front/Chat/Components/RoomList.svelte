@@ -32,7 +32,7 @@
     let displayRooms = false;
     let displayRoomInvitations = false;
 
-    let spaceOpenState = writable(new Map<string,boolean>());
+    let spaceOpenState = writable(new Map<string, boolean>());
 
     onMount(() => {
         expandOrCollapseRoomsIfEmpty();
@@ -78,9 +78,9 @@
         displayRoomInvitations = !displayRoomInvitations;
     }
 
-    function openCreateRoomModal(parentSpaceID : string | undefined) {
-        openModal(CreateRoomModal,{
-            parentSpaceID 
+    function openCreateRoomModal(parentSpaceID?: string) {
+        openModal(CreateRoomModal, {
+            parentSpaceID,
         });
     }
 
@@ -98,15 +98,18 @@
         get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase())
     );
 
-    $:filteredRoomBySpaceWithoutDefaultRoom = Array.from($roomBySpace.entries()).reduce((acc,[space,roomList])=>{
-        if(!space) return acc; 
-        acc.set(space,roomList.filter((room)=>get(room.name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase())))
+    $: filteredRoomBySpaceWithoutDefaultRoom = Array.from($roomBySpace.entries()).reduce((acc, [space, roomList]) => {
+        if (!space) return acc;
+        acc.set(
+            space,
+            roomList.filter((room) =>
+                get(room.name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase())
+            )
+        );
         return acc;
-    },new Map<ChatRoom,ChatRoom[]>());
+    }, new Map<ChatRoom, ChatRoom[]>());
 
-    
-
-    $: roomsFromDefaultSpaceRoom = Array.from($roomBySpace.get(undefined)?.values()||[]);
+    $: roomsFromDefaultSpaceRoom = Array.from($roomBySpace.get(undefined)?.values() || []);
     $: isGuest = chat.isGuest;
 
     $: displayTwoColumnLayout = sideBarWidth >= CHAT_LAYOUT_LIMIT;
@@ -163,7 +166,9 @@
                 <button
                     data-testid="openCreateRoomModalButton"
                     class="tw-p-0 tw-m-0 tw-text-gray-400"
-                    on:click={openCreateRoomModal}
+                    on:click={() => {
+                        openCreateRoomModal();
+                    }}
                 >
                     <IconSquarePlus font-size={16} />
                 </button>
@@ -181,43 +186,47 @@
             {/if}
 
         <!--roomBySpace-->
-        {#each Array.from(filteredRoomBySpaceWithoutDefaultRoom) as [space,roomList] (space) }
-        <div class="tw-flex tw-justify-between">
-            <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={()=>{
-                    spaceOpenState.update((state)=>{
-                        const newState =  ($spaceOpenState.get(space.id)===undefined)? true: !$spaceOpenState.get(space.id);
-                        state.set(space.id,newState);
-                        return state
-                    })     
-            }}>
-                {#if displayRooms}
-                    <IconChevronDown />
-                {:else}
-                    <IconChevronRight />
-                {/if}
-                {get(space.name)}</button
-            >
-            {#if $isGuest === false}
+        {#each Array.from(filteredRoomBySpaceWithoutDefaultRoom) as [space, roomList] (space)}
+            <div class="tw-flex tw-justify-between">
                 <button
-                    data-testid="openCreateRoomModalButton"
                     class="tw-p-0 tw-m-0 tw-text-gray-400"
-                    on:click={()=>openCreateRoomModal(space.id)}
+                    on:click={() => {
+                        spaceOpenState.update((state) => {
+                            const newState =
+                                $spaceOpenState.get(space.id) === undefined ? true : !$spaceOpenState.get(space.id);
+                            state.set(space.id, newState);
+                            return state;
+                        });
+                    }}
                 >
-                    <IconSquarePlus font-size={16} />
-                </button>
-            {/if}
-        </div>
-
-        {#if $spaceOpenState.get(space.id) || false}
-            <div class="tw-flex tw-flex-col tw-overflow-auto">
-                {#each roomList as room (room)}
-                    <Room {room} />
-                {/each}
-                {#if roomList.length === 0}
-                    <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
+                    {#if $spaceOpenState.get(space.id) || false}
+                        <IconChevronDown />
+                    {:else}
+                        <IconChevronRight />
+                    {/if}
+                    {get(space.name)}</button
+                >
+                {#if $isGuest === false}
+                    <button
+                        data-testid="openCreateRoomModalButton"
+                        class="tw-p-0 tw-m-0 tw-text-gray-400"
+                        on:click={() => openCreateRoomModal(space.id)}
+                    >
+                        <IconSquarePlus font-size={16} />
+                    </button>
                 {/if}
             </div>
-        {/if}
+
+            {#if $spaceOpenState.get(space.id) || false}
+                <div class="tw-flex tw-flex-col tw-overflow-auto">
+                    {#each roomList as room (room)}
+                        <Room {room} />
+                    {/each}
+                    {#if roomList.length === 0}
+                        <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
+                    {/if}
+                </div>
+            {/if}
         {/each}
 
         {#if $proximityRoomConnection}

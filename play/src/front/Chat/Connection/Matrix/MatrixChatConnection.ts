@@ -35,7 +35,6 @@ export enum INTERACTIVE_AUTH_PHASE {
 
 export class MatrixChatConnection implements ChatConnectionInterface {
     private readonly roomList: MapStore<string, ChatRoom>;
-    private spaceRoomList: MapStore<string, ChatRoom>;
     private client!: MatrixClient;
     connectionStatus: Writable<ConnectionStatus>;
     directRooms: Readable<ChatRoom[]>;
@@ -43,7 +42,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     rooms: Readable<ChatRoom[]>;
     isEncryptionRequiredAndNotSet: Writable<boolean>;
     isGuest!: Writable<boolean>;
-    roomBySpaceRoom: Readable<Map<ChatSpaceRoom, ChatRoom[]>>;
+    roomBySpaceRoom: Readable<Map<ChatSpaceRoom | undefined, ChatRoom[]>>;
 
     constructor(
         private connection: Connection,
@@ -52,7 +51,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     ) {
         this.connectionStatus = writable("CONNECTING");
         this.roomList = new MapStore<string, MatrixChatRoom>();
-        this.spaceRoomList = new MapStore<string, MatrixChatRoom>();
 
         this.directRooms = derived(this.roomList, (roomList) => {
             return Array.from(roomList.values()).filter(
@@ -71,36 +69,46 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         });
 
         this.roomBySpaceRoom = derived(
-            [this.spaceRoomList, this.roomList],
-            ([spaceRoomList, roomList]) => {
-                let roomsBelongToASpace: string[] = [];
-                const roomListArray = Array.from(roomList.values());
-                const spaceByRoomMap = Array.from(spaceRoomList.values()).reduce((roomBySpaceRoomAcc, currentSpace) => {
-                    const listRoomIdsFromCurrentSpace: string[] =
+            [this.roomList],
+            ([roomList]) => {
+                const roomWithoutSpace: ChatRoom[] = [];
+
+                const roomBySpaceRoom = Array.from(roomList.values()).reduce((acc, currentSpace) => {
+                    const listOfParentSpace =
                         this.client
                             .getRoom(currentSpace.id)
                             ?.getLiveTimeline()
                             ?.getState(Direction.Forward)
-                            ?.getStateEvents("m.space.child")
+                            ?.getStateEvents("m.space.parent")
                             .reduce((acc, cur) => {
-                                const childRoomID = cur.getStateKey();
-                                if (childRoomID) acc.push(childRoomID);
+                                const spaceRoomID = cur.getStateKey();
+                                if (spaceRoomID) acc.push(spaceRoomID);
                                 return acc;
                             }, [] as string[]) || [];
 
-                    roomsBelongToASpace = [...roomsBelongToASpace, ...listRoomIdsFromCurrentSpace];
+                    listOfParentSpace.forEach((parentSpace) => {
+                        const oldParentSpaceRoomList = acc.get(parentSpace) || [];
+                        acc.set(parentSpace, [...oldParentSpaceRoomList, currentSpace]);
+                    });
 
-                    const roomsForThisSpace = roomListArray.filter((room) =>
-                        listRoomIdsFromCurrentSpace.includes(room.id)
-                    );
-                    roomBySpaceRoomAcc.set(currentSpace, roomsForThisSpace);
-                    return roomBySpaceRoomAcc;
-                }, new Map<ChatSpaceRoom | undefined, ChatRoom[]>());
+                    if (listOfParentSpace.length === 0) {
+                        roomWithoutSpace.push(currentSpace);
+                    }
 
-                const roomsWithoutSpace = roomListArray.filter((room) => !roomsBelongToASpace.includes(room.id));
+                    return acc;
+                }, new Map());
 
-                spaceByRoomMap.set(undefined, roomsWithoutSpace);
                 return spaceByRoomMap;
+                const convertedMap = new Map();
+                roomBySpaceRoom.forEach((roomList, spaceID) => {
+                    const room = this.client.getRoom(spaceID);
+                    if (room) {
+                        convertedMap.set(new MatrixChatRoom(room), roomList);
+                    }
+                });
+
+                convertedMap.set(undefined, roomWithoutSpace);
+                return convertedMap;
             },
             new Map()
         );
@@ -151,15 +159,15 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     private onRoomStateEventUpdate(event: RoomState) {
         const roomID = event.roomId;
         const room = this.client.getRoom(roomID);
-        if (room && this.spaceRoomList.has(roomID)) {
-            this.spaceRoomList.set(roomID, new MatrixChatRoom(room));
+
+        if (room && this.roomList.has(roomID)) {
+            this.roomList.set(roomID, new MatrixChatRoom(room));
         }
     }
 
     private onClientEventRoom(room: Room) {
         const { roomId } = room;
-        const isSpaceRoom = room.isSpaceRoom();
-        const existingMatrixChatRoom = this.roomList.get(roomId) || this.spaceRoomList.get(roomId);
+        const existingMatrixChatRoom = this.roomList.get(roomId);
 
         if (existingMatrixChatRoom !== undefined) {
             console.warn("room already exist");
@@ -168,17 +176,11 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
         const matrixRoom = new MatrixChatRoom(room);
 
-        if (isSpaceRoom) {
-            this.spaceRoomList.set(matrixRoom.id, matrixRoom);
-            return;
-        }
-
         this.roomList.set(matrixRoom.id, matrixRoom);
     }
 
     private onClientEventDeleteRoom(roomId: string) {
         this.roomList.delete(roomId);
-        this.spaceRoomList.delete(roomId);
     }
 
     private onRoomEventMembership(room: Room, membership: string, prevMembership: string | undefined) {
@@ -219,10 +221,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
             if (roomOptions.parentSpaceID) {
                 this.addRoomToSpace(roomOptions.parentSpaceID, result.room_id);
-                const parentSpace = this.client.getRoom(roomOptions.parentSpaceID);
-                if (parentSpace) {
-                    this.spaceRoomList.set(roomOptions.parentSpaceID, new MatrixChatRoom(parentSpace));
-                }
             }
             return result;
         } catch (error) {
