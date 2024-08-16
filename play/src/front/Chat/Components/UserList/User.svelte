@@ -82,13 +82,13 @@
         <div class={`wa-chat-item ${isAdmin ? "admin" : "user"}  tw-cursor-default`}>
             <div
                 class={`tw-relative wa-avatar ${!$userStatus && "tw-opacity-50"}  tw-cursor-default`}
-            style={`background-color: ${color ?? defaultColor}`}
+                style={`background-color: ${color ?? defaultColor}`}
             >
                 <div class="wa-container tw-cursor-default">
                     <img
                         class="tw-w-full tw-cursor-default"
                         style="image-rendering: pixelated;"
-                    src={avatarUrl ?? defaultWoka}
+                        src={avatarUrl ?? defaultWoka}
                         alt="Avatar"
                     />
                 </div>

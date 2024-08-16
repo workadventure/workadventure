@@ -1,7 +1,7 @@
 import { get, Readable, writable, Writable } from "svelte/store";
 import type JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
 import { TrackStreamWrapperInterface } from "../Contract/TrackStreamWrapperInterface";
-import {SpaceUserExtended} from "../../Space/SpaceFilter/SpaceFilter";
+import { SpaceUserExtended } from "../../Space/SpaceFilter/SpaceFilter";
 import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
 
 export interface JitsiTrackExt extends JitsiTrack {

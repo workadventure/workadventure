@@ -28,11 +28,13 @@
 
     let embedScreen: EmbedScreen;
     let backGroundColor = "#000000";
-    peer.jitsiTrackWrapper.spaceUser.then((spaceUser) => {
-        backGroundColor = Color.getColorByString(spaceUser.name);
-    }).catch(() => {
-        console.error("Error getting spaceUser");
-    });
+    peer.jitsiTrackWrapper.spaceUser
+        .then((spaceUser) => {
+            backGroundColor = Color.getColorByString(spaceUser.name);
+        })
+        .catch(() => {
+            console.error("Error getting spaceUser");
+        });
     let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
 
     if (peer) {
@@ -125,9 +127,7 @@
                 <span
                     class="tw-font-semibold tw-text-sm tw-not-italic tw-break-words tw-px-2 tw-overflow-y-auto tw-max-h-10"
                 >
-                    {peer.jitsiTrackWrapper.isLocal
-                        ? $LL.camera.my.nameTag()
-                        : spaceUser.name}
+                    {peer.jitsiTrackWrapper.isLocal ? $LL.camera.my.nameTag() : spaceUser.name}
                 </span>
             </div>
         {:else}

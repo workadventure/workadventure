@@ -830,6 +830,19 @@ export class GameScene extends DirtyScene {
             this.connect();
         }
 
+        /*this.connectionAnswerPromiseDeferred.promise.then((connectionAnswer) => {
+            console.warn("Connection established", connectionAnswer);
+        });
+        this.CurrentPlayer.getTextureLoadedPromise().then((textures) => {
+            console.warn("Current player textures loaded", textures);
+        });
+        this.gameMapFrontWrapper.initializedPromise.then(() => {
+            console.warn("GameMapFrontWrapper initialized");
+        });
+        Promise.all(scriptPromises).then(() => {
+            console.warn("All scripts loaded");
+        });*/
+
         Promise.all([
             this.connectionAnswerPromiseDeferred.promise as Promise<unknown>,
             ...scriptPromises,

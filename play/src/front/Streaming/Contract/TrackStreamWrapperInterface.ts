@@ -1,5 +1,5 @@
 import { Readable } from "svelte/store";
-import {SpaceUserExtended} from "../../Space/SpaceFilter/SpaceFilter";
+import { SpaceUserExtended } from "../../Space/SpaceFilter/SpaceFilter";
 import { TrackInterface } from "./TrackInterface";
 
 export interface TrackStreamWrapperInterface {

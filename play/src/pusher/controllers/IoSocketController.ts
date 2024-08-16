@@ -5,7 +5,8 @@ import {
     apiVersionHash,
     ClientToServerMessage,
     CompanionDetail,
-    ErrorApiData, noUndefined,
+    ErrorApiData,
+    noUndefined,
     ServerToClientMessage as ServerToClientMessageTsProto,
     ServerToClientMessage,
     SpaceFilterMessage,
@@ -720,7 +721,10 @@ export class IoSocketController {
                                 message.message.addSpaceFilterMessage.spaceFilterMessage.spaceName = `${
                                     socket.getUserData().world
                                 }.${message.message.addSpaceFilterMessage.spaceFilterMessage.spaceName}`;
-                            socketManager.handleAddSpaceFilterMessage(socket, noUndefined(message.message.addSpaceFilterMessage));
+                            socketManager.handleAddSpaceFilterMessage(
+                                socket,
+                                noUndefined(message.message.addSpaceFilterMessage)
+                            );
                             break;
                         }
                         case "updateSpaceFilterMessage": {
@@ -755,7 +759,11 @@ export class IoSocketController {
                                 message.message.joinSpaceMessage.spaceName
                             }`;
 
-                            await socketManager.handleJoinSpace(socket, message.message.joinSpaceMessage.spaceName, localSpaceName);
+                            await socketManager.handleJoinSpace(
+                                socket,
+                                message.message.joinSpaceMessage.spaceName,
+                                localSpaceName
+                            );
                             break;
                         }
                         case "updateSpaceMetadataMessage": {
@@ -1017,10 +1025,7 @@ export class IoSocketController {
                                 message.message.publicEvent.spaceName
                             }`;
 
-                            socketManager.handlePublicEvent(
-                                socket,
-                                message.message.publicEvent,
-                            );
+                            socketManager.handlePublicEvent(socket, message.message.publicEvent);
                             break;
                         }
                         case "privateEvent": {
@@ -1028,10 +1033,7 @@ export class IoSocketController {
                                 message.message.privateEvent.spaceName
                             }`;
 
-                            socketManager.handlePrivateEvent(
-                                socket,
-                                message.message.privateEvent,
-                            );
+                            socketManager.handlePrivateEvent(socket, message.message.privateEvent);
                             break;
                         }
                         default: {

@@ -2,7 +2,7 @@
 import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
 import { Readable, readable, Unsubscriber, Writable, writable } from "svelte/store";
 import { Subscription } from "rxjs";
-import {Deferred} from "ts-deferred";
+import { Deferred } from "ts-deferred";
 import { SoundMeter } from "../../Phaser/Components/SoundMeter";
 import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
 import { TrackWrapper } from "../Common/TrackWrapper";

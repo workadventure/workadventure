@@ -42,9 +42,7 @@ export class MatrixChatRoom implements ChatRoom {
     isEncrypted!: Writable<boolean>;
     typingMembers: Writable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
 
-    constructor(
-        private matrixRoom: Room,
-    ) {
+    constructor(private matrixRoom: Room) {
         this.id = matrixRoom.roomId;
         this.name = writable(matrixRoom.name);
         this.type = this.getMatrixRoomType();
@@ -102,9 +100,9 @@ export class MatrixChatRoom implements ChatRoom {
                 if (userFromSpace && userFromSpace.getWokaBase64) {
                     typingMemberInformation.avatarUrl = userFromSpace.getWokaBase64;
                 } else {*/
-                    typingMemberInformation.avatarUrl = typingMemberInformation.avatarUrl
-                        ? this.matrixRoom.client.mxcUrlToHttp(typingMemberInformation.avatarUrl ?? "", 48, 48)
-                        : typingMemberInformation.avatarUrl;
+                typingMemberInformation.avatarUrl = typingMemberInformation.avatarUrl
+                    ? this.matrixRoom.client.mxcUrlToHttp(typingMemberInformation.avatarUrl ?? "", 48, 48)
+                    : typingMemberInformation.avatarUrl;
                 //}
 
                 this.typingMembers.update((currentTypingMemberList) => {
