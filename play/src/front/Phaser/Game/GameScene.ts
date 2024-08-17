@@ -166,7 +166,8 @@ import { ProximityChatConnection } from "../../Chat/Connection/Proximity/Proximi
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
 import { ExtensionModuleStatusSynchronization } from "../../Rules/StatusRules/ExtensionModuleStatusSynchronization";
 import { calendarEventsStore, isActivatedStore } from "../../Stores/CalendarStore";
-import { ExtensionModule, RoomMetadataType } from "../../ExternalModule/ExtensionModule";
+import { externalSvelteComponentStore } from "../../Stores/Utils/externalSvelteComponentStore";
+import { RoomMetadataType } from "../../ExternalModule/ExtensionModule";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -332,7 +333,6 @@ export class GameScene extends DirtyScene {
         this.currentCompanionTextureReject = reject;
     });
     public chatConnection!: ChatConnectionInterface;
-    public extensionModule: ExtensionModule | undefined = undefined;
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
@@ -1025,8 +1025,11 @@ export class GameScene extends DirtyScene {
         this.playersMovementEventDispatcher.cleanup();
         this.gameMapFrontWrapper?.close();
         this.followManager?.close();
-        this.extensionModule?.destroy();
-        extensionModuleStore.set([]);
+
+        // We need to destroy all the entities
+        get(extensionModuleStore).forEach((extensionModule) => {
+            extensionModule.destroy();
+        });
 
         LocalSpaceProviderSingleton.getInstance().destroy();
 
@@ -2064,13 +2067,9 @@ export class GameScene extends DirtyScene {
                 (async () => {
                     try {
                         const extensionModule = await import(`../../../external-modules/${module}/index`);
-                        this.extensionModule = extensionModule.default;
+                        const defaultExtensionModule = extensionModule.default;
 
-                        if (!this.extensionModule) {
-                            throw new Error("Extension module not found or not exported");
-                        }
-
-                        this.extensionModule.init(parsedRoomMetadata.data, {
+                        defaultExtensionModule.init(parsedRoomMetadata.data, {
                             workadventureStatusStore: availabilityStatusStore,
                             userAccessToken: localUserStore.getAuthToken()!,
                             roomId: this.roomUrl,
@@ -2081,10 +2080,11 @@ export class GameScene extends DirtyScene {
                             closeCoWebsite,
                             getOauthRefreshToken: this.connection?.getOauthRefreshToken.bind(this.connection),
                             adminUrl: ADMIN_URL,
+                            externalSvelteComponent: externalSvelteComponentStore,
                         });
 
-                        if (this.extensionModule.calendarSynchronised) isActivatedStore.set(true);
-                        extensionModuleStore.add(this.extensionModule);
+                        if (defaultExtensionModule.calendarSynchronised) isActivatedStore.set(true);
+                        extensionModuleStore.add(defaultExtensionModule);
                     } catch (error) {
                         console.warn("Extension module initialization cancelled", error);
                     } finally {

@@ -1,29 +1,34 @@
 <script lang="ts">
     import { Readable } from "svelte/store";
-    import { TeamsModuleStatus } from "..";
-    import { createEventDispatcher } from "svelte";
+    import { onMount } from "svelte";
+    import { MSTeamsExtensionModule, TeamsModuleStatus } from "..";
     import { analyticsClient } from "../../../front/Administration/AnalyticsClient";
     import LL from "../../../i18n/i18n-svelte";
     import Tooltip from "../../../front/Components/Util/Tooltip.svelte";
 
-    import businessSvg from "../images/applications/business.svg";
-    import checkSvg from "../images/applications/check.svg";
-    import reloadSvg from "../images/applications/reload.svg";
-    import warningSvg from "../images/applications/warning.svg";
+    import businessSvg from "./images/business.svg";
+    import checkSvg from "./images/check.svg";
+    import reloadSvg from "./images/reload.svg";
+    import warningSvg from "./images/warning.svg";
 
-    const dispatch = createEventDispatcher();
+    export let extensionModule: MSTeamsExtensionModule;
+    export let isMobile = false;
 
-    export let teamsModuleStatusStore: Readable<TeamsModuleStatus> | undefined;
-    export let isMobile: boolean = false;
+    let teamsModuleStatusStore: Readable<TeamsModuleStatus> | undefined;
+
+    onMount(() => {
+        teamsModuleStatusStore = extensionModule.statusStore;
+    });
 
     function noDrag(): boolean {
         return false;
     }
 
     function showExternalModule() {
-        dispatch("showExternalModule");
+        extensionModule.openPopUpModuleStatus();
     }
 </script>
+
 <!-- Teams integration -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div

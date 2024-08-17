@@ -45,6 +45,7 @@ import { requestVisitCardsStore, selectedChatIDRemotePlayerStore } from "../../.
 import { isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
 import { MessageUserJoined } from "../../../Connection/ConnexionModels";
 import { Area } from "../../Entity/Area";
+import { extensionModuleStore } from "../../../Stores/GameSceneStore";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -720,19 +721,26 @@ export class AreasPropertiesListener {
     }
 
     private handleExtensionModuleAreaPropertyOnLeave(subtype: string, area?: AreaData): void {
-        const areaMapEditor = this.scene.extensionModule?.areaMapEditor && this.scene.extensionModule?.areaMapEditor();
-        if (areaMapEditor === undefined) {
-            return;
+        const extensionModule = get(extensionModuleStore);
+        for (const module of extensionModule) {
+            if (!module.areaMapEditor) continue;
+
+            const areaMapEditor = module.areaMapEditor();
+            if (areaMapEditor == undefined) continue;
+
+            areaMapEditor[subtype].handleAreaPropertyOnLeave(area);
         }
-        areaMapEditor[subtype].handleAreaPropertyOnLeave(area);
     }
 
     private handleExtensionModuleAreaPropertyOnEnter(area: AreaData, subtype: string): void {
-        const areaMapEditor = this.scene.extensionModule?.areaMapEditor && this.scene.extensionModule?.areaMapEditor();
-        if (areaMapEditor === undefined) {
-            return;
+        const extensionModule = get(extensionModuleStore);
+        for (const module of extensionModule) {
+            if (!module.areaMapEditor) continue;
+
+            const areaMapEditor = module.areaMapEditor();
+            if (areaMapEditor == undefined) continue;
+            areaMapEditor[subtype].handleAreaPropertyOnEnter(area);
         }
-        areaMapEditor[subtype].handleAreaPropertyOnEnter(area);
     }
 
     private openCoWebsiteFunction(

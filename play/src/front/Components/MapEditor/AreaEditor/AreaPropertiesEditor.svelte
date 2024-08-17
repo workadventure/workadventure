@@ -31,7 +31,6 @@
     import { IconChevronDown, IconChevronRight } from "../../Icons";
     import { extensionModuleStore } from "../../../Stores/GameSceneStore";
     import { ExtensionModule, ExtensionModuleAreaProperty } from "../../../ExternalModule/ExtensionModule";
-    import { each } from "svelte/internal";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
@@ -354,13 +353,16 @@
         showDescriptionField = !showDescriptionField;
     }
 
-    let extensionModulesAreaMapEditor = $extensionModuleStore.reduce((acc: { [key: string]: ExtensionModuleAreaProperty }[], module: ExtensionModule) => {
-        const areaProperty = module.areaMapEditor?.();
-        if(areaProperty != undefined) {
-            acc.push(areaProperty);
-        }
-        return acc;
-    }, []);
+    let extensionModulesAreaMapEditor = $extensionModuleStore.reduce(
+        (acc: { [key: string]: ExtensionModuleAreaProperty }[], module: ExtensionModule) => {
+            const areaProperty = module.areaMapEditor?.();
+            if (areaProperty != undefined) {
+                acc.push(areaProperty);
+            }
+            return acc;
+        },
+        []
+    );
 </script>
 
 {#if $mapEditorSelectedAreaPreviewStore === undefined}
@@ -455,8 +457,8 @@
                 }}
             />
             {#if extensionModulesAreaMapEditor.length > 0}
-                {#each extensionModulesAreaMapEditor as extensionModuleAreaMapEditor}
-                    {#each Object.entries(extensionModuleAreaMapEditor) as [subtype, index] (index)}
+                {#each extensionModulesAreaMapEditor as extensionModuleAreaMapEditor, index (`extensionModulesAreaMapEditor-${index}`)}
+                    {#each Object.entries(extensionModuleAreaMapEditor) as [subtype, index] (`extensionModuleAreaMapEditor-${index}`)}
                         {#if extensionModuleAreaMapEditor[subtype].shouldDisplayButton(properties)}
                             <AddPropertyButtonWrapper
                                 property="extensionModule"
@@ -678,7 +680,7 @@
                             on:change={({ detail }) => onUpdateProperty(property, detail)}
                         />
                     {:else if property.type === "extensionModule" && extensionModulesAreaMapEditor.length > 0}
-                        {#each extensionModulesAreaMapEditor as extensionModuleAreaMapEditor}
+                        {#each extensionModulesAreaMapEditor as extensionModuleAreaMapEditor, index (`extensionModulesAreaMapEditor-${index}`)}
                             <svelte:component
                                 this={extensionModuleAreaMapEditor[property.subtype].AreaPropertyEditor}
                                 on:close={() => {

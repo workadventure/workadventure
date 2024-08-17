@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Readable, Unsubscriber, writable } from "svelte/store";
+    import { writable } from "svelte/store";
     import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
     import { AvailabilityStatus } from "@workadventure/messages";
@@ -102,8 +102,7 @@
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
     import { isActivatedStore, isCalendarVisibleStore } from "../../Stores/CalendarStore";
-    import { extensionActivateComponentModuleStore, extensionModuleStore } from "../../Stores/GameSceneStore";
-    import { ExternalModuleStatus } from "../../ExternalModule/ExtensionModule";
+    import { externalActionBarSvelteComponent } from "../../Stores/Utils/externalSvelteComponentStore";
     import AvailabilityStatusComponent from "./AvailabilityStatus/AvailabilityStatus.svelte";
     import { IconCheck, IconChevronDown, IconChevronUp } from "@wa-icons";
 
@@ -903,6 +902,17 @@
                             <img draggable="false" src={menuImg} style="padding: 2px" alt={$LL.menu.icon.open.menu()} />
                         </button>
                     </div>
+
+                    <!-- External module action bar -->
+                    {#if $externalActionBarSvelteComponent.size > 0}
+                        {#each [...$externalActionBarSvelteComponent.entries()] as [id, value] (`externalActionBarSvelteComponent-${id}`)}
+                            <svelte:component
+                                this={value.componentType}
+                                extensionModule={value.extensionModule}
+                                {isMobile}
+                            />
+                        {/each}
+                    {/if}
 
                     <!-- Calendar integration -->
                     {#if $isActivatedStore}

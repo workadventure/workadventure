@@ -17,7 +17,7 @@ const initExtensionModuleStore = () => {
                 extensionModules.push(extensionModule);
                 return extensionModules;
             });
-        }
+        },
     };
 };
 export const extensionModuleStore = initExtensionModuleStore();

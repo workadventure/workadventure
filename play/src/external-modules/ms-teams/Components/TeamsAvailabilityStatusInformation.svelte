@@ -1,9 +1,16 @@
 <script lang="ts">
     import { Readable } from "svelte/store";
-    import { TeamsModuleStatus } from "..";
+    import { onMount } from "svelte";
+    import { MSTeamsExtensionModule, TeamsModuleStatus } from "..";
     import businessSvg from "./images/business.svg";
 
-    export let teamsModuleStatusStore: Readable<TeamsModuleStatus> | undefined;
+    export let extensionModule: MSTeamsExtensionModule;
+    let teamsModuleStatusStore: Readable<TeamsModuleStatus> | undefined;
+
+    onMount(() => {
+        teamsModuleStatusStore = extensionModule.statusStore;
+    });
+
     const openTeamsDoc = () => {
         // TODO open the doc to sync teams
     };

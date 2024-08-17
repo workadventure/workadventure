@@ -1,12 +1,10 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { Readable } from "svelte/store";
-    import { createEventDispatcher, onMount } from "svelte";
+    import { onMount } from "svelte";
     import LL from "../../../i18n/i18n-svelte";
     import { MSTeamsExtensionModule, TeamsModuleStatus } from "../index";
-    import TeamsLogoPng from "./images/TeamsLogo.png";
-
-    const dispatch = createEventDispatcher();
+    import TeamsLogoSvg from "./images/business.svg";
 
     export let extensionModule: MSTeamsExtensionModule;
 
@@ -16,10 +14,10 @@
     let presenceSynchronised = false;
 
     function closeModal() {
-        dispatch("close");
+        extensionModule.closePopUpModuleStatus();
     }
     function goToReSync() {
-        dispatch("checkmodulecynschronisation");
+        extensionModule.checkModuleSynschronisation();
     }
 
     onMount(() => {
@@ -33,7 +31,7 @@
 <div class="teams-menu tw-min-h-fit tw-rounded-3xl tw-overflow-visible" transition:fly={{ x: 1000, duration: 500 }}>
     <div class="tw-p-8 tw-flex tw-flex-col tw-justify-center tw-items-center">
         <h1 class="tw-p-2">Teams Microsoft Meetings 🎉</h1>
-        <img src={TeamsLogoPng} alt="Object" class="tw-w-32 tw-h-32 tw-mb-4 tw-object-contain" />
+        <img src={TeamsLogoSvg} alt="Object" class="tw-w-32 tw-h-32 tw-mb-4 tw-object-contain" />
         <p class="tw-p-2 tw-m-0">
             Teams is a Microsoft 365 app that helps your team stay connected and organized. You can chat, meet, call,
             and collaborate all in one place.

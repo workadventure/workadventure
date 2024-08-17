@@ -16,9 +16,8 @@
     import LL from "../../../../i18n/i18n-svelte";
     import { connectionManager } from "../../../Connection/ConnectionManager";
     import { extensionModuleStore } from "../../../Stores/GameSceneStore";
-    import AddPropertyButton from "./AddPropertyButton.svelte";
     import { ExtensionModule, ExtensionModuleAreaProperty } from "../../../ExternalModule/ExtensionModule";
-    import { forEach } from "lodash";
+    import AddPropertyButton from "./AddPropertyButton.svelte";
 
     export let property: AreaDataPropertiesKeys | EntityDataPropertiesKeys;
     export let subProperty: string | undefined = undefined;
@@ -26,13 +25,16 @@
 
     const dispatch = createEventDispatcher();
 
-    let modulesExtensionMapEditor = $extensionModuleStore.reduce((acc: { [key: string]: ExtensionModuleAreaProperty }[], module: ExtensionModule) => {
-        const areaProperty = module.areaMapEditor?.();
-        if(areaProperty != undefined) {
-            acc.push(areaProperty);
-        }
-        return acc;
-    }, []);
+    let modulesExtensionMapEditor = $extensionModuleStore.reduce(
+        (acc: { [key: string]: ExtensionModuleAreaProperty }[], module: ExtensionModule) => {
+            const areaProperty = module.areaMapEditor?.();
+            if (areaProperty != undefined) {
+                acc.push(areaProperty);
+            }
+            return acc;
+        },
+        []
+    );
 </script>
 
 {#if property === "personalAreaPropertyData"}
@@ -288,7 +290,7 @@
 {/if}
 
 {#if property === "extensionModule" && modulesExtensionMapEditor.length > 0 && subProperty !== undefined}
-    {#each modulesExtensionMapEditor as moduleExtension}
+    {#each modulesExtensionMapEditor as moduleExtension, index (`modulesExtensionMapEditor-${index}`)}
         <svelte:component
             this={moduleExtension[subProperty].AddAreaPropertyButton}
             on:click={(event) => {
