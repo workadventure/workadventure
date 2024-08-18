@@ -38,7 +38,7 @@
         </p>
         {#if synchronisationStatusStore != undefined && $synchronisationStatusStore === TeamsModuleStatus.ONLINE}
             <p class="tw-p-0 tw-m-0">
-                {$LL.actionbar.externalModule.status.onLine()}
+                {$LL.externalModule.status.onLine()}
             </p>
             <ul>
                 {#if meetingSynchronised}
@@ -63,7 +63,7 @@
 
         {#if synchronisationStatusStore != undefined && $synchronisationStatusStore === TeamsModuleStatus.SYNC}
             <p class="tw-p-0 tw-m-0">
-                {$LL.actionbar.externalModule.status.sync()}
+                {$LL.externalModule.status.sync()}
             </p>
             <ul>
                 {#if meetingSynchronised}
@@ -88,13 +88,13 @@
 
         {#if synchronisationStatusStore != undefined && $synchronisationStatusStore === TeamsModuleStatus.WARNING}
             <p class="tw-p-0 tw-m-0">
-                {$LL.actionbar.externalModule.status.warning()}
+                {$LL.externalModule.status.warning()}
             </p>
         {/if}
 
         {#if synchronisationStatusStore != undefined && $synchronisationStatusStore === TeamsModuleStatus.OFFLINE}
             <p class="tw-p-0 tw-m-0">
-                {$LL.actionbar.externalModule.status.offLine()}
+                {$LL.externalModule.status.offLine()}
             </p>
         {/if}
     </div>

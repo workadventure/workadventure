@@ -39,13 +39,13 @@
 >
     {#if !isMobile && teamsModuleStatusStore != undefined}
         {#if $teamsModuleStatusStore === TeamsModuleStatus.ONLINE}
-            <Tooltip text={$LL.actionbar.externalModule.status.onLine()} />
+            <Tooltip text={$LL.externalModule.status.onLine()} />
         {:else if $teamsModuleStatusStore === TeamsModuleStatus.WARNING}
-            <Tooltip text={$LL.actionbar.externalModule.status.warning()} />
+            <Tooltip text={$LL.externalModule.status.warning()} />
         {:else if $teamsModuleStatusStore === TeamsModuleStatus.SYNC}
-            <Tooltip text={$LL.actionbar.externalModule.status.sync()} />
+            <Tooltip text={$LL.externalModule.status.sync()} />
         {:else}
-            <Tooltip text={$LL.actionbar.externalModule.status.offLine()} />
+            <Tooltip text={$LL.externalModule.status.offLine()} />
         {/if}
     {/if}
     <button id="teamsIcon" class="tw-relative">
