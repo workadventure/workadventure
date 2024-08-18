@@ -20,7 +20,7 @@
         const gameScene = gameManager.getCurrentGameScene();
         if (!gameScene) return;
 
-        [...$extensionModuleStore.entries()].forEach(([key, extensionModule]) => {
+        [...$extensionModuleStore.values()].forEach((extensionModule) => {
             extensionModule?.openPopupMeeting &&
                 event.resource?.onlineMeeting?.joinUrl &&
                 extensionModule.openPopupMeeting(
