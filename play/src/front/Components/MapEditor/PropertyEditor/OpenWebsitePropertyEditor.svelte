@@ -33,6 +33,7 @@
     import InputTags from "../../Input/InputTags.svelte";
     import { InputTagOption } from "../../Input/InputTagOption";
     import { localUserStore } from "../../../Connection/LocalUserStore";
+    import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     import { IconAlertTriangle } from "@wa-icons";
 
@@ -557,7 +558,23 @@
                     .then(handlerLinkSelected)
                     .catch(handlerLinkError);
             }
+
+            analyticsClient.openPicker(property.application);
         }
+    }
+
+    function openApplicationWithoutPicker() {
+        if (property.application === "cards") {
+            window.open("https://app.cards-microlearning.com/", "_blank");
+        }
+        if (property.application === "eraser") {
+            window.open("https://app.eraser.io/dashboard/all", "_blank");
+        }
+        if (property.application === "excalidraw") {
+            window.open("https://excalidraw.com/", "_blank");
+        }
+
+        analyticsClient.openApplicationWithoutPicker(property.application);
     }
 
     function handlePolicyChange() {
@@ -691,6 +708,24 @@
                         />
                         <Tooltip
                             text={$LL.mapEditor.properties.linkProperties.openPickerSelector()}
+                            leftPosition="true"
+                        />
+                    </div>
+                {:else if property.application === "cards" || property.application === "eraser" || property.application === "excalidraw"}
+                    <div class="tw-flex tw-flex-row tw-items-center tw-justify-center">
+                        <img
+                            class="tw-w-6 tw-ml-4 tw-items-center tw-cursor-pointer"
+                            src={pickerSvg}
+                            alt={`${$LL.mapEditor.properties.linkProperties.openApplication()} ${property.application}`}
+                            on:keydown
+                            on:keyup
+                            on:keypress
+                            on:click|preventDefault|stopPropagation={openApplicationWithoutPicker}
+                        />
+                        <Tooltip
+                            text={`${$LL.mapEditor.properties.linkProperties.openApplication()} ${
+                                property.application
+                            }`}
                             leftPosition="true"
                         />
                     </div>
