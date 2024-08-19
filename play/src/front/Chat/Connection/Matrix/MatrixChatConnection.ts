@@ -98,7 +98,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                     return acc;
                 }, new Map());
 
-                return spaceByRoomMap;
                 const convertedMap = new Map();
                 roomBySpaceRoom.forEach((roomList, spaceID) => {
                     const room = this.client.getRoom(spaceID);
