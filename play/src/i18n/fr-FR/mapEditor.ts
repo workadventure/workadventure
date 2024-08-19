@@ -208,8 +208,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             disabled: "L'intégration Cards est désactivée.",
         },
         matrixProperties: {
-            label: "lier une room Matrix",
-            description: "lier une room Matrix",
+            label: "Lier une room Matrix",
+            description: "Lier une room Matrix",
             openAutomaticallyChatLabel: "Ouvrir le chat automatiquement",
             localRoomLabel: "Sélectionner une room locale",
             remoteRoomLabel: "Sélectionner une room locale",

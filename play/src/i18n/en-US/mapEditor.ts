@@ -210,8 +210,8 @@ const mapEditor: BaseTranslation = {
             disabled: "Cards integration is disabled.",
         },
         matrixProperties: {
-            label: "link Matrix room",
-            description: "link Matrix room to your area",
+            label: "Link Matrix room",
+            description: "Link Matrix room to your area",
             openAutomaticallyChatLabel: "Automatically open chat",
             localRoomLabel: "Select a local room",
             remoteRoomLabel: "Select a remote room",
