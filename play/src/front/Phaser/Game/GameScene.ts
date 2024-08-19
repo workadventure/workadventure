@@ -632,7 +632,10 @@ export class GameScene extends DirtyScene {
             this.Map,
             this.Terrains
         );
-        this.gameMapFrontWrapper.initialize().catch((e) => console.error(e));
+        this.gameMapFrontWrapper.initialize().catch((e) => {
+            console.error(e);
+            Sentry.captureException(e);
+        });
         for (const layer of this.gameMapFrontWrapper.getFlatLayers()) {
             if (layer.type === "tilelayer") {
                 const exitSceneUrl = this.getExitSceneUrl(layer);
@@ -858,7 +861,7 @@ export class GameScene extends DirtyScene {
             this.connectionAnswerPromiseDeferred.promise as Promise<unknown>,
             ...scriptPromises,
             this.CurrentPlayer.getTextureLoadedPromise() as Promise<unknown>,
-            this.gameMapFrontWrapper.initializedPromise,
+            this.gameMapFrontWrapper.initializedPromise.promise,
         ])
             .then(() => {
                 this.initUserPermissionsOnEntity();
@@ -866,12 +869,22 @@ export class GameScene extends DirtyScene {
                 this.sceneReadyToStartDeferred.resolve();
                 this.initializeAreaManager();
             })
-            .catch((e) =>
+            .catch((e) => {
                 console.error(
-                    "Some scripts failed to load ot the connection failed to establish to WorkAdventure server",
+                    "Some scripts failed to load or the connection failed to establish to WorkAdventure server",
                     e
-                )
-            );
+                );
+                errorScreenStore.setError(
+                    ErrorScreenMessage.fromPartial({
+                        type: "error",
+                        code: "INITIALIZE_ERROR",
+                        title: "Error initializing the map",
+                        subtitle:
+                            "Some scripts failed to load or the connection failed to establish to WorkAdventure server",
+                        details: e instanceof Error ? e.message : "",
+                    })
+                );
+            });
 
         if (gameManager.currentStartedRoom.backgroundColor != undefined) {
             this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
