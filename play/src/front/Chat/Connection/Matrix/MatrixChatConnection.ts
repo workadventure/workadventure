@@ -435,6 +435,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.client
             .sendStateEvent(
                 spaceRoomId,
+                //@ts-ignore
                 "m.space.child",
                 {
                     via: [this.client.getDomain()], // The domain of the homeserver to be used to join the room
