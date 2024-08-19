@@ -686,6 +686,11 @@ export class AreaEditorTool extends MapEditorTool {
         areaPreview.on(AreaPreviewEvent.Delete, () => {
             this.handleDeleteAreaFrontCommandExecution(areaPreview.getId());
         });
+        areaPreview.on(AreaPreviewEvent.UpdateVisibility, (visibility: boolean) => {
+            if (!visibility) {
+                this.areaOldPositionPreview.clear();
+            }
+        });
     }
 
     private updateAreaPreviews(): void {
