@@ -215,9 +215,8 @@ export class ProximityChatRoom implements ChatRoom {
         // Add message to the list
         this.messages.push(newMessage);
 
-
         this.playNewMessageSound();
-        
+
         // Send bubble message to WorkAdventure scripting API
         try {
             iframeListener.sendUserInputChat(message, senderUserId);

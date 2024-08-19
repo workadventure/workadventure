@@ -207,7 +207,7 @@ export class MatrixChatRoom implements ChatRoom {
                     } else {
                         this.handleNewMessage(event);
                         const senderID = event.getSender();
-                        if(senderID!==this.matrixRoom.client.getSafeUserId()){
+                        if (senderID !== this.matrixRoom.client.getSafeUserId()) {
                             this.playNewMessageSound();
                         }
                     }
