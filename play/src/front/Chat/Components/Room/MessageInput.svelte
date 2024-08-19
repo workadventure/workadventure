@@ -89,8 +89,26 @@
 
         const text = event.clipboardData.getData("text");
 
-        document.execCommand("insertText", false, text);
+        insertTextAtCursor(text);
     }
+
+    function insertTextAtCursor(text: string) {
+        const selection = window.getSelection();
+        if (!selection || !selection.rangeCount) return;
+
+        const range = selection.getRangeAt(0);
+        range.deleteContents();
+
+        const textNode = document.createTextNode(text);
+        range.insertNode(textNode);
+
+        // Move the cursor to the end of the inserted text
+        range.setStartAfter(textNode);
+        range.setEndAfter(textNode);
+        selection.removeAllRanges();
+        selection.addRange(range);
+    }
+
     $: quotedMessageContent = $selectedChatMessageToReply?.content;
 </script>
 
@@ -104,7 +122,9 @@
         </button>
     </div>
 {/if}
-<div class="tw-flex tw-items-center tw-gap-1 tw-border tw-border-solid tw-rounded-xl tw-pr-1 tw-border-light-purple">
+<div
+    class="tw-flex tw-items-center tw-py-1 tw-gap-1 tw-border tw-border-solid tw-rounded-xl tw-pr-1 tw-border-light-purple"
+>
     <div
         data-testid="messageInput"
         bind:textContent={message}
@@ -113,8 +133,8 @@
         on:keydown={sendMessageOrEscapeLine}
         on:input={onInputHandler}
         on:paste={onPasteHandler}
-        class="!tw-m-0 tw-px-2 tw-max-h-36 tw-overflow-auto tw-w-full tw-h-full tw-rounded-xl wa-searchbar tw-block tw-text-white placeholder:tw-text-sm  tw-border-light-purple tw-border !tw-bg-transparent tw-resize-none tw-border-none tw-outline-none tw-shadow-none focus:tw-ring-0"
-        placeholder={$LL.chat.enter()}
+        class=" message-input !tw-m-0 tw-px-2 tw-max-h-36 tw-overflow-auto tw-w-full tw-h-full tw-rounded-xl wa-searchbar tw-block tw-text-white placeholder:tw-text-sm  tw-border-light-purple tw-border !tw-bg-transparent tw-resize-none tw-border-none tw-outline-none tw-shadow-none focus:tw-ring-0"
+        data-text={$LL.chat.enter()}
     />
     <button
         class="disabled:tw-opacity-30 disabled:!tw-cursor-none tw-p-0 tw-m-0"
@@ -133,3 +153,10 @@
         <IconSend font-size={20} />
     </button>
 </div>
+
+<style lang="scss">
+    .message-input:empty:not(:focus):before {
+        content: attr(data-text);
+        color: rgba(211, 211, 211, 0.5);
+    }
+</style>
