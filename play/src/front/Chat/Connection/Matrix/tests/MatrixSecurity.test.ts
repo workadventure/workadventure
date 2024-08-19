@@ -12,6 +12,10 @@ vi.mock("../../../../Phaser/Entity/CharacterLayerManager", () => {
     };
 });
 
+vi.mock("../AccessSecretStorageDialog.svelte", () => {
+    return {};
+});
+
 vi.mock("../CreateRecoveryKeyDialog.svelte", () => {
     return {};
 });
