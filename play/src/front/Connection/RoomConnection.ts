@@ -82,7 +82,7 @@ import { chatZoneLiveStore } from "../Stores/ChatStore";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
 import { isSpeakerStore } from "../Stores/MediaStore";
-import { currentLiveStreamingNameStore } from "../Stores/MegaphoneStore";
+import { currentLiveStreamingSpaceStore } from "../Stores/MegaphoneStore";
 import {
     inviteUserActivated,
     mapEditorActivated,
@@ -426,7 +426,7 @@ export class RoomConnection implements RoomConnection {
                                 if (subMessage.kickOffMessage.userId !== this.userId?.toString()) break;
 
                                 isSpeakerStore.set(false);
-                                currentLiveStreamingNameStore.set(undefined);
+                                currentLiveStreamingSpaceStore.set(undefined);
                                 const scene = gameManager.getCurrentGameScene();
                                 scene.broadcastService.leaveSpace(subMessage.kickOffMessage.spaceName);
 
@@ -1481,8 +1481,9 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    // FIXME: turn this into updateSpaceUser
     public emitMegaphoneState(state: boolean) {
-        const currentMegaphoneName = get(currentLiveStreamingNameStore);
+        const currentMegaphoneName = get(currentLiveStreamingSpaceStore)?.getName();
         this.send({
             message: {
                 $case: "megaphoneStateMessage",
@@ -1494,6 +1495,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    // FIXME: turn this into updateSpaceUser
     public emitJitsiParticipantIdSpace(spaceName: string, participantId: string) {
         this.send({
             message: {

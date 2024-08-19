@@ -443,9 +443,6 @@ services:
   synapse:
     image: matrixdotorg/synapse:latest
     entrypoint: /data/start.sh
-    depends_on:
-      oidc-server-mock:
-        condition: service_healthy
     labels:
         - "traefik.enable=true"
         - "traefik.http.routers.matrix.rule=Host(`matrix.workadventure.localhost`)"

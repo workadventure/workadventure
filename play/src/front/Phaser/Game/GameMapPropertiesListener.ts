@@ -20,7 +20,7 @@ import { Room } from "../../Connection/Room";
 import { LL } from "../../../i18n/i18n-svelte";
 import { inBbbStore, inJitsiStore, inOpenWebsite, isSpeakerStore, silentStore } from "../../Stores/MediaStore";
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
-import { currentLiveStreamingNameStore } from "../../Stores/MegaphoneStore";
+import { currentLiveStreamingSpaceStore } from "../../Stores/MegaphoneStore";
 import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
 import { Area } from "../Entity/Area";
 import { analyticsClient } from "./../../Administration/AnalyticsClient";
@@ -660,8 +660,8 @@ export class GameMapPropertiesListener {
                 "handleSpeakerMegaphonePropertiesOnEnter => joinSpace => speakerZone.value : ",
                 speakerZone.value
             );
-            currentLiveStreamingNameStore.set(speakerZone.value);
-            this.scene.broadcastService.joinSpace(speakerZone.value, false);
+            const broadcastSpace = this.scene.broadcastService.joinSpace(speakerZone.value, false);
+            currentLiveStreamingSpaceStore.set(broadcastSpace.space);
             /*if (get(requestedCameraState) || get(requestedMicrophoneState)) {
                 requestedMegaphoneStore.set(true);
             }*/
@@ -675,7 +675,7 @@ export class GameMapPropertiesListener {
         const speakerZone = place.properties.find((property) => property.name === GameMapProperties.SPEAKER_MEGAPHONE);
         if (speakerZone && speakerZone.type === "string" && speakerZone.value !== undefined) {
             isSpeakerStore.set(false);
-            currentLiveStreamingNameStore.set(undefined);
+            currentLiveStreamingSpaceStore.set(undefined);
             this.scene.broadcastService.leaveSpace(speakerZone.value);
         }
     }
@@ -693,13 +693,13 @@ export class GameMapPropertiesListener {
                 listenerZone.value
             );
             if (speakerZoneName) {
-                currentLiveStreamingNameStore.set(speakerZoneName);
                 // TODO remove this log after testing
                 console.info(
                     "handleListenerMegaphonePropertiesOnEnter => joinSpace => speakerZoneName : ",
                     speakerZoneName
                 );
-                this.scene.broadcastService.joinSpace(speakerZoneName, false);
+                const broadcastSpace = this.scene.broadcastService.joinSpace(speakerZoneName, false);
+                currentLiveStreamingSpaceStore.set(broadcastSpace.space);
             }
         }
     }
@@ -717,7 +717,7 @@ export class GameMapPropertiesListener {
                 listenerZone.value
             );
             if (speakerZoneName) {
-                currentLiveStreamingNameStore.set(undefined);
+                currentLiveStreamingSpaceStore.set(undefined);
                 this.scene.broadcastService.leaveSpace(speakerZoneName);
             }
         }

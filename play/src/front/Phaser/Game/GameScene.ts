@@ -139,7 +139,7 @@ import { SpaceRegistry } from "../../Space/SpaceRegistry/SpaceRegistry";
 import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer, debugZoom } from "../../Utils/Debuggers";
 import { checkCoturnServer } from "../../Components/Video/utils";
 import { BroadcastService } from "../../Streaming/BroadcastService";
-import { liveStreamingEnabledStore, megaphoneCanBeUsedStore, megaphoneUrlStore } from "../../Stores/MegaphoneStore";
+import { liveStreamingEnabledStore, megaphoneCanBeUsedStore, megaphoneSpaceStore } from "../../Stores/MegaphoneStore";
 import { CompanionTextureError } from "../../Exception/CompanionTextureError";
 import { SelectCompanionScene, SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { scriptUtils } from "../../Api/ScriptUtils";
@@ -1817,18 +1817,18 @@ export class GameScene extends DirtyScene {
                             megaphoneSettingsMessage.url &&
                             get(availabilityStatusStore) !== AvailabilityStatus.DO_NOT_DISTURB
                         ) {
-                            const oldMegaphoneUrl = get(megaphoneUrlStore);
+                            const oldMegaphoneSpace = get(megaphoneSpaceStore);
 
                             if (
                                 this._spaceRegistry &&
-                                oldMegaphoneUrl &&
-                                megaphoneSettingsMessage.url !== oldMegaphoneUrl
+                                oldMegaphoneSpace &&
+                                megaphoneSettingsMessage.url !== oldMegaphoneSpace.getName()
                             ) {
-                                this._spaceRegistry.leaveSpace(oldMegaphoneUrl);
+                                this._spaceRegistry.leaveSpace(oldMegaphoneSpace.getName());
                             }
 
-                            broadcastService.joinSpace(megaphoneSettingsMessage.url);
-                            megaphoneUrlStore.set(megaphoneSettingsMessage.url);
+                            const broadcastStore = broadcastService.joinSpace(megaphoneSettingsMessage.url);
+                            megaphoneSpaceStore.set(broadcastStore.space);
                         }
                     }
                 });

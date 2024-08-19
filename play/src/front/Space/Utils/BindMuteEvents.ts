@@ -4,7 +4,7 @@ import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { isSpeakerStore, requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import LL from "../../../i18n/i18n-svelte";
 import { askDialogStore } from "../../Stores/MeetingStore";
-import { currentLiveStreamingNameStore } from "../../Stores/MegaphoneStore";
+import { currentLiveStreamingSpaceStore } from "../../Stores/MegaphoneStore";
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
 
 /**
@@ -43,7 +43,7 @@ export function bindMuteEventsToSpace(space: SpaceInterface) {
         // FIXME: kick off should probably kick the user of the world, right???
         // In this case, maybe kickoff does not belong to a space but is a more generic message???
         isSpeakerStore.set(false);
-        currentLiveStreamingNameStore.set(undefined);
+        currentLiveStreamingSpaceStore.set(undefined);
         //const scene = gameManager.getCurrentGameScene();
 
         //scene.broadcastService.leaveSpace(subMessage.kickOffMessage.spaceName);
