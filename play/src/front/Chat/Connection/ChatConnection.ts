@@ -1,23 +1,24 @@
 import { Readable, Writable } from "svelte/store";
-import { AvailabilityStatus, PartialSpaceUser } from "@workadventure/messages";
+import { AvailabilityStatus } from "@workadventure/messages";
 import { MapStore } from "@workadventure/store-utils";
 import { RoomConnection } from "../../Connection/RoomConnection";
-import { SpaceUserExtended } from "../../Space/SpaceFilter/SpaceFilter";
 
 export interface ChatUser {
-    id: string;
+    chatId: string;
     uuid?: string;
     availabilityStatus: Writable<AvailabilityStatus>;
     username: string | undefined;
-    avatarUrl: string | null;
+    avatarUrl: string | undefined;
     roomName: string | undefined;
     playUri: string | undefined;
     isAdmin?: boolean;
     isMember?: boolean;
     visitCardUrl?: string;
     color: string | undefined;
-    spaceId: number | undefined;
+    id: number | undefined;
 }
+
+export type PartialChatUser = Partial<ChatUser> & { chatId: string };
 
 export type ChatRoomMembership = "ban" | "join" | "knock" | "leave" | "invite" | string;
 
@@ -94,46 +95,25 @@ export type chatId = string;
 
 export interface ChatConnectionInterface {
     connectionStatus: Readable<ConnectionStatus>;
-    connectedUsers: Readable<Map<userId, ChatUser>>;
-    userDisconnected: Readable<Map<chatId, ChatUser>>;
     directRooms: Readable<ChatRoom[]>;
     rooms: Readable<ChatRoom[]>;
     invitations: Readable<ChatRoom[]>;
-
-    addUserFromSpace(user: SpaceUserExtended): void;
-
-    updateUserFromSpace(user: PartialSpaceUser): void;
-
-    disconnectSpaceUser(userId: number): void;
-
-    sendBan: (uuid: string, username: string) => void;
     createRoom: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string }>;
-
     createDirectRoom(userChatId: string): Promise<ChatRoom | undefined>;
-
     getDirectRoomFor(uuserChatId: string): ChatRoom | undefined;
-
     searchUsers(searchText: string): Promise<void>;
-
     searchAccessibleRooms(searchText: string): Promise<
         {
             id: string;
             name: string | undefined;
         }[]
     >;
-
     joinRoom(roomId: string): Promise<ChatRoom | undefined>;
-
     destroy(): Promise<void>;
-
     searchChatUsers(searchText: string): Promise<{ id: string; name: string | undefined }[] | undefined>;
-
     isEncryptionRequiredAndNotSet: Readable<boolean>;
-
     initEndToEndEncryption(): Promise<void>;
-
     isGuest: Readable<boolean>;
-    joinSpace?: (spaceId: string, spaceName: string) => void;
 }
 
 export type Connection = Pick<RoomConnection, "queryChatMembers" | "emitPlayerChatID" | "emitBanPlayerMessage">;

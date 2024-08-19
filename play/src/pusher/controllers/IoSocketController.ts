@@ -12,6 +12,7 @@ import {
     SpaceUser,
     SubMessage,
     WokaDetail,
+    PusherToBackMessage,
 } from "@workadventure/messages";
 import { JsonWebTokenError } from "jsonwebtoken";
 import * as Sentry from "@sentry/node";
@@ -703,10 +704,6 @@ export class IoSocketController {
                             socketManager.handleViewport(socket, message.message.viewportMessage);
                             break;
                         }
-                        case "userMovesMessage": {
-                            socketManager.handleUserMovesMessage(socket, message.message.userMovesMessage);
-                            break;
-                        }
                         case "playGlobalMessage": {
                             await socketManager.emitPlayGlobalMessage(socket, message.message.playGlobalMessage);
                             break;
@@ -745,10 +742,7 @@ export class IoSocketController {
                             );
                             break;
                         }
-                        case "setPlayerDetailsMessage": {
-                            socketManager.handleSetPlayerDetails(socket, message.message.setPlayerDetailsMessage);
-                            break;
-                        }
+
                         case "watchSpaceMessage": {
                             message.message.watchSpaceMessage.spaceName = `${socket.getUserData().world}.${
                                 message.message.watchSpaceMessage.spaceName
@@ -792,39 +786,6 @@ export class IoSocketController {
                                 message.message.unwatchSpaceMessage.spaceName
                             }`;
                             void socketManager.handleLeaveSpace(socket, message.message.unwatchSpaceMessage.spaceName);
-                            break;
-                        }
-                        case "cameraStateMessage": {
-                            socketManager.handleCameraState(socket, message.message.cameraStateMessage.value);
-                            break;
-                        }
-                        case "microphoneStateMessage": {
-                            socketManager.handleMicrophoneState(socket, message.message.microphoneStateMessage.value);
-                            break;
-                        }
-                        case "screenSharingStateMessage": {
-                            socketManager.handleScreenSharingState(
-                                socket,
-                                message.message.screenSharingStateMessage.value
-                            );
-                            break;
-                        }
-                        case "megaphoneStateMessage": {
-                            message.message.megaphoneStateMessage.spaceName = `${socket.getUserData().world}.${
-                                message.message.megaphoneStateMessage.spaceName
-                            }`;
-                            socketManager.handleMegaphoneState(socket, message.message.megaphoneStateMessage);
-                            break;
-                        }
-                        case "jitsiParticipantIdSpaceMessage": {
-                            message.message.jitsiParticipantIdSpaceMessage.spaceName = `${socket.getUserData().world}.${
-                                message.message.jitsiParticipantIdSpaceMessage.spaceName
-                            }`;
-                            socketManager.handleJitsiParticipantIdSpace(
-                                socket,
-                                message.message.jitsiParticipantIdSpaceMessage.spaceName,
-                                message.message.jitsiParticipantIdSpaceMessage.value
-                            );
                             break;
                         }
                         case "updateChatIdMessage": {
@@ -932,110 +893,15 @@ export class IoSocketController {
                             }
                             break;
                         }
-                        case "itemEventMessage":
-                        case "variableMessage":
-                        case "webRtcSignalToServerMessage":
-                        case "webRtcScreenSharingSignalToServerMessage":
-                        case "emotePromptMessage":
-                        case "followRequestMessage":
-                        case "followConfirmationMessage":
-                        case "followAbortMessage":
-                        case "lockGroupPromptMessage":
-                        case "pingMessage":
-                        case "askPositionMessage": {
-                            socketManager.forwardMessageToBack(socket, message.message);
-                            break;
-                        }
-                        case "editMapCommandMessage": {
-                            socketManager.forwardMessageToBack(socket, message.message);
-                            break;
-                        }
-                        case "muteParticipantIdMessage": {
-                            message.message.muteParticipantIdMessage.spaceName = `${socket.getUserData().world}.${
-                                message.message.muteParticipantIdMessage.spaceName
-                            }`;
-                            socketManager.handleMuteParticipantIdMessage(
-                                socket,
-                                message.message.muteParticipantIdMessage.spaceName,
-                                message.message.muteParticipantIdMessage.mutedUserUuid,
-                                message.message
-                            );
-                            break;
-                        }
-                        case "muteVideoParticipantIdMessage": {
-                            message.message.muteVideoParticipantIdMessage.spaceName = `${socket.getUserData().world}.${
-                                message.message.muteVideoParticipantIdMessage.spaceName
-                            }`;
-
-                            socketManager.handleMuteVideoParticipantIdMessage(
-                                socket,
-                                message.message.muteVideoParticipantIdMessage.spaceName,
-                                message.message.muteVideoParticipantIdMessage.mutedUserUuid,
-                                message.message
-                            );
-                            break;
-                        }
-                        case "kickOffUserMessage": {
-                            message.message.kickOffUserMessage.spaceName = `${socket.getUserData().world}.${
-                                message.message.kickOffUserMessage.spaceName
-                            }`;
-                            socketManager.handleKickOffSpaceUserMessage(
-                                socket,
-                                message.message.kickOffUserMessage.spaceName,
-                                message.message.kickOffUserMessage.userId,
-                                message.message
-                            );
-                            break;
-                        }
-                        case "muteEveryBodyParticipantMessage": {
-                            message.message.muteEveryBodyParticipantMessage.spaceName = `${
-                                socket.getUserData().world
-                            }.${message.message.muteEveryBodyParticipantMessage.spaceName}`;
-                            socketManager.handleMuteEveryBodyParticipantMessage(
-                                socket,
-                                message.message.muteEveryBodyParticipantMessage.spaceName,
-                                message.message.muteEveryBodyParticipantMessage.senderUserId,
-                                message.message
-                            );
-                            break;
-                        }
-                        case "muteVideoEveryBodyParticipantMessage": {
-                            message.message.muteVideoEveryBodyParticipantMessage.spaceName = `${
-                                socket.getUserData().world
-                            }.${message.message.muteVideoEveryBodyParticipantMessage.spaceName}`;
-                            socketManager.handleMuteVideoEveryBodyParticipantMessage(
-                                socket,
-                                message.message.muteVideoEveryBodyParticipantMessage.spaceName,
-                                message.message.muteVideoEveryBodyParticipantMessage.userId,
-                                message.message
-                            );
-                            break;
-                        }
                         case "banPlayerMessage": {
                             await socketManager.handleBanPlayerMessage(socket, message.message.banPlayerMessage);
                             break;
                         }
-                        case "publicEvent": {
-                            socketManager.handlePublicEvent(
-                                socket,
-                                message.message.publicEvent.spaceName,
-                                message.message
-                            );
-                            break;
-                        }
-                        case "privateEvent": {
-                            socketManager.handlePrivateEvent(
-                                socket,
-                                message.message.privateEvent.spaceName,
-                                message.message
-                            );
-                            break;
-                        }
                         default: {
-                            const _exhaustiveCheck: never = message.message;
+                            this.processEventWhoNeedToBeForwardToBack(socket, message.message);
+                            //const _exhaustiveCheck: never = message.message;
                         }
                     }
-
                     /* Ok is false if backpressure was built up, wait for drain */
                     //let ok = ws.send(message, isBinary);
                 })().catch((e) => {
@@ -1067,6 +933,143 @@ export class IoSocketController {
         });
     }
 
+    private processEventWhoNeedToBeForwardToBack(socket: Socket, message: ClientToServerMessage["message"]): void {
+        if (!message) return;
+        let eventIsHandle = true;
+        switch (message.$case) {
+            case "userMovesMessage": {
+                socketManager.handleUserMovesMessage(socket, message.userMovesMessage);
+                break;
+            }
+            case "setPlayerDetailsMessage": {
+                socketManager.handleSetPlayerDetails(socket, message.setPlayerDetailsMessage);
+                break;
+            }
+            case "cameraStateMessage": {
+                socketManager.handleCameraState(socket, message.cameraStateMessage.value);
+                break;
+            }
+            case "microphoneStateMessage": {
+                socketManager.handleMicrophoneState(socket, message.microphoneStateMessage.value);
+                break;
+            }
+            case "screenSharingStateMessage": {
+                socketManager.handleScreenSharingState(socket, message.screenSharingStateMessage.value);
+                break;
+            }
+            case "megaphoneStateMessage": {
+                message.megaphoneStateMessage.spaceName = `${socket.getUserData().world}.${
+                    message.megaphoneStateMessage.spaceName
+                }`;
+                socketManager.handleMegaphoneState(socket, message.megaphoneStateMessage);
+                break;
+            }
+            case "jitsiParticipantIdSpaceMessage": {
+                message.jitsiParticipantIdSpaceMessage.spaceName = `${socket.getUserData().world}.${
+                    message.jitsiParticipantIdSpaceMessage.spaceName
+                }`;
+                socketManager.handleJitsiParticipantIdSpace(
+                    socket,
+                    message.jitsiParticipantIdSpaceMessage.spaceName,
+                    message.jitsiParticipantIdSpaceMessage.value
+                );
+                break;
+            }
+            case "muteParticipantIdMessage": {
+                message.muteParticipantIdMessage.spaceName = `${socket.getUserData().world}.${
+                    message.muteParticipantIdMessage.spaceName
+                }`;
+                socketManager.handleMuteParticipantIdMessage(
+                    socket,
+                    message.muteParticipantIdMessage.spaceName,
+                    message.muteParticipantIdMessage.mutedUserUuid,
+                    message
+                );
+                break;
+            }
+            case "muteVideoParticipantIdMessage": {
+                message.muteVideoParticipantIdMessage.spaceName = `${socket.getUserData().world}.${
+                    message.muteVideoParticipantIdMessage.spaceName
+                }`;
+
+                socketManager.handleMuteVideoParticipantIdMessage(
+                    socket,
+                    message.muteVideoParticipantIdMessage.spaceName,
+                    message.muteVideoParticipantIdMessage.mutedUserUuid,
+                    message
+                );
+                break;
+            }
+            case "kickOffUserMessage": {
+                message.kickOffUserMessage.spaceName = `${socket.getUserData().world}.${
+                    message.kickOffUserMessage.spaceName
+                }`;
+                socketManager.handleKickOffSpaceUserMessage(
+                    socket,
+                    message.kickOffUserMessage.spaceName,
+                    message.kickOffUserMessage.userId,
+                    message
+                );
+                break;
+            }
+            case "muteEveryBodyParticipantMessage": {
+                message.muteEveryBodyParticipantMessage.spaceName = `${socket.getUserData().world}.${
+                    message.muteEveryBodyParticipantMessage.spaceName
+                }`;
+                socketManager.handleMuteEveryBodyParticipantMessage(
+                    socket,
+                    message.muteEveryBodyParticipantMessage.spaceName,
+                    message.muteEveryBodyParticipantMessage.senderUserId,
+                    message
+                );
+                break;
+            }
+            case "muteVideoEveryBodyParticipantMessage": {
+                message.muteVideoEveryBodyParticipantMessage.spaceName = `${socket.getUserData().world}.${
+                    message.muteVideoEveryBodyParticipantMessage.spaceName
+                }`;
+                socketManager.handleMuteVideoEveryBodyParticipantMessage(
+                    socket,
+                    message.muteVideoEveryBodyParticipantMessage.spaceName,
+                    message.muteVideoEveryBodyParticipantMessage.userId,
+                    message
+                );
+                break;
+            }
+
+            case "publicEvent": {
+                socketManager.handlePublicEvent(socket, message.publicEvent.spaceName, message);
+                break;
+            }
+            case "privateEvent": {
+                socketManager.handlePrivateEvent(socket, message.privateEvent.spaceName, message);
+                break;
+            }
+            case "itemEventMessage":
+            case "variableMessage":
+            case "webRtcSignalToServerMessage":
+            case "webRtcScreenSharingSignalToServerMessage":
+            case "emotePromptMessage":
+            case "followRequestMessage":
+            case "followConfirmationMessage":
+            case "followAbortMessage":
+            case "lockGroupPromptMessage":
+            case "pingMessage":
+            case "askPositionMessage": {
+                socketManager.forwardMessageToBack(socket, message as PusherToBackMessage["message"]);
+                return;
+            }
+            default: {
+                eventIsHandle = false;
+            }
+        }
+
+        if (eventIsHandle) {
+            socketManager.forwardMessageToBack(socket, message as PusherToBackMessage["message"]);
+        } else {
+            throw new Error(`Event : "${message.$case}" is not handle`);
+        }
+    }
     private sendAnswerMessage(socket: compressors.WebSocket<SocketData>, answerMessage: AnswerMessage) {
         socket.send(
             ServerToClientMessage.encode({

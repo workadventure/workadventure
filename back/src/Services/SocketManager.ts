@@ -1461,10 +1461,21 @@ export class SocketManager {
     }
 
     handleUpdateSpaceUserMessage(pusher: SpacesWatcher, updateSpaceUserMessage: UpdateSpaceUserMessage) {
-        const space = this.spaces.get(updateSpaceUserMessage.spaceName);
-        if (space && updateSpaceUserMessage.user) {
-            space.updateUser(pusher, updateSpaceUserMessage.user);
+        const updateMask = updateSpaceUserMessage.updateMask;
+        if (!updateSpaceUserMessage.user || !updateMask) {
+            console.error("UpdateSpaceUserMessage has no user or updateMask");
+            Sentry.captureException("UpdateSpaceUserMessage has no user or updateMask");
+            return;
         }
+
+        const space = this.spaces.get(updateSpaceUserMessage.spaceName);
+        if (!space) {
+            console.error("Could not find space to update in UpdateSpaceUserMessage");
+            Sentry.captureException("Could not find space to update in UpdateSpaceUserMessage");
+            return;
+        }
+
+        space.updateUser(pusher, updateSpaceUserMessage.user, updateMask);
     }
 
     handleRemoveSpaceUserMessage(pusher: SpacesWatcher, removeSpaceUserMessage: RemoveSpaceUserMessage) {

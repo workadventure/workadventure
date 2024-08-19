@@ -138,6 +138,7 @@ import {
     WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM,
 } from "../../Stores/MapEditorStore";
 import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
+import { LocalSpaceProvider } from "../../Space/SpaceProvider/SpaceStore";
 import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer, debugZoom } from "../../Utils/Debuggers";
 import { checkCoturnServer } from "../../Components/Video/utils";
 import { BroadcastService } from "../../Streaming/BroadcastService";
@@ -153,16 +154,19 @@ import { hideBubbleConfirmationModal } from "../../Rules/StatusRules/statusChang
 import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/statusChanger";
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import { getCoWebSite, openCoWebSite } from "../../Chat/Utils";
-import { LocalSpaceProviderSingleton } from "../../Space/SpaceProvider/SpaceStore";
 import { CONNECTED_USER_FILTER_NAME, WORLD_SPACE_NAME } from "../../Space/Space";
-import { StreamSpaceWatcherSingleton } from "../../Space/SpaceWatcher/SocketSpaceWatcher";
+import { StreamSpaceWatcher } from "../../Space/SpaceWatcher/SocketSpaceWatcher";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
 import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
 import { matrixSecurity } from "../../Chat/Connection/Matrix/MatrixSecurity";
-import { proximityRoomConnection, selectedRoom } from "../../Chat/Stores/ChatStore";
-import { ProximityChatConnection } from "../../Chat/Connection/Proximity/ProximityChatConnection";
+import { selectedRoom } from "../../Chat/Stores/ChatStore";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
+import { SpaceProviderInterface } from "../../Space/SpaceProvider/SpaceProviderInterface";
+import { WorldUserProvider } from "../../Chat/UserProvider/WorldUserProvider";
+import { MatrixUserProvider } from "../../Chat/UserProvider/MatrixUserProvider";
+import { UserProviderMerger } from "../../Chat/UserProviderMerger/UserProviderMerger";
+import { AdminUserProvider } from "../../Chat/UserProvider/AdminUserProvider";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -297,6 +301,7 @@ export class GameScene extends DirtyScene {
     private playerVariablesManager!: PlayerVariablesManager;
     private scriptingEventsManager!: ScriptingEventsManager;
     private followManager!: FollowManager;
+    private streamSpaceWatcher: StreamSpaceWatcher | undefined;
     private objectsByType = new Map<string, ITiledMapObject[]>();
     private embeddedWebsiteManager!: EmbeddedWebsiteManager;
     private areaManager!: DynamicAreaManager;
@@ -328,6 +333,9 @@ export class GameScene extends DirtyScene {
         this.currentCompanionTextureReject = reject;
     });
     public chatConnection!: ChatConnectionInterface;
+    private _spaceStore: SpaceProviderInterface | undefined;
+    private _proximityChatRoom: ProximityChatRoom | undefined;
+    private _userProviderMerger: UserProviderMerger | undefined;
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
@@ -992,6 +1000,8 @@ export class GameScene extends DirtyScene {
         layoutManagerActionStore.clearActions();
 
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
+        this.streamSpaceWatcher?.destroy();
+        this._spaceStore?.destroy();
         this.connection?.closeConnection();
         this.simplePeer?.closeAllConnections();
         this.simplePeer?.unregister();
@@ -1047,8 +1057,6 @@ export class GameScene extends DirtyScene {
         this.playersMovementEventDispatcher.cleanup();
         this.gameMapFrontWrapper?.close();
         this.followManager?.close();
-
-        LocalSpaceProviderSingleton.getInstance().destroy();
 
         //When we leave game, the camera is stop to be reopen after.
         // I think that we could keep camera status and the scene can manage camera setup
@@ -1521,39 +1529,42 @@ export class GameScene extends DirtyScene {
                     }
                 }
 
-                if (this.connection) {
-                    //We need to add an env parameter to switch between chat services
-                    const matrixClientWrapper = new MatrixClientWrapper(MATRIX_PUBLIC_URI ?? "", localUserStore);
-                    const matrixClientPromise = matrixClientWrapper.initMatrixClient();
+                //We need to add an env parameter to switch between chat services
+                const matrixClientWrapper = new MatrixClientWrapper(MATRIX_PUBLIC_URI ?? "", localUserStore);
+                const matrixClientPromise = matrixClientWrapper.initMatrixClient();
 
-                    matrixClientPromise
-                        .then((matrixClient) => {
-                            matrixSecurity.updateMatrixClientStore(matrixClient);
-                        })
-                        .catch((e) => {
-                            console.error(e);
-                        });
+                matrixClientPromise
+                    .then((matrixClient) => {
+                        matrixSecurity.updateMatrixClientStore(matrixClient);
+                    })
+                    .catch((e) => {
+                        console.error(e);
+                    });
 
-                    this.chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
+                this._spaceStore = new LocalSpaceProvider();
+                this.streamSpaceWatcher = new StreamSpaceWatcher(this.connection, this._spaceStore);
 
-                    // initialise the proximity chat connection
-                    proximityRoomConnection.set(
-                        new ProximityChatConnection(
-                            this.connection,
-                            this.connection.getUserId(),
-                            localUserStore.getLocalUser()?.uuid ?? "Unknown"
-                        )
-                    );
+                const allUserInWorldFilter = this._spaceStore.add(WORLD_SPACE_NAME).watch(CONNECTED_USER_FILTER_NAME);
 
-                    const chatId = localUserStore.getChatId();
-                    const email: string | null = localUserStore.getLocalUser()?.email || null;
-                    if (email && chatId) this.connection.emitUpdateChatId(email, chatId);
-                }
+                this.chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise, this._spaceStore);
 
-                const spaceProvider = LocalSpaceProviderSingleton.getInstance(onConnect.connection.socket);
-                StreamSpaceWatcherSingleton.getInstance(onConnect.connection.socket);
+                this._proximityChatRoom = new ProximityChatRoom(this.connection, this.connection.getUserId());
 
-                spaceProvider.add(WORLD_SPACE_NAME).watch(CONNECTED_USER_FILTER_NAME);
+                //init merger
+
+                const adminUserProvider = new AdminUserProvider(this.connection.queryChatMembers(""));
+                const matrixUserProvider = new MatrixUserProvider(matrixClientPromise);
+                const worldUserProvider = new WorldUserProvider(allUserInWorldFilter);
+
+                this._userProviderMerger = new UserProviderMerger([
+                    adminUserProvider,
+                    matrixUserProvider,
+                    worldUserProvider,
+                ]);
+
+                const chatId = localUserStore.getChatId();
+                const email: string | null = localUserStore.getLocalUser()?.email || null;
+                if (email && chatId) this.connection.emitUpdateChatId(email, chatId);
 
                 this.tryOpenMapEditorWithToolEditorParameter();
 
@@ -1800,7 +1811,14 @@ export class GameScene extends DirtyScene {
                         broadcastService: BroadcastService,
                         playSound: boolean
                     ) => {
-                        return new JitsiBroadcastSpace(connection, spaceName, spaceFilter, broadcastService, playSound);
+                        return new JitsiBroadcastSpace(
+                            connection,
+                            spaceName,
+                            spaceFilter,
+                            broadcastService,
+                            playSound,
+                            this.spaceStore
+                        );
                     }
                 );
                 this._broadcastService = broadcastService;
@@ -1816,9 +1834,14 @@ export class GameScene extends DirtyScene {
                         ) {
                             const oldMegaphoneUrl = get(megaphoneUrlStore);
 
-                            if (oldMegaphoneUrl && megaphoneSettingsMessage.url !== oldMegaphoneUrl) {
-                                spaceProvider.delete(oldMegaphoneUrl);
+                            if (
+                                this._spaceStore &&
+                                oldMegaphoneUrl &&
+                                megaphoneSettingsMessage.url !== oldMegaphoneUrl
+                            ) {
+                                this._spaceStore.delete(oldMegaphoneUrl);
                             }
+
                             broadcastService.joinSpace(megaphoneSettingsMessage.url);
                             megaphoneUrlStore.set(megaphoneSettingsMessage.url);
                         }
@@ -1969,11 +1992,7 @@ export class GameScene extends DirtyScene {
                         return;
                     }
 
-                    const _proximityRoomConnection = get(proximityRoomConnection);
-                    if (!_proximityRoomConnection) return;
-
-                    const room = get(_proximityRoomConnection?.rooms)[0];
-                    if (!room || !room.addNewMessage) return;
+                    const room = this.proximityChatRoom;
 
                     // The user sending the message is myself. Do not show the message.
                     const proximityUserId = publicEvent.senderUserId;
@@ -1992,16 +2011,14 @@ export class GameScene extends DirtyScene {
                 this.connection.typingProximityEvent.subscribe((publicEvent: PublicEvent) => {
                     if (publicEvent.spaceEvent!.event?.$case != "spaceIsTyping") return;
 
-                    const _proximityRoomConnection = get(proximityRoomConnection);
-                    if (!_proximityRoomConnection) return;
-
-                    const room = get(_proximityRoomConnection?.rooms)[0];
-                    if (!room || !(room instanceof ProximityChatRoom)) return;
+                    const room = this.proximityChatRoom;
 
                     if (publicEvent.senderUserId != undefined)
-                        if (publicEvent.spaceEvent!.event.spaceIsTyping.isTyping)
+                        if (publicEvent.spaceEvent!.event.spaceIsTyping.isTyping) {
                             room.addTypingUser(publicEvent.senderUserId);
-                        else room.removeTypingUser(publicEvent.senderUserId);
+                        } else {
+                            room.removeTypingUser(publicEvent.senderUserId);
+                        }
                 });
 
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
@@ -2575,11 +2592,7 @@ ${escapedMessage}
             iframeListener.chatMessageStream.subscribe((chatMessage) => {
                 switch (chatMessage.options.scope) {
                     case "local": {
-                        const _proximityRoomConnection = get(proximityRoomConnection);
-                        if (!_proximityRoomConnection) return;
-
-                        const room = get(_proximityRoomConnection.rooms)[0];
-                        if (!room || !room.addExternalMessage) return;
+                        const room = this.proximityChatRoom;
 
                         room.addExternalMessage(chatMessage.message, chatMessage.options.author);
                         selectedRoom.set(room);
@@ -2587,11 +2600,7 @@ ${escapedMessage}
                         break;
                     }
                     case "bubble": {
-                        const _proximityRoomConnection = get(proximityRoomConnection);
-                        if (!_proximityRoomConnection) return;
-
-                        const room = get(_proximityRoomConnection.rooms)[0];
-                        if (!room || !room.addExternalMessage) return;
+                        const room = this.proximityChatRoom;
 
                         room.addExternalMessage(chatMessage.message);
                         selectedRoom.set(room);
@@ -2599,7 +2608,7 @@ ${escapedMessage}
 
                         // Send the message to other users in the bubble
                         // TODO: the message should be sent by not myself
-                        const spaceName = (room as ProximityChatRoom).getSpaceName();
+                        const spaceName = room.getSpaceName();
                         if (spaceName) this.connection?.emitProximityPublicMessage(spaceName, chatMessage.message);
                         else console.warn("No space name found for the bubble chat");
                         break;
@@ -2610,22 +2619,14 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.startTypingProximityMessageStream.subscribe((sartWriting) => {
-                const _proximityRoomConnection = get(proximityRoomConnection);
-                if (!_proximityRoomConnection) return;
-
-                const room = get(_proximityRoomConnection.rooms)[0];
-                if (!room || !(room instanceof ProximityChatRoom)) return;
+                const room = this.proximityChatRoom;
 
                 room.addExternalTypingUser(btoa(sartWriting.author ?? "unknow"), sartWriting.author ?? "unknow", null);
             })
         );
         this.iframeSubscriptionList.push(
             iframeListener.stopTypingProximityMessageStream.subscribe((stopWriting) => {
-                const _proximityRoomConnection = get(proximityRoomConnection);
-                if (!_proximityRoomConnection) return;
-
-                const room = get(_proximityRoomConnection.rooms)[0];
-                if (!room || !(room instanceof ProximityChatRoom)) return;
+                const room = this.proximityChatRoom;
 
                 room.removeExternalTypingUser(btoa(stopWriting.author ?? "unknow"));
             })
@@ -3877,5 +3878,27 @@ ${escapedMessage}
 
     private disableCameraResistance(): void {
         this.cameraManager.disableResistanceZone();
+    }
+
+    //get spaceStore(): Promise<SpaceProviderInterface> {
+    get spaceStore(): SpaceProviderInterface {
+        if (!this._spaceStore) {
+            throw new Error("_spaceStore not yet initialized");
+        }
+        return this._spaceStore;
+    }
+
+    get proximityChatRoom(): ProximityChatRoom {
+        if (!this._proximityChatRoom) {
+            throw new Error("_proximityChatRoom not yet initialized");
+        }
+        return this._proximityChatRoom;
+    }
+
+    get userProviderMerger(): UserProviderMerger {
+        if (!this._userProviderMerger) {
+            throw new Error("_userProviderMerger not yet initialized");
+        }
+        return this._userProviderMerger;
     }
 }

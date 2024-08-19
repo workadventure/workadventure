@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BackToPusherSpaceMessage, PartialSpaceUser, SpaceUser } from "@workadventure/messages";
+import { BackToPusherSpaceMessage, SpaceUser } from "@workadventure/messages";
 import { mock } from "vitest-mock-extended";
 import { Space } from "../src/Model/Space";
 import { SpacesWatcher } from "../src/Model/SpacesWatcher";
@@ -82,7 +82,7 @@ describe("Space", () => {
         const watcher3 = new SpacesWatcher("uuid-watcher-3", spaceSocketToPusher3);
         space.addWatcher(watcher3);
 
-        const spaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
+        const spaceUser: SpaceUser = SpaceUser.fromPartial({
             id: 1,
             uuid: "uuid-test",
             name: "test2",
@@ -98,7 +98,20 @@ describe("Space", () => {
             visitCardUrl: "test2",
         });
 
-        space.updateUser(watcher1, spaceUser);
+        space.updateUser(watcher1, spaceUser, [
+            "uuid",
+            "name",
+            "playUri",
+            "color",
+            "roomName",
+            "isLogged",
+            "availabilityStatus",
+            "cameraState",
+            "microphoneState",
+            "megaphoneState",
+            "screenSharingState",
+            "visitCardUrl",
+        ]);
 
         // should have received the addUser event
         expect(eventsWatcher3.some((message) => message.message?.$case === "updateSpaceUserMessage")).toBe(true);

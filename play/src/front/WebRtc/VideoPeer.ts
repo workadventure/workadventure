@@ -2,7 +2,6 @@ import { Buffer } from "buffer";
 import type { Subscription } from "rxjs";
 import { get, Readable, readable, Unsubscriber, Writable, writable } from "svelte/store";
 import Peer from "simple-peer/simplepeer.min.js";
-import { v4 } from "uuid";
 import type { RoomConnection } from "../Connection/RoomConnection";
 import { localStreamStore, videoBandwidthStore } from "../Stores/MediaStore";
 import { playersStore } from "../Stores/PlayersStore";
@@ -16,7 +15,6 @@ import { TrackInterface } from "../Streaming/Contract/TrackInterface";
 import { showReportScreenStore } from "../Stores/ShowReportScreenStore";
 import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
 import { iframeListener } from "../Api/IframeListener";
-import { proximityRoomConnection } from "../Chat/Stores/ChatStore";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { blackListManager } from "./BlackListManager";
@@ -118,8 +116,7 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
 
         this._constraintsStore = writable<ObtainedMediaStreamConstraints | null>(null);
 
-        const proximityMeeting = get(proximityRoomConnection);
-
+        // TODO: refactor this with a space later when we enter a group
         // Define the spaceId and spaceName
         // By convention, the video peer space name id defined by the prefix "webrct_"
         let _spaceId = v4(),
@@ -132,8 +129,7 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
                 (_spaceName = `webrct_${this.user.webRtcUser.split(":")[0]}`);
         }
         // Join the space for proximity meeting
-        if (proximityMeeting && proximityMeeting.joinSpace != undefined)
-            proximityMeeting.joinSpace(_spaceId, _spaceName);
+        this.connection.emitUserJoinSpace(_spaceName);
 
         //start listen signal for the peer connection
         this.on("signal", (data: unknown) => {
@@ -164,12 +160,11 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
 
             this._connected = true;
 
-            if (proximityMeeting) {
-                const proximityRoomChat = get(proximityMeeting.rooms)[0];
-                if (proximityRoomChat.addIncomingUser != undefined) {
-                    const color = playersStore.getPlayerById(this.userId)?.color;
-                    proximityRoomChat.addIncomingUser(this.userId, this.userUuid, this.player.name, color ?? undefined);
-                }
+            const proximityRoomChat = gameManager.getCurrentGameScene().proximityChatRoom;
+
+            if (proximityRoomChat.addIncomingUser != undefined) {
+                const color = playersStore.getPlayerById(this.userId)?.color;
+                proximityRoomChat.addIncomingUser(this.userId, this.userUuid, this.player.name, color ?? undefined);
             }
 
             this.newMessageSubscription = newChatMessageSubject.subscribe((newMessage) => {
@@ -347,12 +342,13 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
             this.newMessageSubscription?.unsubscribe();
             this.newWritingStatusMessageSubscription?.unsubscribe();
 
-            const proximityMeeting = get(proximityRoomConnection);
+            // TODO: refactor this with a space later when we enter a group
+            /*const proximityMeeting = get(proximityRoomConnection);
             if (proximityMeeting) {
                 const proximityRoomChat = get(proximityMeeting.rooms)[0];
                 if (proximityRoomChat.addOutcomingUser != undefined)
                     proximityRoomChat.addOutcomingUser(this.userId, this.userUuid, this.player.name);
-            }
+            }*/
 
             if (this.localStreamStoreSubscribe) this.localStreamStoreSubscribe();
             if (this.apparentMediaConstraintStoreSubscribe) this.apparentMediaConstraintStoreSubscribe();

@@ -1,16 +1,14 @@
 import merge from "lodash/merge";
 import {
-    ClientToServerMessage,
-    PartialSpaceUser,
     SpaceFilterContainName,
     SpaceFilterEverybody,
     SpaceFilterLiveStreaming,
-    SpaceFilterMessage,
     SpaceUser,
 } from "@workadventure/messages";
 import { Subject } from "rxjs";
 import { Writable, get, writable } from "svelte/store";
 import { CharacterLayerManager } from "../../Phaser/Entity/CharacterLayerManager";
+import { gameManager } from "../../Phaser/Game/GameManager";
 
 export interface SpaceFilterInterface {
     userExist(userId: number): boolean;
@@ -31,7 +29,8 @@ export interface SpaceUserExtended extends SpaceUser {
     getWokaBase64: string;
     updateSubject: Subject<{
         newUser: SpaceUserExtended;
-        changes: PartialSpaceUser;
+        changes: SpaceUser;
+        updateMask: string[];
     }>;
     emitter: JitsiEventEmitter | undefined;
     spaceName: string;
@@ -67,7 +66,7 @@ export class SpaceFilter implements SpaceFilterInterface {
         private name: string,
         private spaceName: string,
         private filter: Filter = undefined,
-        private sender: (message: ClientToServerMessage) => void,
+        private roomConnection = gameManager.getCurrentGameScene().connection,
         readonly users: Writable<Map<number, SpaceUserExtended>> = writable(new Map<number, SpaceUserExtended>())
     ) {
         this.addSpaceFilter();
@@ -125,25 +124,29 @@ export class SpaceFilter implements SpaceFilterInterface {
 
         emitter = {
             emitKickOffUserMessage: (userId: string) => {
-                this.emitKickOffUserMessage(userId);
+                this.roomConnection?.emitKickOffUserMessage(userId, this.name);
             },
+            // FIXME: it is strange to have a emitMuteEveryBodySpace that is valid for anyone in a space applied to a specific user. It should be a method of the space instead.
+            // In fact, we should have a single "emitPublicMessage" on the space class with a typing that is a union of all possible messages addressed to everybody.
             emitMuteEveryBodySpace: () => {
-                this.emitMuteEveryBodySpace(user.id.toString());
+                this.roomConnection?.emitMuteEveryBodySpace(this.name);
             },
             emitMuteParticipantIdSpace: (userId: string) => {
-                this.emitMuteParticipantIdSpace(userId);
+                this.roomConnection?.emitMuteParticipantIdSpace(this.name, userId);
             },
+            // FIXME: it is strange to have a emitMuteVideoEveryBodySpace that is valid for anyone in a space applied to a specific user. It should be a method of the space instead.
+            // In fact, we should have a single "emitPublicMessage" on the space class with a typing that is a union of all possible messages addressed to everybody.
             emitMuteVideoEveryBodySpace: () => {
-                this.emitMuteVideoEveryBodySpace(user.id.toString());
+                this.roomConnection?.emitMuteVideoEveryBodySpace(this.name);
             },
             emitMuteVideoParticipantIdSpace: (userId: string) => {
-                this.emitMuteVideoParticipantIdSpace(userId);
+                this.roomConnection?.emitMuteParticipantIdSpace(this.name, userId);
             },
             emitProximityPublicMessage: (message: string) => {
-                this.emitProximityPublicMessage(message);
+                this.roomConnection?.emitProximityPublicMessage(this.name, message);
             },
             emitProximityPrivateMessage: (message: string, receiverUserId: number) => {
-                this.emitProximityPrivateMessage(message, receiverUserId);
+                this.roomConnection?.emitProximityPrivateMessage(this.name, message, receiverUserId);
             },
         };
 
@@ -155,142 +158,36 @@ export class SpaceFilter implements SpaceFilterInterface {
             getWokaBase64: wokaBase64,
             updateSubject: new Subject<{
                 newUser: SpaceUserExtended;
-                changes: PartialSpaceUser;
+                changes: SpaceUser;
+                updateMask: string[];
             }>(),
             emitter,
             spaceName,
         };
     }
-    private removeSpaceFilter(spaceFilter: SpaceFilterMessage) {
-        this.sender({
-            message: {
-                $case: "removeSpaceFilterMessage",
-                removeSpaceFilterMessage: {
-                    spaceFilterMessage: {
-                        filterName: this.name,
-                        spaceName: this.spaceName,
-                    },
-                },
+    private removeSpaceFilter() {
+        this.roomConnection.emitRemoveSpaceFilter({
+            spaceFilterMessage: {
+                filterName: this.name,
+                spaceName: this.spaceName,
             },
         });
     }
+
     private updateSpaceFilter() {
-        this.sender({
-            message: {
-                $case: "updateSpaceFilterMessage",
-                updateSpaceFilterMessage: {
-                    spaceFilterMessage: {
-                        filterName: this.name,
-                        spaceName: this.spaceName,
-                        filter: this.filter,
-                    },
-                },
+        this.roomConnection.emitUpdateSpaceFilter({
+            spaceFilterMessage: {
+                filterName: this.name,
+                spaceName: this.spaceName,
+                filter: this.filter,
             },
         });
     }
     private addSpaceFilter() {
-        this.sender({
-            message: {
-                $case: "addSpaceFilterMessage",
-                addSpaceFilterMessage: {
-                    spaceFilterMessage: {
-                        filterName: this.name,
-                        spaceName: this.spaceName,
-                    },
-                },
-            },
-        });
-    }
-    private emitKickOffUserMessage(userId: string) {
-        this.sender({
-            message: {
-                $case: "kickOffUserMessage",
-                kickOffUserMessage: {
-                    userId,
-                    spaceName: this.spaceName,
-                },
-            },
-        });
-    }
-
-    private emitMuteEveryBodySpace(userId: string) {
-        this.sender({
-            message: {
-                $case: "muteEveryBodyParticipantMessage",
-                muteEveryBodyParticipantMessage: {
-                    spaceName: this.spaceName,
-                    senderUserId: userId,
-                },
-            },
-        });
-    }
-
-    private emitMuteVideoEveryBodySpace(userId: string) {
-        this.sender({
-            message: {
-                $case: "muteVideoEveryBodyParticipantMessage",
-                muteVideoEveryBodyParticipantMessage: {
-                    spaceName: this.spaceName,
-                    userId: userId,
-                },
-            },
-        });
-    }
-
-    private emitMuteParticipantIdSpace(userId: string) {
-        this.sender({
-            message: {
-                $case: "muteParticipantIdMessage",
-                muteParticipantIdMessage: {
-                    spaceName: this.spaceName,
-                    mutedUserUuid: userId,
-                },
-            },
-        });
-    }
-
-    private emitMuteVideoParticipantIdSpace(userId: string) {
-        this.sender({
-            message: {
-                $case: "muteVideoParticipantIdMessage",
-                muteVideoParticipantIdMessage: {
-                    spaceName: this.spaceName,
-                    mutedUserUuid: userId,
-                },
-            },
-        });
-    }
-
-    private emitProximityPublicMessage(message: string) {
-        this.sender({
-            message: {
-                $case: "publicEvent",
-                publicEvent: {
-                    spaceName: this.spaceName,
-                    spaceEvent: {
-                        event: {
-                            $case: "spaceMessage",
-                            spaceMessage: {
-                                message,
-                            },
-                        },
-                    },
-                },
-            },
-        });
-    }
-
-    private emitProximityPrivateMessage(message: string, receiverUserId: number) {
-        this.sender({
-            message: {
-                $case: "privateEvent",
-                privateEvent: {
-                    spaceName: this.spaceName,
-                    receiverUserId,
-                    spaceMessage: {
-                        message,
-                    },
-                },
+        this.roomConnection.emitAddSpaceFilter({
+            spaceFilterMessage: {
+                filterName: this.name,
+                spaceName: this.spaceName,
             },
         });
     }
@@ -299,9 +196,6 @@ export class SpaceFilter implements SpaceFilterInterface {
         return this.filter?.$case;
     }
     destroy() {
-        this.removeSpaceFilter({
-            spaceName: this.spaceName,
-            filterName: this.name,
-        });
+        this.removeSpaceFilter();
     }
 }

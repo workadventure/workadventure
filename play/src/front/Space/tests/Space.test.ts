@@ -1,14 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { ClientToServerMessage, UnwatchSpaceMessage, WatchSpaceMessage } from "@workadventure/messages";
 import { Space } from "../Space";
 import { SpaceFilterAlreadyExistError, SpaceNameIsEmptyError } from "../Errors/SpaceError";
 import { SpaceFilterInterface } from "../SpaceFilter/SpaceFilter";
-
-const WebSocket = {
-    CONNECTING: 0,
-    CLOSING: 2,
-    CLOSED: 3,
-};
+import { RoomConnection } from "../../Connection/RoomConnection";
 
 vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
     return {
@@ -19,6 +13,18 @@ vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
         },
     };
 });
+
+vi.mock("../../Phaser/Game/GameManager", () => {
+    return {
+        gameManager: {
+            getCurrentGameScene: () => ({}),
+        },
+    };
+});
+
+const defaultRoomConnectionMock = {
+    emitWatchSpace: vi.fn(),
+} as unknown as RoomConnection;
 
 describe("Space test", () => {
     beforeAll(() => {
@@ -39,135 +45,55 @@ describe("Space test", () => {
     it("should return a error when pass a empty string as spaceName", () => {
         const spaceName = "";
         const metadata = new Map<string, unknown>();
-        const mockSocket = {
-            readyState: WebSocket.CONNECTING,
-            send: vi.fn(),
-        } as unknown as WebSocket;
 
-        const mockEncoder: { encode: (messageCoded: ClientToServerMessage) => { finish: () => Uint8Array } } = {
-            encode: vi.fn().mockImplementation((msg) => {
-                return {
-                    finish: () => new Uint8Array(),
-                };
-            }),
-        };
         expect(() => {
-            new Space(spaceName, metadata, mockSocket, mockEncoder);
+            new Space(spaceName, metadata, defaultRoomConnectionMock);
         }).toThrow(SpaceNameIsEmptyError);
     });
     it("should not return a error when pass a string as spaceName", () => {
         const spaceName = "space-name";
         const metadata = new Map<string, unknown>();
-        const mockSocket: Partial<WebSocket> = {
-            readyState: WebSocket.CONNECTING,
-            send: vi.fn(),
-        } as unknown as WebSocket;
-        const mockEncoder: { encode: (messageCoded: ClientToServerMessage) => { finish: () => Uint8Array } } = {
-            encode: vi.fn().mockImplementation((msg) => {
-                return {
-                    finish: () => new Uint8Array(),
-                };
-            }),
-        };
-        const space = new Space(spaceName, metadata, mockSocket as WebSocket, mockEncoder);
+
+        const space = new Space(spaceName, metadata, defaultRoomConnectionMock);
         expect(space.getName()).toBe(spaceName);
     });
     it("should emit joinSpace event when you create the space", () => {
         const spaceName = "space-name";
         const metadata = new Map<string, unknown>();
-        const mockSocket: Partial<WebSocket> = {
-            readyState: WebSocket.CONNECTING,
-            send: vi.fn(),
-        } as unknown as WebSocket;
-
-        const mockEncoder: { encode: (messageCoded: ClientToServerMessage) => { finish: () => Uint8Array } } = {
-            encode: vi.fn().mockImplementation((msg) => {
-                return {
-                    finish: () => msg,
-                };
-            }),
+        const mockRoomConnection = {
+            emitWatchSpace: vi.fn(),
         };
 
-        const message = {
-            message: {
-                $case: "watchSpaceMessage",
-                watchSpaceMessage: WatchSpaceMessage.fromPartial({
-                    spaceName: spaceName,
-                    spaceFilter: {
-                        filterName: "",
-                        spaceName: spaceName,
-                        filter: undefined,
-                    },
-                }),
-            },
-        };
-        new Space(spaceName, metadata, mockSocket as WebSocket, mockEncoder);
+        new Space(spaceName, metadata, mockRoomConnection as unknown as RoomConnection);
 
         // eslint-disable-next-line @typescript-eslint/unbound-method
-        expect(mockSocket.send).toHaveBeenCalledOnce();
+        expect(mockRoomConnection.emitWatchSpace).toHaveBeenCalledOnce();
         // eslint-disable-next-line @typescript-eslint/unbound-method
-        expect(mockSocket.send).toHaveBeenCalledWith(message);
-
-        expect(mockEncoder.encode).toHaveBeenCalledOnce();
-
-        expect(mockEncoder.encode).toHaveBeenCalledWith(message);
+        expect(mockRoomConnection.emitWatchSpace).toHaveBeenCalledWith(spaceName);
     });
 
     it("should emit leaveSpace event when you call destroy", () => {
         const spaceName = "space-name";
         const metadata = new Map<string, unknown>();
 
-        const mockSocket: Partial<WebSocket> = {
-            readyState: WebSocket.CONNECTING,
-            send: vi.fn(),
-        } as unknown as WebSocket;
-
-        const mockEncoder: { encode: (messageCoded: ClientToServerMessage) => { finish: () => Uint8Array } } = {
-            encode: vi.fn().mockImplementation((msg) => {
-                return {
-                    finish: () => msg,
-                };
-            }),
+        const mockRoomConnection = {
+            emitWatchSpace: vi.fn(),
+            emitUnwatchSpace: vi.fn(),
         };
 
-        const message = {
-            message: {
-                $case: "unwatchSpaceMessage",
-                unwatchSpaceMessage: UnwatchSpaceMessage.fromPartial({
-                    spaceName: spaceName,
-                }),
-            },
-        };
-        const space = new Space(spaceName, metadata, mockSocket as WebSocket, mockEncoder);
+        const space = new Space(spaceName, metadata, mockRoomConnection as unknown as RoomConnection);
 
         space.destroy();
         // eslint-disable-next-line @typescript-eslint/unbound-method
-        expect(mockSocket.send).toHaveBeenCalledTimes(2);
+        expect(mockRoomConnection.emitUnwatchSpace).toHaveBeenCalledOnce();
         // eslint-disable-next-line @typescript-eslint/unbound-method
-        expect(mockSocket.send).toHaveBeenLastCalledWith(message);
-
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        expect(mockEncoder.encode).toHaveBeenCalledTimes(2);
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        expect(mockEncoder.encode).toHaveBeenLastCalledWith(message);
+        expect(mockRoomConnection.emitUnwatchSpace).toHaveBeenLastCalledWith(spaceName);
     });
     it("should add metadata when key is not in metadata map", () => {
         const spaceName = "space-name";
         const metadata = new Map<string, unknown>();
-        const mockSocket: Partial<WebSocket> = {
-            readyState: WebSocket.CONNECTING,
-            send: vi.fn(),
-        } as unknown as WebSocket;
 
-        const mockEncoder: { encode: (messageCoded: ClientToServerMessage) => { finish: () => Uint8Array } } = {
-            encode: vi.fn().mockImplementation((msg) => {
-                return {
-                    finish: () => msg,
-                };
-            }),
-        };
-
-        const space = new Space(spaceName, metadata, mockSocket as WebSocket, mockEncoder);
+        const space = new Space(spaceName, metadata, defaultRoomConnectionMock);
 
         const newMetadata = new Map<string, unknown>([
             ["metadata-1", 0],
@@ -184,20 +110,8 @@ describe("Space test", () => {
     it("should update metadata when key is already in metadata map ", () => {
         const spaceName = "space-name";
         const metadata = new Map<string, unknown>([["metadata-1", 4]]);
-        const mockSocket: Partial<WebSocket> = {
-            readyState: WebSocket.CONNECTING,
-            send: vi.fn(),
-        } as unknown as WebSocket;
 
-        const mockEncoder: { encode: (messageCoded: ClientToServerMessage) => { finish: () => Uint8Array } } = {
-            encode: vi.fn().mockImplementation((msg) => {
-                return {
-                    finish: () => msg,
-                };
-            }),
-        };
-
-        const space = new Space(spaceName, metadata, mockSocket as WebSocket, mockEncoder);
+        const space = new Space(spaceName, metadata, defaultRoomConnectionMock);
 
         const newMetadata = new Map<string, unknown>([["metadata-1", 0]]);
 
@@ -211,20 +125,8 @@ describe("Space test", () => {
         const spaceName = "space-name";
 
         const metadata = new Map<string, unknown>([["metadata-1", 4]]);
-        const mockSocket: Partial<WebSocket> = {
-            readyState: WebSocket.CONNECTING,
-            send: vi.fn(),
-        } as unknown as WebSocket;
 
-        const mockEncoder: { encode: (messageCoded: ClientToServerMessage) => { finish: () => Uint8Array } } = {
-            encode: vi.fn().mockImplementation((msg) => {
-                return {
-                    finish: () => msg,
-                };
-            }),
-        };
-
-        const space = new Space(spaceName, metadata, mockSocket as WebSocket, mockEncoder);
+        const space = new Space(spaceName, metadata, defaultRoomConnectionMock);
 
         const newMetadata = new Map<string, unknown>([
             ["metadata-2", 0],
@@ -245,18 +147,6 @@ describe("Space test", () => {
         const spaceFilterName = "space-filter-name";
 
         const metadata = new Map<string, unknown>([["metadata-1", 4]]);
-        const mockSocket: Partial<WebSocket> = {
-            readyState: WebSocket.CONNECTING,
-            send: vi.fn(),
-        } as unknown as WebSocket;
-
-        const mockEncoder: { encode: (messageCoded: ClientToServerMessage) => { finish: () => Uint8Array } } = {
-            encode: vi.fn().mockImplementation((msg) => {
-                return {
-                    finish: () => msg,
-                };
-            }),
-        };
 
         const filter: Partial<SpaceFilterInterface> = {};
         const spaceFilterMap = new Map<string, Partial<SpaceFilterInterface>>([[spaceFilterName, filter]]);
@@ -264,8 +154,7 @@ describe("Space test", () => {
         const space = new Space(
             spaceName,
             metadata,
-            mockSocket as WebSocket,
-            mockEncoder,
+            defaultRoomConnectionMock,
             spaceFilterMap as Map<string, SpaceFilterInterface>
         );
 
@@ -279,20 +168,8 @@ describe("Space test", () => {
         const spaceFilterName = "space-filter-name";
 
         const metadata = new Map<string, unknown>([["metadata-1", 4]]);
-        const mockSocket: Partial<WebSocket> = {
-            readyState: WebSocket.CONNECTING,
-            send: vi.fn(),
-        } as unknown as WebSocket;
 
-        const mockEncoder: { encode: (messageCoded: ClientToServerMessage) => { finish: () => Uint8Array } } = {
-            encode: vi.fn().mockImplementation((msg) => {
-                return {
-                    finish: () => msg,
-                };
-            }),
-        };
-
-        const space = new Space(spaceName, metadata, mockSocket as WebSocket, mockEncoder);
+        const space = new Space(spaceName, metadata, defaultRoomConnectionMock);
 
         const spaceFilter = space.watch(spaceFilterName);
         expect(spaceFilter).toBeDefined();
@@ -305,18 +182,7 @@ describe("Space test", () => {
         const spaceName = "space-name";
         const spaceFilterName = "space-filter-name";
         const metadata = new Map<string, unknown>([["metadata-1", 4]]);
-        const mockSocket: Partial<WebSocket> = {
-            readyState: WebSocket.CONNECTING,
-            send: vi.fn(),
-        } as unknown as WebSocket;
 
-        const mockEncoder: { encode: (messageCoded: ClientToServerMessage) => { finish: () => Uint8Array } } = {
-            encode: vi.fn().mockImplementation((msg) => {
-                return {
-                    finish: () => msg,
-                };
-            }),
-        };
         const filter: Partial<SpaceFilterInterface> = {
             destroy: vi.fn(),
         };
@@ -324,8 +190,7 @@ describe("Space test", () => {
         const space = new Space(
             spaceName,
             metadata,
-            mockSocket as WebSocket,
-            mockEncoder,
+            defaultRoomConnectionMock,
             spaceFilterMap as Map<string, SpaceFilterInterface>
         );
         space.stopWatching(spaceFilterName);
