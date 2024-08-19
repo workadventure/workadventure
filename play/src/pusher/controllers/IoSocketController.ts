@@ -503,10 +503,6 @@ export class IoSocketController {
                             pusherRoom: undefined,
                             spaces: [],
                             spacesFilters: new Map<string, SpaceFilterMessage[]>(),
-                            cameraState: undefined,
-                            microphoneState: undefined,
-                            screenSharingState: undefined,
-                            megaphoneState: undefined,
                             chatID,
                             world: userData.world,
                         };
@@ -799,37 +795,12 @@ export class IoSocketController {
                             socketManager.handleLeaveSpace(socket, message.message.leaveSpaceMessage.spaceName);
                             break;
                         }
-                        case "cameraStateMessage": {
-                            socketManager.handleCameraState(socket, message.message.cameraStateMessage.value);
-                            break;
-                        }
-                        case "microphoneStateMessage": {
-                            socketManager.handleMicrophoneState(socket, message.message.microphoneStateMessage.value);
-                            break;
-                        }
-                        case "screenSharingStateMessage": {
-                            socketManager.handleScreenSharingState(
-                                socket,
-                                message.message.screenSharingStateMessage.value
-                            );
-                            break;
-                        }
-                        case "megaphoneStateMessage": {
-                            message.message.megaphoneStateMessage.spaceName = `${socket.getUserData().world}.${
-                                message.message.megaphoneStateMessage.spaceName
+                        case "updateSpaceUserMessage": {
+                            message.message.updateSpaceUserMessage.spaceName = `${socket.getUserData().world}.${
+                                message.message.updateSpaceUserMessage.spaceName
                             }`;
-                            socketManager.handleMegaphoneState(socket, message.message.megaphoneStateMessage);
-                            break;
-                        }
-                        case "jitsiParticipantIdSpaceMessage": {
-                            message.message.jitsiParticipantIdSpaceMessage.spaceName = `${socket.getUserData().world}.${
-                                message.message.jitsiParticipantIdSpaceMessage.spaceName
-                            }`;
-                            socketManager.handleJitsiParticipantIdSpace(
-                                socket,
-                                message.message.jitsiParticipantIdSpaceMessage.spaceName,
-                                message.message.jitsiParticipantIdSpaceMessage.value
-                            );
+
+                            socketManager.handleUpdateSpaceUser(socket, message.message.updateSpaceUserMessage);
                             break;
                         }
                         case "updateChatIdMessage": {

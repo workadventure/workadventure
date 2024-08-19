@@ -2,7 +2,6 @@ syntax = "proto3";
 
 import "google/protobuf/wrappers.proto";
 import "google/protobuf/struct.proto";
-import "google/protobuf/any.proto";
 import "google/protobuf/field_mask.proto";
 
 /*********** PARTIAL MESSAGES **************/
@@ -315,11 +314,7 @@ message ClientToServerMessage {
     UpdateSpaceFilterMessage updateSpaceFilterMessage = 27;
     JoinSpaceMessage joinSpaceMessage = 28;
     LeaveSpaceMessage leaveSpaceMessage = 29;
-    CameraStateMessage cameraStateMessage = 30;
-    MicrophoneStateMessage microphoneStateMessage = 31;
-    MegaphoneStateMessage megaphoneStateMessage = 32;
-    ScreenSharingStateMessage screenSharingStateMessage = 33;
-    JitsiParticipantIdSpaceMessage  jitsiParticipantIdSpaceMessage = 34;
+    UpdateSpaceUserMessage updateSpaceUserMessage = 30;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 35;
     BanPlayerMessage banPlayerMessage = 41;
     UpdateChatIdMessage updateChatIdMessage = 42;
@@ -754,33 +749,6 @@ message BanUserMessage{
 message AskPositionMessage{
   string userIdentifier = 1;
   string playUri = 2;
-}
-
-message CameraStateMessage {
-  bool value = 1;
-}
-
-message MicrophoneStateMessage {
-  bool value = 1;
-}
-
-message ScreenSharingStateMessage {
-  bool value = 1;
-}
-
-message MegaphoneStateMessage {
-  bool value = 1;
-  optional string spaceName = 2;
-}
-
-// FIXME: refactor this with a simple "patch"
-message JitsiParticipantIdSpaceMessage {
-  string spaceName = 1;
-  string value = 2;
-}
-
-message MegaphoneEnabledMessage {
-  bool value = 1;
 }
 
 // A request sent within a space to mute the audio of a specific user

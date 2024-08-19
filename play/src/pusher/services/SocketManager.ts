@@ -17,7 +17,6 @@ import {
     GetMemberAnswer,
     GetMemberQuery,
     JoinRoomMessage,
-    MegaphoneStateMessage,
     MemberData,
     PlayerDetailsUpdatedMessage,
     PlayGlobalMessage,
@@ -43,10 +42,13 @@ import {
     NonUndefinedFields,
     PublicEventFrontToPusher,
     PrivateEventFrontToPusher,
+    UpdateSpaceUserMessage,
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import axios, { AxiosResponse, isAxiosError } from "axios";
 import { z } from "zod";
+import { applyFieldMask } from "protobuf-fieldmask";
+import merge from "lodash/merge";
 import { PusherRoom } from "../models/PusherRoom";
 import type { BackSpaceConnection, SocketData } from "../models/Websocket/SocketData";
 
@@ -1137,82 +1139,19 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    handleCameraState(client: Socket, state: boolean) {
-        // FIXME: I don't understand how this can work if there are many pushers.
-        // People on other pushers will not get notified because the message is not propagated to the back
+    handleUpdateSpaceUser(client: Socket, updateSpaceUserMessage: UpdateSpaceUserMessage) {
+        const message = noUndefined(updateSpaceUserMessage);
         const socketData = client.getUserData();
-        socketData.cameraState = state;
-        socketData.spaceUser.cameraState = state;
-        const partialSpaceUser: SpaceUser = SpaceUser.fromPartial({
-            cameraState: state,
-            id: socketData.userId,
-        });
-        socketData.spaces.forEach((space) => {
-            space.updateUser(partialSpaceUser, ["cameraState"]);
-        });
-    }
+        const toUpdateValues = applyFieldMask(message.user, message.updateMask);
+        merge(socketData.spaceUser, toUpdateValues);
 
-    handleMicrophoneState(client: Socket, state: boolean) {
-        // FIXME: I don't understand how this can work if there are many pushers.
-        // People on other pushers will not get notified because the message is not propagated to the back
-        const socketData = client.getUserData();
-        socketData.microphoneState = state;
-        socketData.spaceUser.microphoneState = state;
-        const partialSpaceUser: SpaceUser = SpaceUser.fromPartial({
-            microphoneState: state,
-            id: socketData.userId,
-        });
-        socketData.spaces.forEach((space) => {
-            space.updateUser(partialSpaceUser, ["microphoneState"]);
-        });
-    }
-
-    handleScreenSharingState(client: Socket, state: boolean) {
-        // FIXME: I don't understand how this can work if there are many pushers.
-        // People on other pushers will not get notified because the message is not propagated to the back
-        const socketData = client.getUserData();
-        socketData.screenSharingState = state;
-        socketData.spaceUser.screenSharingState = state;
-        const partialSpaceUser: SpaceUser = SpaceUser.fromPartial({
-            screenSharingState: state,
-            id: socketData.userId,
-        });
-        socketData.spaces.forEach((space) => {
-            space.updateUser(partialSpaceUser, ["screenSharingState"]);
-        });
-    }
-
-    handleMegaphoneState(client: Socket, megaphoneStateMessage: MegaphoneStateMessage) {
-        // FIXME: I don't understand how this can work if there are many pushers.
-        // People on other pushers will not get notified because the message is not propagated to the back
-        const socketData = client.getUserData();
-        socketData.megaphoneState = megaphoneStateMessage.value;
-        socketData.spaceUser.megaphoneState = megaphoneStateMessage.value;
-        const partialSpaceUser: SpaceUser = SpaceUser.fromPartial({
-            megaphoneState: megaphoneStateMessage.value,
-            id: socketData.userId,
-        });
-        socketData.spaces
-            .filter((space) => !megaphoneStateMessage.spaceName || space.name === megaphoneStateMessage.spaceName)
-            .forEach((space) => {
-                space.updateUser(partialSpaceUser, ["megaphoneState"]);
-            });
-    }
-
-    handleJitsiParticipantIdSpace(client: Socket, spaceName: string, jitsiParticipantId: string) {
-        // FIXME: I don't understand how this can work if there are many pushers.
-        // People on other pushers will not get notified because the message is not propagated to the back
-        const socketData = client.getUserData();
-        const space = socketData.spaces.find((space) => space.name === spaceName);
-        if (space) {
-            const partialSpaceUser: SpaceUser = SpaceUser.fromPartial({
-                jitsiParticipantId,
-                id: socketData.userId,
-            });
-            space.updateUser(partialSpaceUser, ["jitsiParticipantId"]);
-        } else {
-            console.error("Could not find space", spaceName, "when updating jitsiParticipantId");
+        const space = socketData.spaces.find((space) => space.name === message.spaceName);
+        if (!space) {
+            throw new Error(
+                `Could not find space ${message.spaceName} when updating value(s) ${message.updateMask.join(", ")}`
+            );
         }
+        space.updateUser(message.user, message.updateMask);
     }
 
     async handleRoomTagsQuery(client: Socket, queryMessage: QueryMessage) {

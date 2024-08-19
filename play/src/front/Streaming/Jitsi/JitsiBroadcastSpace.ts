@@ -13,6 +13,8 @@ import { SpaceInterface } from "../../Space/SpaceInterface";
 import { SpaceRegistryInterface } from "../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { SpaceFilterInterface } from "../../Space/SpaceFilter/SpaceFilter";
 import { bindMuteEventsToSpace } from "../../Space/Utils/BindMuteEvents";
+import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
+import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { jitsiConferencesStore } from "./JitsiConferencesStore";
 import { JitsiConferenceWrapper } from "./JitsiConferenceWrapper";
 import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
@@ -50,6 +52,39 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
         this.space = this.spaceRegistry.joinSpace(spaceName);
         bindMuteEventsToSpace(this.space);
 
+        this.unsubscribes.push(
+            requestedCameraState.subscribe((state) => {
+                this.space.emitUpdateUser({
+                    cameraState: state,
+                });
+            })
+        );
+
+        this.unsubscribes.push(
+            requestedMicrophoneState.subscribe((state) => {
+                this.space.emitUpdateUser({
+                    microphoneState: state,
+                });
+            })
+        );
+
+        this.unsubscribes.push(
+            requestedScreenSharingState.subscribe((state) => {
+                this.space.emitUpdateUser({
+                    screenSharingState: state,
+                });
+            })
+        );
+
+        this.unsubscribes.push(
+            // FIXME: do we need this store in the JitsiBroadcastService?
+            liveStreamingEnabledStore.subscribe((state) => {
+                this.space.emitUpdateUser({
+                    megaphoneState: state,
+                });
+            })
+        );
+
         this.spaceFilter = this.space.watchLiveStreamingUsers();
 
         this.space.setMetadata(new Map([["test", "test"]]));
@@ -79,7 +114,9 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
                         if (this.conference === undefined) {
                             jitsiLoadingStore.set(true);
                             this.conference = await this.joinJitsiConference(spaceName);
-                            this.space.emitJitsiParticipantId(this.conference.participantId);
+                            this.space.emitUpdateUser({
+                                jitsiParticipantId: this.conference.participantId,
+                            });
                             jitsiLoadingStore.set(false);
                         }
                     }).catch((e) => {

@@ -26,6 +26,5 @@ export class MockRoomConnectionForSpaces implements RoomConnectionForSpacesInter
     public emitLeaveSpace = vi.fn();
     public emitJoinSpace = vi.fn();
     public emitUpdateSpaceMetadata = vi.fn();
-    // FIXME: looks like a hack, remove this.
-    public emitJitsiParticipantIdSpace = vi.fn();
+    public emitUpdateSpaceUserMessage = vi.fn();
 }

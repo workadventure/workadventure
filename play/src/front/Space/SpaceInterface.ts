@@ -1,5 +1,5 @@
 import { Subject } from "rxjs";
-import { PrivateSpaceEvent, SpaceEvent } from "@workadventure/messages";
+import { PrivateSpaceEvent, SpaceEvent, SpaceUser } from "@workadventure/messages";
 import { SpaceFilterInterface } from "./SpaceFilter/SpaceFilter";
 import { AllUsersSpaceFilterInterface } from "./SpaceFilter/AllUsersSpaceFilter";
 
@@ -19,8 +19,9 @@ export type PrivateEventsObservables = {
     >;
 };
 
+export type SpaceUserUpdate = Omit<Partial<SpaceUser>, "id">;
+
 export interface SpaceInterface {
-    emitJitsiParticipantId(participantId: string): void;
     getName(): string;
     setMetadata(metadata: Map<string, unknown>): void;
     getMetadata(): Map<string, unknown>;
@@ -30,4 +31,5 @@ export interface SpaceInterface {
     observePublicEvent<K extends keyof PublicEventsObservables>(key: K): NonNullable<PublicEventsObservables[K]>;
     observePrivateEvent<K extends keyof PrivateEventsObservables>(key: K): NonNullable<PrivateEventsObservables[K]>;
     emitPublicMessage(message: NonNullable<SpaceEvent["event"]>): void;
+    emitUpdateUser(spaceUser: SpaceUserUpdate): void;
 }

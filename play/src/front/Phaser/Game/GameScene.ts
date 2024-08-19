@@ -139,11 +139,10 @@ import { SpaceRegistry } from "../../Space/SpaceRegistry/SpaceRegistry";
 import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer, debugZoom } from "../../Utils/Debuggers";
 import { checkCoturnServer } from "../../Components/Video/utils";
 import { BroadcastService } from "../../Streaming/BroadcastService";
-import { liveStreamingEnabledStore, megaphoneCanBeUsedStore, megaphoneSpaceStore } from "../../Stores/MegaphoneStore";
+import { megaphoneCanBeUsedStore, megaphoneSpaceStore } from "../../Stores/MegaphoneStore";
 import { CompanionTextureError } from "../../Exception/CompanionTextureError";
 import { SelectCompanionScene, SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { scriptUtils } from "../../Api/ScriptUtils";
-import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { JitsiBroadcastSpace } from "../../Streaming/Jitsi/JitsiBroadcastSpace";
 import { hideBubbleConfirmationModal } from "../../Rules/StatusRules/statusChangerFunctions";
 import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/statusChanger";
@@ -847,7 +846,7 @@ export class GameScene extends DirtyScene {
             this.connectionAnswerPromiseDeferred.promise as Promise<unknown>,
             ...scriptPromises,
             this.CurrentPlayer.getTextureLoadedPromise() as Promise<unknown>,
-            this.gameMapFrontWrapper.initializedPromise,
+            this.gameMapFrontWrapper.initializedPromise.promise,
         ])
             .then(() => {
                 this.initUserPermissionsOnEntity();
@@ -1993,30 +1992,6 @@ export class GameScene extends DirtyScene {
         this.embedScreenLayoutStoreUnsubscriber = embedScreenLayoutStore.subscribe((layout) => {
             //this.reposition();
         });
-
-        this.unsubscribers.push(
-            requestedCameraState.subscribe((state) => {
-                this.connection?.emitCameraState(state);
-            })
-        );
-
-        this.unsubscribers.push(
-            requestedMicrophoneState.subscribe((state) => {
-                this.connection?.emitMicrophoneState(state);
-            })
-        );
-
-        this.unsubscribers.push(
-            requestedScreenSharingState.subscribe((state) => {
-                this.connection?.emitScreenSharingState(state);
-            })
-        );
-
-        this.unsubscribers.push(
-            liveStreamingEnabledStore.subscribe((state) => {
-                this.connection?.emitMegaphoneState(state);
-            })
-        );
 
         const talkIconVolumeTreshold = 10;
         let oldPeersNumber = 0;

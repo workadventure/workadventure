@@ -64,10 +64,12 @@ import {
     RemoveSpaceUserPusherToFrontMessage,
     PublicEventFrontToPusher,
     PrivateEventFrontToPusher,
+    SpaceUser,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
 import { get } from "svelte/store";
+import { generateFieldMask } from "protobuf-fieldmask";
 import { ReceiveEventEvent } from "../Api/Events/ReceiveEventEvent";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
@@ -1448,61 +1450,21 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitCameraState(state: boolean) {
+    public emitUpdateSpaceUserMessage(spaceName: string, spaceUser: Omit<Partial<SpaceUser>, "id">): void {
+        const userId = this.userId;
+        if (!userId) {
+            throw new Error("userId cannot be null when updating spaceUserMessage");
+        }
         this.send({
             message: {
-                $case: "cameraStateMessage",
-                cameraStateMessage: {
-                    value: state,
-                },
-            },
-        });
-    }
-
-    public emitMicrophoneState(state: boolean) {
-        this.send({
-            message: {
-                $case: "microphoneStateMessage",
-                microphoneStateMessage: {
-                    value: state,
-                },
-            },
-        });
-    }
-
-    public emitScreenSharingState(state: boolean) {
-        this.send({
-            message: {
-                $case: "screenSharingStateMessage",
-                screenSharingStateMessage: {
-                    value: state,
-                },
-            },
-        });
-    }
-
-    // FIXME: turn this into updateSpaceUser
-    public emitMegaphoneState(state: boolean) {
-        const currentMegaphoneName = get(currentLiveStreamingSpaceStore)?.getName();
-        this.send({
-            message: {
-                $case: "megaphoneStateMessage",
-                megaphoneStateMessage: {
-                    value: state,
-                    spaceName: currentMegaphoneName ? slugify(currentMegaphoneName) : undefined,
-                },
-            },
-        });
-    }
-
-    // FIXME: turn this into updateSpaceUser
-    public emitJitsiParticipantIdSpace(spaceName: string, participantId: string) {
-        this.send({
-            message: {
-                $case: "jitsiParticipantIdSpaceMessage",
-                jitsiParticipantIdSpaceMessage: {
+                $case: "updateSpaceUserMessage",
+                updateSpaceUserMessage: {
                     spaceName,
-                    value: participantId,
+                    user: SpaceUser.fromPartial({
+                        id: userId,
+                        ...spaceUser,
+                    }),
+                    updateMask: generateFieldMask(spaceUser),
                 },
             },
         });

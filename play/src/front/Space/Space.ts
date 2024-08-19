@@ -1,6 +1,6 @@
 import { Subject } from "rxjs";
 import { PrivateEvent, PublicEvent, SpaceEvent } from "@workadventure/messages";
-import { PrivateEventsObservables, PublicEventsObservables, SpaceInterface } from "./SpaceInterface";
+import { PrivateEventsObservables, PublicEventsObservables, SpaceInterface, SpaceUserUpdate } from "./SpaceInterface";
 import { SpaceFilterDoesNotExistError, SpaceNameIsEmptyError } from "./Errors/SpaceError";
 import { SpaceFilter, SpaceFilterInterface } from "./SpaceFilter/SpaceFilter";
 import { AllUsersSpaceFilter, AllUsersSpaceFilterInterface } from "./SpaceFilter/AllUsersSpaceFilter";
@@ -172,10 +172,11 @@ export class Space implements SpaceInterface {
         this._connection.emitPublicSpaceEvent(this.name, message);
     }
 
-    // FIXME: this looks like a hack, it should not belong here.
-    // Any chance we can make this more generic?
-    emitJitsiParticipantId(participantId: string) {
-        this._connection.emitJitsiParticipantIdSpace(this.name, participantId);
+    /**
+     * Sends a message to the server to update our user in the space.
+     */
+    public emitUpdateUser(spaceUser: SpaceUserUpdate): void {
+        this._connection.emitUpdateSpaceUserMessage(this.name, spaceUser);
     }
 
     /**

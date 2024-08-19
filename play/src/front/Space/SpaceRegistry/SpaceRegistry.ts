@@ -26,8 +26,7 @@ export type RoomConnectionForSpacesInterface = Pick<
     | "emitLeaveSpace"
     | "emitJoinSpace"
     | "emitUpdateSpaceMetadata"
-    // FIXME: looks like a hack
-    | "emitJitsiParticipantIdSpace"
+    | "emitUpdateSpaceUserMessage"
 >;
 
 /**

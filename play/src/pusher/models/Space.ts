@@ -132,11 +132,11 @@ export class Space implements CustomJsonReplacerInterface {
     }
     public localUpdateUser(spaceUser: PartialSpaceUser, updateMask: string[]) {
         const user = this.users.get(spaceUser.id);
-        let oldUser: SpaceUserExtended | undefined;
         if (!user) {
             console.error("User not found in this space", spaceUser);
             return;
         }
+        const oldUser: SpaceUserExtended | undefined = { ...user };
 
         const updateValues = applyFieldMask(spaceUser, updateMask);
 
@@ -145,7 +145,6 @@ export class Space implements CustomJsonReplacerInterface {
         if (spaceUser.name) user.lowercaseName = spaceUser.name.toLowerCase();
 
         debug(`${this.name} : user updated ${spaceUser.id}`);
-
         const subMessage: SubMessage = {
             message: {
                 $case: "updateSpaceUserMessage",
