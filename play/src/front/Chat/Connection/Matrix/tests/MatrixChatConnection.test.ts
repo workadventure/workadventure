@@ -266,7 +266,7 @@ describe("MatrixChatConnection", () => {
                 onMock.mockRestore();
                 await matrixChatConnection.startMatrixClient();
 
-                expect(onMock).toHaveBeenCalledTimes(4);
+                expect(onMock).toHaveBeenCalledTimes(5);
                 expect(onMock.mock.calls.some(([eventName, _]) => eventName === expectedEventName)).toBeTruthy();
             }
         );
