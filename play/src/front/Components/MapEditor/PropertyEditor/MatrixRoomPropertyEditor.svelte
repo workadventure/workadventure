@@ -31,11 +31,6 @@
     });
 
     onDestroy(()=>{
-        if(property.displayName ==="" && oldName===""  && roomConnection){
-            roomConnection.emitChatRoomAreaNameChange(property.matrixRoomId,$LL.mapEditor.properties.matrixProperties.defaultChatRoomAreaName());
-            dispatch("change");
-            return;
-        }
         if(oldName!==property.displayName && roomConnection){
             roomConnection.emitChatRoomAreaNameChange(property.matrixRoomId,property.displayName);
             dispatch("change");
@@ -64,7 +59,7 @@
     </span>
     <span slot="content">
         <div class="area-name-container">
-            <label for="objectName">{$LL.mapEditor.properties.matrixProperties.roomNameLabel()}</label>
+            <label for="objectName">{$LL.mapEditor.properties.matrixProperties.roomNameLabel()} : </label>
             <input
                 id="objectName"
                 type="text"
@@ -74,13 +69,14 @@
             />
         </div>
         <div class="value-input">
-            <label for="openAutomaticallyChatLabel">{$LL.mapEditor.properties.matrixProperties.openAutomaticallyChatLabel()}</label>
             <input
                 id="openAutomaticallyChatLabel"
                 type="checkbox"
+                class="tw-w-4 tw-h-4"
                 bind:checked={property.shouldOpenAutomatically}
                 on:change={onValueChange}
             />
+            <label for="openAutomaticallyChatLabel">{$LL.mapEditor.properties.matrixProperties.openAutomaticallyChatLabel()}</label>
         </div>
     </span>
 </PropertyEditorBase>
@@ -88,16 +84,16 @@
 <style lang="scss">
     .value-input {
         display: flex;
-        width: 100%;
+               flex-direction: row;
         margin-bottom: 0.5em;
         margin-top: 0.5em;
-        flex-direction: column;
+        gap: 10px;
         label {
             min-width: fit-content;
             margin-right: 0.5em;
         }
         input {
-            flex-grow: 1;
+            flex-grow:0;
             min-width: 0;
         }
         * {
