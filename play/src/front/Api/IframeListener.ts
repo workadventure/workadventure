@@ -578,7 +578,7 @@ class IframeListener {
     }
 
     registerScript(scriptUrl: string, enableModuleMode = true): Promise<void> {
-        return new Promise<void>((resolve) => {
+        return new Promise<void>((resolve, reject) => {
             console.info("Loading map related script at ", scriptUrl);
 
             const iframe = document.createElement("iframe");
@@ -590,28 +590,46 @@ class IframeListener {
             iframe.sandbox.add("allow-top-navigation-by-user-activation");
 
             //iframe.src = "data:text/html;charset=utf-8," + escape(html);
-            iframe.srcdoc =
-                "<!doctype html>\n" +
-                "\n" +
-                '<html lang="en">\n' +
-                "<head>\n" +
-                '<script src="' +
-                window.location.protocol +
-                "//" +
-                window.location.host +
-                '/iframe_api.js" ></script>\n' +
-                "<script " +
-                (enableModuleMode ? 'type="module" ' : "") +
-                'src="' +
-                scriptUrl +
-                '" ></script>\n' +
-                "<title></title>\n" +
-                "</head>\n" +
-                "</html>\n";
+            iframe.srcdoc = `<!doctype html>
+<html lang="en">
+<head>
+<script src="${window.location.protocol}//${window.location.host}/iframe_api.js" ></script>
+<script id="mapScript" ${enableModuleMode ? 'type="module" ' : ""}src="${scriptUrl}" ></script>
+<script>
+document.getElementById("mapScript").addEventListener("error", (e) => {
+    console.error("An error occurred while loading the script associated to the map: ", e);
+    window.parent.postMessage({ "foo": "map script failed to load"}, "*");
+});
+document.getElementById("mapScript").addEventListener("load", (e) => {
+    window.parent.postMessage("map script loaded", "*");
+})
+</script>
+<title></title>
+</head>
+</html>
+`;
 
-            iframe.addEventListener("load", () => {
+            /*iframe.addEventListener("load", () => {
+                console.log("Map related script at ", scriptUrl, "was loaded successfully.");
                 resolve();
-            });
+            });*/
+
+            const messageHandler = (message) => {
+                console.warn("AAAAAAAAAAAAAAAAAAAAAAA", message);
+                if (iframe.contentWindow === message.source) {
+                    if (message.data === "map script failed to load") {
+                        console.error("Map script failed to load.");
+                        reject(new Error("Map script failed to load. Unable to load script at " + scriptUrl));
+                        window.removeEventListener("message", messageHandler);
+                    } else if (message.data.status === "map script loaded") {
+                        window.removeEventListener("message", messageHandler);
+                        resolve();
+                    }
+                }
+            };
+
+            console.warn("AAAAAAAAAAAAAAAAAAAAAAA REGISTERING LISTENER");
+            window.addEventListener("message", messageHandler);
 
             document.body.prepend(iframe);
 
