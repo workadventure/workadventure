@@ -30,6 +30,7 @@
     import RightsPropertyEditor from "../PropertyEditor/RightsPropertyEditor.svelte";
     import { IconChevronDown, IconChevronRight } from "../../Icons";
     import MatrixRoomPropertyEditor from "../PropertyEditor/MatrixRoomPropertyEditor.svelte";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
@@ -46,6 +47,7 @@
     let showDescriptionField = false;
     let hasPersonalAreaProperty: boolean;
     let hasRightsProperty: boolean;
+    let connection = gameManager.getCurrentGameScene().connection;
 
     let selectedAreaPreviewUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((currentAreaPreview) => {
         if (currentAreaPreview) {
@@ -665,6 +667,7 @@
                             {property}
                             on:close={({ detail }) => {
                                 onDeleteProperty(property.id, detail);
+                                if(connection) connection.emitDeleteChatRoomArea(property.matrixRoomId);
                             }}
                             on:change={({ detail }) => onUpdateProperty(property, detail)}
                         />

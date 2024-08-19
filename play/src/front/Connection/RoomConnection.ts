@@ -1696,6 +1696,17 @@ export class RoomConnection implements RoomConnection {
             },
         });
     }
+    
+    public emitDeleteChatRoomArea(roomID: string): void {
+        this.send({
+            message: {
+                $case: "deleteChatRoomAreaMessage",
+                deleteChatRoomAreaMessage:{
+                    roomID
+                }
+            },
+        });
+    }
 
     private resetPingTimeout(): void {
         if (this.timeout) {

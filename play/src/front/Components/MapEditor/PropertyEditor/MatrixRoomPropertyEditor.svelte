@@ -41,6 +41,11 @@
             dispatch("change");
             return;
         }
+        if(property.displayName ==="" && roomConnection){
+            roomConnection.emitChatRoomAreaNameChange(property.matrixRoomId,$LL.mapEditor.properties.matrixProperties.defaultChatRoomAreaName());
+            dispatch("change");
+            return;
+        }
     })
 </script>
 

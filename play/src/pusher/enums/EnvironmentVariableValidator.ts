@@ -148,7 +148,7 @@ export const EnvironmentVariables = z.object({
     MATRIX_DOMAIN: z.string().optional(),
     MATRIX_API_URI: z.string().optional(),
     MATRIX_PUBLIC_URI: z.string().optional(),
-
+    MATRIX_USER_ADMIN: z.string().optional(),
     EMBEDLY_KEY: z.string().optional(),
 });
 

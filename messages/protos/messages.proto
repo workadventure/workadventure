@@ -124,6 +124,10 @@ message LeaveChatRoomAreaMessage {
   string roomID = 1;
 }
 
+message DeleteChatRoomAreaMessage {
+  string roomID = 1;
+}
+
 message ChangeChatRoomAreaNameMessage{
   string roomID = 1;
   string name = 2;
@@ -327,10 +331,11 @@ message ClientToServerMessage {
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 35;
     BanPlayerMessage banPlayerMessage = 41;
     UpdateChatIdMessage updateChatIdMessage = 42;
-    PublicEventFrontToPusher publicEvent = 43;
-    PrivateEventFrontToPusher privateEvent = 44;
-    EnterChatRoomAreaMessage enterChatRoomAreaMessage = 45;
-    LeaveChatRoomAreaMessage leaveChatRoomAreaMessage = 46;
+    PublicEvent publicEvent = 43;
+    PrivateEvent privateEvent = 44;
+    LeaveChatRoomAreaMessage leaveChatRoomAreaMessage = 45;
+    ChangeChatRoomAreaNameMessage changeChatRoomAreaNameMessage=46;
+    DeleteChatRoomAreaMessage deleteChatRoomAreaMessage = 47;
   }
 }
 

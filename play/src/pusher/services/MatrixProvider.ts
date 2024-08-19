@@ -1,18 +1,31 @@
 import axios from "axios";
-import { EventType, Visibility } from "matrix-js-sdk";
-import { MATRIX_API_URI, MATRIX_DOMAIN } from "../enums/EnvironmentVariable";
+import { EventType } from "matrix-js-sdk";
+import { MATRIX_ADMIN_USER, MATRIX_API_URI, MATRIX_DOMAIN } from "../enums/EnvironmentVariable";
 
-//env var
-const ADMIN_CHAT_ID = "@admin:matrix.workadventure.localhost";
+const ADMIN_CHAT_ID = `@${MATRIX_ADMIN_USER}:${MATRIX_DOMAIN}`;
+interface CreateRoomOptions {
+    visibility: string;
+    initial_state: {
+        type: EventType;
+        state_key?: string;
+        content:
+             {
+                  history_visibility: string;
+              }
+            | {
+                  via: string[];
+              };
+    }[];
+}
 class MatrixProvider {
     private accessToken: string | undefined;
     private lastAccessTokenDate: number = Date.now();
     //TODO : env var ?
     private roomAreaSpaceName = "space_for_area_room";
-    private roomAreaSpaceID: string;
+    private roomAreaSpaceID: string | undefined;
 
     constructor() {
-        //TODO: DELETE and move in synapse config or ...
+        //TODO: DELETE and move in synapse config ?
         this.overrideRateLimitForAdminAccount()
             .then(() => console.log("overrideRateLimitForAdminAccount"))
             .catch((error) => console.error(error));
@@ -83,37 +96,50 @@ class MatrixProvider {
     }
 
     async createRoomForArea(): Promise<string> {
-        return axios
-            .post(
-                `${MATRIX_API_URI}_matrix/client/r0/createRoom`,
+        const options: CreateRoomOptions = {
+            visibility: "private",
+            initial_state: [
                 {
-                    visibility: "private",
-                    initial_state: [
-                        {
-                            type: EventType.RoomHistoryVisibility,
-                            content: { history_visibility: "joined" },
-                        },
-                        {
-                            type: EventType.SpaceParent,
-                            state_key: this.roomAreaSpaceID,
-                            content: {
-                                via: [MATRIX_DOMAIN],
-                            },
-                        },
-                    ],
+                    type: EventType.RoomHistoryVisibility,
+                    content: { history_visibility: "joined" },
                 },
-                {
-                    headers: {
-                        Authorization: "Bearer " + (await this.getAccessToken()),
-                    },
-                }
-            )
+            ],
+        };
+
+        if (this.roomAreaSpaceID) {
+            options.initial_state.push({
+                type: EventType.SpaceParent,
+                state_key: this.roomAreaSpaceID,
+                content: {
+                    via: [MATRIX_DOMAIN],
+                },
+            });
+        }
+
+        let roomID: string | undefined;
+
+        return axios
+            .post(`${MATRIX_API_URI}_matrix/client/r0/createRoom`, options, {
+                headers: {
+                    Authorization: "Bearer " + (await this.getAccessToken()),
+                },
+            })
             .then((response) => {
                 if (response.status === 200) {
+                    console.log(response.data.room_id);
+                    roomID = response.data.room_id;
                     return this.AddRoomToSpace(response.data.room_id);
                 } else {
                     return Promise.reject(new Error("Failed with status " + response.status));
                 }
+            })
+            .catch((error) => {
+                console.error(error);
+                if (roomID) {
+                    return Promise.resolve(roomID);
+                }
+
+                return Promise.reject(new Error("Failed to create room"));
             });
     }
 
@@ -122,8 +148,7 @@ class MatrixProvider {
             .post(
                 `${MATRIX_API_URI}_matrix/client/r0/rooms/${roomID}/kick`,
                 {
-                    //TODO : change reason label
-                    reason: "deconnection",
+                    reason: "kick",
                     user_id: userID,
                 },
                 {
@@ -208,18 +233,15 @@ class MatrixProvider {
             });
     }
 
-    //TODO : try to find a solution to call this function 1 time for all pushers
-    //TODO:Rename and split in 2 functions
     private async createChatSpaceAreaAndSetID(): Promise<string> {
-        const isChatSpaceAreaExist = await this.isChatSpaceAreaExist();
-        if (isChatSpaceAreaExist) {
-            return Promise.resolve(isChatSpaceAreaExist);
+        const spaceAreaID = await this.getChatSpaceAreaID();
+        if (spaceAreaID) {
+            return Promise.resolve(spaceAreaID);
         }
         return await axios
             .post(
                 `${MATRIX_API_URI}_matrix/client/r0/createRoom`,
                 {
-                    //preset: "public_chat",
                     visibility: "public",
                     room_alias_name: this.roomAreaSpaceName,
                     name: "Room Area Space",
@@ -242,7 +264,7 @@ class MatrixProvider {
             });
     }
 
-    private async isChatSpaceAreaExist(): Promise<string | undefined> {
+    private async getChatSpaceAreaID(): Promise<string | undefined> {
         return axios
             .get(`${MATRIX_API_URI}_matrix/client/r0/directory/room/%23${this.roomAreaSpaceName}:${MATRIX_DOMAIN}`, {
                 headers: {
@@ -263,30 +285,77 @@ class MatrixProvider {
     }
 
     async AddRoomToSpace(roomID: string): Promise<string> {
+        if (!this.roomAreaSpaceID) {
+            console.error(new Error(`Failed to add room : ${roomID} to room area space `));
+            return Promise.resolve(roomID);
+        }
+
         const roomLinkContent = {
             via: [MATRIX_DOMAIN],
         };
 
-        try {
-            const response = await axios.put(
-                `${MATRIX_API_URI}/_matrix/client/r0/rooms/${this.roomAreaSpaceID}/state/m.space.child/${roomID}`,
+        return axios
+            .put(
+                `${MATRIX_API_URI}_matrix/client/r0/rooms/${this.roomAreaSpaceID}/state/m.space.child/${roomID}`,
                 roomLinkContent,
                 {
                     headers: {
                         Authorization: `Bearer ${await this.getAccessToken()}`,
                     },
                 }
-            );
+            )
+            .then((response) => {
+                if (response.status === 200) {
+                    return Promise.resolve(roomID);
+                } else {
+                    return Promise.reject(new Error(`Failed to add room : ${roomID} to room area space `));
+                }
+            })
+            .catch((error) => {
+                return Promise.reject(new Error(`Failed to add room : ${roomID} to room area space `));
+            });
+    }
 
-            if (response.status === 200) {
-                return roomID;
-            } else {
-                throw new Error("Failed with status " + response.status);
-            }
-        } catch (error) {
-            console.error("An error occurred: " + (error as Error).message);
-            throw new Error("Failed with error: " + (error as Error).message);
-        }
+    deleteRoom(roomID: string): Promise<void> {
+        return this.kickAllUsersFromRoom(roomID)
+            .then(() => {
+                return this.kickUserFromRoom(ADMIN_CHAT_ID, roomID);
+            })
+            .catch((error) => {
+                console.error("Failed to delete room : " + roomID);
+                return Promise.reject(new Error("Failed to delete room : " + roomID));
+            });
+    }
+
+    async kickAllUsersFromRoom(roomID: string): Promise<void> {
+        return axios
+            .get(`${MATRIX_API_URI}_matrix/client/r0/rooms/${roomID}/members`, {
+                headers: {
+                    Authorization: `Bearer ${await this.getAccessToken()}`,
+                },
+            })
+            .then((response) => {
+                if (response.status !== 200) {
+                    throw new Error(`Failed to fetch members for room: ${roomID}`);
+                }
+
+                const kickMembersPromises = response.data.chunk.reduce((acc, currentMember) => {
+                    if (currentMember.state_key !== ADMIN_CHAT_ID && currentMember.content.membership !== "join") {
+                        acc.push(this.kickUserFromRoom(currentMember.state_key, roomID));
+                    }
+
+                    return acc;
+                }, []);
+
+                return Promise.all(kickMembersPromises);
+            })
+            .then(() => {
+                return Promise.resolve();
+            })
+            .catch((error) => {
+                console.error("Failed to kick all user from room : " + roomID , error);
+                return Promise.reject(new Error("Failed to kick all user from room : " + roomID));
+            });
     }
 
     async inviteUserToRoom(userID:string , roomID : string):Promise<void>{
@@ -400,6 +469,5 @@ class MatrixProvider {
         
     }
 }
-
 
 export const matrixProvider = new MatrixProvider();

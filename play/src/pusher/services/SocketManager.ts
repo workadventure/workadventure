@@ -1506,7 +1506,6 @@ export class SocketManager implements ZoneEventListener {
             chatRoomID 
         };
     }
-
     async leaveChatRoomArea(socket : Socket):Promise<void>{
         const {chatID,currentChatRoomArea} = socket.getUserData();
 
@@ -1534,8 +1533,7 @@ export class SocketManager implements ZoneEventListener {
     async handleEnterChatRoomAreaQuery(socket : Socket, roomID : string):Promise<void>{
         const socketData = socket.getUserData();
         if(!socketData.chatID){
-            //TODO : error msg
-            return Promise.reject("");
+            return Promise.reject(new Error("Error: Chat ID not found"));
         }
         socketData.currentChatRoomArea.push(roomID);
         return matrixProvider.inviteUserToRoom(socketData.chatID,roomID).catch((error)=>console.error(error));
@@ -1543,6 +1541,10 @@ export class SocketManager implements ZoneEventListener {
 
     async handleChangeChatRoomAreaName(roomID : string,newName : string):Promise<void>{
         return matrixProvider.changeRoomName(roomID,newName);
+    }
+
+    async handleDeleteChatRoomArea(roomID : string):Promise<void>{
+        return matrixProvider.deleteRoom(roomID);
     }
 }
 
