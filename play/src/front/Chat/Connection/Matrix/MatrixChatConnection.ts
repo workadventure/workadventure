@@ -38,7 +38,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     invitations: Readable<ChatRoom[]>;
     rooms: Readable<ChatRoom[]>;
     isEncryptionRequiredAndNotSet: Writable<boolean>;
-    isGuest!: Writable<boolean>;
+    isGuest: Writable<boolean> = writable(true);
 
     constructor(
         private connection: Connection,
@@ -69,7 +69,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         (async () => {
             this.client = await clientPromise;
             await this.startMatrixClient();
-            this.isGuest = writable(this.client.isGuest());
+            this.isGuest.set(this.client.isGuest());
         })().catch((error) => {
             console.error(error);
         });

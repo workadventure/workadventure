@@ -20,7 +20,7 @@
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
 
     const chat = gameManager.getCurrentGameScene().chatConnection;
-    $: chatConnectionStatus = chat.connectionStatus;
+    const chatConnectionStatus = chat.connectionStatus;
     const CHAT_LAYOUT_LIMIT = INITIAL_SIDEBAR_WIDTH * 2;
 
     let directRooms = chat.directRooms;
