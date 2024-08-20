@@ -160,24 +160,10 @@
                 {:else}
                     <IconChevronRight />
                 {/if}
-                {$LL.chat.rooms()}</button
-            >
-            {#if $isGuest === false}
-                <button
-                    data-testid="openCreateRoomModalButton"
-                    class="tw-p-0 tw-m-0 tw-text-gray-400"
-                    on:click={() => {
-                        openCreateRoomModal();
-                    }}
-                >
-                    <IconSquarePlus font-size={16} />
-                </button>
-            {/if}
-        </div>
-
-        {#if displayRooms}
-            <div class="tw-flex tw-flex-col tw-overflow-auto">
-                {#each roomsFromDefaultSpaceRoom as room (room.id)}
+                {$LL.chat.people()}
+            </button>
+            {#if displayDirectRooms}
+                {#each filteredDirectRoom as room (room.id)}
                     <Room {room} />
                 {/each}
                 {#if filteredDirectRoom.length === 0}
@@ -185,51 +171,6 @@
                 {/if}
             {/if}
 
-        <!--roomBySpace-->
-        {#each Array.from(filteredRoomBySpaceWithoutDefaultRoom) as [space, roomList] (space)}
-            <div class="tw-flex tw-justify-between">
-                <button
-                    class="tw-p-0 tw-m-0 tw-text-gray-400"
-                    on:click={() => {
-                        spaceOpenState.update((state) => {
-                            const newState =
-                                $spaceOpenState.get(space.id) === undefined ? true : !$spaceOpenState.get(space.id);
-                            state.set(space.id, newState);
-                            return state;
-                        });
-                    }}
-                >
-                    {#if $spaceOpenState.get(space.id) || false}
-                        <IconChevronDown />
-                    {:else}
-                        <IconChevronRight />
-                    {/if}
-                    {get(space.name)}</button
-                >
-                {#if $isGuest === false}
-                    <button
-                        data-testid="openCreateRoomModalButton"
-                        class="tw-p-0 tw-m-0 tw-text-gray-400"
-                        on:click={() => openCreateRoomModal(space.id)}
-                    >
-                        <IconSquarePlus font-size={16} />
-                    </button>
-                {/if}
-            </div>
-
-            {#if $spaceOpenState.get(space.id) || false}
-                <div class="tw-flex tw-flex-col tw-overflow-auto">
-                    {#each roomList as room (room)}
-                        <Room {room} />
-                    {/each}
-                    {#if roomList.length === 0}
-                        <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
-                    {/if}
-                </div>
-            {/if}
-        {/each}
-
-        {#if $proximityRoomConnection}
             <div class="tw-flex tw-justify-between">
                 <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={toggleDisplayRooms}>
                     {#if displayRooms}
@@ -243,7 +184,9 @@
                     <button
                         data-testid="openCreateRoomModalButton"
                         class="tw-p-0 tw-m-0 tw-text-gray-400"
-                        on:click={openCreateRoomModal}
+                        on:click={() => {
+                            openCreateRoomModal();
+                        }}
                     >
                         <IconSquarePlus font-size={16} />
                     </button>
@@ -252,7 +195,7 @@
 
             {#if displayRooms}
                 <div class="tw-flex tw-flex-col tw-overflow-auto">
-                    {#each filteredRooms as room (room.id)}
+                    {#each roomsFromDefaultSpaceRoom as room (room.id)}
                         <Room {room} />
                     {/each}
                     {#if filteredRooms.length === 0}
@@ -260,8 +203,51 @@
                     {/if}
                 </div>
             {/if}
-        {/if}
 
+            <!--roomBySpace-->
+            {#each Array.from(filteredRoomBySpaceWithoutDefaultRoom) as [space, roomList] (space)}
+                <div class="tw-flex tw-justify-between">
+                    <button
+                        class="tw-p-0 tw-m-0 tw-text-gray-400"
+                        on:click={() => {
+                            spaceOpenState.update((state) => {
+                                const newState =
+                                    $spaceOpenState.get(space.id) === undefined ? true : !$spaceOpenState.get(space.id);
+                                state.set(space.id, newState);
+                                return state;
+                            });
+                        }}
+                    >
+                        {#if $spaceOpenState.get(space.id) || false}
+                            <IconChevronDown />
+                        {:else}
+                            <IconChevronRight />
+                        {/if}
+                        {get(space.name)}</button
+                    >
+                    {#if $isGuest === false}
+                        <button
+                            data-testid="openCreateRoomModalButton"
+                            class="tw-p-0 tw-m-0 tw-text-gray-400"
+                            on:click={() => openCreateRoomModal(space.id)}
+                        >
+                            <IconSquarePlus font-size={16} />
+                        </button>
+                    {/if}
+                </div>
+
+                {#if $spaceOpenState.get(space.id) || false}
+                    <div class="tw-flex tw-flex-col tw-overflow-auto">
+                        {#each roomList as room (room)}
+                            <Room {room} />
+                        {/each}
+                        {#if roomList.length === 0}
+                            <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
+                        {/if}
+                    </div>
+                {/if}
+            {/each}
+        {/if}
         <div class="tw-flex tw-justify-between">
             <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={toggleDisplayProximityChat}>
                 <IconChevronRight />
