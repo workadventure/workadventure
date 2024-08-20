@@ -8,14 +8,15 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { chatSearchBarValue, navChat, selectedRoom } from "../../Stores/ChatStore";
     import { gameManager } from "../../../Phaser/Game/GameManager";
+    import { defaultColor, defaultWoka } from "../../Connection/Matrix/MatrixChatConnection";
     import UserActionButton from "./UserActionButton.svelte";
     import { IconLoader, IconShield, IconUsers } from "@wa-icons";
 
     export let user: ChatUser;
 
-    $: ({ id, availabilityStatus, username = "", color, isAdmin, isMember, avatarUrl } = user);
+    $: ({ chatId, availabilityStatus, username = "", color, isAdmin, isMember, avatarUrl } = user);
 
-    $: isMe = user.id === localUserStore.getChatId();
+    $: isMe = user.chatId === localUserStore.getChatId();
 
     $: userStatus = isMe ? availabilityStatusStore : availabilityStatus;
 
@@ -48,11 +49,11 @@
     const openChat = async () => {
         if (isMe) return;
 
-        let room: ChatRoom | undefined = chatConnection.getDirectRoomFor(id);
+        let room: ChatRoom | undefined = chatConnection.getDirectRoomFor(chatId);
         if (!room)
             try {
                 loadingDirectRoomAccess = true;
-                room = await chatConnection.createDirectRoom(id);
+                room = await chatConnection.createDirectRoom(chatId);
             } catch (error) {
                 console.error(error);
             } finally {
@@ -81,13 +82,13 @@
         <div class={`wa-chat-item ${isAdmin ? "admin" : "user"}  tw-cursor-default`}>
             <div
                 class={`tw-relative wa-avatar ${!$userStatus && "tw-opacity-50"}  tw-cursor-default`}
-                style={`background-color: ${color}`}
+                style={`background-color: ${color ?? defaultColor}`}
             >
                 <div class="wa-container tw-cursor-default">
                     <img
                         class="tw-w-full tw-cursor-default"
                         style="image-rendering: pixelated;"
-                        src={avatarUrl}
+                        src={avatarUrl ?? defaultWoka}
                         alt="Avatar"
                     />
                 </div>

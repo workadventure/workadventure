@@ -60,10 +60,6 @@ export type SocketData = {
     pusherRoom: PusherRoom | undefined;
     spaces: Space[];
     spacesFilters: Map<string, SpaceFilterMessage[]>;
-    cameraState?: boolean;
-    microphoneState?: boolean;
-    screenSharingState?: boolean;
-    megaphoneState?: boolean;
     chatID?: string;
     world: string;
 };

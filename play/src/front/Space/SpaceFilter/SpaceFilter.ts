@@ -1,307 +1,268 @@
 import merge from "lodash/merge";
-import {
-    ClientToServerMessage,
-    PartialSpaceUser,
-    SpaceFilterContainName,
-    SpaceFilterEverybody,
-    SpaceFilterLiveStreaming,
-    SpaceFilterMessage,
-    SpaceUser,
-} from "@workadventure/messages";
-import { Subject } from "rxjs";
-import { Writable, get, writable } from "svelte/store";
+import { PrivateSpaceEvent, SpaceFilterMessage, SpaceUser } from "@workadventure/messages";
+import { Observable, Subject, Subscriber } from "rxjs";
+import { Readable, get, readable, writable, Writable } from "svelte/store";
 import { CharacterLayerManager } from "../../Phaser/Entity/CharacterLayerManager";
+import { SpaceInterface } from "../SpaceInterface";
+import { RoomConnectionForSpacesInterface } from "../SpaceRegistry/SpaceRegistry";
 
+// FIXME: refactor from the standpoint of the consumer. addUser, removeUser should be removed...
 export interface SpaceFilterInterface {
-    userExist(userId: number): boolean;
-    addUser(user: SpaceUser): Promise<SpaceUserExtended>;
-    getUsers(): SpaceUserExtended[];
-    users: Writable<Map<number, SpaceUserExtended>>;
-    getUser(userId: number): SpaceUser | null;
-    removeUser(userId: number): void;
-    updateUserData(userdata: Partial<SpaceUser>): void;
-    setFilter(filter: Filter): void;
+    //userExist(userId: number): boolean;
+    //addUser(user: SpaceUser): Promise<SpaceUserExtended>;
+    readonly usersStore: Readable<Map<number, SpaceUserExtended>>;
+    //removeUser(userId: number): void;
+    //updateUserData(userdata: Partial<SpaceUser>): void;
     getName(): string;
-    getFilterType(): "spaceFilterEverybody" | "spaceFilterContainName" | "spaceFilterLiveStreaming" | undefined;
-    destroy(): void;
+
+    /**
+     * Use this observer to get a description of new users.
+     * It can be easier than subscribing to the usersStore and trying to deduce who the new user is.
+     */
+    readonly observeUserJoined: Observable<SpaceUserExtended>;
+    /**
+     * Use this observer to get a description of users who left.
+     * It can be easier than subscribing to the usersStore and trying to deduce who the gone user is.
+     */
+    readonly observeUserLeft: Observable<SpaceUserExtended>;
 }
 
-export interface SpaceUserExtended extends SpaceUser {
+type ReactiveSpaceUser = {
+    [K in keyof Omit<SpaceUser, "id">]: Readonly<Readable<SpaceUser[K]>>;
+} & {
+    id: number;
+    playUri: string | undefined;
+    roomName: string | undefined;
+};
+
+export type SpaceUserExtended = SpaceUser & {
     wokaPromise: Promise<string> | undefined;
     getWokaBase64: string;
     updateSubject: Subject<{
         newUser: SpaceUserExtended;
-        changes: PartialSpaceUser;
+        changes: SpaceUser;
+        updateMask: string[];
     }>;
-    emitter: JitsiEventEmitter | undefined;
-    spaceName: string;
-}
+    emitPrivateEvent: (message: NonNullable<PrivateSpaceEvent["event"]>) => void;
+    //emitter: JitsiEventEmitter | undefined;
+    space: SpaceInterface;
+    reactiveUser: ReactiveSpaceUser;
+};
 
-export type Filter =
-    | {
-          $case: "spaceFilterEverybody";
-          spaceFilterEverybody: SpaceFilterEverybody;
-      }
-    | {
-          $case: "spaceFilterContainName";
-          spaceFilterContainName: SpaceFilterContainName;
-      }
-    | {
-          $case: "spaceFilterLiveStreaming";
-          spaceFilterLiveStreaming: SpaceFilterLiveStreaming;
-      }
-    | undefined;
+export type Filter = SpaceFilterMessage["filter"];
 
-export interface JitsiEventEmitter {
-    emitKickOffUserMessage(userId: string): void;
-    emitMuteEveryBodySpace(): void;
-    emitMuteVideoEveryBodySpace(): void;
-    emitMuteParticipantIdSpace(userId: string): void;
-    emitMuteVideoParticipantIdSpace(userId: string): void;
-    emitProximityPublicMessage(message: string): void;
-    emitProximityPrivateMessage(message: string, receiverUserId: number): void;
-}
+// export interface JitsiEventEmitter {
+//     emitKickOffUserMessage(userId: string): void;
+//     emitMuteEveryBodySpace(): void;
+//     emitMuteVideoEveryBodySpace(): void;
+//     emitMuteParticipantIdSpace(userId: string): void;
+//     emitMuteVideoParticipantIdSpace(userId: string): void;
+//     emitProximityPublicMessage(message: string): void;
+//     emitProximityPrivateMessage(message: string, receiverUserId: number): void;
+// }
 
-export class SpaceFilter implements SpaceFilterInterface {
-    constructor(
-        private name: string,
-        private spaceName: string,
-        private filter: Filter = undefined,
-        private sender: (message: ClientToServerMessage) => void,
-        readonly users: Writable<Map<number, SpaceUserExtended>> = writable(new Map<number, SpaceUserExtended>())
+export abstract class SpaceFilter implements SpaceFilterInterface {
+    private _setUsers: ((value: Map<number, SpaceUserExtended>) => void) | undefined;
+    readonly usersStore: Readable<Map<number, Readonly<SpaceUserExtended>>>;
+    private _users: Map<number, SpaceUserExtended> = new Map<number, SpaceUserExtended>();
+    private isSubscribe = false;
+    private _addUserSubscriber: Subscriber<SpaceUserExtended> | undefined;
+    private _leftUserSubscriber: Subscriber<SpaceUserExtended> | undefined;
+    public readonly observeUserJoined: Observable<SpaceUserExtended>;
+    public readonly observeUserLeft: Observable<SpaceUserExtended>;
+    private registerRefCount = 0;
+
+    protected constructor(
+        private _name: string,
+        private _space: SpaceInterface,
+        private _connection: RoomConnectionForSpacesInterface,
+        private _filter: Filter
     ) {
-        this.addSpaceFilter();
-    }
-    userExist(userId: number): boolean {
-        return get(this.users).has(userId);
+        this.usersStore = readable(new Map<number, SpaceUserExtended>(), (set) => {
+            this.registerSpaceFilter();
+            this._setUsers = set;
+            set(this._users);
+            this.isSubscribe = true;
+
+            return () => {
+                this.unregisterSpaceFilter();
+                this.isSubscribe = false;
+            };
+        });
+
+        this.observeUserJoined = new Observable<SpaceUserExtended>((subscriber) => {
+            this.registerSpaceFilter();
+            this._addUserSubscriber = subscriber;
+
+            return () => {
+                this.unregisterSpaceFilter();
+            };
+        });
+
+        this.observeUserLeft = new Observable<SpaceUserExtended>((subscriber) => {
+            this.registerSpaceFilter();
+            this._leftUserSubscriber = subscriber;
+
+            return () => {
+                this.unregisterSpaceFilter();
+            };
+        });
     }
     async addUser(user: SpaceUser): Promise<SpaceUserExtended> {
-        const extendSpaceUser = await this.extendSpaceUser(user, this.spaceName);
-        this.users.update((value) => {
-            if (!this.userExist(user.id)) value.set(user.id, extendSpaceUser);
-            return value;
-        });
+        const extendSpaceUser = await this.extendSpaceUser(user);
+
+        if (!this._users.has(user.id)) {
+            this._users.set(user.id, extendSpaceUser);
+            if (this._setUsers) {
+                this._setUsers(this._users);
+            }
+            if (this._addUserSubscriber) {
+                this._addUserSubscriber.next(extendSpaceUser);
+            }
+        }
+
         return extendSpaceUser;
     }
 
-    getUser(userId: number): SpaceUser | null {
-        return get(this.users).get(userId) || null;
-    }
-
     getUsers(): SpaceUserExtended[] {
-        return Array.from(get(this.users).values());
+        return Array.from(get(this.usersStore).values());
     }
-    removeUser(userId: number): boolean {
-        let isDeleted = false;
-        this.users.update((value) => {
-            isDeleted = value.delete(userId);
-            return value;
-        });
-
-        return isDeleted;
+    removeUser(userId: number): void {
+        const user = this._users.get(userId);
+        if (user) {
+            this._users.delete(userId);
+            if (this._setUsers) {
+                this._setUsers(this._users);
+            }
+            if (this._leftUserSubscriber) {
+                this._leftUserSubscriber.next(user);
+            }
+        }
     }
 
     updateUserData(newData: Partial<SpaceUser>): void {
         if (!newData.id && newData.id !== 0) return;
-        const userToUpdate = get(this.users).get(newData.id);
+
+        const userToUpdate = this._users.get(newData.id);
+
         if (!userToUpdate) return;
+
+        //TODO : Use fieldMask to update user
         merge(userToUpdate, newData);
-        this.users.update((value) => {
-            value.set(userToUpdate.id, userToUpdate);
-            return value;
-        });
+
+        for (const key in newData) {
+            // We allow ourselves a not 100% exact type cast here.
+            // Technically, newData could contain any key, not only keys part of SpaceUser type (because additional keys
+            // are allowed in Javascript objects)
+            // However, we know for sure that the keys of newData are part of SpaceUser type, so we can safely cast them.
+            const castKey = key as keyof typeof newData;
+            // Out of security, we add a runtime check to ensure that the key is part of SpaceUser type
+            if (castKey in userToUpdate.reactiveUser) {
+                // Finally, we cast the "Readable" to "Writable" to be able to update the value. We know for sure it is
+                // writable because the only place that can create a "ReactiveSpaceUser" is the "extendSpaceUser" method.
+                const store = userToUpdate.reactiveUser[castKey];
+                if (typeof store === "object" && "set" in store) {
+                    (store as Writable<unknown>).set(newData[castKey]);
+                }
+            }
+        }
+
+        if (this._setUsers) {
+            this._setUsers(this._users);
+        }
     }
 
-    setFilter(newFilter: Filter) {
-        this.filter = newFilter;
-        this.updateSpaceFilter();
+    protected setFilter(newFilter: Filter) {
+        this._filter = newFilter;
+        if (this.isSubscribe) {
+            this.updateSpaceFilter();
+        }
     }
     getName(): string {
-        return this.name;
+        return this._name;
     }
 
-    private async extendSpaceUser(user: SpaceUser, spaceName: string): Promise<SpaceUserExtended> {
-        let emitter = undefined;
-
-        emitter = {
-            emitKickOffUserMessage: (userId: string) => {
-                this.emitKickOffUserMessage(userId);
-            },
-            emitMuteEveryBodySpace: () => {
-                this.emitMuteEveryBodySpace(user.id.toString());
-            },
-            emitMuteParticipantIdSpace: (userId: string) => {
-                this.emitMuteParticipantIdSpace(userId);
-            },
-            emitMuteVideoEveryBodySpace: () => {
-                this.emitMuteVideoEveryBodySpace(user.id.toString());
-            },
-            emitMuteVideoParticipantIdSpace: (userId: string) => {
-                this.emitMuteVideoParticipantIdSpace(userId);
-            },
-            emitProximityPublicMessage: (message: string) => {
-                this.emitProximityPublicMessage(message);
-            },
-            emitProximityPrivateMessage: (message: string, receiverUserId: number) => {
-                this.emitProximityPrivateMessage(message, receiverUserId);
-            },
-        };
-
+    private async extendSpaceUser(user: SpaceUser): Promise<SpaceUserExtended> {
         const wokaBase64 = await CharacterLayerManager.wokaBase64(user.characterTextures);
 
-        return {
+        const extendedUser = {
             ...user,
             wokaPromise: undefined,
             getWokaBase64: wokaBase64,
             updateSubject: new Subject<{
                 newUser: SpaceUserExtended;
-                changes: PartialSpaceUser;
+                changes: SpaceUser;
+                updateMask: string[];
             }>(),
-            emitter,
-            spaceName,
-        };
-    }
-    private removeSpaceFilter(spaceFilter: SpaceFilterMessage) {
-        this.sender({
-            message: {
-                $case: "removeSpaceFilterMessage",
-                removeSpaceFilterMessage: {
-                    spaceFilterMessage: {
-                        filterName: this.name,
-                        spaceName: this.spaceName,
-                    },
-                },
+            //emitter,
+            emitPrivateEvent: (message: NonNullable<PrivateSpaceEvent["event"]>) => {
+                this._connection.emitPrivateSpaceEvent(this._space.getName(), message, user.id);
             },
-        });
+            space: this._space,
+        } as unknown as SpaceUserExtended;
+
+        extendedUser.reactiveUser = new Proxy(
+            {
+                id: extendedUser.id,
+                roomName: extendedUser.roomName,
+                playUri: extendedUser.playUri,
+            } as unknown as ReactiveSpaceUser,
+            {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                get(target: any, property: PropertyKey, receiver: unknown) {
+                    if (typeof property !== "string") {
+                        return Reflect.get(target, property, receiver);
+                    }
+
+                    if (target[property as keyof ReactiveSpaceUser]) {
+                        return target[property as keyof ReactiveSpaceUser];
+                    } else {
+                        if (property in extendedUser) {
+                            //@ts-ignore
+                            target[property] = writable(extendedUser[property]);
+                            return target[property];
+                        } else {
+                            return Reflect.get(target, property, receiver);
+                        }
+                    }
+                },
+            }
+        );
+
+        return extendedUser;
     }
+
+    private unregisterSpaceFilter() {
+        this.registerRefCount--;
+        if (this.registerRefCount === 0) {
+            this._connection.emitRemoveSpaceFilter({
+                spaceFilterMessage: {
+                    filterName: this._name,
+                    spaceName: this._space.getName(),
+                },
+            });
+        }
+    }
+
     private updateSpaceFilter() {
-        this.sender({
-            message: {
-                $case: "updateSpaceFilterMessage",
-                updateSpaceFilterMessage: {
-                    spaceFilterMessage: {
-                        filterName: this.name,
-                        spaceName: this.spaceName,
-                        filter: this.filter,
-                    },
-                },
+        this._connection.emitUpdateSpaceFilter({
+            spaceFilterMessage: {
+                filterName: this._name,
+                spaceName: this._space.getName(),
+                filter: this._filter,
             },
         });
     }
-    private addSpaceFilter() {
-        this.sender({
-            message: {
-                $case: "addSpaceFilterMessage",
-                addSpaceFilterMessage: {
-                    spaceFilterMessage: {
-                        filterName: this.name,
-                        spaceName: this.spaceName,
-                    },
+    private registerSpaceFilter() {
+        if (this.registerRefCount === 0) {
+            this._connection.emitAddSpaceFilter({
+                spaceFilterMessage: {
+                    filterName: this._name,
+                    spaceName: this._space.getName(),
+                    filter: this._filter,
                 },
-            },
-        });
-    }
-    private emitKickOffUserMessage(userId: string) {
-        this.sender({
-            message: {
-                $case: "kickOffUserMessage",
-                kickOffUserMessage: {
-                    userId,
-                    spaceName: this.spaceName,
-                },
-            },
-        });
-    }
-
-    private emitMuteEveryBodySpace(userId: string) {
-        this.sender({
-            message: {
-                $case: "muteEveryBodyParticipantMessage",
-                muteEveryBodyParticipantMessage: {
-                    spaceName: this.spaceName,
-                    senderUserId: userId,
-                },
-            },
-        });
-    }
-
-    private emitMuteVideoEveryBodySpace(userId: string) {
-        this.sender({
-            message: {
-                $case: "muteVideoEveryBodyParticipantMessage",
-                muteVideoEveryBodyParticipantMessage: {
-                    spaceName: this.spaceName,
-                    userId: userId,
-                },
-            },
-        });
-    }
-
-    private emitMuteParticipantIdSpace(userId: string) {
-        this.sender({
-            message: {
-                $case: "muteParticipantIdMessage",
-                muteParticipantIdMessage: {
-                    spaceName: this.spaceName,
-                    mutedUserUuid: userId,
-                },
-            },
-        });
-    }
-
-    private emitMuteVideoParticipantIdSpace(userId: string) {
-        this.sender({
-            message: {
-                $case: "muteVideoParticipantIdMessage",
-                muteVideoParticipantIdMessage: {
-                    spaceName: this.spaceName,
-                    mutedUserUuid: userId,
-                },
-            },
-        });
-    }
-
-    private emitProximityPublicMessage(message: string) {
-        this.sender({
-            message: {
-                $case: "publicEvent",
-                publicEvent: {
-                    spaceName: this.spaceName,
-                    spaceEvent: {
-                        event: {
-                            $case: "spaceMessage",
-                            spaceMessage: {
-                                message,
-                            },
-                        },
-                    },
-                },
-            },
-        });
-    }
-
-    private emitProximityPrivateMessage(message: string, receiverUserId: number) {
-        this.sender({
-            message: {
-                $case: "privateEvent",
-                privateEvent: {
-                    spaceName: this.spaceName,
-                    receiverUserId,
-                    spaceMessage: {
-                        message,
-                    },
-                },
-            },
-        });
-    }
-
-    getFilterType(): "spaceFilterEverybody" | "spaceFilterContainName" | "spaceFilterLiveStreaming" | undefined {
-        return this.filter?.$case;
-    }
-    destroy() {
-        this.removeSpaceFilter({
-            spaceName: this.spaceName,
-            filterName: this.name,
-        });
+            });
+        }
+        this.registerRefCount++;
     }
 }

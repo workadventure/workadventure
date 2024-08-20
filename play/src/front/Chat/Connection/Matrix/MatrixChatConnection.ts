@@ -14,23 +14,11 @@ import {
     Visibility,
 } from "matrix-js-sdk";
 import { MapStore } from "@workadventure/store-utils";
-import { AvailabilityStatus, ChatMember, ChatMembersAnswer, PartialSpaceUser } from "@workadventure/messages";
 import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
-import {
-    ChatConnectionInterface,
-    chatId,
-    ChatRoom,
-    ChatUser,
-    Connection,
-    ConnectionStatus,
-    CreateRoomOptions,
-    userId,
-} from "../ChatConnection";
-import { SpaceUserExtended } from "../../../Space/SpaceFilter/SpaceFilter";
+import { ChatConnectionInterface, ChatRoom, Connection, ConnectionStatus, CreateRoomOptions } from "../ChatConnection";
 import { selectedRoom } from "../../Stores/ChatStore";
 import { MatrixChatRoom } from "./MatrixChatRoom";
-import { chatUserFactory } from "./MatrixChatUser";
 import { MatrixSecurity, matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity";
 
 export const defaultWoka =
@@ -49,10 +37,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     directRooms: Readable<ChatRoom[]>;
     invitations: Readable<ChatRoom[]>;
     rooms: Readable<ChatRoom[]>;
-    connectedUsers: MapStore<userId, ChatUser> = new MapStore<userId, ChatUser>();
-    userDisconnected: MapStore<chatId, ChatUser> = new MapStore<chatId, ChatUser>();
     isEncryptionRequiredAndNotSet: Writable<boolean>;
-    isGuest!: Writable<boolean>;
+    isGuest: Writable<boolean> = writable(true);
 
     constructor(
         private connection: Connection,
@@ -83,7 +69,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         (async () => {
             this.client = await clientPromise;
             await this.startMatrixClient();
-            this.isGuest = writable(this.client.isGuest());
+            this.isGuest.set(this.client.isGuest());
         })().catch((error) => {
             console.error(error);
         });
@@ -94,7 +80,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             switch (state) {
                 case SyncState.Prepared:
                     this.connectionStatus.set("ONLINE");
-                    this.initUserList();
                     this.connection.emitPlayerChatID(this.client.getSafeUserId());
                     break;
                 case SyncState.Error:
@@ -154,134 +139,11 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             }
 
             if (membership === KnownMembership.Invite) {
-                const inviter = room.getDMInviter();
                 const newRoom = new MatrixChatRoom(room);
-                if (
-                    inviter &&
-                    (this.userDisconnected.has(inviter) ||
-                        Array.from(this.connectedUsers.values()).some((user: ChatUser) => user.id === inviter))
-                ) {
-                    this.roomList.set(roomId, newRoom);
-                    newRoom.joinRoom();
-                }
+                this.roomList.set(roomId, newRoom);
                 return;
             }
         }
-    }
-
-    private initUserList(): void {
-        this.client
-            .getUsers()
-            .filter((user) => user.userId !== this.client.getUserId())
-            .forEach((user) => {
-                user.avatarUrl = defaultWoka;
-                this.userDisconnected.set(user.userId, chatUserFactory(user, this.client));
-            });
-
-        this.getWorldChatMembers()
-            .then((members) => {
-                members.forEach((member) => {
-                    if (member.chatId) {
-                        this.userDisconnected.set(member.chatId, {
-                            availabilityStatus: writable(AvailabilityStatus.UNCHANGED),
-                            avatarUrl: defaultWoka,
-                            id: member.chatId,
-                            roomName: undefined,
-                            playUri: undefined,
-                            username: member.wokaName,
-                            isAdmin: member.tags.includes("admin"),
-                            isMember: member.tags.includes("member"),
-                            uuid: undefined,
-                            color: defaultColor,
-                            spaceId: undefined,
-                        });
-                    }
-                });
-            })
-            .catch((error) => console.error(error));
-    }
-
-    updateUserFromSpace(user: PartialSpaceUser): void {
-        const connectedUserToUpdate: ChatUser | undefined = this.connectedUsers.get(user.id);
-
-        if (!connectedUserToUpdate) return;
-
-        if (user.availabilityStatus && user.availabilityStatus !== 0)
-            connectedUserToUpdate.availabilityStatus.set(user.availabilityStatus);
-        if (connectedUserToUpdate.spaceId)
-            this.connectedUsers.set(connectedUserToUpdate.spaceId, {
-                id:
-                    connectedUserToUpdate.id === "" || connectedUserToUpdate.id === "null"
-                        ? user.chatID ?? ""
-                        : connectedUserToUpdate.id,
-                uuid: connectedUserToUpdate.uuid,
-                avatarUrl: connectedUserToUpdate.avatarUrl,
-                availabilityStatus: connectedUserToUpdate.availabilityStatus,
-                roomName: user.roomName ?? connectedUserToUpdate.roomName,
-                playUri: user.playUri ?? connectedUserToUpdate.playUri,
-                username: user.name ?? connectedUserToUpdate.username,
-                isAdmin:
-                    user.tags && user.tags.length > 0 ? user.tags.includes("admin") : connectedUserToUpdate.isAdmin,
-                isMember:
-                    user.tags && user.tags.length > 0 ? user.tags.includes("member") : connectedUserToUpdate.isMember,
-                visitCardUrl: user.visitCardUrl ?? connectedUserToUpdate.visitCardUrl,
-                color: user.color ?? connectedUserToUpdate.color,
-                spaceId: connectedUserToUpdate.spaceId,
-            });
-    }
-
-    addUserFromSpace(user: SpaceUserExtended): void {
-        if (!user.chatID) return;
-        //TODO : Try to find why pusher send us availabilityStatus = 0
-        if (user.availabilityStatus === 0) user.availabilityStatus = AvailabilityStatus.ONLINE;
-        let updatedUser = {
-            uuid: user.uuid,
-            id: user.chatID,
-            avatarUrl: user.getWokaBase64 ?? defaultWoka,
-            availabilityStatus: writable(user.availabilityStatus),
-            roomName: user.roomName,
-            playUri: user.playUri,
-            username: user.name,
-            isAdmin: user.tags.includes("admin"),
-            isMember: user.tags.includes("member"),
-            visitCardUrl: user.visitCardUrl,
-            color: user.color ?? defaultColor,
-            spaceId: user.id,
-        };
-
-        const actualUser = this.connectedUsers.get(user.id);
-        if (actualUser) {
-            actualUser.availabilityStatus.set(user.availabilityStatus);
-            updatedUser = {
-                uuid: user.uuid,
-                id: user.chatID,
-                avatarUrl: user.getWokaBase64 ?? defaultWoka,
-                availabilityStatus: actualUser.availabilityStatus,
-                roomName: user.roomName,
-                playUri: user.playUri,
-                username: user.name,
-                isAdmin: user.tags.includes("admin"),
-                isMember: user.tags.includes("member"),
-                visitCardUrl: user.visitCardUrl,
-                color: user.color ?? defaultColor,
-                spaceId: user.id,
-            };
-        }
-
-        this.connectedUsers.set(user.id, updatedUser);
-    }
-
-    disconnectSpaceUser(userId: number): void {
-        this.connectedUsers.delete(userId);
-    }
-
-    async getWorldChatMembers(searchText?: string): Promise<ChatMember[]> {
-        const { members } = await this.connection.queryChatMembers(searchText ?? "");
-        return members;
-    }
-
-    sendBan(uuid: string, username: string): void {
-        if (this.connection.emitBanPlayerMessage) this.connection.emitBanPlayerMessage(uuid, username);
     }
 
     //TODO createOptions only on matrix size
@@ -396,33 +258,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         if (directRooms.length > 0) return directRooms[0];
 
         return undefined;
-    }
-
-    searchUsers(searchText: string): Promise<void> {
-        return new Promise((res, rej) => {
-            this.connection
-                .queryChatMembers(searchText)
-                .then(({ members }: ChatMembersAnswer) => {
-                    members.forEach((member: ChatMember) => {
-                        if (!member.chatId || this.userDisconnected.has(member.chatId)) return;
-                        this.userDisconnected.set(member.chatId, {
-                            availabilityStatus: writable(AvailabilityStatus.UNCHANGED),
-                            avatarUrl: defaultWoka,
-                            id: member.chatId,
-                            roomName: undefined,
-                            playUri: undefined,
-                            username: member.wokaName,
-                            isAdmin: member.tags.includes("admin"),
-                            isMember: member.tags.includes("member"),
-                            uuid: undefined,
-                            color: defaultColor,
-                            spaceId: undefined,
-                        });
-                    });
-                    res();
-                })
-                .catch((error) => rej(error));
-        });
     }
 
     async searchChatUsers(searchText: string) {

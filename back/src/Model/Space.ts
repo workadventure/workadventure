@@ -1,11 +1,14 @@
+import { applyFieldMask } from "protobuf-fieldmask";
+import merge from "lodash/merge";
+import * as Sentry from "@sentry/node";
 import {
     AddSpaceUserMessage,
     BackToPusherSpaceMessage,
-    PartialSpaceUser,
+    PrivateEvent,
+    PublicEvent,
     RemoveSpaceUserMessage,
     SpaceUser,
     UpdateSpaceMetadataMessage,
-    UpdateSpaceUserMessage,
 } from "@workadventure/messages";
 import Debug from "debug";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
@@ -25,95 +28,68 @@ export class Space implements CustomJsonReplacerInterface {
         debug(`${name} => created`);
     }
 
-    public addUser(watcher: SpacesWatcher, spaceUser: SpaceUser) {
-        const usersList = this.usersList(watcher);
+    public addUser(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser) {
+        const usersList = this.usersList(sourceWatcher);
         usersList.set(spaceUser.id, spaceUser);
-        this.notifyWatchers(watcher, {
-            message: {
-                $case: "addSpaceUserMessage",
-                addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
-                    spaceName: this.name,
-                    user: spaceUser,
-                }),
-            },
-        });
-        debug(`${this.name} : user => added ${spaceUser.id}`);
-    }
-    public updateUser(watcher: SpacesWatcher, spaceUser: PartialSpaceUser) {
-        const usersList = this.usersList(watcher);
-        const user = usersList.get(spaceUser.id);
-        if (user) {
-            if (spaceUser.tags.length > 0) {
-                user.tags = spaceUser.tags;
-            }
-            if (spaceUser.name) {
-                user.name = spaceUser.name;
-            }
-            if (spaceUser.playUri) {
-                user.playUri = spaceUser.playUri;
-            }
-            if (spaceUser.color) {
-                user.color = spaceUser.color;
-            }
-            if (spaceUser.characterTextures.length > 0) {
-                user.characterTextures = spaceUser.characterTextures;
-            }
-            if (spaceUser.isLogged !== undefined) {
-                user.isLogged = spaceUser.isLogged;
-            }
-            if (spaceUser.availabilityStatus !== undefined) {
-                user.availabilityStatus = spaceUser.availabilityStatus;
-            }
-            if (spaceUser.roomName) {
-                user.roomName = spaceUser.roomName;
-            }
-            if (spaceUser.visitCardUrl) {
-                user.visitCardUrl = spaceUser.visitCardUrl;
-            }
-            if (spaceUser.screenSharingState !== undefined) {
-                user.screenSharingState = spaceUser.screenSharingState;
-            }
-            if (spaceUser.microphoneState !== undefined) {
-                user.microphoneState = spaceUser.microphoneState;
-            }
-            if (spaceUser.cameraState !== undefined) {
-                user.cameraState = spaceUser.cameraState;
-            }
-            if (spaceUser.megaphoneState !== undefined) {
-                user.megaphoneState = spaceUser.megaphoneState;
-            }
-            if (spaceUser.jitsiParticipantId) {
-                user.jitsiParticipantId = spaceUser.jitsiParticipantId;
-            }
-            if (spaceUser.uuid) {
-                user.uuid = spaceUser.uuid;
-            }
-            usersList.set(spaceUser.id, user);
-            this.notifyWatchers(watcher, {
+        this.notifyWatchers(
+            {
                 message: {
-                    $case: "updateSpaceUserMessage",
-                    updateSpaceUserMessage: UpdateSpaceUserMessage.fromPartial({
+                    $case: "addSpaceUserMessage",
+                    addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
                         spaceName: this.name,
                         user: spaceUser,
                     }),
                 },
-            });
-            debug(`${this.name} : user => updated ${spaceUser.id}`);
-        }
+            },
+            sourceWatcher
+        );
+        debug(`${this.name} : user => added ${spaceUser.id}`);
     }
-    public removeUser(watcher: SpacesWatcher, id: number) {
-        const usersList = this.usersList(watcher);
+    public updateUser(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser, updateMask: string[]) {
+        const usersList = this.usersList(sourceWatcher);
+        const user = usersList.get(spaceUser.id);
+        if (!user) {
+            console.error("User not found in this space", spaceUser);
+            Sentry.captureMessage(`User not found in this space ${spaceUser.id}`);
+            return;
+        }
+
+        const updateValues = applyFieldMask(spaceUser, updateMask);
+
+        merge(user, updateValues);
+
+        usersList.set(spaceUser.id, user);
+        this.notifyWatchers(
+            {
+                message: {
+                    $case: "updateSpaceUserMessage",
+                    updateSpaceUserMessage: {
+                        spaceName: this.name,
+                        user: spaceUser,
+                        updateMask,
+                    },
+                },
+            },
+            sourceWatcher
+        );
+        debug(`${this.name} : user => updated ${spaceUser.id}`);
+    }
+    public removeUser(sourceWatcher: SpacesWatcher, id: number) {
+        const usersList = this.usersList(sourceWatcher);
         usersList.delete(id);
 
-        this.notifyWatchers(watcher, {
-            message: {
-                $case: "removeSpaceUserMessage",
-                removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
-                    spaceName: this.name,
-                    userId: id,
-                }),
+        this.notifyWatchers(
+            {
+                message: {
+                    $case: "removeSpaceUserMessage",
+                    removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
+                        spaceName: this.name,
+                        userId: id,
+                    }),
+                },
             },
-        });
+            sourceWatcher
+        );
         debug(`${this.name} : user => removed ${id}`);
     }
 
@@ -122,7 +98,7 @@ export class Space implements CustomJsonReplacerInterface {
             this.metadata.set(key, metadata[key]);
         }
 
-        this.notifyWatchers(watcher, {
+        this.notifyWatchers({
             message: {
                 $case: "updateSpaceMetadataMessage",
                 updateSpaceMetadataMessage: UpdateSpaceMetadataMessage.fromPartial({
@@ -172,11 +148,15 @@ export class Space implements CustomJsonReplacerInterface {
         debug(`${this.name} => watcher removed ${watcher.id}`);
     }
 
-    private notifyWatchers(watcher: SpacesWatcher, message: BackToPusherSpaceMessage) {
+    /**
+     * Notify all watchers expect the one that sent the message
+     */
+    private notifyWatchers(message: BackToPusherSpaceMessage, exceptWatcher?: SpacesWatcher | undefined) {
         for (const watcher_ of this.users.keys()) {
-            if (watcher_.id !== watcher.id || message.message?.$case === "updateSpaceMetadataMessage") {
-                watcher_.write(message);
+            if (exceptWatcher && watcher_.id === exceptWatcher.id) {
+                continue;
             }
+            watcher_.write(message);
         }
     }
 
@@ -200,5 +180,29 @@ export class Space implements CustomJsonReplacerInterface {
             return `Users : ${this.users.size}`;
         }
         return undefined;
+    }
+
+    public dispatchPublicEvent(publicEvent: PublicEvent) {
+        console.log("dispatchPublicEvent to all pushers", publicEvent);
+        this.notifyWatchers({
+            message: {
+                $case: "publicEvent",
+                publicEvent,
+            },
+        });
+    }
+
+    public dispatchPrivateEvent(privateEvent: PrivateEvent) {
+        // Let's notify the watcher that contains the user
+        for (const [watcher, users] of this.users.entries()) {
+            if (users.has(privateEvent.receiverUserId)) {
+                watcher.write({
+                    message: {
+                        $case: "privateEvent",
+                        privateEvent,
+                    },
+                });
+            }
+        }
     }
 }
