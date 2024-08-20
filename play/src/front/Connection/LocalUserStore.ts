@@ -40,6 +40,7 @@ const matrixDeviceId = "matrixDeviceId";
 const matrixLoginToken = "matrixLoginToken";
 const requestedStatus = "RequestedStatus";
 const matrixGuest = "matrixGuest";
+const volumeProximityDiscussion = "volumeProximityDiscussion";
 
 const JwtAuthToken = z
     .object({
@@ -592,6 +593,14 @@ class LocalUserStore {
 
     setGuest(isGuest: boolean): void {
         localStorage.setItem(matrixGuest, isGuest.toString());
+    }
+
+    getVolumeProximityDiscussion(): number {
+        return parseFloat(localStorage.getItem(volumeProximityDiscussion) || "1");
+    }
+
+    setVolumeProximityDiscussion(value: number): void {
+        localStorage.setItem(volumeProximityDiscussion, `${value}`);
     }
 }
 
