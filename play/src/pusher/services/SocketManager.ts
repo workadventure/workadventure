@@ -361,7 +361,13 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    public async handleJoinSpace(client: Socket, spaceName: string, localSpaceName: string): Promise<void> {
+    public async handleJoinSpace(
+        client: Socket,
+        joinSpaceMessage: JoinSpaceMessage,
+        localSpaceName: string
+    ): Promise<void> {
+        const spaceName = joinSpaceMessage.spaceName;
+        const synchronizedPlayerProperties = joinSpaceMessage.synchronizedPlayerProperties;
         const socketData = client.getUserData();
 
         try {
@@ -544,7 +550,10 @@ export class SocketManager implements ZoneEventListener {
                 space.addClientWatcher(client);
             }
             space.addUser(socketData.spaceUser, client);
-            socketData.spaces.push(space);
+            socketData.spaces.set(space.name, {
+                space,
+                synchronizedPlayerProperties,
+            });
 
             // client.spacesFilters = [
             //     new SpaceFilterMessage()
@@ -657,8 +666,12 @@ export class SocketManager implements ZoneEventListener {
             if (socketData.spaceUser.chatID !== playerDetailsMessage.chatID && playerDetailsMessage.chatID !== "") {
                 fieldMask.push("chatID");
             }
-            socketData.spaces.forEach((space) => {
-                space.updateUser(partialSpaceUser, fieldMask);
+            socketData.spaces.forEach((spaceDescriptor) => {
+                // We only update the part of the user that needs to be synchronized for this space
+                const fieldMaskIntersection = fieldMask.filter((field) =>
+                    spaceDescriptor.synchronizedPlayerProperties.includes(field)
+                );
+                spaceDescriptor.space.updateUser(partialSpaceUser, fieldMaskIntersection);
             });
         }
     }
@@ -1082,8 +1095,9 @@ export class SocketManager implements ZoneEventListener {
         const newFilter = addSpaceFilterMessage.spaceFilterMessage;
         const socketData = client.getUserData();
 
-        const space = socketData.spaces.find((space) => space.name === newFilter.spaceName);
-        if (space) {
+        const spaceDescriptor = socketData.spaces.get(newFilter.spaceName);
+        if (spaceDescriptor) {
+            const space = spaceDescriptor.space;
             space.handleAddFilter(client, addSpaceFilterMessage);
             let spacesFilter = socketData.spacesFilters.get(space.name) || [];
             if (!spacesFilter) {
@@ -1122,8 +1136,9 @@ export class SocketManager implements ZoneEventListener {
     ) {
         const oldFilter = removeSpaceFilterMessage.spaceFilterMessage;
         const socketData = client.getUserData();
-        const space = socketData.spaces.find((space) => space.name === oldFilter.spaceName);
-        if (space) {
+        const spaceDescriptor = socketData.spaces.get(oldFilter.spaceName);
+        if (spaceDescriptor) {
+            const space = spaceDescriptor.space;
             space.handleRemoveFilter(client, removeSpaceFilterMessage);
             const spacesFilter = socketData.spacesFilters.get(space.name);
             if (spacesFilter) {
@@ -1253,7 +1268,7 @@ export class SocketManager implements ZoneEventListener {
         if (space) {
             space.removeClientWatcher(client);
             space.removeUser(socketData.spaceUser.id);
-            socketData.spaces = socketData.spaces.filter((space) => space.name !== spaceName);
+            socketData.spaces.delete(spaceName);
             this.deleteSpaceIfEmpty(space);
         }
     }
@@ -1348,13 +1363,14 @@ export class SocketManager implements ZoneEventListener {
         message: PusherToBackMessage["message"]
     ) {
         const socketData = client.getUserData();
-        const space = socketData.spaces.find((space) => space.name === spaceName);
+        const spaceDescriptor = socketData.spaces.get(spaceName);
         // FIXME: the message should ALWAYS be forwarded to the back (because the same space  will live in many fronts)
         // We probably need to refactor this part of the code into something more generic
-        if (!space) {
+        if (!spaceDescriptor) {
             this.forwardMessageToBack(client, message);
             return;
         }
+        const space = spaceDescriptor.space;
         space.kickOffUser(socketData, participantId);
     }
 
@@ -1412,14 +1428,17 @@ export class SocketManager implements ZoneEventListener {
     handlePublicEvent(client: Socket, publicEvent: PublicEventFrontToPusher) {
         const socketData = client.getUserData();
         // FIXME: replace the space array with a map?
-        const space = socketData.spaces.find((space) => space.name === publicEvent.spaceName);
-        if (!space) {
+        const spaceDescriptor = socketData.spaces.get(publicEvent.spaceName);
+        if (!spaceDescriptor) {
             throw new Error(
                 `Trying to send a public event to a space that does not exist: "${
                     publicEvent.spaceName
-                }". Existing spaces for user: ${socketData.spaces.map((space) => space.name).join(", ")}`
+                }". Existing spaces for user: ${Array.from(socketData.spaces.values())
+                    .map((spaceDescriptor) => spaceDescriptor.space.name)
+                    .join(", ")}`
             );
         }
+        const space = spaceDescriptor.space;
         if (!socketData.userId) {
             throw new Error("User id not found");
         }
@@ -1435,12 +1454,13 @@ export class SocketManager implements ZoneEventListener {
     handlePrivateEvent(client: Socket, privateEvent: PrivateEventFrontToPusher) {
         const socketData = client.getUserData();
         // FIXME: replace the space array with a map?
-        const space = socketData.spaces.find((space) => space.name === privateEvent.spaceName);
-        if (!space) {
+        const spaceDescritor = socketData.spaces.get(privateEvent.spaceName);
+        if (!spaceDescritor) {
             throw new Error(
                 `Trying to send a private event to a space that does not exist: "${privateEvent.spaceName}"`
             );
         }
+        const space = spaceDescritor.space;
         if (!socketData.userId) {
             throw new Error("User id not found");
         }

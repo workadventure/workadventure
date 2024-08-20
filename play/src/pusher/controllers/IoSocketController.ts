@@ -30,6 +30,7 @@ import { adminService } from "../services/AdminService";
 import { validateWebsocketQuery } from "../services/QueryValidator";
 import { SocketData } from "../models/Websocket/SocketData";
 import { emitInBatch } from "../services/IoSocketHelpers";
+import { Space } from "../models/Space";
 
 type UpgradeFailedInvalidData = {
     rejected: true;
@@ -501,7 +502,13 @@ export class IoSocketController {
                             backConnection: undefined,
                             listenedZones: new Set<Zone>(),
                             pusherRoom: undefined,
-                            spaces: [],
+                            spaces: new Map<
+                                string,
+                                {
+                                    space: Space;
+                                    synchronizedPlayerProperties: string[];
+                                }
+                            >(),
                             spacesFilters: new Map<string, SpaceFilterMessage[]>(),
                             chatID,
                             world: userData.world,
@@ -757,7 +764,7 @@ export class IoSocketController {
 
                             await socketManager.handleJoinSpace(
                                 socket,
-                                message.message.joinSpaceMessage.spaceName,
+                                message.message.joinSpaceMessage,
                                 localSpaceName
                             );
                             break;

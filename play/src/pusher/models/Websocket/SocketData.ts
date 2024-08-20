@@ -58,7 +58,14 @@ export type SocketData = {
     backConnection?: BackConnection;
     listenedZones: Set<Zone>;
     pusherRoom: PusherRoom | undefined;
-    spaces: Space[];
+    // A map mapping the name of spaces to the space and the list of properties that should be synchronized from the user details.
+    spaces: Map<
+        string,
+        {
+            space: Space;
+            synchronizedPlayerProperties: string[];
+        }
+    >;
     spacesFilters: Map<string, SpaceFilterMessage[]>;
     chatID?: string;
     world: string;
