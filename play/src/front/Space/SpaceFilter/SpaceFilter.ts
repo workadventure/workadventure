@@ -6,7 +6,6 @@ import { CharacterLayerManager } from "../../Phaser/Entity/CharacterLayerManager
 import { SpaceInterface } from "../SpaceInterface";
 import { RoomConnectionForSpacesInterface } from "../SpaceRegistry/SpaceRegistry";
 
-// FIXME: refactor from the standpoint of the consumer. addUser, removeUser should be removed...
 export interface SpaceFilterInterface {
     //userExist(userId: number): boolean;
     //addUser(user: SpaceUser): Promise<SpaceUserExtended>;

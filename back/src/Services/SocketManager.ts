@@ -49,6 +49,7 @@ import {
     PrivateEvent,
     LeaveSpaceMessage,
     JoinSpaceMessage,
+    noUndefined,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -637,7 +638,6 @@ export class SocketManager {
             message: {
                 $case: "joinSpaceRequestMessage",
                 joinSpaceRequestMessage: {
-                    // FIXME: before fixing the fact that spaceName is undefined, let's try to understand why I don't have any info about the user in the error caught above
                     spaceName: group.spaceName,
                 },
             },
@@ -1469,21 +1469,17 @@ export class SocketManager {
     }
 
     handleUpdateSpaceUserMessage(pusher: SpacesWatcher, updateSpaceUserMessage: UpdateSpaceUserMessage) {
-        const updateMask = updateSpaceUserMessage.updateMask;
-        if (!updateSpaceUserMessage.user || !updateMask) {
-            console.error("UpdateSpaceUserMessage has no user or updateMask");
-            Sentry.captureException("UpdateSpaceUserMessage has no user or updateMask");
-            return;
-        }
+        const message = noUndefined(updateSpaceUserMessage);
+        const updateMask = message.updateMask;
 
         const space = this.spaces.get(updateSpaceUserMessage.spaceName);
         if (!space) {
-            console.error("Could not find space to update in UpdateSpaceUserMessage");
-            Sentry.captureException("Could not find space to update in UpdateSpaceUserMessage");
-            return;
+            throw new Error(
+                `Could not find space "${updateSpaceUserMessage.spaceName}" to update in UpdateSpaceUserMessage`
+            );
         }
 
-        space.updateUser(pusher, updateSpaceUserMessage.user, updateMask);
+        space.updateUser(pusher, message.user, updateMask);
     }
 
     handleRemoveSpaceUserMessage(pusher: SpacesWatcher, removeSpaceUserMessage: RemoveSpaceUserMessage) {

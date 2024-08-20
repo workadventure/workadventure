@@ -183,7 +183,6 @@ export class Space implements CustomJsonReplacerInterface {
     }
 
     public dispatchPublicEvent(publicEvent: PublicEvent) {
-        console.log("dispatchPublicEvent to all pushers", publicEvent);
         this.notifyWatchers({
             message: {
                 $case: "publicEvent",
