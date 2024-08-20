@@ -4,13 +4,11 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
-  
-
 
     export let property: MatrixRoomPropertyData;
     let oldName = property.displayName;
-    
-;    const gameScene = gameManager.getCurrentGameScene();
+
+    const gameScene = gameManager.getCurrentGameScene();
     const roomConnection = gameScene.connection;
 
     const dispatch = createEventDispatcher();
@@ -19,29 +17,33 @@
         dispatch("change");
     }
 
-    onMount(()=>{
-            if(!property.matrixRoomId && roomConnection){
-                roomConnection.queryCreateChatRoomForArea(property.id)
-                .then((answer)=>{
+    onMount(() => {
+        if (!property.matrixRoomId && roomConnection) {
+            roomConnection
+                .queryCreateChatRoomForArea(property.id)
+                .then((answer) => {
                     property.matrixRoomId = answer.chatRoomID;
                     dispatch("change");
                 })
-                .catch(error=>console.error(error));
+                .catch((error) => console.error(error));
         }
     });
 
-    onDestroy(()=>{
-        if(oldName!==property.displayName && roomConnection){
-            roomConnection.emitChatRoomAreaNameChange(property.matrixRoomId,property.displayName);
+    onDestroy(() => {
+        if (oldName !== property.displayName && roomConnection) {
+            roomConnection.emitChatRoomAreaNameChange(property.matrixRoomId, property.displayName);
             dispatch("change");
             return;
         }
-        if(property.displayName ==="" && roomConnection){
-            roomConnection.emitChatRoomAreaNameChange(property.matrixRoomId,$LL.mapEditor.properties.matrixProperties.defaultChatRoomAreaName());
+        if (property.displayName === "" && roomConnection) {
+            roomConnection.emitChatRoomAreaNameChange(
+                property.matrixRoomId,
+                $LL.mapEditor.properties.matrixProperties.defaultChatRoomAreaName()
+            );
             dispatch("change");
             return;
         }
-    })
+    });
 </script>
 
 <PropertyEditorBase
@@ -76,7 +78,9 @@
                 bind:checked={property.shouldOpenAutomatically}
                 on:change={onValueChange}
             />
-            <label for="openAutomaticallyChatLabel">{$LL.mapEditor.properties.matrixProperties.openAutomaticallyChatLabel()}</label>
+            <label for="openAutomaticallyChatLabel"
+                >{$LL.mapEditor.properties.matrixProperties.openAutomaticallyChatLabel()}</label
+            >
         </div>
     </span>
 </PropertyEditorBase>
@@ -84,7 +88,7 @@
 <style lang="scss">
     .value-input {
         display: flex;
-               flex-direction: row;
+        flex-direction: row;
         margin-bottom: 0.5em;
         margin-top: 0.5em;
         gap: 10px;
@@ -93,7 +97,7 @@
             margin-right: 0.5em;
         }
         input {
-            flex-grow:0;
+            flex-grow: 0;
             min-width: 0;
         }
         * {

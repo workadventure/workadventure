@@ -206,8 +206,8 @@
                     id,
                     type,
                     matrixRoomId: "",
-                    shouldOpenAutomatically : false,
-                    displayName:""
+                    shouldOpenAutomatically: false,
+                    displayName: "",
                 };
             default:
                 throw new Error(`Unknown property type ${type}`);
@@ -328,7 +328,6 @@
         hasplayAudioProperty = hasProperty("playAudio");
         hasPersonalAreaProperty = hasProperty("personalAreaPropertyData");
         hasRightsProperty = hasProperty("restrictedRightsPropertyData");
-        //hasMatrixRoom =  hasProperty("MatrixRoomData")
     }
 
     function openKlaxoonActivityPicker(app: AreaDataProperty) {
@@ -352,8 +351,6 @@
     function toggleDescriptionField() {
         showDescriptionField = !showDescriptionField;
     }
-
- 
 </script>
 
 {#if $mapEditorSelectedAreaPreviewStore === undefined}
@@ -667,7 +664,7 @@
                             {property}
                             on:close={({ detail }) => {
                                 onDeleteProperty(property.id, detail);
-                                if(connection) connection.emitDeleteChatRoomArea(property.matrixRoomId);
+                                if (connection) connection.emitDeleteChatRoomArea(property.matrixRoomId);
                             }}
                             on:change={({ detail }) => onUpdateProperty(property, detail)}
                         />

@@ -9,7 +9,7 @@ interface CreateRoomOptions {
         type: EventType;
         state_key?: string;
         content:
-             {
+            | {
                   history_visibility: string;
               }
             | {
@@ -339,13 +339,15 @@ class MatrixProvider {
                     throw new Error(`Failed to fetch members for room: ${roomID}`);
                 }
 
-                const kickMembersPromises = response.data.chunk.reduce((acc, currentMember) => {
-                    if (currentMember.state_key !== ADMIN_CHAT_ID && currentMember.content.membership !== "join") {
-                        acc.push(this.kickUserFromRoom(currentMember.state_key, roomID));
-                    }
-
-                    return acc;
-                }, []);
+                const kickMembersPromises = response.data.chunk.reduce(
+                    (acc: Promise<void>[], currentMember: { state_key: string; content: { membership: string } }) => {
+                        if (currentMember.state_key !== ADMIN_CHAT_ID && currentMember.content.membership !== "join") {
+                            acc.push(this.kickUserFromRoom(currentMember.state_key, roomID));
+                        }
+                        return acc;
+                    },
+                    []
+                );
 
                 return Promise.all(kickMembersPromises);
             })
@@ -353,7 +355,7 @@ class MatrixProvider {
                 return Promise.resolve();
             })
             .catch((error) => {
-                console.error("Failed to kick all user from room : " + roomID , error);
+                console.error("Failed to kick all user from room : " + roomID, error);
                 return Promise.reject(new Error("Failed to kick all user from room : " + roomID));
             });
     }

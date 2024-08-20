@@ -207,7 +207,7 @@ export class AreasPropertiesListener {
                 break;
             }
             case "matrixRoomPropertyData": {
-                this.handleMatrixRoomAreaOnEnter(property, area);
+                this.handleMatrixRoomAreaOnEnter(property);
                 break;
             }
 
@@ -274,7 +274,7 @@ export class AreasPropertiesListener {
             }
             case "matrixRoomPropertyData": {
                 newProperty = newProperty as typeof oldProperty;
-                this.handleMatrixRoomAreaOnEnter(newProperty, area);
+                this.handleMatrixRoomAreaOnEnter(newProperty);
                 this.handleMatrixRoomAreaOnLeave(oldProperty);
                 break;
             }
@@ -567,22 +567,23 @@ export class AreasPropertiesListener {
         }
     }
 
-    private handleMatrixRoomAreaOnEnter(property: MatrixRoomPropertyData, areaData: AreaData) {
-        if(this.scene.connection){
+    private handleMatrixRoomAreaOnEnter(property: MatrixRoomPropertyData) {
+        if (this.scene.connection) {
             this.scene.connection
                 .queryEnterChatRoomArea(property.matrixRoomId)
-                .then(()=>{ 
+                .then(() => {
                     return this.scene.chatConnection.joinRoom(property.matrixRoomId);
-
                 })
-                .then((room : ChatRoom)=>{
-                    if(!room) return; 
+                .then((room: ChatRoom) => {
+                    if (!room) return;
                     selectedRoom.set(room);
                     navChat.set("chat");
                     chatZoneLiveStore.set(true);
                     if (property.shouldOpenAutomatically) chatVisibilityStore.set(true);
-                });
-                return;
+                })
+                .catch((error) => console.error(error));
+
+            return;
         }
     }
 
@@ -597,8 +598,8 @@ export class AreasPropertiesListener {
         } else if (property.accessClaimMode === PersonalAreaAccessClaimMode.enum.dynamic) {
             this.displayPersonalAreaClaimDialogBox(property, areaData, area);
         }
-    }      
-    
+    }
+
     private displayPersonalAreaOwnerVisitCard(ownerId: string, areaData: AreaData, area?: Area) {
         const connectedUserUUID = localUserStore.getLocalUser()?.uuid;
         if (connectedUserUUID != ownerId) {
@@ -768,8 +769,8 @@ export class AreasPropertiesListener {
     }
 
     private handleMatrixRoomAreaOnLeave(property: MatrixRoomPropertyData) {
-            const actualRoom = get(selectedRoom) ;
-            const chatVisibility = get(chatVisibilityStore);
+        const actualRoom = get(selectedRoom);
+        const chatVisibility = get(chatVisibilityStore);
 
         if (actualRoom?.id === property.matrixRoomId && chatVisibility) {
             chatVisibilityStore.set(false);
@@ -777,18 +778,12 @@ export class AreasPropertiesListener {
         }
         chatZoneLiveStore.set(false);
 
-        get(this
-        .scene
-        .chatConnection
-        .rooms)
-        .find(room=>room.id===property.matrixRoomId)
-        ?.leaveRoom();
+        get(this.scene.chatConnection.rooms)
+            .find((room) => room.id === property.matrixRoomId)
+            ?.leaveRoom();
 
-        if(this.scene.connection){
-            this
-            .scene
-            .connection
-            .emitLeaveChatRoomArea(property.matrixRoomId);
+        if (this.scene.connection) {
+            this.scene.connection.emitLeaveChatRoomArea(property.matrixRoomId);
         }
     }
 
