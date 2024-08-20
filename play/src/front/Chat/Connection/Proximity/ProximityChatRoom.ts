@@ -24,6 +24,7 @@ import { SpaceFilterInterface, SpaceUserExtended } from "../../../Space/SpaceFil
 import { mapExtendedSpaceUserToChatUser } from "../../UserProvider/ChatUserMapper";
 import { SimplePeer } from "../../../WebRtc/SimplePeer";
 import { bindMuteEventsToSpace } from "../../../Space/Utils/BindMuteEvents";
+import { gameManager } from "../../../Phaser/Game/GameManager";
 
 export class ProximityChatMessage implements ChatMessage {
     isQuotedMessage = undefined;
@@ -93,9 +94,9 @@ export class ProximityChatRoom implements ChatRoom {
         private spaceRegistry: SpaceRegistryInterface,
         private simplePeer: SimplePeer,
         iframeListenerInstance: Pick<typeof iframeListener, "newChatMessageWritingStatusStream">,
-        private playNewMessageSound = ()=>{
-        gameManager.getCurrentGameScene().playSound("new-message");
-    }
+        private playNewMessageSound = () => {
+            gameManager.getCurrentGameScene().playSound("new-message");
+        }
     ) {
         this.typingMembers = writable([]);
 

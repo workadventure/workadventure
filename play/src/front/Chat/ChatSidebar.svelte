@@ -19,7 +19,7 @@
         }
     }
 
-    let sideBarWidth : number;
+    let sideBarWidth: number;
 
     const handleMousedown = (e: MouseEvent) => {
         let dragX = e.clientX;

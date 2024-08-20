@@ -7,14 +7,13 @@
     import { scriptUtils } from "../../../Api/ScriptUtils";
     import { requestVisitCardsStore } from "../../../Stores/GameStore";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import { IconForbid, IconDots, IconMessage, IconLoader } from "@wa-icons";
     import { navChat, selectedRoom } from "../../Stores/ChatStore";
-    import { localUserStore } from "../../../Connection/LocalUserStore";
     import { showReportScreenStore } from "../../../Stores/ShowReportScreenStore";
+    import { IconForbid, IconDots, IconMessage, IconLoader } from "@wa-icons";
 
     export let user: ChatUser;
 
-    const { connection, roomUrl } = gameManager.getCurrentGameScene();
+    const { connection, roomUrl, chatConnection } = gameManager.getCurrentGameScene();
 
     const isInTheSameMap = user.playUri === roomUrl;
 
@@ -47,11 +46,11 @@
     let loadingDirectRoomAccess = false;
 
     const openChat = async () => {
-        let room: ChatRoom | undefined = chatConnection.getDirectRoomFor(user.id);
+        let room: ChatRoom | undefined = chatConnection.getDirectRoomFor(user.chatId);
         if (!room)
             try {
                 loadingDirectRoomAccess = true;
-                room = await chatConnection.createDirectRoom(user.id);
+                room = await chatConnection.createDirectRoom(user.chatId);
             } catch (error) {
                 console.error(error);
             } finally {
@@ -106,7 +105,7 @@
             {/if}
         {/if}
 
-        {#if user.id && !loadingDirectRoomAccess}
+        {#if user.chatId && !loadingDirectRoomAccess}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <span class="sendMessage wa-dropdown-item" on:click|stopPropagation={openChat}
                 ><IconMessage font-size="13" />

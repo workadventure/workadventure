@@ -112,11 +112,11 @@
         {#if $chatConnectionStatus === "ONLINE"}
             {#if $joignableRoom.length > 0}
                 <p class="tw-p-0 tw-m-0 tw-text-gray-400">{$LL.chat.availableRooms()}</p>
-            <div class="tw-flex tw-flex-col tw-overflow-auto">
-                {#each $joignableRoom as room (room.id)}
-                    <JoignableRooms {room} />
-                {/each}
-            </div>
+                <div class="tw-flex tw-flex-col tw-overflow-auto">
+                    {#each $joignableRoom as room (room.id)}
+                        <JoignableRooms {room} />
+                    {/each}
+                </div>
             {/if}
             <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={toggleDisplayRoomInvitations}>
                 {#if displayRoomInvitations}
@@ -124,17 +124,17 @@
                 {:else}
                     <IconChevronRight />
                 {/if}
-                         {$LL.chat.invitations()}
+                {$LL.chat.invitations()}
             </button>
             {#if displayRoomInvitations}
-            <div class="tw-flex tw-flex-col tw-overflow-auto">
-                {#each filteredRoomInvitations as room (room.id)}
-                    <RoomInvitation {room} />
-                {/each}
-                {#if filteredRoomInvitations.length === 0}
-                    <p class="tw-p-1 tw-m-1 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
-                {/if}
-            </div>
+                <div class="tw-flex tw-flex-col tw-overflow-auto">
+                    {#each filteredRoomInvitations as room (room.id)}
+                        <RoomInvitation {room} />
+                    {/each}
+                    {#if filteredRoomInvitations.length === 0}
+                        <p class="tw-p-1 tw-m-1 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
+                    {/if}
+                </div>
             {/if}
 
             <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={toggleDisplayDirectRooms}>

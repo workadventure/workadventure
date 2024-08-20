@@ -83,8 +83,6 @@
     }
 
     function onPasteHandler(event: ClipboardEvent) {
-        event.preventDefault(); // Prevent the default paste action
-
         if (!event.clipboardData) return;
 
         const text = event.clipboardData.getData("text");

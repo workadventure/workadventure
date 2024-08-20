@@ -91,25 +91,25 @@
                 handleScroll();
             }}
         >
-        <ul class="tw-list-none tw-p-0 tw-flex-1 tw-flex tw-flex-col tw-max-h-full">
-            <!--{#if room.id === "proximity" && $connectedUsers !== undefined}-->
-            <!--    <div class="tw-flex tw-flex-row tw-items-center tw-gap-2">-->
-            <!--        {#each [...$connectedUsers] as [userId, user] (userId)}-->
-            <!--            <div class="avatar">-->
-            <!--                <Avatar avatarUrl={user.avatarUrl} fallbackName={user?.username} color={user?.color} />-->
-            <!--            </div>-->
-            <!--        {/each}-->
-            <!--    </div>-->
-            <!--{/if}-->
-            {#if $messages.length === 0}
-                <p class="tw-self-center tw-text-md tw-text-gray-500">{$LL.chat.nothingToDisplay()}</p>
-            {/if}
-            {#each $messages as message (message.id)}
-                <li data-event-id={message.id} >
-                    <Message {message} reactions={$messageReaction.get(message.id)} />
-                </li>
-            {/each}
-        </ul>
+            <ul class="tw-list-none tw-p-0 tw-flex-1 tw-flex tw-flex-col tw-max-h-full">
+                <!--{#if room.id === "proximity" && $connectedUsers !== undefined}-->
+                <!--    <div class="tw-flex tw-flex-row tw-items-center tw-gap-2">-->
+                <!--        {#each [...$connectedUsers] as [userId, user] (userId)}-->
+                <!--            <div class="avatar">-->
+                <!--                <Avatar avatarUrl={user.avatarUrl} fallbackName={user?.username} color={user?.color} />-->
+                <!--            </div>-->
+                <!--        {/each}-->
+                <!--    </div>-->
+                <!--{/if}-->
+                {#if $messages.length === 0}
+                    <p class="tw-self-center tw-text-md tw-text-gray-500">{$LL.chat.nothingToDisplay()}</p>
+                {/if}
+                {#each $messages as message (message.id)}
+                    <li data-event-id={message.id}>
+                        <Message {message} reactions={$messageReaction.get(message.id)} />
+                    </li>
+                {/each}
+            </ul>
         </div>
 
         {#if $typingMembers.length > 0}
