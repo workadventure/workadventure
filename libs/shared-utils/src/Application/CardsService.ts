@@ -21,7 +21,7 @@ export const getCardsLink = (url: URL, userToken?: string | null): string => {
 };
 
 export const isCardsPublicLink = (url: URL) => {
-    return ["app.cards-microlearning.com"].includes(url.hostname);
+    return ["app.cards-microlearning.com", "embed.cards-microlearning.com"].includes(url.hostname);
 };
 
 export const isCardsConnectedLink = (url: URL) => {

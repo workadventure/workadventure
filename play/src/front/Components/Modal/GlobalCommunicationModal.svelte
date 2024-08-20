@@ -29,8 +29,8 @@
     import { StringUtils } from "../../Utils/StringUtils";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import {
-        currentLiveStreamingNameStore,
-        megaphoneUrlStore,
+        currentLiveStreamingSpaceStore,
+        megaphoneSpaceStore,
         requestedMegaphoneStore,
     } from "../../Stores/MegaphoneStore";
     import { userIsAdminStore } from "../../Stores/GameStore";
@@ -160,7 +160,7 @@
 
     function startLive() {
         analyticsClient.startMegaphone();
-        currentLiveStreamingNameStore.set($megaphoneUrlStore);
+        currentLiveStreamingSpaceStore.set($megaphoneSpaceStore);
         requestedMegaphoneStore.set(true);
         close();
     }

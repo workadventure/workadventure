@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 
 export interface AskDialog {
     uuid: string;
-    userId: string;
+    userId: number;
     message: string;
     userName?: string;
     avatarUrl?: string;
@@ -19,7 +19,7 @@ function createAskDialogStore() {
     return {
         subscribe,
         addAskDialog: (
-            userId: string,
+            userId: number,
             message: string,
             callback?: () => void,
             userName?: string,
@@ -48,7 +48,7 @@ function createAskDialogStore() {
             askDialogs.delete(askDialog);
             set(askDialogs);
         },
-        closeDialogByUserId: (userId: string) => {
+        closeDialogByUserId: (userId: number) => {
             const askDialogs = get(askDialogStore);
             // find the askDialog with the userId
             const askDialog = Array.from(askDialogs).find((askDialog) => askDialog.userId === userId);

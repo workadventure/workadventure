@@ -131,3 +131,8 @@ services:
     healthcheck:
       #disable: true
       timeout: 5s
+
+  synapse:
+    depends_on:
+      oidc-server-mock:
+        condition: service_healthy

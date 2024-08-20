@@ -1,4 +1,5 @@
 import { Readable } from "svelte/store";
+import { SpaceUserExtended } from "../../Space/SpaceFilter/SpaceFilter";
 import { TrackInterface } from "./TrackInterface";
 
 export interface TrackStreamWrapperInterface {
@@ -20,18 +21,13 @@ export interface TrackStreamWrapperInterface {
 
     isLocal(): boolean;
 
-    muteAudioParticipant(): void;
-
+    getExtendedSpaceUser(): Promise<SpaceUserExtended>;
+    // FIXME: move these directly to the extended space user.
+    /*muteAudioParticipant(): void;
     muteAudioEveryBody(): void;
-
     muteVideoParticipant(): void;
-
     muteVideoEverybody(): void;
-
-    kickoff(): void;
+    kickoff(): void;*/
 
     blockOrReportUser(): void;
-
-    sendProximityPublicMessage(message: string): void;
-    sendProximityPrivateMessage(message: string): void;
 }

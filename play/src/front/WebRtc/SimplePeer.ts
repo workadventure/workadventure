@@ -1,6 +1,7 @@
 import { get } from "svelte/store";
 import type { Subscription } from "rxjs";
 import * as Sentry from "@sentry/svelte";
+import { Deferred } from "ts-deferred";
 import type {
     WebRtcDisconnectMessageInterface,
     WebRtcSignalReceivedMessageInterface,
@@ -12,6 +13,7 @@ import { peerStore, screenSharingPeerStore } from "../Stores/PeerStore";
 import { batchGetUserMediaStore } from "../Stores/MediaStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { nbSoundPlayedInBubbleStore } from "../Stores/ApparentMediaContraintStore";
+import { SpaceFilterInterface } from "../Space/SpaceFilter/SpaceFilter";
 import { askDialogStore } from "../Stores/MeetingStore";
 import { RemotePlayersRepository } from "../Phaser/Game/RemotePlayersRepository";
 import { mediaManager, NotificationType } from "./MediaManager";
@@ -24,7 +26,6 @@ export interface UserSimplePeerInterface {
     initiator?: boolean;
     webRtcUser?: string | undefined;
     webRtcPassword?: string | undefined;
-    webRtcSpaceName?: string | undefined;
 }
 
 export type RemotePeer = VideoPeer | ScreenSharingPeer;
@@ -37,6 +38,7 @@ export class SimplePeer {
     private readonly rxJsUnsubscribers: Subscription[] = [];
     private lastWebrtcUserName: string | undefined;
     private lastWebrtcPassword: string | undefined;
+    private spaceFilterDeferred = new Deferred<SpaceFilterInterface>();
 
     constructor(private Connection: RoomConnection, private remotePlayersRepository: RemotePlayersRepository) {
         //we make sure we don't get any old peer.
@@ -174,7 +176,7 @@ export class SimplePeer {
             user.initiator ? user.initiator : false,
             player,
             this.Connection,
-            user.webRtcSpaceName
+            this.spaceFilterDeferred.promise
         );
 
         peer.toClose = false;
@@ -276,7 +278,7 @@ export class SimplePeer {
             this.closeScreenSharingConnection(userId);
 
             // Close the ask dialog by user ID
-            askDialogStore.closeDialogByUserId(peer.userUuid);
+            askDialogStore.closeDialogByUserId(peer.userId);
         } catch (err) {
             console.error("An error occurred in closeConnection", err);
         }
@@ -491,5 +493,13 @@ export class SimplePeer {
                 }
             })().catch(reject);
         });
+    }
+
+    setSpaceFilter(spaceFilter: SpaceFilterInterface | undefined) {
+        if (spaceFilter) {
+            this.spaceFilterDeferred.resolve(spaceFilter);
+        } else {
+            this.spaceFilterDeferred = new Deferred<SpaceFilterInterface>();
+        }
     }
 }

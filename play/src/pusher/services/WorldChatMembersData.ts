@@ -9,7 +9,7 @@ const ChatMemberData = z.object({
 });
 
 export const WorldChatMembersData = z.object({
-    total: z.number().positive(),
+    total: z.number().min(0),
     members: z.array(ChatMemberData),
 });
 export type WorldChatMembersData = z.infer<typeof WorldChatMembersData>;
