@@ -1,7 +1,7 @@
 oidc_providers:
   - name: Discord
-    client_id: 1268134259147931648
-    client_secret: INVYsk8F1Uu76MY3QPqsjkcQRvla1WoA
+    client_id: 
+    client_secret: 
     redirect_uri: 
       - http://pusher.workadventure.localhost/third-party-login/discord/callback
 
