@@ -19,7 +19,14 @@ import {
 import { MapStore } from "@workadventure/store-utils";
 import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
-import { ChatConnectionInterface, ChatRoom, Connection, ConnectionStatus, CreateRoomOptions } from "../ChatConnection";
+import {
+    ChatConnectionInterface,
+    ChatRoom,
+    ChatSpaceRoom,
+    Connection,
+    ConnectionStatus,
+    CreateRoomOptions,
+} from "../ChatConnection";
 import { selectedRoom } from "../../Stores/ChatStore";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 import { MatrixSecurity, matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity";
