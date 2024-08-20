@@ -13,7 +13,7 @@
     import workerWhiteSvg from "../../images/applications/worker_white.svg";
     import teamWhiteSvg from "../../images/applications/team_white.svg";
     import cardsPng from "../../images/applications/icon_cards.svg";
-    import messageSvg from "../../images/applications/icon_message.svg"
+    import messageSvg from "../../images/applications/icon_message.svg";
     import LL from "../../../../i18n/i18n-svelte";
     import { connectionManager } from "../../../Connection/ConnectionManager";
     import AddPropertyButton from "./AddPropertyButton.svelte";

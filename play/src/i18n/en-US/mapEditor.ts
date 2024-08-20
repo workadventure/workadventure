@@ -218,7 +218,7 @@ const mapEditor: BaseTranslation = {
             createARoom: "Create a new room",
             roomNameLabel: "Display name of room",
             roomNameLabelPlaceholder: "My room",
-            defaultChatRoomAreaName:"Room Area",
+            defaultChatRoomAreaName: "Room Area",
         },
     },
     areaEditor: {

@@ -1499,56 +1499,57 @@ export class SocketManager implements ZoneEventListener {
         return matrixProvider.changeRoomName(roomID,newName);
     }
 
-
-    async handleCreateChatRoomForAreaQuery(chatMemberQuery: CreateChatRoomForAreaQuery): Promise<CreateChatRoomForAreaAnswer>{
-    const chatRoomID =  await matrixProvider.createRoomForArea();
+    async handleCreateChatRoomForAreaQuery(
+        chatMemberQuery: CreateChatRoomForAreaQuery
+    ): Promise<CreateChatRoomForAreaAnswer> {
+        const chatRoomID = await matrixProvider.createRoomForArea();
         return {
-            chatRoomID 
+            chatRoomID,
         };
     }
-    async leaveChatRoomArea(socket : Socket):Promise<void>{
-        const {chatID,currentChatRoomArea} = socket.getUserData();
+    async leaveChatRoomArea(socket: Socket): Promise<void> {
+        const { chatID, currentChatRoomArea } = socket.getUserData();
 
-        if(!chatID || !currentChatRoomArea){
+        if (!chatID || !currentChatRoomArea) {
             //TODO : msg error
             return Promise.reject(new Error(""));
         }
 
-        Promise
-            .all(currentChatRoomArea.map(chatRoomAreaID=>matrixProvider.kickUserFromRoom(chatID,chatRoomAreaID)))
-            .then(()=>{
+        Promise.all(
+            currentChatRoomArea.map((chatRoomAreaID) => matrixProvider.kickUserFromRoom(chatID, chatRoomAreaID))
+        )
+            .then(() => {
                 return Promise.resolve();
             })
-            .catch((error)=>{
+            .catch((error) => {
                 return Promise.reject(new Error(error));
-            });    
+            });
     }
 
-    handleLeaveChatRoomArea(socket : Socket,chatRoomAreaToLeave : string ){
+    handleLeaveChatRoomArea(socket: Socket, chatRoomAreaToLeave: string) {
         const socketData = socket.getUserData();
-        socketData.currentChatRoomArea = socketData.currentChatRoomArea.filter((ChatRoomArea)=>ChatRoomArea!==chatRoomAreaToLeave);
+        socketData.currentChatRoomArea = socketData.currentChatRoomArea.filter(
+            (ChatRoomArea) => ChatRoomArea !== chatRoomAreaToLeave
+        );
     }
 
-
-    async handleEnterChatRoomAreaQuery(socket : Socket, roomID : string):Promise<void>{
+    async handleEnterChatRoomAreaQuery(socket: Socket, roomID: string): Promise<void> {
         const socketData = socket.getUserData();
-        if(!socketData.chatID){
+        if (!socketData.chatID) {
             return Promise.reject(new Error("Error: Chat ID not found"));
         }
         socketData.currentChatRoomArea.push(roomID);
-        return matrixProvider.inviteUserToRoom(socketData.chatID,roomID).catch((error)=>console.error(error));
+        return matrixProvider.inviteUserToRoom(socketData.chatID, roomID).catch((error) => console.error(error));
     }
 
-    async handleChangeChatRoomAreaName(roomID : string,newName : string):Promise<void>{
-        return matrixProvider.changeRoomName(roomID,newName);
+    async handleChangeChatRoomAreaName(roomID: string, newName: string): Promise<void> {
+        return matrixProvider.changeRoomName(roomID, newName);
     }
 
-    async handleDeleteChatRoomArea(roomID : string):Promise<void>{
+    async handleDeleteChatRoomArea(roomID: string): Promise<void> {
         return matrixProvider.deleteRoom(roomID);
     }
 }
-
-
 
 // Verify that the domain of the url in parameter is in the white list of embeddable domains defined in the .env file (EMBEDDED_DOMAINS_WHITELIST)
 const verifyUrlAsDomainInWhiteList = (url: string) => {

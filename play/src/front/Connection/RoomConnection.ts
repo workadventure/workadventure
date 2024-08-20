@@ -780,10 +780,10 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitChatRoomAreaNameChange(roomID: string,name:string): void {
+    public emitChatRoomAreaNameChange(roomID: string, name: string): void {
         const message = ChangeChatRoomAreaNameMessageTsProto.fromPartial({
             roomID,
-            name
+            name,
         });
         this.send({
             message: {
@@ -1675,14 +1675,14 @@ export class RoomConnection implements RoomConnection {
         const answer = await this.query({
             $case: "enterChatRoomAreaQuery",
             enterChatRoomAreaQuery: {
-                roomID
+                roomID,
             },
         });
 
         if (answer.$case !== "enterChatRoomAreaAnswer") {
             throw new Error("Unexpected answer");
         }
-        
+
         return;
     }
 
@@ -1690,20 +1690,20 @@ export class RoomConnection implements RoomConnection {
         this.send({
             message: {
                 $case: "leaveChatRoomAreaMessage",
-                leaveChatRoomAreaMessage:{
-                    roomID
-                }
+                leaveChatRoomAreaMessage: {
+                    roomID,
+                },
             },
         });
     }
-    
+
     public emitDeleteChatRoomArea(roomID: string): void {
         this.send({
             message: {
                 $case: "deleteChatRoomAreaMessage",
-                deleteChatRoomAreaMessage:{
-                    roomID
-                }
+                deleteChatRoomAreaMessage: {
+                    roomID,
+                },
             },
         });
     }

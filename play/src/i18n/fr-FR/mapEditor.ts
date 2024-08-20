@@ -216,7 +216,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             createARoom: "Créer une nouvelle room",
             roomNameLabel: "Nom du salon",
             roomNameLabelPlaceholder: "Mon Salon",
-            defaultChatRoomAreaName:"Salon de zone",
+            defaultChatRoomAreaName: "Salon de zone",
         },
     },
     areaEditor: {
