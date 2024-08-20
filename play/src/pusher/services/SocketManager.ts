@@ -1453,60 +1453,6 @@ export class SocketManager implements ZoneEventListener {
         });
     }
 
-
-    async handleCreateChatRoomForAreaQuery(chatMemberQuery: CreateChatRoomForAreaQuery): Promise<CreateChatRoomForAreaAnswer>{
-    const chatRoomID =  await matrixProvider.createRoomForArea();
-        return {
-            chatRoomID 
-        };
-    }
-
-    async leaveChatRoomArea(socket : Socket):Promise<void>{
-        const {chatID,currentChatRoomArea} = socket.getUserData();
-
-        if(!chatID || !currentChatRoomArea){
-            //TODO : msg error
-            return Promise.reject(new Error(""));
-        }
-
-        Promise
-            .all(currentChatRoomArea.map(chatRoomAreaID=>matrixProvider.kickUserFromRoom(chatID,chatRoomAreaID)))
-            .then(()=>{
-                return Promise.resolve();
-            })
-            .catch((error)=>{
-                return Promise.reject(new Error(error));
-            });    
-    }
-
-    handleLeaveChatRoomArea(socket : Socket,chatRoomAreaToLeave : string ){
-        const socketData = socket.getUserData();
-        socketData.currentChatRoomArea = socketData.currentChatRoomArea.filter((ChatRoomArea)=>ChatRoomArea!==chatRoomAreaToLeave);
-    }
-
-
-    async handleEnterChatRoomAreaQuery(socket : Socket, roomID : string):Promise<void>{
-        const socketData = socket.getUserData();
-        if(!socketData.chatID){
-            //TODO : error msg
-            return Promise.reject("");
-        }
-        socketData.currentChatRoomArea.push(roomID);
-        return matrixProvider.inviteUserToRoom(socketData.chatID,roomID).catch((error)=>console.error(error));
-    }
-
-    async handleChangeChatRoomAreaName(roomID : string,newName : string):Promise<void>{
-        return matrixProvider.changeRoomName(roomID,newName);
-    }
-
-    async handleCreateChatRoomForAreaQuery(
-        chatMemberQuery: CreateChatRoomForAreaQuery
-    ): Promise<CreateChatRoomForAreaAnswer> {
-        const chatRoomID = await matrixProvider.createRoomForArea();
-        return {
-            chatRoomID,
-        };
-    }
     async leaveChatRoomArea(socket: Socket): Promise<void> {
         const { chatID, currentChatRoomArea } = socket.getUserData();
 
@@ -1524,6 +1470,15 @@ export class SocketManager implements ZoneEventListener {
             .catch((error) => {
                 return Promise.reject(new Error(error));
             });
+    }
+
+    async handleCreateChatRoomForAreaQuery(
+        chatMemberQuery: CreateChatRoomForAreaQuery
+    ): Promise<CreateChatRoomForAreaAnswer> {
+        const chatRoomID = await matrixProvider.createRoomForArea();
+        return {
+            chatRoomID,
+        };
     }
 
     handleLeaveChatRoomArea(socket: Socket, chatRoomAreaToLeave: string) {

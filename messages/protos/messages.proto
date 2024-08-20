@@ -331,8 +331,8 @@ message ClientToServerMessage {
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 35;
     BanPlayerMessage banPlayerMessage = 41;
     UpdateChatIdMessage updateChatIdMessage = 42;
-    PublicEvent publicEvent = 43;
-    PrivateEvent privateEvent = 44;
+    PublicEventFrontToPusher publicEvent = 43;
+    PrivateEventFrontToPusher privateEvent = 44;
     LeaveChatRoomAreaMessage leaveChatRoomAreaMessage = 45;
     ChangeChatRoomAreaNameMessage changeChatRoomAreaNameMessage=46;
     DeleteChatRoomAreaMessage deleteChatRoomAreaMessage = 47;
