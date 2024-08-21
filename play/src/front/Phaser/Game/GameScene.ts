@@ -1542,6 +1542,9 @@ export class GameScene extends DirtyScene {
                 this.allUserSpace = this._spaceRegistry.joinSpace(WORLD_SPACE_NAME);
                 this._chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
 
+                    if (email && chatId && this.connection) this.connection.emitUpdateChatId(email, chatId);
+    
+                });
                 //init merger
 
                 const adminUserProvider = new AdminUserProvider(this.connection);

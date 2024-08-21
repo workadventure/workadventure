@@ -666,7 +666,7 @@
                                 onDeleteProperty(property.id, detail);
                                 if (connection) connection.emitDeleteChatRoomArea(property.matrixRoomId);
                             }}
-                            on:change={({ detail }) => onUpdateProperty(property, detail)}
+                            on:change={() => onUpdateProperty(property)}
                         />
                     {/if}
                 </div>

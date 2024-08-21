@@ -51,6 +51,15 @@ class ChatUtils {
   public async closeChat(page: Page) {
     await page.getByTestId("closeChatButton").click();
   }
+
+  public async isChatSidebarOpen(page: Page){
+    return page.getByTestId("closeChatButton").isVisible();
+  }
+
+  public async openRoomAreaList(page: Page){
+    return page.getByText("Rooms").click();
+  }
+
 }
 
 export default new ChatUtils();

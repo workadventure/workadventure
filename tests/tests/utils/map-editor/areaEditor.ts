@@ -92,6 +92,13 @@ class AreaEditor {
     await page.locator(".map-editor .sidebar .properties-container input#tabLink").fill(link);
   }
 
+  async setMatrixChatRoomProperty(page: Page,shouldOpenAutomatically: boolean, roomName?: string){
+    if(roomName){
+      await page.getByPlaceholder("My room").fill(roomName);
+    }
+    await page.getByTestId("shouldOpenAutomaticallyCheckbox").setChecked(shouldOpenAutomatically);
+  }
+
   private async fullFillAreaRight(locator: Locator, right: string) {
     await locator.click();
     await locator.fill(right);

@@ -4,10 +4,11 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
+    import { mapEditorSelectedAreaPreviewStore } from "../../../Stores/MapEditorStore";
 
     export let property: MatrixRoomPropertyData;
     let oldName = property.displayName;
-
+    
     const gameScene = gameManager.getCurrentGameScene();
     const roomConnection = gameScene.connection;
 
@@ -19,11 +20,18 @@
 
     onMount(() => {
         if (!property.matrixRoomId && roomConnection) {
+            console.log('call roomConnection queryCreateChatRoomForArea');
             roomConnection
                 .queryCreateChatRoomForArea(property.id)
                 .then((answer) => {
                     property.matrixRoomId = answer.chatRoomID;
-                    dispatch("change");
+                    //use this instead of dispatch beacause if then is execute before areaeditor was close : no effect ...
+                    if($mapEditorSelectedAreaPreviewStore){
+                        $mapEditorSelectedAreaPreviewStore.updateProperty(property);
+                    }else{
+                        console.log('$mapEditorSelectedAreaPreviewStore is empty ')
+                    }
+                        
                 })
                 .catch((error) => console.error(error));
         }
@@ -73,6 +81,7 @@
         <div class="value-input">
             <input
                 id="openAutomaticallyChatLabel"
+                data-testid="shouldOpenAutomaticallyCheckbox"
                 type="checkbox"
                 class="tw-w-4 tw-h-4"
                 bind:checked={property.shouldOpenAutomatically}

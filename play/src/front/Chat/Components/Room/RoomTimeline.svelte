@@ -82,7 +82,7 @@
                 <IconArrowLeft />
             </button>
             <span class="tw-flex-1" />
-            <p class="tw-m-0 tw-p-0 tw-text-gray-400">{$roomName}</p>
+            <p data-testid="roomName" class="tw-m-0 tw-p-0 tw-text-gray-400">{$roomName}</p>
             <span class="tw-flex-1" />
         </div>
         <div
