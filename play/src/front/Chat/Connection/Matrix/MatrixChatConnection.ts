@@ -48,7 +48,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     invitations: Readable<ChatRoom[]>;
     rooms: Readable<ChatRoom[]>;
     isEncryptionRequiredAndNotSet: Writable<boolean>;
-    isGuest!: Writable<boolean>;
+    isGuest: Writable<boolean> = writable(true);
     roomBySpaceRoom: Readable<Map<ChatSpaceRoom | undefined, ChatRoom[]>>;
 
     constructor(
