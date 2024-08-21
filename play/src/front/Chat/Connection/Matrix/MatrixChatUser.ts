@@ -9,7 +9,7 @@ export const chatUserFactory: (matrixChatUser: User, matrixClient: MatrixClient)
 ) => {
     return {
         chatId: matrixChatUser.userId,
-        username: matrixChatUser.displayName,
+        username: matrixChatUser.rawDisplayName,
         roomName: undefined,
         playUri: undefined,
         avatarUrl: matrixClient.mxcUrlToHttp(matrixChatUser.avatarUrl ?? "", 48, 48) ?? undefined,

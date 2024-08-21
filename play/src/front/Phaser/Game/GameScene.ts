@@ -393,6 +393,8 @@ export class GameScene extends DirtyScene {
         this.load.audio("audio-report-message", "/resources/objects/report-message.mp3");
         this.load.audio("audio-megaphone", "/resources/objects/megaphone.mp3");
         this.load.audio("audio-cloud", "/resources/objects/cloud.mp3");
+        this.load.audio("new-message", "/resources/objects/new-message.mp3");
+
         this.sound.pauseOnBlur = false;
 
         this.load.on(FILE_LOAD_ERROR, (file: { src: string }) => {
