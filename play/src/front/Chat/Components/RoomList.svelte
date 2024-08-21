@@ -19,7 +19,8 @@
 
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
 
-    const chat = gameManager.getCurrentGameScene().chatConnection;
+    const { chatConnection: chat, proximityChatRoom } = gameManager.getCurrentGameScene();
+
     const chatConnectionStatus = chat.connectionStatus;
     const CHAT_LAYOUT_LIMIT = INITIAL_SIDEBAR_WIDTH * 2;
 
@@ -30,6 +31,8 @@
     let displayDirectRooms = false;
     let displayRooms = false;
     let displayRoomInvitations = false;
+
+    const proximityChatRoomHasUnreadMessage = proximityChatRoom.hasUnreadMessages;
 
     onMount(() => {
         expandOrCollapseRoomsIfEmpty();
@@ -80,7 +83,8 @@
     }
 
     function toggleDisplayProximityChat() {
-        selectedRoom.set(gameManager.getCurrentGameScene().proximityChatRoom);
+        selectedRoom.set(proximityChatRoom);
+        proximityChatRoom.hasUnreadMessages.set(false);
     }
 
     $: filteredDirectRoom = $directRooms.filter(({ name }) =>
@@ -190,6 +194,11 @@
             <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={toggleDisplayProximityChat}>
                 <IconChevronRight />
                 {$LL.chat.proximity()}
+                <div>
+                    {#if $proximityChatRoomHasUnreadMessage}
+                        <div class="tw-bg-red-500 tw-ml-3 tw-h-3 tw-w-3 tw-rounded-full" />
+                    {/if}
+                </div>
             </button>
         </div>
     </div>

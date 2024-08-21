@@ -218,6 +218,9 @@ export class ProximityChatRoom implements ChatRoom {
 
         this.playNewMessageSound();
 
+        if (get(selectedRoom) !== this) {
+            this.hasUnreadMessages.set(true);
+        }
         // Send bubble message to WorkAdventure scripting API
         try {
             iframeListener.sendUserInputChat(message, senderUserId);

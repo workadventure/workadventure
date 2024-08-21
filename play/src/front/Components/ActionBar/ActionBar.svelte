@@ -375,6 +375,11 @@
 
     let totalMessagesToSee = writable<number>(0);
 
+    const gameScene = gameManager.getCurrentGameScene();
+    const { chatConnection } = gameScene;
+
+    const chatHasUnreadMessage = chatConnection.hasUnreadMessages;
+
     onMount(() => {
         resizeObserver.observe(mainHtmlDiv);
     });
@@ -810,7 +815,7 @@
                     <button class:border-top-light={$chatVisibilityStore} class="chat-btn">
                         <img draggable="false" src={bubbleImg} style="padding: 2px" alt="Toggle chat" />
                     </button>
-                    {#if $chatZoneLiveStore || $peerStore.size > 0}
+                    {#if $chatZoneLiveStore || $peerStore.size > 0 || $chatHasUnreadMessage}
                         <div class="tw-absolute tw-top-1 tw-right-0.5">
                             <span
                                 class={`tw-w-4 tw-h-4 ${
