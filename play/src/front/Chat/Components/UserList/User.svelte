@@ -1,4 +1,5 @@
 <script lang="ts">
+    import * as Sentry from "@sentry/svelte";
     import { AvailabilityStatus } from "@workadventure/messages";
     import highlightWords from "highlight-words";
     import { localUserStore } from "../../../Connection/LocalUserStore";
@@ -56,6 +57,7 @@
                 room = await chatConnection.createDirectRoom(chatId);
             } catch (error) {
                 console.error(error);
+                Sentry.captureMessage("Failed to create direct room");
             } finally {
                 loadingDirectRoomAccess = false;
             }

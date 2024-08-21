@@ -1,4 +1,5 @@
 <script lang="ts">
+    import * as Sentry from "@sentry/svelte";
     import walk from "../../images/walk.svg";
     import teleport from "../../images/teleport.svg";
     import businessCard from "../../images/business-cards.svg";
@@ -53,6 +54,7 @@
                 room = await chatConnection.createDirectRoom(user.chatId);
             } catch (error) {
                 console.error(error);
+                Sentry.captureMessage("Failed to create room");
             } finally {
                 loadingDirectRoomAccess = false;
             }
