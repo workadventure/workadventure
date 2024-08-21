@@ -848,10 +848,7 @@ export class GameScene extends DirtyScene {
             this.connectionAnswerPromiseDeferred.promise as Promise<unknown>,
             ...scriptPromises,
             this.CurrentPlayer.getTextureLoadedPromise() as Promise<unknown>,
-            // FIXME: we lack the .promise property here but it causes bug in staging environment.
-            // TODO: investigate.
-            this.gameMapFrontWrapper.initializedPromise,
-            //this.gameMapFrontWrapper.initializedPromise.promise,
+            this.gameMapFrontWrapper.initializedPromise.promise,
         ])
             .then(() => {
                 this.initUserPermissionsOnEntity();
