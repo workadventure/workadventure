@@ -30,6 +30,8 @@ export class User implements Movable, CustomJsonReplacerInterface {
     private _following: User | undefined;
     private followedBy: Set<User> = new Set<User>();
     public disconnected = false;
+    private isRoomJoinedMessage = false;
+    private pendingMessages: NonNullable<ServerToClientMessage["message"]>[] = [];
 
     public constructor(
         public id: number,
@@ -331,5 +333,43 @@ export class User implements Movable, CustomJsonReplacerInterface {
             return group ? `group ${group.getId()}` : "no group";
         }
         return undefined;
+    }
+
+    public write(chunk: NonNullable<ServerToClientMessage["message"]>, cb?: (...args: unknown[]) => unknown): boolean {
+        //TODO : handle socket.write return false
+        if (this.isRoomJoinedMessage) {
+            return this.socket.write(
+                {
+                    message: chunk,
+                },
+                cb
+            );
+        }
+
+        if (chunk.$case === "roomJoinedMessage") {
+            this.isRoomJoinedMessage = true;
+
+            this.socket.write(
+                {
+                    message: chunk,
+                },
+                cb
+            );
+
+            this.pendingMessages.forEach((message) => {
+                this.socket.write(
+                    {
+                        message,
+                    },
+                    cb
+                );
+            });
+
+            this.pendingMessages = [];
+            return true;
+        }
+
+        this.pendingMessages.push(chunk);
+        return true;
     }
 }
