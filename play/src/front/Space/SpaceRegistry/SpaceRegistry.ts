@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/svelte";
 import { Subscription } from "rxjs";
 import { z } from "zod";
 import { SpaceInterface } from "../SpaceInterface";
@@ -126,12 +127,13 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     exist(spaceName: string): boolean {
         return this.spaces.has(spaceName);
     }
-    leaveSpace(spaceName: string): void {
-        const space = this.spaces.get(spaceName);
-        if (!space) {
+    leaveSpace(space: SpaceInterface): void {
+        const spaceName = space.getName();
+        const spaceInRegistry = this.spaces.get(spaceName);
+        if (!spaceInRegistry) {
             throw new SpaceDoesNotExistError(spaceName);
         }
-        space.destroy();
+        spaceInRegistry.destroy();
         this.spaces.delete(spaceName);
     }
     getAll(): SpaceInterface[] {
@@ -153,8 +155,12 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         this.proximityPublicMessageEventSubscription.unsubscribe();
         this.proximityPrivateMessageEventSubscription.unsubscribe();
 
+        // Technically, all spaces should have been destroyed by now.
+        // If a space is not destroyed, it means that there is a bug in the code.
         for (const space of this.spaces.values()) {
             space.destroy();
+            console.warn(`Space "${space.getName()}" was not destroyed properly.`);
+            Sentry.captureException(new Error(`Space "${space.getName()}" was not destroyed properly.`));
         }
         this.spaces.clear();
     }

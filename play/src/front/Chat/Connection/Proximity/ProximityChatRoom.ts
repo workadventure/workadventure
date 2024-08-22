@@ -413,7 +413,7 @@ export class ProximityChatRoom implements ChatRoom {
             this.usersUnsubscriber();
         }
         this.users = undefined;
-        this.spaceRegistry.leaveSpace(spaceName);
+        this.spaceRegistry.leaveSpace(this._space);
         this.spaceMessageSubscription?.unsubscribe();
         this.spaceIsTypingSubscription?.unsubscribe();
 

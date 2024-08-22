@@ -148,7 +148,6 @@ import { hideBubbleConfirmationModal } from "../../Rules/StatusRules/statusChang
 import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/statusChanger";
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import { getCoWebSite, openCoWebSite } from "../../Chat/Utils";
-import { WORLD_SPACE_NAME } from "../../Space/Space";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
 import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
@@ -161,6 +160,7 @@ import { WorldUserProvider } from "../../Chat/UserProvider/WorldUserProvider";
 import { MatrixUserProvider } from "../../Chat/UserProvider/MatrixUserProvider";
 import { UserProviderMerger } from "../../Chat/UserProviderMerger/UserProviderMerger";
 import { AdminUserProvider } from "../../Chat/UserProvider/AdminUserProvider";
+import { SpaceInterface } from "../../Space/SpaceInterface";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -214,6 +214,8 @@ interface DeleteGroupEventInterface {
     type: "DeleteGroupEvent";
     groupId: number;
 }
+
+const WORLD_SPACE_NAME = "allWorldUser";
 
 export class GameScene extends DirtyScene {
     Terrains: Array<Phaser.Tilemaps.Tileset>;
@@ -328,6 +330,7 @@ export class GameScene extends DirtyScene {
     });
     public chatConnection!: ChatConnectionInterface;
     private _spaceRegistry: SpaceRegistryInterface | undefined;
+    private allUserSpace: SpaceInterface | undefined;
     private _proximityChatRoom: ProximityChatRoom | undefined;
     private _userProviderMerger: UserProviderMerger | undefined;
 
@@ -982,7 +985,9 @@ export class GameScene extends DirtyScene {
         layoutManagerActionStore.clearActions();
 
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
-        this._spaceRegistry?.destroy();
+        if (this.allUserSpace) {
+            this.spaceRegistry?.leaveSpace(this.allUserSpace);
+        }
         this.connection?.closeConnection();
         this.simplePeer?.closeAllConnections();
         this.simplePeer?.unregister();
@@ -1040,6 +1045,7 @@ export class GameScene extends DirtyScene {
         this.playersMovementEventDispatcher.cleanup();
         this.gameMapFrontWrapper?.close();
         this.followManager?.close();
+        this._spaceRegistry?.destroy();
 
         //When we leave game, the camera is stop to be reopen after.
         // I think that we could keep camera status and the scene can manage camera setup
@@ -1526,15 +1532,14 @@ export class GameScene extends DirtyScene {
 
                 this._spaceRegistry = new SpaceRegistry(this.connection);
 
-                // FIXME: we don't need to watch this until we take a look at the user list.
-                const allUserSpace = this._spaceRegistry.joinSpace(WORLD_SPACE_NAME);
+                this.allUserSpace = this._spaceRegistry.joinSpace(WORLD_SPACE_NAME);
                 this.chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
 
                 //init merger
 
                 const adminUserProvider = new AdminUserProvider(this.connection);
                 const matrixUserProvider = new MatrixUserProvider(matrixClientPromise);
-                const worldUserProvider = new WorldUserProvider(allUserSpace);
+                const worldUserProvider = new WorldUserProvider(this.allUserSpace);
 
                 this._userProviderMerger = new UserProviderMerger([
                     adminUserProvider,
@@ -1825,7 +1830,7 @@ export class GameScene extends DirtyScene {
                                 oldMegaphoneSpace &&
                                 megaphoneSettingsMessage.url !== oldMegaphoneSpace.getName()
                             ) {
-                                this._spaceRegistry.leaveSpace(oldMegaphoneSpace.getName());
+                                this._spaceRegistry.leaveSpace(oldMegaphoneSpace);
                             }
 
                             const broadcastStore = broadcastService.joinSpace(megaphoneSettingsMessage.url);

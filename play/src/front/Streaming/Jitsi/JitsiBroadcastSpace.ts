@@ -239,7 +239,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
             });
         jitsiConferencesStore.delete(this.space.getName());
         this.space.stopWatching(this.spaceFilter);
-        this.spaceRegistry.leaveSpace(this.space.getName());
+        this.spaceRegistry.leaveSpace(this.space);
         this.unsubscribes.forEach((unsubscribe) => unsubscribe());
     }
 }

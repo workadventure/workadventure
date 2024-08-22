@@ -15,28 +15,28 @@ export class FloorEditorTool extends MapEditorTool {
     }
 
     public update(time: number, dt: number): void {
-        console.info("FloorEditorTool update");
+        // To implement
     }
     public clear(): void {
-        console.info("FloorEditorTool clear");
+        // To implement
     }
     public activate(): void {
-        console.info("FloorEditorTool activate");
+        // To implement
     }
     public destroy(): void {
-        console.info("FloorEditorTool destroy");
+        // To implement
     }
     public subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void {
-        console.info("FloorEditorTool subscribeToGameMapFrontWrapperEvents");
+        // To implement
     }
     public handleKeyDownEvent(event: KeyboardEvent): void {
-        console.info("FloorEditorTool handleKeyDownEvent");
+        // To implement
     }
     /**
      * React on commands coming from the outside
      */
     public handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): Promise<void> {
-        console.info("FloorEditorTool handleIncomingCommandMessage");
+        // To implement
         return Promise.resolve();
     }
 }
