@@ -108,8 +108,10 @@
 >
     {#if $selectedRoom === undefined || displayTwoColumnLayout}
         <div
-            class="tw-w-full tw-flex tw-flex-1 tw-flex-col tw-overflow-auto"
-            style={displayTwoColumnLayout ? `border-right:1px solid #4d4b67;padding-right:12px;max-width:335px ` : ``}
+            class="tw-flex tw-flex-col tw-overflow-auto"
+            style={displayTwoColumnLayout
+                ? `border-right:1px solid #4d4b67;padding-right:12px;width:335px ;flex: 0 0 auto`
+                : `flex: 1 1 0%`}
         >
             {#if $chatConnectionStatus === "CONNECTING"}
                 <ChatLoader label={$LL.chat.connecting()} />
