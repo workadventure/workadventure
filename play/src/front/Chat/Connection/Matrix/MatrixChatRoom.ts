@@ -194,10 +194,14 @@ export class MatrixChatRoom implements ChatRoom {
             await matrixSecurity.initClientCryptoConfiguration();
         }
 
+        //get age give the age of the event when the event arrived at the device
+        const ageOfEvent = event.getAge();
+
         //Only get realtime event
-        if (toStartOfTimeline || !data || !data.liveEvent) {
+        if (toStartOfTimeline || !data || !data.liveEvent || (ageOfEvent && ageOfEvent >= 2000)) {
             return;
         }
+
         if (room !== undefined) {
             (async () => {
                 if (event.isEncrypted()) {
