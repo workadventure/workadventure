@@ -3,6 +3,7 @@
     import { CalendarEventInterface } from "@workadventure/shared-utils";
     import { calendarEventsStore, isCalendarVisibleStore } from "../../Stores/CalendarStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import { extensionModuleStore } from "../../Stores/GameSceneStore";
 
     function closeCalendar() {
         isCalendarVisibleStore.set(false);
@@ -19,15 +20,18 @@
         const gameScene = gameManager.getCurrentGameScene();
         if (!gameScene) return;
 
-        if (gameScene.extensionModule?.openPopupMeeting && event.resource?.onlineMeeting?.joinUrl)
-            gameScene.extensionModule.openPopupMeeting(
-                event.title,
-                event.resource?.onlineMeeting?.joinUrl,
-                event.id,
-                event.start,
-                event.end,
-                event.resource?.onlineMeeting?.passcode
-            );
+        [...$extensionModuleStore.values()].forEach((extensionModule) => {
+            extensionModule?.openPopupMeeting &&
+                event.resource?.onlineMeeting?.joinUrl &&
+                extensionModule.openPopupMeeting(
+                    event.title,
+                    event.resource?.onlineMeeting?.joinUrl,
+                    event.id,
+                    event.start,
+                    event.end,
+                    event.resource?.onlineMeeting?.passcode
+                );
+        });
     }
 </script>
 

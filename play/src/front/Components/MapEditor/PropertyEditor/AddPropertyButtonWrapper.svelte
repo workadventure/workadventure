@@ -16,6 +16,7 @@
     import LL from "../../../../i18n/i18n-svelte";
     import { connectionManager } from "../../../Connection/ConnectionManager";
     import { extensionModuleStore } from "../../../Stores/GameSceneStore";
+    import { ExtensionModule, ExtensionModuleAreaProperty } from "../../../ExternalModule/ExtensionModule";
     import AddPropertyButton from "./AddPropertyButton.svelte";
 
     export let property: AreaDataPropertiesKeys | EntityDataPropertiesKeys;
@@ -24,9 +25,16 @@
 
     const dispatch = createEventDispatcher();
 
-    let moduleExtensionMapEditor = $extensionModuleStore?.areaMapEditor
-        ? $extensionModuleStore.areaMapEditor()
-        : undefined;
+    let modulesExtensionMapEditor = $extensionModuleStore.reduce(
+        (acc: { [key: string]: ExtensionModuleAreaProperty }[], module: ExtensionModule) => {
+            const areaProperty = module.areaMapEditor?.();
+            if (areaProperty != undefined) {
+                acc.push(areaProperty);
+            }
+            return acc;
+        },
+        []
+    );
 </script>
 
 {#if property === "personalAreaPropertyData"}
@@ -281,13 +289,15 @@
     />
 {/if}
 
-{#if property === "extensionModule" && moduleExtensionMapEditor !== undefined && subProperty !== undefined}
-    <svelte:component
-        this={moduleExtensionMapEditor[subProperty].AddAreaPropertyButton}
-        on:click={(event) => {
-            dispatch("click", event);
-        }}
-    />
+{#if property === "extensionModule" && modulesExtensionMapEditor.length > 0 && subProperty !== undefined}
+    {#each modulesExtensionMapEditor as moduleExtension, index (`modulesExtensionMapEditor-${index}`)}
+        <svelte:component
+            this={moduleExtension[subProperty].AddAreaPropertyButton}
+            on:click={(event) => {
+                dispatch("click", event);
+            }}
+        />
+    {/each}
 {/if}
 
 {#each connectionManager.applications as app, index (`my-own-app-${index}`)}

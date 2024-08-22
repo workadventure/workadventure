@@ -164,6 +164,7 @@ import { UserProviderMerger } from "../../Chat/UserProviderMerger/UserProviderMe
 import { AdminUserProvider } from "../../Chat/UserProvider/AdminUserProvider";
 import { ExtensionModuleStatusSynchronization } from "../../Rules/StatusRules/ExtensionModuleStatusSynchronization";
 import { calendarEventsStore, isActivatedStore } from "../../Stores/CalendarStore";
+import { externalSvelteComponentStore } from "../../Stores/Utils/externalSvelteComponentStore";
 import { ExtensionModule, RoomMetadataType } from "../../ExternalModule/ExtensionModule";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
@@ -1043,8 +1044,11 @@ export class GameScene extends DirtyScene {
         this.playersMovementEventDispatcher.cleanup();
         this.gameMapFrontWrapper?.close();
         this.followManager?.close();
-        this.extensionModule?.destroy();
-        extensionModuleStore.set(undefined);
+
+        // We need to destroy all the entities
+        get(extensionModuleStore).forEach((extensionModule) => {
+            extensionModule.destroy();
+        });
 
         //When we leave game, the camera is stop to be reopen after.
         // I think that we could keep camera status and the scene can manage camera setup
@@ -1922,29 +1926,32 @@ export class GameScene extends DirtyScene {
                 return;
             }
 
-            if (parsedRoomMetadata.data.msteams === true) {
+            for (const module of parsedRoomMetadata.data.modules ?? []) {
                 (async () => {
                     try {
-                        const extensionModule = await import("../../../ms-teams/MSTeams");
-                        this.extensionModule = extensionModule.default;
+                        const extensionModule = await import(`../../../external-modules/${module}/index`);
+                        const defaultExtensionModule = extensionModule.default;
 
-                        this.extensionModule.init(parsedRoomMetadata.data, {
+                        defaultExtensionModule.init(parsedRoomMetadata.data, {
                             workadventureStatusStore: availabilityStatusStore,
-                            onExtensionModuleStatusChange: ExtensionModuleStatusSynchronization.onStatusChange,
-                            getOauthRefreshToken: this.connection?.getOauthRefreshToken.bind(this.connection),
-                            calendarEventsStoreUpdate: calendarEventsStore.update,
                             userAccessToken: localUserStore.getAuthToken()!,
-                            adminUrl: ADMIN_URL,
                             roomId: this.roomUrl,
                             externalModuleMessage: this.connection!.externalModuleMessage,
+                            onExtensionModuleStatusChange: ExtensionModuleStatusSynchronization.onStatusChange,
+                            calendarEventsStoreUpdate: calendarEventsStore.update,
                             openCoWebSite: openCoWebSiteWithoutSource,
                             closeCoWebsite,
+                            getOauthRefreshToken: this.connection?.getOauthRefreshToken.bind(this.connection),
+                            adminUrl: ADMIN_URL,
+                            externalSvelteComponent: externalSvelteComponentStore,
                         });
-                        // TODO change that to check if the calendar synchro is enabled from admin
-                        if (parsedRoomMetadata.data.teamsstings.calendar) isActivatedStore.set(true);
-                        extensionModuleStore.set(this.extensionModule);
+
+                        if (defaultExtensionModule.calendarSynchronised) isActivatedStore.set(true);
+                        extensionModuleStore.add(defaultExtensionModule);
                     } catch (error) {
                         console.warn("Extension module initialization cancelled", error);
+                    } finally {
+                        console.info(`Extension module ${module} initialization finished`);
                     }
                 })().catch((error) => console.error(error));
             }

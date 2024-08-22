@@ -30,6 +30,7 @@
     import RightsPropertyEditor from "../PropertyEditor/RightsPropertyEditor.svelte";
     import { IconChevronDown, IconChevronRight } from "../../Icons";
     import { extensionModuleStore } from "../../../Stores/GameSceneStore";
+    import { ExtensionModule, ExtensionModuleAreaProperty } from "../../../ExternalModule/ExtensionModule";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
@@ -352,9 +353,16 @@
         showDescriptionField = !showDescriptionField;
     }
 
-    let extensionModuleAreaMapEditor = $extensionModuleStore?.areaMapEditor
-        ? $extensionModuleStore.areaMapEditor()
-        : undefined;
+    let extensionModulesAreaMapEditor = $extensionModuleStore.reduce(
+        (acc: { [key: string]: ExtensionModuleAreaProperty }[], module: ExtensionModule) => {
+            const areaProperty = module.areaMapEditor?.();
+            if (areaProperty != undefined) {
+                acc.push(areaProperty);
+            }
+            return acc;
+        },
+        []
+    );
 </script>
 
 {#if $mapEditorSelectedAreaPreviewStore === undefined}
@@ -448,17 +456,19 @@
                     onAddProperty("openWebsite");
                 }}
             />
-            {#if extensionModuleAreaMapEditor !== undefined}
-                {#each Object.entries(extensionModuleAreaMapEditor) as [subtype, index] (index)}
-                    {#if extensionModuleAreaMapEditor[subtype].shouldDisplayButton(properties)}
-                        <AddPropertyButtonWrapper
-                            property="extensionModule"
-                            subProperty={subtype}
-                            on:click={() => {
-                                onAddProperty("extensionModule", subtype);
-                            }}
-                        />
-                    {/if}
+            {#if extensionModulesAreaMapEditor.length > 0}
+                {#each extensionModulesAreaMapEditor as extensionModuleAreaMapEditor, index (`extensionModulesAreaMapEditor-${index}`)}
+                    {#each Object.entries(extensionModuleAreaMapEditor) as [subtype, index] (`extensionModuleAreaMapEditor-${index}`)}
+                        {#if extensionModuleAreaMapEditor[subtype].shouldDisplayButton(properties)}
+                            <AddPropertyButtonWrapper
+                                property="extensionModule"
+                                subProperty={subtype}
+                                on:click={() => {
+                                    onAddProperty("extensionModule", subtype);
+                                }}
+                            />
+                        {/if}
+                    {/each}
                 {/each}
             {/if}
         </div>
@@ -669,13 +679,15 @@
                             }}
                             on:change={({ detail }) => onUpdateProperty(property, detail)}
                         />
-                    {:else if property.type === "extensionModule" && extensionModuleAreaMapEditor !== undefined}
-                        <svelte:component
-                            this={extensionModuleAreaMapEditor[property.subtype].AreaPropertyEditor}
-                            on:close={() => {
-                                onDeleteProperty(property.id);
-                            }}
-                        />
+                    {:else if property.type === "extensionModule" && extensionModulesAreaMapEditor.length > 0}
+                        {#each extensionModulesAreaMapEditor as extensionModuleAreaMapEditor, index (`extensionModulesAreaMapEditor-${index}`)}
+                            <svelte:component
+                                this={extensionModuleAreaMapEditor[property.subtype].AreaPropertyEditor}
+                                on:close={() => {
+                                    onDeleteProperty(property.id);
+                                }}
+                            />
+                        {/each}
                     {/if}
                 </div>
             {/each}

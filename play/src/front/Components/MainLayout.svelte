@@ -39,8 +39,7 @@
     } from "../Stores/AvailabilityStatusModalsStore";
     import { mapEditorAskToClaimPersonalAreaStore, mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
-    import { extensionActivateComponentModuleStore, extensionModuleStore } from "../Stores/GameSceneStore";
-    import { gameManager } from "../Phaser/Game/GameManager";
+    import { externalPopupSvelteComponent } from "../Stores/Utils/externalSvelteComponentStore";
     import AudioManager from "./AudioManager/AudioManager.svelte";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
@@ -200,29 +199,10 @@
             <WarningToast />
         {/if}
 
-        {#if $extensionActivateComponentModuleStore}
-            {#if $extensionModuleStore != undefined && $extensionModuleStore.components != undefined}
-                {#each $extensionModuleStore.components() as ExternalModuleComponent, index (index)}
-                    <svelte:component
-                        this={ExternalModuleComponent}
-                        synchronisationStatusStore={gameManager.getCurrentGameScene().extensionModule?.statusStore}
-                        meetingSynchronised={gameManager.getCurrentGameScene().extensionModule?.meetingSynchronised}
-                        calendarSynchronised={gameManager.getCurrentGameScene().extensionModule?.calendarSynchronised}
-                        presenceSynchronised={gameManager.getCurrentGameScene().extensionModule?.presenceSynchronised}
-                        on:checkmodulecynschronisation={() => {
-                            if (
-                                $extensionModuleStore != undefined &&
-                                $extensionModuleStore.checkModuleSynschronisation != undefined
-                            )
-                                $extensionModuleStore.checkModuleSynschronisation();
-                            extensionActivateComponentModuleStore.set(false);
-                        }}
-                        on:close={() => {
-                            extensionActivateComponentModuleStore.set(false);
-                        }}
-                    />
-                {/each}
-            {/if}
+        {#if $externalPopupSvelteComponent.size > 0}
+            {#each [...$externalPopupSvelteComponent.entries()] as [key, value] (key)}
+                <svelte:component this={value.componentType} extensionModule={value.extensionModule} />
+            {/each}
         {/if}
 
         <MainModal />

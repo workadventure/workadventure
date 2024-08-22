@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onDestroy } from "svelte";
+    import * as Sentry from "@sentry/svelte";
     import { AvailabilityStatus } from "@workadventure/messages";
     import { availabilityStatusMenuStore } from "../../../Stores/AvailabilityStatusMenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
@@ -65,6 +66,7 @@
             statusChanger.changeStatusTo(newStatus);
         } catch (e) {
             console.error("Error while changing status", e);
+            Sentry.captureException(e);
         }
         buttonProps = {
             ...buttonProps,

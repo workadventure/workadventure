@@ -6,5 +6,19 @@ export const gameSceneIsLoadedStore = writable(false);
 
 export const gameSceneStore = writable<GameScene | undefined>(undefined);
 
-export const extensionModuleStore = writable<ExtensionModule | undefined>(undefined);
+const initExtensionModuleStore = () => {
+    const { subscribe, update, set } = writable<ExtensionModule[]>([]);
+    return {
+        subscribe,
+        update,
+        set,
+        add: (extensionModule: ExtensionModule) => {
+            extensionModuleStore.update((extensionModules) => {
+                extensionModules.push(extensionModule);
+                return extensionModules;
+            });
+        },
+    };
+};
+export const extensionModuleStore = initExtensionModuleStore();
 export const extensionActivateComponentModuleStore = writable<boolean>(false);

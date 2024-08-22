@@ -1,7 +1,7 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
-    import AddPropertyButton from "../../front/Components/MapEditor/PropertyEditor/AddPropertyButton.svelte";
-    import teamsLogo from "./images/TeamsLogo.png";
+    import AddPropertyButton from "../../../front/Components/MapEditor/PropertyEditor/AddPropertyButton.svelte";
+    import teamsLogo from "./images/business.svg";
 
     const dispatch = createEventDispatcher();
 </script>
