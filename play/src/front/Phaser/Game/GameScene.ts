@@ -165,7 +165,7 @@ import { AdminUserProvider } from "../../Chat/UserProvider/AdminUserProvider";
 import { ExtensionModuleStatusSynchronization } from "../../Rules/StatusRules/ExtensionModuleStatusSynchronization";
 import { calendarEventsStore, isActivatedStore } from "../../Stores/CalendarStore";
 import { externalSvelteComponentStore } from "../../Stores/Utils/externalSvelteComponentStore";
-import { RoomMetadataType } from "../../ExternalModule/ExtensionModule";
+import { ExtensionModule, RoomMetadataType } from "../../ExternalModule/ExtensionModule";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
