@@ -1185,8 +1185,9 @@ message BackToPusherSpaceMessage{
 /**
  * Message sent by the user to join a space as a participant.
  */
-message JoinSpaceMessage{
+message JoinSpaceMessage {
   string spaceName = 1;
+  repeated string synchronizedPlayerProperties = 2;
 }
 message LeaveSpaceMessage{
   string spaceName = 1;
