@@ -131,9 +131,11 @@
         on:keydown={sendMessageOrEscapeLine}
         on:input={onInputHandler}
         on:paste={onPasteHandler}
-        on:click={() => messageInput.focus()}
         class=" message-input !tw-m-0 tw-px-2 tw-max-h-36 tw-overflow-auto tw-w-full tw-h-full tw-rounded-xl wa-searchbar tw-block tw-text-white placeholder:tw-text-sm  tw-border-light-purple tw-border !tw-bg-transparent tw-resize-none tw-border-none tw-outline-none tw-shadow-none focus:tw-ring-0"
         data-text={$LL.chat.enter()}
+        role="textbox"
+        tabindex="0"
+        dir="auto"
     />
     <button
         class="disabled:tw-opacity-30 disabled:!tw-cursor-none tw-p-0 tw-m-0"
@@ -154,8 +156,16 @@
 </div>
 
 <style lang="scss">
-    .message-input:empty:not(:focus):before {
+    .message-input::before {
         content: attr(data-text);
         color: rgba(211, 211, 211, 0.5);
+        pointer-events: none;
+        z-index: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .message-input:focus::before,
+    .message-input:not(:empty)::before {
+        content: "";
     }
 </style>
