@@ -10,7 +10,7 @@
     <p class="tw-p-0 tw-m-0 tw-text-xs tw-italic tw-text-center">
         {$content.body}
         {#if date}<span class="tw-text-white/50"
-                >{("0" + date.getHours().toString()).slice(-2)}:{("0" + date.getSeconds().toString()).slice(-2)}</span
+                >{("0" + date.getHours().toString()).slice(-2)}:{("0" + date.getMinutes().toString()).slice(-2)}</span
             >{/if}
     </p>
 </div>
