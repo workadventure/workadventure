@@ -95,6 +95,7 @@ const mapEditor: BaseTranslation = {
             findOutMoreHere: "Find out more here",
             openPickerSelector: "Open picker selector",
             forcedInNewTab: "Forced in new tab",
+            openApplication: "Open application",
         },
         advancedOptions: "Advanced Options",
         speakerMegaphoneProperties: {

@@ -199,39 +199,9 @@ const roomManager = {
                                 socketManager.handleAskPositionMessage(room, user, message.message.askPositionMessage);
                                 break;
                             }
-                            case "kickOffUserMessage": {
-                                socketManager.handleKickOffUserMessage(user, message.message.kickOffUserMessage.userId);
-                                break;
-                            }
-                            case "muteParticipantIdMessage": {
-                                socketManager.handeMuteParticipantIdMessage(
-                                    user,
-                                    message.message.muteParticipantIdMessage.mutedUserUuid
-                                );
-                                break;
-                            }
-                            case "muteEveryBodyParticipantMessage": {
-                                socketManager.handleMuteEveryBodyParticipantMessage(user);
-                                break;
-                            }
-                            case "muteVideoParticipantIdMessage": {
-                                socketManager.handeMuteVideoParticipantIdMessage(
-                                    user,
-                                    message.message.muteVideoParticipantIdMessage.mutedUserUuid
-                                );
-                                break;
-                            }
-                            case "muteVideoEveryBodyParticipantMessage": {
-                                socketManager.handleMuteVideoEveryBodyParticipantMessage(user);
-                                break;
-                            }
-                            case "publicEvent": {
-                                socketManager.handlePublicEventMessage(user, message.message.publicEvent);
-                                break;
-                            }
+                            case "publicEvent":
                             case "privateEvent": {
-                                socketManager.handlePrivateEventMessage(user, message.message.privateEvent);
-                                break;
+                                throw new Error("Cannot reach here, this is handled by the space manager");
                             }
                             default: {
                                 const _exhaustiveCheck: never = message.message;
@@ -279,7 +249,8 @@ const roomManager = {
             closeConnection();
         });
 
-        call.on("error", (err: Error) => {
+        call.on("error", (err: unknown) => {
+            // Note: it seems "end" is called before "error" and therefore, user is null
             console.error("An error occurred in joinRoom stream for user", user?.name, ":", err);
             Sentry.captureException(
                 `An error occurred in joinRoom stream for user ${JSON.stringify(user?.name)}: ${JSON.stringify(err)}`

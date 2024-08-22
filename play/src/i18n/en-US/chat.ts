@@ -71,6 +71,7 @@ const chat: BaseTranslation = {
         description: "Messages and events history",
         incoming: "{userName} joined the discussion",
         outcoming: "{userName} has left the discussion",
+        youLeft: "You left the discussion",
     },
     form: {
         placeholder: "Enter your message...",

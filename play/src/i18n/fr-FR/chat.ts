@@ -72,6 +72,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         description: "Historique de vos conversations",
         incoming: "{userName} a rejoint la conversation",
         outcoming: "{userName} a quitté la conversation",
+        youLeft: "Vous avez quitté la conversation",
     },
     form: {
         placeholder: "Écrire votre message...",

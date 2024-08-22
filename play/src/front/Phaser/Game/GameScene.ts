@@ -14,9 +14,6 @@ import {
     availabilityStatusToJSON,
     ErrorScreenMessage,
     PositionMessage_Direction,
-    PrivateEvent,
-    PublicEvent,
-    SpaceFilterMessage,
 } from "@workadventure/messages";
 import { z } from "zod";
 import { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
@@ -123,7 +120,7 @@ import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
 import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
 import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 import type { AskPositionEvent } from "../../Api/Events/AskPositionEvent";
-import { _newChatMessageSubject, chatVisibilityStore, forceRefreshChatStore } from "../../Stores/ChatStore";
+import { chatVisibilityStore, forceRefreshChatStore } from "../../Stores/ChatStore";
 import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
 import { extensionModuleStore, gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
 import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
@@ -139,31 +136,32 @@ import {
     WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM,
 } from "../../Stores/MapEditorStore";
 import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
+import { SpaceRegistry } from "../../Space/SpaceRegistry/SpaceRegistry";
 import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer, debugZoom } from "../../Utils/Debuggers";
 import { checkCoturnServer } from "../../Components/Video/utils";
 import { BroadcastService } from "../../Streaming/BroadcastService";
-import { liveStreamingEnabledStore, megaphoneCanBeUsedStore, megaphoneUrlStore } from "../../Stores/MegaphoneStore";
+import { megaphoneCanBeUsedStore, megaphoneSpaceStore } from "../../Stores/MegaphoneStore";
 import { CompanionTextureError } from "../../Exception/CompanionTextureError";
 import { SelectCompanionScene, SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { scriptUtils } from "../../Api/ScriptUtils";
-import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { JitsiBroadcastSpace } from "../../Streaming/Jitsi/JitsiBroadcastSpace";
-import { notificationPlayingStore } from "../../Stores/NotificationStore";
-import { askDialogStore } from "../../Stores/MeetingStore";
 import { hideBubbleConfirmationModal } from "../../Rules/StatusRules/statusChangerFunctions";
 import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/statusChanger";
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import { closeCoWebsite, getCoWebSite, openCoWebSite, openCoWebSiteWithoutSource } from "../../Chat/Utils";
-import { LocalSpaceProviderSingleton } from "../../Space/SpaceProvider/SpaceStore";
-import { CONNECTED_USER_FILTER_NAME, WORLD_SPACE_NAME } from "../../Space/Space";
-import { StreamSpaceWatcherSingleton } from "../../Space/SpaceWatcher/SocketSpaceWatcher";
+import { WORLD_SPACE_NAME } from "../../Space/Space";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
 import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
 import { matrixSecurity } from "../../Chat/Connection/Matrix/MatrixSecurity";
-import { proximityRoomConnection, selectedRoom } from "../../Chat/Stores/ChatStore";
-import { ProximityChatConnection } from "../../Chat/Connection/Proximity/ProximityChatConnection";
+import { selectedRoom } from "../../Chat/Stores/ChatStore";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
+import { ProximitySpaceManager } from "../../WebRtc/ProximitySpaceManager";
+import { SpaceRegistryInterface } from "../../Space/SpaceRegistry/SpaceRegistryInterface";
+import { WorldUserProvider } from "../../Chat/UserProvider/WorldUserProvider";
+import { MatrixUserProvider } from "../../Chat/UserProvider/MatrixUserProvider";
+import { UserProviderMerger } from "../../Chat/UserProviderMerger/UserProviderMerger";
+import { AdminUserProvider } from "../../Chat/UserProvider/AdminUserProvider";
 import { ExtensionModuleStatusSynchronization } from "../../Rules/StatusRules/ExtensionModuleStatusSynchronization";
 import { calendarEventsStore, isActivatedStore } from "../../Stores/CalendarStore";
 import { externalSvelteComponentStore } from "../../Stores/Utils/externalSvelteComponentStore";
@@ -302,6 +300,7 @@ export class GameScene extends DirtyScene {
     private playerVariablesManager!: PlayerVariablesManager;
     private scriptingEventsManager!: ScriptingEventsManager;
     private followManager!: FollowManager;
+    private proximitySpaceManager: ProximitySpaceManager | undefined;
     private objectsByType = new Map<string, ITiledMapObject[]>();
     private embeddedWebsiteManager!: EmbeddedWebsiteManager;
     private areaManager!: DynamicAreaManager;
@@ -333,6 +332,10 @@ export class GameScene extends DirtyScene {
         this.currentCompanionTextureReject = reject;
     });
     public chatConnection!: ChatConnectionInterface;
+    private _spaceRegistry: SpaceRegistryInterface | undefined;
+    private _proximityChatRoom: ProximityChatRoom | undefined;
+    private _userProviderMerger: UserProviderMerger | undefined;
+    public extensionModule: ExtensionModule | undefined = undefined;
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
@@ -832,11 +835,24 @@ export class GameScene extends DirtyScene {
             this.connect();
         }
 
+        /*this.connectionAnswerPromiseDeferred.promise.then((connectionAnswer) => {
+            console.warn("Connection established", connectionAnswer);
+        });
+        this.CurrentPlayer.getTextureLoadedPromise().then((textures) => {
+            console.warn("Current player textures loaded", textures);
+        });
+        this.gameMapFrontWrapper.initializedPromise.then(() => {
+            console.warn("GameMapFrontWrapper initialized");
+        });
+        Promise.all(scriptPromises).then(() => {
+            console.warn("All scripts loaded");
+        });*/
+
         Promise.all([
             this.connectionAnswerPromiseDeferred.promise as Promise<unknown>,
             ...scriptPromises,
             this.CurrentPlayer.getTextureLoadedPromise() as Promise<unknown>,
-            this.gameMapFrontWrapper.initializedPromise,
+            this.gameMapFrontWrapper.initializedPromise.promise,
         ])
             .then(() => {
                 this.initUserPermissionsOnEntity();
@@ -970,6 +986,7 @@ export class GameScene extends DirtyScene {
         layoutManagerActionStore.clearActions();
 
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
+        this._spaceRegistry?.destroy();
         this.connection?.closeConnection();
         this.simplePeer?.closeAllConnections();
         this.simplePeer?.unregister();
@@ -980,6 +997,8 @@ export class GameScene extends DirtyScene {
         this.cameraManager?.destroy();
         this.mapEditorModeManager?.destroy();
         this._broadcastService?.destroy();
+        this.proximitySpaceManager?.destroy();
+        this._proximityChatRoom?.destroy();
         this.peerStoreUnsubscriber?.();
         this.mapEditorModeStoreUnsubscriber?.();
         this.refreshPromptStoreStoreUnsubscriber?.();
@@ -1030,8 +1049,6 @@ export class GameScene extends DirtyScene {
         get(extensionModuleStore).forEach((extensionModule) => {
             extensionModule.destroy();
         });
-
-        LocalSpaceProviderSingleton.getInstance().destroy();
 
         //When we leave game, the camera is stop to be reopen after.
         // I think that we could keep camera status and the scene can manage camera setup
@@ -1505,41 +1522,41 @@ export class GameScene extends DirtyScene {
                     }
                 }
 
-                if (this.connection) {
-                    //We need to add an env parameter to switch between chat services
-                    const matrixClientWrapper = new MatrixClientWrapper(MATRIX_PUBLIC_URI ?? "", localUserStore);
-                    const matrixClientPromise = matrixClientWrapper.initMatrixClient();
+                //We need to add an env parameter to switch between chat services
+                const matrixClientWrapper = new MatrixClientWrapper(MATRIX_PUBLIC_URI ?? "", localUserStore);
+                const matrixClientPromise = matrixClientWrapper.initMatrixClient();
 
-                    matrixClientPromise
-                        .then((matrixClient) => {
-                            matrixSecurity.updateMatrixClientStore(matrixClient);
-                        })
-                        .catch((e) => {
-                            console.error(e);
-                        });
+                matrixClientPromise
+                    .then((matrixClient) => {
+                        matrixSecurity.updateMatrixClientStore(matrixClient);
+                    })
+                    .catch((e) => {
+                        console.error(e);
+                    });
 
-                    this.chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
+                this._spaceRegistry = new SpaceRegistry(this.connection);
 
-                    // initialise the proximity chat connection
-                    proximityRoomConnection.set(
-                        new ProximityChatConnection(
-                            this.connection,
-                            this.connection.getUserId(),
-                            localUserStore.getLocalUser()?.uuid ?? "Unknown"
-                        )
-                    );
+                // FIXME: we don't need to watch this until we take a look at the user list.
+                const allUserSpace = this._spaceRegistry.joinSpace(WORLD_SPACE_NAME);
+                this.chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
 
-                    const chatId = localUserStore.getChatId();
-                    const email: string | null = localUserStore.getLocalUser()?.email || null;
-                    if (email && chatId) this.connection.emitUpdateChatId(email, chatId);
+                //init merger
 
-                    this.initExtensionModule();
-                }
+                const adminUserProvider = new AdminUserProvider(this.connection);
+                const matrixUserProvider = new MatrixUserProvider(matrixClientPromise);
+                const worldUserProvider = new WorldUserProvider(allUserSpace);
 
-                const spaceProvider = LocalSpaceProviderSingleton.getInstance(onConnect.connection.socket);
-                StreamSpaceWatcherSingleton.getInstance(onConnect.connection.socket);
+                this._userProviderMerger = new UserProviderMerger([
+                    adminUserProvider,
+                    matrixUserProvider,
+                    worldUserProvider,
+                ]);
 
-                spaceProvider.add(WORLD_SPACE_NAME).watch(CONNECTED_USER_FILTER_NAME);
+                const chatId = localUserStore.getChatId();
+                const email: string | null = localUserStore.getLocalUser()?.email || null;
+                if (email && chatId) this.connection.emitUpdateChatId(email, chatId);
+
+                this.initExtensionModule();
 
                 this.tryOpenMapEditorWithToolEditorParameter();
 
@@ -1716,6 +1733,14 @@ export class GameScene extends DirtyScene {
                     }
                 });*/
 
+                this._proximityChatRoom = new ProximityChatRoom(
+                    this.connection.getUserId(),
+                    this._spaceRegistry,
+                    this.simplePeer,
+                    iframeListener
+                );
+                this.proximitySpaceManager = new ProximitySpaceManager(this.connection, this._proximityChatRoom);
+
                 userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
 
                 this.CurrentPlayer.on(hasMovedEventName, (event: HasPlayerMovedInterface) => {
@@ -1782,11 +1807,16 @@ export class GameScene extends DirtyScene {
                     (
                         connection: RoomConnection,
                         spaceName: string,
-                        spaceFilter: SpaceFilterMessage,
                         broadcastService: BroadcastService,
                         playSound: boolean
                     ) => {
-                        return new JitsiBroadcastSpace(connection, spaceName, spaceFilter, broadcastService, playSound);
+                        return new JitsiBroadcastSpace(
+                            connection,
+                            spaceName,
+                            broadcastService,
+                            playSound,
+                            this.spaceRegistry
+                        );
                     }
                 );
                 this._broadcastService = broadcastService;
@@ -1800,194 +1830,27 @@ export class GameScene extends DirtyScene {
                             megaphoneSettingsMessage.url &&
                             get(availabilityStatusStore) !== AvailabilityStatus.DO_NOT_DISTURB
                         ) {
-                            const oldMegaphoneUrl = get(megaphoneUrlStore);
+                            const oldMegaphoneSpace = get(megaphoneSpaceStore);
 
-                            if (oldMegaphoneUrl && megaphoneSettingsMessage.url !== oldMegaphoneUrl) {
-                                spaceProvider.delete(oldMegaphoneUrl);
+                            if (
+                                this._spaceRegistry &&
+                                oldMegaphoneSpace &&
+                                megaphoneSettingsMessage.url !== oldMegaphoneSpace.getName()
+                            ) {
+                                this._spaceRegistry.leaveSpace(oldMegaphoneSpace.getName());
                             }
-                            broadcastService.joinSpace(megaphoneSettingsMessage.url);
-                            megaphoneUrlStore.set(megaphoneSettingsMessage.url);
+
+                            const broadcastStore = broadcastService.joinSpace(megaphoneSettingsMessage.url);
+                            megaphoneSpaceStore.set(broadcastStore.space);
                         }
                     }
                 });
                 this._broadcastService = broadcastService;
 
-                // The megaphoneSettingsMessageStream is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.megaphoneSettingsMessageStream.subscribe((megaphoneSettingsMessage) => {
-                    if (megaphoneSettingsMessage) {
-                        megaphoneCanBeUsedStore.set(megaphoneSettingsMessage.enabled);
-                        if (
-                            megaphoneSettingsMessage.url &&
-                            get(availabilityStatusStore) !== AvailabilityStatus.DO_NOT_DISTURB
-                        ) {
-                            broadcastService.joinSpace(megaphoneSettingsMessage.url);
-                            megaphoneUrlStore.set(megaphoneSettingsMessage.url);
-                        }
-                    }
-                });
-
-                // The muteMicrophoneSpaceUserMessage is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.muteMicrophoneMessage.subscribe(() => {
-                    notificationPlayingStore.playNotification(
-                        get(LL).notification.askToMuteMicrophone(),
-                        "microphone-off.png"
-                    );
-                    requestedMicrophoneState.disableMicrophone();
-                });
-
-                // The muteVideoSpaceUserMessage is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.muteVideoMessage.subscribe(() => {
-                    notificationPlayingStore.playNotification(get(LL).notification.askToMuteCamera(), "camera-off.png");
-                    requestedCameraState.disableWebcam();
-                });
-
-                // The muteMicrophoneEverybodySpaceUserMessage is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.muteMicrophoneEverybodyMessage.subscribe(() => {
-                    notificationPlayingStore.playNotification(
-                        get(LL).notification.askToMuteMicrophone(),
-                        "microphone-off.png"
-                    );
-                    requestedMicrophoneState.disableMicrophone();
-                });
-
-                // The muteVideoEverybodySpaceUserMessage is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.muteVideoEverybodyMessage.subscribe(() => {
-                    notificationPlayingStore.playNotification(get(LL).notification.askToMuteCamera(), "camera-off.png");
-                    requestedCameraState.disableWebcam();
-                });
-
-                // The askMuteVideoSpaceUserMessage is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.askMuteVideoMessage.subscribe((askMuteVideoMessage) => {
-                    notificationPlayingStore.playNotification(get(LL).notification.askToMuteCamera(), "camera-off.png");
-                    askDialogStore.addAskDialog(
-                        askMuteVideoMessage.userId,
-                        get(LL).notification.askToMuteCamera(),
-                        () => {
-                            requestedCameraState.disableWebcam();
-                        }
-                    );
-                });
-
-                // The askMuteMicrophoneSpaceUserMessage is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.askMuteMicrophoneMessage.subscribe((askMuteMicrophoneMessage) => {
-                    notificationPlayingStore.playNotification(
-                        get(LL).notification.askToMuteMicrophone(),
-                        "microphone-off.png"
-                    );
-                    askDialogStore.addAskDialog(
-                        askMuteMicrophoneMessage.userId,
-                        get(LL).notification.askToMuteMicrophone(),
-                        () => {
-                            requestedMicrophoneState.disableMicrophone();
-                        }
-                    );
-                });
-
-                // The mutedMessage is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.mutedMessage.subscribe(() => {
-                    notificationPlayingStore.playNotification(
-                        get(LL).notification.askToMuteMicrophone(),
-                        "microphone-off.png"
-                    );
-                    requestedMicrophoneState.disableMicrophone();
-                });
-
-                // The mutedVideoMessage is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.mutedVideoMessage.subscribe(() => {
-                    notificationPlayingStore.playNotification(get(LL).notification.askToMuteCamera(), "camera-off.png");
-                    requestedCameraState.disableWebcam();
-                });
-
-                // The askMutedMessage is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.askMutedMessage.subscribe((askMutedMessage) => {
-                    notificationPlayingStore.playNotification(
-                        get(LL).notification.askToMuteMicrophone(),
-                        "microphone-off.png"
-                    );
-                    askDialogStore.addAskDialog(
-                        askMutedMessage.userUuid,
-                        get(LL).notification.askToMuteMicrophone(),
-                        () => {
-                            requestedMicrophoneState.disableMicrophone();
-                        }
-                    );
-                });
-
-                // The askMutedVideoMessage is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.askMutedVideoMessage.subscribe((askMutedVideoMessage) => {
-                    notificationPlayingStore.playNotification(get(LL).notification.askToMuteCamera(), "camera-off.png");
-                    askDialogStore.addAskDialog(
-                        askMutedVideoMessage.userUuid,
-                        get(LL).notification.askToMuteCamera(),
-                        () => {
-                            requestedCameraState.disableWebcam();
-                        }
-                    );
-                });
-
                 // The errorMessageStream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.errorMessageStream.subscribe((errorMessage) => {
                     warningMessageStore.addWarningMessage(errorMessage.message);
-                });
-
-                // The proximityPrivateMessageToClientMessageStream is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.proximityPrivateMessageEvent.subscribe((privateEvent: PrivateEvent) => {
-                    console.info("proximity private message not implemented yet!");
-                });
-
-                // The proximityPublicMessageToClientMessageStream is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.proximityPublicMessageEvent.subscribe((publicEvent: PublicEvent) => {
-                    if (publicEvent.spaceEvent!.event?.$case != "spaceMessage") {
-                        return;
-                    }
-
-                    const _proximityRoomConnection = get(proximityRoomConnection);
-                    if (!_proximityRoomConnection) return;
-
-                    const room = get(_proximityRoomConnection?.rooms)[0];
-                    if (!room || !room.addNewMessage) return;
-
-                    // The user sending the message is myself. Do not show the message.
-                    const proximityUserId = publicEvent.senderUserId;
-                    if (proximityUserId == undefined || proximityUserId === this.connection?.getUserId()) {
-                        return;
-                    }
-                    room.addNewMessage(publicEvent.spaceEvent!.event.spaceMessage.message, proximityUserId);
-
-                    // if the proximity chat is not open, open it to see the message
-                    chatVisibilityStore.set(true);
-                    if (get(selectedRoom) == undefined) selectedRoom.set(room);
-                });
-
-                // the typingProximityMessageToClientMessageStream is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.typingProximityEvent.subscribe((publicEvent: PublicEvent) => {
-                    if (publicEvent.spaceEvent!.event?.$case != "spaceIsTyping") return;
-
-                    const _proximityRoomConnection = get(proximityRoomConnection);
-                    if (!_proximityRoomConnection) return;
-
-                    const room = get(_proximityRoomConnection?.rooms)[0];
-                    if (!room || !(room instanceof ProximityChatRoom)) return;
-
-                    if (publicEvent.senderUserId != undefined)
-                        if (publicEvent.spaceEvent!.event.spaceIsTyping.isTyping)
-                            room.addTypingUser(publicEvent.senderUserId);
-                        else room.removeTypingUser(publicEvent.senderUserId);
                 });
 
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
@@ -2187,30 +2050,6 @@ export class GameScene extends DirtyScene {
         this.embedScreenLayoutStoreUnsubscriber = embedScreenLayoutStore.subscribe((layout) => {
             //this.reposition();
         });
-
-        this.unsubscribers.push(
-            requestedCameraState.subscribe((state) => {
-                this.connection?.emitCameraState(state);
-            })
-        );
-
-        this.unsubscribers.push(
-            requestedMicrophoneState.subscribe((state) => {
-                this.connection?.emitMicrophoneState(state);
-            })
-        );
-
-        this.unsubscribers.push(
-            requestedScreenSharingState.subscribe((state) => {
-                this.connection?.emitScreenSharingState(state);
-            })
-        );
-
-        this.unsubscribers.push(
-            liveStreamingEnabledStore.subscribe((state) => {
-                this.connection?.emitMegaphoneState(state);
-            })
-        );
 
         const talkIconVolumeTreshold = 10;
         let oldPeersNumber = 0;
@@ -2595,9 +2434,9 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
+            // FIXME: aren't we making a weird loop here?
             iframeListener.addPersonnalMessageStream.subscribe((text) => {
                 iframeListener.sendUserInputChat(text, undefined);
-                _newChatMessageSubject.next(text);
             })
         );
 
@@ -2605,34 +2444,19 @@ ${escapedMessage}
             iframeListener.chatMessageStream.subscribe((chatMessage) => {
                 switch (chatMessage.options.scope) {
                     case "local": {
-                        const _proximityRoomConnection = get(proximityRoomConnection);
-                        if (!_proximityRoomConnection) return;
+                        const room = this.proximityChatRoom;
 
-                        const room = get(_proximityRoomConnection.rooms)[0];
-                        if (!room || !room.addExternalMessage) return;
-
-                        room.addExternalMessage(chatMessage.message, chatMessage.options.author);
+                        room.addExternalMessage("local", chatMessage.message, chatMessage.options.author);
                         selectedRoom.set(room);
                         chatVisibilityStore.set(true);
                         break;
                     }
                     case "bubble": {
-                        const _proximityRoomConnection = get(proximityRoomConnection);
-                        if (!_proximityRoomConnection) return;
+                        const room = this.proximityChatRoom;
 
-                        const room = get(_proximityRoomConnection.rooms)[0];
-                        if (!room || !room.addExternalMessage) return;
-
-                        room.addExternalMessage(chatMessage.message);
+                        room.addExternalMessage("bubble", chatMessage.message);
                         selectedRoom.set(room);
                         chatVisibilityStore.set(true);
-
-                        // Send the message to other users in the bubble
-                        // TODO: the message should be sent by not myself
-                        const spaceName = (room as ProximityChatRoom).getSpaceName();
-                        if (spaceName) this.connection?.emitProximityPublicMessage(spaceName, chatMessage.message);
-                        else console.warn("No space name found for the bubble chat");
-                        break;
                     }
                 }
             })
@@ -2640,22 +2464,14 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.startTypingProximityMessageStream.subscribe((sartWriting) => {
-                const _proximityRoomConnection = get(proximityRoomConnection);
-                if (!_proximityRoomConnection) return;
-
-                const room = get(_proximityRoomConnection.rooms)[0];
-                if (!room || !(room instanceof ProximityChatRoom)) return;
+                const room = this.proximityChatRoom;
 
                 room.addExternalTypingUser(btoa(sartWriting.author ?? "unknow"), sartWriting.author ?? "unknow", null);
             })
         );
         this.iframeSubscriptionList.push(
             iframeListener.stopTypingProximityMessageStream.subscribe((stopWriting) => {
-                const _proximityRoomConnection = get(proximityRoomConnection);
-                if (!_proximityRoomConnection) return;
-
-                const room = get(_proximityRoomConnection.rooms)[0];
-                if (!room || !(room instanceof ProximityChatRoom)) return;
+                const room = this.proximityChatRoom;
 
                 room.removeExternalTypingUser(btoa(stopWriting.author ?? "unknow"));
             })
@@ -3901,5 +3717,27 @@ ${escapedMessage}
 
     private disableCameraResistance(): void {
         this.cameraManager.disableResistanceZone();
+    }
+
+    //get spaceStore(): Promise<SpaceProviderInterface> {
+    get spaceRegistry(): SpaceRegistryInterface {
+        if (!this._spaceRegistry) {
+            throw new Error("_spaceRegistry not yet initialized");
+        }
+        return this._spaceRegistry;
+    }
+
+    get proximityChatRoom(): ProximityChatRoom {
+        if (!this._proximityChatRoom) {
+            throw new Error("_proximityChatRoom not yet initialized");
+        }
+        return this._proximityChatRoom;
+    }
+
+    get userProviderMerger(): UserProviderMerger {
+        if (!this._userProviderMerger) {
+            throw new Error("_userProviderMerger not yet initialized");
+        }
+        return this._userProviderMerger;
     }
 }

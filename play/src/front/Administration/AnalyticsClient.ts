@@ -761,5 +761,21 @@ class AnalyticsClient {
             })
             .catch((e) => console.error(e));
     }
+
+    openPicker(applicationName: string): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_map-editor_open_picker", { applicationName });
+            })
+            .catch((e) => console.error(e));
+    }
+
+    openApplicationWithoutPicker(applicationName: string): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_map-editor_open_application", { applicationName });
+            })
+            .catch((e) => console.error(e));
+    }
 }
 export const analyticsClient = new AnalyticsClient();

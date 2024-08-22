@@ -97,6 +97,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             findOutMoreHere: "En savoir plus ici",
             openPickerSelector: "Ouvrir le sélecteur",
             forcedInNewTab: "Ouverture forcée dans un nouvel onglet",
+            openApplication: "Ouvrir l'application",
         },
         advancedOptions: "Options avancées",
         speakerMegaphoneProperties: {
