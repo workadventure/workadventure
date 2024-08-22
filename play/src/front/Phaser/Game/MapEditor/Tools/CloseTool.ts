@@ -7,10 +7,10 @@ import { MapEditorTool } from "./MapEditorTool";
 
 export class CloseTool implements MapEditorTool {
     public update(time: number, dt: number): void {
-        console.warn("Method not implemented.", time, dt);
+        // Nothing to be done
     }
     public clear(): void {
-        console.warn("Method not implemented.");
+        // Nothing to be done
     }
     public activate(): void {
         analyticsClient.toggleMapEditor(false);
@@ -19,16 +19,16 @@ export class CloseTool implements MapEditorTool {
         mapEditorVisibilityStore.set(false);
     }
     public destroy(): void {
-        console.warn("Method not implemented.");
+        // Nothing to be done
     }
     public subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void {
-        console.warn("Method not implemented.", gameMapFrontWrapper);
+        // Nothing to be done
     }
     public handleKeyDownEvent(event: KeyboardEvent): void {
-        console.warn("Method not implemented.", event);
+        // Nothing to be done
     }
     public handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): Promise<void> {
-        console.warn("Method not implemented.", editMapCommandMessage);
+        // Nothing to be done
         return Promise.resolve();
     }
 }
