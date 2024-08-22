@@ -88,6 +88,8 @@
         const text = event.clipboardData.getData("text");
 
         insertTextAtCursor(text);
+        message = messageInput.innerText;
+        event.preventDefault();
     }
 
     function insertTextAtCursor(text: string) {
