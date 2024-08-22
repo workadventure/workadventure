@@ -17,26 +17,34 @@
     import { element } from 'svelte/internal';
 
 
-    interface discordServeur {
+    interface DiscordServer {
         name: string;
         id: string;
         isSync: boolean;
         isBridging: boolean;
+        icon?: string;
     }
 
     let chatConnection = gameManager.getCurrentGameScene().chatConnection;
     let unsubscribeBotMessage: Unsubscriber |undefined;
-    $: servers = [] as Array<discordServeur>;
+    $: servers = [] as Array<DiscordServer>;
     $: qrCodeUrl = undefined as string | undefined;
     $: needManualToken = false;
     let manualDiscordToken = '';
     let loadingFetchServer = true;
 
+    const clientDiscordApi = axios.create({
+        baseURL: "https://discord.com/api",
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    });
+
     export let bridgeConnected: boolean = false;
     let step = 'checkLogin';
     let isFirstMessqge = true;
  
-    async function getUserDiscordServer(room: ChatRoom): Promise<discordServeur[]>{
+    async function getUserDiscordServer(room: ChatRoom): Promise<DiscordServer[]>{
             if(!room)return [];
             room.sendMessage('guild status');
             const allMessages = await storeToPromise(room.messages);
@@ -82,7 +90,7 @@
 
     let discordbotRoom : ChatRoom | undefined;
 
-    function handleCheckboxChange(server: discordServeur) {
+    function handleCheckboxChange(server: DiscordServer) {
         if(server.isSync){
             server.isBridging = true;
             if(discordbotRoom)discordbotRoom.sendMessage(`guilds bridge ${server.id} --entire`);
@@ -100,28 +108,14 @@
     
     onMount(async() => {
 
-        const parsedRoomMetadata = RoomMetadataType.safeParse(gameManager.getCurrentGameScene().room.metadata);
-        if (!parsedRoomMetadata.success) {
-            console.error(
-                "Unable to initialize Discord due to room metadata parsing error : ",
-                parsedRoomMetadata.error
-            );
-            parsedRoomMetadata.error.errors.forEach((err) => {
-                console.error(`Path: ${err.path.join('.')}, Message: ${err.message}`);
-            });
-        }
-
         // TODO add discord bot Id in a env file
         const discordBotId ='@discordbot:matrix.workadventure.localhost'
         discordbotRoom = await chatConnection.createDirectRoom(discordBotId);
 
         if(!discordbotRoom)return;
 
-        unsubscribeBotMessage = discordbotRoom.messages.subscribe((messages) => {
-            if(isFirstMessqge){
-                isFirstMessqge=false;
-                return;
-            }
+        unsubscribeBotMessage = discordbotRoom.messages.subscribe(async (messages) => {
+            console.log('unsubscribeBotMessage => discordbotRoom.messages', messages);
             if(!discordbotRoom)return;
 
             loadingFetchServer = true;
@@ -147,6 +141,8 @@
                     }
                     break;
                 case 'getServers':
+                    const guilds = await getAllGuilds();
+
                     needManualToken = false;
                     qrCodeUrl = undefined;
                     const messageServers = get(lastMessage.content).body;
@@ -156,11 +152,13 @@
                     const matches = messageServers.matchAll(regex);
 
                     servers = Array.from(matches).map((match)=>{
+                        const guild = guilds.find((guild: { id: string; }) => guild.id === match[2]);
                         return {
                                 name :match[1] ,
                                 id:match[2] ,
                                 isSync:( match[3].includes("never"))?false:true,
-                                isBridging : false
+                                isBridging : false,
+                                ...guild
                             }
                         });
                     console.log('servers', servers);
@@ -218,6 +216,34 @@
         initialsElement.classList.add('tw-w-8', 'tw-h-8', 'tw-rounded-full', 'tw-flex', 'tw-justify-center', 'tw-items-center', 'tw-bg-gray-300', 'tw-text-gray-700');
         imgElement.parentNode.insertBefore(initialsElement, imgElement);
     }
+
+
+    async function getAllGuilds() : Promise<DiscordServer[]>{
+        const parsedRoomMetadata = RoomMetadataType.safeParse(gameManager.getCurrentGameScene().room.metadata);
+        if (!parsedRoomMetadata.success) {
+            console.error(
+                "Unable to initialize Discord due to room metadata parsing error : ",
+                parsedRoomMetadata.error
+            );
+            parsedRoomMetadata.error.errors.forEach((err) => {
+                console.error(`Path: ${err.path.join('.')}, Message: ${err.message}`);
+            });
+        }
+
+        const discordAuthToken = parsedRoomMetadata.data?.player.accessTokens.find(
+            (token) => token.provider.toLocaleLowerCase() === 'discord'
+        );
+        if(!discordAuthToken){
+            throw new Error('Discord token not found');
+        }
+
+        const guildsResponse = await clientDiscordApi.get('/users/@me/guilds', {
+            headers: {
+                Authorization: `Bearer ${discordAuthToken.token}`,
+            },
+        });
+        return guildsResponse.data;
+    }
 </script>
 
 <div class="tw-flex tw-flex-col tw-w-full tw-gap-2">
@@ -274,11 +300,13 @@
     {#each servers as server}
         <li class="tw-flex tw-flex-row tw-gap-2 tw-py-2 tw-items-center tw-justify-between ">
             <div class="tw-flex tw-flex-row tw-items-center tw-gap-2">
-                <!-- <img src={`https://cdn.discordapp.com/icons/${server.id}/${server.icon}.png`}
-                alt={server.name} 
-                class="tw-w-8 tw-h-8 tw-rounded-full"
-                on:error={handleImageError}
-                /> -->
+                {#if server.icon}
+                <img src={`https://cdn.discordapp.com/icons/${server.id}/${server.icon}.png`}
+                    alt={server.name} 
+                    class="tw-w-8 tw-h-8 tw-rounded-full"
+                    on:error={handleImageError}
+                />
+                {/if}
                 <span>
                     {server.name}
                 </span>
