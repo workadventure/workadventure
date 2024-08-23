@@ -786,8 +786,6 @@ export class RoomConnection implements RoomConnection {
             name,
         });
 
-        console.log('in roomConnection',{roomID,name});
-        
         this.send({
             message: {
                 $case: "changeChatRoomAreaNameMessage",
@@ -1594,20 +1592,17 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitUpdateChatId(email: string, chatId: string) {
-
-        if (chatId && email){
-            console.log('send update chat id');
+        if (chatId && email) {
             this.send({
-                    message: {
-                        $case: "updateChatIdMessage",
-                        updateChatIdMessage: {
-                            email,
-                            chatId,
-                        },
+                message: {
+                    $case: "updateChatIdMessage",
+                    updateChatIdMessage: {
+                        email,
+                        chatId,
                     },
-                });
+                },
+            });
         }
-            
     }
 
     public async queryEnterChatRoomArea(roomID: string): Promise<void> {

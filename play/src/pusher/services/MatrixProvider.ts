@@ -2,8 +2,8 @@ import axios from "axios";
 import { EventType } from "matrix-js-sdk";
 import { MATRIX_ADMIN_USER, MATRIX_API_URI, MATRIX_DOMAIN } from "../enums/EnvironmentVariable";
 
-//const ADMIN_CHAT_ID = `@${MATRIX_ADMIN_USER}:${MATRIX_DOMAIN}`;
-const ADMIN_CHAT_ID = `@admin:${MATRIX_DOMAIN}`;
+const ADMIN_CHAT_ID = `@${MATRIX_ADMIN_USER}:${MATRIX_DOMAIN}`;
+//const ADMIN_CHAT_ID = `@admin:${MATRIX_DOMAIN}`;
 interface CreateRoomOptions {
     visibility: string;
     initial_state: {
@@ -27,9 +27,7 @@ class MatrixProvider {
 
     constructor() {
         //TODO: DELETE and move in synapse config ?
-        this.overrideRateLimitForAdminAccount()
-            .then(() => console.log("overrideRateLimitForAdminAccount"))
-            .catch((error) => console.error(error));
+        this.overrideRateLimitForAdminAccount().catch((error) => console.error(error));
 
         this.createChatSpaceAreaAndSetID()
             .then((roomID) => {
@@ -97,8 +95,6 @@ class MatrixProvider {
     }
 
     async createRoomForArea(): Promise<string> {
-        console.log('start create new room ');
-
         const options: CreateRoomOptions = {
             visibility: "private",
             initial_state: [
@@ -129,9 +125,7 @@ class MatrixProvider {
             })
             .then((response) => {
                 if (response.status === 200) {
-                    console.log(response.data.room_id);
                     roomID = response.data.room_id;
-                    console.log('return id: ',roomID);
                     return this.AddRoomToSpace(response.data.room_id);
                 } else {
                     return Promise.reject(new Error("Failed with status " + response.status));
@@ -140,8 +134,7 @@ class MatrixProvider {
             .catch((error) => {
                 console.error(error);
                 if (roomID) {
-                    console.log('return id: ',roomID);
-                    return Promise.resolve(roomID); 
+                    return Promise.resolve(roomID);
                 }
 
                 return Promise.reject(new Error("Failed to create room"));
@@ -172,10 +165,10 @@ class MatrixProvider {
     }
 
     async inviteUserToRoom(userID: string, roomID: string): Promise<void> {
-        if(!roomID){
-            console.error('roomID is undefined or null');
-            return; 
-        };
+        if (!roomID) {
+            console.error("roomID is undefined or null");
+            return;
+        }
         return await axios
             .post(
                 `${MATRIX_API_URI}_matrix/client/r0/rooms/${roomID}/invite`,
@@ -198,7 +191,6 @@ class MatrixProvider {
     }
 
     async changeRoomName(roomID: string, name: string): Promise<void> {
-        console.log('in changeRoomName',{roomID,name});
         return await axios
             .put(
                 `${MATRIX_API_URI}_matrix/client/r0/rooms/${roomID}/state/m.room.name`,

@@ -568,7 +568,6 @@ export class AreasPropertiesListener {
     }
 
     private handleMatrixRoomAreaOnEnter(property: MatrixRoomPropertyData) {
-        console.log('queryEnterChatRoomArea',property.matrixRoomId);
         if (this.scene.connection && property.matrixRoomId) {
             this.scene.connection
                 .queryEnterChatRoomArea(property.matrixRoomId)

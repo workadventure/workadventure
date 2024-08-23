@@ -1490,7 +1490,6 @@ export class SocketManager implements ZoneEventListener {
 
     async handleEnterChatRoomAreaQuery(socket: Socket, roomID: string): Promise<void> {
         const socketData = socket.getUserData();
-        console.log('handleEnterChatRoomAreaQuery',socketData.chatID);
         if (!socketData.chatID) {
             return Promise.reject(new Error("Error: Chat ID not found"));
         }
