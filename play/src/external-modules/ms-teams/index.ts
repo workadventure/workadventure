@@ -23,6 +23,12 @@ const MS_GRAPH_ENDPOINT_BETA = "https://graph.microsoft.com/beta";
 const MS_ME_ENDPOINT = "/me";
 const MS_ME_PRESENCE_ENDPOINT = "/me/presence";
 
+enum MSGraphMessageEventSource {
+    MicrosoftGraphPresence = "#Microsoft.Graph.presence",
+    MicrosoftGraphEvent = "#Microsoft.Graph.Event",
+    MicrosoftGraphSubscription = "#Microsoft.Graph.subscription",
+}
+
 export interface MSTeamsExtensionModule extends ExtensionModule {
     checkModuleSynschronisation: () => void;
     statusStore: Readable<TeamsModuleStatus>;
@@ -84,6 +90,9 @@ interface MSTeamsCalendarEvent {
     bodyPreview: string;
 }
 
+interface MSGraphSubscriptionResponse {
+    data: MSGraphSubscription;
+}
 interface MSGraphSubscription {
     id: string;
     changeType: string;
@@ -188,20 +197,20 @@ class MSTeams implements MSTeamsExtensionModule {
             this.moduleOptions.externalModuleMessage.subscribe((externalModuleMessage: ExternalModuleMessage) => {
                 console.info("Message received from external module", externalModuleMessage);
                 const type = externalModuleMessage.message["@odata.type"];
-                switch (type) {
-                    case "#Microsoft.Graph.presence":
+                switch (type.toLowerCase()) {
+                    case MSGraphMessageEventSource.MicrosoftGraphPresence.toLocaleLowerCase():
                         // get the presence status
                         if (this.moduleOptions.onExtensionModuleStatusChange)
                             this.moduleOptions.onExtensionModuleStatusChange(
                                 this.mapTeamsStatusToWorkAdventureStatus(externalModuleMessage.message.availability)
                             );
                         break;
-                    case "#Microsoft.Graph.Event":
+                    case MSGraphMessageEventSource.MicrosoftGraphEvent.toLocaleLowerCase():
                         this.updateCalendarEvents().catch((e) =>
                             console.error("Error while updating calendar events", e)
                         );
                         break;
-                    case "#Microsoft.Graph.subscription":
+                    case MSGraphMessageEventSource.MicrosoftGraphSubscription.toLocaleLowerCase():
                         this.checkModuleSynschronisation().catch((e) =>
                             console.error("Error while reauthorizing subscriptions", e)
                         );
@@ -216,7 +225,7 @@ class MSTeams implements MSTeamsExtensionModule {
 
         // Initialize the subscription
         if (this.adminUrl != undefined) {
-            this.initSubscription();
+            this.initSubscription().catch((e) => console.error("Error while initializing subscription", e));
         } else {
             console.info("Admin URL is not defined. Subscription to Graph API webhook is not possible!");
         }
@@ -494,23 +503,58 @@ class MSTeams implements MSTeamsExtensionModule {
         }
     }
 
-    private initSubscription(): void {
+    private async initSubscription(): Promise<void> {
         console.info("Init module synchronization check");
 
+        // All 10 minutes, check if the subscriptions are expired
+        let checkModuleSynchronisationIntervalMinutes = 10 * 60 * 1000;
+
         // Initialize the subscription for presence
-        if (this.roomMetadata.msTeamsSettings.status)
-            this.createOrGetPresenceSubscription().catch((e) =>
-                console.error("Error while creating presence subscription", e)
-            );
+        if (this.roomMetadata.msTeamsSettings.status) {
+            try {
+                const presenceSubscriptionResponse = await this.createOrGetPresenceSubscription();
+
+                // Define the last time to renew the subscription
+                const expirationDateTime = new Date(presenceSubscriptionResponse.data.expirationDateTime);
+                // Calculsate the time to renew the subscription
+                // We renew the subscription 30 seconds before the expiration date
+                const timeToRenewSubscription = expirationDateTime.getTime() - new Date().getTime() - 1000 * 30;
+                if (
+                    timeToRenewSubscription > 0 &&
+                    timeToRenewSubscription < checkModuleSynchronisationIntervalMinutes
+                ) {
+                    checkModuleSynchronisationIntervalMinutes = timeToRenewSubscription;
+                }
+            } catch (e) {
+                console.error("Error while creating or getting presence subscription", e);
+                // If there is an error, the interval will be set to 1 minutes and the synchronization will be retried
+                checkModuleSynchronisationIntervalMinutes = 1 * 60 * 1000;
+            }
+        }
 
         // Initialize the subscription for calendar
-        if (this.roomMetadata.msTeamsSettings.calendar)
-            this.createOrGetCalendarSubscription().catch((e) =>
-                console.error("Error while creating calendar subscription", e)
-            );
+        if (this.roomMetadata.msTeamsSettings.calendar) {
+            try {
+                const calendarSubscriptionResponse = await this.createOrGetCalendarSubscription();
 
-        // All 10 minutes, check if the subscriptions are expired
-        const checkModuleSynchronisationIntervalMinutes = 10 * 60 * 1000;
+                // Define the last time to renew the subscription
+                const expirationDateTime = new Date(calendarSubscriptionResponse.data.expirationDateTime);
+                // Calculsate the time to renew the subscription
+                // We renew the subscription 30 seconds before the expiration date
+                const timeToRenewSubscription = expirationDateTime.getTime() - new Date().getTime() - 1000 * 30;
+                if (
+                    timeToRenewSubscription > 0 &&
+                    timeToRenewSubscription < checkModuleSynchronisationIntervalMinutes
+                ) {
+                    checkModuleSynchronisationIntervalMinutes = timeToRenewSubscription;
+                }
+            } catch (e) {
+                console.error("Error while creating or getting calendar subscription", e);
+                // If there is an error, the interval will be set to 1 minutes and the synchronization will be retried
+                checkModuleSynchronisationIntervalMinutes = 1 * 60 * 1000;
+            }
+        }
+
         if (this.checkModuleSynschronisationInterval !== undefined)
             clearTimeout(this.checkModuleSynschronisationInterval);
         this.checkModuleSynschronisationInterval = setTimeout(() => {
@@ -524,6 +568,7 @@ class MSTeams implements MSTeamsExtensionModule {
     // Check module synchronization
     // If there is an error, the interval will be set to 1 minutes and the synchronization will be retried
     async checkModuleSynschronisation(): Promise<void> {
+        console.info("Check module synchronization");
         if (!this.adminUrl) {
             console.info(
                 "Admin URL is not defined. Subscription to Graph API webhook is not possible!",
@@ -542,7 +587,13 @@ class MSTeams implements MSTeamsExtensionModule {
         try {
             // If there is no subscription, reinitialize the subscription
             if (subscriptions.data.value.length === 0) {
-                this.initSubscription();
+                try {
+                    await this.initSubscription();
+                } catch (e) {
+                    console.error("Error while reinitializing subscriptions", e);
+                    // If there is an error, retry in 1 minutes
+                    checkModuleSynchronisationIntervalMinutes = 1 * 60 * 1000;
+                }
             } else {
                 // Check if the subscription already exists
                 const promisesReauthorizeSubscription = [];
@@ -582,7 +633,7 @@ class MSTeams implements MSTeamsExtensionModule {
 
             // Reinitialize the subscription
             try {
-                this.initSubscription();
+                await this.initSubscription();
             } catch (e) {
                 // If there is an error, retry in 1 minutes
                 console.error("Error while reinitializing subscriptions", e);
@@ -617,7 +668,7 @@ class MSTeams implements MSTeamsExtensionModule {
     }
 
     // Create subscription to listen changes
-    private async createOrGetPresenceSubscription(): Promise<MSGraphSubscription> {
+    private async createOrGetPresenceSubscription(): Promise<MSGraphSubscriptionResponse> {
         // Check if the subscription already exists
         const subscriptions = await this.msAxiosClientV1.get(`/subscriptions`);
         if (subscriptions.data.value.length > 0) {
@@ -659,7 +710,7 @@ class MSTeams implements MSTeamsExtensionModule {
     }
 
     // Create subscription to listen changes
-    private async createOrGetCalendarSubscription(): Promise<MSGraphSubscription> {
+    private async createOrGetCalendarSubscription(): Promise<MSGraphSubscriptionResponse> {
         // Check if the subscription already exists
         const subscriptions = await this.msAxiosClientBeta.get(`/subscriptions`);
         if (subscriptions.data.value.length > 0) {
