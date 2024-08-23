@@ -827,6 +827,7 @@ export class IoSocketController {
                                 )
                                 .catch((error) => {
                                     console.error(error);
+                                    Sentry.captureException(error);
                                 });
                             break;
                         }
@@ -835,6 +836,7 @@ export class IoSocketController {
                                 .handleDeleteChatRoomArea(message.message.deleteChatRoomAreaMessage.roomID)
                                 .catch((error) => {
                                     console.error(error);
+                                    Sentry.captureException(error);
                                 });
                             break;
                         }
@@ -847,7 +849,10 @@ export class IoSocketController {
                                     case "roomTagsQuery": {
                                         await socketManager
                                             .handleRoomTagsQuery(socket, message.message.queryMessage)
-                                            .catch((error) => console.error(error));
+                                            .catch((error) => {
+                                                console.error(error);
+                                                Sentry.captureException(error);
+                                            });
                                         break;
                                     }
                                     case "embeddableWebsiteQuery": {
@@ -1092,7 +1097,10 @@ export class IoSocketController {
                     socketData.disconnecting = true;
                     socketManager.leaveRoom(socket);
                     socketManager.leaveSpaces(socket);
-                    socketManager.leaveChatRoomArea(socket).catch((error) => console.error(error));
+                    socketManager.leaveChatRoomArea(socket).catch((error) => {
+                        console.error(error);
+                        Sentry.captureException(error);
+                    });
                     socketData.currentChatRoomArea = [];
                 } catch (e) {
                     Sentry.captureException(`An error occurred on "disconnect" ${e}`);
