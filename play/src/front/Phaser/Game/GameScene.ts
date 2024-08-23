@@ -1927,9 +1927,11 @@ export class GameScene extends DirtyScene {
             }
 
             for (const module of parsedRoomMetadata.data.modules ?? []) {
+                if (module !== "ms-teams") continue;
+
                 (async () => {
                     try {
-                        const extensionModule = await import(`../../../external-modules/${module}/index`);
+                        const extensionModule = await import(`../../../external-modules/ms-teams/index`);
                         const defaultExtensionModule = extensionModule.default;
 
                         defaultExtensionModule.init(parsedRoomMetadata.data, {

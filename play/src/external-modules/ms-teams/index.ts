@@ -9,6 +9,7 @@ import { notificationPlayingStore } from "../../front/Stores/NotificationStore";
 import { ExtensionModule, ExtensionModuleOptions, RoomMetadataType } from "../../front/ExternalModule/ExtensionModule";
 import { NODE_ENV } from "../../front/Enum/EnvironmentVariable";
 import { OpenCoWebsiteObject } from "../../front/Chat/Utils";
+import LL from "../../i18n/i18n-svelte";
 import { TeamsActivity, TeamsAvailability } from "./MSTeamsInterface";
 
 import TeamsMeetingAreaPropertyEditor from "./Components/TeamsMeetingAreaPropertyEditor.svelte";
@@ -332,7 +333,7 @@ class MSTeams implements MSTeamsExtensionModule {
     }
 
     joinMeeting() {
-        console.log("joinTeamsMeeting : Not Implemented");
+        console.info("joinTeamsMeeting : Not Implemented");
     }
 
     destroy() {
@@ -747,7 +748,11 @@ class MSTeams implements MSTeamsExtensionModule {
 
     private handleAreaPropertyOnEnter(area: AreaData) {
         console.debug("Enter extension module area");
-        notificationPlayingStore.playNotification("Opening Teams Meeting...", undefined, area.id);
+        notificationPlayingStore.playNotification(
+            get(LL).externalModule.teams.openingMeeting(),
+            "business.svg",
+            area.id
+        );
         this.createOrGetMeeting(area.id)
             .then(async (data) => {
                 const cowebsiteOpened = await this.openPopupMeeting(
@@ -763,7 +768,11 @@ class MSTeams implements MSTeamsExtensionModule {
             .catch((error) => {
                 console.error(error);
                 notificationPlayingStore.removeNotificationById(area.id);
-                notificationPlayingStore.playNotification("Unable to join Teams Meeting", undefined, area.id);
+                notificationPlayingStore.playNotification(
+                    get(LL).externalModule.teams.unableJoinMeeting(),
+                    "business.svg",
+                    area.id
+                );
             });
     }
 
@@ -796,7 +805,6 @@ class MSTeams implements MSTeamsExtensionModule {
         endDateTime: Date,
         passcode: string | undefined
     ): Promise<{ id: string }> {
-        console.info("Opening Teams Meeting", joinWebUrl);
         // Open cowebsite
         const URITeamsIframeLink = new URL(`${this.adminUrl}/iframe/ask-to-join-meeting-ms-teams`);
         URITeamsIframeLink.searchParams.append("joinMeetingId", meetingId);
@@ -807,13 +815,12 @@ class MSTeams implements MSTeamsExtensionModule {
         if (passcode) {
             URITeamsIframeLink.searchParams.append("passcode", passcode);
         }
-        console.log("Opening Teams Meeting", URITeamsIframeLink.toString());
         if (this.openCoWebSite)
             return await this.openCoWebSite(
                 {
                     url: URITeamsIframeLink.toString(),
                     allowApi: true,
-                    widthPercent: 50,
+                    widthPercent: 30,
                     position: 1,
                 },
                 window

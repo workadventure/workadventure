@@ -114,7 +114,7 @@
 
         {#if $notificationPlayingStore}
             <div class="tw-flex tw-flex-col tw-absolute tw-w-auto tw-right-0">
-                {#each [...$notificationPlayingStore.values()] as notification (notification.id)}
+                {#each [...$notificationPlayingStore.values()] as notification, index (`${index}-${notification.id}`)}
                     <Notification {notification} />
                 {/each}
             </div>
