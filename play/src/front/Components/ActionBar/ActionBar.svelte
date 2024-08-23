@@ -42,6 +42,7 @@
     import worldImg from "../images/world.svg";
     import calendarSvg from "../images/calendar.svg";
     import burgerMenuImg from "../images/menu.svg";
+    import AppSvg from "../images/action-app.svg";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
@@ -182,6 +183,7 @@
             emoteMenuSubStore.closeEmoteMenu();
         } else {
             emoteMenuSubStore.openEmoteMenu();
+            appMenuOpened = false;
         }
     }
 
@@ -413,6 +415,7 @@
 
     const onClickOutside = () => {
         if ($emoteMenuSubStore) emoteMenuSubStore.closeEmoteMenu();
+        if (appMenuOpened) appMenuOpened = false;
     };
 
     let isActiveMobileMenu = false;
@@ -436,6 +439,12 @@
             if (openMobileMenuTimeout) clearTimeout(openMobileMenuTimeout);
             openMobileMenu = false;
         }
+    }
+
+    let appMenuOpened = false;
+    function openAppMenu() {
+        emoteMenuSubStore.closeEmoteMenu();
+        appMenuOpened = !appMenuOpened;
     }
 </script>
 
@@ -885,8 +894,9 @@
             </div>
 
             {#if !isMobile || openMobileMenu == true}
+                <!-- Menu part -->
                 <div class="bottom-action-section tw-flex tw-flex-initial">
-                    <!-- Menu part -->
+                    <!-- Logo part -->
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
                         on:dragstart|preventDefault={noDrag}
@@ -903,44 +913,21 @@
                         </button>
                     </div>
 
-                    <!-- External module action bar -->
-                    {#if $externalActionBarSvelteComponent.size > 0}
-                        {#each [...$externalActionBarSvelteComponent.entries()] as [id, value] (`externalActionBarSvelteComponent-${id}`)}
-                            <svelte:component
-                                this={value.componentType}
-                                extensionModule={value.extensionModule}
-                                {isMobile}
-                            />
-                        {/each}
-                    {/if}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div
+                        on:dragstart|preventDefault={noDrag}
+                        on:click={() => analyticsClient.openedMenu()}
+                        on:click|stopPropagation={openAppMenu}
+                        class="bottom-action-button"
+                    >
+                        {#if !isMobile}
+                            <Tooltip text={$LL.actionbar.appList()} />
+                        {/if}
 
-                    <!-- Calendar integration -->
-                    {#if $isActivatedStore}
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                        <div
-                            on:dragstart|preventDefault={noDrag}
-                            on:click={() => analyticsClient.openExternalModuleCalendar()}
-                            on:click={openExternalModuleCalendar}
-                            class="bottom-action-button"
-                        >
-                            {#if !isMobile}
-                                <Tooltip text={$LL.actionbar.calendar()} />
-                            {/if}
-                            <button id="calendarIcon" class:border-top-light={$isCalendarVisibleStore}>
-                                <img
-                                    draggable="false"
-                                    src={calendarSvg}
-                                    style="padding: 2px"
-                                    alt={$LL.menu.icon.open.calendar()}
-                                />
-                                <span
-                                    class="tw-absolute tw-top-5 tw-text-white tw-rounded-full tw-px-1 tw-py-0.5 tw-text-xxs tw-font-bold tw-leading-none"
-                                >
-                                    {new Date().getDate()}
-                                </span>
-                            </button>
-                        </div>
-                    {/if}
+                        <button id="appIcon" class:border-top-light={appMenuOpened}>
+                            <img draggable="false" src={AppSvg} style="padding: 2px" alt="Applications list" />
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Status part -->
@@ -996,35 +983,6 @@
                         </div>
                     {/if}
                 </div>
-
-                <!-- Room list part -->
-                {#if $roomListActivated}
-                    <div class="bottom-action-section tw-flex tw-flex-initial">
-                        <!-- TODO button hep -->
-                        <!-- Room list button -->
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                        <div
-                            on:dragstart|preventDefault={noDrag}
-                            on:click={() => analyticsClient.openedRoomList()}
-                            on:click={showRoomList}
-                            class="bottom-action-button"
-                        >
-                            {#if !isMobile}
-                                <Tooltip text={$LL.actionbar.roomList()} />
-                            {/if}
-
-                            <button id="roomListIcon" class:border-top-light={$roomListVisibilityStore}>
-                                <!-- svelte-ignore a11y-img-redundant-alt -->
-                                <img
-                                    draggable="false"
-                                    src={worldImg}
-                                    style="padding: 2px"
-                                    alt="Image for room list modal"
-                                />
-                            </button>
-                        </div>
-                    </div>
-                {/if}
             {/if}
 
             {#if $addActionButtonActionBarEvent.length > 0}
@@ -1127,7 +1085,7 @@
 {#if $emoteMenuSubStore}
     <div
         class="tw-flex tw-justify-center tw-m-auto tw-absolute tw-left-0 tw-right-0 tw-bottom-0"
-        style="margin-bottom: 4.5rem; height: auto;"
+        style="margin-bottom: 5.5rem; height: auto;"
     >
         <div class="bottom-action-bar">
             <div class="bottom-action-section tw-flex animate">
@@ -1166,7 +1124,7 @@
                             <img
                                 draggable="false"
                                 src={penImg}
-                                style="padding: 2px"
+                                style="padding: 6px"
                                 alt={$LL.menu.icon.open.openEmoji()}
                             />
                         {/if}
@@ -1177,9 +1135,96 @@
                         <img
                             draggable="false"
                             src={closeImg}
-                            style="padding: 4px"
+                            style="padding: 8px"
                             alt={$LL.menu.icon.open.closeEmoji()}
                         />
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+{/if}
+
+{#if appMenuOpened && $roomListActivated && $isActivatedStore && $externalActionBarSvelteComponent.size > 0}
+    <div
+        class="tw-flex tw-justify-center tw-m-auto tw-absolute tw-left-0 tw-right-0 tw-bottom-0"
+        style="margin-bottom: 5.5rem; height: auto;"
+    >
+        <div class="bottom-action-bar">
+            <div class="bottom-action-section tw-flex animate">
+                <!-- Room list part -->
+                {#if $roomListActivated}
+                    <!-- TODO button hep -->
+                    <!-- Room list button -->
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div
+                        on:dragstart|preventDefault={noDrag}
+                        on:click={() => analyticsClient.openedRoomList()}
+                        on:click={showRoomList}
+                        class="bottom-action-button"
+                    >
+                        {#if !isMobile}
+                            <Tooltip text={$LL.actionbar.roomList()} />
+                        {/if}
+
+                        <button id="roomListIcon" class:border-top-light={$roomListVisibilityStore}>
+                            <!-- svelte-ignore a11y-img-redundant-alt -->
+                            <img
+                                draggable="false"
+                                src={worldImg}
+                                style="padding: 2px"
+                                alt="Image for room list modal"
+                            />
+                        </button>
+                    </div>
+                {/if}
+
+                <!-- Calendar integration -->
+                {#if $isActivatedStore}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div
+                        on:dragstart|preventDefault={noDrag}
+                        on:click={() => analyticsClient.openExternalModuleCalendar()}
+                        on:click={openExternalModuleCalendar}
+                        class="bottom-action-button"
+                    >
+                        {#if !isMobile}
+                            <Tooltip text={$LL.actionbar.calendar()} />
+                        {/if}
+                        <button id="calendarIcon" class:border-top-light={$isCalendarVisibleStore}>
+                            <img
+                                draggable="false"
+                                src={calendarSvg}
+                                style="padding: 2px"
+                                alt={$LL.menu.icon.open.calendar()}
+                            />
+                            <span
+                                class="tw-absolute tw-top-5 tw-text-white tw-rounded-full tw-px-1 tw-py-0.5 tw-text-xxs tw-font-bold tw-leading-none"
+                            >
+                                {new Date().getDate()}
+                            </span>
+                        </button>
+                    </div>
+                {/if}
+            </div>
+
+            <div class="bottom-action-section tw-flex animate">
+                <!-- External module action bar -->
+                {#if $externalActionBarSvelteComponent.size > 0}
+                    {#each [...$externalActionBarSvelteComponent.entries()] as [id, value] (`externalActionBarSvelteComponent-${id}`)}
+                        <svelte:component
+                            this={value.componentType}
+                            extensionModule={value.extensionModule}
+                            {isMobile}
+                        />
+                    {/each}
+                {/if}
+            </div>
+
+            <div class="bottom-action-section tw-flex animate">
+                <div class="tw-transition-all bottom-action-button">
+                    <button on:click|preventDefault={openAppMenu}>
+                        <img draggable="false" src={closeImg} style="padding: 8px" alt={$LL.actionbar.appList()} />
                     </button>
                 </div>
             </div>

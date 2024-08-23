@@ -36,6 +36,7 @@ const actionbar: BaseTranslation = {
     },
     globalMessage: "Envoyer un message global",
     roomList: "Ouvrir / Fermer la liste des salons",
+    appList: "Ouvrir / Fermer la liste des apps",
 };
 
 export default actionbar;
