@@ -517,8 +517,8 @@ class MSTeams implements MSTeamsExtensionModule {
                 // Define the last time to renew the subscription
                 const expirationDateTime = new Date(presenceSubscriptionResponse.data.expirationDateTime);
                 // Calculsate the time to renew the subscription
-                // We renew the subscription 30 seconds before the expiration date
-                const timeToRenewSubscription = expirationDateTime.getTime() - new Date().getTime() - 1000 * 30;
+                // We renew the subscription 2 seconds after the expiration date
+                const timeToRenewSubscription = expirationDateTime.getTime() - new Date().getTime() + 1000 * 2;
                 if (
                     timeToRenewSubscription > 0 &&
                     timeToRenewSubscription < checkModuleSynchronisationIntervalMinutes
@@ -540,8 +540,8 @@ class MSTeams implements MSTeamsExtensionModule {
                 // Define the last time to renew the subscription
                 const expirationDateTime = new Date(calendarSubscriptionResponse.data.expirationDateTime);
                 // Calculsate the time to renew the subscription
-                // We renew the subscription 30 seconds before the expiration date
-                const timeToRenewSubscription = expirationDateTime.getTime() - new Date().getTime() - 1000 * 30;
+                // We renew the subscription 2 seconds after the expiration date
+                const timeToRenewSubscription = expirationDateTime.getTime() - new Date().getTime() + 1000 * 2;
                 if (
                     timeToRenewSubscription > 0 &&
                     timeToRenewSubscription < checkModuleSynchronisationIntervalMinutes
@@ -578,43 +578,27 @@ class MSTeams implements MSTeamsExtensionModule {
         }
         this.teamsSynchronisationStore.set(TeamsModuleStatus.SYNC);
         console.info("Check module synchronization", new Date().toLocaleString());
-        // Use interval with base value to 10 minutes. If there is an error, the interval will be set to 10 minutes
-        let checkModuleSynchronisationIntervalMinutes = 10 * 60 * 1000;
 
         // Get all subscription
         const subscriptions = await this.msAxiosClientBeta.get(`/subscriptions/`);
 
         try {
             // If there is no subscription, reinitialize the subscription
-            if (subscriptions.data.value.length === 0) {
+            if (subscriptions.data.value.length < 2) {
                 try {
                     await this.initSubscription();
+                    this.teamsSynchronisationStore.set(TeamsModuleStatus.ONLINE);
                 } catch (e) {
                     console.error("Error while reinitializing subscriptions", e);
-                    // If there is an error, retry in 1 minutes
-                    checkModuleSynchronisationIntervalMinutes = 1 * 60 * 1000;
                 }
             } else {
-                // Check if the subscription already exists
-                const promisesReauthorizeSubscription = [];
-                for (const subscription of subscriptions.data.value) {
-                    if (new Date(subscription.expirationDateTime) < new Date()) {
-                        if (subscription.resource === `/communications/presences/${this.clientId}`) {
-                            promisesReauthorizeSubscription.push(this.reauthorizePresenceSubscription(subscription.id));
-                        } else if (subscription.resource === `/me/events`) {
-                            promisesReauthorizeSubscription.push(this.reauthorizeCalendarSubscription(subscription.id));
-                        }
-                    }
-                }
-
-                // If there are expired subscription, reauthorize them
-                if (promisesReauthorizeSubscription.length > 0) await Promise.all(promisesReauthorizeSubscription);
+                // Indicate to the user that the synchronization is working
+                this.teamsSynchronisationStore.set(TeamsModuleStatus.ONLINE);
             }
-            this.teamsSynchronisationStore.set(TeamsModuleStatus.ONLINE);
         } catch (e) {
             this.teamsSynchronisationStore.set(TeamsModuleStatus.WARNING);
             console.error("Error while reauthorizing subscriptions", e);
-            // If there is an error, delete subscription
+            // If there is an error, delete subscription and try to create a new twice
             const promisesDeleteSubscription = [];
             for (const subscription of subscriptions.data.value) {
                 if (new Date(subscription.expirationDateTime) < new Date()) {
@@ -637,19 +621,8 @@ class MSTeams implements MSTeamsExtensionModule {
             } catch (e) {
                 // If there is an error, retry in 1 minutes
                 console.error("Error while reinitializing subscriptions", e);
-                // Indicate to the user that the synchronization is not working and new tentative will be done in 1 minutes
-                checkModuleSynchronisationIntervalMinutes = 1 * 60 * 1000;
-                // TODO show error message
             }
         }
-        // All 10 minutes, check if the subscriptions are expired
-        if (this.checkModuleSynschronisationInterval !== undefined)
-            clearTimeout(this.checkModuleSynschronisationInterval);
-        this.checkModuleSynschronisationInterval = setTimeout(() => {
-            this.checkModuleSynschronisation().catch((e) =>
-                console.error("Error while reauthorizing subscriptions", e)
-            );
-        }, checkModuleSynchronisationIntervalMinutes);
     }
 
     // Destroy all subscriptions
@@ -677,27 +650,16 @@ class MSTeams implements MSTeamsExtensionModule {
                     subscription.resource === `/communications/presences/${this.clientId}`
             );
             // Check if the subscription is expired
-            if (presenceSubscription != undefined && new Date(presenceSubscription.expirationDateTime) < new Date()) {
-                try {
-                    // If there are expired subscription, reauthorize them
-                    await this.reauthorizePresenceSubscription(presenceSubscription.id);
-                    return presenceSubscription;
-                } catch (e) {
-                    console.info("Error while reauthorizing presence subscription", e);
-                    // Delete the subscription and create a new one
-                    try {
-                        await this.deletePresenceSubscription(presenceSubscription.id);
-                    } catch (e) {
-                        console.error("Error while deleting presence subscription", e);
-                    }
-                }
+            // If expiration is not expired, return the subscription
+            if (presenceSubscription != undefined && new Date(presenceSubscription.expirationDateTime) > new Date()) {
+                return presenceSubscription;
             }
         }
 
         // Expiration date is 60 minutes, check the graph documentation for more information
         // https://docs.microsoft.com/en-us/graph/api/subscription-post-subscriptions?view=graph-rest-1.0
         const expirationDateTime = new Date();
-        expirationDateTime.setMinutes(expirationDateTime.getMinutes() + 3);
+        expirationDateTime.setMinutes(expirationDateTime.getMinutes() + 60);
 
         return await this.msAxiosClientV1.post(`/subscriptions`, {
             changeType: "updated",
@@ -718,27 +680,15 @@ class MSTeams implements MSTeamsExtensionModule {
                 (subscription: MSGraphSubscription) => subscription.resource === `/me/events`
             );
             // Check if the subscription is expired
-            if (calendarSubscription != undefined && new Date(calendarSubscription.expirationDateTime) < new Date()) {
-                try {
-                    // If there are expired subscription, reauthorize them
-                    await this.reauthorizeCalendarSubscription(calendarSubscription.id);
-                    return calendarSubscription;
-                } catch (e) {
-                    console.info("Error while reauthorizing calendar subscription", e);
-                    // Delete the subscription and create a new one
-                    try {
-                        await this.deleteCalendarSubscription(calendarSubscription.id);
-                    } catch (e) {
-                        console.error("Error while deleting calendar subscription", e);
-                    }
-                }
+            if (calendarSubscription != undefined && new Date(calendarSubscription.expirationDateTime) > new Date()) {
+                return calendarSubscription;
             }
         }
 
         // Expiration date is 3 days for online meeting, check the graph documentation for more information
         // https://docs.microsoft.com/en-us/graph/api/subscription-post-subscriptions?view=graph-rest-1.0
         const expirationDateTime = new Date();
-        expirationDateTime.setMinutes(expirationDateTime.getMinutes() + 3);
+        expirationDateTime.setMinutes(expirationDateTime.getMinutes() + 4230);
 
         return await this.msAxiosClientBeta.post(`/subscriptions`, {
             changeType: "created,updated,deleted",
@@ -758,7 +708,8 @@ class MSTeams implements MSTeamsExtensionModule {
         await this.msAxiosClientBeta.delete(`/subscriptions/${subscriptionId}`);
     }
 
-    private async reauthorizePresenceSubscription(subscriptionId: string): Promise<void> {
+    /** Reauthorize doesn't work for presence with MSGraph API */
+    /*private async reauthorizePresenceSubscription(subscriptionId: string): Promise<void> {
         // Expiration date is 60 minutes, check the graph documentation for more information
         // https://docs.microsoft.com/en-us/graph/api/subscription-post-subscriptions?view=graph-rest-1.0
         const expirationDateTime = new Date();
@@ -767,9 +718,10 @@ class MSTeams implements MSTeamsExtensionModule {
         await this.msAxiosClientBeta.patch(`/subscriptions/${subscriptionId}`, {
             expirationDateTime,
         });
-    }
+    }*/
 
-    private async reauthorizeCalendarSubscription(subscriptionId: string): Promise<void> {
+    /** Reauthorize doesn't work for calendar with MSGraph API */
+    /*private async reauthorizeCalendarSubscription(subscriptionId: string): Promise<void> {
         // Expiration date is 3 days for online meeting, check the graph documentation for more information
         // https://docs.microsoft.com/en-us/graph/api/subscription-post-subscriptions?view=graph-rest-1.0
         const expirationDateTime = new Date();
@@ -779,7 +731,7 @@ class MSTeams implements MSTeamsExtensionModule {
         await this.msAxiosClientV1.patch(`/subscriptions/${subscriptionId}`, {
             expirationDateTime,
         });
-    }
+    }*/
 
     areaMapEditor() {
         if (!this.roomMetadata.msTeamsSettings.communication) return;
