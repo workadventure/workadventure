@@ -79,16 +79,16 @@ describe("SpaceFilter", () => {
                 name: "user-1",
             };
 
-            const newData: Partial<SpaceUserExtended> = {
+            const newData: SpaceUserExtended = {
                 name: "user-2",
                 availabilityStatus: 1,
                 roomName: "world",
-            };
+            } as SpaceUserExtended;
 
             const spaceFilter = new AllUsersSpaceFilter(spaceFilterName, space, defaultRoomConnectionMock);
 
             await spaceFilter.addUser(user as SpaceUserExtended);
-            spaceFilter.updateUserData(newData);
+            spaceFilter.updateUserData(newData, ["name", "availabilityStatus", "roomName"]);
 
             const storedUser = get(spaceFilter.usersStore).get(id);
             expect(storedUser).toBeDefined();
@@ -105,12 +105,12 @@ describe("SpaceFilter", () => {
                 name: "user-1",
             };
 
-            const newData: Partial<SpaceUserExtended> = {
+            const newData: SpaceUserExtended = {
                 id,
                 name: "user-2",
                 availabilityStatus: 1,
                 roomName: "world",
-            };
+            } as SpaceUserExtended;
 
             const updatedUserResult = {
                 ...user,
@@ -120,7 +120,7 @@ describe("SpaceFilter", () => {
             const spaceFilter = new AllUsersSpaceFilter(spaceFilterName, space, defaultRoomConnectionMock);
 
             await spaceFilter.addUser(user as SpaceUserExtended);
-            spaceFilter.updateUserData(newData);
+            spaceFilter.updateUserData(newData, ["name", "availabilityStatus", "roomName"]);
 
             const updatedUser = get(spaceFilter.usersStore).get(id);
 
@@ -139,17 +139,17 @@ describe("SpaceFilter", () => {
                 name: "user-1",
             };
 
-            const newData: Partial<SpaceUser> = {
+            const newData: SpaceUser = {
                 id: 404,
                 name: "user-2",
                 availabilityStatus: 1,
                 roomName: "world",
-            };
+            } as SpaceUser;
 
             const spaceFilter = new AllUsersSpaceFilter(spaceFilterName, space, defaultRoomConnectionMock);
 
             await spaceFilter.addUser(user as SpaceUserExtended);
-            spaceFilter.updateUserData(newData);
+            spaceFilter.updateUserData(newData, ["name", "availabilityStatus", "roomName"]);
 
             const updatedUser = get(spaceFilter.usersStore).get(id);
 
