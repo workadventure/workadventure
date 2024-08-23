@@ -8,6 +8,10 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         warning: "Module error ⚠️",
         sync: "Module en cours de synchro 🔄",
     },
+    teams: {
+        openingMeeting: "Ouverture de la réunion Teams...",
+        unableJoinMeeting: "Impossible de rejoindre la réunion Teams!",
+    },
 };
 
 export default externalModule;

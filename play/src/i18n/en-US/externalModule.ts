@@ -7,6 +7,10 @@ const externalModule: BaseTranslation = {
         warning: "Status is warning ⚠️",
         sync: "Status is syncing 🔄",
     },
+    teams: {
+        openingMeeting: "Opening Teams Meeting...",
+        unableJoinMeeting: "Unable to join Teams Meeting!",
+    },
 };
 
 export default externalModule;
