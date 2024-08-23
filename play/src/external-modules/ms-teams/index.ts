@@ -333,6 +333,7 @@ class MSTeams implements MSTeamsExtensionModule {
             })
             .then(() => {
                 console.info(`Your presence status has been set to ${newTeamsAvailability}`);
+                this.teamsAvailability = newTeamsAvailability;
             })
             .catch((e) => console.error(e));
     }
@@ -645,14 +646,14 @@ class MSTeams implements MSTeamsExtensionModule {
         // Check if the subscription already exists
         const subscriptions = await this.msAxiosClientV1.get(`/subscriptions`);
         if (subscriptions.data.value.length > 0) {
-            const presenceSubscription = subscriptions.data.value.find(
+            const presenceSubscription: MSGraphSubscription = subscriptions.data.value.find(
                 (subscription: MSGraphSubscription) =>
                     subscription.resource === `/communications/presences/${this.clientId}`
             );
             // Check if the subscription is expired
             // If expiration is not expired, return the subscription
             if (presenceSubscription != undefined && new Date(presenceSubscription.expirationDateTime) > new Date()) {
-                return presenceSubscription;
+                return { data: presenceSubscription };
             }
         }
 
@@ -676,12 +677,12 @@ class MSTeams implements MSTeamsExtensionModule {
         // Check if the subscription already exists
         const subscriptions = await this.msAxiosClientBeta.get(`/subscriptions`);
         if (subscriptions.data.value.length > 0) {
-            const calendarSubscription = subscriptions.data.value.find(
+            const calendarSubscription: MSGraphSubscription = subscriptions.data.value.find(
                 (subscription: MSGraphSubscription) => subscription.resource === `/me/events`
             );
             // Check if the subscription is expired
             if (calendarSubscription != undefined && new Date(calendarSubscription.expirationDateTime) > new Date()) {
-                return calendarSubscription;
+                return { data: calendarSubscription };
             }
         }
 
