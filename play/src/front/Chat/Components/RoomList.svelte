@@ -15,6 +15,7 @@
     import CreateRoomModal from "./Room/CreateRoomModal.svelte";
     import ChatLoader from "./ChatLoader.svelte";
     import ChatError from "./ChatError.svelte";
+    import RoomFolder from "./RoomFolder.svelte";
     import { IconChevronDown, IconChevronRight, IconSquarePlus } from "@wa-icons";
 
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
@@ -25,8 +26,9 @@
 
     let directRooms = chat.directRooms;
     let rooms = chat.rooms;
+    //TODO : Make a distinction between invitations to a room or to a space;
     let roomInvitations = chat.invitations;
-    let roomBySpace = chat.roomBySpaceRoom;
+    let roomFolders = chat.roomFolders;
 
     let displayDirectRooms = false;
     let displayRooms = false;
@@ -98,21 +100,21 @@
         get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase())
     );
 
-    $: filteredRoomBySpaceWithoutDefaultRoom = Array.from($roomBySpace.entries()).reduce((acc, [space, roomList]) => {
-        if (!space) return acc;
-        acc.set(
-            space,
-            roomList.filter((room) =>
-                get(room.name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase())
-            )
-        );
-        return acc;
-    }, new Map<ChatRoom, ChatRoom[]>());
 
-    $: roomsFromDefaultSpaceRoom = Array.from($roomBySpace.get(undefined)?.values() || []);
+
     $: isGuest = chat.isGuest;
 
     $: displayTwoColumnLayout = sideBarWidth >= CHAT_LAYOUT_LIMIT;
+
+    const isFoldersOpen : {[key:string]:boolean} = {
+
+} ;
+
+$roomFolders.forEach(folder => {
+if (!(folder.id in isFoldersOpen)) {
+  isFoldersOpen[folder.id] = false; 
+}
+});
 </script>
 
 {#if $selectedRoom === undefined || displayTwoColumnLayout}
@@ -127,9 +129,10 @@
             <ChatError />
         {/if}
         {#if $chatConnectionStatus === "ONLINE"}
-            {#if $joignableRoom.length > 0}
+            {#if $joignableRoom.length > 0 && $chatSearchBarValue.trim()!==""}
                 <p class="tw-p-0 tw-m-0 tw-text-gray-400">{$LL.chat.availableRooms()}</p>
                 <div class="tw-flex tw-flex-col tw-overflow-auto">
+                   
                     {#each $joignableRoom as room (room.id)}
                         <JoignableRooms {room} />
                     {/each}
@@ -195,7 +198,7 @@
 
             {#if displayRooms}
                 <div class="tw-flex tw-flex-col tw-overflow-auto">
-                    {#each roomsFromDefaultSpaceRoom as room (room.id)}
+                    {#each filteredRooms as room (room.id)}
                         <Room {room} />
                     {/each}
                     {#if filteredRooms.length === 0}
@@ -203,49 +206,9 @@
                     {/if}
                 </div>
             {/if}
-
             <!--roomBySpace-->
-            {#each Array.from(filteredRoomBySpaceWithoutDefaultRoom) as [space, roomList] (space)}
-                <div class="tw-flex tw-justify-between">
-                    <button
-                        class="tw-p-0 tw-m-0 tw-text-gray-400"
-                        on:click={() => {
-                            spaceOpenState.update((state) => {
-                                const newState =
-                                    $spaceOpenState.get(space.id) === undefined ? true : !$spaceOpenState.get(space.id);
-                                state.set(space.id, newState);
-                                return state;
-                            });
-                        }}
-                    >
-                        {#if $spaceOpenState.get(space.id) || false}
-                            <IconChevronDown />
-                        {:else}
-                            <IconChevronRight />
-                        {/if}
-                        {get(space.name)}</button
-                    >
-                    {#if $isGuest === false}
-                        <button
-                            data-testid="openCreateRoomModalButton"
-                            class="tw-p-0 tw-m-0 tw-text-gray-400"
-                            on:click={() => openCreateRoomModal(space.id)}
-                        >
-                            <IconSquarePlus font-size={16} />
-                        </button>
-                    {/if}
-                </div>
-
-                {#if $spaceOpenState.get(space.id) || false}
-                    <div class="tw-flex tw-flex-col tw-overflow-auto">
-                        {#each roomList as room (room)}
-                            <Room {room} />
-                        {/each}
-                        {#if roomList.length === 0}
-                            <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
-                        {/if}
-                    </div>
-                {/if}
+            {#each $roomFolders as rootRoomFolder  (rootRoomFolder.id)}
+                <RoomFolder bind:isOpen={isFoldersOpen[rootRoomFolder.id]} name={rootRoomFolder.name} id={rootRoomFolder.id}  folders={rootRoomFolder.folders} rooms={rootRoomFolder.rooms} isGuest={$isGuest}/>
             {/each}
         {/if}
         <div class="tw-flex tw-justify-between">
@@ -255,6 +218,7 @@
             </button>
         </div>
     </div>
+
 {/if}
 {#if $selectedRoom !== undefined}
     <RoomTimeline room={$selectedRoom} />

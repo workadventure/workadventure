@@ -76,6 +76,15 @@ export type ChatMessageContent = { body: string; url: string | undefined };
 export const historyVisibilityOptions = ["world_readable", "joined", "invited"] as const;
 export type historyVisibility = (typeof historyVisibilityOptions)[number];
 
+export interface RoomFolder {
+    id : string;
+    name: Readable<string>;
+    rooms : Readable<ChatRoom[]>;
+    folders : Readable<RoomFolder[]>;
+    loadRoomsAndFolderPromise : Promise<void>;
+}
+
+
 export interface CreateRoomOptions {
     name?: string;
     visibility?: "private" | "public";
@@ -97,7 +106,8 @@ export interface ChatConnectionInterface {
     directRooms: Readable<ChatRoom[]>;
     rooms: Readable<ChatRoom[]>;
     invitations: Readable<ChatRoom[]>;
-    roomBySpaceRoom: Readable<Map<ChatSpaceRoom | undefined, ChatRoom[]>>;
+    roomFolders: Readable<RoomFolder[]>;
+    roomWithoutFolder : Readable<ChatRoom[]>;
     createRoom: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string }>;
     createDirectRoom(userChatId: string): Promise<ChatRoom | undefined>;
     getDirectRoomFor(uuserChatId: string): ChatRoom | undefined;

@@ -8,11 +8,10 @@ import {
     IRoomDirectoryOptions,
     MatrixClient,
     MatrixError,
+    MatrixEvent,
     PendingEventOrdering,
     Room,
     RoomEvent,
-    RoomState,
-    RoomStateEvent,
     SyncState,
     Visibility,
 } from "matrix-js-sdk";
@@ -22,7 +21,6 @@ import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import {
     ChatConnectionInterface,
     ChatRoom,
-    ChatSpaceRoom,
     Connection,
     ConnectionStatus,
     CreateRoomOptions,
@@ -30,6 +28,7 @@ import {
 import { selectedRoom } from "../../Stores/ChatStore";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 import { MatrixSecurity, matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity";
+import { MatrixRoomFolder } from "./MatrixRoomFolder";
 
 export const defaultWoka =
     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAAdCAYAAABBsffGAAAB/ElEQVRIia1WMW7CQBC8EAoqFy74AD1FqNzkAUi09DROwwN4Ag+gMQ09dcQXXNHQIucBPAJFc2Iue+dd40QZycLc7c7N7d7u+cU9wXw+ryyL0+n00eU9tCZIOp1O/f/ZbBbmzuczX6uuRVTlIAYpCSeTScumaZqw0OVyURd47SIGaZ7n6s4wjmc0Grn7/e6yLFtcr9dPaaOGhcTEeDxu2dxut2hXUJ9ioKmW0IidMg6/NPmD1EmqtojTBWAvE26SW8r+YhfIu87zbyB5BiRerVYtikXxXuLRuK058HABMyz/AX8UHwXgV0NRaEXzDKzaw+EQCioo1yrsLfvyjwZrTvK0yp/xh/o+JwbFhFYgFRNqzGEIB1ZhH2INkXJZoShn2WNSgJRNS/qoYSHxer1+qkhChnC320ULRI1LEsNhv99HISBkLmhP/7L8OfqhiKC6SzEJtSTLHMkGFhK6XC79L89rmtC6rv0YfjXV9COPDwtVQxEc2ZflIu7R+WADQrkA7eCH5BdFwQRXQ8bKxXejeWFoYZGCQM7Yh7BAkcw0DEnEEPHhbjBPQfCDvwzlEINlWZq3OAiOx2O0KwAKU8gehXfzu2Wz2VQMTXqCeLZZSNvtVv20MFsu48gQpDvjuHYxE+ZHESBPSJ/x3sqBvhe0hc5vRXkfypBY4xGcc9+lcFxartG6LgAAAABJRU5ErkJggg==";
@@ -39,8 +38,8 @@ export enum INTERACTIVE_AUTH_PHASE {
     PRE_AUTH = 1,
     POST_AUTH,
 }
-
 export class MatrixChatConnection implements ChatConnectionInterface {
+    //TODO : delete useless properties after refacto
     private readonly roomList: MapStore<string, ChatRoom>;
     private client!: MatrixClient;
     connectionStatus: Writable<ConnectionStatus>;
@@ -49,7 +48,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     rooms: Readable<ChatRoom[]>;
     isEncryptionRequiredAndNotSet: Writable<boolean>;
     isGuest: Writable<boolean> = writable(true);
-    roomBySpaceRoom: Readable<Map<ChatSpaceRoom | undefined, ChatRoom[]>>;
+    roomFolders: Writable<MatrixRoomFolder[]> = writable([]);
+    roomWithoutFolder : Writable<MatrixChatRoom[]> = writable([]);
 
     constructor(
         private connection: Connection,
@@ -75,49 +75,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             );
         });
 
-        this.roomBySpaceRoom = derived(
-            [this.roomList],
-            ([roomList]) => {
-                const roomWithoutSpace: ChatRoom[] = [];
-
-                const roomBySpaceRoom = Array.from(roomList.values()).reduce((acc, currentSpace) => {
-                    const listOfParentSpace =
-                        this.client
-                            .getRoom(currentSpace.id)
-                            ?.getLiveTimeline()
-                            ?.getState(Direction.Forward)
-                            ?.getStateEvents("m.space.parent")
-                            .reduce((acc, cur) => {
-                                const spaceRoomID = cur.getStateKey();
-                                if (spaceRoomID) acc.push(spaceRoomID);
-                                return acc;
-                            }, [] as string[]) || [];
-
-                    listOfParentSpace.forEach((parentSpace) => {
-                        const oldParentSpaceRoomList = acc.get(parentSpace) || [];
-                        acc.set(parentSpace, [...oldParentSpaceRoomList, currentSpace]);
-                    });
-
-                    if (listOfParentSpace.length === 0) {
-                        roomWithoutSpace.push(currentSpace);
-                    }
-
-                    return acc;
-                }, new Map());
-
-                const convertedMap = new Map();
-                roomBySpaceRoom.forEach((roomList, spaceID) => {
-                    const room = this.client.getRoom(spaceID);
-                    if (room) {
-                        convertedMap.set(new MatrixChatRoom(room), roomList);
-                    }
-                });
-
-                convertedMap.set(undefined, roomWithoutSpace);
-                return convertedMap;
-            },
-            new Map()
-        );
+        // TODO : pas ouf de set un writable dans un derived ?? avantage 1 boucle sur roomlist
 
         this.isEncryptionRequiredAndNotSet = this.matrixSecurity.isEncryptionRequiredAndNotSet;
 
@@ -128,6 +86,17 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         })().catch((error) => {
             console.error(error);
         });
+    }
+
+    private getParentRoomID(room: Room) : string[] {
+        return (room.getLiveTimeline()
+            .getState(Direction.Forward)
+            ?.getStateEvents("m.space.parent")||[])
+            .reduce((acc,currentMatrixEvent)=>{
+                const parentID = currentMatrixEvent.getStateKey();
+                if(parentID) acc.push(parentID);
+                return acc;
+            },[] as string[]);
     }
 
     async startMatrixClient() {
@@ -151,7 +120,51 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.client.on(ClientEvent.Room, this.onClientEventRoom.bind(this));
         this.client.on(ClientEvent.DeleteRoom, this.onClientEventDeleteRoom.bind(this));
         this.client.on(RoomEvent.MyMembership, this.onRoomEventMembership.bind(this));
-        this.client.on(RoomStateEvent.Update, this.onRoomStateEventUpdate.bind(this));
+        //this.client.on(RoomStateEvent.Update, this.onRoomStateEventUpdate.bind(this));
+        this.client.on("RoomState.events",async (event :MatrixEvent)=>{
+            const eventType = event.getType();
+            if (eventType==="m.space.child") {
+                const roomID = event.getStateKey(); // get id of new child 
+                const room = this.client.getRoom(roomID);
+                if(room && roomID){
+                    //TODO : rename variable
+                    this.roomList.delete(roomID); //delete the room of the root roolist and put him in his space 
+                    const parentID = event.getRoomId();
+                    if(!parentID){
+                       return; 
+                    }
+
+                    const parentroom = this.client.getRoom(parentID); //get parent room
+                    if(!parentroom){
+                        return;
+                    }
+                    
+                    let searchParentResult = false; 
+                    for(const folder of get(this.roomFolders)){
+                        if(folder.id===parentID){
+                            folder.rooms.update((rooms)=>{
+                                return [...rooms,new MatrixChatRoom(room)]
+                            }) 
+                        }
+                        const node = folder.getNode(parentID);
+
+                        if(node && node instanceof  MatrixRoomFolder){
+                            node.deleteNode(node.id);
+                            node.rooms.update((rooms)=>{
+                                searchParentResult=true;
+                                return [...rooms,new MatrixChatRoom(room)]
+                            })
+
+                            this.roomList.delete(roomID);
+                            break;
+                        }
+                    }
+                    
+                }
+               
+            }
+        })
+
 
         await this.client.store.startup();
         await this.client.initRustCrypto();
@@ -162,45 +175,131 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         });
     }
 
-    private onRoomStateEventUpdate(event: RoomState) {
-        const roomID = event.roomId;
-        const room = this.client.getRoom(roomID);
-
-        if (room && this.roomList.has(roomID)) {
-            this.roomList.set(roomID, new MatrixChatRoom(room));
-        }
+    private onClientEventRoom(room: Room) {
+        this.addRoomOrFolder(room)
     }
 
-    private onClientEventRoom(room: Room) {
+    private addRoomOrFolder(room: Room): void {
         const { roomId } = room;
-        const existingMatrixChatRoom = this.roomList.get(roomId);
+    
+        // Check if the room already exists in the room list
+        if (this.roomList.has(roomId)) {
+            console.warn("Room already exists");
+            return;
+        }
+    
+        // Check if the room already exists in any folder
+        const existingRoomOrFolder = this.findRoomOrFolder(roomId);
 
-        if (existingMatrixChatRoom !== undefined) {
-            console.warn("room already exist");
+        if (existingRoomOrFolder) {
+            console.warn("Room already exists in a folder");
             return;
         }
 
-        const matrixRoom = new MatrixChatRoom(room);
+        if(room.getMyMembership()===KnownMembership.Invite){
+            this.createAndAddNewRoom(room);
+            return;
+        }
+        if(room.getMyMembership()===KnownMembership.Ban || room.getMyMembership()===KnownMembership.Leave){
+            return;
+        }
 
-        this.roomList.set(matrixRoom.id, matrixRoom);
+        const isSpaceRoom = room.isSpaceRoom();
+        const parentRoomsIDs = this.getParentRoomID(room);
+
+        if (parentRoomsIDs.length > 0) {
+            const isAdded = this.addRoomToParentFolder(room, parentRoomsIDs[0], isSpaceRoom);
+
+            if(!isAdded && !isSpaceRoom){
+                this.roomList.set(roomId,new MatrixChatRoom(room))
+            }
+        } 
+        else if (isSpaceRoom) {
+            this.createAndAddNewFolder(room);
+        } 
+        else {
+            this.createAndAddNewRoom(room);
+        }
     }
 
+    private findRoomOrFolder(roomId: string): MatrixRoomFolder | MatrixChatRoom | undefined {
+        const folders = get(this.roomFolders);
+        for (const folder of folders) {
+            const roomOrFolder = folder.getNode(roomId);
+            if (roomOrFolder) {
+                return roomOrFolder;
+            }
+        }
+        return undefined;
+    }
+    
+    private addRoomToParentFolder(room: Room, parentId: string, isSpaceRoom: boolean): boolean {
+        for (const folder of get(this.roomFolders)) {
+            const parentNode = folder.getNode(parentId);
+            if (parentNode && parentNode instanceof MatrixRoomFolder) {
+                if (isSpaceRoom) {
+                    parentNode.folders.update((folders) => [...folders, new MatrixRoomFolder(room)]);
+                }else{
+                    parentNode.rooms.update((rooms) => [...rooms,new MatrixChatRoom(room)]);
+                }
+                return true;
+                break;
+            }
+        }
+
+        return false
+    }
+    
+    private createAndAddNewFolder(room: Room): void {
+        const newFolder = new MatrixRoomFolder(room);
+    
+        this.roomFolders.update((folders) => [...folders, newFolder]);
+
+        newFolder.getRoomsIdInNode().then((roomIDs)=>{
+            roomIDs.forEach((roomID)=>{
+                this.roomList.delete(roomID)
+            })
+        })
+    }
+    
+    private createAndAddNewRoom(room: Room): void {
+        const newRoom = new MatrixChatRoom(room);
+    
+        this.roomList.set(newRoom.id, newRoom);
+    }
     private onClientEventDeleteRoom(roomId: string) {
-        this.roomList.delete(roomId);
+        this.deleteRoom(roomId);
+    }
+
+    private deleteRoom(roomId: string) {
+        const isRootRoom = this.roomList.delete(roomId);
+        if(isRootRoom){
+            return;
+        };
+        const folders =get(this.roomFolders);
+        const isRootFolder =folders.some((folder)=>{
+            return folder.id === roomId
+        }) ; 
+
+        if(isRootFolder){
+            return;
+        }
+
+        folders.forEach((folder) => {
+            folder.deleteNode(roomId); 
+        });
+        const currentRoom = get(selectedRoom)?.id;
+        if (currentRoom && currentRoom === roomId) selectedRoom.set(undefined);
     }
 
     private onRoomEventMembership(room: Room, membership: string, prevMembership: string | undefined) {
         const { roomId } = room;
-        const existingMatrixChatRoom = this.roomList.has(roomId);
+        let existingMatrixChatRoom = this.roomList.has(roomId) || get(this.roomFolders).some((folder)=>folder.id===roomId) ;
+
         if (membership !== prevMembership && existingMatrixChatRoom) {
             if (membership === KnownMembership.Join) {
-                this.roomList.set(roomId, new MatrixChatRoom(room));
-                return;
-            }
-            if (membership === KnownMembership.Leave || membership === KnownMembership.Ban) {
                 this.roomList.delete(roomId);
-                const currentRoom = get(selectedRoom)?.id;
-                if (currentRoom && currentRoom === roomId) selectedRoom.set(undefined);
+                this.addRoomOrFolder(room);
                 return;
             }
 
@@ -210,6 +309,12 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 return;
             }
         }
+
+        if (membership === KnownMembership.Leave || membership === KnownMembership.Ban) {
+            this.deleteRoom(roomId);
+            return;
+        }
+
     }
 
     //TODO createOptions only on matrix size
@@ -224,10 +329,25 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             const result = await this.client.createRoom(
                 this.mapCreateRoomOptionsToMatrixCreateRoomOptions(roomOptions)
             );
-
+            await new Promise<void>((resolve, _) => {
+                this.client.once(ClientEvent.Sync, (state) => {
+                    if (state === SyncState.Syncing) {
+                        resolve();
+                    }
+                });
+            });
             if (roomOptions.parentSpaceID) {
                 this.addRoomToSpace(roomOptions.parentSpaceID, result.room_id);
+                await new Promise<void>((resolve, _) => {
+                    this.client.once(ClientEvent.Sync, (state) => {
+                        if (state === SyncState.Syncing) {
+                            resolve();
+                        }
+                    });
+                });
             }
+
+
             return result;
         } catch (error) {
             throw this.handleMatrixError(error);
@@ -443,13 +563,14 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             .sendStateEvent(
                 spaceRoomId,
                 //@ts-ignore
-                "m.space.child",
+                EventType.SpaceChild,
                 {
                     via: [this.client.getDomain()], // The domain of the homeserver to be used to join the room
                 },
                 childRoomId
             )
             .catch((error) => console.error("Error adding room to space : ", error));
+
     }
 
     private async addDMRoomInAccountData(userId: string, roomId: string) {
