@@ -1853,8 +1853,9 @@ export class GameScene extends DirtyScene {
                 if (error && error?.type === "reconnecting") errorScreenStore.delete();
                 //this.scene.stop(ReconnectingSceneName);
 
+                // FIXME this is a hack because the position is set before that area properties are loaded
                 //init user position and play trigger to check layers properties
-                this.gameMapFrontWrapper.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
+                //this.gameMapFrontWrapper.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
 
                 // Init layer change listener
                 this.gameMapFrontWrapper.onEnterLayer((layers) => {
@@ -1903,6 +1904,12 @@ export class GameScene extends DirtyScene {
 
                 gameSceneStore.set(this);
                 gameSceneIsLoadedStore.set(true);
+
+                // FIXME this is a hack because the position is set before that area properties are loaded
+                // HotFix to trigger area property when user spown in area with proprety and applyies it
+                setTimeout(() => {
+                    this.gameMapFrontWrapper.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
+                }, 500);
             })
             .catch((e) => console.error(e));
     }
