@@ -858,6 +858,7 @@ export class GameScene extends DirtyScene {
                 this.hide(false);
                 this.sceneReadyToStartDeferred.resolve();
                 this.initializeAreaManager();
+                this.gameMapFrontWrapper.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
             })
             .catch((e) =>
                 console.error(
@@ -1852,9 +1853,6 @@ export class GameScene extends DirtyScene {
                 const error = get(errorScreenStore);
                 if (error && error?.type === "reconnecting") errorScreenStore.delete();
                 //this.scene.stop(ReconnectingSceneName);
-
-                //init user position and play trigger to check layers properties
-                this.gameMapFrontWrapper.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
 
                 // Init layer change listener
                 this.gameMapFrontWrapper.onEnterLayer((layers) => {
