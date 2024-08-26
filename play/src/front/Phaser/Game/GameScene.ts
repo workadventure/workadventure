@@ -954,6 +954,7 @@ export class GameScene extends DirtyScene {
     }
 
     public playSound(sound: string) {
+        if (!statusChanger.allowNotificationSound()) return;
         this.sound.play(sound, {
             volume: 0.2,
         });
@@ -2105,10 +2106,10 @@ export class GameScene extends DirtyScene {
             }
 
             if (newPeerNumber > oldPeersNumber) {
-                if (statusChanger.allowNotificationSound()) this.playSound("audio-webrtc-in");
+                this.playSound("audio-webrtc-in");
                 faviconManager.pushNotificationFavicon();
             } else if (newPeerNumber < oldPeersNumber) {
-                if (statusChanger.allowNotificationSound()) this.playSound("audio-webrtc-out");
+                this.playSound("audio-webrtc-out");
                 faviconManager.pushOriginalFavicon();
             }
 

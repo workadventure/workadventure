@@ -1,9 +1,10 @@
 import { Subscription } from "rxjs";
 import { get } from "svelte/store";
+import { AvailabilityStatus } from "@workadventure/messages";
 import { RoomConnection } from "../Connection/RoomConnection";
 import { ProximityChatRoom } from "../Chat/Connection/Proximity/ProximityChatRoom";
 import { isAChatRoomIsVisible, navChat, selectedRoom } from "../Chat/Stores/ChatStore";
-import { mediaStreamConstraintsStore } from "../Stores/MediaStore";
+import { availabilityStatusStore, mediaStreamConstraintsStore } from "../Stores/MediaStore";
 import { chatVisibilityStore } from "../Stores/ChatStore";
 
 export class ProximitySpaceManager {
@@ -19,7 +20,12 @@ export class ProximitySpaceManager {
             if (!isAChatRoomIsVisible()) {
                 selectedRoom.set(proximityChatRoom);
                 navChat.set("chat");
-                if (!mediaStreamConstraints.audio && !mediaStreamConstraints.video) {
+                if (
+                    !mediaStreamConstraints.audio &&
+                    !mediaStreamConstraints.video &&
+                    (get(availabilityStatusStore) === AvailabilityStatus.ONLINE ||
+                        get(availabilityStatusStore) === AvailabilityStatus.AWAY)
+                ) {
                     chatVisibilityStore.set(true);
                 }
             }
