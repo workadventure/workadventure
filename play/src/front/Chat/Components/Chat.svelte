@@ -61,7 +61,7 @@
     $: isGuest = chat.isGuest;
 </script>
 
-<div class="tw-flex tw-flex-col tw-gap-2 tw-h-full ">
+<div class="tw-flex tw-flex-col tw-gap-2 tw-h-full">
     <div id="chatModal" class="tw-absolute tw-to-50%" />
     <div class="tw-flex tw-flex-col tw-gap-2">
         <nav class="nav">
@@ -89,15 +89,12 @@
             </div>
         </div>
     </div>
-    <div
-        class="tw-flex tw-flex-col tw-gap-2 tw-flex-1 tw-min-h-0"
-        class:!tw-flex-row={sideBarWidth > INITIAL_SIDEBAR_WIDTH * 2 && $navChat === "chat"}
-    >
+    <div class="tw-flex tw-flex-col tw-gap-2 !tw-flex-1 tw-min-h-0">
         {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}
             <button
                 data-testid="restoreEncryptionButton"
                 on:click|stopPropagation={initChatConnectionEncryption}
-                class="tw-text-red-500 tw-flex tw-gap-1 tw-border tw-border-solid tw-border-red-500 tw-rounded-md tw-justify-center"
+                class="tw-text-red-500 tw-flex tw-gap-1 tw-border tw-border-solid tw-border-red-500 tw-rounded-md tw-justify-center !tw-flex-shrink !tw-flex-grow-0 !tw-basis-auto"
             >
                 <IconShieldLock /> {$LL.chat.e2ee.encryptionNotConfigured()}</button
             >
@@ -112,5 +109,3 @@
         {/if}
     </div>
 </div>
-
-<audio id="newMessageSound" src="./static/new-message.mp3" style="width: 0;height: 0;opacity: 0" />

@@ -123,6 +123,7 @@ export interface ChatConnectionInterface {
     isEncryptionRequiredAndNotSet: Readable<boolean>;
     initEndToEndEncryption(): Promise<void>;
     isGuest: Readable<boolean>;
+    hasUnreadMessages: Readable<boolean>;
 }
 
 export type Connection = Pick<RoomConnection, "queryChatMembers" | "emitPlayerChatID" | "emitBanPlayerMessage">;

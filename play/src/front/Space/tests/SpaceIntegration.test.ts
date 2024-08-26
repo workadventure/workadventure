@@ -179,7 +179,7 @@ describe("", () => {
 
         const userFromMessage = {
             id: 1,
-            name: "",
+            name: "testName",
             playUri: "",
             color: "",
             characterTextures: [],
@@ -230,6 +230,8 @@ describe("", () => {
 
         expect(subscriber).toHaveBeenCalledTimes(2);
         expect(subscriber).toHaveBeenLastCalledWith("new@id.fr");
+
+        expect(get(spaceFilter.usersStore).get(userFromMessage.id)?.name).toBe("testName");
 
         unsubscriber();
     });

@@ -6,6 +6,7 @@
     import LL from "../../../../i18n/i18n-svelte";
     import Message from "./Message.svelte";
     import MessageInput from "./MessageInput.svelte";
+    import MessageSystem from "./MessageSystem.svelte";
     import { IconArrowLeft } from "@wa-icons";
 
     export let room: ChatRoom;
@@ -74,7 +75,7 @@
     $: roomName = room?.name;
 </script>
 
-<div class="tw-flex tw-flex-col tw-flex-1 tw-h-full">
+<div class="tw-flex tw-flex-col tw-flex-1 tw-h-full tw-w-full tw-pl-2">
     {#if room !== undefined}
         <div class="tw-flex tw-items-center">
             <button class="back-roomlist tw-p-0 tw-m-0" on:click={goBackAndClearSelectedChatMessage}>
@@ -106,7 +107,11 @@
                 {/if}
                 {#each $messages as message (message.id)}
                     <li data-event-id={message.id}>
-                        <Message {message} reactions={$messageReaction.get(message.id)} />
+                        {#if message.type === "outcoming" || message.type === "incoming"}
+                            <MessageSystem {message} />
+                        {:else}
+                            <Message {message} reactions={$messageReaction.get(message.id)} />
+                        {/if}
                     </li>
                 {/each}
             </ul>

@@ -2,6 +2,7 @@ import { Subject } from "rxjs";
 import { availabilityStatusToJSON } from "@workadventure/messages";
 import { BanEvent, ChatEvent, ChatMessage, KLAXOON_ACTIVITY_PICKER_EVENT } from "@workadventure/shared-utils";
 import { StartWritingEvent, StopWritingEvent } from "@workadventure/shared-utils/src/Events/WritingEvent";
+import { get } from "svelte/store";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
 import {
     additionnalButtonsMenu,
@@ -484,6 +485,11 @@ class IframeListener {
                         modalIframeStore.set(iframeEvent.data);
                         modalVisibilityStore.set(true);
                     } else if (iframeEvent.type == "closeModal") {
+                        // Get modal and send close event to trigger close event
+                        const modalIframe = get(modalIframeStore);
+                        if (modalIframe) iframeListener.sendModalCloseTriggered(modalIframe);
+
+                        // Close modal
                         modalVisibilityStore.set(false);
                         modalIframeStore.set(null);
                     } else if (iframeEvent.type == "addButtonActionBar") {

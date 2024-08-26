@@ -48,6 +48,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     rooms: Readable<ChatRoom[]>;
     isEncryptionRequiredAndNotSet: Writable<boolean>;
     isGuest: Writable<boolean> = writable(true);
+    hasUnreadMessages: Readable<boolean>;
     roomFolders: Writable<MatrixRoomFolder[]> = writable([]);
     roomWithoutFolder : Writable<MatrixChatRoom[]> = writable([]);
 
@@ -75,7 +76,21 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             );
         });
 
-        // TODO : pas ouf de set un writable dans un derived ?? avantage 1 boucle sur roomlist
+        this.hasUnreadMessages = derived(
+            this.roomList,
+            ($roomList, set) => {
+                // Create a listener for each `hasUnreadMessages` store
+                const unsubscribes = Array.from($roomList.values()).map((room) =>
+                    room.hasUnreadMessages.subscribe(() => {
+                        set(Array.from($roomList.values()).some((someRoom) => get(someRoom.hasUnreadMessages)));
+                    })
+                );
+
+                // Cleanup function
+                return () => unsubscribes.forEach((unsub) => unsub());
+            },
+            false
+        );
 
         this.isEncryptionRequiredAndNotSet = this.matrixSecurity.isEncryptionRequiredAndNotSet;
 
@@ -121,7 +136,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.client.on(ClientEvent.DeleteRoom, this.onClientEventDeleteRoom.bind(this));
         this.client.on(RoomEvent.MyMembership, this.onRoomEventMembership.bind(this));
         //this.client.on(RoomStateEvent.Update, this.onRoomStateEventUpdate.bind(this));
-        this.client.on("RoomState.events",async (event :MatrixEvent)=>{
+        this.client.on("RoomState.events",(event :MatrixEvent)=>{
             const eventType = event.getType();
             if (eventType==="m.space.child") {
                 const roomID = event.getStateKey(); // get id of new child 
@@ -139,7 +154,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                         return;
                     }
                     
-                    let searchParentResult = false; 
+                   
                     for(const folder of get(this.roomFolders)){
                         if(folder.id===parentID){
                             folder.rooms.update((rooms)=>{
@@ -151,7 +166,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                         if(node && node instanceof  MatrixRoomFolder){
                             node.deleteNode(node.id);
                             node.rooms.update((rooms)=>{
-                                searchParentResult=true;
                                 return [...rooms,new MatrixChatRoom(room)]
                             })
 
@@ -255,7 +269,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     
         this.roomFolders.update((folders) => [...folders, newFolder]);
 
-        newFolder.getRoomsIdInNode().then((roomIDs)=>{
+        //TODO : delete void and handle promise ...
+        void newFolder.getRoomsIdInNode().then((roomIDs)=>{
             roomIDs.forEach((roomID)=>{
                 this.roomList.delete(roomID)
             })

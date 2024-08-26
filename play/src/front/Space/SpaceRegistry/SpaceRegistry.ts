@@ -63,7 +63,10 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                     throw new Error("updateSpaceUserMessage is missing a user or a filterName or an updateMask");
                 }
 
-                this.spaces.get(message.spaceName)?.getSpaceFilter(message.filterName).updateUserData(message.user);
+                this.spaces
+                    .get(message.spaceName)
+                    ?.getSpaceFilter(message.filterName)
+                    .updateUserData(message.user, message.updateMask);
             }
         );
 
