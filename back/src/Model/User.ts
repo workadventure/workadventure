@@ -338,7 +338,7 @@ export class User implements Movable, CustomJsonReplacerInterface {
     /**
      * Due to race conditions, it is possible that the first call to "write" is not a "roomJoinedMessage".
      * If this is the case, the message is lost on the front side. This method is putting back the messages
-     * in the correct order. If the first message is not a "roomJoinedMessage", it is buffered until the 
+     * in the correct order. If the first message is not a "roomJoinedMessage", it is buffered until the
      * "roomJoinedMessage" message is received.
      */
     public write(chunk: NonNullable<ServerToClientMessage["message"]>, cb?: (...args: unknown[]) => unknown): boolean {
