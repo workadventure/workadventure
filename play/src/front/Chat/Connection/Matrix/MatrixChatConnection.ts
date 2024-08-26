@@ -70,7 +70,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 // Create a listener for each `hasUnreadMessages` store
                 const unsubscribes = Array.from($roomList.values()).map((room) =>
                     room.hasUnreadMessages.subscribe(() => {
-                        set(Array.from($roomList.values()).some((room) => get(room.hasUnreadMessages)));
+                        set(Array.from($roomList.values()).some((someRoom) => get(someRoom.hasUnreadMessages)));
                     })
                 );
 
