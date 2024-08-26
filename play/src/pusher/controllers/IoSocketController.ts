@@ -804,7 +804,8 @@ export class IoSocketController {
                             break;
                         }
                         case "updateChatIdMessage": {
-                            socketManager.handleUpdateChatId(
+                            await socketManager.handleUpdateChatId(
+                                socket,
                                 message.message.updateChatIdMessage.email,
                                 message.message.updateChatIdMessage.chatId
                             );
