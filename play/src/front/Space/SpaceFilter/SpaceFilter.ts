@@ -2,6 +2,7 @@ import merge from "lodash/merge";
 import { PrivateSpaceEvent, SpaceFilterMessage, SpaceUser } from "@workadventure/messages";
 import { Observable, Subject, Subscriber } from "rxjs";
 import { Readable, get, readable, writable, Writable } from "svelte/store";
+import { applyFieldMask } from "protobuf-fieldmask";
 import { CharacterLayerManager } from "../../Phaser/Entity/CharacterLayerManager";
 import { SpaceInterface } from "../SpaceInterface";
 import { RoomConnectionForSpacesInterface } from "../SpaceRegistry/SpaceRegistry";
@@ -140,15 +141,14 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
         }
     }
 
-    updateUserData(newData: Partial<SpaceUser>): void {
+    updateUserData(newData: SpaceUser, updateMask: string[]): void {
         if (!newData.id && newData.id !== 0) return;
 
         const userToUpdate = this._users.get(newData.id);
 
         if (!userToUpdate) return;
 
-        //TODO : Use fieldMask to update user
-        merge(userToUpdate, newData);
+        merge(userToUpdate, applyFieldMask(newData, updateMask));
 
         for (const key in newData) {
             // We allow ourselves a not 100% exact type cast here.

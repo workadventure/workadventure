@@ -39,7 +39,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     rooms: Readable<ChatRoom[]>;
     isEncryptionRequiredAndNotSet: Writable<boolean>;
     isGuest: Writable<boolean> = writable(true);
-
+    hasUnreadMessages: Readable<boolean>;
     constructor(
         private connection: Connection,
         clientPromise: Promise<MatrixClient>,
@@ -63,6 +63,22 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 (room) => room.myMembership === KnownMembership.Join && room.type === "multiple"
             );
         });
+
+        this.hasUnreadMessages = derived(
+            this.roomList,
+            ($roomList, set) => {
+                // Create a listener for each `hasUnreadMessages` store
+                const unsubscribes = Array.from($roomList.values()).map((room) =>
+                    room.hasUnreadMessages.subscribe(() => {
+                        set(Array.from($roomList.values()).some((someRoom) => get(someRoom.hasUnreadMessages)));
+                    })
+                );
+
+                // Cleanup function
+                return () => unsubscribes.forEach((unsub) => unsub());
+            },
+            false
+        );
 
         this.isEncryptionRequiredAndNotSet = this.matrixSecurity.isEncryptionRequiredAndNotSet;
 

@@ -30,6 +30,8 @@ export class User implements Movable, CustomJsonReplacerInterface {
     private _following: User | undefined;
     private followedBy: Set<User> = new Set<User>();
     public disconnected = false;
+    private isRoomJoinedMessage = false;
+    private pendingMessages: NonNullable<ServerToClientMessage["message"]>[] = [];
 
     public constructor(
         public id: number,
@@ -331,5 +333,49 @@ export class User implements Movable, CustomJsonReplacerInterface {
             return group ? `group ${group.getId()}` : "no group";
         }
         return undefined;
+    }
+
+    /**
+     * Due to race conditions, it is possible that the first call to "write" is not a "roomJoinedMessage".
+     * If this is the case, the message is lost on the front side. This method is putting back the messages
+     * in the correct order. If the first message is not a "roomJoinedMessage", it is buffered until the
+     * "roomJoinedMessage" message is received.
+     */
+    public write(chunk: NonNullable<ServerToClientMessage["message"]>, cb?: (...args: unknown[]) => unknown): boolean {
+        //TODO : handle socket.write return false
+        if (this.isRoomJoinedMessage) {
+            return this.socket.write(
+                {
+                    message: chunk,
+                },
+                cb
+            );
+        }
+
+        if (chunk.$case === "roomJoinedMessage") {
+            this.isRoomJoinedMessage = true;
+
+            this.socket.write(
+                {
+                    message: chunk,
+                },
+                cb
+            );
+
+            this.pendingMessages.forEach((message) => {
+                this.socket.write(
+                    {
+                        message,
+                    },
+                    cb
+                );
+            });
+
+            this.pendingMessages = [];
+            return true;
+        }
+
+        this.pendingMessages.push(chunk);
+        return true;
     }
 }

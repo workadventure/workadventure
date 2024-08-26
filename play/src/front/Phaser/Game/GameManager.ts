@@ -211,7 +211,7 @@ export class GameManager {
             this.currentGameSceneName == undefined ? "default" : this.currentGameSceneName
         );
         if (!(gameScene instanceof GameScene)) {
-            throw new Error("Not the Game Scene");
+            throw new GameSceneNotFoundError("Not the Game Scene");
         }
         return gameScene;
     }
@@ -222,3 +222,9 @@ export class GameManager {
 }
 
 export const gameManager = new GameManager();
+
+export class GameSceneNotFoundError extends Error {
+    constructor(message: string) {
+        super(message);
+    }
+}
