@@ -1400,12 +1400,8 @@ export class SocketManager implements ZoneEventListener {
         };
     }
 
-    handleUpdateChatId(email: string, chatId: string): void {
-        try {
-            adminService.updateChatId(email, chatId);
-        } catch (e) {
-            console.error("SocketManager => handleUpdateChatId => error while updating chat id", e);
-        }
+    handleUpdateChatId(client: Socket, email: string, chatId: string): Promise<void> {
+        return adminService.updateChatId(email, chatId, client.getUserData().roomId);
     }
 
     // handle the public event for proximity message
