@@ -101,8 +101,7 @@ export interface AdminInterface {
         playUri: string,
         name: string,
         message: string,
-        byUserUuid: string,
-        byUserEmail?: string
+        byUserUuid: string
     ): Promise<boolean>;
 
     getTagsList(roomUrl: string): Promise<string[]>;
