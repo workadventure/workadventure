@@ -24,6 +24,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         businessCard: "Carte de visite",
         sendMessage: "Envoyer un message",
     },
+    accept: "Accepter",
+    decline: "Refuser",
     connecting: "Connexion au serveur ...",
     waitingInit: "Attente de l'initialisation du serveur ...",
     waitingData: "En attentes des informations de l'utilisateur ...",

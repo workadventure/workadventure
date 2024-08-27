@@ -23,6 +23,8 @@ const chat: BaseTranslation = {
         businessCard: "Business Card",
         sendMessage: "Send Message",
     },
+    accept: "Accept",
+    decline: "Decline",
     connecting: "Connecting to server ...",
     waitingInit: "Waiting for server initialization ...",
     waitingData: "Waiting user data ...",

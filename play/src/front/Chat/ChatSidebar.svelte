@@ -114,17 +114,13 @@
 
     .chatWindow {
         color: white;
-        //display: flex;
-        //flex-direction: column;
         position: absolute !important;
         top: 0;
         min-width: 335px !important;
         width: 335px;
-        height: 100vh !important;
-        z-index: 2000;
         pointer-events: auto;
 
-        height: 100vh !important;
+        height: 100dvh !important;
         z-index: 2000;
         pointer-events: auto;
         .close-window {

@@ -13,6 +13,7 @@ import {
     RoomMemberEvent,
     TimelineWindow,
 } from "matrix-js-sdk";
+import * as Sentry from "@sentry/svelte";
 import { get, Writable, writable } from "svelte/store";
 import { MediaEventContent, MediaEventInfo } from "matrix-js-sdk/lib/@types/media";
 import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
@@ -422,12 +423,30 @@ export class MatrixChatRoom implements ChatRoom {
         }
     }
 
-    joinRoom(): void {
-        this.matrixRoom.client.joinRoom(this.id).catch((error) => console.error("Unable to join", error));
+    joinRoom(): Promise<void> {
+        return this.matrixRoom.client
+            .joinRoom(this.id)
+            .then(() => {
+                return Promise.resolve();
+            })
+            .catch((error) => {
+                Sentry.captureMessage("Failed to leave room");
+                console.error("Unable to join", error);
+                return Promise.reject(new Error("Failed to leave room"));
+            });
     }
 
-    leaveRoom(): void {
-        this.matrixRoom.client.leave(this.id).catch((error) => console.error("Unable to leave", error));
+    leaveRoom(): Promise<void> {
+        return this.matrixRoom.client
+            .leave(this.id)
+            .then(() => {
+                return Promise.resolve();
+            })
+            .catch((error) => {
+                Sentry.captureMessage("Failed to leave room");
+                console.error("Unable to leave", error);
+                return Promise.reject(new Error("Failed to leave room"));
+            });
     }
 
     private getMatrixRoomType(): "direct" | "multiple" {

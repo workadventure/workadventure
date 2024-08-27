@@ -35,8 +35,8 @@ export interface ChatRoom {
     myMembership: ChatRoomMembership;
     setTimelineAsRead: () => void;
     membersId: string[];
-    leaveRoom: () => void;
-    joinRoom: () => void;
+    leaveRoom: () => Promise<void>;
+    joinRoom: () => Promise<void>;
     hasPreviousMessage: Readable<boolean>;
     loadMorePreviousMessages: () => Promise<void>;
     isEncrypted: Readable<boolean>;
@@ -77,13 +77,12 @@ export const historyVisibilityOptions = ["world_readable", "joined", "invited"] 
 export type historyVisibility = (typeof historyVisibilityOptions)[number];
 
 export interface RoomFolder {
-    id : string;
+    id: string;
     name: Readable<string>;
-    rooms : Readable<ChatRoom[]>;
-    folders : Readable<RoomFolder[]>;
-    loadRoomsAndFolderPromise : Promise<void>;
+    rooms: Readable<ChatRoom[]>;
+    folders: Readable<RoomFolder[]>;
+    loadRoomsAndFolderPromise: Promise<void>;
 }
-
 
 export interface CreateRoomOptions {
     name?: string;
@@ -107,7 +106,7 @@ export interface ChatConnectionInterface {
     rooms: Readable<ChatRoom[]>;
     invitations: Readable<ChatRoom[]>;
     roomFolders: Readable<RoomFolder[]>;
-    roomWithoutFolder : Readable<ChatRoom[]>;
+    roomWithoutFolder: Readable<ChatRoom[]>;
     createRoom: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string }>;
     createDirectRoom(userChatId: string): Promise<ChatRoom | undefined>;
     getDirectRoomFor(uuserChatId: string): ChatRoom | undefined;

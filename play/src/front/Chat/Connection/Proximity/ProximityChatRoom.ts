@@ -237,10 +237,10 @@ export class ProximityChatRoom implements ChatRoom {
     setTimelineAsRead(): void {
         console.info("setTimelineAsRead => Method not implemented yet!");
     }
-    leaveRoom(): void {
+    leaveRoom(): Promise<void> {
         throw new Error("leaveRoom => Method not implemented.");
     }
-    joinRoom(): void {
+    joinRoom(): Promise<void> {
         throw new Error("joinRoom => Method not implemented.");
     }
     loadMorePreviousMessages(): Promise<void> {
