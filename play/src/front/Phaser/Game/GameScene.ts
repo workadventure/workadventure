@@ -858,7 +858,6 @@ export class GameScene extends DirtyScene {
                 this.hide(false);
                 this.sceneReadyToStartDeferred.resolve();
                 this.initializeAreaManager();
-                this.gameMapFrontWrapper.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
             })
             .catch((e) =>
                 console.error(

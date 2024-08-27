@@ -271,6 +271,7 @@ export class GameMapFrontWrapper {
         const gameMapAreas = this.getGameMap().getGameMapAreas();
         if (gameMapAreas !== undefined) {
             this.areasManager = new AreasManager(this.scene, gameMapAreas, userConnectedTags, userCanEdit);
+            gameMapAreas.triggerAreasChange(undefined, this.position);
         } else {
             console.error("Unable to load AreasManager because gameMapAreas is undefined");
         }
