@@ -1853,7 +1853,7 @@ export class GameScene extends DirtyScene {
                 const error = get(errorScreenStore);
                 if (error && error?.type === "reconnecting") errorScreenStore.delete();
                 //this.scene.stop(ReconnectingSceneName);
-
+                this.gameMapFrontWrapper.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
                 // Init layer change listener
                 this.gameMapFrontWrapper.onEnterLayer((layers) => {
                     layers.forEach((layer) => {
