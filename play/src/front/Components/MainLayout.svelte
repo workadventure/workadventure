@@ -40,6 +40,7 @@
     import { mapEditorAskToClaimPersonalAreaStore, mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
     import { externalPopupSvelteComponent } from "../Stores/Utils/externalSvelteComponentStore";
+    import { gameManager, GameSceneNotFoundError } from "../Phaser/Game/GameManager";
     import AudioManager from "./AudioManager/AudioManager.svelte";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
@@ -75,7 +76,7 @@
     import MainModal from "./Modal/MainModal.svelte";
 
     let mainLayout: HTMLDivElement;
-
+    let keyboardEventIsDisable = false;
     let isMobile = isMediaBreakpointUp("md");
     const resizeObserver = new ResizeObserver(() => {
         isMobile = isMediaBreakpointUp("md");
@@ -84,6 +85,43 @@
     onMount(() => {
         resizeObserver.observe(mainLayout);
     });
+
+    const handleFocusInEvent = (event: FocusEvent) => {
+        const target = event.target as HTMLElement | null;
+        if (
+            target &&
+            (["INPUT", "TEXTAREA"].includes(target.tagName) ||
+                (target.tagName === "DIV" && target.getAttribute("role") === "textbox"))
+        ) {
+            try {
+                gameManager.getCurrentGameScene().userInputManager.disableControls();
+                keyboardEventIsDisable = true;
+            } catch (error) {
+                if (error instanceof GameSceneNotFoundError) {
+                    keyboardEventIsDisable = false;
+                    return;
+                }
+                throw error;
+            }
+        }
+    };
+
+    const handleFocusOutEvent = () => {
+        if (!keyboardEventIsDisable) return;
+        try {
+            gameManager.getCurrentGameScene().userInputManager.restoreControls();
+            keyboardEventIsDisable = false;
+        } catch (error) {
+            if (error instanceof GameSceneNotFoundError) {
+                keyboardEventIsDisable = false;
+                return;
+            }
+            throw error;
+        }
+    };
+
+    document.addEventListener("focusin", handleFocusInEvent);
+    document.addEventListener("focusout", handleFocusOutEvent);
 </script>
 
 <!-- Components ordered by z-index -->
@@ -228,8 +266,6 @@
     {#if $notificationPermissionModalVisibility}
         <NotificationPermissionModal />
     {/if}
-    <!-- audio when user have a message TODO delete it with new chat -->
-    <audio id="newMessageSound" src="/resources/objects/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
 
     <Lazy
         on:onload={() => emoteDataStoreLoading.set(true)}

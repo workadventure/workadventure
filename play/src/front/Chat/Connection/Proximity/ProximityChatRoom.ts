@@ -19,11 +19,13 @@ import { iframeListener } from "../../../Api/IframeListener";
 import { SpaceInterface } from "../../../Space/SpaceInterface";
 import { SpaceRegistryInterface } from "../../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { chatVisibilityStore } from "../../../Stores/ChatStore";
-import { selectedRoom } from "../../Stores/ChatStore";
+import { isAChatRoomIsVisible, navChat, selectedRoom } from "../../Stores/ChatStore";
 import { SpaceFilterInterface, SpaceUserExtended } from "../../../Space/SpaceFilter/SpaceFilter";
 import { mapExtendedSpaceUserToChatUser } from "../../UserProvider/ChatUserMapper";
 import { SimplePeer } from "../../../WebRtc/SimplePeer";
 import { bindMuteEventsToSpace } from "../../../Space/Utils/BindMuteEvents";
+import { gameManager } from "../../../Phaser/Game/GameManager";
+import { availabilityStatusStore, mediaStreamConstraintsStore } from "../../../Stores/MediaStore";
 
 export class ProximityChatMessage implements ChatMessage {
     isQuotedMessage = undefined;
@@ -92,7 +94,10 @@ export class ProximityChatRoom implements ChatRoom {
         private _userId: number,
         private spaceRegistry: SpaceRegistryInterface,
         private simplePeer: SimplePeer,
-        iframeListenerInstance: Pick<typeof iframeListener, "newChatMessageWritingStatusStream">
+        iframeListenerInstance: Pick<typeof iframeListener, "newChatMessageWritingStatusStream">,
+        private playNewMessageSound = () => {
+            gameManager.getCurrentGameScene().playSound("new-message");
+        }
     ) {
         this.typingMembers = writable([]);
 
@@ -212,6 +217,11 @@ export class ProximityChatRoom implements ChatRoom {
         // Add message to the list
         this.messages.push(newMessage);
 
+        this.playNewMessageSound();
+
+        if (get(selectedRoom) !== this) {
+            this.hasUnreadMessages.set(true);
+        }
         // Send bubble message to WorkAdventure scripting API
         try {
             iframeListener.sendUserInputChat(message, senderUserId);
@@ -374,6 +384,20 @@ export class ProximityChatRoom implements ChatRoom {
         });
 
         this.simplePeer.setSpaceFilter(this._spaceWatcher);
+
+        const mediaStreamConstraints = get(mediaStreamConstraintsStore);
+        const actualStatus = get(availabilityStatusStore);
+        if (!isAChatRoomIsVisible()) {
+            selectedRoom.set(this);
+            navChat.set("chat");
+            if (
+                !mediaStreamConstraints.audio &&
+                !mediaStreamConstraints.video &&
+                (actualStatus === AvailabilityStatus.ONLINE || actualStatus === AvailabilityStatus.AWAY)
+            ) {
+                chatVisibilityStore.set(true);
+            }
+        }
     }
 
     public leaveSpace(spaceName: string): void {
@@ -407,7 +431,7 @@ export class ProximityChatRoom implements ChatRoom {
             this.usersUnsubscriber();
         }
         this.users = undefined;
-        this.spaceRegistry.leaveSpace(spaceName);
+        this.spaceRegistry.leaveSpace(this._space);
         this.spaceMessageSubscription?.unsubscribe();
         this.spaceIsTypingSubscription?.unsubscribe();
 

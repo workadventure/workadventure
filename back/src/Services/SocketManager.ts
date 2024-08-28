@@ -210,13 +210,10 @@ export class SocketManager {
             roomJoinedMessage.webRtcPassword = password;
         }
 
-        const serverToClientMessage: ServerToClientMessage = {
-            message: {
-                $case: "roomJoinedMessage",
-                roomJoinedMessage: RoomJoinedMessage.fromPartial(roomJoinedMessage),
-            },
-        };
-        socket.write(serverToClientMessage);
+        user.write({
+            $case: "roomJoinedMessage",
+            roomJoinedMessage: RoomJoinedMessage.fromPartial(roomJoinedMessage),
+        });
 
         return {
             room,
@@ -308,11 +305,9 @@ export class SocketManager {
         }
 
         //if (!client.disconnecting) {
-        remoteUser.socket.write({
-            message: {
-                $case: "webRtcSignalToClientMessage",
-                webRtcSignalToClientMessage: WebRtcSignalToClientMessage.fromPartial(webrtcSignalToClientMessage),
-            },
+        remoteUser.write({
+            $case: "webRtcSignalToClientMessage",
+            webRtcSignalToClientMessage: WebRtcSignalToClientMessage.fromPartial(webrtcSignalToClientMessage),
         });
         //}
     }
@@ -342,12 +337,10 @@ export class SocketManager {
         }
 
         //if (!client.disconnecting) {
-        remoteUser.socket.write({
-            message: {
-                $case: "webRtcScreenSharingSignalToClientMessage",
-                webRtcScreenSharingSignalToClientMessage:
-                    WebRtcSignalToClientMessage.fromPartial(webrtcSignalToClientMessage),
-            },
+        remoteUser.write({
+            $case: "webRtcScreenSharingSignalToClientMessage",
+            webRtcScreenSharingSignalToClientMessage:
+                WebRtcSignalToClientMessage.fromPartial(webrtcSignalToClientMessage),
         });
         //}
     }
@@ -618,29 +611,25 @@ export class SocketManager {
     }
 
     private sendGroupUsersUpdateToGroupMembers(group: Group) {
-        const clientMessage: ServerToClientMessage = {
-            message: {
-                $case: "groupUsersUpdateMessage",
-                groupUsersUpdateMessage: {
-                    groupId: group.getId(),
-                    userIds: group.getUsers().map((user) => user.id),
-                },
+        const clientMessage: ServerToClientMessage["message"] = {
+            $case: "groupUsersUpdateMessage",
+            groupUsersUpdateMessage: {
+                groupId: group.getId(),
+                userIds: group.getUsers().map((user) => user.id),
             },
         };
 
         group.getUsers().forEach((currentUser: User) => {
-            currentUser.socket.write(clientMessage);
+            currentUser.write(clientMessage);
         });
     }
 
     private joinWebRtcRoom(user: User, group: Group) {
-        user.socket.write({
-            message: {
-                $case: "joinSpaceRequestMessage",
-                joinSpaceRequestMessage: {
-                    // FIXME: before fixing the fact that spaceName is undefined, let's try to understand why I don't have any info about the user in the error caught above
-                    spaceName: group.spaceName,
-                },
+        user.write({
+            $case: "joinSpaceRequestMessage",
+            joinSpaceRequestMessage: {
+                // FIXME: before fixing the fact that spaceName is undefined, let's try to understand why I don't have any info about the user in the error caught above
+                spaceName: group.spaceName,
             },
         });
 
@@ -664,11 +653,9 @@ export class SocketManager {
                 webrtcStartMessage1.webRtcPassword = password;
             }
 
-            user.socket.write({
-                message: {
-                    $case: "webRtcStartMessage",
-                    webRtcStartMessage: WebRtcStartMessage.fromPartial(webrtcStartMessage1),
-                },
+            user.write({
+                $case: "webRtcStartMessage",
+                webRtcStartMessage: WebRtcStartMessage.fromPartial(webrtcStartMessage1),
             });
 
             const webrtcStartMessage2: Partial<WebRtcStartMessage> = {
@@ -681,11 +668,9 @@ export class SocketManager {
                 webrtcStartMessage2.webRtcPassword = password;
             }
 
-            otherUser.socket.write({
-                message: {
-                    $case: "webRtcStartMessage",
-                    webRtcStartMessage: WebRtcStartMessage.fromPartial(webrtcStartMessage2),
-                },
+            otherUser.write({
+                $case: "webRtcStartMessage",
+                webRtcStartMessage: WebRtcStartMessage.fromPartial(webrtcStartMessage2),
             });
         }
     }
@@ -711,12 +696,10 @@ export class SocketManager {
 
     //disconnect user
     private disConnectedUser(user: User, group: Group) {
-        user.socket.write({
-            message: {
-                $case: "leaveSpaceRequestMessage",
-                leaveSpaceRequestMessage: {
-                    spaceName: group.spaceName,
-                },
+        user.write({
+            $case: "leaveSpaceRequestMessage",
+            leaveSpaceRequestMessage: {
+                spaceName: group.spaceName,
             },
         });
 
@@ -731,23 +714,19 @@ export class SocketManager {
             }
 
             //if (!otherUser.socket.disconnecting) {
-            otherUser.socket.write({
-                message: {
-                    $case: "webRtcDisconnectMessage",
-                    webRtcDisconnectMessage: {
-                        userId: user.id,
-                    },
+            otherUser.write({
+                $case: "webRtcDisconnectMessage",
+                webRtcDisconnectMessage: {
+                    userId: user.id,
                 },
             });
             //}
 
             //if (!user.socket.disconnecting) {
-            user.socket.write({
-                message: {
-                    $case: "webRtcDisconnectMessage",
-                    webRtcDisconnectMessage: {
-                        userId: otherUser.id,
-                    },
+            user.write({
+                $case: "webRtcDisconnectMessage",
+                webRtcDisconnectMessage: {
+                    userId: otherUser.id,
                 },
             });
             //}
@@ -842,11 +821,9 @@ export class SocketManager {
             };
         }
 
-        user.socket.write({
-            message: {
-                $case: "answerMessage",
-                answerMessage: AnswerMessage.fromPartial(answerMessage),
-            },
+        user.write({
+            $case: "answerMessage",
+            answerMessage: AnswerMessage.fromPartial(answerMessage),
         });
     }
 
@@ -980,20 +957,16 @@ export class SocketManager {
     }
 
     public handleSendUserMessage(user: User, sendUserMessageToSend: SendUserMessage) {
-        user.socket.write({
-            message: {
-                $case: "sendUserMessage",
-                sendUserMessage: sendUserMessageToSend,
-            },
+        user.write({
+            $case: "sendUserMessage",
+            sendUserMessage: sendUserMessageToSend,
         });
     }
 
     public handleBanUserMessage(room: GameRoom, user: User, banUserMessageToSend: BanUserMessage) {
-        user.socket.write({
-            message: {
-                $case: "sendUserMessage",
-                sendUserMessage: banUserMessageToSend,
-            },
+        user.write({
+            $case: "sendUserMessage",
+            sendUserMessage: banUserMessageToSend,
         });
 
         setTimeout(() => {
@@ -1152,13 +1125,11 @@ export class SocketManager {
         }
 
         for (const recipient of recipients) {
-            recipient.socket.write({
-                message: {
-                    $case: "sendUserMessage",
-                    sendUserMessage: {
-                        message,
-                        type,
-                    },
+            recipient.write({
+                $case: "sendUserMessage",
+                sendUserMessage: {
+                    message,
+                    type,
                 },
             });
         }
@@ -1200,13 +1171,11 @@ export class SocketManager {
             room.leave(recipient);
 
             // Let's close the connection when the user is banned.
-            recipient.socket.write({
-                message: {
-                    $case: "banUserMessage",
-                    banUserMessage: {
-                        message,
-                        type: "banned",
-                    },
+            recipient.write({
+                $case: "banUserMessage",
+                banUserMessage: {
+                    message,
+                    type: "banned",
                 },
             });
             recipient.socket.end();
@@ -1231,13 +1200,11 @@ export class SocketManager {
         }
 
         room.getUsers().forEach((recipient) => {
-            recipient.socket.write({
-                message: {
-                    $case: "sendUserMessage",
-                    sendUserMessage: {
-                        message,
-                        type,
-                    },
+            recipient.write({
+                $case: "sendUserMessage",
+                sendUserMessage: {
+                    message,
+                    type,
                 },
             });
         });
@@ -1261,11 +1228,9 @@ export class SocketManager {
         }
 
         room.getUsers().forEach((recipient) => {
-            recipient.socket.write({
-                message: {
-                    $case: "worldFullWarningMessage",
-                    worldFullWarningMessage: {},
-                },
+            recipient.write({
+                $case: "worldFullWarningMessage",
+                worldFullWarningMessage: {},
             });
         });
     }
@@ -1278,13 +1243,11 @@ export class SocketManager {
 
         const versionNumber = await room.incrementVersion();
         room.getUsers().forEach((recipient) => {
-            recipient.socket.write({
-                message: {
-                    $case: "refreshRoomMessage",
-                    refreshRoomMessage: {
-                        roomId,
-                        versionNumber,
-                    },
+            recipient.write({
+                $case: "refreshRoomMessage",
+                refreshRoomMessage: {
+                    roomId,
+                    versionNumber,
                 },
             });
         });
@@ -1385,12 +1348,10 @@ export class SocketManager {
             const userToJoin = room.getUserByUuid(askPositionMessage.userIdentifier);
             const position = userToJoin?.getPosition();
             if (position) {
-                user.socket.write({
-                    message: {
-                        $case: "moveToPositionMessage",
-                        moveToPositionMessage: {
-                            position: ProtobufUtils.toPositionMessage(position),
-                        },
+                user.write({
+                    $case: "moveToPositionMessage",
+                    moveToPositionMessage: {
+                        position: ProtobufUtils.toPositionMessage(position),
                     },
                 });
             }

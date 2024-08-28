@@ -7,8 +7,6 @@ import { AllUsersSpaceFilter, AllUsersSpaceFilterInterface } from "./SpaceFilter
 import { LiveStreamingUsersSpaceFilter } from "./SpaceFilter/LiveStreamingUsersSpaceFilter";
 import { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegistry";
 
-export const WORLD_SPACE_NAME = "allWorldUser";
-
 export class Space implements SpaceInterface {
     private readonly name: string;
     private filters: Map<string, SpaceFilter> = new Map<string, SpaceFilter>();

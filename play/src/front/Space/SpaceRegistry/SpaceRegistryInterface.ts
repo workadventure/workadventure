@@ -4,6 +4,6 @@ export interface SpaceRegistryInterface {
     get(spaceName: string): SpaceInterface;
     joinSpace(spaceName: string): SpaceInterface;
     exist(spaceName: string): boolean;
-    leaveSpace(spaceName: string): void;
+    leaveSpace(space: SpaceInterface): void;
     destroy(): void;
 }

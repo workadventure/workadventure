@@ -87,9 +87,9 @@ describe("SpaceProviderInterface implementation", () => {
 
                 spaceRegistry.joinSpace("space-test1");
                 spaceRegistry.joinSpace("space-test2");
-                spaceRegistry.joinSpace("space-to-delete");
+                const spaceToDelete = spaceRegistry.joinSpace("space-to-delete");
 
-                spaceRegistry.leaveSpace("space-to-delete");
+                spaceRegistry.leaveSpace(spaceToDelete);
                 expect(spaceRegistry.getAll().find((space) => space.getName() === "space-to-delete")).toBeUndefined();
                 expect(roomConnectionMock.emitLeaveSpace).toHaveBeenCalledOnce();
             });
@@ -102,7 +102,7 @@ describe("SpaceProviderInterface implementation", () => {
                 const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(defaultRoomConnectionMock);
 
                 expect(() => {
-                    spaceRegistry.leaveSpace(newSpace.getName());
+                    spaceRegistry.leaveSpace(newSpace);
                 }).toThrow(SpaceDoesNotExistError);
             });
         });

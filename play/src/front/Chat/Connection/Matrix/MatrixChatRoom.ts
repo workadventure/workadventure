@@ -19,7 +19,8 @@ import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
 import { RoomMessageEventContent } from "matrix-js-sdk/lib/@types/events";
 import { ChatRoom, ChatRoomMembership } from "../ChatConnection";
-import { selectedChatMessageToReply } from "../../Stores/ChatStore";
+import { isAChatRoomIsVisible, navChat, selectedChatMessageToReply, selectedRoom } from "../../Stores/ChatStore";
+import { gameManager } from "../../../Phaser/Game/GameManager";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { matrixSecurity } from "./MatrixSecurity";
@@ -42,7 +43,12 @@ export class MatrixChatRoom implements ChatRoom {
     isEncrypted!: Writable<boolean>;
     typingMembers: Writable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
 
-    constructor(private matrixRoom: Room) {
+    constructor(
+        private matrixRoom: Room,
+        private playNewMessageSound = () => {
+            gameManager.getCurrentGameScene().playSound("new-message");
+        }
+    ) {
         this.id = matrixRoom.roomId;
         this.name = writable(matrixRoom.name);
         this.type = this.getMatrixRoomType();
@@ -188,10 +194,14 @@ export class MatrixChatRoom implements ChatRoom {
             await matrixSecurity.initClientCryptoConfiguration();
         }
 
+        //get age give the age of the event when the event arrived at the device
+        const ageOfEvent = event.getAge();
+
         //Only get realtime event
-        if (toStartOfTimeline || !data || !data.liveEvent) {
+        if (toStartOfTimeline || !data || !data.liveEvent || (ageOfEvent && ageOfEvent >= 2000)) {
             return;
         }
+
         if (room !== undefined) {
             (async () => {
                 if (event.isEncrypted()) {
@@ -203,6 +213,14 @@ export class MatrixChatRoom implements ChatRoom {
                         this.handleMessageModification(event);
                     } else {
                         this.handleNewMessage(event);
+                        const senderID = event.getSender();
+                        if (senderID !== this.matrixRoom.client.getSafeUserId()) {
+                            this.playNewMessageSound();
+                            if (!isAChatRoomIsVisible() && get(selectedRoom)?.id !== "proximity") {
+                                selectedRoom.set(this);
+                                navChat.set("chat");
+                            }
+                        }
                     }
                 }
                 if (event.getType() === "m.reaction") {

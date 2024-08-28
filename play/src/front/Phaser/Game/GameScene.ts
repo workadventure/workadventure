@@ -149,7 +149,6 @@ import { hideBubbleConfirmationModal } from "../../Rules/StatusRules/statusChang
 import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/statusChanger";
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import { closeCoWebsite, getCoWebSite, openCoWebSite, openCoWebSiteWithoutSource } from "../../Chat/Utils";
-import { WORLD_SPACE_NAME } from "../../Space/Space";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
 import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
@@ -166,6 +165,7 @@ import { ExtensionModuleStatusSynchronization } from "../../Rules/StatusRules/Ex
 import { calendarEventsStore, isActivatedStore } from "../../Stores/CalendarStore";
 import { externalSvelteComponentStore } from "../../Stores/Utils/externalSvelteComponentStore";
 import { ExtensionModule, RoomMetadataType } from "../../ExternalModule/ExtensionModule";
+import { SpaceInterface } from "../../Space/SpaceInterface";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -219,6 +219,8 @@ interface DeleteGroupEventInterface {
     type: "DeleteGroupEvent";
     groupId: number;
 }
+
+const WORLD_SPACE_NAME = "allWorldUser";
 
 export class GameScene extends DirtyScene {
     Terrains: Array<Phaser.Tilemaps.Tileset>;
@@ -333,6 +335,7 @@ export class GameScene extends DirtyScene {
     });
     public chatConnection!: ChatConnectionInterface;
     private _spaceRegistry: SpaceRegistryInterface | undefined;
+    private allUserSpace: SpaceInterface | undefined;
     private _proximityChatRoom: ProximityChatRoom | undefined;
     private _userProviderMerger: UserProviderMerger | undefined;
     public extensionModule: ExtensionModule | undefined = undefined;
@@ -399,6 +402,8 @@ export class GameScene extends DirtyScene {
         this.load.audio("audio-report-message", "/resources/objects/report-message.mp3");
         this.load.audio("audio-megaphone", "/resources/objects/megaphone.mp3");
         this.load.audio("audio-cloud", "/resources/objects/cloud.mp3");
+        this.load.audio("new-message", "/resources/objects/new-message.mp3");
+
         this.sound.pauseOnBlur = false;
 
         this.load.on(FILE_LOAD_ERROR, (file: { src: string }) => {
@@ -955,6 +960,7 @@ export class GameScene extends DirtyScene {
     }
 
     public playSound(sound: string) {
+        if (!statusChanger.allowNotificationSound()) return;
         this.sound.play(sound, {
             volume: 0.2,
         });
@@ -986,7 +992,9 @@ export class GameScene extends DirtyScene {
         layoutManagerActionStore.clearActions();
 
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
-        this._spaceRegistry?.destroy();
+        if (this.allUserSpace) {
+            this.spaceRegistry?.leaveSpace(this.allUserSpace);
+        }
         this.connection?.closeConnection();
         this.simplePeer?.closeAllConnections();
         this.simplePeer?.unregister();
@@ -1044,6 +1052,7 @@ export class GameScene extends DirtyScene {
         this.playersMovementEventDispatcher.cleanup();
         this.gameMapFrontWrapper?.close();
         this.followManager?.close();
+        this._spaceRegistry?.destroy();
 
         // We need to destroy all the entities
         get(extensionModuleStore).forEach((extensionModule) => {
@@ -1536,15 +1545,14 @@ export class GameScene extends DirtyScene {
 
                 this._spaceRegistry = new SpaceRegistry(this.connection);
 
-                // FIXME: we don't need to watch this until we take a look at the user list.
-                const allUserSpace = this._spaceRegistry.joinSpace(WORLD_SPACE_NAME);
+                this.allUserSpace = this._spaceRegistry.joinSpace(WORLD_SPACE_NAME);
                 this.chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
 
                 //init merger
 
                 const adminUserProvider = new AdminUserProvider(this.connection);
                 const matrixUserProvider = new MatrixUserProvider(matrixClientPromise);
-                const worldUserProvider = new WorldUserProvider(allUserSpace);
+                const worldUserProvider = new WorldUserProvider(this.allUserSpace);
 
                 this._userProviderMerger = new UserProviderMerger([
                     adminUserProvider,
@@ -1837,7 +1845,7 @@ export class GameScene extends DirtyScene {
                                 oldMegaphoneSpace &&
                                 megaphoneSettingsMessage.url !== oldMegaphoneSpace.getName()
                             ) {
-                                this._spaceRegistry.leaveSpace(oldMegaphoneSpace.getName());
+                                this._spaceRegistry.leaveSpace(oldMegaphoneSpace);
                             }
 
                             const broadcastStore = broadcastService.joinSpace(megaphoneSettingsMessage.url);
@@ -1859,10 +1867,7 @@ export class GameScene extends DirtyScene {
                 const error = get(errorScreenStore);
                 if (error && error?.type === "reconnecting") errorScreenStore.delete();
                 //this.scene.stop(ReconnectingSceneName);
-
-                //init user position and play trigger to check layers properties
                 this.gameMapFrontWrapper.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
-
                 // Init layer change listener
                 this.gameMapFrontWrapper.onEnterLayer((layers) => {
                     layers.forEach((layer) => {
@@ -2158,10 +2163,10 @@ export class GameScene extends DirtyScene {
             }
 
             if (newPeerNumber > oldPeersNumber) {
-                if (statusChanger.allowNotificationSound()) this.playSound("audio-webrtc-in");
+                this.playSound("audio-webrtc-in");
                 faviconManager.pushNotificationFavicon();
             } else if (newPeerNumber < oldPeersNumber) {
-                if (statusChanger.allowNotificationSound()) this.playSound("audio-webrtc-out");
+                this.playSound("audio-webrtc-out");
                 faviconManager.pushOriginalFavicon();
             }
 
