@@ -33,7 +33,7 @@ test.describe("Scripting for Map editor @oidc", () => {
 
     test("Scripting Area onEnter & onLeave", async ({page, request}, {project}) => {
         await resetWamMaps(request);
-        await page.goto(Map.url("shaka"));
+        await page.goto(Map.url("start"));
         await login(page, "test", 3, "en-US", false);
         await oidcAdminTagLogin(page, false);
 
@@ -43,31 +43,36 @@ test.describe("Scripting for Map editor @oidc", () => {
         await areaEditor.setAreaName(page, "MyZone");
 
         await evaluateScript(page, () => {
-            // @ts-ignore
             WA.mapEditor.area.onEnter("MyZone").subscribe(() => {
-                // @ts-ignore
                 WA.ui.displayActionMessage({
                     message: "Welcome to MyZone",
                     type: "message",
-                    callback: () => {}
+                    callback: () => {
+                        console.info("Welcome to MyZone");
+                    }
                 });
             });
 
-            // @ts-ignore
             WA.mapEditor.area.onLeave("MyZone").subscribe(() => {
-                // @ts-ignore
                 WA.ui.displayActionMessage({
                     message: "Goodby to MyZone",
                     type: "message",
-                    callback: () => {}
+                    callback: () => {
+                        console.info("Goodby to MyZone");
+                    }
                 });
             });
         });
 
         await menu.closeMapEditor(page);
         await Map.teleportToPosition(page, 11 * 32, 1 * 32);
-        await expect(page.locator('.blue-dialog-box').nth(0)).toHaveText("Welcome to MyZone");
+        await expect(page.locator('span.characterTriggerAction').nth(0)).toHaveText("Welcome to MyZone");
+        await page.locator('span.characterTriggerAction').nth(0).click();
+
         await Map.teleportToPosition(page, 11 * 32, 10 * 32);
-        await expect(page.locator('.blue-dialog-box').nth(1)).toHaveText("Goodby to MyZone");
+        await expect(page.locator('span.characterTriggerAction').nth(0)).toHaveText("Goodby to MyZone");
+        await page.locator('span.characterTriggerAction').nth(0).click();
+
+        await expect(page.locator('span.characterTriggerAction')).toBeHidden();
     });
 });
