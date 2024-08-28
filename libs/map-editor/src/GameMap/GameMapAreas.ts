@@ -5,7 +5,6 @@ import {
     AreaDataProperties,
     AtLeast,
     EntityCoordinates,
-    GameMapProperties,
     PersonalAreaPropertyData,
     RestrictedRightsPropertyData,
     WAMFileFormat,
@@ -265,24 +264,6 @@ export class GameMapAreas {
         }
     }
 
-    public getProperties(position: { x: number; y: number }): Map<string, string | boolean | number> {
-        const properties = new Map<string, string | boolean | number>();
-        for (const area of this.getAreasOnPosition(position, this.areasPositionOffsetY)) {
-            if (area.properties === undefined) {
-                continue;
-            }
-            const flattenedProperties = this.flattenAreaProperties(area.properties);
-            for (const key in flattenedProperties) {
-                const property = flattenedProperties[key];
-                if (property === undefined) {
-                    continue;
-                }
-                properties.set(key, property);
-            }
-        }
-        return properties;
-    }
-
     public getAreasOnPosition(position: { x: number; y: number }, offsetY = 0): AreaData[] {
         const areasOfInterest = [...this.areas.values()];
 
@@ -385,62 +366,6 @@ export class GameMapAreas {
             return true;
         }
         return false;
-    }
-
-    private flattenAreaProperties(areaProperties: AreaDataProperties): Record<string, string | boolean | number> {
-        const flattenedProperties: Record<string, string | boolean | number> = {};
-        for (const property of areaProperties) {
-            switch (property.type) {
-                case "focusable": {
-                    flattenedProperties[GameMapProperties.FOCUSABLE] = true;
-                    if (property.zoom_margin) {
-                        flattenedProperties[GameMapProperties.ZOOM_MARGIN] = property.zoom_margin;
-                    }
-                    break;
-                }
-                case "jitsiRoomProperty": {
-                    flattenedProperties[GameMapProperties.JITSI_ROOM] = property.roomName ?? "";
-                    if (property.jitsiRoomConfig) {
-                        flattenedProperties[GameMapProperties.JITSI_CONFIG] = JSON.stringify(property.jitsiRoomConfig);
-                    }
-                    break;
-                }
-                case "openWebsite": {
-                    if (property.link == undefined) break;
-                    if (property.newTab) {
-                        flattenedProperties[GameMapProperties.OPEN_TAB] = property.link;
-                    } else {
-                        flattenedProperties[GameMapProperties.OPEN_WEBSITE] = property.link;
-                    }
-                    break;
-                }
-                case "playAudio": {
-                    flattenedProperties[GameMapProperties.PLAY_AUDIO] = property.audioLink;
-                    break;
-                }
-                case "start": {
-                    flattenedProperties[GameMapProperties.START] = true;
-                    break;
-                }
-                case "exit": {
-                    flattenedProperties[GameMapProperties.EXIT_URL] = property.url;
-                    break;
-                }
-                case "silent": {
-                    flattenedProperties[GameMapProperties.SILENT] = true;
-                    break;
-                }
-                case "speakerMegaphone": {
-                    flattenedProperties[GameMapProperties.SPEAKER_MEGAPHONE] = property.name;
-                    break;
-                }
-                case "listenerMegaphone": {
-                    flattenedProperties[GameMapProperties.LISTENER_MEGAPHONE] = property.speakerZoneName;
-                    break;
-                }
-            }
-        }
-        return flattenedProperties;
     }
 
     /**

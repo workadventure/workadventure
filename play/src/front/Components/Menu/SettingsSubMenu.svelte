@@ -92,7 +92,7 @@
             if (document.fullscreenElement !== null && !fullscreen) {
                 document.exitFullscreen().catch((e) => console.error(e));
             } else {
-                body.requestFullscreen().catch((e) => console.error(e));
+                document.documentElement.requestFullscreen().catch((e) => console.error(e));
             }
             localUserStore.setFullscreen(fullscreen);
         }

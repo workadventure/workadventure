@@ -271,6 +271,7 @@ export class GameMapFrontWrapper {
         const gameMapAreas = this.getGameMap().getGameMapAreas();
         if (gameMapAreas !== undefined) {
             this.areasManager = new AreasManager(this.scene, gameMapAreas, userConnectedTags, userCanEdit);
+            gameMapAreas.triggerAreasChange(undefined, this.position);
         } else {
             console.error("Unable to load AreasManager because gameMapAreas is undefined");
         }
@@ -1163,12 +1164,14 @@ export class GameMapFrontWrapper {
         const properties = new Map<string, string | boolean | number>();
         // NOTE: WE DO NOT WANT AREAS TO BE THE PART OF THE OLD PROPERTIES CHANGE SYSTEM
         // CHECK FOR AREAS PROPERTIES
-        // if (this.position) {
-        //     const areasProperties = this.gameMap.getGameMapAreas()?.getProperties(this.position);
-        //     if (areasProperties) {
-        //         properties = areasProperties;
-        //     }
-        // }
+        //if (this.position) {
+        //    const areasProperties = this.gameMap.getGameMapAreas()?.getProperties(this.position);
+        //    if (areasProperties) {
+        //        for (const [key, value] of areasProperties) {
+        //            properties.set(key, value);
+        //        }
+        //    }
+        //}
 
         // CHECK FOR DYNAMIC AREAS PROPERTIES
         if (this.position) {
