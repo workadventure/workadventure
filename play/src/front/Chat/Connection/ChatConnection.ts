@@ -43,8 +43,7 @@ export interface ChatRoom {
     typingMembers: Readable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
     startTyping: () => Promise<object>;
     stopTyping: () => Promise<object>;
-    //TODO: Rename with a more generic name ?
-    isSpaceRoom: boolean;
+    isRoomFolder: boolean;
 }
 
 //Readonly attributes
@@ -108,7 +107,6 @@ export interface ChatConnectionInterface {
     invitations: Readable<ChatRoom[]>;
     roomFolders: MapStore<RoomFolder["id"], RoomFolder>;
     createRoom: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string }>;
-    //TODO : create type CreateFolderOptions base on CreateRoomOptions;
     createFolder: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string }>;
     createDirectRoom(userChatId: string): Promise<ChatRoom | undefined>;
     getDirectRoomFor(uuserChatId: string): ChatRoom | undefined;

@@ -43,7 +43,7 @@ export class MatrixChatRoom implements ChatRoom {
     inMemoryEventsContent: Map<EventId, IContent>;
     isEncrypted!: Writable<boolean>;
     typingMembers: Writable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
-    isSpaceRoom = false;
+    isRoomFolder = false;
 
     constructor(
         private matrixRoom: Room,
@@ -69,8 +69,7 @@ export class MatrixChatRoom implements ChatRoom {
         this.isEncrypted = writable(matrixRoom.hasEncryptionStateEvent());
         this.typingMembers = writable([]);
 
-        //TODO: Rename with a more generic name ?
-        this.isSpaceRoom = matrixRoom.isSpaceRoom();
+        this.isRoomFolder = matrixRoom.isSpaceRoom();
 
         void this.matrixRoom.getMembersWithMembership(KnownMembership.Join).forEach((member) =>
             member.on(RoomMemberEvent.Typing, (event, member) => {

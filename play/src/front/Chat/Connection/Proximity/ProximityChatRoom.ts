@@ -77,7 +77,7 @@ export class ProximityChatRoom implements ChatRoom {
     private spaceWatcherUserJoinedObserver: Subscription | undefined;
     private spaceWatcherUserLeftObserver: Subscription | undefined;
     private newChatMessageWritingStatusStreamUnsubscriber: Subscription;
-    isSpaceRoom = false;
+    isRoomFolder = false;
 
     private unknownUser = {
         chatId: "0",
