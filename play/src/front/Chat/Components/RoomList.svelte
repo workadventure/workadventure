@@ -1,7 +1,6 @@
 <script lang="ts">
     import { get } from "svelte/store";
     // eslint-disable-next-line import/no-unresolved
-    import { openModal } from "svelte-modals";
     import { onDestroy, onMount } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import LL from "../../../i18n/i18n-svelte";
@@ -12,11 +11,11 @@
     import RoomTimeline from "./Room/RoomTimeline.svelte";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
     import JoignableRooms from "./Room/JoignableRooms.svelte";
-    import CreateRoomModal from "./Room/CreateRoomModal.svelte";
     import ChatLoader from "./ChatLoader.svelte";
     import ChatError from "./ChatError.svelte";
     import RoomFolder from "./RoomFolder.svelte";
-    import { IconChevronDown, IconChevronRight, IconSquarePlus } from "@wa-icons";
+    import CreateRoomOrFolderOption from "./Room/CreateRoomOrFolderOption.svelte";
+    import { IconChevronDown, IconChevronRight } from "@wa-icons";
 
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
 
@@ -79,12 +78,6 @@
 
     function toggleDisplayRoomInvitations() {
         displayRoomInvitations = !displayRoomInvitations;
-    }
-
-    function openCreateRoomModal(parentSpaceID?: string) {
-        openModal(CreateRoomModal, {
-            parentSpaceID,
-        });
     }
 
     function toggleDisplayProximityChat() {
@@ -168,17 +161,6 @@
                         {/if}
                         {$LL.chat.people()}</button
                     >
-                    {#if $isGuest === false}
-                        <button
-                            data-testid="openCreateRoomModalButton"
-                            class="tw-p-0 tw-m-0 tw-text-gray-400"
-                            on:click={() => {
-                                openCreateRoomModal();
-                            }}
-                        >
-                            <IconSquarePlus font-size={16} />
-                        </button>
-                    {/if}
                 </div>
 
                 {#if displayDirectRooms}
@@ -202,15 +184,7 @@
                         {$LL.chat.rooms()}</button
                     >
                     {#if $isGuest === false}
-                        <button
-                            data-testid="openCreateRoomModalButton"
-                            class="tw-p-0 tw-m-0 tw-text-gray-400"
-                            on:click={() => {
-                                openCreateRoomModal();
-                            }}
-                        >
-                            <IconSquarePlus font-size={16} />
-                        </button>
+                        <CreateRoomOrFolderOption />
                     {/if}
                 </div>
 
@@ -229,10 +203,10 @@
                     <RoomFolder
                         bind:isOpen={isFoldersOpen[rootRoomFolder.id]}
                         name={rootRoomFolder.name}
-                        id={rootRoomFolder.id}
                         folders={rootRoomFolder.folders}
                         rooms={rootRoomFolder.rooms}
                         isGuest={$isGuest}
+                        id={rootRoomFolder.id}
                     />
                 {/each}
             {/if}
