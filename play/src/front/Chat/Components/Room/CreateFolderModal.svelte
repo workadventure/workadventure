@@ -10,7 +10,7 @@
 
     export let isOpen: boolean;
     export let parentSpaceID: string | undefined;
-    let createFolderOptions: CreateRoomOptions = { visibility: "public" };
+    let createFolderOptions: CreateRoomOptions = { visibility: "public", description: "" };
     if (parentSpaceID) createFolderOptions.parentSpaceID = parentSpaceID;
     let createFolderError: string | undefined = undefined;
 
@@ -92,6 +92,17 @@
                     {$LL.chat.createFolder.visibility.publicDescription()}
                 {/if}
             </p>
+            <p class="tw-p-0 tw-m-0 tw-pl-1 tw-font-bold">
+                {$LL.chat.createFolder.description.label() || "Description"}
+            </p>
+            <textarea
+                class="tw-resize-none"
+                rows="4"
+                bind:value={createFolderOptions.description}
+                name="folderDescription"
+                id=""
+                on:keypress={() => {}}
+            />
             <p class="tw-p-0 tw-m-0 tw-pl-1 tw-font-bold">{$LL.chat.createFolder.users()}</p>
             <Select
                 bind:value={createFolderOptions.invite}

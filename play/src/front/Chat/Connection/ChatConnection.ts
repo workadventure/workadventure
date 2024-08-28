@@ -93,6 +93,7 @@ export interface CreateRoomOptions {
     preset?: "private_chat" | "public_chat" | "trusted_private_chat";
     encrypt?: boolean;
     parentSpaceID?: string;
+    description?: string;
 }
 
 export type ConnectionStatus = "ONLINE" | "ON_ERROR" | "CONNECTING" | "OFFLINE";
@@ -108,7 +109,7 @@ export interface ChatConnectionInterface {
     roomFolders: MapStore<RoomFolder["id"], RoomFolder>;
     createRoom: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string }>;
     //TODO : create type CreateFolderOptions base on CreateRoomOptions;
-    createFolder: (roomOptions: CreateFolderOptions) => Promise<{ room_id: string }>;
+    createFolder: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string }>;
     createDirectRoom(userChatId: string): Promise<ChatRoom | undefined>;
     getDirectRoomFor(uuserChatId: string): ChatRoom | undefined;
     searchAccessibleRooms(searchText: string): Promise<

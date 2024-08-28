@@ -2,6 +2,7 @@ import { derived, get, Readable, writable, Writable } from "svelte/store";
 import {
     ClientEvent,
     Direction,
+    EmittedEvents,
     EventType,
     ICreateRoomOpts,
     ICreateRoomStateEvent,
@@ -120,7 +121,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.client.on(ClientEvent.Room, this.onClientEventRoom.bind(this));
         this.client.on(ClientEvent.DeleteRoom, this.onClientEventDeleteRoom.bind(this));
         this.client.on(RoomEvent.MyMembership, this.onRoomEventMembership.bind(this));
-        this.client.on("RoomState.events", this.onRoomStateEvent.bind(this));
+        this.client.on("RoomState.events" as EmittedEvents, this.onRoomStateEvent.bind(this));
 
         await this.client.store.startup();
         await this.client.initRustCrypto();
@@ -448,11 +449,10 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             visibility: roomOptions.visibility as Visibility | undefined,
             room_alias_name: slugify(roomName),
             invite: roomOptions.invite?.map((invitation) => invitation.value) ?? [],
-            initial_state: this.computeInitialState(roomOptions), //gerer le space parent
-            //topic : description,
+            initial_state: this.computeInitialState(roomOptions),
+            topic: roomOptions.description,
             creation_content: {
-                //TODO : add in modal creation
-                "m.federate": true, // Set to false if you want the space to be non-federated
+                "m.federate": true, //TODO : read doc on federate space
                 type: "m.space",
             },
         };
@@ -632,13 +632,15 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
     private addRoomToSpace(spaceRoomId: string, childRoomId: string) {
         // Send the m.space.child event to link the room to the space
+        const domain = this.client.getDomain();
+        if (!domain) return;
         this.client
             .sendStateEvent(
                 spaceRoomId,
                 //@ts-ignore
                 EventType.SpaceChild,
                 {
-                    via: [this.client.getDomain()], // The domain of the homeserver to be used to join the room
+                    via: [domain], // The domain of the homeserver to be used to join the room
                 },
                 childRoomId
             )

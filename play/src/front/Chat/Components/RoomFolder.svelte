@@ -98,8 +98,16 @@
             class:tw-absolue={optionButtonRef !== undefined}
             class:tw-hidden={hideFolderOptions}
         >
-            <RoomOption IconComponent={IconLogout} title={"creer une room"} on:click={closeMenuAndOpenCreateRoom} />
-            <RoomOption IconComponent={IconLogout} title={"Créer un space"} on:click={closeMenuAndOpenCreateSpace} />
+            <RoomOption
+                IconComponent={IconLogout}
+                title={$LL.chat.createRoom.title()}
+                on:click={closeMenuAndOpenCreateRoom}
+            />
+            <RoomOption
+                IconComponent={IconLogout}
+                title={$LL.chat.createFolder.title()}
+                on:click={closeMenuAndOpenCreateSpace}
+            />
         </div>
     {/if}
 </div>

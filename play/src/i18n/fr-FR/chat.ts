@@ -201,8 +201,12 @@ const chat: DeepPartial<Translation["chat"]> = {
         creationSuccessNotification: "Salon créé",
     },
     createFolder: {
-        title: "Créer un nouveau Space",
+        title: "Créer un nouveau space",
         name: "Nom",
+        description: {
+            label: "Description",
+            placeholder: "Description",
+        },
         visibility: {
             label: "Visibilité",
             private: "Privé",

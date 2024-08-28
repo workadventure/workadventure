@@ -209,6 +209,10 @@ const chat: BaseTranslation = {
             public: "Public",
             publicDescription: "Anyone can find and join the room.",
         },
+        description: {
+            label: "Description",
+            placeholder: "Description",
+        },
         e2eEncryption: {
             label: "Activate end to end encryption",
             description: "You won't be able to deactivate it later.",
