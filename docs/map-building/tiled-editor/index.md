@@ -73,7 +73,7 @@ You will be prompted to enter a repository name for your map.
 
 ### Loading the map in Tiled
 
-The sample map is in the file `map.tmj`. You can load this file in [Tiled](https://www.mapeditor.org/).
+The sample map is in the file `office.tmj`. You can load this file in [Tiled](https://www.mapeditor.org/).
 
 Now, it's up to you to edit the map and write your own map.
 
@@ -111,9 +111,9 @@ The local web server can only be used to test your map locally. In particular, t
 ### Adding more map files
 
 If you want to add more maps to your project, no need to duplicate the whole starter kit.
-Instead, simply copy and paste the `map.tmj` file. You can give any name to this file, but it must have the `.tmj` extension.
+Instead, simply copy and paste the `office.tmj` file. You can give any name to this file, but it must have the `.tmj` extension.
 
-From here, you can access your map by modifying the URL in the browser and replacing `map.tmj` by your new map name.
+From here, you can access your map by modifying the URL in the browser and replacing `office.tmj` by your new map name.
 For example, if you have a map named `map2.tmj`, you can access it by visiting `http://play.workadventure.localhost/_/some_random_chars/localhost:5137/map2.tmj`.
 
 ## Need some help?
