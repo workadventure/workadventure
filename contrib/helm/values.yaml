@@ -111,7 +111,7 @@ play:
   # see configuration reference: https://github.com/workadventure/workadventure/blob/master/contrib/docker/.env.prod.template
   env:
     JITSI_PRIVATE_MODE: "false"
-    START_ROOM_URL: /_/global/raw.githubusercontent.com/workadventure/map-starter-kit/master/map.tmj
+    START_ROOM_URL: /_/global/raw.githubusercontent.com/workadventure/map-starter-kit/master/office.tmj
     ENABLE_CHAT_ONLINE_LIST: "true"
     ENABLE_CHAT_DISCONNECTED_LIST: "true"
     MAX_HISTORY_CHAT: 0
