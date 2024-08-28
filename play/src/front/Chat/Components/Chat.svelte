@@ -71,7 +71,7 @@
         <ChatError />
     {/if}    
     <div class="tw-flex tw-flex-col tw-gap-2">
-        <div class="tw-flex tw-flex-row tw-gap-2 tw-items-center tw-pr-8 ">
+        <div class="tw-flex tw-flex-row tw-gap-2 tw-items-center tw-pr-8">
             <button class="hover:tw-bg-white hover:tw-bg-opacity-10 tw-flex tw-justify-center tw-items-center tw-p-2 tw-rounded-md tw-cursor-pointer" on:click={() => navChat.set("settings")}
             class:tw-bg-dark-purple={$navChat === "settings"}
                 >
@@ -115,7 +115,7 @@
         {/if}
         {#if $navChat === "settings"}
             <ChatSettings />
-        {#if $navChat === "users"}
+        {:else if $navChat === "users"}
             <RoomUserList />
         {:else}
             <RoomList {sideBarWidth} />
