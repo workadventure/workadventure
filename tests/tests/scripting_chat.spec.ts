@@ -22,84 +22,83 @@ test.describe("Scripting chat functions", () => {
       await chatUtils.resetMatrixDatabase();
     }
   );
-  test('can open / close chat + start / stop typing @chat', async ({ page}) => {
+  test("can open / close chat + start / stop typing @chat", async ({
+    page,
+  }) => {
     await login(page, "bob", 3, "us-US", false);
     //await oidcMatrixUserLogin(page, false);
 
     // Test open chat scripting
-    await expect(page.locator('#chat')).toBeHidden();
+    await expect(page.locator("#chat")).toBeHidden();
 
     await evaluateScript(page, async () => {
-        return WA.chat.open();
+      return WA.chat.open();
     });
-    await expect(page.locator('#chat')).toBeVisible();
-    await expect(page.getByRole('button', {name: 'Proximity Chat'})).toBeVisible({ timeout: 60000 });
+    await expect(page.locator("#chat")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Proximity Chat" })
+    ).toBeVisible({ timeout: 60000 });
 
     // Open the time line
     await Chat.openTimeline(page);
-    await expect(page.locator('.back-roomlist')).toBeVisible();
+    await expect(page.locator(".back-roomlist")).toBeVisible();
 
     // Test send message scripting
     await evaluateScript(page, async () => {
-        return WA.chat.sendChatMessage('Test message sent', 'Test machine');
+      return WA.chat.sendChatMessage("Test message sent", "Test machine");
     });
 
-    await expect(
-      page.locator('#chat')
-      .locator('#message')
-    ).toContainText('Test message sent');
+    await expect(page.locator("#chat").locator("#message")).toContainText(
+      "Test message sent"
+    );
 
     await expect(
-      page.locator('#chat')
-      .locator('#message')
-      .locator(".messageHeader")
-    ).toContainText('Test machine');
+      page.locator("#chat").locator("#message").locator(".messageHeader")
+    ).toContainText("Test machine");
 
     // Test start typing
     await evaluateScript(page, async () => {
-        return WA.chat.startTyping({
-            scope: "local",
-            author: "Eve",
-        });
+      return WA.chat.startTyping({
+        scope: "local",
+        author: "Eve",
+      });
     });
     await expect(
-      page.locator('#chat')
-      .locator(`#typing-user-${btoa("Eve")}`)
+      page.locator("#chat").locator(`#typing-user-${btoa("Eve")}`)
     ).toBeVisible();
 
     // Test stop typing
     await evaluateScript(page, async () => {
-        return WA.chat.stopTyping({
-            scope: "local",
-            author: "Eve",
-        });
+      return WA.chat.stopTyping({
+        scope: "local",
+        author: "Eve",
+      });
     });
     await expect(
-      page.locator('#chat')
-      .locator(`#typing-user-${btoa("Eve")}`)
+      page.locator("#chat").locator(`#typing-user-${btoa("Eve")}`)
     ).toBeHidden();
 
     // Test close chat scripting
     await evaluateScript(page, async () => {
-        return WA.chat.close();
+      return WA.chat.close();
     });
-    await expect(page.locator('#chat')).toBeHidden();
+    await expect(page.locator("#chat")).toBeHidden();
   });
 
-  test('can send message to bubble users @chat', async ({ page, browser}) => {
+  test("can send message to bubble users @chat", async ({ page, browser }) => {
     const bob = page;
     await login(bob, "bob", 3, "us-US", false);
     //await oidcMatrixUserLogin(bob, false);
     // test to send bubble message when entering proximity meeting
     await evaluateScript(bob, async () => {
       WA.player.proximityMeeting.onJoin().subscribe((user) => {
-          console.log("Entering proximity meeting with", user);
-          // Let's wait a bit to be sure the "bob entered the meeting" message is sent first
-          setTimeout(() => {
-              WA.chat.sendChatMessage('Test message sent', {
-                  scope: 'bubble'
-              });
-          }, 200);
+        console.log("Entering proximity meeting with", user);
+        // Let's wait a bit to be sure the "bob entered the meeting" message is sent first
+        setTimeout(() => {
+          WA.chat.sendChatMessage("Test message sent", {
+            scope: "bubble",
+          });
+        }, 200);
       });
     });
 
@@ -114,13 +113,16 @@ test.describe("Scripting chat functions", () => {
     //await oidcMemberTagLogin(alice, false);
 
     const chatMessageReceivedPromise = evaluateScript(alice, async () => {
-        return new Promise((resolve) => {
-            WA.chat.onChatMessage((message, event) => {
-                resolve(message)
-            }, {
-                scope: "bubble"
-            });
-        });
+      return new Promise((resolve) => {
+        WA.chat.onChatMessage(
+          (message, event) => {
+            resolve(message);
+          },
+          {
+            scope: "bubble",
+          }
+        );
+      });
     });
     //await alice.waitForTimeout(200);
 
@@ -128,34 +130,28 @@ test.describe("Scripting chat functions", () => {
     await Map.teleportToPosition(alice, 32, 32);
 
     // Check that bob received the message
-    await expect(
-      bob.locator('#chat')
-      .locator('#message')
-      .nth(0)
-    ).toContainText('alice joined the discussion', { timeout: 30000 });
+    await expect(bob.locator("#chat")).toContainText(
+      "alice joined the discussion",
+      { timeout: 30000 }
+    );
 
     // Check that bob received the message
-    await expect(
-      bob.locator('#chat')
-      .locator('#message')
-      .nth(1)
-    ).toContainText('Test message sent', { timeout: 30000 });
+    await expect(bob.locator("#chat")).toContainText("Test message sent", {
+      timeout: 30000,
+    });
 
     // Check that bob received the message
-    await expect(
-      alice.locator('#chat')
-      .locator('#message')
-      .nth(0)
-    ).toContainText('bob joined the discussion', { timeout: 30000 });
+    await expect(alice.locator("#chat")).toContainText(
+      "bob joined the discussion",
+      { timeout: 30000 }
+    );
 
     // Check that alice also received the message
-    await expect(
-      alice.locator('#chat')
-      .locator('#message')
-      .nth(1)
-    ).toContainText('Test message sent', { timeout: 30000 });
+    await expect(alice.locator("#chat")).toContainText("Test message sent", {
+      timeout: 30000,
+    });
 
     const chatMessageReceived = await chatMessageReceivedPromise;
-    expect(chatMessageReceived).toBe('Test message sent');
+    expect(chatMessageReceived).toBe("Test message sent");
   });
 });

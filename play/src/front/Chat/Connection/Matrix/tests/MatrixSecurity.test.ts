@@ -12,6 +12,17 @@ vi.mock("../../../../Phaser/Entity/CharacterLayerManager", () => {
     };
 });
 
+vi.mock("../AccessSecretStorageDialog.svelte", () => {
+    return {};
+});
+
+vi.mock("../CreateRecoveryKeyDialog.svelte", () => {
+    return {};
+});
+vi.mock("../InteractiveAuthDialog.svelte", () => {
+    return {};
+});
+
 describe("MatrixSecurity", () => {
     describe("initClientCryptoConfiguration", () => {
         const basicMockClient = {

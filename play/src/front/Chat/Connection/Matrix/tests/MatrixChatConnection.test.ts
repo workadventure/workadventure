@@ -1,12 +1,29 @@
 import { ClientEvent, EventType, MatrixClient, PendingEventOrdering, RoomEvent, SyncState } from "matrix-js-sdk";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { KnownMembership } from "matrix-js-sdk/lib/types";
-import { get, Writable, writable } from "svelte/store";
-import { AvailabilityStatus, PartialSpaceUser } from "@workadventure/messages";
+import { get } from "svelte/store";
 import { MatrixChatConnection } from "../MatrixChatConnection";
-import { ChatUser, Connection, CreateRoomOptions } from "../../ChatConnection";
+import { Connection, CreateRoomOptions } from "../../ChatConnection";
 import { MatrixChatRoom } from "../MatrixChatRoom";
 import { MatrixSecurity } from "../MatrixSecurity";
+
+vi.mock("../../../../Phaser/Game/GameManager", () => {
+    return {
+        gameManager: {
+            getCurrentGameScene: () => ({}),
+        },
+    };
+});
+
+vi.mock("../../../../Phaser/Entity/CharacterLayerManager", () => {
+    return {
+        CharacterLayerManager: {
+            wokaBase64(): Promise<string> {
+                return Promise.resolve("");
+            },
+        },
+    };
+});
 
 describe("MatrixChatConnection", () => {
     const flushPromises = () => new Promise(setImmediate);
@@ -343,123 +360,6 @@ describe("MatrixChatConnection", () => {
         });
     });
 
-    describe("updateUserFromSpace", () => {
-        it("should not update userlist when user to update is not in userConnectedList", () => {
-            const mockStartClient = vi.fn();
-            const mockMatrixClient = {
-                isGuest: vi.fn(),
-                on: vi.fn(),
-                store: {
-                    startup: vi.fn(),
-                },
-                initRustCrypto: vi.fn(),
-                startClient: mockStartClient,
-            } as unknown as MatrixClient;
-
-            const clientPromise = Promise.resolve(mockMatrixClient);
-
-            const matrixChatConnection = new MatrixChatConnection(
-                basicMockConnection,
-                clientPromise,
-                basicMockMatrixSecurity
-            );
-
-            const userToUpdate = {
-                id: 1,
-            } as PartialSpaceUser;
-
-            matrixChatConnection.updateUserFromSpace(userToUpdate);
-
-            expect(matrixChatConnection["connectedUsers"]).toHaveLength(0);
-        });
-        it("should update availabilityStatus when is defined and !== 0", () => {
-            const mockStartClient = vi.fn();
-            const mockMatrixClient = {
-                isGuest: vi.fn(),
-                on: vi.fn(),
-                store: {
-                    startup: vi.fn(),
-                },
-                initRustCrypto: vi.fn(),
-                startClient: mockStartClient,
-            } as unknown as MatrixClient;
-
-            const clientPromise = Promise.resolve(mockMatrixClient);
-
-            const matrixChatConnection = new MatrixChatConnection(
-                basicMockConnection,
-                clientPromise,
-                basicMockMatrixSecurity
-            );
-
-            const userSpaceId = 1;
-
-            const user = {
-                spaceId: userSpaceId,
-                name: "Alice",
-                availabilityStatus: writable(3),
-            } as unknown as ChatUser;
-
-            matrixChatConnection["connectedUsers"].set(userSpaceId, user);
-
-            const userToUpdate = {
-                id: 1,
-                availabilityStatus: 4,
-            } as PartialSpaceUser;
-
-            matrixChatConnection.updateUserFromSpace(userToUpdate);
-            const availabilityStatusWritable: Writable<AvailabilityStatus> =
-                matrixChatConnection["connectedUsers"].get(userSpaceId)?.availabilityStatus || writable(0);
-            const availabilityStatus = get(availabilityStatusWritable);
-
-            expect(availabilityStatus).toBe(userToUpdate.availabilityStatus);
-        });
-
-        it("should not update availabilityStatus when is defined and === 0", () => {
-            const mockStartClient = vi.fn();
-            const mockMatrixClient = {
-                isGuest: vi.fn(),
-                on: vi.fn(),
-                store: {
-                    startup: vi.fn(),
-                },
-                initRustCrypto: vi.fn(),
-                startClient: mockStartClient,
-            } as unknown as MatrixClient;
-
-            const clientPromise = Promise.resolve(mockMatrixClient);
-
-            const matrixChatConnection = new MatrixChatConnection(
-                basicMockConnection,
-                clientPromise,
-                basicMockMatrixSecurity
-            );
-
-            const initialAvailabilityStatus = 3;
-
-            const userSpaceId = 1;
-            const user = {
-                spaceId: userSpaceId,
-                name: "Alice",
-                availabilityStatus: writable(initialAvailabilityStatus),
-            } as unknown as ChatUser;
-
-            matrixChatConnection["connectedUsers"].set(userSpaceId, user);
-
-            const userToUpdate = {
-                id: 1,
-                availabilityStatus: 0,
-            } as PartialSpaceUser;
-
-            matrixChatConnection.updateUserFromSpace(userToUpdate);
-
-            const availabilityStatusWritable: Writable<AvailabilityStatus> =
-                matrixChatConnection["connectedUsers"].get(userSpaceId)?.availabilityStatus || writable(0);
-            const availabilityStatus = get(availabilityStatusWritable);
-
-            expect(availabilityStatus).toBe(initialAvailabilityStatus);
-        });
-    });
     describe("computeInitialState", () => {
         it("should add encryption option to initial state when encrypt from roomOptions is true", () => {
             const mockStartClient = vi.fn();

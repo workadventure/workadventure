@@ -26,7 +26,7 @@ jobs:
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
           cache: "npm"
 
       - name: Install Protoc
@@ -95,7 +95,7 @@ jobs:
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 20
           cache: "npm"
 
 
@@ -144,7 +144,7 @@ jobs:
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 20
           cache: "npm"
 
 
@@ -171,7 +171,7 @@ jobs:
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
           cache: "npm"
 
       - name: Install Protoc
@@ -227,7 +227,7 @@ jobs:
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
           cache: "npm"
 
       - name: Install Protoc
@@ -275,7 +275,7 @@ jobs:
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 20
           cache: "npm"
 
 
@@ -324,7 +324,7 @@ jobs:
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
           cache: "npm"
 
       - name: Install Protoc
@@ -446,7 +446,7 @@ jobs:
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
           cache: "npm"
           cache-dependency-path: 'tests/package-lock.json'
 

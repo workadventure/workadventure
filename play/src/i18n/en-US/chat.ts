@@ -21,6 +21,7 @@ const chat: BaseTranslation = {
         walkTo: "Walk to",
         teleporting: "Teleporting ...",
         businessCard: "Business Card",
+        sendMessage: "Send Message",
     },
     connecting: "Connecting to server ...",
     waitingInit: "Waiting for server initialization ...",
@@ -29,6 +30,7 @@ const chat: BaseTranslation = {
     searchChat: "Search for channel, message, etc ...",
     people: "People",
     rooms: "Rooms",
+    invitations: "Invitations",
     availableRooms: "Available rooms",
     proximity: "Proximity Chat",
     role: {
@@ -71,6 +73,7 @@ const chat: BaseTranslation = {
         description: "Messages and events history",
         incoming: "{userName} joined the discussion",
         outcoming: "{userName} has left the discussion",
+        youLeft: "You left the discussion",
     },
     form: {
         placeholder: "Enter your message...",

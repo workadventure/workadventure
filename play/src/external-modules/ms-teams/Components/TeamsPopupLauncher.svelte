@@ -1,8 +1,8 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { createEventDispatcher } from "svelte";
-    import LL from "../../i18n/i18n-svelte";
-    import TeamsLogoPng from "./images/TeamsLogo.png";
+    import LL from "../../../i18n/i18n-svelte";
+    import TeamsLogoSvg from "./images/business.svg";
 
     const dispatch = createEventDispatcher();
 
@@ -35,7 +35,7 @@
 <div class="teams-menu tw-min-h-fit tw-rounded-3xl tw-overflow-visible" transition:fly={{ x: 1000, duration: 500 }}>
     <div class="tw-p-8 tw-flex tw-flex-col tw-justify-center tw-items-center">
         <h1 class="tw-p-2">Join your Teams meeting 🎉</h1>
-        <img src={TeamsLogoPng} alt="Object" class="tw-w-32 tw-h-32 tw-mb-4 tw-object-contain" />
+        <img src={TeamsLogoSvg} alt="Object" class="tw-w-32 tw-h-32 tw-mb-4 tw-object-contain" />
         <p class="tw-py-2 tw-m-0">subject: <span class="tw-font-bold">{subject}</span></p>
         <p class="tw-py-2 tw-m-0">meetingId: {meetingId}</p>
         <p class="tw-py-2 tw-m-0">start: {startDateTime.toLocaleString()}</p>

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Readable, Unsubscriber, writable } from "svelte/store";
+    import { writable } from "svelte/store";
     import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
     import { AvailabilityStatus } from "@workadventure/messages";
@@ -42,10 +42,7 @@
     import worldImg from "../images/world.svg";
     import calendarSvg from "../images/calendar.svg";
     import burgerMenuImg from "../images/menu.svg";
-    import businessSvg from "../images/applications/business.svg";
-    import checkSvg from "../images/applications/check.svg";
-    import reloadSvg from "../images/applications/reload.svg";
-    import warningSvg from "../images/applications/warning.svg";
+    import AppSvg from "../images/action-app.svg";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
@@ -106,8 +103,7 @@
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
     import { isActivatedStore, isCalendarVisibleStore } from "../../Stores/CalendarStore";
-    import { extensionActivateComponentModuleStore, extensionModuleStore } from "../../Stores/GameSceneStore";
-    import { ExternalModuleStatus } from "../../ExternalModule/ExtensionModule";
+    import { externalActionBarSvelteComponent } from "../../Stores/Utils/externalSvelteComponentStore";
     import AvailabilityStatusComponent from "./AvailabilityStatus/AvailabilityStatus.svelte";
     import { IconCheck, IconChevronDown, IconChevronUp } from "@wa-icons";
 
@@ -187,6 +183,7 @@
             emoteMenuSubStore.closeEmoteMenu();
         } else {
             emoteMenuSubStore.openEmoteMenu();
+            appMenuOpened = false;
         }
     }
 
@@ -386,18 +383,18 @@
     }
 
     let totalMessagesToSee = writable<number>(0);
-    let externalModuleStatusStore: Readable<ExternalModuleStatus> | undefined;
-    let extensionModuleStoreSubscription: Unsubscriber | undefined;
+
+    const gameScene = gameManager.getCurrentGameScene();
+    const { chatConnection } = gameScene;
+
+    const chatHasUnreadMessage = chatConnection.hasUnreadMessages;
+
     onMount(() => {
         resizeObserver.observe(mainHtmlDiv);
-        extensionModuleStoreSubscription = extensionModuleStore.subscribe((value) => {
-            externalModuleStatusStore = value?.statusStore;
-        });
     });
 
     onDestroy(() => {
         resizeObserver.disconnect();
-        if (extensionModuleStoreSubscription) extensionModuleStoreSubscription();
     });
 
     function buttonActionBarTrigger(id: string) {
@@ -423,6 +420,7 @@
 
     const onClickOutside = () => {
         if ($emoteMenuSubStore) emoteMenuSubStore.closeEmoteMenu();
+        if (appMenuOpened) appMenuOpened = false;
     };
 
     let isActiveMobileMenu = false;
@@ -448,8 +446,10 @@
         }
     }
 
-    function showExternalModule() {
-        extensionActivateComponentModuleStore.set(true);
+    let appMenuOpened = false;
+    function openAppMenu() {
+        emoteMenuSubStore.closeEmoteMenu();
+        appMenuOpened = !appMenuOpened;
     }
 </script>
 
@@ -835,7 +835,7 @@
                     <button class:border-top-light={$chatVisibilityStore} class="chat-btn">
                         <img draggable="false" src={bubbleImg} style="padding: 2px" alt="Toggle chat" />
                     </button>
-                    {#if $chatZoneLiveStore || $peerStore.size > 0}
+                    {#if $chatZoneLiveStore || $peerStore.size > 0 || $chatHasUnreadMessage}
                         <div class="tw-absolute tw-top-1 tw-right-0.5">
                             <span
                                 class={`tw-w-4 tw-h-4 ${
@@ -899,8 +899,9 @@
             </div>
 
             {#if !isMobile || openMobileMenu == true}
+                <!-- Menu part -->
                 <div class="bottom-action-section tw-flex tw-flex-initial">
-                    <!-- Menu part -->
+                    <!-- Logo part -->
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
                         on:dragstart|preventDefault={noDrag}
@@ -917,87 +918,21 @@
                         </button>
                     </div>
 
-                    <!-- Teams integration -->
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    {#if $extensionModuleStore != undefined && $extensionModuleStore.statusStore != undefined}
-                        <div
-                            class="bottom-action-button"
-                            on:dragstart|preventDefault={noDrag}
-                            on:click={() => analyticsClient.openExternalModule()}
-                            on:click={showExternalModule}
-                        >
-                            {#if !isMobile && externalModuleStatusStore != undefined}
-                                {#if $externalModuleStatusStore === ExternalModuleStatus.ONLINE}
-                                    <Tooltip text={$LL.actionbar.externalModule.status.onLine()} />
-                                {:else if $externalModuleStatusStore === ExternalModuleStatus.WARNING}
-                                    <Tooltip text={$LL.actionbar.externalModule.status.warning()} />
-                                {:else if $externalModuleStatusStore === ExternalModuleStatus.SYNC}
-                                    <Tooltip text={$LL.actionbar.externalModule.status.sync()} />
-                                {:else}
-                                    <Tooltip text={$LL.actionbar.externalModule.status.offLine()} />
-                                {/if}
-                            {/if}
-                            <button id="teamsIcon" class="tw-relative">
-                                <img draggable="false" src={businessSvg} style="padding: 2px;" alt="Teams" />
-                                {#if externalModuleStatusStore != undefined}
-                                    <span
-                                        class="tw-absolute tw-right-0 tw-top-5 tw-text-white tw-rounded-full tw-px-1 tw-py-0.5 tw-text-xxs tw-font-bold tw-leading-none"
-                                    >
-                                        {#if $externalModuleStatusStore === ExternalModuleStatus.ONLINE}
-                                            <img
-                                                draggable="false"
-                                                src={checkSvg}
-                                                style="padding: 2px; width: 16px; opacity: 0.6;"
-                                                alt="Teams"
-                                            />
-                                        {:else if $externalModuleStatusStore === ExternalModuleStatus.WARNING}
-                                            <img
-                                                draggable="false"
-                                                src={warningSvg}
-                                                style="padding: 2px; width: 16px; opacity: 0.6;"
-                                                alt="Teams"
-                                            />
-                                        {:else if $externalModuleStatusStore === ExternalModuleStatus.SYNC}
-                                            <img
-                                                draggable="false"
-                                                src={reloadSvg}
-                                                style="padding: 2px; width: 16px; opacity: 0.6;"
-                                                alt="Teams"
-                                            />
-                                        {/if}
-                                    </span>
-                                {/if}
-                            </button>
-                        </div>
-                    {/if}
+                    <div
+                        on:dragstart|preventDefault={noDrag}
+                        on:click={() => analyticsClient.openedMenu()}
+                        on:click|stopPropagation={openAppMenu}
+                        class="bottom-action-button"
+                    >
+                        {#if !isMobile}
+                            <Tooltip text={$LL.actionbar.appList()} />
+                        {/if}
 
-                    <!-- Calendar integration -->
-                    {#if $isActivatedStore}
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                        <div
-                            on:dragstart|preventDefault={noDrag}
-                            on:click={() => analyticsClient.openExternalModuleCalendar()}
-                            on:click={openExternalModuleCalendar}
-                            class="bottom-action-button"
-                        >
-                            {#if !isMobile}
-                                <Tooltip text={$LL.actionbar.calendar()} />
-                            {/if}
-                            <button id="calendarIcon" class:border-top-light={$isCalendarVisibleStore}>
-                                <img
-                                    draggable="false"
-                                    src={calendarSvg}
-                                    style="padding: 2px"
-                                    alt={$LL.menu.icon.open.calendar()}
-                                />
-                                <span
-                                    class="tw-absolute tw-top-5 tw-text-white tw-rounded-full tw-px-1 tw-py-0.5 tw-text-xxs tw-font-bold tw-leading-none"
-                                >
-                                    {new Date().getDate()}
-                                </span>
-                            </button>
-                        </div>
-                    {/if}
+                        <button id="appIcon" class:border-top-light={appMenuOpened}>
+                            <img draggable="false" src={AppSvg} style="padding: 2px" alt="Applications list" />
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Status part -->
@@ -1053,35 +988,6 @@
                         </div>
                     {/if}
                 </div>
-
-                <!-- Room list part -->
-                {#if $roomListActivated}
-                    <div class="bottom-action-section tw-flex tw-flex-initial">
-                        <!-- TODO button hep -->
-                        <!-- Room list button -->
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                        <div
-                            on:dragstart|preventDefault={noDrag}
-                            on:click={() => analyticsClient.openedRoomList()}
-                            on:click={showRoomList}
-                            class="bottom-action-button"
-                        >
-                            {#if !isMobile}
-                                <Tooltip text={$LL.actionbar.roomList()} />
-                            {/if}
-
-                            <button id="roomListIcon" class:border-top-light={$roomListVisibilityStore}>
-                                <!-- svelte-ignore a11y-img-redundant-alt -->
-                                <img
-                                    draggable="false"
-                                    src={worldImg}
-                                    style="padding: 2px"
-                                    alt="Image for room list modal"
-                                />
-                            </button>
-                        </div>
-                    </div>
-                {/if}
             {/if}
 
             {#if $addActionButtonActionBarEvent.length > 0}
@@ -1184,7 +1090,7 @@
 {#if $emoteMenuSubStore}
     <div
         class="tw-flex tw-justify-center tw-m-auto tw-absolute tw-left-0 tw-right-0 tw-bottom-0"
-        style="margin-bottom: 4.5rem; height: auto;"
+        style="margin-bottom: 5.5rem; height: auto;"
     >
         <div class="bottom-action-bar">
             <div class="bottom-action-section tw-flex animate">
@@ -1223,7 +1129,7 @@
                             <img
                                 draggable="false"
                                 src={penImg}
-                                style="padding: 2px"
+                                style="padding: 6px"
                                 alt={$LL.menu.icon.open.openEmoji()}
                             />
                         {/if}
@@ -1234,9 +1140,96 @@
                         <img
                             draggable="false"
                             src={closeImg}
-                            style="padding: 4px"
+                            style="padding: 8px"
                             alt={$LL.menu.icon.open.closeEmoji()}
                         />
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+{/if}
+
+{#if appMenuOpened && $roomListActivated && $isActivatedStore && $externalActionBarSvelteComponent.size > 0}
+    <div
+        class="tw-flex tw-justify-center tw-m-auto tw-absolute tw-left-0 tw-right-0 tw-bottom-0"
+        style="margin-bottom: 5.5rem; height: auto;"
+    >
+        <div class="bottom-action-bar">
+            <div class="bottom-action-section tw-flex animate">
+                <!-- Room list part -->
+                {#if $roomListActivated}
+                    <!-- TODO button hep -->
+                    <!-- Room list button -->
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div
+                        on:dragstart|preventDefault={noDrag}
+                        on:click={() => analyticsClient.openedRoomList()}
+                        on:click={showRoomList}
+                        class="bottom-action-button"
+                    >
+                        {#if !isMobile}
+                            <Tooltip text={$LL.actionbar.roomList()} />
+                        {/if}
+
+                        <button id="roomListIcon" class:border-top-light={$roomListVisibilityStore}>
+                            <!-- svelte-ignore a11y-img-redundant-alt -->
+                            <img
+                                draggable="false"
+                                src={worldImg}
+                                style="padding: 2px"
+                                alt="Image for room list modal"
+                            />
+                        </button>
+                    </div>
+                {/if}
+
+                <!-- Calendar integration -->
+                {#if $isActivatedStore}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div
+                        on:dragstart|preventDefault={noDrag}
+                        on:click={() => analyticsClient.openExternalModuleCalendar()}
+                        on:click={openExternalModuleCalendar}
+                        class="bottom-action-button"
+                    >
+                        {#if !isMobile}
+                            <Tooltip text={$LL.actionbar.calendar()} />
+                        {/if}
+                        <button id="calendarIcon" class:border-top-light={$isCalendarVisibleStore}>
+                            <img
+                                draggable="false"
+                                src={calendarSvg}
+                                style="padding: 2px"
+                                alt={$LL.menu.icon.open.calendar()}
+                            />
+                            <span
+                                class="tw-absolute tw-top-5 tw-text-white tw-rounded-full tw-px-1 tw-py-0.5 tw-text-xxs tw-font-bold tw-leading-none"
+                            >
+                                {new Date().getDate()}
+                            </span>
+                        </button>
+                    </div>
+                {/if}
+            </div>
+
+            <div class="bottom-action-section tw-flex animate">
+                <!-- External module action bar -->
+                {#if $externalActionBarSvelteComponent.size > 0}
+                    {#each [...$externalActionBarSvelteComponent.entries()] as [id, value] (`externalActionBarSvelteComponent-${id}`)}
+                        <svelte:component
+                            this={value.componentType}
+                            extensionModule={value.extensionModule}
+                            {isMobile}
+                        />
+                    {/each}
+                {/if}
+            </div>
+
+            <div class="bottom-action-section tw-flex animate">
+                <div class="tw-transition-all bottom-action-button">
+                    <button on:click|preventDefault={openAppMenu}>
+                        <img draggable="false" src={closeImg} style="padding: 8px" alt={$LL.actionbar.appList()} />
                     </button>
                 </div>
             </div>

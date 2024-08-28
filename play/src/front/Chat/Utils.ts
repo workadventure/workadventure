@@ -95,7 +95,8 @@ export const closeCoWebsite = (coWebsiteId: string) => {
     const coWebsite = coWebsiteManager.getCoWebsiteById(coWebsiteId);
 
     if (!coWebsite) {
-        throw new Error("Unknown co-website");
+        console.warn("Unknown co-website, probably already closed", coWebsiteId);
+        return;
     }
 
     return coWebsiteManager.closeCoWebsite(coWebsite);

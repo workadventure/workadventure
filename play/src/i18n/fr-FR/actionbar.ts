@@ -36,14 +36,7 @@ const actionbar: BaseTranslation = {
     },
     globalMessage: "Envoyer un message global",
     roomList: "Ouvrir / Fermer la liste des salons",
-    externalModule: {
-        status: {
-            onLine: "Le statut est ok ✅",
-            offLine: "Le statut est hors ligne ❌",
-            warning: "Le statut est en avertissement ⚠️",
-            sync: "Le statut est en synchronisation 🔄",
-        },
-    },
+    appList: "Ouvrir / Fermer la liste des apps",
 };
 
 export default actionbar;

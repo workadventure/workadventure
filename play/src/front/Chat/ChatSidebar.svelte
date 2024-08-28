@@ -1,11 +1,8 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { onDestroy } from "svelte";
     import { enableUserInputsStore } from "../Stores/UserInputStore";
     import { mapEditorModeStore } from "../Stores/MapEditorStore";
     import { chatVisibilityStore, INITIAL_SIDEBAR_WIDTH } from "../Stores/ChatStore";
-    import { LocalSpaceProviderSingleton } from "../Space/SpaceProvider/SpaceStore";
-    import { CONNECTED_USER_FILTER_NAME, WORLD_SPACE_NAME } from "../Space/Space";
     import Chat from "./Components/Chat.svelte";
 
     let container: HTMLElement;
@@ -22,28 +19,7 @@
         }
     }
 
-    const chatVisibilityStoreUnsubscriber = chatVisibilityStore.subscribe((isVisible: boolean) => {
-        const SpaceProvider = LocalSpaceProviderSingleton.getInstance();
-        if (!SpaceProvider) return;
-
-        const allWorldUserSpace = SpaceProvider.get(WORLD_SPACE_NAME);
-        const connectedUsersFilter = allWorldUserSpace.getSpaceFilter(CONNECTED_USER_FILTER_NAME);
-
-        if (isVisible) {
-            connectedUsersFilter.setFilter({
-                $case: "spaceFilterEverybody",
-                spaceFilterEverybody: {},
-            });
-        } else {
-            connectedUsersFilter.setFilter(undefined);
-        }
-    });
-
-    onDestroy(() => {
-        chatVisibilityStoreUnsubscriber();
-    });
-
-    let sideBarWidth;
+    let sideBarWidth: number;
 
     const handleMousedown = (e: MouseEvent) => {
         let dragX = e.clientX;
@@ -79,7 +55,7 @@
     };
 
     const handleDbClick = () => {
-        if (container.style.width === document.documentElement.clientWidth + "px") {
+        if (isChatBarInFullScreen()) {
             container.style.maxWidth = INITIAL_SIDEBAR_WIDTH + "px";
             container.style.width = INITIAL_SIDEBAR_WIDTH + "px";
         } else {
@@ -87,9 +63,24 @@
             container.style.width = document.documentElement.clientWidth + "px";
         }
     };
+
+    const onresize = () => {
+        if (isChatSidebarLargerThanWindow()) {
+            container.style.maxWidth = document.documentElement.clientWidth + "px";
+            container.style.width = document.documentElement.clientWidth + "px";
+        }
+    };
+
+    const isChatSidebarLargerThanWindow = () => {
+        return sideBarWidth >= document.documentElement.clientWidth;
+    };
+
+    const isChatBarInFullScreen = () => {
+        return sideBarWidth === document.documentElement.clientWidth;
+    };
 </script>
 
-<svelte:window on:keydown={onKeyDown} />
+<svelte:window on:keydown={onKeyDown} on:resize={onresize} />
 {#if $chatVisibilityStore}
     <section
         bind:clientWidth={sideBarWidth}

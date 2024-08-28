@@ -7,27 +7,34 @@ import { Observable } from "rxjs";
 import { z } from "zod";
 import { OpenCoWebsiteObject } from "../Chat/Utils";
 
-export enum ExternalModuleStatus {
-    ONLINE = "online",
-    WARNING = "warning",
-    SYNC = "sync",
-    OFFLINE = "offline",
+export interface ExternalSvelteComponentStore {
+    addActionBarComponent: (key: string, externsionModule: ExtensionModule, componentType: ComponentType) => void;
+    removeActionBarComponent: (key: string) => void;
+    addAvailibilityStatusComponent: (
+        key: string,
+        externsionModule: ExtensionModule,
+        componentType: ComponentType
+    ) => void;
+    removeAvailibilityStatusComponent: (key: string) => void;
+    addPopupComponent: (key: string, externsionModule: ExtensionModule, componentType: ComponentType) => void;
+    removePopupComponent: (key: string) => void;
 }
 
 export interface ExtensionModuleOptions {
     workadventureStatusStore: Readable<AvailabilityStatus>;
-    onExtensionModuleStatusChange?: (workAdventureNewStatus: AvailabilityStatus) => void;
-    getOauthRefreshToken?: (tokenToRefresh: string) => Promise<OauthRefreshToken>;
-    calendarEventsStoreUpdate?: (this: void, updater: Updater<Map<string, CalendarEventInterface>>) => void;
     userAccessToken: string;
     roomId: string;
-    externalModuleMessage?: Observable<ExternalModuleMessage>;
-    adminUrl?: string;
-    openCoWebSite?: (
+    externalModuleMessage: Observable<ExternalModuleMessage>;
+    externalSvelteComponent: Readable<ExternalSvelteComponentStore>;
+    onExtensionModuleStatusChange: (workAdventureNewStatus: AvailabilityStatus) => void;
+    calendarEventsStoreUpdate: (this: void, updater: Updater<Map<string, CalendarEventInterface>>) => void;
+    openCoWebSite: (
         openCoWebsiteObject: OpenCoWebsiteObject,
         source: MessageEventSource | null
     ) => Promise<{ id: string }>;
-    closeCoWebsite?: (id: string) => unknown;
+    closeCoWebsite: (id: string) => unknown;
+    adminUrl?: string;
+    getOauthRefreshToken?: (tokenToRefresh: string) => Promise<OauthRefreshToken>;
 }
 
 export interface ExtensionModuleAreaProperty {
@@ -39,12 +46,11 @@ export interface ExtensionModuleAreaProperty {
 }
 
 export interface ExtensionModule {
-    init: (roomMetadata: RoomMetadataType, options?: ExtensionModuleOptions) => void;
+    id: string;
+    init: (roomMetadata: RoomMetadataType, options: ExtensionModuleOptions) => void;
     joinMeeting: () => void;
     destroy: () => void;
     areaMapEditor?: () => { [key: string]: ExtensionModuleAreaProperty } | undefined;
-    statusStore?: Readable<ExternalModuleStatus>;
-    checkModuleSynschronisation?: () => void;
     components?: () => ComponentType[];
     openPopupMeeting?: (
         subject: string,
@@ -54,9 +60,7 @@ export interface ExtensionModule {
         endDateTime: Date,
         passcode?: string
     ) => void;
-    meetingSynchronised?: boolean;
-    calendarSynchronised?: boolean;
-    presenceSynchronised?: boolean;
+    calendarSynchronised: boolean;
 }
 
 export const RoomMetadataType = z.object({
@@ -69,7 +73,8 @@ export const RoomMetadataType = z.object({
         ),
     }),
     msteams: z.boolean().optional(),
-    teamsstings: z.object({
+    modules: z.enum(["ms-teams", "discord", "slack"]).array(),
+    msTeamsSettings: z.object({
         communication: z.boolean(),
         status: z.boolean(),
         calendar: z.boolean(),

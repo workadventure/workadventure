@@ -291,8 +291,6 @@ export class AdminController extends BaseHttpController {
             for (const roomClient of roomClients) {
                 promises.push(
                     new Promise<void>((resolve, reject) => {
-                        console.log("dispatchGlobalEvent => body.name", body.name);
-                        console.log("dispatchGlobalEvent => body.data", body.data);
                         roomClient.dispatchGlobalEvent(
                             {
                                 name: body.name,
@@ -405,7 +403,6 @@ export class AdminController extends BaseHttpController {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.post("/external-module/event", [adminToken], async (req: Request, res: Response) => {
             const body = await req.json();
-            console.log("dispatchExternalModuleEvent => body", body);
             try {
                 if (typeof body.data.moduleId !== "string") {
                     throw new Error("Incorrect roomId parameter");

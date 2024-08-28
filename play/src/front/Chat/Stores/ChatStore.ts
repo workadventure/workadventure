@@ -1,5 +1,6 @@
-import { writable } from "svelte/store";
-import { ChatMessage as NewChatMessage, ChatRoom, ChatConnectionInterface } from "../Connection/ChatConnection";
+import { get, writable } from "svelte/store";
+import { ChatMessage as NewChatMessage, ChatRoom } from "../Connection/ChatConnection";
+import { chatVisibilityStore } from "../../Stores/ChatStore";
 
 export const navChat = writable<"chat" | "users" | "settings">("chat");
 
@@ -12,4 +13,12 @@ export const selectedChatMessageToEdit = writable<NewChatMessage | null>(null);
 
 export const joignableRoom = writable<{ id: string; name: string | undefined }[]>([]);
 
-export const proximityRoomConnection = writable<ChatConnectionInterface | undefined>(undefined);
+export const isAChatRoomIsVisible = () => {
+    return get(selectedRoom) && get(navChat) === "chat" && get(chatVisibilityStore);
+};
+
+export const showRoom = (room: ChatRoom) => {
+    selectedRoom.set(room);
+    navChat.set("chat");
+    chatVisibilityStore.set(true);
+};

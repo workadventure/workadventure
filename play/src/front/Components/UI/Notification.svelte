@@ -7,6 +7,7 @@
     import jistiImg from "../images/jitsi.png";
     import waImg from "../images/icon-workadventure-white.png";
     import AreaToolImg from "../images/icon-tool-area.png";
+    import BusinessImg from "../../../external-modules/ms-teams/Components/images/business.svg";
 
     const icons = new Map<string, string>([
         ["microphone-off.png", microphoneOffImg],
@@ -14,6 +15,7 @@
         ["jitsi.png", jistiImg],
         ["jitsi.png", jistiImg],
         ["icon-tool-area.png", AreaToolImg],
+        ["business.svg", BusinessImg],
     ]);
 
     export let notification: Notification;

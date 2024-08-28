@@ -11,7 +11,6 @@ const actionbar: BaseTranslation = {
     microphone: "Mute / Unmute",
     emoji: "Open / Close emoji",
     menu: "Open / Close menu",
-    calendar: "Open / Close calendar",
     bo: "Open back office",
     subtitle: {
         microphone: "Microphone",

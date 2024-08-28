@@ -30,7 +30,7 @@ import { chatZoneLiveStore } from "../../../Stores/ChatStore";
  import { layoutManagerActionStore } from "../../../Stores/LayoutManagerStore";
  */
 import { inJitsiStore, inOpenWebsite, isSpeakerStore, silentStore } from "../../../Stores/MediaStore";
-import { currentLiveStreamingNameStore } from "../../../Stores/MegaphoneStore";
+import { currentLiveStreamingSpaceStore } from "../../../Stores/MegaphoneStore";
 import { notificationPlayingStore } from "../../../Stores/NotificationStore";
 import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
 import { JitsiCoWebsite } from "../../../WebRtc/CoWebsite/JitsiCoWebsite";
@@ -45,6 +45,7 @@ import { requestVisitCardsStore, selectedChatIDRemotePlayerStore } from "../../.
 import { isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
 import { MessageUserJoined } from "../../../Connection/ConnexionModels";
 import { Area } from "../../Entity/Area";
+import { extensionModuleStore } from "../../../Stores/GameSceneStore";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -720,19 +721,26 @@ export class AreasPropertiesListener {
     }
 
     private handleExtensionModuleAreaPropertyOnLeave(subtype: string, area?: AreaData): void {
-        const areaMapEditor = this.scene.extensionModule?.areaMapEditor && this.scene.extensionModule?.areaMapEditor();
-        if (areaMapEditor === undefined) {
-            return;
+        const extensionModule = get(extensionModuleStore);
+        for (const module of extensionModule) {
+            if (!module.areaMapEditor) continue;
+
+            const areaMapEditor = module.areaMapEditor();
+            if (areaMapEditor == undefined) continue;
+
+            areaMapEditor[subtype].handleAreaPropertyOnLeave(area);
         }
-        areaMapEditor[subtype].handleAreaPropertyOnLeave(area);
     }
 
     private handleExtensionModuleAreaPropertyOnEnter(area: AreaData, subtype: string): void {
-        const areaMapEditor = this.scene.extensionModule?.areaMapEditor && this.scene.extensionModule?.areaMapEditor();
-        if (areaMapEditor === undefined) {
-            return;
+        const extensionModule = get(extensionModuleStore);
+        for (const module of extensionModule) {
+            if (!module.areaMapEditor) continue;
+
+            const areaMapEditor = module.areaMapEditor();
+            if (areaMapEditor == undefined) continue;
+            areaMapEditor[subtype].handleAreaPropertyOnEnter(area);
         }
-        areaMapEditor[subtype].handleAreaPropertyOnEnter(area);
     }
 
     private openCoWebsiteFunction(
@@ -791,8 +799,8 @@ export class AreasPropertiesListener {
     private handleSpeakerMegaphonePropertyOnEnter(property: SpeakerMegaphonePropertyData): void {
         if (property.name !== undefined && property.id !== undefined) {
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
-            currentLiveStreamingNameStore.set(uniqRoomName);
-            this.scene.broadcastService.joinSpace(uniqRoomName, false);
+            const broadcastSpace = this.scene.broadcastService.joinSpace(uniqRoomName, false);
+            currentLiveStreamingSpaceStore.set(broadcastSpace.space);
             isSpeakerStore.set(true);
             //requestedMegaphoneStore.set(true);
             if (property.chatEnabled) {
@@ -805,7 +813,7 @@ export class AreasPropertiesListener {
         if (property.name !== undefined && property.id !== undefined) {
             isSpeakerStore.set(false);
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
-            currentLiveStreamingNameStore.set(undefined);
+            currentLiveStreamingSpaceStore.set(undefined);
             this.scene.broadcastService.leaveSpace(uniqRoomName);
             if (property.chatEnabled) {
                 this.handleLeaveMucRoom(uniqRoomName);
@@ -821,8 +829,8 @@ export class AreasPropertiesListener {
             );
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
-                currentLiveStreamingNameStore.set(uniqRoomName);
-                this.scene.broadcastService.joinSpace(uniqRoomName, false);
+                const broadcastSpace = this.scene.broadcastService.joinSpace(uniqRoomName, false);
+                currentLiveStreamingSpaceStore.set(broadcastSpace.space);
                 if (property.chatEnabled) {
                     this.handleJoinMucRoom(uniqRoomName, "live");
                 }
@@ -838,7 +846,7 @@ export class AreasPropertiesListener {
             );
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
-                currentLiveStreamingNameStore.set(undefined);
+                currentLiveStreamingSpaceStore.set(undefined);
                 this.scene.broadcastService.leaveSpace(uniqRoomName);
                 if (property.chatEnabled) {
                     this.handleLeaveMucRoom(uniqRoomName);
