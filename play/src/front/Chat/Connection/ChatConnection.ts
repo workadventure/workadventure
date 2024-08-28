@@ -107,6 +107,7 @@ export interface ChatConnectionInterface {
     invitations: Readable<ChatRoom[]>;
     roomFolders: Readable<RoomFolder[]>;
     createRoom: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string }>;
+    createFolder: (roomOptions: CreateFolderOptions) => Promise<{ room_id: string }>;
     createDirectRoom(userChatId: string): Promise<ChatRoom | undefined>;
     getDirectRoomFor(uuserChatId: string): ChatRoom | undefined;
     searchAccessibleRooms(searchText: string): Promise<

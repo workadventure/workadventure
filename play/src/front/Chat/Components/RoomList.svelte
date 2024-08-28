@@ -102,21 +102,17 @@
         get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase())
     );
 
-
-
     $: isGuest = chat.isGuest;
 
     $: displayTwoColumnLayout = sideBarWidth >= CHAT_LAYOUT_LIMIT;
 
-    const isFoldersOpen : {[key:string]:boolean} = {
+    const isFoldersOpen: { [key: string]: boolean } = {};
 
-} ;
-
-$roomFolders.forEach(folder => {
-if (!(folder.id in isFoldersOpen)) {
-  isFoldersOpen[folder.id] = false; 
-}
-});
+    $roomFolders.forEach((folder) => {
+        if (!(folder.id in isFoldersOpen)) {
+            isFoldersOpen[folder.id] = false;
+        }
+    });
 </script>
 
 <div
@@ -137,7 +133,7 @@ if (!(folder.id in isFoldersOpen)) {
                 <ChatError />
             {/if}
             {#if $chatConnectionStatus === "ONLINE"}
-            {#if $joignableRoom.length > 0 && $chatSearchBarValue.trim()!==""}
+                {#if $joignableRoom.length > 0 && $chatSearchBarValue.trim() !== ""}
                     <p class="tw-p-0 tw-m-0 tw-text-gray-400">{$LL.chat.availableRooms()}</p>
                     <div class="tw-flex tw-flex-col tw-overflow-auto">
                         {#each $joignableRoom as room (room.id)}
@@ -163,39 +159,38 @@ if (!(folder.id in isFoldersOpen)) {
                         {/if}
                     </div>
                 {/if}
-            <div  class="tw-flex tw-justify-between">
-                <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={toggleDisplayDirectRooms}>
-                    {#if displayDirectRooms}
-                        <IconChevronDown />
-                    {:else}
-                        <IconChevronRight />
-                    {/if}
-                    {$LL.chat.people()}</button
-                >
-                {#if $isGuest === false}
-                   
+                <div class="tw-flex tw-justify-between">
+                    <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={toggleDisplayDirectRooms}>
+                        {#if displayDirectRooms}
+                            <IconChevronDown />
+                        {:else}
+                            <IconChevronRight />
+                        {/if}
+                        {$LL.chat.people()}</button
+                    >
+                    {#if $isGuest === false}
                         <button
                             data-testid="openCreateRoomModalButton"
                             class="tw-p-0 tw-m-0 tw-text-gray-400"
-                            on:click={()=>{
-                                openCreateRoomModal()
+                            on:click={() => {
+                                openCreateRoomModal();
                             }}
                         >
                             <IconSquarePlus font-size={16} />
                         </button>
-                {/if}
-                </div>
-
-            {#if displayDirectRooms}
-                <div class="tw-flex tw-flex-col tw-overflow-auto">
-                    {#each filteredDirectRoom as room (room.id)}
-                        <Room {room} />
-                    {/each}
-                    {#if filteredDirectRoom.length === 0}
-                        <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
                     {/if}
                 </div>
-            {/if}
+
+                {#if displayDirectRooms}
+                    <div class="tw-flex tw-flex-col tw-overflow-auto">
+                        {#each filteredDirectRoom as room (room.id)}
+                            <Room {room} />
+                        {/each}
+                        {#if filteredDirectRoom.length === 0}
+                            <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
+                        {/if}
+                    </div>
+                {/if}
 
                 <div class="tw-flex tw-justify-between">
                     <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={toggleDisplayRooms}>
@@ -204,13 +199,14 @@ if (!(folder.id in isFoldersOpen)) {
                         {:else}
                             <IconChevronRight />
                         {/if}
-                        {$LL.chat.rooms()}</button>
+                        {$LL.chat.rooms()}</button
+                    >
                     {#if $isGuest === false}
                         <button
                             data-testid="openCreateRoomModalButton"
                             class="tw-p-0 tw-m-0 tw-text-gray-400"
-                            on:click={()=>{
-                                openCreateRoomModal()
+                            on:click={() => {
+                                openCreateRoomModal();
                             }}
                         >
                             <IconSquarePlus font-size={16} />
@@ -228,10 +224,17 @@ if (!(folder.id in isFoldersOpen)) {
                         {/if}
                     </div>
                 {/if}
-            <!--roomBySpace-->
-            {#each $roomFolders as rootRoomFolder  (rootRoomFolder.id)}
-                <RoomFolder bind:isOpen={isFoldersOpen[rootRoomFolder.id]} name={rootRoomFolder.name} id={rootRoomFolder.id}  folders={rootRoomFolder.folders} rooms={rootRoomFolder.rooms} isGuest={$isGuest}/>
-            {/each}
+                <!--roomBySpace-->
+                {#each $roomFolders as rootRoomFolder (rootRoomFolder.id)}
+                    <RoomFolder
+                        bind:isOpen={isFoldersOpen[rootRoomFolder.id]}
+                        name={rootRoomFolder.name}
+                        id={rootRoomFolder.id}
+                        folders={rootRoomFolder.folders}
+                        rooms={rootRoomFolder.rooms}
+                        isGuest={$isGuest}
+                    />
+                {/each}
             {/if}
 
             <div class="tw-flex tw-justify-between">

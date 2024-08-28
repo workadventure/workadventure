@@ -4,8 +4,8 @@ import { KnownMembership } from "matrix-js-sdk/lib/types";
 import * as Sentry from "@sentry/svelte";
 import { RoomFolder } from "../ChatConnection";
 import { MatrixChatRoom } from "./MatrixChatRoom";
-
 export class MatrixRoomFolder implements RoomFolder {
+    //TODO : change array to map store
     rooms: Writable<MatrixChatRoom[]> = writable([]);
     folders: Writable<MatrixRoomFolder[]> = writable([]);
     id: string;
@@ -38,20 +38,21 @@ export class MatrixRoomFolder implements RoomFolder {
                             } else {
                                 const matrixChatRoom = new MatrixChatRoom(childRoom);
                                 if (matrixChatRoom.myMembership === KnownMembership.Join) {
-                                    acc.rooms.push(new MatrixChatRoom(childRoom));
+                                    acc.rooms.push(matrixChatRoom);
                                 }
                             }
 
                             return acc;
                         }, defaultFoldersAndRooms) || defaultFoldersAndRooms;
 
-                    this.rooms.update((oldRooms) => {
-                        return [...oldRooms, ...rooms];
+                    this.rooms.update(() => {
+                        return [...rooms];
                     });
-                    this.folders.update((oldfolders) => {
-                        return [...oldfolders, ...folders];
+
+                    this.folders.update(() => {
+                        return [...folders];
                     });
-                    console.log("finish to load folders and room in :", get(this.name));
+
                     resolve();
                 })
                 .catch((error) => {
@@ -89,7 +90,6 @@ export class MatrixRoomFolder implements RoomFolder {
         const hasNodeInRoom = get(this.rooms).some((room) => room.id === id);
         if (hasNodeInRoom) {
             this.rooms.update((rooms) => {
-                console.log("delete a sub room");
                 return rooms.filter((room) => room.id !== id);
             });
             return true;
@@ -98,7 +98,6 @@ export class MatrixRoomFolder implements RoomFolder {
         const hasNodeInFolder = get(this.folders).some((folder) => folder.id === id);
         if (hasNodeInFolder) {
             this.folders.update((folders) => {
-                console.log("delete a sub folder");
                 return folders.filter((folder) => folder.id !== id);
             });
             return true;

@@ -200,6 +200,35 @@ const chat: DeepPartial<Translation["chat"]> = {
         loadingCreation: "Salon en cours de création",
         creationSuccessNotification: "Salon créé",
     },
+    createFolder: {
+        title: "Créer un nouveau Space",
+        name: "Nom",
+        visibility: {
+            label: "Visibilité",
+            private: "Privé",
+            privateDescription: "Seules les personnes invitées pourront trouver et rejoindre ce salon.",
+            public: "Public",
+            publicDescription: "Quiconque pourra trouver et rejoindre ce salon.",
+        },
+        e2eEncryption: {
+            label: "Activer le chiffrement de bout en bout",
+            description: "Vous ne pourrez pas le désactiver plus tard.",
+        },
+        users: "Utilisateurs",
+        historyVisibility: {
+            label: "Qui peut lire l'historique",
+            world_readable: "N'importe qui",
+            joined: "Seulement les membres (depuis leur arrivée)",
+            invited: "Seulement les membres (depuis leur invitation)",
+        },
+        buttons: {
+            create: "Créer",
+            cancel: "Annuler",
+        },
+        error: "Erreur lors de la création du salon",
+        loadingCreation: "Salon en cours de création",
+        creationSuccessNotification: "Salon créé",
+    },
     roomMenu: {
         leaveRoom: {
             label: "Quitter le salon",

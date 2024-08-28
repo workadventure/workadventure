@@ -23,7 +23,7 @@
         clearTimeout(typingTimer);
         typingTimer = setTimeout(() => {
             searchLoader = true;
-            if ($navChat === "chat" && $chatSearchBarValue.trim()!=="" ) {
+            if ($navChat === "chat" && $chatSearchBarValue.trim() !== "") {
                 searchAccessibleRooms();
             }
 
