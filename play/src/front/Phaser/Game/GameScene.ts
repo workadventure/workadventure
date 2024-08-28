@@ -1526,6 +1526,10 @@ export class GameScene extends DirtyScene {
                 matrixClientPromise
                     .then((matrixClient) => {
                         matrixSecurity.updateMatrixClientStore(matrixClient);
+
+                        const chatId = localUserStore.getChatId();
+                        const email: string | null = localUserStore.getLocalUser()?.email || null;
+                        if (email && chatId) this.connection?.emitUpdateChatId(email, chatId);
                     })
                     .catch((e) => {
                         console.error(e);
@@ -1547,10 +1551,6 @@ export class GameScene extends DirtyScene {
                     matrixUserProvider,
                     worldUserProvider,
                 ]);
-
-                const chatId = localUserStore.getChatId();
-                const email: string | null = localUserStore.getLocalUser()?.email || null;
-                if (email && chatId) this.connection.emitUpdateChatId(email, chatId);
 
                 this.tryOpenMapEditorWithToolEditorParameter();
 
