@@ -38,7 +38,7 @@
 </script>
 
 <button
-    data-testid="openCreateRoomModalButton"
+    data-testid="openOptionToCreateRoomOrFolder"
     class="tw-p-0 tw-m-0 tw-text-gray-400"
     bind:this={optionButtonRef}
     on:click|preventDefault|stopPropagation={toggleSpaceOption}
@@ -52,8 +52,14 @@
     class:tw-absolue={optionButtonRef !== undefined}
     class:tw-hidden={hideFolderOptions}
 >
-    <RoomOption IconComponent={IconMessage} title={$LL.chat.createRoom.title()} on:click={closeMenuAndOpenCreateRoom} />
     <RoomOption
+        dataTestId="openCreateRoomModalButton"
+        IconComponent={IconMessage}
+        title={$LL.chat.createRoom.title()}
+        on:click={closeMenuAndOpenCreateRoom}
+    />
+    <RoomOption
+        dataTestId="openCreateFolderModalButton"
         IconComponent={IconFolder}
         title={$LL.chat.createFolder.title()}
         on:click={closeMenuAndOpenCreateSpace}

@@ -9,6 +9,7 @@ class ChatUtils {
   }
 
   public async openCreateRoomDialog(page: Page) {
+    await page.getByTestId("openOptionToCreateRoomOrFolder").click();
     await page.getByTestId("openCreateRoomModalButton").click();
   }
 
