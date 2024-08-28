@@ -10,9 +10,9 @@
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
 
     export let isOpen: boolean;
-    export let parentSpaceID: string | undefined;
+    export let parentID: string | undefined;
     let createRoomOptions: CreateRoomOptions = { visibility: "public" };
-    if (parentSpaceID) createRoomOptions.parentSpaceID = parentSpaceID;
+    if (parentID) createRoomOptions.parentSpaceID = parentID;
     let createRoomError: string | undefined = undefined;
 
     const chat = gameManager.getCurrentGameScene().chatConnection;

@@ -9,9 +9,9 @@
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
 
     export let isOpen: boolean;
-    export let parentSpaceID: string | undefined;
+    export let parentID: string | undefined;
     let createFolderOptions: CreateRoomOptions = { visibility: "public", description: "" };
-    if (parentSpaceID) createFolderOptions.parentSpaceID = parentSpaceID;
+    if (parentID) createFolderOptions.parentSpaceID = parentID;
     let createFolderError: string | undefined = undefined;
 
     const chat = gameManager.getCurrentGameScene().chatConnection;
@@ -93,12 +93,13 @@
                 {/if}
             </p>
             <p class="tw-p-0 tw-m-0 tw-pl-1 tw-font-bold">
-                {$LL.chat.createFolder.description.label() || "Description"}
+                {$LL.chat.createFolder.description.label()}
             </p>
             <textarea
-                class="tw-resize-none"
+                class="tw-resize-none tw-w-full tw-rounded-xl tw-text-white placeholder:tw-text-sm tw-px-3 tw-py-2 tw-p tw-border-light-purple tw-border tw-border-solid tw-bg-contrast"
                 rows="4"
                 bind:value={createFolderOptions.description}
+                placeholder={$LL.chat.createFolder.description.label()}
                 name="folderDescription"
                 id=""
                 on:keypress={() => {}}
