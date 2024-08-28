@@ -35,12 +35,12 @@ export enum INTERACTIVE_AUTH_PHASE {
     POST_AUTH,
 }
 export class MatrixChatConnection implements ChatConnectionInterface {
-    private readonly roomList: MapStore<string, ChatRoom>;
+    private readonly roomList: MapStore<string, MatrixChatRoom>;
     private client!: MatrixClient;
     connectionStatus: Writable<ConnectionStatus>;
-    directRooms: Readable<ChatRoom[]>;
-    invitations: Readable<ChatRoom[]>;
-    rooms: Readable<ChatRoom[]>;
+    directRooms: Readable<MatrixChatRoom[]>;
+    invitations: Readable<MatrixChatRoom[]>;
+    rooms: Readable<MatrixChatRoom[]>;
     isEncryptionRequiredAndNotSet: Writable<boolean>;
     isGuest: Writable<boolean> = writable(true);
     hasUnreadMessages: Readable<boolean>;
@@ -122,6 +122,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.client.on(ClientEvent.DeleteRoom, this.onClientEventDeleteRoom.bind(this));
         this.client.on(RoomEvent.MyMembership, this.onRoomEventMembership.bind(this));
         this.client.on("RoomState.events" as EmittedEvents, this.onRoomStateEvent.bind(this));
+        this.client.on(RoomEvent.Name, this.onRoomNameEvent.bind(this));
 
         await this.client.store.startup();
         await this.client.initRustCrypto();
@@ -140,6 +141,18 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             },
             [] as string[]
         );
+    }
+
+    private onRoomNameEvent(room: Room): void {
+        const { roomId, name } = room;
+        const roomInConnection = this.findRoomOrFolder(roomId);
+
+        if (roomInConnection) {
+            roomInConnection.name.set(name);
+            return;
+        }
+
+        this.manageRoomOrFolder(room);
     }
     private onRoomStateEvent(event: MatrixEvent): void {
         const eventType = event.getType();
@@ -199,7 +212,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     private manageRoomOrFolder(room: Room): void {
         const { roomId } = room;
 
-        if (this.isRoomAlreadyManaged(roomId)) return;
+        if (this.findRoomOrFolder(roomId)) return;
 
         if (!this.isUserMemberOrInvited(room)) return;
 
@@ -215,19 +228,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             this.handleOrphanRoom(room);
         }
     }
-    private isRoomAlreadyManaged(roomId: string): boolean {
-        if (this.roomList.has(roomId)) {
-            console.warn("Room already exists in the root list");
-            return true;
-        }
 
-        if (this.findRoomOrFolder(roomId)) {
-            console.warn("Room already exists in a folder");
-            return true;
-        }
-
-        return false;
-    }
     private isUserMemberOrInvited(room: Room): boolean {
         const membershipStatus = room.getMyMembership();
 
@@ -249,11 +250,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             if (parentFolder && parentFolder instanceof MatrixRoomFolder) {
                 if (isSpaceRoom) {
                     this.roomFolders.delete(room.roomId);
-                    // this.addToFolder<MatrixRoomFolder>(folder.folders, new MatrixRoomFolder(room));
-                    //parentFolder.folders.set(room.roomId, new MatrixRoomFolder(room))
                 } else {
                     parentFolder.rooms.set(room.roomId, new MatrixChatRoom(room));
-                    // this.addToFolder<MatrixChatRoom>(folder.rooms, new MatrixChatRoom(room));
                 }
                 return true;
             }
@@ -269,8 +267,14 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         }
     }
     private findRoomOrFolder(roomId: string): MatrixRoomFolder | MatrixChatRoom | undefined {
+        const roomInRoomList = this.roomList.get(roomId);
+        if (roomInRoomList) {
+            console.warn("Room already exists in the root list");
+            return roomInRoomList;
+        }
+
         for (const [, folder] of this.roomFolders) {
-            const roomOrFolder = folder.getNode(roomId);
+            const roomOrFolder = folder.id === roomId ? folder : folder.getNode(roomId);
             if (roomOrFolder) {
                 return roomOrFolder;
             }

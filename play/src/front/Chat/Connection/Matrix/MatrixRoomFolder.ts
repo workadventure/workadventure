@@ -1,5 +1,5 @@
 import { Room } from "matrix-js-sdk";
-import { Readable, writable } from "svelte/store";
+import { Writable, writable } from "svelte/store";
 import { KnownMembership } from "matrix-js-sdk/lib/types";
 import * as Sentry from "@sentry/svelte";
 import { MapStore } from "@workadventure/store-utils";
@@ -13,7 +13,7 @@ export class MatrixRoomFolder implements RoomFolder {
     >();
 
     id: string;
-    name: Readable<string>;
+    name: Writable<string>;
     loadRoomsAndFolderPromise: Promise<void>;
 
     constructor(private room: Room) {
