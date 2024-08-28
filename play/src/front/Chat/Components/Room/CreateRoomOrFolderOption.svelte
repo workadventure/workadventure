@@ -4,7 +4,7 @@
     import CreateRoomModal from "./CreateRoomModal.svelte";
     import CreateFolderModal from "./CreateFolderModal.svelte";
     import RoomOption from "./RoomMenu/RoomOption.svelte";
-    import { IconLogout, IconSquarePlus } from "@wa-icons";
+    import { IconFolder, IconMessage, IconSquarePlus } from "@wa-icons";
 
     export let parentID: string | undefined = undefined;
     let optionButtonRef: HTMLButtonElement | undefined = undefined;
@@ -52,9 +52,9 @@
     class:tw-absolue={optionButtonRef !== undefined}
     class:tw-hidden={hideFolderOptions}
 >
-    <RoomOption IconComponent={IconLogout} title={$LL.chat.createRoom.title()} on:click={closeMenuAndOpenCreateRoom} />
+    <RoomOption IconComponent={IconMessage} title={$LL.chat.createRoom.title()} on:click={closeMenuAndOpenCreateRoom} />
     <RoomOption
-        IconComponent={IconLogout}
+        IconComponent={IconFolder}
         title={$LL.chat.createFolder.title()}
         on:click={closeMenuAndOpenCreateSpace}
     />
