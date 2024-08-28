@@ -454,11 +454,6 @@
          "name":"mapName",
          "type":"string",
          "value":"Starter kit"
-        }, 
-        {
-         "name":"script",
-         "type":"string",
-         "value":"..\/dist\/script.js"
         }],
  "renderorder":"right-down",
  "tiledversion":"1.9.0",

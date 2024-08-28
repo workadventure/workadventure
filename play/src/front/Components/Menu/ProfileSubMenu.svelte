@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onDestroy, onMount } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { SelectCompanionScene, SelectCompanionSceneName } from "../../Phaser/Login/SelectCompanionScene";
     import {
@@ -11,7 +12,10 @@
     import { selectCompanionSceneVisibleStore } from "../../Stores/SelectCompanionStore";
     import { LoginScene, LoginSceneName } from "../../Phaser/Login/LoginScene";
     import { loginSceneVisibleStore } from "../../Stores/LoginSceneStore";
-    import { selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterStore";
+    import {
+        selectCharacterCustomizeSceneVisibleStore,
+        selectCharacterSceneVisibleStore,
+    } from "../../Stores/SelectCharacterStore";
     import { SelectCharacterScene, SelectCharacterSceneName } from "../../Phaser/Login/SelectCharacterScene";
     import { connectionManager } from "../../Connection/ConnectionManager";
     import { EnableCameraScene, EnableCameraSceneName } from "../../Phaser/Login/EnableCameraScene";
@@ -24,6 +28,10 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { ENABLE_OPENID } from "../../Enum/EnvironmentVariable";
+    import { CustomizeScene, CustomizeSceneName } from "../../Phaser/Login/CustomizeScene";
+    import { iframeListener } from "../../Api/IframeListener";
+
+    let profileIframe: HTMLIFrameElement;
 
     function disableMenuStores() {
         menuVisiblilityStore.set(false);
@@ -44,8 +52,15 @@
 
     function openEditSkinScene() {
         disableMenuStores();
-        selectCharacterSceneVisibleStore.set(true);
-        gameManager.leaveGame(SelectCharacterSceneName, new SelectCharacterScene());
+
+        const gameScene = gameManager.getCurrentGameScene();
+        if (gameScene.CurrentPlayer.sprites.size > 1) {
+            selectCharacterCustomizeSceneVisibleStore.set(true);
+            gameManager.leaveGame(CustomizeSceneName, new CustomizeScene());
+        } else {
+            selectCharacterSceneVisibleStore.set(true);
+            gameManager.leaveGame(SelectCharacterSceneName, new SelectCharacterScene());
+        }
     }
 
     function logOut() {
@@ -62,6 +77,14 @@
     function showWokaNameButton() {
         return connectionManager.currentRoom?.opidWokaNamePolicy !== "force_opid";
     }
+
+    onMount(() => {
+        if ($profileAvailable && profileIframe) iframeListener.registerIframe(profileIframe);
+    });
+
+    onDestroy(() => {
+        if ($profileAvailable && profileIframe) iframeListener.unregisterIframe(profileIframe);
+    });
 </script>
 
 <div class="customize-main">
@@ -145,6 +168,7 @@
         <section class="centered-column tw-w-full tw-m-auto resizing-text">
             {#if $profileAvailable}
                 <iframe
+                    bind:this={profileIframe}
                     title="profile"
                     src={getProfileUrl()}
                     class="tw-w-4/5 tw-h-screen tw-border-0 tw-border-solid tw-border-light-blue"

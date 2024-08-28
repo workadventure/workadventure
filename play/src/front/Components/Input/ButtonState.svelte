@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { InfoIcon, XCircleIcon } from "svelte-feather-icons";
+    import { IconCircleX, IconInfoCircle } from "@wa-icons";
 
     export let promise: () => Promise<string>;
     export let initialText: string;
@@ -47,9 +47,9 @@
         {loadingText}
     {:else}
         {#if state === "success"}
-            <InfoIcon class="tw-mr-3" />
+            <IconInfoCircle class="tw-mr-3" />
         {:else}
-            <XCircleIcon class="tw-mr-3" />
+            <IconCircleX class="tw-mr-3" />
         {/if}
         {finalText}
     {/if}

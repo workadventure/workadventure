@@ -1,6 +1,14 @@
-import * as _ from "lodash";
 import { MathUtils } from "@workadventure/math-utils";
-import { AreaData, AreaDataProperties, AtLeast, GameMapProperties, WAMFileFormat } from "../types";
+import * as _ from "lodash";
+import {
+    AreaData,
+    AreaDataProperties,
+    AtLeast,
+    EntityCoordinates,
+    PersonalAreaPropertyData,
+    RestrictedRightsPropertyData,
+    WAMFileFormat,
+} from "../types";
 
 export type AreaChangeCallback = (
     areasChangedByAction: Array<AreaData>,
@@ -90,6 +98,79 @@ export class GameMapAreas {
         return true;
     }
 
+    public isUserHasWriteAccessOnAreaForEntityCoordinates(
+        entityCenterCoordinates: EntityCoordinates,
+        userConnectedTags: string[],
+        userUUID = ""
+    ): boolean {
+        const areas = this.getAreasOnPosition(entityCenterCoordinates);
+        if (areas?.length === 0) {
+            return false;
+        }
+        return (
+            areas.some((area) => this.isUserHasWriteAccessOnAreaByUserTags(area, userConnectedTags)) ||
+            areas.some((area) => this.isAreaOwner(area, userUUID))
+        );
+    }
+
+    public isUserHasReadAccessOnAreaForEntityCoordinates(
+        entityCenterCoordinates: EntityCoordinates,
+        userConnectedTags: string[]
+    ): boolean {
+        const areas = this.getAreasOnPosition(entityCenterCoordinates);
+        if (areas?.length === 0) {
+            return true;
+        }
+        return areas.some((area) => this.isUserHasReadAccessOnAreaByTags(area, userConnectedTags));
+    }
+
+    public isUserHasAreaAccess(areaId: string, userConnectedTags: string[]) {
+        const area = this.getArea(areaId);
+        if (area === undefined) {
+            return true;
+        }
+        const areaRights = this.getAreaRightPropertyData(area);
+        if (areaRights === undefined) {
+            return true;
+        }
+
+        const areaRightTags = [...areaRights.writeTags, ...areaRights.readTags];
+        return areaRightTags.some((tag) => userConnectedTags.includes(tag));
+    }
+
+    public hasAreaAccess(area: AreaData, userConnectedTags: string[]) {
+        const areaRights = this.getAreaRightPropertyData(area);
+        if (areaRights === undefined) {
+            return true;
+        }
+
+        const areaRightTags = [...areaRights.writeTags, ...areaRights.readTags];
+        return areaRightTags.some((tag) => userConnectedTags.includes(tag));
+    }
+
+    public isOverlappingArea(areaId: string): boolean {
+        const area = this.getArea(areaId);
+        if (area === undefined) {
+            return false;
+        }
+        return this.getPersonalAreaRightPropertyData(area) != undefined;
+    }
+
+    public isGameMapContainsSpecificAreas(): boolean {
+        let hasSpecificAreas = false;
+        this.areas.forEach((area) => {
+            if (this.getAreaRightPropertyData(area) !== undefined) {
+                hasSpecificAreas = true;
+                return;
+            }
+            if (this.getPersonalAreaRightPropertyData(area) !== undefined) {
+                hasSpecificAreas = true;
+                return;
+            }
+        });
+        return hasSpecificAreas;
+    }
+
     public isPlayerInsideArea(id: string, playerPosition: { x: number; y: number }): boolean {
         return (
             this.getAreasOnPosition(playerPosition, this.areasPositionOffsetY).findIndex((area) => area.id === id) !==
@@ -124,34 +205,6 @@ export class GameMapAreas {
         const deleted = this.areas.delete(id);
         if (deleted) {
             return this.deleteAreaFromWAM(id);
-        }
-        return false;
-    }
-
-    private addAreaToWAM(areaData: AreaData): boolean {
-        if (!this.wam.areas.find((area) => area.id === areaData.id)) {
-            this.wam.areas.push(areaData);
-        } else {
-            console.warn(`ADD AREA FAIL: AREA OF ID ${areaData.id} ALREADY EXISTS WITHIN THE WAM FILE!`);
-            return false;
-        }
-        return true;
-    }
-
-    private deleteAreaFromWAM(id: string): boolean {
-        const index = this.wam.areas.findIndex((area) => area.id === id);
-        if (index !== -1) {
-            this.wam.areas.splice(index, 1);
-            return true;
-        }
-        return false;
-    }
-
-    private updateAreaWAM(areaData: AreaData): boolean {
-        const index = this.wam.areas.findIndex((area) => area.id === areaData.id);
-        if (index !== -1) {
-            this.wam.areas[index] = structuredClone(areaData);
-            return true;
         }
         return false;
     }
@@ -211,81 +264,7 @@ export class GameMapAreas {
         }
     }
 
-    public getProperties(position: { x: number; y: number }): Map<string, string | boolean | number> {
-        const properties = new Map<string, string | boolean | number>();
-        for (const area of this.getAreasOnPosition(position, this.areasPositionOffsetY)) {
-            if (area.properties === undefined) {
-                continue;
-            }
-            const flattenedProperties = this.flattenAreaProperties(area.properties);
-            for (const key in flattenedProperties) {
-                const property = flattenedProperties[key];
-                if (property === undefined) {
-                    continue;
-                }
-                properties.set(key, property);
-            }
-        }
-        return properties;
-    }
-
-    private flattenAreaProperties(areaProperties: AreaDataProperties): Record<string, string | boolean | number> {
-        const flattenedProperties: Record<string, string | boolean | number> = {};
-        for (const property of areaProperties) {
-            switch (property.type) {
-                case "focusable": {
-                    flattenedProperties[GameMapProperties.FOCUSABLE] = true;
-                    if (property.zoom_margin) {
-                        flattenedProperties[GameMapProperties.ZOOM_MARGIN] = property.zoom_margin;
-                    }
-                    break;
-                }
-                case "jitsiRoomProperty": {
-                    flattenedProperties[GameMapProperties.JITSI_ROOM] = property.roomName ?? "";
-                    if (property.jitsiRoomConfig) {
-                        flattenedProperties[GameMapProperties.JITSI_CONFIG] = JSON.stringify(property.jitsiRoomConfig);
-                    }
-                    break;
-                }
-                case "openWebsite": {
-                    if (property.link == undefined) break;
-                    if (property.newTab) {
-                        flattenedProperties[GameMapProperties.OPEN_TAB] = property.link;
-                    } else {
-                        flattenedProperties[GameMapProperties.OPEN_WEBSITE] = property.link;
-                    }
-                    break;
-                }
-                case "playAudio": {
-                    flattenedProperties[GameMapProperties.PLAY_AUDIO] = property.audioLink;
-                    break;
-                }
-                case "start": {
-                    flattenedProperties[GameMapProperties.START] = true;
-                    break;
-                }
-                case "exit": {
-                    flattenedProperties[GameMapProperties.EXIT_URL] = property.url;
-                    break;
-                }
-                case "silent": {
-                    flattenedProperties[GameMapProperties.SILENT] = true;
-                    break;
-                }
-                case "speakerMegaphone": {
-                    flattenedProperties[GameMapProperties.SPEAKER_MEGAPHONE] = property.name;
-                    break;
-                }
-                case "listenerMegaphone": {
-                    flattenedProperties[GameMapProperties.LISTENER_MEGAPHONE] = property.speakerZoneName;
-                    break;
-                }
-            }
-        }
-        return flattenedProperties;
-    }
-
-    private getAreasOnPosition(position: { x: number; y: number }, offsetY = 0): AreaData[] {
+    public getAreasOnPosition(position: { x: number; y: number }, offsetY = 0): AreaData[] {
         const areasOfInterest = [...this.areas.values()];
 
         const overlappedAreas: AreaData[] = [];
@@ -295,5 +274,104 @@ export class GameMapAreas {
             }
         }
         return overlappedAreas;
+    }
+
+    private isUserHasWriteAccessOnAreaByUserTags(area: AreaData, userTags: string[]): boolean {
+        const areaRights = this.getAreaRightPropertyData(area);
+        if (areaRights === undefined) {
+            return false;
+        }
+        return areaRights.writeTags.some((tag) => userTags.includes(tag));
+    }
+
+    private isAreaOwner(area: AreaData, userUUID: string): boolean {
+        const personalAreaRightPropertyData = this.getPersonalAreaRightPropertyData(area);
+        if (personalAreaRightPropertyData === undefined) {
+            return false;
+        }
+        return personalAreaRightPropertyData.ownerId === userUUID;
+    }
+
+    private isUserHasReadAccessOnAreaByTags(area: AreaData, userTags: string[]): boolean {
+        const areaRights = this.getAreaRightPropertyData(area);
+        if (areaRights === undefined) {
+            return true;
+        }
+        return areaRights.readTags.some((tag) => userTags.includes(tag));
+    }
+
+    public isPersonalArea(areaId: string): boolean {
+        const area = this.getArea(areaId);
+        if (area) {
+            const personalAreaData = this.getPersonalAreaRightPropertyData(area);
+            if (personalAreaData !== undefined && personalAreaData.ownerId !== null) {
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private getAreaRightPropertyData(area: AreaData): RestrictedRightsPropertyData | undefined {
+        const areaRightPropertyData = area.properties.find(
+            (property) => property.type === "restrictedRightsPropertyData"
+        );
+        const areaRights = areaRightPropertyData
+            ? RestrictedRightsPropertyData.parse(areaRightPropertyData)
+            : undefined;
+        if (areaRights !== undefined) {
+            const rightTags = [...areaRights.writeTags, ...areaRights.readTags];
+            if (rightTags.length === 0) {
+                return;
+            }
+            return RestrictedRightsPropertyData.parse(areaRightPropertyData);
+        }
+        return;
+    }
+
+    private getPersonalAreaRightPropertyData(area: AreaData): PersonalAreaPropertyData | undefined {
+        const personalAreaPropertyData = area.properties.find(
+            (property) => property.type === "personalAreaPropertyData"
+        );
+        if (personalAreaPropertyData !== undefined) {
+            return PersonalAreaPropertyData.parse(personalAreaPropertyData);
+        }
+        return;
+    }
+
+    private addAreaToWAM(areaData: AreaData): boolean {
+        if (!this.wam.areas.find((area) => area.id === areaData.id)) {
+            this.wam.areas.push(areaData);
+        } else {
+            console.warn(`ADD AREA FAIL: AREA OF ID ${areaData.id} ALREADY EXISTS WITHIN THE WAM FILE!`);
+            return false;
+        }
+        return true;
+    }
+
+    private deleteAreaFromWAM(id: string): boolean {
+        const index = this.wam.areas.findIndex((area) => area.id === id);
+        if (index !== -1) {
+            this.wam.areas.splice(index, 1);
+            return true;
+        }
+        return false;
+    }
+
+    private updateAreaWAM(areaData: AreaData): boolean {
+        const index = this.wam.areas.findIndex((area) => area.id === areaData.id);
+        if (index !== -1) {
+            this.wam.areas[index] = structuredClone(areaData);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns the list of all areas that the user has no access to.
+     */
+    public getCollidingAreas(userConnectedTags: string[]): AreaData[] {
+        return Array.from(this.areas.values()).filter((area) => !this.hasAreaAccess(area, userConnectedTags));
     }
 }

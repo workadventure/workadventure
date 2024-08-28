@@ -23,7 +23,6 @@
     let currentConfig: JitsiRoomConfigData = {};
 
     onMount(() => {
-        console.log("config", config);
         currentConfig = {};
         if (config !== undefined) {
             currentConfig = structuredClone(config);
@@ -69,7 +68,7 @@
 
 <div class="menu-container center">
     <div class="tw-w-full tw-bg-dark-purple/95 tw-rounded" transition:fly={{ x: 1000, duration: 500 }}>
-        <button type="button" class="close-window" on:click={close}>&times</button>
+        <button type="button" class="close-window" on:click|preventDefault|stopPropagation={close}>&times</button>
         <select class="tag-selector" bind:value={selectedKey} on:change={() => onSelectedKey()}>
             <option value="">{$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.addConfig()}</option>
             {#each defaultConfigKeys as configKey (configKey)}

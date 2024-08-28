@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/svelte";
-import type { AvailabilityStatus } from "@workadventure/messages";
+import type { ApplicationDefinitionInterface, AvailabilityStatus } from "@workadventure/messages";
 import {
     ErrorApiErrorData,
     ErrorApiRetryData,
@@ -8,12 +8,26 @@ import {
     MeResponse,
 } from "@workadventure/messages";
 import { isAxiosError } from "axios";
+import { KlaxoonService } from "@workadventure/shared-utils";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { subMenusStore, userIsConnected, warningBannerStore } from "../Stores/MenuStore";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
 import { _ServiceWorker } from "../Network/ServiceWorker";
 import { GameConnexionTypes, urlManager } from "../Url/UrlManager";
-import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
+import {
+    CARDS_ENABLED,
+    ENABLE_OPENID,
+    ERASER_ENABLED,
+    EXCALIDRAW_DOMAINS,
+    EXCALIDRAW_ENABLED,
+    GOOGLE_DOCS_ENABLED,
+    GOOGLE_DRIVE_ENABLED,
+    GOOGLE_SHEETS_ENABLED,
+    GOOGLE_SLIDES_ENABLED,
+    KLAXOON_CLIENT_ID,
+    KLAXOON_ENABLED,
+    YOUTUBE_ENABLED,
+} from "../Enum/EnvironmentVariable";
 import { limitMapStore } from "../Stores/GameStore";
 import { showLimitRoomModalStore } from "../Stores/ModalStore";
 import { gameManager } from "../Phaser/Game/GameManager";
@@ -29,6 +43,18 @@ import { RoomConnection } from "./RoomConnection";
 import { HtmlUtils } from "./../WebRtc/HtmlUtils";
 import { hasCapability } from "./Capabilities";
 
+const enum defautlNativeIntegrationAppName {
+    KLAXOON = "Klaxoon",
+    YOUTUBE = "Youtube",
+    GOOGLE_DRIVE = "Google Drive",
+    GOOGLE_DOCS = "Google Docs",
+    GOOGLE_SHEETS = "Google Sheets",
+    GOOGLE_SLIDES = "Google Slides",
+    ERASER = "Eraser",
+    EXCALIDRAW = "Excalidraw",
+    CARDS = "Cards",
+}
+
 class ConnectionManager {
     private localUser!: LocalUser;
 
@@ -40,6 +66,20 @@ class ConnectionManager {
 
     private serviceWorker?: _ServiceWorker;
 
+    private _klaxoonToolActivated: boolean | undefined;
+    private _klaxoonToolClientId: string | undefined;
+    private _youtubeToolActivated: boolean | undefined;
+    private _googleDocsToolActivated: boolean | undefined;
+    private _googleSheetsToolActivated: boolean | undefined;
+    private _googleSlidesToolActivated: boolean | undefined;
+    private _eraserToolActivated: boolean | undefined;
+    private _googleDriveActivated: boolean | undefined;
+    private _excalidrawToolActivated: boolean | undefined;
+    private _excalidrawToolDomains: string[] | undefined;
+    private _cardsToolActivated: boolean | undefined;
+
+    private _applications: ApplicationDefinitionInterface[] = [];
+
     get unloading() {
         return this._unloading;
     }
@@ -49,6 +89,22 @@ class ConnectionManager {
             this._unloading = true;
             if (this.reconnectingTimeout) clearTimeout(this.reconnectingTimeout);
         });
+
+        // Initialise default application
+        this.klaxoonToolActivated = KLAXOON_ENABLED;
+        this._klaxoonToolClientId = KLAXOON_CLIENT_ID;
+        if (this._klaxoonToolClientId) {
+            KlaxoonService.initWindowKlaxoonActivityPicker();
+        }
+        this.youtubeToolActivated = YOUTUBE_ENABLED;
+        this.googleDriveToolActivated = GOOGLE_DRIVE_ENABLED;
+        this.googleDocsToolActivated = GOOGLE_DOCS_ENABLED;
+        this.googleSheetsToolActivated = GOOGLE_SHEETS_ENABLED;
+        this.googleSlidesToolActivated = GOOGLE_SLIDES_ENABLED;
+        this.eraserToolActivated = ERASER_ENABLED;
+        this.excalidrawToolActivated = EXCALIDRAW_ENABLED;
+        this.excalidrawToolDomains = EXCALIDRAW_DOMAINS;
+        this.cardsToolActivated = CARDS_ENABLED;
     }
 
     /**
@@ -92,7 +148,14 @@ class ConnectionManager {
         const redirectUrl = new URL(`${this._currentRoom.opidLogoutRedirectUrl}`, window.location.href);
         redirectUrl.searchParams.append("playUri", this._currentRoom.key);
         redirectUrl.searchParams.append("token", tokenTmp ?? "");
-        window.location.assign(redirectUrl);
+
+        gameManager
+            .getCurrentGameScene()
+            .chatConnection.destroy()
+            .catch((error) => {
+                console.error("Chat connection not closed properly : ", error);
+            })
+            .finally(() => window.location.assign(redirectUrl));
     }
 
     /**
@@ -130,6 +193,21 @@ class ConnectionManager {
 
             //clean token of url
             urlParams.delete("token");
+        }
+
+        let matrixLoginToken = urlParams.get("matrixLoginToken");
+        // get token injected by post method from pusher
+        if (matrixLoginToken == undefined) {
+            const input = HtmlUtils.getElementByIdOrFail<HTMLInputElement>("matrixLoginToken");
+            if (input.value != undefined && input.value != "") {
+                matrixLoginToken = input.value;
+            }
+        }
+
+        if (matrixLoginToken != undefined) {
+            localUserStore.setMatrixLoginToken(matrixLoginToken);
+            //clean token of url
+            urlParams.delete("matrixLoginToken");
         }
 
         if (this.connexionType === GameConnexionTypes.login) {
@@ -330,6 +408,14 @@ class ConnectionManager {
             localUserStore.saveUser(this.localUser);
             localUserStore.setAuthToken(this.authToken);
         }
+        this.anonymousMatrixLogin();
+    }
+
+    private anonymousMatrixLogin() {
+        localUserStore.setMatrixLoginToken(null);
+        localUserStore.setMatrixUserId(null);
+        localUserStore.setMatrixAccessToken(null);
+        localUserStore.setMatrixRefreshToken(null);
     }
 
     public initBenchmark(): void {
@@ -406,6 +492,74 @@ class ConnectionManager {
             // The roomJoinedMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
             //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
             connection.roomJoinedMessageStream.subscribe((connect: OnConnectInterface) => {
+                // Set the default application integration for the room
+                const KlaxoonApp = connect.room.applications?.find(
+                    (app) => app.name === defautlNativeIntegrationAppName.KLAXOON
+                );
+                this.klaxoonToolActivated = KlaxoonApp?.enabled ?? KLAXOON_ENABLED;
+
+                const YoutubeApp = connect.room.applications?.find(
+                    (app) => app.name === defautlNativeIntegrationAppName.YOUTUBE
+                );
+                this.youtubeToolActivated = YoutubeApp?.enabled ?? YOUTUBE_ENABLED;
+
+                const GoogleDriveApp = connect.room.applications?.find(
+                    (app) => app.name === defautlNativeIntegrationAppName.GOOGLE_DRIVE
+                );
+                this.googleDriveToolActivated = GoogleDriveApp?.enabled ?? GOOGLE_DRIVE_ENABLED;
+
+                const GoogleDocsApp = connect.room.applications?.find(
+                    (app) => app.name === defautlNativeIntegrationAppName.GOOGLE_DOCS
+                );
+                this.googleDocsToolActivated = GoogleDocsApp?.enabled ?? GOOGLE_DOCS_ENABLED;
+
+                const GoogleSheetsApp = connect.room.applications?.find(
+                    (app) => app.name === defautlNativeIntegrationAppName.GOOGLE_SHEETS
+                );
+                this.googleSheetsToolActivated = GoogleSheetsApp?.enabled ?? GOOGLE_SHEETS_ENABLED;
+
+                const GoogleSlidesApp = connect.room.applications?.find(
+                    (app) => app.name === defautlNativeIntegrationAppName.GOOGLE_SHEETS
+                );
+                this.googleSlidesToolActivated = GoogleSlidesApp?.enabled ?? GOOGLE_SLIDES_ENABLED;
+
+                const EraserApp = connect.room.applications?.find(
+                    (app) => app.name === defautlNativeIntegrationAppName.ERASER
+                );
+                this.eraserToolActivated = EraserApp?.enabled ?? ERASER_ENABLED;
+
+                const ExcalidrawApp = connect.room.applications?.find(
+                    (app) => app.name === defautlNativeIntegrationAppName.EXCALIDRAW
+                );
+                this.excalidrawToolActivated = ExcalidrawApp?.enabled ?? EXCALIDRAW_ENABLED;
+
+                const CardsApp = connect.room.applications?.find(
+                    (app) => app.name === defautlNativeIntegrationAppName.CARDS
+                );
+                this.cardsToolActivated = CardsApp?.enabled ?? CARDS_ENABLED;
+
+                // Set other applications
+                for (const app of connect.room.applications ?? []) {
+                    if (
+                        defautlNativeIntegrationAppName.KLAXOON === app.name ||
+                        defautlNativeIntegrationAppName.YOUTUBE === app.name ||
+                        defautlNativeIntegrationAppName.GOOGLE_DRIVE === app.name ||
+                        defautlNativeIntegrationAppName.GOOGLE_DOCS === app.name ||
+                        defautlNativeIntegrationAppName.GOOGLE_SHEETS === app.name ||
+                        defautlNativeIntegrationAppName.GOOGLE_SLIDES === app.name ||
+                        defautlNativeIntegrationAppName.ERASER === app.name ||
+                        defautlNativeIntegrationAppName.EXCALIDRAW === app.name ||
+                        defautlNativeIntegrationAppName.CARDS === app.name
+                    ) {
+                        continue;
+                    }
+
+                    // Save applications in the connection manager to use it in the map editor
+                    if (this._applications.find((a) => a.name === app.name) === undefined) {
+                        this._applications.push(app);
+                    }
+                }
+
                 resolve(connect);
             });
         }).catch((err) => {
@@ -466,10 +620,14 @@ class ConnectionManager {
                     playUri,
                     localStorageCharacterTextureIds: localUserStore.getCharacterTextures() ?? undefined,
                     localStorageCompanionTextureId: localUserStore.getCompanionTextureId() ?? undefined,
+                    chatID: localUserStore.getChatId() ?? undefined,
                 },
             })
             .then((res) => {
                 return res.data;
+            })
+            .catch((err) => {
+                throw err;
             });
 
         const response = MeResponse.parse(data);
@@ -478,12 +636,19 @@ class ConnectionManager {
             return response;
         }
 
-        const { authToken, userUuid, email, username, locale, visitCardUrl } = response;
+        const { authToken, userUuid, email, username, locale, visitCardUrl, matrixUserId } = response;
 
         localUserStore.setAuthToken(authToken);
-        this.localUser = new LocalUser(userUuid, email);
+        this.localUser = new LocalUser(userUuid, email, matrixUserId /*, isMatrixRegistered*/);
         localUserStore.saveUser(this.localUser);
         this.authToken = authToken;
+
+        /*
+        if (matrixServerUrl) {
+            setMatrixServerDetails(matrixServerUrl);
+        } else {
+            noMatrixServerUrl();
+        }*/
 
         if (visitCardUrl) {
             gameManager.setVisitCardUrl(visitCardUrl);
@@ -578,6 +743,83 @@ class ConnectionManager {
 
     get currentRoom() {
         return this._currentRoom;
+    }
+
+    get klaxoonToolActivated(): boolean {
+        return this._klaxoonToolActivated ?? false;
+    }
+    set klaxoonToolActivated(activated: boolean | undefined) {
+        this._klaxoonToolActivated = activated;
+    }
+    get klaxoonToolClientId(): string | undefined {
+        return this._klaxoonToolClientId;
+    }
+
+    get youtubeToolActivated(): boolean {
+        return this._youtubeToolActivated ?? false;
+    }
+    set youtubeToolActivated(activated: boolean | undefined) {
+        this._youtubeToolActivated = activated;
+    }
+
+    get googleDocsToolActivated(): boolean {
+        return this._googleDocsToolActivated ?? false;
+    }
+    set googleDocsToolActivated(activated: boolean | undefined) {
+        this._googleDocsToolActivated = activated;
+    }
+
+    get googleSheetsToolActivated(): boolean {
+        return this._googleSheetsToolActivated ?? false;
+    }
+    set googleSheetsToolActivated(activated: boolean | undefined) {
+        this._googleSheetsToolActivated = activated;
+    }
+
+    get googleSlidesToolActivated(): boolean {
+        return this._googleSlidesToolActivated ?? false;
+    }
+    set googleSlidesToolActivated(activated: boolean | undefined) {
+        this._googleSlidesToolActivated = activated;
+    }
+
+    get eraserToolActivated(): boolean {
+        return this._eraserToolActivated ?? false;
+    }
+    set eraserToolActivated(activated: boolean | undefined) {
+        this._eraserToolActivated = activated;
+    }
+
+    get googleDriveToolActivated(): boolean {
+        return this._googleDriveActivated ?? false;
+    }
+    set googleDriveToolActivated(activated: boolean | undefined) {
+        this._googleDriveActivated = activated;
+    }
+
+    get excalidrawToolActivated(): boolean {
+        return this._excalidrawToolActivated ?? false;
+    }
+    set excalidrawToolActivated(activated: boolean | undefined) {
+        this._excalidrawToolActivated = activated;
+    }
+
+    get excalidrawToolDomains(): string[] {
+        return this._excalidrawToolDomains ?? [];
+    }
+    set excalidrawToolDomains(domains: string[] | undefined) {
+        this._excalidrawToolDomains = domains;
+    }
+
+    get cardsToolActivated(): boolean {
+        return this._cardsToolActivated ?? false;
+    }
+    set cardsToolActivated(activated: boolean | undefined) {
+        this._cardsToolActivated = activated;
+    }
+
+    get applications(): ApplicationDefinitionInterface[] {
+        return this._applications;
     }
 }
 

@@ -1,4 +1,5 @@
 import { ServerDuplexStream } from "@grpc/grpc-js";
+import * as Sentry from "@sentry/node";
 import {
     ApplicationMessage,
     AvailabilityStatus,
@@ -11,16 +12,15 @@ import {
     SetPlayerVariableMessage_Scope,
     SubMessage,
 } from "@workadventure/messages";
-import * as Sentry from "@sentry/node";
-import { Zone } from "../Model/Zone";
 import { Movable } from "../Model/Movable";
 import { PositionNotifier } from "../Model/PositionNotifier";
+import { Zone } from "../Model/Zone";
 import { PlayerVariables } from "../Services/PlayersRepository/PlayerVariables";
 import { getPlayersVariablesRepository } from "../Services/PlayersRepository/PlayersVariablesRepository";
-import { PointInterface } from "./Websocket/PointInterface";
-import { Group } from "./Group";
 import { BrothersFinder } from "./BrothersFinder";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
+import { Group } from "./Group";
+import { PointInterface } from "./Websocket/PointInterface";
 
 export type UserSocket = ServerDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 
@@ -30,10 +30,11 @@ export class User implements Movable, CustomJsonReplacerInterface {
     private _following: User | undefined;
     private followedBy: Set<User> = new Set<User>();
     public disconnected = false;
+    private isRoomJoinedMessage = false;
+    private pendingMessages: NonNullable<ServerToClientMessage["message"]>[] = [];
 
     public constructor(
         public id: number,
-        public userJid: string,
         public readonly uuid: string,
         public readonly isLogged: boolean,
         public readonly IPAddress: string,
@@ -42,6 +43,7 @@ export class User implements Movable, CustomJsonReplacerInterface {
         private availabilityStatus: AvailabilityStatus,
         public readonly socket: UserSocket,
         public readonly tags: string[],
+        public readonly canEdit: boolean,
         public readonly visitCardUrl: string | null,
         public readonly name: string,
         public readonly characterTextures: CharacterTextureMessage[],
@@ -51,7 +53,8 @@ export class User implements Movable, CustomJsonReplacerInterface {
         private outlineColor?: number,
         private voiceIndicatorShown?: boolean,
         public readonly activatedInviteUser?: boolean,
-        public readonly applications?: ApplicationMessage[]
+        public readonly applications?: ApplicationMessage[],
+        public readonly chatID?: string
     ) {
         this.listenedZones = new Set<Zone>();
 
@@ -61,7 +64,6 @@ export class User implements Movable, CustomJsonReplacerInterface {
     public static async create(
         id: number,
         uuid: string,
-        userJid: string,
         isLogged: boolean,
         IPAddress: string,
         position: PointInterface,
@@ -69,6 +71,7 @@ export class User implements Movable, CustomJsonReplacerInterface {
         availabilityStatus: AvailabilityStatus,
         socket: UserSocket,
         tags: string[],
+        canEdit: boolean,
         visitCardUrl: string | null,
         name: string,
         characterTextures: CharacterTextureMessage[],
@@ -79,7 +82,8 @@ export class User implements Movable, CustomJsonReplacerInterface {
         outlineColor?: number,
         voiceIndicatorShown?: boolean,
         activatedInviteUser?: boolean,
-        applications?: ApplicationMessage[]
+        applications?: ApplicationMessage[],
+        chatID?: string
     ): Promise<User> {
         const playersVariablesRepository = await getPlayersVariablesRepository();
         const variables = new PlayerVariables(uuid, roomUrl, roomGroup, playersVariablesRepository, isLogged);
@@ -87,7 +91,6 @@ export class User implements Movable, CustomJsonReplacerInterface {
 
         return new User(
             id,
-            userJid,
             uuid,
             isLogged,
             IPAddress,
@@ -96,6 +99,7 @@ export class User implements Movable, CustomJsonReplacerInterface {
             availabilityStatus,
             socket,
             tags,
+            canEdit,
             visitCardUrl,
             name,
             characterTextures,
@@ -105,7 +109,8 @@ export class User implements Movable, CustomJsonReplacerInterface {
             outlineColor,
             voiceIndicatorShown,
             activatedInviteUser,
-            applications
+            applications,
+            chatID
         );
     }
 
@@ -169,7 +174,9 @@ export class User implements Movable, CustomJsonReplacerInterface {
             this.availabilityStatus === AvailabilityStatus.SILENT ||
             this.availabilityStatus === AvailabilityStatus.JITSI ||
             this.availabilityStatus === AvailabilityStatus.BBB ||
-            this.availabilityStatus === AvailabilityStatus.SPEAKER
+            this.availabilityStatus === AvailabilityStatus.SPEAKER ||
+            this.availabilityStatus === AvailabilityStatus.DO_NOT_DISTURB ||
+            this.availabilityStatus === AvailabilityStatus.BACK_IN_A_MOMENT
         );
     }
 
@@ -326,5 +333,49 @@ export class User implements Movable, CustomJsonReplacerInterface {
             return group ? `group ${group.getId()}` : "no group";
         }
         return undefined;
+    }
+
+    /**
+     * Due to race conditions, it is possible that the first call to "write" is not a "roomJoinedMessage".
+     * If this is the case, the message is lost on the front side. This method is putting back the messages
+     * in the correct order. If the first message is not a "roomJoinedMessage", it is buffered until the
+     * "roomJoinedMessage" message is received.
+     */
+    public write(chunk: NonNullable<ServerToClientMessage["message"]>, cb?: (...args: unknown[]) => unknown): boolean {
+        //TODO : handle socket.write return false
+        if (this.isRoomJoinedMessage) {
+            return this.socket.write(
+                {
+                    message: chunk,
+                },
+                cb
+            );
+        }
+
+        if (chunk.$case === "roomJoinedMessage") {
+            this.isRoomJoinedMessage = true;
+
+            this.socket.write(
+                {
+                    message: chunk,
+                },
+                cb
+            );
+
+            this.pendingMessages.forEach((message) => {
+                this.socket.write(
+                    {
+                        message,
+                    },
+                    cb
+                );
+            });
+
+            this.pendingMessages = [];
+            return true;
+        }
+
+        this.pendingMessages.push(chunk);
+        return true;
     }
 }

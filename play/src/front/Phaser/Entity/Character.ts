@@ -4,6 +4,7 @@ import type CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
 import type { AvailabilityStatus as AvailabilityStatusType } from "@workadventure/messages";
 import { AvailabilityStatus, PositionMessage_Direction } from "@workadventure/messages";
+import { defaultWoka } from "@workadventure/shared-utils";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import { PlayerStatusDot } from "../Components/PlayerStatusDot";
 import { TalkIcon } from "../Components/TalkIcon";
@@ -19,8 +20,10 @@ import { getPlayerAnimations, PlayerAnimationTypes } from "../Player/Animation";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { SpeakerIcon } from "../Components/SpeakerIcon";
 import { MegaphoneIcon } from "../Components/MegaphoneIcon";
+
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
 import { SpeechBubble } from "./SpeechBubble";
+import { SpeechDomElement } from "./SpeechDomElement";
 import Text = Phaser.GameObjects.Text;
 import Container = Phaser.GameObjects.Container;
 import Sprite = Phaser.GameObjects.Sprite;
@@ -28,6 +31,11 @@ import DOMElement = Phaser.GameObjects.DOMElement;
 
 const playerNameY = -25;
 const interactiveRadius = 25;
+
+export const CHARACTER_BODY_WIDTH = 16;
+export const CHARACTER_BODY_HEIGHT = 16;
+export const CHARACTER_BODY_OFFSET_X = 0;
+export const CHARACTER_BODY_OFFSET_Y = 8;
 
 export abstract class Character extends Container implements OutlineableInterface {
     private bubble: SpeechBubble | null = null;
@@ -45,6 +53,9 @@ export abstract class Character extends Container implements OutlineableInterfac
     public companion?: Companion;
     private emote: Phaser.GameObjects.DOMElement | null = null;
     private emoteTween: Phaser.Tweens.Tween | null = null;
+    private texts: Map<string, Phaser.GameObjects.DOMElement> = new Map();
+    private textsToBuild = new Map();
+    private timeoutDestroyText: NodeJS.Timeout | null = null;
     scene: GameScene;
     private readonly _pictureStore: Writable<string | undefined>;
     protected readonly outlineColorStore = createColorStore();
@@ -122,6 +133,13 @@ export abstract class Character extends Container implements OutlineableInterfac
                         this.textureLoadedDeferred.resolve();
 
                         return this.getSnapshot().then((htmlImageElementSrc) => {
+                            // When there is no renderer (for instance with bots), the htmlImageElementSrc is an empty string
+                            if (!htmlImageElementSrc) {
+                                htmlImageElementSrc = defaultWoka;
+                            }
+                            if (userId != undefined) {
+                                currentPlayerWokaStore.set(htmlImageElementSrc);
+                            }
                             this._pictureStore.set(htmlImageElementSrc);
                         });
                     })
@@ -201,9 +219,9 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.scene.physics.world.enableBody(this);
         this.getBody().setImmovable(true);
         this.getBody().setCollideWorldBounds(true);
-        this.setSize(16, 16);
-        this.getBody().setSize(16, 16); //edit the hitbox to better match the character model
-        this.getBody().setOffset(0, 8);
+        this.setSize(CHARACTER_BODY_WIDTH, CHARACTER_BODY_HEIGHT);
+        this.getBody().setSize(CHARACTER_BODY_WIDTH, CHARACTER_BODY_HEIGHT); //edit the hitbox to better match the character model
+        this.getBody().setOffset(CHARACTER_BODY_OFFSET_X, CHARACTER_BODY_OFFSET_Y);
         this.setDepth(0);
     }
 
@@ -355,70 +373,6 @@ export abstract class Character extends Container implements OutlineableInterfac
         return body;
     }
 
-    /**
-     * Moves the character by the given speed amount.
-     */
-    moveBy(x: number, y: number) {
-        const body = this.getBody();
-
-        body.setVelocity(x, y);
-
-        if (Math.abs(body.velocity.x) > Math.abs(body.velocity.y)) {
-            if (body.velocity.x < 0) {
-                this._lastDirection = PositionMessage_Direction.LEFT;
-            } else if (body.velocity.x > 0) {
-                this._lastDirection = PositionMessage_Direction.RIGHT;
-            }
-        } else {
-            if (body.velocity.y < 0) {
-                this._lastDirection = PositionMessage_Direction.UP;
-            } else if (body.velocity.y > 0) {
-                this._lastDirection = PositionMessage_Direction.DOWN;
-            }
-        }
-        this.playAnimation(this._lastDirection, true);
-
-        this.setDepth(this.y + 16);
-
-        if (this.companion) {
-            this.companion.setTarget(this.x, this.y, this._lastDirection);
-        }
-    }
-
-    /**
-     * Moves the character to the given position.
-     */
-    moveToPos(x: number, y: number) {
-        const oldX = this.x;
-        const oldY = this.y;
-        this.x = x;
-        this.y = y;
-        // The 1.1 ratio to y is applied here because in path finding mode, the player often moves in diagonal.
-        // In diagonal, the amount of x and y are almost equal. This produces a graphical glitch where on one frame,
-        // the player goes left, and on the next frame, the player goes up. This is because the x and y are almost equal.
-        // To fix this, we apply a ratio of 1.1 to y to make sure that the player goes up/down when the y and x are almost equal.
-        if (Math.abs(x - oldX) > Math.abs((y - oldY) * 1.1)) {
-            if (x < oldX) {
-                this._lastDirection = PositionMessage_Direction.LEFT;
-            } else if (x > oldX) {
-                this._lastDirection = PositionMessage_Direction.RIGHT;
-            }
-        } else {
-            if (y < oldY) {
-                this._lastDirection = PositionMessage_Direction.UP;
-            } else if (y > oldY) {
-                this._lastDirection = PositionMessage_Direction.DOWN;
-            }
-        }
-        this.playAnimation(this._lastDirection, true);
-
-        this.setDepth(this.y + 16);
-
-        if (this.companion) {
-            this.companion.setTarget(this.x, this.y, this._lastDirection);
-        }
-    }
-
     stop() {
         this.getBody().setVelocity(0, 0);
         this.playAnimation(this._lastDirection, false);
@@ -457,6 +411,32 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.emote.setAlpha(0);
         this.add(this.emote);
         this.createStartTransition(emoteY);
+    }
+
+    playText(
+        id: string,
+        text: string,
+        duration = 10000,
+        callback = () => this.destroyText(id),
+        createStackAnimation = true
+    ) {
+        if (this.texts.has(id)) {
+            this.destroyText(id);
+        }
+        this.textsToBuild.set(id, { text, duration, callback });
+
+        // If there is already one text created, we don't need to create a stack animation
+        if (this.texts.size == 1 && createStackAnimation) {
+            this.createStackAnimationForMultiText();
+            return;
+        }
+
+        const speechDomElement = new SpeechDomElement(id, text, this.scene, -1, -30 + this.texts.size * 2, callback);
+        this.add(speechDomElement);
+        this.texts.set(id, speechDomElement);
+        speechDomElement.play(-1, -50 + this.texts.size * 2, duration, (id) => {
+            this.destroyText(id);
+        });
     }
 
     private createStartTransition(emoteY: number) {
@@ -521,10 +501,12 @@ export abstract class Character extends Container implements OutlineableInterfac
                 outlineColor: color,
             });
         }
-        this.scene.markDirty();
+
+        //Using outline quickfix
+        this.scene.refreshSceneForOutline();
     }
 
-    cancelPreviousEmote() {
+    private cancelPreviousEmote() {
         if (!this.emote) return;
 
         this.emoteTween?.remove();
@@ -534,6 +516,29 @@ export abstract class Character extends Container implements OutlineableInterfac
     private destroyEmote() {
         this.emote?.destroy();
         this.emote = null;
+    }
+
+    destroyText(id: string) {
+        const text = this.texts.get(id);
+        text?.destroy();
+        this.texts.delete(id);
+        this.textsToBuild.delete(id);
+    }
+
+    private createStackAnimationForMultiText() {
+        // Destroy all texts and recreate them
+        this.texts.forEach((text, id) => {
+            // Destroy and remove the text from the map
+            text.destroy();
+            this.texts.delete(id);
+        });
+
+        // Recreate all texts in the correct order (from the biggest length to the smallest)
+        Array.from(this.textsToBuild.entries())
+            .sort((a, b) => a[1].text.length - b[1].text.length)
+            .forEach(([id, { text, duration, callback }]) => {
+                this.playText(id, text, duration, callback, false);
+            });
     }
 
     public get pictureStore(): PictureStore {
@@ -587,5 +592,11 @@ export abstract class Character extends Container implements OutlineableInterfac
 
     public get lastDirection(): PositionMessage_Direction {
         return this._lastDirection;
+    }
+
+    public handlePressSpacePlayerTextCallback() {
+        for (const [, text] of this.texts) {
+            (text as SpeechDomElement).callback();
+        }
     }
 }

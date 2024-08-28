@@ -14,8 +14,8 @@
 
     export let peer: ScreenSharingPeer;
     let streamStore = peer.streamStore;
-    let name = peer.userName;
-    let backGroundColor = Color.getColorByString(peer.userName);
+    let name = peer.player.name;
+    let backGroundColor = Color.getColorByString(peer.player.name);
     let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
     let statusStore = peer.statusStore;
 

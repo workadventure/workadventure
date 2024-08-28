@@ -3,10 +3,10 @@ import { Subject } from "rxjs";
 
 import type { SetVariableEvent } from "../Events/SetVariableEvent";
 
-export abstract class AbstractWorkadventureStateCommands {
+export abstract class AbstractWorkadventureStateCommands<State extends { [key: string]: unknown }> {
     protected setVariableResolvers = new Subject<SetVariableEvent>();
-    protected variables = new Map<string, unknown>();
-    protected variableSubscribers = new Map<string, Subject<unknown>>();
+    protected variables: Partial<State> = {};
+    protected variableSubscribers: Partial<{ [K in keyof State]: Subject<State[K]> }> = {};
 
     protected constructor() {
         //super();
@@ -20,10 +20,12 @@ export abstract class AbstractWorkadventureStateCommands {
             /*if (JSON.stringify(oldValue) === JSON.stringify(event.value)) {
                 return;
             }*/
-            this.variables.set(event.key, event.value);
-            const subject = this.variableSubscribers.get(event.key);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            this.variables[event.key as keyof State] = event.value as any;
+            const subject = this.variableSubscribers[event.key];
             if (subject !== undefined) {
-                subject.next(event.value);
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                subject.next(event.value as any);
             }
         });
     }
@@ -32,25 +34,26 @@ export abstract class AbstractWorkadventureStateCommands {
     initVariables(_variables: Map<string, unknown>): void {
         for (const [name, value] of _variables.entries()) {
             // In case the user already decided to put values in the variables (before onInit), let's make sure onInit does not override this.
-            if (!this.variables.has(name)) {
-                this.variables.set(name, value);
+            if (!(name in this.variables)) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                this.variables[name as keyof State] = value as any;
             }
         }
     }
 
-    loadVariable(key: string): unknown {
-        return this.variables.get(key);
+    loadVariable<K extends keyof State>(key: K): State[K] | undefined {
+        return this.variables[key];
     }
 
-    hasVariable(key: string): boolean {
-        return this.variables.has(key);
+    hasVariable<K extends keyof State>(key: K): boolean {
+        return key in this.variables;
     }
 
-    onVariableChange(key: string): Observable<unknown> {
-        let subject = this.variableSubscribers.get(key);
+    onVariableChange<K extends keyof State>(key: K): Observable<State[K]> {
+        let subject = this.variableSubscribers[key];
         if (subject === undefined) {
-            subject = new Subject<unknown>();
-            this.variableSubscribers.set(key, subject);
+            subject = new Subject<State[K]>();
+            this.variableSubscribers[key] = subject;
         }
         return subject.asObservable();
     }

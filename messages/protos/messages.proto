@@ -2,7 +2,7 @@ syntax = "proto3";
 
 import "google/protobuf/wrappers.proto";
 import "google/protobuf/struct.proto";
-import "google/protobuf/any.proto";
+import "google/protobuf/field_mask.proto";
 
 /*********** PARTIAL MESSAGES **************/
 
@@ -15,6 +15,9 @@ enum AvailabilityStatus {
   BBB = 5;
   DENY_PROXIMITY_MEETING = 6;
   SPEAKER = 7;
+  BUSY = 8;
+  DO_NOT_DISTURB = 9;
+  BACK_IN_A_MOMENT = 10;
 }
 
 message PositionMessage {
@@ -49,7 +52,17 @@ message CharacterTextureMessage {
 
 message ApplicationMessage {
   string name = 1;
-  string script = 2;
+  optional string script = 2;
+  optional string doc = 3;
+  optional string description = 4;
+  optional string image = 5;
+  optional bool enabled = 6;
+  optional string regexUrl = 7;
+  optional string targetUrl = 8;
+  optional bool default = 9;
+  optional bool forceNewTab = 10;
+  optional bool allowAPI = 11;
+  optional string policy = 12;
 }
 
 message CompanionTextureMessage {
@@ -78,6 +91,8 @@ message SetPlayerDetailsMessage {
   google.protobuf.BoolValue showVoiceIndicator = 5;
   AvailabilityStatus availabilityStatus = 6;
   SetPlayerVariableMessage setVariable = 7;
+  string chatID = 8;
+  
 }
 
 message UserMovesMessage {
@@ -98,6 +113,11 @@ message ReportPlayerMessage {
 message BanPlayerMessage {
   string banUserUuid = 1;
   string banUserName = 2;
+}
+
+message UpdateChatIdMessage {
+  string email = 1;
+  string chatId = 2;
 }
 
 message EmotePromptMessage {
@@ -128,11 +148,6 @@ message LockGroupPromptMessage {
   bool lock = 1;
 }
 
-message KickOffUserMessage {
-  string userId = 1;
-  string spaceName = 2;
-}
-
 /*********** MAP EDITOR MESSAGES *************/
 
 message EditMapMessage {
@@ -145,7 +160,10 @@ message EditMapMessage {
     DeleteEntityMessage deleteEntityMessage = 6;
     UpdateWAMSettingsMessage updateWAMSettingsMessage = 7;
     ErrorCommandMessage errorCommandMessage = 8;
-    ModifiyWAMMetadataMessage modifiyWAMMetadataMessage = 9;
+    UploadEntityMessage uploadEntityMessage = 9;
+    ModifyCustomEntityMessage modifyCustomEntityMessage = 10;
+    DeleteCustomEntityMessage deleteCustomEntityMessage = 11;
+    ModifiyWAMMetadataMessage modifiyWAMMetadataMessage = 12;
   }
 }
 
@@ -178,6 +196,9 @@ message EditMapCommandsArrayMessage {
 message EditMapCommandWithKeyMessage {
   string mapKey = 1;
   EditMapCommandMessage editMapCommandMessage = 2;
+  repeated string connectedUserTags = 3;
+  bool userCanEdit = 4;
+  string userUUID = 5;
 }
 
 message ModifyAreaMessage {
@@ -213,19 +234,58 @@ message CreateEntityMessage {
   string prefabId = 5;
   repeated google.protobuf.Value properties = 6;
   optional string name = 7;
+  uint32 width = 8;
+  uint32 height = 9;
 }
 
 message DeleteEntityMessage {
   string id = 1;
 }
 
+message CollisionGridRow {
+  repeated uint32 row = 1;
+}
+
+enum CustomEntityDirection {
+  Up = 0;
+  Right = 1;
+  Down = 2;
+  Left = 3;
+}
+
+message UploadEntityMessage {
+  bytes file = 1;
+  string id = 2;
+  string name = 3;
+  repeated string tags = 4;
+  string imagePath = 5;
+  CustomEntityDirection direction = 6;
+  string color = 7;
+  optional google.protobuf.Value collisionGrid = 8;
+  optional int32 depthOffset = 9;
+}
+
+message ModifyCustomEntityMessage {
+  string id = 1;
+  string name = 2;
+  repeated string tags = 3;
+  optional google.protobuf.Value collisionGrid = 4;
+  optional int32 depthOffset = 5;
+}
+
+message DeleteCustomEntityMessage {
+  string id = 1;
+}
+
 message ModifyEntityMessage {
   string id = 1;
-  optional uint32 x = 2;
-  optional uint32 y = 3;
+  uint32 x = 2;
+  uint32 y = 3;
   repeated google.protobuf.Value properties = 4;
   optional bool modifyProperties = 5;
   optional string name = 6;
+  uint32 width = 7;
+  uint32 height = 8;
 }
 
 message ClientToServerMessage {
@@ -252,20 +312,14 @@ message ClientToServerMessage {
     AddSpaceFilterMessage addSpaceFilterMessage = 25;
     RemoveSpaceFilterMessage removeSpaceFilterMessage = 26;
     UpdateSpaceFilterMessage updateSpaceFilterMessage = 27;
-    WatchSpaceMessage watchSpaceMessage = 28;
-    UnwatchSpaceMessage unwatchSpaceMessage = 29;
-    CameraStateMessage cameraStateMessage = 30;
-    MicrophoneStateMessage microphoneStateMessage = 31;
-    MegaphoneStateMessage megaphoneStateMessage = 32;
-    ScreenSharingStateMessage screenSharingStateMessage = 33;
-    JitsiParticipantIdSpaceMessage  jitsiParticipantIdSpaceMessage = 34;
+    JoinSpaceMessage joinSpaceMessage = 28;
+    LeaveSpaceMessage leaveSpaceMessage = 29;
+    UpdateSpaceUserMessage updateSpaceUserMessage = 30;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 35;
-    KickOffUserMessage kickOffUserMessage = 36;
-    MuteParticipantIdMessage muteParticipantIdMessage = 37;
-    MuteEveryBodyParticipantMessage muteEveryBodyParticipantMessage = 38;
-    MuteVideoParticipantIdMessage muteVideoParticipantIdMessage = 39;
-    MuteVideoEveryBodyParticipantMessage muteVideoEveryBodyParticipantMessage = 40;
     BanPlayerMessage banPlayerMessage = 41;
+    UpdateChatIdMessage updateChatIdMessage = 42;
+    PublicEventFrontToPusher publicEvent = 43;
+    PrivateEventFrontToPusher privateEvent = 44;
   }
 }
 
@@ -344,6 +398,11 @@ message QueryMessage {
     EmbeddableWebsiteQuery embeddableWebsiteQuery = 4;
     RoomsFromSameWorldQuery roomsFromSameWorldQuery = 5;
     SendEventQuery sendEventQuery = 6;
+    SearchMemberQuery searchMemberQuery = 7;
+    GetMemberQuery getMemberQuery = 8;
+    TurnCredentialsQuery turnCredentialsQuery = 9;
+    ChatMembersQuery chatMembersQuery = 10;
+    SearchTagsQuery searchTagsQuery = 11;
   }
 }
 
@@ -375,6 +434,25 @@ message SendEventQuery {
   repeated int32 targetUserIds = 3;
 }
 
+message SearchMemberQuery {
+  string searchText = 1;
+}
+
+message GetMemberQuery {
+  string uuid = 1;
+}
+
+message TurnCredentialsQuery {
+}
+
+message ChatMembersQuery {
+  string searchText = 1;
+}
+
+message  SearchTagsQuery{
+  string searchText = 1;
+}
+
 message AnswerMessage {
   int32 id = 1;
   oneof answer {
@@ -385,6 +463,11 @@ message AnswerMessage {
     EmbeddableWebsiteAnswer embeddableWebsiteAnswer = 6;
     RoomsFromSameWorldAnswer roomsFromSameWorldAnswer = 7;
     SendEventAnswer sendEventAnswer = 8;
+    SearchMemberAnswer searchMemberAnswer = 9;
+    GetMemberAnswer getMemberAnswer = 10;
+    TurnCredentialsAnswer turnCredentialsAnswer = 11;
+    ChatMembersAnswer chatMembersAnswer = 12;
+    SearchTagsAnswer searchTagsAnswer = 13;
   }
 }
 
@@ -427,6 +510,44 @@ message RoomsFromSameWorldAnswer {
 message SendEventAnswer {
 }
 
+message SearchMemberAnswer {
+  repeated Member members = 1;
+}
+
+message GetMemberAnswer {
+  Member member = 1;
+}
+
+message ChatMembersAnswer {
+  int64 total = 1;
+  repeated ChatMember members = 2;
+}
+
+message Member {
+  string id = 1;
+  optional string name = 2;
+  optional string email = 3;
+  optional string visitCardUrl = 4;
+  optional string chatID = 5;
+}
+
+message TurnCredentialsAnswer {
+  optional string webRtcUser = 1;
+  optional string webRtcPassword = 2;
+}
+
+message ChatMember {
+  string uuid = 1;
+  optional string wokaName = 2;
+  optional string email = 3;
+  optional string chatId = 4;
+  repeated string tags = 5;
+}
+
+message SearchTagsAnswer{
+  repeated string tags = 1; 
+}
+
 /*********** SERVER TO CLIENT MESSAGES *************/
 
 message UserMovedMessage {
@@ -454,19 +575,16 @@ message SubMessage {
     EditMapCommandMessage editMapCommandMessage = 13;
     JoinMucRoomMessage joinMucRoomMessage = 14;
     LeaveMucRoomMessage leaveMucRoomMessage = 15;
-    AddSpaceUserMessage addSpaceUserMessage = 16;
-    UpdateSpaceUserMessage updateSpaceUserMessage = 17;
-    RemoveSpaceUserMessage removeSpaceUserMessage = 18;
+    AddSpaceUserPusherToFrontMessage addSpaceUserMessage = 16;
+    UpdateSpaceUserPusherToFrontMessage updateSpaceUserMessage = 17;
+    RemoveSpaceUserPusherToFrontMessage removeSpaceUserMessage = 18;
     MegaphoneSettings megaphoneSettingsMessage = 19;
     ReceivedEventMessage receivedEventMessage = 20;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 21;
+    // FIXME: remove all this
     KickOffMessage kickOffMessage = 22;
-    MuteMicrophoneMessage muteMicrophoneMessage = 23;
-    MuteVideoMessage muteVideoMessage = 24;
-    MuteMicrophoneEverybodyMessage muteMicrophoneEverybodyMessage = 25;
-    MuteVideoEverybodyMessage muteVideoEverybodyMessage = 26;
-    AskMuteMicrophoneMessage askMuteMicrophoneMessage = 27;
-    AskMuteVideoMessage askMuteVideoMessage = 28;
+    PublicEvent publicEvent = 29;
+    PrivateEvent privateEvent = 30;
   }
 }
 
@@ -488,7 +606,6 @@ message GroupDeleteMessage {
 
 message UserJoinedMessage {
   int32 userId = 1;
-  string userJid = 2;
   string name = 3;
   repeated CharacterTextureMessage characterTextures = 4;
   PositionMessage position = 5;
@@ -499,6 +616,7 @@ message UserJoinedMessage {
   bool hasOutline = 10;
   AvailabilityStatus availabilityStatus = 11;
   map<string, string> variables = 12;
+  optional string chatID = 13;
 }
 
 message UserLeftMessage {
@@ -551,10 +669,9 @@ message RoomJoinedMessage {
   bool activatedInviteUser = 9;
   repeated VariableMessage playerVariable = 10;
   repeated ApplicationMessage applications = 11;
-  string userJid = 12;
   EditMapCommandsArrayMessage editMapCommandsArrayMessage = 13;
-  string webrtcUserName = 14;
-  string webrtcPassword = 15;
+  string webRtcUserName = 14;
+  string webRtcPassword = 15;
   bool canEdit = 16;
   MegaphoneSettings megaphoneSettings = 17;
   CompanionTextureMessage companionTexture = 18;
@@ -568,8 +685,8 @@ message MegaphoneSettings{
 message WebRtcStartMessage {
   int32 userId = 1;
   bool initiator = 3;
-  string webrtcUserName = 4;
-  string webrtcPassword = 5;
+  string webRtcUserName = 4;
+  string webRtcPassword = 5;
 }
 
 message WebRtcDisconnectMessage {
@@ -579,8 +696,8 @@ message WebRtcDisconnectMessage {
 message WebRtcSignalToClientMessage {
   int32 userId = 1;
   string signal = 2;
-  string webrtcUserName = 4;
-  string webrtcPassword = 5;
+  string webRtcUserName = 4;
+  string webRtcPassword = 5;
 }
 
 message TeleportMessageMessage{
@@ -634,70 +751,88 @@ message AskPositionMessage{
   string playUri = 2;
 }
 
-message CameraStateMessage {
-  bool value = 1;
+// A request sent within a space to mute the audio of a specific user
+message MuteAudioPrivateMessage {
+  // The "force" field is filled by the pusher server if the user is an admin
+  bool force = 1;
 }
 
-message MicrophoneStateMessage {
-  bool value = 1;
+// A request sent within a space to mute the video of a specific user
+message MuteVideoPrivateMessage {
+  // The "force" field is filled by the pusher server if the user is an admin
+  bool force = 1;
 }
 
-message ScreenSharingStateMessage {
-  bool value = 1;
+message MuteAudioForEverybodyPublicMessage {
 }
 
-message MegaphoneStateMessage {
-  bool value = 1;
-  optional string spaceName = 2;
+message MuteVideoForEverybodyPublicMessage {
 }
 
-message JitsiParticipantIdSpaceMessage {
+message KickOffUserPrivateMessage {
+}
+
+message PublicEventFrontToPusher {
   string spaceName = 1;
-  string value = 2;
+  SpaceEvent spaceEvent = 2;
 }
 
-message MegaphoneEnabledMessage {
-  bool value = 1;
-}
-
-message MuteParticipantIdMessage {
+message PublicEvent {
   string spaceName = 1;
-  string mutedUserUuid = 2;
+  SpaceEvent spaceEvent = 2;
+  int32 senderUserId = 3;
 }
 
-message MuteEveryBodyParticipantMessage {
+message SpaceEvent {
+  oneof event {
+    SpaceMessage spaceMessage = 1;
+    SpaceIsTyping spaceIsTyping = 2;
+    MuteAudioForEverybodyPublicMessage muteAudioForEverybody = 3;
+    MuteVideoForEverybodyPublicMessage muteVideoForEverybody = 4;
+  }
+}
+
+message PrivateSpaceEvent {
+  oneof event {
+    MuteVideoPrivateMessage muteVideo = 1;
+    MuteAudioPrivateMessage muteAudio = 2;
+    KickOffUserPrivateMessage kickOffUser = 3;
+  }
+}
+
+message SpaceMessage {
+  string message = 1;
+}
+
+message SpaceIsTyping {
+  bool isTyping = 1;
+}
+
+message PrivateEvent {
   string spaceName = 1;
-  string senderUserId = 2;
+  int32 receiverUserId = 2;
+  int32 senderUserId = 3;
+  PrivateSpaceEvent spaceEvent = 4;
 }
 
-message MutedMessage {
-  string userUuid = 1;
-  string message = 2;
-}
-
-message MuteVideoParticipantIdMessage {
+message PrivateEventFrontToPusher {
   string spaceName = 1;
-  string mutedUserUuid = 2;
+  int32 receiverUserId = 2;
+  PrivateSpaceEvent spaceEvent = 4;
 }
 
-message MuteVideoEveryBodyParticipantMessage {
+/**
+ * Messages going from server to the client to ask the client to join a space
+ */
+message JoinSpaceRequestMessage {
   string spaceName = 1;
-  string userId = 2;
 }
 
-message MutedVideoMessage {
-  string userUuid = 1;
-  string message = 2;
-}
-
-message AskMutedMessage {
-  string userUuid = 1;
-  string message = 2;
-}
-
-message AskMutedVideoMessage {
-  string userUuid = 1;
-  string message = 2;
+/**
+ * Messages going from server to the client to ask the client to leave a space
+ */
+message LeaveSpaceRequestMessage {
+  string spaceName = 1;
 }
 
 /**
@@ -729,13 +864,10 @@ message ServerToClientMessage {
     GroupUsersUpdateMessage groupUsersUpdateMessage = 25;
     ErrorScreenMessage errorScreenMessage = 26;
     AnswerMessage answerMessage = 28;
-    XmppSettingsMessage xmppSettingsMessage = 29;
     MoveToPositionMessage moveToPositionMessage = 31;
     InvalidCompanionTextureMessage invalidCompanionTextureMessage = 32;
-    MutedMessage mutedMessage = 33;
-    MutedVideoMessage mutedVideoMessage = 34;
-    AskMutedMessage askMutedMessage = 35;
-    AskMutedVideoMessage askMutedVideoMessage = 36;
+    JoinSpaceRequestMessage joinSpaceRequestMessage = 39;
+    LeaveSpaceRequestMessage leaveSpaceRequestMessage = 40;
   }
 }
 
@@ -757,14 +889,13 @@ message JoinRoomMessage {
   bool activatedInviteUser = 12;
   bool isLogged = 13;
   repeated ApplicationMessage applications = 14;
-  string userJid = 15;
   google.protobuf.StringValue lastCommandId = 16;
   bool canEdit = 17;
+  google.protobuf.StringValue chatID = 18;
 }
 
 message UserJoinedZoneMessage {
   int32 userId = 1;
-  string userJid = 2;
   string name = 3;
   repeated CharacterTextureMessage characterTextures = 4;
   PositionMessage position = 5;
@@ -776,6 +907,7 @@ message UserJoinedZoneMessage {
   bool hasOutline = 11;
   AvailabilityStatus availabilityStatus = 12;
   map<string, string> variables = 13;
+  optional string chatID=14;
 }
 
 message UserLeftZoneMessage {
@@ -836,11 +968,8 @@ message PusherToBackMessage {
     AskPositionMessage askPositionMessage = 22;
     EditMapCommandMessage editMapCommandMessage = 23;
     PingMessage pingMessage = 24;
-    KickOffUserMessage kickOffUserMessage = 25;
-    MuteParticipantIdMessage muteParticipantIdMessage = 26;
-    MuteEveryBodyParticipantMessage muteEveryBodyParticipantMessage = 27;
-    MuteVideoParticipantIdMessage muteVideoParticipantIdMessage = 28;
-    MuteVideoEveryBodyParticipantMessage muteVideoEveryBodyParticipantMessage = 29;
+    PublicEvent publicEvent = 30;
+    PrivateEvent privateEvent = 31;
   }
 }
 
@@ -1005,11 +1134,12 @@ message MucRoomDefinitionMessage {
   bool subscribe = 4;
 }
 
-message XmppSettingsMessage{
-  string conferenceDomain = 2;
-  repeated MucRoomDefinitionMessage rooms = 3;
-  string jabberId = 4;
-  string jabberPassword = 5;
+message BanUserByUuidMessage{
+  string playUri = 1;
+  string uuidToBan = 2;
+  string name = 3;
+  string message = 4;
+  string byUserEmail = 5;
 }
 /*********************************************************************************
  * End Chat Messages
@@ -1024,20 +1154,17 @@ message XmppSettingsMessage{
  ********************************************************************************/
 message PusherToBackSpaceMessage{
   oneof message {
-    WatchSpaceMessage watchSpaceMessage = 1;
-    UnwatchSpaceMessage unwatchSpaceMessage = 2;
+    JoinSpaceMessage joinSpaceMessage = 1;
+    LeaveSpaceMessage leaveSpaceMessage = 2;
     AddSpaceUserMessage addSpaceUserMessage = 3;
     UpdateSpaceUserMessage updateSpaceUserMessage = 4;
     RemoveSpaceUserMessage removeSpaceUserMessage = 5;
     PingMessage pongMessage = 6;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 7;
+    // FIXME: the kick of message should be global to the room (unless we apply it on the world space???)
     KickOffMessage kickOffMessage = 8;
-    MuteMicrophoneMessage muteMicrophoneMessage = 9;
-    MuteVideoMessage muteVideoMessage = 10;
-    MuteMicrophoneEverybodyMessage muteMicrophoneEverybodyMessage = 11;
-    MuteVideoEverybodyMessage muteVideoEverybodyMessage = 12;
-    AskMuteMicrophoneMessage askMuteMicrophoneMessage = 13;
-    AskMuteVideoMessage askMuteVideoMessage = 14;
+    PublicEvent publicEvent = 15;
+    PrivateEvent privateEvent = 16;
   }
 }
 
@@ -1048,24 +1175,21 @@ message BackToPusherSpaceMessage{
     RemoveSpaceUserMessage removeSpaceUserMessage = 3;
     PingMessage pingMessage = 4;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 5;
+    // FIXME: the kick of message should be global to the room (unless we apply it on the world space???)
     KickOffMessage kickOffMessage = 6;
-    MuteMicrophoneMessage muteMicrophoneMessage = 7;
-    MuteVideoMessage muteVideoMessage = 8;
-    MuteMicrophoneEverybodyMessage muteMicrophoneEverybodyMessage = 9;
-    MuteVideoEverybodyMessage muteVideoEverybodyMessage = 10;
-    AskMuteMicrophoneMessage askMuteMicrophoneMessage = 11;
-    AskMuteVideoMessage askMuteVideoMessage = 12;
+    PublicEvent publicEvent = 13;
+    PrivateEvent privateEvent = 14;
   }
 }
 
-message WatchSpaceMessage{
+/**
+ * Message sent by the user to join a space as a participant.
+ */
+message JoinSpaceMessage{
   string spaceName = 1;
-  SpaceUser user = 2;
-  SpaceFilterMessage spaceFilter = 3;
 }
-message UnwatchSpaceMessage{
+message LeaveSpaceMessage{
   string spaceName = 1;
-  int32 userId = 2;
 }
 
 message SpaceUser{
@@ -1085,9 +1209,10 @@ message SpaceUser{
   bool megaphoneState = 14; // used
   google.protobuf.StringValue jitsiParticipantId = 15; // used
   string uuid = 16; // used
+  google.protobuf.StringValue chatID = 17; // used
 }
 
-message PartialSpaceUser{
+/*message PartialSpaceUser{
   int32 id = 1;
   google.protobuf.StringValue name = 2;
   google.protobuf.StringValue playUri = 3;
@@ -1104,22 +1229,48 @@ message PartialSpaceUser{
   google.protobuf.BoolValue megaphoneState = 14;
   google.protobuf.StringValue jitsiParticipantId = 15;
   string uuid = 16;
-}
+  google.protobuf.StringValue chatID = 17;
+}*/
 
+/**
+ * Message adding a user to a space (front to pusher, pusher to back-space, back-space to pusher)
+ */
 message AddSpaceUserMessage{
   string spaceName = 1;
   SpaceUser user = 2;
-  google.protobuf.StringValue filterName = 3;
 }
+message AddSpaceUserPusherToFrontMessage{
+  string spaceName = 1;
+  SpaceUser user = 2;
+  string filterName = 3;
+}
+
+/**
+ * Message updating a user in a space (front to pusher, pusher to back-space, back-space to pusher)
+ */
 message UpdateSpaceUserMessage{
   string spaceName = 1;
-  PartialSpaceUser user = 2;
-  google.protobuf.StringValue filterName = 3;
+  SpaceUser user = 2;
+  google.protobuf.FieldMask updateMask = 4;
 }
+message UpdateSpaceUserPusherToFrontMessage{
+  string spaceName = 1;
+  SpaceUser user = 2;
+  string filterName = 3;
+  google.protobuf.FieldMask updateMask = 4;
+}
+
+/**
+ * Message removing a user from a space (front to pusher, pusher to back-space, back-space to pusher)
+ */
 message RemoveSpaceUserMessage{
   string spaceName = 1;
   int32 userId = 2;
-  google.protobuf.StringValue filterName = 3;
+}
+message RemoveSpaceUserPusherToFrontMessage{
+  string spaceName = 1;
+  int32 userId = 2;
+  string filterName = 3;
 }
 message UpdateSpaceMetadataMessage{
   string spaceName = 1;
@@ -1127,36 +1278,6 @@ message UpdateSpaceMetadataMessage{
   google.protobuf.StringValue filterName = 3;
 }
 message KickOffMessage{
-  string spaceName = 1;
-  string userId = 2;
-  google.protobuf.StringValue filterName = 3;
-}
-message MuteMicrophoneMessage{
-  string spaceName = 1;
-  string userId = 2;
-  google.protobuf.StringValue filterName = 3;
-}
-message MuteVideoMessage{
-  string spaceName = 1;
-  string userId = 2;
-  google.protobuf.StringValue filterName = 3;
-}
-message MuteMicrophoneEverybodyMessage{
-  string spaceName = 1;
-  string userId = 2;
-  google.protobuf.StringValue filterName = 3;
-}
-message MuteVideoEverybodyMessage{
-  string spaceName = 1;
-  string userId = 2;
-  google.protobuf.StringValue filterName = 3;
-}
-message AskMuteMicrophoneMessage{
-  string spaceName = 1;
-  string userId = 2;
-  google.protobuf.StringValue filterName = 3;
-}
-message AskMuteVideoMessage{
   string spaceName = 1;
   string userId = 2;
   google.protobuf.StringValue filterName = 3;

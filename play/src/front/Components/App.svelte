@@ -5,14 +5,15 @@
     import { loginSceneVisibleStore } from "../Stores/LoginSceneStore";
     import { enableCameraSceneVisibilityStore } from "../Stores/MediaStore";
     import {
-        selectCharacterSceneVisibleStore,
         selectCharacterCustomizeSceneVisibleStore,
+        selectCharacterSceneVisibleStore,
     } from "../Stores/SelectCharacterStore";
     import { selectCompanionSceneVisibleStore } from "../Stores/SelectCompanionStore";
     import { gameSceneIsLoadedStore } from "../Stores/GameSceneStore";
     import { mapEditorModeStore } from "../Stores/MapEditorStore";
     import { refreshPromptStore } from "../Stores/RefreshPromptStore";
     import { forceRefreshChatStore } from "../Stores/ChatStore";
+    import ChatSidebar from "../Chat/ChatSidebar.svelte";
     import EnableCameraScene from "./EnableCamera/EnableCameraScene.svelte";
     import LoginScene from "./Login/LoginScene.svelte";
     import MainLayout from "./MainLayout.svelte";
@@ -20,9 +21,9 @@
     import SelectCompanionScene from "./SelectCompanion/SelectCompanionScene.svelte";
     import ErrorDialog from "./UI/ErrorDialog.svelte";
     import ErrorScreen from "./UI/ErrorScreen.svelte";
-    import Chat from "./Chat/Chat.svelte";
     import MapEditor from "./MapEditor/MapEditor.svelte";
     import RefreshPrompt from "./RefreshPrompt.svelte";
+    import SelectCharacterCustomizeScene from "./SelectCharacter/SelectCharacterCustomizeScene.svelte";
 
     export let game: Game;
 
@@ -49,6 +50,10 @@
     <div>
         <SelectCharacterScene {game} />
     </div>
+{:else if $selectCharacterCustomizeSceneVisibleStore}
+    <div>
+        <SelectCharacterCustomizeScene {game} />
+    </div>
 {:else if $selectCompanionSceneVisibleStore}
     <div>
         <SelectCompanionScene {game} />
@@ -62,7 +67,7 @@
         <RefreshPrompt />
     {/if}
     {#key $forceRefreshChatStore}
-        <Chat />
+        <ChatSidebar />
         {#if $mapEditorModeStore}
             <MapEditor />
         {/if}

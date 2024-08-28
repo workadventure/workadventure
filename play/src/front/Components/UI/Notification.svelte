@@ -6,11 +6,14 @@
     import cameraOffImg from "../images/camera-off.png";
     import jistiImg from "../images/jitsi.png";
     import waImg from "../images/icon-workadventure-white.png";
+    import AreaToolImg from "../images/icon-tool-area.png";
 
     const icons = new Map<string, string>([
         ["microphone-off.png", microphoneOffImg],
         ["camera-off.png", cameraOffImg],
         ["jitsi.png", jistiImg],
+        ["jitsi.png", jistiImg],
+        ["icon-tool-area.png", AreaToolImg],
     ]);
 
     export let notification: Notification;
@@ -25,7 +28,7 @@
 
 <div class="notification-playing tw-bg-dark-blue/95 tw-mt-1" transition:fly={{ x: 210, duration: 500 }}>
     <img
-        src={icons.get(notification.icon) ?? waImg}
+        src={notification.icon ? icons.get(notification.icon) : waImg}
         alt="Audio playing"
         class="tw-bg-medium-purple tw-rounded-full tw-h-14"
     />

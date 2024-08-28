@@ -27,7 +27,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
 
       - name: Login to DockerHub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -80,7 +80,7 @@ jobs:
 
       - name: Load image (for sentry)
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
-        run: docker load --input /tmp/play.tar
+        run: docker image load --input /tmp/play.tar
 
       - name: Sentry push source maps
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
@@ -115,81 +115,6 @@ jobs:
           name: play
           path: /tmp/play.tar.gz
 
-  build-chat:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      # docker
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Login to DockerHub
-        uses: docker/login-action@v2
-        if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - uses: rlespinasse/github-slug-action@4.2.3
-
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v4
-        with:
-          images: thecodingmachine/workadventure-chat
-
-      - name: Build and push
-        uses: docker/build-push-action@v3
-        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
-        with:
-          context: .
-          file: chat/Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: thecodingmachine/workadventure-chat:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-          cache-from: |
-            type=registry,ref=thecodingmachine/workadventure-chat:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-            type=registry,ref=thecodingmachine/workadventure-chat:develop
-          cache-to: type=inline
-          labels: ${{ steps.meta.outputs.labels }}
-          secrets: |
-            "SENTRY_URL=${{ secrets.SENTRY_URL }}"
-            "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}"
-            "SENTRY_ORG=${{ secrets.SENTRY_ORG }}"
-            "SENTRY_PROJECT=chat"
-            "SENTRY_ENVIRONMENT=${{ github.event_name == 'release' && 'production' || env.GITHUB_REF_NAME == 'master' && 'staging' || 'testing' }}"
-            "SENTRY_RELEASE=${{ github.event_name == 'release' && env.GITHUB_REF_NAME || format('{0}@{1}', env.GITHUB_REF_NAME, env.GITHUB_SHA) }}"
-
-      - name: Build test image
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          file: chat/Dockerfile
-          platforms: linux/amd64
-          push: false
-          tags: thecodingmachine/workadventure-chat:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-          cache-from: |
-            type=registry,ref=thecodingmachine/workadventure-chat:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-            type=registry,ref=thecodingmachine/workadventure-chat:develop
-          cache-to: type=inline
-          labels: ${{ steps.meta.outputs.labels }}
-          outputs: type=docker,dest=/tmp/chat.tar
-
-      - name: Zip image
-        run: gzip chat.tar
-        working-directory: /tmp
-
-      - name: Upload image as artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: chat
-          path: /tmp/chat.tar.gz
-
   build-back:
     runs-on: ubuntu-latest
     steps:
@@ -204,7 +129,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
 
       - name: Login to DockerHub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -256,7 +181,7 @@ jobs:
 
       - name: Load image (for sentry)
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
-        run: docker load --input /tmp/back.tar
+        run: docker image load --input /tmp/back.tar
 
       - name: Sentry push source maps
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
@@ -300,7 +225,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
 
       - name: Login to DockerHub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -363,7 +288,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
 
       - name: Login to DockerHub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -429,7 +354,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
 
       - name: Login to DockerHub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -475,7 +400,7 @@ jobs:
 
       - name: Load image (for sentry)
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
-        run: docker load --input /tmp/map-storage.tar
+        run: docker image load --input /tmp/map-storage.tar
 
       - name: Sentry push source maps
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
@@ -507,72 +432,6 @@ jobs:
         with:
           name: map-storage
           path: /tmp/map-storage.tar.gz
-
-  build-ejabberd:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      # docker
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Login to DockerHub
-        uses: docker/login-action@v2
-        if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - uses: rlespinasse/github-slug-action@4.2.3
-
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v4
-        with:
-          images: thecodingmachine/workadventure-ejabberd
-
-      - name: Build and push
-        uses: docker/build-push-action@v3
-        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
-        with:
-          context: xmpp/
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: thecodingmachine/workadventure-ejabberd:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-          cache-from: |
-            type=registry,ref=thecodingmachine/workadventure-ejabberd:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-            type=registry,ref=thecodingmachine/workadventure-ejabberd:develop
-          cache-to: type=inline
-          labels: ${{ steps.meta.outputs.labels }}
-
-      - name: Build test image
-        uses: docker/build-push-action@v3
-        with:
-          context: xmpp/
-          platforms: linux/amd64
-          push: false
-          tags: thecodingmachine/workadventure-ejabberd:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-          cache-from: |
-            type=registry,ref=thecodingmachine/workadventure-ejabberd:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-            type=registry,ref=thecodingmachine/workadventure-ejabberd:develop
-          cache-to: type=inline
-          labels: ${{ steps.meta.outputs.labels }}
-          outputs: type=docker,dest=/tmp/ejabberd.tar
-
-      - name: Zip image
-        run: gzip ejabberd.tar
-        working-directory: /tmp
-
-      - name: Upload image as artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: ejabberd
-          path: /tmp/ejabberd.tar.gz
 
   end-to-end-tests:
     name: "End to end tests with ${{ matrix.project }} (${{ matrix.shard }}/${{ matrix.nbShards }})"
@@ -642,12 +501,10 @@ jobs:
             renderer: auto
     needs:
       - build-play
-      - build-chat
       - build-back
       - build-maps
       - build-uploader
       - build-map-storage
-      - build-ejabberd
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
@@ -695,11 +552,6 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v3
         with:
-          name: chat
-          path: /tmp
-      - name: Download artifact
-        uses: actions/download-artifact@v3
-        with:
           name: back
           path: /tmp
       - name: Download artifact
@@ -717,25 +569,16 @@ jobs:
         with:
           name: uploader
           path: /tmp
-      - name: Download artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: ejabberd
-          path: /tmp
       - name: Load image
         run: |
-          docker load --input /tmp/play.tar.gz
-          docker load --input /tmp/chat.tar.gz
-          docker load --input /tmp/back.tar.gz
-          docker load --input /tmp/maps.tar.gz
-          docker load --input /tmp/map-storage.tar.gz
-          docker load --input /tmp/uploader.tar.gz
-          docker load --input /tmp/ejabberd.tar.gz
+          docker image load --input /tmp/play.tar.gz
+          docker image load --input /tmp/back.tar.gz
+          docker image load --input /tmp/maps.tar.gz
+          docker image load --input /tmp/map-storage.tar.gz
+          docker image load --input /tmp/uploader.tar.gz
           docker image ls -a
       - name: Start WorkAdventure
-        run: |
-          docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml pull
-          docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml up -d
+        run: docker compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml up -d
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
       - name: Upload test-map
@@ -747,18 +590,18 @@ jobs:
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           RENDERER_MODE: ${{ matrix.renderer }}
-      - name: Display docker-compose logs on failure
-        run: docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml logs
+      - name: Display docker compose logs on failure
+        run: docker compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml logs
         if: failure()
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
       - name: Display containers state
-        run: docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml ps
+        run: docker compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml ps
         if: failure()
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-      - name: Side-load docker-compose logs in the playwright report
-        run: docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml logs > tests/playwright-report/docker-compose.log
+      - name: Side-load docker compose logs in the playwright report
+        run: docker compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml logs > tests/playwright-report/docker-compose.log
         if: failure()
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
@@ -770,7 +613,7 @@ jobs:
           retention-days: 30
 
   prod-single-domain-deploy-tests:
-    name: "Test production docker-compose (${{ matrix.shard }}/${{ matrix.nbShards }})"
+    name: "Test production docker compose (${{ matrix.shard }}/${{ matrix.nbShards }})"
     strategy:
       fail-fast: false
       matrix:
@@ -782,12 +625,10 @@ jobs:
     if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     needs:
       - build-play
-      - build-chat
       - build-back
       - build-maps
       - build-uploader
       - build-map-storage
-      - build-ejabberd
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
@@ -835,7 +676,7 @@ jobs:
           KLAXOON_CLIENT_ID: ${{ secrets.KLAXOON_CLIENT_ID }}
         working-directory: contrib/docker
       - name: Start WorkAdventure
-        run: docker-compose -f docker-compose.prod.yaml -f tests/docker-compose.test-maps.yaml up -d
+        run: docker compose -f docker-compose.prod.yaml -f tests/docker-compose.test-maps.yaml up -d
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
         working-directory: contrib/docker
@@ -851,20 +692,20 @@ jobs:
         working-directory: tests
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-      - name: Display docker-compose logs on failure
-        run: docker-compose  -f docker-compose.prod.yaml -f tests/docker-compose.test-maps.yaml logs
+      - name: Display docker compose logs on failure
+        run: docker compose  -f docker-compose.prod.yaml -f tests/docker-compose.test-maps.yaml logs
         if: failure()
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
         working-directory: contrib/docker
       - name: Display containers state
-        run: docker-compose  -f docker-compose.prod.yaml -f tests/docker-compose.test-maps.yaml ps
+        run: docker compose  -f docker-compose.prod.yaml -f tests/docker-compose.test-maps.yaml ps
         if: failure()
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
         working-directory: contrib/docker
-      - name: Side-load docker-compose logs in the playwright report
-        run: docker-compose  -f docker-compose.prod.yaml -f tests/docker-compose.test-maps.yaml logs > ../../tests/playwright-report/docker-compose.log
+      - name: Side-load docker compose logs in the playwright report
+        run: docker compose  -f docker-compose.prod.yaml -f tests/docker-compose.test-maps.yaml logs > ../../tests/playwright-report/docker-compose.log
         if: failure()
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
@@ -880,12 +721,10 @@ jobs:
     name: "Deploy in Kubernetes"
     needs:
       - build-play
-      - build-chat
       - build-back
       - build-maps
       - build-uploader
       - build-map-storage
-      - build-ejabberd
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
 
@@ -951,7 +790,6 @@ jobs:
           echo "
           appVersion: \"${DEPLOY_REF}\"
           domainName: ${DEPLOY_REF}.test.workadventu.re
-          ejabberdJwtSecret: \"${EJABBERD_JWT_SECRET}\"
           forceRedeploy: true
           play:
             secretEnv:
@@ -1004,7 +842,6 @@ jobs:
           DEPLOY_REF: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
           POSTHOG_URL: ${{ secrets.POSTHOG_URL }}
-          EJABBERD_JWT_SECRET: ${{ secrets.EJABBERD_JWT_SECRET }}
           ENABLE_REPORT_ISSUES_MENU: ${{ secrets.ENABLE_REPORT_ISSUES_MENU }}
           REPORT_ISSUES_URL: ${{ secrets.REPORT_ISSUES_URL }}
           LOGROCKET_ID: ${{ secrets.LOGROCKET_ID }}

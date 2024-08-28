@@ -2,19 +2,21 @@ import {
     AreaDataProperties,
     EntityData,
     EntityDataProperties,
+    EntityDimensions,
     EntityPrefabRef,
     WAMEntityData,
 } from "@workadventure/map-editor";
 import { Observable, Subject } from "rxjs";
 import { get, Unsubscriber } from "svelte/store";
 import { z } from "zod";
+import * as Sentry from "@sentry/svelte";
 import { actionsMenuStore } from "../../../Stores/ActionsMenuStore";
 import {
+    mapEditorEntityModeStore,
     mapEditorModeStore,
+    mapEditorSelectedEntityDraggedStore,
     mapEditorSelectedEntityPrefabStore,
     mapEditorSelectedEntityStore,
-    mapEditorEntityModeStore,
-    mapEditorSelectedEntityDraggedStore,
     mapEditorSelectedToolStore,
 } from "../../../Stores/MapEditorStore";
 import { Entity, EntityEvent } from "../../ECS/Entity";
@@ -30,6 +32,7 @@ export const CopyEntityEventData = z.object({
     }),
     prefabRef: EntityPrefabRef,
     properties: EntityDataProperties.optional(),
+    entityDimensions: EntityDimensions,
 });
 
 export const CopyAreaEventData = z.object({
@@ -88,6 +91,16 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             this.gameMapFrontWrapper.handleEntityActionTrigger();
         });
 
+        // When the GameScene is loaded (connection established, etc.), we update all entities
+        this.scene.sceneReadyToStartPromise
+            .then(() => {
+                this.makeAllEntitiesInteractive(true);
+            })
+            .catch((e) => {
+                console.error(e);
+                Sentry.captureException(e);
+            });
+
         this.bindEventHandlers();
     }
 
@@ -103,8 +116,8 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             .getEntityPrefab(data.prefabRef.collectionName, data.prefabRef.id);
         if (prefab === undefined) {
             console.warn(`Could not find entity ${data.prefabRef.id} in collection ${data.prefabRef.collectionName}`);
-            throw new Error(
-                `Could not find entity ${data.prefabRef.id} in collection ${data.prefabRef.collectionName}`
+            return Promise.reject(
+                new Error(`Could not find entity ${data.prefabRef.id} in collection ${data.prefabRef.collectionName}`)
             );
         }
 
@@ -136,9 +149,11 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         }
 
         this.entities.set(entityId, entity);
+
         if (entity.isActivatable()) {
             this.activatableEntities.push(entity);
         }
+
         this.scene.markDirty();
         return entity;
     }
@@ -165,6 +180,23 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         this.scene.markDirty();
 
         return this.entities.delete(id);
+    }
+
+    public deleteEntities(idsToRemove: string[]): boolean {
+        const removedEntitiesStatus: boolean[] = idsToRemove.map((id) => this.deleteEntity(id));
+        return removedEntitiesStatus.every(Boolean);
+    }
+
+    public updateEntitiesDepth(modifiedEntityPrefabId: string, depthOffset: number) {
+        const entities = this.getEntities();
+        for (const entity of entities.values()) {
+            const entityPrefab = entity.getPrefab();
+            if (entityPrefab.id === modifiedEntityPrefabId) {
+                if (entityPrefab.depthOffset !== depthOffset) {
+                    entity.setDepth(entity.y + entity.displayHeight + depthOffset);
+                }
+            }
+        }
     }
 
     public getProperties(): Map<string, string | boolean | number> {
@@ -244,6 +276,9 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             this.emit(EntitiesManagerEvent.UpdateEntity, data);
         });
         entity.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
+            if (!entity.canEdit) {
+                return;
+            }
             if (
                 get(mapEditorModeStore) &&
                 this.isEntityEditorToolActive() &&
@@ -275,8 +310,8 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                 if (
                     !this.scene
                         .getGameMapFrontWrapper()
-                        .canEntityBePlaced(
-                            entity.getPosition(),
+                        .canEntityBePlacedOnMap(
+                            entity.getTopLeft(),
                             entity.displayWidth,
                             entity.displayHeight,
                             entity.getCollisionGrid(),
@@ -307,6 +342,10 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                 return;
             }
 
+            if (!entity.canEdit) {
+                return;
+            }
+
             if (
                 get(mapEditorModeStore) &&
                 this.isEntityEditorToolActive() &&
@@ -320,6 +359,10 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                     return;
                 }
 
+                if (!entity.canEdit) {
+                    return;
+                }
+
                 mapEditorEntityModeStore.set("EDIT");
                 mapEditorSelectedEntityDraggedStore.set(true);
                 mapEditorSelectedEntityStore.set(entity);
@@ -328,6 +371,9 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         entity.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
             this.pointerOverEntitySubject.next(entity);
             if (get(mapEditorModeStore)) {
+                if (!entity.canEdit) {
+                    return;
+                }
                 if (this.isEntityEditorToolActive()) {
                     entity.setPointedToEditColor(this.isTrashEditorToolActive() ? 0xff0000 : 0x00ff00);
                     this.scene.markDirty();
@@ -341,12 +387,8 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         entity.on(Phaser.Input.Events.POINTER_OUT, () => {
             this.pointerOutEntitySubject.next(entity);
             if (get(mapEditorModeStore)) {
-                if (this.isEntityEditorToolActive()) {
+                if (this.isEntityEditorToolActive() || this.isExplorerToolActive()) {
                     entity.removePointedToEditColor();
-                    this.scene.markDirty();
-                }
-                if (this.isExplorerToolActive()) {
-                    entity.setPointedToEditColor(0x000000);
                     this.scene.markDirty();
                 }
             }
@@ -363,9 +405,9 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         mapEditorSelectedEntityStore.set(undefined);
         const eventData: CopyEntityEventData = {
             position: positionToPlaceCopyAt,
-            //prefab: entity.getEntityData().prefab,
             prefabRef: entity.getEntityData().prefabRef,
             properties: entity.getEntityData().properties,
+            entityDimensions: { width: entity.width, height: entity.height },
         };
         this.emit(EntitiesManagerEvent.CopyEntity, eventData);
     }
@@ -374,8 +416,8 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         if (
             !this.scene
                 .getGameMapFrontWrapper()
-                .canEntityBePlaced(
-                    entity.getPosition(),
+                .canEntityBePlacedOnMap(
+                    entity.getTopLeft(),
                     entity.displayWidth,
                     entity.displayHeight,
                     entity.getCollisionGrid(),
@@ -413,6 +455,30 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         return this.entities;
     }
 
+    public getEntitiesInsideArea(areaId: string): Map<string, Entity> {
+        const entitiesInsideArea = new Map<string, Entity>();
+        const gameMapFrontWrapper = this.scene.getGameMapFrontWrapper();
+        const area = this.scene.getGameMap().getGameMapAreas()?.getArea(areaId);
+        if (area === undefined) {
+            return entitiesInsideArea;
+        }
+
+        this.entities.forEach((entity, entityId) => {
+            if (
+                gameMapFrontWrapper.isInsideAreaByCoordinates(
+                    { x: area.x, y: area.y, width: area.width, height: area.height },
+                    {
+                        x: entity.getBounds().centerX,
+                        y: entity.getBounds().centerY,
+                    }
+                )
+            ) {
+                entitiesInsideArea.set(entityId, entity);
+            }
+        });
+        return entitiesInsideArea;
+    }
+
     public getActivatableEntities(): Entity[] {
         return this.activatableEntities;
     }
@@ -431,16 +497,5 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
 
     public close() {
         this.actionsMenuStoreUnsubscriber();
-    }
-
-    public setAllEntitiesPointedToEditColor(color: number) {
-        for (const entity of this.entities.values()) {
-            entity.setPointedToEditColor(color);
-        }
-    }
-    public removeAllEntitiesPointedToEditColor() {
-        for (const entity of this.entities.values()) {
-            entity.removePointedToEditColor();
-        }
     }
 }

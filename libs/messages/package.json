@@ -4,7 +4,8 @@
   "description": "Google Protobuf generated messages",
   "main": "./src/index.ts",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
   },
   "author": "WorkAdventure",
   "license": "ISC",
@@ -16,7 +17,7 @@
     "openapi3-ts": "^3.0.2",
     "protobufjs": "^7.2.4",
     "rxjs": "6.6.3",
-    "zod": "^3.19.1"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^18.7.17",

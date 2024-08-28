@@ -18,9 +18,11 @@ import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores
 import { iframeListener } from "../../Api/IframeListener";
 import { Room } from "../../Connection/Room";
 import { LL } from "../../../i18n/i18n-svelte";
-import { inJitsiStore, inBbbStore, silentStore, inOpenWebsite, isSpeakerStore } from "../../Stores/MediaStore";
+import { inBbbStore, inJitsiStore, inOpenWebsite, isSpeakerStore, silentStore } from "../../Stores/MediaStore";
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
-import { currentLiveStreamingNameStore } from "../../Stores/MegaphoneStore";
+import { currentLiveStreamingSpaceStore } from "../../Stores/MegaphoneStore";
+import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
+import { Area } from "../Entity/Area";
 import { analyticsClient } from "./../../Administration/AnalyticsClient";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameScene } from "./GameScene";
@@ -41,6 +43,8 @@ export class GameMapPropertiesListener {
     private coWebsitesOpenByPlace = new Map<string, OpenCoWebsite>();
     private coWebsitesActionTriggerByPlace = new Map<string, string>();
 
+    private actionTriggerCallback = new Map<string, () => void>();
+
     constructor(private scene: GameScene, private gameMapFrontWrapper: GameMapFrontWrapper) {
         this.areasPropertiesListener = new AreasPropertiesListener(scene);
     }
@@ -49,7 +53,16 @@ export class GameMapPropertiesListener {
         // Website on new tab
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.OPEN_TAB, (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
+                this.scene.CurrentPlayer.destroyText("openTab");
+                const callback = this.actionTriggerCallback.get("openTab");
+                if (callback) {
+                    this.scene.userInputManager.removeSpaceEventListener(callback);
+                    this.actionTriggerCallback.delete("openTab");
+                }
+                /**
+                 * @DEPRECATED - This is the old way to show trigger message
                 layoutManagerActionStore.removeAction("openTab");
+                */
             }
             if (typeof newValue == "string" && newValue.length) {
                 const openWebsiteTriggerValue = allProps.get(GameMapProperties.OPEN_WEBSITE_TRIGGER);
@@ -57,8 +70,24 @@ export class GameMapPropertiesListener {
                 if (forceTrigger || openWebsiteTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
                     let message = allProps.get(GameMapProperties.OPEN_WEBSITE_TRIGGER_MESSAGE);
                     if (message === undefined) {
-                        message = get(LL).trigger.newTab();
+                        message = isMediaBreakpointUp("md")
+                            ? get(LL).trigger.mobile.newTab()
+                            : get(LL).trigger.newTab();
                     }
+
+                    // Create callback and play text message
+                    const callback = () => {
+                        scriptUtils.openTab(newValue);
+                        this.scene.CurrentPlayer.destroyText("openTab");
+                        this.scene.userInputManager.removeSpaceEventListener(callback);
+                        this.actionTriggerCallback.delete("openTab");
+                    };
+                    this.scene.CurrentPlayer.playText("openTab", `${message}`, -1, callback);
+                    this.scene.userInputManager?.addSpaceEventListener(callback);
+                    this.actionTriggerCallback.set("openTab", callback);
+
+                    /**
+                     * @DEPRECATED - This is the old way to show trigger message
                     layoutManagerActionStore.addAction({
                         uuid: "openTab",
                         type: "message",
@@ -66,6 +95,7 @@ export class GameMapPropertiesListener {
                         callback: () => scriptUtils.openTab(newValue),
                         userInputManager: this.scene.userInputManager,
                     });
+                    */
                 } else {
                     scriptUtils.openTab(newValue);
                 }
@@ -75,7 +105,16 @@ export class GameMapPropertiesListener {
         // Jitsi room
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.JITSI_ROOM, (newValue, oldValue, allProps) => {
             if (newValue === undefined || newValue !== oldValue) {
+                this.scene.CurrentPlayer.destroyText("jitsi");
+                const callback = this.actionTriggerCallback.get("jitsi");
+                if (callback) {
+                    this.scene.userInputManager.removeSpaceEventListener(callback);
+                    this.actionTriggerCallback.delete("jitsi");
+                }
+                /**
+                 * @DEPRECATED - This is the old way to show trigger message
                 layoutManagerActionStore.removeAction("jitsi");
+                */
                 coWebsiteManager.getCoWebsites().forEach((coWebsite) => {
                     if (coWebsite instanceof JitsiCoWebsite) {
                         coWebsiteManager.closeCoWebsite(coWebsite);
@@ -176,7 +215,16 @@ export class GameMapPropertiesListener {
 
                 analyticsClient.enteredJitsi(roomName, this.scene.roomUrl);
 
+                this.scene.CurrentPlayer.destroyText("jitsi");
+                const callback = this.actionTriggerCallback.get("jitsi");
+                if (callback) {
+                    this.scene.userInputManager.removeSpaceEventListener(callback);
+                    this.actionTriggerCallback.delete("jitsi");
+                }
+                /**
+                 * @DEPRECATED - This is the old way to show trigger message
                 layoutManagerActionStore.removeAction("jitsi");
+                */
             };
 
             const jitsiTriggerValue = allProps.get(GameMapProperties.JITSI_TRIGGER);
@@ -184,8 +232,24 @@ export class GameMapPropertiesListener {
             if (forceTrigger || jitsiTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
                 let message = allProps.get(GameMapProperties.JITSI_TRIGGER_MESSAGE);
                 if (message === undefined) {
-                    message = get(LL).trigger.jitsiRoom();
+                    message = isMediaBreakpointUp("md")
+                        ? get(LL).trigger.mobile.jitsiRoom()
+                        : get(LL).trigger.jitsiRoom();
                 }
+
+                // Create callback and play text message
+                const callback = () => {
+                    openJitsiRoomFunction().catch((e) => console.error(e));
+                    this.scene.CurrentPlayer.destroyText("jitsi");
+                    this.scene.userInputManager.removeSpaceEventListener(callback);
+                    this.actionTriggerCallback.delete("jitsi");
+                };
+                this.scene.CurrentPlayer.playText("jitsi", `${message}`, -1, callback);
+                this.scene.userInputManager?.addSpaceEventListener(callback);
+                this.actionTriggerCallback.set("jitsi", callback);
+
+                /**
+                 * @DEPRECATED - This is the old way to show trigger message
                 layoutManagerActionStore.addAction({
                     uuid: "jitsi",
                     type: "message",
@@ -195,6 +259,7 @@ export class GameMapPropertiesListener {
                     },
                     userInputManager: this.scene.userInputManager,
                 });
+                 */
             } else {
                 openJitsiRoomFunction().catch((e) => console.error(e));
             }
@@ -202,7 +267,16 @@ export class GameMapPropertiesListener {
 
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.BBB_MEETING, (newValue, oldValue, allProps) => {
             if (newValue === undefined || newValue !== oldValue) {
+                this.scene.CurrentPlayer.destroyText("bbbMeeting");
+                const callback = this.actionTriggerCallback.get("bbbMeeting");
+                if (callback) {
+                    this.scene.userInputManager.removeSpaceEventListener(callback);
+                    this.actionTriggerCallback.delete("bbbMeeting");
+                }
+                /**
+                 * @DEPRECATED - This is the old way to show trigger message
                 layoutManagerActionStore.removeAction("bbbMeeting");
+                */
                 inBbbStore.set(false);
                 bbbFactory.setStopped(true);
                 bbbFactory.stop();
@@ -300,11 +374,13 @@ export class GameMapPropertiesListener {
             const playUri = this.scene.roomUrl + "/";
 
             if (oldValue !== undefined) {
-                iframeListener.sendLeaveMucEventToChatIframe(playUri + oldValue);
+                iframeListener.sendLeaveMucEventToChatIframe(playUri + oldValue).catch((error) => console.error(error));
                 chatZoneLiveStore.set(false);
             }
             if (newValue !== undefined) {
-                iframeListener.sendJoinMucEventToChatIframe(playUri + newValue, newValue.toString(), "live", false);
+                iframeListener
+                    .sendJoinMucEventToChatIframe(playUri + newValue, newValue.toString(), "live", false)
+                    .catch((error) => console.error(error));
                 chatZoneLiveStore.set(true);
             }
         });
@@ -326,11 +402,32 @@ export class GameMapPropertiesListener {
         });
 
         this.gameMapFrontWrapper.onEnterArea((newAreas) => {
-            this.onEnterAreasHandler(newAreas);
+            if (
+                this.gameMapFrontWrapper.areasManager == undefined ||
+                this.gameMapFrontWrapper.areasManager.getAreaByUd == undefined
+            )
+                return;
+            // Hide the area if the user has no access
+            const areas: Area[] = [];
+            for (const area of newAreas) {
+                const areaObject = this.gameMapFrontWrapper.areasManager.getAreaByUd(area.id);
+                if (areaObject) areas.push(areaObject);
+            }
+            this.onEnterAreasHandler(newAreas, areas);
         });
 
         this.gameMapFrontWrapper.onLeaveArea((oldAreas) => {
-            this.onLeaveAreasHandler(oldAreas);
+            if (
+                this.gameMapFrontWrapper.areasManager == undefined ||
+                this.gameMapFrontWrapper.areasManager.getAreaByUd == undefined
+            )
+                return;
+            const areas: Area[] = [];
+            for (const area of oldAreas) {
+                const areaObject = this.gameMapFrontWrapper.areasManager.getAreaByUd(area.id);
+                if (areaObject) areas.push(areaObject);
+            }
+            this.onLeaveAreasHandler(oldAreas, areas);
         });
 
         this.gameMapFrontWrapper.onUpdateArea((area, oldProperties, newProperties) => {
@@ -372,8 +469,8 @@ export class GameMapPropertiesListener {
         });
     }
 
-    private onEnterAreasHandler(areas: AreaData[]): void {
-        this.areasPropertiesListener.onEnterAreasHandler(areas);
+    private onEnterAreasHandler(areasData: AreaData[], areas?: Area[]): void {
+        this.areasPropertiesListener.onEnterAreasHandler(areasData, areas);
     }
 
     private onUpdateAreasHandler(
@@ -384,8 +481,8 @@ export class GameMapPropertiesListener {
         this.areasPropertiesListener.onUpdateAreasHandler(area, oldProperties, newProperties);
     }
 
-    private onLeaveAreasHandler(areas: AreaData[]): void {
-        this.areasPropertiesListener.onLeaveAreasHandler(areas);
+    private onLeaveAreasHandler(areasData: AreaData[], areas?: Area[]): void {
+        this.areasPropertiesListener.onLeaveAreasHandler(areasData, areas);
     }
 
     private handleOpenWebsitePropertiesOnEnter(place: ITiledPlace): void {
@@ -451,11 +548,27 @@ export class GameMapPropertiesListener {
                 console.error("Error during loading a co-website: " + coWebsite.getUrl());
             });
 
+            this.scene.CurrentPlayer.destroyText(actionId);
+            const callback = this.actionTriggerCallback.get(actionId);
+            if (callback) {
+                this.scene.userInputManager.removeSpaceEventListener(callback);
+                this.actionTriggerCallback.delete(actionId);
+            }
+            /**
+             * @DEPRECATED - This is the old way to show trigger message
             layoutManagerActionStore.removeAction(actionId);
+            */
         };
 
         const openCoWebsiteFunction = () => {
-            const url = new URL(openWebsiteProperty ?? "", this.scene.mapUrlFile);
+            // Check URl and get the correct one
+            let urlStr = openWebsiteProperty ?? "";
+            try {
+                urlStr = scriptUtils.getWebsiteUrl(openWebsiteProperty ?? "");
+            } catch (e) {
+                console.error("Error on getWebsiteUrl: ", e);
+            }
+            const url = new URL(urlStr, this.scene.mapUrlFile);
             const coWebsite = new SimpleCoWebsite(
                 url,
                 allowApiProperty,
@@ -479,11 +592,25 @@ export class GameMapPropertiesListener {
 
         if (localUserStore.getForceCowebsiteTrigger() || websiteTriggerProperty === ON_ACTION_TRIGGER_BUTTON) {
             if (!websiteTriggerMessageProperty) {
-                websiteTriggerMessageProperty = get(LL).trigger.cowebsite();
+                websiteTriggerMessageProperty = isMediaBreakpointUp("md")
+                    ? get(LL).trigger.mobile.cowebsite()
+                    : get(LL).trigger.cowebsite();
             }
 
             this.coWebsitesActionTriggerByPlace.set(this.getIdFromPlace(place), actionId);
 
+            // Create callback and play text message
+            const callback = () => {
+                openCoWebsiteFunction();
+                this.scene.CurrentPlayer.destroyText(actionId);
+                this.scene.userInputManager.removeSpaceEventListener(callback);
+                this.actionTriggerCallback.delete(actionId);
+            };
+            this.scene.CurrentPlayer.playText(actionId, `${websiteTriggerMessageProperty}`, -1, callback);
+            this.scene.userInputManager?.addSpaceEventListener(callback);
+            this.actionTriggerCallback.set(actionId, callback);
+            /**
+             * @DEPRECATED - This is the old way to show trigger message
             layoutManagerActionStore.addAction({
                 uuid: actionId,
                 type: "message",
@@ -491,9 +618,17 @@ export class GameMapPropertiesListener {
                 callback: () => openCoWebsiteFunction(),
                 userInputManager: this.scene.userInputManager,
             });
+            */
         } else if (websiteTriggerProperty === ON_ICON_TRIGGER_BUTTON) {
+            // Check URl and get the correct one
+            let urlStr = openWebsiteProperty ?? "";
+            try {
+                urlStr = scriptUtils.getWebsiteUrl(openWebsiteProperty ?? "");
+            } catch (e) {
+                console.error("Error on getWebsiteUrl: ", e);
+            }
             const coWebsite = new SimpleCoWebsite(
-                new URL(openWebsiteProperty ?? "", this.scene.mapUrlFile),
+                new URL(urlStr, this.scene.mapUrlFile),
                 allowApiProperty,
                 websitePolicyProperty,
                 websiteWidthProperty,
@@ -525,8 +660,8 @@ export class GameMapPropertiesListener {
                 "handleSpeakerMegaphonePropertiesOnEnter => joinSpace => speakerZone.value : ",
                 speakerZone.value
             );
-            currentLiveStreamingNameStore.set(speakerZone.value);
-            this.scene.broadcastService.joinSpace(speakerZone.value, false);
+            const broadcastSpace = this.scene.broadcastService.joinSpace(speakerZone.value, false);
+            currentLiveStreamingSpaceStore.set(broadcastSpace.space);
             /*if (get(requestedCameraState) || get(requestedMicrophoneState)) {
                 requestedMegaphoneStore.set(true);
             }*/
@@ -540,7 +675,7 @@ export class GameMapPropertiesListener {
         const speakerZone = place.properties.find((property) => property.name === GameMapProperties.SPEAKER_MEGAPHONE);
         if (speakerZone && speakerZone.type === "string" && speakerZone.value !== undefined) {
             isSpeakerStore.set(false);
-            currentLiveStreamingNameStore.set(undefined);
+            currentLiveStreamingSpaceStore.set(undefined);
             this.scene.broadcastService.leaveSpace(speakerZone.value);
         }
     }
@@ -558,13 +693,13 @@ export class GameMapPropertiesListener {
                 listenerZone.value
             );
             if (speakerZoneName) {
-                currentLiveStreamingNameStore.set(speakerZoneName);
                 // TODO remove this log after testing
                 console.info(
                     "handleListenerMegaphonePropertiesOnEnter => joinSpace => speakerZoneName : ",
                     speakerZoneName
                 );
-                this.scene.broadcastService.joinSpace(speakerZoneName, false);
+                const broadcastSpace = this.scene.broadcastService.joinSpace(speakerZoneName, false);
+                currentLiveStreamingSpaceStore.set(broadcastSpace.space);
             }
         }
     }
@@ -582,7 +717,7 @@ export class GameMapPropertiesListener {
                 listenerZone.value
             );
             if (speakerZoneName) {
-                currentLiveStreamingNameStore.set(undefined);
+                currentLiveStreamingSpaceStore.set(undefined);
                 this.scene.broadcastService.leaveSpace(speakerZoneName);
             }
         }
@@ -655,13 +790,22 @@ export class GameMapPropertiesListener {
             return;
         }
 
-        const actionStore = get(layoutManagerActionStore);
         const actionTriggerUuid = this.coWebsitesActionTriggerByPlace.get(this.getIdFromPlace(place));
 
         if (!actionTriggerUuid) {
             return;
         }
 
+        this.scene.CurrentPlayer.destroyText(actionTriggerUuid);
+        const callback = this.actionTriggerCallback.get(actionTriggerUuid);
+        if (callback) {
+            this.scene.userInputManager.removeSpaceEventListener(callback);
+            this.actionTriggerCallback.delete(actionTriggerUuid);
+        }
+
+        /**
+         * @DEPRECATED - This is the old way to show trigger message
+        const actionStore = get(layoutManagerActionStore);
         const action =
             actionStore && actionStore.length > 0
                 ? actionStore.find((action) => action.uuid === actionTriggerUuid)
@@ -670,6 +814,7 @@ export class GameMapPropertiesListener {
         if (action) {
             layoutManagerActionStore.removeAction(actionTriggerUuid);
         }
+        */
 
         this.coWebsitesActionTriggerByPlace.delete(this.getIdFromPlace(place));
     }

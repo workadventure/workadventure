@@ -4,8 +4,8 @@
   "description": "Map Editor commands types",
   "main": "./src/index.ts",
   "scripts": {
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "lint-fix": "eslint \"{src,apps,libs,test}/**/*.ts\"",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
+    "lint-fix": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "precommit": "lint-staged && npm run export-json-schema",
     "pretty": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
     "pretty-check": "prettier --check 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}'",
@@ -28,7 +28,7 @@
     "ipaddr.js": "^2.0.1",
     "lodash": "^4.17.21",
     "uuid": "^9.0.0",
-    "zod": "^3.20.2",
+    "zod": "^3.23.8",
     "zod-to-json-schema": "^3.20.4"
   },
   "devDependencies": {
@@ -36,7 +36,6 @@
     "@types/node": "^18.11.18",
     "@typescript-eslint/eslint-plugin": "^5.48.1",
     "@typescript-eslint/parser": "^5.48.1",
-    "@vitest/coverage-c8": "^0.30.1",
     "eslint": "^8.31.0",
     "eslint-config-prettier": "^8.6.0",
     "eslint-import-resolver-typescript": "^3.5.3",
@@ -47,7 +46,7 @@
     "ts-jest": "^29.0.3",
     "tsx": "^4.7.0",
     "typescript": "^4.9.4",
-    "vitest": "^0.30.1"
+    "vitest": "^1.4.0"
   },
   "files": [
     "src"

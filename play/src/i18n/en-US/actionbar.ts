@@ -15,12 +15,25 @@ const actionbar: BaseTranslation = {
     menu: "Open / Close menu",
     mapEditor: "Open / Close map manager",
     mapEditorMobileLocked: "Map editor is locked on mobile mode",
+    mapEditorLocked: "Map editor is locked 🔐",
     bo: "Open back office",
     subtitle: {
         microphone: "Microphone",
         speaker: "Speaker",
     },
     app: "Open / Close applications",
+    listStatusTitle: {
+        enable: "Change your status",
+        inMeeting: "Have a good meeting 🤓",
+        inSilentZone: "Enjoy the silent zone 😁",
+    },
+
+    status: {
+        ONLINE: "Online",
+        BACK_IN_A_MOMENT: "Back in a moment",
+        DO_NOT_DISTURB: "Do not disturb",
+        BUSY: "Busy",
+    },
     globalMessage: "Send a global message",
     roomList: "Open / Close room list",
 };

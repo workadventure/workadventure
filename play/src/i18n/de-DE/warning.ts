@@ -3,24 +3,27 @@ import type { Translation } from "../i18n-types";
 
 const warning: DeepPartial<Translation["warning"]> = {
     title: "Warnung!",
-    content: `Diese Welt erreicht bald die maximale Kapazität. Du kannst die Kapazität <a href="{upgradeLink}" target="_blank">hier</a> erhöhen`,
-    limit: "Diese Welt erreicht bald die maximale Kapazität!",
+    content: `Diese Welt ist nah an ihrer Kapazitätsgrenze! Du kannst ihre Kapazität <a href="{upgradeLink}" target="_blank">hier</a> erhöhen.`,
+    limit: "Diese Welt ist nah an ihrer Kapazitätsgrenze!",
     accessDenied: {
-        camera: "Zugriff auf die Kamera verweigert. Hier klicken um deine Browser Berechtigungen zu prüfen.",
-        screenSharing:
-            "Zugriff auf die Bildschirmfreigabe verweigert. Hier klicken um deine Browser Berechtigungen zu prüfen.",
-        room: "Zutritt nicht gestattet. Dir fehlt die Berechtigung um diesen Raum zu betreten.",
-        teleport: "Sie dürfen sich nicht zu diesem Benutzer beamen.",
+        camera: "Kamerazugriff verweigert. Klicke hier und überprüfe die Berechtigungen deines Browsers.",
+        screenSharing: "Bildschirmfreigabe verweigert. Klicke hier und überprüfe die Berechtigungen deines Browsers.",
+        teleport: "Dir fehlt die Berechtigung, um zu diesem Benutzer zu teleportieren.",
+        room: "Zutritt nicht gestattet. Dir fehlt die Berechtigung, um diesen Raum zu betreten.",
     },
     importantMessage: "Wichtige Nachricht",
-    connectionLost: "Verbindungen unterbrochen. Verbindung wiederherstellen...",
-    connectionLostTitle: "Verbindungen unterbrochen",
-    connectionLostSubtitle: "Verbindung wiederherstellen...",
-    waitingConnectionTitle: "Auf Verbindung warten",
+    connectionLost: "Verbindung verloren. Verbindung wird wiederhergestellt...",
+    connectionLostTitle: "Verbindung verloren",
+    connectionLostSubtitle: "Verbindung wiederherstellen",
+    waitingConnectionTitle: "Warten auf Verbindung",
     waitingConnectionSubtitle: "Verbinden",
+    megaphoneNeeds:
+        "Um das Megaphon zu benutzen, musst du deine Kamera oder dein Mikrofon aktivieren oder deinen Bildschirm freigeben.",
+    mapEditorShortCut: "Beim Versuch, den Karteneditor zu öffnen, ist ein Fehler aufgetreten.",
+    mapEditorNotEnabled: "Der Karteneditor ist in dieser Welt nicht aktiviert.",
     popupBlocked: {
-        title: "Pop-up-Blocker",
-        content: "Bitte erlaube Pop-ups für diese Website in den Einstellungen deines Browsers.",
+        title: "Popup blockiert",
+        content: "Bitte erlaube Popups für diese Website in deinen Browsereinstellungen.",
         done: "Ok",
     },
 };

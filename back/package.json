@@ -59,13 +59,14 @@
     "mkdirp": "^1.0.4",
     "openapi3-ts": "^3.0.2",
     "prom-client": "^12.0.0",
+    "protobuf-fieldmask": "^2.0.0",
     "query-string": "^6.13.3",
     "redis": "^4.3.1",
     "source-map-support": "^0.5.21",
     "tsx": "^4.7.0",
     "uuidv4": "^6.0.7",
     "uWebSockets.js": "uNetworking/uWebSockets.js#v20.32.0",
-    "zod": "^3.19.1"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@sentry/cli": "^2.17.2",
@@ -80,15 +81,14 @@
     "@types/node": "^18.11.9",
     "@typescript-eslint/eslint-plugin": "^5.8.0",
     "@typescript-eslint/parser": "^5.8.0",
-    "@vitest/coverage-c8": "^0.29.1",
     "eslint": "^8.5.0",
     "eslint-import-resolver-typescript": "^3.5.3",
     "eslint-plugin-import": "^2.27.5",
     "lint-staged": "^11.0.0",
     "prettier": "^2.8.1",
     "typescript": "^4.5.4",
-    "vitest": "^0.29.1",
-    "vitest-mock-extended": "^1.0.9"
+    "vitest": "^1.4.0",
+    "vitest-mock-extended": "^1.3.1"
   },
   "lint-staged": {
     "*.ts": [

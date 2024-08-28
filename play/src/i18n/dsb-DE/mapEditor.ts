@@ -9,6 +9,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         trashEditor: "Zbórk",
         closeMapEditor: "Mapu zacyniś",
         mapManagerActivated: "Mapowy manager je aktiwěrowany",
+        exploreTheRoomActivated: "Wobłuk wužiwaś",
+        areaEditorActivated: "Areal wobźěłaś",
+        entityEditorActivated: "Entitu wobźěłaś",
+        trashEditorActivated: "Zbórk wužiwaś",
+        configureMyRoomActivated: "Mój rum wobźěłaś",
     },
     properties: {
         silentProperty: {
@@ -81,6 +86,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             errorInvalidUrl: 'Njepłaśeca URL. Wóna musy se zachopiś z "http://" oder "https://".',
             findOutMoreHere: "How zgónijośo wěcej",
             openPickerSelector: "Wuzwóleński wuběraŕ wótcyniś",
+            forcedInNewTab: "W nowem woknje wótcyniś",
         },
         advancedOptions: "Rozšyrjone opcije",
         speakerMegaphoneProperties: {

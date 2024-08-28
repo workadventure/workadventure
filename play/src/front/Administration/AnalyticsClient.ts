@@ -477,10 +477,10 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
-    addNewParticipant(): void {
+    addNewParticipant(peerId: string, userId: number, uuid: string): void {
         this.posthogPromise
             ?.then((posthog) => {
-                posthog.capture("wa_spontaneous_discussion");
+                posthog.capture("wa_spontaneous_discussion", { peerId, userId, uuid });
             })
             .catch((e) => console.error(e));
     }
@@ -718,6 +718,46 @@ class AnalyticsClient {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture("wa_opened_popup", { targetRectangle, id });
+            })
+            .catch((e) => console.error(e));
+    }
+
+    openGlobalMessage(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_action_globalmessage");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    openGlobalAudio(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_action_globalaudio");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    settingAudioVolume(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_setting_audio_volume");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    openPicker(applicationName: string): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_map-editor_open_picker", { applicationName });
+            })
+            .catch((e) => console.error(e));
+    }
+
+    openApplicationWithoutPicker(applicationName: string): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_map-editor_open_application", { applicationName });
             })
             .catch((e) => console.error(e));
     }

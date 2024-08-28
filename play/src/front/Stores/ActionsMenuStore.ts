@@ -9,6 +9,7 @@ export type ActionsMenuAction = {
 };
 export interface ActionsMenuData {
     menuName: string;
+    menuDescription?: string;
     actions: ActionsMenuAction[];
 }
 
@@ -17,9 +18,10 @@ function createActionsMenuStore() {
 
     return {
         subscribe,
-        initialize: (menuName: string) => {
+        initialize: (menuName: string, menuDescription?: string) => {
             set({
                 menuName,
+                menuDescription,
                 actions: new Array<ActionsMenuAction>(),
             });
         },

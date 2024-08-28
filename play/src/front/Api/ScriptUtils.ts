@@ -1,30 +1,17 @@
-import { GoogleWorkSpaceService, KlaxoonService, ChatMessageTypes } from "@workadventure/shared-utils";
-import type { ChatEvent } from "@workadventure/shared-utils";
-import { StartWritingEvent, StopWritingEvent } from "@workadventure/shared-utils/src/Events/WritingEvent";
-import { playersStore } from "../Stores/PlayersStore";
-import { chatMessagesService, writingStatusMessageStore } from "../Stores/ChatStore";
+import { CardsService, GoogleWorkSpaceService, KlaxoonService } from "@workadventure/shared-utils";
 import { analyticsClient } from "../Administration/AnalyticsClient";
-import { iframeListener } from "./IframeListener";
+import { gameManager } from "../Phaser/Game/GameManager";
 
 class ScriptUtils {
     public openTab(url: string) {
-        const urlApi = new URL(url);
-        // Check if the url is a klaxoon link
-        if (KlaxoonService.isKlaxoonLink(urlApi)) {
-            // If it is a Klaxoon link opening in new tab, we need to remove the embedded parameter
-            url = KlaxoonService.getKlaxoonBasicUrl(urlApi);
-        }
+        // Get URL from the website
+        url = this.getWebsiteUrl(url);
 
-        // Check if the url is a Google WorkSpace link
-        if (GoogleWorkSpaceService.isEmbedableGooglWorkSapceLink(urlApi)) {
-            // If it a Google WorkSpace link opening in new tab, we need to remove the embedded parameter
-            url = GoogleWorkSpaceService.getGoogleWorkSpaceBasicUrl(urlApi);
-        }
-
+        // Open the url in a new tab
         window.open(url);
 
         // Analytics tracking for opening a new tab
-        analyticsClient.openedWebsite(urlApi);
+        analyticsClient.openedWebsite(new URL(url));
     }
 
     public goToPage(url: string) {
@@ -44,46 +31,6 @@ class ScriptUtils {
         window.location.href = url;
     }
 
-    public sendChat(chatEvent: ChatEvent, origin?: Window) {
-        switch (chatEvent.options.scope) {
-            case "local": {
-                const userId = playersStore.addFacticePlayer(chatEvent.options.author || "System");
-                chatMessagesService.addExternalMessage(userId, chatEvent.message, origin);
-                break;
-            }
-            case "bubble": {
-                iframeListener.sendMessageToChatIframe({
-                    type: ChatMessageTypes.me,
-                    text: [chatEvent.message],
-                    date: new Date(),
-                });
-                //chatMessagesStore.addExternalMessage(gameManager.getCurrentGameScene().connection?.getUserId(), chatEvent.message, origin);
-                break;
-            }
-            default: {
-                const _exhaustiveCheck: never = chatEvent.options;
-            }
-        }
-    }
-
-    public startWriting(startWritingEvent: StartWritingEvent, origin?: Window) {
-        const userId = playersStore.addFacticePlayer(startWritingEvent.author || "System");
-
-        /*const writingUsersList = get(writingStatusMessageStore);
-        writingUsersList.add(playersStore.getPlayerById(userId));*/
-        writingStatusMessageStore.addWritingStatus(userId, ChatMessageTypes.userWriting);
-
-        /*iframeListener.sendWritingStatusToChatIframe()
-
-        chatMessagesService.startWriting(userId, origin);*/
-    }
-
-    public stopWriting(stopWritingEvent: StopWritingEvent, origin?: Window) {
-        const userId = playersStore.addFacticePlayer(stopWritingEvent.author || "System");
-        //chatMessagesService.stopWriting(userId, origin);
-        writingStatusMessageStore.addWritingStatus(userId, ChatMessageTypes.userStopWriting);
-    }
-
     private inIframe() {
         try {
             return window.self !== window.top;
@@ -91,6 +38,30 @@ class ScriptUtils {
             console.info("Error in checking if in iframe", e);
             return true;
         }
+    }
+
+    public getWebsiteUrl(url: string) {
+        const urlApi = new URL(url);
+        // Check if the url is a klaxoon link
+        if (KlaxoonService.isKlaxoonLink(urlApi)) {
+            // If it is a Klaxoon link opening in new tab, we need to remove the embedded parameter
+            url = KlaxoonService.getKlaxoonBasicUrl(urlApi);
+        }
+
+        // Check if the url is a Google WorkSpace link
+        if (GoogleWorkSpaceService.isEmbedableGooglWorkSapceLink(urlApi)) {
+            // If it a Google WorkSpace link opening in new tab, we need to remove the embedded parameter
+            url = GoogleWorkSpaceService.getGoogleWorkSpaceBasicUrl(urlApi);
+        }
+
+        // Check if the Url is a Cards link
+        if (CardsService.isCardsLink(urlApi)) {
+            // If it is a Cards link opening in new tab, we need to remove the token parameter
+            const userRoomToken = gameManager.getCurrentGameScene().connection?.userRoomToken;
+            url = CardsService.getCardsLink(urlApi, userRoomToken);
+        }
+
+        return url;
     }
 }
 

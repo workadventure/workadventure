@@ -35,13 +35,10 @@
                         @apply sm:tw-w-14 sm:tw-h-12;
                     }
                 }
-            }
 
-            #invite-btn {
-                @apply tw-min-h-[2rem] tw-h-8 sm:tw-h-10 tw-outline-none;
-            }
-            #register-btn {
-                @apply tw-min-h-[2rem] tw-h-8 sm:tw-h-10 tw-outline-none;
+                button.large {
+                    @apply tw-w-max;
+                }
             }
 
             .bottom-action-button:first-child {

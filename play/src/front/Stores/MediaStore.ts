@@ -3,20 +3,22 @@ import { derived, get, readable, writable } from "svelte/store";
 import deepEqual from "fast-deep-equal";
 import { AvailabilityStatus } from "@workadventure/messages";
 import { localUserStore } from "../Connection/LocalUserStore";
-import { HtmlUtils } from "../WebRtc/HtmlUtils";
 import { isIOS } from "../WebRtc/DeviceUtils";
 import { ObtainedMediaStreamConstraints } from "../WebRtc/P2PMessages/ConstraintMessage";
 import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
-import { userMovingStore } from "./GameStore";
+import { RequestedStatus } from "../Rules/StatusRules/statusRules";
+import { HtmlUtils } from "../WebRtc/HtmlUtils";
+import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 import { BrowserTooOldError } from "./Errors/BrowserTooOldError";
 import { errorStore } from "./ErrorStore";
 import { WebviewOnOldIOS } from "./Errors/WebviewOnOldIOS";
-import { inExternalServiceStore, myCameraStore, myMicrophoneStore, proximityMeetingStore } from "./MyMediaStore";
+
 import { peerStore } from "./PeerStore";
-import { privacyShutdownStore } from "./PrivacyShutdownStore";
-import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 import { createSilentStore } from "./SilentStore";
+import { privacyShutdownStore } from "./PrivacyShutdownStore";
+import { inExternalServiceStore, myCameraStore, myMicrophoneStore, proximityMeetingStore } from "./MyMediaStore";
+import { userMovingStore } from "./GameStore";
 
 /**
  * A store that contains the camera state requested by the user (on or off).
@@ -324,6 +326,8 @@ export const inJitsiStore = writable(false);
 export const inBbbStore = writable(false);
 export const isSpeakerStore = writable(false);
 
+export const requestedStatusStore: Writable<RequestedStatus | null> = writable(localUserStore.getRequestedStatus());
+
 export const inCowebsiteZone = derived(
     [inJitsiStore, inBbbStore, inOpenWebsite],
     ([$inJitsiStore, $inBbbStore, $inOpenWebsite]) => {
@@ -335,13 +339,30 @@ export const inCowebsiteZone = derived(
 export const silentStore = createSilentStore();
 
 export const availabilityStatusStore = derived(
-    [inJitsiStore, inBbbStore, silentStore, privacyShutdownStore, proximityMeetingStore, isSpeakerStore],
-    ([$inJitsiStore, $inBbbStore, $silentStore, $privacyShutdownStore, $proximityMeetingStore, $isSpeakerStore]) => {
+    [
+        inJitsiStore,
+        inBbbStore,
+        silentStore,
+        privacyShutdownStore,
+        proximityMeetingStore,
+        isSpeakerStore,
+        requestedStatusStore,
+    ],
+    ([
+        $inJitsiStore,
+        $inBbbStore,
+        $silentStore,
+        $privacyShutdownStore,
+        $proximityMeetingStore,
+        $isSpeakerStore,
+        $requestedStatusStore,
+    ]) => {
         if ($inJitsiStore) return AvailabilityStatus.JITSI;
         if ($inBbbStore) return AvailabilityStatus.BBB;
         if (!$proximityMeetingStore) return AvailabilityStatus.DENY_PROXIMITY_MEETING;
         if ($isSpeakerStore) return AvailabilityStatus.SPEAKER;
         if ($silentStore) return AvailabilityStatus.SILENT;
+        if ($requestedStatusStore) return $requestedStatusStore;
         if ($privacyShutdownStore) return AvailabilityStatus.AWAY;
         return AvailabilityStatus.ONLINE;
     },
@@ -440,7 +461,10 @@ export const mediaStreamConstraintsStore = derived(
         if (
             $availabilityStatusStore === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
             $availabilityStatusStore === AvailabilityStatus.SILENT ||
-            $availabilityStatusStore === AvailabilityStatus.SPEAKER
+            $availabilityStatusStore === AvailabilityStatus.SPEAKER ||
+            $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
+            $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
+            $availabilityStatusStore === AvailabilityStatus.BUSY
         ) {
             currentVideoConstraint = false;
             currentAudioConstraint = false;

@@ -60,7 +60,7 @@
         </button>
     </section>
     <section class="action tw-flex tw-flex-row tw-justify-center">
-        <button href="/" class="outline tw-mr-2 selectCompanionSceneFormBack" on:click|preventDefault={noCompanion}
+        <button class="outline tw-mr-2 selectCompanionSceneFormBack" on:click|preventDefault={noCompanion}
             >{$LL.companion.select.any()}</button
         >
         <button

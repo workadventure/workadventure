@@ -1,4 +1,4 @@
-import { CreateEntityCommand, GameMap, WAMEntityData } from "@workadventure/map-editor";
+import { CreateEntityCommand, EntityDimensions, GameMap, WAMEntityData } from "@workadventure/map-editor";
 import { EntitiesManager } from "../../../GameMap/EntitiesManager";
 import { FrontCommandInterface } from "../FrontCommandInterface";
 import { RoomConnection } from "../../../../../Connection/RoomConnection";
@@ -10,7 +10,8 @@ export class CreateEntityFrontCommand extends CreateEntityCommand implements Fro
         entityId: string | undefined,
         entityData: WAMEntityData,
         commandId: string | undefined,
-        private entitiesManager: EntitiesManager
+        private entitiesManager: EntitiesManager,
+        private entityDimensions: EntityDimensions
     ) {
         super(gameMap, entityId, entityData, commandId);
     }
@@ -27,6 +28,6 @@ export class CreateEntityFrontCommand extends CreateEntityCommand implements Fro
     }
 
     public emitEvent(roomConnection: RoomConnection): void {
-        roomConnection.emitMapEditorCreateEntity(this.commandId, this.entityId, this.entityData);
+        roomConnection.emitMapEditorCreateEntity(this.commandId, this.entityId, this.entityData, this.entityDimensions);
     }
 }

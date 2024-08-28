@@ -1,9 +1,17 @@
 import type { BaseTranslation } from "../i18n-types";
 
 const trigger: BaseTranslation = {
-    cowebsite: "Press SPACE or touch here to open web site",
-    jitsiRoom: "Press SPACE or touch here to enter Jitsi Meet room",
-    newTab: "Press SPACE or touch here to open web site in new tab",
+    cowebsite: `[SPACE] to open web site 👀`,
+    jitsiRoom: "[SPACE] to enter Jitsi 👀",
+    newTab: "[SPACE] to open new tab 👀",
+    object: "[SPACE] to interact with it 👀",
+    spaceKeyboard: "[SPACE]",
+    mobile: {
+        cowebsite: "👆 to open web site 👀",
+        jitsiRoom: "👆 to enter Jitsi 👀",
+        newTab: "👆 to open web new tab 👀",
+        object: "👆 to interact with it 👀",
+    },
 };
 
 export default trigger;

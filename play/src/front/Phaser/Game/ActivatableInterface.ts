@@ -8,6 +8,8 @@ export interface ActivatableInterface {
     activate: () => void;
     deactivate: () => void;
     getPosition: () => { x: number; y: number };
+    playText(id: string, text: string, duration?: number, callback?: () => void): void;
+    destroyText(id: string): void;
 }
 
 export function isActivatable(object: unknown): object is ActivatableInterface {

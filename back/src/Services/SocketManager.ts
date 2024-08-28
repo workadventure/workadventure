@@ -1,8 +1,13 @@
 import crypto from "crypto";
 import {
+    AddSpaceUserMessage,
     AnswerMessage,
+    AskPositionMessage,
     BanUserMessage,
     BatchToPusherMessage,
+    ChatMessagePrompt,
+    EditMapCommandMessage,
+    EditMapCommandsArrayMessage,
     EmoteEventMessage,
     EmotePromptMessage,
     FollowAbortMessage,
@@ -16,16 +21,23 @@ import {
     JoinBBBMeetingAnswer,
     JoinBBBMeetingQuery,
     JoinRoomMessage,
+    KickOffMessage,
     LockGroupPromptMessage,
     PlayerDetailsUpdatedMessage,
     QueryMessage,
+    RemoveSpaceUserMessage,
     RoomDescription,
     RoomJoinedMessage,
     RoomsList,
+    SendEventQuery,
     SendUserMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
     SubToPusherMessage,
+    TurnCredentialsAnswer,
+    UpdateMapToNewestWithKeyMessage,
+    UpdateSpaceMetadataMessage,
+    UpdateSpaceUserMessage,
     UserJoinedZoneMessage,
     UserMovesMessage,
     VariableMessage,
@@ -33,23 +45,10 @@ import {
     WebRtcSignalToServerMessage,
     WebRtcStartMessage,
     Zone as ProtoZone,
-    AskPositionMessage,
-    EditMapCommandMessage,
-    ChatMessagePrompt,
-    UpdateMapToNewestWithKeyMessage,
-    EditMapCommandsArrayMessage,
-    WatchSpaceMessage,
-    UnwatchSpaceMessage,
-    UpdateSpaceUserMessage,
-    AddSpaceUserMessage,
-    RemoveSpaceUserMessage,
-    SendEventQuery,
-    UpdateSpaceMetadataMessage,
-    KickOffMessage,
-    MuteMicrophoneMessage,
-    MuteVideoMessage,
-    MuteMicrophoneEverybodyMessage,
-    MuteVideoEverybodyMessage,
+    PublicEvent,
+    PrivateEvent,
+    LeaveSpaceMessage,
+    JoinSpaceMessage,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -182,7 +181,6 @@ export class SocketManager {
         }
 
         const roomJoinedMessage: Partial<RoomJoinedMessage> = {
-            userJid: joinRoomMessage.userJid,
             tag: joinRoomMessage.tag,
             userRoomToken: joinRoomMessage.userRoomToken,
             characterTextures: joinRoomMessage.characterTextures,
@@ -207,17 +205,14 @@ export class SocketManager {
 
         if (TURN_STATIC_AUTH_SECRET) {
             const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
-            roomJoinedMessage.webrtcUserName = username;
-            roomJoinedMessage.webrtcPassword = password;
+            roomJoinedMessage.webRtcUserName = username;
+            roomJoinedMessage.webRtcPassword = password;
         }
 
-        const serverToClientMessage: ServerToClientMessage = {
-            message: {
-                $case: "roomJoinedMessage",
-                roomJoinedMessage: RoomJoinedMessage.fromPartial(roomJoinedMessage),
-            },
-        };
-        socket.write(serverToClientMessage);
+        user.write({
+            $case: "roomJoinedMessage",
+            roomJoinedMessage: RoomJoinedMessage.fromPartial(roomJoinedMessage),
+        });
 
         return {
             room,
@@ -295,6 +290,7 @@ export class SocketManager {
             return;
         }
 
+        console.log("emitVideo => data", room.id);
         const webrtcSignalToClientMessage: Partial<WebRtcSignalToClientMessage> = {
             userId: user.id,
             signal: data.signal,
@@ -303,16 +299,14 @@ export class SocketManager {
         // TODO: only compute credentials if data.signal.type === "offer"
         if (TURN_STATIC_AUTH_SECRET) {
             const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
-            webrtcSignalToClientMessage.webrtcUserName = username;
-            webrtcSignalToClientMessage.webrtcPassword = password;
+            webrtcSignalToClientMessage.webRtcUserName = username;
+            webrtcSignalToClientMessage.webRtcPassword = password;
         }
 
         //if (!client.disconnecting) {
-        remoteUser.socket.write({
-            message: {
-                $case: "webRtcSignalToClientMessage",
-                webRtcSignalToClientMessage: WebRtcSignalToClientMessage.fromPartial(webrtcSignalToClientMessage),
-            },
+        remoteUser.write({
+            $case: "webRtcSignalToClientMessage",
+            webRtcSignalToClientMessage: WebRtcSignalToClientMessage.fromPartial(webrtcSignalToClientMessage),
         });
         //}
     }
@@ -337,17 +331,15 @@ export class SocketManager {
         // TODO: only compute credentials if data.signal.type === "offer"
         if (TURN_STATIC_AUTH_SECRET) {
             const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
-            webrtcSignalToClientMessage.webrtcUserName = username;
-            webrtcSignalToClientMessage.webrtcPassword = password;
+            webrtcSignalToClientMessage.webRtcUserName = username;
+            webrtcSignalToClientMessage.webRtcPassword = password;
         }
 
         //if (!client.disconnecting) {
-        remoteUser.socket.write({
-            message: {
-                $case: "webRtcScreenSharingSignalToClientMessage",
-                webRtcScreenSharingSignalToClientMessage:
-                    WebRtcSignalToClientMessage.fromPartial(webrtcSignalToClientMessage),
-            },
+        remoteUser.write({
+            $case: "webRtcScreenSharingSignalToClientMessage",
+            webRtcScreenSharingSignalToClientMessage:
+                WebRtcSignalToClientMessage.fromPartial(webrtcSignalToClientMessage),
         });
         //}
     }
@@ -444,12 +436,12 @@ export class SocketManager {
         }
         const userJoinedZoneMessage: Partial<UserJoinedZoneMessage> = {
             userId: user.id,
-            userJid: user.userJid,
             userUuid: user.uuid,
             name: user.name,
             availabilityStatus: user.getAvailabilityStatus(),
             characterTextures: user.characterTextures,
             position: ProtobufUtils.toPositionMessage(user.getPosition()),
+            chatID: user.chatID,
         };
         if (fromZone) {
             userJoinedZoneMessage.fromZone = SocketManager.toProtoZone(fromZone);
@@ -618,22 +610,29 @@ export class SocketManager {
     }
 
     private sendGroupUsersUpdateToGroupMembers(group: Group) {
-        const clientMessage: ServerToClientMessage = {
-            message: {
-                $case: "groupUsersUpdateMessage",
-                groupUsersUpdateMessage: {
-                    groupId: group.getId(),
-                    userIds: group.getUsers().map((user) => user.id),
-                },
+        const clientMessage: ServerToClientMessage["message"] = {
+            $case: "groupUsersUpdateMessage",
+            groupUsersUpdateMessage: {
+                groupId: group.getId(),
+                userIds: group.getUsers().map((user) => user.id),
             },
         };
 
         group.getUsers().forEach((currentUser: User) => {
-            currentUser.socket.write(clientMessage);
+            currentUser.write(clientMessage);
         });
     }
 
     private joinWebRtcRoom(user: User, group: Group) {
+        user.write({
+            $case: "joinSpaceRequestMessage",
+            joinSpaceRequestMessage: {
+                // FIXME: before fixing the fact that spaceName is undefined, let's try to understand why I don't have any info about the user in the error caught above
+                spaceName: group.spaceName,
+            },
+        });
+
+        // TODO: remove code below when WebRTC is managed in spaces
         for (const otherUser of group.getUsers()) {
             if (user === otherUser) {
                 continue;
@@ -649,15 +648,13 @@ export class SocketManager {
                     otherUser.id.toString(),
                     TURN_STATIC_AUTH_SECRET
                 );
-                webrtcStartMessage1.webrtcUserName = username;
-                webrtcStartMessage1.webrtcPassword = password;
+                webrtcStartMessage1.webRtcUserName = username;
+                webrtcStartMessage1.webRtcPassword = password;
             }
 
-            user.socket.write({
-                message: {
-                    $case: "webRtcStartMessage",
-                    webRtcStartMessage: WebRtcStartMessage.fromPartial(webrtcStartMessage1),
-                },
+            user.write({
+                $case: "webRtcStartMessage",
+                webRtcStartMessage: WebRtcStartMessage.fromPartial(webrtcStartMessage1),
             });
 
             const webrtcStartMessage2: Partial<WebRtcStartMessage> = {
@@ -666,15 +663,13 @@ export class SocketManager {
             };
             if (TURN_STATIC_AUTH_SECRET) {
                 const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
-                webrtcStartMessage2.webrtcUserName = username;
-                webrtcStartMessage2.webrtcPassword = password;
+                webrtcStartMessage2.webRtcUserName = username;
+                webrtcStartMessage2.webRtcPassword = password;
             }
 
-            otherUser.socket.write({
-                message: {
-                    $case: "webRtcStartMessage",
-                    webRtcStartMessage: WebRtcStartMessage.fromPartial(webrtcStartMessage2),
-                },
+            otherUser.write({
+                $case: "webRtcStartMessage",
+                webRtcStartMessage: WebRtcStartMessage.fromPartial(webrtcStartMessage2),
             });
         }
     }
@@ -700,6 +695,13 @@ export class SocketManager {
 
     //disconnect user
     private disConnectedUser(user: User, group: Group) {
+        user.write({
+            $case: "leaveSpaceRequestMessage",
+            leaveSpaceRequestMessage: {
+                spaceName: group.spaceName,
+            },
+        });
+
         // Most of the time, sending a disconnect event to one of the players is enough (the player will close the connection
         // which will be shut for the other player).
         // However! In the rare case where the WebRTC connection is not yet established, if we close the connection on one of the player,
@@ -711,23 +713,19 @@ export class SocketManager {
             }
 
             //if (!otherUser.socket.disconnecting) {
-            otherUser.socket.write({
-                message: {
-                    $case: "webRtcDisconnectMessage",
-                    webRtcDisconnectMessage: {
-                        userId: user.id,
-                    },
+            otherUser.write({
+                $case: "webRtcDisconnectMessage",
+                webRtcDisconnectMessage: {
+                    userId: user.id,
                 },
             });
             //}
 
             //if (!user.socket.disconnecting) {
-            user.socket.write({
-                message: {
-                    $case: "webRtcDisconnectMessage",
-                    webRtcDisconnectMessage: {
-                        userId: otherUser.id,
-                    },
+            user.write({
+                $case: "webRtcDisconnectMessage",
+                webRtcDisconnectMessage: {
+                    userId: otherUser.id,
                 },
             });
             //}
@@ -784,10 +782,21 @@ export class SocketManager {
                     };
                     break;
                 }
+                case "turnCredentialsQuery": {
+                    const answer = this.handleTurnCredentialsQuery(user.id.toString());
+                    answerMessage.answer = {
+                        $case: "turnCredentialsAnswer",
+                        turnCredentialsAnswer: answer,
+                    };
+                    break;
+                }
                 case "embeddableWebsiteQuery":
                 case "roomTagsQuery":
-                case "roomsFromSameWorldQuery": {
-                    // Nothing to do, the message will never be received in the back
+                case "roomsFromSameWorldQuery":
+                case "searchMemberQuery":
+                case "getMemberQuery":
+                case "searchTagsQuery":
+                case "chatMembersQuery": {
                     break;
                 }
                 default: {
@@ -810,11 +819,9 @@ export class SocketManager {
             };
         }
 
-        user.socket.write({
-            message: {
-                $case: "answerMessage",
-                answerMessage: AnswerMessage.fromPartial(answerMessage),
-            },
+        user.write({
+            $case: "answerMessage",
+            answerMessage: AnswerMessage.fromPartial(answerMessage),
         });
     }
 
@@ -948,20 +955,16 @@ export class SocketManager {
     }
 
     public handleSendUserMessage(user: User, sendUserMessageToSend: SendUserMessage) {
-        user.socket.write({
-            message: {
-                $case: "sendUserMessage",
-                sendUserMessage: sendUserMessageToSend,
-            },
+        user.write({
+            $case: "sendUserMessage",
+            sendUserMessage: sendUserMessageToSend,
         });
     }
 
     public handleBanUserMessage(room: GameRoom, user: User, banUserMessageToSend: BanUserMessage) {
-        user.socket.write({
-            message: {
-                $case: "sendUserMessage",
-                sendUserMessage: banUserMessageToSend,
-            },
+        user.write({
+            $case: "sendUserMessage",
+            sendUserMessage: banUserMessageToSend,
         });
 
         setTimeout(() => {
@@ -1120,13 +1123,11 @@ export class SocketManager {
         }
 
         for (const recipient of recipients) {
-            recipient.socket.write({
-                message: {
-                    $case: "sendUserMessage",
-                    sendUserMessage: {
-                        message,
-                        type,
-                    },
+            recipient.write({
+                $case: "sendUserMessage",
+                sendUserMessage: {
+                    message,
+                    type,
                 },
             });
         }
@@ -1168,13 +1169,11 @@ export class SocketManager {
             room.leave(recipient);
 
             // Let's close the connection when the user is banned.
-            recipient.socket.write({
-                message: {
-                    $case: "banUserMessage",
-                    banUserMessage: {
-                        message,
-                        type: "banned",
-                    },
+            recipient.write({
+                $case: "banUserMessage",
+                banUserMessage: {
+                    message,
+                    type: "banned",
                 },
             });
             recipient.socket.end();
@@ -1199,13 +1198,11 @@ export class SocketManager {
         }
 
         room.getUsers().forEach((recipient) => {
-            recipient.socket.write({
-                message: {
-                    $case: "sendUserMessage",
-                    sendUserMessage: {
-                        message,
-                        type,
-                    },
+            recipient.write({
+                $case: "sendUserMessage",
+                sendUserMessage: {
+                    message,
+                    type,
                 },
             });
         });
@@ -1229,11 +1226,9 @@ export class SocketManager {
         }
 
         room.getUsers().forEach((recipient) => {
-            recipient.socket.write({
-                message: {
-                    $case: "worldFullWarningMessage",
-                    worldFullWarningMessage: {},
-                },
+            recipient.write({
+                $case: "worldFullWarningMessage",
+                worldFullWarningMessage: {},
             });
         });
     }
@@ -1246,13 +1241,11 @@ export class SocketManager {
 
         const versionNumber = await room.incrementVersion();
         room.getUsers().forEach((recipient) => {
-            recipient.socket.write({
-                message: {
-                    $case: "refreshRoomMessage",
-                    refreshRoomMessage: {
-                        roomId,
-                        versionNumber,
-                    },
+            recipient.write({
+                $case: "refreshRoomMessage",
+                refreshRoomMessage: {
+                    roomId,
+                    versionNumber,
                 },
             });
         });
@@ -1353,12 +1346,10 @@ export class SocketManager {
             const userToJoin = room.getUserByUuid(askPositionMessage.userIdentifier);
             const position = userToJoin?.getPosition();
             if (position) {
-                user.socket.write({
-                    message: {
-                        $case: "moveToPositionMessage",
-                        moveToPositionMessage: {
-                            position: ProtobufUtils.toPositionMessage(position),
-                        },
+                user.write({
+                    $case: "moveToPositionMessage",
+                    moveToPositionMessage: {
+                        position: ProtobufUtils.toPositionMessage(position),
                     },
                 });
             }
@@ -1392,21 +1383,18 @@ export class SocketManager {
         return true;
     }
 
-    handleWatchSpaceMessage(pusher: SpacesWatcher, watchSpaceMessage: WatchSpaceMessage) {
-        let space: Space | undefined = this.spaces.get(watchSpaceMessage.spaceName);
+    handleJoinSpaceMessage(pusher: SpacesWatcher, joinSpaceMessage: JoinSpaceMessage) {
+        let space: Space | undefined = this.spaces.get(joinSpaceMessage.spaceName);
         if (!space) {
-            space = new Space(watchSpaceMessage.spaceName);
-            this.spaces.set(watchSpaceMessage.spaceName, space);
+            space = new Space(joinSpaceMessage.spaceName);
+            this.spaces.set(joinSpaceMessage.spaceName, space);
         }
         pusher.watchSpace(space.name);
         space.addWatcher(pusher);
-        if (watchSpaceMessage.user) {
-            space.addUser(pusher, watchSpaceMessage.user);
-        }
     }
 
-    handleUnwatchSpaceMessage(pusher: SpacesWatcher, unwatchSpaceMessage: UnwatchSpaceMessage) {
-        const space: Space | undefined = this.spaces.get(unwatchSpaceMessage.spaceName);
+    handleLeaveSpaceMessage(pusher: SpacesWatcher, leaveSpaceMessage: LeaveSpaceMessage) {
+        const space: Space | undefined = this.spaces.get(leaveSpaceMessage.spaceName);
         if (!space) {
             throw new Error("Cant unwatch space, space not found");
         }
@@ -1417,7 +1405,8 @@ export class SocketManager {
         pusher.spacesWatched.forEach((spaceName) => {
             const space = this.spaces.get(spaceName);
             if (!space) {
-                throw new Error("Cant unwatch space, space not found");
+                console.error("Cant unwatch space, space not found");
+                return;
             }
             this.removeSpaceWatcher(pusher, space);
         });
@@ -1439,12 +1428,25 @@ export class SocketManager {
             space.addUser(pusher, addSpaceUserMessage.user);
         }
     }
+
     handleUpdateSpaceUserMessage(pusher: SpacesWatcher, updateSpaceUserMessage: UpdateSpaceUserMessage) {
-        const space = this.spaces.get(updateSpaceUserMessage.spaceName);
-        if (space && updateSpaceUserMessage.user) {
-            space.updateUser(pusher, updateSpaceUserMessage.user);
+        const updateMask = updateSpaceUserMessage.updateMask;
+        if (!updateSpaceUserMessage.user || !updateMask) {
+            console.error("UpdateSpaceUserMessage has no user or updateMask");
+            Sentry.captureException("UpdateSpaceUserMessage has no user or updateMask");
+            return;
         }
+
+        const space = this.spaces.get(updateSpaceUserMessage.spaceName);
+        if (!space) {
+            console.error("Could not find space to update in UpdateSpaceUserMessage");
+            Sentry.captureException("Could not find space to update in UpdateSpaceUserMessage");
+            return;
+        }
+
+        space.updateUser(pusher, updateSpaceUserMessage.user, updateMask);
     }
+
     handleRemoveSpaceUserMessage(pusher: SpacesWatcher, removeSpaceUserMessage: RemoveSpaceUserMessage) {
         const space = this.spaces.get(removeSpaceUserMessage.spaceName);
         if (space) {
@@ -1481,74 +1483,35 @@ export class SocketManager {
         });
     }
 
-    handleMuteMicrophoneSpaceUserMessage(pusher: SpacesWatcher, muteMicrophoneSpaceUserMessage: MuteMicrophoneMessage) {
-        const space = this.spaces.get(muteMicrophoneSpaceUserMessage.spaceName);
-        if (!space) return;
-        pusher.write({
-            message: {
-                $case: "muteMicrophoneMessage",
-                muteMicrophoneMessage: {
-                    spaceName: muteMicrophoneSpaceUserMessage.spaceName,
-                    userId: muteMicrophoneSpaceUserMessage.userId,
-                    filterName: muteMicrophoneSpaceUserMessage.filterName,
-                },
-            },
-        });
+    handlePublicEvent(pusher: SpacesWatcher, publicEvent: PublicEvent) {
+        const space = this.spaces.get(publicEvent.spaceName);
+        if (!space) {
+            throw new Error(`Could not find space ${publicEvent.spaceName} to dispatch public event`);
+        }
+        space.dispatchPublicEvent(publicEvent);
     }
 
-    handleMuteVideoSpaceUserMessage(pusher: SpacesWatcher, muteVideoSpaceUserMessage: MuteVideoMessage) {
-        const space = this.spaces.get(muteVideoSpaceUserMessage.spaceName);
-        if (!space) return;
-        pusher.write({
-            message: {
-                $case: "muteVideoMessage",
-                muteVideoMessage: {
-                    spaceName: muteVideoSpaceUserMessage.spaceName,
-                    userId: muteVideoSpaceUserMessage.userId,
-                    filterName: muteVideoSpaceUserMessage.filterName,
-                },
-            },
-        });
-    }
-
-    handleMuteMicrophoneEverybodySpaceUserMessage(
-        pusher: SpacesWatcher,
-        muteMicrophoneEverybodySpaceUserMessage: MuteMicrophoneEverybodyMessage
-    ) {
-        const space = this.spaces.get(muteMicrophoneEverybodySpaceUserMessage.spaceName);
-        if (!space) return;
-        pusher.write({
-            message: {
-                $case: "muteMicrophoneEverybodyMessage",
-                muteMicrophoneEverybodyMessage: {
-                    spaceName: muteMicrophoneEverybodySpaceUserMessage.spaceName,
-                    userId: muteMicrophoneEverybodySpaceUserMessage.userId,
-                    filterName: muteMicrophoneEverybodySpaceUserMessage.filterName,
-                },
-            },
-        });
-    }
-
-    handleMuteVideoEverybodySpaceUserMessage(
-        pusher: SpacesWatcher,
-        muteVideoEverybodySpaceUserMessage: MuteVideoEverybodyMessage
-    ) {
-        const space = this.spaces.get(muteVideoEverybodySpaceUserMessage.spaceName);
-        if (!space) return;
-        pusher.write({
-            message: {
-                $case: "muteVideoEverybodyMessage",
-                muteVideoEverybodyMessage: {
-                    spaceName: muteVideoEverybodySpaceUserMessage.spaceName,
-                    userId: muteVideoEverybodySpaceUserMessage.userId,
-                    filterName: muteVideoEverybodySpaceUserMessage.filterName,
-                },
-            },
-        });
+    handlePrivateEvent(pusher: SpacesWatcher, privateEvent: PrivateEvent) {
+        const space = this.spaces.get(privateEvent.spaceName);
+        if (!space) {
+            throw new Error(`Could not find space ${privateEvent.spaceName} to dispatch public event`);
+        }
+        space.dispatchPrivateEvent(privateEvent);
     }
 
     private handleSendEventQuery(gameRoom: GameRoom, user: User, sendEventQuery: SendEventQuery) {
         gameRoom.dispatchEvent(sendEventQuery.name, sendEventQuery.data, user.id, sendEventQuery.targetUserIds);
+    }
+
+    private handleTurnCredentialsQuery(userId: string): TurnCredentialsAnswer {
+        if (TURN_STATIC_AUTH_SECRET) {
+            const { username, password } = this.getTURNCredentials(userId, TURN_STATIC_AUTH_SECRET);
+            return {
+                webRtcUser: username,
+                webRtcPassword: password,
+            };
+        }
+        return {};
     }
 
     async dispatchEvent(roomUrl: string, name: string, value: unknown, targetUserIds: number[]): Promise<void> {
@@ -1587,6 +1550,7 @@ export class SocketManager {
         }
     }
 
+    // TODO: connect this.
     handleKickOffUserMessage(user: User, userKickedUuid: string) {
         const group = user.group;
         if (!group) {
@@ -1602,122 +1566,6 @@ export class SocketManager {
         }
         // TODO fixme to notify only user kiked
         group.setOutOfBounds(true);
-    }
-
-    handeMuteParticipantIdMessage(user: User, userMutedUuid: string) {
-        const group = user.group;
-        if (!group) {
-            return;
-        }
-        const usersMuted = group.getUsers().filter((user) => user.uuid === userMutedUuid);
-        // create mute event
-        let serverToClientMessage: ServerToClientMessage = {
-            message: {
-                $case: "mutedMessage",
-                mutedMessage: {
-                    userUuid: user.uuid,
-                    message: "muted",
-                },
-            },
-        };
-        if (!user.tags.includes("admin")) {
-            serverToClientMessage = {
-                message: {
-                    $case: "askMutedMessage",
-                    askMutedMessage: {
-                        userUuid: user.uuid,
-                        message: "muted",
-                    },
-                },
-            };
-        }
-        for (const mutedUser of usersMuted) {
-            // send mute event
-            mutedUser.socket.write(serverToClientMessage);
-        }
-    }
-
-    handleMuteEveryBodyParticipantMessage(user: User) {
-        const group = user.group;
-        if (!group) {
-            return;
-        }
-        if (!user.tags.includes("admin")) {
-            return;
-        }
-        for (const mutedUser of group.getUsers().values()) {
-            // not mute the user who sent the message
-            if (mutedUser.uuid === user.uuid) continue;
-            // send mute event
-            const serverToClientMessage: ServerToClientMessage = {
-                message: {
-                    $case: "mutedMessage",
-                    mutedMessage: {
-                        userUuid: user.uuid,
-                        message: "muted",
-                    },
-                },
-            };
-            mutedUser.socket.write(serverToClientMessage);
-        }
-    }
-
-    handeMuteVideoParticipantIdMessage(user: User, userMutedUuid: string) {
-        const group = user.group;
-        if (!group) {
-            return;
-        }
-        const usersMuted = group.getUsers().filter((user) => user.uuid === userMutedUuid);
-        // create mute event
-        let serverToClientMessage: ServerToClientMessage = {
-            message: {
-                $case: "mutedVideoMessage",
-                mutedVideoMessage: {
-                    userUuid: user.uuid,
-                    message: "mutedVideo",
-                },
-            },
-        };
-        if (!user.tags.includes("admin")) {
-            serverToClientMessage = {
-                message: {
-                    $case: "askMutedVideoMessage",
-                    askMutedVideoMessage: {
-                        userUuid: user.uuid,
-                        message: "mutedVideo",
-                    },
-                },
-            };
-        }
-        for (const mutedUser of usersMuted) {
-            // send mute event
-            mutedUser.socket.write(serverToClientMessage);
-        }
-    }
-
-    handleMuteVideoEveryBodyParticipantMessage(user: User) {
-        const group = user.group;
-        if (!group) {
-            return;
-        }
-        if (!user.tags.includes("admin")) {
-            return;
-        }
-        for (const mutedUser of group.getUsers().values()) {
-            // not mute the user who sent the message
-            if (mutedUser.uuid === user.uuid) continue;
-            // send mute event
-            const serverToClientMessage: ServerToClientMessage = {
-                message: {
-                    $case: "mutedVideoMessage",
-                    mutedVideoMessage: {
-                        userUuid: user.uuid,
-                        message: "mutedVideo",
-                    },
-                },
-            };
-            mutedUser.socket.write(serverToClientMessage);
-        }
     }
 }
 

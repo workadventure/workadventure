@@ -21,6 +21,7 @@
     import { selectDefaultSpeaker, speakerSelectedStore } from "../../Stores/MediaStore";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
     import ActionMediaBox from "./ActionMediaBox.svelte";
 
     // Extend the HTMLVideoElement interface to add the setSinkId method.
@@ -36,14 +37,15 @@
 
     let streamStore = peer.streamStore;
     let volumeStore = peer.volumeStore;
-    let name = peer.userName;
-    let backGroundColor = Color.getColorByString(peer.userName);
+    let name = peer.player.name;
+    let backGroundColor = Color.getColorByString(peer.player.name);
     let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
     let statusStore = peer.statusStore;
     let constraintStore = peer.constraintsStore;
     let unsubscribeChangeOutput: Unsubscriber;
     let unsubscribeStreamStore: Unsubscriber;
     let unsubscribeConstraintStore: Unsubscriber;
+    let unsubscribeVolumeProximityDiscussionStore: Unsubscriber;
 
     let embedScreen: EmbedScreen;
     let videoContainer: HTMLDivElement;
@@ -150,12 +152,19 @@
             if (!wasVideoEnabled && isHightlighted) highlightedEmbedScreen.toggleHighlight(embedScreen);
             updateRatio();
         });
+
+        unsubscribeVolumeProximityDiscussionStore = volumeProximityDiscussionStore.subscribe((volume) => {
+            if (videoElement) {
+                videoElement.volume = volume;
+            }
+        });
     });
 
     onDestroy(() => {
         if (unsubscribeChangeOutput) unsubscribeChangeOutput();
         if (unsubscribeStreamStore) unsubscribeStreamStore();
         if (unsubscribeConstraintStore) unsubscribeConstraintStore();
+        if (unsubscribeVolumeProximityDiscussionStore) unsubscribeVolumeProximityDiscussionStore();
         destroyed = true;
         sinkIdPromise.cancel();
         if (noVideoTimeout) {
@@ -229,6 +238,10 @@
         if (!clickable || !videoEnabled) return;
         highlightedEmbedScreen.toggleHighlight(embedScreen);
     }
+
+    function onLoadVideoElement() {
+        videoElement.volume = $volumeProximityDiscussionStore;
+    }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -240,7 +253,7 @@
     on:click={() => analyticsClient.pinMeetingAction()}
     on:click={() => hightlight()}
 >
-    <ActionMediaBox {embedScreen} trackStreamWraper={peer} {videoEnabled} />
+    <ActionMediaBox {embedScreen} trackStreamWrapper={peer} {videoEnabled} />
 
     <div
         style={videoEnabled
@@ -265,6 +278,7 @@
         <!-- svelte-ignore a11y-media-has-caption -->
         <video
             bind:this={videoElement}
+            on:loadedmetadata={onLoadVideoElement}
             class:tw-h-0={!videoEnabled}
             class:tw-w-0={!videoEnabled}
             class:object-contain={minimized || isHightlighted || aspectRatio < 1}

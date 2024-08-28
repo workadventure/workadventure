@@ -4,24 +4,32 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import Woka from "./Woka.svelte";
 
-    export let userId: number;
+    export let userId: number | string;
     export let placeholderSrc: string;
     export let customWidth: string;
     export let customHeight: string;
 
     let src: string;
-    let unsubscribe: Unsubscriber;
+    let unsubscribe: Unsubscriber | undefined;
 
     onMount(() => {
         const gameScene = gameManager.getCurrentGameScene();
         let playerWokaPictureStore;
         if (userId === -1) {
             playerWokaPictureStore = gameScene.CurrentPlayer.pictureStore;
+        } else if (Number.isInteger(userId)) {
+            playerWokaPictureStore = gameScene.MapPlayersByKey.getNestedStore(
+                userId as number,
+                (item) => item.pictureStore
+            );
         } else {
-            playerWokaPictureStore = gameScene.MapPlayersByKey.getNestedStore(userId, (item) => item.pictureStore);
+            playerWokaPictureStore = [...gameScene.MapPlayersByKey].find(
+                ([, player]) => player.userUuid === (userId as string)
+            )?.[1].pictureStore;
         }
+
         src = placeholderSrc;
-        unsubscribe = playerWokaPictureStore.subscribe((source) => {
+        unsubscribe = playerWokaPictureStore?.subscribe((source) => {
             src = source ?? placeholderSrc;
         });
     });

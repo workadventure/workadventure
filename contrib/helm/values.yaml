@@ -4,7 +4,6 @@
 
 appVersion: "master"
 domainName: wa.example.com
-ejabberdDomain: ejabberd.example.com
 
 # If singleDomain is true, WorkAdventure is hosted on the [domainName] domain.
 # If singleDomain is false, WorkAdventure is hosted in subdomains:
@@ -23,9 +22,6 @@ domainNamePrefix: "-"
 # Secret key used by the application to encode JWT tokens.
 # If empty, a secret key will be generated and stored in the "shared-env-secret" secret.
 secretKey: ""
-# Secret key used by the application to connect to ejabberd.
-# If empty, a secret key will be generated and stored in the "shared-env-secret" secret.
-ejabberdJwtSecret: ""
 
 imagePullSecrets: []
 nameOverride: ""
@@ -48,13 +44,9 @@ commonEnv:
   ENABLE_MAP_EDITOR: "true"
   JITSI_URL: https://meet.jit.si
   MAX_PER_GROUP: 4
-  EJABBERD_USER: admin
   ENABLE_CHAT: "true"
   ENABLE_CHAT_UPLOAD: "true"
   UPLOAD_MAX_FILESIZE: "10485760"
-
-commonSecretEnv:
-  EJABBERD_PASSWORD: mySecretPassword
 
 # #########################################################
 # play service
@@ -162,85 +154,6 @@ play:
     # By default, if you are using Traefik for an ingress controller, the appropriate annotations are used.
     roomApiDomainName: ""
     # ClassName to use for the play container. If not set, will fallback to (root.ingress.className)
-    className: ""
-
-# #########################################################
-# chat service
-# #########################################################
-chat:
-  replicaCount: 1
-
-  image:
-    repository: thecodingmachine/workadventure-chat
-    pullPolicy: IfNotPresent
-    # Overrides the image tag whose default is appVersion.
-    tag: ""
-
-  podAnnotations: {}
-
-  podSecurityContext: {}
-    # fsGroup: 2000
-
-  securityContext: {}
-    # capabilities:
-    #   drop:
-    #   - ALL
-    # readOnlyRootFilesystem: true
-    # runAsNonRoot: true
-    # runAsUser: 1000
-
-  service:
-    type: ClusterIP
-    port: 80
-
-  resources: {}
-    # We usually recommend not to specify default resources and to leave this as a conscious
-    # choice for the user. This also increases chances charts run on environments with little
-    # resources, such as Minikube. If you do want to specify resources, uncomment the following
-    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-    # limits:
-    #   cpu: 100m
-    #   memory: 128Mi
-    # requests:
-    #   cpu: 100m
-    #   memory: 128Mi
-
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 10
-    targetCPUUtilizationPercentage: 70
-    targetMemoryUtilizationPercentage: 80
-
-  nodeSelector: {}
-
-  tolerations: []
-
-  affinity: {}
-
-  # see configuration reference: https://github.com/workadventure/workadventure/blob/master/contrib/docker/.env.prod.template
-  env: {}
-
-  # Those environment variables should be added in "Kubernetes" format (e.g. [name: "...", valueFrom: {...}]).
-  extraEnvVars: []
-
-  secretEnv: {}
-
-  # The name of a configMap that should be added to the service.
-  externalConfigMapName: ""
-  # The name of a secret that should be added to the service.
-  externalSecretName: ""
-
-  ingress:
-    # This setting is used to enable the chat ingress in multiDomain mode.
-    # This is ignored in singleDomain mode (see (root).ingress.enabled instead).
-    enabled: true
-    tls: false
-    secretName: ""
-    # Domain name to be used for the container.
-    # If not set, the play domain name is built from the root "domainName" value and the "singleDomain" value.
-    domainName: ""
-    # ClassName to use for the container. If not set, will fallback to (root.ingress.className)
     className: ""
 
 
@@ -453,13 +366,6 @@ maps:
 
   # see configuration reference: https://github.com/workadventure/workadventure/blob/master/contrib/docker/.env.prod.template
   env: {}
-    # AWS_DEFAULT_REGION:
-    # AWS_BUCKET:
-    # AWS_URL:
-    # AWS_ENDPOINT:
-    # # or
-    # REDIS_HOST:
-  # REDIS_PORT:
 
   # Those environment variables should be added in "Kubernetes" format (e.g. [name: "...", valueFrom: {...}]).
   extraEnvVars: []
@@ -534,87 +440,6 @@ icon:
 
   ingress:
     # This setting is used to enable the icon ingress in multiDomain mode.
-    # This is ignored in singleDomain mode (see (root).ingress.enabled instead).
-    enabled: true
-    tls: false
-    secretName: ""
-    # Domain name to be used for the container.
-    # If not set, the play domain name is built from the root "domainName" value and the "singleDomain" value.
-    domainName: ""
-    # ClassName to use for the container. If not set, will fallback to (root.ingress.className)
-    className: ""
-
-
-# #########################################################
-# ejabberd service
-# #########################################################
-ejabberd:
-  enabled: true
-  replicaCount: 1
-
-  image:
-    repository: thecodingmachine/workadventure-ejabberd
-    pullPolicy: IfNotPresent
-    # Overrides the image tag whose default is appVersion.
-    tag: ""
-
-  podAnnotations: {}
-
-  podSecurityContext: {}
-    # fsGroup: 2000
-
-  securityContext: {}
-    # capabilities:
-    #   drop:
-    #   - ALL
-    # readOnlyRootFilesystem: true
-    # runAsNonRoot: true
-    # runAsUser: 1000
-
-  service:
-    type: ClusterIP
-    port: 5443
-
-  resources: {}
-    # We usually recommend not to specify default resources and to leave this as a conscious
-    # choice for the user. This also increases chances charts run on environments with little
-    # resources, such as Minikube. If you do want to specify resources, uncomment the following
-    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-    # limits:
-    #   cpu: 100m
-    #   memory: 128Mi
-    # requests:
-    #   cpu: 100m
-    #   memory: 128Mi
-
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 10
-    targetCPUUtilizationPercentage: 70
-    targetMemoryUtilizationPercentage: 80
-
-  nodeSelector: {}
-
-  tolerations: []
-
-  affinity: {}
-
-  # see configuration reference: https://github.com/workadventure/workadventure/blob/master/contrib/docker/.env.prod.template
-  env: {}
-
-  # Those environment variables should be added in "Kubernetes" format (e.g. [name: "...", valueFrom: {...}]).
-  extraEnvVars: []
-
-  secretEnv: {}
-
-  # The name of a configMap that should be added to the service.
-  externalConfigMapName: ""
-  # The name of a secret that should be added to the service.
-  externalSecretName: ""
-
-  ingress:
-    # This setting is used to enable the ingress in multiDomain mode.
     # This is ignored in singleDomain mode (see (root).ingress.enabled instead).
     enabled: true
     tls: false

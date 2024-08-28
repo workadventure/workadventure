@@ -1,25 +1,24 @@
 <script lang="ts">
-    import type { Unsubscriber } from "svelte/store";
-    import { ChevronDownIcon, ChevronUpIcon, CheckIcon } from "svelte-feather-icons";
-    import { fly } from "svelte/transition";
-    import { onDestroy, onMount } from "svelte";
     import { writable } from "svelte/store";
-    import { Subscription } from "rxjs";
+    import { fly } from "svelte/transition";
+    import { onMount } from "svelte";
+    import { AvailabilityStatus } from "@workadventure/messages";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import {
+        availabilityStatusStore,
         cameraListStore,
+        isSpeakerStore,
         microphoneListStore,
-        speakerListStore,
+        requestedCameraDeviceIdStore,
         requestedCameraState,
+        requestedMicrophoneDeviceIdStore,
         requestedMicrophoneState,
         silentStore,
+        speakerListStore,
         speakerSelectedStore,
-        requestedMicrophoneDeviceIdStore,
-        requestedCameraDeviceIdStore,
+        streamingMegaphoneStore,
         usedCameraDeviceIdStore,
         usedMicrophoneDeviceIdStore,
-        streamingMegaphoneStore,
-        isSpeakerStore,
     } from "../../Stores/MediaStore";
     import cameraImg from "../images/camera.png";
     import cameraOffImg from "../images/camera-off.png";
@@ -41,6 +40,7 @@
     import megaphoneImg from "../images/megaphone.svg";
     import WorkAdventureImg from "../images/icon-workadventure-white.png";
     import worldImg from "../images/world.svg";
+    import burgerMenuImg from "../images/menu.svg";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
@@ -49,22 +49,23 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { chatVisibilityStore, chatZoneLiveStore } from "../../Stores/ChatStore";
     import {
-        proximityMeetingStore,
         inExternalServiceStore,
         myCameraStore,
         myMicrophoneStore,
+        proximityMeetingStore,
     } from "../../Stores/MyMediaStore";
     import {
         activeSubMenuStore,
-        menuVisiblilityStore,
+        addActionButtonActionBarEvent,
+        addClassicButtonActionBarEvent,
+        additionnalButtonsMenu,
         inviteUserActivated,
+        mapManagerActivated,
+        menuVisiblilityStore,
+        roomListActivated,
+        screenSharingActivatedStore,
         SubMenusInterface,
         subMenusStore,
-        additionnalButtonsMenu,
-        addClassicButtonActionBarEvent,
-        addActionButtonActionBarEvent,
-        mapManagerActivated,
-        screenSharingActivatedStore,
     } from "../../Stores/MenuStore";
     import {
         emoteDataStore,
@@ -85,20 +86,22 @@
     import {
         modalIframeStore,
         modalVisibilityStore,
-        showModalGlobalComminucationVisibilityStore,
         roomListVisibilityStore,
+        showModalGlobalComminucationVisibilityStore,
     } from "../../Stores/ModalStore";
     import { userHasAccessToBackOfficeStore } from "../../Stores/GameStore";
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
     import { Emoji } from "../../Stores/Utils/emojiSchema";
     import {
-        megaphoneCanBeUsedStore,
         liveStreamingEnabledStore,
+        megaphoneCanBeUsedStore,
         requestedMegaphoneStore,
     } from "../../Stores/MegaphoneStore";
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
+    import AvailabilityStatusComponent from "./AvailabilityStatus/AvailabilityStatus.svelte";
+    import { IconCheck, IconChevronDown, IconChevronUp } from "@wa-icons";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
@@ -167,6 +170,7 @@
             menuVisiblilityStore.set(false);
             activeSubMenuStore.activateByIndex(0);
         }
+
         chatVisibilityStore.set(!$chatVisibilityStore);
     }
 
@@ -348,7 +352,7 @@
         chatVisibilityStore.set(false);
     }
 
-    function noDrag() {
+    function noDrag(): boolean {
         return false;
     }
 
@@ -369,19 +373,15 @@
         speakerSelectedStore.set(deviceId);
     }
 
-    let subscribers = new Array<Unsubscriber>();
-    let chatTotalMessagesSubscription: Subscription | undefined;
     let totalMessagesToSee = writable<number>(0);
-    onMount(() => {
-        chatTotalMessagesSubscription = iframeListener.chatTotalMessagesToSeeStream.subscribe((total) =>
-            totalMessagesToSee.set(total)
-        );
-        resizeObserver.observe(mainHtmlDiv);
-    });
 
-    onDestroy(() => {
-        subscribers.map((subscriber) => subscriber());
-        chatTotalMessagesSubscription?.unsubscribe();
+    const gameScene = gameManager.getCurrentGameScene();
+    const { chatConnection } = gameScene;
+
+    const chatHasUnreadMessage = chatConnection.hasUnreadMessages;
+
+    onMount(() => {
+        resizeObserver.observe(mainHtmlDiv);
     });
 
     function buttonActionBarTrigger(id: string) {
@@ -404,12 +404,39 @@
 
         roomListVisibilityStore.set(true);
     }
+
+    const onClickOutside = () => {
+        if ($emoteMenuSubStore) emoteMenuSubStore.closeEmoteMenu();
+    };
+
+    let isActiveMobileMenu = false;
+    let openMobileMenu = false;
+    let openMobileMenuTimeout: ReturnType<typeof setTimeout> | undefined;
+    let closeAfterunusedTimeout: ReturnType<typeof setTimeout> | undefined;
+    function activeMobileMenu() {
+        isActiveMobileMenu = !isActiveMobileMenu;
+        if (isActiveMobileMenu) {
+            if (openMobileMenuTimeout) clearTimeout(openMobileMenuTimeout);
+            openMobileMenuTimeout = setTimeout(() => {
+                openMobileMenu = true;
+            }, 200);
+            if (closeAfterunusedTimeout) clearTimeout(closeAfterunusedTimeout);
+            closeAfterunusedTimeout = setTimeout(() => {
+                if (openMobileMenuTimeout) clearTimeout(openMobileMenuTimeout);
+                isActiveMobileMenu = false;
+                openMobileMenu = false;
+            }, 30000);
+        } else {
+            if (openMobileMenuTimeout) clearTimeout(openMobileMenuTimeout);
+            openMobileMenu = false;
+        }
+    }
 </script>
 
-<svelte:window on:keydown={onKeyDown} />
+<svelte:window on:keydown={onKeyDown} on:click={onClickOutside} on:touchend={onClickOutside} />
 
 <div
-    class="tw-flex tw-justify-center tw-m-auto tw-absolute tw-left-0 tw-right-0 tw-bottom-0"
+    class="tw-flex tw-justify-center tw-m-auto tw-absolute tw-left-0 tw-right-0 tw-bottom-0 md:tw-bottom-4"
     class:animated={$bottomActionBarVisibilityStore}
     bind:this={mainHtmlDiv}
 >
@@ -430,10 +457,12 @@
                     on:click={() => analyticsClient.follow()}
                     on:click={followClick}
                 >
-                    {#if $followStateStore === "active"}
-                        <Tooltip text={$LL.actionbar.unfollow()} />
-                    {:else}
-                        <Tooltip text={$LL.actionbar.follow()} />
+                    {#if !isMobile}
+                        {#if $followStateStore === "active"}
+                            <Tooltip text={$LL.actionbar.unfollow()} />
+                        {:else}
+                            <Tooltip text={$LL.actionbar.follow()} />
+                        {/if}
                     {/if}
 
                     <button class:border-top-light={$followStateStore === "active"}>
@@ -452,7 +481,9 @@
                     on:click={() => analyticsClient.layoutPresentChange()}
                     on:click={switchLayoutMode}
                 >
-                    <Tooltip text={$LL.actionbar.layout()} />
+                    {#if !isMobile}
+                        <Tooltip text={$LL.actionbar.layout()} />
+                    {/if}
 
                     <button>
                         {#if $embedScreenLayoutStore === LayoutMode.Presentation}
@@ -480,7 +511,9 @@
                     on:click={() => analyticsClient.lockDiscussion()}
                     on:click={lockClick}
                 >
-                    <Tooltip text={$LL.actionbar.lock()} />
+                    {#if !isMobile}
+                        <Tooltip text={$LL.actionbar.lock()} />
+                    {/if}
 
                     <button class:border-top-light={$currentPlayerGroupLockStateStore}>
                         {#if $currentPlayerGroupLockStateStore}
@@ -503,7 +536,9 @@
                     on:click={screenSharingClick}
                     class:enabled={$requestedScreenSharingState}
                 >
-                    <Tooltip text={$LL.actionbar.screensharing()} />
+                    {#if !isMobile}
+                        <Tooltip text={$LL.actionbar.screensharing()} />
+                    {/if}
 
                     <button
                         id="screenSharing"
@@ -533,8 +568,9 @@
         {/if}
 
         <div class="tw-flex tw-flex-row base-section animated tw-flex-wrap tw-justify-center">
+            <!-- Discution part -->
             <div class="bottom-action-section tw-flex tw-flex-initial">
-                {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore}
+                {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore && ![AvailabilityStatus.BUSY, AvailabilityStatus.DO_NOT_DISTURB, AvailabilityStatus.BACK_IN_A_MOMENT].includes($availabilityStatusStore)}
                     {#if $myCameraStore}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div
@@ -543,13 +579,15 @@
                             on:click={cameraClick}
                             class:disabled={!$requestedCameraState || $silentStore}
                         >
-                            <Tooltip text={$LL.actionbar.camera()} />
+                            {#if !isMobile}
+                                <Tooltip text={$LL.actionbar.camera()} />
+                            {/if}
 
                             <button
                                 class="tooltiptext sm:tw-w-56 md:tw-w-96"
                                 class:border-top-light={$requestedCameraState}
                             >
-                                {#if $requestedCameraState && !$silentStore}
+                                {#if $requestedCameraState}
                                     <img
                                         draggable="false"
                                         src={cameraImg}
@@ -572,9 +610,9 @@
                                     on:click|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}
                                 >
                                     {#if cameraActive}
-                                        <ChevronDownIcon size="13" />
+                                        <IconChevronDown font-size="13" />
                                     {:else}
-                                        <ChevronUpIcon size="13" />
+                                        <IconChevronUp font-size="13" />
                                     {/if}
                                 </button>
 
@@ -596,7 +634,7 @@
                                         >
                                             {StringUtils.normalizeDeviceName(camera.label)}
                                             {#if $usedCameraDeviceIdStore === camera.deviceId}
-                                                <CheckIcon size="13" class="tw-ml-1" />
+                                                <IconCheck font-size="13" class="tw-ml-1" />
                                             {/if}
                                         </span>
                                     {/each}
@@ -613,7 +651,9 @@
                             on:click={microphoneClick}
                             class:disabled={!$requestedMicrophoneState || $silentStore}
                         >
-                            <Tooltip text={$LL.actionbar.microphone()} />
+                            {#if !isMobile}
+                                <Tooltip text={$LL.actionbar.microphone()} />
+                            {/if}
 
                             <button class:border-top-light={$requestedMicrophoneState}>
                                 {#if $requestedMicrophoneState && !$silentStore}
@@ -640,9 +680,9 @@
                                         (microphoneActive = !microphoneActive)}
                                 >
                                     {#if microphoneActive}
-                                        <ChevronDownIcon size="13" />
+                                        <IconChevronDown font-size="13" />
                                     {:else}
-                                        <ChevronUpIcon size="13" />
+                                        <IconChevronUp font-size="13" />
                                     {/if}
                                 </button>
 
@@ -667,7 +707,7 @@
                                             >
                                                 {StringUtils.normalizeDeviceName(microphone.label)}
                                                 {#if $usedMicrophoneDeviceIdStore === microphone.deviceId}
-                                                    <CheckIcon size="13" />
+                                                    <IconCheck font-size="13" />
                                                 {/if}
                                             </span>
                                         {/each}
@@ -689,7 +729,7 @@
                                             >
                                                 {StringUtils.normalizeDeviceName(speaker.label)}
                                                 {#if $speakerSelectedStore === speaker.deviceId}
-                                                    <CheckIcon size="13" />
+                                                    <IconCheck font-size="13" />
                                                 {/if}
                                             </span>
                                         {/each}
@@ -708,7 +748,9 @@
                         on:click={screenSharingClick}
                         class:enabled={$requestedScreenSharingState}
                     >
-                        <Tooltip text={$LL.actionbar.screensharing()} />
+                        {#if !isMobile}
+                            <Tooltip text={$LL.actionbar.screensharing()} />
+                        {/if}
 
                         <button class:border-top-light={$requestedScreenSharingState}>
                             {#if $requestedScreenSharingState}
@@ -737,7 +779,9 @@
                         on:click={() => analyticsClient.layoutPresentChange()}
                         on:click={switchLayoutMode}
                     >
-                        <Tooltip text={$LL.actionbar.layout()} />
+                        {#if !isMobile}
+                            <Tooltip text={$LL.actionbar.layout()} />
+                        {/if}
                         <button>
                             {#if $embedScreenLayoutStore === LayoutMode.Presentation}
                                 <img
@@ -764,12 +808,14 @@
                     on:click={toggleChat}
                     class="bottom-action-button tw-relative"
                 >
-                    <Tooltip text={$LL.actionbar.chat()} />
+                    {#if !isMobile}
+                        <Tooltip text={$LL.actionbar.chat()} />
+                    {/if}
 
                     <button class:border-top-light={$chatVisibilityStore} class="chat-btn">
                         <img draggable="false" src={bubbleImg} style="padding: 2px" alt="Toggle chat" />
                     </button>
-                    {#if $chatZoneLiveStore || $peerStore.size > 0}
+                    {#if $chatZoneLiveStore || $peerStore.size > 0 || $chatHasUnreadMessage}
                         <div class="tw-absolute tw-top-1 tw-right-0.5">
                             <span
                                 class={`tw-w-4 tw-h-4 ${
@@ -791,8 +837,10 @@
                     {/if}
                 </div>
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div on:click={toggleEmojiPicker} class="bottom-action-button">
-                    <Tooltip text={$LL.actionbar.emoji()} />
+                <div on:click|stopPropagation={toggleEmojiPicker} class="bottom-action-button">
+                    {#if !isMobile}
+                        <Tooltip text={$LL.actionbar.emoji()} />
+                    {/if}
 
                     <button class:border-top-light={$emoteMenuSubStore}>
                         <img draggable="false" src={emojiPickOn} style="padding: 2px" alt="Toggle emoji picker" />
@@ -801,10 +849,12 @@
                 {#if $megaphoneCanBeUsedStore && !$silentStore && ($myMicrophoneStore || $myCameraStore)}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div on:click={toggleGlobalMessage} class="bottom-action-button tw-relative">
-                        {#if $liveStreamingEnabledStore}
-                            <Tooltip text={$LL.actionbar.disableMegaphone()} />
-                        {:else}
-                            <Tooltip text={$LL.actionbar.globalMessage()} />
+                        {#if !isMobile}
+                            {#if $liveStreamingEnabledStore}
+                                <Tooltip text={$LL.actionbar.disableMegaphone()} />
+                            {:else}
+                                <Tooltip text={$LL.actionbar.globalMessage()} />
+                            {/if}
                         {/if}
 
                         <button
@@ -828,77 +878,109 @@
                 {/if}
             </div>
 
-            <div class="bottom-action-section tw-flex tw-flex-initial">
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div
-                    on:dragstart|preventDefault={noDrag}
-                    on:click={() => analyticsClient.openedMenu()}
-                    on:click={showMenu}
-                    class="bottom-action-button"
-                >
-                    <Tooltip text={$LL.actionbar.menu()} />
-
-                    <button id="menuIcon" class:border-top-light={$menuVisiblilityStore}>
-                        <img draggable="false" src={menuImg} style="padding: 2px" alt={$LL.menu.icon.open.menu()} />
-                    </button>
-                </div>
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div on:dragstart|preventDefault={noDrag} on:click={toggleMapEditorMode} class="bottom-action-button">
-                    {#if isMobile || !$mapManagerActivated}
-                        <Tooltip text={$LL.actionbar.mapEditorMobileLocked()} />
-                    {:else}
-                        <Tooltip text={$LL.actionbar.mapEditor()} />
-                    {/if}
-                    <button
-                        id="mapEditorIcon"
-                        class:border-top-light={$mapEditorModeStore && !isMobile}
-                        name="toggle-map-editor"
-                        disabled={isMobile || !$mapManagerActivated}
-                    >
-                        <img
-                            draggable="false"
-                            src={mapBuilder}
-                            class:disable-opacity={isMobile || !$mapManagerActivated}
-                            style="padding: 2px"
-                            alt="toggle-map-editor"
-                        />
-                    </button>
-                </div>
-                {#if $userHasAccessToBackOfficeStore}
+            {#if !isMobile || openMobileMenu == true}
+                <!-- Menu part -->
+                <div class="bottom-action-section tw-flex tw-flex-initial">
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
                         on:dragstart|preventDefault={noDrag}
-                        on:click={() => analyticsClient.openBackOffice()}
-                        on:click={openBo}
+                        on:click={() => analyticsClient.openedMenu()}
+                        on:click={showMenu}
                         class="bottom-action-button"
                     >
-                        <Tooltip text={$LL.actionbar.bo()} />
+                        {#if !isMobile}
+                            <Tooltip text={$LL.actionbar.menu()} />
+                        {/if}
 
-                        <button id="backOfficeIcon">
-                            <img draggable="false" src={hammerImg} style="padding: 2px" alt="toggle-bo" />
+                        <button id="menuIcon" class:border-top-light={$menuVisiblilityStore}>
+                            <img draggable="false" src={menuImg} style="padding: 2px" alt={$LL.menu.icon.open.menu()} />
                         </button>
                     </div>
-                {/if}
-            </div>
-
-            <div class="bottom-action-section tw-flex tw-flex-initial">
-                <!-- TODO button hep -->
-                <!-- Room list button -->
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div
-                    on:dragstart|preventDefault={noDrag}
-                    on:click={() => analyticsClient.openedRoomList()}
-                    on:click={showRoomList}
-                    class="bottom-action-button"
-                >
-                    <Tooltip text={$LL.actionbar.roomList()} />
-
-                    <button id="roomListIcon" class:border-top-light={$roomListVisibilityStore}>
-                        <!-- svelte-ignore a11y-img-redundant-alt -->
-                        <img draggable="false" src={worldImg} style="padding: 2px" alt="Image for room list modal" />
-                    </button>
                 </div>
-            </div>
+
+                <!-- Status part -->
+                <div class="bottom-action-section tw-flex tw-flex-initial">
+                    <AvailabilityStatusComponent />
+                </div>
+
+                <!-- Editor part -->
+                <div class="bottom-action-section tw-flex tw-flex-initial">
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div
+                        on:dragstart|preventDefault={noDrag}
+                        on:click={toggleMapEditorMode}
+                        class="bottom-action-button"
+                    >
+                        {#if isMobile}
+                            <Tooltip text={$LL.actionbar.mapEditorMobileLocked()} />
+                        {:else if !$mapManagerActivated}
+                            <Tooltip text={$LL.actionbar.mapEditorLocked()} />
+                        {:else}
+                            <Tooltip text={$LL.actionbar.mapEditor()} />
+                        {/if}
+                        <button
+                            id="mapEditorIcon"
+                            class:border-top-light={$mapEditorModeStore && !isMobile}
+                            name="toggle-map-editor"
+                            disabled={isMobile || !$mapManagerActivated}
+                        >
+                            <img
+                                draggable="false"
+                                src={mapBuilder}
+                                class:disable-opacity={isMobile || !$mapManagerActivated}
+                                style="padding: 2px"
+                                alt="toggle-map-editor"
+                            />
+                        </button>
+                    </div>
+                    {#if $userHasAccessToBackOfficeStore}
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <div
+                            on:dragstart|preventDefault={noDrag}
+                            on:click={() => analyticsClient.openBackOffice()}
+                            on:click={openBo}
+                            class="bottom-action-button"
+                        >
+                            {#if !isMobile}
+                                <Tooltip text={$LL.actionbar.bo()} />
+                            {/if}
+
+                            <button id="backOfficeIcon">
+                                <img draggable="false" src={hammerImg} style="padding: 2px" alt="toggle-bo" />
+                            </button>
+                        </div>
+                    {/if}
+                </div>
+
+                <!-- Room list part -->
+                {#if $roomListActivated}
+                    <div class="bottom-action-section tw-flex tw-flex-initial">
+                        <!-- TODO button hep -->
+                        <!-- Room list button -->
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <div
+                            on:dragstart|preventDefault={noDrag}
+                            on:click={() => analyticsClient.openedRoomList()}
+                            on:click={showRoomList}
+                            class="bottom-action-button"
+                        >
+                            {#if !isMobile}
+                                <Tooltip text={$LL.actionbar.roomList()} />
+                            {/if}
+
+                            <button id="roomListIcon" class:border-top-light={$roomListVisibilityStore}>
+                                <!-- svelte-ignore a11y-img-redundant-alt -->
+                                <img
+                                    draggable="false"
+                                    src={worldImg}
+                                    style="padding: 2px"
+                                    alt="Image for room list modal"
+                                />
+                            </button>
+                        </div>
+                    </div>
+                {/if}
+            {/if}
 
             {#if $addActionButtonActionBarEvent.length > 0}
                 <div class="bottom-action-section tw-flex tw-flex-initial">
@@ -919,7 +1001,7 @@
                             }}
                             class="bottom-action-button"
                         >
-                            {#if button.toolTip}
+                            {#if button.toolTip && !isMobile}
                                 <Tooltip text={button.toolTip} />
                             {/if}
                             <button id={button.id}>
@@ -969,6 +1051,30 @@
                     </button>
                 </div>
             {/each}
+
+            {#if isMobile}
+                <!-- Menu mobile part -->
+                <div class="bottom-action-section tw-flex tw-flex-initial">
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div
+                        on:dragstart|preventDefault={noDrag}
+                        on:click={() => activeMobileMenu()}
+                        class="bottom-action-button"
+                    >
+                        <button id="burgerIcon">
+                            <img
+                                draggable="false"
+                                src={burgerMenuImg}
+                                style="padding: 2px"
+                                alt={$LL.menu.icon.open.mobile()}
+                                class="tw-transition-all tw-transform"
+                                class:tw-rotate-0={isActiveMobileMenu == false}
+                                class:tw-rotate-90={isActiveMobileMenu == true}
+                            />
+                        </button>
+                    </div>
+                </div>
+            {/if}
         </div>
     </div>
 </div>
@@ -1038,7 +1144,6 @@
 
 <style lang="scss">
     @import "../../style/breakpoints.scss";
-
     button {
         justify-content: center;
     }

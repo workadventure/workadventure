@@ -1,16 +1,19 @@
 import { Command, UpdateWAMSettingCommand } from "@workadventure/map-editor";
-import { Unsubscriber, get } from "svelte/store";
+import { get, Unsubscriber } from "svelte/store";
 import { EditMapCommandMessage } from "@workadventure/messages";
 import pLimit from "p-limit";
 import debug from "debug";
+import merge from "lodash/merge";
 import type { RoomConnection } from "../../../Connection/RoomConnection";
 import type { GameScene } from "../GameScene";
 import {
+    mapEditorAskToClaimPersonalAreaStore,
     mapEditorModeStore,
     mapEditorSelectedToolStore,
     mapEditorVisibilityStore,
 } from "../../../Stores/MapEditorStore";
-import { mapEditorActivated } from "../../../Stores/MenuStore";
+import { mapEditorActivated, mapEditorActivatedForThematics } from "../../../Stores/MenuStore";
+import { localUserStore } from "../../../Connection/LocalUserStore";
 import { AreaEditorTool } from "./Tools/AreaEditorTool";
 import type { MapEditorTool } from "./Tools/MapEditorTool";
 import { FloorEditorTool } from "./Tools/FloorEditorTool";
@@ -21,6 +24,7 @@ import { FrontCommand } from "./Commands/FrontCommand";
 import { TrashEditorTool } from "./Tools/TrashEditorTool";
 import { ExplorerTool } from "./Tools/ExplorerTool";
 import { CloseTool } from "./Tools/CloseTool";
+import { UpdateAreaFrontCommand } from "./Commands/Area/UpdateAreaFrontCommand";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",
@@ -89,12 +93,14 @@ export class MapEditorModeManager {
 
         this.active = false;
 
+        const areaEditorTool = new AreaEditorTool(this);
+
         this.editorTools = {
-            [EditorToolName.AreaEditor]: new AreaEditorTool(this),
+            [EditorToolName.AreaEditor]: areaEditorTool,
             [EditorToolName.EntityEditor]: new EntityEditorTool(this),
             [EditorToolName.FloorEditor]: new FloorEditorTool(this),
             [EditorToolName.WAMSettingsEditor]: new WAMSettingsEditorTool(this),
-            [EditorToolName.TrashEditor]: new TrashEditorTool(this),
+            [EditorToolName.TrashEditor]: new TrashEditorTool(this, areaEditorTool),
             [EditorToolName.ExploreTheRoom]: new ExplorerTool(this, this.scene),
             [EditorToolName.CloseMapEditor]: new CloseTool(),
         };
@@ -114,31 +120,22 @@ export class MapEditorModeManager {
     private currentRunningCommand: Promise<void>;
 
     /**
-     * Creates new Command object from given command config and executes it, both local and from the back.
+     * Creates new Command object from given command config and executes it
      * @param command what to execute
-     * @param emitMapEditorUpdate Should the command be emitted further to the game room? Default true.
-     * (for example if command came from the back)
-     * @param addToLocalCommandsHistory Should the command be added to the local commands history to be used in undo/redo mechanism? Default true.
+     *
      */
     public async executeCommand(
-        command: Command & FrontCommandInterface,
-        emitMapEditorUpdate = true,
-        addToLocalCommandsHistory = true
+        command: (Command & FrontCommandInterface) | (Command & FrontCommandInterface & UpdateWAMSettingCommand)
     ): Promise<void> {
         await this.isReverting;
         // Commands are throttled. Only one at a time.
         return (this.currentRunningCommand = this.currentRunningCommand.then(async () => {
             const delay = 0;
             try {
-                // We do an execution instantly so there will be no lag from user's perspective
                 await command.execute();
+                this.emitMapEditorUpdate(command, delay);
 
-                if (emitMapEditorUpdate) {
-                    this.emitMapEditorUpdate(command, delay);
-                }
-
-                // FIXME: why the exception here regarding UpdateWAMSettingCommand ?
-                if (addToLocalCommandsHistory && !(command instanceof UpdateWAMSettingCommand)) {
+                if (!(command instanceof UpdateWAMSettingCommand)) {
                     // if we are not at the end of commands history and perform an action, get rid of commands later in history than our current point in time
                     if (this.currentCommandIndex !== this.localCommandsHistory.length - 1) {
                         this.localCommandsHistory.splice(this.currentCommandIndex + 1);
@@ -151,10 +148,23 @@ export class MapEditorModeManager {
 
                 this.scene.getGameMap().updateLastCommandIdProperty(command.commandId);
                 return;
-                //return true;
             } catch (error) {
                 logger(error);
-                //return false;
+                return;
+            }
+        }));
+    }
+
+    public async executeLocalCommand(command: Command & FrontCommandInterface): Promise<void> {
+        await this.isReverting;
+        // Commands are throttled. Only one at a time.
+        return (this.currentRunningCommand = this.currentRunningCommand.then(async () => {
+            try {
+                await command.execute();
+                this.scene.getGameMap().updateLastCommandIdProperty(command.commandId);
+                return;
+            } catch (error) {
+                logger(error);
                 return;
             }
         }));
@@ -422,8 +432,11 @@ export class MapEditorModeManager {
                 return;
             }
             this.equipTool(
-                this.lastlyUsedTool ??
-                    (get(mapEditorActivated) ? EditorToolName.EntityEditor : EditorToolName.ExploreTheRoom)
+                this.lastlyUsedTool && this.lastlyUsedTool != EditorToolName.CloseMapEditor
+                    ? this.lastlyUsedTool
+                    : get(mapEditorActivated) || get(mapEditorActivatedForThematics)
+                    ? EditorToolName.EntityEditor
+                    : EditorToolName.ExploreTheRoom
             );
         });
     }
@@ -444,5 +457,42 @@ export class MapEditorModeManager {
 
     public getScene(): GameScene {
         return this.scene;
+    }
+
+    public claimPersonalArea() {
+        const areaDataToClaim = get(mapEditorAskToClaimPersonalAreaStore);
+        const userUUID = localUserStore.getLocalUser()?.uuid;
+        if (areaDataToClaim === undefined) {
+            console.error("No area to claim");
+            return;
+        }
+        if (userUUID === undefined) {
+            console.error("Unable to claim the area, your UUID is undefined");
+            return;
+        }
+        const areaPersonalPropertyData = areaDataToClaim.properties.find(
+            (property) => property.type === "personalAreaPropertyData"
+        );
+        if (!areaPersonalPropertyData) {
+            console.error("No area property data");
+            return;
+        }
+
+        const oldAreaData = structuredClone(areaDataToClaim);
+        const property = areaDataToClaim.properties.find((property) => property.type === "personalAreaPropertyData");
+        if (property) {
+            merge(property, { ownerId: userUUID });
+        }
+
+        this.executeCommand(
+            new UpdateAreaFrontCommand(
+                this.getScene().getGameMap(),
+                areaDataToClaim,
+                undefined,
+                oldAreaData,
+                this.editorTools.AreaEditor as AreaEditorTool,
+                this.scene.getGameMapFrontWrapper()
+            )
+        ).catch((error) => console.error(error));
     }
 }

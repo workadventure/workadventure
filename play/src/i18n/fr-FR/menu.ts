@@ -12,10 +12,12 @@ const menu: DeepPartial<Translation["menu"]> = {
             userlist: "Liste des utilisateurs",
             openEmoji: "Ouvrir la selection d'emoji",
             closeEmoji: "Fermer le menu emoji",
+            mobile: "Ouvrir le menu mobile",
         },
     },
     visitCard: {
         close: "Fermer",
+        sendMessage: "Envoyer un message",
     },
     profile: {
         edit: {
@@ -56,6 +58,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         chatSounds: "Sons du chat",
         cowebsiteTrigger: "Demander toujours avant d'ouvrir des sites web et des salles de conférence Jitsi",
         ignoreFollowRequest: "Ignorer les demandes de suivi des autres utilisateurs",
+        proximityDiscussionVolume: "Volume des bulles de discussion",
     },
     invite: {
         description: "Partager le lien de la salle!",

@@ -47,18 +47,67 @@ You can delete an object by selecting it and pressing the `Delete` key on your k
 Alternatively, if you have many objects to delete, you can select the "delete tool" (the bin icon) in the toolbar and
 click on the objects you want to delete.
 
+## Uploading an object
+
+You can upload your custom objects and place them on your map.
+
+To upload an object, open the Entity editor and click on the upload zone at the bottom. You can also drag/drop your object image in the upload zone.
+
+![Upload Object](../../images/editor/entity-upload/upload-object.png)
+
+You will see the upload form allowing you to configure your asset <strong>BEFORE</strong> upload.
+
+![Upload Form 1](../../images/editor/entity-upload/upload-form.png)
+
+In this form you can :
+
+- Define the asset name
+- Add tags (separated by a comma)
+- Define object depth
+- Define the object as "floating object"
+
+Once your object is uploaded, you can access it by searching it or click on "Custom" category in entity list.
+
+![Upload ended](../../images/editor/entity-upload/upload-ended.png)
+
+### Object depth
+
+Object depth is a way to define how your Woka will be displayed while walking through the object. You can use depth preset or define your own by selecting "Custom".
+
+- Standing : Your Woka will be displayed behind the object
+- On the floor: Your Woka will walk upon the object
+- Custom : Move the blue selector near the object to define the point where the Woka will be displayed behind the object
+
+![Upload Form 2](../../images/editor/entity-upload/upload-form-2.png)
+
+### Floating object
+
+By default, a custom object can be placed on the map guided by a grid. By leaving this parameter unchecked, you can click on the image to define the collide parameter (define if your Woka can walk through the object or if he needs to walk around it).
+If you check the "floating object" checkbox, your object can by placed freely on the map. It does not stick to the grid anymore. However, you will not have the opportunity to define a collision grid anymore.
+
+![Upload Form 3](../../images/editor/entity-upload/upload-form-3.png)
+
+Note : The "floating object" checkbox is <strong>NOT EDITABLE</strong> after upload. A floating object will never have a collision grid.
+
+## Editing an object
+
+On the entity editor your can edit your custom objects. Included defaults objects are not editable.
+To edit a custom object, select it and click on "edit" button.
+
+![Edit object](../../images/editor/entity-edition/edit-object.png)
+
+You will see an edit form on wich you can :
+
+- Edit the name
+- Add/remove tags
+- Edit depth ([learn more](#object-depth))
+- Remove the object (this action will also remove the object on the map if it was already placed)
+
+![Edit object](../../images/editor/entity-edition/edit-object-2.png)
+
+Do not forget to save your modifications by clicking on the "Save" button.
+
 ## Frequently Asked Questions
-
-### Can I import my own objects?
-
-As of now, it is not possible to import your own objects in the inline map editor using a graphical interface.
-This will come in future releases, as we extend the capabilities of the inline map editor.
-
-However, if you are a die-hard fan and are not afraid of doing some technical work, you can define your own object
-collections by writing a JSON file and then manually modifying the map file (with the `.wam` extension) to add a
-reference to your JSON object collection.
-
-You can read more about the entity collection format in the [documentation](../entity-collection-file-format.md).
 
 ### I cannot move or select an object on the map
 

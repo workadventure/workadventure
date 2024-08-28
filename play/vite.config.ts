@@ -3,6 +3,11 @@ import { svelte } from "@sveltejs/vite-plugin-svelte";
 import sveltePreprocess from "svelte-preprocess";
 import legacy from "@vitejs/plugin-legacy";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
+import Icons from "unplugin-icons/vite";
+import tsconfigPaths from "vite-tsconfig-paths";
+import inject from "@rollup/plugin-inject";
+import { UserConfig } from "vitest/config";
+import NodeGlobalsPolyfillPlugin from "@esbuild-plugins/node-globals-polyfill";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -24,6 +29,10 @@ export default defineConfig(({ mode }) => {
         build: {
             sourcemap: true,
             outDir: "./dist/public",
+            rollupOptions: {
+                plugins: [NodeGlobalsPolyfillPlugin({buffer: true}) ],
+                //plugins: [inject({ Buffer: ["buffer/", "Buffer"] })],
+            },
         },
         plugins: [
             svelte({
@@ -39,6 +48,7 @@ export default defineConfig(({ mode }) => {
                     }
                 },
             }),
+            Icons({ compiler: "svelte" }),
             legacy({
                 //targets: ['defaults', 'not IE 11', 'iOS > 14.3']
 
@@ -46,7 +56,26 @@ export default defineConfig(({ mode }) => {
                 polyfills: ["web.structured-clone"],
                 modernPolyfills: ["web.structured-clone"],
             }),
+            tsconfigPaths(),
         ],
+        test: {
+            environment: "jsdom",
+            globals: true,
+            coverage: {
+                all: true,
+                include: ["src/*.ts", "src/**/*.ts"],
+                exclude: ["src/i18n", "src/enum"],
+            },
+        },
+        optimizeDeps: {
+            include: ["olm"],
+            exclude: ["svelte-modals"],
+            esbuildOptions: {
+                define: {
+                    global: "globalThis",
+                },
+            },
+        },
     };
 
     if (env.SENTRY_ORG && env.SENTRY_PROJECT && env.SENTRY_AUTH_TOKEN && env.SENTRY_RELEASE && env.SENTRY_ENVIRONMENT) {
@@ -73,5 +102,5 @@ export default defineConfig(({ mode }) => {
     } else {
         console.info("Sentry plugin disabled");
     }
-    return config;
+    return config ;
 });

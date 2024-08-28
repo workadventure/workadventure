@@ -11,7 +11,7 @@ class MapsManager {
     private loadedMaps: Map<string, GameMap>;
     private loadedMapsCommandsQueue: Map<string, EditMapCommandMessage[]>;
 
-    private saveMapIntervals: Map<string, NodeJS.Timer>;
+    private saveMapIntervals: Map<string, NodeJS.Timeout>;
     private mapLastChangeTimestamp: Map<string, number>;
 
     private mapListService: MapListService;
@@ -32,7 +32,7 @@ class MapsManager {
     constructor() {
         this.loadedMaps = new Map<string, GameMap>();
         this.loadedMapsCommandsQueue = new Map<string, EditMapCommandMessage[]>();
-        this.saveMapIntervals = new Map<string, NodeJS.Timer>();
+        this.saveMapIntervals = new Map<string, NodeJS.Timeout>();
         this.mapLastChangeTimestamp = new Map<string, number>();
         this.mapListService = new MapListService(fileSystem, new WebHookService(WEB_HOOK_URL));
     }
@@ -99,7 +99,6 @@ class MapsManager {
         const wam = WAMFileFormat.parse(JSON.parse(file));
 
         const gameMap = new GameMap(this.getMockITiledMap(), wam);
-        gameMap.initialize();
         this.loadedMaps.set(key, gameMap);
 
         return gameMap;
@@ -153,10 +152,10 @@ class MapsManager {
                 queue.splice(0, 1);
             } else {
                 console.error(
-                    `Command with id ${commandId} that is scheduled from removal in the queue is not the first command. This should never happen (unless the queue was purged and recreated within 30 seconds... unlikely.`
+                    `Command with id ${commandId} that is scheduled from removal in the queue is not the first command. This should never happen (unless the queue was purged and recreated within 30 seconds... unlikely.`,
                 );
                 Sentry.captureMessage(
-                    `Command with id ${commandId} that is scheduled from removal in the queue is not the first command. This should never happen (unless the queue was purged and recreated within 30 seconds... unlikely.`
+                    `Command with id ${commandId} that is scheduled from removal in the queue is not the first command. This should never happen (unless the queue was purged and recreated within 30 seconds... unlikely.`,
                 );
             }
         }, this.COMMAND_TIME_IN_QUEUE_MS);
@@ -184,7 +183,7 @@ class MapsManager {
                     console.error(e);
                     Sentry.captureException(e);
                 });
-            }, intervalMS)
+            }, intervalMS),
         );
     }
 }

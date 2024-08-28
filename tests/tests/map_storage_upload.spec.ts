@@ -56,12 +56,12 @@ test.describe('Map-storage Upload API', () => {
         await expect(uploadFile2.ok()).toBeTruthy();
 
         await gotoWait200(page, `/~/map1.wam?phaserMode=${RENDERER_MODE}`);
-        await login(page, 'Alice');
+        await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
 
         const newBrowser = await browser.browserType().launch();
         const page2 = await newBrowser.newPage();
         await gotoWait200(page2, `/~/map2.wam?phaserMode=${RENDERER_MODE}`);
-        await login(page2, 'Bob');
+        await login(page2, 'Bob', 5, 'en-US', project.name === "mobilechromium");
 
         // Let's trigger a reload of map 1 only
         const uploadFile3 = await request.put("map1.wam", {
@@ -485,20 +485,27 @@ test.describe('Map-storage Upload API', () => {
             return;
         }
 
+        const folderName = "toDelete" ;
+        const fileName = "map.wam" ;
+        const filePath = `${folderName}/${fileName}`;
+
         createZipFromDirectory("./assets/file1/", "./assets/file1.zip");
         const uploadFileToDir = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/file1.zip"),
-                directory: "/toDelete"
+                directory: `/${folderName}`
             }
         });
+
         await expect(uploadFileToDir.ok()).toBeTruthy();
 
         let listOfMaps = await request.get("maps");
         let maps = await listOfMaps.json();
-        await expect(maps["maps"]["toDelete/map.wam"]).toBeDefined();
+        await expect(maps["maps"][filePath]).toBeDefined();
 
-        const deleteRoot = await request.delete(`toDelete`);
+
+
+        const deleteRoot = await request.delete(folderName);
 
         await expect(deleteRoot.status() === 204).toBeTruthy();
 

@@ -1,5 +1,10 @@
 import type { SignalData } from "simple-peer";
-import type { AvailabilityStatus, EditMapCommandMessage, PositionMessage } from "@workadventure/messages";
+import type {
+    ApplicationDefinitionInterface,
+    AvailabilityStatus,
+    EditMapCommandMessage,
+    PositionMessage,
+} from "@workadventure/messages";
 import type { WokaTextureDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
 import { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures";
 import type { RoomConnection } from "./RoomConnection";
@@ -11,7 +16,6 @@ export interface MessageUserMovedInterface {
 
 export interface MessageUserJoined {
     userId: number;
-    userJid: string;
     name: string;
     characterTextures: WokaTextureDescriptionInterface[];
     position: PositionMessage;
@@ -21,6 +25,7 @@ export interface MessageUserJoined {
     userUuid: string;
     outlineColor: number | undefined;
     variables: Map<string, unknown>;
+    chatID?: string;
 }
 
 export interface PositionInterface {
@@ -72,8 +77,9 @@ export interface RoomJoinedMessageInterface {
     characterTextures: WokaTextureDescriptionInterface[];
     companionTexture?: CompanionTextureDescriptionInterface;
     commandsToApply?: EditMapCommandMessage[];
-    webrtcUserName: string;
-    webrtcPassword: string;
+    webRtcUserName: string;
+    webRtcPassword: string;
+    applications?: Array<ApplicationDefinitionInterface> | undefined;
 }
 
 export interface PlayGlobalMessageInterface {

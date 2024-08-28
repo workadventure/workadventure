@@ -1,7 +1,6 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
-    import { InfoIcon } from "svelte-feather-icons";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { showModalGlobalComminucationVisibilityStore } from "../../Stores/ModalStore";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
@@ -29,8 +28,13 @@
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { StringUtils } from "../../Utils/StringUtils";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import { requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
+    import {
+        currentLiveStreamingSpaceStore,
+        megaphoneSpaceStore,
+        requestedMegaphoneStore,
+    } from "../../Stores/MegaphoneStore";
     import { userIsAdminStore } from "../../Stores/GameStore";
+    import { IconInfoCircle } from "@wa-icons";
 
     let mainModal: HTMLDivElement;
 
@@ -86,20 +90,21 @@
         activeLiveMessage = true;
         inputSendTextActive = false;
         uploadAudioActive = false;
+        analyticsClient.openMegaphone();
     }
 
     function activateInputText() {
-        analyticsClient.globalMessage();
         activeLiveMessage = false;
         inputSendTextActive = true;
         uploadAudioActive = false;
+        analyticsClient.openGlobalMessage();
     }
 
     function activateUploadAudio() {
-        analyticsClient.globalMessage();
         activeLiveMessage = false;
         inputSendTextActive = false;
         uploadAudioActive = true;
+        analyticsClient.openGlobalAudio();
     }
 
     function back() {
@@ -154,7 +159,8 @@
     }
 
     function startLive() {
-        analyticsClient.openMegaphone();
+        analyticsClient.startMegaphone();
+        currentLiveStreamingSpaceStore.set($megaphoneSpaceStore);
         requestedMegaphoneStore.set(true);
         close();
     }
@@ -164,7 +170,7 @@
 
 <div class="menu-container {isMobile ? 'mobile' : 'center'} tw-h-3/4" bind:this={mainModal}>
     <div class="tw-w-full tw-bg-dark-purple/95 tw-rounded" transition:fly={{ x: 1000, duration: 500 }}>
-        <button type="button" class="close-window" on:click={close}>&times</button>
+        <button type="button" class="close-window" on:click|preventDefault|stopPropagation={close}>&times</button>
         <header>
             <h2 class="tw-p-5 blue-title">Global communication</h2>
             {#if activeLiveMessage || inputSendTextActive || uploadAudioActive}
@@ -220,7 +226,10 @@
                             />
                             {$LL.megaphone.modal.textMessage.title()}
                         </h3>
-                        <p class="help-text"><InfoIcon size="18" /> {$LL.megaphone.modal.audioMessage.noAccess()}</p>
+                        <p class="help-text">
+                            <IconInfoCircle font-size="18" />
+                            {$LL.megaphone.modal.audioMessage.noAccess()}
+                        </p>
                         <button class="light tw-max-w-fit" on:click={activateInputText} disabled={!$userIsAdminStore}>
                             {$LL.megaphone.modal.textMessage.button()}</button
                         >
@@ -237,7 +246,10 @@
                             />
                             {$LL.megaphone.modal.audioMessage.title()}
                         </h3>
-                        <p class="help-text"><InfoIcon size="18" /> {$LL.megaphone.modal.audioMessage.noAccess()}</p>
+                        <p class="help-text">
+                            <IconInfoCircle font-size="18" />
+                            {$LL.megaphone.modal.audioMessage.noAccess()}
+                        </p>
                         <button class="light tw-max-w-fit" on:click={activateUploadAudio} disabled={!$userIsAdminStore}>
                             {$LL.megaphone.modal.audioMessage.button()}</button
                         >

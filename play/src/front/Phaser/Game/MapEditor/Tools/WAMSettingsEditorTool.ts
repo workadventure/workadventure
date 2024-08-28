@@ -17,22 +17,22 @@ export class WAMSettingsEditorTool extends MapEditorTool {
     }
 
     public update(time: number, dt: number): void {
-        console.info("WAMSettingsEditorTool update");
+        // Nothing to be done
     }
     public clear(): void {
-        console.info("WAMSettingsEditorTool clear");
+        // Nothing to be done
     }
     public activate(): void {
         mapEditorVisibilityStore.set(false);
     }
     public destroy(): void {
-        console.info("WAMSettingsEditorTool destroy");
+        // Nothing to be done
     }
     public subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void {
-        console.info("WAMSettingsEditorTool subscribeToGameMapFrontWrapperEvents");
+        // Nothing to be done
     }
     public handleKeyDownEvent(event: KeyboardEvent): void {
-        console.info("WAMSettingsEditorTool handleKeyDownEvent");
+        // Nothing to be done
     }
     /**
      * React on commands coming from the outside
@@ -48,11 +48,7 @@ export class WAMSettingsEditorTool extends MapEditorTool {
             }
 
             // execute command locally
-            await this.mapEditorModeManager.executeCommand(
-                new UpdateWAMSettingFrontCommand(wam, data, commandId),
-                false,
-                false
-            );
+            await this.mapEditorModeManager.executeLocalCommand(new UpdateWAMSettingFrontCommand(wam, data, commandId));
         }
         return Promise.resolve();
     }

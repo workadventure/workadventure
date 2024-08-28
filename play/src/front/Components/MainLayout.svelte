@@ -4,7 +4,11 @@
     import { hasEmbedScreen } from "../Stores/EmbedScreensStore";
     import { emoteDataStoreLoading, emoteMenuStore } from "../Stores/EmoteStore";
     import { requestVisitCardsStore } from "../Stores/GameStore";
-    import { helpCameraSettingsVisibleStore, helpWebRtcSettingsVisibleStore } from "../Stores/HelpSettingsStore";
+    import {
+        helpCameraSettingsVisibleStore,
+        helpNotificationSettingsVisibleStore,
+        helpWebRtcSettingsVisibleStore,
+    } from "../Stores/HelpSettingsStore";
     import { helpSettingsPopupBlockedStore } from "../Stores/HelpSettingsPopupBlockedStore";
     import { layoutManagerActionVisibilityStore } from "../Stores/LayoutManagerStore";
     import { menuVisiblilityStore, warningBannerStore } from "../Stores/MenuStore";
@@ -15,11 +19,10 @@
     import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
     import { soundPlayingStore } from "../Stores/SoundPlayingStore";
     import {
-        showLimitRoomModalStore,
         modalVisibilityStore,
-        showModalGlobalComminucationVisibilityStore,
-        modalPopupVisibilityStore,
         roomListVisibilityStore,
+        showLimitRoomModalStore,
+        showModalGlobalComminucationVisibilityStore,
     } from "../Stores/ModalStore";
     import { actionsMenuStore } from "../Stores/ActionsMenuStore";
     import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore";
@@ -29,13 +32,20 @@
     import { proximityMeetingStore } from "../Stores/MyMediaStore";
     import { notificationPlayingStore } from "../Stores/NotificationStore";
     import { askDialogStore } from "../Stores/MeetingStore";
-    import { mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
+    import {
+        bubbleModalVisibility,
+        changeStatusConfirmationModalVisibility,
+        notificationPermissionModalVisibility,
+    } from "../Stores/AvailabilityStatusModalsStore";
+    import { mapEditorAskToClaimPersonalAreaStore, mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
+    import { gameManager, GameSceneNotFoundError } from "../Phaser/Game/GameManager";
     import AudioManager from "./AudioManager/AudioManager.svelte";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
     import HelpCameraSettingsPopup from "./HelpSettings/HelpCameraSettingsPopup.svelte";
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
+    import HelpNotificationSettingsPopup from "./HelpSettings/HelpNotificationSettingPopup.svelte";
     import LayoutActionManager from "./LayoutActionManager/LayoutActionManager.svelte";
     import Menu from "./Menu/Menu.svelte";
     import ReportMenu from "./ReportMenu/ReportMenu.svelte";
@@ -54,14 +64,18 @@
     import HelpPopUpBlocked from "./HelpSettings/HelpPopUpBlocked.svelte";
     import Notification from "./UI/Notification.svelte";
     import MuteDialogBox from "./Video/AskedAction/MuteDialogBox.svelte";
+    import ChangeStatusConfirmationModal from "./ActionBar/AvailabilityStatus/Modals/ChangeStatusConfirmationModal.svelte";
+    import BubbleConfirmationModal from "./ActionBar/AvailabilityStatus/Modals/BubbleConfirmationModal.svelte";
+    import NotificationPermissionModal from "./ActionBar/AvailabilityStatus/Modals/NotificationPermissionModal.svelte";
     import GlobalCommunicationModal from "./Modal/GlobalCommunicationModal.svelte";
     import ObjectDetails from "./Modal/ObjectDetails.svelte";
-    import Popup from "./Modal/Popup.svelte";
     import MapList from "./Exploration/MapList.svelte";
     import WarningToast from "./WarningContainer/WarningToast.svelte";
+    import ClaimPersonalAreaDialogBox from "./MapEditor/ClaimPersonalAreaDialogBox.svelte";
+    import MainModal from "./Modal/MainModal.svelte";
 
     let mainLayout: HTMLDivElement;
-
+    let keyboardEventIsDisable = false;
     let isMobile = isMediaBreakpointUp("md");
     const resizeObserver = new ResizeObserver(() => {
         isMobile = isMediaBreakpointUp("md");
@@ -70,11 +84,48 @@
     onMount(() => {
         resizeObserver.observe(mainLayout);
     });
+
+    const handleFocusInEvent = (event: FocusEvent) => {
+        const target = event.target as HTMLElement | null;
+        if (
+            target &&
+            (["INPUT", "TEXTAREA"].includes(target.tagName) ||
+                (target.tagName === "DIV" && target.getAttribute("role") === "textbox"))
+        ) {
+            try {
+                gameManager.getCurrentGameScene().userInputManager.disableControls();
+                keyboardEventIsDisable = true;
+            } catch (error) {
+                if (error instanceof GameSceneNotFoundError) {
+                    keyboardEventIsDisable = false;
+                    return;
+                }
+                throw error;
+            }
+        }
+    };
+
+    const handleFocusOutEvent = () => {
+        if (!keyboardEventIsDisable) return;
+        try {
+            gameManager.getCurrentGameScene().userInputManager.restoreControls();
+            keyboardEventIsDisable = false;
+        } catch (error) {
+            if (error instanceof GameSceneNotFoundError) {
+                keyboardEventIsDisable = false;
+                return;
+            }
+            throw error;
+        }
+    };
+
+    document.addEventListener("focusin", handleFocusInEvent);
+    document.addEventListener("focusout", handleFocusOutEvent);
 </script>
 
 <!-- Components ordered by z-index -->
 <div id="main-layout" class={[...$coWebsites.values()].length === 0 ? "not-cowebsite" : ""} bind:this={mainLayout}>
-    {#if $modalVisibilityStore || $modalPopupVisibilityStore}
+    {#if $modalVisibilityStore}
         <div class="tw-bg-black/60 tw-w-full tw-h-full tw-fixed tw-left-0 tw-right-0" />
     {/if}
 
@@ -122,6 +173,10 @@
             <HelpCameraSettingsPopup />
         {/if}
 
+        {#if $helpNotificationSettingsVisibleStore}
+            <HelpNotificationSettingsPopup />
+        {/if}
+
         {#if $helpWebRtcSettingsVisibleStore !== "hidden" && $proximityMeetingStore === true}
             <HelpWebRtcSettingsPopup />
         {/if}
@@ -162,6 +217,10 @@
             <MuteDialogBox />
         {/if}
 
+        {#if $mapEditorAskToClaimPersonalAreaStore}
+            <ClaimPersonalAreaDialogBox />
+        {/if}
+
         {#if $showModalGlobalComminucationVisibilityStore}
             <GlobalCommunicationModal />
         {/if}
@@ -170,15 +229,14 @@
             <ObjectDetails />
         {/if}
 
-        {#if $modalPopupVisibilityStore}
-            <Popup />
-        {/if}
         {#if $roomListVisibilityStore}
             <MapList />
         {/if}
         {#if $warningMessageStore.length > 0}
             <WarningToast />
         {/if}
+
+        <MainModal />
     </section>
 
     {#if $layoutManagerActionVisibilityStore}
@@ -191,8 +249,16 @@
 
     <ActionBar />
 
-    <!-- audio when user have a message TODO delete it with new chat -->
-    <audio id="newMessageSound" src="/resources/objects/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
+    {#if $changeStatusConfirmationModalVisibility}
+        <ChangeStatusConfirmationModal />
+    {/if}
+
+    {#if $bubbleModalVisibility}
+        <BubbleConfirmationModal />
+    {/if}
+    {#if $notificationPermissionModalVisibility}
+        <NotificationPermissionModal />
+    {/if}
 
     <Lazy
         on:onload={() => emoteDataStoreLoading.set(true)}

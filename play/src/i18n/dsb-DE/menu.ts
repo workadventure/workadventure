@@ -12,6 +12,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             userlist: "Lisćina wužywarjow",
             openEmoji: "Wótcyń emoji-popup",
             closeEmoji: "Zacyń emoji-menij",
+            mobile: "Mobilny menij wótcyniś",
         },
     },
     visitCard: {

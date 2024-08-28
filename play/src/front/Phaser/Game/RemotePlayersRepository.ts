@@ -1,12 +1,13 @@
 import type { PlayerDetailsUpdatedMessage, UserMovedMessage } from "@workadventure/messages";
 import { availabilityStatusToJSON } from "@workadventure/messages";
+import { Deferred } from "ts-deferred";
 import type { MessageUserJoined } from "../../Connection/ConnexionModels";
 import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 import { iframeListener } from "../../Api/IframeListener";
 import { RoomConnection } from "../../Connection/RoomConnection";
 import { debugAddPlayer, debugRemovePlayer } from "../../Utils/Debuggers";
 
-interface RemotePlayerData extends MessageUserJoined {
+export interface RemotePlayerData extends MessageUserJoined {
     showVoiceIndicator: boolean;
 }
 
@@ -33,6 +34,7 @@ export class RemotePlayersRepository {
     private updatedPlayers = new Map<number, PlayerDetailsUpdate>();
 
     private remotePlayersData = new Map<number, RemotePlayerData>();
+    private getPlayerDeferred = new Map<number, Deferred<RemotePlayerData>>();
 
     public addPlayer(userJoinedMessage: MessageUserJoined): void {
         debugAddPlayer("Player will be added to repo", userJoinedMessage.userId);
@@ -59,6 +61,13 @@ export class RemotePlayersRepository {
             this.movedPlayers.delete(userJoinedMessage.userId);
             this.updatedPlayers.delete(userJoinedMessage.userId);
             this.addedPlayers.set(userJoinedMessage.userId, player);
+        }
+
+        // If we were waiting for this player to be added, resolve the promise
+        const deferred = this.getPlayerDeferred.get(userJoinedMessage.userId);
+        if (deferred) {
+            deferred.resolve(player);
+            this.getPlayerDeferred.delete(userJoinedMessage.userId);
         }
 
         debugAddPlayer("Player has been added to repo", userJoinedMessage.userId);
@@ -190,5 +199,30 @@ export class RemotePlayersRepository {
             availabilityStatus: availabilityStatusToJSON(player.availabilityStatus),
             variables: player.variables,
         };
+    }
+
+    /**
+     * This method is used to get the player data for a given user ID.
+     * It returns a promise because in some specific cases, the player data is not immediately available (for instance,
+     * we could get a WebRTC request with the user ID before the user is added to the remotePlayersRepository).
+     */
+    public getPlayer(userId: number): Promise<RemotePlayerData> {
+        const player = this.remotePlayersData.get(userId);
+        if (player) {
+            return Promise.resolve(player);
+        }
+        const deferred = new Deferred<RemotePlayerData>();
+        this.getPlayerDeferred.set(userId, deferred);
+        //return deferred.promise;
+
+        // We wait for 5 seconds for the player to be added
+        return Promise.race([
+            deferred.promise,
+            new Promise<RemotePlayerData>((resolve, reject) => {
+                setTimeout(() => {
+                    reject(new Error("Timeout waiting for player data"));
+                }, 5000);
+            }),
+        ]);
     }
 }

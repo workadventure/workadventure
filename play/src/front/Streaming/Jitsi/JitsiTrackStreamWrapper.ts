@@ -1,6 +1,7 @@
 import { get, Readable, writable, Writable } from "svelte/store";
 import type JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
 import { TrackStreamWrapperInterface } from "../Contract/TrackStreamWrapperInterface";
+import { SpaceUserExtended } from "../../Space/SpaceFilter/SpaceFilter";
 import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
 
 export interface JitsiTrackExt extends JitsiTrack {
@@ -63,8 +64,8 @@ export class JitsiTrackStreamWrapper implements TrackStreamWrapperInterface {
         return this.jitsiTrackWrapper.isLocal;
     }
 
-    public muteAudioParticipant(): void {
-        this.jitsiTrackWrapper.muteMicrophonePartcipant();
+    /*public muteAudioParticipant(): void {
+        this.jitsiTrackWrapper.muteMicrophoneParticipant();
     }
 
     public muteAudioEveryBody(): void {
@@ -81,9 +82,13 @@ export class JitsiTrackStreamWrapper implements TrackStreamWrapperInterface {
 
     public kickoff(): void {
         this.jitsiTrackWrapper.kickoff();
-    }
+    }*/
 
     public blockOrReportUser(): void {
         console.info("Not implemented yet!");
+    }
+
+    public getExtendedSpaceUser(): Promise<SpaceUserExtended> {
+        return this.jitsiTrackWrapper.spaceUser;
     }
 }

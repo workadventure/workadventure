@@ -16,7 +16,6 @@ const actionbar: BaseTranslation = {
         microphone: "mikrofon",
         speaker: "wótřerěčak",
     },
-    app: "aplikacije wočinić/začinić",
 };
 
 export default actionbar;
