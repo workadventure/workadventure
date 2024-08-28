@@ -432,7 +432,15 @@ export abstract class Character extends Container implements OutlineableInterfac
             return;
         }
 
-        const speechDomElement = new SpeechDomElement(id, text, this.scene, -1, -30 + this.texts.size * 2, callback, type);
+        const speechDomElement = new SpeechDomElement(
+            id,
+            text,
+            this.scene,
+            -1,
+            -30 + this.texts.size * 2,
+            callback,
+            type
+        );
         this.add(speechDomElement);
         this.texts.set(id, speechDomElement);
         speechDomElement.play(-1, -50 + this.texts.size * 2, duration, (id) => {
@@ -526,8 +534,8 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.textsToBuild.delete(id);
     }
 
-    destroyAllText(){
-        for(const [id, ] of this.texts){
+    destroyAllText() {
+        for (const [id] of this.texts) {
             this.destroyText(id);
         }
     }
