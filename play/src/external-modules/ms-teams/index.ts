@@ -180,7 +180,7 @@ class MSTeams implements MSTeamsExtensionModule {
                 this.listenToWorkadventureStatus = subscribe(
                     this.moduleOptions.workadventureStatusStore,
                     (workadventureStatus: AvailabilityStatus) => {
-                        this.setStatus(workadventureStatus);
+                        this.setStatusToTeams(workadventureStatus);
                     }
                 );
             }
@@ -315,7 +315,7 @@ class MSTeams implements MSTeamsExtensionModule {
             .catch((e) => console.error("Error while getting MSTeams status", e));
     }
 
-    setStatus(workadventureNewStatus: AvailabilityStatus) {
+    setStatusToTeams(workadventureNewStatus: AvailabilityStatus) {
         const newTeamsAvailability = this.mapWorkAdventureStatusToTeamsStatus(workadventureNewStatus);
         if (newTeamsAvailability === this.teamsAvailability) {
             return;
