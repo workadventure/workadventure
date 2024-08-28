@@ -23,6 +23,7 @@
             createFolderError = undefined;
             loadingFolderCreation = true;
             await chat.createFolder(createFolderOptions);
+            closeModal();
             notifyUserForFolderCreation();
         } catch (error) {
             console.error(error);
@@ -37,7 +38,7 @@
     }
 
     function notifyUserForFolderCreation() {
-        notificationPlayingStore.playNotification($LL.chat.createRoom.creationSuccessNotification());
+        notificationPlayingStore.playNotification($LL.chat.createFolder.creationSuccessNotification());
     }
     async function searchMembers(filterText: string) {
         try {

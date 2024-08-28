@@ -170,6 +170,7 @@ const chat: BaseTranslation = {
     messageEdited: "Modified",
     waiting: "Waiting",
     nothingToDisplay: "Nothing to display",
+    addRoomToSpaceError: "Impossible to add the room to the space",
     createRoom: {
         title: "Create new room",
         name: "Name",

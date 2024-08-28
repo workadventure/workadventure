@@ -171,6 +171,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     messageEdited: "Modifié",
     waiting: "En attente",
     nothingToDisplay: "Rien à afficher",
+    addRoomToSpaceError: "Impossible d'ajouter la room à l'espace",
     createRoom: {
         title: "Créer un nouveau salon",
         name: "Nom",

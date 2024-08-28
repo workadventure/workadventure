@@ -61,7 +61,9 @@
 
         if (!room) return;
 
-        if (room.myMembership === "invite") room.joinRoom();
+        if (room.myMembership === "invite") {
+            room.joinRoom().catch((error) => console.error(error));
+        }
 
         selectedRoom.set(room);
         navChat.set("chat");

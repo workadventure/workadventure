@@ -22,6 +22,7 @@ import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { ChatConnectionInterface, ChatRoom, Connection, ConnectionStatus, CreateRoomOptions } from "../ChatConnection";
 import { selectedRoom } from "../../Stores/ChatStore";
+import LL from "../../../../i18n/i18n-svelte";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 import { MatrixSecurity, matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity";
 import { MatrixRoomFolder } from "./MatrixRoomFolder";
@@ -358,6 +359,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             const result = await this.client.createRoom(
                 this.mapCreateRoomOptionsToMatrixCreateRoomOptions(roomOptions)
             );
+
             await new Promise<void>((resolve, _) => {
                 this.client.once(ClientEvent.Sync, (state) => {
                     if (state === SyncState.Syncing) {
@@ -365,15 +367,24 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                     }
                 });
             });
+
             if (roomOptions.parentSpaceID) {
-                this.addRoomToSpace(roomOptions.parentSpaceID, result.room_id);
-                await new Promise<void>((resolve, _) => {
-                    this.client.once(ClientEvent.Sync, (state) => {
-                        if (state === SyncState.Syncing) {
-                            resolve();
-                        }
+                try {
+                    await this.addRoomToSpace(roomOptions.parentSpaceID, result.room_id);
+
+                    await new Promise<void>((resolve, _) => {
+                        this.client.once(ClientEvent.Sync, (state) => {
+                            if (state === SyncState.Syncing) {
+                                resolve();
+                            }
+                        });
                     });
-                });
+
+                    return result; // Return result here after adding the room to the space
+                } catch {
+                    this.roomList.delete(result.room_id);
+                    return Promise.reject(new Error(get(LL).chat.addRoomToSpaceError()));
+                }
             }
 
             return result;
@@ -382,9 +393,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         }
     }
 
-    async createFolder(roomOptions?: CreateRoomOptions): Promise<{
-        room_id: string;
-    }> {
+    async createFolder(roomOptions?: CreateRoomOptions): Promise<{ room_id: string }> {
         if (roomOptions === undefined) {
             return Promise.reject(new Error("CreateRoomOptions is empty"));
         }
@@ -393,6 +402,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             const result = await this.client.createRoom(
                 this.mapCreateRoomOptionsToMatrixCreateFolderOptions(roomOptions)
             );
+
             await new Promise<void>((resolve, _) => {
                 this.client.once(ClientEvent.Sync, (state) => {
                     if (state === SyncState.Syncing) {
@@ -400,15 +410,24 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                     }
                 });
             });
+
             if (roomOptions.parentSpaceID) {
-                this.addRoomToSpace(roomOptions.parentSpaceID, result.room_id);
-                await new Promise<void>((resolve, _) => {
-                    this.client.once(ClientEvent.Sync, (state) => {
-                        if (state === SyncState.Syncing) {
-                            resolve();
-                        }
+                try {
+                    await this.addRoomToSpace(roomOptions.parentSpaceID, result.room_id);
+
+                    await new Promise<void>((resolve, _) => {
+                        this.client.once(ClientEvent.Sync, (state) => {
+                            if (state === SyncState.Syncing) {
+                                resolve();
+                            }
+                        });
                     });
-                });
+
+                    return result;
+                } catch {
+                    this.roomFolders.delete(result.room_id);
+                    return Promise.reject(new Error(get(LL).chat.addRoomToSpaceError()));
+                }
             }
 
             return result;
@@ -643,7 +662,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 .catch((error) => {
                     console.error("Unable to join", error);
                     rej(this.handleMatrixError(error));
-                    //rej(error);
                 });
         });
     }
@@ -652,21 +670,30 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         return this.matrixSecurity.initClientCryptoConfiguration();
     }
 
-    private addRoomToSpace(spaceRoomId: string, childRoomId: string) {
-        // Send the m.space.child event to link the room to the space
+    private addRoomToSpace(spaceRoomId: string, childRoomId: string): Promise<void> {
         const domain = this.client.getDomain();
-        if (!domain) return;
-        this.client
+        if (!domain) {
+            return Promise.reject(new Error("Domain is not available"));
+        }
+
+        return this.client
             .sendStateEvent(
                 spaceRoomId,
-                //@ts-ignore
+                // @ts-ignore
                 EventType.SpaceChild,
                 {
-                    via: [domain], // The domain of the homeserver to be used to join the room
+                    via: [domain],
                 },
                 childRoomId
             )
-            .catch((error) => console.error("Error adding room to space : ", error));
+            .then(() => {
+                return;
+            })
+            .catch((error) => {
+                console.error("Error adding room to space: ", error);
+                //notificationPlayingStore.playNotification(get(LL).chat.addRoomToSpaceError());
+                return Promise.reject(new Error(get(LL).chat.addRoomToSpaceError()));
+            });
     }
 
     private async addDMRoomInAccountData(userId: string, roomId: string) {
