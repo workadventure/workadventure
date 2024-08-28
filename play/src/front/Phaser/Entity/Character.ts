@@ -418,12 +418,13 @@ export abstract class Character extends Container implements OutlineableInterfac
         text: string,
         duration = 10000,
         callback = () => this.destroyText(id),
-        createStackAnimation = true
+        createStackAnimation = true,
+        type: "warning" | "message" = "message"
     ) {
         if (this.texts.has(id)) {
             this.destroyText(id);
         }
-        this.textsToBuild.set(id, { text, duration, callback });
+        this.textsToBuild.set(id, { text, duration, callback, type });
 
         // If there is already one text created, we don't need to create a stack animation
         if (this.texts.size == 1 && createStackAnimation) {
@@ -431,7 +432,7 @@ export abstract class Character extends Container implements OutlineableInterfac
             return;
         }
 
-        const speechDomElement = new SpeechDomElement(id, text, this.scene, -1, -30 + this.texts.size * 2, callback);
+        const speechDomElement = new SpeechDomElement(id, text, this.scene, -1, -30 + this.texts.size * 2, callback, type);
         this.add(speechDomElement);
         this.texts.set(id, speechDomElement);
         speechDomElement.play(-1, -50 + this.texts.size * 2, duration, (id) => {
@@ -523,6 +524,12 @@ export abstract class Character extends Container implements OutlineableInterfac
         text?.destroy();
         this.texts.delete(id);
         this.textsToBuild.delete(id);
+    }
+
+    destroyAllText(){
+        for(const [id, ] of this.texts){
+            this.destroyText(id);
+        }
     }
 
     private createStackAnimationForMultiText() {

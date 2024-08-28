@@ -1,0 +1,73 @@
+import { expect, test } from "@playwright/test";
+import { evaluateScript } from "./utils/scripting";
+import { login } from "./utils/roles";
+import Map from "./utils/map";
+import { resetWamMaps } from "./utils/map-editor/uploader";
+import { oidcAdminTagLogin } from "./utils/oidc";
+import menu from "./utils/menu";
+import mapeditor from "./utils/mapeditor";
+import areaEditor from "./utils/map-editor/areaEditor";
+
+test.describe("Scripting for Map editor @oidc", () => {
+    test.beforeEach(
+        "Ignore tests on mobilechromium because map editor not available for mobile devices",
+        ({}, {project}) => {
+            //Map Editor not available on mobile
+            if (project.name === "mobilechromium") {
+                //eslint-disable-next-line playwright/no-skipped-test
+                test.skip();
+                return;
+            }
+        }
+    );
+
+    test.beforeEach("Ignore tests on webkit because of issue with camera and microphone", ({browserName}) => {
+        //WebKit has issue with camera
+        if (browserName === "webkit") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+    });
+
+
+    test("Scripting Area onEnter & onLeave", async ({page, request}, {project}) => {
+        await resetWamMaps(request);
+        await page.goto(Map.url("shaka"));
+        await login(page, "test", 3, "en-US", false);
+        await oidcAdminTagLogin(page, false);
+
+        await menu.openMapEditor(page);
+        await mapeditor.openAreaEditor(page);
+        await areaEditor.drawArea(page, {x: 10 * 32, y: 0}, {x: 13 * 32, y: 2 * 32});
+        await areaEditor.setAreaName(page, "MyZone");
+
+        await evaluateScript(page, () => {
+            // @ts-ignore
+            WA.mapEditor.area.onEnter("MyZone").subscribe(() => {
+                // @ts-ignore
+                WA.ui.displayActionMessage({
+                    message: "Welcome to MyZone",
+                    type: "message",
+                    callback: () => {}
+                });
+            });
+
+            // @ts-ignore
+            WA.mapEditor.area.onLeave("MyZone").subscribe(() => {
+                // @ts-ignore
+                WA.ui.displayActionMessage({
+                    message: "Goodby to MyZone",
+                    type: "message",
+                    callback: () => {}
+                });
+            });
+        });
+
+        await menu.closeMapEditor(page);
+        await Map.teleportToPosition(page, 11 * 32, 1 * 32);
+        await expect(page.locator('.blue-dialog-box').nth(0)).toHaveText("Welcome to MyZone");
+        await Map.teleportToPosition(page, 11 * 32, 10 * 32);
+        await expect(page.locator('.blue-dialog-box').nth(1)).toHaveText("Goodby to MyZone");
+    });
+});

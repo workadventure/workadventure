@@ -1,4 +1,4 @@
-import { derived, writable } from "svelte/store";
+import { writable } from "svelte/store";
 import type { UserInputManager } from "../Phaser/UserInput/UserInputManager";
 
 export interface LayoutManagerAction {
@@ -50,7 +50,3 @@ function createLayoutManagerAction() {
 }
 
 export const layoutManagerActionStore = createLayoutManagerAction();
-
-export const layoutManagerActionVisibilityStore = derived(layoutManagerActionStore, ($layoutManagerActionStore) => {
-    return !!$layoutManagerActionStore.length;
-});

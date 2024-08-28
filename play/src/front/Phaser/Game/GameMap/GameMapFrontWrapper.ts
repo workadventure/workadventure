@@ -105,8 +105,6 @@ export class GameMapFrontWrapper {
     private enterDynamicAreaCallbacks = Array<DynamicAreaChangeCallback>();
     private leaveDynamicAreaCallbacks = Array<DynamicAreaChangeCallback>();
 
-    private enterDynamicMapEditorAreaCallbacks = Array<DynamicAreaChangeCallback>();
-    private leaveDynamicMapEditorAreaCallbacks = Array<DynamicAreaChangeCallback>();
     public areasManager!: AreasManager;
 
     /**
@@ -541,14 +539,6 @@ export class GameMapFrontWrapper {
      */
     public onLeaveArea(callback: AreaChangeCallback) {
         this.gameMap.getGameMapAreas()?.onLeaveArea(callback);
-    }
-
-    public onEnterMapEditorArea(callback: DynamicAreaChangeCallback) {
-        this.enterDynamicMapEditorAreaCallbacks.push(callback);
-    }
-
-    public onLeaveMapEditorArea(callback: DynamicAreaChangeCallback){
-        this.leaveDynamicMapEditorAreaCallbacks.push(callback);
     }
 
     public findLayer(layerName: string): ITiledMapLayer | undefined {

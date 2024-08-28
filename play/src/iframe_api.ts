@@ -30,6 +30,7 @@ import type { Popup } from "./front/Api/Iframe/Ui/Popup";
 import type { Sound } from "./front/Api/Iframe/Sound/Sound";
 import { answerPromises, queryWorkadventure } from "./front/Api/Iframe/IframeApiContribution";
 import camera from "./front/Api/Iframe/camera";
+import mapEditor from "./front/Api/Iframe/mapEditor";
 export type {
     CreateUIWebsiteEvent,
     ModifyUIWebsiteEvent,
@@ -112,6 +113,7 @@ const wa = {
     camera,
     state: globalState,
     event,
+    mapEditor,
 
     /**
      * When your script / iFrame loads WorkAdventure, it takes a few milliseconds for your
