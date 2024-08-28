@@ -11,8 +11,8 @@
     import RoomOption from "./Room/RoomMenu/RoomOption.svelte";
     import { IconChevronDown, IconChevronRight, IconLogout, IconSquarePlus } from "@wa-icons";
 
-    export let folders: Readable<RoomFolder[]>;
-    export let rooms: Readable<ChatRoom[]>;
+    export let folders: Readable<Map<string, RoomFolder>>;
+    export let rooms: Readable<Map<string, ChatRoom>>;
     export let name: Readable<string>;
     export let isGuest: boolean;
     export let isOpen: boolean;
@@ -24,15 +24,7 @@
 
     const isFoldersOpen: { [key: string]: boolean } = {};
 
-    console.log(
-        "in folder svelte : ",
-        get(rooms).map((room) => ({ name: get(room.name), id: room.id }))
-    );
-    console.log(
-        "in folder svelte : ",
-        get(folders).map((room) => ({ name: get(room.name), id: room.id }))
-    );
-    $: filteredRoom = $rooms.filter(({ name }) =>
+    $: filteredRoom = Array.from($rooms.values()).filter(({ name }) =>
         get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase())
     );
 
@@ -114,7 +106,7 @@
 
 {#if isOpen}
     <div class="tw-flex tw-flex-col tw-overflow-auto tw-ml-4">
-        {#each $folders as folder (folder.id)}
+        {#each Array.from($folders.values()) as folder (folder.id)}
             <svelte:self
                 bind:isOpen={isFoldersOpen[folder.id]}
                 id={folder.id}
@@ -127,7 +119,7 @@
         {#each filteredRoom as room (room.id)}
             <Room {room} />
         {/each}
-        {#if $rooms.length === 0 && $folders.length === 0}
+        {#if $rooms.size === 0 && $folders.size === 0}
             <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
         {/if}
     </div>

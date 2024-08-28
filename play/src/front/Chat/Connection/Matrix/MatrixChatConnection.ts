@@ -43,7 +43,10 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     isEncryptionRequiredAndNotSet: Writable<boolean>;
     isGuest: Writable<boolean> = writable(true);
     hasUnreadMessages: Readable<boolean>;
-    roomFolders: Writable<MatrixRoomFolder[]> = writable([]);
+    roomFolders: MapStore<MatrixRoomFolder["id"], MatrixRoomFolder> = new MapStore<
+        MatrixRoomFolder["id"],
+        MatrixRoomFolder
+    >();
 
     constructor(
         private connection: Connection,
@@ -169,14 +172,13 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         }
     }
     private moveRoomToParentFolder(room: Room, parentID: string): void {
-        const roomFolders = get(this.roomFolders);
         const isSpaceRoom = room.isSpaceRoom();
-        for (const folder of roomFolders) {
+        for (const [, folder] of this.roomFolders) {
             if (folder.id === parentID) {
                 if (isSpaceRoom) {
-                    this.addToFolder<MatrixRoomFolder>(folder.folders, new MatrixRoomFolder(room));
+                    folder.folders.set(room.roomId, new MatrixRoomFolder(room));
                 } else {
-                    this.addToFolder<MatrixChatRoom>(folder.rooms, new MatrixChatRoom(room));
+                    folder.rooms.set(room.roomId, new MatrixChatRoom(room));
                 }
                 break;
             }
@@ -184,35 +186,25 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             const node = folder.getNode(parentID);
             if (node && node instanceof MatrixRoomFolder) {
                 if (isSpaceRoom) {
-                    this.addToFolder<MatrixRoomFolder>(node.folders, new MatrixRoomFolder(room));
+                    node.folders.set(room.roomId, new MatrixRoomFolder(room));
                 } else {
-                    this.addToFolder<MatrixChatRoom>(node.rooms, new MatrixChatRoom(room));
+                    node.rooms.set(room.roomId, new MatrixChatRoom(room));
                 }
                 break;
             }
         }
     }
 
-    private addToFolder<T extends MatrixRoomFolder | MatrixChatRoom>(folder: Writable<T[]>, room: T): void {
-        folder.update((folders) => {
-            if (!folders.some((folderFromFolder) => room.id === folderFromFolder.id)) {
-                return [...folders, room];
-            } else {
-                return folders;
-            }
-        });
-    }
     private manageRoomOrFolder(room: Room): void {
         const { roomId } = room;
 
         if (this.isRoomAlreadyManaged(roomId)) return;
 
-        if (this.handleMembershipStatus(room)) return;
+        if (!this.isUserMemberOrInvited(room)) return;
 
         const parentRoomID = this.getFirstParentRoomID(room);
 
         if (parentRoomID) {
-            //TODO : Refresh Parent instead of try to add ?
             const isAdded = this.tryAddRoomToParentFolder(room, parentRoomID);
 
             if (!isAdded && !room.isSpaceRoom()) {
@@ -235,16 +227,11 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
         return false;
     }
-    private handleMembershipStatus(room: Room): boolean {
+    private isUserMemberOrInvited(room: Room): boolean {
         const membershipStatus = room.getMyMembership();
 
-        if (membershipStatus === KnownMembership.Invite) {
-            this.createAndAddNewRootRoom(room);
+        if (membershipStatus === KnownMembership.Invite || membershipStatus === KnownMembership.Join) {
             return true;
-        }
-
-        if (membershipStatus === KnownMembership.Ban || membershipStatus === KnownMembership.Leave) {
-            return true; // Room shouldn't be added
         }
 
         return false;
@@ -256,14 +243,16 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
     private tryAddRoomToParentFolder(room: Room, parentRoomID: string): boolean {
         const isSpaceRoom = room.isSpaceRoom();
-        for (const folder of get(this.roomFolders)) {
+        for (const [, folder] of this.roomFolders) {
             const parentFolder = folder.id === parentRoomID ? folder : folder.getNode(parentRoomID);
-
             if (parentFolder && parentFolder instanceof MatrixRoomFolder) {
                 if (isSpaceRoom) {
+                    this.roomFolders.delete(room.roomId);
                     // this.addToFolder<MatrixRoomFolder>(folder.folders, new MatrixRoomFolder(room));
+                    //parentFolder.folders.set(room.roomId, new MatrixRoomFolder(room))
                 } else {
-                    this.addToFolder<MatrixChatRoom>(folder.rooms, new MatrixChatRoom(room));
+                    parentFolder.rooms.set(room.roomId, new MatrixChatRoom(room));
+                    // this.addToFolder<MatrixChatRoom>(folder.rooms, new MatrixChatRoom(room));
                 }
                 return true;
             }
@@ -279,8 +268,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         }
     }
     private findRoomOrFolder(roomId: string): MatrixRoomFolder | MatrixChatRoom | undefined {
-        const folders = get(this.roomFolders);
-        for (const folder of folders) {
+        for (const [, folder] of this.roomFolders) {
             const roomOrFolder = folder.getNode(roomId);
             if (roomOrFolder) {
                 return roomOrFolder;
@@ -288,9 +276,10 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         }
         return undefined;
     }
+
     private createAndAddNewRootFolder(room: Room): void {
         const newFolder = new MatrixRoomFolder(room);
-        this.addToFolder<MatrixRoomFolder>(this.roomFolders, newFolder);
+        this.roomFolders.set(room.roomId, newFolder);
 
         newFolder
             .getRoomsIdInNode()
@@ -317,25 +306,22 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         if (isRootRoom) {
             return;
         }
-        const folders = get(this.roomFolders);
-        const isRootFolder = folders.some((folder) => {
-            return folder.id === roomId;
-        });
+        const isRootFolder = this.roomFolders.has(roomId);
 
         if (isRootFolder) {
             return;
         }
 
-        folders.forEach((folder) => {
+        this.roomFolders.forEach((folder) => {
             folder.deleteNode(roomId);
         });
+
         const currentRoom = get(selectedRoom)?.id;
         if (currentRoom && currentRoom === roomId) selectedRoom.set(undefined);
     }
     private onRoomEventMembership(room: Room, membership: string, prevMembership: string | undefined) {
         const { roomId } = room;
-        const existingMatrixChatRoom =
-            this.roomList.has(roomId) || get(this.roomFolders).some((folder) => folder.id === roomId);
+        const existingMatrixChatRoom = this.roomList.has(roomId) || this.roomFolders.has(roomId);
 
         if (membership !== prevMembership && existingMatrixChatRoom) {
             if (membership === KnownMembership.Join) {
@@ -541,13 +527,13 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
     getDirectRoomFor(userID: string): ChatRoom | undefined {
         const directRooms = Array.from(this.roomList)
-            .filter(([_, room]) => {
+            .filter(([, room]) => {
                 return (
                     room.type === "direct" &&
                     room.membersId.some((memberId) => memberId === userID && room.membersId.length === 2)
                 );
             })
-            .map(([_, room]) => room);
+            .map(([, room]) => room);
 
         if (directRooms.length > 0) return directRooms[0];
 

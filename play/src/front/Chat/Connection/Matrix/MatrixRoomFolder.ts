@@ -1,13 +1,17 @@
 import { Room } from "matrix-js-sdk";
-import { get, Readable, Writable, writable } from "svelte/store";
+import { Readable, writable } from "svelte/store";
 import { KnownMembership } from "matrix-js-sdk/lib/types";
 import * as Sentry from "@sentry/svelte";
+import { MapStore } from "@workadventure/store-utils";
 import { RoomFolder } from "../ChatConnection";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 export class MatrixRoomFolder implements RoomFolder {
-    //TODO : change array to map store
-    rooms: Writable<MatrixChatRoom[]> = writable([]);
-    folders: Writable<MatrixRoomFolder[]> = writable([]);
+    rooms: MapStore<MatrixChatRoom["id"], MatrixChatRoom> = new MapStore<MatrixChatRoom["id"], MatrixChatRoom>();
+    folders: MapStore<MatrixRoomFolder["id"], MatrixRoomFolder> = new MapStore<
+        MatrixRoomFolder["id"],
+        MatrixRoomFolder
+    >();
+
     id: string;
     name: Readable<string>;
     loadRoomsAndFolderPromise: Promise<void>;
@@ -16,43 +20,24 @@ export class MatrixRoomFolder implements RoomFolder {
         this.name = writable(room.name);
         this.id = room.roomId;
 
-        const defaultFoldersAndRooms: {
-            folders: MatrixRoomFolder[];
-            rooms: MatrixChatRoom[];
-        } = {
-            folders: [] as MatrixRoomFolder[],
-            rooms: [] as MatrixChatRoom[],
-        };
-
         this.loadRoomsAndFolderPromise = new Promise((resolve, reject) => {
             this.room.client
                 .getRoomHierarchy(room.roomId, 100, 1)
                 .then(({ rooms: roomsHierarchy }) => {
-                    const { folders, rooms } =
-                        roomsHierarchy.reduce((acc, cur) => {
-                            const childRoom = room.client.getRoom(cur.room_id);
-                            if (!childRoom || cur.room_id === this.id) return acc;
+                    roomsHierarchy.forEach((cur) => {
+                        const childRoom = room.client.getRoom(cur.room_id);
 
-                            if (childRoom.isSpaceRoom()) {
-                                acc.folders.push(new MatrixRoomFolder(childRoom));
-                            } else {
-                                const matrixChatRoom = new MatrixChatRoom(childRoom);
-                                if (matrixChatRoom.myMembership === KnownMembership.Join) {
-                                    acc.rooms.push(matrixChatRoom);
-                                }
+                        if (!childRoom || cur.room_id === this.id) return;
+
+                        if (childRoom.isSpaceRoom()) {
+                            this.folders.set(childRoom.roomId, new MatrixRoomFolder(childRoom));
+                        } else {
+                            const matrixChatRoom = new MatrixChatRoom(childRoom);
+                            if (matrixChatRoom.myMembership === KnownMembership.Join) {
+                                this.rooms.set(childRoom.roomId, matrixChatRoom);
                             }
-
-                            return acc;
-                        }, defaultFoldersAndRooms) || defaultFoldersAndRooms;
-
-                    this.rooms.update(() => {
-                        return [...rooms];
+                        }
                     });
-
-                    this.folders.update(() => {
-                        return [...folders];
-                    });
-
                     resolve();
                 })
                 .catch((error) => {
@@ -64,19 +49,17 @@ export class MatrixRoomFolder implements RoomFolder {
     }
 
     getNode(id: string): MatrixRoomFolder | MatrixChatRoom | undefined {
-        const roomsList = get(this.rooms);
-        const roomNode = roomsList.find((room) => room.id === id);
+        const roomNode = this.rooms.get(id);
         if (roomNode) {
             return roomNode;
         }
-        const folderList = get(this.folders);
-        const folderNode = folderList.find((room) => room.id === id);
+        const folderNode = this.folders.get(id);
 
         if (folderNode) {
             return folderNode;
         }
 
-        for (const folder of get(this.folders)) {
+        for (const [, folder] of this.folders) {
             const node = folder.getNode(id);
             if (node) {
                 return node;
@@ -87,23 +70,17 @@ export class MatrixRoomFolder implements RoomFolder {
     }
 
     deleteNode(id: string): boolean {
-        const hasNodeInRoom = get(this.rooms).some((room) => room.id === id);
-        if (hasNodeInRoom) {
-            this.rooms.update((rooms) => {
-                return rooms.filter((room) => room.id !== id);
-            });
+        const isDeletedInRoomList = this.rooms.delete(id);
+        if (isDeletedInRoomList) {
             return true;
         }
 
-        const hasNodeInFolder = get(this.folders).some((folder) => folder.id === id);
-        if (hasNodeInFolder) {
-            this.folders.update((folders) => {
-                return folders.filter((folder) => folder.id !== id);
-            });
+        const isDeletedInFolderList = this.folders.delete(id);
+        if (isDeletedInFolderList) {
             return true;
         }
 
-        for (const folder of get(this.folders)) {
+        for (const [, folder] of this.folders) {
             if (folder.deleteNode(id)) {
                 return true;
             }
@@ -113,19 +90,17 @@ export class MatrixRoomFolder implements RoomFolder {
     }
 
     getParentOfNode(id: string): MatrixRoomFolder | undefined {
-        const roomsList = get(this.rooms);
-        const roomNode = roomsList.find((room) => room.id === id);
+        const roomNode = this.rooms.get(id);
         if (roomNode) {
             return this;
         }
-        const folderList = get(this.folders);
-        const folderNode = folderList.find((room) => room.id === id);
+        const folderNode = this.folders.get(id);
 
         if (folderNode) {
             return this;
         }
 
-        for (const folder of get(this.folders)) {
+        for (const [, folder] of this.folders) {
             const parentNode = folder.getParentOfNode(id);
             if (parentNode) {
                 return parentNode;
@@ -139,17 +114,17 @@ export class MatrixRoomFolder implements RoomFolder {
         try {
             await this.loadRoomsAndFolderPromise;
 
-            const roomlist = get(this.rooms);
-            const roomIDs = roomlist.map((room) => room.id);
+            const roomIDs = Array.from(this.rooms.keys());
+            const folders = this.folders;
+            const foldersID = Array.from(this.rooms.keys());
 
-            const folders = get(this.folders);
+            const nestedRoomIDs = await Promise.all(
+                Array.from(folders.values()).map((folder) => folder.getRoomsIdInNode())
+            );
 
-            const nestedRoomIDs = await Promise.all(folders.map((folder) => folder.getRoomsIdInNode()));
-
-            return [...roomIDs, ...nestedRoomIDs.flat()];
+            return [...roomIDs, ...foldersID, ...nestedRoomIDs.flat()];
         } catch (error) {
             console.error("Error fetching room IDs:", error);
-
             return [];
         }
     }

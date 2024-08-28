@@ -79,8 +79,8 @@ export type historyVisibility = (typeof historyVisibilityOptions)[number];
 export interface RoomFolder {
     id: string;
     name: Readable<string>;
-    rooms: Readable<ChatRoom[]>;
-    folders: Readable<RoomFolder[]>;
+    rooms: MapStore<ChatRoom["id"], ChatRoom>;
+    folders: MapStore<RoomFolder["id"], RoomFolder>;
     loadRoomsAndFolderPromise: Promise<void>;
 }
 
@@ -105,8 +105,9 @@ export interface ChatConnectionInterface {
     directRooms: Readable<ChatRoom[]>;
     rooms: Readable<ChatRoom[]>;
     invitations: Readable<ChatRoom[]>;
-    roomFolders: Readable<RoomFolder[]>;
+    roomFolders: MapStore<RoomFolder["id"], RoomFolder>;
     createRoom: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string }>;
+    //TODO : create type CreateFolderOptions base on CreateRoomOptions;
     createFolder: (roomOptions: CreateFolderOptions) => Promise<{ room_id: string }>;
     createDirectRoom(userChatId: string): Promise<ChatRoom | undefined>;
     getDirectRoomFor(uuserChatId: string): ChatRoom | undefined;

@@ -27,7 +27,7 @@
 
     let directRooms = chat.directRooms;
     let rooms = chat.rooms;
-    //TODO : Make a distinction between invitations to a room or to a space;
+    //TODO : Make a distinction between invitations to a room or a space;
     let roomInvitations = chat.invitations;
     let roomFolders = chat.roomFolders;
 
@@ -225,7 +225,7 @@
                     </div>
                 {/if}
                 <!--roomBySpace-->
-                {#each $roomFolders as rootRoomFolder (rootRoomFolder.id)}
+                {#each Array.from($roomFolders.values()) as rootRoomFolder (rootRoomFolder.id)}
                     <RoomFolder
                         bind:isOpen={isFoldersOpen[rootRoomFolder.id]}
                         name={rootRoomFolder.name}
