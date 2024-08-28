@@ -179,6 +179,8 @@ const chat: BaseTranslation = {
             privateDescription: "Only invited guests will be able to find and join the room.",
             public: "Public",
             publicDescription: "Anyone can find and join the room.",
+            restricted: "Space member",
+            restrictedDescription: "Visible only to members of the space",
         },
         e2eEncryption: {
             label: "Activate end to end encryption",
@@ -208,6 +210,8 @@ const chat: BaseTranslation = {
             privateDescription: "Only invited guests will be able to find and join the room.",
             public: "Public",
             publicDescription: "Anyone can find and join the room.",
+            restricted: "Space member",
+            restrictedDescription: "Visible only to members of the space",
         },
         description: {
             label: "Description",

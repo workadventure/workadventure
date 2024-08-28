@@ -86,7 +86,7 @@ export interface RoomFolder {
 
 export interface CreateRoomOptions {
     name?: string;
-    visibility?: "private" | "public";
+    visibility?: "private" | "public" | "restricted";
     is_direct?: boolean;
     historyVisibility?: historyVisibility;
     invite?: { value: string; label: string }[];

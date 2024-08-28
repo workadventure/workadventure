@@ -96,6 +96,9 @@
             >
                 <option value="private">{$LL.chat.createRoom.visibility.private()}</option>
                 <option value="public">{$LL.chat.createRoom.visibility.public()}</option>
+                {#if parentID}
+                    <option value="restricted">{$LL.chat.createRoom.visibility.restricted()}</option>
+                {/if}
             </select>
 
             <p class="tw-text-xs tw-m-0 tw-p-0 tw-text-gray-400 tw-pl-1">
@@ -104,6 +107,8 @@
                     {$LL.chat.createRoom.visibility.privateDescription()}
                 {:else if createRoomOptions.visibility === "public"}
                     {$LL.chat.createRoom.visibility.publicDescription()}
+                {:else if createRoomOptions.visibility === "restricted"}
+                    {$LL.chat.createRoom.visibility.restrictedDescription()}
                 {/if}
             </p>
             {#if createRoomOptions.visibility === "private"}

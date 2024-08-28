@@ -450,7 +450,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
         return {
             name: roomName.trim(),
-            visibility: roomOptions.visibility as Visibility | undefined,
+            visibility: (roomOptions.visibility === "public" ? "public" : "private") as Visibility | undefined,
             room_alias_name: slugify(roomName),
             invite: roomOptions.invite?.map((invitation) => invitation.value) ?? [],
             initial_state: this.computeInitialState(roomOptions),
@@ -483,8 +483,26 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                     via: [this.client.getDomain()],
                 },
             });
+            if (roomOptions.visibility === "restricted") {
+                initial_state.push({
+                    type: "m.room.join_rules",
+                    state_key: "",
+                    content: {
+                        join_rule: "restricted",
+                        allow: [
+                            {
+                                type: "m.room_membership",
+                                room_id: roomOptions.parentSpaceID, // Replace with your space room ID
+                            },
+                        ],
+                    },
+                });
+            }
         }
+
         initial_state.push({ type: EventType.RoomGuestAccess, content: { guest_access: "can_join" } });
+
+        console.log(initial_state);
 
         return initial_state;
     }

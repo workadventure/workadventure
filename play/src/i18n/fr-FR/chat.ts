@@ -180,6 +180,8 @@ const chat: DeepPartial<Translation["chat"]> = {
             privateDescription: "Seules les personnes invitées pourront trouver et rejoindre ce salon.",
             public: "Public",
             publicDescription: "Quiconque pourra trouver et rejoindre ce salon.",
+            restricted: "Membre de l'espace",
+            restrictedDescription: "Visible seulement pour les membres de l'espace",
         },
         e2eEncryption: {
             label: "Activer le chiffrement de bout en bout",
@@ -201,7 +203,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         creationSuccessNotification: "Salon créé",
     },
     createFolder: {
-        title: "Créer un nouveau space",
+        title: "Créer un nouvel espace",
         name: "Nom",
         description: {
             label: "Description",
@@ -213,6 +215,8 @@ const chat: DeepPartial<Translation["chat"]> = {
             privateDescription: "Seules les personnes invitées pourront trouver et rejoindre ce salon.",
             public: "Public",
             publicDescription: "Quiconque pourra trouver et rejoindre ce salon.",
+            restricted: "Membre de l'espace",
+            restrictedDescription: "Visible seulement pour les membres de l'espace",
         },
         e2eEncryption: {
             label: "Activer le chiffrement de bout en bout",
