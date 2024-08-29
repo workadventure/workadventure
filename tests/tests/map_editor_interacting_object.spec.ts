@@ -15,7 +15,7 @@ test.use({
 });
 
 test.describe("Map editor interacting with object @oidc", () => {
-  test.describe.configure({mode:"serial"})
+  test.describe.configure({mode:"serial"});
   test.beforeEach(
     "Ignore tests on mobilechromium because map editor not available for mobile devices",
     ({}, { project }) => {

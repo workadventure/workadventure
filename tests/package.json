@@ -15,7 +15,8 @@
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-playwright": "^0.11.2",
     "lint-staged": "^13.0.3",
-    "typescript-eslint": "^0.0.1-alpha.0"
+    "typescript-eslint": "^0.0.1-alpha.0",
+    "uuid": "^10.0.0"
   },
   "scripts": {
     "lint": "eslint tests/ . --ext .ts",
@@ -27,7 +28,7 @@
     "test-headed-firefox": "dotenv -e ../.env -- playwright test --headed --project=firefox",
     "test-headed-webkit": "dotenv -e ../.env -- playwright test --headed --project=webkit",
     "test-prod-like": "OVERRIDE_DOCKER_COMPOSE=docker-compose.e2e.yml npm run test ",
-    "test-prod-like-restart-container":"OVERRIDE_DOCKER_COMPOSE=docker-compose.e2e.yml npm run test-restart",
+    "test-prod-like-restart-container": "OVERRIDE_DOCKER_COMPOSE=docker-compose.e2e.yml npm run test-restart",
     "test-single-domain-install": "NODE_TLS_REJECT_UNAUTHORIZED=0 ROOM_API_HOSTNAME=https://play.workadventure.localhost ROOM_API_PORT=50051 MAP_STORAGE_PROTOCOL=https MAP_STORAGE_ENDPOINT=play.workadventure.localhost/map-storage/ dotenv -e ../contrib/docker/.env -- playwright test --project=chromium --grep-invert \"@docker|@oidc|@selfsigned|@chat\"",
     "test-helm-install": "NODE_TLS_REJECT_UNAUTHORIZED=0 ROOM_API_PORT=443 MAP_STORAGE_PROTOCOL=https playwright test --project=chromium --grep-invert \"@docker|@oidc|@selfsigned|@local|@chat\"",
     "precommit": "lint-staged",

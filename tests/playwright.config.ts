@@ -26,7 +26,7 @@ const config: PlaywrightTestConfig = {
   /* Retry on CI only */
   retries: process.env.CI ? 1 : 0,
   /* Opt out of parallel tests. */
-  workers: 2,
+  workers: 4,
   fullyParallel : true,
   /* Limit failures to 9 in CI (to finish early) */
   maxFailures: process.env.CI ? 9 : undefined,
