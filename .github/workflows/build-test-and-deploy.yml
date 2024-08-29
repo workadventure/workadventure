@@ -591,7 +591,7 @@ jobs:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           RENDERER_MODE: ${{ matrix.renderer }}
       - name: Run Playwright restart container tests
-        run: npm run test-prod-like-restart-container -- --project=${{ matrix.project }} --shard=${{ matrix.shard }}/${{ matrix.nbShards }}
+        run: npm run test-prod-like-restart -- --project=${{ matrix.project }} --shard=${{ matrix.shard }}/${{ matrix.nbShards }}
         working-directory: tests
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
