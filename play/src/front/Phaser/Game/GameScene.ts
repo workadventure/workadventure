@@ -1895,6 +1895,18 @@ export class GameScene extends DirtyScene {
                     });
                 });
 
+                this.gameMapFrontWrapper.onEnterDynamicArea((areas) => {
+                    areas.forEach((area) => {
+                        iframeListener.sendEnterMapEditorAreaEvent(area.name);
+                    });
+                });
+
+                this.gameMapFrontWrapper.onLeaveDynamicArea((areas) => {
+                    areas.forEach((area) => {
+                        iframeListener.sendLeaveMapEditorAreaEvent(area.name);
+                    });
+                });
+
                 this.emoteManager = new EmoteManager(this, this.connection);
 
                 // Check WebRtc connection

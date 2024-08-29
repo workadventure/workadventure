@@ -67,6 +67,10 @@ export class AreasPropertiesListener {
             // analytics event for area
             analyticsClient.enterAreaMapEditor(areaData.id, areaData.name);
 
+            // TODO: fix me to use listener event through GameScene
+            // Send event to enter in the area
+            iframeListener.sendEnterMapEditorAreaEvent(areaData.name);
+
             if (!areaData.properties) {
                 continue;
             }
@@ -127,6 +131,10 @@ export class AreasPropertiesListener {
         for (const areaData of areasData) {
             // analytics event for area
             analyticsClient.leaveAreaMapEditor(areaData.id, areaData.name);
+
+            // TODO: fix me to use listener event through GameScene
+            // Send event to leave the area
+            iframeListener.sendLeaveMapEditorAreaEvent(areaData.name);
 
             if (!areaData.properties) {
                 continue;
