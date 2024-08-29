@@ -24,13 +24,11 @@
         hideFolderOptions = !hideFolderOptions;
     }
     function closeMenuAndOpenCreateRoom() {
-        hideFolderOptions = true;
         openModal(CreateRoomModal, {
             parentID,
         });
     }
-    function closeMenuAndOpenCreateSpace() {
-        hideFolderOptions = true;
+    function openCreateSpace() {
         openModal(CreateFolderModal, {
             parentID,
         });
@@ -56,12 +54,18 @@
         dataTestId="openCreateRoomModalButton"
         IconComponent={IconMessage}
         title={$LL.chat.createRoom.title()}
-        on:click={closeMenuAndOpenCreateRoom}
+        on:click={() => {
+            hideFolderOptions = true;
+            closeMenuAndOpenCreateRoom();
+        }}
     />
     <RoomOption
         dataTestId="openCreateFolderModalButton"
         IconComponent={IconFolder}
         title={$LL.chat.createFolder.title()}
-        on:click={closeMenuAndOpenCreateSpace}
+        on:click={() => {
+            hideFolderOptions = true;
+            openCreateSpace();
+        }}
     />
 </div>

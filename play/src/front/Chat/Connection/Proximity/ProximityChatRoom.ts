@@ -391,8 +391,8 @@ export class ProximityChatRoom implements ChatRoom {
             selectedRoom.set(this);
             navChat.set("chat");
             if (
-                !requestedMicrophoneState &&
-                !requestedCameraState &&
+                !get(requestedMicrophoneState) &&
+                !get(requestedCameraState) &&
                 (actualStatus === AvailabilityStatus.ONLINE || actualStatus === AvailabilityStatus.AWAY)
             ) {
                 chatVisibilityStore.set(true);
