@@ -121,18 +121,20 @@ export class MatrixChatRoom implements ChatRoom {
             })
         );
 
+        this.inMemoryEventsContent = new Map<EventId, MatrixEvent>();
+
         (async () => {
             if (matrixRoom.hasEncryptionStateEvent()) {
                 await matrixSecurity.initClientCryptoConfiguration();
             }
-        })().catch((error) => console.error(error));
+        })()
+            .catch((error) => console.error(error))
+            .then(async () => {
+                await this.initMatrixRoomMessagesAndReactions();
+            })
+            .catch((error) => console.error(error));
 
         //Necessary to keep matrix event content for local event deletions after initialization
-        this.inMemoryEventsContent = new Map<EventId, MatrixEvent>();
-        (async () => {
-            await this.initMatrixRoomMessagesAndReactions();
-        })().catch((error) => console.error(error));
-
         this.startHandlingChatRoomEvents();
 
         this.matrixRoom
@@ -157,7 +159,6 @@ export class MatrixChatRoom implements ChatRoom {
                 console.error(error)
             );
         });
-
         this.hasPreviousMessage.set(this.timelineWindow.canPaginate(Direction.Backward));
     }
 
@@ -167,7 +168,9 @@ export class MatrixChatRoom implements ChatRoom {
         messageReactions: MapStore<string, MapStore<string, MatrixChatMessageReaction>>
     ) {
         if (event.isEncrypted()) {
-            await this.matrixRoom.client.decryptEventIfNeeded(event);
+            await this.matrixRoom.client.decryptEventIfNeeded(event).catch(() => {
+                console.error("Failed to decrypt");
+            });
         }
         if (event.getType() === "m.room.message" && !this.isEventReplacingExistingOne(event)) {
             messages.push(new MatrixChatMessage(event, this.matrixRoom));
