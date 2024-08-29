@@ -25,7 +25,7 @@ import { mapExtendedSpaceUserToChatUser } from "../../UserProvider/ChatUserMappe
 import { SimplePeer } from "../../../WebRtc/SimplePeer";
 import { bindMuteEventsToSpace } from "../../../Space/Utils/BindMuteEvents";
 import { gameManager } from "../../../Phaser/Game/GameManager";
-import { availabilityStatusStore, mediaStreamConstraintsStore } from "../../../Stores/MediaStore";
+import { availabilityStatusStore, requestedCameraState, requestedMicrophoneState } from "../../../Stores/MediaStore";
 
 export class ProximityChatMessage implements ChatMessage {
     isQuotedMessage = undefined;
@@ -386,14 +386,13 @@ export class ProximityChatRoom implements ChatRoom {
 
         this.simplePeer.setSpaceFilter(this._spaceWatcher);
 
-        const mediaStreamConstraints = get(mediaStreamConstraintsStore);
         const actualStatus = get(availabilityStatusStore);
         if (!isAChatRoomIsVisible()) {
             selectedRoom.set(this);
             navChat.set("chat");
             if (
-                !mediaStreamConstraints.audio &&
-                !mediaStreamConstraints.video &&
+                !requestedMicrophoneState &&
+                !requestedCameraState &&
                 (actualStatus === AvailabilityStatus.ONLINE || actualStatus === AvailabilityStatus.AWAY)
             ) {
                 chatVisibilityStore.set(true);
