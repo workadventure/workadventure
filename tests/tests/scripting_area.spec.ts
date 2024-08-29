@@ -39,7 +39,7 @@ test.describe("Scripting for Map editor @oidc", () => {
 
         await menu.openMapEditor(page);
         await mapeditor.openAreaEditor(page);
-        await areaEditor.drawArea(page, {x: 10 * 32, y: 0}, {x: 13 * 32, y: 2 * 32});
+        await areaEditor.drawArea(page, {x: 9 * 32, y: 0}, {x: 16 * 32, y: 4 * 32});
         await areaEditor.setAreaName(page, "MyZone");
 
         await evaluateScript(page, () => {
