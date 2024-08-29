@@ -14,7 +14,7 @@ export const ExtensionModuleStatusSynchronization = {
         ) {
             resetAllStatusStoreExcept(status);
         }
-        if (status === AvailabilityStatus.ONLINE) {
+        if (status === AvailabilityStatus.ONLINE || status === AvailabilityStatus.AWAY) {
             resetAllStatusStoreExcept(null);
         }
     },
