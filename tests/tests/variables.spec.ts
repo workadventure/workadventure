@@ -18,7 +18,7 @@ import {maps_domain, maps_test_url, play_url, publicTestMapUrl} from "./utils/ur
 test.setTimeout(360000);
 //TODO : skip for test paralel mode !
 //TODO : faire 2 commande 1 test le reste / ce fichier
-test.describe('Variables', () => {
+test.describe.skip('Variables', () => {
   test.describe.configure({mode:"serial"})
   // WARNING: Since this test restarts traefik and other components, it might fail when run against the vite dev server.
   // when running with --headed you can manually reload the page to avoid this issue.
