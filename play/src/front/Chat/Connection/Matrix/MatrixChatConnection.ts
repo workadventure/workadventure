@@ -166,7 +166,9 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         const room = this.client.getRoom(roomID);
         if (!room) return;
 
-        this.removeFromRootRoomList(roomID);
+        this.roomList.delete(roomID);
+        this.roomFolders.delete(roomID);
+
         const parentID = event.getRoomId();
         if (!parentID) return;
 
@@ -177,14 +179,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     }
     private onClientEventRoom(room: Room) {
         this.manageRoomOrFolder(room);
-    }
-    private removeFromRootRoomList(roomID: string): boolean {
-        if (this.roomList.has(roomID)) {
-            this.roomList.delete(roomID);
-            return true;
-        } else {
-            return false;
-        }
     }
     private moveRoomToParentFolder(room: Room, parentID: string): void {
         const isSpaceRoom = room.isSpaceRoom();
@@ -262,6 +256,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     }
     private handleOrphanRoom(room: Room): void {
         if (room.isSpaceRoom()) {
+            this.createAndAddNewRootFolder(room);
             this.createAndAddNewRootFolder(room);
         } else {
             this.createAndAddNewRootRoom(room);
@@ -520,8 +515,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         }
 
         initial_state.push({ type: EventType.RoomGuestAccess, content: { guest_access: "can_join" } });
-
-        console.log(initial_state);
 
         return initial_state;
     }
