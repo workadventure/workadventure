@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import {maps_domain} from "./utils/urls";
 
 test.describe('Meta tags', () => {
+  test.describe.configure({mode:"serial"})
   test('check they are populated when the user-agent is a bot. @selfsigned', async ({
       request,
   }, { project }) => {

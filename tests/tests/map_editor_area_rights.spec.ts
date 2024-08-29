@@ -20,6 +20,8 @@ test.use({
 });
 
 test.describe("Map editor area with rights @oidc", () => {
+  //need to use .wam map
+  test.describe.configure({mode:"serial"});
   test.beforeEach(
     "Ignore tests on mobilechromium because map editor not available for mobile devices",
     ({}, { project }) => {

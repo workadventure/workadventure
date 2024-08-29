@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { v4 as uuid } from "uuid";
 import { publicTestMapUrl } from "./utils/urls";
 import { login } from "./utils/roles";
 
@@ -15,7 +16,7 @@ test.describe("Connection", () => {
       return;
     }
 
-    await page.goto(publicTestMapUrl("tests/mousewheel.json", "reconnect"));
+    await page.goto(publicTestMapUrl("tests/mousewheel.json", uuid()));
 
     //Simulation of offline network
     await context.setOffline(true);

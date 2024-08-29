@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { v4 as uuid } from "uuid";
 import { login } from './utils/roles';
 import {publicTestMapUrl} from "./utils/urls";
 
@@ -13,7 +14,7 @@ test.describe('Translation', () => {
       return;
     }
     await page.goto(
-      publicTestMapUrl("tests/mousewheel.json", "translate")
+      publicTestMapUrl("tests/mousewheel.json", uuid())
     );
 
     await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");

@@ -1,5 +1,6 @@
 
 import {expect, test} from '@playwright/test';
+import { v4 as uuid } from "uuid";
 import { evaluateScript } from './utils/scripting';
 import { login } from './utils/roles';
 import Menu  from './utils/menu';
@@ -18,7 +19,7 @@ test.describe('Availability Status', () => {
             const statusName = "Busy";
             const isMobileTest = project.name === "mobilechromium";
     
-            await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+            await page.goto(publicTestMapUrl("tests/E2E/empty.json", uuid()));
     
             await login(page, 'Alice', 2, 'en-US', isMobileTest);
             
@@ -47,7 +48,7 @@ test.describe('Availability Status', () => {
             const statusName = "Busy";
             const isMobileTest = project.name === "mobilechromium";
     
-            await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+            await page.goto(publicTestMapUrl("tests/E2E/empty.json", uuid()));
     
             await login(page, 'Alice', 2, 'en-US', isMobileTest);
             
@@ -77,7 +78,7 @@ test.describe('Availability Status', () => {
             }
             const statusName = "Busy";
     
-            await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+            await page.goto(publicTestMapUrl("tests/E2E/empty.json", uuid()));
     
             await login(page, 'Alice', 2, 'en-US');
 
@@ -108,7 +109,7 @@ test.describe('Availability Status', () => {
             const isMobileTest = project.name === "mobilechromium";
 
 
-            await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+            await page.goto(publicTestMapUrl("tests/E2E/empty.json", uuid()));
     
             await login(page, 'Alice', 2, 'en-US', isMobileTest);
             await Map.walkTo(page,'ArrowRight',500);
@@ -132,7 +133,8 @@ test.describe('Availability Status', () => {
                 }
                 const statusName = "Busy";
                 const isMobileTest = project.name === "mobilechromium";
-                await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+                const mapID = uuid();
+                await page.goto(publicTestMapUrl("tests/E2E/empty.json", mapID));
         
                 await login(page, 'Alice', 2, 'en-US', isMobileTest);
                 const positionToDiscuss = {
@@ -144,7 +146,7 @@ test.describe('Availability Status', () => {
                 const newBrowser = await browser.browserType().launch();
                 const userBob = await newBrowser.newPage();
             
-                await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+                await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", mapID));
                // Login user "Bob"
                 const secondPageName = 'Bob'
                 await login(userBob, secondPageName, 3, 'en-US', isMobileTest);
@@ -184,7 +186,8 @@ test.describe('Availability Status', () => {
                 }
                 const statusName = "Busy";
                 const isMobileTest = project.name === "mobilechromium";
-                await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+                const mapID = uuid();
+                await page.goto(publicTestMapUrl("tests/E2E/empty.json", mapID));
         
                 await login(page, 'Alice', 2, 'en-US', isMobileTest);
 
@@ -201,7 +204,7 @@ test.describe('Availability Status', () => {
                 const newBrowser = await browser.browserType().launch();
                 const userBob = await newBrowser.newPage();
 
-                await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+                await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", mapID));
                // Login user "Bob"
                 const secondPageName = 'Bob'
                 await login(userBob, secondPageName, 3, 'en-US', isMobileTest);
@@ -228,7 +231,8 @@ test.describe('Availability Status', () => {
 
                 const statusName = "Busy";
                 const isMobileTest = project.name === "mobilechromium";
-                await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+                const mapID = uuid();
+                await page.goto(publicTestMapUrl("tests/E2E/empty.json", mapID));
         
                 await login(page, 'Alice', 2, 'en-US', isMobileTest);
                 const positionToDiscuss = {
@@ -244,7 +248,7 @@ test.describe('Availability Status', () => {
                 const newBrowser = await browser.browserType().launch();
                 const userBob = await newBrowser.newPage();
 
-                await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+                await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", mapID));
                // Login user "Bob"
                 const secondPageName = 'Bob'
                 await login(userBob, secondPageName, 3, 'en-US', isMobileTest);
@@ -277,7 +281,7 @@ test.describe('Availability Status', () => {
             const statusName = "Back in a moment";
             const isMobileTest = project.name === "mobilechromium";
     
-            await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+            await page.goto(publicTestMapUrl("tests/E2E/empty.json", uuid()));
     
             await login(page, 'Alice', 2, 'en-US', isMobileTest);
 
@@ -301,7 +305,7 @@ test.describe('Availability Status', () => {
                 test.skip();
                 return;
             }
-            await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+            await page.goto(publicTestMapUrl("tests/E2E/empty.json", uuid()));
     
             await login(page, 'Alice', 2, 'en-US', isMobileTest);
 
@@ -326,7 +330,7 @@ test.describe('Availability Status', () => {
             }
             const statusName = "Back in a moment";
     
-            await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+            await page.goto(publicTestMapUrl("tests/E2E/empty.json", uuid()));
     
             await login(page, 'Alice', 2, 'en-US');
             
@@ -349,7 +353,7 @@ test.describe('Availability Status', () => {
             test('should not create a bubble',async({ page, browser,context}, {project})=>{
                 const statusName = "Back in a moment";
                 const isMobileTest = project.name === "mobilechromium";
-                await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+                await page.goto(publicTestMapUrl("tests/E2E/empty.json", uuid()));
         
                 await login(page, 'Alice', 2, 'en-US', isMobileTest);
                 const positionToDiscuss = {
@@ -364,7 +368,7 @@ test.describe('Availability Status', () => {
                 const newBrowser = await browser.browserType().launch();
                 const userBob = await newBrowser.newPage();
 
-                await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+                await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", uuid()));
                // Login user "Bob"
                 const secondPageName = 'Bob'
                 await login(userBob, secondPageName, 3, 'en-US', isMobileTest);
@@ -386,7 +390,7 @@ test.describe('Availability Status', () => {
             const statusName = "Do not disturb";
             const isMobileTest = project.name === "mobilechromium";
     
-            await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+            await page.goto(publicTestMapUrl("tests/E2E/empty.json", uuid()));
     
             await login(page, 'Alice', 2, 'en-US', isMobileTest);
             
@@ -413,7 +417,7 @@ test.describe('Availability Status', () => {
             const statusName = "Do not disturb";
             const isMobileTest = project.name === "mobilechromium";
 
-            await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+            await page.goto(publicTestMapUrl("tests/E2E/empty.json", uuid()));
     
             await login(page, 'Alice', 2, 'en-US', isMobileTest);
 
@@ -443,7 +447,7 @@ test.describe('Availability Status', () => {
             }
             const statusName = "Do not disturb";
     
-            await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+            await page.goto(publicTestMapUrl("tests/E2E/empty.json", uuid()));
     
             await login(page, 'Alice', 2, 'en-US');
         
@@ -467,7 +471,8 @@ test.describe('Availability Status', () => {
             test('should not create a bubble ',async({ page, browser,context}, {project})=>{
                 const statusName = "Do not disturb";
                 const isMobileTest = project.name === "mobilechromium";
-                await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+                const mapID = uuid();
+                await page.goto(publicTestMapUrl("tests/E2E/empty.json", mapID));
         
                 await login(page, 'Alice', 2, 'en-US', isMobileTest);
                 const positionToDiscuss = {
@@ -482,8 +487,7 @@ test.describe('Availability Status', () => {
                 const newBrowser = await browser.browserType().launch();
                 const userBob = await newBrowser.newPage();
 
-
-                await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+                await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", mapID));
                // Login user "Bob"
                 const secondPageName = 'Bob'
                 await login(userBob, secondPageName, 3, 'en-US', isMobileTest);

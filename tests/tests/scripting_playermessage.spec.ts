@@ -1,4 +1,5 @@
 import {expect, test} from '@playwright/test';
+import { v4 as uuid } from "uuid";
 import { login } from './utils/roles';
 import {publicTestMapUrl} from "./utils/urls";
 import { evaluateScript } from './utils/scripting';
@@ -21,7 +22,7 @@ test.describe('Scripting player message function', () => {
 
         
         await page.goto(
-            publicTestMapUrl("tests/E2E/empty.json", "scripting_follow")
+            publicTestMapUrl("tests/E2E/empty.json", uuid())
         );
 
         await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");

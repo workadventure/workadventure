@@ -26,7 +26,8 @@ const config: PlaywrightTestConfig = {
   /* Retry on CI only */
   retries: process.env.CI ? 1 : 0,
   /* Opt out of parallel tests. */
-  workers: 1,
+  workers: 2,
+  fullyParallel : true,
   /* Limit failures to 9 in CI (to finish early) */
   maxFailures: process.env.CI ? 9 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
@@ -40,7 +41,6 @@ const config: PlaywrightTestConfig = {
     actionTimeout: 20_000,
     /* Base URL to use in actions like `await page.goto('/')`. */
     baseURL: process.env.PLAY_URL ?? 'http://play.workadventure.localhost/',
-
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: process.env.CI ? 'on-first-retry' : 'retain-on-failure',
     navigationTimeout: 60_000,

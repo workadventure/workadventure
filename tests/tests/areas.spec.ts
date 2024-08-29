@@ -1,10 +1,10 @@
 
 import {} from "../../play/packages/iframe-api-typings/iframe_api";
 import {expect, test} from '@playwright/test';
+import { v4 as uuid } from "uuid";
 import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
 import {publicTestMapUrl} from "./utils/urls";
-
 test.describe('Areas', () => {
     test('can edit Tiled area from scripting API', async ({ page, browser }, { project }) => {
         // Skip test for mobile device
@@ -19,7 +19,7 @@ test.describe('Areas', () => {
         // We check the silent zone applies to the Woka.
 
         await page.goto(
-            publicTestMapUrl("tests/Areas/AreaFromTiledMap/map.json", "areas")
+            publicTestMapUrl("tests/Areas/AreaFromTiledMap/map.json", uuid())
         );
         await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
 

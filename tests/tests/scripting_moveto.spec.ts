@@ -1,4 +1,5 @@
 import {test} from '@playwright/test';
+import { v4 as uuid } from "uuid";
 import { login } from './utils/roles';
 import Map from './utils/map';
 import {publicTestMapUrl} from "./utils/urls";
@@ -6,7 +7,7 @@ import {publicTestMapUrl} from "./utils/urls";
 test.describe('Scripting moveto function', () => {
     test('stops at correct position', async ({ page, browser}, { project }) => {
         await page.goto(
-            publicTestMapUrl("tests/E2E/empty.json", "scripting_follow")
+            publicTestMapUrl("tests/E2E/empty.json", uuid())
         );
 
         await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");

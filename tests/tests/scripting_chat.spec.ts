@@ -7,6 +7,7 @@ import { resetWamMaps } from "./utils/map-editor/uploader";
 import chatUtils from "./chat/chatUtils";
 
 test.describe("Scripting chat functions", () => {
+  test.describe.configure({mode:"serial"})
   test.beforeEach(
     "Ignore tests on webkit because of issue with camera and microphone",
 

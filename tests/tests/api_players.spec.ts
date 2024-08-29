@@ -1,11 +1,11 @@
 import { Browser, expect, Page, test } from "@playwright/test";
+import { v4 as uuid } from "uuid";
 import { login } from "./utils/roles";
 import { getCoWebsiteIframe } from "./utils/iframe";
 import { assertLogMessage, startRecordLogs } from "./utils/log";
 import { evaluateScript } from "./utils/scripting";
 import { oidcLogin, oidcLogout } from "./utils/oidc";
 import { publicTestMapUrl } from "./utils/urls";
-
 test.describe("API WA.players", () => {
   test("enter leave events are received", async ({ page, browser }, {
     project,
@@ -17,8 +17,9 @@ test.describe("API WA.players", () => {
       return;
     }
 
+    const mapID = uuid();
     await page.goto(
-      publicTestMapUrl(`tests/RemotePlayers/remote_players.json`, "api_players")
+      publicTestMapUrl(`tests/RemotePlayers/remote_players.json`, mapID)
     );
     await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
 
@@ -26,7 +27,7 @@ test.describe("API WA.players", () => {
     const page2 = await newBrowser.newPage();
 
     await page2.goto(
-      publicTestMapUrl(`tests/RemotePlayers/remote_players.json`, "api_players")
+      publicTestMapUrl(`tests/RemotePlayers/remote_players.json`, mapID)
     );
 
     await login(page2, "Bob", 3, "en-US", project.name === "mobilechromium");
@@ -76,11 +77,11 @@ test.describe("API WA.players", () => {
       test.skip();
       return;
     }
-
+    const mapID = uuid();
     await page.goto(
       publicTestMapUrl(
         `tests/RemotePlayers/remote_players_no_init.json`,
-        "api_players"
+          mapID
       )
     );
     await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
@@ -103,8 +104,8 @@ test.describe("API WA.players", () => {
       test.skip();
       return;
     }
-
-    await page.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
+    const mapID = uuid();
+    await page.goto(publicTestMapUrl("tests/E2E/empty.json", mapID));
 
     await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
 
@@ -121,7 +122,7 @@ test.describe("API WA.players", () => {
     const newBrowser = await browser.browserType().launch();
     const page2 = await newBrowser.newPage();
 
-    await page2.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
+    await page2.goto(publicTestMapUrl("tests/E2E/empty.json", mapID));
 
     await login(page2, "Bob", 3, "en-US", project.name === "mobilechromium");
 
@@ -142,7 +143,8 @@ test.describe("API WA.players", () => {
   const runPersistenceTest = async (
     page: Page,
     browser: Browser,
-    isMobile = false
+    isMobile = false,
+    mapID : string
   ) => {
     await evaluateScript(page, async () => {
       /*function later(delay) {
@@ -242,7 +244,7 @@ test.describe("API WA.players", () => {
     const newBrowser = await browser.browserType().launch();
     const page2 = await newBrowser.newPage();
 
-    await page2.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
+    await page2.goto(publicTestMapUrl("tests/E2E/empty.json", mapID));
 
     await login(page2, "Bob", 3, "en-US", isMobile);
 
@@ -412,11 +414,12 @@ test.describe("API WA.players", () => {
       return;
     }
 
-    await page.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
+    const mapID = uuid();
+    await page.goto(publicTestMapUrl("tests/E2E/empty.json", mapID));
 
     await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
 
-    await runPersistenceTest(page, browser, project.name === "mobilechromium");
+    await runPersistenceTest(page, browser, project.name === "mobilechromium",mapID);
   });
 
   test("Test variable persistence for logged users. @oidc", async ({
@@ -429,15 +432,16 @@ test.describe("API WA.players", () => {
       test.skip();
       return;
     }
-
+    
+    const mapID = uuid();
     test.setTimeout(120_000); // Fix Webkit that can take more than 60s
-    await page.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
+    await page.goto(publicTestMapUrl("tests/E2E/empty.json", mapID));
 
     await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
 
     await oidcLogin(page);
 
-    await runPersistenceTest(page, browser, project.name === "mobilechromium");
+    await runPersistenceTest(page, browser, project.name === "mobilechromium",mapID);
 
     await oidcLogout(page, false);
   });
@@ -452,8 +456,9 @@ test.describe("API WA.players", () => {
       return;
     }
 
+    const mapID = uuid()
     await page.goto(
-      publicTestMapUrl("tests/E2E/empty_2_frames.json", "api_players")
+      publicTestMapUrl("tests/E2E/empty_2_frames.json", mapID)
     );
 
     await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
@@ -507,7 +512,8 @@ test.describe("API WA.players", () => {
       return;
     }
 
-    await page.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
+    const mapID = uuid();
+    await page.goto(publicTestMapUrl("tests/E2E/empty.json", mapID));
 
     await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
 
@@ -519,7 +525,7 @@ test.describe("API WA.players", () => {
     // We use a new tab to keep the same LocalStorage
     const page2 = await context.newPage();
 
-    await page2.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
+    await page2.goto(publicTestMapUrl("tests/E2E/empty.json", mapID));
 
     /*console.log("PAGE 2 MY ID", await evaluateScript(page2, async () => {
       await WA.onInit();
@@ -606,7 +612,8 @@ test.describe("API WA.players", () => {
       return;
     }
 
-    await page.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
+    const mapID = uuid()
+    await page.goto(publicTestMapUrl("tests/E2E/empty.json", mapID));
 
     await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
 

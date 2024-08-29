@@ -11,6 +11,7 @@ test.use({
 })
 
 test.describe('Map-storage Upload API', () => {
+    test.describe.configure({mode:"serial"});
     test('users are asked to reconnect when a map is updated', async ({
         request, page, browser
     }, { project }) => {

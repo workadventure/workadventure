@@ -1,5 +1,6 @@
 import fs from 'fs';
 import { expect, test } from '@playwright/test';
+import { v4 as uuid } from "uuid";
 import {
   gotoWait200,
   rebootBack,
@@ -15,7 +16,10 @@ import { login } from './utils/roles';
 import {maps_domain, maps_test_url, play_url, publicTestMapUrl} from "./utils/urls";
 
 test.setTimeout(360000);
+//TODO : skip for test paralel mode !
+//TODO : faire 2 commande 1 test le reste / ce fichier
 test.describe('Variables', () => {
+  test.describe.configure({mode:"serial"})
   // WARNING: Since this test restarts traefik and other components, it might fail when run against the vite dev server.
   // when running with --headed you can manually reload the page to avoid this issue.
   test('storage works @docker', async ({ page }, { project }) => {
@@ -43,7 +47,7 @@ test.describe('Variables', () => {
     await textField.press('Tab');
 
     await page.goto(
-      publicTestMapUrl("tests/Variables/shared_variables.json", "variables")
+      publicTestMapUrl("tests/Variables/shared_variables.json", uuid())
     );
     await expect(textField).toHaveValue('new value');
 

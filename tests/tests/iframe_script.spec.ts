@@ -1,8 +1,8 @@
 import { chromium, expect, test } from "@playwright/test";
+import { v4 as uuid } from "uuid";
 import { login } from "./utils/roles";
 import { evaluateScript } from "./utils/scripting";
 import { publicTestMapUrl } from "./utils/urls";
-
 test.describe("Iframe API", () => {
   test("can be called from an iframe loading a script", async ({ page }, {
     project,
@@ -15,7 +15,7 @@ test.describe("Iframe API", () => {
     }
 
     await page.goto(
-      publicTestMapUrl("tests/Metadata/cowebsiteAllowApi.json", "iframe_script")
+      publicTestMapUrl("tests/Metadata/cowebsiteAllowApi.json", uuid())
     );
 
     await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
@@ -114,7 +114,7 @@ test.describe("Iframe API", () => {
     }
 
     await page.goto(
-      publicTestMapUrl("tests/E2E/empty.json", "iframe_script") + "#foo=bar"
+      publicTestMapUrl("tests/E2E/empty.json", uuid()) + "#foo=bar"
     );
 
     await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
@@ -136,7 +136,7 @@ test.describe("Iframe API", () => {
       return;
     }
 
-    await page.goto(publicTestMapUrl("tests/E2E/empty.json", "iframe_script"));
+    await page.goto(publicTestMapUrl("tests/E2E/empty.json", uuid()));
 
     await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
 
@@ -168,7 +168,7 @@ test.describe("Iframe API", () => {
   });
 
   test("test disable invite user button", async ({ page }, { project }) => {
-    await page.goto(publicTestMapUrl("tests/E2E/empty.json", "iframe_script"));
+    await page.goto(publicTestMapUrl("tests/E2E/empty.json", uuid()));
 
     await page.evaluate(() => localStorage.setItem("debug", "*"));
     await login(page, "Alice", 3, "en-US", project.name === "mobilechromium");
@@ -207,8 +207,8 @@ test.describe("Iframe API", () => {
       test.skip();
       return;
     }
-
-    await page.goto(publicTestMapUrl("tests/E2E/empty.json", "iframe_script"));
+const mapID=uuid();
+    await page.goto(publicTestMapUrl("tests/E2E/empty.json", mapID));
 
     await page.evaluate(() => localStorage.setItem("debug", "*"));
     await login(page, "Alice", 3, "en-US", project.name === "mobilechromium");
@@ -224,7 +224,7 @@ test.describe("Iframe API", () => {
     const newBrowser = await browser.browserType().launch();
     const pageBob = await newBrowser.newPage();
     await pageBob.goto(
-      publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
+      publicTestMapUrl("tests/E2E/empty.json", mapID)
     );
     await pageBob.evaluate(() => localStorage.setItem("debug", "*"));
     await login(pageBob, "Bob", 5, 'en-US', project.name === "mobilechromium");
@@ -258,7 +258,7 @@ test.describe("Iframe API", () => {
       return;
     }
 
-    await page.goto(publicTestMapUrl("tests/E2E/empty.json", "iframe_script"));
+    await page.goto(publicTestMapUrl("tests/E2E/empty.json", uuid()));
 
     await page.evaluate(() => localStorage.setItem("debug", "*"));
     await login(page, 'Alice', 3, 'en-US', project.name === "mobilechromium");

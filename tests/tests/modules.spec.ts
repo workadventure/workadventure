@@ -1,4 +1,5 @@
 import { test } from '@playwright/test';
+import { v4 as uuid } from "uuid";
 import { assertLogMessage, startRecordLogs} from './utils/log';
 import { login } from './utils/roles';
 import {publicTestMapUrl} from "./utils/urls";
@@ -14,7 +15,7 @@ test.describe('Module', () => {
 
     startRecordLogs(page);
     await page.goto(
-      publicTestMapUrl("tests/Modules/with_modules.json", "modules")
+      publicTestMapUrl("tests/Modules/with_modules.json", uuid())
     );
 
     await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");

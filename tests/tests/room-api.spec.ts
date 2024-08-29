@@ -19,6 +19,8 @@ const roomUrl = `${play_url}/_/room-api/${maps_domain}/tests/Variables/shared_va
 const variableName = "textField";
 
 test.describe('Room API', async () => {
+    //TODO : see if we can pass these tests in paralel mode
+    test.describe.configure({mode:"serial"});
     test("With a bad API key", async ({ browser }, { project }) => {
         // Skip test for mobile device
         if(project.name === "mobilechromium") {

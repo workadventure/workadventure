@@ -1,4 +1,5 @@
 import {expect, test} from '@playwright/test';
+import { v4 as uuid } from "uuid";
 import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
 import {publicTestMapUrl} from "./utils/urls";
@@ -12,9 +13,10 @@ test.describe('Scripting API Events', () => {
             return;
         }
 
+        const mapID = uuid();
         // Go to 
         await page.goto(
-            publicTestMapUrl("tests/E2E/empty.json", "scripting_events")
+            publicTestMapUrl("tests/E2E/empty.json", mapID)
         );
         await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
 
@@ -55,7 +57,7 @@ test.describe('Scripting API Events', () => {
         const page2 = await newBrowser.newPage();
 
         await page2.goto(
-            publicTestMapUrl("tests/E2E/empty.json", "scripting_events")
+            publicTestMapUrl("tests/E2E/empty.json", mapID)
         );
 
         await login(page2, 'Bob', 2, 'en-US', project.name === "mobilechromium");

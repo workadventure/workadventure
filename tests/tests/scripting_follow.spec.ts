@@ -1,4 +1,5 @@
 import {expect, test, webkit} from '@playwright/test';
+import { v4 as uuid } from "uuid";
 import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
 import Map from './utils/map';
@@ -12,9 +13,9 @@ test.describe('Scripting follow functions', () => {
             test.skip();
             return;
         }
-
+const mapID = uuid();
         await page.goto(
-            publicTestMapUrl("tests/E2E/empty.json", "scripting_follow")
+            publicTestMapUrl("tests/E2E/empty.json", mapID)
         );
 
         await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
@@ -23,7 +24,7 @@ test.describe('Scripting follow functions', () => {
 
         const newBrowser = await browser.browserType().launch();
         const page2 = await newBrowser.newPage();
-        await page2.goto(publicTestMapUrl("tests/E2E/empty.json", "scripting_follow"));
+        await page2.goto(publicTestMapUrl("tests/E2E/empty.json", mapID));
         await login(page2, "Bob", 3, "en-US", project.name === "mobilechromium");
 
 

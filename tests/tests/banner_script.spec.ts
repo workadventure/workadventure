@@ -1,9 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { v4 as uuid } from "uuid";
 import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
 import {expectInViewport} from "./utils/viewport";
 import {publicTestMapUrl} from "./utils/urls";
-
 test.describe('Modal', () => {
     test('test', async ({ page }, { project }) => {
         // Skip test for mobile device
@@ -15,7 +15,7 @@ test.describe('Modal', () => {
       
         // Go to
         await page.goto(
-            publicTestMapUrl("tests/E2E/empty.json", "banner_script")
+            publicTestMapUrl("tests/E2E/empty.json", uuid())
         );
 
         // Connection with Alice

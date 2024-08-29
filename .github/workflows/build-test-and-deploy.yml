@@ -590,6 +590,12 @@ jobs:
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           RENDERER_MODE: ${{ matrix.renderer }}
+      - name: Run Playwright restart container tests
+        run: npm run test-prod-like-restart-container -- --project=${{ matrix.project }} --shard=${{ matrix.shard }}/${{ matrix.nbShards }}
+        working-directory: tests
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          RENDERER_MODE: ${{ matrix.renderer }}
       - name: Display docker compose logs on failure
         run: docker compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml logs
         if: failure()

@@ -1,4 +1,5 @@
 import {expect, test} from '@playwright/test';
+import { v4 as uuid } from "uuid";
 import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
 import {expectInViewport} from "./utils/viewport";
@@ -15,7 +16,7 @@ test.describe('Modal', () => {
 
         // Go to 
         await page.goto(
-            publicTestMapUrl("tests/E2E/empty.json", "modal_script")
+            publicTestMapUrl("tests/E2E/empty.json", uuid())
         );
         await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
         await evaluateScript(page, async () => {

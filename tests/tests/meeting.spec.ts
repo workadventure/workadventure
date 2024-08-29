@@ -1,4 +1,5 @@
 import {expect, test} from '@playwright/test';
+import { v4 as uuid } from "uuid";
 import {login} from './utils/roles';
 import Map from "./utils/map";
 import {publicTestMapUrl} from "./utils/urls";
@@ -25,8 +26,9 @@ test.describe('Meeting actions test', () => {
     );
 
     test('Meeting action to mute microphone & video', async ({page, browser}, {project}) => {
+        const mapID = uuid();
         // Go to the empty map
-        await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await page.goto(publicTestMapUrl("tests/E2E/empty.json", mapID));
         // Login user "Alice"
         await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
 
@@ -36,7 +38,7 @@ test.describe('Meeting actions test', () => {
         const newBrowser = await browser.browserType().launch();
         const userBob = await newBrowser.newPage();
         // Go to the empty map
-        await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", mapID));
         // Login user "Bob"
         await login(userBob, 'Bob', 5, 'en-US', project.name === "mobilechromium");
         // Move user

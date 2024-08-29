@@ -5,6 +5,7 @@ import { login } from "../utils/roles";
 import { oidcLogout, oidcMatrixUserLogin } from "../utils/oidc";
 import ChatUtils from "./chatUtils";
 
+
 test.describe("Matrix chat tests @oidc", () => {
   test.beforeEach(
     "Ignore tests on webkit because of issue with camera and microphone",
@@ -233,6 +234,8 @@ test.describe("Matrix chat tests @oidc", () => {
     await expect(page.getByText(chatMessageContent)).toBeAttached();
   });
 
+  
+
   test("Retrieve encrypted message", async ({ page, context }, { project }) => {
     const isMobile = project.name === "mobilechromium";
     await login(page, "test", 3, "us-US", isMobile);
@@ -417,3 +420,58 @@ test.describe("Matrix chat tests @oidc", () => {
     await expect(page.getByText(room)).toBeAttached();  
   });
 });
+
+test.describe("Parallel test",()=>{
+  test.describe.configure({mode:'parallel'});
+  test('Test Case 1', async ({ page }) => {
+    await page.goto('https://example.com');
+    await page.waitForTimeout(Math.random()*1000);
+    await expect(page).toHaveTitle('Example Domain');
+  });
+  
+  test('Test Case 2', async ({ page }) => {
+    await page.goto('https://example.com');
+    await page.waitForTimeout(Math.random()*1000);
+    const heading = await page.textContent('h1');
+    expect(heading).toBe('Example Domain');
+  });
+  
+  test('Test Case 3', async ({ page }) => {
+    await page.goto('https://example.com');
+    await page.waitForTimeout(Math.random()*1000);
+    await page.click('text=More information...');
+    await expect(page).toHaveURL('https://www.iana.org/domains/example');
+  });
+  test('Test Case 4', async ({ page }) => {
+    await page.goto('https://example.com');
+    await page.waitForTimeout(Math.random()*1000);
+    await expect(page).toHaveTitle('Example Domain');
+  });
+  
+  test('Test Case 5', async ({ page }) => {
+    await page.goto('https://example.com');
+    await page.waitForTimeout(Math.random()*1000);
+    const heading = await page.textContent('h1');
+    expect(heading).toBe('Example Domain');
+  });
+  
+  test('Test Case 6', async ({ page }) => {
+    await page.goto('https://example.com');
+    await page.click('text=More information...');
+    await page.waitForTimeout(Math.random()*1000);
+    await expect(page).toHaveURL('https://www.iana.org/domains/example');
+  });
+  test('Test Case 7', async ({ page }) => {
+    await page.goto('https://example.com');
+    const heading = await page.textContent('h1');
+    await page.waitForTimeout(Math.random()*1000);
+    expect(heading).toBe('Example Domain');
+  });
+  
+  test('Test Case 8', async ({ page }) => {
+    await page.goto('https://example.com');
+    await page.click('text=More information...');
+    await page.waitForTimeout(Math.random()*1000);
+    await expect(page).toHaveURL('https://www.iana.org/domains/example');
+  });
+})

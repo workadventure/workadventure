@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
+import { v4 as uuid } from "uuid";
 import {RENDERER_MODE} from "./utils/environment";
 import {publicTestMapUrl} from "./utils/urls";
-
 test.describe('Error pages', () => {
   test('successfully displayed for unsupported URLs', async ({ page }, { project }) => {
     // Skip test for mobile device
@@ -27,7 +27,7 @@ test.describe('Error pages', () => {
     }
     
     await page.goto(
-        publicTestMapUrl("does/not/exist", "error_pages")
+        publicTestMapUrl("does/not/exist", uuid())
     );
 
     await page.fill('input[name="loginSceneName"]', 'Alice');

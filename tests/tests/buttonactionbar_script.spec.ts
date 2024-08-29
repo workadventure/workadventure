@@ -1,8 +1,8 @@
 import {expect, test} from '@playwright/test';
+import { v4 as uuid } from "uuid";
 import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
 import {publicTestMapUrl} from "./utils/urls";
-
 test.describe('Button in action bar', () => {
     test('test', async ({ page }, { project }) => {
         // Skip test for mobile device
@@ -14,7 +14,7 @@ test.describe('Button in action bar', () => {
       
         // Go to WorkAdventure platform
         await page.goto(
-            publicTestMapUrl("tests/E2E/empty.json", "buttonactionbar_script")
+            publicTestMapUrl("tests/E2E/empty.json", uuid())
         );
 
         // Login Alice
@@ -50,7 +50,7 @@ test.describe('Action button in action bar', () => {
       
         // Go to WorkAdventure platform
         await page.goto(
-            publicTestMapUrl("tests/E2E/empty.json", "buttonactionbar_script")
+            publicTestMapUrl("tests/E2E/empty.json", uuid())
         );
 
         // Login Alice

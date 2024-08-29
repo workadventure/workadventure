@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { v4 as uuid } from "uuid";
 import { login } from './utils/roles';
 import {oidcLogin, oidcLogout} from "./utils/oidc";
 import {evaluateScript} from "./utils/scripting";
@@ -16,7 +17,7 @@ test.describe('OpenID connect @oidc', () => {
     }
 
     await page.goto(
-        publicTestMapUrl("tests/E2E/empty.json", "oidc")
+        publicTestMapUrl("tests/E2E/empty.json", uuid())
     );
 
     await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
