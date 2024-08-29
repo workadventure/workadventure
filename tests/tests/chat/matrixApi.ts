@@ -55,6 +55,7 @@ class MatrixApi {
       await this.deactivateAndActivateUsers(users);
     } catch (error) {
       console.error(error);
+      throw new Error(error)
     }
   }
 
