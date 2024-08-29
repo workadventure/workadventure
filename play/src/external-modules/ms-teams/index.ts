@@ -199,11 +199,14 @@ class MSTeams implements MSTeamsExtensionModule {
                 const type = externalModuleMessage.message["@odata.type"];
                 switch (type.toLowerCase()) {
                     case MSGraphMessageEventSource.MicrosoftGraphPresence.toLocaleLowerCase():
-                        // get the presence status
-                        if (this.moduleOptions.onExtensionModuleStatusChange)
-                            this.moduleOptions.onExtensionModuleStatusChange(
-                                this.mapTeamsStatusToWorkAdventureStatus(externalModuleMessage.message.availability)
-                            );
+                        if (!this.moduleOptions.onExtensionModuleStatusChange) break;
+                        // Update the teams status of this module and do not call API to set presence
+                        this.teamsAvailability = externalModuleMessage.message.availability;
+
+                        // Update the workadventure status
+                        this.moduleOptions.onExtensionModuleStatusChange(
+                            this.mapTeamsStatusToWorkAdventureStatus(externalModuleMessage.message.availability)
+                        );
                         break;
                     case MSGraphMessageEventSource.MicrosoftGraphEvent.toLocaleLowerCase():
                         this.updateCalendarEvents().catch((e) =>
