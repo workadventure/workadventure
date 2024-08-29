@@ -21,8 +21,8 @@
   "scripts": {
     "lint": "eslint tests/ . --ext .ts",
     "fix": "eslint --fix tests/ . --ext .ts",
-    "test": "dotenv -e ../.env -- playwright test --grep-invert='variable.spec.ts'",
-    "test-restart": "dotenv -e ../.env -- playwright test variable.spec.ts",
+    "test": "dotenv -e ../.env -- playwright test --grep-invert=\"@docker\"",
+    "test-restart": "dotenv -e ../.env -- playwright test --grep=\"@docker\"",
     "test-headed": "dotenv -e ../.env -- playwright test --headed",
     "test-headed-chrome": "dotenv -e ../.env -- playwright test --headed --project=chromium",
     "test-headed-firefox": "dotenv -e ../.env -- playwright test --headed --project=firefox",
