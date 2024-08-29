@@ -7,6 +7,7 @@ import { publicTestMapUrl } from "../utils/urls";
 import ChatUtils from "./chatUtils";
 
 test.describe("Matrix chat tests @oidc", () => {
+  test.describe.configure({mode:"serial"})
   test.beforeEach(
     "Ignore tests on webkit because of issue with camera and microphone",
 
