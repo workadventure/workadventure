@@ -39,7 +39,7 @@ test.describe("Scripting for Map editor @oidc", () => {
 
         await menu.openMapEditor(page);
         await mapeditor.openAreaEditor(page);
-        await areaEditor.drawArea(page, {x: 9 * 32, y: 0}, {x: 16 * 32, y: 4 * 32});
+        await areaEditor.drawArea(page, {x: 6 * 32, y: 0}, {x: 20 * 32, y: 4 * 32});
         await areaEditor.setAreaName(page, "MyZone");
 
         await evaluateScript(page, () => {
@@ -65,11 +65,11 @@ test.describe("Scripting for Map editor @oidc", () => {
         });
 
         await menu.closeMapEditor(page);
-        await Map.teleportToPosition(page, 11 * 32, 1 * 32);
+        await Map.teleportToPosition(page, 9 * 32, 1 * 32);
         await expect(page.locator('span.characterTriggerAction').nth(0)).toHaveText("Welcome to MyZone");
         await page.locator('span.characterTriggerAction').nth(0).click();
 
-        await Map.teleportToPosition(page, 11 * 32, 10 * 32);
+        await Map.teleportToPosition(page, 9 * 32, 9 * 32);
         await expect(page.locator('span.characterTriggerAction').nth(0)).toHaveText("Goodby to MyZone");
         await page.locator('span.characterTriggerAction').nth(0).click();
 
