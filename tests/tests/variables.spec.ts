@@ -1,6 +1,5 @@
 import fs from 'fs';
 import { expect, test } from '@playwright/test';
-import { v4 as uuid } from "uuid";
 import {
   gotoWait200,
   rebootBack,
@@ -46,7 +45,7 @@ test.describe('Variables', () => {
     await textField.press('Tab');
 
     await page.goto(
-      publicTestMapUrl("tests/Variables/shared_variables.json", uuid())
+      publicTestMapUrl("tests/Variables/shared_variables.json",  "variables")
     );
     await expect(textField).toHaveValue('new value');
 
