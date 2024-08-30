@@ -21,7 +21,11 @@ export async function oidcLogin(
   await page.fill("#Input_Username", userName);
   await page.fill("#Input_Password", password);
 
-  await page.click('button:has-text("Login")');
+  await page.click('button:has-text("Login")', {
+    // Give ample time for the OIDC redirects to succeed
+    timeout: 30_000
+});
+
 }
 
 export async function oidcLogout(page: Page, isMobile = false) {

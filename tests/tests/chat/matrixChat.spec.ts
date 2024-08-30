@@ -23,6 +23,7 @@ test.describe("Matrix chat tests @oidc @serial", () => {
       await ChatUtils.resetMatrixDatabase();
     }
   );
+
   
   test("Create a private encrypted chat room (new user)", async ({
     page,
