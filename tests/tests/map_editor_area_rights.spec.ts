@@ -45,6 +45,47 @@ test.describe("Map editor area with rights @oidc @serial", () => {
       }
     }
   );
+  test("Area with restricted write access : Trying to read an object", async ({
+    page,
+    browser,
+    request,
+  }, { project }) => {
+    await resetWamMaps(request);
+
+    await page.goto(Map.url("empty"));
+    await login(page, "test", 2, "en-US", project.name === "mobilechromium");
+    await oidcAdminTagLogin(page, false);
+
+    // Second browser with member user trying to read the object
+    const newBrowser = await browser.browserType().launch({});
+    const page2 = await newBrowser.newPage();
+    await page2.goto(Map.url("empty"));
+    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
+    await oidcMemberTagLogin(page2);
+
+    // Add area with admin rights
+    await Menu.openMapEditor(page);
+    await AreaAccessRights.openAreaEditorAndAddAreaWithRights(
+      page,
+      ["admin"],
+      ["admin"]
+    );
+    await AreaAccessRights.openEntityEditorAndAddEntityWithOpenLinkPropertyInsideArea(
+      page
+    );
+    await oidcLogout(page, false);
+
+    // Expect user in other page to not have the right
+    // to read the object
+    await EntityEditor.moveAndClick(
+      page2,
+      AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
+      AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
+    );
+    await expect(
+      page2.locator(".actions-menu .actions button").nth(0)
+    ).not.toBeAttached();
+  });
 
   test("Successfully set Area with right access", async ({ page, request }, {
     project,
@@ -144,47 +185,6 @@ test.describe("Map editor area with rights @oidc @serial", () => {
     await expect(entityEditorButton).not.toBeAttached();
   });
 
-  test("Area with restricted write access : Trying to read an object", async ({
-    page,
-    browser,
-    request,
-  }, { project }) => {
-    await resetWamMaps(request);
-
-    await page.goto(Map.url("empty"));
-    await login(page, "test", 2, "en-US", project.name === "mobilechromium");
-    await oidcAdminTagLogin(page, false);
-
-    // Second browser with member user trying to read the object
-    const newBrowser = await browser.browserType().launch({});
-    const page2 = await newBrowser.newPage();
-    await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
-    await oidcMemberTagLogin(page2);
-
-    // Add area with admin rights
-    await Menu.openMapEditor(page);
-    await AreaAccessRights.openAreaEditorAndAddAreaWithRights(
-      page,
-      ["admin"],
-      ["admin"]
-    );
-    await AreaAccessRights.openEntityEditorAndAddEntityWithOpenLinkPropertyInsideArea(
-      page
-    );
-    await oidcLogout(page, false);
-
-    // Expect user in other page to not have the right
-    // to read the object
-    await EntityEditor.moveAndClick(
-      page2,
-      AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
-      AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
-    );
-    await expect(
-      page2.locator(".actions-menu .actions button").nth(0)
-    ).not.toBeAttached();
-  });
 
   test("Area with restricted write access : Trying to read an object with read/write access", async ({
     page,
