@@ -17,7 +17,8 @@ test.use({
     baseURL: map_storage_url,
 });
 
-test.describe("Map editor @oidc", () => {
+test.describe("Map editor @oidc @serial", () => {
+    test.describe.configure({mode:"serial"})
     test.beforeEach(
         "Ignore tests on mobilechromium because map editor not available for mobile devices",
         ({}, {project}) => {

@@ -19,7 +19,7 @@ test.use({
   baseURL: map_storage_url,
 });
 
-test.describe("Map editor area with rights @oidc", () => {
+test.describe("Map editor area with rights @oidc @serial", () => {
   //need to use .wam map
   test.describe.configure({mode:"serial"});
   test.beforeEach(

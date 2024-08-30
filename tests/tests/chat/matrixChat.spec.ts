@@ -1,13 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { v4 as uuid } from "uuid";
 import { resetWamMaps } from "../utils/map-editor/uploader";
+import Map from "../utils/map";
 import { login } from "../utils/roles";
 import { oidcLogout, oidcMatrixUserLogin } from "../utils/oidc";
-import { publicTestMapUrl } from "../utils/urls";
 import ChatUtils from "./chatUtils";
 
-test.describe("Matrix chat tests @oidc", () => {
-  test.describe.configure({mode:"serial"})
+test.describe("Matrix chat tests @oidc @serial", () => {
+  test.describe.configure({mode:"serial"});
   test.beforeEach(
     "Ignore tests on webkit because of issue with camera and microphone",
 
@@ -19,7 +18,8 @@ test.describe("Matrix chat tests @oidc", () => {
         return;
       }
       await resetWamMaps(request);
-      await page.goto(publicTestMapUrl("tests/E2E/empty.json", uuid()));
+      await page.goto(Map.url("empty"));
+
       await ChatUtils.resetMatrixDatabase();
     }
   );

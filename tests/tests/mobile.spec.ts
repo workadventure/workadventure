@@ -10,8 +10,7 @@ test.use({
   baseURL: play_url,
 })
 test.describe('Mobile', () => {
-    //TODO : see if we can pass in paralel mode
-    //test.describe.configure({mode:"serial"});
+    test.describe.configure({mode:"parallel"});
     test('Successfully bubble discussion with mobile device', async ({ page, browser, request, browserName }) => {
         // If the browser is webkit
         if (browser.browserType().name() !== "mobilechromium") {
@@ -22,7 +21,6 @@ test.describe('Mobile', () => {
 
         const mapID = uuid();
         await page.goto(publicTestMapUrl("tests/E2E/empty.json", mapID));
-        //await page.goto(Map.url("empty"));
         await login(page, "Bob", 3, 'en-US', true);
 
         const positionToDiscuss = {
@@ -43,7 +41,6 @@ test.describe('Mobile', () => {
         const newBrowserAlice = await browser.browserType().launch();
         const pageAlice = await newBrowserAlice.newPage();
         await pageAlice.goto(publicTestMapUrl("tests/E2E/empty.json", mapID));
-        //await pageAlice.goto(Map.url("empty"));
         await pageAlice.evaluate(() => localStorage.setItem('debug', '*'));
         await login(pageAlice, "Alice", 5, 'en-US', true);
 
@@ -63,7 +60,7 @@ test.describe('Mobile', () => {
         // Second browser
         const newBrowserJohn = await browser.browserType().launch();
         const pageJohn = await newBrowserJohn.newPage();
-        await pageJohn.goto(Map.url("empty"));
+        await pageJohn.goto(publicTestMapUrl("tests/E2E/empty.json", mapID));
         await pageJohn.evaluate(() => localStorage.setItem('debug', '*'));
         await login(pageJohn, "John", 5, 'en-US', true);
 
