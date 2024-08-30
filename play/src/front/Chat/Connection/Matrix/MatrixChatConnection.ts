@@ -286,7 +286,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             .getRoomsIdInNode()
             .then((roomIDs) => {
                 roomIDs.forEach((roomID) => {
-                    this.removeFromRootRoomList(roomID);
+                    this.roomList.delete(roomID);
                 });
             })
             .catch(() => {
@@ -303,7 +303,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.deleteRoom(roomId);
     }
     private deleteRoom(roomId: string) {
-        const isRootRoom = this.removeFromRootRoomList(roomId);
+        const isRootRoom = this.roomList.delete(roomId);
         if (isRootRoom) {
             return;
         }
@@ -326,7 +326,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
         if (membership !== prevMembership && existingMatrixChatRoom) {
             if (membership === KnownMembership.Join) {
-                this.removeFromRootRoomList(roomId);
+                this.roomList.delete(roomId);
                 this.manageRoomOrFolder(room);
                 return;
             }
