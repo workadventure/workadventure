@@ -22,7 +22,7 @@
     "lint": "eslint tests/ . --ext .ts",
     "fix": "eslint --fix tests/ . --ext .ts",
     "test": "dotenv -e ../.env -- playwright test --grep-invert=\"@docker|@serial\"",
-    "test-restart": "dotenv -e ../.env -- playwright test --workers=1 --grep=\"@docker|serial\"",
+    "test-restart": "dotenv -e ../.env -- playwright test --workers=1 --grep=\"@docker|@serial\"",
     "test-headed": "dotenv -e ../.env -- playwright test --headed",
     "test-headed-chrome": "dotenv -e ../.env -- playwright test --headed --project=chromium",
     "test-headed-firefox": "dotenv -e ../.env -- playwright test --headed --project=firefox",
