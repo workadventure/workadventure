@@ -8,6 +8,7 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { navChat, selectedRoom } from "../../Chat/Stores/ChatStore";
     import { ChatRoom } from "../../Chat/Connection/ChatConnection";
+    import { IconLoader } from "@wa-icons";
 
     export let visitCardUrl: string;
     let w = "500px";
@@ -17,6 +18,7 @@
 
     const chatConnection = gameManager.getCurrentGameScene().chatConnection;
     const selectPlayerChatID = get(selectedChatIDRemotePlayerStore);
+    const roomCreationInProgress = chatConnection.roomCreationInProgress;
 
     function closeCard() {
         requestVisitCardsStore.set(null);
@@ -73,11 +75,20 @@
                 on:click={closeCard}>{$LL.menu.visitCard.close()}</button
             >
             {#if selectPlayerChatID && canSendMessageTo(selectPlayerChatID)}
-                <button
-                    class="light tw-cursor-pointer tw-px-3 tw-mb-2 tw-mr-0"
-                    data-testid="sendMessagefromVisitCardButton"
-                    on:click={openChat}>{$LL.menu.visitCard.sendMessage()}</button
-                >
+                {#if !$roomCreationInProgress}
+                    <button
+                        class="light tw-cursor-pointer tw-px-3 tw-mb-2 tw-mr-0"
+                        data-testid="sendMessagefromVisitCardButton"
+                        on:click={openChat}>{$LL.menu.visitCard.sendMessage()}</button
+                    >
+                {:else}
+                    <button
+                        class="light tw-cursor-pointer tw-px-3 tw-mb-2 tw-mr-0"
+                        data-testid="sendMessagefromVisitCardButton"
+                    >
+                        <IconLoader class="tw-animate-spin" />
+                    </button>
+                {/if}
             {/if}
         </div>
     {/if}
