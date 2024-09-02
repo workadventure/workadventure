@@ -7,6 +7,7 @@
     import { IconFolder, IconMessage, IconSquarePlus } from "@wa-icons";
 
     export let parentID: string | undefined = undefined;
+    export let parentName = "";
     let optionButtonRef: HTMLButtonElement | undefined = undefined;
     let optionRef: HTMLDivElement | undefined = undefined;
     let hideFolderOptions = true;
@@ -36,7 +37,7 @@
 </script>
 
 <button
-    data-testid="openOptionToCreateRoomOrFolder"
+    data-testid={`openOptionToCreateRoomOrFolder${parentName}`}
     class="tw-p-0 tw-m-0 tw-text-gray-400"
     bind:this={optionButtonRef}
     on:click|preventDefault|stopPropagation={toggleSpaceOption}
@@ -51,21 +52,15 @@
     class:tw-hidden={hideFolderOptions}
 >
     <RoomOption
-        dataTestId="openCreateRoomModalButton"
+        dataTestId={`openCreateRoomModalButton${parentName}`}
         IconComponent={IconMessage}
         title={$LL.chat.createRoom.title()}
-        on:click={() => {
-            hideFolderOptions = true;
-            closeMenuAndOpenCreateRoom();
-        }}
+        on:click={closeMenuAndOpenCreateRoom}
     />
     <RoomOption
-        dataTestId="openCreateFolderModalButton"
+        dataTestId={`openCreateFolderModalButton${parentName}`}
         IconComponent={IconFolder}
         title={$LL.chat.createFolder.title()}
-        on:click={() => {
-            hideFolderOptions = true;
-            openCreateSpace();
-        }}
+        on:click={openCreateSpace}
     />
 </div>

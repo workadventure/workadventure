@@ -8,9 +8,13 @@ class ChatUtils {
     await page.click("button.chat-btn");
   }
 
-  public async openCreateRoomDialog(page: Page) {
-    await page.getByTestId("openOptionToCreateRoomOrFolder").click();
-    await page.getByTestId("openCreateRoomModalButton").click();
+  public async openCreateRoomDialog(page: Page,folderName="") {
+    await page.getByTestId(`openOptionToCreateRoomOrFolder${folderName}`).click();
+    await page.getByTestId(`openCreateRoomModalButton${folderName}`).click();
+  }
+  public async openCreateFolderDialog(page: Page,folderName="") {
+    await page.getByTestId(`openOptionToCreateRoomOrFolder${folderName}`).click();
+    await page.getByTestId(`openCreateFolderModalButton${folderName}`).click();
   }
 
   public getRandomName() {
