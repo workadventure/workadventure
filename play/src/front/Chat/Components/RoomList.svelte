@@ -32,8 +32,6 @@
     let displayRooms = false;
     let displayRoomInvitations = false;
 
-    const proximityChatRoomHasUnreadMessage = proximityChatRoom.hasUnreadMessages;
-
     onMount(() => {
         expandOrCollapseRoomsIfEmpty();
     });
@@ -197,13 +195,18 @@
             {/if}
 
             <div class="tw-flex tw-justify-between">
-                <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={toggleDisplayProximityChat}>
+                <button class="tw-p-0 tw-m-0 tw-text-gray-400 tw-relative" on:click={toggleDisplayProximityChat}>
                     <IconChevronRight />
                     {$LL.chat.proximity()}
                     <div>
-                        {#if $proximityChatRoomHasUnreadMessage}
-                            <div class="tw-bg-red-500 tw-ml-3 tw-h-3 tw-w-3 tw-rounded-full" />
-                        {/if}
+                        <div class="tw-absolute tw-top-1 -tw-right-6 ">
+                            <span
+                                class="tw-w-4 tw-h-4 tw-block tw-rounded-full tw-absolute tw-top-0 tw-right-0 tw-animate-ping tw-bg-pop-green"
+                            />
+                            <span
+                                class="tw-w-3 tw-h-3  tw-block tw-rounded-full tw-absolute tw-top-0.5 tw-right-0.5 tw-bg-pop-green"
+                            />
+                        </div>
                     </div>
                 </button>
             </div>
