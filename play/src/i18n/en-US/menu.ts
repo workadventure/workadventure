@@ -55,7 +55,7 @@ const menu: BaseTranslation = {
         otherSettings: "Other settings",
         fullscreen: "Fullscreen",
         notifications: "Notifications",
-        chatSounds: "Sounds of chat",
+        chatSounds: "Chat sounds",
         cowebsiteTrigger: "Always ask before opening websites and Jitsi Meet rooms",
         ignoreFollowRequest: "Ignore requests to follow other users",
         proximityDiscussionVolume: "Proximity discussion volume",
