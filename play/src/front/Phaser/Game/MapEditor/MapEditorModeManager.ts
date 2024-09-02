@@ -1,4 +1,4 @@
-import { Command, UpdateWAMSettingCommand } from "@workadventure/map-editor";
+import { Command, PersonalAreaPropertyData, UpdateWAMSettingCommand } from "@workadventure/map-editor";
 import { get, Unsubscriber } from "svelte/store";
 import { EditMapCommandMessage } from "@workadventure/messages";
 import pLimit from "p-limit";
@@ -15,6 +15,7 @@ import {
 import { mapEditorActivated, mapEditorActivatedForThematics } from "../../../Stores/MenuStore";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import LL from "../../../../i18n/i18n-svelte";
+import { gameManager } from "../GameManager";
 import { AreaEditorTool } from "./Tools/AreaEditorTool";
 import type { MapEditorTool } from "./Tools/MapEditorTool";
 import { FloorEditorTool } from "./Tools/FloorEditorTool";
@@ -26,7 +27,6 @@ import { TrashEditorTool } from "./Tools/TrashEditorTool";
 import { ExplorerTool } from "./Tools/ExplorerTool";
 import { CloseTool } from "./Tools/CloseTool";
 import { UpdateAreaFrontCommand } from "./Commands/Area/UpdateAreaFrontCommand";
-import { gameManager } from "../GameManager";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",
@@ -482,8 +482,10 @@ export class MapEditorModeManager {
 
         // Get and revoke the personal area of the user if it exists
         const gameMapFrontWrapper = gameManager.getCurrentGameScene().getGameMapFrontWrapper();
-        for(const area of gameMapFrontWrapper.areasManager.getAreasByPropertyType("personalAreaPropertyData")) {
-            const property = area.areaData.properties.find((property) => property.type === "personalAreaPropertyData");
+        for (const area of gameMapFrontWrapper.areasManager.getAreasByPropertyType("personalAreaPropertyData")) {
+            const property = area.areaData.properties.find(
+                (property) => property.type === "personalAreaPropertyData"
+            ) as PersonalAreaPropertyData | undefined;
             if (!property || property.ownerId !== userUUID) continue;
 
             // The user already has a personal area, revoke it
