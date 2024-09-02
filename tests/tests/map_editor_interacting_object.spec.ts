@@ -95,7 +95,7 @@ test.describe("Map editor interacting with object @oidc", () => {
     await Menu.closeMapEditor(page);
 
     // Refresh the page to see the entity
-    await page.reload();
+    await page.goto(Map.url("empty"));
 
     // Move to the entity
     await EntityEditor.moveAndRightClick(page, 13 * 32, 13 * 32);
