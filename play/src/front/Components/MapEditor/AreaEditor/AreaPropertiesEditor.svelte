@@ -47,6 +47,7 @@
     let showDescriptionField = false;
     let hasPersonalAreaProperty: boolean;
     let hasRightsProperty: boolean;
+    let hasMatrixRoom: boolean;
     let connection = gameManager.getCurrentGameScene().connection;
 
     let selectedAreaPreviewUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((currentAreaPreview) => {
@@ -328,6 +329,7 @@
         hasplayAudioProperty = hasProperty("playAudio");
         hasPersonalAreaProperty = hasProperty("personalAreaPropertyData");
         hasRightsProperty = hasProperty("restrictedRightsPropertyData");
+        hasMatrixRoom = hasProperty("matrixRoomPropertyData");
     }
 
     function openKlaxoonActivityPicker(app: AreaDataProperty) {
@@ -444,13 +446,14 @@
                     onAddProperty("openWebsite");
                 }}
             />
-
-            <AddPropertyButtonWrapper
-                property="matrixRoomPropertyData"
-                on:click={() => {
-                    onAddProperty("matrixRoomPropertyData");
-                }}
-            />
+            {#if !hasMatrixRoom}
+                <AddPropertyButtonWrapper
+                    property="matrixRoomPropertyData"
+                    on:click={() => {
+                        onAddProperty("matrixRoomPropertyData");
+                    }}
+                />
+            {/if}
         </div>
         <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-mt-2">
             <AddPropertyButtonWrapper
