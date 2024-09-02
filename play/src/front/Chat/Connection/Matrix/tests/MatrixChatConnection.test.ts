@@ -566,9 +566,7 @@ describe("MatrixChatConnection", () => {
             );
 
             await clientPromise;
-            const result = await matrixChatConnection.createRoom({ name: "Test" });
-            console.log(result);
-            expect(result).toEqual(expected);
+            expect(await matrixChatConnection.createRoom({ name: "Test" })).toEqual(expected);
         });
     });
     describe("createDirectRoom", () => {
