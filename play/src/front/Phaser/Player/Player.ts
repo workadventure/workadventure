@@ -11,6 +11,7 @@ import { followStateStore, followRoleStore, followUsersStore } from "../../Store
 import { WOKA_SPEED } from "../../Enum/EnvironmentVariable";
 import { visibilityStore } from "../../Stores/VisibilityStore";
 import { passStatusToOnline } from "../../Rules/StatusRules/statusChangerFunctions";
+import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 
 export const hasMovedEventName = "hasMoved";
 export const requestEmoteEventName = "requestEmote";
@@ -22,6 +23,7 @@ export class Player extends Character {
     private followingPathPromiseResolve?: (result: { x: number; y: number; cancelled: boolean }) => void;
     private pathWalkingSpeed?: number;
     private readonly unsubscribeVisibilityStore: Unsubscriber;
+    private readonly unsubscribeLayoutManagerActionStore: Unsubscriber;
 
     constructor(
         Scene: GameScene,
@@ -42,6 +44,13 @@ export class Player extends Character {
                 this.stop();
                 this.finishFollowingPath(true);
             }
+        });
+
+        this.unsubscribeLayoutManagerActionStore = layoutManagerActionStore.subscribe((actions) => {
+            this.destroyAllText();
+            actions.forEach((action) => {
+                this.playText(action.uuid, `${action.message}`, -1, action.callback, undefined, action.type);
+            });
         });
     }
 
@@ -331,6 +340,7 @@ export class Player extends Character {
     }
     destroy(): void {
         this.unsubscribeVisibilityStore();
+        this.unsubscribeLayoutManagerActionStore();
         super.destroy();
     }
 }

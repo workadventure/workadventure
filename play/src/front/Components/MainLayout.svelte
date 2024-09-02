@@ -10,7 +10,6 @@
         helpWebRtcSettingsVisibleStore,
     } from "../Stores/HelpSettingsStore";
     import { helpSettingsPopupBlockedStore } from "../Stores/HelpSettingsPopupBlockedStore";
-    import { layoutManagerActionVisibilityStore } from "../Stores/LayoutManagerStore";
     import { menuVisiblilityStore, warningBannerStore } from "../Stores/MenuStore";
     import { showReportScreenStore, userReportEmpty } from "../Stores/ShowReportScreenStore";
     import { followStateStore } from "../Stores/FollowStore";
@@ -46,7 +45,6 @@
     import HelpCameraSettingsPopup from "./HelpSettings/HelpCameraSettingsPopup.svelte";
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
     import HelpNotificationSettingsPopup from "./HelpSettings/HelpNotificationSettingPopup.svelte";
-    import LayoutActionManager from "./LayoutActionManager/LayoutActionManager.svelte";
     import Menu from "./Menu/Menu.svelte";
     import ReportMenu from "./ReportMenu/ReportMenu.svelte";
     import VisitCard from "./VisitCard/VisitCard.svelte";
@@ -239,10 +237,6 @@
 
         <MainModal />
     </section>
-
-    {#if $layoutManagerActionVisibilityStore}
-        <LayoutActionManager />
-    {/if}
 
     {#if $actionsMenuStore}
         <ActionsMenu />

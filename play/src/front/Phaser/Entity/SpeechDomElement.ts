@@ -9,7 +9,8 @@ export class SpeechDomElement extends Phaser.GameObjects.DOMElement {
         scene: Phaser.Scene,
         x = -1,
         y = -50,
-        public readonly callback = () => this.destroy()
+        public readonly callback = () => this.destroy(),
+        type: "warning" | "message" = "message"
     ) {
         // Create SVG white triangle with border radius and add the text "space"
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -49,7 +50,9 @@ export class SpeechDomElement extends Phaser.GameObjects.DOMElement {
             x,
             y,
             span,
-            `z-index:10; background-color: #00000080; color: #ffffff; padding: 5px; border-radius: 5px; font-size: 9px; cursor: pointer; backdrop-filter: blur(8px);`
+            `z-index:10; background-color: #00000080; color: ${
+                type === "message" ? "#ffffff" : "#f9e81e"
+            }; padding: 5px; border-radius: 5px; font-size: 9px; cursor: pointer; backdrop-filter: blur(8px);`
         );
         this.setAlpha(0);
     }
