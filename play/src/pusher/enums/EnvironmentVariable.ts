@@ -115,7 +115,8 @@ export const GOOGLE_DRIVE_PICKER_APP_ID = env.GOOGLE_DRIVE_PICKER_APP_ID;
 export const MATRIX_DOMAIN: string = env.MATRIX_DOMAIN || "";
 export const MATRIX_PUBLIC_URI: string | undefined = env.MATRIX_PUBLIC_URI;
 export const MATRIX_API_URI: string | undefined = env.MATRIX_API_URI;
-export const MATRIX_ADMIN_USER: string | undefined = env.MATRIX_USER_ADMIN;
+export const MATRIX_ADMIN_USER: string | undefined = env.MATRIX_ADMIN_USER;
+export const MATRIX_ADMIN_PASSWORD: string | undefined = env.MATRIX_ADMIN_PASSWORD;
 
 // Front container:
 export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {

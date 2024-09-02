@@ -1,5 +1,6 @@
 import {
     Direction,
+    EventEmitterEvents,
     EventStatus,
     EventType,
     IContent,
@@ -9,7 +10,9 @@ import {
     NotificationCountType,
     ReceiptType,
     Room,
+    RoomEmittedEvents,
     RoomEvent,
+    RoomMember,
     RoomMemberEvent,
     TimelineWindow,
 } from "matrix-js-sdk";
@@ -45,6 +48,17 @@ export class MatrixChatRoom implements ChatRoom {
     typingMembers: Writable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
     isRoomFolder = false;
 
+    private handleRoomTimeline = () => {
+        this.onRoomTimeline.bind(this);
+    };
+    private handleRoomName = () => this.onRoomName.bind(this);
+    private handleRoomRedaction = () => this.onRoomRedaction.bind(this);
+    private handleMemberTyping = () => this.onMemberTyping.bind(this);
+
+    private listOn: {
+        eventName: RoomEmittedEvents | EventEmitterEvents | RoomMemberEvent;
+        callback: (...args: unknown[]) => void;
+    }[];
     constructor(
         private matrixRoom: Room,
         private playNewMessageSound = () => {
@@ -56,7 +70,7 @@ export class MatrixChatRoom implements ChatRoom {
         this.type = this.getMatrixRoomType();
         this.hasUnreadMessages = writable(matrixRoom.getUnreadNotificationCount() > 0);
         this.avatarUrl = matrixRoom.getAvatarUrl(matrixRoom.client.baseUrl, 24, 24, "scale") ?? undefined;
-        this.messages = new SearchableArrayStore((item: MatrixChatMessage) => item.id); //writable(new Map<string, MatrixChatMessage>());
+        this.messages = new SearchableArrayStore((item: MatrixChatMessage) => item.id);
         this.messageReactions = new MapStore<string, MapStore<string, MatrixChatMessageReaction>>();
         this.sendMessage = this.sendMessage.bind(this);
         this.myMembership = matrixRoom.getMyMembership();
@@ -68,61 +82,18 @@ export class MatrixChatRoom implements ChatRoom {
         this.timelineWindow = new TimelineWindow(matrixRoom.client, matrixRoom.getLiveTimeline().getTimelineSet());
         this.isEncrypted = writable(matrixRoom.hasEncryptionStateEvent());
         this.typingMembers = writable([]);
+        this.listOn = [];
 
         this.isRoomFolder = matrixRoom.isSpaceRoom();
-
-        void this.matrixRoom.getMembersWithMembership(KnownMembership.Join).forEach((member) =>
-            member.on(RoomMemberEvent.Typing, (event, member) => {
-                const typingMember = member.user;
-                if (!typingMember) return;
-
-                const typingMemberInformation = {
-                    id: typingMember.userId,
-                    name: typingMember.displayName || null,
-                    avatarUrl: typingMember.avatarUrl || null,
-                };
-
-                const myUserID = this.matrixRoom.client.getSafeUserId();
-
-                if (!typingMemberInformation.id || typingMemberInformation.id === myUserID) return;
-
-                const isAlreadyTyping = get(this.typingMembers).some((memberInformation) => {
-                    return memberInformation.id === typingMemberInformation.id;
-                });
-
-                if (isAlreadyTyping) {
-                    this.typingMembers.update((currentTypingMemberList) => {
-                        return currentTypingMemberList.filter((member) => member.id !== typingMemberInformation.id);
-                    });
-                    return;
-                }
-
-                // FIXME: this forces us to subscribe to the world store (which I would like to avoid)
-                /*const allUserSpaceFilter = this.spaceRegistry
-                    .get(WORLD_SPACE_NAME)
-                    .getSpaceFilter(CONNECTED_USER_FILTER_NAME);
-
-
-                const userFromSpace = allUserSpaceFilter
-                    .getUsers()
-                    .filter((spaceuser) => spaceuser.chatID === typingMemberInformation.id)[0];
-
-                if (userFromSpace && userFromSpace.getWokaBase64) {
-                    typingMemberInformation.avatarUrl = userFromSpace.getWokaBase64;
-                } else {*/
-                typingMemberInformation.avatarUrl = typingMemberInformation.avatarUrl
-                    ? this.matrixRoom.client.mxcUrlToHttp(typingMemberInformation.avatarUrl ?? "", 48, 48)
-                    : typingMemberInformation.avatarUrl;
-                //}
-
-                this.typingMembers.update((currentTypingMemberList) => {
-                    return [...currentTypingMemberList, typingMemberInformation];
-                });
-            })
-        );
+        void this.matrixRoom.getMembersWithMembership(KnownMembership.Join).forEach((member) => {
+            this.listOn.push({
+                eventName: RoomMemberEvent.Typing,
+                callback: this.handleMemberTyping,
+            });
+            member.on(RoomMemberEvent.Typing, this.handleMemberTyping);
+        });
 
         this.inMemoryEventsContent = new Map<EventId, MatrixEvent>();
-
         (async () => {
             if (matrixRoom.hasEncryptionStateEvent()) {
                 await matrixSecurity.initClientCryptoConfiguration();
@@ -152,6 +123,53 @@ export class MatrixChatRoom implements ChatRoom {
                     console.error(error);
                 });
             });
+    }
+    private onMemberTyping(event: MatrixEvent, member: RoomMember) {
+        const typingMember = member.user;
+        if (!typingMember) return;
+
+        const typingMemberInformation = {
+            id: typingMember.userId,
+            name: typingMember.displayName || null,
+            avatarUrl: typingMember.avatarUrl || null,
+        };
+
+        const myUserID = this.matrixRoom.client.getSafeUserId();
+
+        if (!typingMemberInformation.id || typingMemberInformation.id === myUserID) return;
+
+        const isAlreadyTyping = get(this.typingMembers).some((memberInformation) => {
+            return memberInformation.id === typingMemberInformation.id;
+        });
+
+        if (isAlreadyTyping) {
+            this.typingMembers.update((currentTypingMemberList) => {
+                return currentTypingMemberList.filter((member) => member.id !== typingMemberInformation.id);
+            });
+            return;
+        }
+
+        // FIXME: this forces us to subscribe to the world store (which I would like to avoid)
+        /*const allUserSpaceFilter = this.spaceRegistry
+                .get(WORLD_SPACE_NAME)
+                .getSpaceFilter(CONNECTED_USER_FILTER_NAME);
+
+
+            const userFromSpace = allUserSpaceFilter
+                .getUsers()
+                .filter((spaceuser) => spaceuser.chatID === typingMemberInformation.id)[0];
+
+            if (userFromSpace && userFromSpace.getWokaBase64) {
+                typingMemberInformation.avatarUrl = userFromSpace.getWokaBase64;
+            } else {*/
+        typingMemberInformation.avatarUrl = typingMemberInformation.avatarUrl
+            ? this.matrixRoom.client.mxcUrlToHttp(typingMemberInformation.avatarUrl ?? "", 48, 48)
+            : typingMemberInformation.avatarUrl;
+        //}
+
+        this.typingMembers.update((currentTypingMemberList) => {
+            return [...currentTypingMemberList, typingMemberInformation];
+        });
     }
 
     private async initMatrixRoomMessagesAndReactions() {
@@ -190,11 +208,15 @@ export class MatrixChatRoom implements ChatRoom {
     }
 
     private startHandlingChatRoomEvents() {
-        this.matrixRoom.on(RoomEvent.Timeline, (event, room, toStartOfTimeline, _, data) => {
-            this.onRoomTimeline(event, room, toStartOfTimeline, _, data).catch((error) => console.error(error));
-        });
-        this.matrixRoom.on(RoomEvent.Name, this.onRoomName.bind(this));
-        this.matrixRoom.on(RoomEvent.Redaction, this.onRoomRedaction.bind(this));
+        this.listOn.push(
+            { eventName: RoomEvent.Timeline, callback: this.handleRoomTimeline },
+            { eventName: RoomEvent.Name, callback: this.handleRoomName },
+            { eventName: RoomEvent.Redaction, callback: this.handleRoomRedaction }
+        );
+
+        this.matrixRoom.on(RoomEvent.Timeline, this.handleRoomTimeline);
+        this.matrixRoom.on(RoomEvent.Name, this.handleRoomName);
+        this.matrixRoom.on(RoomEvent.Redaction, this.handleRoomRedaction);
     }
 
     private async onRoomTimeline(
@@ -537,6 +559,13 @@ export class MatrixChatRoom implements ChatRoom {
 
     private removeEventContentInMemory(eventId: string) {
         this.inMemoryEventsContent.delete(eventId);
+    }
+
+    destroy() {
+        this.listOn.forEach(({ callback, eventName }) => {
+            //TODO : try to find a other solution than as
+            this.matrixRoom.off(eventName as RoomEmittedEvents, callback);
+        });
     }
 
     startTyping(): Promise<object> {

@@ -63,7 +63,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         private matrixSecurity: MatrixSecurity = defaultMatrixSecurity
     ) {
         this.connectionStatus = writable("CONNECTING");
-        this.roomList = new MapStore<string, MatrixChatRoom>();
+        this.roomList = AutoDestroyingMapStoreProxy(new MapStore<string, MatrixChatRoom>());
 
         this.directRooms = derived(this.roomList, (roomList) => {
             return Array.from(roomList.values()).filter(
@@ -717,14 +717,38 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     }
 
     clearListener() {
+        this.roomList.forEach((room) => {
+            this.roomList.delete(room.id);
+        });
         this.client?.off(ClientEvent.Room, this.handleRoom);
         this.client?.off(ClientEvent.DeleteRoom, this.handleDeleteRoom);
         this.client?.off(RoomEvent.MyMembership, this.handleMyMembership);
         this.client?.off("RoomState.events" as EmittedEvents, this.handleRoomStateEvent);
         this.client?.off(RoomEvent.Name, this.handleName);
     }
-
     async destroy(): Promise<void> {
         await this.client?.logout(true);
     }
+}
+
+function AutoDestroyingMapStoreProxy<K, V extends Required<{ destroy: () => void }>>(mapStore: MapStore<K, V>) {
+    return new Proxy(mapStore, {
+        get(target, prop, receiver) {
+            if (prop === "delete") {
+                return function (key: K) {
+                    if (target.has(key)) {
+                        target.get(key)?.destroy();
+                        return target.delete(key);
+                    }
+                    return false;
+                };
+            }
+            const value = Reflect.get(target, prop, receiver);
+
+            if (typeof value === "function") {
+                return value.bind(target);
+            }
+            return value;
+        },
+    });
 }

@@ -44,6 +44,7 @@ export interface ChatRoom {
     startTyping: () => Promise<object>;
     stopTyping: () => Promise<object>;
     isRoomFolder: boolean;
+    destroy: () => void;
 }
 
 //Readonly attributes

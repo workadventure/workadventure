@@ -1,9 +1,8 @@
 import axios from "axios";
 import { EventType } from "matrix-js-sdk";
-import { MATRIX_ADMIN_USER, MATRIX_API_URI, MATRIX_DOMAIN } from "../enums/EnvironmentVariable";
+import { MATRIX_ADMIN_USER, MATRIX_API_URI, MATRIX_DOMAIN, MATRIX_ADMIN_PASSWORD } from "../enums/EnvironmentVariable";
 
 const ADMIN_CHAT_ID = `@${MATRIX_ADMIN_USER}:${MATRIX_DOMAIN}`;
-//const ADMIN_CHAT_ID = `@admin:${MATRIX_DOMAIN}`;
 interface CreateRoomOptions {
     visibility: string;
     initial_state: {
@@ -52,8 +51,8 @@ class MatrixProvider {
             await axios
                 .post(`${MATRIX_API_URI}_matrix/client/r0/login`, {
                     type: "m.login.password",
-                    user: process.env.MATRIX_ADMIN_USER,
-                    password: process.env.MATRIX_ADMIN_PASSWORD,
+                    user: MATRIX_ADMIN_USER,
+                    password: MATRIX_ADMIN_PASSWORD,
                 })
                 .then((response) => {
                     if (response.status === 200 && response.data.errcode === undefined) {
