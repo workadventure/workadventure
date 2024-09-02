@@ -567,7 +567,8 @@ export class MatrixChatRoom implements ChatRoom {
 
     destroy() {
         this.listOn.forEach(({ callback, eventName }) => {
-            //TODO : try to find a other solution than as
+            //TODO : try to find a other solution than as | delete ts-ignore before merge
+            //@ts-ignore
             this.matrixRoom.off(eventName as RoomEmittedEvents, callback);
         });
     }
