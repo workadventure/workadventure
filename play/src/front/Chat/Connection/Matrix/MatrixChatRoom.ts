@@ -48,16 +48,15 @@ export class MatrixChatRoom implements ChatRoom {
     typingMembers: Writable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
     isRoomFolder = false;
 
-    private handleRoomTimeline = () => {
-        this.onRoomTimeline.bind(this);
-    };
-    private handleRoomName = () => this.onRoomName.bind(this);
-    private handleRoomRedaction = () => this.onRoomRedaction.bind(this);
-    private handleMemberTyping = () => this.onMemberTyping.bind(this);
+    private handleRoomTimeline = this.onRoomTimeline.bind(this);
+    private handleRoomName = this.onRoomName.bind(this);
+    private handleRoomRedaction = this.onRoomRedaction.bind(this);
+    private handleMemberTyping = this.onMemberTyping.bind(this);
 
     private listOn: {
         eventName: RoomEmittedEvents | EventEmitterEvents | RoomMemberEvent;
-        callback: (...args: unknown[]) => void;
+        //TODO : find better solution than function type | delete before merge 
+        callback: Function // (...args: (unknown|MatrixEvent|Room|RoomMember)[]) => void;
     }[];
     constructor(
         private matrixRoom: Room,
@@ -214,7 +213,11 @@ export class MatrixChatRoom implements ChatRoom {
             { eventName: RoomEvent.Redaction, callback: this.handleRoomRedaction }
         );
 
-        this.matrixRoom.on(RoomEvent.Timeline, this.handleRoomTimeline);
+        this.matrixRoom.on(RoomEvent.Timeline,this.handleRoomTimeline)
+            
+            /*(event, room, toStartOfTimeline, _, data) => {
+            this.onRoomTimeline(event, room, toStartOfTimeline, _, data).catch((error) => console.error(error));
+        });*/
         this.matrixRoom.on(RoomEvent.Name, this.handleRoomName);
         this.matrixRoom.on(RoomEvent.Redaction, this.handleRoomRedaction);
     }
