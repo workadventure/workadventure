@@ -26,6 +26,7 @@ import { TrashEditorTool } from "./Tools/TrashEditorTool";
 import { ExplorerTool } from "./Tools/ExplorerTool";
 import { CloseTool } from "./Tools/CloseTool";
 import { UpdateAreaFrontCommand } from "./Commands/Area/UpdateAreaFrontCommand";
+import { gameManager } from "../GameManager";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",
@@ -477,6 +478,35 @@ export class MapEditorModeManager {
         if (!areaPersonalPropertyData) {
             console.error("No area property data");
             return;
+        }
+
+        // Get and revoke the personal area of the user if it exists
+        const gameMapFrontWrapper = gameManager.getCurrentGameScene().getGameMapFrontWrapper();
+        for(const area of gameMapFrontWrapper.areasManager.getAreasByPropertyType("personalAreaPropertyData")) {
+            const property = area.areaData.properties.find((property) => property.type === "personalAreaPropertyData");
+            if (!property || property.ownerId !== userUUID) continue;
+
+            // The user already has a personal area, revoke it
+            const oldAreaDataToRevok = structuredClone(area.areaData);
+            // Define the new name of the area
+            merge(area.areaData, {
+                name: get(LL).area.personalArea.claimDescription(),
+            });
+            // Define the new owner of the area
+            merge(property, {
+                ownerId: null,
+            });
+
+            this.executeCommand(
+                new UpdateAreaFrontCommand(
+                    this.getScene().getGameMap(),
+                    area.areaData,
+                    undefined,
+                    oldAreaDataToRevok,
+                    this.editorTools.AreaEditor as AreaEditorTool,
+                    this.scene.getGameMapFrontWrapper()
+                )
+            ).catch((error) => console.error(error));
         }
 
         const oldAreaData = structuredClone(areaDataToClaim);

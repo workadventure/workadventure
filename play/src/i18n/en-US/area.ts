@@ -9,6 +9,7 @@ const area: BaseTranslation = {
             no: "No",
         },
         personalSpaceWithNames: "{name}'s personal space",
+        alreadyHavePersonalArea: "You already have a personal area. Will be deleted if you claim this one.",
     },
 };
 
