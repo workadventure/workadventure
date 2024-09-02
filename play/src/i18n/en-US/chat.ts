@@ -170,7 +170,7 @@ const chat: BaseTranslation = {
     messageEdited: "Modified",
     waiting: "Waiting",
     nothingToDisplay: "Nothing to display",
-    addRoomToSpaceError: "Impossible to add the room to the space",
+    addRoomToFolderError: "Impossible to add the room to the folder",
     createRoom: {
         title: "Create new room",
         name: "Name",
@@ -180,8 +180,8 @@ const chat: BaseTranslation = {
             privateDescription: "Only invited guests will be able to find and join the room.",
             public: "Public",
             publicDescription: "Anyone can find and join the room.",
-            restricted: "Space member",
-            restrictedDescription: "Visible only to members of the space",
+            restricted: "Folder member",
+            restrictedDescription: "Visible only to members of the folder",
         },
         e2eEncryption: {
             label: "Activate end to end encryption",
@@ -203,7 +203,7 @@ const chat: BaseTranslation = {
         creationSuccessNotification: "Room created",
     },
     createFolder: {
-        title: "Create new space",
+        title: "Create new folder",
         name: "Name",
         visibility: {
             label: "Visibility",
@@ -211,8 +211,8 @@ const chat: BaseTranslation = {
             privateDescription: "Only invited guests will be able to find and join the room.",
             public: "Public",
             publicDescription: "Anyone can find and join the room.",
-            restricted: "Space member",
-            restrictedDescription: "Visible only to members of the space",
+            restricted: "Folder member",
+            restrictedDescription: "Visible only to members of the folder",
         },
         description: {
             label: "Description",

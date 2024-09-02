@@ -80,7 +80,6 @@ export interface RoomFolder {
     name: Readable<string>;
     rooms: MapStore<ChatRoom["id"], ChatRoom>;
     folders: MapStore<RoomFolder["id"], RoomFolder>;
-    loadRoomsAndFolderPromise: Promise<void>;
 }
 
 export interface CreateRoomOptions {
@@ -123,6 +122,7 @@ export interface ChatConnectionInterface {
     initEndToEndEncryption(): Promise<void>;
     isGuest: Readable<boolean>;
     hasUnreadMessages: Readable<boolean>;
+    clearListener: () => void;
 }
 
 export type Connection = Pick<RoomConnection, "queryChatMembers" | "emitPlayerChatID" | "emitBanPlayerMessage">;

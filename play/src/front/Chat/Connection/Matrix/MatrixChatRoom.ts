@@ -128,11 +128,17 @@ export class MatrixChatRoom implements ChatRoom {
                 await matrixSecurity.initClientCryptoConfiguration();
             }
         })()
-            .catch((error) => console.error(error))
+            .catch((error) => {
+                console.error(error);
+                Sentry.captureMessage("Failed to init client crypto configuration");
+            })
             .then(async () => {
                 await this.initMatrixRoomMessagesAndReactions();
             })
-            .catch((error) => console.error(error));
+            .catch((error) => {
+                console.error(error);
+                Sentry.captureMessage("Failed to init Matrix room messages");
+            });
 
         //Necessary to keep matrix event content for local event deletions after initialization
         this.startHandlingChatRoomEvents();
@@ -170,6 +176,7 @@ export class MatrixChatRoom implements ChatRoom {
         if (event.isEncrypted()) {
             await this.matrixRoom.client.decryptEventIfNeeded(event).catch(() => {
                 console.error("Failed to decrypt");
+                Sentry.captureMessage("Failed to decrypt event");
             });
         }
         if (event.getType() === "m.room.message" && !this.isEventReplacingExistingOne(event)) {
@@ -425,30 +432,26 @@ export class MatrixChatRoom implements ChatRoom {
         }
     }
 
-    joinRoom(): Promise<void> {
-        return this.matrixRoom.client
-            .joinRoom(this.id)
-            .then(() => {
-                return Promise.resolve();
-            })
-            .catch((error) => {
-                Sentry.captureMessage("Failed to leave room");
-                console.error("Unable to join", error);
-                return Promise.reject(new Error("Failed to leave room"));
-            });
+    async joinRoom(): Promise<void> {
+        try {
+            await this.matrixRoom.client.joinRoom(this.id);
+            return;
+        } catch (error) {
+            Sentry.captureMessage("Failed to leave room");
+            console.error("Unable to join", error);
+            return Promise.reject(new Error("Failed to leave room"));
+        }
     }
 
-    leaveRoom(): Promise<void> {
-        return this.matrixRoom.client
-            .leave(this.id)
-            .then(() => {
-                return Promise.resolve();
-            })
-            .catch((error) => {
-                Sentry.captureMessage("Failed to leave room");
-                console.error("Unable to leave", error);
-                return Promise.reject(new Error("Failed to leave room"));
-            });
+    async leaveRoom(): Promise<void> {
+        try {
+            await this.matrixRoom.client.leave(this.id);
+            return;
+        } catch (error) {
+            Sentry.captureMessage("Failed to leave room");
+            console.error("Unable to leave", error);
+            throw new Error("Failed to leave room");
+        }
     }
 
     private getMatrixRoomType(): "direct" | "multiple" {

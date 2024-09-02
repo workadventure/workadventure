@@ -171,7 +171,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     messageEdited: "Modifié",
     waiting: "En attente",
     nothingToDisplay: "Rien à afficher",
-    addRoomToSpaceError: "Impossible d'ajouter la room à l'espace",
+    addRoomToFolderError: "Impossible d'ajouter la room au dossier",
     createRoom: {
         title: "Créer un nouveau salon",
         name: "Nom",
@@ -181,8 +181,8 @@ const chat: DeepPartial<Translation["chat"]> = {
             privateDescription: "Seules les personnes invitées pourront trouver et rejoindre ce salon.",
             public: "Public",
             publicDescription: "Quiconque pourra trouver et rejoindre ce salon.",
-            restricted: "Membre de l'espace",
-            restrictedDescription: "Visible seulement pour les membres de l'espace",
+            restricted: "Membre du dossier",
+            restrictedDescription: "Visible seulement pour les membres du dossier",
         },
         e2eEncryption: {
             label: "Activer le chiffrement de bout en bout",
@@ -204,7 +204,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         creationSuccessNotification: "Salon créé",
     },
     createFolder: {
-        title: "Créer un nouvel espace",
+        title: "Créer un nouveau dossier",
         name: "Nom",
         description: {
             label: "Description",
@@ -216,8 +216,8 @@ const chat: DeepPartial<Translation["chat"]> = {
             privateDescription: "Seules les personnes invitées pourront trouver et rejoindre ce salon.",
             public: "Public",
             publicDescription: "Quiconque pourra trouver et rejoindre ce salon.",
-            restricted: "Membre de l'espace",
-            restrictedDescription: "Visible seulement pour les membres de l'espace",
+            restricted: "Membre du dossier",
+            restrictedDescription: "Visible seulement pour les membres du dossier",
         },
         e2eEncryption: {
             label: "Activer le chiffrement de bout en bout",

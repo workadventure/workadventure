@@ -14,7 +14,7 @@ export class MatrixRoomFolder implements RoomFolder {
 
     id: string;
     name: Writable<string>;
-    loadRoomsAndFolderPromise: Promise<void>;
+    private loadRoomsAndFolderPromise: Promise<void>;
 
     constructor(private room: Room) {
         this.name = writable(room.name);
