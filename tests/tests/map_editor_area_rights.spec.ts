@@ -582,4 +582,46 @@ test.describe("Map editor area with rights @oidc", () => {
       page2.getByTestId("claimPersonalAreaButton")
     ).not.toBeAttached();
   });
+
+  test("Claim multi personal area", async ({
+    page,
+    browser,
+    request,
+  }, { project }) => {
+    await resetWamMaps(request);
+
+    await page.goto(Map.url("empty"));
+    await login(page, "test", 3, "en-US", project.name === "mobilechromium");
+    await oidcAdminTagLogin(page, false);
+
+    // Add a first area
+    await Menu.openMapEditor(page);
+    await AreaAccessRights.openAreaEditorAndAddArea(page);
+    await page.getByTestId("personalAreaPropertyData").click();
+    await Menu.closeMapEditor(page);
+
+    // Add a second area
+    await Menu.openMapEditor(page);
+    await AreaAccessRights.openAreaEditorAndAddArea(
+      page,
+      { x: 1 * 32, y: 10 * 32 },
+      { x: 9 * 32, y: 19 * 32 },
+    );
+    await page.getByTestId("personalAreaPropertyData").click();
+    await Menu.closeMapEditor(page);
+
+    // Try to claim the area
+    await Map.rightClickToPosition(page, 6 * 32 + 10, 3 * 32 + 10);
+    await page.getByTestId("claimPersonalAreaButton").click();
+
+    // Check if the second area is claimable
+    await Map.rightClickToPosition(page, 6 * 32 + 10, 12 * 32 + 10);
+    await page.getByTestId("claimPersonalAreaButton").click();
+
+    // Check if the first area is not claimable
+    await Map.rightClickToPosition(page, 6 * 32 + 10, 3 * 32 + 10);
+    await expect(
+      page.getByTestId("claimPersonalAreaButton")
+    ).not.toBeAttached();
+  });
 });
