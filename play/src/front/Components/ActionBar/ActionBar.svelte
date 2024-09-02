@@ -1150,7 +1150,7 @@
     </div>
 {/if}
 
-{#if appMenuOpened && $roomListActivated && $isActivatedStore && $externalActionBarSvelteComponent.size > 0}
+{#if appMenuOpened && ($roomListActivated || $isActivatedStore || $externalActionBarSvelteComponent.size > 0)}
     <div
         class="tw-flex tw-justify-center tw-m-auto tw-absolute tw-left-0 tw-right-0 tw-bottom-0"
         style="margin-bottom: 5.5rem; height: auto;"
