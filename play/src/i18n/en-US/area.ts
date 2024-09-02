@@ -8,6 +8,7 @@ const area: BaseTranslation = {
             yes: "Yes",
             no: "No",
         },
+        personalSpaceWithNames: "{name}'s personal space",
     },
 };
 

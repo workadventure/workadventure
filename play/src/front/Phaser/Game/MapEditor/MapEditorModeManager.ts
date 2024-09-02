@@ -14,6 +14,7 @@ import {
 } from "../../../Stores/MapEditorStore";
 import { mapEditorActivated, mapEditorActivatedForThematics } from "../../../Stores/MenuStore";
 import { localUserStore } from "../../../Connection/LocalUserStore";
+import LL from "../../../../i18n/i18n-svelte";
 import { AreaEditorTool } from "./Tools/AreaEditorTool";
 import type { MapEditorTool } from "./Tools/MapEditorTool";
 import { FloorEditorTool } from "./Tools/FloorEditorTool";
@@ -459,7 +460,7 @@ export class MapEditorModeManager {
         return this.scene;
     }
 
-    public claimPersonalArea() {
+    public claimPersonalArea(userName: string) {
         const areaDataToClaim = get(mapEditorAskToClaimPersonalAreaStore);
         const userUUID = localUserStore.getLocalUser()?.uuid;
         if (areaDataToClaim === undefined) {
@@ -481,7 +482,14 @@ export class MapEditorModeManager {
         const oldAreaData = structuredClone(areaDataToClaim);
         const property = areaDataToClaim.properties.find((property) => property.type === "personalAreaPropertyData");
         if (property) {
-            merge(property, { ownerId: userUUID });
+            // Define the new name of the area
+            merge(areaDataToClaim, {
+                name: get(LL).area.personalArea.personalSpaceWithNames({ name: userName }),
+            });
+            // Define the new owner of the area
+            merge(property, {
+                ownerId: userUUID,
+            });
         }
 
         this.executeCommand(
