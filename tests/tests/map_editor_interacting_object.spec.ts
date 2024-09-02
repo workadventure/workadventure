@@ -94,6 +94,9 @@ test.describe("Map editor interacting with object @oidc", () => {
     await EntityEditor.setOpenLinkProperty(page, "https://workadventu.re");
     await Menu.closeMapEditor(page);
 
+    // Refresh the page to see the entity
+    await page.reload();
+
     // Move to the entity
     await EntityEditor.moveAndRightClick(page, 13 * 32, 13 * 32);
 
