@@ -82,7 +82,7 @@ export class AreasManager {
     public getAreasByPropertyType(propertyType: string): Area[] {
         return this.areas.reduce((areas, area) => {
             const areaFound = area.areaData.properties.find((property) => property.type === propertyType);
-            if(areaFound) {
+            if (areaFound) {
                 areas.push(area);
             }
             return areas;
