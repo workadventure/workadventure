@@ -65,7 +65,7 @@
         {:else}
             {#if createFolderError !== undefined}
                 <div class="tw-bg-red-500 tw-p-2 tw-rounded-md">
-                    {$LL.chat.createRoom.error()} : <b><i>{createFolderError}</i></b>
+                    {$LL.chat.createFolder.error()} : <b><i>{createFolderError}</i></b>
                 </div>
             {/if}
             <p class="tw-p-0 tw-m-0 tw-pl-1 tw-font-bold">{$LL.chat.createFolder.name()}</p>
@@ -73,11 +73,11 @@
                 class="tw-w-full tw-rounded-xl tw-text-white placeholder:tw-text-sm tw-px-3 tw-py-2 tw-p tw-border-light-purple tw-border tw-border-solid tw-bg-contrast"
                 placeholder={$LL.chat.createFolder.name()}
                 bind:value={createFolderOptions.name}
-                data-testid="createRoomName"
+                data-testid="createFolderName"
             />
             <p class="tw-p-0 tw-m-0 tw-pl-1 tw-font-bold">{$LL.chat.createFolder.visibility.label()}</p>
             <select
-                data-testid="createRoomVisibility"
+                data-testid="createFolderVisibility"
                 bind:value={createFolderOptions.visibility}
                 class="tw-m-0 tw-bg-contrast tw-rounded-xl"
             >
@@ -134,11 +134,11 @@
                 >{$LL.chat.createFolder.buttons.cancel()}</button
             >
             <button
-                data-testid="createRoomButton"
+                data-testid="createFolderButton"
                 class="disabled:tw-text-gray-400 disabled:tw-bg-gray-500 tw-bg-secondary tw-flex-1 tw-justify-center"
                 disabled={createFolderOptions.name === undefined || createFolderOptions.name?.trim().length === 0}
                 on:click={() => createNewFolder(createFolderOptions)}
-                >{$LL.chat.createRoom.buttons.create()}
+                >{$LL.chat.createFolder.buttons.create()}
             </button>
         {/if}
     </svelte:fragment>

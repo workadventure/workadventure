@@ -40,10 +40,10 @@
         {:else}
             <IconChevronRight />
         {/if}
-        {$name}</button
-    >
+        {$name}
+    </button>
     {#if isGuest === false}
-        <CreateRoomOrFolderOption parentID={id} />
+        <CreateRoomOrFolderOption parentID={id} parentName={$name} />
     {/if}
 </div>
 
