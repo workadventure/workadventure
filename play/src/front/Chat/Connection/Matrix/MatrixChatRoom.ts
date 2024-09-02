@@ -56,6 +56,7 @@ export class MatrixChatRoom implements ChatRoom {
     private listOn: {
         eventName: RoomEmittedEvents | EventEmitterEvents | RoomMemberEvent;
         //TODO : find better solution than function type | delete before merge 
+        //@ts-ignore
         callback: Function // (...args: (unknown|MatrixEvent|Room|RoomMember)[]) => void;
     }[];
     constructor(
