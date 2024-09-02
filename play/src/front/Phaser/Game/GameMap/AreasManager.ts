@@ -79,6 +79,16 @@ export class AreasManager {
         return this.areas.find((area) => area.areaData.id === areaId);
     }
 
+    public getAreasByPropertyType(propertyType: string): Area[] {
+        return this.areas.reduce((areas, area) => {
+            const areaFound = area.areaData.properties.find((property) => property.type === propertyType);
+            if (areaFound) {
+                areas.push(area);
+            }
+            return areas;
+        }, [] as Area[]);
+    }
+
     /**
      * Returns the list of all areas that the user has no access to.
      */
