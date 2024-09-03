@@ -6,6 +6,7 @@ import { AreaData, AreaDataProperties } from "@workadventure/map-editor";
 import { Observable } from "rxjs";
 import { z } from "zod";
 import { OpenCoWebsiteObject } from "../Chat/Utils";
+import { SpaceRegistryInterface } from "../Space/SpaceRegistry/SpaceRegistryInterface";
 
 export interface ExternalSvelteComponentStore {
     addActionBarComponent: (key: string, externsionModule: ExtensionModule, componentType: ComponentType) => void;
@@ -35,6 +36,7 @@ export interface ExtensionModuleOptions {
     closeCoWebsite: (id: string) => unknown;
     adminUrl?: string;
     getOauthRefreshToken?: (tokenToRefresh: string) => Promise<OauthRefreshToken>;
+    spaceRegistry?: SpaceRegistryInterface;
 }
 
 export interface ExtensionModuleAreaProperty {
@@ -70,8 +72,8 @@ export const RoomMetadataType = z.object({
                 token: z.string(),
                 provider: z.string(),
             })
-        ),
-    }),
+        ).optional(),
+    }).optional(),
     modules: z.enum(["ms-teams"]).array(),
     msTeamsSettings: z.object({
         communication: z.boolean(),
