@@ -970,7 +970,7 @@ export class GameScene extends DirtyScene {
         mediaManager.disableMyMicrophone();
         // stop playing audio, close any open website, stop any open Jitsi, unsubscribe
         coWebsiteManager.cleanup();
-        this.chatConnection.clearListener();
+        //this.chatConnection.clearListener();
         // Stop the script, if any
         if (this.mapFile) {
             const scripts = this.getScriptUrls(this.mapFile);
