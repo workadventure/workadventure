@@ -11,20 +11,21 @@ import chatUtils from "./chatUtils";
 test.describe("matrix chat area property",()=>{
     test.beforeEach(
         "Ignore tests on mobilechromium because map editor not available for mobile devices",
-        ({}, {project}) => {
+        async ({page,request}, {project}) => {
             //Map Editor not available on mobile
             if (project.name === "mobilechromium") {
                 //eslint-disable-next-line playwright/no-skipped-test
                 test.skip();
                 return;
             }
+            chatUtils.resetMatrixDatabase()
+            await resetWamMaps(request);
+        
+            await page.goto(Map.url("empty"));
         }
     );
 
-    test("it should automatically open the chat when entering the area if the property is checked", async ({page, request, browserName}) => {
-        await resetWamMaps(request);
-
-        await page.goto(Map.url("empty"));
+    test("it should automatically open the chat when entering the area if the property is checked", async ({page, browserName}) => {
 
         //await page.evaluate(() => localStorage.setItem('debug', '*'));
         await login(page, "test", 3, "en-US", false);
@@ -57,10 +58,7 @@ test.describe("matrix chat area property",()=>{
     });
 
 
-    test("it should automatically close the chat when the user leaves the area", async ({page, request, browserName}) => {
-        await resetWamMaps(request);
-
-        await page.goto(Map.url("empty"));
+    test("it should automatically close the chat when the user leaves the area", async ({page, browserName}) => {
 
         await login(page, "test", 3, "en-US", false);
         await oidcMatrixUserLogin(page, false);
@@ -93,10 +91,7 @@ test.describe("matrix chat area property",()=>{
     });
 
 
-    test("it should leave the matrix room when the user quits the room from an area with a matrix chat room link", async ({page, request, browserName}) => {
-        await resetWamMaps(request);
-
-        await page.goto(Map.url("empty"));
+    test("it should leave the matrix room when the user quits the room from an area with a matrix chat room link", async ({page, browserName}) => {
 
         await login(page, "test", 3, "en-US", false);
         await oidcMatrixUserLogin(page, false);
