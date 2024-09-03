@@ -831,6 +831,8 @@ class MSTeams implements MSTeamsExtensionModule {
             const message: MSTeamsMeeting = JSON.parse(event.spaceMessage.message);
             meetingCreated = true;
 
+            console.debug("Space message to open Teams meeting receive", message);
+
             // Open the meeting
             this.openCowebsiteTeamsMeeting(message).catch((e) =>
                 console.error("Error while opening cowebsite Teams meeting", e)
