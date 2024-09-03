@@ -18,6 +18,7 @@ import {
 } from "matrix-js-sdk";
 import * as Sentry from "@sentry/svelte";
 import { get, Writable, writable } from "svelte/store";
+import * as Sentry from "@sentry/svelte";
 import { MediaEventContent, MediaEventInfo } from "matrix-js-sdk/lib/@types/media";
 import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
@@ -57,7 +58,7 @@ export class MatrixChatRoom implements ChatRoom {
         eventName: RoomEmittedEvents | EventEmitterEvents | RoomMemberEvent;
         //TODO : find better solution than function type | delete before merge 
         //TODO : recuperer le type matrix https://matrix-org.github.io/matrix-js-sdk/classes/matrix.Room.html
-        //@ts-ignore
+        // eslint-disable-line  @typescript-eslint/ban-types
         callback: Function // (...args: (unknown|MatrixEvent|Room|RoomMember)[]) => void;
         
     }[];
@@ -216,6 +217,8 @@ export class MatrixChatRoom implements ChatRoom {
             { eventName: RoomEvent.Redaction, callback: this.handleRoomRedaction }
         );
 
+        //TODO : Delete before merge !
+        // eslint-disable-line @typescript-eslint/no-misused-promises
         this.matrixRoom.on(RoomEvent.Timeline,this.handleRoomTimeline)
             
             /*(event, room, toStartOfTimeline, _, data) => {
