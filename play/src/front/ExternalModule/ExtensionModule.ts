@@ -66,14 +66,18 @@ export interface ExtensionModule {
 }
 
 export const RoomMetadataType = z.object({
-    player: z.object({
-        accessTokens: z.array(
-            z.object({
-                token: z.string(),
-                provider: z.string(),
-            })
-        ).optional(),
-    }).optional(),
+    player: z
+        .object({
+            accessTokens: z
+                .array(
+                    z.object({
+                        token: z.string(),
+                        provider: z.string(),
+                    })
+                )
+                .optional(),
+        })
+        .optional(),
     modules: z.enum(["ms-teams"]).array(),
     msTeamsSettings: z.object({
         communication: z.boolean(),

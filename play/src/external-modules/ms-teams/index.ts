@@ -5,11 +5,14 @@ import { subscribe } from "svelte/internal";
 import { get, Readable, Unsubscriber, Updater, writable } from "svelte/store";
 import { CalendarEventInterface } from "@workadventure/shared-utils";
 import { AreaData, AreaDataProperties } from "@workadventure/map-editor";
+import { Subscription } from "rxjs";
 import { notificationPlayingStore } from "../../front/Stores/NotificationStore";
 import { ExtensionModule, ExtensionModuleOptions, RoomMetadataType } from "../../front/ExternalModule/ExtensionModule";
 import { NODE_ENV } from "../../front/Enum/EnvironmentVariable";
 import { OpenCoWebsiteObject } from "../../front/Chat/Utils";
 import LL from "../../i18n/i18n-svelte";
+import { SpaceInterface } from "../../front/Space/SpaceInterface";
+import { AllUsersSpaceFilterInterface } from "../../front/Space/SpaceFilter/AllUsersSpaceFilter";
 import { TeamsActivity, TeamsAvailability } from "./MSTeamsInterface";
 
 import TeamsMeetingAreaPropertyEditor from "./Components/TeamsMeetingAreaPropertyEditor.svelte";
@@ -17,8 +20,6 @@ import AddTeamsMeetingAreaPropertyButton from "./Components/AddTeamsMeetingAreaP
 import TeamsPopupStatus from "./Components/TeamsPopupStatus.svelte";
 import TeamsAvailabilityStatusInformation from "./Components/TeamsAvailabilityStatusInformation.svelte";
 import TeamsActionBar from "./Components/TeamsActionBar.svelte";
-import { SpaceInterface } from "../../front/Space/SpaceInterface";
-import { Subscription } from "rxjs";
 
 const MS_GRAPH_ENDPOINT_V1 = "https://graph.microsoft.com/v1.0";
 const MS_GRAPH_ENDPOINT_BETA = "https://graph.microsoft.com/beta";
@@ -139,6 +140,7 @@ class MSTeams implements MSTeamsExtensionModule {
 
     private observePublicEventUnsubscribe?: Subscription;
     private observeUserJoinedUnsubscribe?: Subscription;
+    private filterObserveUserJoined?: AllUsersSpaceFilterInterface;
     private setTimeoutOpenMeeting?: NodeJS.Timeout;
 
     init(roomMetadata: RoomMetadataType, options: ExtensionModuleOptions) {
@@ -153,7 +155,9 @@ class MSTeams implements MSTeamsExtensionModule {
 
         this.teamsSynchronisationStore.set(TeamsModuleStatus.SYNC);
 
-        const microsoftTeamsMetadata = roomMetadata?.player?.accessTokens ? roomMetadata.player.accessTokens[0] : undefined;
+        const microsoftTeamsMetadata = roomMetadata?.player?.accessTokens
+            ? roomMetadata.player.accessTokens[0]
+            : undefined;
         if (microsoftTeamsMetadata === undefined || roomMetadata.player?.accessTokens?.length === 0) {
             console.error("Microsoft teams metadata is undefined. Cancelling the initialization");
             return;
@@ -779,12 +783,15 @@ class MSTeams implements MSTeamsExtensionModule {
         console.debug("Enter extension module area");
 
         // join space meeting
-        if(this.moduleOptions.spaceRegistry){
-            console.debug("SpaceRegistry is defined, join space, create or get meeting and share it!", `msteams-${area.id}`);
+        if (this.moduleOptions.spaceRegistry) {
+            console.debug(
+                "SpaceRegistry is defined, join space, create or get meeting and share it!",
+                `msteams-${area.id}`
+            );
             let _space = undefined;
-            try{
+            try {
                 _space = this.moduleOptions.spaceRegistry.get(`msteams-${area.id}`);
-            }catch(e){
+            } catch (e) {
                 console.info("Error while joining space", e);
             }
             this.space = _space ? _space : this.moduleOptions.spaceRegistry.joinSpace(`msteams-${area.id}`);
@@ -792,20 +799,23 @@ class MSTeams implements MSTeamsExtensionModule {
             // Get metadata of the space,
             // If the space has a meeting, open the meeting
             const metadata = this.space.getMetadata();
-            if(metadata.get('joinMeetingIdSettings') !== undefined){
+            if (metadata.get("joinMeetingIdSettings") !== undefined) {
                 this.openPopupMeeting(
-                    metadata.get('subject') as string,
-                    metadata.get('joinWebUrl') as string,
-                    (metadata.get('joinMeetingIdSettings') as { joinMeetingId: string, passcode?: string }).joinMeetingId,
-                    new Date(metadata.get('startDateTime') as string),
-                    new Date(metadata.get('endDateTime') as string),
-                    (metadata.get('joinMeetingIdSettings') as { joinMeetingId: string, passcode?: string }).passcode,
-                ).then((cowebsiteOpened) => {
-                    this.cowebsiteOpenedId = cowebsiteOpened.id;
-                });
+                    metadata.get("subject") as string,
+                    metadata.get("joinWebUrl") as string,
+                    (metadata.get("joinMeetingIdSettings") as { joinMeetingId: string; passcode?: string })
+                        .joinMeetingId,
+                    new Date(metadata.get("startDateTime") as string),
+                    new Date(metadata.get("endDateTime") as string),
+                    (metadata.get("joinMeetingIdSettings") as { joinMeetingId: string; passcode?: string }).passcode
+                )
+                    .then((cowebsiteOpened) => {
+                        this.cowebsiteOpenedId = cowebsiteOpened.id;
+                    })
+                    .catch((e) => console.error("Error while opening cowebsite Teams meeting", e));
                 return;
             }
-        }else{
+        } else {
             console.error("SpaceRegistry is not defined, unable to join space, create or get meeting and share it!");
             return;
         }
@@ -822,43 +832,52 @@ class MSTeams implements MSTeamsExtensionModule {
             meetingCreated = true;
 
             // Open the meeting
-            this.openCowebsiteTeamsMeeting(message);
+            this.openCowebsiteTeamsMeeting(message).catch((e) =>
+                console.error("Error while opening cowebsite Teams meeting", e)
+            );
 
             // Unsuscribe to the event
             this.observePublicEventUnsubscribe?.unsubscribe();
         });
 
         // FIXME: with the new space registry, we need to wait for the space to be created
-        if(this.setTimeoutOpenMeeting) clearTimeout(this.setTimeoutOpenMeeting);
+        if (this.setTimeoutOpenMeeting) clearTimeout(this.setTimeoutOpenMeeting);
         this.setTimeoutOpenMeeting = setTimeout(() => {
-            if(meetingCreated) return;
-            if(this.clientId) {
+            if (meetingCreated) return;
+            if (this.clientId) {
                 this.createOrGetMeeting(area.id)
-                    .then(async (data) => {
+                    .then((data) => {
                         // Open the meeting
-                        this.openCowebsiteTeamsMeeting(data);
-    
+                        this.openCowebsiteTeamsMeeting(data).catch((e) =>
+                            console.error("Error while opening cowebsite Teams meeting", e)
+                        );
+
                         // Save the meeting data in the space metadata
                         const metadata = new Map<string, unknown>();
-                        metadata.set('subject', data.subject);
-                        metadata.set('startDateTime', data.startDateTime);
-                        metadata.set('endDateTime', data.endDateTime);
-                        metadata.set('joinWebUrl', data.joinWebUrl);
-                        metadata.set('joinMeetingIdSettings', data.joinMeetingIdSettings);
-    
+                        metadata.set("subject", data.subject);
+                        metadata.set("startDateTime", data.startDateTime);
+                        metadata.set("endDateTime", data.endDateTime);
+                        metadata.set("joinWebUrl", data.joinWebUrl);
+                        metadata.set("joinMeetingIdSettings", data.joinMeetingIdSettings);
+
                         this.space?.setMetadata(metadata);
-                        const filter = this.space?.watchAllUsers();
-                        this.observeUserJoinedUnsubscribe = filter?.observeUserJoined.subscribe((event) => {
-                            this.space?.emitPublicMessage({
-                                $case: "spaceMessage",
-                                spaceMessage: {
-                                    message: JSON.stringify(data)
-                                }
-                            });
-                        });
+                        this.filterObserveUserJoined = this.space?.watchAllUsers();
+                        this.observeUserJoinedUnsubscribe = this.filterObserveUserJoined?.observeUserJoined.subscribe(
+                            () => {
+                                this.space?.emitPublicMessage({
+                                    $case: "spaceMessage",
+                                    spaceMessage: {
+                                        message: JSON.stringify(data),
+                                    },
+                                });
+                            }
+                        );
                     })
                     .catch((error) => {
                         console.error(error);
+                        this.observeUserJoinedUnsubscribe?.unsubscribe();
+                        if (this.filterObserveUserJoined) this.space?.stopWatching(this.filterObserveUserJoined);
+
                         notificationPlayingStore.removeNotificationById(area.id);
                         notificationPlayingStore.playNotification(
                             get(LL).externalModule.teams.unableJoinMeeting(),
@@ -886,7 +905,8 @@ class MSTeams implements MSTeamsExtensionModule {
         // leave space meeting
         this.observePublicEventUnsubscribe?.unsubscribe();
         this.observeUserJoinedUnsubscribe?.unsubscribe();
-        if(this.space && this.moduleOptions.spaceRegistry){
+        if (this.space && this.moduleOptions.spaceRegistry) {
+            if (this.filterObserveUserJoined) this.space?.stopWatching(this.filterObserveUserJoined);
             this.moduleOptions.spaceRegistry.leaveSpace(this.space);
         }
 
