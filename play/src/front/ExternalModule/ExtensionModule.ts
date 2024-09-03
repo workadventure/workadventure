@@ -67,17 +67,18 @@ export const RoomMetadataType = z.object({
     player: z.object({
         accessTokens: z.array(
             z.object({
-                token: z.string(),
                 provider: z.string(),
+                token: z.string(),
             })
         ),
     }),
-    modules: z.enum(["ms-teams"]).array(),
+    msteams: z.boolean().optional(),
+    modules: z.enum(["ms-teams", "discord", "slack"]).array(),
     msTeamsSettings: z.object({
         communication: z.boolean(),
         status: z.boolean(),
         calendar: z.boolean(),
-    }),
+    }).optional(),
 });
 
 export type RoomMetadataType = z.infer<typeof RoomMetadataType>;
