@@ -37,6 +37,11 @@ test.describe('Variables', () => {
     const textField = page
       .frameLocator('#cowebsite-buffer iframe')
       .locator('#textField');
+    
+    await textField.waitFor({
+      timeout : 120000
+    });
+
     await expect(textField).toHaveValue('default value');
     await textField.fill('');
     await textField.fill('new value');
