@@ -21,6 +21,11 @@ test.describe("Matrix chat tests @oidc", () => {
       await ChatUtils.resetMatrixDatabase();
     }
   );
+
+  test.afterAll('reset matrix database',async ()=>{
+    await ChatUtils.resetMatrixDatabase();
+});
+
   test("Open matrix Chat", async ({ page }, { project }) => {
     const isMobile = project.name === "mobilechromium";
     await login(page, "test", 3, "us-US", isMobile);
