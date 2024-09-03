@@ -37,19 +37,13 @@ test.describe('Variables', () => {
     const textField = page
       .frameLocator('#cowebsite-buffer iframe')
       .locator('#textField');
-    
-    await textField.waitFor({
-      timeout : 120000
-    });
-
     await expect(textField).toHaveValue('default value');
     await textField.fill('');
     await textField.fill('new value');
     await textField.press('Tab');
 
-    await page.goto(
-      publicTestMapUrl("tests/Variables/shared_variables.json", "variables")
-    );
+    await gotoWait200(page, publicTestMapUrl("tests/Variables/shared_variables.json", "variables"));
+
     await expect(textField).toHaveValue('new value');
 
     // Now, let's kill the reverse proxy to cut the connexion
@@ -62,7 +56,7 @@ test.describe('Variables', () => {
     // 2: detect reconnecting screen
     // 3: start Traefik again
 
-    await expect(textField).toHaveValue('new value', { timeout: 120000 });
+    await expect(textField).toHaveValue('new value', { timeout: 60000 });
 
     stopRedis();
     await textField.fill('');
@@ -98,7 +92,7 @@ test.describe('Variables', () => {
     // Redis will reconnect automatically and will store the variable on reconnect!
     // So we should see the new value.
     await expect(textField).toHaveValue('value set while Redis stopped', {
-      timeout: 120000,
+      timeout: 60000,
     });
 
     // Now, let's try to kill / reboot the back
@@ -115,9 +109,8 @@ test.describe('Variables', () => {
     await textField.fill('value set after back restart');
     await textField.press('Tab');
 
-    await page.goto(
-      publicTestMapUrl("tests/Variables/shared_variables.json", "variables")
-    );
+    await gotoWait200(page, publicTestMapUrl("tests/Variables/shared_variables.json", "variables"));
+
     // Redis will reconnect automatically and will store the variable on reconnect!
     // So we should see the new value.
     await expect(textField).toHaveValue('value set after back restart');
@@ -134,9 +127,8 @@ test.describe('Variables', () => {
     await textField.fill('value set after pusher restart');
     await textField.press('Tab');
 
-    await page.goto(
-      publicTestMapUrl("tests/Variables/shared_variables.json", "variables")
-    );
+    await gotoWait200(page, publicTestMapUrl("tests/Variables/shared_variables.json", "variables"));
+
     // Redis will reconnect automatically and will store the variable on reconnect!
     // So we should see the new value.
     await expect(textField).toHaveValue('value set after pusher restart');
@@ -196,6 +188,7 @@ test.describe('Variables', () => {
       const rooms = await getPusherRooms(request);
       const json = await rooms.json();
       const users = json[`${play_url}/_/variables/${maps_domain}/tests/Variables/Cache/variables_tmp.json`] ?? 0;
+      console.log({users});
       return users;
     }).toBe(2);
 
