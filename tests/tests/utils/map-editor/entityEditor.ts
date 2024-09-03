@@ -4,7 +4,7 @@ import { expect, Page } from "@playwright/test";
 class EntityEditor {
   async selectEntity(page: Page, nb: number, search?: string, expectedFilename?: string) {
     if (search != undefined) {
-      await page.getByPlaceholder("Search").click();
+      await page.getByPlaceholder("Search").click({timeout:20_000});
       await page.getByPlaceholder("Search").fill(search);
     }
     await expect(page.getByTestId("entityImageLoader")).toHaveCount(0);

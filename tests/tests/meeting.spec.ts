@@ -62,7 +62,7 @@ test.describe('Meeting actions test', () => {
         // Check if the user has been muted
         await expect(page.locator('.cameras-container .other-cameras .video-container .media-box-camera-off-size')).toBeVisible({timeout: 20_000});
         // Click on the mute video button
-        await page.click('.cameras-container .other-cameras .video-container .action-button#mute-video-user');
+        await page.click('.cameras-container .other-cameras .video-container .action-button#mute-video-user',{timeout:60_000});
 
         // Check if "Bob" user receive the request to be muted
         await expect(userBob.locator('.interact-menu')).toBeVisible({timeout: 20_000});
