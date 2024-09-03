@@ -40,6 +40,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     isEncryptionRequiredAndNotSet: Writable<boolean>;
     isGuest: Writable<boolean> = writable(true);
     hasUnreadMessages: Readable<boolean>;
+    roomCreationInProgress: Writable<boolean> = writable(false);
     constructor(
         private connection: Connection,
         clientPromise: Promise<MatrixClient>,
@@ -170,9 +171,12 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             return Promise.reject(new Error("CreateRoomOptions is empty"));
         }
         try {
+            this.roomCreationInProgress.set(true);
             return await this.client.createRoom(this.mapCreateRoomOptionsToMatrixCreateRoomOptions(roomOptions));
         } catch (error) {
             throw this.handleMatrixError(error);
+        } finally {
+            this.roomCreationInProgress.set(false);
         }
     }
 
@@ -224,6 +228,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
         if (existingDirectRoom) return existingDirectRoom;
 
+        this.roomCreationInProgress.set(true);
+
         const createRoomOptions = {
             //TODO not clean code
             invite: [{ value: userToInvite, label: userToInvite }],
@@ -258,6 +264,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             return newRoom;
         } catch (error) {
             throw this.handleMatrixError(error);
+        } finally {
+            this.roomCreationInProgress.set(false);
         }
     }
 
