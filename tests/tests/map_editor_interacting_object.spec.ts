@@ -96,6 +96,8 @@ test.describe("Map editor interacting with object @oidc", () => {
 
     // Refresh the page to see the entity
     await page.goto(Map.url("empty"));
+    // Wait for the map to be loaded
+    await expect(page.locator("button#menuIcon").nth(0)).toBeVisible();
 
     // Move to the entity
     await EntityEditor.moveAndRightClick(page, 13 * 32, 13 * 32);
