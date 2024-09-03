@@ -21,7 +21,7 @@ import TeamsActionBar from "./Components/TeamsActionBar.svelte";
 const MS_GRAPH_ENDPOINT_V1 = "https://graph.microsoft.com/v1.0";
 const MS_GRAPH_ENDPOINT_BETA = "https://graph.microsoft.com/beta";
 const MS_ME_ENDPOINT = "/me";
-const MS_ME_PRESENCE_ENDPOINT = "/me/presence";
+const MS_ME_PRESENCE_ENDPOINT = "/presence";
 
 enum MSGraphMessageEventSource {
     MicrosoftGraphPresence = "#Microsoft.Graph.presence",
@@ -140,7 +140,9 @@ class MSTeams implements MSTeamsExtensionModule {
 
         this.openCoWebSite = this.moduleOptions.openCoWebSite;
         this.closeCoWebSite = this.moduleOptions.closeCoWebsite;
+
         this.teamsSynchronisationStore.set(TeamsModuleStatus.SYNC);
+
         const microsoftTeamsMetadata = roomMetadata.player.accessTokens[0];
         if (roomMetadata.player.accessTokens.length === 0 && microsoftTeamsMetadata === undefined) {
             console.error("Microsoft teams metadata is undefined. Cancelling the initialization");
@@ -168,28 +170,62 @@ class MSTeams implements MSTeamsExtensionModule {
         this.msAxiosClientBeta.interceptors.response.use(null, (error) =>
             this.refreshTokenInterceptor(error, this.moduleOptions.getOauthRefreshToken)
         );
-        this.setMSTeamsClientId();
 
         this.userAccessToken = this.moduleOptions.userAccessToken;
         this.adminUrl = this.moduleOptions.adminUrl;
         this.roomId = this.moduleOptions.roomId;
 
-        if (roomMetadata.msTeamsSettings.status) {
-            this.listenToTeamsStatusUpdate(this.moduleOptions.onExtensionModuleStatusChange);
-            if (this.moduleOptions.workadventureStatusStore) {
-                this.listenToWorkadventureStatus = subscribe(
-                    this.moduleOptions.workadventureStatusStore,
-                    (workadventureStatus: AvailabilityStatus) => {
-                        this.setStatusToTeams(workadventureStatus);
+        // Get the client ID
+        this.setMSTeamsClientId()
+            .then(() => {
+                // Listen to the status change
+                if (roomMetadata.msTeamsSettings.status) {
+                    this.listenToTeamsStatusUpdate(this.moduleOptions.onExtensionModuleStatusChange).catch((e) =>
+                        console.error("Error while listening Teams status update", e)
+                    );
+                    if (this.moduleOptions.workadventureStatusStore) {
+                        this.listenToWorkadventureStatus = subscribe(
+                            this.moduleOptions.workadventureStatusStore,
+                            (workadventureStatus: AvailabilityStatus) => {
+                                this.setStatusToTeams(workadventureStatus)?.catch((e) =>
+                                    console.error("Error while setting Teams status", e)
+                                );
+                            }
+                        );
                     }
-                );
-            }
-        }
+                }
 
-        if (roomMetadata.msTeamsSettings.calendar && this.moduleOptions.calendarEventsStoreUpdate) {
-            this.calendarEventsStoreUpdate = this.moduleOptions.calendarEventsStoreUpdate;
-            this.updateCalendarEvents().catch((e) => console.error("Error while updating calendar events", e));
-        }
+                // Update the calendar events
+                if (roomMetadata.msTeamsSettings.calendar && this.moduleOptions.calendarEventsStoreUpdate) {
+                    this.calendarEventsStoreUpdate = this.moduleOptions.calendarEventsStoreUpdate;
+                    this.updateCalendarEvents().catch((e) => console.error("Error while updating calendar events", e));
+                }
+
+                // Initialize the subscription
+                if (
+                    this.adminUrl != undefined &&
+                    this.adminUrl.indexOf("localhost") === -1 &&
+                    NODE_ENV === "production"
+                ) {
+                    this.initSubscription().catch((e) => console.error("Error while initializing subscription", e));
+                } else {
+                    // In development mode, we can't use the webhook because the server is not accessible from the internet
+                    // So we replace the webhook by sending a call API every 10 minutes
+                    setInterval(() => {
+                        this.updateCalendarEvents().catch((e) =>
+                            console.error("Error while updating calendar events", e)
+                        );
+                    }, 1000 * 10 * 10);
+
+                    // So we replace the webhook by sending a call API every 10 seconds
+                    setInterval(() => {
+                        this.listenToTeamsStatusUpdate(this.moduleOptions.onExtensionModuleStatusChange).catch((e) =>
+                            console.error("Error while listening Teams status update", e)
+                        );
+                    }, 1000 * 10);
+                }
+            })
+            .catch((e) => console.error("Error while initializing Microsoft Teams module", e));
 
         if (this.moduleOptions.externalModuleMessage) {
             // The externalModuleMessage is completed in the RoomConnection. No need to unsubscribe.
@@ -226,28 +262,8 @@ class MSTeams implements MSTeamsExtensionModule {
             });
         }
 
-        // Initialize the subscription
-        if (this.adminUrl != undefined) {
-            this.initSubscription().catch((e) => console.error("Error while initializing subscription", e));
-        } else {
-            console.info("Admin URL is not defined. Subscription to Graph API webhook is not possible!");
-        }
-
         console.info("Microsoft teams module for WorkAdventure initialized");
         this.teamsSynchronisationStore.set(TeamsModuleStatus.ONLINE);
-
-        // In development mode, we can't use the webhook because the server is not accessible from the internet
-        if ((this.adminUrl == undefined || this.adminUrl.indexOf("localhost") !== -1) && NODE_ENV !== "production") {
-            // So we replace the webhook by sending a call API every 10 minutes
-            setInterval(() => {
-                this.updateCalendarEvents().catch((e) => console.error("Error while updating calendar events", e));
-            }, 1000 * 10 * 10);
-
-            // So we replace the webhook by sending a call API every 10 seconds
-            setInterval(() => {
-                this.listenToTeamsStatusUpdate(this.moduleOptions.onExtensionModuleStatusChange);
-            }, 1000 * 10);
-        }
 
         const externalSvelteComponent = get(this.moduleOptions.externalSvelteComponent);
         if (externalSvelteComponent.addAvailibilityStatusComponent) {
@@ -290,8 +306,8 @@ class MSTeams implements MSTeamsExtensionModule {
     }
 
     listenToTeamsStatusUpdate(onTeamsStatusChange?: (workAdventureNewStatus: AvailabilityStatus) => void) {
-        this.msAxiosClientV1
-            .get<unknown>(MS_ME_PRESENCE_ENDPOINT)
+        return this.msAxiosClientV1
+            .get<unknown>(`/users/${this.clientId}/${MS_ME_PRESENCE_ENDPOINT}`)
             .then((response) => {
                 const userPresence = response.data;
                 const userPresenceResponse = z
@@ -329,7 +345,7 @@ class MSTeams implements MSTeamsExtensionModule {
             return;
         }
 
-        this.msAxiosClientV1
+        return this.msAxiosClientV1
             .post(this.getUrlForSettingUserPresence(), {
                 availability: newTeamsAvailability,
                 activity: newTeamsAvailability,
@@ -359,7 +375,7 @@ class MSTeams implements MSTeamsExtensionModule {
             id: z.string(),
         });
 
-        this.msAxiosClientV1
+        return this.msAxiosClientV1
             .get(MS_ME_ENDPOINT)
             .then((response) => {
                 const meResponse = meResponseObject.safeParse(response.data);
