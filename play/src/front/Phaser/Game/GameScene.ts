@@ -1963,6 +1963,7 @@ export class GameScene extends DirtyScene {
                             getOauthRefreshToken: this.connection?.getOauthRefreshToken.bind(this.connection),
                             adminUrl: ADMIN_URL,
                             externalSvelteComponent: externalSvelteComponentStore,
+                            spaceRegistry: this.spaceRegistry,
                         });
 
                         if (defaultExtensionModule.calendarSynchronised) isActivatedStore.set(true);
