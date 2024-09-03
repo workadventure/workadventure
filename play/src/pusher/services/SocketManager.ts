@@ -1456,9 +1456,12 @@ export class SocketManager implements ZoneEventListener {
     async leaveChatRoomArea(socket: Socket): Promise<void> {
         const { chatID, currentChatRoomArea } = socket.getUserData();
 
-        if (!chatID || !currentChatRoomArea) {
-            //TODO : msg error
-            return Promise.reject(new Error(""));
+        if (!currentChatRoomArea) {
+            return Promise.reject(new Error("currentChatRoomArea is undefined"));
+        }
+
+        if (!chatID) {
+            return Promise.reject(new Error("ChatID is undefined"));
         }
 
         Promise.all(

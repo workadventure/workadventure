@@ -12,6 +12,7 @@ import {
     PlayAudioPropertyData,
     SpeakerMegaphonePropertyData,
 } from "@workadventure/map-editor";
+import * as Sentry from "@sentry/svelte";
 import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
 import { Jitsi } from "@workadventure/shared-utils";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
@@ -581,7 +582,10 @@ export class AreasPropertiesListener {
                     chatZoneLiveStore.set(true);
                     if (property.shouldOpenAutomatically) chatVisibilityStore.set(true);
                 })
-                .catch((error) => console.error(error));
+                .catch((error) => {
+                    Sentry.captureMessage(`Failed to join room area : ${error}`);
+                    console.error(error);
+                });
 
             return;
         }

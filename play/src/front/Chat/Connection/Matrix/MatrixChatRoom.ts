@@ -56,10 +56,8 @@ export class MatrixChatRoom implements ChatRoom {
     private handleRoomRedaction = this.onRoomRedaction.bind(this);
     private handleMemberTyping = this.onMemberTyping.bind(this);
 
-    private listOn: {
+    private registeredListeners: {
         eventName: RoomEmittedEvents | EventEmitterEvents | RoomMemberEvent;
-        //TODO : find better solution than function type | delete before merge
-        //TODO : recuperer le type matrix https://matrix-org.github.io/matrix-js-sdk/classes/matrix.Room.html
         callback: Listener<RoomEmittedEvents, RoomEventHandlerMap, EventEmitterEvents | RoomEmittedEvents>;
     }[];
     constructor(
@@ -85,13 +83,13 @@ export class MatrixChatRoom implements ChatRoom {
         this.timelineWindow = new TimelineWindow(matrixRoom.client, matrixRoom.getLiveTimeline().getTimelineSet());
         this.isEncrypted = writable(matrixRoom.hasEncryptionStateEvent());
         this.typingMembers = writable([]);
-        this.listOn = [];
+        this.registeredListeners = [];
 
         this.isRoomFolder = matrixRoom.isSpaceRoom();
         void this.matrixRoom.getMembersWithMembership(KnownMembership.Join).forEach((member) => {
-            this.listOn.push({
+            this.registeredListeners.push({
                 eventName: RoomMemberEvent.Typing,
-                //TODO : remove as before merge
+                //TODO : remove 'as' before merge
                 callback: this.handleMemberTyping as Listener<
                     RoomEmittedEvents,
                     RoomEventHandlerMap,
@@ -216,7 +214,7 @@ export class MatrixChatRoom implements ChatRoom {
     }
 
     private startHandlingChatRoomEvents() {
-        this.listOn.push(
+        this.registeredListeners.push(
             //TODO : Delete before merge !
             //eslint-disable-next-line @typescript-eslint/no-misused-promises
             { eventName: RoomEvent.Timeline, callback: this.handleRoomTimeline },
@@ -227,10 +225,6 @@ export class MatrixChatRoom implements ChatRoom {
         //TODO : Delete before merge !
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.matrixRoom.on(RoomEvent.Timeline, this.handleRoomTimeline);
-
-        /*(event, room, toStartOfTimeline, _, data) => {
-            this.onRoomTimeline(event, room, toStartOfTimeline, _, data).catch((error) => console.error(error));
-        });*/
         this.matrixRoom.on(RoomEvent.Name, this.handleRoomName);
         this.matrixRoom.on(RoomEvent.Redaction, this.handleRoomRedaction);
     }
@@ -578,7 +572,7 @@ export class MatrixChatRoom implements ChatRoom {
     }
 
     destroy() {
-        this.listOn.forEach(({ callback, eventName }) => {
+        this.registeredListeners.forEach(({ callback, eventName }) => {
             //TODO : try to find a other solution than as | delete ts-ignore before merge
             //@ts-ignore
             this.matrixRoom.off(eventName as RoomEmittedEvents, callback);

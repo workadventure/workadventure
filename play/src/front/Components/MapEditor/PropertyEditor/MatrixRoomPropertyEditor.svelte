@@ -1,11 +1,11 @@
 <script lang="ts">
     import { MatrixRoomPropertyData } from "@workadventure/map-editor";
     import { createEventDispatcher, onDestroy, onMount } from "svelte";
+    import * as Sentry from "@sentry/svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { mapEditorSelectedAreaPreviewStore } from "../../../Stores/MapEditorStore";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
-
     export let property: MatrixRoomPropertyData;
     let oldName = property.displayName;
 
@@ -32,7 +32,10 @@
                         console.log("$mapEditorSelectedAreaPreviewStore is empty ");
                     }
                 })
-                .catch((error) => console.error(error));
+                .catch((error) => {
+                    console.error(error);
+                    Sentry.captureMessage(`Failed to create room area : ${error}`);
+                });
         }
     });
 
