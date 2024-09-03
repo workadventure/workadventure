@@ -50,6 +50,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     isEncryptionRequiredAndNotSet: Writable<boolean>;
     isGuest: Writable<boolean> = writable(true);
     hasUnreadMessages: Readable<boolean>;
+    roomCreationInProgress: Writable<boolean> = writable(false);
     roomFolders: MapStore<MatrixRoomFolder["id"], MatrixRoomFolder> = new MapStore<
         MatrixRoomFolder["id"],
         MatrixRoomFolder
@@ -357,27 +358,12 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         }
 
         try {
-            const result = await this.client.createRoom(
-                this.mapCreateRoomOptionsToMatrixCreateRoomOptions(roomOptions)
-            );
-
-            await this.waitForNextSync();
-
-            if (roomOptions.parentSpaceID) {
-                try {
-                    await this.addRoomToSpace(roomOptions.parentSpaceID, result.room_id);
-                    await this.waitForNextSync();
-
-                    return result; // Return result here after adding the room to the space
-                } catch {
-                    this.roomList.delete(result.room_id);
-                    return Promise.reject(new Error(get(LL).chat.addRoomToFolderError()));
-                }
-            }
-
-            return result;
+            this.roomCreationInProgress.set(true);
+            return await this.client.createRoom(this.mapCreateRoomOptionsToMatrixCreateRoomOptions(roomOptions));
         } catch (error) {
             throw this.handleMatrixError(error);
+        } finally {
+            this.roomCreationInProgress.set(false);
         }
     }
 
@@ -524,6 +510,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
         if (existingDirectRoom) return existingDirectRoom;
 
+        this.roomCreationInProgress.set(true);
+
         const createRoomOptions = {
             //TODO not clean code
             invite: [{ value: userToInvite, label: userToInvite }],
@@ -550,6 +538,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             return this.createAndAddNewRootRoom(room);
         } catch (error) {
             throw this.handleMatrixError(error);
+        } finally {
+            this.roomCreationInProgress.set(false);
         }
     }
 

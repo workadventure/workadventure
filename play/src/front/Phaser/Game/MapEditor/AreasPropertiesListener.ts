@@ -41,7 +41,11 @@ import { gameManager } from "../GameManager";
 import { OpenCoWebsite } from "../GameMapPropertiesListener";
 import { GameScene } from "../GameScene";
 import { mapEditorAskToClaimPersonalAreaStore } from "../../../Stores/MapEditorStore";
-import { requestVisitCardsStore, selectedChatIDRemotePlayerStore } from "../../../Stores/GameStore";
+import {
+    canRequestVisitCardsStore,
+    requestVisitCardsStore,
+    selectedChatIDRemotePlayerStore,
+} from "../../../Stores/GameStore";
 import { isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
 import { MessageUserJoined } from "../../../Connection/ConnexionModels";
 import { Area } from "../../Entity/Area";
@@ -550,6 +554,7 @@ export class AreasPropertiesListener {
         area?: Area
     ): void {
         if (property.ownerId !== null) {
+            canRequestVisitCardsStore.set(true);
             this.displayPersonalAreaOwnerVisitCard(property.ownerId, areaData, area);
         } else if (property.accessClaimMode === PersonalAreaAccessClaimMode.enum.dynamic) {
             this.displayPersonalAreaClaimDialogBox(property, areaData, area);
@@ -564,6 +569,7 @@ export class AreasPropertiesListener {
                 connection
                     .queryMember(ownerId)
                     .then((member: Member) => {
+                        if (get(canRequestVisitCardsStore) === false) return;
                         if (member?.visitCardUrl) {
                             requestVisitCardsStore.set(member.visitCardUrl);
                         }
@@ -713,6 +719,9 @@ export class AreasPropertiesListener {
     }
 
     private handlePersonalAreaPropertyOnLeave(area?: Area): void {
+        // Reset this store to indicate that the user is no longer in the personal area and cannot request or display their business card.
+        canRequestVisitCardsStore.set(false);
+
         mapEditorAskToClaimPersonalAreaStore.set(undefined);
         if (get(requestVisitCardsStore)) {
             requestVisitCardsStore.set(null);

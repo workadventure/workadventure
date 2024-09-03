@@ -150,9 +150,17 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
 
         this.entities.set(entityId, entity);
 
-        if (entity.isActivatable()) {
-            this.activatableEntities.push(entity);
-        }
+        // We use the promise to be sure that the entity is fully loaded before we check if it is activatable and push it to the activatableEntities array
+        this.scene
+            .getEntityPermissionsPromise()
+            .then(() => {
+                if (entity.isActivatable()) {
+                    this.activatableEntities.push(entity);
+                }
+            })
+            .catch((e) => {
+                console.error(e);
+            });
 
         this.scene.markDirty();
         return entity;
