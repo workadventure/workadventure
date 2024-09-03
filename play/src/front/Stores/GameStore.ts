@@ -3,6 +3,8 @@ import { BannerEvent } from "./../Api/Events/Ui/BannerEvent";
 
 export const userMovingStore = writable(false);
 
+// This store is used to determine whether the user is currently in the personal area or has left before loading the business card.
+export const canRequestVisitCardsStore = writable(false);
 export const requestVisitCardsStore = writable<string | null>(null);
 
 export const userIsAdminStore = writable(false);
