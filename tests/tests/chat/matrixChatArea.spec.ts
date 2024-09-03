@@ -12,8 +12,8 @@ test.describe("matrix chat area property",()=>{
     test.beforeEach(
         "Ignore tests on mobilechromium because map editor not available for mobile devices",
         async ({page,request}, {project}) => {
-            //Map Editor not available on mobile
-            if (project.name === "mobilechromium") {
+            //Map Editor not available on mobile / WebKit has issue with camera
+            if (project.name === "mobilechromium" || project.name === "webkit") {
                 //eslint-disable-next-line playwright/no-skipped-test
                 test.skip();
                 return;
