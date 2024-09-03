@@ -385,7 +385,7 @@ test.describe("Matrix chat tests @oidc", () => {
     await expect(page.getByText(privateFolder1)).toBeAttached();  
 
     const room = ChatUtils.getRandomName();
-    await ChatUtils.openCreateFolderDialog(page,privateFolder1);
+    await ChatUtils.openCreateRoomDialog(page,privateFolder1);
     await page.getByTestId("createRoomName").fill(room);
     await page.getByTestId("createRoomVisibility").selectOption("public");
     await page.getByTestId("createRoomButton").click();
@@ -409,7 +409,7 @@ test.describe("Matrix chat tests @oidc", () => {
     await expect(page.getByText(privateFolder1)).toBeAttached();  
     
     const room = ChatUtils.getRandomName();
-    await ChatUtils.openCreateFolderDialog(page,privateFolder1);
+    await ChatUtils.openCreateRoomDialog(page,privateFolder1);
     await page.getByTestId("createRoomName").fill(room);
     await page.getByTestId("createRoomVisibility").selectOption("restricted");
     await page.getByTestId("createRoomButton").click();
