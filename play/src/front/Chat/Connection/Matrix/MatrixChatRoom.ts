@@ -56,8 +56,10 @@ export class MatrixChatRoom implements ChatRoom {
     private listOn: {
         eventName: RoomEmittedEvents | EventEmitterEvents | RoomMemberEvent;
         //TODO : find better solution than function type | delete before merge 
+        //TODO : recuperer le type matrix https://matrix-org.github.io/matrix-js-sdk/classes/matrix.Room.html
         //@ts-ignore
         callback: Function // (...args: (unknown|MatrixEvent|Room|RoomMember)[]) => void;
+        
     }[];
     constructor(
         private matrixRoom: Room,
