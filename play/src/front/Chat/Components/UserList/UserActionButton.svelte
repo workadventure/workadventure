@@ -18,6 +18,8 @@
 
     const isInTheSameMap = user.playUri === roomUrl;
 
+    const roomCreationInProgress = chatConnection.roomCreationInProgress;
+
     const iAmAdmin = connection?.hasTag("admin");
 
     const goTo = (type: string, playUri: string, uuid: string) => {
@@ -44,19 +46,14 @@
         closeChatUserMenu();
     };
 
-    let loadingDirectRoomAccess = false;
-
     const openChat = async () => {
         let room: ChatRoom | undefined = chatConnection.getDirectRoomFor(user.chatId);
         if (!room)
             try {
-                loadingDirectRoomAccess = true;
                 room = await chatConnection.createDirectRoom(user.chatId);
             } catch (error) {
                 console.error(error);
                 Sentry.captureMessage("Failed to create room");
-            } finally {
-                loadingDirectRoomAccess = false;
             }
 
         if (!room) return;
@@ -107,13 +104,13 @@
             {/if}
         {/if}
 
-        {#if user.chatId && !loadingDirectRoomAccess}
+        {#if user.chatId && !$roomCreationInProgress}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <span class="sendMessage wa-dropdown-item" on:click|stopPropagation={openChat}
                 ><IconMessage font-size="13" />
                 {$LL.chat.userList.sendMessage()}</span
             >
-        {:else if loadingDirectRoomAccess}
+        {:else if roomCreationInProgress}
             <div
                 class="tw-min-h-[30px] tw-text-md tw-flex tw-gap-2 tw-justify-center tw-flex-row tw-items-center tw-p-1"
             >
