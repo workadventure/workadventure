@@ -15,7 +15,7 @@
     async function searchRoomTags(filterText: string): Promise<{ value: string; label: string }[]> {
         const customTag = {
             value: filterText,
-            label: `add a new tag: '${filterText}'`,
+            label: filterText,
         };
         if (filterText.length === 0) return [];
         const connection = gameManager.getCurrentGameScene().connection;
