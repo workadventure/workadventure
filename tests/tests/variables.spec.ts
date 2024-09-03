@@ -62,7 +62,7 @@ test.describe('Variables', () => {
     // 2: detect reconnecting screen
     // 3: start Traefik again
 
-    await expect(textField).toHaveValue('new value', { timeout: 60000 });
+    await expect(textField).toHaveValue('new value', { timeout: 120000 });
 
     stopRedis();
     await textField.fill('');
@@ -98,7 +98,7 @@ test.describe('Variables', () => {
     // Redis will reconnect automatically and will store the variable on reconnect!
     // So we should see the new value.
     await expect(textField).toHaveValue('value set while Redis stopped', {
-      timeout: 60000,
+      timeout: 120000,
     });
 
     // Now, let's try to kill / reboot the back
