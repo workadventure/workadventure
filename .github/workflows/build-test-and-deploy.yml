@@ -736,7 +736,7 @@ jobs:
       - uses: rlespinasse/github-slug-action@4.2.3
 
       - name: Set ADMIN_URL if "deploy-connect-to-admin" label is set
-        run: echo "ADMIN_API_URL=https://admin-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re" >> $GITHUB_ENV
+        run: echo "ADMIN_API_URL=https://admin-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG_URL || env.GITHUB_REF_SLUG_URL }}.test.workadventu.re" >> $GITHUB_ENV
         if: ${{ (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy-connect-to-admin')) || env.GITHUB_REF_SLUG == 'develop'  }}
 
 #      - name: Write certificate
@@ -789,7 +789,7 @@ jobs:
         run: |
           echo "
           appVersion: \"${DEPLOY_REF}\"
-          domainName: ${DEPLOY_REF}.test.workadventu.re
+          domainName: ${NAMESPACE}.test.workadventu.re
           forceRedeploy: true
           play:
             secretEnv:
@@ -840,6 +840,7 @@ jobs:
           SECRET_JITSI_KEY: ${{ secrets.SECRET_JITSI_KEY }}
           TURN_STATIC_AUTH_SECRET: ${{ secrets.TURN_STATIC_AUTH_SECRET }}
           DEPLOY_REF: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          NAMESPACE: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG_URL || env.GITHUB_REF_SLUG_URL }}
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
           POSTHOG_URL: ${{ secrets.POSTHOG_URL }}
           ENABLE_REPORT_ISSUES_MENU: ${{ secrets.ENABLE_REPORT_ISSUES_MENU }}
@@ -863,24 +864,24 @@ jobs:
                 echo "No releases in 'pending-upgrade' state found in namespace $NAMESPACE."
           fi
         env:
-          NAMESPACE: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          NAMESPACE: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG_URL || env.GITHUB_REF_SLUG_URL }}
 
       - name: 'Deploy'
         run: "helm upgrade --install --create-namespace -n ${NAMESPACE} --wait -f values.yaml -f values-cd.yaml test ."
         working-directory: contrib/helm
         env:
-          NAMESPACE: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          NAMESPACE: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG_URL || env.GITHUB_REF_SLUG_URL }}
 
       - name: "Fix path to assets in WAM test files"
         run: find "." -type f -name "*.wam" -exec sed -i "s|http://play.workadventure.localhost|${PLAY_URL}|g" {} \;
         working-directory: map-storage/tests
         env:
-          PLAY_URL: "https://play-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re"
+          PLAY_URL: "https://play-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG_URL || env.GITHUB_REF_SLUG_URL }}.test.workadventu.re"
 
       - name: Upload demo maps in map-storage
-        run: rm -f tests/assets.zip && cd tests/assets && zip -r ../assets.zip * && curl -F 'file=@../assets.zip' https://map-storage-${DEPLOY_REF}.test.workadventu.re/upload --basic -u john.doe:password
+        run: rm -f tests/assets.zip && cd tests/assets && zip -r ../assets.zip * && curl -F 'file=@../assets.zip' https://map-storage-${NAMESPACE}.test.workadventu.re/upload --basic -u john.doe:password
         env:
-          DEPLOY_REF: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          NAMESPACE: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG_URL || env.GITHUB_REF_SLUG_URL }}
         working-directory: map-storage
 
       - name: Add a comment in PR
@@ -889,7 +890,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          msg: "Environment deployed at https://play-${{ env.GITHUB_HEAD_REF_SLUG }}.test.workadventu.re \nTests available at https://maps-${{ env.GITHUB_HEAD_REF_SLUG }}.test.workadventu.re/tests"
+          msg: "Environment deployed at https://play-${{ env.GITHUB_HEAD_REF_SLUG_URL }}.test.workadventu.re \nTests available at https://maps-${{ env.GITHUB_HEAD_REF_SLUG_URL }}.test.workadventu.re/tests"
           check_for_duplicate_msg: true
 
   helm-test:
@@ -933,7 +934,7 @@ jobs:
         run: find "." -type f -name "*.wam" -exec sed -i "s|http://play.workadventure.localhost|${PLAY_URL}|g" {} \;
         working-directory: map-storage/tests
         env:
-          PLAY_URL: "https://play-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re"
+          PLAY_URL: "https://play-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG_URL || env.GITHUB_REF_SLUG_URL }}.test.workadventu.re"
 
       - name: Create assets.zip needed by the tests
         run: rm -f tests/assets.zip && cd tests/assets && zip -r ../assets.zip *
@@ -944,10 +945,10 @@ jobs:
         run: npm run test-helm-install -- --shard ${{ matrix.shard }}/${{ matrix.nbShards }}
         working-directory: tests
         env:
-          PLAY_URL: "https://play-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re"
-          ROOM_API_HOSTNAME: "room-api-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re"
-          MAP_STORAGE_ENDPOINT: "map-storage-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re"
-          MAPS_DOMAIN: "maps-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re"
+          PLAY_URL: "https://play-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG_URL || env.GITHUB_REF_SLUG_URL }}.test.workadventu.re"
+          ROOM_API_HOSTNAME: "room-api-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG_URL || env.GITHUB_REF_SLUG_URL }}.test.workadventu.re"
+          MAP_STORAGE_ENDPOINT: "map-storage-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG_URL || env.GITHUB_REF_SLUG_URL }}.test.workadventu.re"
+          MAPS_DOMAIN: "maps-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG_URL || env.GITHUB_REF_SLUG_URL }}.test.workadventu.re"
           ROOM_API_SECRET_KEY: "password"
           ADMIN_API_TOKEN: ${{ secrets.ADMIN_API_TOKEN }}
       - uses: actions/upload-artifact@v2
