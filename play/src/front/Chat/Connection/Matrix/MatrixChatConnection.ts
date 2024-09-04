@@ -790,8 +790,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.client?.off(RoomEvent.MyMembership, this.handleMyMembership);
         this.client?.off("RoomState.events" as EmittedEvents, this.handleRoomStateEvent);
         this.client?.off(RoomEvent.Name, this.handleName);
-
-        this.client.off(RoomMemberEvent.Typing, this.handleRoomMemberTyping);
+        this.client?.off(RoomMemberEvent.Typing, this.handleRoomMemberTyping);
     }
     async destroy(): Promise<void> {
         await this.client?.logout(true);
