@@ -239,37 +239,40 @@ describe("MatrixChatConnection", () => {
     });
 
     describe("startMatrixClient", () => {
-        it.each([[ClientEvent.Sync], [ClientEvent.Room], [ClientEvent.DeleteRoom], [RoomEvent.MyMembership]])(
-            "should call this.client.on for event %s",
-            async (expectedEventName) => {
-                const onMock = vi.fn();
-                const mockMatrixClient = {
-                    isGuest: vi.fn(),
-                    on: onMock,
-                    store: {
-                        startup: vi.fn(),
-                    },
-                    initRustCrypto: vi.fn(),
-                    startClient: vi.fn(),
-                } as unknown as MatrixClient;
+        it.each([
+            [ClientEvent.Sync],
+            [ClientEvent.Room],
+            [ClientEvent.DeleteRoom],
+            [RoomEvent.MyMembership],
+            [RoomEvent.Name],
+            ["RoomState.events"],
+        ])("should call this.client.on for event %s", async (expectedEventName) => {
+            const onMock = vi.fn();
+            const mockMatrixClient = {
+                isGuest: vi.fn(),
+                on: onMock,
+                store: {
+                    startup: vi.fn(),
+                },
+                initRustCrypto: vi.fn(),
+                startClient: vi.fn(),
+            } as unknown as MatrixClient;
 
-                const clientPromise = Promise.resolve(mockMatrixClient);
+            const clientPromise = Promise.resolve(mockMatrixClient);
 
-                const matrixChatConnection = new MatrixChatConnection(
-                    basicMockConnection,
-                    clientPromise,
-                    basicMockMatrixSecurity
-                );
+            const matrixChatConnection = new MatrixChatConnection(
+                basicMockConnection,
+                clientPromise,
+                basicMockMatrixSecurity
+            );
 
-                await clientPromise;
+            await clientPromise;
 
-                onMock.mockRestore();
-                await matrixChatConnection.startMatrixClient();
+            onMock.mockRestore();
+            await matrixChatConnection.startMatrixClient();
 
-                expect(onMock).toHaveBeenCalledTimes(4);
-                expect(onMock.mock.calls.some(([eventName, _]) => eventName === expectedEventName)).toBeTruthy();
-            }
-        );
+            expect(onMock.mock.calls.some(([eventName, _]) => eventName === expectedEventName)).toBeTruthy();
+        });
         it("should start store from matrix client", async () => {
             const startUpMock = vi.fn();
             const mockMatrixClient = {
@@ -532,7 +535,6 @@ describe("MatrixChatConnection", () => {
 
             await expect(matrixChatConnection.createRoom({})).rejects.toThrowError("Room name is undefined");
         });
-
         it("should return client.createRoom Result when roomOptions is defined", async () => {
             const expected = {
                 room_id: "1",
@@ -540,7 +542,13 @@ describe("MatrixChatConnection", () => {
             const mockStartClient = vi.fn();
             const mockMatrixClient = {
                 isGuest: vi.fn(),
-                on: vi.fn(),
+                off: vi.fn(),
+                on: vi.fn((_, callback) => {
+                    callback(SyncState.Syncing);
+                }),
+                once: vi.fn().mockImplementation((_, callback) => {
+                    callback(SyncState.Syncing);
+                }),
                 store: {
                     startup: vi.fn(),
                 },
@@ -558,7 +566,6 @@ describe("MatrixChatConnection", () => {
             );
 
             await clientPromise;
-
             expect(await matrixChatConnection.createRoom({ name: "Test" })).toEqual(expected);
         });
     });
@@ -611,7 +618,10 @@ describe("MatrixChatConnection", () => {
             const mockStartClient = vi.fn();
             const mockMatrixClient = {
                 isGuest: vi.fn(),
-                on: vi.fn(),
+                off: vi.fn(),
+                on: vi.fn().mockImplementation((_, funcToResolve) => {
+                    funcToResolve(SyncState.Syncing);
+                }),
                 once: vi.fn().mockImplementation((_, funcToResolve) => {
                     funcToResolve(SyncState.Syncing);
                 }),
@@ -766,7 +776,10 @@ describe("MatrixChatConnection", () => {
             const mockStartClient = vi.fn();
             const mockMatrixClient = {
                 isGuest: vi.fn(),
-                on: vi.fn(),
+                off: vi.fn(),
+                on: vi.fn().mockImplementation((_, funcToResolve) => {
+                    funcToResolve(SyncState.Syncing);
+                }),
                 once: vi.fn().mockImplementation((_, funcToResolve) => {
                     funcToResolve(SyncState.Syncing);
                 }),
@@ -818,7 +831,10 @@ describe("MatrixChatConnection", () => {
             const mockStartClient = vi.fn();
             const mockMatrixClient = {
                 isGuest: vi.fn(),
-                on: vi.fn(),
+                off: vi.fn(),
+                on: vi.fn().mockImplementation((_, funcToResolve) => {
+                    funcToResolve(SyncState.Syncing);
+                }),
                 once: vi.fn().mockImplementation((_, funcToResolve) => {
                     funcToResolve(SyncState.Syncing);
                 }),
@@ -869,7 +885,10 @@ describe("MatrixChatConnection", () => {
             const mockStartClient = vi.fn();
             const mockMatrixClient = {
                 isGuest: vi.fn(),
-                on: vi.fn(),
+                off: vi.fn(),
+                on: vi.fn().mockImplementation((_, funcToResolve) => {
+                    funcToResolve(SyncState.Syncing);
+                }),
                 once: vi.fn().mockImplementation((_, funcToResolve) => {
                     funcToResolve(SyncState.Syncing);
                 }),

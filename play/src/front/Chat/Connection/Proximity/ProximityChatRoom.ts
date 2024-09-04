@@ -25,7 +25,7 @@ import { mapExtendedSpaceUserToChatUser } from "../../UserProvider/ChatUserMappe
 import { SimplePeer } from "../../../WebRtc/SimplePeer";
 import { bindMuteEventsToSpace } from "../../../Space/Utils/BindMuteEvents";
 import { gameManager } from "../../../Phaser/Game/GameManager";
-import { availabilityStatusStore, mediaStreamConstraintsStore } from "../../../Stores/MediaStore";
+import { availabilityStatusStore, requestedCameraState, requestedMicrophoneState } from "../../../Stores/MediaStore";
 
 export class ProximityChatMessage implements ChatMessage {
     isQuotedMessage = undefined;
@@ -77,6 +77,7 @@ export class ProximityChatRoom implements ChatRoom {
     private spaceWatcherUserJoinedObserver: Subscription | undefined;
     private spaceWatcherUserLeftObserver: Subscription | undefined;
     private newChatMessageWritingStatusStreamUnsubscriber: Subscription;
+    isRoomFolder = false;
 
     private unknownUser = {
         chatId: "0",
@@ -236,10 +237,10 @@ export class ProximityChatRoom implements ChatRoom {
     setTimelineAsRead(): void {
         console.info("setTimelineAsRead => Method not implemented yet!");
     }
-    leaveRoom(): void {
+    leaveRoom(): Promise<void> {
         throw new Error("leaveRoom => Method not implemented.");
     }
-    joinRoom(): void {
+    joinRoom(): Promise<void> {
         throw new Error("joinRoom => Method not implemented.");
     }
     loadMorePreviousMessages(): Promise<void> {
@@ -385,14 +386,13 @@ export class ProximityChatRoom implements ChatRoom {
 
         this.simplePeer.setSpaceFilter(this._spaceWatcher);
 
-        const mediaStreamConstraints = get(mediaStreamConstraintsStore);
         const actualStatus = get(availabilityStatusStore);
         if (!isAChatRoomIsVisible()) {
             selectedRoom.set(this);
             navChat.set("chat");
             if (
-                !mediaStreamConstraints.audio &&
-                !mediaStreamConstraints.video &&
+                !get(requestedMicrophoneState) &&
+                !get(requestedCameraState) &&
                 (actualStatus === AvailabilityStatus.ONLINE || actualStatus === AvailabilityStatus.AWAY)
             ) {
                 chatVisibilityStore.set(true);

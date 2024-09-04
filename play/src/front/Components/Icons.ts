@@ -37,3 +37,4 @@ export { default as IconUsers } from "~icons/tabler/users";
 export { default as IconDotsCircle } from "~icons/tabler/dotsCircleHorizontal";
 export { default as IconLogout } from "~icons/tabler/logout";
 export { default as IconMessage } from "~icons/tabler/message";
+export { default as IconFolder } from "~icons/tabler/folder";

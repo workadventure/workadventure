@@ -328,7 +328,7 @@ export class GameScene extends DirtyScene {
         this.currentCompanionTextureResolve = resolve;
         this.currentCompanionTextureReject = reject;
     });
-    public chatConnection!: ChatConnectionInterface;
+    private _chatConnection: ChatConnectionInterface | undefined;
     private _spaceRegistry: SpaceRegistryInterface | undefined;
     private allUserSpace: SpaceInterface | undefined;
     private _proximityChatRoom: ProximityChatRoom | undefined;
@@ -989,6 +989,8 @@ export class GameScene extends DirtyScene {
         if (this.allUserSpace) {
             this.spaceRegistry?.leaveSpace(this.allUserSpace);
         }
+
+        this._chatConnection?.clearListener();
         this.connection?.closeConnection();
         this.simplePeer?.closeAllConnections();
         this.simplePeer?.unregister();
@@ -1534,7 +1536,7 @@ export class GameScene extends DirtyScene {
                 this._spaceRegistry = new SpaceRegistry(this.connection);
 
                 this.allUserSpace = this._spaceRegistry.joinSpace(WORLD_SPACE_NAME);
-                this.chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
+                this._chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
 
                 //init merger
 
@@ -3682,6 +3684,13 @@ ${escapedMessage}
 
     private disableCameraResistance(): void {
         this.cameraManager.disableResistanceZone();
+    }
+
+    get chatConnection(): ChatConnectionInterface {
+        if (!this._chatConnection) {
+            throw new Error("_chatConnection not yet initialized");
+        }
+        return this._chatConnection;
     }
 
     //get spaceStore(): Promise<SpaceProviderInterface> {

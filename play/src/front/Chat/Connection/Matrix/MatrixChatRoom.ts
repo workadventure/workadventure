@@ -13,6 +13,7 @@ import {
     RoomMemberEvent,
     TimelineWindow,
 } from "matrix-js-sdk";
+import * as Sentry from "@sentry/svelte";
 import { get, Writable, writable } from "svelte/store";
 import { MediaEventContent, MediaEventInfo } from "matrix-js-sdk/lib/@types/media";
 import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
@@ -42,6 +43,7 @@ export class MatrixChatRoom implements ChatRoom {
     inMemoryEventsContent: Map<EventId, IContent>;
     isEncrypted!: Writable<boolean>;
     typingMembers: Writable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
+    isRoomFolder = false;
 
     constructor(
         private matrixRoom: Room,
@@ -66,6 +68,8 @@ export class MatrixChatRoom implements ChatRoom {
         this.timelineWindow = new TimelineWindow(matrixRoom.client, matrixRoom.getLiveTimeline().getTimelineSet());
         this.isEncrypted = writable(matrixRoom.hasEncryptionStateEvent());
         this.typingMembers = writable([]);
+
+        this.isRoomFolder = matrixRoom.isSpaceRoom();
 
         void this.matrixRoom.getMembersWithMembership(KnownMembership.Join).forEach((member) =>
             member.on(RoomMemberEvent.Typing, (event, member) => {
@@ -117,18 +121,26 @@ export class MatrixChatRoom implements ChatRoom {
             })
         );
 
+        this.inMemoryEventsContent = new Map<EventId, MatrixEvent>();
+
         (async () => {
             if (matrixRoom.hasEncryptionStateEvent()) {
                 await matrixSecurity.initClientCryptoConfiguration();
             }
-        })().catch((error) => console.error(error));
+        })()
+            .catch((error) => {
+                console.error(error);
+                Sentry.captureMessage("Failed to init client crypto configuration");
+            })
+            .then(async () => {
+                await this.initMatrixRoomMessagesAndReactions();
+            })
+            .catch((error) => {
+                console.error(error);
+                Sentry.captureMessage("Failed to init Matrix room messages");
+            });
 
         //Necessary to keep matrix event content for local event deletions after initialization
-        this.inMemoryEventsContent = new Map<EventId, MatrixEvent>();
-        (async () => {
-            await this.initMatrixRoomMessagesAndReactions();
-        })().catch((error) => console.error(error));
-
         this.startHandlingChatRoomEvents();
 
         this.matrixRoom
@@ -153,7 +165,6 @@ export class MatrixChatRoom implements ChatRoom {
                 console.error(error)
             );
         });
-
         this.hasPreviousMessage.set(this.timelineWindow.canPaginate(Direction.Backward));
     }
 
@@ -163,7 +174,10 @@ export class MatrixChatRoom implements ChatRoom {
         messageReactions: MapStore<string, MapStore<string, MatrixChatMessageReaction>>
     ) {
         if (event.isEncrypted()) {
-            await this.matrixRoom.client.decryptEventIfNeeded(event);
+            await this.matrixRoom.client.decryptEventIfNeeded(event).catch(() => {
+                console.error("Failed to decrypt");
+                Sentry.captureMessage("Failed to decrypt event");
+            });
         }
         if (event.getType() === "m.room.message" && !this.isEventReplacingExistingOne(event)) {
             messages.push(new MatrixChatMessage(event, this.matrixRoom));
@@ -418,12 +432,26 @@ export class MatrixChatRoom implements ChatRoom {
         }
     }
 
-    joinRoom(): void {
-        this.matrixRoom.client.joinRoom(this.id).catch((error) => console.error("Unable to join", error));
+    async joinRoom(): Promise<void> {
+        try {
+            await this.matrixRoom.client.joinRoom(this.id);
+            return;
+        } catch (error) {
+            Sentry.captureMessage("Failed to leave room");
+            console.error("Unable to join", error);
+            return Promise.reject(new Error("Failed to leave room"));
+        }
     }
 
-    leaveRoom(): void {
-        this.matrixRoom.client.leave(this.id).catch((error) => console.error("Unable to leave", error));
+    async leaveRoom(): Promise<void> {
+        try {
+            await this.matrixRoom.client.leave(this.id);
+            return;
+        } catch (error) {
+            Sentry.captureMessage("Failed to leave room");
+            console.error("Unable to leave", error);
+            throw new Error("Failed to leave room");
+        }
     }
 
     private getMatrixRoomType(): "direct" | "multiple" {

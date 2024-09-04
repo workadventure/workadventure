@@ -4,12 +4,10 @@
     import { selectedChatMessageToReply } from "../../Stores/ChatStore";
     import { getChatEmojiPicker } from "../../EmojiPicker";
     import LL from "../../../../i18n/i18n-svelte";
-    import { isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import { IconCircleX, IconMoodSmile, IconSend } from "@wa-icons";
 
     export let room: ChatRoom;
-    let isMobile = isMediaBreakpointUp("md");
 
     let message = "";
     let messageInput: HTMLDivElement;
@@ -126,7 +124,6 @@
 {/if}
 <div
     class="tw-flex tw-items-center tw-py-1 tw-gap-1 tw-border tw-border-solid tw-rounded-xl tw-pr-1 tw-border-light-purple"
-    class:tw-mb-20={isMobile}
 >
     <div
         data-testid="messageInput"

@@ -88,7 +88,8 @@
         if (
             target &&
             (["INPUT", "TEXTAREA"].includes(target.tagName) ||
-                (target.tagName === "DIV" && target.getAttribute("role") === "textbox"))
+                (target.tagName === "DIV" && target.getAttribute("role") === "textbox") ||
+                target.getAttribute("contenteditable") === "true")
         ) {
             try {
                 gameManager.getCurrentGameScene().userInputManager.disableControls();

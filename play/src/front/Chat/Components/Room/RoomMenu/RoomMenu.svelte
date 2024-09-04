@@ -44,8 +44,11 @@
 
     function closeMenuAndLeaveRoom() {
         toggleRoomOptions();
-        room.leaveRoom();
-        notificationPlayingStore.playNotification($LL.chat.roomMenu.leaveRoom.notification());
+        room.leaveRoom()
+            .then(() => {
+                notificationPlayingStore.playNotification($LL.chat.roomMenu.leaveRoom.notification());
+            })
+            .catch(() => console.error("Failed to leave room"));
     }
 </script>
 

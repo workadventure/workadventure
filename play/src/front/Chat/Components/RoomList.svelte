@@ -1,7 +1,6 @@
 <script lang="ts">
     import { get } from "svelte/store";
     // eslint-disable-next-line import/no-unresolved
-    import { openModal } from "svelte-modals";
     import { onDestroy, onMount } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import LL from "../../../i18n/i18n-svelte";
@@ -12,10 +11,11 @@
     import RoomTimeline from "./Room/RoomTimeline.svelte";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
     import JoignableRooms from "./Room/JoignableRooms.svelte";
-    import CreateRoomModal from "./Room/CreateRoomModal.svelte";
     import ChatLoader from "./ChatLoader.svelte";
     import ChatError from "./ChatError.svelte";
-    import { IconChevronDown, IconChevronRight, IconSquarePlus } from "@wa-icons";
+    import RoomFolder from "./RoomFolder.svelte";
+    import CreateRoomOrFolderOption from "./Room/CreateRoomOrFolderOption.svelte";
+    import { IconChevronDown, IconChevronRight } from "@wa-icons";
 
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
 
@@ -26,7 +26,9 @@
 
     let directRooms = chat.directRooms;
     let rooms = chat.rooms;
+    //TODO : Make a distinction between invitations to a room or a space;
     let roomInvitations = chat.invitations;
+    let roomFolders = chat.roomFolders;
 
     let displayDirectRooms = false;
     let displayRooms = false;
@@ -76,10 +78,6 @@
         displayRoomInvitations = !displayRoomInvitations;
     }
 
-    function openCreateRoomModal() {
-        openModal(CreateRoomModal);
-    }
-
     function toggleDisplayProximityChat() {
         selectedRoom.set(proximityChatRoom);
         proximityChatRoom.hasUnreadMessages.set(false);
@@ -95,9 +93,17 @@
         get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase())
     );
 
-    const isGuest = chat.isGuest;
+    $: isGuest = chat.isGuest;
 
     $: displayTwoColumnLayout = sideBarWidth >= CHAT_LAYOUT_LIMIT;
+
+    const isFoldersOpen: { [key: string]: boolean } = {};
+
+    $roomFolders.forEach((folder) => {
+        if (!(folder.id in isFoldersOpen)) {
+            isFoldersOpen[folder.id] = false;
+        }
+    });
 </script>
 
 <div
@@ -118,7 +124,7 @@
                 <ChatError />
             {/if}
             {#if $chatConnectionStatus === "ONLINE"}
-                {#if $joignableRoom.length > 0}
+                {#if $joignableRoom.length > 0 && $chatSearchBarValue.trim() !== ""}
                     <p class="tw-p-0 tw-m-0 tw-text-gray-400">{$LL.chat.availableRooms()}</p>
                     <div class="tw-flex tw-flex-col tw-overflow-auto">
                         {#each $joignableRoom as room (room.id)}
@@ -144,22 +150,26 @@
                         {/if}
                     </div>
                 {/if}
+                <div class="tw-flex tw-justify-between">
+                    <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={toggleDisplayDirectRooms}>
+                        {#if displayDirectRooms}
+                            <IconChevronDown />
+                        {:else}
+                            <IconChevronRight />
+                        {/if}
+                        {$LL.chat.people()}</button
+                    >
+                </div>
 
-                <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={toggleDisplayDirectRooms}>
-                    {#if displayDirectRooms}
-                        <IconChevronDown />
-                    {:else}
-                        <IconChevronRight />
-                    {/if}
-                    {$LL.chat.people()}
-                </button>
                 {#if displayDirectRooms}
-                    {#each filteredDirectRoom as room (room.id)}
-                        <Room {room} />
-                    {/each}
-                    {#if filteredDirectRoom.length === 0}
-                        <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
-                    {/if}
+                    <div class="tw-flex tw-flex-col tw-overflow-auto">
+                        {#each filteredDirectRoom as room (room.id)}
+                            <Room {room} />
+                        {/each}
+                        {#if filteredDirectRoom.length === 0}
+                            <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
+                        {/if}
+                    </div>
                 {/if}
 
                 <div class="tw-flex tw-justify-between">
@@ -172,13 +182,7 @@
                         {$LL.chat.rooms()}</button
                     >
                     {#if $isGuest === false}
-                        <button
-                            data-testid="openCreateRoomModalButton"
-                            class="tw-p-0 tw-m-0 tw-text-gray-400"
-                            on:click={openCreateRoomModal}
-                        >
-                            <IconSquarePlus font-size={16} />
-                        </button>
+                        <CreateRoomOrFolderOption />
                     {/if}
                 </div>
 
@@ -192,6 +196,17 @@
                         {/if}
                     </div>
                 {/if}
+                <!--roomBySpace-->
+                {#each Array.from($roomFolders.values()) as rootRoomFolder (rootRoomFolder.id)}
+                    <RoomFolder
+                        bind:isOpen={isFoldersOpen[rootRoomFolder.id]}
+                        name={rootRoomFolder.name}
+                        folders={rootRoomFolder.folders}
+                        rooms={rootRoomFolder.rooms}
+                        isGuest={$isGuest}
+                        id={rootRoomFolder.id}
+                    />
+                {/each}
             {/if}
 
             <div class="tw-flex tw-justify-between">
