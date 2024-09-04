@@ -1,7 +1,7 @@
 import axios from "axios";
 import { EventType } from "matrix-js-sdk";
+import * as Sentry from "@sentry/node";
 import { MATRIX_ADMIN_USER, MATRIX_API_URI, MATRIX_DOMAIN, MATRIX_ADMIN_PASSWORD } from "../enums/EnvironmentVariable";
-
 const ADMIN_CHAT_ID = `@${MATRIX_ADMIN_USER}:${MATRIX_DOMAIN}`;
 interface CreateRoomOptions {
     visibility: string;
@@ -24,13 +24,19 @@ class MatrixProvider {
     private roomAreaFolderID: string | undefined;
 
     constructor() {
-        this.overrideRateLimitForAdminAccount().catch((error) => console.error(error));
+        this.overrideRateLimitForAdminAccount().catch((error) => {
+            console.error(error);
+            Sentry.captureMessage(`Failed to override admin account ratelimit : ${error}`);
+        });
 
         this.createChatFolderAreaAndSetID()
             .then((roomID) => {
                 this.roomAreaFolderID = roomID;
             })
-            .catch((error) => console.error(error));
+            .catch((error) => {
+                console.error(error);
+                Sentry.captureMessage(`Failed to create chat folder for room area : ${error}`);
+            });
     }
 
     getMatrixIdFromEmail(email: string): string {
