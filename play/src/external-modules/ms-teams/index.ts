@@ -100,7 +100,7 @@ interface MSTeamsCalendarEvent {
 interface MSGraphSubscriptionResponse {
     data: MSGraphSubscription;
 }
-interface MSGraphSubscription {
+export interface MSGraphSubscription {
     id: string;
     changeType: string;
     clientState: string;
@@ -692,7 +692,7 @@ class MSTeams implements MSTeamsExtensionModule {
                     subscription.resource === `/communications/presences/${this.clientId}`
             );
             // Check if the subscription is expired
-            // If expiration is not expired, return the subscription
+            // If subscription is not expired, return the subscription
             if (presenceSubscription != undefined && new Date(presenceSubscription.expirationDateTime) > new Date()) {
                 return { data: presenceSubscription };
             }
