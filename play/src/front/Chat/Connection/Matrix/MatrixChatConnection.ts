@@ -201,13 +201,10 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     private onRoomMemberEventTyping(event: MatrixEvent, member: RoomMember) {
         if (!this.client) return;
         if (get(selectedRoom)?.id !== member.roomId && member.typing) return;
-
         const room = this.findRoomOrFolder(member.roomId);
-
         if (!room || room instanceof MatrixRoomFolder) {
             return;
         }
-
         const typingMember = member.user;
         if (!typingMember) return;
 
@@ -231,6 +228,14 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             });
             return;
         }
+
+        typingMemberInformation.avatarUrl = typingMemberInformation.avatarUrl
+            ? this.client.mxcUrlToHttp(typingMemberInformation.avatarUrl ?? "", 48, 48)
+            : typingMemberInformation.avatarUrl;
+
+        room.typingMembers.update((currentTypingMemberList) => {
+            return [...currentTypingMemberList, typingMemberInformation];
+        });
     }
 
     private onClientEventRoom(room: Room) {
@@ -349,6 +354,9 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     private createAndAddNewRootRoom(room: Room): MatrixChatRoom {
         const newRoom = new MatrixChatRoom(room);
         this.roomList.set(newRoom.id, newRoom);
+        if (get(selectedRoom)?.id === newRoom.id) {
+            selectedRoom.set(newRoom);
+        }
         return newRoom;
     }
     private onClientEventDeleteRoom(roomId: string) {
@@ -710,7 +718,14 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                     if (dmInviterId) {
                         await this.addDMRoomInAccountData(dmInviterId, roomId);
                     }
-                    res(this.createAndAddNewRootRoom(roomAfterSync));
+                    const room = this.findRoomOrFolder(roomAfterSync.roomId);
+                    if (room instanceof MatrixChatRoom) {
+                        res(room);
+                        return;
+                    }
+
+                    const roomFromRoomList = this.createAndAddNewRootRoom(roomAfterSync);
+                    res(roomFromRoomList);
                     return;
                 })
                 .catch((error) => {

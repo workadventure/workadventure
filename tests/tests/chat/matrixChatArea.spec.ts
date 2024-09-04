@@ -49,9 +49,6 @@ test.describe("matrix chat area property",()=>{
         await AreaEditor.drawArea(page, {x: 1 * 32 * 1.5, y: 5}, {x: 9 * 32 * 1.5, y: 4 * 32 * 1.5});
         await AreaEditor.addProperty(page, "Link Matrix room");
         await AreaEditor.setMatrixChatRoomProperty(page,true,"name of new room");
-        //TODO : remove this timeout - useful to wait pusher response
-        await page.waitForTimeout(1000);
-        
         
         await Menu.closeMapEditor(page);
         await Map.walkToPosition(page, 4 * 32, 2 * 32);
@@ -79,8 +76,6 @@ test.describe("matrix chat area property",()=>{
         await AreaEditor.drawArea(page, {x: 1 * 32 * 1.5, y: 5}, {x: 9 * 32 * 1.5, y: 4 * 32 * 1.5});
         await AreaEditor.addProperty(page, "Link Matrix room");
         await AreaEditor.setMatrixChatRoomProperty(page,true,"name of new room");
-        //TODO : remove this timeout - useful to wait pusher response 
-        await page.waitForTimeout(1000);
         
         
         await Menu.closeMapEditor(page);
@@ -112,10 +107,6 @@ test.describe("matrix chat area property",()=>{
         await AreaEditor.drawArea(page, {x: 1 * 32 * 1.5, y: 5}, {x: 9 * 32 * 1.5, y: 4 * 32 * 1.5});
         await AreaEditor.addProperty(page, "Link Matrix room");
         await AreaEditor.setMatrixChatRoomProperty(page,true,"name of new room");
-
-        //TODO : remove this timeout - useful to wait pusher response 
-        await page.waitForTimeout(1000);
-        
         
         await Menu.closeMapEditor(page);
         await Map.walkToPosition(page, 4 * 32, 2 * 32);

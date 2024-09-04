@@ -5,6 +5,7 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { mapEditorSelectedAreaPreviewStore } from "../../../Stores/MapEditorStore";
+    import ChatLoader from "../../../Chat/Components/ChatLoader.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     export let property: MatrixRoomPropertyData;
     let oldName = property.displayName;
@@ -13,17 +14,17 @@
     const roomConnection = gameScene.connection;
 
     const dispatch = createEventDispatcher();
-
+    let isCreatingRoom = false;
     function onValueChange() {
         dispatch("change");
     }
 
     onMount(() => {
         if (!property.matrixRoomId && roomConnection) {
-            console.log("call roomConnection queryCreateChatRoomForArea");
             roomConnection
                 .queryCreateChatRoomForArea(property.id)
                 .then((answer) => {
+                    isCreatingRoom = true;
                     property.matrixRoomId = answer.chatRoomID;
                     //use this instead of dispatch beacause if then is execute before areaeditor was close : no effect ...
                     if ($mapEditorSelectedAreaPreviewStore) {
@@ -35,6 +36,9 @@
                 .catch((error) => {
                     console.error(error);
                     Sentry.captureMessage(`Failed to create room area : ${error}`);
+                })
+                .finally(() => {
+                    isCreatingRoom = false;
                 });
         }
     });
@@ -70,29 +74,33 @@
         {$LL.mapEditor.properties.matrixProperties.label()}
     </span>
     <span slot="content">
-        <div class="area-name-container">
-            <label for="objectName">{$LL.mapEditor.properties.matrixProperties.roomNameLabel()} : </label>
-            <input
-                id="objectName"
-                type="text"
-                placeholder={$LL.mapEditor.properties.matrixProperties.roomNameLabelPlaceholder()}
-                bind:value={property.displayName}
-                on:change={onValueChange}
-            />
-        </div>
-        <div class="value-input">
-            <input
-                id="openAutomaticallyChatLabel"
-                data-testid="shouldOpenAutomaticallyCheckbox"
-                type="checkbox"
-                class="tw-w-4 tw-h-4"
-                bind:checked={property.shouldOpenAutomatically}
-                on:change={onValueChange}
-            />
-            <label for="openAutomaticallyChatLabel"
-                >{$LL.mapEditor.properties.matrixProperties.openAutomaticallyChatLabel()}</label
-            >
-        </div>
+        {#if isCreatingRoom}
+            <div class="area-name-container">
+                <label for="objectName">{$LL.mapEditor.properties.matrixProperties.roomNameLabel()} : </label>
+                <input
+                    id="objectName"
+                    type="text"
+                    placeholder={$LL.mapEditor.properties.matrixProperties.roomNameLabelPlaceholder()}
+                    bind:value={property.displayName}
+                    on:change={onValueChange}
+                />
+            </div>
+            <div class="value-input">
+                <input
+                    id="openAutomaticallyChatLabel"
+                    data-testid="shouldOpenAutomaticallyCheckbox"
+                    type="checkbox"
+                    class="tw-w-4 tw-h-4"
+                    bind:checked={property.shouldOpenAutomatically}
+                    on:change={onValueChange}
+                />
+                <label for="openAutomaticallyChatLabel"
+                    >{$LL.mapEditor.properties.matrixProperties.openAutomaticallyChatLabel()}</label
+                >
+            </div>
+        {:else if }
+            <ChatLoader label={$LL.chat.createRoom.loadingCreation()} />
+        {/if}
     </span>
 </PropertyEditorBase>
 

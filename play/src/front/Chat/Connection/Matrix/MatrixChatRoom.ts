@@ -29,8 +29,8 @@ type EventId = string;
 
 export class MatrixChatRoom implements ChatRoom {
     id!: string;
-    name!: Writable<string>;
-    type!: "multiple" | "direct";
+    name: Writable<string>;
+    type: "multiple" | "direct";
     hasUnreadMessages: Writable<boolean>;
     avatarUrl: string | undefined;
     messages: SearchableArrayStore<string, MatrixChatMessage>;
