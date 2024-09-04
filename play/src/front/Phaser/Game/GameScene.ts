@@ -1534,20 +1534,14 @@ export class GameScene extends DirtyScene {
                         if (email && chatId) this.connection?.emitUpdateChatId(email, chatId);
                     })
                     .catch((e) => {
-                        console.error(e);
+                        console.error(`Failed to create matrix client : ${error}`);
+                        Sentry.captureMessage(`Failed to create matrix client : ${error}`);
                     });
 
                 this._spaceRegistry = new SpaceRegistry(this.connection);
 
                 this.allUserSpace = this._spaceRegistry.joinSpace(WORLD_SPACE_NAME);
                 this._chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
-
-                        if (email && chatId && this.connection) this.connection.emitUpdateChatId(email, chatId);
-                    })
-                    .catch((error) => {
-                        console.error(`Failed to create matrix client : ${error}`);
-                        Sentry.captureMessage(`Failed to create matrix client : ${error}`);
-                    });
                 //init merger
 
                 const adminUserProvider = new AdminUserProvider(this.connection);
