@@ -784,7 +784,8 @@ export class AreasPropertiesListener {
 
         get(this.scene.chatConnection.rooms)
             .find((room) => room.id === property.matrixRoomId)
-            ?.leaveRoom();
+            ?.leaveRoom()
+            .catch((error) => console.error(error));
 
         if (this.scene.connection) {
             this.scene.connection.emitLeaveChatRoomArea(property.matrixRoomId);
