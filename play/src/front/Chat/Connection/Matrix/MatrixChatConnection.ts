@@ -144,37 +144,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.client.on(RoomEvent.MyMembership, this.handleMyMembership);
         this.client.on("RoomState.events" as EmittedEvents, this.handleRoomStateEvent);
         this.client.on(RoomEvent.Name, this.handleName);
-        this.client.on(RoomMemberEvent.Typing, (event: MatrixEvent, member: RoomMember) => {
-            if (get(selectedRoom)?.id !== member.roomId && member.typing) return;
+        this.client.on(RoomMemberEvent.Typing, this.handleRoomMemberTyping);
 
-            const room = this.roomList.get(member.roomId);
-
-            if (!room) return;
-
-            const typingMember = member.user;
-            if (!typingMember) return;
-
-            const typingMemberInformation = {
-                id: typingMember.userId,
-                name: typingMember.displayName || null,
-                avatarUrl: typingMember.avatarUrl || null,
-            };
-
-            const myUserID = this.client.getSafeUserId();
-
-            if (!typingMemberInformation.id || typingMemberInformation.id === myUserID) return;
-
-            const isAlreadyTyping = get(room.typingMembers).some((memberInformation) => {
-                return memberInformation.id === typingMemberInformation.id;
-            });
-
-            if (isAlreadyTyping) {
-                room.typingMembers.update((currentTypingMemberList) => {
-                    return currentTypingMemberList.filter((member) => member.id !== typingMemberInformation.id);
-                });
-                return;
-            }
-        });
         await this.client.store.startup();
         await this.client.initRustCrypto();
         await this.client.startClient({
@@ -228,11 +199,14 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.moveRoomToParentFolder(room, parentID);
     }
     private onRoomMemberEventTyping(event: MatrixEvent, member: RoomMember) {
+        if (!this.client) return;
         if (get(selectedRoom)?.id !== member.roomId && member.typing) return;
 
-        const room = this.roomList.get(member.roomId);
+        const room = this.findRoomOrFolder(member.roomId);
 
-        if (!room) return;
+        if (!room || room instanceof MatrixRoomFolder) {
+            return;
+        }
 
         const typingMember = member.user;
         if (!typingMember) return;
@@ -317,6 +291,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         const parentRoomsIDs = this.getParentRoomID(room);
         return parentRoomsIDs.length > 0 ? parentRoomsIDs[0] : undefined;
     }
+
     private tryAddRoomToParentFolder(room: Room, parentRoomID: string): boolean {
         const isSpaceRoom = room.isSpaceRoom();
         for (const [, folder] of this.roomFolders) {
