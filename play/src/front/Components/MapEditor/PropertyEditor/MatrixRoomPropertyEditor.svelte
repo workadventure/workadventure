@@ -6,6 +6,7 @@
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { mapEditorSelectedAreaPreviewStore } from "../../../Stores/MapEditorStore";
     import ChatLoader from "../../../Chat/Components/ChatLoader.svelte";
+    import ChatError from "../../../Chat/Components/ChatError.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     export let property: MatrixRoomPropertyData;
     let oldName = property.displayName;
@@ -15,6 +16,7 @@
 
     const dispatch = createEventDispatcher();
     let isCreatingRoom = false;
+    let creationRoomError = false;
     function onValueChange() {
         dispatch("change");
     }
@@ -36,6 +38,7 @@
                 .catch((error) => {
                     console.error(error);
                     Sentry.captureMessage(`Failed to create room area : ${error}`);
+                    creationRoomError = true;
                 })
                 .finally(() => {
                     isCreatingRoom = false;
@@ -74,7 +77,7 @@
         {$LL.mapEditor.properties.matrixProperties.label()}
     </span>
     <span slot="content">
-        {#if isCreatingRoom}
+        {#if !isCreatingRoom && !creationRoomError}
             <div class="area-name-container">
                 <label for="objectName">{$LL.mapEditor.properties.matrixProperties.roomNameLabel()} : </label>
                 <input
@@ -98,8 +101,10 @@
                     >{$LL.mapEditor.properties.matrixProperties.openAutomaticallyChatLabel()}</label
                 >
             </div>
-        {:else if }
+        {:else if isCreatingRoom && !creationRoomError}
             <ChatLoader label={$LL.chat.createRoom.loadingCreation()} />
+        {:else}
+            <ChatError label={$LL.chat.createRoom.error()} />
         {/if}
     </span>
 </PropertyEditorBase>
