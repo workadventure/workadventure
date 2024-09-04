@@ -20,17 +20,15 @@ interface CreateRoomOptions {
 class MatrixProvider {
     private accessToken: string | undefined;
     private lastAccessTokenDate: number = Date.now();
-    //TODO : env var ?
-    private roomAreaSpaceName = "space_for_area_room";
-    private roomAreaSpaceID: string | undefined;
+    private roomAreaFolderName = "current visited room";
+    private roomAreaFolderID: string | undefined;
 
     constructor() {
-        //TODO: DELETE and move in synapse config ?
         this.overrideRateLimitForAdminAccount().catch((error) => console.error(error));
 
-        this.createChatSpaceAreaAndSetID()
+        this.createChatFolderAreaAndSetID()
             .then((roomID) => {
-                this.roomAreaSpaceID = roomID;
+                this.roomAreaFolderID = roomID;
             })
             .catch((error) => console.error(error));
     }
@@ -104,10 +102,10 @@ class MatrixProvider {
             ],
         };
 
-        if (this.roomAreaSpaceID) {
+        if (this.roomAreaFolderID) {
             options.initial_state.push({
                 type: EventType.SpaceParent,
-                state_key: this.roomAreaSpaceID,
+                state_key: this.roomAreaFolderID,
                 content: {
                     via: [MATRIX_DOMAIN],
                 },
@@ -125,7 +123,7 @@ class MatrixProvider {
             .then((response) => {
                 if (response.status === 200) {
                     roomID = response.data.room_id;
-                    return this.AddRoomToSpace(response.data.room_id);
+                    return this.AddRoomToFolder(response.data.room_id);
                 } else {
                     return Promise.reject(new Error("Failed with status " + response.status));
                 }
@@ -234,18 +232,18 @@ class MatrixProvider {
             });
     }
 
-    private async createChatSpaceAreaAndSetID(): Promise<string> {
-        const spaceAreaID = await this.getChatSpaceAreaID();
-        if (spaceAreaID) {
-            return Promise.resolve(spaceAreaID);
+    private async createChatFolderAreaAndSetID(): Promise<string> {
+        const folderAreaID = await this.getChatFolderAreaID();
+        if (folderAreaID) {
+            return Promise.resolve(folderAreaID);
         }
         return await axios
             .post(
                 `${MATRIX_API_URI}_matrix/client/r0/createRoom`,
                 {
                     visibility: "public",
-                    room_alias_name: this.roomAreaSpaceName,
-                    name: "Room Area Space",
+                    room_alias_name: this.roomAreaFolderName,
+                    name: this.roomAreaFolderName,
                     creation_content: {
                         type: "m.space",
                     },
@@ -265,9 +263,9 @@ class MatrixProvider {
             });
     }
 
-    private async getChatSpaceAreaID(): Promise<string | undefined> {
+    private async getChatFolderAreaID(): Promise<string | undefined> {
         return axios
-            .get(`${MATRIX_API_URI}_matrix/client/r0/directory/room/%23${this.roomAreaSpaceName}:${MATRIX_DOMAIN}`, {
+            .get(`${MATRIX_API_URI}_matrix/client/r0/directory/room/%23${this.roomAreaFolderName}:${MATRIX_DOMAIN}`, {
                 headers: {
                     Authorization: "Bearer " + (await this.getAccessToken()),
                 },
@@ -285,9 +283,9 @@ class MatrixProvider {
             });
     }
 
-    async AddRoomToSpace(roomID: string): Promise<string> {
-        if (!this.roomAreaSpaceID) {
-            console.error(new Error(`Failed to add room : ${roomID} to room area space `));
+    async AddRoomToFolder(roomID: string): Promise<string> {
+        if (!this.roomAreaFolderID) {
+            console.error(new Error(`Failed to add room : ${roomID} to room area folder `));
             return Promise.resolve(roomID);
         }
 
@@ -297,7 +295,7 @@ class MatrixProvider {
 
         return axios
             .put(
-                `${MATRIX_API_URI}_matrix/client/r0/rooms/${this.roomAreaSpaceID}/state/m.space.child/${roomID}`,
+                `${MATRIX_API_URI}_matrix/client/r0/rooms/${this.roomAreaFolderID}/state/m.space.child/${roomID}`,
                 roomLinkContent,
                 {
                     headers: {
@@ -309,11 +307,11 @@ class MatrixProvider {
                 if (response.status === 200) {
                     return Promise.resolve(roomID);
                 } else {
-                    return Promise.reject(new Error(`Failed to add room : ${roomID} to room area space `));
+                    return Promise.reject(new Error(`Failed to add room : ${roomID} to room area folder `));
                 }
             })
             .catch((error) => {
-                return Promise.reject(new Error(`Failed to add room : ${roomID} to room area space `));
+                return Promise.reject(new Error(`Failed to add room : ${roomID} to room area folder `));
             });
     }
 
