@@ -13,6 +13,8 @@ import {
     PendingEventOrdering,
     Room,
     RoomEvent,
+    RoomMember,
+    RoomMemberEvent,
     SyncState,
     Visibility,
 } from "matrix-js-sdk";
@@ -44,6 +46,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     private handleMyMembership: (room: Room, membership: string, prevMembership: string | undefined) => void;
     private handleRoomStateEvent: (event: MatrixEvent) => void;
     private handleName: (room: Room) => void;
+    private handleRoomMemberTyping: (event: MatrixEvent, member: RoomMember) => void;
     connectionStatus: Writable<ConnectionStatus>;
     directRooms: Readable<MatrixChatRoom[]>;
     invitations: Readable<MatrixChatRoom[]>;
@@ -104,7 +107,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.handleMyMembership = this.onRoomEventMembership.bind(this);
         this.handleRoomStateEvent = this.onRoomStateEvent.bind(this);
         this.handleName = this.onRoomNameEvent.bind(this);
-
+        this.handleRoomMemberTyping = this.onRoomMemberEventTyping.bind(this);
         (async () => {
             this.client = await clientPromise;
             await this.startMatrixClient();
@@ -141,7 +144,37 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.client.on(RoomEvent.MyMembership, this.handleMyMembership);
         this.client.on("RoomState.events" as EmittedEvents, this.handleRoomStateEvent);
         this.client.on(RoomEvent.Name, this.handleName);
+        this.client.on(RoomMemberEvent.Typing, (event: MatrixEvent, member: RoomMember) => {
+            if (get(selectedRoom)?.id !== member.roomId && member.typing) return;
 
+            const room = this.roomList.get(member.roomId);
+
+            if (!room) return;
+
+            const typingMember = member.user;
+            if (!typingMember) return;
+
+            const typingMemberInformation = {
+                id: typingMember.userId,
+                name: typingMember.displayName || null,
+                avatarUrl: typingMember.avatarUrl || null,
+            };
+
+            const myUserID = this.client.getSafeUserId();
+
+            if (!typingMemberInformation.id || typingMemberInformation.id === myUserID) return;
+
+            const isAlreadyTyping = get(room.typingMembers).some((memberInformation) => {
+                return memberInformation.id === typingMemberInformation.id;
+            });
+
+            if (isAlreadyTyping) {
+                room.typingMembers.update((currentTypingMemberList) => {
+                    return currentTypingMemberList.filter((member) => member.id !== typingMemberInformation.id);
+                });
+                return;
+            }
+        });
         await this.client.store.startup();
         await this.client.initRustCrypto();
         await this.client.startClient({
@@ -194,6 +227,38 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
         this.moveRoomToParentFolder(room, parentID);
     }
+    private onRoomMemberEventTyping(event: MatrixEvent, member: RoomMember) {
+        if (get(selectedRoom)?.id !== member.roomId && member.typing) return;
+
+        const room = this.roomList.get(member.roomId);
+
+        if (!room) return;
+
+        const typingMember = member.user;
+        if (!typingMember) return;
+
+        const typingMemberInformation = {
+            id: typingMember.userId,
+            name: typingMember.displayName || null,
+            avatarUrl: typingMember.avatarUrl || null,
+        };
+
+        const myUserID = this.client.getSafeUserId();
+
+        if (!typingMemberInformation.id || typingMemberInformation.id === myUserID) return;
+
+        const isAlreadyTyping = get(room.typingMembers).some((memberInformation) => {
+            return memberInformation.id === typingMemberInformation.id;
+        });
+
+        if (isAlreadyTyping) {
+            room.typingMembers.update((currentTypingMemberList) => {
+                return currentTypingMemberList.filter((member) => member.id !== typingMemberInformation.id);
+            });
+            return;
+        }
+    }
+
     private onClientEventRoom(room: Room) {
         this.manageRoomOrFolder(room);
     }
@@ -725,6 +790,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.client?.off(RoomEvent.MyMembership, this.handleMyMembership);
         this.client?.off("RoomState.events" as EmittedEvents, this.handleRoomStateEvent);
         this.client?.off(RoomEvent.Name, this.handleName);
+
+        this.client.off(RoomMemberEvent.Typing, this.handleRoomMemberTyping);
     }
     async destroy(): Promise<void> {
         await this.client?.logout(true);
