@@ -48,7 +48,7 @@
             .then(() => {
                 notificationPlayingStore.playNotification($LL.chat.roomMenu.leaveRoom.notification());
             })
-            .catch(() => console.error);
+            .catch(() => console.error("Failed to leave room"));
     }
 </script>
 
