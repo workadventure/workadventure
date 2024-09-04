@@ -27,6 +27,7 @@ import { MatrixChatRoom } from "./MatrixChatRoom";
 import { MatrixSecurity, matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity";
 import { MatrixRoomFolder } from "./MatrixRoomFolder";
 
+const CLIENT_NOT_INITIALIZED_ERROR_MSG = "MatrixClient not yet initialized";
 export const defaultWoka =
     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAAdCAYAAABBsffGAAAB/ElEQVRIia1WMW7CQBC8EAoqFy74AD1FqNzkAUi09DROwwN4Ag+gMQ09dcQXXNHQIucBPAJFc2Iue+dd40QZycLc7c7N7d7u+cU9wXw+ryyL0+n00eU9tCZIOp1O/f/ZbBbmzuczX6uuRVTlIAYpCSeTScumaZqw0OVyURd47SIGaZ7n6s4wjmc0Grn7/e6yLFtcr9dPaaOGhcTEeDxu2dxut2hXUJ9ioKmW0IidMg6/NPmD1EmqtojTBWAvE26SW8r+YhfIu87zbyB5BiRerVYtikXxXuLRuK058HABMyz/AX8UHwXgV0NRaEXzDKzaw+EQCioo1yrsLfvyjwZrTvK0yp/xh/o+JwbFhFYgFRNqzGEIB1ZhH2INkXJZoShn2WNSgJRNS/qoYSHxer1+qkhChnC320ULRI1LEsNhv99HISBkLmhP/7L8OfqhiKC6SzEJtSTLHMkGFhK6XC79L89rmtC6rv0YfjXV9COPDwtVQxEc2ZflIu7R+WADQrkA7eCH5BdFwQRXQ8bKxXejeWFoYZGCQM7Yh7BAkcw0DEnEEPHhbjBPQfCDvwzlEINlWZq3OAiOx2O0KwAKU8gehXfzu2Wz2VQMTXqCeLZZSNvtVv20MFsu48gQpDvjuHYxE+ZHESBPSJ/x3sqBvhe0hc5vRXkfypBY4xGcc9+lcFxartG6LgAAAABJRU5ErkJggg==";
 export const defaultColor = "#626262";
@@ -37,7 +38,7 @@ export enum INTERACTIVE_AUTH_PHASE {
 }
 export class MatrixChatConnection implements ChatConnectionInterface {
     private readonly roomList: MapStore<string, MatrixChatRoom>;
-    private client!: MatrixClient;
+    private client: MatrixClient | undefined;
     private handleRoom: (room: Room) => void;
     private handleDeleteRoom: (roomId: string) => void;
     private handleMyMembership: (room: Room, membership: string, prevMembership: string | undefined) => void;
@@ -114,10 +115,13 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     }
 
     async startMatrixClient() {
+        if (!this.client) return;
         this.client.on(ClientEvent.Sync, (state) => {
+            if (!this.client) return;
             switch (state) {
                 case SyncState.Prepared:
                     this.connectionStatus.set("ONLINE");
+
                     this.connection.emitPlayerChatID(this.client.getSafeUserId());
                     break;
                 case SyncState.Error:
@@ -168,6 +172,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.manageRoomOrFolder(room);
     }
     private onRoomStateEvent(event: MatrixEvent): void {
+        if (!this.client) return;
         const eventType = event.getType();
 
         if (eventType !== "m.space.child") return;
@@ -175,7 +180,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         const roomID = event.getStateKey();
         if (!roomID) return;
 
-        const room = this.client.getRoom(roomID);
+        const room = this.client?.getRoom(roomID);
         if (!room) return;
 
         this.roomList.delete(roomID);
@@ -357,6 +362,10 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             return Promise.reject(new Error("CreateRoomOptions is empty"));
         }
 
+        if (!this.client) {
+            return Promise.reject(new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG));
+        }
+
         try {
             this.roomCreationInProgress.set(true);
             return await this.client.createRoom(this.mapCreateRoomOptionsToMatrixCreateRoomOptions(roomOptions));
@@ -372,17 +381,25 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             const resolveIfIsASyncingEvent = (state: SyncState) => {
                 if (state === SyncState.Syncing) {
                     if (timer) clearTimeout(timer);
+                    if (!this.client) {
+                        reject(CLIENT_NOT_INITIALIZED_ERROR_MSG);
+                        return;
+                    }
                     this.client.off(ClientEvent.Sync, resolveIfIsASyncingEvent);
                     resolve();
                 }
             };
 
             const timer = setTimeout(() => {
+                if (!this.client) {
+                    reject(CLIENT_NOT_INITIALIZED_ERROR_MSG);
+                    return;
+                }
                 this.client.off(ClientEvent.Sync, resolveIfIsASyncingEvent);
                 reject(new Error("waitForSync event timeout"));
             }, 30000);
 
-            this.client.on(ClientEvent.Sync, resolveIfIsASyncingEvent);
+            this.client?.on(ClientEvent.Sync, resolveIfIsASyncingEvent);
         });
     }
 
@@ -392,13 +409,13 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         }
 
         try {
-            const result = await this.client.createRoom(
+            const result = await this.client?.createRoom(
                 this.mapCreateRoomOptionsToMatrixCreateFolderOptions(roomOptions)
             );
 
             await this.waitForNextSync();
 
-            if (roomOptions.parentSpaceID) {
+            if (roomOptions.parentSpaceID && result) {
                 try {
                     await this.addRoomToSpace(roomOptions.parentSpaceID, result.room_id);
 
@@ -409,6 +426,10 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                     this.roomFolders.delete(result.room_id);
                     return Promise.reject(new Error(get(LL).chat.addRoomToFolderError()));
                 }
+            }
+
+            if (!result) {
+                return Promise.reject(new Error(get(LL).chat.addRoomToFolderError()));
             }
 
             return result;
@@ -480,7 +501,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 type: EventType.SpaceParent,
                 state_key: roomOptions.parentSpaceID,
                 content: {
-                    via: [this.client.getDomain()],
+                    via: [this.client?.getDomain()],
                 },
             });
             if (roomOptions.visibility === "restricted") {
@@ -506,6 +527,10 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     }
 
     async createDirectRoom(userToInvite: string): Promise<ChatRoom | undefined> {
+        if (!this.client) {
+            return Promise.reject(CLIENT_NOT_INITIALIZED_ERROR_MSG);
+        }
+
         const existingDirectRoom = this.getDirectRoomFor(userToInvite);
 
         if (existingDirectRoom) return existingDirectRoom;
@@ -560,10 +585,14 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
     async searchChatUsers(searchText: string) {
         try {
+            if (!this.client) {
+                throw new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG);
+            }
             const searchUserResponse = await this.client.searchUserDirectory({ term: searchText, limit: 20 });
             return searchUserResponse.results.map((user) => ({ id: user.user_id, name: user.display_name }));
         } catch (error) {
             console.error("Unable to search matrix chat user with searchText: ", searchText, error);
+            Sentry.captureMessage(`Unable to search matrix chat user with searchText: ${error} `);
         }
         return;
     }
@@ -576,6 +605,11 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     > {
         const isGuestUser = get(this.isGuest);
         return new Promise((res, rej) => {
+            if (!this.client) {
+                rej(new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG));
+                return;
+            }
+
             const searchOption: IRoomDirectoryOptions = {
                 include_all_networks: true,
                 filter: {
@@ -613,12 +647,21 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
     async joinRoom(roomId: string): Promise<ChatRoom> {
         return new Promise((res, rej) => {
+            if (!this.client) {
+                rej(new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG));
+                return;
+            }
+
             this.client
                 .joinRoom(roomId)
                 .then(async (_) => {
                     //Wait Sync Event before use/update roomList otherwise room not exist in the client
                     await this.waitForNextSync();
 
+                    if (!this.client) {
+                        rej(new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG));
+                        return;
+                    }
                     const roomAfterSync = this.client.getRoom(roomId);
                     if (!roomAfterSync) {
                         return Promise.reject(new Error("Room not present after synchronization"));
@@ -643,10 +686,16 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     }
 
     private async addRoomToSpace(spaceRoomId: string, childRoomId: string): Promise<void> {
+        if (!this.client) {
+            return Promise.reject(new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG));
+        }
+
         const domain = this.client.getDomain();
+
         if (!domain) {
             return Promise.reject(new Error("Domain is not available"));
         }
+
         try {
             // @ts-ignore
             await this.client.sendStateEvent(spaceRoomId, EventType.SpaceChild, { via: [domain] }, childRoomId);
@@ -659,20 +708,23 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     }
 
     private async addDMRoomInAccountData(userId: string, roomId: string) {
+        if (!this.client) {
+            throw new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG);
+        }
         const directMap: Record<string, string[]> = this.client.getAccountData("m.direct")?.getContent() || {};
         directMap[userId] = [...(directMap[userId] || []), roomId];
         await this.client.setAccountData("m.direct", directMap);
     }
 
     clearListener() {
-        this.client.off(ClientEvent.Room, this.handleRoom);
-        this.client.off(ClientEvent.DeleteRoom, this.handleDeleteRoom);
-        this.client.off(RoomEvent.MyMembership, this.handleMyMembership);
-        this.client.off("RoomState.events" as EmittedEvents, this.handleRoomStateEvent);
-        this.client.off(RoomEvent.Name, this.handleName);
+        this.client?.off(ClientEvent.Room, this.handleRoom);
+        this.client?.off(ClientEvent.DeleteRoom, this.handleDeleteRoom);
+        this.client?.off(RoomEvent.MyMembership, this.handleMyMembership);
+        this.client?.off("RoomState.events" as EmittedEvents, this.handleRoomStateEvent);
+        this.client?.off(RoomEvent.Name, this.handleName);
     }
 
     async destroy(): Promise<void> {
-        await this.client.logout(true);
+        await this.client?.logout(true);
     }
 }
