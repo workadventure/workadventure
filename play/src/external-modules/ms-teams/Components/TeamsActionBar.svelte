@@ -44,7 +44,7 @@
             <Tooltip text={$LL.externalModule.status.warning()} />
         {:else if $teamsModuleStatusStore === TeamsModuleStatus.SYNC}
             <Tooltip text={$LL.externalModule.status.sync()} />
-        {:else}
+        {:else if $teamsModuleStatusStore === TeamsModuleStatus.OFFLINE}
             <Tooltip text={$LL.externalModule.status.offLine()} />
         {/if}
     {/if}

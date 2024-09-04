@@ -1,5 +1,5 @@
-import { Subject } from "rxjs";
-import { PrivateEvent, PublicEvent, SpaceEvent } from "@workadventure/messages";
+import { Observable, Subject } from "rxjs";
+import { PrivateEvent, PublicEvent, SpaceEvent, UpdateSpaceMetadataMessage } from "@workadventure/messages";
 import { PrivateEventsObservables, PublicEventsObservables, SpaceInterface, SpaceUserUpdate } from "./SpaceInterface";
 import { SpaceFilterDoesNotExistError, SpaceNameIsEmptyError } from "./Errors/SpaceError";
 import { SpaceFilter, SpaceFilterInterface } from "./SpaceFilter/SpaceFilter";
@@ -32,7 +32,6 @@ export class Space implements SpaceInterface {
 
         // TODO: The public and private messages should be forwarded to a special method here from the Registry.
     }
-
     getName(): string {
         return this.name;
     }
@@ -190,5 +189,12 @@ export class Space implements SpaceInterface {
         for (const subscription of Object.values(this.privateEventsObservables)) {
             subscription.complete();
         }
+    }
+
+    /**
+     * @returns an observable that emits the new metadata of the space when it changes.
+     */
+    watchSpaceMetadata(): Observable<UpdateSpaceMetadataMessage> {
+        return this._connection.updateSpaceMetadataMessageStream;
     }
 }
