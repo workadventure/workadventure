@@ -45,6 +45,7 @@ import {
     UpdateSpaceUserMessage,
     OauthRefreshTokenQuery,
     OauthRefreshTokenAnswer,
+    SubMessage,
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import axios, { AxiosResponse, isAxiosError } from "axios";
@@ -346,6 +347,12 @@ export class SocketManager implements ZoneEventListener {
             if (!spaceStreamToBackPromise) {
                 throw new Error("Space stream to pusher not found");
             }
+
+            const space = this.spaces.get(spaceName);
+            if (space) {
+                space.localUpdateMetadata(metadata, false);
+            }
+
             await spaceStreamToBackPromise.then((spaceStreamToBack) => {
                 spaceStreamToBack.write({
                     message: {
@@ -439,7 +446,6 @@ export class SocketManager implements ZoneEventListener {
                                     break;
                                 }
                                 case "pingMessage": {
-                                    console.log("SocketManager => handleJoinSpace => pingMessage");
                                     if (spaceStreamToBack.pingTimeout) {
                                         clearTimeout(spaceStreamToBack.pingTimeout);
                                         spaceStreamToBack.pingTimeout = undefined;
@@ -547,6 +553,19 @@ export class SocketManager implements ZoneEventListener {
             }
             space.addUser(socketData.spaceUser, client);
             socketData.spaces.push(space);
+
+            // Notify the client of the space metadata
+            const subMessage: SubMessage = {
+                message: {
+                    $case: "updateSpaceMetadataMessage",
+                    updateSpaceMetadataMessage: {
+                        spaceName: space.name,
+                        metadata: JSON.stringify(Object.fromEntries(space.metadata.entries())),
+                        filterName: undefined,
+                    },
+                },
+            };
+            space.notifyMe(client, subMessage);
 
             // client.spacesFilters = [
             //     new SpaceFilterMessage()

@@ -1,5 +1,5 @@
-import { Subject } from "rxjs";
-import { PrivateSpaceEvent, SpaceEvent, SpaceUser } from "@workadventure/messages";
+import { Observable, Subject } from "rxjs";
+import { PrivateSpaceEvent, SpaceEvent, SpaceUser, UpdateSpaceMetadataMessage } from "@workadventure/messages";
 import { SpaceFilterInterface } from "./SpaceFilter/SpaceFilter";
 import { AllUsersSpaceFilterInterface } from "./SpaceFilter/AllUsersSpaceFilter";
 
@@ -33,4 +33,5 @@ export interface SpaceInterface {
     emitPublicMessage(message: NonNullable<SpaceEvent["event"]>): void;
     emitUpdateUser(spaceUser: SpaceUserUpdate): void;
     emitUpdateSpaceMetadata(metadata: Map<string, unknown>): void;
+    watchSpaceMetadata(): Observable<UpdateSpaceMetadataMessage>;
 }

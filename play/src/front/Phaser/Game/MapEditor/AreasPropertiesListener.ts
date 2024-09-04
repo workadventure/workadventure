@@ -746,6 +746,7 @@ export class AreasPropertiesListener {
             if (areaMapEditor == undefined) continue;
 
             areaMapEditor[subtype].handleAreaPropertyOnLeave(area);
+            inJitsiStore.set(false);
         }
     }
 
@@ -757,6 +758,7 @@ export class AreasPropertiesListener {
             const areaMapEditor = module.areaMapEditor();
             if (areaMapEditor == undefined) continue;
             areaMapEditor[subtype].handleAreaPropertyOnEnter(area);
+            inJitsiStore.set(true);
         }
     }
 

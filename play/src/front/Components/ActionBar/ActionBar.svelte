@@ -40,7 +40,7 @@
     import megaphoneImg from "../images/megaphone.svg";
     import WorkAdventureImg from "../images/icon-workadventure-white.png";
     import worldImg from "../images/world.svg";
-    import calendarSvg from "../images/calendar.svg";
+    import calendarSvg from "../images/applications/outlook.svg";
     import burgerMenuImg from "../images/menu.svg";
     import AppSvg from "../images/action-app.svg";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
@@ -1203,11 +1203,12 @@
                                 style="padding: 2px"
                                 alt={$LL.menu.icon.open.calendar()}
                             />
-                            <span
+                            <!-- Current day dislayed only work with the image ../images/calendar.svg -->
+                            <!---<span
                                 class="tw-absolute tw-top-5 tw-text-white tw-rounded-full tw-px-1 tw-py-0.5 tw-text-xxs tw-font-bold tw-leading-none"
                             >
                                 {new Date().getDate()}
-                            </span>
+                            </span>-->
                         </button>
                     </div>
                 {/if}
