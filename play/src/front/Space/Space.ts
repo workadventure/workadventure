@@ -86,7 +86,7 @@ export class Space implements SpaceInterface {
         this._connection.emitJoinSpace(this.name);
     }
 
-    public updateSpaceMetadata(metadata: Map<string, unknown>) {
+    public emitUpdateSpaceMetadata(metadata: Map<string, unknown>) {
         this._connection.emitUpdateSpaceMetadata(this.name, Object.fromEntries(metadata.entries()));
     }
 
