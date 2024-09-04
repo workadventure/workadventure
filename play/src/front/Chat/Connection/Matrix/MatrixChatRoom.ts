@@ -14,7 +14,6 @@ import {
 } from "matrix-js-sdk";
 import * as Sentry from "@sentry/svelte";
 import { get, Writable, writable } from "svelte/store";
-import * as Sentry from "@sentry/svelte";
 import { MediaEventContent, MediaEventInfo } from "matrix-js-sdk/lib/@types/media";
 import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
