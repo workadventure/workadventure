@@ -44,7 +44,7 @@ const chat: BaseTranslation = {
         online: "Online",
         away: "Away",
         unavailable: "Unavailable",
-        back_in_a_moment: "Back_in_a_moment",
+        back_in_a_moment: "Back in a moment",
         do_not_disturb: "Do not disturb",
         busy: "Busy",
     },
