@@ -14,6 +14,7 @@ const actionbar: BaseTranslation = {
     disableMegaphone: "Disable megaphone",
     menu: "Open / Close menu",
     calendar: "Open / Close calendar",
+    todoList: "Open / Close todo list",
     mapEditor: "Open / Close map manager",
     mapEditorMobileLocked: "Map editor is locked on mobile mode",
     mapEditorLocked: "Map editor is locked 🔐",

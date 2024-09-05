@@ -13,6 +13,7 @@ const menu: BaseTranslation = {
             closeEmoji: "Close emoji menu",
             mobile: "Open mobile menu",
             calendar: "Open calendar",
+            todoList: "Open todo list",
         },
     },
     visitCard: {

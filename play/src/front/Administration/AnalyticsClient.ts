@@ -746,6 +746,14 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
+    openExternalModuleTodoList(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa-opened-external-module-todolist");
+            })
+            .catch((e) => console.error(e));
+    }
+
     openExternalModule(): void {
         this.posthogPromise
             ?.then((posthog) => {

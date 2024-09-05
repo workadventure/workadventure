@@ -162,7 +162,8 @@ import { MatrixUserProvider } from "../../Chat/UserProvider/MatrixUserProvider";
 import { UserProviderMerger } from "../../Chat/UserProviderMerger/UserProviderMerger";
 import { AdminUserProvider } from "../../Chat/UserProvider/AdminUserProvider";
 import { ExtensionModuleStatusSynchronization } from "../../Rules/StatusRules/ExtensionModuleStatusSynchronization";
-import { calendarEventsStore, isActivatedStore } from "../../Stores/CalendarStore";
+import { isActivatedStore as isCalendarActiveStore, calendarEventsStore } from "../../Stores/CalendarStore";
+import { isActivatedStore as isTodoListActiveStore, todoListsStore } from "../../Stores/TodoListStore";
 import { externalSvelteComponentStore } from "../../Stores/Utils/externalSvelteComponentStore";
 import { ExtensionModule, RoomMetadataType } from "../../ExternalModule/ExtensionModule";
 import { SpaceInterface } from "../../Space/SpaceInterface";
@@ -1958,6 +1959,7 @@ export class GameScene extends DirtyScene {
                             externalModuleMessage: this.connection!.externalModuleMessage,
                             onExtensionModuleStatusChange: ExtensionModuleStatusSynchronization.onStatusChange,
                             calendarEventsStoreUpdate: calendarEventsStore.update,
+                            todoListStoreUpdate: todoListsStore.update,
                             openCoWebSite: openCoWebSiteWithoutSource,
                             closeCoWebsite,
                             getOauthRefreshToken: this.connection?.getOauthRefreshToken.bind(this.connection),
@@ -1966,7 +1968,8 @@ export class GameScene extends DirtyScene {
                             spaceRegistry: this.spaceRegistry,
                         });
 
-                        if (defaultExtensionModule.calendarSynchronised) isActivatedStore.set(true);
+                        if (defaultExtensionModule.calendarSynchronised) isCalendarActiveStore.set(true);
+                        if(defaultExtensionModule.todoListSynchronized) isTodoListActiveStore.set(true);
                         extensionModuleStore.add(defaultExtensionModule);
                     } catch (error) {
                         console.warn("Extension module initialization cancelled", error);

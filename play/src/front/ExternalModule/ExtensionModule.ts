@@ -1,6 +1,6 @@
 import { AvailabilityStatus, ExternalModuleMessage, OauthRefreshToken } from "@workadventure/messages";
 import { Readable, Updater } from "svelte/store";
-import { CalendarEventInterface } from "@workadventure/shared-utils";
+import { CalendarEventInterface, TodoListInterface } from "@workadventure/shared-utils";
 import { ComponentType } from "svelte";
 import { AreaData, AreaDataProperties } from "@workadventure/map-editor";
 import { Observable } from "rxjs";
@@ -28,7 +28,6 @@ export interface ExtensionModuleOptions {
     externalModuleMessage: Observable<ExternalModuleMessage>;
     externalSvelteComponent: Readable<ExternalSvelteComponentStore>;
     onExtensionModuleStatusChange: (workAdventureNewStatus: AvailabilityStatus) => void;
-    calendarEventsStoreUpdate: (this: void, updater: Updater<Map<string, CalendarEventInterface>>) => void;
     openCoWebSite: (
         openCoWebsiteObject: OpenCoWebsiteObject,
         source: MessageEventSource | null
@@ -37,6 +36,8 @@ export interface ExtensionModuleOptions {
     adminUrl?: string;
     getOauthRefreshToken?: (tokenToRefresh: string) => Promise<OauthRefreshToken>;
     spaceRegistry?: SpaceRegistryInterface;
+    calendarEventsStoreUpdate?: (this: void, updater: Updater<Map<string, CalendarEventInterface>>) => void;
+    todoListStoreUpdate?: (this: void, updater: Updater<Map<string, TodoListInterface>>) => void;
 }
 
 export interface ExtensionModuleAreaProperty {
@@ -63,6 +64,7 @@ export interface ExtensionModule {
         passcode?: string
     ) => void;
     calendarSynchronised: boolean;
+    todoListSynchronized: boolean;
 }
 
 export const RoomMetadataType = z.object({
@@ -83,6 +85,7 @@ export const RoomMetadataType = z.object({
         communication: z.boolean(),
         status: z.boolean(),
         calendar: z.boolean(),
+        todoList: z.boolean().optional(),
     }),
 });
 
