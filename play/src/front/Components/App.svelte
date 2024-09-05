@@ -15,6 +15,7 @@
     import { forceRefreshChatStore } from "../Stores/ChatStore";
     import ChatSidebar from "../Chat/ChatSidebar.svelte";
     import { isActivatedStore as calendarIsActivatedStore, isCalendarVisibleStore } from "../Stores/CalendarStore";
+    import { isActivatedStore as todoListIsActivatedStore, isTodoListVisibleStore } from "../Stores/TodoListStore";
     import EnableCameraScene from "./EnableCamera/EnableCameraScene.svelte";
     import LoginScene from "./Login/LoginScene.svelte";
     import MainLayout from "./MainLayout.svelte";
@@ -26,7 +27,6 @@
     import RefreshPrompt from "./RefreshPrompt.svelte";
     import SelectCharacterCustomizeScene from "./SelectCharacter/SelectCharacterCustomizeScene.svelte";
     import Calendar from "./Calendar/Calendar.svelte";
-    import { isActivatedStore as todoListIsActivatedStore, isTodoListVisibleStore } from "../Stores/TodoListStore";
     import TodoList from "./TodoList/TodoList.svelte";
 
     export let game: Game;

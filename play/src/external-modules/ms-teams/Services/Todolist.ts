@@ -1,8 +1,8 @@
 import { Axios } from "axios";
 import { z } from "zod";
-import { MSGraphSubscription, MSGraphSubscriptionResponse } from "..";
 import { Updater } from "svelte/store";
 import { TodoListInterface } from "@workadventure/shared-utils";
+import { MSGraphSubscription, MSGraphSubscriptionResponse } from "..";
 
 export const MSTodoList = z.object({
     "@odata.etag": z.string(),
@@ -17,7 +17,7 @@ export type MSTodoList = z.infer<typeof MSTodoList>;
 export const MSTodoLists = z.object({
     "@odata.context": z.string(),
     value: z.array(MSTodoList),
-})
+});
 export type MSTodoLists = z.infer<typeof MSTodoLists>;
 
 export const MSTodoTask = z.object({
@@ -28,38 +28,50 @@ export const MSTodoTask = z.object({
         contentType: z.string(),
     }),
     categories: z.array(z.string()),
-    completedDateTime: z.object({
-        dateTime: z.string(),
-        timeZone: z.string(),
-    }).optional(),
-    dueDateTime: z.object({
-        dateTime: z.string(),
-        timeZone: z.string(),
-    }).optional(),
+    completedDateTime: z
+        .object({
+            dateTime: z.string(),
+            timeZone: z.string(),
+        })
+        .optional(),
+    dueDateTime: z
+        .object({
+            dateTime: z.string(),
+            timeZone: z.string(),
+        })
+        .optional(),
     importance: z.string(),
     isReminderOn: z.boolean(),
-    recurrence: z.object({
-        pattern: z.object({
-            type: z.string(),
-            interval: z.number(),
-            month: z.number().optional(),
-            dayOfMonth: z.number().optional(),
-            daysOfWeek: z.array(z.string()).optional(),
-            firstDayOfWeek: z.string().optional(),
-            index: z.string().optional(),
-        }).optional(),
-        range: z.object({
-            type: z.string(),
-            startDate: z.string(),
-            endDate: z.string().optional(),
-            recurrenceTimeZone: z.string().optional(),
-            numberOfOccurrences: z.number().optional(),
-        }).optional(),
-    }).optional(),
-    reminderDateTime: z.object({
-        dateTime: z.string(),
-        timeZone: z.string(),
-    }).optional(),
+    recurrence: z
+        .object({
+            pattern: z
+                .object({
+                    type: z.string(),
+                    interval: z.number(),
+                    month: z.number().optional(),
+                    dayOfMonth: z.number().optional(),
+                    daysOfWeek: z.array(z.string()).optional(),
+                    firstDayOfWeek: z.string().optional(),
+                    index: z.string().optional(),
+                })
+                .optional(),
+            range: z
+                .object({
+                    type: z.string(),
+                    startDate: z.string(),
+                    endDate: z.string().optional(),
+                    recurrenceTimeZone: z.string().optional(),
+                    numberOfOccurrences: z.number().optional(),
+                })
+                .optional(),
+        })
+        .optional(),
+    reminderDateTime: z
+        .object({
+            dateTime: z.string(),
+            timeZone: z.string(),
+        })
+        .optional(),
     status: z.string(),
     title: z.string(),
     createdDateTime: z.string(),
@@ -78,17 +90,17 @@ export type MSTodoTasks = z.infer<typeof MSTodoTasks>;
 export class Todolist {
     private readonly timeoutToGetList: Map<string, NodeJS.Timeout>;
     private readonly lasttimeToGetList: Map<string, number>;
-    private readonly todoLists: Map<string, {todoList: MSTodoList, value: MSTodoTasks}>;
+    private readonly todoLists: Map<string, { todoList: MSTodoList; value: MSTodoTasks }>;
     constructor(
         private readonly msGraphApiClient: Axios,
         private readonly msGraphAccessToken: string,
         private readonly roomId: string,
         private readonly todoListStoreUpdate: (this: void, updater: Updater<Map<string, TodoListInterface>>) => void,
-        private readonly adminUrl?: string,
+        private readonly adminUrl?: string
     ) {
         this.timeoutToGetList = new Map<string, NodeJS.Timeout>();
         this.lasttimeToGetList = new Map<string, number>();
-        this.todoLists = new Map<string, {todoList: MSTodoList, value: MSTodoTasks}>();
+        this.todoLists = new Map<string, { todoList: MSTodoList; value: MSTodoTasks }>();
 
         this.getTodolist().catch((error) => console.error("Error while getting todolist", error));
     }
@@ -126,12 +138,15 @@ export class Todolist {
         const subscriptions = [];
         if (subscriptionsResponse.data.value.length > 0) {
             const todoListSubscriptions: MSGraphSubscription[] = subscriptionsResponse.data.value.find(
-                (subscription: MSGraphSubscription) => subscription.resource.indexOf("me/todo/lists") !== -1 
+                (subscription: MSGraphSubscription) => subscription.resource.indexOf("me/todo/lists") !== -1
             );
 
-            for(const todoListSubscription of todoListSubscriptions){
+            for (const todoListSubscription of todoListSubscriptions) {
                 // Check if the subscription is expired
-                if (todoListSubscription != undefined && new Date(todoListSubscription.expirationDateTime) > new Date()) {
+                if (
+                    todoListSubscription != undefined &&
+                    new Date(todoListSubscription.expirationDateTime) > new Date()
+                ) {
                     subscriptions.push({ data: todoListSubscription });
                 }
             }
@@ -145,9 +160,7 @@ export class Todolist {
         const promiseToCreateSubscriptions: Promise<MSGraphSubscriptionResponse>[] = [];
         subscriptions.forEach((subscription: MSGraphSubscriptionResponse) => {
             // Delete all subscriptions
-            promiseToDeleteSubscriptions.push(
-                this.deleteSubscription(subscription.data.id)
-            );
+            promiseToDeleteSubscriptions.push(this.deleteSubscription(subscription.data.id));
         });
         // Wait for all the subscriptions to be deleted
         await Promise.all(promiseToDeleteSubscriptions);
@@ -156,7 +169,7 @@ export class Todolist {
         await this.getTodolist();
 
         // Create new subscriptions for each todo list
-        for(const [todoListId, ] of this.todoLists.entries()) {
+        for (const [todoListId] of this.todoLists.entries()) {
             promiseToCreateSubscriptions.push(
                 this.msGraphApiClient.post("/subscriptions", {
                     changeType: "created,updated,deleted",
@@ -179,18 +192,21 @@ export class Todolist {
     private getTodoTasks(todoList: MSTodoList) {
         let timeout = 0;
         // Check if the last time to get the list is less than 10 seconds
-        if(this.lasttimeToGetList.has(todoList.id) && (new Date()).getTime() - this.lasttimeToGetList.get(todoList.id)! < 1000 * 10) {
+        if (
+            this.lasttimeToGetList.has(todoList.id) &&
+            new Date().getTime() - this.lasttimeToGetList.get(todoList.id)! < 1000 * 10
+        ) {
             // Set the timeout to 10 seconds
             timeout = 1000 * 10;
         }
 
         // Clear the timeout if it exists
-        if (this.timeoutToGetList.has(todoList.id)) clearTimeout(this.timeoutToGetList.get(todoList.id)!);
+        if (this.timeoutToGetList.has(todoList.id)) clearTimeout(this.timeoutToGetList.get(todoList.id));
         // Set the timeout to get the list
         this.timeoutToGetList.set(
-            todoList.id,  
+            todoList.id,
             setTimeout(() => {
-                this.lasttimeToGetList.set(todoList.id, (new Date()).getTime());
+                this.lasttimeToGetList.set(todoList.id, new Date().getTime());
                 this.msGraphApiClient
                     .get(`/me/todo/lists/${todoList.id}/tasks`)
                     .then((response) => {
@@ -200,12 +216,10 @@ export class Todolist {
                             throw new Error("Error while parsing MSTodoList");
                         }
 
-                        this.todoLists.set(todoList.id, 
-                            {
-                                todoList,
-                                value: parseMSTodoTask.data
-                            }
-                        );
+                        this.todoLists.set(todoList.id, {
+                            todoList,
+                            value: parseMSTodoTask.data,
+                        });
                         this.updateTodoListStore();
                     })
                     .catch((error) => {
@@ -224,7 +238,7 @@ export class Todolist {
     }
 
     /**
-     * 
+     *
      */
     updateTodoListStore() {
         this.todoListStoreUpdate(() => {
@@ -244,7 +258,11 @@ export class Todolist {
                                     start: task.dueDateTime ? new Date(task.dueDateTime.dateTime) : undefined,
                                     end: task.completedDateTime ? new Date(task.completedDateTime.dateTime) : undefined,
                                     status: task.status as "notStarted" | "inProgress" | "completed",
-                                    recurence: task.recurrence?.pattern?.type as "daily" | "weekly" | "monthly" | "yearly",
+                                    recurence: task.recurrence?.pattern?.type as
+                                        | "daily"
+                                        | "weekly"
+                                        | "monthly"
+                                        | "yearly",
                                 };
                             }),
                         },

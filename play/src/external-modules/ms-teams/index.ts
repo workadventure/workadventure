@@ -223,13 +223,13 @@ class MSTeams implements MSTeamsExtensionModule {
                 }
 
                 // Initialize Todo List synchronization
-                if(roomMetadata.msTeamsSettings.todoList && this.moduleOptions.todoListStoreUpdate) { 
+                if (roomMetadata.msTeamsSettings.todoList && this.moduleOptions.todoListStoreUpdate) {
                     this.todoList = new Todolist(
                         this.msAxiosClientV1,
                         this.userAccessToken,
                         this.roomId,
                         this.moduleOptions.todoListStoreUpdate,
-                        this.adminUrl,
+                        this.adminUrl
                     );
                 }
 
@@ -257,11 +257,11 @@ class MSTeams implements MSTeamsExtensionModule {
                     }, 1000 * 10);
 
                     // So we replace the webhook by sending a call API every 10 minutes for todo list
-                    if(this.roomMetadata.msTeamsSettings.todoList) {
+                    if (this.roomMetadata.msTeamsSettings.todoList) {
                         setInterval(() => {
-                            this.todoList?.getTodolist().catch((e) =>
-                                console.error("Error while updating todo list", e)
-                            );
+                            this.todoList
+                                ?.getTodolist()
+                                .catch((e) => console.error("Error while updating todo list", e));
                         }, 1000 * 60 * 10);
                     }
                 }
@@ -293,7 +293,9 @@ class MSTeams implements MSTeamsExtensionModule {
 
                         // CHANGE ME: with th new API for presence, try to make more performance by calling the API only when the user change his status
                         // Get presence status from Microsoft Graph API
-                        this.listenToTeamsStatusUpdate(this.moduleOptions.onExtensionModuleStatusChange).catch((e) => console.error("Error while listening Teams status update", e));
+                        this.listenToTeamsStatusUpdate(this.moduleOptions.onExtensionModuleStatusChange).catch((e) =>
+                            console.error("Error while listening Teams status update", e)
+                        );
 
                         break;
                     case MSGraphMessageEventSource.MicrosoftGraphEvent.toLocaleLowerCase():
@@ -307,9 +309,7 @@ class MSTeams implements MSTeamsExtensionModule {
                         );
                         break;
                     case MSGraphMessageEventSource.MicrosoftTodoTask.toLocaleLowerCase():
-                        this.todoList?.getTodolist().catch((e) =>
-                            console.error("Error while updating todo list", e)
-                        );
+                        this.todoList?.getTodolist().catch((e) => console.error("Error while updating todo list", e));
                         break;
                     default:
                         console.warn("Unknown message type", type);
@@ -637,11 +637,12 @@ class MSTeams implements MSTeamsExtensionModule {
             }
         }
 
-        if(this.roomMetadata.msTeamsSettings.todoList) {
+        if (this.roomMetadata.msTeamsSettings.todoList) {
             try {
                 const todoListSubscriptionResponse = await this.todoList?.createOrGetTodoListSubscription();
 
-                if(todoListSubscriptionResponse == undefined) throw new Error("Error while creating or getting todo list subscription");
+                if (todoListSubscriptionResponse == undefined)
+                    throw new Error("Error while creating or getting todo list subscription");
                 // Define the last time to renew the subscription for each subscription of the todo list
                 for (const todoListSubscription of todoListSubscriptionResponse) {
                     const expirationDateTime = new Date(todoListSubscription.data.expirationDateTime);

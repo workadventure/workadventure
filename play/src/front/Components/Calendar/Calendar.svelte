@@ -5,7 +5,7 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { extensionModuleStore } from "../../Stores/GameSceneStore";
     import LL from "../../../i18n/i18n-svelte";
-    
+
     import calendarSvg from "../images/applications/outlook.svg";
 
     function closeCalendar() {
