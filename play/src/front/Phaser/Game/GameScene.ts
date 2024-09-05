@@ -1533,7 +1533,7 @@ export class GameScene extends DirtyScene {
                         const email: string | null = localUserStore.getLocalUser()?.email || null;
                         if (email && chatId) this.connection?.emitUpdateChatId(email, chatId);
                     })
-                    .catch((e) => {
+                    .catch((error) => {
                         console.error(`Failed to create matrix client : ${error}`);
                         Sentry.captureMessage(`Failed to create matrix client : ${error}`);
                     });

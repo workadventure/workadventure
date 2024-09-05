@@ -7,22 +7,24 @@
     import { mapEditorSelectedAreaPreviewStore } from "../../../Stores/MapEditorStore";
     import ChatLoader from "../../../Chat/Components/ChatLoader.svelte";
     import ChatError from "../../../Chat/Components/ChatError.svelte";
+    import { isChatIdSentToPusher } from "../../../Chat/Stores/ChatStore";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     export let property: MatrixRoomPropertyData;
     let oldName = property.displayName;
-
     const gameScene = gameManager.getCurrentGameScene();
     const roomConnection = gameScene.connection;
 
     const dispatch = createEventDispatcher();
     let isCreatingRoom = false;
     let creationRoomError = false;
+    let shouldChangeRoomName = false;
     function onValueChange() {
         dispatch("change");
     }
 
     onMount(() => {
         if (!property.matrixRoomId && roomConnection) {
+            isCreatingRoom = true;
             roomConnection
                 .queryCreateChatRoomForArea(property.id)
                 .then((answer) => {
@@ -33,6 +35,10 @@
                         $mapEditorSelectedAreaPreviewStore.updateProperty(property);
                     } else {
                         console.log("$mapEditorSelectedAreaPreviewStore is empty ");
+                    }
+
+                    if (shouldChangeRoomName) {
+                        roomConnection.emitChatRoomAreaNameChange(property.matrixRoomId, property.matrixRoomId);
                     }
                 })
                 .catch((error) => {
@@ -49,14 +55,18 @@
     onDestroy(() => {
         if (oldName !== property.displayName && roomConnection) {
             roomConnection.emitChatRoomAreaNameChange(property.matrixRoomId, property.displayName);
-            dispatch("change");
-            return;
-        }
-        if (property.displayName === "" && roomConnection) {
-            roomConnection.emitChatRoomAreaNameChange(
-                property.matrixRoomId,
-                $LL.mapEditor.properties.matrixProperties.defaultChatRoomAreaName()
-            );
+            if (isCreatingRoom) {
+                shouldChangeRoomName = true;
+                dispatch("change");
+                return;
+            }
+
+            $LL.mapEditor.properties.matrixProperties.defaultChatRoomAreaName();
+            const newRoomName =
+                property.displayName.trim() === ""
+                    ? $LL.mapEditor.properties.matrixProperties.defaultChatRoomAreaName()
+                    : property.displayName;
+            roomConnection.emitChatRoomAreaNameChange(property.matrixRoomId, newRoomName);
             dispatch("change");
             return;
         }
@@ -77,7 +87,7 @@
         {$LL.mapEditor.properties.matrixProperties.label()}
     </span>
     <span slot="content">
-        {#if !isCreatingRoom && !creationRoomError}
+        {#if !isCreatingRoom && !creationRoomError && isChatIdSentToPusher}
             <div class="area-name-container">
                 <label for="objectName">{$LL.mapEditor.properties.matrixProperties.roomNameLabel()} : </label>
                 <input

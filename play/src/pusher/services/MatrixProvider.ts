@@ -1,6 +1,7 @@
 import axios from "axios";
 import { EventType } from "matrix-js-sdk";
 import * as Sentry from "@sentry/node";
+import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { MATRIX_ADMIN_USER, MATRIX_API_URI, MATRIX_DOMAIN, MATRIX_ADMIN_PASSWORD } from "../enums/EnvironmentVariable";
 const ADMIN_CHAT_ID = `@${MATRIX_ADMIN_USER}:${MATRIX_DOMAIN}`;
 interface CreateRoomOptions {
@@ -20,7 +21,7 @@ interface CreateRoomOptions {
 class MatrixProvider {
     private accessToken: string | undefined;
     private lastAccessTokenDate: number = Date.now();
-    private roomAreaFolderName = "current visited room";
+    private roomAreaFolderName = slugify("current visited room");
     private roomAreaFolderID: string | undefined;
 
     constructor() {
@@ -131,11 +132,11 @@ class MatrixProvider {
                     roomID = response.data.room_id;
                     return this.AddRoomToFolder(response.data.room_id);
                 } else {
-                    return Promise.reject(new Error("Failed with status " + response.status));
+                    return Promise.reject(new Error("Failed to add room in folder with status " + response.status));
                 }
             })
             .catch((error) => {
-                console.error(error);
+                console.error("Failed to create room with error : ", error);
                 if (roomID) {
                     return Promise.resolve(roomID);
                 }
@@ -168,6 +169,7 @@ class MatrixProvider {
     }
 
     async inviteUserToRoom(userID: string, roomID: string): Promise<void> {
+        console.log({ userID });
         if (!roomID) {
             console.error("roomID is undefined or null");
             return;

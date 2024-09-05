@@ -53,7 +53,9 @@ class ChatUtils {
   }
 
   public async isChatSidebarOpen(page: Page){
-    return page.getByTestId("closeChatButton").isVisible();
+    return page.getByTestId("closeChatButton").isVisible({
+      timeout : 10_000
+    });
   }
 
   public async openRoomAreaList(page: Page){

@@ -658,6 +658,7 @@ export class SocketManager implements ZoneEventListener {
                 fieldMask.push("availabilityStatus");
             }
             if (socketData.spaceUser.chatID !== playerDetailsMessage.chatID && playerDetailsMessage.chatID !== "") {
+                socketData.chatID = playerDetailsMessage.chatID;
                 fieldMask.push("chatID");
             }
             socketData.spaces.forEach((space) => {
@@ -1496,6 +1497,7 @@ export class SocketManager implements ZoneEventListener {
         if (!socketData.chatID) {
             return Promise.reject(new Error("Error: Chat ID not found"));
         }
+
         socketData.currentChatRoomArea.push(roomID);
         return matrixProvider.inviteUserToRoom(socketData.chatID, roomID).catch((error) => console.error(error));
     }
