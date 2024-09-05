@@ -95,7 +95,6 @@ class MatrixProvider {
         } else {
             throw new Error("Failed with status " + response.status);
         }
-        c;
     }
 
     async createRoomForArea(): Promise<string> {
@@ -149,7 +148,6 @@ class MatrixProvider {
         } else {
             throw new Error("Failed with status " + response.status);
         }
-        x;
     }
 
     async inviteUserToRoom(userID: string, roomID: string): Promise<void> {
@@ -212,7 +210,6 @@ class MatrixProvider {
         } else {
             throw new Error("Failed with status " + response.status);
         }
-        x;
     }
 
     private async createChatFolderAreaAndSetID(): Promise<string> {
