@@ -1,9 +1,12 @@
 import axios from "axios";
+import pLimit from "p-limit";
 import { EventType } from "matrix-js-sdk";
 import * as Sentry from "@sentry/node";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { MATRIX_ADMIN_USER, MATRIX_API_URI, MATRIX_DOMAIN, MATRIX_ADMIN_PASSWORD } from "../enums/EnvironmentVariable";
 const ADMIN_CHAT_ID = `@${MATRIX_ADMIN_USER}:${MATRIX_DOMAIN}`;
+
+const limit = pLimit(10);
 interface CreateRoomOptions {
     visibility: string;
     initial_state: {
@@ -301,7 +304,7 @@ class MatrixProvider {
         const kickMembersPromises = response.data.chunk.reduce(
             (acc: Promise<void>[], currentMember: { state_key: string; content: { membership: string } }) => {
                 if (currentMember.state_key !== ADMIN_CHAT_ID && currentMember.content.membership !== "join") {
-                    acc.push(this.kickUserFromRoom(currentMember.state_key, roomID));
+                    acc.push(limit(() => this.kickUserFromRoom(currentMember.state_key, roomID)));
                 }
                 return acc;
             },
