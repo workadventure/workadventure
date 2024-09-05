@@ -820,24 +820,16 @@ export class IoSocketController {
                             break;
                         }
                         case "changeChatRoomAreaNameMessage": {
-                            socketManager
-                                .handleChangeChatRoomAreaName(
-                                    message.message.changeChatRoomAreaNameMessage.roomID,
-                                    message.message.changeChatRoomAreaNameMessage.name
-                                )
-                                .catch((error) => {
-                                    console.error(error);
-                                    Sentry.captureException(error);
-                                });
+                            await socketManager.handleChangeChatRoomAreaName(
+                                message.message.changeChatRoomAreaNameMessage.roomID,
+                                message.message.changeChatRoomAreaNameMessage.name
+                            );
                             break;
                         }
                         case "deleteChatRoomAreaMessage": {
-                            socketManager
-                                .handleDeleteChatRoomArea(message.message.deleteChatRoomAreaMessage.roomID)
-                                .catch((error) => {
-                                    console.error(error);
-                                    Sentry.captureException(error);
-                                });
+                            await socketManager.handleDeleteChatRoomArea(
+                                message.message.deleteChatRoomAreaMessage.roomID
+                            );
                             break;
                         }
                         case "queryMessage": {
@@ -847,12 +839,7 @@ export class IoSocketController {
                                 };
                                 switch (message.message.queryMessage.query?.$case) {
                                     case "roomTagsQuery": {
-                                        await socketManager
-                                            .handleRoomTagsQuery(socket, message.message.queryMessage)
-                                            .catch((error) => {
-                                                console.error(error);
-                                                Sentry.captureException(error);
-                                            });
+                                        await socketManager.handleRoomTagsQuery(socket, message.message.queryMessage);
                                         break;
                                     }
                                     case "embeddableWebsiteQuery": {
