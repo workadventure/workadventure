@@ -3,10 +3,9 @@
     import { writable } from "svelte/store";
     import { isTodoListVisibleStore, todoListsStore } from "../../Stores/TodoListStore";
     import LL from "../../../i18n/i18n-svelte";
-    import todoListPng from "../images/applications/todoList.png";
+    import todoListPng from "../images/applications/todolist.png";
     import TodoTask from "./TodoTask.svelte";
     import { IconArrowDown } from "@wa-icons";
-
 
     let todoTaskCompletedOpened = false;
     let totoListOpenedId = writable<Set<string>>(new Set());
