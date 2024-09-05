@@ -162,8 +162,12 @@ export class Todolist {
             // Delete all subscriptions
             promiseToDeleteSubscriptions.push(this.deleteSubscription(subscription.data.id));
         });
-        // Wait for all the subscriptions to be deleted
-        await Promise.all(promiseToDeleteSubscriptions);
+        try {
+            // Wait for all the subscriptions to be deleted
+            await Promise.all(promiseToDeleteSubscriptions);
+        } catch (error) {
+            console.warn("Error while deleting subscriptions. Perhaps subscription was already deleted!", error);
+        }
 
         // Get all the todo list
         await this.getTodolist();

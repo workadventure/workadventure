@@ -165,6 +165,7 @@ import { ExtensionModuleStatusSynchronization } from "../../Rules/StatusRules/Ex
 import { isActivatedStore as isCalendarActiveStore, calendarEventsStore } from "../../Stores/CalendarStore";
 import { isActivatedStore as isTodoListActiveStore, todoListsStore } from "../../Stores/TodoListStore";
 import { externalSvelteComponentStore } from "../../Stores/Utils/externalSvelteComponentStore";
+import { notificationPermissionModalVisibility } from "../../Stores/AvailabilityStatusModalsStore";
 import { ExtensionModule, RoomMetadataType } from "../../ExternalModule/ExtensionModule";
 import { SpaceInterface } from "../../Space/SpaceInterface";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
@@ -175,7 +176,6 @@ import { soundManager } from "./SoundManager";
 import { SharedVariablesManager } from "./SharedVariablesManager";
 import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
 import { DynamicAreaManager } from "./DynamicAreaManager";
-
 import { PlayerMovement } from "./PlayerMovement";
 import { PlayersPositionInterpolator } from "./PlayersPositionInterpolator";
 import { DirtyScene } from "./DirtyScene";
@@ -1966,11 +1966,15 @@ export class GameScene extends DirtyScene {
                             adminUrl: ADMIN_URL,
                             externalSvelteComponent: externalSvelteComponentStore,
                             spaceRegistry: this.spaceRegistry,
+                            logoutCallback: () => {
+                                connectionManager.logout();
+                            },
                         });
 
                         if (defaultExtensionModule.calendarSynchronised) isCalendarActiveStore.set(true);
-                        if(defaultExtensionModule.todoListSynchronized) isTodoListActiveStore.set(true);
+                        if (defaultExtensionModule.todoListSynchronized) isTodoListActiveStore.set(true);
                         extensionModuleStore.add(defaultExtensionModule);
+                        notificationPermissionModalVisibility.open();
                     } catch (error) {
                         console.warn("Extension module initialization cancelled", error);
                     } finally {

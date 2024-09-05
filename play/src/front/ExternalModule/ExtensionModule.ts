@@ -38,6 +38,7 @@ export interface ExtensionModuleOptions {
     spaceRegistry?: SpaceRegistryInterface;
     calendarEventsStoreUpdate?: (this: void, updater: Updater<Map<string, CalendarEventInterface>>) => void;
     todoListStoreUpdate?: (this: void, updater: Updater<Map<string, TodoListInterface>>) => void;
+    logoutCallback?(): void;
 }
 
 export interface ExtensionModuleAreaProperty {
@@ -84,6 +85,8 @@ export const RoomMetadataType = z.object({
     msTeamsSettings: z.object({
         communication: z.boolean(),
         status: z.boolean(),
+        statusTeamsToWorkAdventure: z.boolean(),
+        statusWorkAdventureToTeams: z.boolean(),
         calendar: z.boolean(),
         todoList: z.boolean().optional(),
     }),

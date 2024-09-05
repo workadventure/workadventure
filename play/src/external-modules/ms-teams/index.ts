@@ -21,6 +21,7 @@ import TeamsAvailabilityStatusInformation from "./Components/TeamsAvailabilitySt
 import TeamsActionBar from "./Components/TeamsActionBar.svelte";
 import TeamsPopupMeetingNotCreated from "./Components/TeamsPopupMeetingNotCreated.svelte";
 import { Todolist } from "./Services/Todolist";
+import TeamsPopupReconnect from "./Components/TeamsPopupReconnect.svelte";
 
 const MS_GRAPH_ENDPOINT_V1 = "https://graph.microsoft.com/v1.0";
 const MS_GRAPH_ENDPOINT_BETA = "https://graph.microsoft.com/beta";
@@ -42,6 +43,10 @@ export interface MSTeamsExtensionModule extends ExtensionModule {
     openPopUpModuleStatus: () => void;
     closePopUpModuleStatus: () => void;
     closePopUpMeetingNotCreated: () => void;
+    openPopUpModuleReconnect: () => void;
+    closePopUpModuleReconnect: () => void;
+    dontShowAgainPopUpModuleReconnect: () => void;
+    reconnectToTeams: () => void;
     isGuest: boolean;
 }
 
@@ -164,6 +169,7 @@ class MSTeams implements MSTeamsExtensionModule {
         const microsoftTeamsMetadata = roomMetadata?.player?.accessTokens
             ? roomMetadata.player.accessTokens[0]
             : undefined;
+
         if (microsoftTeamsMetadata === undefined || roomMetadata.player?.accessTokens?.length === 0) {
             console.error("Microsoft teams metadata is undefined. Cancelling the initialization");
             if (roomMetadata.msTeamsSettings.communication) {
@@ -204,7 +210,10 @@ class MSTeams implements MSTeamsExtensionModule {
                     this.listenToTeamsStatusUpdate(this.moduleOptions.onExtensionModuleStatusChange).catch((e) =>
                         console.error("Error while listening Teams status update", e)
                     );
-                    if (this.moduleOptions.workadventureStatusStore) {
+                    if (
+                        this.moduleOptions.workadventureStatusStore &&
+                        roomMetadata.msTeamsSettings.statusWorkAdventureToTeams
+                    ) {
                         this.listenToWorkadventureStatus = subscribe(
                             this.moduleOptions.workadventureStatusStore,
                             (workadventureStatus: AvailabilityStatus) => {
@@ -243,18 +252,23 @@ class MSTeams implements MSTeamsExtensionModule {
                 } else {
                     // In development mode, we can't use the webhook because the server is not accessible from the internet
                     // So we replace the webhook by sending a call API every 10 minutes
-                    setInterval(() => {
-                        this.updateCalendarEvents().catch((e) =>
-                            console.error("Error while updating calendar events", e)
-                        );
-                    }, 1000 * 60 * 10);
+                    if (this.roomMetadata.msTeamsSettings.calendar)
+                        setInterval(() => {
+                            this.updateCalendarEvents().catch((e) =>
+                                console.error("Error while updating calendar events", e)
+                            );
+                        }, 1000 * 60 * 10);
 
                     // So we replace the webhook by sending a call API every 10 seconds
-                    setInterval(() => {
-                        this.listenToTeamsStatusUpdate(this.moduleOptions.onExtensionModuleStatusChange).catch((e) =>
-                            console.error("Error while listening Teams status update", e)
-                        );
-                    }, 1000 * 10);
+                    if (
+                        this.roomMetadata.msTeamsSettings.status &&
+                        this.roomMetadata.msTeamsSettings.statusTeamsToWorkAdventure
+                    )
+                        setInterval(() => {
+                            this.listenToTeamsStatusUpdate(this.moduleOptions.onExtensionModuleStatusChange).catch(
+                                (e) => console.error("Error while listening Teams status update", e)
+                            );
+                        }, 1000 * 10);
 
                     // So we replace the webhook by sending a call API every 10 minutes for todo list
                     if (this.roomMetadata.msTeamsSettings.todoList) {
@@ -340,6 +354,10 @@ class MSTeams implements MSTeamsExtensionModule {
         }
     }
 
+    // variable to save the number of tentatives to refresh the token
+    private tentatives = 0;
+    private popUpModuleReconnect = false;
+    private askDoNotShowAgainPopUpModuleReconnect = false;
     private refreshTokenInterceptor(
         error: unknown,
         getOauthRefreshToken?: (tokenToRefresh: string) => Promise<OauthRefreshToken>
@@ -359,8 +377,18 @@ class MSTeams implements MSTeamsExtensionModule {
                 .then(({ token }) => {
                     this.msAxiosClientV1.defaults.headers.common.Authorization = `Bearer ${token}`;
                     console.info("Microsoft teams token has been refreshed");
+                    this.tentatives = 0;
                 })
                 .catch((error) => {
+                    this.tentatives++;
+                    // If the token can't be refreshed, we try 3 times. Propose to the user to reconnect if it doesn't work
+                    if (this.tentatives > 10) {
+                        console.error("Error while refreshing token", error);
+                        if (this.moduleOptions.logoutCallback && this.popUpModuleReconnect === false) {
+                            this.openPopUpModuleReconnect();
+                            return;
+                        }
+                    }
                     throw error;
                 });
         }
@@ -369,7 +397,7 @@ class MSTeams implements MSTeamsExtensionModule {
 
     listenToTeamsStatusUpdate(onTeamsStatusChange?: (workAdventureNewStatus: AvailabilityStatus) => void) {
         return this.msAxiosClientV1
-            .get<unknown>(`/users/${this.clientId}/${MS_ME_PRESENCE_ENDPOINT}`)
+            .get<unknown>(`/users/${this.clientId}${MS_ME_PRESENCE_ENDPOINT}`)
             .then((response) => {
                 const userPresence = response.data;
                 const userPresenceResponse = z
@@ -592,7 +620,7 @@ class MSTeams implements MSTeamsExtensionModule {
         let checkModuleSynchronisationIntervalMinutes = 10 * 60 * 1000;
 
         // Initialize the subscription for presence
-        if (this.roomMetadata.msTeamsSettings.status) {
+        if (this.roomMetadata.msTeamsSettings.status && this.roomMetadata.msTeamsSettings.statusTeamsToWorkAdventure) {
             try {
                 const presenceSubscriptionResponse = await this.createOrGetPresenceSubscription();
 
@@ -1069,9 +1097,31 @@ class MSTeams implements MSTeamsExtensionModule {
             TeamsPopupMeetingNotCreated
         );
     }
+
     closePopUpMeetingNotCreated() {
         const externalSvelteComponent = get(this.moduleOptions.externalSvelteComponent);
         externalSvelteComponent.removePopupComponent("ms-teams-popup-meeting-not-created");
+    }
+
+    openPopUpModuleReconnect() {
+        if (this.askDoNotShowAgainPopUpModuleReconnect === true) return;
+        const externalSvelteComponent = get(this.moduleOptions.externalSvelteComponent);
+        externalSvelteComponent.addPopupComponent("ms-teams-popup-reconnect", this, TeamsPopupReconnect);
+        this.popUpModuleReconnect = true;
+    }
+
+    closePopUpModuleReconnect() {
+        const externalSvelteComponent = get(this.moduleOptions.externalSvelteComponent);
+        externalSvelteComponent.removePopupComponent("ms-teams-popup-reconnect");
+        this.popUpModuleReconnect = false;
+    }
+
+    reconnectToTeams() {
+        if (this.moduleOptions.logoutCallback) this.moduleOptions.logoutCallback();
+    }
+
+    dontShowAgainPopUpModuleReconnect() {
+        this.askDoNotShowAgainPopUpModuleReconnect = true;
     }
 
     get meetingSynchronised() {

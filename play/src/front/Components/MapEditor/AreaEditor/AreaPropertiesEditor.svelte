@@ -309,6 +309,7 @@
     }
 
     function onUpdateProperty(property: AreaDataProperty, removeAreaEntities?: boolean) {
+        console.log("onUpdateProperty => property", property);
         if ($mapEditorSelectedAreaPreviewStore) {
             $mapEditorSelectedAreaPreviewStore.updateProperty(property, removeAreaEntities);
         }
@@ -683,9 +684,11 @@
                         {#each extensionModulesAreaMapEditor as extensionModuleAreaMapEditor, index (`extensionModulesAreaMapEditor-${index}`)}
                             <svelte:component
                                 this={extensionModuleAreaMapEditor[property.subtype].AreaPropertyEditor}
+                                {property}
                                 on:close={() => {
                                     onDeleteProperty(property.id);
                                 }}
+                                on:change={() => onUpdateProperty(property)}
                             />
                         {/each}
                     {/if}
