@@ -33,8 +33,6 @@
                     //use this instead of dispatch beacause if then is execute before areaeditor was close : no effect ...
                     if ($mapEditorSelectedAreaPreviewStore) {
                         $mapEditorSelectedAreaPreviewStore.updateProperty(property);
-                    } else {
-                        console.log("$mapEditorSelectedAreaPreviewStore is empty ");
                     }
 
                     if (shouldChangeRoomName) {

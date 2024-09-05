@@ -169,7 +169,6 @@ class MatrixProvider {
     }
 
     async inviteUserToRoom(userID: string, roomID: string): Promise<void> {
-        console.log({ userID });
         if (!roomID) {
             console.error("roomID is undefined or null");
             return;
