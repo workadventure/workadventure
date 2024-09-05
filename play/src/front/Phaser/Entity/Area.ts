@@ -1,4 +1,4 @@
-import { AreaData, AtLeast, MatrixRoomPropertyData } from "@workadventure/map-editor";
+import { AreaData, AtLeast } from "@workadventure/map-editor";
 import { merge } from "lodash";
 import { get } from "svelte/store";
 import { GameScene } from "../Game/GameScene";
@@ -58,10 +58,8 @@ export class Area extends Phaser.GameObjects.Rectangle {
         super.destroy(fromScene);
 
         this.areaData.properties.forEach((property) => {
-            const validationResult = MatrixRoomPropertyData.safeParse(property);
-
-            if (validationResult.success) {
-                this.connection?.emitDeleteChatRoomArea(validationResult.data.matrixRoomId);
+            if (property.type === "matrixRoomPropertyData") {
+                this.connection?.emitDeleteChatRoomArea(property.matrixRoomId);
             }
         });
 
