@@ -66,7 +66,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         private matrixSecurity: MatrixSecurity = defaultMatrixSecurity
     ) {
         this.connectionStatus = writable("CONNECTING");
-        this.roomList = AutoDestroyingMapStoreProxy(new MapStore<string, MatrixChatRoom>());
+        this.roomList = new AutoDestroyingMapStore<string, MatrixChatRoom>();
 
         this.directRooms = derived(this.roomList, (roomList) => {
             return Array.from(roomList.values()).filter(
@@ -787,24 +787,9 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     }
 }
 
-function AutoDestroyingMapStoreProxy<K, V extends Required<{ destroy: () => void }>>(mapStore: MapStore<K, V>) {
-    return new Proxy(mapStore, {
-        get(target, prop, receiver) {
-            if (prop === "delete") {
-                return function (key: K) {
-                    if (target.has(key)) {
-                        target.get(key)?.destroy();
-                        return target.delete(key);
-                    }
-                    return false;
-                };
-            }
-            const value = Reflect.get(target, prop, receiver);
-
-            if (typeof value === "function") {
-                return value.bind(target);
-            }
-            return value;
-        },
-    });
+class AutoDestroyingMapStore<K, V extends Required<{ destroy: () => void }>> extends MapStore<K, V> {
+    override delete(key: K): boolean {
+        this.get(key)?.destroy();
+        return super.delete(key);
+    }
 }
