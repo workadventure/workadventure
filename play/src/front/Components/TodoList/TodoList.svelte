@@ -3,7 +3,7 @@
     import { writable } from "svelte/store";
     import { isTodoListVisibleStore, todoListsStore } from "../../Stores/TodoListStore";
     import LL from "../../../i18n/i18n-svelte";
-    import todoListSvg from "../images/applications/todoList.png";
+    import todoListPng from "../images/applications/todoList.png";
     import TodoTask from "./TodoTask.svelte";
     import { IconArrowDown } from "@wa-icons";
 
@@ -35,7 +35,7 @@
                 <h3 class="tw-text-l tw-text-left">
                     <img
                         draggable="false"
-                        src={todoListSvg}
+                        src={todoListPng}
                         class="tw-w-8 tw-mx-2"
                         alt={$LL.menu.icon.open.todoList()}
                     />
