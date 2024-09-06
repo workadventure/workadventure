@@ -258,6 +258,7 @@ services:
       SENTRY_ENVIRONMENT: $SENTRY_ENVIRONMENT
       SENTRY_RELEASE: $SENTRY_RELEASE
       PATH_PREFIX: ""
+      SECRET_KEY: '$SECRET_KEY'
     volumes:
       - .:/usr/src/app
     tmpfs: /tmp

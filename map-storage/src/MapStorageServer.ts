@@ -5,13 +5,11 @@ import {
     AtLeast,
     CreateAreaCommand,
     CreateEntityCommand,
-    DeleteAreaCommand,
     DeleteEntityCommand,
     EntityCoordinates,
     EntityDataProperties,
     EntityDimensions,
     EntityPermissions,
-    UpdateAreaCommand,
     UpdateEntityCommand,
     UpdateWAMMetadataCommand,
     UpdateWAMSettingCommand,
@@ -27,13 +25,15 @@ import {
 } from "@workadventure/messages";
 import { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
 import { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated/services";
-import { DeleteCustomEntityMapStorageCommand } from "./Commands/DeleteCustomEntityMapStorageCommand";
-import { ModifyCustomEntityMapStorageCommand } from "./Commands/ModifyCustomEntityMapStorageCommand";
-import { UploadEntityMapStorageCommand } from "./Commands/UploadEntityMapStorageCommand";
+import { DeleteCustomEntityMapStorageCommand } from "./Commands/CustomEntity/DeleteCustomEntityMapStorageCommand";
+import { ModifyCustomEntityMapStorageCommand } from "./Commands/CustomEntity/ModifyCustomEntityMapStorageCommand";
+import { UploadEntityMapStorageCommand } from "./Commands/CustomEntity/UploadEntityMapStorageCommand";
 import { entitiesManager } from "./EntitiesManager";
 import { mapsManager } from "./MapsManager";
 import { mapPathUsingDomainWithPrefix } from "./Services/PathMapper";
 import { LockByKey } from "./Services/LockByKey";
+import { DeleteAreaMapStorageCommand } from "./Commands/Area/DeleteAreaMapStorageCommand";
+import { UpdateAreaMapStorageCommand } from "./Commands/Area/UpdateAreaMapStorageCommand";
 
 const editionLocks = new LockByKey<string>();
 
@@ -140,7 +140,7 @@ const mapStorageServer: MapStorageServer = {
                             await mapsManager.executeCommand(
                                 mapKey,
                                 mapUrl.host,
-                                new UpdateAreaCommand(gameMap, dataToModify, commandId)
+                                new UpdateAreaMapStorageCommand(gameMap, dataToModify, commandId, area)
                             );
                         } else {
                             console.log(`Could not find area with id: ${message.id}`);
@@ -165,7 +165,7 @@ const mapStorageServer: MapStorageServer = {
                         await mapsManager.executeCommand(
                             mapKey,
                             mapUrl.host,
-                            new DeleteAreaCommand(gameMap, message.id, commandId)
+                            new DeleteAreaMapStorageCommand(gameMap, message.id, commandId)
                         );
                         break;
                     }

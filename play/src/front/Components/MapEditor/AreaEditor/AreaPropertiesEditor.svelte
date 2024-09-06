@@ -31,6 +31,7 @@
     import { IconChevronDown, IconChevronRight } from "../../Icons";
     import MatrixRoomPropertyEditor from "../PropertyEditor/MatrixRoomPropertyEditor.svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
+    import { ABSOLUTE_PUSHER_URL } from "../../../Enum/ComputedConst";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
@@ -49,6 +50,8 @@
     let hasRightsProperty: boolean;
     let hasMatrixRoom: boolean;
     let connection = gameManager.getCurrentGameScene().connection;
+
+    const ROOM_AREA_PUSHER_URL = new URL("roomArea", ABSOLUTE_PUSHER_URL).toString();
 
     let selectedAreaPreviewUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((currentAreaPreview) => {
         if (currentAreaPreview) {
@@ -209,6 +212,7 @@
                     matrixRoomId: "",
                     shouldOpenAutomatically: false,
                     displayName: "",
+                    ressourceUrl : ROOM_AREA_PUSHER_URL
                 };
             default:
                 throw new Error(`Unknown property type ${type}`);

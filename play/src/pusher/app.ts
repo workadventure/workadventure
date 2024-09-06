@@ -90,6 +90,7 @@ class App {
         new AdminController(this.webserver);
         new OpenIdProfileController(this.webserver);
         new PingController(this.webserver);
+        
         if (ENABLE_OPENAPI_ENDPOINT) {
             new SwaggerController(this.webserver);
         }
