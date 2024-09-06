@@ -32,6 +32,7 @@ import {
     MoveToPositionMessage as MoveToPositionMessageProto,
     MucRoomDefinitionMessage,
     PlayerDetailsUpdatedMessage as PlayerDetailsUpdatedMessageTsProto,
+    PokeUserMessage,
     PositionMessage as PositionMessageTsProto,
     PositionMessage_Direction,
     QueryMessage,
@@ -171,6 +172,9 @@ export class RoomConnection implements RoomConnection {
 
     private readonly _followAbortMessageStream = new Subject<FollowAbortMessage>();
     public readonly followAbortMessageStream = this._followAbortMessageStream.asObservable();
+
+    private readonly _pokeUserMessageStream = new Subject<PokeUserMessage>();
+    public readonly pokeUserMessageStream = this._pokeUserMessageStream.asObservable();
 
     private readonly _itemEventMessageStream = new Subject<{
         itemId: number;
@@ -643,6 +647,10 @@ export class RoomConnection implements RoomConnection {
                 }
                 case "followAbortMessage": {
                     this._followAbortMessageStream.next(message.followAbortMessage);
+                    break;
+                }
+                case "pokeUserMessage": {
+                    this._pokeUserMessageStream.next(message.pokeUserMessage);
                     break;
                 }
                 case "errorMessage": {
@@ -1757,6 +1765,7 @@ export class RoomConnection implements RoomConnection {
         this._followRequestMessageStream.complete();
         this._followConfirmationMessageStream.complete();
         this._followAbortMessageStream.complete();
+        this._pokeUserMessageStream.complete();
         this._itemEventMessageStream.complete();
         this._emoteEventMessageStream.complete();
         this._variableMessageStream.complete();

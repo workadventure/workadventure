@@ -1,6 +1,6 @@
 import { AvailabilityStatus } from "@workadventure/messages";
 import { TimedRules } from "../statusRules";
-import { askIfUserWantToJoinBubbleOf, askToChangeStatus } from "../statusChangerFunctions";
+import { askToChangeStatus } from "../statusChangerFunctions";
 import { notificationPermissionModalVisibility } from "../../../Stores/AvailabilityStatusModalsStore";
 import { helpNotificationSettingsVisibleStore } from "../../../Stores/HelpSettingsStore";
 import { localUserStore } from "../../../Connection/LocalUserStore";
@@ -17,10 +17,6 @@ export class BusyStatusStrategy extends BasicStatusStrategy {
         timedRules.push({
             rule: askToChangeStatus,
             applyIn: this.toMilliseconds(1, 0, 0),
-        });
-
-        interactionRules.push(() => {
-            askIfUserWantToJoinBubbleOf(this.userNameInteraction);
         });
 
         this.basicRules.push(this.showNotificationPermissionModal);
