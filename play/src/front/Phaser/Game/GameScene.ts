@@ -2108,7 +2108,6 @@ export class GameScene extends DirtyScene {
                 // Note: by design, the peerStore can only add or remove one user at a given time.
                 // So we know for sure that there is only one new user.
                 const peer = Array.from(peers.values())[0];
-                //askIfUserWantToJoinBubbleOf(peer.userName);
                 statusChanger.setUserNameInteraction(peer.player.name);
                 statusChanger.applyInteractionRules();
 
