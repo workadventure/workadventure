@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { createEventDispatcher, onMount } from "svelte";
+    import { createEventDispatcher } from "svelte";
     import PropertyEditorBase from "../../../front/Components/MapEditor/PropertyEditor/PropertyEditorBase.svelte";
     import LL from "../../../i18n/i18n-svelte";
     import { TeamsMeetingPropertyData } from "../MapEditor/types";
@@ -11,16 +11,13 @@
     let optionAdvancedActivated = false;
 
     function onValueChange() {
+        property.data = property.data?.trim().replace(new RegExp(" ", "g"), "");
         dispatch("change", property.data);
     }
 
     function toggleAdvancedOption() {
         optionAdvancedActivated = !optionAdvancedActivated;
     }
-
-    onMount(() => {
-        console.log("property", property);
-    });
 </script>
 
 <PropertyEditorBase on:close={() => dispatch("close")}>

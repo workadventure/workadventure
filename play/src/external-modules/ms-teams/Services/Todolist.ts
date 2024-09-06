@@ -87,7 +87,7 @@ export const MSTodoTasks = z.object({
 });
 export type MSTodoTasks = z.infer<typeof MSTodoTasks>;
 
-export class Todolist {
+export class TodolistService {
     private readonly timeoutToGetList: Map<string, NodeJS.Timeout>;
     private readonly lasttimeToGetList: Map<string, number>;
     private readonly todoLists: Map<string, { todoList: MSTodoList; value: MSTodoTasks }>;
@@ -254,7 +254,6 @@ export class Todolist {
                             id: value.todoList.id,
                             title: value.todoList.displayName,
                             tasks: value.value.value.map((task) => {
-                                console.log("task.status", task.status);
                                 return {
                                     id: task.id,
                                     title: task.title,

@@ -20,8 +20,10 @@ import TeamsPopupStatus from "./Components/TeamsPopupStatus.svelte";
 import TeamsAvailabilityStatusInformation from "./Components/TeamsAvailabilityStatusInformation.svelte";
 import TeamsActionBar from "./Components/TeamsActionBar.svelte";
 import TeamsPopupMeetingNotCreated from "./Components/TeamsPopupMeetingNotCreated.svelte";
-import { Todolist } from "./Services/Todolist";
+import { TodolistService } from "./Services/Todolist";
 import TeamsPopupReconnect from "./Components/TeamsPopupReconnect.svelte";
+import { TeamsOnlineMeetingService } from "./Services/TeamsOnlineMeeting";
+import { TeamsMeetingPropertyData } from "./MapEditor/types";
 
 const MS_GRAPH_ENDPOINT_V1 = "https://graph.microsoft.com/v1.0";
 const MS_GRAPH_ENDPOINT_BETA = "https://graph.microsoft.com/beta";
@@ -72,6 +74,16 @@ export const MSTeamsMeeting = z.object({
     }),
 });
 export type MSTeamsMeeting = z.infer<typeof MSTeamsMeeting>;
+
+export const MSTeamsMeetings = z.object({
+    value: z.array(MSTeamsMeeting),
+});
+export type MSTeamsMeetings = z.infer<typeof MSTeamsMeetings>;
+
+export const MSTeamsMeetingsGraphResponse = z.object({
+    data: MSTeamsMeetings,
+});
+export type MSTeamsMeetingsGraphResponse = z.infer<typeof MSTeamsMeetingsGraphResponse>;
 
 interface MSTeamsCalendarEvent {
     id: string;
@@ -152,7 +164,8 @@ class MSTeams implements MSTeamsExtensionModule {
     private watchsSpaceMetadataSubscribe: Map<string, Subscription> = new Map<string, Subscription>();
     private onlineTeamsMeetingsCreated: Set<string> = new Set<string>();
 
-    private todoList?: Todolist;
+    private teamsOnLineMeetingService?: TeamsOnlineMeetingService;
+    private todoList?: TodolistService;
 
     init(roomMetadata: RoomMetadataType, options: ExtensionModuleOptions) {
         this.roomMetadata = roomMetadata;
@@ -233,13 +246,18 @@ class MSTeams implements MSTeamsExtensionModule {
 
                 // Initialize Todo List synchronization
                 if (roomMetadata.msTeamsSettings.todoList && this.moduleOptions.todoListStoreUpdate) {
-                    this.todoList = new Todolist(
+                    this.todoList = new TodolistService(
                         this.msAxiosClientV1,
                         this.userAccessToken,
                         this.roomId,
                         this.moduleOptions.todoListStoreUpdate,
                         this.adminUrl
                     );
+                }
+
+                // Initialize Online Meeting synchronization
+                if (roomMetadata.msTeamsSettings.communication) {
+                    this.teamsOnLineMeetingService = new TeamsOnlineMeetingService(this.msAxiosClientV1, this.clientId);
                 }
 
                 // Initialize the subscription
@@ -887,6 +905,58 @@ class MSTeams implements MSTeamsExtensionModule {
 
     private handleAreaPropertyOnEnter(area: AreaData) {
         console.debug("Enter extension module area");
+
+        // Check if the Teams property is defined
+        const teamsAreaProperty = area.properties?.find(
+            (property) => property.type === "extensionModule" && property.subtype === "teams"
+        ) as TeamsMeetingPropertyData | undefined;
+        if (teamsAreaProperty === undefined) {
+            console.warn("Teams property is not defined, unable to join space, create or get meeting and share it!");
+            notificationPlayingStore.removeNotificationById(area.id);
+            notificationPlayingStore.playNotification(
+                get(LL).externalModule.teams.unableJoinMeeting(),
+                "business.svg",
+                area.id
+            );
+            return;
+        }
+
+        // Check if the property is well formatted and have join meeting id
+        const joinMeetingId = teamsAreaProperty.data;
+        if (joinMeetingId != undefined && joinMeetingId.length > 0) {
+            console.info("Joining Teams meeting was defined in the area property", joinMeetingId);
+            notificationPlayingStore.removeNotificationById(area.id);
+            notificationPlayingStore.removeNotificationById(area.id);
+            notificationPlayingStore.playNotification(
+                get(LL).externalModule.teams.openingMeeting(),
+                "business.svg",
+                area.id
+            );
+            this.teamsOnLineMeetingService
+                ?.getOnlineMeetingByJoinMeetingId(joinMeetingId)
+                .then((teamsOnlineMeeting) => {
+                    return this.openCowebsiteTeamsMeeting(teamsOnlineMeeting)
+                        .then(() => {
+                            this.onlineTeamsMeetingsCreated.add(area.id);
+                        })
+                        .catch((e) => {
+                            console.error("Error while opening cowebsite Teams meeting", e);
+                            throw e;
+                        });
+                })
+                .catch((e) => {
+                    console.error("Error while getting Teams Online meeting", e);
+                    notificationPlayingStore.removeNotificationById(area.id);
+                    notificationPlayingStore.playNotification(
+                        get(LL).externalModule.teams.unableJoinMeeting(),
+                        "business.svg",
+                        area.id
+                    );
+                    this.onlineTeamsMeetingsCreated.delete(area.id);
+                });
+            return;
+        }
+
         if (!this.moduleOptions.spaceRegistry) {
             console.warn("SpaceRegistry is not defined, unable to join space, create or get meeting and share it!");
             notificationPlayingStore.removeNotificationById(area.id);
@@ -897,7 +967,6 @@ class MSTeams implements MSTeamsExtensionModule {
             );
             return;
         }
-
         // join space meeting
         console.debug(
             "SpaceRegistry is defined, join space, create or get meeting and share it!",
