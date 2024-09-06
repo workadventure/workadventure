@@ -23,7 +23,7 @@ import TeamsPopupMeetingNotCreated from "./Components/TeamsPopupMeetingNotCreate
 import { TodolistService } from "./Services/Todolist";
 import TeamsPopupReconnect from "./Components/TeamsPopupReconnect.svelte";
 import { TeamsOnlineMeetingService } from "./Services/TeamsOnlineMeeting";
-import { TeamsMeetingPropertyData } from "./MapEditor/types";
+import { MSTeamsMeeting, TeamsMeetingPropertyData } from "./MapEditor/types";
 
 const MS_GRAPH_ENDPOINT_V1 = "https://graph.microsoft.com/v1.0";
 const MS_GRAPH_ENDPOINT_BETA = "https://graph.microsoft.com/beta";
@@ -59,21 +59,6 @@ export enum TeamsModuleStatus {
     OFFLINE = "offline",
     NONE = "none",
 }
-
-export const MSTeamsMeeting = z.object({
-    id: z.string(),
-    subject: z.string(),
-    startDateTime: z.string(),
-    endDateTime: z.string(),
-    joinUrl: z.string(),
-    joinWebUrl: z.string(),
-    joinMeetingIdSettings: z.object({
-        isPasscodeRequired: z.boolean(),
-        joinMeetingId: z.string(),
-        passcode: z.string().optional().nullable(),
-    }),
-});
-export type MSTeamsMeeting = z.infer<typeof MSTeamsMeeting>;
 
 export const MSTeamsMeetings = z.object({
     value: z.array(MSTeamsMeeting),
@@ -899,6 +884,7 @@ class MSTeams implements MSTeamsExtensionModule {
                     !areaDataProperties.find(
                         (property) => property.type === "extensionModule" && property.subtype === "teams"
                     ),
+                getOnlineMeetingByJoinMeetingId: this.getOnlineMeetingByJoinMeetingId.bind(this),
             },
         };
     }
@@ -922,40 +908,25 @@ class MSTeams implements MSTeamsExtensionModule {
         }
 
         // Check if the property is well formatted and have join meeting id
-        const joinMeetingId = teamsAreaProperty.data;
-        if (joinMeetingId != undefined && joinMeetingId.length > 0) {
-            console.info("Joining Teams meeting was defined in the area property", joinMeetingId);
-            notificationPlayingStore.removeNotificationById(area.id);
+        if (teamsAreaProperty.data && teamsAreaProperty.data.msTeamsMeeting) {
+            console.info(
+                "Joining Teams meeting was defined in the area property",
+                teamsAreaProperty.data.msTeamsMeeting.joinMeetingIdSettings.joinMeetingId
+            );
             notificationPlayingStore.removeNotificationById(area.id);
             notificationPlayingStore.playNotification(
                 get(LL).externalModule.teams.openingMeeting(),
                 "business.svg",
                 area.id
             );
-            this.teamsOnLineMeetingService
-                ?.getOnlineMeetingByJoinMeetingId(joinMeetingId)
-                .then((teamsOnlineMeeting) => {
-                    if (this.cowebsiteOpenedId && this.closeCoWebSite) this.closeCoWebSite(this.cowebsiteOpenedId);
-                    return this.openCowebsiteTeamsMeeting(teamsOnlineMeeting)
-                        .then(() => {
-                            this.onlineTeamsMeetingsCreated.add(area.id);
-                        })
-                        .catch((e) => {
-                            console.error("Error while opening cowebsite Teams meeting", e);
-                            throw e;
-                        });
+            return this.openCowebsiteTeamsMeeting(teamsAreaProperty.data.msTeamsMeeting)
+                .then(() => {
+                    this.onlineTeamsMeetingsCreated.add(area.id);
                 })
                 .catch((e) => {
-                    console.error("Error while getting Teams Online meeting", e);
-                    notificationPlayingStore.removeNotificationById(area.id);
-                    notificationPlayingStore.playNotification(
-                        get(LL).externalModule.teams.unableJoinMeeting(),
-                        "business.svg",
-                        area.id
-                    );
-                    this.onlineTeamsMeetingsCreated.delete(area.id);
+                    console.error("Error while opening cowebsite Teams meeting", e);
+                    throw e;
                 });
-            return;
         }
 
         if (!this.moduleOptions.spaceRegistry) {
@@ -1193,6 +1164,10 @@ class MSTeams implements MSTeamsExtensionModule {
 
     dontShowAgainPopUpModuleReconnect() {
         this.askDoNotShowAgainPopUpModuleReconnect = true;
+    }
+
+    getOnlineMeetingByJoinMeetingId(joinMeetingId: string): Promise<MSTeamsMeeting> | undefined {
+        return this.teamsOnLineMeetingService?.getOnlineMeetingByJoinMeetingId(joinMeetingId);
     }
 
     get meetingSynchronised() {

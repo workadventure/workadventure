@@ -1,23 +1,62 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
+    import { createEventDispatcher, onMount } from "svelte";
     import PropertyEditorBase from "../../../front/Components/MapEditor/PropertyEditor/PropertyEditorBase.svelte";
     import LL from "../../../i18n/i18n-svelte";
-    import { TeamsMeetingPropertyData } from "../MapEditor/types";
+    import { TeamsAreaMapEditorData, TeamsMeetingPropertyData } from "../MapEditor/types";
     import TeamsLogoSvg from "./images/business.svg";
 
     export let property: TeamsMeetingPropertyData;
+    export let extensionModuleAreaMapEditor: TeamsAreaMapEditorData;
 
     const dispatch = createEventDispatcher();
     let optionAdvancedActivated = false;
+    let temasOnlineMeetingId: string;
 
-    function onValueChange() {
-        property.data = property.data?.trim().replace(new RegExp(" ", "g"), "");
+    async function onValueChange() {
+        if (temasOnlineMeetingId && temasOnlineMeetingId.length > 0) {
+            temasOnlineMeetingId = temasOnlineMeetingId?.trim().replace(new RegExp(" ", "g"), "");
+            property.data!.temasOnlineMeetingId = temasOnlineMeetingId;
+            await getOnLineMeetingUrl();
+        } else {
+            property.data!.msTeamsMeeting = null;
+        }
         dispatch("change", property.data);
     }
 
     function toggleAdvancedOption() {
         optionAdvancedActivated = !optionAdvancedActivated;
     }
+
+    async function getOnLineMeetingUrl() {
+        if (!extensionModuleAreaMapEditor.teams.getOnlineMeetingByJoinMeetingId || !temasOnlineMeetingId) return;
+        try {
+            const msTeamsMeeting = await extensionModuleAreaMapEditor.teams.getOnlineMeetingByJoinMeetingId(
+                temasOnlineMeetingId
+            );
+            if (msTeamsMeeting) {
+                property.data!.msTeamsMeeting = msTeamsMeeting;
+            } else {
+                property.data!.msTeamsMeeting = null;
+            }
+        } catch (e) {
+            console.error("Error getting online meeting", e);
+            property.data!.msTeamsMeeting = null;
+        }
+    }
+
+    onMount(() => {
+        if (!property.data) {
+            property.data = {
+                msTeamsMeeting: undefined,
+                temasOnlineMeetingId: undefined,
+            };
+        }
+
+        if (property.data.msTeamsMeeting?.joinMeetingIdSettings.joinMeetingId) {
+            temasOnlineMeetingId = property.data.msTeamsMeeting.joinMeetingIdSettings.joinMeetingId;
+            optionAdvancedActivated = true;
+        }
+    });
 </script>
 
 <PropertyEditorBase on:close={() => dispatch("close")}>
@@ -39,10 +78,23 @@
                         id="teamsMeetingId"
                         type="text"
                         placeholder="Teams meeting id"
-                        bind:value={property.data}
+                        bind:value={temasOnlineMeetingId}
                         on:change={onValueChange}
                     />
                 </div>
+            </div>
+        {/if}
+
+        {#if property.data && property.data.msTeamsMeeting}
+            <div class="tw-flex tw-flex-col tw-mt-2">
+                <span class="tw-text-sm">Meeting subject: {property.data.msTeamsMeeting.subject}</span>
+                <span class="tw-text-sm tw-whitespace-nowrap"
+                    >Meeting ID: {property.data.msTeamsMeeting.joinMeetingIdSettings.joinMeetingId}</span
+                >
+            </div>
+        {:else if temasOnlineMeetingId}
+            <div class="tw-flex tw-flex-col tw-items-center tw-mt-2">
+                <span class="tw-text-sm tw-text-warning-800">⚠️ Meeting not found</span>
             </div>
         {/if}
     </span>

@@ -684,6 +684,7 @@
                             <svelte:component
                                 this={extensionModuleAreaMapEditor[property.subtype].AreaPropertyEditor}
                                 {property}
+                                {extensionModuleAreaMapEditor}
                                 on:close={() => {
                                     onDeleteProperty(property.id);
                                 }}
