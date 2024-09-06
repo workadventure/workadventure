@@ -1,5 +1,6 @@
 import { Axios } from "axios";
-import { MSTeamsMeeting, MSTeamsMeetingsGraphResponse } from "../index";
+import { MSTeamsMeetingsGraphResponse } from "../index";
+import { MSTeamsMeeting } from "../MapEditor/types";
 
 export class TeamsOnlineMeetingService {
     constructor(private readonly graphClient: Axios, private readonly clientId: string) {}

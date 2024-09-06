@@ -919,7 +919,7 @@ class MSTeams implements MSTeamsExtensionModule {
                 "business.svg",
                 area.id
             );
-            return this.openCowebsiteTeamsMeeting(teamsAreaProperty.data.msTeamsMeeting)
+            this.openCowebsiteTeamsMeeting(teamsAreaProperty.data.msTeamsMeeting)
                 .then(() => {
                     this.onlineTeamsMeetingsCreated.add(area.id);
                 })
@@ -927,6 +927,7 @@ class MSTeams implements MSTeamsExtensionModule {
                     console.error("Error while opening cowebsite Teams meeting", e);
                     throw e;
                 });
+            return;
         }
 
         if (!this.moduleOptions.spaceRegistry) {
