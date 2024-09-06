@@ -935,6 +935,7 @@ class MSTeams implements MSTeamsExtensionModule {
             this.teamsOnLineMeetingService
                 ?.getOnlineMeetingByJoinMeetingId(joinMeetingId)
                 .then((teamsOnlineMeeting) => {
+                    if (this.cowebsiteOpenedId && this.closeCoWebSite) this.closeCoWebSite(this.cowebsiteOpenedId);
                     return this.openCowebsiteTeamsMeeting(teamsOnlineMeeting)
                         .then(() => {
                             this.onlineTeamsMeetingsCreated.add(area.id);
@@ -998,6 +999,7 @@ class MSTeams implements MSTeamsExtensionModule {
                     area.id
                 );
 
+                if (this.cowebsiteOpenedId && this.closeCoWebSite) this.closeCoWebSite(this.cowebsiteOpenedId);
                 this.openCowebsiteTeamsMeeting(parseMSTeamsMeeting.data)
                     .then(() => {
                         // Remove popup component
@@ -1040,6 +1042,7 @@ class MSTeams implements MSTeamsExtensionModule {
                     this.onlineTeamsMeetingsCreated.add(area.id);
 
                     // Open the meeting
+                    if (this.cowebsiteOpenedId && this.closeCoWebSite) this.closeCoWebSite(this.cowebsiteOpenedId);
                     this.openCowebsiteTeamsMeeting(data).catch((e) =>
                         console.error("Error while opening cowebsite Teams meeting", e)
                     );
@@ -1097,7 +1100,6 @@ class MSTeams implements MSTeamsExtensionModule {
     }
 
     private async openCowebsiteTeamsMeeting(data: MSTeamsMeeting) {
-        console.trace("Open cowebsite Teams meeting", data);
         const cowebsiteOpened = await this.openPopupMeeting(
             data.subject,
             data.joinWebUrl,

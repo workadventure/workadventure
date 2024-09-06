@@ -18,7 +18,10 @@
     });
 </script>
 
-<div class="teams-menu tw-min-h-fit tw-rounded-3xl tw-overflow-visible" transition:fly={{ x: 1000, duration: 500 }}>
+<div
+    class="teams-menu-meeting-not-created tw-min-h-fit tw-rounded-3xl tw-overflow-visible"
+    transition:fly={{ x: 1000, duration: 500 }}
+>
     <div class="tw-p-8 tw-flex tw-flex-col tw-justify-center tw-items-center">
         <h1 class="tw-p-2">Teams Microsoft Meetings 🎉</h1>
         <img src={TeamsLogoSvg} alt="Object" class="tw-w-32 tw-h-32 tw-mb-4 tw-object-contain" />

@@ -11,6 +11,7 @@
     descriptionText="Open a new meeting in new tab"
     img={teamsLogo}
     style={`z-index: 200`}
+    testId="onlineTeamsMeeting"
     on:click={(event) => {
         dispatch("click", event);
     }}
