@@ -20,6 +20,10 @@ import TeamsPopupStatus from "./Components/TeamsPopupStatus.svelte";
 import TeamsAvailabilityStatusInformation from "./Components/TeamsAvailabilityStatusInformation.svelte";
 import TeamsActionBar from "./Components/TeamsActionBar.svelte";
 import TeamsPopupMeetingNotCreated from "./Components/TeamsPopupMeetingNotCreated.svelte";
+import { TodolistService } from "./Services/Todolist";
+import TeamsPopupReconnect from "./Components/TeamsPopupReconnect.svelte";
+import { TeamsOnlineMeetingService } from "./Services/TeamsOnlineMeeting";
+import { MSTeamsMeeting, TeamsMeetingPropertyData } from "./MapEditor/types";
 
 const MS_GRAPH_ENDPOINT_V1 = "https://graph.microsoft.com/v1.0";
 const MS_GRAPH_ENDPOINT_BETA = "https://graph.microsoft.com/beta";
@@ -30,6 +34,7 @@ enum MSGraphMessageEventSource {
     MicrosoftGraphPresence = "#Microsoft.Graph.presence",
     MicrosoftGraphEvent = "#Microsoft.Graph.Event",
     MicrosoftGraphSubscription = "#Microsoft.Graph.subscription",
+    MicrosoftTodoTask = "#Microsoft.Graph.todoTask",
 }
 
 export interface MSTeamsExtensionModule extends ExtensionModule {
@@ -40,6 +45,10 @@ export interface MSTeamsExtensionModule extends ExtensionModule {
     openPopUpModuleStatus: () => void;
     closePopUpModuleStatus: () => void;
     closePopUpMeetingNotCreated: () => void;
+    openPopUpModuleReconnect: () => void;
+    closePopUpModuleReconnect: () => void;
+    dontShowAgainPopUpModuleReconnect: () => void;
+    reconnectToTeams: () => void;
     isGuest: boolean;
 }
 
@@ -51,20 +60,15 @@ export enum TeamsModuleStatus {
     NONE = "none",
 }
 
-export const MSTeamsMeeting = z.object({
-    id: z.string(),
-    subject: z.string(),
-    startDateTime: z.string(),
-    endDateTime: z.string(),
-    joinUrl: z.string(),
-    joinWebUrl: z.string(),
-    joinMeetingIdSettings: z.object({
-        isPasscodeRequired: z.boolean(),
-        joinMeetingId: z.string(),
-        passcode: z.string().optional().nullable(),
-    }),
+export const MSTeamsMeetings = z.object({
+    value: z.array(MSTeamsMeeting),
 });
-export type MSTeamsMeeting = z.infer<typeof MSTeamsMeeting>;
+export type MSTeamsMeetings = z.infer<typeof MSTeamsMeetings>;
+
+export const MSTeamsMeetingsGraphResponse = z.object({
+    data: MSTeamsMeetings,
+});
+export type MSTeamsMeetingsGraphResponse = z.infer<typeof MSTeamsMeetingsGraphResponse>;
 
 interface MSTeamsCalendarEvent {
     id: string;
@@ -97,10 +101,10 @@ interface MSTeamsCalendarEvent {
     bodyPreview: string;
 }
 
-interface MSGraphSubscriptionResponse {
+export interface MSGraphSubscriptionResponse {
     data: MSGraphSubscription;
 }
-interface MSGraphSubscription {
+export interface MSGraphSubscription {
     id: string;
     changeType: string;
     clientState: string;
@@ -145,6 +149,9 @@ class MSTeams implements MSTeamsExtensionModule {
     private watchsSpaceMetadataSubscribe: Map<string, Subscription> = new Map<string, Subscription>();
     private onlineTeamsMeetingsCreated: Set<string> = new Set<string>();
 
+    private teamsOnLineMeetingService?: TeamsOnlineMeetingService;
+    private todoList?: TodolistService;
+
     init(roomMetadata: RoomMetadataType, options: ExtensionModuleOptions) {
         this.roomMetadata = roomMetadata;
         this.moduleOptions = options;
@@ -160,6 +167,7 @@ class MSTeams implements MSTeamsExtensionModule {
         const microsoftTeamsMetadata = roomMetadata?.player?.accessTokens
             ? roomMetadata.player.accessTokens[0]
             : undefined;
+
         if (microsoftTeamsMetadata === undefined || roomMetadata.player?.accessTokens?.length === 0) {
             console.error("Microsoft teams metadata is undefined. Cancelling the initialization");
             if (roomMetadata.msTeamsSettings.communication) {
@@ -200,7 +208,10 @@ class MSTeams implements MSTeamsExtensionModule {
                     this.listenToTeamsStatusUpdate(this.moduleOptions.onExtensionModuleStatusChange).catch((e) =>
                         console.error("Error while listening Teams status update", e)
                     );
-                    if (this.moduleOptions.workadventureStatusStore) {
+                    if (
+                        this.moduleOptions.workadventureStatusStore &&
+                        roomMetadata.msTeamsSettings.statusWorkAdventureToTeams
+                    ) {
                         this.listenToWorkadventureStatus = subscribe(
                             this.moduleOptions.workadventureStatusStore,
                             (workadventureStatus: AvailabilityStatus) => {
@@ -218,6 +229,22 @@ class MSTeams implements MSTeamsExtensionModule {
                     this.updateCalendarEvents().catch((e) => console.error("Error while updating calendar events", e));
                 }
 
+                // Initialize Todo List synchronization
+                if (roomMetadata.msTeamsSettings.todoList && this.moduleOptions.todoListStoreUpdate) {
+                    this.todoList = new TodolistService(
+                        this.msAxiosClientV1,
+                        this.userAccessToken,
+                        this.roomId,
+                        this.moduleOptions.todoListStoreUpdate,
+                        this.adminUrl
+                    );
+                }
+
+                // Initialize Online Meeting synchronization
+                if (roomMetadata.msTeamsSettings.communication) {
+                    this.teamsOnLineMeetingService = new TeamsOnlineMeetingService(this.msAxiosClientV1, this.clientId);
+                }
+
                 // Initialize the subscription
                 if (
                     this.adminUrl != undefined &&
@@ -228,18 +255,32 @@ class MSTeams implements MSTeamsExtensionModule {
                 } else {
                     // In development mode, we can't use the webhook because the server is not accessible from the internet
                     // So we replace the webhook by sending a call API every 10 minutes
-                    setInterval(() => {
-                        this.updateCalendarEvents().catch((e) =>
-                            console.error("Error while updating calendar events", e)
-                        );
-                    }, 1000 * 10 * 10);
+                    if (this.roomMetadata.msTeamsSettings.calendar)
+                        setInterval(() => {
+                            this.updateCalendarEvents().catch((e) =>
+                                console.error("Error while updating calendar events", e)
+                            );
+                        }, 1000 * 60 * 10);
 
                     // So we replace the webhook by sending a call API every 10 seconds
-                    setInterval(() => {
-                        this.listenToTeamsStatusUpdate(this.moduleOptions.onExtensionModuleStatusChange).catch((e) =>
-                            console.error("Error while listening Teams status update", e)
-                        );
-                    }, 1000 * 10);
+                    if (
+                        this.roomMetadata.msTeamsSettings.status &&
+                        this.roomMetadata.msTeamsSettings.statusTeamsToWorkAdventure
+                    )
+                        setInterval(() => {
+                            this.listenToTeamsStatusUpdate(this.moduleOptions.onExtensionModuleStatusChange).catch(
+                                (e) => console.error("Error while listening Teams status update", e)
+                            );
+                        }, 1000 * 10);
+
+                    // So we replace the webhook by sending a call API every 10 minutes for todo list
+                    if (this.roomMetadata.msTeamsSettings.todoList) {
+                        setInterval(() => {
+                            this.todoList
+                                ?.getTodolist()
+                                .catch((e) => console.error("Error while updating todo list", e));
+                        }, 1000 * 60 * 10);
+                    }
                 }
             })
             .catch((e) => console.error("Error while initializing Microsoft Teams module", e));
@@ -253,6 +294,11 @@ class MSTeams implements MSTeamsExtensionModule {
                 switch (type.toLowerCase()) {
                     case MSGraphMessageEventSource.MicrosoftGraphPresence.toLocaleLowerCase():
                         if (!this.moduleOptions.onExtensionModuleStatusChange) break;
+                        /*
+                            ⚠️
+                            Don't trust event pushed by Microsoft Graph API
+                            The event could be received after the user has changed his status and create confusion for the user
+
                         // Update the teams status of this module and do not call API to set presence
                         this.teamsAvailability = externalModuleMessage.message.availability;
 
@@ -260,6 +306,14 @@ class MSTeams implements MSTeamsExtensionModule {
                         this.moduleOptions.onExtensionModuleStatusChange(
                             this.mapTeamsStatusToWorkAdventureStatus(externalModuleMessage.message.availability)
                         );
+                        */
+
+                        // CHANGE ME: with th new API for presence, try to make more performance by calling the API only when the user change his status
+                        // Get presence status from Microsoft Graph API
+                        this.listenToTeamsStatusUpdate(this.moduleOptions.onExtensionModuleStatusChange).catch((e) =>
+                            console.error("Error while listening Teams status update", e)
+                        );
+
                         break;
                     case MSGraphMessageEventSource.MicrosoftGraphEvent.toLocaleLowerCase():
                         this.updateCalendarEvents().catch((e) =>
@@ -270,6 +324,9 @@ class MSTeams implements MSTeamsExtensionModule {
                         this.checkModuleSynschronisation().catch((e) =>
                             console.error("Error while reauthorizing subscriptions", e)
                         );
+                        break;
+                    case MSGraphMessageEventSource.MicrosoftTodoTask.toLocaleLowerCase():
+                        this.todoList?.getTodolist().catch((e) => console.error("Error while updating todo list", e));
                         break;
                     default:
                         console.warn("Unknown message type", type);
@@ -300,6 +357,10 @@ class MSTeams implements MSTeamsExtensionModule {
         }
     }
 
+    // variable to save the number of tentatives to refresh the token
+    private tentatives = 0;
+    private popUpModuleReconnect = false;
+    private askDoNotShowAgainPopUpModuleReconnect = false;
     private refreshTokenInterceptor(
         error: unknown,
         getOauthRefreshToken?: (tokenToRefresh: string) => Promise<OauthRefreshToken>
@@ -319,8 +380,18 @@ class MSTeams implements MSTeamsExtensionModule {
                 .then(({ token }) => {
                     this.msAxiosClientV1.defaults.headers.common.Authorization = `Bearer ${token}`;
                     console.info("Microsoft teams token has been refreshed");
+                    this.tentatives = 0;
                 })
                 .catch((error) => {
+                    this.tentatives++;
+                    // If the token can't be refreshed, we try 3 times. Propose to the user to reconnect if it doesn't work
+                    if (this.tentatives > 10) {
+                        console.error("Error while refreshing token", error);
+                        if (this.moduleOptions.logoutCallback && this.popUpModuleReconnect === false) {
+                            this.openPopUpModuleReconnect();
+                            return;
+                        }
+                    }
                     throw error;
                 });
         }
@@ -329,7 +400,7 @@ class MSTeams implements MSTeamsExtensionModule {
 
     listenToTeamsStatusUpdate(onTeamsStatusChange?: (workAdventureNewStatus: AvailabilityStatus) => void) {
         return this.msAxiosClientV1
-            .get<unknown>(`/users/${this.clientId}/${MS_ME_PRESENCE_ENDPOINT}`)
+            .get<unknown>(`/users/${this.clientId}${MS_ME_PRESENCE_ENDPOINT}`)
             .then((response) => {
                 const userPresence = response.data;
                 const userPresenceResponse = z
@@ -350,8 +421,8 @@ class MSTeams implements MSTeamsExtensionModule {
                     return;
                 }
 
-                onTeamsStatusChange(this.mapTeamsStatusToWorkAdventureStatus(userPresenceResponse.data.availability));
                 this.teamsAvailability = userPresenceResponse.data.availability;
+                onTeamsStatusChange(this.mapTeamsStatusToWorkAdventureStatus(userPresenceResponse.data.availability));
             })
             .catch((e) => console.error("Error while getting MSTeams status", e));
     }
@@ -552,7 +623,7 @@ class MSTeams implements MSTeamsExtensionModule {
         let checkModuleSynchronisationIntervalMinutes = 10 * 60 * 1000;
 
         // Initialize the subscription for presence
-        if (this.roomMetadata.msTeamsSettings.status) {
+        if (this.roomMetadata.msTeamsSettings.status && this.roomMetadata.msTeamsSettings.statusTeamsToWorkAdventure) {
             try {
                 const presenceSubscriptionResponse = await this.createOrGetPresenceSubscription();
 
@@ -592,6 +663,32 @@ class MSTeams implements MSTeamsExtensionModule {
                 }
             } catch (e) {
                 console.error("Error while creating or getting calendar subscription", e);
+                // If there is an error, the interval will be set to 1 minutes and the synchronization will be retried
+                checkModuleSynchronisationIntervalMinutes = 1 * 60 * 1000;
+            }
+        }
+
+        if (this.roomMetadata.msTeamsSettings.todoList) {
+            try {
+                const todoListSubscriptionResponse = await this.todoList?.createOrGetTodoListSubscription();
+
+                if (todoListSubscriptionResponse == undefined)
+                    throw new Error("Error while creating or getting todo list subscription");
+                // Define the last time to renew the subscription for each subscription of the todo list
+                for (const todoListSubscription of todoListSubscriptionResponse) {
+                    const expirationDateTime = new Date(todoListSubscription.data.expirationDateTime);
+                    // Calculsate the time to renew the subscription
+                    // We renew the subscription 2 seconds after the expiration date
+                    const timeToRenewSubscription = expirationDateTime.getTime() - new Date().getTime() + 1000 * 2;
+                    if (
+                        timeToRenewSubscription > 0 &&
+                        timeToRenewSubscription < checkModuleSynchronisationIntervalMinutes
+                    ) {
+                        checkModuleSynchronisationIntervalMinutes = timeToRenewSubscription;
+                    }
+                }
+            } catch (e) {
+                console.error("Error while creating or getting todo list subscription", e);
                 // If there is an error, the interval will be set to 1 minutes and the synchronization will be retried
                 checkModuleSynchronisationIntervalMinutes = 1 * 60 * 1000;
             }
@@ -692,7 +789,7 @@ class MSTeams implements MSTeamsExtensionModule {
                     subscription.resource === `/communications/presences/${this.clientId}`
             );
             // Check if the subscription is expired
-            // If expiration is not expired, return the subscription
+            // If subscription is not expired, return the subscription
             if (presenceSubscription != undefined && new Date(presenceSubscription.expirationDateTime) > new Date()) {
                 return { data: presenceSubscription };
             }
@@ -787,12 +884,53 @@ class MSTeams implements MSTeamsExtensionModule {
                     !areaDataProperties.find(
                         (property) => property.type === "extensionModule" && property.subtype === "teams"
                     ),
+                getOnlineMeetingByJoinMeetingId: this.getOnlineMeetingByJoinMeetingId.bind(this),
             },
         };
     }
 
     private handleAreaPropertyOnEnter(area: AreaData) {
         console.debug("Enter extension module area");
+
+        // Check if the Teams property is defined
+        const teamsAreaProperty = area.properties?.find(
+            (property) => property.type === "extensionModule" && property.subtype === "teams"
+        ) as TeamsMeetingPropertyData | undefined;
+        if (teamsAreaProperty === undefined) {
+            console.warn("Teams property is not defined, unable to join space, create or get meeting and share it!");
+            notificationPlayingStore.removeNotificationById(area.id);
+            notificationPlayingStore.playNotification(
+                get(LL).externalModule.teams.unableJoinMeeting(),
+                "business.svg",
+                area.id
+            );
+            return;
+        }
+
+        // Check if the property is well formatted and have join meeting id
+        if (teamsAreaProperty.data && teamsAreaProperty.data.msTeamsMeeting) {
+            console.info(
+                "Joining Teams meeting was defined in the area property",
+                teamsAreaProperty.data.msTeamsMeeting.joinMeetingIdSettings.joinMeetingId
+            );
+            notificationPlayingStore.removeNotificationById(area.id);
+            notificationPlayingStore.playNotification(
+                get(LL).externalModule.teams.openingMeeting(),
+                "business.svg",
+                area.id
+            );
+            this.openCowebsiteTeamsMeeting(teamsAreaProperty.data.msTeamsMeeting)
+                .then(() => {
+                    this.onlineTeamsMeetingsCreated.add(area.id);
+                })
+                .catch((e) => {
+                    console.error("Error while opening cowebsite Teams meeting", e);
+                    this.closeCoWebSiteTeamsMeeting();
+                    throw e;
+                });
+            return;
+        }
+
         if (!this.moduleOptions.spaceRegistry) {
             console.warn("SpaceRegistry is not defined, unable to join space, create or get meeting and share it!");
             notificationPlayingStore.removeNotificationById(area.id);
@@ -803,7 +941,6 @@ class MSTeams implements MSTeamsExtensionModule {
             );
             return;
         }
-
         // join space meeting
         console.debug(
             "SpaceRegistry is defined, join space, create or get meeting and share it!",
@@ -825,6 +962,14 @@ class MSTeams implements MSTeamsExtensionModule {
         );
 
         const watchSpaceMetadataSubscribe = space.watchSpaceMetadata().subscribe((value) => {
+            // Use time out to avoid multiple meeting creation
+            console.log(
+                "this.onlineTeamsMeetingsCreated.has(area.id)",
+                area.id,
+                this.onlineTeamsMeetingsCreated.has(area.id)
+            );
+            if (this.onlineTeamsMeetingsCreated.has(area.id)) return;
+
             // If the space has a meeting, open the meeting and clear the timeout to create a new meeting
             const parseMSTeamsMeeting = MSTeamsMeeting.safeParse(JSON.parse(value.metadata));
             if (parseMSTeamsMeeting.success) {
@@ -835,11 +980,11 @@ class MSTeams implements MSTeamsExtensionModule {
                     area.id
                 );
 
+                this.onlineTeamsMeetingsCreated.add(area.id);
                 this.openCowebsiteTeamsMeeting(parseMSTeamsMeeting.data)
                     .then(() => {
                         // Remove popup component
                         this.closePopUpMeetingNotCreated();
-                        this.onlineTeamsMeetingsCreated.add(area.id);
                     })
                     .catch((e) => {
                         console.error("Error while opening cowebsite Teams meeting", e);
@@ -850,6 +995,7 @@ class MSTeams implements MSTeamsExtensionModule {
                             area.id
                         );
                         this.onlineTeamsMeetingsCreated.delete(area.id);
+                        this.closeCoWebSiteTeamsMeeting();
                     })
                     .finally(() => {
                         watchSpaceMetadataSubscribe.unsubscribe();
@@ -860,26 +1006,20 @@ class MSTeams implements MSTeamsExtensionModule {
                 console.warn(
                     "Error while parsing MSTeamsMeeting! Maybe your are Guest and the Teams Online meeting was not created!"
                 );
-                this.onlineTeamsMeetingsCreated.delete(area.id);
             }
 
-            // Use time out to avoid multiple meeting creation
-            if (this.isGuest || this.onlineTeamsMeetingsCreated.has(area.id)) {
+            if (this.isGuest) {
                 // Show popup component
                 this.closePopUpMeetingNotCreated();
                 this.openPopUpMeetingNotCreated();
                 return;
             }
 
+            // Open the meeting
+            this.onlineTeamsMeetingsCreated.add(area.id);
             this.createOrGetMeeting(area.id)
-                .then((data) => {
-                    if (this.onlineTeamsMeetingsCreated.has(area.id)) return;
-                    this.onlineTeamsMeetingsCreated.add(area.id);
-
-                    // Open the meeting
-                    this.openCowebsiteTeamsMeeting(data).catch((e) =>
-                        console.error("Error while opening cowebsite Teams meeting", e)
-                    );
+                .then(async (data) => {
+                    await this.openCowebsiteTeamsMeeting(data);
 
                     const parseMSTeamsMeeting = MSTeamsMeeting.safeParse(data);
                     if (!parseMSTeamsMeeting.success) throw new Error("Error while parsing MSTeamsMeeting");
@@ -897,6 +1037,7 @@ class MSTeams implements MSTeamsExtensionModule {
                         area.id
                     );
                     this.onlineTeamsMeetingsCreated.delete(area.id);
+                    this.closeCoWebSiteTeamsMeeting();
                 })
                 .finally(() => {
                     watchSpaceMetadataSubscribe.unsubscribe();
@@ -912,11 +1053,9 @@ class MSTeams implements MSTeamsExtensionModule {
         console.debug("Leaving extension module area");
 
         try {
-            if (this.cowebsiteOpenedId && this.closeCoWebSite) this.closeCoWebSite(this.cowebsiteOpenedId);
+            this.closeCoWebSiteTeamsMeeting();
         } catch (e) {
             console.error("Error when we try to close the cowebsite", e);
-        } finally {
-            this.cowebsiteOpenedId = undefined;
         }
 
         // leave space meeting
@@ -934,7 +1073,7 @@ class MSTeams implements MSTeamsExtensionModule {
     }
 
     private async openCowebsiteTeamsMeeting(data: MSTeamsMeeting) {
-        console.trace("Open cowebsite Teams meeting", data);
+        if (this.cowebsiteOpenedId != undefined) return;
         const cowebsiteOpened = await this.openPopupMeeting(
             data.subject,
             data.joinWebUrl,
@@ -944,6 +1083,11 @@ class MSTeams implements MSTeamsExtensionModule {
             data.joinMeetingIdSettings.passcode || undefined
         );
         this.cowebsiteOpenedId = cowebsiteOpened.id;
+    }
+
+    private closeCoWebSiteTeamsMeeting() {
+        if (this.closeCoWebSite && this.cowebsiteOpenedId != undefined) this.closeCoWebSite(this.cowebsiteOpenedId);
+        this.cowebsiteOpenedId = undefined;
     }
 
     get statusStore() {
@@ -1003,9 +1147,35 @@ class MSTeams implements MSTeamsExtensionModule {
             TeamsPopupMeetingNotCreated
         );
     }
+
     closePopUpMeetingNotCreated() {
         const externalSvelteComponent = get(this.moduleOptions.externalSvelteComponent);
         externalSvelteComponent.removePopupComponent("ms-teams-popup-meeting-not-created");
+    }
+
+    openPopUpModuleReconnect() {
+        if (this.askDoNotShowAgainPopUpModuleReconnect === true) return;
+        const externalSvelteComponent = get(this.moduleOptions.externalSvelteComponent);
+        externalSvelteComponent.addPopupComponent("ms-teams-popup-reconnect", this, TeamsPopupReconnect);
+        this.popUpModuleReconnect = true;
+    }
+
+    closePopUpModuleReconnect() {
+        const externalSvelteComponent = get(this.moduleOptions.externalSvelteComponent);
+        externalSvelteComponent.removePopupComponent("ms-teams-popup-reconnect");
+        this.popUpModuleReconnect = false;
+    }
+
+    reconnectToTeams() {
+        if (this.moduleOptions.logoutCallback) this.moduleOptions.logoutCallback();
+    }
+
+    dontShowAgainPopUpModuleReconnect() {
+        this.askDoNotShowAgainPopUpModuleReconnect = true;
+    }
+
+    getOnlineMeetingByJoinMeetingId(joinMeetingId: string): Promise<MSTeamsMeeting> | undefined {
+        return this.teamsOnLineMeetingService?.getOnlineMeetingByJoinMeetingId(joinMeetingId);
     }
 
     get meetingSynchronised() {
@@ -1019,6 +1189,9 @@ class MSTeams implements MSTeamsExtensionModule {
     }
     get isGuest() {
         return this.clientId == undefined;
+    }
+    get todoListSynchronized() {
+        return this.roomMetadata.msTeamsSettings.todoList === true;
     }
 }
 

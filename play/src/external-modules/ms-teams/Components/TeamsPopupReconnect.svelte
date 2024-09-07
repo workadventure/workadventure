@@ -1,44 +1,33 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { onMount } from "svelte";
     import LL from "../../../i18n/i18n-svelte";
     import { MSTeamsExtensionModule } from "../index";
     import TeamsLogoSvg from "./images/business.svg";
 
     export let extensionModule: MSTeamsExtensionModule;
 
-    let isGuest = false;
-
     function closeModal() {
-        extensionModule.closePopUpMeetingNotCreated();
+        extensionModule.closePopUpModuleReconnect();
     }
-
-    onMount(() => {
-        isGuest = extensionModule.isGuest === true;
-    });
+    function goToReSync() {
+        extensionModule.reconnectToTeams();
+    }
+    function dontShowAgain() {
+        extensionModule.dontShowAgainPopUpModuleReconnect();
+    }
 </script>
 
-<div
-    class="teams-menu-meeting-not-created tw-min-h-fit tw-rounded-3xl tw-overflow-visible"
-    transition:fly={{ x: 1000, duration: 500 }}
->
+<div class="teams-menu tw-min-h-fit tw-rounded-3xl tw-overflow-visible" transition:fly={{ x: 1000, duration: 500 }}>
     <div class="tw-p-8 tw-flex tw-flex-col tw-justify-center tw-items-center">
-        <h1 class="tw-p-2">Teams Microsoft Meetings 🎉</h1>
+        <h1 class="tw-p-2">Teams Synchonization 🚀</h1>
         <img src={TeamsLogoSvg} alt="Object" class="tw-w-32 tw-h-32 tw-mb-4 tw-object-contain" />
-        <p class="tw-p-2 tw-m-0">The Teams Meeting is not created yet 😱</p>
-        {#if isGuest}
-            <p>You are not connected and cannot create Teams Online Meeting 😭</p>
-            <p>
-                Please connect to the platform to create a Teams Online Meeting or ask the owner to create it for you 🚀
-            </p>
-        {/if}
-        <div class={`tw-grid tw-place-items-center tw-h-10 loader`}>
-            <div class="tw-flex tw-items-center tw-flex-col">
-                <div
-                    style="border-top-color:transparent"
-                    class="tw-w-16 tw-h-16 tw-border-2 tw-border-white tw-border-solid tw-rounded-full tw-animate-spin tw-mb-5"
-                />
-            </div>
+        <p class="tw-p-2 tw-m-0">
+            We detected that your Teams synchronization is not up to date. Please click on the button below to reconnect
+            your Teams account 🙏
+        </p>
+        <div class="tw-flex tw-row tw-justify-center tw-content-center tw-items-center tw-text-xs tw-p-4">
+            <input type="checkbox" id="askagain" class="tw-mx-1" on:change={dontShowAgain} />
+            <label for="askagain" class="tw-m-0 tw-mx-1">{$LL.camera.webrtc.solutionVpnNotAskAgain()}</label>
         </div>
     </div>
     <div
@@ -47,11 +36,12 @@
         <button class="tw-bg-dark-purple tw-p-4" on:click={closeModal}>
             {$LL.mapEditor.explorer.details.close()}
         </button>
+        <button class="light tw-p-4" on:click={goToReSync}> Reconnect Teams </button>
     </div>
 </div>
 
 <style lang="scss">
-    .teams-menu-meeting-not-created {
+    .teams-menu {
         position: absolute;
         width: 668px;
         height: max-content !important;

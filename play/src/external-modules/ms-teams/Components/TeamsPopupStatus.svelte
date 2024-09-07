@@ -12,6 +12,7 @@
     let meetingSynchronised = false;
     let calendarSynchronised = false;
     let presenceSynchronised = false;
+    let todoListSynchronised = false;
     let isGuest = false;
 
     function closeModal() {
@@ -26,6 +27,7 @@
         meetingSynchronised = extensionModule.meetingSynchronised === true;
         calendarSynchronised = extensionModule.calendarSynchronised === true;
         presenceSynchronised = extensionModule.presenceSynchronised === true;
+        todoListSynchronised = extensionModule.todoListSynchronized === true;
         isGuest = extensionModule.isGuest === true;
     });
 </script>
@@ -61,6 +63,11 @@
                     {:else}
                         <li>Presence ❌</li>
                     {/if}
+                    {#if todoListSynchronised}
+                        <li>To Do ✅</li>
+                    {:else}
+                        <li>To Do ❌</li>
+                    {/if}
                 </ul>
             {/if}
         {/if}
@@ -69,25 +76,33 @@
             <p class="tw-p-0 tw-m-0">
                 {$LL.externalModule.status.sync()}
             </p>
-            <ul>
-                {#if meetingSynchronised}
-                    <li>Meeting 🔄</li>
-                {:else}
-                    <li>Meeting ❌</li>
-                {/if}
+            {#if !isGuest}
+                <ul>
+                    {#if meetingSynchronised}
+                        <li>Meeting 🔄</li>
+                    {:else}
+                        <li>Meeting ❌</li>
+                    {/if}
 
-                {#if calendarSynchronised}
-                    <li>Calendar 🔄</li>
-                {:else}
-                    <li>Calendar ❌</li>
-                {/if}
+                    {#if calendarSynchronised}
+                        <li>Calendar 🔄</li>
+                    {:else}
+                        <li>Calendar ❌</li>
+                    {/if}
 
-                {#if presenceSynchronised}
-                    <li>Presence 🔄</li>
-                {:else}
-                    <li>Presence ❌</li>
-                {/if}
-            </ul>
+                    {#if presenceSynchronised}
+                        <li>Presence 🔄</li>
+                    {:else}
+                        <li>Presence ❌</li>
+                    {/if}
+
+                    {#if todoListSynchronised}
+                        <li>To Do 🔄</li>
+                    {:else}
+                        <li>To Do ❌</li>
+                    {/if}
+                </ul>
+            {/if}
         {/if}
 
         {#if $synchronisationStatusStore === TeamsModuleStatus.WARNING}

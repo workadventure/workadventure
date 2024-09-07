@@ -14,6 +14,7 @@ const actionbar: BaseTranslation = {
     disableMegaphone: "Couper le mégaphone",
     menu: "Ouvrir / Fermer le menu",
     calendar: "Ouvrir / Fermer le calendrier",
+    todoList: "Ouvrir / Fermer la liste de tâches",
     mapEditor: "Ouvrir / Fermer l'éditeur de carte",
     mapEditorMobileLocked: "L'éditeur de carte est verrouillé en mode mobile",
     mapEditorLocked: "L'éditeur de carte est verrouillé 🔐",

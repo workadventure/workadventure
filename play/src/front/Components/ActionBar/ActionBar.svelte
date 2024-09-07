@@ -41,6 +41,7 @@
     import WorkAdventureImg from "../images/icon-workadventure-white.png";
     import worldImg from "../images/world.svg";
     import calendarSvg from "../images/applications/outlook.svg";
+    import todoListSvg from "../images/applications/todolist.png";
     import burgerMenuImg from "../images/menu.svg";
     import AppSvg from "../images/action-app.svg";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
@@ -102,7 +103,8 @@
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
-    import { isActivatedStore, isCalendarVisibleStore } from "../../Stores/CalendarStore";
+    import { isActivatedStore as isCalendarActivatedStore, isCalendarVisibleStore } from "../../Stores/CalendarStore";
+    import { isActivatedStore as isTodoListActivatedStore, isTodoListVisibleStore } from "../../Stores/TodoListStore";
     import { externalActionBarSvelteComponent } from "../../Stores/Utils/externalSvelteComponentStore";
     import AvailabilityStatusComponent from "./AvailabilityStatus/AvailabilityStatus.svelte";
     import { IconCheck, IconChevronDown, IconChevronUp } from "@wa-icons";
@@ -380,6 +382,10 @@
 
     function openExternalModuleCalendar() {
         isCalendarVisibleStore.set(!$isCalendarVisibleStore);
+    }
+
+    function openExternalModuleTodoList() {
+        isTodoListVisibleStore.set(!$isTodoListVisibleStore);
     }
 
     let totalMessagesToSee = writable<number>(0);
@@ -1150,7 +1156,7 @@
     </div>
 {/if}
 
-{#if appMenuOpened && ($roomListActivated || $isActivatedStore || $externalActionBarSvelteComponent.size > 0)}
+{#if appMenuOpened && ($roomListActivated || $isCalendarActivatedStore || $isTodoListActivatedStore || $externalActionBarSvelteComponent.size > 0)}
     <div
         class="tw-flex tw-justify-center tw-m-auto tw-absolute tw-left-0 tw-right-0 tw-bottom-0"
         style="margin-bottom: 5.5rem; height: auto;"
@@ -1185,7 +1191,7 @@
                 {/if}
 
                 <!-- Calendar integration -->
-                {#if $isActivatedStore}
+                {#if $isCalendarActivatedStore}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
                         on:dragstart|preventDefault={noDrag}
@@ -1209,6 +1215,29 @@
                             >
                                 {new Date().getDate()}
                             </span>-->
+                        </button>
+                    </div>
+                {/if}
+
+                <!-- Todo List Integration -->
+                {#if $isTodoListActivatedStore}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div
+                        on:dragstart|preventDefault={noDrag}
+                        on:click={() => analyticsClient.openExternalModuleTodoList()}
+                        on:click={openExternalModuleTodoList}
+                        class="bottom-action-button"
+                    >
+                        {#if !isMobile}
+                            <Tooltip text={$LL.actionbar.todoList()} />
+                        {/if}
+                        <button id="todoListIcon" class:border-top-light={$isTodoListVisibleStore}>
+                            <img
+                                draggable="false"
+                                src={todoListSvg}
+                                style="padding: 2px"
+                                alt={$LL.menu.icon.open.todoList()}
+                            />
                         </button>
                     </div>
                 {/if}

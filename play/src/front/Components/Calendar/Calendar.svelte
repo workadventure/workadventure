@@ -4,6 +4,9 @@
     import { calendarEventsStore, isCalendarVisibleStore } from "../../Stores/CalendarStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { extensionModuleStore } from "../../Stores/GameSceneStore";
+    import LL from "../../../i18n/i18n-svelte";
+
+    import calendarSvg from "../images/applications/outlook.svg";
 
     function closeCalendar() {
         isCalendarVisibleStore.set(false);
@@ -42,6 +45,12 @@
         <div class="mapexplorer tw-flex tw-flex-col tw-overflow-auto">
             <div class="header-container">
                 <h3 class="tw-text-l tw-text-left">
+                    <img
+                        draggable="false"
+                        src={calendarSvg}
+                        class="tw-w-8 tw-mx-2"
+                        alt={$LL.menu.icon.open.calendar()}
+                    />
                     {new Date().toLocaleString("en-EN", {
                         month: "long",
                         day: "2-digit",

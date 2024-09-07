@@ -683,9 +683,12 @@
                         {#each extensionModulesAreaMapEditor as extensionModuleAreaMapEditor, index (`extensionModulesAreaMapEditor-${index}`)}
                             <svelte:component
                                 this={extensionModuleAreaMapEditor[property.subtype].AreaPropertyEditor}
+                                {property}
+                                {extensionModuleAreaMapEditor}
                                 on:close={() => {
                                     onDeleteProperty(property.id);
                                 }}
+                                on:change={() => onUpdateProperty(property)}
                             />
                         {/each}
                     {/if}
