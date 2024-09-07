@@ -51,7 +51,7 @@
 </div>
 
 <style lang="scss">
-    .teams-menu {
+    .teams-menu-meeting-not-created {
         position: absolute;
         width: 668px;
         height: max-content !important;

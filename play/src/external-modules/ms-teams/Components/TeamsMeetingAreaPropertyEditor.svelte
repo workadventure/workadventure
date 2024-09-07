@@ -13,12 +13,21 @@
     let temasOnlineMeetingId: string;
 
     async function onValueChange() {
+        console.log("property.data", property.data);
+
+        if (!property.data) {
+            property.data = {
+                msTeamsMeeting: undefined,
+                temasOnlineMeetingId: undefined,
+            };
+        }
+
         if (temasOnlineMeetingId && temasOnlineMeetingId.length > 0) {
             temasOnlineMeetingId = temasOnlineMeetingId?.trim().replace(new RegExp(" ", "g"), "");
-            property.data!.temasOnlineMeetingId = temasOnlineMeetingId;
+            property.data.temasOnlineMeetingId = temasOnlineMeetingId;
             await getOnLineMeetingUrl();
         } else {
-            property.data!.msTeamsMeeting = null;
+            property.data.msTeamsMeeting = null;
         }
         dispatch("change", property.data);
     }
@@ -56,6 +65,8 @@
             temasOnlineMeetingId = property.data.msTeamsMeeting.joinMeetingIdSettings.joinMeetingId;
             optionAdvancedActivated = true;
         }
+
+        dispatch("change", property.data);
     });
 </script>
 

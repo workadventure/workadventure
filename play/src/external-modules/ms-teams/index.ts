@@ -925,6 +925,7 @@ class MSTeams implements MSTeamsExtensionModule {
                 })
                 .catch((e) => {
                     console.error("Error while opening cowebsite Teams meeting", e);
+                    this.closeCoWebSiteTeamsMeeting();
                     throw e;
                 });
             return;
@@ -961,6 +962,14 @@ class MSTeams implements MSTeamsExtensionModule {
         );
 
         const watchSpaceMetadataSubscribe = space.watchSpaceMetadata().subscribe((value) => {
+            // Use time out to avoid multiple meeting creation
+            console.log(
+                "this.onlineTeamsMeetingsCreated.has(area.id)",
+                area.id,
+                this.onlineTeamsMeetingsCreated.has(area.id)
+            );
+            if (this.onlineTeamsMeetingsCreated.has(area.id)) return;
+
             // If the space has a meeting, open the meeting and clear the timeout to create a new meeting
             const parseMSTeamsMeeting = MSTeamsMeeting.safeParse(JSON.parse(value.metadata));
             if (parseMSTeamsMeeting.success) {
@@ -971,12 +980,11 @@ class MSTeams implements MSTeamsExtensionModule {
                     area.id
                 );
 
-                if (this.cowebsiteOpenedId && this.closeCoWebSite) this.closeCoWebSite(this.cowebsiteOpenedId);
+                this.onlineTeamsMeetingsCreated.add(area.id);
                 this.openCowebsiteTeamsMeeting(parseMSTeamsMeeting.data)
                     .then(() => {
                         // Remove popup component
                         this.closePopUpMeetingNotCreated();
-                        this.onlineTeamsMeetingsCreated.add(area.id);
                     })
                     .catch((e) => {
                         console.error("Error while opening cowebsite Teams meeting", e);
@@ -987,6 +995,7 @@ class MSTeams implements MSTeamsExtensionModule {
                             area.id
                         );
                         this.onlineTeamsMeetingsCreated.delete(area.id);
+                        this.closeCoWebSiteTeamsMeeting();
                     })
                     .finally(() => {
                         watchSpaceMetadataSubscribe.unsubscribe();
@@ -997,27 +1006,20 @@ class MSTeams implements MSTeamsExtensionModule {
                 console.warn(
                     "Error while parsing MSTeamsMeeting! Maybe your are Guest and the Teams Online meeting was not created!"
                 );
-                this.onlineTeamsMeetingsCreated.delete(area.id);
             }
 
-            // Use time out to avoid multiple meeting creation
-            if (this.isGuest || this.onlineTeamsMeetingsCreated.has(area.id)) {
+            if (this.isGuest) {
                 // Show popup component
                 this.closePopUpMeetingNotCreated();
                 this.openPopUpMeetingNotCreated();
                 return;
             }
 
+            // Open the meeting
+            this.onlineTeamsMeetingsCreated.add(area.id);
             this.createOrGetMeeting(area.id)
-                .then((data) => {
-                    if (this.onlineTeamsMeetingsCreated.has(area.id)) return;
-                    this.onlineTeamsMeetingsCreated.add(area.id);
-
-                    // Open the meeting
-                    if (this.cowebsiteOpenedId && this.closeCoWebSite) this.closeCoWebSite(this.cowebsiteOpenedId);
-                    this.openCowebsiteTeamsMeeting(data).catch((e) =>
-                        console.error("Error while opening cowebsite Teams meeting", e)
-                    );
+                .then(async (data) => {
+                    await this.openCowebsiteTeamsMeeting(data);
 
                     const parseMSTeamsMeeting = MSTeamsMeeting.safeParse(data);
                     if (!parseMSTeamsMeeting.success) throw new Error("Error while parsing MSTeamsMeeting");
@@ -1035,6 +1037,7 @@ class MSTeams implements MSTeamsExtensionModule {
                         area.id
                     );
                     this.onlineTeamsMeetingsCreated.delete(area.id);
+                    this.closeCoWebSiteTeamsMeeting();
                 })
                 .finally(() => {
                     watchSpaceMetadataSubscribe.unsubscribe();
@@ -1050,11 +1053,9 @@ class MSTeams implements MSTeamsExtensionModule {
         console.debug("Leaving extension module area");
 
         try {
-            if (this.cowebsiteOpenedId && this.closeCoWebSite) this.closeCoWebSite(this.cowebsiteOpenedId);
+            this.closeCoWebSiteTeamsMeeting();
         } catch (e) {
             console.error("Error when we try to close the cowebsite", e);
-        } finally {
-            this.cowebsiteOpenedId = undefined;
         }
 
         // leave space meeting
@@ -1072,6 +1073,7 @@ class MSTeams implements MSTeamsExtensionModule {
     }
 
     private async openCowebsiteTeamsMeeting(data: MSTeamsMeeting) {
+        if (this.cowebsiteOpenedId != undefined) return;
         const cowebsiteOpened = await this.openPopupMeeting(
             data.subject,
             data.joinWebUrl,
@@ -1081,6 +1083,11 @@ class MSTeams implements MSTeamsExtensionModule {
             data.joinMeetingIdSettings.passcode || undefined
         );
         this.cowebsiteOpenedId = cowebsiteOpened.id;
+    }
+
+    private closeCoWebSiteTeamsMeeting() {
+        if (this.closeCoWebSite && this.cowebsiteOpenedId != undefined) this.closeCoWebSite(this.cowebsiteOpenedId);
+        this.cowebsiteOpenedId = undefined;
     }
 
     get statusStore() {
