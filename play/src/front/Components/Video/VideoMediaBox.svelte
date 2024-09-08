@@ -22,6 +22,8 @@
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
+    import { scriptUtils } from "../../Api/ScriptUtils";
+    import { hiddenStore } from "../../Stores/VisibilityStore";
     import ActionMediaBox from "./ActionMediaBox.svelte";
 
     // Extend the HTMLVideoElement interface to add the setSinkId method.
@@ -46,6 +48,7 @@
     let unsubscribeStreamStore: Unsubscriber;
     let unsubscribeConstraintStore: Unsubscriber;
     let unsubscribeVolumeProximityDiscussionStore: Unsubscriber;
+    let unsubscribeHidenStore: Unsubscriber;
 
     let embedScreen: EmbedScreen;
     let videoContainer: HTMLDivElement;
@@ -154,8 +157,18 @@
         });
 
         unsubscribeVolumeProximityDiscussionStore = volumeProximityDiscussionStore.subscribe((volume) => {
+            console.log("volume", volume);
             if (videoElement) {
                 videoElement.volume = volume;
+            }
+        });
+
+        unsubscribeHidenStore = hiddenStore.subscribe((value) => {
+            console.log("hiddenStore => subscribe", value);
+            if (value) {
+                scriptUtils.startPictureInpictureMode(videoElement);
+            } else {
+                scriptUtils.exitPictureInpictureMode(videoElement);
             }
         });
     });
@@ -171,6 +184,7 @@
             clearTimeout(noVideoTimeout);
             noVideoTimeout = undefined;
         }
+        if (unsubscribeHidenStore) unsubscribeHidenStore();
     });
 
     //sets the ID of the audio device to use for output
@@ -241,6 +255,7 @@
 
     function onLoadVideoElement() {
         videoElement.volume = $volumeProximityDiscussionStore;
+        scriptUtils.startPictureInpictureMode(videoElement);
     }
 </script>
 

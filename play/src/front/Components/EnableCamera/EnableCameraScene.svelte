@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
+    import { Unsubscriber } from "svelte/store";
     import type { EnableCameraScene } from "../../Phaser/Login/EnableCameraScene";
     import { EnableCameraSceneName } from "../../Phaser/Login/EnableCameraScene";
     import {
@@ -21,11 +22,15 @@
     import { StringUtils } from "../../Utils/StringUtils";
     import { myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
+    import { scriptUtils } from "../../Api/ScriptUtils";
+    import { hiddenStore } from "../../Stores/VisibilityStore";
     import HorizontalSoundMeterWidget from "./HorizontalSoundMeterWidget.svelte";
 
     export let game: Game;
     let selectedCamera: string | undefined = undefined;
     let selectedMicrophone: string | undefined = undefined;
+    let videoElement: HTMLVideoElement;
+    let unsubscribeHidenStore: Unsubscriber | undefined;
 
     const enableCameraScene = game.scene.getScene(EnableCameraSceneName) as EnableCameraScene;
 
@@ -71,6 +76,7 @@
 
     onDestroy(() => {
         unsubscribeLocalStreamStore();
+        if (unsubscribeHidenStore) unsubscribeHidenStore();
     });
 
     onMount(() => {
@@ -81,6 +87,14 @@
         requestedCameraState.enableWebcam();
         requestedMicrophoneState.enableMicrophone();
         batchGetUserMediaStore.commitChanges();
+
+        unsubscribeHidenStore = hiddenStore.subscribe((value) => {
+            if (value) {
+                scriptUtils.startPictureInpictureMode(videoElement);
+            } else {
+                scriptUtils.exitPictureInpictureMode(videoElement);
+            }
+        });
     });
 
     function selectCamera() {
@@ -114,6 +128,7 @@
             </section>
             {#if selectedCamera != undefined && $localStreamStore.type === "success" && $localStreamStore.stream}
                 <video
+                    bind:this={videoElement}
                     class="myCamVideoSetup tw-mb-26"
                     use:srcObject={$localStreamStore.stream}
                     autoplay

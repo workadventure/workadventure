@@ -63,6 +63,33 @@ class ScriptUtils {
 
         return url;
     }
+
+    public startPictureInpictureMode(videoElement: HTMLVideoElement) {
+        const requestPictureInPicture = (videoElement: HTMLVideoElement | undefined) => {
+            videoElement
+                ?.requestPictureInPicture()
+                .then((pictureInPictureWindow: PictureInPictureWindow) => {
+                    console.debug("Entered Picture in Picture mode", pictureInPictureWindow);
+                })
+                .catch((error) => {
+                    console.error("Error entering Picture in Picture mode", error);
+                });
+        };
+
+        // Try to use picture in picture mode
+        if (videoElement.readyState >= 2) {
+            requestPictureInPicture(videoElement);
+        } else {
+            videoElement.addEventListener("loadeddata", (e) => {
+                requestPictureInPicture(videoElement);
+                console.debug("Video loaded", e);
+            });
+        }
+    }
+
+    public exitPictureInpictureMode(videoElement: HTMLVideoElement | undefined) {
+        console.debug("Exiting Picture in Picture mode", videoElement);
+    }
 }
 
 export const scriptUtils = new ScriptUtils();

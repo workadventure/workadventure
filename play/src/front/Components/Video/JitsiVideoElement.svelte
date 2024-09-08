@@ -1,6 +1,9 @@
 <script lang="ts">
-    import { afterUpdate, onMount } from "svelte";
+    import { afterUpdate, onMount, onDestroy } from "svelte";
     import type JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
+    import { Unsubscriber } from "svelte/store";
+    import { hiddenStore } from "../../Stores/VisibilityStore";
+    import { scriptUtils } from "../../Api/ScriptUtils";
 
     export let jitsiTrack: JitsiTrack;
     export let isLocal: boolean;
@@ -11,12 +14,22 @@
 
     let aspectRatio = 1;
 
+    let unsubscribeHidenStore: Unsubscriber | undefined;
+
     onMount(() => {
         // TODO: remove this hack
         setTimeout(() => {
             aspectRatio = videoElement != undefined ? videoElement.videoWidth / videoElement.videoHeight : 1;
         }, 1000);
         attachTrack();
+
+        unsubscribeHidenStore = hiddenStore.subscribe((value) => {
+            if (value) {
+                scriptUtils.startPictureInpictureMode(videoElement);
+            } else {
+                scriptUtils.exitPictureInpictureMode(videoElement);
+            }
+        });
     });
 
     afterUpdate(() => {
@@ -26,6 +39,10 @@
     function attachTrack() {
         jitsiTrack.attach(videoElement);
     }
+
+    onDestroy(() => {
+        if (unsubscribeHidenStore) unsubscribeHidenStore();
+    });
 </script>
 
 <!-- svelte-ignore a11y-media-has-caption -->

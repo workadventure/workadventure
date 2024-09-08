@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
     import { Color } from "@workadventure/shared-utils";
+    import { Unsubscriber } from "svelte/store";
     import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
     import {
         cameraEnergySavingStore,
@@ -14,6 +15,8 @@
     import { inExternalServiceStore } from "../Stores/MyMediaStore";
     import { gameManager } from "../Phaser/Game/GameManager";
     import { streamableCollectionStore } from "../Stores/StreamableCollectionStore";
+    import { scriptUtils } from "../Api/ScriptUtils";
+    import { hiddenStore } from "../Stores/VisibilityStore";
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
     import { srcObject } from "./Video/utils";
     import Woka from "./Woka/WokaFromUserId.svelte";
@@ -40,6 +43,8 @@
         }
     });
 
+    let unsubscribeHidenStore: Unsubscriber | undefined;
+
     let cameraContainer: HTMLDivElement;
     let isMobile = isMediaBreakpointUp("md");
     const resizeObserver = new ResizeObserver(() => {
@@ -48,6 +53,7 @@
 
     onDestroy(() => {
         unsubscribeLocalStreamStore();
+        if (unsubscribeHidenStore) unsubscribeHidenStore();
     });
 
     onMount(() => {
@@ -63,6 +69,14 @@
             }
         });
         resizeObserver.observe(cameraContainer);
+
+        unsubscribeHidenStore = hiddenStore.subscribe((value) => {
+            if (value) {
+                scriptUtils.startPictureInpictureMode(videoElement);
+            } else {
+                scriptUtils.exitPictureInpictureMode(videoElement);
+            }
+        });
     });
 </script>
 

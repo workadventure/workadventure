@@ -2,24 +2,31 @@
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
     import { Color } from "@workadventure/shared-utils";
+    import { onDestroy, onMount } from "svelte";
+    import { Unsubscriber } from "svelte/store";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { EmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
 
     import type { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
+    import { scriptUtils } from "../../Api/ScriptUtils";
+    import { hiddenStore } from "../../Stores/VisibilityStore";
     import { srcObject } from "./utils";
     import BanReportBox from "./BanReportBox.svelte";
 
     export let clickable = false;
-
     export let peer: ScreenSharingPeer;
+
     let streamStore = peer.streamStore;
     let name = peer.player.name;
     let backGroundColor = Color.getColorByString(peer.player.name);
     let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
     let statusStore = peer.statusStore;
+    let videoElement: HTMLVideoElement;
 
     let embedScreen: EmbedScreen;
+
+    let unsubscribeHidenStore: Unsubscriber | undefined;
 
     if (peer) {
         embedScreen = {
@@ -27,6 +34,20 @@
             embed: peer as unknown as Streamable,
         };
     }
+
+    onMount(() => {
+        unsubscribeHidenStore = hiddenStore.subscribe((value) => {
+            if (value) {
+                scriptUtils.startPictureInpictureMode(videoElement);
+            } else {
+                scriptUtils.exitPictureInpictureMode(videoElement);
+            }
+        });
+    });
+
+    onDestroy(() => {
+        if (unsubscribeHidenStore) unsubscribeHidenStore();
+    });
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -42,6 +63,7 @@
     {/if}
     {#if $streamStore !== null}
         <video
+            bind:this={videoElement}
             use:srcObject={$streamStore}
             autoplay
             playsinline
