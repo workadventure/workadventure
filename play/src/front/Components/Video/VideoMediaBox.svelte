@@ -168,7 +168,7 @@
             if (value) {
                 scriptUtils.startPictureInpictureMode(videoElement);
             } else {
-                scriptUtils.exitPictureInpictureMode();
+                //scriptUtils.exitPictureInpictureMode();
             }
         });
     });
