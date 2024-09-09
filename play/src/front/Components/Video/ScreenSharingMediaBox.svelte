@@ -40,7 +40,7 @@
             if (value) {
                 scriptUtils.startPictureInpictureMode(videoElement);
             } else {
-                scriptUtils.exitPictureInpictureMode(videoElement);
+                scriptUtils.exitPictureInpictureMode();
             }
         });
     });
