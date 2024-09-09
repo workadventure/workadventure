@@ -255,7 +255,6 @@
 
     function onLoadVideoElement() {
         videoElement.volume = $volumeProximityDiscussionStore;
-        scriptUtils.startPictureInpictureMode(videoElement);
     }
 </script>
 
