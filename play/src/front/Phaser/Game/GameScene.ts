@@ -165,7 +165,6 @@ import { ExtensionModuleStatusSynchronization } from "../../Rules/StatusRules/Ex
 import { isActivatedStore as isCalendarActiveStore, calendarEventsStore } from "../../Stores/CalendarStore";
 import { isActivatedStore as isTodoListActiveStore, todoListsStore } from "../../Stores/TodoListStore";
 import { externalSvelteComponentStore } from "../../Stores/Utils/externalSvelteComponentStore";
-import { notificationPermissionModalVisibility } from "../../Stores/AvailabilityStatusModalsStore";
 import { ExtensionModule, RoomMetadataType } from "../../ExternalModule/ExtensionModule";
 import { SpaceInterface } from "../../Space/SpaceInterface";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
@@ -1974,7 +1973,6 @@ export class GameScene extends DirtyScene {
                         if (defaultExtensionModule.calendarSynchronised) isCalendarActiveStore.set(true);
                         if (defaultExtensionModule.todoListSynchronized) isTodoListActiveStore.set(true);
                         extensionModuleStore.add(defaultExtensionModule);
-                        notificationPermissionModalVisibility.open();
                     } catch (error) {
                         console.warn("Extension module initialization cancelled", error);
                     } finally {
