@@ -64,10 +64,17 @@ class ScriptUtils {
         return url;
     }
 
-    public startPictureInpictureMode(videoElement: HTMLVideoElement) {
-        const requestPictureInPicture = (videoElement: HTMLVideoElement | undefined) => {
+    public startPictureInpictureMode(videoElement?: HTMLVideoElement) {
+        if (
+            videoElement == undefined ||
+            !document.pictureInPictureEnabled ||
+            videoElement.requestPictureInPicture == undefined
+        )
+            return;
+
+        const requestPictureInPicture = (videoElement: HTMLVideoElement) => {
             videoElement
-                ?.requestPictureInPicture()
+                .requestPictureInPicture()
                 .then((pictureInPictureWindow: PictureInPictureWindow) => {
                     console.debug("Entered Picture in Picture mode", pictureInPictureWindow);
                 })
@@ -87,8 +94,17 @@ class ScriptUtils {
         }
     }
 
-    public exitPictureInpictureMode(videoElement: HTMLVideoElement | undefined) {
-        console.debug("Exiting Picture in Picture mode", videoElement);
+    public exitPictureInpictureMode() {
+        if (!document.pictureInPictureEnabled || document.exitPictureInPicture == undefined) return;
+
+        document
+            .exitPictureInPicture()
+            .then(() => {
+                console.debug("Exited Picture in Picture mode");
+            })
+            .catch((error) => {
+                console.error("Error exiting Picture in Picture mode", error);
+            });
     }
 }
 
