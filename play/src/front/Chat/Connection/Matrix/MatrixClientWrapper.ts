@@ -61,6 +61,7 @@ export interface MatrixLocalUserStore {
 export class MatrixClientWrapper implements MatrixClientWrapperInterface {
     private client!: MatrixClient;
     private secretStorageKeys: Record<string, Uint8Array> = {};
+    private clientClosed = false;
 
     constructor(
         private baseUrl: string,
@@ -151,6 +152,10 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
                 },
             },
         };
+
+        if (this.clientClosed) {
+            throw new Error("Client has been closed before being initialized");
+        }
 
         // Now, let's instantiate the Matrix client.
         this.client = this._createClient(matrixCreateClientOpts);
@@ -332,5 +337,12 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
 
     public cacheSecretStorageKey(keyId: string, key: Uint8Array) {
         this.secretStorageKeys[keyId] = key;
+    }
+
+    public stopClient() {
+        this.clientClosed = true;
+        if (this.client) {
+            this.client.stopClient();
+        }
     }
 }
