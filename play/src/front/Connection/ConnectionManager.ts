@@ -636,19 +636,18 @@ class ConnectionManager {
             return response;
         }
 
-        const { authToken, userUuid, email, username, locale, visitCardUrl, matrixUserId } = response;
+        const { authToken, userUuid, email, username, locale, visitCardUrl, matrixUserId, matrixServerUrl } = response;
 
         localUserStore.setAuthToken(authToken);
         this.localUser = new LocalUser(userUuid, email, matrixUserId /*, isMatrixRegistered*/);
         localUserStore.saveUser(this.localUser);
         this.authToken = authToken;
 
-        /*
         if (matrixServerUrl) {
-            setMatrixServerDetails(matrixServerUrl);
+            gameManager.setMatrixServerUrl(matrixServerUrl);
         } else {
-            noMatrixServerUrl();
-        }*/
+            gameManager.setMatrixServerUrl(undefined);
+        }
 
         if (visitCardUrl) {
             gameManager.setVisitCardUrl(visitCardUrl);

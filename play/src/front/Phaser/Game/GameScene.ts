@@ -161,6 +161,7 @@ import { MatrixUserProvider } from "../../Chat/UserProvider/MatrixUserProvider";
 import { UserProviderMerger } from "../../Chat/UserProviderMerger/UserProviderMerger";
 import { AdminUserProvider } from "../../Chat/UserProvider/AdminUserProvider";
 import { SpaceInterface } from "../../Space/SpaceInterface";
+import { UserProviderInterface } from "../../Chat/UserProvider/UserProviderInterface";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -333,6 +334,7 @@ export class GameScene extends DirtyScene {
     private allUserSpace: SpaceInterface | undefined;
     private _proximityChatRoom: ProximityChatRoom | undefined;
     private _userProviderMerger: UserProviderMerger | undefined;
+    private matrixClientWrapper: MatrixClientWrapper | undefined;
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
@@ -991,6 +993,7 @@ export class GameScene extends DirtyScene {
         }
 
         this._chatConnection?.clearListener();
+        this.matrixClientWrapper?.stopClient();
         this.connection?.closeConnection();
         this.simplePeer?.closeAllConnections();
         this.simplePeer?.unregister();
@@ -1521,38 +1524,42 @@ export class GameScene extends DirtyScene {
                     }
                 }
 
-                //We need to add an env parameter to switch between chat services
-                const matrixClientWrapper = new MatrixClientWrapper(MATRIX_PUBLIC_URI ?? "", localUserStore);
-                const matrixClientPromise = matrixClientWrapper.initMatrixClient();
-
-                matrixClientPromise
-                    .then((matrixClient) => {
-                        matrixSecurity.updateMatrixClientStore(matrixClient);
-
-                        const chatId = localUserStore.getChatId();
-                        const email: string | null = localUserStore.getLocalUser()?.email || null;
-                        if (email && chatId) this.connection?.emitUpdateChatId(email, chatId);
-                    })
-                    .catch((e) => {
-                        console.error(e);
-                    });
-
                 this._spaceRegistry = new SpaceRegistry(this.connection);
 
                 this.allUserSpace = this._spaceRegistry.joinSpace(WORLD_SPACE_NAME);
-                this._chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
-
-                //init merger
 
                 const adminUserProvider = new AdminUserProvider(this.connection);
-                const matrixUserProvider = new MatrixUserProvider(matrixClientPromise);
                 const worldUserProvider = new WorldUserProvider(this.allUserSpace);
 
-                this._userProviderMerger = new UserProviderMerger([
-                    adminUserProvider,
-                    matrixUserProvider,
-                    worldUserProvider,
-                ]);
+                const userProviders: UserProviderInterface[] = [adminUserProvider, worldUserProvider];
+
+                //We need to add an env parameter to switch between chat services
+                const matrixServerUrl = gameManager.getMatrixServerUrl() ?? MATRIX_PUBLIC_URI;
+                if (matrixServerUrl) {
+                    this.matrixClientWrapper = new MatrixClientWrapper(matrixServerUrl, localUserStore);
+                    const matrixClientPromise = this.matrixClientWrapper.initMatrixClient();
+
+                    matrixClientPromise
+                        .then((matrixClient) => {
+                            matrixSecurity.updateMatrixClientStore(matrixClient);
+
+                            const chatId = localUserStore.getChatId();
+                            const email: string | null = localUserStore.getLocalUser()?.email || null;
+                            if (email && chatId) this.connection?.emitUpdateChatId(email, chatId);
+                        })
+                        .catch((error) => {
+                            console.error(`Failed to create matrix client : ${error}`);
+                            Sentry.captureMessage(`Failed to create matrix client : ${error}`);
+                        });
+
+                    this._chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
+                    const matrixUserProvider = new MatrixUserProvider(matrixClientPromise);
+
+                    // Put the matrixUserProvider at the middle of the userProviders array
+                    userProviders.splice(1, 0, matrixUserProvider);
+                }
+
+                this._userProviderMerger = new UserProviderMerger(userProviders);
 
                 this.tryOpenMapEditorWithToolEditorParameter();
 

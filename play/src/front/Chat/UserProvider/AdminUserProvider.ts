@@ -2,9 +2,9 @@ import { Writable, writable } from "svelte/store";
 import { AvailabilityStatus, ChatMember } from "@workadventure/messages";
 import { ChatUser, PartialChatUser } from "../Connection/ChatConnection";
 import { RoomConnection } from "../../Connection/RoomConnection";
-import { UserProvideInterface } from "./UserProvideInterface";
+import { UserProviderInterface } from "./UserProviderInterface";
 
-export class AdminUserProvider implements UserProvideInterface {
+export class AdminUserProvider implements UserProviderInterface {
     users: Writable<PartialChatUser[]>;
     private _setUsers: ((value: PartialChatUser[]) => void) | undefined;
 

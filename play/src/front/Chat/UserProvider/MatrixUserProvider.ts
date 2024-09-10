@@ -2,9 +2,9 @@ import { Readable, readable } from "svelte/store";
 import { MatrixClient } from "matrix-js-sdk";
 import { PartialChatUser } from "../Connection/ChatConnection";
 import { chatUserFactory } from "../Connection/Matrix/MatrixChatUser";
-import { UserProvideInterface } from "./UserProvideInterface";
+import { UserProviderInterface } from "./UserProviderInterface";
 
-export class MatrixUserProvider implements UserProvideInterface {
+export class MatrixUserProvider implements UserProviderInterface {
     users: Readable<PartialChatUser[]>;
     private _allUser: PartialChatUser[] = [];
     private _setUsers: ((value: PartialChatUser[]) => void) | undefined;
