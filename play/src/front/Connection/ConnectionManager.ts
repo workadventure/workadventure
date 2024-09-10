@@ -151,10 +151,7 @@ class ConnectionManager {
 
         gameManager
             .getCurrentGameScene()
-            .chatConnection.destroy()
-            .catch((error) => {
-                console.error("Chat connection not closed properly : ", error);
-            })
+            .logout()
             .finally(() => window.location.assign(redirectUrl));
     }
 
