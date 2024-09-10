@@ -3721,4 +3721,19 @@ ${escapedMessage}
         }
         return this._userProviderMerger;
     }
+
+    /**
+     * Performs all cleanup actions specific to someone logging out.
+     * Currently, this logs out from the Matrix client.
+     */
+    public async logout(): Promise<void> {
+        if (this._chatConnection) {
+            try {
+                await this._chatConnection.destroy();
+            } catch (e) {
+                console.error("Chat connection not closed properly : ", e);
+                Sentry.captureException(e);
+            }
+        }
+    }
 }
