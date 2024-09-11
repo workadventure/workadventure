@@ -482,7 +482,7 @@ export class MapEditorModeManager {
 
         // Get and revoke the personal area of the user if it exists
         const gameMapFrontWrapper = gameManager.getCurrentGameScene().getGameMapFrontWrapper();
-        for (const area of gameMapFrontWrapper.areasManager.getAreasByPropertyType("personalAreaPropertyData")) {
+        for (const area of gameMapFrontWrapper.areasManager?.getAreasByPropertyType("personalAreaPropertyData") ?? []) {
             const property = area.areaData.properties.find(
                 (property) => property.type === "personalAreaPropertyData"
             ) as PersonalAreaPropertyData | undefined;

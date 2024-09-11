@@ -162,6 +162,8 @@ import { UserProviderMerger } from "../../Chat/UserProviderMerger/UserProviderMe
 import { AdminUserProvider } from "../../Chat/UserProvider/AdminUserProvider";
 import { SpaceInterface } from "../../Space/SpaceInterface";
 import { UserProviderInterface } from "../../Chat/UserProvider/UserProviderInterface";
+import { VoidChatConnection } from "../../Chat/Connection/VoidChatConnection";
+import { faviconManager } from "../../WebRtc/FaviconManager";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -189,7 +191,6 @@ import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManager";
 import { DEPTH_BUBBLE_CHAT_SPRITE, DEPTH_WHITE_MASK } from "./DepthIndexes";
 import { ScriptingEventsManager } from "./ScriptingEventsManager";
-import { faviconManager } from "./../../WebRtc/FaviconManager";
 import { FollowManager } from "./FollowManager";
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
@@ -1557,6 +1558,9 @@ export class GameScene extends DirtyScene {
 
                     // Put the matrixUserProvider at the middle of the userProviders array
                     userProviders.splice(1, 0, matrixUserProvider);
+                } else {
+                    // No matrix connection? Let's fill the gap with a "void" object
+                    this._chatConnection = new VoidChatConnection();
                 }
 
                 this._userProviderMerger = new UserProviderMerger(userProviders);
