@@ -191,7 +191,7 @@ export class AuthenticateController extends BaseHttpController {
                             authToken: token,
                             locale: authTokenData?.locale,
                             matrixUserId: authTokenData?.matrixUserId,
-                            matrixServerUrl: MATRIX_PUBLIC_URI,
+                            matrixServerUrl: (resCheckTokenAuth.matrix_url as string | undefined) ?? MATRIX_PUBLIC_URI,
                             // TODO: replace ... with each property
                             ...resUserData,
                             ...resCheckTokenAuth,
