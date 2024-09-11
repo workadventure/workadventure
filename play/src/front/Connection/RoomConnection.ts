@@ -277,7 +277,7 @@ export class RoomConnection implements RoomConnection {
             url += "&lastCommandId=" + lastCommandId;
         }
         url += "&version=" + apiVersionHash;
-        url += "&chatID=" + localUserStore.getChatId();
+        url += "&chatID=" + (localUserStore.getChatId() ?? "");
         url += "&roomName=" + gameManager.currentStartedRoom.roomName;
 
         if (RoomConnection.websocketFactory) {
