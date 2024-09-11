@@ -42,7 +42,7 @@ const mapStorageServer: MapStorageServer = {
     ping(call: ServerUnaryCall<PingMessage, Empty>, callback: sendUnaryData<PingMessage>): void {
         callback(null, call.request);
     },
-    async handleClearAfterUpload(
+    handleClearAfterUpload(
         call: ServerUnaryCall<MapStorageClearAfterUploadMessage, Empty>,
         callback: sendUnaryData<Empty>
     ): void {
@@ -50,7 +50,9 @@ const mapStorageServer: MapStorageServer = {
             const wamUrl = call.request.wamUrl;
             const url = new URL(wamUrl);
             const wamKey = mapPathUsingDomainWithPrefix(url.pathname, url.hostname);
-            await mapsManager.clearAfterUpload(wamKey);
+            mapsManager.clearAfterUpload(wamKey).catch((error) => {
+                throw new Error("Failed to clear after upload");
+            });
             callback(null);
         } catch (e: unknown) {
             console.error("An error occurred in handleClearAfterUpload", e);

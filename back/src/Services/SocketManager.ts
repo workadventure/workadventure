@@ -797,7 +797,6 @@ export class SocketManager {
                 case "searchMemberQuery":
                 case "getMemberQuery":
                 case "searchTagsQuery":
-                case "createChatRoomForAreaQuery":
                 case "enterChatRoomAreaQuery":
                 case "chatMembersQuery": {
                     break;
