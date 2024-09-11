@@ -40,6 +40,9 @@
                         "hideButtonLabel": {
                           "type": "boolean"
                         },
+                        "ressourceUrl": {
+                          "type": "string"
+                        },
                         "type": {
                           "type": "string",
                           "const": "jitsiRoomProperty"
@@ -122,6 +125,9 @@
                         "hideButtonLabel": {
                           "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/hideButtonLabel"
                         },
+                        "ressourceUrl": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/ressourceUrl"
+                        },
                         "type": {
                           "type": "string",
                           "const": "playAudio"
@@ -155,6 +161,9 @@
                         },
                         "hideButtonLabel": {
                           "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/hideButtonLabel"
+                        },
+                        "ressourceUrl": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/ressourceUrl"
                         },
                         "type": {
                           "type": "string",
@@ -245,6 +254,9 @@
                         "hideButtonLabel": {
                           "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/hideButtonLabel"
                         },
+                        "ressourceUrl": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/ressourceUrl"
+                        },
                         "type": {
                           "type": "string",
                           "const": "entityDescriptionProperties"
@@ -333,6 +345,9 @@
                         "hideButtonLabel": {
                           "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/hideButtonLabel"
                         },
+                        "ressourceUrl": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/ressourceUrl"
+                        },
                         "type": {
                           "type": "string",
                           "const": "start"
@@ -358,6 +373,9 @@
                         },
                         "hideButtonLabel": {
                           "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/hideButtonLabel"
+                        },
+                        "ressourceUrl": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/ressourceUrl"
                         },
                         "type": {
                           "type": "string",
@@ -390,6 +408,9 @@
                         "hideButtonLabel": {
                           "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/hideButtonLabel"
                         },
+                        "ressourceUrl": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/ressourceUrl"
+                        },
                         "type": {
                           "type": "string",
                           "const": "focusable"
@@ -415,6 +436,9 @@
                         },
                         "hideButtonLabel": {
                           "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/hideButtonLabel"
+                        },
+                        "ressourceUrl": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/ressourceUrl"
                         },
                         "type": {
                           "type": "string",
@@ -448,6 +472,9 @@
                         "hideButtonLabel": {
                           "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/hideButtonLabel"
                         },
+                        "ressourceUrl": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/ressourceUrl"
+                        },
                         "type": {
                           "type": "string",
                           "const": "speakerMegaphone"
@@ -478,6 +505,9 @@
                         },
                         "hideButtonLabel": {
                           "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/hideButtonLabel"
+                        },
+                        "ressourceUrl": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/ressourceUrl"
                         },
                         "type": {
                           "type": "string",
@@ -510,6 +540,9 @@
                         "hideButtonLabel": {
                           "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/hideButtonLabel"
                         },
+                        "ressourceUrl": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/ressourceUrl"
+                        },
                         "type": {
                           "type": "string",
                           "const": "areaDescriptionProperties"
@@ -539,6 +572,9 @@
                         },
                         "hideButtonLabel": {
                           "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/hideButtonLabel"
+                        },
+                        "ressourceUrl": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/ressourceUrl"
                         },
                         "type": {
                           "type": "string",
@@ -576,6 +612,9 @@
                         },
                         "hideButtonLabel": {
                           "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/hideButtonLabel"
+                        },
+                        "ressourceUrl": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/ressourceUrl"
                         },
                         "type": {
                           "type": "string",
@@ -621,6 +660,9 @@
                         },
                         "hideButtonLabel": {
                           "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/hideButtonLabel"
+                        },
+                        "ressourceUrl": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/ressourceUrl"
                         },
                         "type": {
                           "type": "string",
