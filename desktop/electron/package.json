@@ -33,7 +33,7 @@
         "@types/auto-launch": "^5.0.2",
         "@typescript-eslint/eslint-plugin": "^5.18.0",
         "@typescript-eslint/parser": "^5.18.0",
-        "electron": "^18.0.3",
+        "electron": "^22.3.25",
         "electron-builder": "^23.6.0",
         "eslint": "^8.12.0",
         "prettier": "^2.6.2",
