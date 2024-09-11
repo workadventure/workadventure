@@ -38,6 +38,7 @@ export const EnvironmentVariables = z.object({
     ALLOWED_CORS_ORIGIN: z.string().url().or(z.literal("*")).optional(),
     PUSHER_URL: AbsoluteOrRelativeUrl.optional(),
     FRONT_URL: AbsoluteOrRelativeUrl.optional(),
+    MAP_STORAGE_API_TOKEN: z.string(),
     PUBLIC_MAP_STORAGE_URL: z
         .string()
         .url()

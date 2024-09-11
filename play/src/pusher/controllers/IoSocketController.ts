@@ -781,7 +781,6 @@ export class IoSocketController {
                             message.message.updateSpaceMetadataMessage.spaceName = `${socket.getUserData().world}.${
                                 message.message.updateSpaceMetadataMessage.spaceName
                             }`;
-
                             await socketManager.handleUpdateSpaceMetadata(
                                 socket,
                                 message.message.updateSpaceMetadataMessage.spaceName,
@@ -816,19 +815,6 @@ export class IoSocketController {
                             socketManager.handleLeaveChatRoomArea(
                                 socket,
                                 message.message.leaveChatRoomAreaMessage.roomID
-                            );
-                            break;
-                        }
-                        case "changeChatRoomAreaNameMessage": {
-                            await socketManager.handleChangeChatRoomAreaName(
-                                message.message.changeChatRoomAreaNameMessage.roomID,
-                                message.message.changeChatRoomAreaNameMessage.name
-                            );
-                            break;
-                        }
-                        case "deleteChatRoomAreaMessage": {
-                            await socketManager.handleDeleteChatRoomArea(
-                                message.message.deleteChatRoomAreaMessage.roomID
                             );
                             break;
                         }
@@ -899,19 +885,6 @@ export class IoSocketController {
                                         answerMessage.answer = {
                                             $case: "getMemberAnswer",
                                             getMemberAnswer,
-                                        };
-                                        this.sendAnswerMessage(socket, answerMessage);
-                                        break;
-                                    }
-                                    case "createChatRoomForAreaQuery": {
-                                        const createChatRoomForAreaAnswer =
-                                            await socketManager.handleCreateChatRoomForAreaQuery(
-                                                message.message.queryMessage.query.createChatRoomForAreaQuery
-                                            );
-
-                                        answerMessage.answer = {
-                                            $case: "createChatRoomForAreaAnswer",
-                                            createChatRoomForAreaAnswer,
                                         };
                                         this.sendAnswerMessage(socket, answerMessage);
                                         break;

@@ -2,11 +2,13 @@ import { Command, GameMap, WAMFileFormat } from "@workadventure/map-editor";
 import { EditMapCommandMessage } from "@workadventure/messages";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import * as Sentry from "@sentry/node";
+import pLimit from "p-limit";
 import { fileSystem } from "./fileSystem";
 import { MapListService } from "./Services/MapListService";
 import { WebHookService } from "./Services/WebHookService";
 import { WEB_HOOK_URL } from "./Enum/EnvironmentVariable";
-
+import { _axios } from "./Commands/Area/UpdateAreaMapStorageCommand";
+const limit = pLimit(10);
 class MapsManager {
     private loadedMaps: Map<string, GameMap>;
     private loadedMapsCommandsQueue: Map<string, EditMapCommandMessage[]>;
@@ -104,8 +106,24 @@ class MapsManager {
         return gameMap;
     }
 
-    public clearAfterUpload(key: string): void {
+    public async clearAfterUpload(key: string): Promise<void> {
         console.log(`UPLOAD/DELETE DETECTED. CLEAR CACHE FOR: ${key}`);
+        const areas = this.loadedMaps.get(key)?.getGameMapAreas()?.getAreas().values();
+
+        if (areas) {
+            console.log("delete ressource url properties >>>>>>");
+            const promises = Array.from(areas).reduce((acc, currArea) => {
+                currArea.properties.forEach((property) => {
+                    const ressourceUrl = property.ressourceUrl;
+                    if (ressourceUrl) {
+                        acc.push(limit(() => _axios.delete(ressourceUrl, { data: property })));
+                    }
+                });
+                return acc;
+            }, [] as Promise<unknown>[]);
+            await Promise.all(promises);
+        }
+
         this.loadedMaps.delete(key);
         this.loadedMapsCommandsQueue.delete(key);
         this.clearSaveMapInterval(key);
@@ -152,10 +170,10 @@ class MapsManager {
                 queue.splice(0, 1);
             } else {
                 console.error(
-                    `Command with id ${commandId} that is scheduled from removal in the queue is not the first command. This should never happen (unless the queue was purged and recreated within 30 seconds... unlikely.`,
+                    `Command with id ${commandId} that is scheduled from removal in the queue is not the first command. This should never happen (unless the queue was purged and recreated within 30 seconds... unlikely.`
                 );
                 Sentry.captureMessage(
-                    `Command with id ${commandId} that is scheduled from removal in the queue is not the first command. This should never happen (unless the queue was purged and recreated within 30 seconds... unlikely.`,
+                    `Command with id ${commandId} that is scheduled from removal in the queue is not the first command. This should never happen (unless the queue was purged and recreated within 30 seconds... unlikely.`
                 );
             }
         }, this.COMMAND_TIME_IN_QUEUE_MS);
@@ -183,7 +201,7 @@ class MapsManager {
                     console.error(e);
                     Sentry.captureException(e);
                 });
-            }, intervalMS),
+            }, intervalMS)
         );
     }
 }

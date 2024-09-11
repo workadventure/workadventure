@@ -144,6 +144,8 @@ export const EnvironmentVariables = z.object({
             "A comma separated list of entity collection URLs to be used when a new TMJ map is uploaded. Note: ignored if WAM_TEMPLATE_URL is set."
         )
         .transform(emptyStringToUndefined),
+    MAP_STORAGE_API_TOKEN: z.string(),
+    GRPC_PORT_BACK: PositiveIntAsString.optional().transform((val) => toNumber(val, 50051)),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

@@ -10,8 +10,6 @@ import {
     BanPlayerMessage,
     ChatMembersAnswer,
     ChatMembersQuery,
-    CreateChatRoomForAreaAnswer,
-    CreateChatRoomForAreaQuery,
     EmoteEventMessage,
     ErrorApiData,
     ErrorMessage,
@@ -1476,15 +1474,6 @@ export class SocketManager implements ZoneEventListener {
             });
     }
 
-    async handleCreateChatRoomForAreaQuery(
-        chatMemberQuery: CreateChatRoomForAreaQuery
-    ): Promise<CreateChatRoomForAreaAnswer> {
-        const chatRoomID = await matrixProvider.createRoomForArea();
-        return {
-            chatRoomID,
-        };
-    }
-
     handleLeaveChatRoomArea(socket: Socket, chatRoomAreaToLeave: string) {
         const socketData = socket.getUserData();
         socketData.currentChatRoomArea = socketData.currentChatRoomArea.filter(
@@ -1500,14 +1489,6 @@ export class SocketManager implements ZoneEventListener {
 
         socketData.currentChatRoomArea.push(roomID);
         return matrixProvider.inviteUserToRoom(socketData.chatID, roomID).catch((error) => console.error(error));
-    }
-
-    async handleChangeChatRoomAreaName(roomID: string, newName: string): Promise<void> {
-        return matrixProvider.changeRoomName(roomID, newName);
-    }
-
-    async handleDeleteChatRoomArea(roomID: string): Promise<void> {
-        return matrixProvider.deleteRoom(roomID);
     }
 }
 

@@ -13,7 +13,7 @@
     import { v4 as uuid } from "uuid";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { mapEditorSelectedAreaPreviewStore } from "../../../Stores/MapEditorStore";
-    import { FEATURE_FLAG_BROADCAST_AREAS } from "../../../Enum/EnvironmentVariable";
+    import { FEATURE_FLAG_BROADCAST_AREAS, PUSHER_URL } from "../../../Enum/EnvironmentVariable";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { connectionManager } from "../../../Connection/ConnectionManager";
     import JitsiRoomPropertyEditor from "../PropertyEditor/JitsiRoomPropertyEditor.svelte";
@@ -30,8 +30,6 @@
     import RightsPropertyEditor from "../PropertyEditor/RightsPropertyEditor.svelte";
     import { IconChevronDown, IconChevronRight } from "../../Icons";
     import MatrixRoomPropertyEditor from "../PropertyEditor/MatrixRoomPropertyEditor.svelte";
-    import { gameManager } from "../../../Phaser/Game/GameManager";
-    import { ABSOLUTE_PUSHER_URL } from "../../../Enum/ComputedConst";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
@@ -49,9 +47,8 @@
     let hasPersonalAreaProperty: boolean;
     let hasRightsProperty: boolean;
     let hasMatrixRoom: boolean;
-    let connection = gameManager.getCurrentGameScene().connection;
 
-    const ROOM_AREA_PUSHER_URL = new URL("roomArea", ABSOLUTE_PUSHER_URL).toString();
+    const ROOM_AREA_PUSHER_URL = new URL("roomArea", PUSHER_URL).toString();
 
     let selectedAreaPreviewUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((currentAreaPreview) => {
         if (currentAreaPreview) {
@@ -212,7 +209,7 @@
                     matrixRoomId: "",
                     shouldOpenAutomatically: false,
                     displayName: "",
-                    ressourceUrl : ROOM_AREA_PUSHER_URL
+                    ressourceUrl: ROOM_AREA_PUSHER_URL,
                 };
             default:
                 throw new Error(`Unknown property type ${type}`);
@@ -671,7 +668,6 @@
                             {property}
                             on:close={({ detail }) => {
                                 onDeleteProperty(property.id, detail);
-                                if (connection) connection.emitDeleteChatRoomArea(property.matrixRoomId);
                             }}
                             on:change={() => onUpdateProperty(property)}
                         />

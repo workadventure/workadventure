@@ -499,7 +499,6 @@ export class MapEditorModeManager {
                 ownerId: null,
             });
 
-            //TODO : trouver un moyen pour update le nom sachant qu'on a 
             this.executeCommand(
                 new UpdateAreaFrontCommand(
                     this.getScene().getGameMap(),

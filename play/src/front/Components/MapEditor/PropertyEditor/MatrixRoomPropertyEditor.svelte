@@ -1,72 +1,24 @@
 <script lang="ts">
     import { MatrixRoomPropertyData } from "@workadventure/map-editor";
-    import { createEventDispatcher, onDestroy, onMount } from "svelte";
-    import * as Sentry from "@sentry/svelte";
+    import { createEventDispatcher, onDestroy } from "svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import { gameManager } from "../../../Phaser/Game/GameManager";
-    import { mapEditorSelectedAreaPreviewStore } from "../../../Stores/MapEditorStore";
     import ChatLoader from "../../../Chat/Components/ChatLoader.svelte";
     import ChatError from "../../../Chat/Components/ChatError.svelte";
     import { isChatIdSentToPusher } from "../../../Chat/Stores/ChatStore";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     export let property: MatrixRoomPropertyData;
-    let oldName = property.displayName;
-    const gameScene = gameManager.getCurrentGameScene();
-    const roomConnection = gameScene.connection;
 
     const dispatch = createEventDispatcher();
     let isCreatingRoom = false;
     let creationRoomError = false;
-    let shouldChangeRoomName = false;
     function onValueChange() {
         dispatch("change");
     }
 
-    onMount(() => {
-        if (!property.matrixRoomId && roomConnection) {
-            isCreatingRoom = true;
-            roomConnection
-                .queryCreateChatRoomForArea(property.id)
-                .then((answer) => {
-                    isCreatingRoom = true;
-                    property.matrixRoomId = answer.chatRoomID;
-                    //use this instead of dispatch beacause if then is execute before areaeditor was close : no effect ...
-                    if ($mapEditorSelectedAreaPreviewStore) {
-                        $mapEditorSelectedAreaPreviewStore.updateProperty(property);
-                    }
-
-                    if (shouldChangeRoomName) {
-                        roomConnection.emitChatRoomAreaNameChange(property.matrixRoomId, property.matrixRoomId);
-                    }
-                })
-                .catch((error) => {
-                    console.error(error);
-                    Sentry.captureMessage(`Failed to create room area : ${error}`);
-                    creationRoomError = true;
-                })
-                .finally(() => {
-                    isCreatingRoom = false;
-                });
-        }
-    });
-
     onDestroy(() => {
-        if (oldName !== property.displayName && roomConnection) {
-            roomConnection.emitChatRoomAreaNameChange(property.matrixRoomId, property.displayName);
-            if (isCreatingRoom) {
-                shouldChangeRoomName = true;
-                dispatch("change");
-                return;
-            }
-
-            $LL.mapEditor.properties.matrixProperties.defaultChatRoomAreaName();
-            const newRoomName =
-                property.displayName.trim() === ""
-                    ? $LL.mapEditor.properties.matrixProperties.defaultChatRoomAreaName()
-                    : property.displayName;
-            roomConnection.emitChatRoomAreaNameChange(property.matrixRoomId, newRoomName);
+        if (property.displayName === "" || !property.displayName) {
+            property.displayName = $LL.mapEditor.properties.matrixProperties.defaultChatRoomAreaName();
             dispatch("change");
-            return;
         }
     });
 </script>

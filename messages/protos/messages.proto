@@ -124,14 +124,8 @@ message LeaveChatRoomAreaMessage {
   string roomID = 1;
 }
 
-message DeleteChatRoomAreaMessage {
-  string roomID = 1;
-}
 
-message ChangeChatRoomAreaNameMessage{
-  string roomID = 1;
-  string name = 2;
-}
+
 
 message EmotePromptMessage {
   string emote = 2;
@@ -334,8 +328,6 @@ message ClientToServerMessage {
     PublicEventFrontToPusher publicEvent = 43;
     PrivateEventFrontToPusher privateEvent = 44;
     LeaveChatRoomAreaMessage leaveChatRoomAreaMessage = 45;
-    ChangeChatRoomAreaNameMessage changeChatRoomAreaNameMessage=46;
-    DeleteChatRoomAreaMessage deleteChatRoomAreaMessage = 47;
   }
 }
 
@@ -418,9 +410,8 @@ message QueryMessage {
     GetMemberQuery getMemberQuery = 8;
     TurnCredentialsQuery turnCredentialsQuery = 9;
     ChatMembersQuery chatMembersQuery = 10;
-    CreateChatRoomForAreaQuery createChatRoomForAreaQuery = 11;
-    SearchTagsQuery searchTagsQuery = 12;
-    EnterChatRoomAreaQuery enterChatRoomAreaQuery = 13;
+    SearchTagsQuery searchTagsQuery = 11;
+    EnterChatRoomAreaQuery enterChatRoomAreaQuery = 12;
   }
 }
 
@@ -467,10 +458,6 @@ message ChatMembersQuery {
   string searchText = 1;
 }
 
-message CreateChatRoomForAreaQuery{
-  string areaID = 1;
-}
-
 message  SearchTagsQuery{
   string searchText = 1;
 }
@@ -493,9 +480,8 @@ message AnswerMessage {
     GetMemberAnswer getMemberAnswer = 10;
     TurnCredentialsAnswer turnCredentialsAnswer = 11;
     ChatMembersAnswer chatMembersAnswer = 12;
-    CreateChatRoomForAreaAnswer createChatRoomForAreaAnswer = 13;
-    SearchTagsAnswer searchTagsAnswer = 14;
-    EnterChatRoomAreaAnswer enterChatRoomAreaAnswer = 15;
+    SearchTagsAnswer searchTagsAnswer = 13;
+    EnterChatRoomAreaAnswer enterChatRoomAreaAnswer = 14;
   }
 }
 
@@ -1143,6 +1129,10 @@ message RoomsList {
 message DispatchGlobalEventRequest {
   string name = 1;
   google.protobuf.Value value = 2;
+}
+
+message DispatchModifyAreaRequest {
+  ModifyAreaMessage modifyAreaMessage = 2;
 }
 
 /********************************************************************************

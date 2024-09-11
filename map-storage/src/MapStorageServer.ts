@@ -34,6 +34,7 @@ import { mapPathUsingDomainWithPrefix } from "./Services/PathMapper";
 import { LockByKey } from "./Services/LockByKey";
 import { DeleteAreaMapStorageCommand } from "./Commands/Area/DeleteAreaMapStorageCommand";
 import { UpdateAreaMapStorageCommand } from "./Commands/Area/UpdateAreaMapStorageCommand";
+import { GRPC_PORT_BACK } from "./Enum/EnvironmentVariable";
 
 const editionLocks = new LockByKey<string>();
 
@@ -41,7 +42,7 @@ const mapStorageServer: MapStorageServer = {
     ping(call: ServerUnaryCall<PingMessage, Empty>, callback: sendUnaryData<PingMessage>): void {
         callback(null, call.request);
     },
-    handleClearAfterUpload(
+    async handleClearAfterUpload(
         call: ServerUnaryCall<MapStorageClearAfterUploadMessage, Empty>,
         callback: sendUnaryData<Empty>
     ): void {
@@ -49,7 +50,7 @@ const mapStorageServer: MapStorageServer = {
             const wamUrl = call.request.wamUrl;
             const url = new URL(wamUrl);
             const wamKey = mapPathUsingDomainWithPrefix(url.pathname, url.hostname);
-            mapsManager.clearAfterUpload(wamKey);
+            await mapsManager.clearAfterUpload(wamKey);
             callback(null);
         } catch (e: unknown) {
             console.error("An error occurred in handleClearAfterUpload", e);
@@ -137,10 +138,12 @@ const mapStorageServer: MapStorageServer = {
                         }
                         const area = gameMap.getGameMapAreas()?.getArea(message.id);
                         if (area) {
+                            const backAddress = `${call.getPeer().split(":")[0]}:${GRPC_PORT_BACK}`;
+
                             await mapsManager.executeCommand(
                                 mapKey,
                                 mapUrl.host,
-                                new UpdateAreaMapStorageCommand(gameMap, dataToModify, commandId, area)
+                                new UpdateAreaMapStorageCommand(gameMap, dataToModify, commandId, area, backAddress)
                             );
                         } else {
                             console.log(`Could not find area with id: ${message.id}`);

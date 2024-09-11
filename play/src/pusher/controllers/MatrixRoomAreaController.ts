@@ -1,48 +1,122 @@
-import { PingMessage } from "@workadventure/messages";
-import { Metadata } from "@grpc/grpc-js";
-import { apiClientRepository } from "../services/ApiClientRepository";
-import { BaseHttpController } from "./BaseHttpController";
+import { MatrixRoomPropertyData } from "@workadventure/map-editor";
+import * as Sentry from "@sentry/node";
+import { DefaultResponseLocals, Response } from "hyper-express";
 import { matrixProvider } from "../services/MatrixProvider";
-import { z } from "zod";
 import { validatePostQuery } from "../services/QueryValidator";
+import { mapStorageToken } from "../middlewares/MapStorageToken";
+import { BaseHttpController } from "./BaseHttpController";
 
 export class MatrixRoomAreaController extends BaseHttpController {
     // Returns a map mapping map name to file name of the map
     routes(): void {
-        //TODO : revoir doc
         /**
          * @openapi
-         * /ping:
-         *   get:
-         *     description: Create new Matrix room dedicated to a area
-         *     produces:
-         *      - "text/plain;charset=UTF-8"
+         * /roomArea:
+         *   post:
+         *     summary: Create a new Matrix room dedicated to an area
+         *     description: Create a new Matrix room associated with a specific area.
+         *     tags:
+         *       - MatrixRoomArea
+         *     requestBody:
+         *       required: true
+         *       content:
+         *         application/json:
+         *           schema:
+         *             $ref: '#/components/schemas/MatrixRoomPropertyData'
          *     responses:
-         *       200:
-         *         description: OK
+         *       '201':
+         *         description: Matrix room created successfully.
+         *         content:
+         *           application/json:
+         *             schema:
+         *               $ref: '#/components/schemas/MatrixRoomPropertyData'
+         *       '400':
+         *         description: Invalid request body.
          *         content:
          *           text/plain:
          *             schema:
          *               type: string
-         *               example: pong
-         *
+         *               example: Invalid Request Body
+         *       '500':
+         *         description: Internal Server Error.
+         *         content:
+         *           text/plain:
+         *             schema:
+         *               type: string
+         *               example: Internal Server Error
          */
-        this.app.post("/roomArea", async (req, res) => {
-            //TODO : auth
-            try{
+        this.app.post("/roomArea", [mapStorageToken], async (req, res) => {
+            try {
+                const body = await validatePostQuery(req, res, MatrixRoomPropertyData);
+
+                if (!body) {
+                    return res.status(400).send("Invalid Request Body");
+                }
+
                 const roomID = await matrixProvider.createRoomForArea();
-                res.send(roomID);
-            }catch(error){
-                console.error(error);
+                body.matrixRoomId = roomID;
+                res.status(201).json(body);
+            } catch (error) {
+                return this.handleError(res, error);
             }
-           // return;
         });
-        //TODO : revoir doc 
+
         /**
          * @openapi
-         * /ping-back:
-         *   get:
-         *     description: Returns a "pong" message if all back servers could be reached.
+         * /roomArea:
+         *   patch:
+         *     summary: Update Matrix room name
+         *     description: Updates the name of an existing Matrix room.
+         *     tags:
+         *       - MatrixRoomArea
+         *     requestBody:
+         *       required: true
+         *       content:
+         *         application/json:
+         *           schema:
+         *             $ref: '#/components/schemas/MatrixRoomPropertyData'
+         *     responses:
+         *       '200':
+         *         description: Room name updated successfully.
+         *         content:
+         *           text/plain:
+         *             schema:
+         *               type: string
+         *               example: Room name updated successfully
+         *       '400':
+         *         description: Invalid request body.
+         *         content:
+         *           text/plain:
+         *             schema:
+         *               type: string
+         *               example: Invalid Request Body
+         *       '500':
+         *         description: Internal Server Error.
+         *         content:
+         *           text/plain:
+         *             schema:
+         *               type: string
+         *               example: Internal Server Error
+         */
+        this.app.delete("/roomArea", [mapStorageToken], async (req, res) => {
+            try {
+                const body = await req.json();
+                const isMatrixRoomPropertyData = MatrixRoomPropertyData.safeParse(body);
+
+                if (!isMatrixRoomPropertyData.success) {
+                    return res.status(400).send("Invalid request body");
+                }
+                await matrixProvider.deleteRoom(isMatrixRoomPropertyData.data.matrixRoomId);
+                return res.status(204).send();
+            } catch (error) {
+                return this.handleError(res, error);
+            }
+        });
+        /**
+         * @openapi
+         * /roomArea:
+         *   patch:
+         *     description: Update room name
          *     produces:
          *      - "text/plain;charset=UTF-8"
          *     responses:
@@ -62,31 +136,27 @@ export class MatrixRoomAreaController extends BaseHttpController {
          *               example: ko
          *
          */
-        this.app.delete("/roomArea/:roomID", async (req, res) => {
-            //TODO : auth
-            try{
-                const body = await validatePostQuery(
-                    req,
-                    res,
-                    z.object({
-                        roomID: z.string(),
-                    })
-                );
+        this.app.patch("/roomArea", [mapStorageToken], async (req, res) => {
+            try {
+                const body = await req.json();
+                const isMatrixRoomPropertyData = MatrixRoomPropertyData.safeParse(body);
 
-                if (body === undefined) {
-                    return;
+                if (!isMatrixRoomPropertyData.success) {
+                    return res.status(400).send("Invalid request body");
                 }
-                
-                await matrixProvider.deleteRoom(body.roomID);
-
-            }catch(error){
-
+                await matrixProvider.changeRoomName(
+                    isMatrixRoomPropertyData.data.matrixRoomId,
+                    isMatrixRoomPropertyData.data.displayName
+                );
+                return res.status(200).send("Room name updated successfully");
+            } catch (error) {
+                return this.handleError(res, error);
             }
-            return;
         });
-
-        this.app.put("/roomArea/:roomID",async (req,res) =>{
-            //TODO : route pour update le name (seul propriete de la room qui change , voir comment on peut faire si plusieurs propriete peuvent changer...)
-        })
+    }
+    private handleError(res: Response<DefaultResponseLocals>, error: unknown) {
+        console.error(error);
+        Sentry.captureMessage(`Internal Server Error : ${error}`);
+        return res.status(500).send("Internal Server Error");
     }
 }

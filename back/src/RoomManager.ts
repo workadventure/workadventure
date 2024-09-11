@@ -633,6 +633,11 @@ const roomManager = {
         socketManager.dispatchGlobalEvent(call.request.name, call.request.value);
         callback(null);
     },
+    dispatchModifyAreaMessage(call, callback) {
+        //TODO : voir pourquoi le type peut etre undefined
+        if (call.request.modifyAreaMessage) socketManager.dispatchModifyAreaMessage(call.request.modifyAreaMessage);
+        callback(null);
+    },
 } satisfies RoomManagerServer;
 
 export { roomManager };

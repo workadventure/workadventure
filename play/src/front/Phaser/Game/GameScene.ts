@@ -1533,15 +1533,15 @@ export class GameScene extends DirtyScene {
                         const email: string | null = localUserStore.getLocalUser()?.email || null;
                         if (email && chatId) this.connection?.emitUpdateChatId(email, chatId);
                     })
-                    .catch((error) => {
-                        console.error(`Failed to create matrix client : ${error}`);
-                        Sentry.captureMessage(`Failed to create matrix client : ${error}`);
+                    .catch((e) => {
+                        console.error(e);
                     });
 
                 this._spaceRegistry = new SpaceRegistry(this.connection);
 
                 this.allUserSpace = this._spaceRegistry.joinSpace(WORLD_SPACE_NAME);
                 this._chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
+
                 //init merger
 
                 const adminUserProvider = new AdminUserProvider(this.connection);
@@ -3231,8 +3231,14 @@ ${escapedMessage}
                 this.CurrentPlayer,
                 phaserLayer,
                 (
-                    object1: Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile,
-                    object2: Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile
+                    object1:
+                        | Phaser.Physics.Arcade.Body
+                        | Phaser.Tilemaps.Tile
+                        | Phaser.Types.Physics.Arcade.GameObjectWithBody,
+                    object2:
+                        | Phaser.Physics.Arcade.Body
+                        | Phaser.Tilemaps.Tile
+                        | Phaser.Types.Physics.Arcade.GameObjectWithBody
                 ) => {}
             );
             phaserLayer.setCollisionByProperty({ collides: true });

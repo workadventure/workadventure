@@ -57,12 +57,6 @@ export class Area extends Phaser.GameObjects.Rectangle {
     destroy(fromScene?: boolean) {
         super.destroy(fromScene);
 
-        this.areaData.properties.forEach((property) => {
-            if (property.type === "matrixRoomPropertyData") {
-                this.connection?.emitDeleteChatRoomArea(property.matrixRoomId);
-            }
-        });
-
         if (this.highlightTimeOut !== undefined) {
             clearTimeout(this.highlightTimeOut);
         }
