@@ -401,8 +401,12 @@ class LocalAdmin implements AdminInterface {
     }
 
     getWorldChatMembers(playUri: string, searchText: string): Promise<WorldChatMembersData> {
-        return Promise.reject(new Error("No admin backoffice set!"));
+        return Promise.resolve({
+            members: [],
+            total: 0,
+        });
     }
+
     updateChatId(userIdentifier: string, chatId: string): Promise<void> {
         return Promise.reject(new Error("No admin backoffice to updateChatID !"));
     }

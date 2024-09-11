@@ -33,6 +33,7 @@ export class GameManager {
     // Note: this scenePlugin is the scenePlugin of the EntryScene. We should always provide a key in methods called on this scenePlugin.
     private scenePlugin!: Phaser.Scenes.ScenePlugin;
     private visitCardUrl: string | null = null;
+    private matrixServerUrl: string | undefined = undefined;
 
     constructor() {
         this.playerName = localUserStore.getName();
@@ -218,6 +219,14 @@ export class GameManager {
 
     public get currentStartedRoom() {
         return this.startRoom;
+    }
+
+    public setMatrixServerUrl(matrixServerUrl: string | undefined) {
+        this.matrixServerUrl = matrixServerUrl;
+    }
+
+    public getMatrixServerUrl(): string | undefined {
+        return this.matrixServerUrl;
     }
 }
 

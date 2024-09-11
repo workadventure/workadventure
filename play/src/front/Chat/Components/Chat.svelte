@@ -57,6 +57,7 @@
         }
     }
 
+    const chatStatusStore = chat.connectionStatus;
     $: isEncryptionRequiredAndNotSet = chat.isEncryptionRequiredAndNotSet;
     $: isGuest = chat.isGuest;
 </script>
@@ -76,18 +77,20 @@
             </ul>
         </nav>
         <!-- searchbar -->
-        <div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid">
-            <div class="tw-p-3">
-                <input
-                    autocomplete="new-password"
-                    class="wa-searchbar tw-block tw-text-white tw-w-full placeholder:tw-text-sm tw-rounded-3xl tw-px-3 tw-py-1 tw-border-light-purple tw-border tw-border-solid tw-bg-transparent"
-                    placeholder={$navChat === "users" ? $LL.chat.searchUser() : $LL.chat.searchChat()}
-                    on:keydown={handleKeyDown}
-                    on:keyup={handleKeyUp}
-                    bind:value={$chatSearchBarValue}
-                />
+        {#if $chatStatusStore !== "OFFLINE"}
+            <div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid">
+                <div class="tw-p-3">
+                    <input
+                        autocomplete="new-password"
+                        class="wa-searchbar tw-block tw-text-white tw-w-full placeholder:tw-text-sm tw-rounded-3xl tw-px-3 tw-py-1 tw-border-light-purple tw-border tw-border-solid tw-bg-transparent"
+                        placeholder={$navChat === "users" ? $LL.chat.searchUser() : $LL.chat.searchChat()}
+                        on:keydown={handleKeyDown}
+                        on:keyup={handleKeyUp}
+                        bind:value={$chatSearchBarValue}
+                    />
+                </div>
             </div>
-        </div>
+        {/if}
     </div>
     <div class="tw-flex tw-flex-col tw-gap-2 !tw-flex-1 tw-min-h-0">
         {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}
