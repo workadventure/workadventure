@@ -118,7 +118,7 @@ export interface ChatConnectionInterface {
         }[]
     >;
 
-    joinRoom(roomId: string): Promise<ChatRoom>;
+    joinRoom(roomId: string): Promise<ChatRoom | undefined>;
 
     destroy(): Promise<void>;
     searchChatUsers(searchText: string): Promise<{ id: string; name: string | undefined }[] | undefined>;

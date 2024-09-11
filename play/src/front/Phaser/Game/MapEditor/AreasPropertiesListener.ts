@@ -575,7 +575,7 @@ export class AreasPropertiesListener {
                 .then(() => {
                     return this.scene.chatConnection.joinRoom(property.matrixRoomId);
                 })
-                .then((room: ChatRoom) => {
+                .then((room: ChatRoom | undefined) => {
                     if (!room) return;
                     selectedRoom.set(room);
                     navChat.set("chat");
