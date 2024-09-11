@@ -2,7 +2,7 @@ version: "3.6"
 services:
   # disables the Synapse service
   # use with command:
-  # docker-compose -f docker-compose.yaml -f docker-compose.no-synapse.yml up -d --build
+  # docker-compose -f docker-compose.yaml -f docker-compose.no-synapse.yaml up
   synapse:
     profiles:
       - do-not-start

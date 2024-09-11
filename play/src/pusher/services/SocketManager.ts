@@ -641,22 +641,22 @@ export class SocketManager implements ZoneEventListener {
 
         socketManager.forwardMessageToBack(client, pusherToBackMessage);
 
+        const fieldMask: string[] = [];
         if (
-            socketData.spaceUser.availabilityStatus !== playerDetailsMessage.availabilityStatus ||
-            socketData.spaceUser.chatID !== playerDetailsMessage.chatID
+            socketData.spaceUser.availabilityStatus !== playerDetailsMessage.availabilityStatus &&
+            playerDetailsMessage.availabilityStatus !== 0
         ) {
+            fieldMask.push("availabilityStatus");
+        }
+        if (socketData.spaceUser.chatID !== playerDetailsMessage.chatID && playerDetailsMessage.chatID !== "") {
+            fieldMask.push("chatID");
+        }
+        if (fieldMask.length > 0) {
             const partialSpaceUser: SpaceUser = SpaceUser.fromPartial({
                 availabilityStatus: playerDetailsMessage.availabilityStatus,
                 id: socketData.userId,
                 chatID: playerDetailsMessage.chatID,
             });
-            const fieldMask: string[] = [];
-            if (socketData.spaceUser.availabilityStatus !== playerDetailsMessage.availabilityStatus) {
-                fieldMask.push("availabilityStatus");
-            }
-            if (socketData.spaceUser.chatID !== playerDetailsMessage.chatID && playerDetailsMessage.chatID !== "") {
-                fieldMask.push("chatID");
-            }
             socketData.spaces.forEach((space) => {
                 space.updateUser(partialSpaceUser, fieldMask);
             });

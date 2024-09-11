@@ -17,7 +17,7 @@
 
     $: ({ chatId, availabilityStatus, username = "", color, isAdmin, isMember, avatarUrl } = user);
 
-    $: isMe = user.chatId === localUserStore.getChatId();
+    $: isMe = user.chatId === localUserStore.getChatId() || user.chatId === localUserStore.getLocalUser()?.uuid;
 
     $: userStatus = isMe ? availabilityStatusStore : availabilityStatus;
 

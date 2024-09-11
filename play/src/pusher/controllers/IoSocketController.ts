@@ -275,9 +275,10 @@ export class IoSocketController {
                         lastCommandId,
                         version,
                         companionTextureId,
-                        chatID,
                         roomName,
                     } = query;
+
+                    const chatID = query.chatID ? query.chatID : undefined;
 
                     try {
                         if (version !== apiVersionHash) {

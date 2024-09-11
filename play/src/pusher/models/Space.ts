@@ -567,7 +567,6 @@ export class Space implements CustomJsonReplacerInterface {
 
         for (const user of this.users.values()) {
             if (user.client && user.id !== senderId) {
-                console.log("Notifying ", user.id, ` (${user.client.getUserData().userId}) of `, subMessage);
                 user.client.getUserData().emitInBatch(subMessage);
             }
         }

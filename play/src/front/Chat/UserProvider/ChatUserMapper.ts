@@ -4,7 +4,7 @@ import { SpaceUserExtended } from "../../Space/SpaceFilter/SpaceFilter";
 export function mapExtendedSpaceUserToChatUser(user: SpaceUserExtended): ChatUser {
     return {
         uuid: user.uuid,
-        chatId: user.chatID ?? "",
+        chatId: user.chatID ?? user.uuid,
         avatarUrl: user.getWokaBase64,
         availabilityStatus: user.reactiveUser.availabilityStatus,
         roomName: user.roomName,
