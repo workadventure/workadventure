@@ -75,7 +75,7 @@ export class AreasManager {
         mapEditorActivatedForThematics.set(isGameMapHasSpecificAreas);
     }
 
-    public getAreaByUd(areaId: string): Area | undefined {
+    public getAreaById(areaId: string): Area | undefined {
         return this.areas.find((area) => area.areaData.id === areaId);
     }
 
