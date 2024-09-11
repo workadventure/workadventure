@@ -55,7 +55,7 @@ export class MatrixRoomAreaController extends BaseHttpController {
 
                 const roomID = await matrixProvider.createRoomForArea();
                 body.matrixRoomId = roomID;
-                res.status(201).json(body);
+                return res.status(201).json(body);
             } catch (error) {
                 return this.handleError(res, error);
             }
