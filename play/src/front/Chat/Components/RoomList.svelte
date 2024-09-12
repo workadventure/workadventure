@@ -15,6 +15,7 @@
     import ChatError from "./ChatError.svelte";
     import RoomFolder from "./RoomFolder.svelte";
     import CreateRoomOrFolderOption from "./Room/CreateRoomOrFolderOption.svelte";
+    import ShowMore from "./ShowMore.svelte";
     import { IconChevronDown, IconChevronRight } from "@wa-icons";
 
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
@@ -86,6 +87,7 @@
     $: filteredDirectRoom = $directRooms.filter(({ name }) =>
         get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase())
     );
+
     $: filteredRooms = $rooms.filter(({ name }) =>
         get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase())
     );
@@ -107,15 +109,13 @@
 </script>
 
 <div
-    class="tw-flex-1 tw-flex tw-flex-row tw-overflow-hidden"
+    class="tw-flex-1 tw-flex tw-flex-row tw-overflow-auto"
     class:!tw-flex-row={sideBarWidth > INITIAL_SIDEBAR_WIDTH * 2 && $navChat === "chat"}
 >
     {#if $selectedRoom === undefined || displayTwoColumnLayout}
         <div
-            class="tw-flex tw-flex-col tw-overflow-auto"
-            style={displayTwoColumnLayout
-                ? `border-right:1px solid #4d4b67;padding-right:12px;width:335px ;flex: 0 0 auto`
-                : `flex: 1 1 0%`}
+            class="tw-w-full"
+            style={displayTwoColumnLayout ? `border-right:1px solid #4d4b67;padding-right:12px;width:335px ;` : ``}
         >
             {#if $chatConnectionStatus === "CONNECTING"}
                 <ChatLoader label={$LL.chat.connecting()} />
@@ -126,7 +126,7 @@
             {#if $chatConnectionStatus === "ONLINE"}
                 {#if $joignableRoom.length > 0 && $chatSearchBarValue.trim() !== ""}
                     <p class="tw-p-0 tw-m-0 tw-text-gray-400">{$LL.chat.availableRooms()}</p>
-                    <div class="tw-flex tw-flex-col tw-overflow-auto">
+                    <div class="tw-flex tw-flex-col">
                         {#each $joignableRoom as room (room.id)}
                             <JoignableRooms {room} />
                         {/each}
@@ -142,12 +142,9 @@
                 </button>
                 {#if displayRoomInvitations}
                     <div class="tw-flex tw-flex-col tw-overflow-auto">
-                        {#each filteredRoomInvitations as room (room.id)}
+                        <ShowMore items={filteredRoomInvitations} maxNumber={8} idKey="id" let:item={room}>
                             <RoomInvitation {room} />
-                        {/each}
-                        {#if filteredRoomInvitations.length === 0}
-                            <p class="tw-p-1 tw-m-1 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
-                        {/if}
+                        </ShowMore>
                     </div>
                 {/if}
                 <div class="tw-flex tw-justify-between">
@@ -163,12 +160,9 @@
 
                 {#if displayDirectRooms}
                     <div class="tw-flex tw-flex-col tw-overflow-auto">
-                        {#each filteredDirectRoom as room (room.id)}
+                        <ShowMore items={filteredDirectRoom} maxNumber={8} idKey="id" let:item={room}>
                             <Room {room} />
-                        {/each}
-                        {#if filteredDirectRoom.length === 0}
-                            <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
-                        {/if}
+                        </ShowMore>
                     </div>
                 {/if}
 
@@ -187,14 +181,9 @@
                 </div>
 
                 {#if displayRooms}
-                    <div class="tw-flex tw-flex-col tw-overflow-auto">
-                        {#each filteredRooms as room (room.id)}
-                            <Room {room} />
-                        {/each}
-                        {#if filteredRooms.length === 0}
-                            <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
-                        {/if}
-                    </div>
+                    <ShowMore items={filteredRooms} maxNumber={8} idKey="id" let:item={room}>
+                        <Room {room} />
+                    </ShowMore>
                 {/if}
                 <!--roomBySpace-->
                 {#each Array.from($roomFolders.values()) as rootRoomFolder (rootRoomFolder.id)}

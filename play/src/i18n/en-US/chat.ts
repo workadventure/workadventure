@@ -170,6 +170,8 @@ const chat: BaseTranslation = {
     messageEdited: "Modified",
     waiting: "Waiting",
     nothingToDisplay: "Nothing to display",
+    showMore: "Show {number} more",
+    showLess: "Show less",
     addRoomToFolderError: "Impossible to add the room to the folder",
     createRoom: {
         title: "Create new room",
