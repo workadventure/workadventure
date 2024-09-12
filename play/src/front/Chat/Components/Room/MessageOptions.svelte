@@ -1,13 +1,11 @@
 <script lang="ts">
     import { ChatMessage } from "../../Connection/ChatConnection";
     import { selectedChatMessageToEdit, selectedChatMessageToReply } from "../../Stores/ChatStore";
-    import { getChatEmojiPicker } from "../../EmojiPicker";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    import { IconArrowBackUp, IconArrowDown, IconMoodSmile, IconPencil, IconTrash } from "@wa-icons";
+    import EmojiButton from "./EmojiButton.svelte";
+    import { IconArrowBackUp, IconArrowDown, IconPencil, IconTrash } from "@wa-icons";
 
     export let message: ChatMessage;
-
-    let optionRef: HTMLDivElement;
 
     function replyToMessage() {
         selectedChatMessageToReply.set(message);
@@ -21,14 +19,8 @@
         selectedChatMessageToEdit.set(message);
     }
 
-    const emojiPicker = getChatEmojiPicker();
-
-    emojiPicker.on("emoji", ({ emoji }) => {
-        message.addReaction(emoji).catch((error) => console.error(error));
-    });
-
-    function openCloseEmojiPicker() {
-        emojiPicker.togglePicker(optionRef);
+    function addReaction(event: CustomEvent<string>) {
+        message.addReaction(event.detail).catch((error) => console.error(error));
     }
 
     const { content, isMyMessage, type } = message;
@@ -38,7 +30,7 @@
     $: isGuest = chat.isGuest;
 </script>
 
-<div class="tw-flex tw-flex-row tw-gap-1 tw-items-center" bind:this={optionRef}>
+<div class="tw-flex tw-flex-row tw-gap-1 tw-items-center">
     {#if message.type !== "text"}
         <a
             href={$content.url}
@@ -52,13 +44,7 @@
     <button class="tw-p-0 tw-m-0 hover:tw-text-black" data-testid="replyToMessageButton" on:click={replyToMessage}>
         <IconArrowBackUp font-size={16} />
     </button>
-    <button
-        data-testid="openEmojiPickerButton"
-        class="tw-p-0 tw-m-0 hover:tw-text-yellow-500"
-        on:click={openCloseEmojiPicker}
-    >
-        <IconMoodSmile font-size={16} />
-    </button>
+    <EmojiButton on:change={addReaction} />
     {#if isMyMessage && type === "text"}
         <button
             class="tw-p-0 tw-m-0 hover:tw-text-blue-500"
