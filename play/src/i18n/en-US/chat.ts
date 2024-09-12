@@ -12,7 +12,7 @@ const chat: BaseTranslation = {
     users: "Users",
     chat: "Chat",
     userList: {
-        disconnected: "Disconnected",
+        disconnected: "Not connected to the world",
         isHere: "Is on this map",
         inAnotherMap: "In another map",
         in: "In ",

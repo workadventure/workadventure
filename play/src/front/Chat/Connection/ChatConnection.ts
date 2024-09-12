@@ -124,6 +124,7 @@ export interface ChatConnectionInterface {
     isGuest: Readable<boolean>;
     hasUnreadMessages: Readable<boolean>;
     clearListener: () => void;
+    directRoomsUsers: Readable<ChatUser[]>;
 }
 
 export type Connection = Pick<RoomConnection, "queryChatMembers" | "emitPlayerChatID" | "emitBanPlayerMessage">;
