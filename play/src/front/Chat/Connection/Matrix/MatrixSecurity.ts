@@ -4,6 +4,7 @@ import { deriveKey } from "matrix-js-sdk/lib/crypto/key_passphrase";
 import { decodeRecoveryKey } from "matrix-js-sdk/lib/crypto/recoverykey";
 import { openModal } from "svelte-modals";
 import { writable } from "svelte/store";
+import { alreadyAskForInitCryptoConfiguration } from "../../Stores/ChatStore";
 import InteractiveAuthDialog from "./InteractiveAuthDialog.svelte";
 import CreateRecoveryKeyDialog from "./CreateRecoveryKeyDialog.svelte";
 
@@ -36,6 +37,8 @@ export class MatrixSecurity {
             console.info("Encryption already initialized");
             return;
         }
+
+        alreadyAskForInitCryptoConfiguration.set(true);
 
         this.initializingEncryptionPromise = new Promise<void>((resolve, initializingEncryptionReject) => {
             (async () => {

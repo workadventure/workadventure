@@ -22,3 +22,5 @@ export const showRoom = (room: ChatRoom) => {
     navChat.set("chat");
     chatVisibilityStore.set(true);
 };
+
+export const alreadyAskForInitCryptoConfiguration = writable(false);
