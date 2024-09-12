@@ -191,23 +191,19 @@ export class MatrixChatRoom implements ChatRoom {
 
     private startHandlingChatRoomEvents() {
         this.matrixRoom.on(RoomEvent.Timeline, (event, room, toStartOfTimeline, _, data) => {
-            this.onRoomTimeline(event, room, toStartOfTimeline, _, data).catch((error) => console.error(error));
+            this.onRoomTimeline(event, room, toStartOfTimeline, _, data);
         });
         this.matrixRoom.on(RoomEvent.Name, this.onRoomName.bind(this));
         this.matrixRoom.on(RoomEvent.Redaction, this.onRoomRedaction.bind(this));
     }
 
-    private async onRoomTimeline(
+    private onRoomTimeline(
         event: MatrixEvent,
         room: Room | undefined,
         toStartOfTimeline: boolean | undefined,
         _: boolean,
         data: IRoomTimelineData
     ) {
-        if (event.getType() === EventType.RoomEncryption || event.getType() === EventType.RoomMessageEncrypted) {
-            await matrixSecurity.initClientCryptoConfiguration();
-        }
-
         //get age give the age of the event when the event arrived at the device
         const ageOfEvent = event.getAge();
 
