@@ -20,7 +20,13 @@ import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
 import { RoomMessageEventContent } from "matrix-js-sdk/lib/@types/events";
 import { ChatRoom, ChatRoomMembership } from "../ChatConnection";
-import { isAChatRoomIsVisible, navChat, selectedChatMessageToReply, selectedRoom } from "../../Stores/ChatStore";
+import {
+    alreadyAskForInitCryptoConfiguration,
+    isAChatRoomIsVisible,
+    navChat,
+    selectedChatMessageToReply,
+    selectedRoom,
+} from "../../Stores/ChatStore";
 import { gameManager } from "../../../Phaser/Game/GameManager";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
@@ -124,7 +130,7 @@ export class MatrixChatRoom implements ChatRoom {
         this.inMemoryEventsContent = new Map<EventId, MatrixEvent>();
 
         (async () => {
-            if (matrixRoom.hasEncryptionStateEvent()) {
+            if (matrixRoom.hasEncryptionStateEvent() && !get(alreadyAskForInitCryptoConfiguration)) {
                 await matrixSecurity.initClientCryptoConfiguration();
             }
         })()
@@ -204,7 +210,7 @@ export class MatrixChatRoom implements ChatRoom {
         _: boolean,
         data: IRoomTimelineData
     ) {
-        if (event.getType() === EventType.RoomEncryption) {
+        if (event.getType() === EventType.RoomEncryption && !get(alreadyAskForInitCryptoConfiguration)) {
             await matrixSecurity.initClientCryptoConfiguration();
         }
 
