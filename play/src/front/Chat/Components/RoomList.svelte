@@ -214,7 +214,7 @@
                     <IconChevronRight />
                     {$LL.chat.proximity()}
                     <div>
-                        <div class="tw-absolute tw-top-1 -tw-right-6 ">
+                        <div class="tw-absolute tw-top-1 -tw-right-6 tw-w-8 tw-h-8">
                             <span
                                 class="tw-w-4 tw-h-4 tw-block tw-rounded-full tw-absolute tw-top-0 tw-right-0 tw-animate-ping tw-bg-pop-green"
                             />
