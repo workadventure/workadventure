@@ -20,12 +20,20 @@ import * as Sentry from "@sentry/svelte";
 import { MapStore } from "@workadventure/store-utils";
 import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
-import { ChatConnectionInterface, ChatRoom, Connection, ConnectionStatus, CreateRoomOptions } from "../ChatConnection";
+import {
+    ChatConnectionInterface,
+    ChatRoom,
+    ChatUser,
+    Connection,
+    ConnectionStatus,
+    CreateRoomOptions,
+} from "../ChatConnection";
 import { selectedRoom } from "../../Stores/ChatStore";
 import LL from "../../../../i18n/i18n-svelte";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 import { MatrixSecurity, matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity";
 import { MatrixRoomFolder } from "./MatrixRoomFolder";
+import { chatUserFactory } from "./MatrixChatUser";
 
 const CLIENT_NOT_INITIALIZED_ERROR_MSG = "MatrixClient not yet initialized";
 export const defaultWoka =
@@ -56,6 +64,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         MatrixRoomFolder["id"],
         MatrixRoomFolder
     >();
+    directRoomsUsers: Readable<ChatUser[]>;
 
     constructor(
         private connection: Connection,
@@ -70,6 +79,31 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 (room) => room.myMembership === KnownMembership.Join && room.type === "direct"
             );
         });
+
+        this.directRoomsUsers = derived(
+            this.directRooms,
+            (directRooms) => {
+                const myUserID = this.client?.getSafeUserId();
+                const client = this.client;
+
+                if (!client) {
+                    return [];
+                }
+
+                return directRooms.reduce((acc, currentRoom) => {
+                    currentRoom.membersId.forEach((memberID) => {
+                        if (memberID !== myUserID) {
+                            const user = client.getUser(memberID);
+                            if (user) {
+                                acc.push(chatUserFactory(user, client));
+                            }
+                        }
+                    });
+                    return acc;
+                }, [] as ChatUser[]);
+            },
+            []
+        );
 
         this.invitations = derived(this.roomList, (roomList) => {
             return Array.from(roomList.values()).filter((room) => room.myMembership === KnownMembership.Invite);

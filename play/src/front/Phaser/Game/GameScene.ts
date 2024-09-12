@@ -157,7 +157,7 @@ import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChat
 import { ProximitySpaceManager } from "../../WebRtc/ProximitySpaceManager";
 import { SpaceRegistryInterface } from "../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { WorldUserProvider } from "../../Chat/UserProvider/WorldUserProvider";
-import { MatrixUserProvider } from "../../Chat/UserProvider/MatrixUserProvider";
+import { ChatUserProvider } from "../../Chat/UserProvider/ChatUserProvider";
 import { UserProviderMerger } from "../../Chat/UserProviderMerger/UserProviderMerger";
 import { AdminUserProvider } from "../../Chat/UserProvider/AdminUserProvider";
 import { SpaceInterface } from "../../Space/SpaceInterface";
@@ -1554,14 +1554,13 @@ export class GameScene extends DirtyScene {
                         });
 
                     this._chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
-                    const matrixUserProvider = new MatrixUserProvider(matrixClientPromise);
-
-                    // Put the matrixUserProvider at the middle of the userProviders array
-                    userProviders.splice(1, 0, matrixUserProvider);
                 } else {
                     // No matrix connection? Let's fill the gap with a "void" object
                     this._chatConnection = new VoidChatConnection();
                 }
+                // Put the chatConnection at the middle of the userProviders array
+                const chatUserProvider = new ChatUserProvider(this._chatConnection);
+                userProviders.splice(1, 0, chatUserProvider);
 
                 this._userProviderMerger = new UserProviderMerger(userProviders);
 

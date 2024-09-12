@@ -96,7 +96,7 @@
                         alt="Avatar"
                     />
                 </div>
-                {#if $userStatus && user.roomName}
+                {#if $userStatus}
                     <span
                         title={getNameOfAvailabilityStatus($userStatus)}
                         class={`status tw-w-4 tw-h-4 tw-cursor-default tw-block tw-rounded-full tw-absolute tw-right-0 tw-top-0 tw-transform tw-translate-x-2 -tw-translate-y-1 tw-border-solid tw-border-2 tw-border-light-purple`}
