@@ -15,6 +15,7 @@ import { openModal } from "svelte-modals";
 import { LocalUser } from "../../../Connection/LocalUser";
 import AccessSecretStorageDialog from "./AccessSecretStorageDialog.svelte";
 import { matrixSecurity } from "./MatrixSecurity";
+import { customMatrixLogger } from "./CustomMatrixLogger";
 
 globalThis.Olm = Olm;
 window.Buffer = Buffer;
@@ -151,6 +152,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
                     this.cacheSecretStorageKey(keyId, key);
                 },
             },
+            logger: customMatrixLogger,
         };
 
         if (this.clientClosed) {
