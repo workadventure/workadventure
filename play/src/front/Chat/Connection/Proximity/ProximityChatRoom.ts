@@ -26,6 +26,7 @@ import { SimplePeer } from "../../../WebRtc/SimplePeer";
 import { bindMuteEventsToSpace } from "../../../Space/Utils/BindMuteEvents";
 import { gameManager } from "../../../Phaser/Game/GameManager";
 import { availabilityStatusStore, requestedCameraState, requestedMicrophoneState } from "../../../Stores/MediaStore";
+import { localUserStore } from "../../../Connection/LocalUserStore";
 
 export class ProximityChatMessage implements ChatMessage {
     isQuotedMessage = undefined;
@@ -77,6 +78,7 @@ export class ProximityChatRoom implements ChatRoom {
     private spaceWatcherUserJoinedObserver: Subscription | undefined;
     private spaceWatcherUserLeftObserver: Subscription | undefined;
     private newChatMessageWritingStatusStreamUnsubscriber: Subscription;
+    areNotificationsMuted = writable(false);
     isRoomFolder = false;
     lastMessageTimestamp = 0;
 
@@ -98,6 +100,7 @@ export class ProximityChatRoom implements ChatRoom {
         private simplePeer: SimplePeer,
         iframeListenerInstance: Pick<typeof iframeListener, "newChatMessageWritingStatusStream">,
         private playNewMessageSound = () => {
+            if (!localUserStore.getChatSounds() || get(this.areNotificationsMuted)) return;
             gameManager.getCurrentGameScene().playSound("new-message");
         }
     ) {
@@ -115,6 +118,15 @@ export class ProximityChatRoom implements ChatRoom {
                     });
                 }
             });
+    }
+
+    muteNotification(): Promise<void> {
+        this.areNotificationsMuted.set(true);
+        return Promise.resolve();
+    }
+    unmuteNotification(): Promise<void> {
+        this.areNotificationsMuted.set(false);
+        return Promise.resolve();
     }
 
     sendMessage(message: string, action: ChatMessageType = "proximity", broadcast = true): void {

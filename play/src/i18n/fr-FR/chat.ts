@@ -245,6 +245,8 @@ const chat: DeepPartial<Translation["chat"]> = {
             label: "Quitter le salon",
             notification: "Vous avez quitté le salon",
         },
+        muteRoom: "Couper les notification",
+        unmuteRoom: "Activer les notifications",
     },
     e2ee: {
         encryptionNotConfigured: "Chiffrement non configuré",

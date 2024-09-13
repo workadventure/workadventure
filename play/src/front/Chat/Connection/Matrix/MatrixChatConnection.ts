@@ -6,11 +6,13 @@ import {
     EventType,
     ICreateRoomOpts,
     ICreateRoomStateEvent,
+    IPushRule,
     IRoomDirectoryOptions,
     MatrixClient,
     MatrixError,
     MatrixEvent,
     PendingEventOrdering,
+    PushRuleActionName,
     Room,
     RoomEvent,
     SetPresence,
@@ -161,18 +163,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         (async () => {
             this.client = await clientPromise;
             await this.startMatrixClient();
-            console.log(
-                "m.push_rules",
-                this.client
-                    .getAccountData("m.push_rules")
-                    ?.getContent()
-                    .global.override.reduce((acc, rule) => {
-                        if (rule.actions.includes("dont_notify")) {
-                            acc.push(rule.rule_id);
-                        }
-                        return acc;
-                    }, [] as string[])
-            );
             this.isGuest.set(this.client.isGuest());
         })().catch((error) => {
             console.error(error);
@@ -243,18 +233,26 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
     private onAccountDataEvent(event: MatrixEvent) {
         if (event.getType() === "m.push_rules") {
-            event.getContent().global.override.forEach((rule) => {
+            const content = event.getContent();
+
+            content.global.override.forEach((rule: IPushRule) => {
                 const room = this.roomList.get(rule.rule_id);
                 if (!room) return;
-                console.log("on a bien une room ");
-                if (rule.actions.includes("dont_notify")) {
-                    console.log("update silent to true");
+                if (rule.actions.includes(PushRuleActionName.DontNotify)) {
                     room.setNotificationSilent(true);
-                } else {
-                    console.log("update silent to false; ");
-                    room.setNotificationSilent(false);
                 }
             });
+
+            Array.from(this.roomList.values())
+                .filter((room) => {
+                    return !content.global.override.some(
+                        (rule: IPushRule) =>
+                            rule.rule_id === room.id && rule.actions.includes(PushRuleActionName.DontNotify)
+                    );
+                })
+                .forEach((room) => {
+                    room.setNotificationSilent(false);
+                });
         }
     }
 

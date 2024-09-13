@@ -38,3 +38,5 @@ export { default as IconDotsCircle } from "~icons/tabler/dotsCircleHorizontal";
 export { default as IconLogout } from "~icons/tabler/logout";
 export { default as IconMessage } from "~icons/tabler/message";
 export { default as IconFolder } from "~icons/tabler/folder";
+export { default as IconUnMute } from "~icons/tabler/volume";
+export { default as IconMute } from "~icons/tabler/volume3";
