@@ -26,7 +26,6 @@ vi.mock("../../../../Phaser/Entity/CharacterLayerManager", () => {
         },
     };
 });
-
 describe("MatrixChatConnection", () => {
     const flushPromises = () => new Promise(setImmediate);
 
