@@ -777,7 +777,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.client?.off(RoomEvent.MyMembership, this.handleMyMembership);
         this.client?.off("RoomState.events" as EmittedEvents, this.handleRoomStateEvent);
         this.client?.off(RoomEvent.Name, this.handleName);
-        this.statusUnsubscriber();
+        if (this.statusUnsubscriber) this.statusUnsubscriber();
     }
 
     async destroy(): Promise<void> {
