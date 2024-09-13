@@ -1,6 +1,5 @@
 import { readable, Readable, writable } from "svelte/store";
 import { MapStore } from "@workadventure/store-utils";
-import { AvailabilityStatus } from "@workadventure/messages";
 import {
     ChatConnectionInterface,
     ChatRoom,
@@ -58,6 +57,5 @@ export class VoidChatConnection implements ChatConnectionInterface {
         return Promise.resolve();
     }
 
-    setPresence(status: AvailabilityStatus): void {}
     clearListener(): void {}
 }

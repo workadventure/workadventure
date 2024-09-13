@@ -1,4 +1,4 @@
-import { derived, get, Readable, writable, Writable } from "svelte/store";
+import { derived, get, Readable, Unsubscriber, writable, Writable } from "svelte/store";
 import {
     ClientEvent,
     Direction,
@@ -32,6 +32,7 @@ import {
 } from "../ChatConnection";
 import { selectedRoom } from "../../Stores/ChatStore";
 import LL from "../../../../i18n/i18n-svelte";
+import { availabilityStatusStore } from "../../../Stores/MediaStore";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 import { MatrixSecurity, matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity";
 import { MatrixRoomFolder } from "./MatrixRoomFolder";
@@ -54,6 +55,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     private handleMyMembership: (room: Room, membership: string, prevMembership: string | undefined) => void;
     private handleRoomStateEvent: (event: MatrixEvent) => void;
     private handleName: (room: Room) => void;
+    private statusUnsubscriber: Unsubscriber | undefined;
     connectionStatus: Writable<ConnectionStatus>;
     directRooms: Readable<MatrixChatRoom[]>;
     invitations: Readable<MatrixChatRoom[]>;
@@ -71,6 +73,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     constructor(
         private connection: Connection,
         clientPromise: Promise<MatrixClient>,
+        private statusStore = availabilityStatusStore,
         private matrixSecurity: MatrixSecurity = defaultMatrixSecurity
     ) {
         this.connectionStatus = writable("CONNECTING");
@@ -81,7 +84,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 (room) => room.myMembership === KnownMembership.Join && room.type === "direct"
             );
         });
-
         this.directRoomsUsers = derived(
             this.directRooms,
             (directRooms) => {
@@ -141,6 +143,10 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.handleRoomStateEvent = this.onRoomStateEvent.bind(this);
         this.handleName = this.onRoomNameEvent.bind(this);
 
+        this.statusUnsubscriber = this.statusStore.subscribe((status: AvailabilityStatus) => {
+            this.setPresence(status);
+        });
+
         (async () => {
             this.client = await clientPromise;
             await this.startMatrixClient();
@@ -150,22 +156,17 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         });
     }
 
-    setPresence(status: AvailabilityStatus): void {
-        console.log("change status...");
+    private setPresence(status: AvailabilityStatus): void {
         let matrixStatus: SetPresence;
         if (status === AvailabilityStatus.ONLINE) {
             matrixStatus = SetPresence.Online;
         } else {
             matrixStatus = SetPresence.Unavailable;
         }
-        this.client
-            ?.setPresence({
-                presence: matrixStatus,
-            })
-            .catch((error) => {
-                console.error("Failed to send presence", error);
-                Sentry.captureMessage(`Failed to send presence to synapse server : ${error}`);
-            });
+        this.client?.setSyncPresence(matrixStatus).catch((error) => {
+            console.error("Failed to send presence", error);
+            Sentry.captureMessage(`Failed to send presence to synapse server : ${error}`);
+        });
     }
 
     async startMatrixClient() {
@@ -776,6 +777,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.client?.off(RoomEvent.MyMembership, this.handleMyMembership);
         this.client?.off("RoomState.events" as EmittedEvents, this.handleRoomStateEvent);
         this.client?.off(RoomEvent.Name, this.handleName);
+        this.statusUnsubscriber();
     }
 
     async destroy(): Promise<void> {
