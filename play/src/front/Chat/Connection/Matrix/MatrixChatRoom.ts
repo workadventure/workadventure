@@ -1,4 +1,5 @@
 import {
+    ConditionKind,
     Direction,
     EventStatus,
     EventType,
@@ -7,6 +8,8 @@ import {
     MatrixEvent,
     MsgType,
     NotificationCountType,
+    PushRuleActionName,
+    PushRuleKind,
     ReceiptType,
     Room,
     RoomEvent,
@@ -28,10 +31,10 @@ import {
     selectedRoom,
 } from "../../Stores/ChatStore";
 import { gameManager } from "../../../Phaser/Game/GameManager";
+import { localUserStore } from "../../../Connection/LocalUserStore";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { matrixSecurity } from "./MatrixSecurity";
-import { localUserStore } from "../../../Connection/LocalUserStore";
 
 type EventId = string;
 
@@ -51,15 +54,14 @@ export class MatrixChatRoom implements ChatRoom {
     isEncrypted!: Writable<boolean>;
     typingMembers: Writable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
     isRoomFolder = false;
-    isNotificationSilent = writable(false);
+    areNotificationsMuted = writable(false);
 
     constructor(
         private matrixRoom: Room,
         private playNewMessageSound = () => {
-            if(!localUserStore.getChatSounds())return;
+            if (!localUserStore.getChatSounds() || this.areNotificationsMuted) return;
             gameManager.getCurrentGameScene().playSound("new-message");
         }
-
     ) {
         this.id = matrixRoom.roomId;
         this.name = writable(matrixRoom.name);
@@ -133,14 +135,18 @@ export class MatrixChatRoom implements ChatRoom {
 
         this.inMemoryEventsContent = new Map<EventId, MatrixEvent>();
 
-        this.isNotificationSilent.set(this.matrixRoom.client.getAccountData("m.push_rules")?.getContent().global.override.some((rule)=>{
-            if(rule.actions.includes('dont_notify') && rule.rule_id === this.id){
-                console.log('m.push dont notify room : ', get(this.name));
-                return true;
-            }
-            return false;
-        }));
-
+        this.areNotificationsMuted.set(
+            this.matrixRoom.client
+                .getAccountData("m.push_rules")
+                ?.getContent()
+                .global.override.some((rule) => {
+                    if (rule.actions.includes("dont_notify") && rule.rule_id === this.id) {
+                        console.log("m.push dont notify room : ", get(this.name));
+                        return true;
+                    }
+                    return false;
+                })
+        );
 
         (async () => {
             if (matrixRoom.hasEncryptionStateEvent() && !get(alreadyAskForInitCryptoConfiguration)) {
@@ -248,7 +254,7 @@ export class MatrixChatRoom implements ChatRoom {
                         this.handleNewMessage(event);
                         const senderID = event.getSender();
                         if (senderID !== this.matrixRoom.client.getSafeUserId()) {
-                            if(get(this.isNotificationSilent)) this.playNewMessageSound();
+                            if (get(this.areNotificationsMuted)) this.playNewMessageSound();
                             if (!isAChatRoomIsVisible() && get(selectedRoom)?.id !== "proximity") {
                                 selectedRoom.set(this);
                                 navChat.set("chat");
@@ -557,12 +563,50 @@ export class MatrixChatRoom implements ChatRoom {
     private removeEventContentInMemory(eventId: string) {
         this.inMemoryEventsContent.delete(eventId);
     }
-    setNotificationSilent(isSilent : boolean){
-        if(get(this.isNotificationSilent)===isSilent) return;
-        console.log('update silent to : ',isSilent);
-        this.isNotificationSilent.set(isSilent);
+    setNotificationSilent(isSilent: boolean) {
+        if (get(this.areNotificationsMuted) === isSilent) return;
+        console.log("update silent to : ", isSilent);
+        this.areNotificationsMuted.set(isSilent);
     }
 
+    async muteNotification() {
+        try {
+            const roomRule = this.matrixRoom.client.getRoomPushRule("global", this.id);
+            if (roomRule) {
+                await this.matrixRoom.client.deletePushRule("global", PushRuleKind.RoomSpecific, this.id);
+            }
+
+            await this.matrixRoom.client.addPushRule("global", PushRuleKind.Override, this.id, {
+                conditions: [
+                    {
+                        kind: ConditionKind.EventMatch,
+                        key: "room_id",
+                        pattern: this.id,
+                    },
+                ],
+                actions: [PushRuleActionName.DontNotify],
+            });
+            this.areNotificationsMuted.set(true);
+        } catch (error) {
+            console.error("failed to mute notification");
+            Sentry.captureMessage(`Failed to mute notification :${error}`);
+        }
+    }
+
+    async unmuteNotification() {
+        try {
+            const overrideMuteRule = this.matrixRoom.client.pushRules?.global.override?.find(
+                (rule) => rule.rule_id === this.id
+            );
+            if (overrideMuteRule) {
+                await this.matrixRoom.client.deletePushRule("global", PushRuleKind.Override, overrideMuteRule.rule_id);
+            }
+            this.areNotificationsMuted.set(false);
+        } catch (error) {
+            console.error("failed to mute notification");
+            Sentry.captureMessage(`Failed to mute notification :${error}`);
+        }
+    }
 
     startTyping(): Promise<object> {
         const isTypingTime = 30000;

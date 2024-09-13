@@ -45,6 +45,9 @@ export interface ChatRoom {
     readonly stopTyping: () => Promise<object>;
     readonly isRoomFolder: boolean;
     readonly lastMessageTimestamp: number;
+    readonly areNotificationsMuted: Readable<boolean>;
+    readonly unmuteNotification: () => Promise<void>;
+    readonly muteNotification: () => Promise<void>;
 }
 
 //Readonly attributes

@@ -244,6 +244,8 @@ const chat: BaseTranslation = {
             label: "Leave room",
             notification: "You have left the room",
         },
+        muteRoom: "Mute Room",
+        unmuteRoom: "Unmute Room",
     },
     e2ee: {
         encryptionNotConfigured: "Encryption not configured",
