@@ -78,6 +78,7 @@ export class ProximityChatRoom implements ChatRoom {
     private spaceWatcherUserLeftObserver: Subscription | undefined;
     private newChatMessageWritingStatusStreamUnsubscriber: Subscription;
     isRoomFolder = false;
+    lastMessageTimestamp = 0;
 
     private unknownUser = {
         chatId: "0",
@@ -141,6 +142,8 @@ export class ProximityChatRoom implements ChatRoom {
 
         // Add message to the list
         this.messages.push(newMessage);
+
+        this.lastMessageTimestamp = newMessage.date.getTime();
 
         // Use the room connection to send the message to other users of the space
         if (broadcast) {
@@ -217,6 +220,8 @@ export class ProximityChatRoom implements ChatRoom {
 
         // Add message to the list
         this.messages.push(newMessage);
+
+        this.lastMessageTimestamp = newMessage.date.getTime();
 
         this.playNewMessageSound();
 

@@ -35,10 +35,10 @@ import { matrixSecurity } from "./MatrixSecurity";
 type EventId = string;
 
 export class MatrixChatRoom implements ChatRoom {
-    id!: string;
-    name!: Writable<string>;
-    type!: "multiple" | "direct";
-    hasUnreadMessages: Writable<boolean>;
+    readonly id: string;
+    readonly name: Writable<string>;
+    readonly type: "multiple" | "direct";
+    readonly hasUnreadMessages: Writable<boolean>;
     avatarUrl: string | undefined;
     messages: SearchableArrayStore<string, MatrixChatMessage>;
     myMembership: ChatRoomMembership;
@@ -553,5 +553,9 @@ export class MatrixChatRoom implements ChatRoom {
     stopTyping(): Promise<object> {
         const isTypingTime = 30000;
         return this.matrixRoom.client.sendTyping(this.id, false, isTypingTime);
+    }
+
+    public get lastMessageTimestamp(): number {
+        return this.matrixRoom.getLastActiveTimestamp();
     }
 }
