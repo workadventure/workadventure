@@ -31,6 +31,7 @@ import { gameManager } from "../../../Phaser/Game/GameManager";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { matrixSecurity } from "./MatrixSecurity";
+import { localUserStore } from "../../../Connection/LocalUserStore";
 
 type EventId = string;
 
@@ -50,12 +51,15 @@ export class MatrixChatRoom implements ChatRoom {
     isEncrypted!: Writable<boolean>;
     typingMembers: Writable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
     isRoomFolder = false;
+    isNotificationSilent = writable(false);
 
     constructor(
         private matrixRoom: Room,
         private playNewMessageSound = () => {
+            if(!localUserStore.getChatSounds())return;
             gameManager.getCurrentGameScene().playSound("new-message");
         }
+
     ) {
         this.id = matrixRoom.roomId;
         this.name = writable(matrixRoom.name);
@@ -128,6 +132,15 @@ export class MatrixChatRoom implements ChatRoom {
         );
 
         this.inMemoryEventsContent = new Map<EventId, MatrixEvent>();
+
+        this.isNotificationSilent.set(this.matrixRoom.client.getAccountData("m.push_rules")?.getContent().global.override.some((rule)=>{
+            if(rule.actions.includes('dont_notify') && rule.rule_id === this.id){
+                console.log('m.push dont notify room : ', get(this.name));
+                return true;
+            }
+            return false;
+        }));
+
 
         (async () => {
             if (matrixRoom.hasEncryptionStateEvent() && !get(alreadyAskForInitCryptoConfiguration)) {
@@ -235,7 +248,7 @@ export class MatrixChatRoom implements ChatRoom {
                         this.handleNewMessage(event);
                         const senderID = event.getSender();
                         if (senderID !== this.matrixRoom.client.getSafeUserId()) {
-                            this.playNewMessageSound();
+                            if(get(this.isNotificationSilent)) this.playNewMessageSound();
                             if (!isAChatRoomIsVisible() && get(selectedRoom)?.id !== "proximity") {
                                 selectedRoom.set(this);
                                 navChat.set("chat");
@@ -544,6 +557,12 @@ export class MatrixChatRoom implements ChatRoom {
     private removeEventContentInMemory(eventId: string) {
         this.inMemoryEventsContent.delete(eventId);
     }
+    setNotificationSilent(isSilent : boolean){
+        if(get(this.isNotificationSilent)===isSilent) return;
+        console.log('update silent to : ',isSilent);
+        this.isNotificationSilent.set(isSilent);
+    }
+
 
     startTyping(): Promise<object> {
         const isTypingTime = 30000;

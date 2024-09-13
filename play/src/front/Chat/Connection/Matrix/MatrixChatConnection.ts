@@ -55,6 +55,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     private handleMyMembership: (room: Room, membership: string, prevMembership: string | undefined) => void;
     private handleRoomStateEvent: (event: MatrixEvent) => void;
     private handleName: (room: Room) => void;
+    private handleAccountDataEvent: (event: MatrixEvent) => void;
     private statusUnsubscriber: Unsubscriber | undefined;
     connectionStatus: Writable<ConnectionStatus>;
     directRooms: Readable<MatrixChatRoom[]>;
@@ -151,6 +152,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.handleMyMembership = this.onRoomEventMembership.bind(this);
         this.handleRoomStateEvent = this.onRoomStateEvent.bind(this);
         this.handleName = this.onRoomNameEvent.bind(this);
+        this.handleAccountDataEvent = this.onAccountDataEvent.bind(this);
 
         this.statusUnsubscriber = this.statusStore.subscribe((status: AvailabilityStatus) => {
             this.setPresence(status);
@@ -159,6 +161,18 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         (async () => {
             this.client = await clientPromise;
             await this.startMatrixClient();
+            console.log(
+                "m.push_rules",
+                this.client
+                    .getAccountData("m.push_rules")
+                    ?.getContent()
+                    .global.override.reduce((acc, rule) => {
+                        if (rule.actions.includes("dont_notify")) {
+                            acc.push(rule.rule_id);
+                        }
+                        return acc;
+                    }, [] as string[])
+            );
             this.isGuest.set(this.client.isGuest());
         })().catch((error) => {
             console.error(error);
@@ -205,6 +219,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.client.on(RoomEvent.MyMembership, this.handleMyMembership);
         this.client.on("RoomState.events" as EmittedEvents, this.handleRoomStateEvent);
         this.client.on(RoomEvent.Name, this.handleName);
+        this.client.on(ClientEvent.AccountData, this.handleAccountDataEvent);
 
         await this.client.store.startup();
         await this.client.initRustCrypto();
@@ -214,6 +229,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             pendingEventOrdering: PendingEventOrdering.Detached,
         });
     }
+
     private getParentRoomID(room: Room): string[] {
         return (room.getLiveTimeline().getState(Direction.Forward)?.getStateEvents("m.space.parent") || []).reduce(
             (acc, currentMatrixEvent) => {
@@ -224,6 +240,24 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             [] as string[]
         );
     }
+
+    private onAccountDataEvent(event: MatrixEvent) {
+        if (event.getType() === "m.push_rules") {
+            event.getContent().global.override.forEach((rule) => {
+                const room = this.roomList.get(rule.rule_id);
+                if (!room) return;
+                console.log("on a bien une room ");
+                if (rule.actions.includes("dont_notify")) {
+                    console.log("update silent to true");
+                    room.setNotificationSilent(true);
+                } else {
+                    console.log("update silent to false; ");
+                    room.setNotificationSilent(false);
+                }
+            });
+        }
+    }
+
     private onRoomNameEvent(room: Room): void {
         const { roomId, name } = room;
         const roomInConnection = this.findRoomOrFolder(roomId);
