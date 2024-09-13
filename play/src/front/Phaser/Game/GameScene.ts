@@ -1553,7 +1553,11 @@ export class GameScene extends DirtyScene {
                             Sentry.captureMessage(`Failed to create matrix client : ${error}`);
                         });
 
-                    this._chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
+                    this._chatConnection = new MatrixChatConnection(
+                        this.connection,
+                        matrixClientPromise,
+                        availabilityStatusStore
+                    );
                 } else {
                     // No matrix connection? Let's fill the gap with a "void" object
                     this._chatConnection = new VoidChatConnection();

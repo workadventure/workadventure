@@ -32,7 +32,7 @@ import {
 } from "../ChatConnection";
 import { selectedRoom } from "../../Stores/ChatStore";
 import LL from "../../../../i18n/i18n-svelte";
-import { availabilityStatusStore } from "../../../Stores/MediaStore";
+import { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 import { MatrixSecurity, matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity";
 import { MatrixRoomFolder } from "./MatrixRoomFolder";
@@ -73,7 +73,16 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     constructor(
         private connection: Connection,
         clientPromise: Promise<MatrixClient>,
-        private statusStore = availabilityStatusStore,
+        private statusStore: Readable<
+            | AvailabilityStatus.ONLINE
+            | AvailabilityStatus.SILENT
+            | AvailabilityStatus.AWAY
+            | AvailabilityStatus.JITSI
+            | AvailabilityStatus.BBB
+            | AvailabilityStatus.DENY_PROXIMITY_MEETING
+            | AvailabilityStatus.SPEAKER
+            | RequestedStatus
+        >,
         private matrixSecurity: MatrixSecurity = defaultMatrixSecurity
     ) {
         this.connectionStatus = writable("CONNECTING");
