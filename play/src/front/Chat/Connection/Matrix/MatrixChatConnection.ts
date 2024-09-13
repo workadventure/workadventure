@@ -13,6 +13,7 @@ import {
     PendingEventOrdering,
     Room,
     RoomEvent,
+    SetPresence,
     SyncState,
     Visibility,
 } from "matrix-js-sdk";
@@ -20,6 +21,7 @@ import * as Sentry from "@sentry/svelte";
 import { MapStore } from "@workadventure/store-utils";
 import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
+import { AvailabilityStatus } from "@workadventure/messages";
 import {
     ChatConnectionInterface,
     ChatRoom,
@@ -146,6 +148,24 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         })().catch((error) => {
             console.error(error);
         });
+    }
+
+    setPresence(status: AvailabilityStatus): void {
+        console.log("change status...");
+        let matrixStatus: SetPresence;
+        if (status === AvailabilityStatus.ONLINE) {
+            matrixStatus = SetPresence.Online;
+        } else {
+            matrixStatus = SetPresence.Unavailable;
+        }
+        this.client
+            ?.setPresence({
+                presence: matrixStatus,
+            })
+            .catch((error) => {
+                console.error("Failed to send presence", error);
+                Sentry.captureMessage(`Failed to send presence to synapse server : ${error}`);
+            });
     }
 
     async startMatrixClient() {
