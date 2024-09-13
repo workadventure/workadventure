@@ -125,7 +125,6 @@ export interface ChatConnectionInterface {
     isGuest: Readable<boolean>;
     hasUnreadMessages: Readable<boolean>;
     clearListener: () => void;
-    setPresence(status: AvailabilityStatus): void;
     directRoomsUsers: Readable<ChatUser[]>;
 }
 

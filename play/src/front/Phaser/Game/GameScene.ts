@@ -1980,7 +1980,6 @@ export class GameScene extends DirtyScene {
             if (availabilityStatus === AvailabilityStatus.SILENT) {
                 this.CurrentPlayer.toggleTalk(false, true);
             }
-            this.chatConnection.setPresence(availabilityStatus);
         });
 
         this.emoteUnsubscriber = emoteStore.subscribe((emote) => {
