@@ -18,9 +18,9 @@
 
     const isFoldersOpen: { [key: string]: boolean } = {};
 
-    $: filteredRoom = Array.from($rooms.values()).filter(({ name }) =>
-        get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase())
-    );
+    $: filteredRoom = Array.from($rooms.values())
+        .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
+        .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
 
     $folders.forEach((folder) => {
         if (!(folder.id in isFoldersOpen)) {

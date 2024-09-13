@@ -84,16 +84,16 @@
         proximityChatRoom.hasUnreadMessages.set(false);
     }
 
-    $: filteredDirectRoom = $directRooms.filter(({ name }) =>
-        get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase())
-    );
+    $: filteredDirectRoom = $directRooms
+        .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
+        .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
 
-    $: filteredRooms = $rooms.filter(({ name }) =>
-        get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase())
-    );
-    $: filteredRoomInvitations = $roomInvitations.filter(({ name }) =>
-        get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase())
-    );
+    $: filteredRooms = $rooms
+        .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
+        .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
+    $: filteredRoomInvitations = $roomInvitations
+        .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
+        .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
 
     $: isGuest = chat.isGuest;
 

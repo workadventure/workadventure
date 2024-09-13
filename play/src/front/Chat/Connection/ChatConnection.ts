@@ -23,27 +23,28 @@ export type PartialChatUser = Partial<ChatUser> & { chatId: string };
 export type ChatRoomMembership = "ban" | "join" | "knock" | "leave" | "invite" | string;
 
 export interface ChatRoom {
-    id: string;
-    name: Readable<string>;
-    type: "direct" | "multiple";
-    hasUnreadMessages: Readable<boolean>;
-    avatarUrl: string | undefined;
-    messages: Readable<readonly ChatMessage[]>;
-    messageReactions: MapStore<string, MapStore<string, ChatMessageReaction>>;
-    sendMessage: (message: string) => void;
-    sendFiles: (files: FileList) => Promise<void>;
-    myMembership: ChatRoomMembership;
-    setTimelineAsRead: () => void;
-    membersId: string[];
-    leaveRoom: () => Promise<void>;
-    joinRoom: () => Promise<void>;
-    hasPreviousMessage: Readable<boolean>;
-    loadMorePreviousMessages: () => Promise<void>;
-    isEncrypted: Readable<boolean>;
-    typingMembers: Readable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
-    startTyping: () => Promise<object>;
-    stopTyping: () => Promise<object>;
-    isRoomFolder: boolean;
+    readonly id: string;
+    readonly name: Readable<string>;
+    readonly type: "direct" | "multiple";
+    readonly hasUnreadMessages: Readable<boolean>;
+    readonly avatarUrl: string | undefined;
+    readonly messages: Readable<readonly ChatMessage[]>;
+    readonly messageReactions: MapStore<string, MapStore<string, ChatMessageReaction>>;
+    readonly sendMessage: (message: string) => void;
+    readonly sendFiles: (files: FileList) => Promise<void>;
+    readonly myMembership: ChatRoomMembership;
+    readonly setTimelineAsRead: () => void;
+    readonly membersId: string[];
+    readonly leaveRoom: () => Promise<void>;
+    readonly joinRoom: () => Promise<void>;
+    readonly hasPreviousMessage: Readable<boolean>;
+    readonly loadMorePreviousMessages: () => Promise<void>;
+    readonly isEncrypted: Readable<boolean>;
+    readonly typingMembers: Readable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
+    readonly startTyping: () => Promise<object>;
+    readonly stopTyping: () => Promise<object>;
+    readonly isRoomFolder: boolean;
+    readonly lastMessageTimestamp: number;
 }
 
 //Readonly attributes
