@@ -40,6 +40,11 @@
                 return $LL.chat.status.do_not_disturb();
             case AvailabilityStatus.BACK_IN_A_MOMENT:
                 return $LL.chat.status.back_in_a_moment();
+            case AvailabilityStatus.JITSI:
+            case AvailabilityStatus.BBB:
+                return $LL.chat.status.meeting();
+            case AvailabilityStatus.SPEAKER:
+                return $LL.chat.status.megaphone();
             case AvailabilityStatus.SILENT:
             default:
                 return $LL.chat.status.unavailable();

@@ -48,6 +48,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         do_not_disturb: "Ne pas déranger",
         busy: "Occupé",
         unavailable: "Non disponible",
+        meeting: "En réunion",
+        megaphone: "Utilise le mégaphone",
     },
     logIn: "Se connecter",
     signIn: "Inscrivez-vous ou connectez-vous pour profiter de toutes les fonctionnalités du chat !",
