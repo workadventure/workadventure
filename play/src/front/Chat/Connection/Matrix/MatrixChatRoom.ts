@@ -4,6 +4,7 @@ import {
     EventStatus,
     EventType,
     IContent,
+    IPushRule,
     IRoomTimelineData,
     MatrixEvent,
     MsgType,
@@ -139,9 +140,8 @@ export class MatrixChatRoom implements ChatRoom {
             this.matrixRoom.client
                 .getAccountData("m.push_rules")
                 ?.getContent()
-                .global.override.some((rule) => {
-                    if (rule.actions.includes("dont_notify") && rule.rule_id === this.id) {
-                        console.log("m.push dont notify room : ", get(this.name));
+                .global.override.some((rule: IPushRule) => {
+                    if (rule.actions.includes(PushRuleActionName.DontNotify) && rule.rule_id === this.id) {
                         return true;
                     }
                     return false;
@@ -253,8 +253,8 @@ export class MatrixChatRoom implements ChatRoom {
                     } else {
                         this.handleNewMessage(event);
                         const senderID = event.getSender();
-                        if (senderID !== this.matrixRoom.client.getSafeUserId()) {
-                            if (get(this.areNotificationsMuted)) this.playNewMessageSound();
+                        if (senderID !== this.matrixRoom.client.getSafeUserId() && !get(this.areNotificationsMuted)) {
+                            this.playNewMessageSound();
                             if (!isAChatRoomIsVisible() && get(selectedRoom)?.id !== "proximity") {
                                 selectedRoom.set(this);
                                 navChat.set("chat");
@@ -565,7 +565,6 @@ export class MatrixChatRoom implements ChatRoom {
     }
     setNotificationSilent(isSilent: boolean) {
         if (get(this.areNotificationsMuted) === isSilent) return;
-        console.log("update silent to : ", isSilent);
         this.areNotificationsMuted.set(isSilent);
     }
 
