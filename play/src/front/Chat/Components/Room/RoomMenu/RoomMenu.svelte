@@ -55,7 +55,7 @@
         toggleRoomOptions();
         if ($areNotificationsMuted) {
             room.unmuteNotification().catch(() => {
-                console.log("Failed to unmute room");
+                console.error("Failed to unmute room");
             });
             return;
         }

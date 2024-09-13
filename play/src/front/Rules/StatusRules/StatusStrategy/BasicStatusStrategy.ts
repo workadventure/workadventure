@@ -13,13 +13,13 @@ export class BasicStatusStrategy extends StatusStrategy {
     }
 
     allowNotificationSound(): boolean {
-        switch(this.status){
+        switch (this.status) {
             case AvailabilityStatus.SILENT:
             case AvailabilityStatus.JITSI:
             case AvailabilityStatus.BBB:
             case AvailabilityStatus.SPEAKER:
                 return false;
-            default: 
+            default:
                 return true;
         }
     }
