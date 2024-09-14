@@ -179,6 +179,7 @@ export class ProximityChatRoom implements ChatRoom {
 
     private addOutcomingUser(spaceUser: SpaceUserExtended): void {
         this.sendMessage(get(LL).chat.timeLine.outcoming({ userName: spaceUser.name }), "outcoming", false);
+        this.removeTypingUserbyChatID(spaceUser.chatID ?? "");
 
         /*this._connection.connectedUsers.update((users) => {
             users.delete(userId);
@@ -293,7 +294,6 @@ export class ProximityChatRoom implements ChatRoom {
                 isTyping: true,
             },
         });
-
         return Promise.resolve({});
     }
     stopTyping(): Promise<object> {
@@ -312,11 +312,11 @@ export class ProximityChatRoom implements ChatRoom {
         if (sender === undefined) {
             return;
         }
-
+        const chatID = sender.chatID ?? "";
         this.typingMembers.update((typingMembers) => {
             if (typingMembers.find((user) => user.id === sender.chatID) == undefined) {
                 typingMembers.push({
-                    id: sender.chatID ?? "",
+                    id: chatID,
                     name: sender.name ?? null,
                     avatarUrl: sender.getWokaBase64 ?? null,
                 });
@@ -331,8 +331,16 @@ export class ProximityChatRoom implements ChatRoom {
             return;
         }
 
+        const chatID = sender.chatID ?? "";
+
         this.typingMembers.update((typingMembers) => {
-            return typingMembers.filter((user) => user.id !== sender.chatID);
+            return typingMembers.filter((user) => user.id !== chatID);
+        });
+    }
+
+    private removeTypingUserbyChatID(chatID: string) {
+        this.typingMembers.update((typingMembers) => {
+            return typingMembers.filter((user) => user.id !== chatID);
         });
     }
 
@@ -428,6 +436,7 @@ export class ProximityChatRoom implements ChatRoom {
                     this.sendMessage(get(LL).chat.timeLine.outcoming({ userName: user.name }), "outcoming", false);
                 }
             }
+            this.typingMembers.set([]);
         }
 
         this.spaceWatcherUserJoinedObserver?.unsubscribe();
