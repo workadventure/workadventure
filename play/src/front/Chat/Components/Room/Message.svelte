@@ -15,7 +15,6 @@
     import MessageReactions from "./MessageReactions.svelte";
     import MessageIncoming from "./Message/MessageIncoming.svelte";
     import MessageOutcoming from "./Message/MessageOutcoming.svelte";
-    import MessageProximity from "./Message/MessageProximity.svelte";
     import { IconCornerDownRight, IconTrash } from "@wa-icons";
 
     export let message: ChatMessage;
@@ -34,7 +33,7 @@
         video: MessageVideoFile as ComponentType,
         incoming: MessageIncoming as ComponentType,
         outcoming: MessageOutcoming as ComponentType,
-        proximity: MessageProximity as ComponentType,
+        proximity: MessageText as ComponentType,
     };
 </script>
 

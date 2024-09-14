@@ -44,7 +44,10 @@
             keyDownEvent.preventDefault();
         }
         if (keyDownEvent.key === "Enter" && message.trim().length !== 0) {
-            sendMessage(message);
+            // message contains HTML tags. Actually, the only tags we allow are for the new line, ie. <br> tags.
+            // We can turn those back into carriage returns.
+            const messageToSend = message.replace(/<br>/g, "\n");
+            sendMessage(messageToSend);
             return;
         }
     }
@@ -88,25 +91,42 @@
         const text = event.clipboardData.getData("text");
 
         insertTextAtCursor(text);
-        message = messageInput.innerText;
+        message = messageInput.innerHTML;
         event.preventDefault();
     }
 
     function insertTextAtCursor(text: string) {
         const selection = window.getSelection();
-        if (!selection || !selection.rangeCount) return;
+        if (!selection || !selection.rangeCount) {
+            return;
+        }
 
         const range = selection.getRangeAt(0);
         range.deleteContents();
 
-        const textNode = document.createTextNode(text);
-        range.insertNode(textNode);
+        const lines = text.split("\n").reverse();
+        let textNode: Text | undefined;
+        let lastBrNode: HTMLBRElement | undefined;
+        for (const line of lines) {
+            const br = document.createElement("br");
+            range.insertNode(br);
+            if (textNode === undefined) {
+                lastBrNode = br;
+            }
+            textNode = document.createTextNode(line);
+            // Insertion in a range object is done in reverse order.
+            range.insertNode(textNode);
+        }
 
-        // Move the cursor to the end of the inserted text
-        range.setStartAfter(textNode);
-        range.setEndAfter(textNode);
         selection.removeAllRanges();
         selection.addRange(range);
+        // Move the cursor to the end of the inserted text
+        selection.collapseToEnd();
+        // The code above is adding on purpose an additional <br> at the end of the message.
+        // This way, we can scroll to the end of the message.
+        // Once we have scrolled, we can remove the last <br> tag
+        lastBrNode?.scrollIntoView();
+        lastBrNode?.remove();
     }
 
     $: quotedMessageContent = $selectedChatMessageToReply?.content;
@@ -127,7 +147,7 @@
 >
     <div
         data-testid="messageInput"
-        bind:textContent={message}
+        bind:innerHTML={message}
         contenteditable="true"
         bind:this={messageInput}
         on:keydown={sendMessageOrEscapeLine}
