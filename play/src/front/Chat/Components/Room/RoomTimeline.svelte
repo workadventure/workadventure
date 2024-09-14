@@ -1,5 +1,6 @@
 <script lang="ts">
     import { afterUpdate, beforeUpdate, onMount } from "svelte";
+    import { get } from "svelte/store";
     import { ChatRoom } from "../../Connection/ChatConnection";
     import { selectedChatMessageToReply, selectedRoom } from "../../Stores/ChatStore";
     import Avatar from "../Avatar.svelte";
@@ -7,7 +8,7 @@
     import Message from "./Message.svelte";
     import MessageInput from "./MessageInput.svelte";
     import MessageSystem from "./MessageSystem.svelte";
-    import { IconArrowLeft } from "@wa-icons";
+    import { IconArrowLeft, IconLoader } from "@wa-icons";
 
     export let room: ChatRoom;
 
@@ -17,17 +18,36 @@
     let autoScroll = true;
     let onScrollTop = false;
 
+    let oldScrollHeight = 0;
+
     let scrollTimer: ReturnType<typeof setTimeout>;
+    $: isLoadingMessages = false;
 
     onMount(() => {
         scrollToMessageListBottom();
         if (messageListRef) {
-            room.loadMorePreviousMessages().catch((error) => console.error(error));
+            let messages = Array.from(messageListRef?.querySelectorAll("li") || []);
+            let messagesBeforeViewportTop = messages.find((msg) => msg.getBoundingClientRect().top >= 0);
+            // FIXME: Use a counter because if we fail to decrypt the message, hasPreviousMessage is still true, and we get stuck in this loop.
+            let count = 0;
+            while (
+                get(room.hasPreviousMessage) &&
+                messagesBeforeViewportTop &&
+                messages.indexOf(messagesBeforeViewportTop) <= 0 &&
+                count < 20
+            ) {
+                room.loadMorePreviousMessages().catch((error) => console.error(error));
+                messages = Array.from(messageListRef?.querySelectorAll("li") || []);
+                messagesBeforeViewportTop = messages.find((msg) => msg.getBoundingClientRect().top >= 0);
+                count++;
+            }
+            setFirstListItem();
         }
     });
 
     beforeUpdate(() => {
         if (messageListRef) {
+            oldScrollHeight = messageListRef.scrollHeight;
             const scrollableDistance = messageListRef.scrollHeight - messageListRef.offsetHeight;
             autoScroll = messageListRef.scrollTop > scrollableDistance - 20;
             onScrollTop = messageListRef.scrollTop === 0;
@@ -36,18 +56,17 @@
 
     afterUpdate(() => {
         room.setTimelineAsRead();
-        const oldFirstListItem = messageListRef.querySelector<HTMLLIElement>('li[data-first-li="true"]');
+
         if (autoScroll) {
             scrollToMessageListBottom();
-        }
-        if (onScrollTop) {
+        } else if (onScrollTop) {
+            const oldFirstListItem = messageListRef.querySelector<HTMLLIElement>('li[data-first-li="true"]');
+
             if (oldFirstListItem !== null) {
-                messageListRef.scrollTop =
-                    oldFirstListItem.getBoundingClientRect().top - messageListRef.getBoundingClientRect().top;
-                oldFirstListItem.removeAttribute("data-first-li");
+                const newScrollHeight = messageListRef.scrollHeight;
+                messageListRef.scrollTop = newScrollHeight - oldScrollHeight;
             }
-            const firstListItem = messageListRef.children.item(0);
-            firstListItem?.setAttribute("data-first-li", "true");
+            setFirstListItem();
         }
     });
 
@@ -63,27 +82,51 @@
     function handleScroll() {
         clearTimeout(scrollTimer);
         scrollTimer = setTimeout(() => {
-            if (messageListRef.scrollTop === 0) {
-                room.loadMorePreviousMessages().catch((error) => console.error(error));
+            const messages = Array.from(messageListRef?.querySelectorAll("li") || []);
+            const messagesBeforeViewportTop = messages.find((msg) => msg.getBoundingClientRect().top >= 0);
+            if (
+                messagesBeforeViewportTop &&
+                messages.indexOf(messagesBeforeViewportTop) < 10 &&
+                messages.indexOf(messagesBeforeViewportTop) !== -1
+            ) {
+                if (messageListRef.scrollTop === 0) isLoadingMessages = true;
+                room.loadMorePreviousMessages()
+                    .catch((error) => console.error(error))
+                    .finally(() => {
+                        if (isLoadingMessages) isLoadingMessages = false;
+                    });
             }
         }, 100);
     }
 
+    function setFirstListItem() {
+        const oldFirstListItem = messageListRef.querySelector<HTMLLIElement>('li[data-first-li="true"]');
+        oldFirstListItem?.removeAttribute("data-first-li");
+
+        const firstListItem = messageListRef.getElementsByTagName("li").item(0);
+        firstListItem?.setAttribute("data-first-li", "true");
+    }
     $: messages = room?.messages;
     $: messageReaction = room?.messageReactions;
-    //$: connectedUsers = $proximityRoomConnection?.connectedUsers;
     $: roomName = room?.name;
 </script>
 
 <div class="tw-flex tw-flex-col tw-flex-1 tw-h-full tw-w-full tw-pl-2">
     {#if room !== undefined}
-        <div class="tw-flex tw-items-center">
-            <button class="back-roomlist tw-p-0 tw-m-0" on:click={goBackAndClearSelectedChatMessage}>
-                <IconArrowLeft />
-            </button>
-            <span class="tw-flex-1" />
-            <p class="tw-m-0 tw-p-0 tw-text-gray-400">{$roomName}</p>
-            <span class="tw-flex-1" />
+        <div class="tw-flex tw-flex-col tw-gap-2">
+            <div class="tw-flex tw-flex-row tw-items-center">
+                <button class="back-roomlist tw-p-0 tw-m-0" on:click={goBackAndClearSelectedChatMessage}>
+                    <IconArrowLeft />
+                </button>
+                <span class="tw-flex-1" />
+                <p class="tw-m-0 tw-p-0 tw-text-gray-400">{$roomName}</p>
+                <span class="tw-flex-1" />
+            </div>
+            {#if isLoadingMessages}
+                <div class="tw-flex tw-justify-center tw-items-center tw-w-full tw-pb-1 tw-bg-transparent">
+                    <IconLoader class="tw-animate-[spin_2s_linear_infinite]" font-size={25} />
+                </div>
+            {/if}
         </div>
         <div
             bind:this={messageListRef}
@@ -105,7 +148,7 @@
                 {#if $messages.length === 0}
                     <p class="tw-self-center tw-text-md tw-text-gray-500">{$LL.chat.nothingToDisplay()}</p>
                 {/if}
-                {#each $messages as message (message.id)}
+                {#each $messages as message, index (message.id)}
                     <li data-event-id={message.id}>
                         {#if message.type === "outcoming" || message.type === "incoming"}
                             <MessageSystem {message} />
