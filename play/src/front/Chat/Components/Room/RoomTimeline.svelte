@@ -148,7 +148,7 @@
                 {#if $messages.length === 0}
                     <p class="tw-self-center tw-text-md tw-text-gray-500">{$LL.chat.nothingToDisplay()}</p>
                 {/if}
-                {#each $messages as message, index (message.id)}
+                {#each $messages as message (message.id)}
                     <li data-event-id={message.id}>
                         {#if message.type === "outcoming" || message.type === "incoming"}
                             <MessageSystem {message} />
