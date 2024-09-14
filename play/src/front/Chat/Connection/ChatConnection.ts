@@ -72,7 +72,13 @@ export interface ChatMessageReaction {
 }
 
 export type ChatMessageType = "proximity" | "text" | "incoming" | "outcoming" | "image" | "file" | "audio" | "video";
-export type ChatMessageContent = { body: string; url: string | undefined };
+export type ChatMessageContent = {
+    /**
+     * The body can contain HTML. It will be run against DOMPurify before being outputted to the user.
+     */
+    body: string;
+    url: string | undefined;
+};
 export const historyVisibilityOptions = ["world_readable", "joined", "invited"] as const;
 export type historyVisibility = (typeof historyVisibilityOptions)[number];
 

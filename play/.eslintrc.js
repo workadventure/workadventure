@@ -68,6 +68,8 @@ module.exports = {
 
         "svelte/require-each-key": "error",
         "svelte/valid-compile": ["error", { ignoreWarnings: true }],
+        // Of because for some reason, we cannot ignore the only place where it is used (in MessageText.svelte)
+        "svelte/no-at-html-tags": "off",
         "import/default": "off",
         "import/no-named-as-default": "off",
         "import/no-named-as-default-member": "off",
