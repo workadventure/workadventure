@@ -5,6 +5,7 @@
     import { selectedChatMessageToReply, selectedRoom } from "../../Stores/ChatStore";
     import Avatar from "../Avatar.svelte";
     import LL from "../../../../i18n/i18n-svelte";
+    import { matrixSecurity } from "../../Connection/Matrix/MatrixSecurity";
     import Message from "./Message.svelte";
     import MessageInput from "./MessageInput.svelte";
     import MessageSystem from "./MessageSystem.svelte";
@@ -21,29 +22,36 @@
     let oldScrollHeight = 0;
 
     let scrollTimer: ReturnType<typeof setTimeout>;
-    $: isLoadingMessages = false;
+    let isLoadingMessages = false;
 
     onMount(() => {
         scrollToMessageListBottom();
-        if (messageListRef) {
-            let messages = Array.from(messageListRef?.querySelectorAll("li") || []);
-            let messagesBeforeViewportTop = messages.find((msg) => msg.getBoundingClientRect().top >= 0);
-            // FIXME: Use a counter because if we fail to decrypt the message, hasPreviousMessage is still true, and we get stuck in this loop.
-            let count = 0;
-            while (
-                get(room.hasPreviousMessage) &&
-                messagesBeforeViewportTop &&
-                messages.indexOf(messagesBeforeViewportTop) <= 0 &&
-                count < 20
-            ) {
-                room.loadMorePreviousMessages().catch((error) => console.error(error));
-                messages = Array.from(messageListRef?.querySelectorAll("li") || []);
-                messagesBeforeViewportTop = messages.find((msg) => msg.getBoundingClientRect().top >= 0);
-                count++;
-            }
-            setFirstListItem();
-        }
+        initMessages().catch((error) => console.log(error));
     });
+
+    async function initMessages() {
+        if (!messageListRef) return;
+
+        const loadMessages = async () => {
+            try {
+                if (get(room.isEncrypted) && get(matrixSecurity.isEncryptionRequiredAndNotSet)) {
+                    return;
+                }
+
+                await room.loadMorePreviousMessages();
+
+                if (get(room.hasPreviousMessage) && isViewportNotFilled()) {
+                    await loadMessages();
+                }
+            } catch (error) {
+                console.error(`Failed to load messages: ${error}`);
+            }
+        };
+
+        await loadMessages();
+
+        setFirstListItem();
+    }
 
     beforeUpdate(() => {
         if (messageListRef) {
@@ -82,21 +90,32 @@
     function handleScroll() {
         clearTimeout(scrollTimer);
         scrollTimer = setTimeout(() => {
-            const messages = Array.from(messageListRef?.querySelectorAll("li") || []);
-            const messagesBeforeViewportTop = messages.find((msg) => msg.getBoundingClientRect().top >= 0);
-            if (
-                messagesBeforeViewportTop &&
-                messages.indexOf(messagesBeforeViewportTop) < 10 &&
-                messages.indexOf(messagesBeforeViewportTop) !== -1
-            ) {
-                if (messageListRef.scrollTop === 0) isLoadingMessages = true;
-                room.loadMorePreviousMessages()
-                    .catch((error) => console.error(error))
-                    .finally(() => {
-                        if (isLoadingMessages) isLoadingMessages = false;
-                    });
-            }
+            loadMorePreviousMessages().catch((error) => console.error(error));
         }, 100);
+    }
+
+    async function loadMorePreviousMessages() {
+        if (shouldLoadMoreMessages()) {
+            try {
+                if (messageListRef.scrollTop === 0) isLoadingMessages = true;
+                await room.loadMorePreviousMessages();
+                await loadMorePreviousMessages();
+                if (isLoadingMessages) isLoadingMessages = false;
+            } catch (error) {
+                console.error(error);
+            }
+        }
+    }
+
+    function shouldLoadMoreMessages() {
+        const messages = Array.from(messageListRef?.querySelectorAll("li") || []);
+        const messagesBeforeViewportTop = messages.find((msg) => msg.getBoundingClientRect().top >= 0);
+
+        return (
+            messagesBeforeViewportTop &&
+            messages.indexOf(messagesBeforeViewportTop) < 10 &&
+            messages.indexOf(messagesBeforeViewportTop) !== -1
+        );
     }
 
     function setFirstListItem() {
@@ -106,6 +125,11 @@
         const firstListItem = messageListRef.getElementsByTagName("li").item(0);
         firstListItem?.setAttribute("data-first-li", "true");
     }
+
+    function isViewportNotFilled() {
+        return messageListRef.scrollHeight <= messageListRef.clientHeight;
+    }
+
     $: messages = room?.messages;
     $: messageReaction = room?.messageReactions;
     $: roomName = room?.name;
