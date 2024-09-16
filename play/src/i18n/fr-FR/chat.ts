@@ -292,6 +292,14 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     connectionError: "Chat indisponible",
+    requiresLoginForChatModal: {
+        title: "Identifiez-vous pour utiliser le chat !",
+        content_1: "Pour profiter pleinement de cette fonctionnalité du chat, vous devez être connecté.",
+        content_2:
+            "La connexion vous donne accès à toutes les fonctionnalités du chat et vous permet de continuer sans interruption.",
+        content_3: "Veuillez vous connecter pour poursuivre l’expérience.",
+    },
+    requiresLoginForChat: "Identifiez-vous pour accéder aux messages du chat",
 };
 
 export default chat;

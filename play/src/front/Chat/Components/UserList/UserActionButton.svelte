@@ -1,15 +1,14 @@
 <script lang="ts">
-    import * as Sentry from "@sentry/svelte";
     import walk from "../../images/walk.svg";
     import teleport from "../../images/teleport.svg";
     import businessCard from "../../images/business-cards.svg";
-    import { ChatRoom, ChatUser } from "../../Connection/ChatConnection";
+    import { ChatUser } from "../../Connection/ChatConnection";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { scriptUtils } from "../../../Api/ScriptUtils";
     import { requestVisitCardsStore } from "../../../Stores/GameStore";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import { navChat, selectedRoom } from "../../Stores/ChatStore";
     import { showReportScreenStore } from "../../../Stores/ShowReportScreenStore";
+    import { openChatRoom } from "../../Utils";
     import { IconForbid, IconDots, IconMessage, IconLoader } from "@wa-icons";
 
     export let user: ChatUser;
@@ -44,26 +43,6 @@
             requestVisitCardsStore.set(visitCardUrl);
         }
         closeChatUserMenu();
-    };
-
-    const openChat = async () => {
-        let room: ChatRoom | undefined = chatConnection.getDirectRoomFor(user.chatId);
-        if (!room)
-            try {
-                room = await chatConnection.createDirectRoom(user.chatId);
-            } catch (error) {
-                console.error(error);
-                Sentry.captureMessage("Failed to create room");
-            }
-
-        if (!room) return;
-
-        if (room.myMembership === "invite") {
-            room.joinRoom().catch((error) => console.error(error));
-        }
-
-        selectedRoom.set(room);
-        navChat.set("chat");
     };
 </script>
 
@@ -108,7 +87,7 @@
 
         {#if user.chatId && !$roomCreationInProgress}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <span class="sendMessage wa-dropdown-item" on:click|stopPropagation={openChat}
+            <span class="sendMessage wa-dropdown-item" on:click|stopPropagation={() => openChatRoom(user.chatId)}
                 ><IconMessage font-size="13" />
                 {$LL.chat.userList.sendMessage()}</span
             >

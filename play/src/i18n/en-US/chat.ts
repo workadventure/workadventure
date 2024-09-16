@@ -291,6 +291,13 @@ const chat: BaseTranslation = {
         },
     },
     connectionError: "Chat not available",
+    requiresLoginForChatModal: {
+        title: "Log in to unlock the chat !",
+        content_1: "To fully enjoy this chat feature, you need to be logged into your account.",
+        content_2: "Logging in gives you access to all options and allows you to continue without interruption.",
+        content_3: " Please log in to proceed with the experience.",
+    },
+    requiresLoginForChat: "Sign in to access the chat messages",
 };
 
 export default chat;

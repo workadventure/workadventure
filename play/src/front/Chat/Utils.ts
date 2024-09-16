@@ -1,3 +1,6 @@
+import * as Sentry from "@sentry/svelte";
+import { openModal } from "svelte-modals";
+import { get } from "svelte/store";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { iframeListener } from "../Api/IframeListener";
 import { connectionManager } from "../Connection/ConnectionManager";
@@ -5,8 +8,11 @@ import { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 import { SimpleCoWebsite } from "../WebRtc/CoWebsite/SimpleCoWebsite";
 import { coWebsiteManager } from "../WebRtc/CoWebsiteManager";
 import { scriptUtils } from "../Api/ScriptUtils";
-
-//enlever les events lié au chat dans iframelistener
+import { gameManager } from "../Phaser/Game/GameManager";
+import { userIsConnected } from "../Stores/MenuStore";
+import { navChat, selectedRoom } from "./Stores/ChatStore";
+import { ChatRoom } from "./Connection/ChatConnection";
+import RequiresLoginForChatModal from "./Components/RequiresLoginForChatModal.svelte";
 
 export const openCoWebSite = async (
     {
@@ -74,4 +80,27 @@ export const sendLogin = () => {
 
 export const openTab = (url: string) => {
     scriptUtils.openTab(url);
+};
+
+export const openChatRoom = async (chatID: string) => {
+    try {
+        if (!get(userIsConnected)) {
+            openModal(RequiresLoginForChatModal);
+            return;
+        }
+        const chatConnection = gameManager.getCurrentGameScene().chatConnection;
+        let room: ChatRoom | undefined = chatConnection.getDirectRoomFor(chatID);
+        if (!room) room = await chatConnection.createDirectRoom(chatID);
+        if (!room) throw new Error("Failed to create room");
+
+        if (room.myMembership === "invite") {
+            room.joinRoom().catch((error: unknown) => console.error(error));
+        }
+
+        selectedRoom.set(room);
+        navChat.set("chat");
+    } catch (error) {
+        console.error(error);
+        Sentry.captureMessage("Failed to create room");
+    }
 };

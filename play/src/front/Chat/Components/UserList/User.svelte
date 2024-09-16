@@ -1,15 +1,14 @@
 <script lang="ts">
-    import * as Sentry from "@sentry/svelte";
     import { AvailabilityStatus } from "@workadventure/messages";
     import highlightWords from "highlight-words";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { availabilityStatusStore } from "../../../Stores/MediaStore";
     import { getColorHexOfStatus } from "../../../Utils/AvailabilityStatus";
-    import { ChatRoom, ChatUser } from "../../Connection/ChatConnection";
+    import { ChatUser } from "../../Connection/ChatConnection";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import { chatSearchBarValue, navChat, selectedRoom } from "../../Stores/ChatStore";
-    import { gameManager } from "../../../Phaser/Game/GameManager";
+    import { chatSearchBarValue } from "../../Stores/ChatStore";
     import { defaultColor, defaultWoka } from "../../Connection/Matrix/MatrixChatConnection";
+    import { openChatRoom } from "../../Utils";
     import UserActionButton from "./UserActionButton.svelte";
     import { IconLoader, IconShield, IconUsers } from "@wa-icons";
 
@@ -20,8 +19,6 @@
     $: isMe = user.chatId === localUserStore.getChatId() || user.chatId === localUserStore.getLocalUser()?.uuid;
 
     $: userStatus = isMe ? availabilityStatusStore : availabilityStatus;
-
-    let chatConnection = gameManager.getCurrentGameScene().chatConnection;
 
     $: chunks = highlightWords({
         text: username.match(/\[\d*]/) ? username.substring(0, username.search(/\[\d*]/)) : username,
@@ -52,30 +49,6 @@
     }
 
     let loadingDirectRoomAccess = false;
-    const openChat = async () => {
-        if (isMe) return;
-
-        let room: ChatRoom | undefined = chatConnection.getDirectRoomFor(chatId);
-        if (!room)
-            try {
-                loadingDirectRoomAccess = true;
-                room = await chatConnection.createDirectRoom(chatId);
-            } catch (error) {
-                console.error(error);
-                Sentry.captureMessage("Failed to create direct room");
-            } finally {
-                loadingDirectRoomAccess = false;
-            }
-
-        if (!room) return;
-
-        if (room.myMembership === "invite") {
-            room.joinRoom().catch((error) => console.error(error));
-        }
-
-        selectedRoom.set(room);
-        navChat.set("chat");
-    };
 </script>
 
 {#if loadingDirectRoomAccess}
@@ -85,7 +58,7 @@
 {:else}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
-        on:click|stopPropagation={openChat}
+        on:click|stopPropagation={() => openChatRoom(chatId)}
         class="tw-text-md tw-flex tw-gap-2 tw-flex-row tw-items-center tw-justify-between hover:tw-bg-white hover:tw-bg-opacity-10 hover:tw-rounded-md hover:!tw-cursor-pointer tw-p-1"
     >
         <div class={`wa-chat-item ${isAdmin ? "admin" : "user"}  tw-cursor-default`}>
