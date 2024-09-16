@@ -7,6 +7,8 @@
     import { chatSearchBarValue, joignableRoom, navChat, selectedRoom } from "../Stores/ChatStore";
     import { ChatRoom } from "../Connection/ChatConnection";
     import { INITIAL_SIDEBAR_WIDTH } from "../../Stores/ChatStore";
+    import { userIsConnected } from "../../Stores/MenuStore";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
     import Room from "./Room/Room.svelte";
     import RoomTimeline from "./Room/RoomTimeline.svelte";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
@@ -117,12 +119,27 @@
             class="tw-w-full"
             style={displayTwoColumnLayout ? `border-right:1px solid #4d4b67;padding-right:12px;width:335px ;` : ``}
         >
-            {#if $chatConnectionStatus === "CONNECTING"}
+            {#if $chatConnectionStatus === "CONNECTING" && $userIsConnected}
                 <ChatLoader label={$LL.chat.connecting()} />
             {/if}
-            {#if $chatConnectionStatus === "ON_ERROR"}
+            {#if $chatConnectionStatus === "ON_ERROR" && $userIsConnected}
                 <ChatError />
             {/if}
+
+            {#if !$userIsConnected}
+                <p class="tw-text-gray-400 tw-w-full tw-text-center tw-pt-2">
+                    {$LL.chat.requiresLoginForChat()}
+                </p>
+                <a
+                    type="button"
+                    class="btn light tw-min-w-[220px] tw-flex tw-justify-center tw-items-center tw-my-2"
+                    href="/login"
+                    on:click={() => analyticsClient.login()}
+                >
+                    {$LL.menu.profile.login()}
+                </a>
+            {/if}
+
             {#if $chatConnectionStatus === "ONLINE"}
                 {#if $joignableRoom.length > 0 && $chatSearchBarValue.trim() !== ""}
                     <p class="tw-p-0 tw-m-0 tw-text-gray-400">{$LL.chat.availableRooms()}</p>

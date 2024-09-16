@@ -165,6 +165,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             await this.startMatrixClient();
             this.isGuest.set(this.client.isGuest());
         })().catch((error) => {
+            this.connectionStatus.set("OFFLINE");
             console.error(error);
         });
     }
