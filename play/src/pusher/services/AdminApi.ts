@@ -1160,7 +1160,7 @@ class AdminApi implements AdminInterface {
      */
     async refreshOauthToken(token: string): Promise<OauthRefreshToken> {
         const response = await axios.post(
-            `${ADMIN_URL}/oauth/refreshtoken`,
+            `${ADMIN_URL}/api/oauth/refreshtoken`,
             {
                 accessToken: token,
             },
@@ -1168,7 +1168,7 @@ class AdminApi implements AdminInterface {
                 headers: { Authorization: `${ADMIN_API_TOKEN}` },
             }
         );
-        const refreshTokenResponse = isOauthRefreshToken.safeParse(response);
+        const refreshTokenResponse = isOauthRefreshToken.safeParse(response.data);
         if (refreshTokenResponse.error) {
             throw new Error("Unable to parse refreshTokenResponse");
         }
