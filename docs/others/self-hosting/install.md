@@ -44,6 +44,9 @@ In order to host WorkAdventure you will need to host:
   peer-to-peer connections. Coturn is optional, but without Coturn, approximately 15% of the users will fail to establish
   a audio/video connection.
 - **Jitsi**: in large meeting rooms, Jitsi is used to broadcast video streams to all users.
+- **OIDC Provider** (optional): this is the service that authenticates users. It is optional as you can run a WorkAdventure
+  instance with only anonymous users.
+- **Synapse**: this is the server that hosts the Matrix chat rooms. It is optional.
 
 ```mermaid
 flowchart LR
@@ -52,19 +55,26 @@ flowchart LR
     WorkAdventure
     Jitsi
     Coturn
+    Synapse
     end
     Browser1["Your browser"]
     Browser1-->WorkAdventure
     Browser1-->Jitsi
     Browser1-->Coturn
+    Browser1-.->Synapse
+    WorkAdventure-.->OIDC[OIDC Provider - SSO]
+    Synapse-.->OIDC
+  style Synapse stroke-width:1px,stroke-dasharray: 5 5
+  style OIDC stroke-width:1px,stroke-dasharray: 5 5
 ```
 
 > [!WARNING]  
-> In the rest of this document, we will describe how to install the WorkAdventure server. We will leave Jitsi
-> and Coturn installs out of scope.
+> In the rest of this document, we will describe how to install the WorkAdventure server. We will leave Jitsi,
+> Coturn and Synapse installs out of scope. OpenID Connect authentication is also out of scope for now.
 
 Jitsi install guide: https://jitsi.github.io/handbook/docs/devops-guide/  
 Coturn install guide: https://meetrix.io/blog/webrtc/coturn/installation.html
+Synapse install guide: https://element-hq.github.io/synapse/latest/setup/installation.html
 
 ## Installation method for the WorkAdventure server
 
