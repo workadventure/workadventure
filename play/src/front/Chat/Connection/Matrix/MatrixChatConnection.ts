@@ -24,14 +24,7 @@ import { MapStore } from "@workadventure/store-utils";
 import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { AvailabilityStatus } from "@workadventure/messages";
-import {
-    ChatConnectionInterface,
-    ChatRoom,
-    ChatUser,
-    Connection,
-    ConnectionStatus,
-    CreateRoomOptions,
-} from "../ChatConnection";
+import { ChatConnectionInterface, ChatRoom, ChatUser, ConnectionStatus, CreateRoomOptions } from "../ChatConnection";
 import { selectedRoom } from "../../Stores/ChatStore";
 import LL from "../../../../i18n/i18n-svelte";
 import { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
@@ -74,7 +67,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     directRoomsUsers: Readable<ChatUser[]>;
 
     constructor(
-        private connection: Connection,
         clientPromise: Promise<MatrixClient>,
         private statusStore: Readable<
             | AvailabilityStatus.ONLINE
@@ -86,6 +78,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             | AvailabilityStatus.SPEAKER
             | RequestedStatus
         >,
+        resolver: (value: ChatConnectionInterface | PromiseLike<ChatConnectionInterface>) => void | undefined,
         private matrixSecurity: MatrixSecurity = defaultMatrixSecurity
     ) {
         this.connectionStatus = writable("CONNECTING");
@@ -162,12 +155,19 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
         (async () => {
             this.client = await clientPromise;
+            this.matrixSecurity.updateMatrixClientStore(this.client);
             await this.startMatrixClient();
             this.isGuest.set(this.client.isGuest());
-        })().catch((error) => {
-            this.connectionStatus.set("OFFLINE");
-            console.error(error);
-        });
+        })()
+            .catch((error) => {
+                this.connectionStatus.set("OFFLINE");
+                console.error(error);
+            })
+            .finally(() => {
+                if (resolver) {
+                    resolver(this);
+                }
+            });
     }
 
     private setPresence(status: AvailabilityStatus): void {
@@ -190,8 +190,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             switch (state) {
                 case SyncState.Prepared:
                     this.connectionStatus.set("ONLINE");
-
-                    this.connection.emitPlayerChatID(this.client.getSafeUserId());
                     break;
                 case SyncState.Error:
                     this.connectionStatus.set("ON_ERROR");
@@ -218,6 +216,30 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             threadSupport: false,
             //Detached to prevent using listener on localIdReplaced for each event
             pendingEventOrdering: PendingEventOrdering.Detached,
+        });
+
+        await this.waitInitialSync();
+    }
+
+    private waitInitialSync(timeout = 20000, interval = 3500): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const startTime = Date.now();
+            const checkSync = () => {
+                if (this.client?.isInitialSyncComplete()) {
+                    resolve();
+                } else {
+                    if (Date.now() - startTime >= timeout) {
+                        throw new Error("Failed to wait initial sync");
+                    } else {
+                        setTimeout(checkSync, interval);
+                    }
+                }
+            };
+            try {
+                checkSync();
+            } catch (error) {
+                reject(error);
+            }
         });
     }
 

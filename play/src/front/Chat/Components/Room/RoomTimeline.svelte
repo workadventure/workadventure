@@ -21,12 +21,18 @@
 
     let oldScrollHeight = 0;
 
+    let loadingMessagePromise: Promise<void> | undefined = undefined;
+
     let scrollTimer: ReturnType<typeof setTimeout>;
-    let isLoadingMessages = false;
+    let shouldDisplayLoader = false;
+
+    $: messages = room?.messages;
+    $: messageReaction = room?.messageReactions;
+    $: roomName = room?.name;
 
     onMount(() => {
         scrollToMessageListBottom();
-        initMessages().catch((error) => console.log(error));
+        initMessages().catch((error) => console.error(error));
     });
 
     async function initMessages() {
@@ -49,7 +55,7 @@
         };
 
         await loadMessages();
-
+        scrollToMessageListBottom();
         setFirstListItem();
     }
 
@@ -90,21 +96,41 @@
     function handleScroll() {
         clearTimeout(scrollTimer);
         scrollTimer = setTimeout(() => {
-            loadMorePreviousMessages().catch((error) => console.error(error));
+            loadMorePreviousMessages();
         }, 100);
     }
 
-    async function loadMorePreviousMessages() {
-        if (shouldLoadMoreMessages()) {
-            try {
-                if (messageListRef.scrollTop === 0) isLoadingMessages = true;
-                await room.loadMorePreviousMessages();
-                await loadMorePreviousMessages();
-                if (isLoadingMessages) isLoadingMessages = false;
-            } catch (error) {
-                console.error(error);
-            }
-        }
+    function loadMorePreviousMessages() {
+        if (loadingMessagePromise || !shouldLoadMoreMessages()) return;
+
+        loadingMessagePromise = new Promise<void>((resolve) => {
+            (async () => {
+                const loadMessages = async () => {
+                    try {
+                        if (messageListRef.scrollTop === 0) {
+                            shouldDisplayLoader = true;
+                        }
+                        await room.loadMorePreviousMessages();
+
+                        if (shouldLoadMoreMessages()) {
+                            loadMorePreviousMessages();
+                        }
+                    } catch {
+                        throw new Error("Failed to load messages");
+                    } finally {
+                        if (shouldDisplayLoader) {
+                            shouldDisplayLoader = false;
+                        }
+                    }
+                };
+
+                await loadMessages();
+            })().finally(() => {
+                resolve();
+            });
+        }).finally(() => {
+            loadingMessagePromise = undefined;
+        });
     }
 
     function shouldLoadMoreMessages() {
@@ -129,10 +155,6 @@
     function isViewportNotFilled() {
         return messageListRef.scrollHeight <= messageListRef.clientHeight;
     }
-
-    $: messages = room?.messages;
-    $: messageReaction = room?.messageReactions;
-    $: roomName = room?.name;
 </script>
 
 <div class="tw-flex tw-flex-col tw-flex-1 tw-h-full tw-w-full tw-pl-2">
@@ -146,7 +168,7 @@
                 <p class="tw-m-0 tw-p-0 tw-text-gray-400">{$roomName}</p>
                 <span class="tw-flex-1" />
             </div>
-            {#if isLoadingMessages}
+            {#if shouldDisplayLoader}
                 <div class="tw-flex tw-justify-center tw-items-center tw-w-full tw-pb-1 tw-bg-transparent">
                     <IconLoader class="tw-animate-[spin_2s_linear_infinite]" font-size={25} />
                 </div>
@@ -155,9 +177,7 @@
         <div
             bind:this={messageListRef}
             class="tw-flex tw-overflow-auto tw-h-full {$messages.length && 'tw-items-end'} "
-            on:scroll={() => {
-                handleScroll();
-            }}
+            on:scroll={handleScroll}
         >
             <ul class="tw-list-none tw-p-0 tw-flex-1 tw-flex tw-flex-col tw-max-h-full">
                 <!--{#if room.id === "proximity" && $connectedUsers !== undefined}-->

@@ -14,7 +14,7 @@
     let hidden = true;
     let cvIframe: HTMLIFrameElement;
 
-    const chatConnection = gameManager.getCurrentGameScene().chatConnection;
+    const chatConnection = gameManager.chatConnection;
     const selectPlayerChatID = get(selectedChatIDRemotePlayerStore);
     const roomCreationInProgress = chatConnection.roomCreationInProgress;
 

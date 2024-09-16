@@ -15,7 +15,7 @@
     if (parentID) createRoomOptions.parentSpaceID = parentID;
     let createRoomError: string | undefined = undefined;
 
-    const chat = gameManager.getCurrentGameScene().chatConnection;
+    const chat = gameManager.chatConnection;
 
     let loadingRoomCreation = false;
 

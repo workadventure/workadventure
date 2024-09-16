@@ -11,7 +11,7 @@
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
 
     const gameScene = gameManager.getCurrentGameScene();
-    const chat = gameScene.chatConnection;
+    const chat = gameManager.chatConnection;
     const userProviderMerger = gameScene.userProviderMerger;
     const DONE_TYPING_INTERVAL = 2000;
 
