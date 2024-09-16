@@ -395,7 +395,7 @@ class MSTeams implements MSTeamsExtensionModule {
                     throw error;
                 });
         }
-        return error;
+        throw error;
     }
 
     listenToTeamsStatusUpdate(onTeamsStatusChange?: (workAdventureNewStatus: AvailabilityStatus) => void) {
@@ -722,8 +722,10 @@ class MSTeams implements MSTeamsExtensionModule {
         const subscriptions = await this.msAxiosClientBeta.get(`/subscriptions/`);
 
         try {
+            if (subscriptions.status < 200 || subscriptions.status >= 300)
+                throw new Error("Error while getting subscriptions");
             // If there is no subscription, reinitialize the subscription
-            if (subscriptions.data.value.length < 2) {
+            if (subscriptions.data && subscriptions.data.value && subscriptions.data.value.length < 2) {
                 try {
                     await this.initSubscription();
                     this.teamsSynchronisationStore.set(TeamsModuleStatus.ONLINE);
@@ -739,12 +741,14 @@ class MSTeams implements MSTeamsExtensionModule {
             console.error("Error while reauthorizing subscriptions", e);
             // If there is an error, delete subscription and try to create a new twice
             const promisesDeleteSubscription = [];
-            for (const subscription of subscriptions.data.value) {
-                if (new Date(subscription.expirationDateTime) < new Date()) {
-                    if (subscription.resource === `/communications/presences/${this.clientId}`) {
-                        promisesDeleteSubscription.push(this.deletePresenceSubscription(subscription.id));
-                    } else if (subscription.resource === `/me/events`) {
-                        promisesDeleteSubscription.push(this.deleteCalendarSubscription(subscription.id));
+            if (subscriptions.data && subscriptions.data.value) {
+                for (const subscription of subscriptions.data.value) {
+                    if (new Date(subscription.expirationDateTime) < new Date()) {
+                        if (subscription.resource === `/communications/presences/${this.clientId}`) {
+                            promisesDeleteSubscription.push(this.deletePresenceSubscription(subscription.id));
+                        } else if (subscription.resource === `/me/events`) {
+                            promisesDeleteSubscription.push(this.deleteCalendarSubscription(subscription.id));
+                        }
                     }
                 }
             }
