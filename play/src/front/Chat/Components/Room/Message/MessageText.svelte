@@ -1,19 +1,21 @@
 <script lang="ts">
     import { Readable, Unsubscriber } from "svelte/store";
-    import DOMPurify from "dompurify";
     import { Marked } from "marked";
     import { onDestroy, onMount } from "svelte";
     import { ChatMessageContent } from "../../../Connection/ChatConnection";
+    import { sanitizeHTML } from "./WA-HTML-Sanitizer";
 
     export let content: Readable<ChatMessageContent>;
 
     async function getMarked(body: string): Promise<Marked> {
         let marked: Marked;
+
         // Let's lazy load hljs and markedHighlight if the message contains ```.
         if (body.includes("```")) {
             const hljsPromise = import("highlight.js");
             const markedHighlightPromise = import("marked-highlight");
             const [hljsModule, markedHighlightModule] = await Promise.all([hljsPromise, markedHighlightPromise]);
+
             marked = new Marked(
                 markedHighlightModule.markedHighlight({
                     langPrefix: "hljs language-",
@@ -27,9 +29,20 @@
         } else {
             marked = new Marked();
         }
+
+        // Custom renderer for links
+        const renderer = new marked.Renderer();
+        renderer.link = (href: string, title: string, text: string) => {
+            const titleAttr = title ? `title="${title}"` : "";
+            return `<a href="${href}" target="_blank" rel="noopener noreferrer" ${titleAttr}>${text}</a>`;
+        };
+
+        // Apply the custom renderer and enable line breaks
         marked.use({
+            renderer,
             breaks: true,
         });
+
         return marked;
     }
 
@@ -58,5 +71,5 @@
 </script>
 
 <p class="tw-p-0 tw-m-0 tw-text-xs">
-    {@html DOMPurify.sanitize(html)}
+    {@html sanitizeHTML(html)}
 </p>
