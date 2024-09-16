@@ -64,7 +64,8 @@ export class MatrixChatMessage implements ChatMessage {
 
         const content = this.event.getOriginalContent();
         const quotedMessage = this.getQuotedMessage();
-        if (quotedMessage !== undefined) {
+
+        if (quotedMessage !== undefined && content.formatted_body) {
             this.quotedMessage = quotedMessage;
             return {
                 body: content.formatted_body.replace(/^(<mx-reply>).*(<\/mx-reply>)/, ""),
