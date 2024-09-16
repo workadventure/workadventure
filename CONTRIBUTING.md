@@ -16,7 +16,7 @@ You can share your work on maps / articles / videos related to WorkAdventure on 
 
 ## Developer documentation
 
-Documentation targeted at developers can be found in the [`/docs/dev`](docs/dev/)
+Documentation targeted at developers can be found in the [`/docs/others`](docs/others/)
 
 ## Using the issue tracker
 
@@ -85,4 +85,4 @@ More information on running end-to-end tests can be found in the [`/tests/README
 
 ### A bad wording or a missing language
 
-If you notice a translation error or missing language you can help us by following the [how to translate](docs/dev/how-to-translate.md) documentation.
+If you notice a translation error or missing language you can help us by following the [how to translate](docs/others/contributing/how-to-translate.md) documentation.
