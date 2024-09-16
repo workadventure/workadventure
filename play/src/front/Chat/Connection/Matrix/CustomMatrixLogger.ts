@@ -1,42 +1,43 @@
 import Debug from "debug";
 import { Logger } from "matrix-js-sdk/lib/logger";
 
-const traceLogger = Debug("trace");
-const debugLogger = Debug("debug");
-const infoLogger = Debug("info");
-const warnLogger = Debug("warn");
-const errorLogger = Debug("error");
-
-class CustomMatrixLogger implements Logger {
+class CustomLogger implements Logger {
     private namespace: string;
+
+    private traceLogger: Debug.Debugger;
+    private debugLogger: Debug.Debugger;
+    private infoLogger: Debug.Debugger;
 
     constructor(namespace: string) {
         this.namespace = namespace;
+        this.traceLogger = Debug(`${namespace}:trace`);
+        this.debugLogger = Debug(`${namespace}:debug`);
+        this.infoLogger = Debug(`${namespace}:info`);
     }
 
     getChild(namespace: string): Logger {
-        return new CustomMatrixLogger(`${this.namespace}:${namespace}`);
+        return new CustomLogger(`${this.namespace}:${namespace}`);
     }
 
     trace(...msg: unknown[]): void {
-        traceLogger(this.namespace, ...msg);
+        this.traceLogger(this.namespace, ...msg);
     }
 
     debug(...msg: unknown[]): void {
-        debugLogger(this.namespace, ...msg);
+        this.debugLogger(this.namespace, ...msg);
     }
 
     info(...msg: unknown[]): void {
-        infoLogger(this.namespace, ...msg);
+        this.infoLogger(this.namespace, ...msg);
     }
 
     warn(...msg: unknown[]): void {
-        warnLogger(this.namespace, ...msg);
+        console.warn(this.namespace, ...msg);
     }
 
     error(...msg: unknown[]): void {
-        errorLogger(this.namespace, ...msg);
+        console.error(this.namespace, ...msg);
     }
 }
 
-export const customMatrixLogger = new CustomMatrixLogger("matrix");
+export const customMatrixLogger = new CustomLogger("matrix");
