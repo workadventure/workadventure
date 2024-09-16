@@ -342,7 +342,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     private findRoomOrFolder(roomId: string): MatrixRoomFolder | MatrixChatRoom | undefined {
         const roomInRoomList = this.roomList.get(roomId);
         if (roomInRoomList) {
-            console.warn("Room already exists in the root list");
             return roomInRoomList;
         }
 
