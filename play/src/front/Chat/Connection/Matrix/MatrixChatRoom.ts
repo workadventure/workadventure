@@ -60,7 +60,7 @@ export class MatrixChatRoom implements ChatRoom {
     constructor(
         private matrixRoom: Room,
         private playNewMessageSound = () => {
-            if (!localUserStore.getChatSounds() || this.areNotificationsMuted) return;
+            if (!localUserStore.getChatSounds() || get(this.areNotificationsMuted)) return;
             gameManager.getCurrentGameScene().playSound("new-message");
         }
     ) {
