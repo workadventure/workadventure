@@ -7,13 +7,21 @@
 
     export let content: Readable<ChatMessageContent>;
 
+    DOMPurify.addHook("afterSanitizeAttributes", function (node) {
+        if ("target" in node) {
+            node.setAttribute("target", "_blank");
+            node.setAttribute("rel", "noopener noreferrer");
+        }
+    });
     async function getMarked(body: string): Promise<Marked> {
         let marked: Marked;
+
         // Let's lazy load hljs and markedHighlight if the message contains ```.
         if (body.includes("```")) {
             const hljsPromise = import("highlight.js");
             const markedHighlightPromise = import("marked-highlight");
             const [hljsModule, markedHighlightModule] = await Promise.all([hljsPromise, markedHighlightPromise]);
+
             marked = new Marked(
                 markedHighlightModule.markedHighlight({
                     langPrefix: "hljs language-",
@@ -27,9 +35,20 @@
         } else {
             marked = new Marked();
         }
+
+        // Custom renderer for links
+        const renderer = new marked.Renderer();
+        renderer.link = (href: string, title: string, text: string) => {
+            const titleAttr = title ? `title="${title}"` : "";
+            return `<a href="${href}" target="_blank" rel="noopener noreferrer" ${titleAttr}>${text}</a>`;
+        };
+
+        // Apply the custom renderer and enable line breaks
         marked.use({
+            renderer,
             breaks: true,
         });
+
         return marked;
     }
 
