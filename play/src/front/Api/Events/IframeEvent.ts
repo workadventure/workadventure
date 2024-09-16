@@ -67,6 +67,7 @@ import { isTeleportPlayerToEventConfig } from "./TeleportPlayerToEvent";
 import { isSendEventEvent } from "./SendEventEvent";
 import { isReceiveEventEvent } from "./ReceiveEventEvent";
 import { isPlaySoundInBubbleEvent } from "./ProximityMeeting/PlaySoundInBubbleEvent";
+import { isExternalModuleEvent } from "./ExternalModuleEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -365,6 +366,10 @@ export const isIframeEventWrapper = z.union([
         type: z.literal("restoreRoomList"),
         data: z.undefined(),
     }),
+    z.object({
+        type: z.literal("externalModuleEvent"),
+        data: isExternalModuleEvent
+    }),
 ]);
 
 export type IframeEvent = z.infer<typeof isIframeEventWrapper>;
@@ -536,6 +541,10 @@ export const isIframeResponseEvent = z.union([
         type: z.literal("banUser"),
         data: isBanEvent,
     }),
+    z.object({
+        type: z.literal("externalModuleEvent"),
+        data: isExternalModuleEvent,
+    }),
 ]);
 export type IframeResponseEvent = z.infer<typeof isIframeResponseEvent>;
 
@@ -694,6 +703,10 @@ export const iframeQueryMapTypeGuards = {
         query: z.undefined(),
         answer: z.undefined(),
     },
+    externalModuleEvent:{
+        query: isSendEventEvent,
+        answer: z.undefined(),
+    }
 };
 
 type IframeQueryMapTypeGuardsType = typeof iframeQueryMapTypeGuards;

@@ -55,6 +55,7 @@ import type { AddPlayerEvent } from "./Events/AddPlayerEvent";
 import { ModalEvent } from "./Events/ModalEvent";
 import { AddButtonActionBarEvent } from "./Events/Ui/ButtonActionBarEvent";
 import { ReceiveEventEvent } from "./Events/ReceiveEventEvent";
+import { ExternalModuleEvent } from "./Events/ExternalModuleEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -222,6 +223,9 @@ class IframeListener {
     private readonly iframes = new Map<HTMLIFrameElement, string | undefined>();
     private readonly iframeCloseCallbacks = new Map<MessageEventSource, Set<() => void>>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
+
+    private readonly _externalModuleEventStream: Subject<ExternalModuleEvent> = new Subject();
+    public readonly externalModuleEventStream = this._externalModuleEventStream.asObservable();
 
     private sendPlayerMove = false;
 
@@ -533,6 +537,8 @@ class IframeListener {
                         this._roomListStream.next(false);
                     } else if (iframeEvent.type == "restoreRoomList") {
                         this._roomListStream.next(true);
+                    } else if (iframeEvent.type == "externalModuleEvent") {
+                        this._externalModuleEventStream.next(iframeEvent.data);
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;

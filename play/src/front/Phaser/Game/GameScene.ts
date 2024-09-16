@@ -2504,6 +2504,14 @@ ${escapedMessage}
                 room.removeExternalTypingUser(btoa(stopWriting.author ?? "unknow"));
             })
         );
+        this.iframeSubscriptionList.push(
+            iframeListener.externalModuleEventStream.subscribe((event) => {
+                const extensionModule = get(extensionModuleStore).find((module) => module.id === event.id);
+                if(extensionModule && extensionModule.callbackPostMessageApiEvent){
+                    extensionModule.callbackPostMessageApiEvent(event);
+                }
+            })
+        );
 
         /*this.iframeSubscriptionList.push(
             iframeListener.newChatMessageWritingStatusStream.subscribe((status) => {

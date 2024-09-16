@@ -5,7 +5,7 @@ import { subscribe } from "svelte/internal";
 import { get, Readable, Unsubscriber, Updater, writable } from "svelte/store";
 import { CalendarEventInterface } from "@workadventure/shared-utils";
 import { AreaData, AreaDataProperties } from "@workadventure/map-editor";
-import { Subscription } from "rxjs";
+import { Observable, Subject, Subscription } from "rxjs";
 import { notificationPlayingStore } from "../../front/Stores/NotificationStore";
 import { ExtensionModule, ExtensionModuleOptions, RoomMetadataType } from "../../front/ExternalModule/ExtensionModule";
 import { NODE_ENV } from "../../front/Enum/EnvironmentVariable";
@@ -24,6 +24,9 @@ import { TodolistService } from "./Services/Todolist";
 import TeamsPopupReconnect from "./Components/TeamsPopupReconnect.svelte";
 import { TeamsOnlineMeetingService } from "./Services/TeamsOnlineMeeting";
 import { MSTeamsMeeting, TeamsMeetingPropertyData } from "./MapEditor/types";
+import { ExternalModuleEvent } from "../../front/Api/Events/ExternalModuleEvent";
+import { isExternalMsTeamsModuleEvent } from "./Messages/type";
+import { iframeListener } from "../../front/Api/IframeListener";
 
 const MS_GRAPH_ENDPOINT_V1 = "https://graph.microsoft.com/v1.0";
 const MS_GRAPH_ENDPOINT_BETA = "https://graph.microsoft.com/beta";
@@ -1074,14 +1077,7 @@ class MSTeams implements MSTeamsExtensionModule {
 
     private async openCowebsiteTeamsMeeting(data: MSTeamsMeeting) {
         if (this.cowebsiteOpenedId != undefined) return;
-        const cowebsiteOpened = await this.openPopupMeeting(
-            data.subject,
-            data.joinWebUrl,
-            data.joinMeetingIdSettings.joinMeetingId,
-            new Date(data.startDateTime),
-            new Date(data.endDateTime),
-            data.joinMeetingIdSettings.passcode || undefined
-        );
+        const cowebsiteOpened = await this.openPopupMeetingWithMsTeams(data);
         this.cowebsiteOpenedId = cowebsiteOpened.id;
     }
 
@@ -1116,7 +1112,7 @@ class MSTeams implements MSTeamsExtensionModule {
         if (passcode) {
             URITeamsIframeLink.searchParams.append("passcode", passcode);
         }
-        if (this.openCoWebSite)
+        if (this.openCoWebSite){
             return await this.openCoWebSite(
                 {
                     url: URITeamsIframeLink.toString(),
@@ -1126,7 +1122,49 @@ class MSTeams implements MSTeamsExtensionModule {
                 },
                 window
             );
+        }
         throw new Error("Open CoWebSite is not defined");
+    }
+
+    private openPopupMeetingWithMsTeams(msTeamsMeeting: MSTeamsMeeting){
+        if(this.callbackPostMessageApiEventStreamSubscription) this.callbackPostMessageApiEventStreamSubscription.unsubscribe();
+        this.callbackPostMessageApiEventStreamSubscription = this.callbackPostMessageApiEventStream.subscribe((event) => {
+            const parsedEvent = isExternalMsTeamsModuleEvent.safeParse(event);
+            if (!parsedEvent.success) {
+                console.error("Error while parsing event", parsedEvent.error);
+                return;
+            }
+
+            switch (parsedEvent.data.data.name) {
+                case `msteamsmeeting:${msTeamsMeeting.joinMeetingIdSettings.joinMeetingId}`:
+                    if(parsedEvent.data.data.message == 'opened'){
+                        console.log("openPopupMeetingWithMsTeams => queryWorkadventure", msTeamsMeeting);
+                        // Close the cowebsite
+                        // Open the modal with teams information to say that the meeting is in progress
+                        iframeListener.postMessage({
+                            type: "externalModuleEvent",
+                            data:{
+                                id: "ms-teams",
+                                data: {
+                                    name: `msteamsmeeting:${msTeamsMeeting.joinMeetingIdSettings.joinMeetingId}`,
+                                    data: msTeamsMeeting
+                                }
+                            }
+                        });
+                    }
+                    break;
+                default:
+                    break;
+            }
+        });
+        return this.openPopupMeeting(
+            msTeamsMeeting.subject,
+            msTeamsMeeting.joinWebUrl,
+            msTeamsMeeting.joinMeetingIdSettings.joinMeetingId,
+            new Date(msTeamsMeeting.startDateTime),
+            new Date(msTeamsMeeting.endDateTime),
+            msTeamsMeeting.joinMeetingIdSettings.passcode || undefined
+        );
     }
 
     openPopUpModuleStatus() {
@@ -1176,6 +1214,12 @@ class MSTeams implements MSTeamsExtensionModule {
 
     getOnlineMeetingByJoinMeetingId(joinMeetingId: string): Promise<MSTeamsMeeting> | undefined {
         return this.teamsOnLineMeetingService?.getOnlineMeetingByJoinMeetingId(joinMeetingId);
+    }
+
+    private readonly callbackPostMessageApiEventStream: Subject<ExternalModuleEvent> = new Subject();
+    private callbackPostMessageApiEventStreamSubscription: Subscription | undefined;
+    callbackPostMessageApiEvent(event: ExternalModuleEvent){
+        this.callbackPostMessageApiEventStream.next(event);
     }
 
     get meetingSynchronised() {

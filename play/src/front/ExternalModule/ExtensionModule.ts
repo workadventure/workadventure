@@ -7,6 +7,8 @@ import { Observable } from "rxjs";
 import { z } from "zod";
 import { OpenCoWebsiteObject } from "../Chat/Utils";
 import { SpaceRegistryInterface } from "../Space/SpaceRegistry/SpaceRegistryInterface";
+import { IframeQuery, IframeQueryMap } from "../Api/Events/IframeEvent";
+import { ExternalModuleEvent } from "../Api/Events/ExternalModuleEvent";
 
 export interface ExternalSvelteComponentStore {
     addActionBarComponent: (key: string, externsionModule: ExtensionModule, componentType: ComponentType) => void;
@@ -64,6 +66,7 @@ export interface ExtensionModule {
         endDateTime: Date,
         passcode?: string
     ) => void;
+    callbackPostMessageApiEvent?: (event: ExternalModuleEvent) => void;
     calendarSynchronised: boolean;
     todoListSynchronized: boolean;
 }
