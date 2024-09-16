@@ -1,13 +1,15 @@
 <script lang="ts">
     import { afterUpdate, beforeUpdate, onMount } from "svelte";
+    import { get } from "svelte/store";
     import { ChatRoom } from "../../Connection/ChatConnection";
     import { selectedChatMessageToReply, selectedRoom } from "../../Stores/ChatStore";
     import Avatar from "../Avatar.svelte";
     import LL from "../../../../i18n/i18n-svelte";
+    import { matrixSecurity } from "../../Connection/Matrix/MatrixSecurity";
     import Message from "./Message.svelte";
     import MessageInput from "./MessageInput.svelte";
     import MessageSystem from "./MessageSystem.svelte";
-    import { IconArrowLeft } from "@wa-icons";
+    import { IconArrowLeft, IconLoader } from "@wa-icons";
 
     export let room: ChatRoom;
 
@@ -17,17 +19,43 @@
     let autoScroll = true;
     let onScrollTop = false;
 
+    let oldScrollHeight = 0;
+
     let scrollTimer: ReturnType<typeof setTimeout>;
+    let isLoadingMessages = false;
 
     onMount(() => {
         scrollToMessageListBottom();
-        if (messageListRef) {
-            room.loadMorePreviousMessages().catch((error) => console.error(error));
-        }
+        initMessages().catch((error) => console.log(error));
     });
+
+    async function initMessages() {
+        if (!messageListRef) return;
+
+        const loadMessages = async () => {
+            try {
+                if (get(room.isEncrypted) && get(matrixSecurity.isEncryptionRequiredAndNotSet)) {
+                    return;
+                }
+
+                await room.loadMorePreviousMessages();
+
+                if (get(room.hasPreviousMessage) && isViewportNotFilled()) {
+                    await loadMessages();
+                }
+            } catch (error) {
+                console.error(`Failed to load messages: ${error}`);
+            }
+        };
+
+        await loadMessages();
+
+        setFirstListItem();
+    }
 
     beforeUpdate(() => {
         if (messageListRef) {
+            oldScrollHeight = messageListRef.scrollHeight;
             const scrollableDistance = messageListRef.scrollHeight - messageListRef.offsetHeight;
             autoScroll = messageListRef.scrollTop > scrollableDistance - 20;
             onScrollTop = messageListRef.scrollTop === 0;
@@ -36,18 +64,17 @@
 
     afterUpdate(() => {
         room.setTimelineAsRead();
-        const oldFirstListItem = messageListRef.querySelector<HTMLLIElement>('li[data-first-li="true"]');
+
         if (autoScroll) {
             scrollToMessageListBottom();
-        }
-        if (onScrollTop) {
+        } else if (onScrollTop) {
+            const oldFirstListItem = messageListRef.querySelector<HTMLLIElement>('li[data-first-li="true"]');
+
             if (oldFirstListItem !== null) {
-                messageListRef.scrollTop =
-                    oldFirstListItem.getBoundingClientRect().top - messageListRef.getBoundingClientRect().top;
-                oldFirstListItem.removeAttribute("data-first-li");
+                const newScrollHeight = messageListRef.scrollHeight;
+                messageListRef.scrollTop = newScrollHeight - oldScrollHeight;
             }
-            const firstListItem = messageListRef.children.item(0);
-            firstListItem?.setAttribute("data-first-li", "true");
+            setFirstListItem();
         }
     });
 
@@ -63,27 +90,67 @@
     function handleScroll() {
         clearTimeout(scrollTimer);
         scrollTimer = setTimeout(() => {
-            if (messageListRef.scrollTop === 0) {
-                room.loadMorePreviousMessages().catch((error) => console.error(error));
-            }
+            loadMorePreviousMessages().catch((error) => console.error(error));
         }, 100);
+    }
+
+    async function loadMorePreviousMessages() {
+        if (shouldLoadMoreMessages()) {
+            try {
+                if (messageListRef.scrollTop === 0) isLoadingMessages = true;
+                await room.loadMorePreviousMessages();
+                await loadMorePreviousMessages();
+                if (isLoadingMessages) isLoadingMessages = false;
+            } catch (error) {
+                console.error(error);
+            }
+        }
+    }
+
+    function shouldLoadMoreMessages() {
+        const messages = Array.from(messageListRef?.querySelectorAll("li") || []);
+        const messagesBeforeViewportTop = messages.find((msg) => msg.getBoundingClientRect().top >= 0);
+
+        return (
+            messagesBeforeViewportTop &&
+            messages.indexOf(messagesBeforeViewportTop) < 10 &&
+            messages.indexOf(messagesBeforeViewportTop) !== -1
+        );
+    }
+
+    function setFirstListItem() {
+        const oldFirstListItem = messageListRef.querySelector<HTMLLIElement>('li[data-first-li="true"]');
+        oldFirstListItem?.removeAttribute("data-first-li");
+
+        const firstListItem = messageListRef.getElementsByTagName("li").item(0);
+        firstListItem?.setAttribute("data-first-li", "true");
+    }
+
+    function isViewportNotFilled() {
+        return messageListRef.scrollHeight <= messageListRef.clientHeight;
     }
 
     $: messages = room?.messages;
     $: messageReaction = room?.messageReactions;
-    //$: connectedUsers = $proximityRoomConnection?.connectedUsers;
     $: roomName = room?.name;
 </script>
 
 <div class="tw-flex tw-flex-col tw-flex-1 tw-h-full tw-w-full tw-pl-2">
     {#if room !== undefined}
-        <div class="tw-flex tw-items-center">
-            <button class="back-roomlist tw-p-0 tw-m-0" on:click={goBackAndClearSelectedChatMessage}>
-                <IconArrowLeft />
-            </button>
-            <span class="tw-flex-1" />
-            <p class="tw-m-0 tw-p-0 tw-text-gray-400">{$roomName}</p>
-            <span class="tw-flex-1" />
+        <div class="tw-flex tw-flex-col tw-gap-2">
+            <div class="tw-flex tw-flex-row tw-items-center">
+                <button class="back-roomlist tw-p-0 tw-m-0" on:click={goBackAndClearSelectedChatMessage}>
+                    <IconArrowLeft />
+                </button>
+                <span class="tw-flex-1" />
+                <p class="tw-m-0 tw-p-0 tw-text-gray-400">{$roomName}</p>
+                <span class="tw-flex-1" />
+            </div>
+            {#if isLoadingMessages}
+                <div class="tw-flex tw-justify-center tw-items-center tw-w-full tw-pb-1 tw-bg-transparent">
+                    <IconLoader class="tw-animate-[spin_2s_linear_infinite]" font-size={25} />
+                </div>
+            {/if}
         </div>
         <div
             bind:this={messageListRef}
