@@ -153,6 +153,8 @@ class MSTeams implements MSTeamsExtensionModule {
     private teamsOnLineMeetingService?: TeamsOnlineMeetingService;
     private todoList?: TodolistService;
 
+    private initTimeOut: NodeJS.Timeout | undefined = undefined;
+
     init(roomMetadata: RoomMetadataType, options: ExtensionModuleOptions) {
         this.roomMetadata = roomMetadata;
         this.moduleOptions = options;
@@ -287,7 +289,8 @@ class MSTeams implements MSTeamsExtensionModule {
                 if (this.clientId == undefined) {
                     this.destroy();
                     // try to init the module again in one minutes
-                    return setTimeout(() => {
+                    if (this.initTimeOut !== undefined) clearTimeout(this.initTimeOut);
+                    this.initTimeOut = setTimeout(() => {
                         console.info("New tentative to init Microsoft Teams module");
                         return this.init(roomMetadata, options);
                     }, 1000 * 60);
