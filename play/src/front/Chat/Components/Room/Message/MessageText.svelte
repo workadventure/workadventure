@@ -1,18 +1,12 @@
 <script lang="ts">
     import { Readable, Unsubscriber } from "svelte/store";
-    import DOMPurify from "dompurify";
     import { Marked } from "marked";
     import { onDestroy, onMount } from "svelte";
     import { ChatMessageContent } from "../../../Connection/ChatConnection";
+    import { sanitizeHTML } from "./WA-HTML-Sanitizer";
 
     export let content: Readable<ChatMessageContent>;
 
-    DOMPurify.addHook("afterSanitizeAttributes", function (node) {
-        if ("target" in node) {
-            node.setAttribute("target", "_blank");
-            node.setAttribute("rel", "noopener noreferrer");
-        }
-    });
     async function getMarked(body: string): Promise<Marked> {
         let marked: Marked;
 
@@ -77,5 +71,5 @@
 </script>
 
 <p class="tw-p-0 tw-m-0 tw-text-xs">
-    {@html DOMPurify.sanitize(html)}
+    {@html sanitizeHTML(html)}
 </p>
