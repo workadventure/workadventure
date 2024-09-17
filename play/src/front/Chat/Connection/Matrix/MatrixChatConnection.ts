@@ -65,7 +65,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         MatrixRoomFolder
     >();
     directRoomsUsers: Readable<ChatUser[]>;
-
+    clientPromise: Promise<MatrixClient>;
     constructor(
         clientPromise: Promise<MatrixClient>,
         private statusStore: Readable<
@@ -78,12 +78,11 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             | AvailabilityStatus.SPEAKER
             | RequestedStatus
         >,
-        resolver: (value: ChatConnectionInterface | PromiseLike<ChatConnectionInterface>) => void | undefined,
         private matrixSecurity: MatrixSecurity = defaultMatrixSecurity
     ) {
         this.connectionStatus = writable("CONNECTING");
         this.roomList = new MapStore<string, MatrixChatRoom>();
-
+        this.clientPromise = clientPromise;
         this.directRooms = derived(this.roomList, (roomList) => {
             return Array.from(roomList.values()).filter(
                 (room) => room.myMembership === KnownMembership.Join && room.type === "direct"
@@ -152,22 +151,18 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.statusUnsubscriber = this.statusStore.subscribe((status: AvailabilityStatus) => {
             this.setPresence(status);
         });
+    }
 
-        (async () => {
-            this.client = await clientPromise;
+    async init(): Promise<void> {
+        try {
+            this.client = await this.clientPromise;
             this.matrixSecurity.updateMatrixClientStore(this.client);
             await this.startMatrixClient();
             this.isGuest.set(this.client.isGuest());
-        })()
-            .catch((error) => {
-                this.connectionStatus.set("OFFLINE");
-                console.error(error);
-            })
-            .finally(() => {
-                if (resolver) {
-                    resolver(this);
-                }
-            });
+        } catch (error) {
+            this.connectionStatus.set("OFFLINE");
+            console.error(error);
+        }
     }
 
     private setPresence(status: AvailabilityStatus): void {
@@ -221,7 +216,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         await this.waitInitialSync();
     }
 
-    private waitInitialSync(timeout = 20000, interval = 3500): Promise<void> {
+    private waitInitialSync(timeout = 10_000, interval = 3500): Promise<void> {
         return new Promise((resolve, reject) => {
             const startTime = Date.now();
             const checkSync = () => {

@@ -208,7 +208,6 @@ export class MatrixChatRoom implements ChatRoom {
             });
         }
         if (event.getType() === "m.room.message" && !this.isEventReplacingExistingOne(event)) {
-
             this.addEventContentInMemory(event);
             return new MatrixChatMessage(event, this.matrixRoom);
         }

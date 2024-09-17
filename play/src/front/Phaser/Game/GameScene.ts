@@ -851,7 +851,7 @@ export class GameScene extends DirtyScene {
             ...scriptPromises,
             this.CurrentPlayer.getTextureLoadedPromise() as Promise<unknown>,
             this.gameMapFrontWrapper.initializedPromise.promise,
-            gameManager.getChatConnectionPromise(),
+            gameManager.initChatConnection(),
         ])
             .then(() => {
                 this.initUserPermissionsOnEntity();
@@ -1533,7 +1533,7 @@ export class GameScene extends DirtyScene {
                 this.allUserSpace = this._spaceRegistry.joinSpace(WORLD_SPACE_NAME);
 
                 gameManager
-                    .getChatConnectionPromise()
+                    .initChatConnection()
                     .then((chatConnection) => {
                         const connection = this.connection;
                         const allUserSpace = this.allUserSpace;

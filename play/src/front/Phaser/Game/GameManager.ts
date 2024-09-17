@@ -41,7 +41,7 @@ export class GameManager {
     private scenePlugin!: Phaser.Scenes.ScenePlugin;
     private visitCardUrl: string | null = null;
     private matrixServerUrl: string | undefined = undefined;
-    private chatConnectionPromise: Promise<ChatConnectionInterface> | undefined;
+    private chatConnectionPromise: Promise<void> | undefined;
     private matrixClientWrapper: MatrixClientWrapper | undefined;
     private _chatConnection: ChatConnectionInterface | undefined;
 
@@ -239,36 +239,29 @@ export class GameManager {
         return this.matrixServerUrl;
     }
 
-    public getChatConnectionPromise(): Promise<ChatConnectionInterface> {
-        if (this.chatConnectionPromise) return this.chatConnectionPromise;
+    public async initChatConnection(): Promise<void> {
+        if (this.chatConnectionPromise) return;
 
-        this.chatConnectionPromise = new Promise((resolve) => {
-            //We need to add an env parameter to switch between chat services
-            const matrixServerUrl = this.getMatrixServerUrl() ?? MATRIX_PUBLIC_URI;
-            if (matrixServerUrl) {
-                this.matrixClientWrapper = new MatrixClientWrapper(matrixServerUrl, localUserStore);
-                const matrixClientPromise = this.matrixClientWrapper.initMatrixClient();
+        const matrixServerUrl = this.getMatrixServerUrl() ?? MATRIX_PUBLIC_URI;
+        if (matrixServerUrl) {
+            this.matrixClientWrapper = new MatrixClientWrapper(matrixServerUrl, localUserStore);
+            const matrixClientPromise = this.matrixClientWrapper.initMatrixClient();
 
-                matrixClientPromise.catch((error) => {
-                    console.error(`Failed to create matrix client : ${error}`);
-                    Sentry.captureMessage(`Failed to create matrix client : ${error}`);
-                });
+            matrixClientPromise.catch((error) => {
+                console.error(`Failed to create matrix client : ${error}`);
+                Sentry.captureMessage(`Failed to create matrix client : ${error}`);
+            });
 
-                const matrixChatConnection = new MatrixChatConnection(
-                    matrixClientPromise,
-                    availabilityStatusStore,
-                    resolve
-                );
+            const matrixChatConnection = new MatrixChatConnection(matrixClientPromise, availabilityStatusStore);
+            this._chatConnection = matrixChatConnection;
 
-                this._chatConnection = matrixChatConnection;
-            } else {
-                // No matrix connection? Let's fill the gap with a "void" object
-                this._chatConnection = new VoidChatConnection();
-                resolve(this._chatConnection);
-            }
-        });
+            this.chatConnectionPromise = matrixChatConnection.init();
 
-        return this.chatConnectionPromise;
+            await this.chatConnectionPromise;
+        } else {
+            // No matrix connection? Let's fill the gap with a "void" object
+            this._chatConnection = new VoidChatConnection();
+        }
     }
     get chatConnection(): ChatConnectionInterface {
         if (!this._chatConnection) {
