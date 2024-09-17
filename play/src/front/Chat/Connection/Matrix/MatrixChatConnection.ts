@@ -224,17 +224,13 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                     resolve();
                 } else {
                     if (Date.now() - startTime >= timeout) {
-                        throw new Error("Failed to wait initial sync");
+                        reject(new Error("Failed to wait initial sync"));
                     } else {
                         setTimeout(checkSync, interval);
                     }
                 }
             };
-            try {
-                checkSync();
-            } catch (error) {
-                reject(error);
-            }
+            checkSync();
         });
     }
 

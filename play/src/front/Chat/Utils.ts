@@ -88,7 +88,7 @@ export const openChatRoom = async (chatID: string) => {
             openModal(RequiresLoginForChatModal);
             return;
         }
-        const chatConnection = gameManager.getCurrentGameScene().chatConnection;
+        const chatConnection = gameManager.chatConnection;
         let room: ChatRoom | undefined = chatConnection.getDirectRoomFor(chatID);
         if (!room) room = await chatConnection.createDirectRoom(chatID);
         if (!room) throw new Error("Failed to create room");

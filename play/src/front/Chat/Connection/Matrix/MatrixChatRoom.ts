@@ -192,7 +192,9 @@ export class MatrixChatRoom implements ChatRoom {
             decryptMessagesPromises.push(this.readEventsToAddMessagesAndReactions(event, this.messageReactions));
         });
 
-        await Promise.all(decryptMessagesPromises);
+        const result = await Promise.all(decryptMessagesPromises);
+        const messages = result.filter((message) => message !== undefined) as MatrixChatMessage[];
+        this.messages.push(...messages);
 
         this.hasPreviousMessage.set(this.timelineWindow.canPaginate(Direction.Backward));
     }
@@ -406,9 +408,10 @@ export class MatrixChatRoom implements ChatRoom {
 
             const result = await Promise.all(tempMatrixChatMessages);
 
-            this.messages.unshift(...result.filter((message) => message !== undefined));
+            const messages = result.filter((message) => message !== undefined) as MatrixChatMessage[];
+            this.messages.unshift(...messages);
             this.hasPreviousMessage.set(this.timelineWindow.canPaginate(Direction.Backward));
-            if (tempMatrixChatMessages.length === 0) {
+            if (messages.length === 0) {
                 await this.loadMorePreviousMessages();
             }
         }

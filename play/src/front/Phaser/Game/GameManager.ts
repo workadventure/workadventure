@@ -41,7 +41,7 @@ export class GameManager {
     private scenePlugin!: Phaser.Scenes.ScenePlugin;
     private visitCardUrl: string | null = null;
     private matrixServerUrl: string | undefined = undefined;
-    private chatConnectionPromise: Promise<void> | undefined;
+    private chatConnectionPromise: Promise<ChatConnectionInterface> | undefined;
     private matrixClientWrapper: MatrixClientWrapper | undefined;
     private _chatConnection: ChatConnectionInterface | undefined;
 
@@ -239,8 +239,10 @@ export class GameManager {
         return this.matrixServerUrl;
     }
 
-    public async initChatConnection(): Promise<void> {
-        if (this.chatConnectionPromise) return;
+    public async getChatConnection(): Promise<ChatConnectionInterface> {
+        if (this.chatConnectionPromise) {
+            return this.chatConnectionPromise;
+        }
 
         const matrixServerUrl = this.getMatrixServerUrl() ?? MATRIX_PUBLIC_URI;
         if (matrixServerUrl) {
@@ -255,12 +257,13 @@ export class GameManager {
             const matrixChatConnection = new MatrixChatConnection(matrixClientPromise, availabilityStatusStore);
             this._chatConnection = matrixChatConnection;
 
-            this.chatConnectionPromise = matrixChatConnection.init();
+            this.chatConnectionPromise = matrixChatConnection.init().then(() => matrixChatConnection);
 
-            await this.chatConnectionPromise;
+            return this.chatConnectionPromise;
         } else {
             // No matrix connection? Let's fill the gap with a "void" object
             this._chatConnection = new VoidChatConnection();
+            return this._chatConnection;
         }
     }
     get chatConnection(): ChatConnectionInterface {

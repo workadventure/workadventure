@@ -330,7 +330,7 @@ export class GameScene extends DirtyScene {
     private _spaceRegistry: SpaceRegistryInterface | undefined;
     private allUserSpace: SpaceInterface | undefined;
     private _proximityChatRoom: ProximityChatRoom | undefined;
-    private _userProviderMerger: UserProviderMerger | undefined;
+    private _userProviderMergerDeferred: Deferred<UserProviderMerger> = new Deferred();
     private matrixClientWrapper: MatrixClientWrapper | undefined;
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
@@ -851,11 +851,12 @@ export class GameScene extends DirtyScene {
             ...scriptPromises,
             this.CurrentPlayer.getTextureLoadedPromise() as Promise<unknown>,
             this.gameMapFrontWrapper.initializedPromise.promise,
-            gameManager.initChatConnection(),
+            gameManager.getChatConnection(),
         ])
             .then(() => {
                 this.initUserPermissionsOnEntity();
                 this.hide(false);
+                gameSceneIsLoadedStore.set(true);
                 this.sceneReadyToStartDeferred.resolve();
                 this.initializeAreaManager();
 
@@ -1533,7 +1534,7 @@ export class GameScene extends DirtyScene {
                 this.allUserSpace = this._spaceRegistry.joinSpace(WORLD_SPACE_NAME);
 
                 gameManager
-                    .initChatConnection()
+                    .getChatConnection()
                     .then((chatConnection) => {
                         const connection = this.connection;
                         const allUserSpace = this.allUserSpace;
@@ -1549,7 +1550,7 @@ export class GameScene extends DirtyScene {
                             userProviders.push(new WorldUserProvider(allUserSpace));
                         }
 
-                        this._userProviderMerger = new UserProviderMerger(userProviders);
+                        this._userProviderMergerDeferred.resolve(new UserProviderMerger(userProviders));
                     })
                     .catch(() => {
                         const errorMessage = "Failed to get chatConnection from gameManager";
@@ -1917,7 +1918,6 @@ export class GameScene extends DirtyScene {
                 this.tryMovePlayerWithMoveToUserParameter();
 
                 gameSceneStore.set(this);
-                gameSceneIsLoadedStore.set(true);
             })
             .catch((e) => console.error(e));
     }
@@ -3704,10 +3704,7 @@ ${escapedMessage}
         return this._proximityChatRoom;
     }
 
-    get userProviderMerger(): UserProviderMerger {
-        if (!this._userProviderMerger) {
-            throw new Error("_userProviderMerger not yet initialized");
-        }
-        return this._userProviderMerger;
+    get userProviderMerger(): Promise<UserProviderMerger> {
+        return this._userProviderMergerDeferred.promise;
     }
 }

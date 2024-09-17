@@ -3,6 +3,7 @@
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue, joignableRoom, navChat } from "../Stores/ChatStore";
     import { INITIAL_SIDEBAR_WIDTH } from "../../Stores/ChatStore";
+    import { UserProviderMerger } from "../UserProviderMerger/UserProviderMerger";
     import RoomUserList from "./UserList/RoomUserList.svelte";
     import ChatLoader from "./ChatLoader.svelte";
     import RoomList from "./RoomList.svelte";
@@ -12,14 +13,14 @@
 
     const gameScene = gameManager.getCurrentGameScene();
     const chat = gameManager.chatConnection;
-    const userProviderMerger = gameScene.userProviderMerger;
+    const userProviderMergerPromise = gameScene.userProviderMerger;
     const DONE_TYPING_INTERVAL = 2000;
 
     let searchValue = "";
     let typingTimer: ReturnType<typeof setTimeout>;
     let searchLoader = false;
 
-    const handleKeyUp = () => {
+    const handleKeyUp = (userProviderMerger: UserProviderMerger) => {
         clearTimeout(typingTimer);
         typingTimer = setTimeout(() => {
             searchLoader = true;
@@ -77,20 +78,24 @@
             </ul>
         </nav>
         <!-- searchbar -->
-        {#if $chatStatusStore !== "OFFLINE"}
-            <div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid">
-                <div class="tw-p-3">
-                    <input
-                        autocomplete="new-password"
-                        class="wa-searchbar tw-block tw-text-white tw-w-full placeholder:tw-text-sm tw-rounded-3xl tw-px-3 tw-py-1 tw-border-light-purple tw-border tw-border-solid tw-bg-transparent"
-                        placeholder={$navChat === "users" ? $LL.chat.searchUser() : $LL.chat.searchChat()}
-                        on:keydown={handleKeyDown}
-                        on:keyup={handleKeyUp}
-                        bind:value={$chatSearchBarValue}
-                    />
+        {#await userProviderMergerPromise}
+            <div />
+        {:then userProviderMerger}
+            {#if $chatStatusStore !== "OFFLINE"}
+                <div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid">
+                    <div class="tw-p-3">
+                        <input
+                            autocomplete="new-password"
+                            class="wa-searchbar tw-block tw-text-white tw-w-full placeholder:tw-text-sm tw-rounded-3xl tw-px-3 tw-py-1 tw-border-light-purple tw-border tw-border-solid tw-bg-transparent"
+                            placeholder={$navChat === "users" ? $LL.chat.searchUser() : $LL.chat.searchChat()}
+                            on:keydown={handleKeyDown}
+                            on:keyup={() => handleKeyUp(userProviderMerger)}
+                            bind:value={$chatSearchBarValue}
+                        />
+                    </div>
                 </div>
-            </div>
-        {/if}
+            {/if}
+        {/await}
     </div>
     <div class="tw-flex tw-flex-col tw-gap-2 !tw-flex-1 tw-min-h-0">
         {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}
@@ -103,7 +108,11 @@
             >
         {/if}
         {#if $navChat === "users"}
-            <RoomUserList />
+            {#await userProviderMergerPromise}
+                <div />
+            {:then userProviderMerger}
+                <RoomUserList {userProviderMerger} />
+            {/await}
         {:else}
             <RoomList {sideBarWidth} />
         {/if}
