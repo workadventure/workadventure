@@ -13,7 +13,9 @@
 
     export let user: ChatUser;
 
-    const { connection, roomUrl, chatConnection } = gameManager.getCurrentGameScene();
+    const { connection, roomUrl } = gameManager.getCurrentGameScene();
+
+    const chatConnection = gameManager.chatConnection;
 
     const isInTheSameMap = user.playUri === roomUrl;
 

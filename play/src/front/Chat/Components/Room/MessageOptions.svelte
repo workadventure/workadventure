@@ -25,7 +25,7 @@
 
     const { content, isMyMessage, type } = message;
 
-    const chat = gameManager.getCurrentGameScene().chatConnection;
+    const chat = gameManager.chatConnection;
 
     $: isGuest = chat.isGuest;
 </script>

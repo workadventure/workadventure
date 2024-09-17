@@ -14,7 +14,7 @@
     if (parentID) createFolderOptions.parentSpaceID = parentID;
     let createFolderError: string | undefined = undefined;
 
-    const chat = gameManager.getCurrentGameScene().chatConnection;
+    const chat = gameManager.chatConnection;
 
     let loadingFolderCreation = false;
 

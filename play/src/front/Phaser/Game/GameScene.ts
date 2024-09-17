@@ -42,7 +42,6 @@ import {
     DEBUG_MODE,
     ENABLE_MAP_EDITOR,
     ENABLE_OPENID,
-    MATRIX_PUBLIC_URI,
     MAX_PER_GROUP,
     POSITION_DELAY,
     PUBLIC_MAP_STORAGE_PREFIX,
@@ -149,9 +148,7 @@ import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/sta
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import { getCoWebSite, openCoWebSite } from "../../Chat/Utils";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
-import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
 import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
-import { matrixSecurity } from "../../Chat/Connection/Matrix/MatrixSecurity";
 import { selectedRoom } from "../../Chat/Stores/ChatStore";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
 import { ProximitySpaceManager } from "../../WebRtc/ProximitySpaceManager";
@@ -162,7 +159,6 @@ import { UserProviderMerger } from "../../Chat/UserProviderMerger/UserProviderMe
 import { AdminUserProvider } from "../../Chat/UserProvider/AdminUserProvider";
 import { SpaceInterface } from "../../Space/SpaceInterface";
 import { UserProviderInterface } from "../../Chat/UserProvider/UserProviderInterface";
-import { VoidChatConnection } from "../../Chat/Connection/VoidChatConnection";
 import { faviconManager } from "../../WebRtc/FaviconManager";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
@@ -334,7 +330,7 @@ export class GameScene extends DirtyScene {
     private _spaceRegistry: SpaceRegistryInterface | undefined;
     private allUserSpace: SpaceInterface | undefined;
     private _proximityChatRoom: ProximityChatRoom | undefined;
-    private _userProviderMerger: UserProviderMerger | undefined;
+    private _userProviderMergerDeferred: Deferred<UserProviderMerger> = new Deferred();
     private matrixClientWrapper: MatrixClientWrapper | undefined;
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
@@ -855,12 +851,22 @@ export class GameScene extends DirtyScene {
             ...scriptPromises,
             this.CurrentPlayer.getTextureLoadedPromise() as Promise<unknown>,
             this.gameMapFrontWrapper.initializedPromise.promise,
+            gameManager.getChatConnection(),
         ])
             .then(() => {
                 this.initUserPermissionsOnEntity();
                 this.hide(false);
+                gameSceneIsLoadedStore.set(true);
                 this.sceneReadyToStartDeferred.resolve();
                 this.initializeAreaManager();
+
+                const chatId = localUserStore.getChatId();
+                const email: string | null = localUserStore.getLocalUser()?.email || null;
+                const connection = this.connection;
+                if (email && chatId && connection) {
+                    connection.emitUpdateChatId(email, chatId);
+                    connection.emitPlayerChatID(chatId);
+                }
             })
             .catch((e) =>
                 console.error(
@@ -993,7 +999,6 @@ export class GameScene extends DirtyScene {
             this.spaceRegistry?.leaveSpace(this.allUserSpace);
         }
 
-        this._chatConnection?.clearListener();
         this.matrixClientWrapper?.stopClient();
         this.connection?.closeConnection();
         this.simplePeer?.closeAllConnections();
@@ -1526,47 +1531,32 @@ export class GameScene extends DirtyScene {
                 }
 
                 this._spaceRegistry = new SpaceRegistry(this.connection);
-
                 this.allUserSpace = this._spaceRegistry.joinSpace(WORLD_SPACE_NAME);
 
-                const adminUserProvider = new AdminUserProvider(this.connection);
-                const worldUserProvider = new WorldUserProvider(this.allUserSpace);
+                gameManager
+                    .getChatConnection()
+                    .then((chatConnection) => {
+                        const connection = this.connection;
+                        const allUserSpace = this.allUserSpace;
 
-                const userProviders: UserProviderInterface[] = [adminUserProvider, worldUserProvider];
+                        const userProviders: UserProviderInterface[] = [];
+                        if (connection) {
+                            userProviders.push(new AdminUserProvider(connection));
+                        }
 
-                //We need to add an env parameter to switch between chat services
-                const matrixServerUrl = gameManager.getMatrixServerUrl() ?? MATRIX_PUBLIC_URI;
-                if (matrixServerUrl) {
-                    this.matrixClientWrapper = new MatrixClientWrapper(matrixServerUrl, localUserStore);
-                    const matrixClientPromise = this.matrixClientWrapper.initMatrixClient();
+                        userProviders.push(new ChatUserProvider(chatConnection));
 
-                    matrixClientPromise
-                        .then((matrixClient) => {
-                            matrixSecurity.updateMatrixClientStore(matrixClient);
+                        if (allUserSpace) {
+                            userProviders.push(new WorldUserProvider(allUserSpace));
+                        }
 
-                            const chatId = localUserStore.getChatId();
-                            const email: string | null = localUserStore.getLocalUser()?.email || null;
-                            if (email && chatId) this.connection?.emitUpdateChatId(email, chatId);
-                        })
-                        .catch((error) => {
-                            console.error(`Failed to create matrix client : ${error}`);
-                            Sentry.captureMessage(`Failed to create matrix client : ${error}`);
-                        });
-
-                    this._chatConnection = new MatrixChatConnection(
-                        this.connection,
-                        matrixClientPromise,
-                        availabilityStatusStore
-                    );
-                } else {
-                    // No matrix connection? Let's fill the gap with a "void" object
-                    this._chatConnection = new VoidChatConnection();
-                }
-                // Put the chatConnection at the middle of the userProviders array
-                const chatUserProvider = new ChatUserProvider(this._chatConnection);
-                userProviders.splice(1, 0, chatUserProvider);
-
-                this._userProviderMerger = new UserProviderMerger(userProviders);
+                        this._userProviderMergerDeferred.resolve(new UserProviderMerger(userProviders));
+                    })
+                    .catch(() => {
+                        const errorMessage = "Failed to get chatConnection from gameManager";
+                        console.error(errorMessage);
+                        Sentry.captureMessage(errorMessage);
+                    });
 
                 this.tryOpenMapEditorWithToolEditorParameter();
 
@@ -1928,7 +1918,6 @@ export class GameScene extends DirtyScene {
                 this.tryMovePlayerWithMoveToUserParameter();
 
                 gameSceneStore.set(this);
-                gameSceneIsLoadedStore.set(true);
             })
             .catch((e) => console.error(e));
     }
@@ -3700,13 +3689,6 @@ ${escapedMessage}
         this.cameraManager.disableResistanceZone();
     }
 
-    get chatConnection(): ChatConnectionInterface {
-        if (!this._chatConnection) {
-            throw new Error("_chatConnection not yet initialized");
-        }
-        return this._chatConnection;
-    }
-
     //get spaceStore(): Promise<SpaceProviderInterface> {
     get spaceRegistry(): SpaceRegistryInterface {
         if (!this._spaceRegistry) {
@@ -3722,25 +3704,7 @@ ${escapedMessage}
         return this._proximityChatRoom;
     }
 
-    get userProviderMerger(): UserProviderMerger {
-        if (!this._userProviderMerger) {
-            throw new Error("_userProviderMerger not yet initialized");
-        }
-        return this._userProviderMerger;
-    }
-
-    /**
-     * Performs all cleanup actions specific to someone logging out.
-     * Currently, this logs out from the Matrix client.
-     */
-    public async logout(): Promise<void> {
-        if (this._chatConnection) {
-            try {
-                await this._chatConnection.destroy();
-            } catch (e) {
-                console.error("Chat connection not closed properly : ", e);
-                Sentry.captureException(e);
-            }
-        }
+    get userProviderMerger(): Promise<UserProviderMerger> {
+        return this._userProviderMergerDeferred.promise;
     }
 }

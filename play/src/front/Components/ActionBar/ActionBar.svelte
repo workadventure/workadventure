@@ -375,8 +375,8 @@
 
     let totalMessagesToSee = writable<number>(0);
 
-    const gameScene = gameManager.getCurrentGameScene();
-    const { chatConnection, proximityChatRoom } = gameScene;
+    const proximityChatRoom = gameManager.getCurrentGameScene().proximityChatRoom;
+    const chatConnection = gameManager.chatConnection;
 
     const proximityChatRoomHasUnreadMessage = proximityChatRoom.hasUnreadMessages;
 

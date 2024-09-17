@@ -4,7 +4,7 @@ import { KnownMembership } from "matrix-js-sdk/lib/types";
 import { get, Readable } from "svelte/store";
 import { AvailabilityStatus } from "@workadventure/messages";
 import { MatrixChatConnection } from "../MatrixChatConnection";
-import { Connection, CreateRoomOptions } from "../../ChatConnection";
+import { CreateRoomOptions } from "../../ChatConnection";
 import { MatrixChatRoom } from "../MatrixChatRoom";
 import { MatrixSecurity } from "../MatrixSecurity";
 import { RequestedStatus } from "../../../../Rules/StatusRules/statusRules";
@@ -26,14 +26,9 @@ vi.mock("../../../../Phaser/Entity/CharacterLayerManager", () => {
         },
     };
 });
+
 describe("MatrixChatConnection", () => {
     const flushPromises = () => new Promise(setImmediate);
-
-    const basicMockConnection: Connection = {
-        queryChatMembers: vi.fn(),
-        emitBanPlayerMessage: vi.fn(),
-        emitPlayerChatID: vi.fn(),
-    };
 
     const basicStatusStore: Readable<
         | AvailabilityStatus.ONLINE
@@ -52,6 +47,14 @@ describe("MatrixChatConnection", () => {
         isEncryptionRequiredAndNotSet: false,
     } as unknown as MatrixSecurity;
 
+    const getMatrixConnection = async (
+        clientPromise: Promise<MatrixClient>,
+        matrixSecurity = basicMockMatrixSecurity
+    ) => {
+        const matrixChatConnection = new MatrixChatConnection(clientPromise, basicStatusStore, matrixSecurity);
+        await matrixChatConnection.init();
+        return matrixChatConnection;
+    };
     describe("Constructor", () => {
         const directChatRoom = {
             id: "directChatRoom",
@@ -78,16 +81,11 @@ describe("MatrixChatConnection", () => {
             vi.restoreAllMocks();
         });
 
-        it("should contains all room with type direct and KnownMembership = join from roomList in directRooms", () => {
+        it("should contains all room with type direct and KnownMembership = join from roomList in directRooms", async () => {
             const mockMatrixClient = {} as unknown as MatrixClient;
 
             const clientPromise = Promise.resolve(mockMatrixClient);
-            const matrixChatConnection = new MatrixChatConnection(
-                basicMockConnection,
-                clientPromise,
-                basicStatusStore,
-                basicMockMatrixSecurity
-            );
+            const matrixChatConnection = await getMatrixConnection(clientPromise);
 
             //set matrixChatConnection RoomList
             matrixChatConnection["roomList"].set(directChatRoom.id, directChatRoom);
@@ -106,16 +104,11 @@ describe("MatrixChatConnection", () => {
             expect(get(matrixChatConnection["directRooms"]).includes(multipleChatRoom)).toBeFalsy();
             expect(get(matrixChatConnection["directRooms"]).includes(InviteDirectChatRoom)).toBeFalsy();
         });
-        it("should contains all room with type multiple and KnownMembership = join from roomList in rooms", () => {
+        it("should contains all room with type multiple and KnownMembership = join from roomList in rooms", async () => {
             const mockMatrixClient = {} as unknown as MatrixClient;
 
             const clientPromise = Promise.resolve(mockMatrixClient);
-            const matrixChatConnection = new MatrixChatConnection(
-                basicMockConnection,
-                clientPromise,
-                basicStatusStore,
-                basicMockMatrixSecurity
-            );
+            const matrixChatConnection = await getMatrixConnection(clientPromise);
 
             //set matrixChatConnection RoomList
             matrixChatConnection["roomList"].set(directChatRoom.id, directChatRoom);
@@ -134,16 +127,11 @@ describe("MatrixChatConnection", () => {
             expect(get(matrixChatConnection["rooms"]).includes(directChatRoom)).toBeFalsy();
             expect(get(matrixChatConnection["rooms"]).includes(InviteDirectChatRoom)).toBeFalsy();
         });
-        it("should contains all room with KnownMembership = invite from roomList in invitations", () => {
+        it("should contains all room with KnownMembership = invite from roomList in invitations", async () => {
             const mockMatrixClient = {} as unknown as MatrixClient;
 
             const clientPromise = Promise.resolve(mockMatrixClient);
-            const matrixChatConnection = new MatrixChatConnection(
-                basicMockConnection,
-                clientPromise,
-                basicStatusStore,
-                basicMockMatrixSecurity
-            );
+            const matrixChatConnection = await getMatrixConnection(clientPromise);
 
             //set matrixChatConnection RoomList
             matrixChatConnection["roomList"].set(directChatRoom.id, directChatRoom);
@@ -162,7 +150,7 @@ describe("MatrixChatConnection", () => {
             matrixChatConnection["roomList"].set(InviteMultipleChatRoom.id + "2", InviteMultipleChatRoom);
             expect(get(matrixChatConnection["invitations"])).toHaveLength(3);
         });
-        it("should set isEncryptionRequiredAndNotSet with value of isEncryptionRequiredAndNotSet from matrixSecurity", () => {
+        it("should set isEncryptionRequiredAndNotSet with value of isEncryptionRequiredAndNotSet from matrixSecurity", async () => {
             const mockMatrixClient = {} as unknown as MatrixClient;
 
             const clientPromise = Promise.resolve(mockMatrixClient);
@@ -171,12 +159,7 @@ describe("MatrixChatConnection", () => {
                 isEncryptionRequiredAndNotSet: false,
             } as unknown as MatrixSecurity;
 
-            const matrixChatConnection = new MatrixChatConnection(
-                basicMockConnection,
-                clientPromise,
-                basicStatusStore,
-                mockMatrixSecurity
-            );
+            const matrixChatConnection = await getMatrixConnection(clientPromise, mockMatrixSecurity);
 
             expect(matrixChatConnection["isEncryptionRequiredAndNotSet"]).toBe(
                 mockMatrixSecurity.isEncryptionRequiredAndNotSet
@@ -184,7 +167,7 @@ describe("MatrixChatConnection", () => {
         });
         it.each([[true], [false]])(
             "should set isEncryptionRequiredAndNotSet with value of isEncryptionRequiredAndNotSet from matrixSecurity ",
-            (expected) => {
+            async (expected) => {
                 const mockMatrixClient = {} as unknown as MatrixClient;
 
                 const clientPromise = Promise.resolve(mockMatrixClient);
@@ -193,25 +176,20 @@ describe("MatrixChatConnection", () => {
                     isEncryptionRequiredAndNotSet: expected,
                 } as unknown as MatrixSecurity;
 
-                const matrixChatConnection = new MatrixChatConnection(
-                    basicMockConnection,
-                    clientPromise,
-                    basicStatusStore,
-                    mockMatrixSecurity
-                );
+                const matrixChatConnection = await getMatrixConnection(clientPromise, mockMatrixSecurity);
 
                 expect(matrixChatConnection["isEncryptionRequiredAndNotSet"]).toBe(expected);
             }
         );
 
-        it("should call startMatrixClient when client promise resolve", () => {
+        it("should call startMatrixClient when client promise resolve", async () => {
             const mockMatrixClient = {} as unknown as MatrixClient;
 
             const clientPromise = Promise.resolve(mockMatrixClient);
 
             const startMatrixClientSpy = vi.spyOn(MatrixChatConnection.prototype, "startMatrixClient");
 
-            new MatrixChatConnection(basicMockConnection, clientPromise, basicStatusStore, basicMockMatrixSecurity);
+            await getMatrixConnection(clientPromise);
 
             clientPromise
                 .then(() => {
@@ -219,44 +197,17 @@ describe("MatrixChatConnection", () => {
                 })
                 .catch((e) => console.error(e));
         });
-        it("should not call startMatrixClient when client promise reject", () => {
+        it("should not call startMatrixClient when client promise reject", async () => {
             const clientPromise = Promise.reject(new Error(""));
 
             const startMatrixClientSpy = vi.spyOn(MatrixChatConnection.prototype, "startMatrixClient");
 
-            new MatrixChatConnection(basicMockConnection, clientPromise, basicStatusStore, basicMockMatrixSecurity);
+            await getMatrixConnection(clientPromise);
 
             clientPromise.catch(() => {
                 expect(startMatrixClientSpy).not.toHaveBeenCalled();
             });
         });
-
-        it.each([[true], [false]])(
-            "should set isGuest with value of isGuest from matrixClient when client promise resolve",
-            async (expected) => {
-                const mockMatrixClient = {
-                    isGuest: vi.fn().mockReturnValue(expected),
-                    on: vi.fn(),
-                    store: {
-                        startup: vi.fn(),
-                    },
-                    initRustCrypto: vi.fn(),
-                    startClient: vi.fn(),
-                } as unknown as MatrixClient;
-
-                const clientPromise = Promise.resolve(mockMatrixClient);
-
-                const matrixChatConnection = new MatrixChatConnection(
-                    basicMockConnection,
-                    clientPromise,
-                    basicStatusStore,
-                    basicMockMatrixSecurity
-                );
-
-                await flushPromises();
-                expect(get(matrixChatConnection.isGuest)).toBe(expected);
-            }
-        );
     });
 
     describe("startMatrixClient", () => {
@@ -277,16 +228,12 @@ describe("MatrixChatConnection", () => {
                 },
                 initRustCrypto: vi.fn(),
                 startClient: vi.fn(),
+                isInitialSyncComplete: vi.fn().mockReturnValue(true),
             } as unknown as MatrixClient;
 
             const clientPromise = Promise.resolve(mockMatrixClient);
 
-            const matrixChatConnection = new MatrixChatConnection(
-                basicMockConnection,
-                clientPromise,
-                basicStatusStore,
-                basicMockMatrixSecurity
-            );
+            const matrixChatConnection = await getMatrixConnection(clientPromise);
 
             await clientPromise;
 
@@ -305,16 +252,12 @@ describe("MatrixChatConnection", () => {
                 },
                 initRustCrypto: vi.fn(),
                 startClient: vi.fn(),
+                isInitialSyncComplete: vi.fn().mockReturnValue(true),
             } as unknown as MatrixClient;
 
             const clientPromise = Promise.resolve(mockMatrixClient);
 
-            const matrixChatConnection = new MatrixChatConnection(
-                basicMockConnection,
-                clientPromise,
-                basicStatusStore,
-                basicMockMatrixSecurity
-            );
+            const matrixChatConnection = await getMatrixConnection(clientPromise);
 
             await clientPromise;
             startUpMock.mockRestore();
@@ -333,16 +276,12 @@ describe("MatrixChatConnection", () => {
                 },
                 initRustCrypto: initCryptoMock,
                 startClient: vi.fn(),
+                isInitialSyncComplete: vi.fn().mockReturnValue(true),
             } as unknown as MatrixClient;
 
             const clientPromise = Promise.resolve(mockMatrixClient);
 
-            const matrixChatConnection = new MatrixChatConnection(
-                basicMockConnection,
-                clientPromise,
-                basicStatusStore,
-                basicMockMatrixSecurity
-            );
+            const matrixChatConnection = await getMatrixConnection(clientPromise);
 
             await clientPromise;
             await flushPromises();
@@ -361,16 +300,12 @@ describe("MatrixChatConnection", () => {
                 },
                 initRustCrypto: vi.fn(),
                 startClient: mockStartClient,
+                isInitialSyncComplete: vi.fn().mockReturnValue(true),
             } as unknown as MatrixClient;
 
             const clientPromise = Promise.resolve(mockMatrixClient);
 
-            const matrixChatConnection = new MatrixChatConnection(
-                basicMockConnection,
-                clientPromise,
-                basicStatusStore,
-                basicMockMatrixSecurity
-            );
+            const matrixChatConnection = await getMatrixConnection(clientPromise);
 
             await clientPromise;
 
@@ -389,7 +324,7 @@ describe("MatrixChatConnection", () => {
     });
 
     describe("computeInitialState", () => {
-        it("should add encryption option to initial state when encrypt from roomOptions is true", () => {
+        it("should add encryption option to initial state when encrypt from roomOptions is true", async () => {
             const mockStartClient = vi.fn();
             const mockMatrixClient = {
                 isGuest: vi.fn(),
@@ -399,16 +334,12 @@ describe("MatrixChatConnection", () => {
                 },
                 initRustCrypto: vi.fn(),
                 startClient: mockStartClient,
+                isInitialSyncComplete: vi.fn().mockReturnValue(true),
             } as unknown as MatrixClient;
 
             const clientPromise = Promise.resolve(mockMatrixClient);
 
-            const matrixChatConnection = new MatrixChatConnection(
-                basicMockConnection,
-                clientPromise,
-                basicStatusStore,
-                basicMockMatrixSecurity
-            );
+            const matrixChatConnection = await getMatrixConnection(clientPromise);
 
             const roomOptions = {
                 encrypt: true,
@@ -419,7 +350,7 @@ describe("MatrixChatConnection", () => {
                 content: { algorithm: "m.megolm.v1.aes-sha2" },
             });
         });
-        it("should not add encryption option to initial state when encrypt from roomOptions is false", () => {
+        it("should not add encryption option to initial state when encrypt from roomOptions is false", async () => {
             const mockStartClient = vi.fn();
             const mockMatrixClient = {
                 isGuest: vi.fn(),
@@ -429,16 +360,12 @@ describe("MatrixChatConnection", () => {
                 },
                 initRustCrypto: vi.fn(),
                 startClient: mockStartClient,
+                isInitialSyncComplete: vi.fn().mockReturnValue(true),
             } as unknown as MatrixClient;
 
             const clientPromise = Promise.resolve(mockMatrixClient);
 
-            const matrixChatConnection = new MatrixChatConnection(
-                basicMockConnection,
-                clientPromise,
-                basicStatusStore,
-                basicMockMatrixSecurity
-            );
+            const matrixChatConnection = await getMatrixConnection(clientPromise);
 
             const roomOptions = {
                 encrypt: false,
@@ -449,7 +376,7 @@ describe("MatrixChatConnection", () => {
                 content: { algorithm: "m.megolm.v1.aes-sha2" },
             });
         });
-        it("should add historyVisibility option to initial state when historyVisibility from roomOptions is defined", () => {
+        it("should add historyVisibility option to initial state when historyVisibility from roomOptions is defined", async () => {
             const mockStartClient = vi.fn();
             const mockMatrixClient = {
                 isGuest: vi.fn(),
@@ -463,12 +390,7 @@ describe("MatrixChatConnection", () => {
 
             const clientPromise = Promise.resolve(mockMatrixClient);
 
-            const matrixChatConnection = new MatrixChatConnection(
-                basicMockConnection,
-                clientPromise,
-                basicStatusStore,
-                basicMockMatrixSecurity
-            );
+            const matrixChatConnection = await getMatrixConnection(clientPromise);
 
             const roomOptions = {
                 historyVisibility: "joined",
@@ -480,7 +402,7 @@ describe("MatrixChatConnection", () => {
             });
         });
 
-        it("should not add historyVisibility option to initial state when historyVisibility from roomOptions is undefined", () => {
+        it("should not add historyVisibility option to initial state when historyVisibility from roomOptions is undefined", async () => {
             const mockStartClient = vi.fn();
             const mockMatrixClient = {
                 isGuest: vi.fn(),
@@ -494,12 +416,7 @@ describe("MatrixChatConnection", () => {
 
             const clientPromise = Promise.resolve(mockMatrixClient);
 
-            const matrixChatConnection = new MatrixChatConnection(
-                basicMockConnection,
-                clientPromise,
-                basicStatusStore,
-                basicMockMatrixSecurity
-            );
+            const matrixChatConnection = await getMatrixConnection(clientPromise);
 
             const roomOptions = {} as unknown as CreateRoomOptions;
 
@@ -526,12 +443,7 @@ describe("MatrixChatConnection", () => {
 
             const clientPromise = Promise.resolve(mockMatrixClient);
 
-            const matrixChatConnection = new MatrixChatConnection(
-                basicMockConnection,
-                clientPromise,
-                basicStatusStore,
-                basicMockMatrixSecurity
-            );
+            const matrixChatConnection = await getMatrixConnection(clientPromise);
 
             //eslint-disable-next-line @typescript-eslint/no-floating-promises
             await expect(matrixChatConnection.createRoom()).rejects.toThrowError("CreateRoomOptions is empty");
@@ -555,12 +467,7 @@ describe("MatrixChatConnection", () => {
 
             const clientPromise = Promise.resolve(mockMatrixClient);
 
-            const matrixChatConnection = new MatrixChatConnection(
-                basicMockConnection,
-                clientPromise,
-                basicStatusStore,
-                basicMockMatrixSecurity
-            );
+            const matrixChatConnection = await getMatrixConnection(clientPromise);
 
             await clientPromise;
 
@@ -590,12 +497,7 @@ describe("MatrixChatConnection", () => {
 
             const clientPromise = Promise.resolve(mockMatrixClient);
 
-            const matrixChatConnection = new MatrixChatConnection(
-                basicMockConnection,
-                clientPromise,
-                basicStatusStore,
-                basicMockMatrixSecurity
-            );
+            const matrixChatConnection = await getMatrixConnection(clientPromise);
 
             await clientPromise;
             expect(await matrixChatConnection.createRoom({ name: "Test" })).toEqual(expected);
@@ -620,13 +522,7 @@ describe("MatrixChatConnection", () => {
 
             const clientPromise = Promise.resolve(mockMatrixClient);
 
-            const matrixChatConnection = new MatrixChatConnection(
-                basicMockConnection,
-                clientPromise,
-                basicStatusStore,
-                basicMockMatrixSecurity
-            );
-
+            const matrixChatConnection = await getMatrixConnection(clientPromise);
             await clientPromise;
 
             const userId = "AliceID";
@@ -669,12 +565,7 @@ describe("MatrixChatConnection", () => {
 
             const clientPromise = Promise.resolve(mockMatrixClient);
 
-            const matrixChatConnection = new MatrixChatConnection(
-                basicMockConnection,
-                clientPromise,
-                basicStatusStore,
-                basicMockMatrixSecurity
-            );
+            const matrixChatConnection = await getMatrixConnection(clientPromise);
 
             await clientPromise;
 
@@ -723,12 +614,7 @@ describe("MatrixChatConnection", () => {
 
             const clientPromise = Promise.resolve(mockMatrixClient);
 
-            const matrixChatConnection = new MatrixChatConnection(
-                basicMockConnection,
-                clientPromise,
-                basicStatusStore,
-                basicMockMatrixSecurity
-            );
+            const matrixChatConnection = await getMatrixConnection(clientPromise);
 
             await clientPromise;
             await flushPromises();
@@ -772,12 +658,7 @@ describe("MatrixChatConnection", () => {
 
             const clientPromise = Promise.resolve(mockMatrixClient);
 
-            const matrixChatConnection = new MatrixChatConnection(
-                basicMockConnection,
-                clientPromise,
-                basicStatusStore,
-                basicMockMatrixSecurity
-            );
+            const matrixChatConnection = await getMatrixConnection(clientPromise);
 
             const roomAlreadyInRoomList = {
                 id: roomSearchText,
@@ -837,12 +718,7 @@ describe("MatrixChatConnection", () => {
                 MatrixChatRoom: vi.fn(),
             }));
 
-            const matrixChatConnection = new MatrixChatConnection(
-                basicMockConnection,
-                clientPromise,
-                basicStatusStore,
-                basicMockMatrixSecurity
-            );
+            const matrixChatConnection = await getMatrixConnection(clientPromise);
 
             await clientPromise;
 
@@ -893,12 +769,7 @@ describe("MatrixChatConnection", () => {
                 MatrixChatRoom: vi.fn(),
             }));
 
-            const matrixChatConnection = new MatrixChatConnection(
-                basicMockConnection,
-                clientPromise,
-                basicStatusStore,
-                basicMockMatrixSecurity
-            );
+            const matrixChatConnection = await getMatrixConnection(clientPromise);
 
             await clientPromise;
 
@@ -946,12 +817,7 @@ describe("MatrixChatConnection", () => {
                 MatrixChatRoom: vi.fn(),
             }));
 
-            const matrixChatConnection = new MatrixChatConnection(
-                basicMockConnection,
-                clientPromise,
-                basicStatusStore,
-                basicMockMatrixSecurity
-            );
+            const matrixChatConnection = await getMatrixConnection(clientPromise);
 
             await clientPromise;
 
@@ -991,12 +857,7 @@ describe("MatrixChatConnection", () => {
 
             const clientPromise = Promise.resolve(mockMatrixClient);
 
-            const matrixChatConnection = new MatrixChatConnection(
-                basicMockConnection,
-                clientPromise,
-                basicStatusStore,
-                basicMockMatrixSecurity
-            );
+            const matrixChatConnection = await getMatrixConnection(clientPromise);
 
             await clientPromise;
 
@@ -1047,12 +908,7 @@ describe("MatrixChatConnection", () => {
 
             const clientPromise = Promise.resolve(mockMatrixClient);
 
-            const matrixChatConnection = new MatrixChatConnection(
-                basicMockConnection,
-                clientPromise,
-                basicStatusStore,
-                basicMockMatrixSecurity
-            );
+            const matrixChatConnection = await getMatrixConnection(clientPromise);
 
             await clientPromise;
 
