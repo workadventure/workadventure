@@ -57,7 +57,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     invitations: Readable<MatrixChatRoom[]>;
     rooms: Readable<MatrixChatRoom[]>;
     isEncryptionRequiredAndNotSet: Writable<boolean>;
-    isGuest: Writable<boolean> = writable(true);
+    isGuest: Writable<boolean> = writable(false);
     hasUnreadMessages: Readable<boolean>;
     roomCreationInProgress: Writable<boolean> = writable(false);
     roomFolders: MapStore<MatrixRoomFolder["id"], MatrixRoomFolder> = new MapStore<

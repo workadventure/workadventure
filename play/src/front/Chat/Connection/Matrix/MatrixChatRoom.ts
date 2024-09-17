@@ -185,19 +185,22 @@ export class MatrixChatRoom implements ChatRoom {
         }
         await this.timelineWindow.load();
         const events = this.timelineWindow.getEvents();
+
+        const decryptMessagesPromises: Promise<MatrixChatMessage | undefined>[] = [];
+
         events.forEach((event) => {
-            this.readEventsToAddMessagesAndReactions(event, this.messages, this.messageReactions).catch((error) =>
-                console.error(error)
-            );
+            decryptMessagesPromises.push(this.readEventsToAddMessagesAndReactions(event, this.messageReactions));
         });
+
+        await Promise.all(decryptMessagesPromises);
+
         this.hasPreviousMessage.set(this.timelineWindow.canPaginate(Direction.Backward));
     }
 
     private async readEventsToAddMessagesAndReactions(
         event: MatrixEvent,
-        messages: MatrixChatMessage[],
         messageReactions: MapStore<string, MapStore<string, MatrixChatMessageReaction>>
-    ) {
+    ): Promise<MatrixChatMessage | undefined> {
         if (event.isEncrypted()) {
             await this.matrixRoom.client.decryptEventIfNeeded(event).catch(() => {
                 console.error("Failed to decrypt");
@@ -205,13 +208,15 @@ export class MatrixChatRoom implements ChatRoom {
             });
         }
         if (event.getType() === "m.room.message" && !this.isEventReplacingExistingOne(event)) {
-            messages.push(new MatrixChatMessage(event, this.matrixRoom));
+
             this.addEventContentInMemory(event);
+            return new MatrixChatMessage(event, this.matrixRoom);
         }
         if (event.getType() === "m.reaction") {
             this.handleNewMessageReaction(event, messageReactions);
             this.addEventContentInMemory(event);
         }
+        return undefined;
     }
 
     private startHandlingChatRoomEvents() {
@@ -395,13 +400,14 @@ export class MatrixChatRoom implements ChatRoom {
             const existingEventsBeforePagination = this.timelineWindow.getEvents();
             await this.timelineWindow.paginate(Direction.Backward, 8);
             this.timelineWindow.unpaginate(existingEventsBeforePagination.length, false);
-            const tempMatrixChatMessages: MatrixChatMessage[] = [];
+            const tempMatrixChatMessages: Promise<MatrixChatMessage | undefined>[] = [];
             this.timelineWindow.getEvents().forEach((event) => {
-                this.readEventsToAddMessagesAndReactions(event, tempMatrixChatMessages, this.messageReactions).catch(
-                    (error) => console.error(error)
-                );
+                tempMatrixChatMessages.push(this.readEventsToAddMessagesAndReactions(event, this.messageReactions));
             });
-            this.messages.unshift(...tempMatrixChatMessages);
+
+            const result = await Promise.all(tempMatrixChatMessages);
+
+            this.messages.unshift(...result.filter((message) => message !== undefined));
             this.hasPreviousMessage.set(this.timelineWindow.canPaginate(Direction.Backward));
             if (tempMatrixChatMessages.length === 0) {
                 await this.loadMorePreviousMessages();

@@ -140,7 +140,8 @@
         return (
             messagesBeforeViewportTop &&
             messages.indexOf(messagesBeforeViewportTop) < 10 &&
-            messages.indexOf(messagesBeforeViewportTop) !== -1
+            messages.indexOf(messagesBeforeViewportTop) !== -1 &&
+            get(room.hasPreviousMessage)
         );
     }
 
