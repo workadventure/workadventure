@@ -1,5 +1,5 @@
 import { isAxiosError } from "axios";
-import type { MucRoomDefinition, LegalsData } from "@workadventure/messages";
+import type { LegalsData } from "@workadventure/messages";
 import { isMapDetailsData, isRoomRedirect, ErrorApiData, OpidWokaNamePolicy } from "@workadventure/messages";
 import { CONTACT_URL, DISABLE_ANONYMOUS, OPID_WOKA_NAME_POLICY } from "../Enum/EnvironmentVariable";
 import { ApiError } from "../Stores/Errors/ApiError";
@@ -32,7 +32,6 @@ export class Room {
     private _loadingLogo: string | undefined;
     private _loginSceneLogo: string | undefined;
     private _metadata: unknown | undefined;
-    private _mucRooms: Array<MucRoomDefinition> | undefined;
     private _showPoweredBy: boolean | undefined = true;
     private _roomName: string | undefined;
     private _pricingUrl: string | undefined;
@@ -163,7 +162,6 @@ export class Room {
                 this._backgroundColor = data.backgroundColor ?? undefined;
                 this._metadata = data.metadata ?? undefined;
 
-                this._mucRooms = data.mucRooms ?? undefined;
                 this._roomName = data.roomName ?? undefined;
 
                 this._pricingUrl = data.pricingUrl ?? undefined;
@@ -303,10 +301,6 @@ export class Room {
 
     get metadata(): unknown {
         return this._metadata;
-    }
-
-    get mucRooms(): Array<MucRoomDefinition> | undefined {
-        return this._mucRooms;
     }
 
     get roomName(): string | undefined {

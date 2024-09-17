@@ -4,7 +4,7 @@ import type { Translation } from "../i18n-types";
 const notification: DeepPartial<Translation["notification"]> = {
     discussion: "co z tobu diskutěrowaś",
     message: "sćelo śi powěsć",
-    forum: "we forumje",
+    chatRoom: "we forumje",
 };
 
 export default notification;
