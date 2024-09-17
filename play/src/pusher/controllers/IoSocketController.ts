@@ -342,7 +342,6 @@ export class IoSocketController {
                             companionTexture: undefined,
                             messages: [],
                             userRoomToken: undefined,
-                            mucRooms: [],
                             activatedInviteUser: true,
                             canEdit: false,
                             world: "",
@@ -469,7 +468,6 @@ export class IoSocketController {
                             visitCardUrl: memberVisitCardUrl,
                             userRoomToken: memberUserRoomToken,
                             activatedInviteUser: userData.activatedInviteUser ?? undefined,
-                            mucRooms: userData.mucRooms || [],
                             applications: userData.applications,
                             canEdit: userData.canEdit ?? false,
                             spaceUser: SpaceUser.fromPartial({

@@ -12,7 +12,6 @@ import {
     isErrorApiErrorData,
     isMapDetailsData,
     isRoomRedirect,
-    MucRoomDefinition,
     WokaDetail,
 } from "@workadventure/messages";
 import { z } from "zod";
@@ -88,9 +87,6 @@ export const isFetchMemberDataByUuidSuccessResponse = z.object({
         example: false,
     }),*/
     userRoomToken: extendApi(z.optional(z.string()), { description: "", example: "" }),
-    mucRooms: extendApi(z.nullable(z.array(MucRoomDefinition)), {
-        description: "The MUC room is a room of message",
-    }),
     activatedInviteUser: extendApi(z.boolean().nullable().optional(), {
         description: "Button invite is activated in the action bar",
     }),
