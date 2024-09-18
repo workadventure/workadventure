@@ -34,7 +34,7 @@
         const renderer = new marked.Renderer();
         renderer.link = (href: string, title: string, text: string) => {
             const titleAttr = title ? `title="${title}"` : "";
-            return `<a href="${href}" target="_blank" rel="noopener noreferrer" ${titleAttr}>${text}</a>`;
+            return `<a href="${href}" target="_blank" rel="noopener noreferrer" ${titleAttr} style="color: white;">${text}</a>`;
         };
 
         // Apply the custom renderer and enable line breaks
