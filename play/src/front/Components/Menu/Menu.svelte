@@ -23,6 +23,7 @@
     import CustomSubMenu from "./CustomSubMenu.svelte";
     import GuestSubMenu from "./GuestSubMenu.svelte";
     import ReportSubMenu from "./ReportSubMenu.svelte";
+    import ChatSubMenu from "./ChatSubMenu.svelte";
 
     let activeSubMenu: MenuItem = $subMenusStore[$activeSubMenuStore];
     let activeComponent: typeof ProfileSubMenu | typeof CustomSubMenu = ProfileSubMenu;
@@ -89,6 +90,10 @@
                 case SubMenusInterface.report:
                     activeComponent = ReportSubMenu;
                     analyticsClient.reportIssue();
+                    break;
+                case SubMenusInterface.chat:
+                    activeComponent = ChatSubMenu;
+                    analyticsClient.menuChat();
                     break;
             }
         } else {

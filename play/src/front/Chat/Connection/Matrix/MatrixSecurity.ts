@@ -4,6 +4,7 @@ import { deriveKey } from "matrix-js-sdk/lib/crypto/key_passphrase";
 import { decodeRecoveryKey } from "matrix-js-sdk/lib/crypto/recoverykey";
 import { openModal } from "svelte-modals";
 import { writable } from "svelte/store";
+import * as Sentry from "@sentry/svelte";
 import { alreadyAskForInitCryptoConfiguration } from "../../Stores/ChatStore";
 import InteractiveAuthDialog from "./InteractiveAuthDialog.svelte";
 import CreateRecoveryKeyDialog from "./CreateRecoveryKeyDialog.svelte";
@@ -105,6 +106,7 @@ export class MatrixSecurity {
                 .bind(this)()
                 .catch((error) => {
                     console.error("initClientCryptoConfiguration error: ", error);
+                    Sentry.captureMessage(`initClientCryptoConfiguration error : ${error}`);
                     this.initializingEncryptionPromise = undefined;
                     initializingEncryptionReject(error);
                     return;
@@ -172,6 +174,50 @@ export class MatrixSecurity {
         } catch (error) {
             console.error("Unable to restoreKeyBackupWithCache : ", error);
             return false;
+        }
+    }
+
+    public async setupNewKeyBackup() {
+        const crypto = this.matrixClientStore?.getCrypto();
+        if (!crypto) return;
+        try {
+            await crypto.bootstrapSecretStorage({
+                createSecretStorageKey: async () => {
+                    const generatedKey = await new Promise<GeneratedSecretStorageKey | null>((resolve, reject) => {
+                        this._openModal(CreateRecoveryKeyDialog, {
+                            crypto,
+                            processCallback: (generatedKey: GeneratedSecretStorageKey | null) => {
+                                if (generatedKey === undefined) {
+                                    return reject(new Error("no generated secret storage key"));
+                                }
+                                resolve(generatedKey);
+                            },
+                        });
+                    });
+
+                    if (generatedKey === null) {
+                        this.isEncryptionRequiredAndNotSet.set(true);
+                        const createSecretStorageKeyError = new Error(
+                            "createSecretStorageKey : no generated secret storage key"
+                        );
+                        return Promise.reject(createSecretStorageKeyError);
+                    }
+                    return Promise.resolve(generatedKey);
+                },
+                setupNewKeyBackup: true,
+                setupNewSecretStorage: true,
+            });
+
+            const keyBackupInfo = await this.matrixClientStore?.getKeyBackupVersion();
+
+            if (keyBackupInfo !== null && keyBackupInfo !== undefined) {
+                await this.restoreBackupMessages(keyBackupInfo);
+            }
+
+            alreadyAskForInitCryptoConfiguration.set(false);
+        } catch (error) {
+            console.error("Failed to reset KeybackUp");
+            Sentry.captureMessage(`Failed to reset KeybackUp : ${error}`);
         }
     }
 }

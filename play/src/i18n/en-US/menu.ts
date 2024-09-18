@@ -110,6 +110,17 @@ const menu: BaseTranslation = {
             },
         },
     },
+    chat: {
+        matrixIDLabel: "Your Matrix ID",
+        settings: "Settings",
+        resetKeyBackUpButtonLabel: "Reset your backup key",
+        resetKeyBackupConfirmationModal: {
+            title: "Backup key reset confirmation",
+            content: "You are about to reset the backup key. Are you sure?",
+            cancel: "Cancel",
+            continue: "Continue",
+        },
+    },
     sub: {
         profile: "Profile",
         settings: "Settings",
@@ -118,6 +129,7 @@ const menu: BaseTranslation = {
         globalMessages: "Global Messages",
         contact: "Contact",
         report: "Report Issues",
+        chat: "Chat",
     },
 };
 
