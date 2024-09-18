@@ -110,6 +110,17 @@ const menu: DeepPartial<Translation["menu"]> = {
             },
         },
     },
+    chat: {
+        matrixIDLabel: "Votre ID Matrix",
+        settings: "Paramètres",
+        resetKeyBackUpButtonLabel: "Réinitialiser la clé de sauvegarde",
+        resetKeyBackupConfirmationModal: {
+            title: "Confirmation de la réinitialisation de la clé de sauvegarde",
+            content: "Vous êtes sur le point de réinitialiser la clé de sauvegarde. Êtes-vous sûr(e) ?",
+            cancel: "Annuler",
+            continue: "Continuer",
+        },
+    },
     sub: {
         profile: "Profil",
         settings: "Paramètres",
@@ -118,6 +129,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "Messages globaux",
         contact: "Contact",
         report: "Remonter un bug",
+        chat: "Chat",
     },
 };
 

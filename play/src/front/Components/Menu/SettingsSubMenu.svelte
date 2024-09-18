@@ -19,7 +19,6 @@
 
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification();
-    let chatSounds: boolean = localUserStore.getChatSounds();
     let forceCowebsiteTrigger: boolean = localUserStore.getForceCowebsiteTrigger();
     let ignoreFollowRequests: boolean = localUserStore.getIgnoreFollowRequests();
     let decreaseAudioPlayerVolumeWhileTalking: boolean = localUserStore.getDecreaseAudioPlayerVolumeWhileTalking();
@@ -116,10 +115,6 @@
                 })
                 .catch((e) => console.error(e));
         }
-    }
-
-    function changeChatSounds() {
-        localUserStore.setChatSounds(chatSounds);
     }
 
     function changeForceCowebsiteTrigger() {
@@ -315,10 +310,6 @@
         <label>
             <input type="checkbox" bind:checked={notification} on:change={changeNotification} />
             <span>{$LL.menu.settings.notifications()}</span>
-        </label>
-        <label>
-            <input type="checkbox" bind:checked={chatSounds} on:change={changeChatSounds} />
-            <span>{$LL.menu.settings.chatSounds()}</span>
         </label>
         <label>
             <input type="checkbox" bind:checked={forceCowebsiteTrigger} on:change={changeForceCowebsiteTrigger} />
