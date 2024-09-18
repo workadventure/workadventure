@@ -52,6 +52,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     private handleName: (room: Room) => void;
     private handleAccountDataEvent: (event: MatrixEvent) => void;
     private statusUnsubscriber: Unsubscriber | undefined;
+    private isClientReady = false;
     connectionStatus: Writable<ConnectionStatus>;
     directRooms: Readable<MatrixChatRoom[]>;
     invitations: Readable<MatrixChatRoom[]>;
@@ -185,6 +186,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             switch (state) {
                 case SyncState.Prepared:
                     this.connectionStatus.set("ONLINE");
+                    this.isClientReady = true;
                     break;
                 case SyncState.Error:
                     this.connectionStatus.set("ON_ERROR");
@@ -194,6 +196,11 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                     break;
                 case SyncState.Stopped:
                     this.connectionStatus.set("OFFLINE");
+                    break;
+                case SyncState.Syncing:
+                    if (get(this.connectionStatus) !== "ONLINE" && this.isClientReady) {
+                        this.connectionStatus.set("ONLINE");
+                    }
                     break;
             }
         });
