@@ -1,10 +1,12 @@
 <script lang="ts">
     import { MatrixClient, SecretStorage } from "matrix-js-sdk";
-    import { closeModal, onBeforeClose } from "svelte-modals";
+    import { closeModal, onBeforeClose, openModal } from "svelte-modals";
     import * as Sentry from "@sentry/svelte";
     import Popup from "../../../Components/Modal/Popup.svelte";
+    import ResetKeyBackupConfirmationModal from "../../../Components/Menu/ResetKeyBackupConfirmationModal.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import { MatrixSecurity } from "./MatrixSecurity";
+    import { IconEdit, IconKey, IconRestore } from "@wa-icons";
     import { IconEdit, IconKey, IconLoader } from "@wa-icons";
 
     export let isOpen: boolean;
@@ -62,6 +64,11 @@
         closeModal();
     }
 
+    function switchToRestoreConfirmationModal() {
+        closeModal();
+        openModal(ResetKeyBackupConfirmationModal);
+    }
+
     onBeforeClose(() => {
         if (hasCancelAccessSecretStorage) {
             onClose(null);
@@ -96,9 +103,15 @@
                         : undefined;
                 }}
             />
-            <button on:click={changeAccessSecretStorageMethod} class={changeAccessSecretStorageMethodButtonClass}>
-                <IconKey /> {$LL.chat.e2ee.accessSecretStorage.buttons.useRecoveryKey()}</button
-            >
+            <div class="tw-flex tw-flex-row tw-justify-between">
+                <button class="tw-self-start tw-text-blue-500" on:click={switchToRestoreConfirmationModal}>
+                    <IconRestore />
+                    {$LL.menu.chat.resetKeyBackUpButtonLabel()}
+                </button>
+                <button on:click={changeAccessSecretStorageMethod} class={changeAccessSecretStorageMethodButtonClass}>
+                    <IconEdit /> {$LL.chat.e2ee.accessSecretStorage.buttons.useRecoveryKey()}</button
+                >
+            </div>
         {:else}
             <label for="recoveryKey"> <IconKey /> {$LL.chat.e2ee.accessSecretStorage.recoveryKey()}</label>
             <input
@@ -110,9 +123,15 @@
                 class="tw-w-full tw-rounded-xl tw-text-white placeholder:tw-text-sm tw-px-3 tw-py-2 tw-p tw-border-light-purple tw-border tw-border-solid tw-bg-contrast"
                 bind:value={recoveryKeyInput}
             />
-            <button on:click={changeAccessSecretStorageMethod} class={changeAccessSecretStorageMethodButtonClass}>
-                <IconEdit /> {$LL.chat.e2ee.accessSecretStorage.buttons.usePassphrase()}</button
-            >
+            <div class="tw-flex tw-flex-row tw-justify-between">
+                <button class="tw-self-start tw-text-blue-500" on:click={switchToRestoreConfirmationModal}>
+                    <IconRestore />
+                    {$LL.menu.chat.resetKeyBackUpButtonLabel()}
+                </button>
+                <button on:click={changeAccessSecretStorageMethod} class={changeAccessSecretStorageMethodButtonClass}>
+                    <IconEdit /> {$LL.chat.e2ee.accessSecretStorage.buttons.usePassphrase()}</button
+                >
+            </div>
         {/if}
 
         {#if error}

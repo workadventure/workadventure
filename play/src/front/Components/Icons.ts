@@ -41,3 +41,4 @@ export { default as IconMessage } from "~icons/tabler/message";
 export { default as IconFolder } from "~icons/tabler/folder";
 export { default as IconUnMute } from "~icons/tabler/volume";
 export { default as IconMute } from "~icons/tabler/volume3";
+export { default as IconRestore } from "~icons/tabler/restore";
