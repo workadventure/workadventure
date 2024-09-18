@@ -57,9 +57,7 @@ export class MatrixSecurity {
                             });
                             if (!finished) {
                                 this.isEncryptionRequiredAndNotSet.set(true);
-                                return initializingEncryptionReject(
-                                    new Error("Cross-signing key upload auth canceled")
-                                );
+                                throw new Error("Cross-signing key upload auth canceled");
                             }
                         },
                         setupNewCrossSigning: keyBackupInfo === null,
