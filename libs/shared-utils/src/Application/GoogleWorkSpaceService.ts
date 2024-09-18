@@ -19,7 +19,7 @@ export const getGoogleSlidesEmbedUrl = (url: URL): string => {
     return getGoogleWorkSpaceEmbedUrl(url);
 };
 
-function getGoogleWorkSpaceEmbedUrl(url: URL): string {
+export const getGoogleWorkSpaceEmbedUrl = (url: URL): string => {
     const link = url.toString();
     if (isEmbedableGooglWorkSapceLink(url)) return link;
     url.searchParams.set("embedded", "true");
@@ -39,6 +39,11 @@ export const isGoogleSheetsLink = (url: URL): boolean => {
 // create function to check if the link is a Google Slides link
 export const isGoogleSlidesLink = (url: URL): boolean => {
     return url.toString().indexOf("/presentation/") > -1;
+};
+
+// create function to check if the link is a Google WorkSpace link
+export const isGoogleWorkSpaceLink = (url: URL): boolean => {
+    return isGoogleDocsLink(url) || isGoogleSheetsLink(url) || isGoogleSlidesLink(url);
 };
 
 // create function to check if the Google WorkSpace link in parameter is embedable or not

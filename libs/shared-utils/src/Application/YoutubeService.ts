@@ -58,3 +58,9 @@ export const isEmbedableYoutubeLink = (url: URL): boolean => {
 export const getTitleFromYoutubeUrl = (url: URL): string | undefined => {
     return cashManagement.get(genreateUrlOembed(url))?.title;
 };
+
+export const createEmbedlink = (url: URL): string => {
+    if(isEmbedableYoutubeLink(url)) return url.toString();
+    // Create embed link from public link for Youtube
+    return url.toString().replace("watch?v=", "embed/");
+};
