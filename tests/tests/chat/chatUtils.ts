@@ -53,6 +53,10 @@ class ChatUtils {
     await page.getByText("Continue").click();
   }
 
+  public async cancelledContinueWithSSO(page:Page,context:BrowserContext){
+    await page.getByText("Cancel").click();
+  }
+
   public async restoreEncryption(page: Page) {
     await page.getByTestId("passphraseInput").fill(DEFAULT_PASSPHRASE);
     await page.getByText("Confirm").click();
