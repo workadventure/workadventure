@@ -10,6 +10,7 @@ import { coWebsiteManager } from "../WebRtc/CoWebsiteManager";
 import { scriptUtils } from "../Api/ScriptUtils";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { userIsConnected } from "../Stores/MenuStore";
+import { chatVisibilityStore } from "../Stores/ChatStore";
 import { navChat, selectedRoom } from "./Stores/ChatStore";
 import { ChatRoom } from "./Connection/ChatConnection";
 import RequiresLoginForChatModal from "./Components/RequiresLoginForChatModal.svelte";
@@ -99,6 +100,7 @@ export const openChatRoom = async (chatID: string) => {
 
         selectedRoom.set(room);
         navChat.set("chat");
+        chatVisibilityStore.set(true);
     } catch (error) {
         console.error(error);
         Sentry.captureMessage("Failed to create room");
