@@ -23,7 +23,16 @@ export async function oidcLogin(
   });
   await page.fill("#Input_Password", password);
 
-  await page.click('button:has-text("Login")');
+  await page.click('button:has-text("Login")', {
+    // Give ample time for login to occur
+    timeout: 50000
+  });
+
+  if (!isMobile) {
+    await expect(page.locator("button#menuIcon").first()).toBeVisible();
+  } else {
+    await expect(page.locator("button#burgerIcon")).toBeVisible();
+  }
 }
 
 export async function oidcLogout(page: Page, isMobile = false) {
