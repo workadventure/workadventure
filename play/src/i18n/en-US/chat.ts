@@ -298,6 +298,7 @@ const chat: BaseTranslation = {
         content_3: " Please log in to proceed with the experience.",
     },
     requiresLoginForChat: "Sign in to access the chat messages",
+    featureComingSoon: "Feature coming soon!",
 };
 
 export default chat;
