@@ -17,6 +17,8 @@ import {
     RoomEvent,
     SetPresence,
     SyncState,
+    User,
+    UserEvent,
     Visibility,
 } from "matrix-js-sdk";
 import * as Sentry from "@sentry/svelte";
@@ -31,7 +33,7 @@ import { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 import { MatrixSecurity, matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity";
 import { MatrixRoomFolder } from "./MatrixRoomFolder";
-import { chatUserFactory } from "./MatrixChatUser";
+import { chatUserFactory, mapMatrixPresenceToAvailabilityStatus } from "./MatrixChatUser";
 
 const CLIENT_NOT_INITIALIZED_ERROR_MSG = "MatrixClient not yet initialized";
 export const defaultWoka =
@@ -51,8 +53,11 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     private handleRoomStateEvent: (event: MatrixEvent) => void;
     private handleName: (room: Room) => void;
     private handleAccountDataEvent: (event: MatrixEvent) => void;
+    private handleUserPresence: (event: MatrixEvent | undefined, user: User) => void;
     private statusUnsubscriber: Unsubscriber | undefined;
     private isClientReady = false;
+    private usersStatus: MapStore<string, AvailabilityStatus>;
+    private userIdsNeedingPresenceUpdate = new Set();
     connectionStatus: Writable<ConnectionStatus>;
     directRooms: Readable<MatrixChatRoom[]>;
     invitations: Readable<MatrixChatRoom[]>;
@@ -90,9 +95,10 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 (room) => room.myMembership === KnownMembership.Join && room.type === "direct"
             );
         });
+
         this.directRoomsUsers = derived(
-            this.directRooms,
-            (directRooms) => {
+            [this.directRooms, this.statusStore],
+            ([directRooms, statusStore]) => {
                 const myUserID = this.client?.getSafeUserId();
                 const client = this.client;
 
@@ -101,11 +107,12 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 }
 
                 return directRooms.reduce((acc, currentRoom) => {
-                    currentRoom.membersId.forEach((memberID) => {
-                        if (memberID !== myUserID) {
-                            const user = client.getUser(memberID);
+                    currentRoom.members.forEach((member) => {
+                        if (member.userId !== myUserID) {
+                            const user = member.user;
                             if (user) {
                                 acc.push(chatUserFactory(user, client));
+                                this.userIdsNeedingPresenceUpdate.add(user.userId);
                             }
                         }
                     });
@@ -141,6 +148,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             false
         );
 
+        this.usersStatus = new MapStore<string, AvailabilityStatus>();
         this.isEncryptionRequiredAndNotSet = this.matrixSecurity.isEncryptionRequiredAndNotSet;
 
         this.handleRoom = this.onClientEventRoom.bind(this);
@@ -149,6 +157,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.handleRoomStateEvent = this.onRoomStateEvent.bind(this);
         this.handleName = this.onRoomNameEvent.bind(this);
         this.handleAccountDataEvent = this.onAccountDataEvent.bind(this);
+        this.handleUserPresence = this.onUserPresenceEvent.bind(this);
 
         this.statusUnsubscriber = this.statusStore.subscribe((status: AvailabilityStatus) => {
             this.setPresence(status);
@@ -179,6 +188,14 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             console.error("Failed to send presence", error);
             Sentry.captureMessage(`Failed to send presence to synapse server : ${error}`);
         });
+    }
+
+    private onUserPresenceEvent(event: MatrixEvent | undefined, user: User): void {
+        const userStatus = get(this.usersStatus).get(user.userId);
+        const newStatus = mapMatrixPresenceToAvailabilityStatus(user.presence);
+        if (userStatus && newStatus !== userStatus && this.userIdsNeedingPresenceUpdate.has(user.userId)) {
+            get(this.usersStatus).set(user.userId, newStatus);
+        }
     }
 
     async startMatrixClient() {
@@ -213,6 +230,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.client.on("RoomState.events" as EmittedEvents, this.handleRoomStateEvent);
         this.client.on(RoomEvent.Name, this.handleName);
         this.client.on(ClientEvent.AccountData, this.handleAccountDataEvent);
+        this.client.on(UserEvent.Presence, this.handleUserPresence);
 
         await this.client.store.startup();
         await this.client.initRustCrypto();
@@ -855,6 +873,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.client?.off(RoomEvent.MyMembership, this.handleMyMembership);
         this.client?.off("RoomState.events" as EmittedEvents, this.handleRoomStateEvent);
         this.client?.off(RoomEvent.Name, this.handleName);
+        this.client?.off(UserEvent.Presence, this.handleUserPresence);
+
         if (this.statusUnsubscriber) this.statusUnsubscriber();
     }
     async destroy(): Promise<void> {
