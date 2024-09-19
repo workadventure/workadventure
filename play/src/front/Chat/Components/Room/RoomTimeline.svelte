@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { afterUpdate, beforeUpdate, onMount } from "svelte";
-    import { get } from "svelte/store";
-    import { ChatRoom } from "../../Connection/ChatConnection";
+    import { afterUpdate, beforeUpdate, onDestroy, onMount } from "svelte";
+    import { get, Unsubscriber, writable } from "svelte/store";
+    import { ChatMessage, ChatRoom } from "../../Connection/ChatConnection";
     import { selectedChatMessageToReply, selectedRoom } from "../../Stores/ChatStore";
     import Avatar from "../Avatar.svelte";
     import LL from "../../../../i18n/i18n-svelte";
@@ -26,9 +26,12 @@
     let scrollTimer: ReturnType<typeof setTimeout>;
     let shouldDisplayLoader = false;
 
-    $: messages = room?.messages;
     $: messageReaction = room?.messageReactions;
     $: roomName = room?.name;
+
+    let messageSubscription: Unsubscriber;
+    const groupedMessagesStore = writable<(ChatMessage | ChatMessage[])[]>([]);
+    const messagesCount = writable(0);
 
     onMount(() => {
         scrollToMessageListBottom();
@@ -57,6 +60,52 @@
         await loadMessages();
         scrollToMessageListBottom();
         setFirstListItem();
+
+        messageSubscription = room?.messages.subscribe((values) => {
+            // Create grouped message from messages store of connection
+            // The message will grouped if the message is from the same sender and the message is sent in the same minute
+            let lastDateTimeMessage = null;
+            let lastSenderMessage = null;
+            const groupedMessages = [];
+            for (const message of values) {
+                const messageDate = message.date && new Date(message.date).getTime();
+                if (!lastDateTimeMessage || !lastSenderMessage) {
+                    groupedMessages.push([message]);
+                } else {
+                    if (
+                        lastDateTimeMessage &&
+                        lastSenderMessage &&
+                        messageDate &&
+                        message.sender &&
+                        messageDate - lastDateTimeMessage < 60000 &&
+                        lastSenderMessage === message.sender.uuid
+                    ) {
+                        groupedMessages[groupedMessages.length - 1].push(message);
+                    } else {
+                        groupedMessages.push([message]);
+                        lastDateTimeMessage = null;
+                        lastSenderMessage = null;
+                    }
+                }
+
+                if (lastDateTimeMessage == undefined && messageDate) {
+                    lastDateTimeMessage = messageDate;
+                }
+                if (lastSenderMessage == undefined && message.sender) {
+                    lastSenderMessage = message.sender.uuid;
+                }
+            }
+            messagesCount.set(values.length);
+            groupedMessagesStore.set(
+                groupedMessages.map((groupedMessage) => {
+                    if (groupedMessage.length > 1) {
+                        return groupedMessage;
+                    } else {
+                        return groupedMessage[0];
+                    }
+                })
+            );
+        });
     }
 
     beforeUpdate(() => {
@@ -156,6 +205,10 @@
     function isViewportNotFilled() {
         return messageListRef.scrollHeight <= messageListRef.clientHeight;
     }
+
+    onDestroy(() => {
+        if (messageSubscription) messageSubscription();
+    });
 </script>
 
 <div class="tw-flex tw-flex-col tw-flex-1 tw-h-full tw-w-full tw-pl-2">
@@ -177,7 +230,7 @@
         </div>
         <div
             bind:this={messageListRef}
-            class="tw-flex tw-overflow-auto tw-h-full {$messages.length && 'tw-items-end'} "
+            class="tw-flex tw-overflow-auto tw-h-full {$messagesCount && 'tw-items-end'} "
             on:scroll={handleScroll}
         >
             <ul class="tw-list-none tw-p-0 tw-flex-1 tw-flex tw-flex-col tw-max-h-full">
@@ -190,17 +243,33 @@
                 <!--        {/each}-->
                 <!--    </div>-->
                 <!--{/if}-->
-                {#if $messages.length === 0}
+                {#if $messagesCount === 0}
                     <p class="tw-self-center tw-text-md tw-text-gray-500">{$LL.chat.nothingToDisplay()}</p>
                 {/if}
-                {#each $messages as message (message.id)}
-                    <li data-event-id={message.id}>
-                        {#if message.type === "outcoming" || message.type === "incoming"}
-                            <MessageSystem {message} />
-                        {:else}
-                            <Message {message} reactions={$messageReaction.get(message.id)} />
-                        {/if}
-                    </li>
+                {#each $groupedMessagesStore as message, index (index)}
+                    {#if Array.isArray(message)}
+                        {#each message as message, index (message.id)}
+                            <li data-event-id={message.id}>
+                                {#if message.type === "outcoming" || message.type === "incoming"}
+                                    <MessageSystem {message} />
+                                {:else}
+                                    <Message
+                                        {message}
+                                        reactions={$messageReaction.get(message.id)}
+                                        isMerged={index > 0}
+                                    />
+                                {/if}
+                            </li>
+                        {/each}
+                    {:else}
+                        <li data-event-id={message.id}>
+                            {#if message.type === "outcoming" || message.type === "incoming"}
+                                <MessageSystem {message} />
+                            {:else}
+                                <Message {message} reactions={$messageReaction.get(message.id)} />
+                            {/if}
+                        </li>
+                    {/if}
                 {/each}
             </ul>
         </div>

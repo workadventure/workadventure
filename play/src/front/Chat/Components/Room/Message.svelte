@@ -19,6 +19,7 @@
 
     export let message: ChatMessage;
     export let reactions: MapStore<string, ChatMessageReaction> | undefined;
+    export let isMerged = false;
 
     const { id, sender, isMyMessage, date, content, quotedMessage, isQuotedMessage, type, isDeleted, isModified } =
         message;
@@ -44,23 +45,25 @@
     } tw-select-text`}
 >
     <div class={`container-grid ${isMyMessage ? "tw-justify-end grid-container-inverted" : "tw-justify-start"}`}>
-        <div
-            class="messageHeader tw-text-gray-500 tw-text-xxs tw-p-0 tw-m-0 tw-flex tw-justify-between tw-items-end"
-            class:tw-flex-row-reverse={isMyMessage}
-            hidden={isQuotedMessage || messageFromSystem}
-        >
-            <span hidden={messageFromSystem}>{isMyMessage ? "You" : sender?.username}</span>
-            <span class={`tw-text-xxxs ${isMyMessage ? "tw-mr-1" : "tw-ml-1"}`}
-                >{date?.toLocaleTimeString($locale, {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                })}</span
+        {#if !isMerged}
+            <div
+                class="messageHeader tw-text-gray-500 tw-text-xxs tw-p-0 tw-m-0 tw-flex tw-justify-between tw-items-end"
+                class:tw-flex-row-reverse={isMyMessage}
+                hidden={isQuotedMessage || messageFromSystem}
             >
-        </div>
-        {#if (!isMyMessage || isQuotedMessage) && sender !== undefined}
-            <div class="avatar">
-                <Avatar avatarUrl={sender?.avatarUrl} fallbackName={sender?.username} />
+                <span hidden={messageFromSystem}>{isMyMessage ? "You" : sender?.username}</span>
+                <span class={`tw-text-xxxs ${isMyMessage ? "tw-mr-1" : "tw-ml-1"}`}
+                    >{date?.toLocaleTimeString($locale, {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                    })}</span
+                >
             </div>
+            {#if (!isMyMessage || isQuotedMessage) && sender !== undefined}
+                <div class="avatar">
+                    <Avatar avatarUrl={sender?.avatarUrl} fallbackName={sender?.username} />
+                </div>
+            {/if}
         {/if}
 
         <div
