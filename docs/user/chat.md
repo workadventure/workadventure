@@ -112,3 +112,11 @@ a room.
 Please note that if you receive a message while you're away, WorkAdventure will send a **notification email**. In encrypted 
 rooms, WorkAdventure cannot include a conversation snippet in the email because we can't decrypt the content. 
 Therefore, we advise enabling end-to-end encryption only if you truly need the added level of privacy.
+
+### Resetting Your Backup Key
+
+If you need to reset your backup key, you can do so via the **Reset Your Backup Key** button located in the chat menu. However, proceed with caution:
+
+**Only proceed if you have no other device with which to verify your session.**
+
+Resetting the backup key will remove your current session and all trusted users. You could lose access to some past messages, and you will no longer be recognized as a trusted user. Make sure you fully understand the consequences of this action before proceeding.
