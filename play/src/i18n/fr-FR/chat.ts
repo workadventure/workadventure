@@ -300,6 +300,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         content_3: "Veuillez vous connecter pour poursuivre l’expérience.",
     },
     requiresLoginForChat: "Identifiez-vous pour accéder aux messages du chat",
+    featureComingSoon: "Prochainement disponible !",
 };
 
 export default chat;
