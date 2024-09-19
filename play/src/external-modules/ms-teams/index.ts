@@ -133,6 +133,7 @@ class MSTeams implements MSTeamsExtensionModule {
         updater: Updater<Map<string, CalendarEventInterface>>
     ) => void | undefined = undefined;
     private userAccessToken!: string;
+    private MSUserAccessToken: { token: string; provider: string } | undefined;
     private adminUrl?: string;
     private roomId!: string;
     private roomMetadata!: RoomMetadataType;
@@ -155,6 +156,8 @@ class MSTeams implements MSTeamsExtensionModule {
     private teamsOnLineMeetingService?: TeamsOnlineMeetingService;
     private todoList?: TodolistService;
 
+    private initTimeOut: NodeJS.Timeout | undefined = undefined;
+
     init(roomMetadata: RoomMetadataType, options: ExtensionModuleOptions) {
         this.roomMetadata = roomMetadata;
         this.moduleOptions = options;
@@ -167,11 +170,9 @@ class MSTeams implements MSTeamsExtensionModule {
 
         this.teamsSynchronisationStore.set(TeamsModuleStatus.SYNC);
 
-        const microsoftTeamsMetadata = roomMetadata?.player?.accessTokens
-            ? roomMetadata.player.accessTokens[0]
-            : undefined;
+        this.MSUserAccessToken = roomMetadata?.player?.accessTokens ? roomMetadata.player.accessTokens[0] : undefined;
 
-        if (microsoftTeamsMetadata === undefined || roomMetadata.player?.accessTokens?.length === 0) {
+        if (this.MSUserAccessToken === undefined || roomMetadata.player?.accessTokens?.length === 0) {
             console.error("Microsoft teams metadata is undefined. Cancelling the initialization");
             if (roomMetadata.msTeamsSettings.communication) {
                 this.teamsSynchronisationStore.set(TeamsModuleStatus.NONE);
@@ -184,7 +185,7 @@ class MSTeams implements MSTeamsExtensionModule {
         this.msAxiosClientV1 = axios.create({
             baseURL: MS_GRAPH_ENDPOINT_V1,
             headers: {
-                Authorization: `Bearer ${microsoftTeamsMetadata.token}`,
+                Authorization: `Bearer ${this.MSUserAccessToken.token}`,
                 "Content-Type": "application/json",
             },
         });
@@ -195,7 +196,7 @@ class MSTeams implements MSTeamsExtensionModule {
         this.msAxiosClientBeta = axios.create({
             baseURL: MS_GRAPH_ENDPOINT_BETA,
             headers: {
-                Authorization: `Bearer ${microsoftTeamsMetadata.token}`,
+                Authorization: `Bearer ${this.MSUserAccessToken.token}`,
                 "Content-Type": "application/json",
             },
         });
@@ -286,7 +287,18 @@ class MSTeams implements MSTeamsExtensionModule {
                     }
                 }
             })
-            .catch((e) => console.error("Error while initializing Microsoft Teams module", e));
+            .catch((e) => {
+                console.warn("Error while initializing Microsoft Teams module", e);
+                if (this.clientId == undefined) {
+                    this.destroy();
+                    // try to init the module again in one minutes
+                    if (this.initTimeOut !== undefined) clearTimeout(this.initTimeOut);
+                    this.initTimeOut = setTimeout(() => {
+                        console.info("New tentative to init Microsoft Teams module");
+                        return this.init(roomMetadata, options);
+                    }, 1000 * 60);
+                }
+            });
 
         if (this.moduleOptions.externalModuleMessage) {
             // The externalModuleMessage is completed in the RoomConnection. No need to unsubscribe.
@@ -364,10 +376,13 @@ class MSTeams implements MSTeamsExtensionModule {
     private tentatives = 0;
     private popUpModuleReconnect = false;
     private askDoNotShowAgainPopUpModuleReconnect = false;
+    private promiseReconnectToTeams: Promise<void> | undefined = undefined;
     private refreshTokenInterceptor(
         error: unknown,
         getOauthRefreshToken?: (tokenToRefresh: string) => Promise<OauthRefreshToken>
     ) {
+        // In the case where the client ID is undefined, we can't refresh the token
+        // The token is wrong and we need to reconnect to Teams
         const parsedError = z
             .object({
                 response: z.object({ status: z.number() }),
@@ -378,15 +393,24 @@ class MSTeams implements MSTeamsExtensionModule {
             return Promise.reject(error);
         }
         if (parsedError.data.response.status === 401 && getOauthRefreshToken !== undefined) {
-            const existingToken = parsedError.data.config.headers.Authorization.replace("Bearer ", "");
-            getOauthRefreshToken(existingToken)
+            // If the token is already being refreshed, we don't need to do it again
+            if (this.promiseReconnectToTeams || !this.MSUserAccessToken) {
+                return;
+            }
+            this.promiseReconnectToTeams = getOauthRefreshToken(this.MSUserAccessToken.token)
                 .then(({ token }) => {
-                    this.msAxiosClientV1.defaults.headers.common.Authorization = `Bearer ${token}`;
+                    if (this.MSUserAccessToken) this.MSUserAccessToken.token = token;
+
+                    this.msAxiosClientV1.defaults.headers.common.Authorization = `Bearer ${this.MSUserAccessToken?.token}`;
+                    this.msAxiosClientBeta.defaults.headers.common.Authorization = `Bearer ${this.MSUserAccessToken?.token}`;
                     console.info("Microsoft teams token has been refreshed");
                     this.tentatives = 0;
+                    this.promiseReconnectToTeams = undefined;
                 })
                 .catch((error) => {
+                    // Count tentative to reconnect to Teams if it's impossible to refresh the token
                     this.tentatives++;
+                    this.promiseReconnectToTeams = undefined;
                     // If the token can't be refreshed, we try 3 times. Propose to the user to reconnect if it doesn't work
                     if (this.tentatives > 10) {
                         console.error("Error while refreshing token", error);
@@ -402,6 +426,8 @@ class MSTeams implements MSTeamsExtensionModule {
     }
 
     listenToTeamsStatusUpdate(onTeamsStatusChange?: (workAdventureNewStatus: AvailabilityStatus) => void) {
+        if (this.clientId == undefined)
+            throw new Error("Unable to listen to teams status because client ID is undefined");
         return this.msAxiosClientV1
             .get<unknown>(`/users/${this.clientId}${MS_ME_PRESENCE_ENDPOINT}`)
             .then((response) => {
@@ -454,6 +480,7 @@ class MSTeams implements MSTeamsExtensionModule {
     }
 
     private getUrlForSettingUserPresence() {
+        if (this.clientId == undefined) throw new Error("Unable to set teams status because client ID is undefined");
         return `/users/${this.clientId}/presence/setUserPreferredPresence`;
     }
 
@@ -476,12 +503,16 @@ class MSTeams implements MSTeamsExtensionModule {
             .then((response) => {
                 const meResponse = meResponseObject.safeParse(response.data);
                 if (!meResponse.success) {
-                    console.error("Unable to retrieve Microsoft client id", meResponse.error);
-                    return;
+                    throw new Error("Unable to retrieve Microsoft client id");
                 }
                 this.clientId = meResponse.data.id;
             })
-            .catch((error) => console.error("Unable to retrieve Microsoft client Id : ", error));
+            .catch((error) => {
+                console.error("Unable to retrieve Microsoft client Id : ", error);
+                // try to refresh the token
+                this.refreshTokenInterceptor(error, this.moduleOptions.getOauthRefreshToken);
+                throw error;
+            });
     }
 
     private mapTeamsStatusToWorkAdventureStatus(teamsStatus: TeamsAvailability): AvailabilityStatus {
@@ -725,8 +756,10 @@ class MSTeams implements MSTeamsExtensionModule {
         const subscriptions = await this.msAxiosClientBeta.get(`/subscriptions/`);
 
         try {
+            if (subscriptions.status < 200 || subscriptions.status >= 300)
+                throw new Error("Error while getting subscriptions");
             // If there is no subscription, reinitialize the subscription
-            if (subscriptions.data.value.length < 2) {
+            if (subscriptions.data && subscriptions.data.value && subscriptions.data.value.length < 2) {
                 try {
                     await this.initSubscription();
                     this.teamsSynchronisationStore.set(TeamsModuleStatus.ONLINE);
@@ -742,12 +775,14 @@ class MSTeams implements MSTeamsExtensionModule {
             console.error("Error while reauthorizing subscriptions", e);
             // If there is an error, delete subscription and try to create a new twice
             const promisesDeleteSubscription = [];
-            for (const subscription of subscriptions.data.value) {
-                if (new Date(subscription.expirationDateTime) < new Date()) {
-                    if (subscription.resource === `/communications/presences/${this.clientId}`) {
-                        promisesDeleteSubscription.push(this.deletePresenceSubscription(subscription.id));
-                    } else if (subscription.resource === `/me/events`) {
-                        promisesDeleteSubscription.push(this.deleteCalendarSubscription(subscription.id));
+            if (subscriptions.data && subscriptions.data.value) {
+                for (const subscription of subscriptions.data.value) {
+                    if (new Date(subscription.expirationDateTime) < new Date()) {
+                        if (subscription.resource === `/communications/presences/${this.clientId}`) {
+                            promisesDeleteSubscription.push(this.deletePresenceSubscription(subscription.id));
+                        } else if (subscription.resource === `/me/events`) {
+                            promisesDeleteSubscription.push(this.deleteCalendarSubscription(subscription.id));
+                        }
                     }
                 }
             }
