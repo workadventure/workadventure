@@ -10,7 +10,8 @@
 <Popup {isOpen}>
     <h1 slot="title">{$LL.menu.chat.resetKeyBackupConfirmationModal.title()}</h1>
     <div slot="content">
-        <p>{$LL.menu.chat.resetKeyBackupConfirmationModal.content()}</p>
+        <p class="tw-w-full tw-text-center">{$LL.menu.chat.resetKeyBackupConfirmationModal.content()}</p>
+        <p class="tw-w-full tw-text-center">{$LL.menu.chat.resetKeyBackupConfirmationModal.warning()}</p>
     </div>
     <svelte:fragment slot="action">
         <button class="tw-flex-1 tw-justify-center" on:click={() => closeModal()}
