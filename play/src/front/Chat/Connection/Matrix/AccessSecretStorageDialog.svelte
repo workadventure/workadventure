@@ -1,10 +1,11 @@
 <script lang="ts">
     import { MatrixClient, SecretStorage } from "matrix-js-sdk";
     import { closeModal, onBeforeClose } from "svelte-modals";
+    import * as Sentry from "@sentry/svelte";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import { MatrixSecurity } from "./MatrixSecurity";
-    import { IconEdit, IconKey } from "@wa-icons";
+    import { IconEdit, IconKey, IconLoader } from "@wa-icons";
 
     export let isOpen: boolean;
     export let keyInfo: SecretStorage.SecretStorageKeyDescription;
@@ -15,6 +16,7 @@
     let passphraseInput = "";
     let error = false;
     let hasCancelAccessSecretStorage = true;
+    let isCheckingPassphrase = false;
 
     function changeAccessSecretStorageMethod() {
         if (accessSecretStorageMethod === "passphrase") {
@@ -25,22 +27,32 @@
     }
 
     async function checkAndSubmitRecoveryOrPassphraseIfValid() {
+        isCheckingPassphrase = true;
         if (recoveryKeyInput.trim().length === 0 && passphraseInput.trim().length === 0) {
             error = true;
             return;
         }
-        const inputToKey = MatrixSecurity.makeInputToKey(keyInfo);
-        const key = await inputToKey({ recoveryKey: recoveryKeyInput, passphrase: passphraseInput });
-        const keyVerified = await matrixClient.secretStorage.checkKey(key, keyInfo);
 
-        if (keyVerified === false) {
+        try {
+            const inputToKey = MatrixSecurity.makeInputToKey(keyInfo);
+            const key = await inputToKey({ recoveryKey: recoveryKeyInput, passphrase: passphraseInput });
+            const keyVerified = await matrixClient.secretStorage.checkKey(key, keyInfo);
+
+            if (keyVerified === false) {
+                throw new Error("The key is not verified !");
+            }
+
+            hasCancelAccessSecretStorage = false;
+            onClose(key);
+            closeModal();
+        } catch (e) {
             console.debug("Unable to verify key");
+            Sentry.captureMessage(`Unable to verify key: ${e}`);
             error = true;
             return;
+        } finally {
+            isCheckingPassphrase = false;
         }
-        hasCancelAccessSecretStorage = false;
-        onClose(key);
-        closeModal();
     }
 
     function cancelAccessSecretStorage() {
@@ -112,10 +124,15 @@
             >{$LL.chat.e2ee.accessSecretStorage.buttons.cancel()}</button
         >
         <button
-            disabled={confirmInputDisabled}
+            disabled={confirmInputDisabled || isCheckingPassphrase}
             class="disabled:tw-text-gray-400 disabled:tw-bg-gray-500 tw-bg-secondary tw-flex-1 tw-justify-center"
             on:click={() => checkAndSubmitRecoveryOrPassphraseIfValid()}
-            >{$LL.chat.e2ee.accessSecretStorage.buttons.confirm()}
+        >
+            {#if isCheckingPassphrase}
+                <IconLoader font-size="1.25rem" />
+            {:else}
+                {$LL.chat.e2ee.accessSecretStorage.buttons.confirm()}
+            {/if}
         </button>
     </svelte:fragment>
 </Popup>
