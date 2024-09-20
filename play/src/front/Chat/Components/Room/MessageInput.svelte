@@ -1,15 +1,19 @@
 <script lang="ts">
     export let message: string;
     export let inputClass = "";
-    export let dataText: string;
+    export let dataText = "";
     export let dataTestid = "";
     export let messageInput: HTMLDivElement;
 
     // FIXME: Try to send an event instead of passing a function in component props
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    export let onKeyDown: (event: KeyboardEvent) => void = (event: KeyboardEvent) => {};
+    export let onKeyDown: ((event: KeyboardEvent) => void) | undefined = undefined;
     export let onInput = () => {};
 
+    const handleKeyDown = (event: KeyboardEvent) => {
+        if (onKeyDown) {
+            onKeyDown(event);
+        }
+    };
     function onPasteHandler(event: ClipboardEvent) {
         if (!event.clipboardData) return;
 
@@ -60,7 +64,7 @@
     bind:innerHTML={message}
     contenteditable="true"
     bind:this={messageInput}
-    on:keydown={onKeyDown}
+    on:keydown={handleKeyDown}
     on:input={onInput}
     on:paste={onPasteHandler}
     class={inputClass}
