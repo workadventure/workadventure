@@ -5,6 +5,8 @@ import { login } from "../utils/roles";
 import { oidcLogout, oidcMatrixUserLogin } from "../utils/oidc";
 import ChatUtils from "./chatUtils";
 
+test.setTimeout(120000);
+
 test.describe("Matrix chat tests @oidc", () => {
   test.beforeEach(
     "Ignore tests on webkit because of issue with camera and microphone",

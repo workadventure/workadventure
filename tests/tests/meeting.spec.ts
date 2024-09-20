@@ -52,7 +52,7 @@ test.describe('Meeting actions test', () => {
         // Click on the mute button
         await page.click('.cameras-container .other-cameras .video-container .action-button#mute-audio-user');
 
-        // Check if "Bob" user receive the request to be metued
+        // Check if "Bob" user receive the request to be muted
         await expect(userBob.locator('.interact-menu')).toBeVisible({timeout: 20_000});
         // Click on the accept button
         await userBob.click('.interact-menu .accept-request');

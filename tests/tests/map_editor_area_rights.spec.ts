@@ -182,6 +182,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await expect(
       page2.locator(".actions-menu .actions button").nth(0)
     ).not.toBeAttached();
+    await page2.close();
   });
 
   test("Area with restricted write access : Trying to read an object with read/write access", async ({
@@ -224,6 +225,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await expect(
       page2.locator(".actions-menu .actions button").nth(0)
     ).toContainText("Open Link");
+    await page2.close();
   });
 
   test("Area with restricted write access : Trying to add an object", async ({
@@ -277,6 +279,7 @@ test.describe("Map editor area with rights @oidc", () => {
         { hasText: "Open Link" }
       )
     ).not.toBeAttached();
+    await page2.close();
   });
 
   test("Area with restricted write access : Trying to add an object with write access", async ({
@@ -330,6 +333,7 @@ test.describe("Map editor area with rights @oidc", () => {
         { hasText: "Open Link" }
       )
     ).toBeAttached();
+    await page2.close();
   });
 
   test("Area with restricted write access : Trying to remove an object", async ({
@@ -382,6 +386,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await expect(
       page2.locator(".actions-menu .actions button").nth(0)
     ).toContainText("Open Link");
+    await page2.close();
   });
 
   test("Area with restricted write access : Trying to remove an object with write access", async ({
@@ -435,6 +440,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await expect(
       page2.locator(".actions-menu .actions button").nth(0)
     ).not.toBeAttached();
+    await page2.close();
   });
 
   test("Area with restricted write access : Trying to remove an object outside the area", async ({
@@ -488,6 +494,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await expect(
       page2.locator(".actions-menu .actions button").nth(0)
     ).toContainText("Open Link");
+    await page2.close();
   });
 
   test("Claim personal area from allowed user", async ({
@@ -544,6 +551,7 @@ test.describe("Map editor area with rights @oidc", () => {
         { hasText: "Open Link" }
       )
     ).toBeAttached();
+    await page2.close();
   });
 
   test("Claim personal area from unauthorized user", async ({
@@ -581,6 +589,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await expect(
       page2.getByTestId("claimPersonalAreaButton")
     ).not.toBeAttached();
+    await page2.close();
   });
 
   test("Claim multi personal area", async ({

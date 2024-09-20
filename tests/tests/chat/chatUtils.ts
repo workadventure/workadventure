@@ -26,8 +26,13 @@ class ChatUtils {
   }
 
   public async initEndToEndEncryption(page: Page, context: BrowserContext) {
-    const oidcPagePromise = context.waitForEvent("page");
-    await page.getByText("Continue with SSO").click();
+    const oidcPagePromise = context.waitForEvent("page", {
+      // Give ample time for the SSO redirection
+      timeout: 50000
+    });
+    await page.getByText("Continue with SSO").click({
+      timeout: 50000
+    });
     const oidcPage = await oidcPagePromise;
     await oidcPage.getByText("Continue with OIDC Server Mock").click();
 
