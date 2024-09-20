@@ -13,7 +13,10 @@
     let messageInput: HTMLDivElement;
     let emojiButtonRef: HTMLButtonElement;
     let stopTypingTimeOutID: undefined | ReturnType<typeof setTimeout>;
-    const TYPINT_TIMEOUT = 10000;
+    let typingTimeoutID: undefined | ReturnType<typeof setTimeout>;
+    const TYPING_TIMEOUT = 3000;
+    const TYPING_DEBOUNCE_DELAY = 20000;
+    let hasSentFirstTypingNotification = false;
 
     const selectedChatChatMessageToReplyUnsubscriber = selectedChatMessageToReply.subscribe((chatMessage) => {
         if (chatMessage !== null) {
@@ -21,25 +24,33 @@
         }
     });
 
-    function sendMessageOrEscapeLine(keyDownEvent: KeyboardEvent) {
-        if (stopTypingTimeOutID) clearTimeout(stopTypingTimeOutID);
+    function startTypingAndSetTimeout() {
         room.startTyping()
             .then(() => {
                 stopTypingTimeOutID = setTimeout(() => {
                     room.stopTyping().catch((error) => console.error(error));
-                    stopTypingTimeOutID = undefined;
-                }, TYPINT_TIMEOUT);
+                    if (typingTimeoutID) clearTimeout(typingTimeoutID);
+                }, TYPING_TIMEOUT);
             })
             .catch((error) => console.error(error));
+    }
+    function sendMessageOrEscapeLine(keyDownEvent: KeyboardEvent) {
+        if (stopTypingTimeOutID) clearTimeout(stopTypingTimeOutID);
 
-        if (keyDownEvent.key === "Enter" || message == "" || message == undefined) {
+        if (keyDownEvent.key === "Enter" || message.trim().length === 0 || message == undefined) {
             if (stopTypingTimeOutID) clearTimeout(stopTypingTimeOutID);
+            if (typingTimeoutID) clearTimeout(typingTimeoutID);
+            hasSentFirstTypingNotification = false;
             room.stopTyping().catch((error) => console.error(error));
         }
 
-        if (keyDownEvent.key === "Enter" && keyDownEvent.shiftKey) {
-            return;
+        if (!hasSentFirstTypingNotification) {
+            startTypingAndSetTimeout();
+            hasSentFirstTypingNotification = true;
+        } else {
+            startTypingWithDebounce();
         }
+
         if (keyDownEvent.key === "Enter" && !keyDownEvent.shiftKey) {
             keyDownEvent.preventDefault();
         }
@@ -50,12 +61,24 @@
             sendMessage(messageToSend);
             return;
         }
+        if (keyDownEvent.key === "Enter" && keyDownEvent.shiftKey) {
+            return;
+        }
+    }
+
+    function startTypingWithDebounce() {
+        if (typingTimeoutID) clearTimeout(typingTimeoutID);
+        typingTimeoutID = setTimeout(() => {
+            startTypingAndSetTimeout();
+        }, TYPING_DEBOUNCE_DELAY);
     }
 
     function sendMessage(messageToSend: string) {
         room?.sendMessage(messageToSend);
         messageInput.innerText = "";
         message = "";
+        hasSentFirstTypingNotification = false;
+        if (typingTimeoutID) clearTimeout(typingTimeoutID);
         if (stopTypingTimeOutID) {
             clearTimeout(stopTypingTimeOutID);
         }
