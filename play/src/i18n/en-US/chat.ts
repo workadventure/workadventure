@@ -170,6 +170,7 @@ const chat: BaseTranslation = {
     anAdmin: "an administrator",
     messageDeletedByYou: "You deleted this message",
     messageEdited: "Modified",
+    messageEditedError: "Unable to edit message. Try again.",
     waiting: "Waiting",
     nothingToDisplay: "Nothing to display",
     showMore: "Show {number} more",
