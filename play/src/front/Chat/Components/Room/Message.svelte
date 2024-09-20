@@ -19,6 +19,7 @@
 
     export let message: ChatMessage;
     export let reactions: MapStore<string, ChatMessageReaction> | undefined;
+    export let replyDepth = 0;
 
     const { id, sender, isMyMessage, date, content, quotedMessage, isQuotedMessage, type, isDeleted, isModified } =
         message;
@@ -88,10 +89,10 @@
                 {/if}
             {/if}
         </div>
-        {#if quotedMessage}
+        {#if quotedMessage && replyDepth < 2}
             <div class="response">
                 <IconCornerDownRight font-size="24" />
-                <svelte:self message={quotedMessage} />
+                <svelte:self replyDepth={replyDepth + 1} message={quotedMessage} />
             </div>
         {/if}
     </div>
