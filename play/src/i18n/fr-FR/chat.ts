@@ -171,6 +171,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     anAdmin: "un administrateur",
     messageDeletedByYou: "Vous avez supprimé ce message",
     messageEdited: "Modifié",
+    messageEditedError: "Impossible de modifier le message. Veuillez réessayer.",
     waiting: "En attente",
     nothingToDisplay: "Rien à afficher",
     showMore: "En afficher {number} de plus",

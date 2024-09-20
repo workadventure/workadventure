@@ -7,7 +7,7 @@
     import LL from "../../../../i18n/i18n-svelte";
     import { matrixSecurity } from "../../Connection/Matrix/MatrixSecurity";
     import Message from "./Message.svelte";
-    import MessageInput from "./MessageInput.svelte";
+    import MessageInputBar from "./MessageInputBar.svelte";
     import MessageSystem from "./MessageSystem.svelte";
     import { IconArrowLeft, IconLoader } from "@wa-icons";
 
@@ -158,7 +158,7 @@
     }
 </script>
 
-<div class="tw-flex tw-flex-col tw-flex-1 tw-h-full tw-w-full tw-pl-2">
+<div class="tw-flex tw-flex-col tw-flex-auto tw-h-full tw-w-full tw-max-w-full tw-pl-2">
     {#if room !== undefined}
         <div class="tw-flex tw-flex-col tw-gap-2">
             <div class="tw-flex tw-flex-row tw-items-center">
@@ -236,7 +236,7 @@
                 </div>
             </div>
         {/if}
-        <MessageInput {room} />
+        <MessageInputBar {room} />
     {/if}
 </div>
 
