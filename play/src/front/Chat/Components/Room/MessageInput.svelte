@@ -6,7 +6,8 @@
     export let messageInput: HTMLDivElement;
 
     // FIXME: Try to send an event instead of passing a function in component props
-    export let onKeyDown = (event: KeyboardEvent) => {};
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    export let onKeyDown: (event: KeyboardEvent) => void = (event: KeyboardEvent) => {};
     export let onInput = () => {};
 
     function onPasteHandler(event: ClipboardEvent) {
