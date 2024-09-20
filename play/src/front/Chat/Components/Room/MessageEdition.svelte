@@ -30,6 +30,7 @@
     <MessageInput
         bind:message={inputValue}
         bind:messageInput
+        dataTestid="editMessageInput"
         inputClass=" tw-p-1  !tw-m-0 tw-px-2 tw-max-h-36 tw-overflow-auto tw-w-full tw-h-full tw-rounded-xl  tw-block !tw-bg-white placeholder:tw-text-sm  !tw-text-black tw-border  tw-resize-none  tw-shadow-none focus:tw-ring-0"
         dataText={$LL.chat.enter()}
     />
