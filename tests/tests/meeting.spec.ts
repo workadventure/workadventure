@@ -31,7 +31,7 @@ test.describe('Meeting actions test', () => {
         await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
 
         // Move user
-        await Map.walkTo(page, 'ArrowRight', 3000);
+        await Map.teleportToPosition(page, 160, 160);
 
         const newBrowser = await browser.browserType().launch();
         const userBob = await newBrowser.newPage();
@@ -40,7 +40,7 @@ test.describe('Meeting actions test', () => {
         // Login user "Bob"
         await login(userBob, 'Bob', 5, 'en-US', project.name === "mobilechromium");
         // Move user
-        await Map.walkTo(userBob, 'ArrowRight', 3000);
+        await Map.teleportToPosition(userBob, 160, 160);
 
         // The user in the bubble meeting should be visible
         await expect(page.locator('.cameras-container .other-cameras .video-container')).toBeVisible({timeout: 20_000});
@@ -60,6 +60,11 @@ test.describe('Meeting actions test', () => {
         // Check if the user has been muted
         await expect(page.locator('.cameras-container .other-cameras .video-container .media-box-camera-off-size')).toBeVisible({timeout: 20_000});
         // Click on the mute video button
+
+        // First, move the mouse out to force closing the action menu.
+        // This action menu is automatically closed on Firefox because it refreshes the stream, which Chrome does not.
+        await page.mouse.move(0, 0);
+        await page.click('.cameras-container .other-cameras .video-container .action-button#more-action');
         await page.click('.cameras-container .other-cameras .video-container .action-button#mute-video-user');
 
         // Check if "Bob" user receive the request to be muted
