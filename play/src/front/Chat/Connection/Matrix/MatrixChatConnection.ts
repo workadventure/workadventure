@@ -187,6 +187,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 case SyncState.Prepared:
                     this.connectionStatus.set("ONLINE");
                     this.isClientReady = true;
+                    this.setPresence(get(this.statusStore));
                     break;
                 case SyncState.Error:
                     this.connectionStatus.set("ON_ERROR");
