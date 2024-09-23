@@ -268,7 +268,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         interactiveAuth: {
             title: "Chiffrement de bout en bout",
             description:
-                "Pour des raisons de sécurité, une clé de signature croisée doit être téléchargée sur notre serveur. En confirmant votre identité, vous enregistrerez la clé de signature croisée qui vous permettra de lire les messages chiffrés de WA et d'autres clients.",
+                "Pour des raisons de sécurité, une clé de signature croisée doit être téléchargée sur notre serveur. En confirmant votre identité, vous enregistrerez la clé de signature croisée qui vous permettra de lire les messages chiffrés de WorkAdventure et d'autres clients.",
             instruction: "Veillez à confirmer la connexion SSO avant de cliquer sur le bouton Terminer.",
             buttons: {
                 cancel: "Annuler",

@@ -267,7 +267,7 @@ const chat: BaseTranslation = {
         interactiveAuth: {
             title: "Chat end to end encryption",
             description:
-                "For security reason, a cross signing key must be uploaded to our server. By confirming your identity, you will save the cross signing key allowing you to read encrypted message from WA and other clients.",
+                "For security reasons, a cross signing key must be uploaded to our server. By confirming your identity, you will save the cross signing key allowing you to read encrypted message from WorkAdventure and other clients.",
             instruction: "Be sure to end SSO connection popup after before clicking on Finish button",
             buttons: {
                 cancel: "Cancel",
