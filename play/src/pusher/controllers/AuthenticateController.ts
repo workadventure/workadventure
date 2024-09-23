@@ -507,6 +507,11 @@ export class AuthenticateController extends BaseHttpController {
      *        description: "A JWT authentication token ???"
      *        required: true
      *        type: "string"
+     *      - name: "playUri"
+     *        in: "query"
+     *        description: "Room URL of the current virtual place"
+     *        required: true
+     *        type: "string"
      *     responses:
      *       302:
      *         description: Redirects the user to the profile screen of the admin

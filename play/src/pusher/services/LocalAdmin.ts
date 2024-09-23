@@ -340,8 +340,7 @@ class LocalAdmin implements AdminInterface {
     }
 
     getProfileUrl(accessToken: string, playUri: string): string {
-        new Error("No admin backoffice set!");
-        return "";
+        return `/profile?accessToken=${accessToken}&playUri=${playUri}`;
     }
 
     async logoutOauth(token: string): Promise<void> {
