@@ -34,7 +34,8 @@
         requestedMegaphoneStore,
     } from "../../Stores/MegaphoneStore";
     import { userIsAdminStore } from "../../Stores/GameStore";
-    import { IconInfoCircle } from "@wa-icons";
+    import Tooltip from "../Util/Tooltip.svelte";
+    import { IconAlertTriangle, IconInfoCircle } from "@wa-icons";
 
     let mainModal: HTMLDivElement;
 
@@ -440,12 +441,24 @@
                         </div>
                     </div>
                     <div class="tw-flex tw-flew-row tw-justify-center">
+                        {#if !$requestedCameraState && !$requestedMicrophoneState && !$requestedScreenSharingState}
+                            <span class="err tw-text-warning-900 tw-text-xs tw-italic tw-mt-1">
+                                <IconAlertTriangle font-size="12" />
+                                {$LL.warning.megaphoneNeeds()}
+                            </span>
+                        {/if}
+                    </div>
+                    <div class="tw-flex tw-flew-row tw-justify-center">
                         <button
                             class="light"
                             on:click={startLive}
                             disabled={!$requestedCameraState && !$requestedMicrophoneState}
-                            >{$LL.megaphone.modal.liveMessage.startMegaphone()}</button
                         >
+                            {#if !$requestedCameraState && !$requestedMicrophoneState && !$requestedScreenSharingState}
+                                <Tooltip text={$LL.warning.megaphoneNeeds()} />
+                            {/if}
+                            {$LL.megaphone.modal.liveMessage.startMegaphone()}
+                        </button>
                     </div>
                 </div>
             {/if}
