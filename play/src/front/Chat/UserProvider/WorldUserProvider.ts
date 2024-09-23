@@ -2,10 +2,10 @@ import { Readable, derived } from "svelte/store";
 import { PartialChatUser } from "../Connection/ChatConnection";
 import { SpaceInterface } from "../../Space/SpaceInterface";
 import { AllUsersSpaceFilterInterface } from "../../Space/SpaceFilter/AllUsersSpaceFilter";
-import { UserProvideInterface } from "./UserProvideInterface";
+import { UserProviderInterface } from "./UserProviderInterface";
 import { mapExtendedSpaceUserToChatUser } from "./ChatUserMapper";
 
-export class WorldUserProvider implements UserProvideInterface {
+export class WorldUserProvider implements UserProviderInterface {
     users: Readable<PartialChatUser[]>;
     private readonly _filter: AllUsersSpaceFilterInterface;
 

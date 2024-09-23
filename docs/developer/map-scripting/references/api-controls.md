@@ -210,4 +210,23 @@ WA.room.onLeaveLayer('myZone').subscribe(() => {
 });
 ```
 
+### Disabling / restoring the room list button
 
+```
+WA.controls.disableRoomList(): void
+WA.controls.restoreRoomList(): void
+```
+
+These 2 methods can be used to remove or restore the room list button in the action bar.
+
+Example:
+
+```ts
+WA.room.onEnterLayer('myZone').subscribe(() => {
+    WA.controls.disableRoomList();
+});
+
+WA.room.onLeaveLayer('myZone').subscribe(() => {
+    WA.controls.restoreRoomList();
+});
+```

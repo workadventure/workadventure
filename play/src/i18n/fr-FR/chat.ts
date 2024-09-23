@@ -13,7 +13,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     users: "Utilisateurs",
     chat: "Chat",
     userList: {
-        disconnected: "Non connecté",
+        disconnected: "Non connecté au monde",
         isHere: "Sur cette map",
         inAnotherMap: "Dans une autre map",
         in: "Dans ",
@@ -24,6 +24,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         businessCard: "Carte de visite",
         sendMessage: "Envoyer un message",
     },
+    accept: "Accepter",
+    decline: "Refuser",
     connecting: "Connexion au serveur ...",
     waitingInit: "Attente de l'initialisation du serveur ...",
     waitingData: "En attentes des informations de l'utilisateur ...",
@@ -46,6 +48,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         do_not_disturb: "Ne pas déranger",
         busy: "Occupé",
         unavailable: "Non disponible",
+        meeting: "En réunion",
+        megaphone: "Utilise le mégaphone",
     },
     logIn: "Se connecter",
     signIn: "Inscrivez-vous ou connectez-vous pour profiter de toutes les fonctionnalités du chat !",
@@ -169,6 +173,9 @@ const chat: DeepPartial<Translation["chat"]> = {
     messageEdited: "Modifié",
     waiting: "En attente",
     nothingToDisplay: "Rien à afficher",
+    showMore: "En afficher {number} de plus",
+    showLess: "En afficher moins",
+    addRoomToFolderError: "Impossible d'ajouter la room au dossier",
     createRoom: {
         title: "Créer un nouveau salon",
         name: "Nom",
@@ -178,6 +185,43 @@ const chat: DeepPartial<Translation["chat"]> = {
             privateDescription: "Seules les personnes invitées pourront trouver et rejoindre ce salon.",
             public: "Public",
             publicDescription: "Quiconque pourra trouver et rejoindre ce salon.",
+            restricted: "Membre du dossier",
+            restrictedDescription: "Visible seulement pour les membres du dossier",
+        },
+        e2eEncryption: {
+            label: "Activer le chiffrement de bout en bout",
+            description: "Vous ne pourrez pas le désactiver plus tard.",
+        },
+        users: "Utilisateurs",
+        historyVisibility: {
+            label: "Qui peut lire l'historique",
+            world_readable: "N'importe qui",
+            joined: "Seulement les membres (depuis leur arrivée)",
+            invited: "Seulement les membres (depuis leur invitation)",
+        },
+        buttons: {
+            create: "Créer",
+            cancel: "Annuler",
+        },
+        error: "Erreur lors de la création du salon",
+        loadingCreation: "Salon en cours de création",
+        creationSuccessNotification: "Salon créé",
+    },
+    createFolder: {
+        title: "Créer un nouveau dossier",
+        name: "Nom",
+        description: {
+            label: "Description",
+            placeholder: "Description",
+        },
+        visibility: {
+            label: "Visibilité",
+            private: "Privé",
+            privateDescription: "Seules les personnes invitées pourront trouver et rejoindre ce salon.",
+            public: "Public",
+            publicDescription: "Quiconque pourra trouver et rejoindre ce salon.",
+            restricted: "Membre du dossier",
+            restrictedDescription: "Visible seulement pour les membres du dossier",
         },
         e2eEncryption: {
             label: "Activer le chiffrement de bout en bout",
@@ -203,6 +247,8 @@ const chat: DeepPartial<Translation["chat"]> = {
             label: "Quitter le salon",
             notification: "Vous avez quitté le salon",
         },
+        muteRoom: "Couper les notification",
+        unmuteRoom: "Activer les notifications",
     },
     e2ee: {
         encryptionNotConfigured: "Chiffrement non configuré",
@@ -222,7 +268,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         interactiveAuth: {
             title: "Chiffrement de bout en bout",
             description:
-                "Pour des raisons de sécurité, une clé de signature croisée doit être téléchargée sur notre serveur. En confirmant votre identité, vous enregistrerez la clé de signature croisée qui vous permettra de lire les messages chiffrés de WA et d'autres clients.",
+                "Pour des raisons de sécurité, une clé de signature croisée doit être téléchargée sur notre serveur. En confirmant votre identité, vous enregistrerez la clé de signature croisée qui vous permettra de lire les messages chiffrés de WorkAdventure et d'autres clients.",
             instruction: "Veillez à confirmer la connexion SSO avant de cliquer sur le bouton Terminer.",
             buttons: {
                 cancel: "Annuler",
@@ -246,6 +292,15 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     connectionError: "Chat indisponible",
+    requiresLoginForChatModal: {
+        title: "Identifiez-vous pour utiliser le chat !",
+        content_1: "Pour profiter pleinement de cette fonctionnalité du chat, vous devez être connecté.",
+        content_2:
+            "La connexion vous donne accès à toutes les fonctionnalités du chat et vous permet de continuer sans interruption.",
+        content_3: "Veuillez vous connecter pour poursuivre l’expérience.",
+    },
+    requiresLoginForChat: "Identifiez-vous pour accéder aux messages du chat",
+    featureComingSoon: "Prochainement disponible !",
 };
 
 export default chat;

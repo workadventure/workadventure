@@ -23,26 +23,31 @@ export type PartialChatUser = Partial<ChatUser> & { chatId: string };
 export type ChatRoomMembership = "ban" | "join" | "knock" | "leave" | "invite" | string;
 
 export interface ChatRoom {
-    id: string;
-    name: Readable<string>;
-    type: "direct" | "multiple";
-    hasUnreadMessages: Readable<boolean>;
-    avatarUrl: string | undefined;
-    messages: Readable<readonly ChatMessage[]>;
-    messageReactions: MapStore<string, MapStore<string, ChatMessageReaction>>;
-    sendMessage: (message: string) => void;
-    sendFiles: (files: FileList) => Promise<void>;
-    myMembership: ChatRoomMembership;
-    setTimelineAsRead: () => void;
-    membersId: string[];
-    leaveRoom: () => void;
-    joinRoom: () => void;
-    hasPreviousMessage: Readable<boolean>;
-    loadMorePreviousMessages: () => Promise<void>;
-    isEncrypted: Readable<boolean>;
-    typingMembers: Readable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
-    startTyping: () => Promise<object>;
-    stopTyping: () => Promise<object>;
+    readonly id: string;
+    readonly name: Readable<string>;
+    readonly type: "direct" | "multiple";
+    readonly hasUnreadMessages: Readable<boolean>;
+    readonly avatarUrl: string | undefined;
+    readonly messages: Readable<readonly ChatMessage[]>;
+    readonly messageReactions: MapStore<string, MapStore<string, ChatMessageReaction>>;
+    readonly sendMessage: (message: string) => void;
+    readonly sendFiles: (files: FileList) => Promise<void>;
+    readonly myMembership: ChatRoomMembership;
+    readonly setTimelineAsRead: () => void;
+    readonly membersId: string[];
+    readonly leaveRoom: () => Promise<void>;
+    readonly joinRoom: () => Promise<void>;
+    readonly hasPreviousMessage: Readable<boolean>;
+    readonly loadMorePreviousMessages: () => Promise<void>;
+    readonly isEncrypted: Readable<boolean>;
+    readonly typingMembers: Readable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
+    readonly startTyping: () => Promise<object>;
+    readonly stopTyping: () => Promise<object>;
+    readonly isRoomFolder: boolean;
+    readonly lastMessageTimestamp: number;
+    readonly areNotificationsMuted: Readable<boolean>;
+    readonly unmuteNotification: () => Promise<void>;
+    readonly muteNotification: () => Promise<void>;
 }
 
 //Readonly attributes
@@ -70,31 +75,48 @@ export interface ChatMessageReaction {
 }
 
 export type ChatMessageType = "proximity" | "text" | "incoming" | "outcoming" | "image" | "file" | "audio" | "video";
-export type ChatMessageContent = { body: string; url: string | undefined };
+export type ChatMessageContent = {
+    /**
+     * The body can contain HTML. It will be run against DOMPurify before being outputted to the user.
+     */
+    body: string;
+    url: string | undefined;
+};
 export const historyVisibilityOptions = ["world_readable", "joined", "invited"] as const;
 export type historyVisibility = (typeof historyVisibilityOptions)[number];
 
+export interface RoomFolder {
+    id: string;
+    name: Readable<string>;
+    rooms: MapStore<ChatRoom["id"], ChatRoom>;
+    folders: MapStore<RoomFolder["id"], RoomFolder>;
+}
+
 export interface CreateRoomOptions {
     name?: string;
-    visibility?: "private" | "public";
+    visibility?: "private" | "public" | "restricted";
     is_direct?: boolean;
     historyVisibility?: historyVisibility;
     invite?: { value: string; label: string }[];
     preset?: "private_chat" | "public_chat" | "trusted_private_chat";
     encrypt?: boolean;
+    parentSpaceID?: string;
+    description?: string;
 }
 
 export type ConnectionStatus = "ONLINE" | "ON_ERROR" | "CONNECTING" | "OFFLINE";
 
 export type userId = number;
 export type chatId = string;
-
+export type ChatSpaceRoom = ChatRoom;
 export interface ChatConnectionInterface {
     connectionStatus: Readable<ConnectionStatus>;
     directRooms: Readable<ChatRoom[]>;
     rooms: Readable<ChatRoom[]>;
     invitations: Readable<ChatRoom[]>;
+    roomFolders: MapStore<RoomFolder["id"], RoomFolder>;
     createRoom: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string }>;
+    createFolder: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string }>;
     createDirectRoom(userChatId: string): Promise<ChatRoom | undefined>;
     roomCreationInProgress: Readable<boolean>;
     getDirectRoomFor(uuserChatId: string): ChatRoom | undefined;
@@ -111,6 +133,8 @@ export interface ChatConnectionInterface {
     initEndToEndEncryption(): Promise<void>;
     isGuest: Readable<boolean>;
     hasUnreadMessages: Readable<boolean>;
+    clearListener: () => void;
+    directRoomsUsers: Readable<ChatUser[]>;
 }
 
 export type Connection = Pick<RoomConnection, "queryChatMembers" | "emitPlayerChatID" | "emitBanPlayerMessage">;

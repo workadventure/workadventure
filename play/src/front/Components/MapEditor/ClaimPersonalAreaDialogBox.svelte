@@ -29,11 +29,11 @@
             return;
         }
         const gameMapFrontWrapper = gameManager.getCurrentGameScene().getGameMapFrontWrapper();
-        gameMapFrontWrapper.areasManager.getAreasByPropertyType("personalAreaPropertyData").forEach((area) => {
+        gameMapFrontWrapper.areasManager?.getAreasByPropertyType("personalAreaPropertyData").forEach((area) => {
             const property = area.areaData.properties.find(
                 (property) => property.type === "personalAreaPropertyData"
             ) as PersonalAreaPropertyData | undefined;
-            if (property != undefined && property.ownerId === userUUID) {
+            if (property !== undefined && property.ownerId === userUUID) {
                 // If the user already has a personal area, we do not allow him to claim another one
                 notificationPlayingStore.playNotification($LL.area.personalArea.alreadyHavePersonalArea());
             }

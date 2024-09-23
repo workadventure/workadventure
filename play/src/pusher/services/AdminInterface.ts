@@ -108,8 +108,7 @@ export interface AdminInterface {
         playUri: string,
         name: string,
         message: string,
-        byUserUuid: string,
-        byUserEmail?: string
+        byUserUuid: string
     ): Promise<boolean>;
 
     getTagsList(roomUrl: string): Promise<string[]>;
@@ -133,7 +132,7 @@ export interface AdminInterface {
 
     getWorldChatMembers(playUri: string, searchText: string): Promise<WorldChatMembersData>;
 
-    updateChatId(userIdentifier: string, chatId: string): void;
+    updateChatId(userIdentifier: string, chatId: string, roomUrl: string): Promise<void>;
 
     refreshOauthToken(token: string): Promise<OauthRefreshToken>;
 }

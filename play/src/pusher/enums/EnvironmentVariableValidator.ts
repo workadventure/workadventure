@@ -145,7 +145,6 @@ export const EnvironmentVariables = z.object({
     GOOGLE_DRIVE_PICKER_CLIENT_ID: z.string().optional(),
     GOOGLE_DRIVE_PICKER_API_KEY: z.string().optional(),
     GOOGLE_DRIVE_PICKER_APP_ID: z.string().optional(),
-    MATRIX_DOMAIN: z.string().optional(),
     MATRIX_API_URI: z.string().optional(),
     MATRIX_PUBLIC_URI: z.string().optional(),
 

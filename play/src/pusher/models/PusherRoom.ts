@@ -15,8 +15,6 @@ const debug = Debug("room");
 export class PusherRoom implements CustomJsonReplacerInterface {
     private readonly positionNotifier: PositionDispatcher;
     private versionNumber = 1;
-    //eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public mucRooms: Array<any> = [];
 
     private backConnection!: ClientReadableStream<BatchToPusherRoomMessage>;
     private isClosing = false;
@@ -27,14 +25,6 @@ export class PusherRoom implements CustomJsonReplacerInterface {
     constructor(public readonly roomUrl: string, private socketListener: ZoneEventListener) {
         // A zone is 10 sprites wide.
         this.positionNotifier = new PositionDispatcher(this.roomUrl, 320, 320, this.socketListener);
-
-        // By default, create a MUC room whose name is the name of the room.
-        this.mucRooms = [
-            {
-                name: "Connected users",
-                uri: roomUrl,
-            },
-        ];
     }
 
     public setViewport(socket: Socket, viewport: ViewportInterface): void {
@@ -43,10 +33,6 @@ export class PusherRoom implements CustomJsonReplacerInterface {
 
     public join(socket: Socket): void {
         this.listeners.add(socket);
-
-        if (!this.mucRooms) {
-            return;
-        }
 
         socket.getUserData().pusherRoom = this;
     }

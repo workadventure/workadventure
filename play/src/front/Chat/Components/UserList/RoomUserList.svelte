@@ -4,8 +4,11 @@
     import { ChatUser } from "../../Connection/ChatConnection";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { chatSearchBarValue, shownRoomListStore } from "../../Stores/ChatStore";
+    import { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
     import UserList from "./UserList.svelte";
     import { IconChevronUp } from "@wa-icons";
+
+    export let userProviderMerger: UserProviderMerger;
 
     const USERS_BY_ROOM_LIMITATION = 200;
 
@@ -13,7 +16,7 @@
         if ($shownRoomListStore === "") shownRoomListStore.set($LL.chat.userList.isHere());
     });
 
-    $: usersByRoom = gameManager.getCurrentGameScene().userProviderMerger.usersByRoomStore;
+    $: usersByRoom = userProviderMerger.usersByRoomStore;
 
     $: roomsWithUsers = Array.from($usersByRoom.entries())
         .reduce((roomsWithUsersAcc, [currentPlayUri, currentRoomWithUsers]) => {

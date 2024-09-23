@@ -16,7 +16,6 @@ import {
     isErrorApiErrorData,
     isMapDetailsData,
     isRoomRedirect,
-    MucRoomDefinition,
     WokaDetail,
 } from "@workadventure/messages";
 import { z } from "zod";
@@ -93,9 +92,6 @@ export const isFetchMemberDataByUuidSuccessResponse = z.object({
         example: false,
     }),*/
     userRoomToken: extendApi(z.optional(z.string()), { description: "", example: "" }),
-    mucRooms: extendApi(z.nullable(z.array(MucRoomDefinition)), {
-        description: "The MUC room is a room of message",
-    }),
     activatedInviteUser: extendApi(z.boolean().nullable().optional(), {
         description: "Button invite is activated in the action bar",
     }),
@@ -760,13 +756,12 @@ class AdminApi implements AdminInterface {
         playUri: string,
         name: string,
         message: string,
-        byUserUuid: string,
-        byUserEmail?: string
+        byUserUuid: string
     ): Promise<boolean> {
         try {
             return axios.post(
                 ADMIN_API_URL + "/api/ban",
-                { uuidToBan, playUri, name, message, byUserEmail, byUserUuid },
+                { uuidToBan, playUri, name, message, byUserUuid },
                 {
                     headers: { Authorization: `${ADMIN_API_TOKEN}` },
                 }
@@ -1123,21 +1118,54 @@ class AdminApi implements AdminInterface {
         return response.data;
     }
 
-    updateChatId(userIdentifier: string, chatId: string): void {
-        axios
-            .put(
-                `${ADMIN_URL}/api/members/${userIdentifier}/chatId`,
-                {
-                    chatId,
-                    userIdentifier,
-                },
-                {
-                    headers: { Authorization: `${ADMIN_API_TOKEN}` },
-                }
-            )
-            .catch((e) => {
-                console.error(e);
-            });
+    /**
+     * @openapi
+     * /api/members/${userIdentifier}/chatId:
+     *   put:
+     *     tags: ["AdminAPI"]
+     *     description: Sets the Chat ID (Matrix ID) of a user. The Matrix ID is received by the client first and then sent to the server.
+     *     security:
+     *      - Bearer: []
+     *     produces:
+     *      - "application/json"
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: "object"
+     *             properties:
+     *               roomUrl:
+     *                 type: string
+     *                 required: true
+     *                 description: The URL of the room
+     *                 example: "https://play.workadventu.re/@/teamSlug/worldSlug/roomSlug"
+     *               chatId:
+     *                 type: string
+     *                 required: true
+     *                 description: The chat ID to be stored
+     *                 example: "@john.doe:matrix.org"
+     *               userIdentifier:
+     *                 type: string
+     *                 required: true
+     *                 description: "It can be an uuid or an email"
+     *                 example: "998ce839-3dea-4698-8b41-ebbdf7688ad9"
+     *     responses:
+     *       200:
+     *         description: The report has been successfully saved
+     */
+    updateChatId(userIdentifier: string, chatId: string, roomUrl: string): Promise<void> {
+        return axios.put(
+            `${ADMIN_URL}/api/members/${userIdentifier}/chatId`,
+            {
+                chatId,
+                userIdentifier,
+                roomUrl,
+            },
+            {
+                headers: { Authorization: `${ADMIN_API_TOKEN}` },
+            }
+        );
     }
 
     /**
