@@ -442,57 +442,57 @@ jobs:
           - browser: chromium
             project: chromium
             shard: 1
-            nbShards: 3
+            nbShards: 4
             renderer: auto
           - browser: chromium
             project: chromium
             shard: 2
-            nbShards: 3
+            nbShards: 4
             renderer: auto
           - browser: chromium
             project: chromium
             shard: 3
-            nbShards: 3
+            nbShards: 4
             renderer: auto
-          - browser: firefox
-            project: firefox
-            shard: 1
-            nbShards: 3
-            renderer: auto
-          - browser: firefox
-            project: firefox
-            shard: 2
-            nbShards: 3
-            renderer: auto
-          - browser: firefox
-            project: firefox
-            shard: 3
-            nbShards: 3
-            renderer: auto
-          - browser: webkit
-            project: webkit
-            shard: 1
-            nbShards: 5
-            renderer: headless
-          - browser: webkit
-            project: webkit
-            shard: 2
-            nbShards: 5
-            renderer: headless
-          - browser: webkit
-            project: webkit
-            shard: 3
-            nbShards: 5
-            renderer: headless
-          - browser: webkit
-            project: webkit
+          - browser: chromium
+            project: chromium
             shard: 4
-            nbShards: 5
+            nbShards: 4
+            renderer: auto
+          - browser: firefox
+            project: firefox
+            shard: 1
+            nbShards: 4
+            renderer: auto
+          - browser: firefox
+            project: firefox
+            shard: 2
+            nbShards: 4
+            renderer: auto
+          - browser: firefox
+            project: firefox
+            shard: 3
+            nbShards: 4
+            renderer: auto
+          - browser: firefox
+            project: firefox
+            shard: 4
+            nbShards: 4
+            renderer: auto
+          - browser: webkit
+            project: webkit
+            shard: 1
+            nbShards: 3
             renderer: headless
           - browser: webkit
             project: webkit
-            shard: 5
-            nbShards: 5
+            shard: 2
+            nbShards: 3
+            renderer: headless
+          - browser: webkit
+            project: webkit
+            shard: 3
+            nbShards: 3
             renderer: headless
           - browser: chromium
             project: mobilechromium

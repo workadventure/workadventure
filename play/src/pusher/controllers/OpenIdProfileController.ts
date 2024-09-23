@@ -21,27 +21,31 @@ export class OpenIdProfileController extends BaseHttpController {
 
             const { accessToken } = query;
 
-            const resCheckTokenAuth = await openIDClient.checkTokenAuth(accessToken);
-            if (!resCheckTokenAuth.sub) {
-                throw new Error("Email was not found");
-            }
-            const sub = resCheckTokenAuth.sub;
+            const { email, name, profile, tags } = await openIDClient.checkTokenAuth(accessToken);
             res.atomic(() => {
                 res.setHeader("Content-Type", "text/html");
-                res.send(this.buildHtml(OPID_CLIENT_ISSUER, sub));
+                res.send(
+                    this.buildHtml(
+                        OPID_CLIENT_ISSUER,
+                        email as string | undefined,
+                        name as string | undefined,
+                        profile as string | undefined,
+                        tags as string[] | undefined
+                    )
+                );
             });
             return;
         });
     }
 
-    buildHtml(domain: string, email: string, pictureUrl?: string): string {
+    buildHtml(domain: string, email?: string, name?: string, pictureUrl?: string, tags?: string[]): string {
         return `
                 <!DOCTYPE>
                 <html>
                     <head>
                         <style>
                             *{
-                                font-family: PixelFont-7, monospace;
+                                font-family: Roboto, monospace;
                             }
                             body{
                                 text-align: center;
@@ -61,7 +65,25 @@ export class OpenIdProfileController extends BaseHttpController {
                                 Profile validated by domain: <span style="font-weight: bold">${domain}</span>
                             </section>
                             <section>
-                                Your email: <span style="font-weight: bold">${email}</span>
+                                ${
+                                    email != undefined &&
+                                    `<p style="margin: 0;font-size: 12px;">Your email or application id:</p><p style="margin: 0 0 5px 0;font-weight: bold;">${email}</p>`
+                                }
+                                ${
+                                    name != undefined &&
+                                    `<p style="margin: 0;font-size: 12px;">Your name:</p><p style="margin: 0 0 5px 0;font-weight: bold;">${name}</p>`
+                                }
+                                ${
+                                    tags != undefined &&
+                                    `<p style="margin: 0;font-size: 12px;">Your access right:</p><p style="margin: 0 0 5px 0;font-weight: bold;">${tags?.join(
+                                        ", "
+                                    )}</p>`
+                                }
+                                ${
+                                    email == undefined && name == undefined && tags == undefined
+                                        ? `<p style="margin: 0;">No information about your profile provided 😱</p>`
+                                        : ""
+                                }
                             </section>
                         </div>
                     </body>

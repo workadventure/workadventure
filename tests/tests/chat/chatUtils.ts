@@ -1,4 +1,4 @@
-import { BrowserContext, Page } from "@playwright/test";
+import {BrowserContext, Page} from "@playwright/test";
 import MatrixApi from "./matrixApi";
 
 const DEFAULT_PASSPHRASE = "defaultPassphrase";
@@ -26,17 +26,27 @@ class ChatUtils {
   }
 
   public async initEndToEndEncryption(page: Page, context: BrowserContext) {
-    const oidcPagePromise = context.waitForEvent("page", {
-      // Give ample time for the SSO redirection
-      timeout: 50000
-    });
-    await page.getByText("Continue with SSO").click({
-      timeout: 50000
-    });
-    const oidcPage = await oidcPagePromise;
-    await oidcPage.getByText("Continue with OIDC Server Mock").click();
+    // Here, sometimes, SSO redirection is required by the Synapse server, sometimes it is not.
+    // It is not clear why, especially since it can change from one test run to another.
 
-    await page.getByText("Finish").click();
+    //eslint-disable-next-line playwright/no-wait-for-timeout
+    await page.waitForTimeout(1000);
+    //eslint-disable-next-line playwright/no-element-handle
+    const ssoButton = await page.$("text=Continue with SSO");
+    if (ssoButton) {
+      const oidcPagePromise = context.waitForEvent("page", {
+        // Give ample time for the SSO redirection
+        timeout: 2000
+      });
+      await page.getByText("Continue with SSO").click({
+        timeout: 1000
+      });
+      const oidcPage = await oidcPagePromise;
+      await oidcPage.getByText("Continue with OIDC Server Mock").click();
+      await page.getByText("Finish").click();
+      await oidcPage.close();
+    }
+
     await page.getByTestId("passphraseInput").fill(DEFAULT_PASSPHRASE);
     await page.getByText("Generate").click();
     await page.getByTestId("downloadRecoveryKeyButton").click();
