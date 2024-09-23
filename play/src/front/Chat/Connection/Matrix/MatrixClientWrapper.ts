@@ -15,11 +15,10 @@ import { openModal } from "svelte-modals";
 import { LocalUser } from "../../../Connection/LocalUser";
 import AccessSecretStorageDialog from "./AccessSecretStorageDialog.svelte";
 import { matrixSecurity } from "./MatrixSecurity";
+import { customMatrixLogger } from "./CustomMatrixLogger";
 
 globalThis.Olm = Olm;
 window.Buffer = Buffer;
-
-export const DEFAULT_CHAT_DISPLAY_NAME = "Guest";
 
 export interface MatrixClientWrapperInterface {
     initMatrixClient(): Promise<MatrixClient>;
@@ -52,10 +51,6 @@ export interface MatrixLocalUserStore {
     setMatrixAccessTokenExpireDate(AccessTokenExpireDate: Date): void;
 
     getName(): string | null;
-
-    isGuest(): boolean;
-
-    setGuest(isGuest: boolean): void;
 }
 
 export class MatrixClientWrapper implements MatrixClientWrapperInterface {
@@ -107,19 +102,6 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
             matrixDeviceId = deviceId;
         }
 
-        if (accessToken === null && refreshToken === null) {
-            const {
-                accessToken: accessTokenFromGuestUser,
-                refreshToken: refreshTokenFromGuestUser,
-                matrixUserId: matrixUserIdFromGuestUser,
-                device_id,
-            } = await this.registerMatrixGuestUser();
-            accessToken = accessTokenFromGuestUser;
-            refreshToken = refreshTokenFromGuestUser;
-            matrixUserId = matrixUserIdFromGuestUser;
-            matrixDeviceId = device_id;
-        }
-
         if (!accessToken) {
             console.error("Unable to connect to matrix, access token is null");
             throw new Error("Unable to connect to matrix, access token is null");
@@ -151,6 +133,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
                     this.cacheSecretStorageKey(keyId, key);
                 },
             },
+            logger: customMatrixLogger,
         };
 
         if (this.clientClosed) {
@@ -159,15 +142,6 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
 
         // Now, let's instantiate the Matrix client.
         this.client = this._createClient(matrixCreateClientOpts);
-
-        this.client.setGuest(this.localUserStore.isGuest());
-
-        const displayName = this.localUserStore.getName();
-
-        if (this.localUserStore.isGuest() && displayName !== this.client.getUser(matrixUserId)?.displayName) {
-            //TODO : Change default display name
-            await this.client.setDisplayName(displayName || DEFAULT_CHAT_DISPLAY_NAME);
-        }
 
         if (oldMatrixUserId !== matrixUserId) {
             await this.client.clearStores();
@@ -189,45 +163,6 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
         const deviceId = matrixUserId ? this.localUserStore.getMatrixDeviceId(matrixUserId) : null;
         const matrixLoginToken = this.localUserStore.getMatrixLoginToken();
         return { deviceId, accessToken, refreshToken, matrixUserId, matrixLoginToken };
-    }
-
-    private async registerMatrixGuestUser(): Promise<{
-        matrixUserId: string;
-        accessToken: string | null;
-        refreshToken: string | null;
-        device_id: string | null;
-    }> {
-        const client = this._createClient({
-            baseUrl: this.baseUrl,
-        });
-        try {
-            const { access_token, refresh_token, user_id, device_id } = await client.registerGuest({
-                body: {
-                    initial_device_display_name: this.localUserStore.getName() || "",
-                    refresh_token: true,
-                },
-            });
-
-            this.localUserStore.setMatrixUserId(user_id);
-            this.localUserStore.setGuest(true);
-
-            if (access_token !== undefined) {
-                this.localUserStore.setMatrixAccessToken(access_token);
-            }
-            this.localUserStore.setMatrixRefreshToken(refresh_token ?? null);
-            if (device_id !== undefined) {
-                this.localUserStore.setMatrixDeviceId(device_id, user_id);
-            }
-            return {
-                matrixUserId: user_id,
-                accessToken: access_token ?? null,
-                refreshToken: refresh_token ?? null,
-                device_id: device_id ?? null,
-            };
-        } catch (error) {
-            console.error(error);
-            throw new Error("Unable to establish a Matrix Guest connection");
-        }
     }
 
     private matrixWebClientStore(matrixUserId: string) {
@@ -277,8 +212,6 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
 
         //Login token has been used, remove it from local storage
         this.localUserStore.setMatrixLoginToken(null);
-
-        this.localUserStore.setGuest(false);
 
         // Note: we ignore the device ID returned by the server. We use the one we generated.
         // This will be required in the future when we switch to a Native OpenID Matrix client.

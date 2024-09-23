@@ -65,11 +65,6 @@ class LocalAdmin implements AdminInterface {
             canEdit = true;
         }
 
-        const mucRooms = [{ name: "Connected users", url: playUri, type: "default", subscribe: false }];
-        if (ENABLE_CHAT) {
-            mucRooms.push({ name: "Welcome", url: `${playUri}/forum/welcome`, type: "forum", subscribe: false });
-        }
-
         let isCharacterTexturesValid = true;
 
         const characterTextures = await localWokaService.fetchWokaDetails(characterTextureIds);
@@ -207,7 +202,6 @@ class LocalAdmin implements AdminInterface {
             isCompanionTextureValid,
             companionTexture,
             userRoomToken: undefined,
-            mucRooms,
             activatedInviteUser: true,
             canEdit,
             world: "localWorld",
@@ -265,7 +259,6 @@ class LocalAdmin implements AdminInterface {
             canEdit,
             authenticationMandatory: DISABLE_ANONYMOUS,
             contactPage: null,
-            mucRooms: null,
             group: wamUrl ? "default" : null,
             iframeAuthentication: null,
             opidLogoutRedirectUrl: null,

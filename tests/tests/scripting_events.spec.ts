@@ -163,5 +163,6 @@ test.describe('Scripting API Events', () => {
         expect(await result.text()).toEqual("ok");
 
         await expect.poll(() => gotExpectedGlobalNotification).toBe(true);
+        await page2.close();
     });
 });

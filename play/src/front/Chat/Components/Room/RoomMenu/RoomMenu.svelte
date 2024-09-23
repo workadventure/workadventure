@@ -4,10 +4,10 @@
     import { notificationPlayingStore } from "../../../../Stores/NotificationStore";
     import LL from "../../../../../i18n/i18n-svelte";
     import RoomOption from "./RoomOption.svelte";
-    import { IconDotsCircle, IconLogout } from "@wa-icons";
+    import { IconDotsCircle, IconLogout, IconMute, IconUnMute } from "@wa-icons";
 
     export let room: ChatRoom;
-
+    const areNotificationsMuted = room.areNotificationsMuted;
     let optionButtonRef: HTMLButtonElement | undefined = undefined;
     let optionRef: HTMLDivElement | undefined = undefined;
     let hideOptions = true;
@@ -50,6 +50,19 @@
             })
             .catch(() => console.error("Failed to leave room"));
     }
+
+    function closeMenuAndSetMuteStatus() {
+        toggleRoomOptions();
+        if ($areNotificationsMuted) {
+            room.unmuteNotification().catch(() => {
+                console.error("Failed to unmute room");
+            });
+            return;
+        }
+        room.muteNotification().catch(() => {
+            console.error("Failed to mute room");
+        });
+    }
 </script>
 
 <button
@@ -70,5 +83,10 @@
         IconComponent={IconLogout}
         title={$LL.chat.roomMenu.leaveRoom.label()}
         on:click={closeMenuAndLeaveRoom}
+    />
+    <RoomOption
+        IconComponent={$areNotificationsMuted ? IconUnMute : IconMute}
+        title={$areNotificationsMuted ? $LL.chat.roomMenu.unmuteRoom() : $LL.chat.roomMenu.muteRoom()}
+        on:click={closeMenuAndSetMuteStatus}
     />
 </div>

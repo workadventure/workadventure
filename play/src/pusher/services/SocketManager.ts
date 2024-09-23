@@ -326,7 +326,6 @@ export class SocketManager implements ZoneEventListener {
             streamToBack.write(pusherToBackMessage);
 
             const pusherRoom = await this.getOrCreateRoom(socketData.roomId);
-            pusherRoom.mucRooms = socketData.mucRooms;
             pusherRoom.join(client);
         } catch (e) {
             Sentry.captureException(`An error occurred on "join_room" event ${e}`);

@@ -1,8 +1,16 @@
-import { Readable, writable } from "svelte/store";
+import { readable, Readable, writable } from "svelte/store";
 import { MapStore } from "@workadventure/store-utils";
-import { ChatConnectionInterface, ChatRoom, CreateRoomOptions, RoomFolder, ConnectionStatus } from "./ChatConnection";
+import {
+    ChatConnectionInterface,
+    ChatRoom,
+    CreateRoomOptions,
+    RoomFolder,
+    ConnectionStatus,
+    ChatUser,
+} from "./ChatConnection";
 
 export class VoidChatConnection implements ChatConnectionInterface {
+    directRoomsUsers: Readable<ChatUser[]> = readable([]);
     connectionStatus: Readable<ConnectionStatus> = writable("OFFLINE");
     directRooms: Readable<ChatRoom[]> = writable([]);
     rooms: Readable<ChatRoom[]> = writable([]);

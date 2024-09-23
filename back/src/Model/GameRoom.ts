@@ -747,7 +747,6 @@ export class GameRoom implements BrothersFinder {
                 editable: canEdit,
                 authenticationMandatory: null,
                 group: null,
-                mucRooms: null,
                 showPoweredBy: true,
                 enableChat: ENABLE_CHAT,
                 enableChatUpload: ENABLE_CHAT_UPLOAD,

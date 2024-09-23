@@ -15,11 +15,11 @@
     import MessageReactions from "./MessageReactions.svelte";
     import MessageIncoming from "./Message/MessageIncoming.svelte";
     import MessageOutcoming from "./Message/MessageOutcoming.svelte";
-    import MessageProximity from "./Message/MessageProximity.svelte";
     import { IconCornerDownRight, IconTrash } from "@wa-icons";
 
     export let message: ChatMessage;
     export let reactions: MapStore<string, ChatMessageReaction> | undefined;
+    export let replyDepth = 0;
 
     const { id, sender, isMyMessage, date, content, quotedMessage, isQuotedMessage, type, isDeleted, isModified } =
         message;
@@ -34,7 +34,7 @@
         video: MessageVideoFile as ComponentType,
         incoming: MessageIncoming as ComponentType,
         outcoming: MessageOutcoming as ComponentType,
-        proximity: MessageProximity as ComponentType,
+        proximity: MessageText as ComponentType,
     };
 </script>
 
@@ -89,10 +89,10 @@
                 {/if}
             {/if}
         </div>
-        {#if quotedMessage}
+        {#if quotedMessage && replyDepth < 2}
             <div class="response">
                 <IconCornerDownRight font-size="24" />
-                <svelte:self message={quotedMessage} />
+                <svelte:self replyDepth={replyDepth + 1} message={quotedMessage} />
             </div>
         {/if}
     </div>

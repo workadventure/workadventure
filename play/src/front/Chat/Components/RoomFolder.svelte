@@ -6,6 +6,7 @@
     import { chatSearchBarValue } from "../Stores/ChatStore";
     import Room from "./Room/Room.svelte";
     import CreateRoomOrFolderOption from "./Room/CreateRoomOrFolderOption.svelte";
+    import ShowMore from "./ShowMore.svelte";
     import { IconChevronDown, IconChevronRight } from "@wa-icons";
 
     export let folders: Readable<Map<string, RoomFolder>>;
@@ -17,9 +18,9 @@
 
     const isFoldersOpen: { [key: string]: boolean } = {};
 
-    $: filteredRoom = Array.from($rooms.values()).filter(({ name }) =>
-        get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase())
-    );
+    $: filteredRoom = Array.from($rooms.values())
+        .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
+        .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
 
     $folders.forEach((folder) => {
         if (!(folder.id in isFoldersOpen)) {
@@ -59,9 +60,9 @@
                 {isGuest}
             />
         {/each}
-        {#each filteredRoom as room (room.id)}
+        <ShowMore items={filteredRoom} maxNumber={8} idKey="id" let:item={room} showNothingToDisplayMessage={false}>
             <Room {room} />
-        {/each}
+        </ShowMore>
         {#if $rooms.size === 0 && $folders.size === 0}
             <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
         {/if}

@@ -12,7 +12,7 @@ const chat: BaseTranslation = {
     users: "Users",
     chat: "Chat",
     userList: {
-        disconnected: "Disconnected",
+        disconnected: "Not connected to the world",
         isHere: "Is on this map",
         inAnotherMap: "In another map",
         in: "In ",
@@ -47,6 +47,8 @@ const chat: BaseTranslation = {
         back_in_a_moment: "Back in a moment",
         do_not_disturb: "Do not disturb",
         busy: "Busy",
+        meeting: "In a meeting",
+        megaphone: "Using the megaphone",
     },
     logIn: "Log in",
     signIn: "Register or log in to enjoy all the features of the chat !",
@@ -170,6 +172,8 @@ const chat: BaseTranslation = {
     messageEdited: "Modified",
     waiting: "Waiting",
     nothingToDisplay: "Nothing to display",
+    showMore: "Show {number} more",
+    showLess: "Show less",
     addRoomToFolderError: "Impossible to add the room to the folder",
     createRoom: {
         title: "Create new room",
@@ -242,6 +246,8 @@ const chat: BaseTranslation = {
             label: "Leave room",
             notification: "You have left the room",
         },
+        muteRoom: "Mute Room",
+        unmuteRoom: "Unmute Room",
     },
     e2ee: {
         encryptionNotConfigured: "Encryption not configured",
@@ -285,6 +291,14 @@ const chat: BaseTranslation = {
         },
     },
     connectionError: "Chat not available",
+    requiresLoginForChatModal: {
+        title: "Log in to unlock the chat !",
+        content_1: "To fully enjoy this chat feature, you need to be logged into your account.",
+        content_2: "Logging in gives you access to all options and allows you to continue without interruption.",
+        content_3: " Please log in to proceed with the experience.",
+    },
+    requiresLoginForChat: "Sign in to access the chat messages",
+    featureComingSoon: "Feature coming soon!",
 };
 
 export default chat;

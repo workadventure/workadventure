@@ -149,10 +149,10 @@ services:
       GOOGLE_DRIVE_PICKER_APP_ID: "$GOOGLE_DRIVE_PICKER_APP_ID"
       #Chat
       MATRIX_API_URI: http://synapse:8008/
-      MATRIX_PUBLIC_URI: http://$MATRIX_DOMAIN/
+      MATRIX_PUBLIC_URI: $MATRIX_PUBLIC_URI
+      MATRIX_ADMIN_USER: '$MATRIX_ADMIN_USER'
+      MATRIX_ADMIN_PASSWORD: '$MATRIX_ADMIN_PASSWORD'
       MATRIX_DOMAIN: "$MATRIX_DOMAIN"
-      MATRIX_ADMIN_USER: "$MATRIX_ADMIN_USER"
-      MATRIX_ADMIN_PASSWORD: "$MATRIX_ADMIN_PASSWORD"
       # oEmbed providers
       EMBEDLY_KEY: "$EMBEDLY_KEY"
       IFRAMELY_KEY: "$IFRAMELY_KEY"
@@ -444,7 +444,7 @@ services:
     # A mock server to test OpenID connect connectivity
 
   synapse:
-    image: matrixdotorg/synapse:latest
+    image: matrixdotorg/synapse:v1.115.0
     entrypoint: /data/start.sh
     labels:
       - "traefik.enable=true"

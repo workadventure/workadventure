@@ -113,7 +113,6 @@ export const GOOGLE_DRIVE_PICKER_CLIENT_ID = env.GOOGLE_DRIVE_PICKER_CLIENT_ID;
 export const GOOGLE_DRIVE_PICKER_API_KEY = env.GOOGLE_DRIVE_PICKER_API_KEY;
 export const GOOGLE_DRIVE_PICKER_APP_ID = env.GOOGLE_DRIVE_PICKER_APP_ID;
 // Matrix
-export const MATRIX_DOMAIN: string = env.MATRIX_DOMAIN || "";
 export const MATRIX_PUBLIC_URI: string | undefined = env.MATRIX_PUBLIC_URI;
 export const MATRIX_API_URI: string | undefined = env.MATRIX_API_URI;
 export const MATRIX_ADMIN_USER: string | undefined = env.MATRIX_ADMIN_USER;

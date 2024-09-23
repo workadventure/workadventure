@@ -1,4 +1,4 @@
-import { derived, get, Readable, writable, Writable } from "svelte/store";
+import { derived, get, Readable, Unsubscriber, writable, Writable } from "svelte/store";
 import {
     ClientEvent,
     Direction,
@@ -6,13 +6,16 @@ import {
     EventType,
     ICreateRoomOpts,
     ICreateRoomStateEvent,
+    IPushRule,
     IRoomDirectoryOptions,
     MatrixClient,
     MatrixError,
     MatrixEvent,
     PendingEventOrdering,
+    PushRuleActionName,
     Room,
     RoomEvent,
+    SetPresence,
     RoomMember,
     RoomMemberEvent,
     SyncState,
@@ -22,12 +25,15 @@ import * as Sentry from "@sentry/svelte";
 import { MapStore } from "@workadventure/store-utils";
 import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
-import { ChatConnectionInterface, ChatRoom, Connection, ConnectionStatus, CreateRoomOptions } from "../ChatConnection";
+import { AvailabilityStatus } from "@workadventure/messages";
+import { ChatConnectionInterface, ChatRoom, ChatUser, ConnectionStatus, CreateRoomOptions } from "../ChatConnection";
 import { selectedRoom } from "../../Stores/ChatStore";
 import LL from "../../../../i18n/i18n-svelte";
+import { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 import { MatrixSecurity, matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity";
 import { MatrixRoomFolder } from "./MatrixRoomFolder";
+import { chatUserFactory } from "./MatrixChatUser";
 
 const CLIENT_NOT_INITIALIZED_ERROR_MSG = "MatrixClient not yet initialized";
 export const defaultWoka =
@@ -46,33 +52,70 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     private handleMyMembership: (room: Room, membership: string, prevMembership: string | undefined) => void;
     private handleRoomStateEvent: (event: MatrixEvent) => void;
     private handleName: (room: Room) => void;
-    private handleRoomMemberTyping: (event: MatrixEvent, member: RoomMember) => void;
+    private handleAccountDataEvent: (event: MatrixEvent) => void;
+    private statusUnsubscriber: Unsubscriber | undefined;
+    private isClientReady = false;
     connectionStatus: Writable<ConnectionStatus>;
     directRooms: Readable<MatrixChatRoom[]>;
     invitations: Readable<MatrixChatRoom[]>;
     rooms: Readable<MatrixChatRoom[]>;
     isEncryptionRequiredAndNotSet: Writable<boolean>;
-    isGuest: Writable<boolean> = writable(true);
+    isGuest: Writable<boolean> = writable(false);
     hasUnreadMessages: Readable<boolean>;
     roomCreationInProgress: Writable<boolean> = writable(false);
     roomFolders: MapStore<MatrixRoomFolder["id"], MatrixRoomFolder> = new MapStore<
         MatrixRoomFolder["id"],
         MatrixRoomFolder
     >();
-
+    directRoomsUsers: Readable<ChatUser[]>;
+    clientPromise: Promise<MatrixClient>;
     constructor(
-        private connection: Connection,
         clientPromise: Promise<MatrixClient>,
+        private statusStore: Readable<
+            | AvailabilityStatus.ONLINE
+            | AvailabilityStatus.SILENT
+            | AvailabilityStatus.AWAY
+            | AvailabilityStatus.JITSI
+            | AvailabilityStatus.BBB
+            | AvailabilityStatus.DENY_PROXIMITY_MEETING
+            | AvailabilityStatus.SPEAKER
+            | RequestedStatus
+        >,
         private matrixSecurity: MatrixSecurity = defaultMatrixSecurity
     ) {
         this.connectionStatus = writable("CONNECTING");
         this.roomList = new AutoDestroyingMapStore<string, MatrixChatRoom>();
 
+        this.clientPromise = clientPromise;
         this.directRooms = derived(this.roomList, (roomList) => {
             return Array.from(roomList.values()).filter(
                 (room) => room.myMembership === KnownMembership.Join && room.type === "direct"
             );
         });
+        this.directRoomsUsers = derived(
+            this.directRooms,
+            (directRooms) => {
+                const myUserID = this.client?.getSafeUserId();
+                const client = this.client;
+
+                if (!client) {
+                    return [];
+                }
+
+                return directRooms.reduce((acc, currentRoom) => {
+                    currentRoom.membersId.forEach((memberID) => {
+                        if (memberID !== myUserID) {
+                            const user = client.getUser(memberID);
+                            if (user) {
+                                acc.push(chatUserFactory(user, client));
+                            }
+                        }
+                    });
+                    return acc;
+                }, [] as ChatUser[]);
+            },
+            []
+        );
 
         this.invitations = derived(this.roomList, (roomList) => {
             return Array.from(roomList.values()).filter((room) => room.myMembership === KnownMembership.Invite);
@@ -108,12 +151,35 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.handleRoomStateEvent = this.onRoomStateEvent.bind(this);
         this.handleName = this.onRoomNameEvent.bind(this);
         this.handleRoomMemberTyping = this.onRoomMemberEventTyping.bind(this);
-        (async () => {
-            this.client = await clientPromise;
+        this.handleAccountDataEvent = this.onAccountDataEvent.bind(this);
+
+        this.statusUnsubscriber = this.statusStore.subscribe((status: AvailabilityStatus) => {
+            this.setPresence(status);
+        });
+    }
+
+    async init(): Promise<void> {
+        try {
+            this.client = await this.clientPromise;
+            this.matrixSecurity.updateMatrixClientStore(this.client);
             await this.startMatrixClient();
             this.isGuest.set(this.client.isGuest());
-        })().catch((error) => {
+        } catch (error) {
+            this.connectionStatus.set("OFFLINE");
             console.error(error);
+        }
+    }
+
+    private setPresence(status: AvailabilityStatus): void {
+        let matrixStatus: SetPresence;
+        if (status === AvailabilityStatus.ONLINE) {
+            matrixStatus = SetPresence.Online;
+        } else {
+            matrixStatus = SetPresence.Unavailable;
+        }
+        this.client?.setSyncPresence(matrixStatus).catch((error) => {
+            console.error("Failed to send presence", error);
+            Sentry.captureMessage(`Failed to send presence to synapse server : ${error}`);
         });
     }
 
@@ -124,8 +190,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             switch (state) {
                 case SyncState.Prepared:
                     this.connectionStatus.set("ONLINE");
-
-                    this.connection.emitPlayerChatID(this.client.getSafeUserId());
+                    this.isClientReady = true;
                     break;
                 case SyncState.Error:
                     this.connectionStatus.set("ON_ERROR");
@@ -136,6 +201,11 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 case SyncState.Stopped:
                     this.connectionStatus.set("OFFLINE");
                     break;
+                case SyncState.Syncing:
+                    if (get(this.connectionStatus) !== "ONLINE" && this.isClientReady) {
+                        this.connectionStatus.set("ONLINE");
+                    }
+                    break;
             }
         });
 
@@ -144,6 +214,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.client.on(RoomEvent.MyMembership, this.handleMyMembership);
         this.client.on("RoomState.events" as EmittedEvents, this.handleRoomStateEvent);
         this.client.on(RoomEvent.Name, this.handleName);
+        this.client.on(ClientEvent.AccountData, this.handleAccountDataEvent);
         this.client.on(RoomMemberEvent.Typing, this.handleRoomMemberTyping);
 
         await this.client.store.startup();
@@ -153,7 +224,28 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             //Detached to prevent using listener on localIdReplaced for each event
             pendingEventOrdering: PendingEventOrdering.Detached,
         });
+
+        await this.waitInitialSync();
     }
+
+    private waitInitialSync(timeout = 10_000, interval = 3500): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const startTime = Date.now();
+            const checkSync = () => {
+                if (this.client?.isInitialSyncComplete()) {
+                    resolve();
+                } else {
+                    if (Date.now() - startTime >= timeout) {
+                        reject(new Error("Failed to wait initial sync"));
+                    } else {
+                        setTimeout(checkSync, interval);
+                    }
+                }
+            };
+            checkSync();
+        });
+    }
+
     private getParentRoomID(room: Room): string[] {
         return (room.getLiveTimeline().getState(Direction.Forward)?.getStateEvents("m.space.parent") || []).reduce(
             (acc, currentMatrixEvent) => {
@@ -164,6 +256,32 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             [] as string[]
         );
     }
+
+    private onAccountDataEvent(event: MatrixEvent) {
+        if (event.getType() === "m.push_rules") {
+            const content = event.getContent();
+
+            content.global.override.forEach((rule: IPushRule) => {
+                const room = this.roomList.get(rule.rule_id);
+                if (!room) return;
+                if (rule.actions.includes(PushRuleActionName.DontNotify)) {
+                    room.setNotificationSilent(true);
+                }
+            });
+
+            Array.from(this.roomList.values())
+                .filter((room) => {
+                    return !content.global.override.some(
+                        (rule: IPushRule) =>
+                            rule.rule_id === room.id && rule.actions.includes(PushRuleActionName.DontNotify)
+                    );
+                })
+                .forEach((room) => {
+                    room.setNotificationSilent(false);
+                });
+        }
+    }
+
     private onRoomNameEvent(room: Room): void {
         const { roomId, name } = room;
         const roomInConnection = this.findRoomOrFolder(roomId);
@@ -323,7 +441,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     private findRoomOrFolder(roomId: string): MatrixRoomFolder | MatrixChatRoom | undefined {
         const roomInRoomList = this.roomList.get(roomId);
         if (roomInRoomList) {
-            console.warn("Room already exists in the root list");
             return roomInRoomList;
         }
 
@@ -780,6 +897,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.client?.off(RoomEvent.MyMembership, this.handleMyMembership);
         this.client?.off("RoomState.events" as EmittedEvents, this.handleRoomStateEvent);
         this.client?.off(RoomEvent.Name, this.handleName);
+        if (this.statusUnsubscriber) this.statusUnsubscriber();
         this.client?.off(RoomMemberEvent.Typing, this.handleRoomMemberTyping);
     }
     async destroy(): Promise<void> {

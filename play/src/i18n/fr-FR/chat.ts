@@ -13,7 +13,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     users: "Utilisateurs",
     chat: "Chat",
     userList: {
-        disconnected: "Non connecté",
+        disconnected: "Non connecté au monde",
         isHere: "Sur cette map",
         inAnotherMap: "Dans une autre map",
         in: "Dans ",
@@ -48,6 +48,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         do_not_disturb: "Ne pas déranger",
         busy: "Occupé",
         unavailable: "Non disponible",
+        meeting: "En réunion",
+        megaphone: "Utilise le mégaphone",
     },
     logIn: "Se connecter",
     signIn: "Inscrivez-vous ou connectez-vous pour profiter de toutes les fonctionnalités du chat !",
@@ -171,6 +173,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     messageEdited: "Modifié",
     waiting: "En attente",
     nothingToDisplay: "Rien à afficher",
+    showMore: "En afficher {number} de plus",
+    showLess: "En afficher moins",
     addRoomToFolderError: "Impossible d'ajouter la room au dossier",
     createRoom: {
         title: "Créer un nouveau salon",
@@ -243,6 +247,8 @@ const chat: DeepPartial<Translation["chat"]> = {
             label: "Quitter le salon",
             notification: "Vous avez quitté le salon",
         },
+        muteRoom: "Couper les notification",
+        unmuteRoom: "Activer les notifications",
     },
     e2ee: {
         encryptionNotConfigured: "Chiffrement non configuré",
@@ -286,6 +292,15 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     connectionError: "Chat indisponible",
+    requiresLoginForChatModal: {
+        title: "Identifiez-vous pour utiliser le chat !",
+        content_1: "Pour profiter pleinement de cette fonctionnalité du chat, vous devez être connecté.",
+        content_2:
+            "La connexion vous donne accès à toutes les fonctionnalités du chat et vous permet de continuer sans interruption.",
+        content_3: "Veuillez vous connecter pour poursuivre l’expérience.",
+    },
+    requiresLoginForChat: "Identifiez-vous pour accéder aux messages du chat",
+    featureComingSoon: "Prochainement disponible !",
 };
 
 export default chat;
