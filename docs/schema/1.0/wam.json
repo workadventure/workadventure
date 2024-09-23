@@ -43,6 +43,11 @@
                         "ressourceUrl": {
                           "type": "string"
                         },
+                        "serverData": {
+                          "type": "object",
+                          "properties": {},
+                          "additionalProperties": false
+                        },
                         "type": {
                           "type": "string",
                           "const": "jitsiRoomProperty"
@@ -128,6 +133,9 @@
                         "ressourceUrl": {
                           "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/ressourceUrl"
                         },
+                        "serverData": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/serverData"
+                        },
                         "type": {
                           "type": "string",
                           "const": "playAudio"
@@ -164,6 +172,9 @@
                         },
                         "ressourceUrl": {
                           "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/ressourceUrl"
+                        },
+                        "serverData": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/serverData"
                         },
                         "type": {
                           "type": "string",
@@ -257,6 +268,9 @@
                         "ressourceUrl": {
                           "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/ressourceUrl"
                         },
+                        "serverData": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/serverData"
+                        },
                         "type": {
                           "type": "string",
                           "const": "entityDescriptionProperties"
@@ -348,6 +362,9 @@
                         "ressourceUrl": {
                           "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/ressourceUrl"
                         },
+                        "serverData": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/serverData"
+                        },
                         "type": {
                           "type": "string",
                           "const": "start"
@@ -376,6 +393,9 @@
                         },
                         "ressourceUrl": {
                           "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/ressourceUrl"
+                        },
+                        "serverData": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/serverData"
                         },
                         "type": {
                           "type": "string",
@@ -411,6 +431,9 @@
                         "ressourceUrl": {
                           "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/ressourceUrl"
                         },
+                        "serverData": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/serverData"
+                        },
                         "type": {
                           "type": "string",
                           "const": "focusable"
@@ -439,6 +462,9 @@
                         },
                         "ressourceUrl": {
                           "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/ressourceUrl"
+                        },
+                        "serverData": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/serverData"
                         },
                         "type": {
                           "type": "string",
@@ -475,6 +501,9 @@
                         "ressourceUrl": {
                           "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/ressourceUrl"
                         },
+                        "serverData": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/serverData"
+                        },
                         "type": {
                           "type": "string",
                           "const": "speakerMegaphone"
@@ -508,6 +537,9 @@
                         },
                         "ressourceUrl": {
                           "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/ressourceUrl"
+                        },
+                        "serverData": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/serverData"
                         },
                         "type": {
                           "type": "string",
@@ -543,6 +575,9 @@
                         "ressourceUrl": {
                           "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/ressourceUrl"
                         },
+                        "serverData": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/serverData"
+                        },
                         "type": {
                           "type": "string",
                           "const": "areaDescriptionProperties"
@@ -575,6 +610,9 @@
                         },
                         "ressourceUrl": {
                           "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/ressourceUrl"
+                        },
+                        "serverData": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/serverData"
                         },
                         "type": {
                           "type": "string",
@@ -615,6 +653,9 @@
                         },
                         "ressourceUrl": {
                           "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/ressourceUrl"
+                        },
+                        "serverData": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/serverData"
                         },
                         "type": {
                           "type": "string",
@@ -664,12 +705,21 @@
                         "ressourceUrl": {
                           "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/ressourceUrl"
                         },
+                        "serverData": {
+                          "type": "object",
+                          "properties": {
+                            "matrixRoomId": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "matrixRoomId"
+                          ],
+                          "additionalProperties": false
+                        },
                         "type": {
                           "type": "string",
                           "const": "matrixRoomPropertyData"
-                        },
-                        "matrixRoomId": {
-                          "type": "string"
                         },
                         "shouldOpenAutomatically": {
                           "type": "boolean"
@@ -680,8 +730,8 @@
                       },
                       "required": [
                         "id",
+                        "serverData",
                         "type",
-                        "matrixRoomId",
                         "shouldOpenAutomatically",
                         "displayName"
                       ],
