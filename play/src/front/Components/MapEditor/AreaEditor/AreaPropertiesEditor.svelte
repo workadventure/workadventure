@@ -206,10 +206,12 @@
                 return {
                     id,
                     type,
-                    matrixRoomId: "",
                     shouldOpenAutomatically: false,
                     displayName: "",
                     ressourceUrl: ROOM_AREA_PUSHER_URL,
+                    serverData: {
+                        matrixRoomId: "",
+                    },
                 };
             default:
                 throw new Error(`Unknown property type ${type}`);

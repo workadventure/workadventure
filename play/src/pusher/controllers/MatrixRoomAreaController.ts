@@ -54,7 +54,7 @@ export class MatrixRoomAreaController extends BaseHttpController {
                 }
 
                 const roomID = await matrixProvider.createRoomForArea();
-                body.matrixRoomId = roomID;
+                body.serverData.matrixRoomId = roomID;
                 return res.status(201).json(body);
             } catch (error) {
                 return this.handleError(res, error);
@@ -106,7 +106,7 @@ export class MatrixRoomAreaController extends BaseHttpController {
                 if (!isMatrixRoomPropertyData.success) {
                     return res.status(400).send("Invalid request body");
                 }
-                await matrixProvider.deleteRoom(isMatrixRoomPropertyData.data.matrixRoomId);
+                await matrixProvider.deleteRoom(isMatrixRoomPropertyData.data.serverData.matrixRoomId);
                 return res.status(204).send();
             } catch (error) {
                 return this.handleError(res, error);
@@ -145,7 +145,7 @@ export class MatrixRoomAreaController extends BaseHttpController {
                     return res.status(400).send("Invalid request body");
                 }
                 await matrixProvider.changeRoomName(
-                    isMatrixRoomPropertyData.data.matrixRoomId,
+                    isMatrixRoomPropertyData.data.serverData.matrixRoomId,
                     isMatrixRoomPropertyData.data.displayName
                 );
                 return res.status(200).send("Room name updated successfully");

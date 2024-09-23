@@ -30,6 +30,7 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
 
     public async execute(): Promise<void> {
         const patch = jsonpatch.compare(this.oldConfig, this.newConfig);
+        let shouldUpdateServerData = false;
         const promises = patch.reduce((acc: Promise<void>[], operation) => {
             if (operation.op === "add" && operation.path.match(new RegExp("^/properties/*"))) {
                 const { ressourceUrl, id } = operation.value as AreaDataProperty;
@@ -49,16 +50,26 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
                         if (!isAreaDataProperty.success) {
                             return Promise.resolve();
                         }
+
                         let shouldNotifyUpdate = false;
+
                         this.newConfig.properties = this.newConfig.properties?.map((property) => {
-                            if (property.id !== id) {
+                            if (property.id !== id || !isAreaDataProperty.data.serverData) {
                                 return property;
                             }
 
-                            const responsePatch = jsonpatch.compare(property, isAreaDataProperty.data);
+                            if (!property.serverData) {
+                                return isAreaDataProperty.data;
+                            }
+
+                            const responsePatch = jsonpatch.compare(
+                                property.serverData,
+                                isAreaDataProperty.data.serverData
+                            );
 
                             if (responsePatch.length > 0) {
                                 shouldNotifyUpdate = true;
+                                shouldUpdateServerData = true;
                             }
 
                             return isAreaDataProperty.data;
@@ -92,7 +103,7 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
 
         await Promise.all(promises);
 
-        return super.execute();
+        return super.execute(shouldUpdateServerData);
     }
     private notifyAreaUpdate() {
         const modifyAreaMessage: ModifyAreaMessage = ModifyAreaMessage.fromPartial({

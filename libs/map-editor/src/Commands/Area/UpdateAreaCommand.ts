@@ -36,8 +36,8 @@ export class UpdateAreaCommand extends Command {
         }
     }
 
-    public execute(): Promise<void> {
-        if (!this.gameMap.getGameMapAreas()?.updateArea(this.newConfig)) {
+    public execute(shouldUpdateServerData = false): Promise<void> {
+        if (!this.gameMap.getGameMapAreas()?.updateArea(this.newConfig, shouldUpdateServerData)) {
             throw new Error(`MapEditorError: Could not execute UpdateArea Command. Area ID: ${this.newConfig.id}`);
         }
         return Promise.resolve();

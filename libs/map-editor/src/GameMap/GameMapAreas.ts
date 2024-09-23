@@ -184,10 +184,21 @@ export class GameMapAreas {
         );
     }
 
-    public updateArea(newConfig: AtLeast<AreaData, "id">): AreaData | undefined {
+    public updateArea(newConfig: AtLeast<AreaData, "id">, shouldUpdateServerData = false): AreaData | undefined {
         const area = this.areas.get(newConfig.id);
         if (!area) {
             throw new Error(`Area to update does not exist!`);
+        }
+
+        if (newConfig.properties && !shouldUpdateServerData) {
+            newConfig.properties.map((property) => {
+                if (property.serverData) {
+                    const oldDataProperty = area.properties.find((properyTofind) => properyTofind.id === property.id);
+                    if (!oldDataProperty?.serverData) return property.serverData;
+                    return oldDataProperty.serverData;
+                }
+                return property;
+            });
         }
 
         _.merge(area, newConfig);
@@ -200,6 +211,8 @@ export class GameMapAreas {
         this.updateAreaWAM(area);
         return area;
     }
+
+    // public updateProperty(areaId : string , )
 
     public deleteArea(id: string): boolean {
         const deleted = this.areas.delete(id);
