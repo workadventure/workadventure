@@ -35,7 +35,8 @@
 
         try {
             const inputToKey = MatrixSecurity.makeInputToKey(keyInfo);
-            const key = await inputToKey({ recoveryKey: recoveryKeyInput, passphrase: passphraseInput });
+            const passphrase = passphraseInput.trim().length === 0 ? undefined : passphraseInput;
+            const key = await inputToKey({ recoveryKey: recoveryKeyInput, passphrase });
             const keyVerified = await matrixClient.secretStorage.checkKey(key, keyInfo);
 
             if (keyVerified === false) {
