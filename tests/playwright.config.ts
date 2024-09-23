@@ -42,7 +42,8 @@ const config: PlaywrightTestConfig = {
     baseURL: process.env.PLAY_URL ?? 'http://play.workadventure.localhost/',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: process.env.CI ? 'on-first-retry' : 'retain-on-failure',
+    // Note: temporarily set to "retain-on-failure" to debug flaky tests
+    trace: /*process.env.CI ? 'on-first-retry' :*/ 'retain-on-failure',
     navigationTimeout: 60_000,
 
     // Emulates the user locale. See https://playwright.dev/docs/api/class-browsertype#browsertypelaunchoptions
