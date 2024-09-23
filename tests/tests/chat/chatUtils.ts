@@ -1,5 +1,4 @@
-import {BrowserContext, expect, Page} from "@playwright/test";
-import playwright from 'playwright';
+import {BrowserContext, Page} from "@playwright/test";
 import MatrixApi from "./matrixApi";
 
 const DEFAULT_PASSPHRASE = "defaultPassphrase";
@@ -30,8 +29,11 @@ class ChatUtils {
     // Here, sometimes, SSO redirection is required by the Synapse server, sometimes it is not.
     // It is not clear why, especially since it can change from one test run to another.
 
-    try {
-      await expect(page.getByText("Continue with SSO")).toBeVisible();
+    //eslint-disable-next-line playwright/no-wait-for-timeout
+    await page.waitForTimeout(1000);
+    //eslint-disable-next-line playwright/no-element-handle
+    const ssoButton = await page.$("text=Continue with SSO");
+    if (ssoButton) {
       const oidcPagePromise = context.waitForEvent("page", {
         // Give ample time for the SSO redirection
         timeout: 2000
@@ -43,11 +45,6 @@ class ChatUtils {
       await oidcPage.getByText("Continue with OIDC Server Mock").click();
       await page.getByText("Finish").click();
       await oidcPage.close();
-    } catch (error) {
-      if (!(error instanceof playwright.errors.TimeoutError)) {
-        throw error;
-      }
-      // No SSO redirection required
     }
 
     await page.getByTestId("passphraseInput").fill(DEFAULT_PASSPHRASE);
