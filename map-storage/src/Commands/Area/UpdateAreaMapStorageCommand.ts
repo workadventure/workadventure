@@ -93,15 +93,31 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
             }
 
             if (operation.op === "replace" && operation.path.match(new RegExp("^/properties/*"))) {
-                const { ressourceUrl } = operation.value as AreaDataProperty;
-                if (ressourceUrl) {
-                    acc.push(limit(() => _axios.patch(ressourceUrl, operation.value)));
+                const match = operation.path.match(/^\/properties\/(\d+)\/*/);
+
+                if (!match) return acc;
+
+                const propertyIndex = Number(match[1]);
+                const properties = this.newConfig.properties;
+
+                if (!properties) return acc;
+                const property = properties[propertyIndex];
+
+                const ressourcesUrl = property.ressourceUrl;
+
+                if (ressourcesUrl) {
+                    acc.push(limit(() => _axios.patch(ressourcesUrl, property)));
                 }
             }
             return acc;
         }, []);
 
-        await Promise.all(promises);
+        try {
+            await Promise.all(promises);
+        } catch {
+            //TODO : better error management
+            console.error("Failed to execute all request on ressourceUrl");
+        }
 
         return super.execute(shouldUpdateServerData);
     }
