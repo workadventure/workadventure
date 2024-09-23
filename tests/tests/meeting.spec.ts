@@ -63,7 +63,8 @@ test.describe('Meeting actions test', () => {
 
         // First, move the mouse out to force closing the action menu.
         // This action menu is automatically closed on Firefox because it refreshes the stream, which Chrome does not.
-        await page.mouse.move(0, 0);
+        await page.mouse.move(1, 1);
+        await expect(page.locator('.cameras-container .other-cameras .video-container .action-button#mute-video-user')).toBeHidden();
         await page.click('.cameras-container .other-cameras .video-container .action-button#more-action');
         await page.click('.cameras-container .other-cameras .video-container .action-button#mute-video-user');
 
