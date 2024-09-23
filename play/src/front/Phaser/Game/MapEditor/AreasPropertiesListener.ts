@@ -573,7 +573,7 @@ export class AreasPropertiesListener {
             this.scene.connection
                 .queryEnterChatRoomArea(property.matrixRoomId)
                 .then(() => {
-                    return this.scene.chatConnection.joinRoom(property.matrixRoomId);
+                    return gameManager.chatConnection.joinRoom(property.matrixRoomId);
                 })
                 .then((room: ChatRoom | undefined) => {
                     if (!room) return;
@@ -782,7 +782,7 @@ export class AreasPropertiesListener {
         }
         chatZoneLiveStore.set(false);
 
-        get(this.scene.chatConnection.rooms)
+        get(gameManager.chatConnection.rooms)
             .find((room) => room.id === property.matrixRoomId)
             ?.leaveRoom()
             .catch((error) => console.error(error));

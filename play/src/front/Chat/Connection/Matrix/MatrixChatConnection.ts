@@ -53,6 +53,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     private handleRoomStateEvent: (event: MatrixEvent) => void;
     private handleName: (room: Room) => void;
     private handleAccountDataEvent: (event: MatrixEvent) => void;
+    private handleRoomMemberTyping:(event: MatrixEvent, member: RoomMember) => void
     private statusUnsubscriber: Unsubscriber | undefined;
     private isClientReady = false;
     connectionStatus: Writable<ConnectionStatus>;

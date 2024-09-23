@@ -117,6 +117,7 @@ export const MATRIX_PUBLIC_URI: string | undefined = env.MATRIX_PUBLIC_URI;
 export const MATRIX_API_URI: string | undefined = env.MATRIX_API_URI;
 export const MATRIX_ADMIN_USER: string | undefined = env.MATRIX_ADMIN_USER;
 export const MATRIX_ADMIN_PASSWORD: string | undefined = env.MATRIX_ADMIN_PASSWORD;
+export const MATRIX_DOMAIN: string | undefined = env.MATRIX_DOMAIN;
 
 // Front container:
 export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {

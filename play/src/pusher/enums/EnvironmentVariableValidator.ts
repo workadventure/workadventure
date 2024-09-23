@@ -9,6 +9,7 @@ import {
     toArray,
     emptyStringToUndefined,
 } from "@workadventure/shared-utils/src/EnvironmentVariables/EnvironmentVariableUtils";
+import { MATRIX_DOMAIN } from "./EnvironmentVariable";
 
 export const EnvironmentVariables = z.object({
     // Pusher related environment variables
@@ -150,6 +151,7 @@ export const EnvironmentVariables = z.object({
     MATRIX_PUBLIC_URI: z.string().optional(),
     MATRIX_ADMIN_USER: z.string().optional(),
     MATRIX_ADMIN_PASSWORD: z.string().optional(),
+    MATRIX_DOMAIN: z.string().optional(),
     EMBEDLY_KEY: z.string().optional(),
 });
 

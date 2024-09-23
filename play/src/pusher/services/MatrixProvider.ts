@@ -108,7 +108,7 @@ class MatrixProvider {
             ],
         };
 
-        if (this.roomAreaFolderID) {
+        if (this.roomAreaFolderID && MATRIX_DOMAIN) {
             options.initial_state.push({
                 type: EventType.SpaceParent,
                 state_key: this.roomAreaFolderID,
