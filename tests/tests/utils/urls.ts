@@ -30,6 +30,4 @@ export function publicTestMapUrl(
   ).toString();
 }
 
-export const matrix_server_url = `${
-  process.env.MAP_STORAGE_PROTOCOL ?? "http"
-}://${process.env.MATRIX_DOMAIN ?? "matrix.workadventure.localhost"}`;
+export const matrix_server_url = process.env.MATRIX_PUBLIC_URI ?? "http://matrix.workadventure.localhost";

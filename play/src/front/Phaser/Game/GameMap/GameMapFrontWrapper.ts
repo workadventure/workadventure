@@ -105,7 +105,7 @@ export class GameMapFrontWrapper {
     private enterDynamicAreaCallbacks = Array<DynamicAreaChangeCallback>();
     private leaveDynamicAreaCallbacks = Array<DynamicAreaChangeCallback>();
 
-    public areasManager!: AreasManager;
+    public areasManager: AreasManager | undefined;
 
     /**
      * Firing on map change, containing newest collision grid array
@@ -260,8 +260,10 @@ export class GameMapFrontWrapper {
             }
         }
 
-        for (const area of this.areasManager.getCollidingAreas()) {
-            this.registerCollisionArea(area);
+        if (this.areasManager) {
+            for (const area of this.areasManager.getCollidingAreas()) {
+                this.registerCollisionArea(area);
+            }
         }
 
         this.updateCollisionGrid(this.areasCollisionLayer, false);
@@ -269,11 +271,10 @@ export class GameMapFrontWrapper {
 
     public initializeAreaManager(userConnectedTags: string[], userCanEdit: boolean) {
         const gameMapAreas = this.getGameMap().getGameMapAreas();
+        // If gameMapAreas is undefined, we are on a public map
         if (gameMapAreas !== undefined) {
             this.areasManager = new AreasManager(this.scene, gameMapAreas, userConnectedTags, userCanEdit);
             gameMapAreas.triggerAreasChange(undefined, this.position);
-        } else {
-            console.error("Unable to load AreasManager because gameMapAreas is undefined");
         }
         // Once we have the tags, we can compute the colliding layer again
         this.recomputeAreasCollisionGrid();
@@ -874,6 +875,10 @@ export class GameMapFrontWrapper {
         if (this.isPlayerInsideAreaByCoordinates(areaData, this.position)) {
             this.triggerSpecificAreaOnEnter(areaData);
         }
+
+        if (!this.areasManager) {
+            throw new Error("AreasManager is not initialized. Are you on a public map?");
+        }
         this.areasManager.addArea(areaData);
     }
 
@@ -913,6 +918,9 @@ export class GameMapFrontWrapper {
             this.triggerSpecificAreaOnEnter(area);
             return;
         }
+        if (!this.areasManager) {
+            throw new Error("AreasManager is not initialized. Are you on a public map?");
+        }
         this.areasManager.updateArea(newConfig);
     }
 
@@ -924,6 +932,9 @@ export class GameMapFrontWrapper {
 
         if (this.isPlayerInsideAreaByCoordinates(areaData, this.position)) {
             this.triggerSpecificAreaOnLeave(areaData);
+        }
+        if (!this.areasManager) {
+            throw new Error("AreasManager is not initialized. Are you on a public map?");
         }
         this.areasManager.removeArea(areaData.id);
     }

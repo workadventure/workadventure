@@ -1,32 +1,38 @@
 <script lang="ts">
     import { get } from "svelte/store";
     // eslint-disable-next-line import/no-unresolved
-    import { openModal } from "svelte-modals";
     import { onDestroy, onMount } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue, joignableRoom, navChat, selectedRoom } from "../Stores/ChatStore";
     import { ChatRoom } from "../Connection/ChatConnection";
     import { INITIAL_SIDEBAR_WIDTH } from "../../Stores/ChatStore";
+    import { userIsConnected } from "../../Stores/MenuStore";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
     import Room from "./Room/Room.svelte";
     import RoomTimeline from "./Room/RoomTimeline.svelte";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
     import JoignableRooms from "./Room/JoignableRooms.svelte";
-    import CreateRoomModal from "./Room/CreateRoomModal.svelte";
     import ChatLoader from "./ChatLoader.svelte";
     import ChatError from "./ChatError.svelte";
-    import { IconChevronDown, IconChevronRight, IconSquarePlus } from "@wa-icons";
+    import RoomFolder from "./RoomFolder.svelte";
+    import CreateRoomOrFolderOption from "./Room/CreateRoomOrFolderOption.svelte";
+    import ShowMore from "./ShowMore.svelte";
+    import { IconChevronDown, IconChevronRight } from "@wa-icons";
 
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
 
-    const { chatConnection: chat, proximityChatRoom } = gameManager.getCurrentGameScene();
+    const proximityChatRoom = gameManager.getCurrentGameScene().proximityChatRoom;
+    const chat = gameManager.chatConnection;
 
     const chatConnectionStatus = chat.connectionStatus;
     const CHAT_LAYOUT_LIMIT = INITIAL_SIDEBAR_WIDTH * 2;
 
     let directRooms = chat.directRooms;
     let rooms = chat.rooms;
+    //TODO : Make a distinction between invitations to a room or a space;
     let roomInvitations = chat.invitations;
+    let roomFolders = chat.roomFolders;
 
     let displayDirectRooms = false;
     let displayRooms = false;
@@ -76,51 +82,69 @@
         displayRoomInvitations = !displayRoomInvitations;
     }
 
-    function openCreateRoomModal() {
-        openModal(CreateRoomModal);
-    }
-
     function toggleDisplayProximityChat() {
         selectedRoom.set(proximityChatRoom);
         proximityChatRoom.hasUnreadMessages.set(false);
     }
 
-    $: filteredDirectRoom = $directRooms.filter(({ name }) =>
-        get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase())
-    );
-    $: filteredRooms = $rooms.filter(({ name }) =>
-        get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase())
-    );
-    $: filteredRoomInvitations = $roomInvitations.filter(({ name }) =>
-        get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase())
-    );
+    $: filteredDirectRoom = $directRooms
+        .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
+        .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
 
-    const isGuest = chat.isGuest;
+    $: filteredRooms = $rooms
+        .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
+        .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
+    $: filteredRoomInvitations = $roomInvitations
+        .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
+        .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
+
+    $: isGuest = chat.isGuest;
 
     $: displayTwoColumnLayout = sideBarWidth >= CHAT_LAYOUT_LIMIT;
+
+    const isFoldersOpen: { [key: string]: boolean } = {};
+
+    $roomFolders.forEach((folder) => {
+        if (!(folder.id in isFoldersOpen)) {
+            isFoldersOpen[folder.id] = false;
+        }
+    });
 </script>
 
 <div
-    class="tw-flex-1 tw-flex tw-flex-row tw-overflow-hidden"
+    class="tw-flex-1 tw-flex tw-flex-row tw-overflow-auto"
     class:!tw-flex-row={sideBarWidth > INITIAL_SIDEBAR_WIDTH * 2 && $navChat === "chat"}
 >
     {#if $selectedRoom === undefined || displayTwoColumnLayout}
         <div
-            class="tw-flex tw-flex-col tw-overflow-auto"
-            style={displayTwoColumnLayout
-                ? `border-right:1px solid #4d4b67;padding-right:12px;width:335px ;flex: 0 0 auto`
-                : `flex: 1 1 0%`}
+            class="tw-w-full"
+            style={displayTwoColumnLayout ? `border-right:1px solid #4d4b67;padding-right:12px;width:335px ;` : ``}
         >
-            {#if $chatConnectionStatus === "CONNECTING"}
+            {#if $chatConnectionStatus === "CONNECTING" && $userIsConnected}
                 <ChatLoader label={$LL.chat.connecting()} />
             {/if}
-            {#if $chatConnectionStatus === "ON_ERROR"}
+            {#if $chatConnectionStatus === "ON_ERROR" && $userIsConnected}
                 <ChatError />
             {/if}
+
+            {#if !$userIsConnected}
+                <p class="tw-text-gray-400 tw-w-full tw-text-center tw-pt-2">
+                    {$LL.chat.requiresLoginForChat()}
+                </p>
+                <a
+                    type="button"
+                    class="btn light tw-min-w-[220px] tw-flex tw-justify-center tw-items-center tw-my-2"
+                    href="/login"
+                    on:click={() => analyticsClient.login()}
+                >
+                    {$LL.menu.profile.login()}
+                </a>
+            {/if}
+
             {#if $chatConnectionStatus === "ONLINE"}
-                {#if $joignableRoom.length > 0}
+                {#if $joignableRoom.length > 0 && $chatSearchBarValue.trim() !== ""}
                     <p class="tw-p-0 tw-m-0 tw-text-gray-400">{$LL.chat.availableRooms()}</p>
-                    <div class="tw-flex tw-flex-col tw-overflow-auto">
+                    <div class="tw-flex tw-flex-col">
                         {#each $joignableRoom as room (room.id)}
                             <JoignableRooms {room} />
                         {/each}
@@ -136,30 +160,28 @@
                 </button>
                 {#if displayRoomInvitations}
                     <div class="tw-flex tw-flex-col tw-overflow-auto">
-                        {#each filteredRoomInvitations as room (room.id)}
+                        <ShowMore items={filteredRoomInvitations} maxNumber={8} idKey="id" let:item={room}>
                             <RoomInvitation {room} />
-                        {/each}
-                        {#if filteredRoomInvitations.length === 0}
-                            <p class="tw-p-1 tw-m-1 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
-                        {/if}
+                        </ShowMore>
                     </div>
                 {/if}
+                <div class="tw-flex tw-justify-between">
+                    <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={toggleDisplayDirectRooms}>
+                        {#if displayDirectRooms}
+                            <IconChevronDown />
+                        {:else}
+                            <IconChevronRight />
+                        {/if}
+                        {$LL.chat.people()}</button
+                    >
+                </div>
 
-                <button class="tw-p-0 tw-m-0 tw-text-gray-400" on:click={toggleDisplayDirectRooms}>
-                    {#if displayDirectRooms}
-                        <IconChevronDown />
-                    {:else}
-                        <IconChevronRight />
-                    {/if}
-                    {$LL.chat.people()}
-                </button>
                 {#if displayDirectRooms}
-                    {#each filteredDirectRoom as room (room.id)}
-                        <Room {room} />
-                    {/each}
-                    {#if filteredDirectRoom.length === 0}
-                        <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
-                    {/if}
+                    <div class="tw-flex tw-flex-col tw-overflow-auto">
+                        <ShowMore items={filteredDirectRoom} maxNumber={8} idKey="id" let:item={room}>
+                            <Room {room} />
+                        </ShowMore>
+                    </div>
                 {/if}
 
                 <div class="tw-flex tw-justify-between">
@@ -172,26 +194,26 @@
                         {$LL.chat.rooms()}</button
                     >
                     {#if $isGuest === false}
-                        <button
-                            data-testid="openCreateRoomModalButton"
-                            class="tw-p-0 tw-m-0 tw-text-gray-400"
-                            on:click={openCreateRoomModal}
-                        >
-                            <IconSquarePlus font-size={16} />
-                        </button>
+                        <CreateRoomOrFolderOption />
                     {/if}
                 </div>
 
                 {#if displayRooms}
-                    <div class="tw-flex tw-flex-col tw-overflow-auto">
-                        {#each filteredRooms as room (room.id)}
-                            <Room {room} />
-                        {/each}
-                        {#if filteredRooms.length === 0}
-                            <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
-                        {/if}
-                    </div>
+                    <ShowMore items={filteredRooms} maxNumber={8} idKey="id" let:item={room}>
+                        <Room {room} />
+                    </ShowMore>
                 {/if}
+                <!--roomBySpace-->
+                {#each Array.from($roomFolders.values()) as rootRoomFolder (rootRoomFolder.id)}
+                    <RoomFolder
+                        bind:isOpen={isFoldersOpen[rootRoomFolder.id]}
+                        name={rootRoomFolder.name}
+                        folders={rootRoomFolder.folders}
+                        rooms={rootRoomFolder.rooms}
+                        isGuest={$isGuest}
+                        id={rootRoomFolder.id}
+                    />
+                {/each}
             {/if}
 
             <div class="tw-flex tw-justify-between">
@@ -199,7 +221,7 @@
                     <IconChevronRight />
                     {$LL.chat.proximity()}
                     <div>
-                        <div class="tw-absolute tw-top-1 -tw-right-6 ">
+                        <div class="tw-absolute tw-top-1 -tw-right-6 tw-w-8 tw-h-8">
                             <span
                                 class="tw-w-4 tw-h-4 tw-block tw-rounded-full tw-absolute tw-top-0 tw-right-0 tw-animate-ping tw-bg-pop-green"
                             />

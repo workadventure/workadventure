@@ -4,18 +4,19 @@
     import { selectedChatMessageToReply } from "../../Stores/ChatStore";
     import { getChatEmojiPicker } from "../../EmojiPicker";
     import LL from "../../../../i18n/i18n-svelte";
-    import { isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import { IconCircleX, IconMoodSmile, IconSend } from "@wa-icons";
 
     export let room: ChatRoom;
-    let isMobile = isMediaBreakpointUp("md");
 
     let message = "";
     let messageInput: HTMLDivElement;
     let emojiButtonRef: HTMLButtonElement;
     let stopTypingTimeOutID: undefined | ReturnType<typeof setTimeout>;
-    const TYPINT_TIMEOUT = 10000;
+    let typingTimeoutID: undefined | ReturnType<typeof setTimeout>;
+    const TYPING_TIMEOUT = 3000;
+    const TYPING_DEBOUNCE_DELAY = 20000;
+    let hasSentFirstTypingNotification = false;
 
     const selectedChatChatMessageToReplyUnsubscriber = selectedChatMessageToReply.subscribe((chatMessage) => {
         if (chatMessage !== null) {
@@ -23,38 +24,61 @@
         }
     });
 
-    function sendMessageOrEscapeLine(keyDownEvent: KeyboardEvent) {
-        if (stopTypingTimeOutID) clearTimeout(stopTypingTimeOutID);
+    function startTypingAndSetTimeout() {
         room.startTyping()
             .then(() => {
                 stopTypingTimeOutID = setTimeout(() => {
                     room.stopTyping().catch((error) => console.error(error));
-                    stopTypingTimeOutID = undefined;
-                }, TYPINT_TIMEOUT);
+                    if (typingTimeoutID) clearTimeout(typingTimeoutID);
+                }, TYPING_TIMEOUT);
             })
             .catch((error) => console.error(error));
+    }
+    function sendMessageOrEscapeLine(keyDownEvent: KeyboardEvent) {
+        if (stopTypingTimeOutID) clearTimeout(stopTypingTimeOutID);
 
-        if (keyDownEvent.key === "Enter" || message == "" || message == undefined) {
+        if (keyDownEvent.key === "Enter" || message.trim().length === 0 || message == undefined) {
             if (stopTypingTimeOutID) clearTimeout(stopTypingTimeOutID);
+            if (typingTimeoutID) clearTimeout(typingTimeoutID);
+            hasSentFirstTypingNotification = false;
             room.stopTyping().catch((error) => console.error(error));
         }
 
-        if (keyDownEvent.key === "Enter" && keyDownEvent.shiftKey) {
-            return;
+        if (!hasSentFirstTypingNotification) {
+            startTypingAndSetTimeout();
+            hasSentFirstTypingNotification = true;
+        } else {
+            startTypingWithDebounce();
         }
+
         if (keyDownEvent.key === "Enter" && !keyDownEvent.shiftKey) {
             keyDownEvent.preventDefault();
         }
         if (keyDownEvent.key === "Enter" && message.trim().length !== 0) {
-            sendMessage(message);
+            // message contains HTML tags. Actually, the only tags we allow are for the new line, ie. <br> tags.
+            // We can turn those back into carriage returns.
+            const messageToSend = message.replace(/<br>/g, "\n");
+            sendMessage(messageToSend);
             return;
         }
+        if (keyDownEvent.key === "Enter" && keyDownEvent.shiftKey) {
+            return;
+        }
+    }
+
+    function startTypingWithDebounce() {
+        if (typingTimeoutID) clearTimeout(typingTimeoutID);
+        typingTimeoutID = setTimeout(() => {
+            startTypingAndSetTimeout();
+        }, TYPING_DEBOUNCE_DELAY);
     }
 
     function sendMessage(messageToSend: string) {
         room?.sendMessage(messageToSend);
         messageInput.innerText = "";
         message = "";
+        hasSentFirstTypingNotification = false;
+        if (typingTimeoutID) clearTimeout(typingTimeoutID);
         if (stopTypingTimeOutID) {
             clearTimeout(stopTypingTimeOutID);
         }
@@ -90,25 +114,42 @@
         const text = event.clipboardData.getData("text");
 
         insertTextAtCursor(text);
-        message = messageInput.innerText;
+        message = messageInput.innerHTML;
         event.preventDefault();
     }
 
     function insertTextAtCursor(text: string) {
         const selection = window.getSelection();
-        if (!selection || !selection.rangeCount) return;
+        if (!selection || !selection.rangeCount) {
+            return;
+        }
 
         const range = selection.getRangeAt(0);
         range.deleteContents();
 
-        const textNode = document.createTextNode(text);
-        range.insertNode(textNode);
+        const lines = text.split("\n").reverse();
+        let textNode: Text | undefined;
+        let lastBrNode: HTMLBRElement | undefined;
+        for (const line of lines) {
+            const br = document.createElement("br");
+            range.insertNode(br);
+            if (textNode === undefined) {
+                lastBrNode = br;
+            }
+            textNode = document.createTextNode(line);
+            // Insertion in a range object is done in reverse order.
+            range.insertNode(textNode);
+        }
 
-        // Move the cursor to the end of the inserted text
-        range.setStartAfter(textNode);
-        range.setEndAfter(textNode);
         selection.removeAllRanges();
         selection.addRange(range);
+        // Move the cursor to the end of the inserted text
+        selection.collapseToEnd();
+        // The code above is adding on purpose an additional <br> at the end of the message.
+        // This way, we can scroll to the end of the message.
+        // Once we have scrolled, we can remove the last <br> tag
+        lastBrNode?.scrollIntoView();
+        lastBrNode?.remove();
     }
 
     $: quotedMessageContent = $selectedChatMessageToReply?.content;
@@ -126,11 +167,10 @@
 {/if}
 <div
     class="tw-flex tw-items-center tw-py-1 tw-gap-1 tw-border tw-border-solid tw-rounded-xl tw-pr-1 tw-border-light-purple"
-    class:tw-mb-20={isMobile}
 >
     <div
         data-testid="messageInput"
-        bind:textContent={message}
+        bind:innerHTML={message}
         contenteditable="true"
         bind:this={messageInput}
         on:keydown={sendMessageOrEscapeLine}

@@ -191,7 +191,7 @@ export class AuthenticateController extends BaseHttpController {
                             authToken: token,
                             locale: authTokenData?.locale,
                             matrixUserId: authTokenData?.matrixUserId,
-                            matrixServerUrl: MATRIX_PUBLIC_URI,
+                            matrixServerUrl: (resCheckTokenAuth.matrix_url as string | undefined) ?? MATRIX_PUBLIC_URI,
                             // TODO: replace ... with each property
                             ...resUserData,
                             ...resCheckTokenAuth,
@@ -505,6 +505,11 @@ export class AuthenticateController extends BaseHttpController {
      *      - name: "token"
      *        in: "query"
      *        description: "A JWT authentication token ???"
+     *        required: true
+     *        type: "string"
+     *      - name: "playUri"
+     *        in: "query"
+     *        description: "Room URL of the current virtual place"
      *        required: true
      *        type: "string"
      *     responses:

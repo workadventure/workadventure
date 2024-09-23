@@ -43,7 +43,6 @@ import {
     DEBUG_MODE,
     ENABLE_MAP_EDITOR,
     ENABLE_OPENID,
-    MATRIX_PUBLIC_URI,
     MAX_PER_GROUP,
     POSITION_DELAY,
     PUBLIC_MAP_STORAGE_PREFIX,
@@ -150,15 +149,13 @@ import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/sta
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import { closeCoWebsite, getCoWebSite, openCoWebSite, openCoWebSiteWithoutSource } from "../../Chat/Utils";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
-import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
 import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
-import { matrixSecurity } from "../../Chat/Connection/Matrix/MatrixSecurity";
 import { selectedRoom } from "../../Chat/Stores/ChatStore";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
 import { ProximitySpaceManager } from "../../WebRtc/ProximitySpaceManager";
 import { SpaceRegistryInterface } from "../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { WorldUserProvider } from "../../Chat/UserProvider/WorldUserProvider";
-import { MatrixUserProvider } from "../../Chat/UserProvider/MatrixUserProvider";
+import { ChatUserProvider } from "../../Chat/UserProvider/ChatUserProvider";
 import { UserProviderMerger } from "../../Chat/UserProviderMerger/UserProviderMerger";
 import { AdminUserProvider } from "../../Chat/UserProvider/AdminUserProvider";
 import { ExtensionModuleStatusSynchronization } from "../../Rules/StatusRules/ExtensionModuleStatusSynchronization";
@@ -167,6 +164,8 @@ import { isActivatedStore as isTodoListActiveStore, todoListsStore } from "../..
 import { externalSvelteComponentStore } from "../../Stores/Utils/externalSvelteComponentStore";
 import { ExtensionModule, RoomMetadataType } from "../../ExternalModule/ExtensionModule";
 import { SpaceInterface } from "../../Space/SpaceInterface";
+import { UserProviderInterface } from "../../Chat/UserProvider/UserProviderInterface";
+import { faviconManager } from "../../WebRtc/FaviconManager";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -193,7 +192,6 @@ import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManager";
 import { DEPTH_BUBBLE_CHAT_SPRITE, DEPTH_WHITE_MASK } from "./DepthIndexes";
 import { ScriptingEventsManager } from "./ScriptingEventsManager";
-import { faviconManager } from "./../../WebRtc/FaviconManager";
 import { FollowManager } from "./FollowManager";
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
@@ -333,11 +331,12 @@ export class GameScene extends DirtyScene {
         this.currentCompanionTextureResolve = resolve;
         this.currentCompanionTextureReject = reject;
     });
-    public chatConnection!: ChatConnectionInterface;
+    private _chatConnection: ChatConnectionInterface | undefined;
     private _spaceRegistry: SpaceRegistryInterface | undefined;
     private allUserSpace: SpaceInterface | undefined;
     private _proximityChatRoom: ProximityChatRoom | undefined;
-    private _userProviderMerger: UserProviderMerger | undefined;
+    private _userProviderMergerDeferred: Deferred<UserProviderMerger> = new Deferred();
+    private matrixClientWrapper: MatrixClientWrapper | undefined;
     public extensionModule: ExtensionModule | undefined = undefined;
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
@@ -861,12 +860,22 @@ export class GameScene extends DirtyScene {
             ...scriptPromises,
             this.CurrentPlayer.getTextureLoadedPromise() as Promise<unknown>,
             this.gameMapFrontWrapper.initializedPromise.promise,
+            gameManager.getChatConnection(),
         ])
             .then(() => {
                 this.initUserPermissionsOnEntity();
                 this.hide(false);
+                gameSceneIsLoadedStore.set(true);
                 this.sceneReadyToStartDeferred.resolve();
                 this.initializeAreaManager();
+
+                const chatId = localUserStore.getChatId();
+                const email: string | null = localUserStore.getLocalUser()?.email || null;
+                const connection = this.connection;
+                if (email && chatId && connection) {
+                    connection.emitUpdateChatId(email, chatId);
+                    connection.emitPlayerChatID(chatId);
+                }
             })
             .catch((e) =>
                 console.error(
@@ -998,6 +1007,8 @@ export class GameScene extends DirtyScene {
         if (this.allUserSpace) {
             this.spaceRegistry?.leaveSpace(this.allUserSpace);
         }
+
+        this.matrixClientWrapper?.stopClient();
         this.connection?.closeConnection();
         this.simplePeer?.closeAllConnections();
         this.simplePeer?.unregister();
@@ -1534,38 +1545,33 @@ export class GameScene extends DirtyScene {
                     }
                 }
 
-                //We need to add an env parameter to switch between chat services
-                const matrixClientWrapper = new MatrixClientWrapper(MATRIX_PUBLIC_URI ?? "", localUserStore);
-                const matrixClientPromise = matrixClientWrapper.initMatrixClient();
-
-                matrixClientPromise
-                    .then((matrixClient) => {
-                        matrixSecurity.updateMatrixClientStore(matrixClient);
-                    })
-                    .catch((e) => {
-                        console.error(e);
-                    });
-
                 this._spaceRegistry = new SpaceRegistry(this.connection);
-
                 this.allUserSpace = this._spaceRegistry.joinSpace(WORLD_SPACE_NAME);
-                this.chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
 
-                //init merger
+                gameManager
+                    .getChatConnection()
+                    .then((chatConnection) => {
+                        const connection = this.connection;
+                        const allUserSpace = this.allUserSpace;
 
-                const adminUserProvider = new AdminUserProvider(this.connection);
-                const matrixUserProvider = new MatrixUserProvider(matrixClientPromise);
-                const worldUserProvider = new WorldUserProvider(this.allUserSpace);
+                        const userProviders: UserProviderInterface[] = [];
+                        if (connection) {
+                            userProviders.push(new AdminUserProvider(connection));
+                        }
 
-                this._userProviderMerger = new UserProviderMerger([
-                    adminUserProvider,
-                    matrixUserProvider,
-                    worldUserProvider,
-                ]);
+                        userProviders.push(new ChatUserProvider(chatConnection));
 
-                const chatId = localUserStore.getChatId();
-                const email: string | null = localUserStore.getLocalUser()?.email || null;
-                if (email && chatId) this.connection.emitUpdateChatId(email, chatId);
+                        if (allUserSpace) {
+                            userProviders.push(new WorldUserProvider(allUserSpace));
+                        }
+
+                        this._userProviderMergerDeferred.resolve(new UserProviderMerger(userProviders));
+                    })
+                    .catch(() => {
+                        const errorMessage = "Failed to get chatConnection from gameManager";
+                        console.error(errorMessage);
+                        Sentry.captureMessage(errorMessage);
+                    });
 
                 this.initExtensionModule();
 
@@ -1929,7 +1935,6 @@ export class GameScene extends DirtyScene {
                 this.tryMovePlayerWithMoveToUserParameter();
 
                 gameSceneStore.set(this);
-                gameSceneIsLoadedStore.set(true);
             })
             .catch((e) => console.error(e));
     }
@@ -3762,10 +3767,7 @@ ${escapedMessage}
         return this._proximityChatRoom;
     }
 
-    get userProviderMerger(): UserProviderMerger {
-        if (!this._userProviderMerger) {
-            throw new Error("_userProviderMerger not yet initialized");
-        }
-        return this._userProviderMerger;
+    get userProviderMerger(): Promise<UserProviderMerger> {
+        return this._userProviderMergerDeferred.promise;
     }
 }

@@ -1,12 +1,9 @@
 import axios from "axios";
-import { MATRIX_API_URI, MATRIX_DOMAIN } from "../enums/EnvironmentVariable";
+import { MATRIX_API_URI } from "../enums/EnvironmentVariable";
 
 class MatrixProvider {
     private accessToken: string | undefined;
     private lastAccessTokenDate: number = Date.now();
-    getMatrixIdFromEmail(email: string): string {
-        return "@" + this.getBareMatrixIdFromEmail(email) + ":" + MATRIX_DOMAIN;
-    }
 
     getBareMatrixIdFromEmail(email: string): string {
         return email.replace("@", "_");

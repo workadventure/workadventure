@@ -275,9 +275,10 @@ export class IoSocketController {
                         lastCommandId,
                         version,
                         companionTextureId,
-                        chatID,
                         roomName,
                     } = query;
+
+                    const chatID = query.chatID ? query.chatID : undefined;
 
                     try {
                         if (version !== apiVersionHash) {
@@ -341,7 +342,6 @@ export class IoSocketController {
                             companionTexture: undefined,
                             messages: [],
                             userRoomToken: undefined,
-                            mucRooms: [],
                             activatedInviteUser: true,
                             canEdit: false,
                             world: "",
@@ -468,7 +468,6 @@ export class IoSocketController {
                             visitCardUrl: memberVisitCardUrl,
                             userRoomToken: memberUserRoomToken,
                             activatedInviteUser: userData.activatedInviteUser ?? undefined,
-                            mucRooms: userData.mucRooms || [],
                             applications: userData.applications,
                             canEdit: userData.canEdit ?? false,
                             spaceUser: SpaceUser.fromPartial({
@@ -804,7 +803,8 @@ export class IoSocketController {
                             break;
                         }
                         case "updateChatIdMessage": {
-                            socketManager.handleUpdateChatId(
+                            await socketManager.handleUpdateChatId(
+                                socket,
                                 message.message.updateChatIdMessage.email,
                                 message.message.updateChatIdMessage.chatId
                             );

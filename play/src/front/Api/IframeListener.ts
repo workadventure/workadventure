@@ -13,7 +13,6 @@ import {
 } from "../Stores/MenuStore";
 import { ProtobufClientUtils } from "../Network/ProtobufClientUtils";
 import type { MessageUserJoined } from "../Connection/ConnexionModels";
-import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { bannerStore, requestVisitCardsStore } from "../Stores/GameStore";
 import { modalIframeStore, modalVisibilityStore } from "../Stores/ModalStore";
@@ -182,9 +181,6 @@ class IframeListener {
 
     private readonly _openInviteMenuStream: Subject<void> = new Subject();
     public readonly openInviteMenuStream = this._openInviteMenuStream.asObservable();
-
-    private readonly _chatTotalMessagesToSeeStream: Subject<number> = new Subject();
-    public readonly chatTotalMessagesToSeeStream = this._chatTotalMessagesToSeeStream.asObservable();
 
     private readonly _addButtonActionBarStream: Subject<AddActionsMenuKeyToRemotePlayerEvent> = new Subject();
     public readonly addButtonActionBarStream = this._addButtonActionBarStream.asObservable();
@@ -458,18 +454,6 @@ class IframeListener {
                         this._askPositionStream.next(iframeEvent.data);
                     } else if (iframeEvent.type == "openInviteMenu") {
                         this._openInviteMenuStream.next();
-                    } else if (iframeEvent.type == "chatTotalMessagesToSee") {
-                        this._chatTotalMessagesToSeeStream.next(iframeEvent.data);
-                    } else if (iframeEvent.type == "notification") {
-                        const notificationType =
-                            iframeEvent.data.notificationType === 1
-                                ? NotificationType.discussion
-                                : NotificationType.message;
-                        mediaManager.createNotification(
-                            iframeEvent.data.userName,
-                            notificationType,
-                            iframeEvent.data.forum
-                        );
                     } else if (iframeEvent.type == "login") {
                         analyticsClient.login();
                         window.location.href = "/login";

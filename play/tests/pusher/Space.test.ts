@@ -43,7 +43,6 @@ describe("Space", () => {
         visitCardUrl: null,
         userRoomToken: undefined,
         activatedInviteUser: undefined,
-        mucRooms: [],
         applications: undefined,
         canEdit: false,
         spaceUser: SpaceUser.fromPartial({

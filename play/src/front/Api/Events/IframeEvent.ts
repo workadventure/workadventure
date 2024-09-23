@@ -58,7 +58,6 @@ import { isAddPlayerEvent, isRemotePlayerChangedEvent } from "./AddPlayerEvent";
 import { isSetPlayerVariableEvent } from "./SetPlayerVariableEvent";
 import { isSettingsEvent } from "./SettingsEvent";
 import { isChatVisibilityEvent } from "./ChatVisibilityEvent";
-import { isNotificationEvent } from "./NotificationEvent";
 import { isShowBusinessCardEvent } from "./ShowBusinessCardEvent";
 import { isModalEvent } from "./ModalEvent";
 import { isAddButtonActionBarEvent, isRemoveButtonActionBarEvent } from "./Ui/ButtonActionBarEvent";
@@ -260,14 +259,6 @@ export const isIframeEventWrapper = z.union([
     z.object({
         type: z.literal("openInviteMenu"),
         data: z.undefined(),
-    }),
-    z.object({
-        type: z.literal("chatTotalMessagesToSee"),
-        data: z.number(),
-    }),
-    z.object({
-        type: z.literal("notification"),
-        data: isNotificationEvent,
     }),
     z.object({
         type: z.literal("login"),

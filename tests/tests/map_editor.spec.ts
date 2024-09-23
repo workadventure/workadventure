@@ -165,6 +165,8 @@ test.describe("Map editor @oidc", () => {
         await expect(page2.locator(".cameras-container .other-cameras .jitsi-video")).toBeVisible({
             timeout: 20_000,
         });
+
+        await page2.close();
     });
 
     test("Successfully set start area in the map editor", async ({page, request}, {project}) => {
@@ -476,6 +478,8 @@ test.describe("Map editor @oidc", () => {
         // check if the popup with application is opened on both pages
         await expect(page.locator(".actions-menu .actions button").nth(0)).toContainText("Open Link");
         await expect(page2.locator(".actions-menu .actions button").nth(0)).toContainText("Open Link");
+
+        await page2.close();
     });
 
     test("Successfully upload and edit asset name", async ({page, browser, request}, {project}) => {
@@ -522,6 +526,8 @@ test.describe("Map editor @oidc", () => {
         // Expect inner html in string to contain the new entity name
         expect(uploadedEntityElement).toContain(newEntityName);
         expect(uploadedEntityElement2).toContain(newEntityName);
+
+        await page2.close();
     });
 
     test("Successfully upload and remove custom entity", async ({page, browser, request}, {project}) => {
@@ -562,6 +568,8 @@ test.describe("Map editor @oidc", () => {
         // Expect both pages to have no entities
         await expect(page.getByTestId("entity-item")).toHaveCount(0);
         await expect(page2.getByTestId("entity-item")).toHaveCount(0);
+
+        await page2.close();
     });
 
     test("Successfully set searchable processus for entity and zone", async ({page, browser, request}, {project}) => {
