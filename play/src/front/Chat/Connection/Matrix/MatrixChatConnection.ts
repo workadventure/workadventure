@@ -16,8 +16,6 @@ import {
     Room,
     RoomEvent,
     SetPresence,
-    RoomMember,
-    RoomMemberEvent,
     SyncState,
     Visibility,
 } from "matrix-js-sdk";
@@ -53,7 +51,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     private handleRoomStateEvent: (event: MatrixEvent) => void;
     private handleName: (room: Room) => void;
     private handleAccountDataEvent: (event: MatrixEvent) => void;
-    private handleRoomMemberTyping:(event: MatrixEvent, member: RoomMember) => void
     private statusUnsubscriber: Unsubscriber | undefined;
     private isClientReady = false;
     connectionStatus: Writable<ConnectionStatus>;
@@ -151,7 +148,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.handleMyMembership = this.onRoomEventMembership.bind(this);
         this.handleRoomStateEvent = this.onRoomStateEvent.bind(this);
         this.handleName = this.onRoomNameEvent.bind(this);
-        this.handleRoomMemberTyping = this.onRoomMemberEventTyping.bind(this);
         this.handleAccountDataEvent = this.onAccountDataEvent.bind(this);
 
         this.statusUnsubscriber = this.statusStore.subscribe((status: AvailabilityStatus) => {
@@ -216,7 +212,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.client.on("RoomState.events" as EmittedEvents, this.handleRoomStateEvent);
         this.client.on(RoomEvent.Name, this.handleName);
         this.client.on(ClientEvent.AccountData, this.handleAccountDataEvent);
-        this.client.on(RoomMemberEvent.Typing, this.handleRoomMemberTyping);
 
         await this.client.store.startup();
         await this.client.initRustCrypto();
@@ -316,45 +311,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         if (!parentRoom) return;
 
         this.moveRoomToParentFolder(room, parentID);
-    }
-    private onRoomMemberEventTyping(event: MatrixEvent, member: RoomMember) {
-        if (!this.client) return;
-        if (get(selectedRoom)?.id !== member.roomId && member.typing) return;
-        const room = this.findRoomOrFolder(member.roomId);
-        if (!room || room instanceof MatrixRoomFolder) {
-            return;
-        }
-        const typingMember = member.user;
-        if (!typingMember) return;
-
-        const typingMemberInformation = {
-            id: typingMember.userId,
-            name: typingMember.displayName || null,
-            avatarUrl: typingMember.avatarUrl || null,
-        };
-
-        const myUserID = this.client.getSafeUserId();
-
-        if (!typingMemberInformation.id || typingMemberInformation.id === myUserID) return;
-
-        const isAlreadyTyping = get(room.typingMembers).some((memberInformation) => {
-            return memberInformation.id === typingMemberInformation.id;
-        });
-
-        if (isAlreadyTyping) {
-            room.typingMembers.update((currentTypingMemberList) => {
-                return currentTypingMemberList.filter((member) => member.id !== typingMemberInformation.id);
-            });
-            return;
-        }
-
-        typingMemberInformation.avatarUrl = typingMemberInformation.avatarUrl
-            ? this.client.mxcUrlToHttp(typingMemberInformation.avatarUrl ?? "", 48, 48)
-            : typingMemberInformation.avatarUrl;
-
-        room.typingMembers.update((currentTypingMemberList) => {
-            return [...currentTypingMemberList, typingMemberInformation];
-        });
     }
 
     private onClientEventRoom(room: Room) {
@@ -899,7 +855,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.client?.off("RoomState.events" as EmittedEvents, this.handleRoomStateEvent);
         this.client?.off(RoomEvent.Name, this.handleName);
         if (this.statusUnsubscriber) this.statusUnsubscriber();
-        this.client?.off(RoomMemberEvent.Typing, this.handleRoomMemberTyping);
     }
     async destroy(): Promise<void> {
         await this.client?.logout(true);
