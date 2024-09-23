@@ -60,7 +60,7 @@ export const getTitleFromYoutubeUrl = (url: URL): string | undefined => {
 };
 
 export const createEmbedlink = (url: URL): string => {
-    if(isEmbedableYoutubeLink(url)) return url.toString();
+    if (isEmbedableYoutubeLink(url)) return url.toString();
     // Create embed link from public link for Youtube
     return url.toString().replace("watch?v=", "embed/");
 };

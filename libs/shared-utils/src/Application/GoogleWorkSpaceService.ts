@@ -24,7 +24,7 @@ export const getGoogleWorkSpaceEmbedUrl = (url: URL): string => {
     if (isEmbedableGooglWorkSapceLink(url)) return link;
     url.searchParams.set("embedded", "true");
     return url.toString();
-}
+};
 
 // create function to check if the link is a Google Docs link
 export const isGoogleDocsLink = (url: URL): boolean => {
