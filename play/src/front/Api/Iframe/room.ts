@@ -98,7 +98,7 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
 
     /**
      * Listens to the position of the current user. The event is triggered when the user enters a given layer.
-     * {@link https://workadventu.re/map-building/api-room.md#detecting-when-the-user-entersleaves-a-layer | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-room.md#detecting-when-the-user-entersleaves-a-layer | Website documentation}
      *
      * @param {string} layerName Name of the layer who as defined in Tiled
      * @returns {Subject<void>} Event subject can be listen by a subscribtion
@@ -115,7 +115,7 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
 
     /**
      * Listens to the position of the current user. The event is triggered when the user leaves a given layer.
-     * {@link https://workadventu.re/map-building/api-room.md#detecting-when-the-user-entersleaves-a-layer | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-room.md#detecting-when-the-user-entersleaves-a-layer | Website documentation}
      *
      * @param {string} layerName Name of the layer who as defined in Tiled
      * @returns {Subject<void>} Event subject can be listen by a subscribtion
@@ -132,7 +132,7 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
 
     /**
      * This methods can be used to show a layer. if layerName is the name of a group layer, show all the layer in that group layer.
-     * {@link https://workadventu.re/map-building/api-room.md#show--hide-a-layer | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-room.md#show--hide-a-layer | Website documentation}
      *
      * @param {string} layerName Name of the layer/group layer who as defined in Tiled
      */
@@ -142,7 +142,7 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
 
     /**
      * This methods can be used to hide a layer. if layerName is the name of a group layer, hide all the layer in that group layer.
-     * {@link https://workadventu.re/map-building/api-room.md#show--hide-a-layer | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-room.md#show--hide-a-layer | Website documentation}
      *
      * @param {string} layerName Name of the layer/group layer who as defined in Tiled
      */
@@ -154,7 +154,7 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
      * Set the value of the propertyName property of the layer layerName at propertyValue.
      * If the property doesn't exist, create the property propertyName and set the value of the property at propertyValue.
      * Note : To unset a property from a layer, use setProperty with propertyValue set to undefined.
-     * {@link https://workadventu.re/map-building/api-room.md#setcreate-properties-in-a-layer | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-room.md#setcreate-properties-in-a-layer | Website documentation}
      *
      * @param {string} layerName Name of the layer who as defined in Tiled
      * @param {string} propertyName Name of the property
@@ -174,7 +174,7 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
     /**
      * Returns a promise that resolves to the JSON map file.
      * Check the {@link https://doc.mapeditor.org/en/stable/reference/json-map-format/ | Tiled documentation to learn more about the format of the JSON map}.
-     * {@link https://workadventu.re/map-building/api-room.md#getting-map-data | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-room.md#getting-map-data | Website documentation}
      *
      * @returns {Promise<ITiledMap>} Map in Tiled JSON format
      */
@@ -185,7 +185,7 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
 
     /**
      * Replace the tile at the x and y coordinates in the layer named layer by the tile with the id tile.
-     * {@link https://workadventu.re/map-building/api-room.md#changing-tiles | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-room.md#changing-tiles | Website documentation}
      *
      * @param {TileDescriptor[]} tiles Description of a tile
      */
@@ -199,7 +199,7 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
     /**
      * The ID of the current room is available from the WA.room.id property.
      * Important: You need to wait for the end of the initialization before accessing.
-     * {@link https://workadventu.re/map-building/api-room.md#get-the-room-id | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-room.md#get-the-room-id | Website documentation}
      *
      * @returns {string} Id of the room
      */
@@ -213,7 +213,7 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
     /**
      * The URL of the map is available from the WA.room.mapURL property.
      * Important: You need to wait for the end of the initialization before accessing.
-     * {@link https://workadventu.re/map-building/api-room.md#get-the-map-url | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-room.md#get-the-map-url | Website documentation}
      *
      * @returns {string} Url of the map
      */
@@ -241,7 +241,7 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
 
     /**
      * Load a tileset in JSON format from an url and return the id of the first tile of the loaded tileset.
-     * {@link https://workadventu.re/map-building/api-room.md#loading-a-tileset | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-room.md#loading-a-tileset | Website documentation}
      *
      * @param {string} url Url of the tileset
      * @returns {Promise<number>} Promise to return the id of the tileset

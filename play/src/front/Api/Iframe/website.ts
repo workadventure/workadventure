@@ -7,7 +7,7 @@ export class WorkadventureRoomWebsiteCommands extends IframeApiContribution<Work
 
     /**
      * You can get an instance of an embedded website by using the WA.room.website.get() method. It returns a promise of an EmbeddedWebsite instance.
-     * {@link https://workadventu.re/map-building/api-room.md#getting-an-instance-of-a-website-already-embedded-in-the-map | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-room.md#getting-an-instance-of-a-website-already-embedded-in-the-map | Website documentation}
      *
      * @param {string} objectName Object name
      * @returns {Promise<EmbeddedWebsite>} Promise to get a embed website
@@ -22,7 +22,7 @@ export class WorkadventureRoomWebsiteCommands extends IframeApiContribution<Work
 
     /**
      * You can create an instance of an embedded website by using the WA.room.website.create() method. It returns an EmbeddedWebsite instance.
-     * {@link https://workadventu.re/map-building/api-room.md#adding-a-new-website-in-a-map | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-room.md#adding-a-new-website-in-a-map | Website documentation}
      *
      * @param createEmbeddedWebsiteEvent
      * @returns {EmbeddedWebsite} Created embed website
@@ -39,7 +39,7 @@ export class WorkadventureRoomWebsiteCommands extends IframeApiContribution<Work
 
     /**
      * Use WA.room.website.delete to completely remove an embedded website from your map.
-     * {@link https://workadventu.re/map-building/api-room.md#deleting-a-website-from-a-map | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-room.md#deleting-a-website-from-a-map | Website documentation}
      *
      * @param {string} objectName Object name
      * @returns {Promise<void>} Promise to away to known when the object has been deleted

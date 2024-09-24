@@ -55,7 +55,7 @@ export class WorkadventureProximityMeetingCommands extends IframeApiContribution
 
     /**
      * Detecting when the user enter on a meeting.
-     * {@link https://workadventu.re/map-building/api-player.md#detecting-when-the-user-entersleaves-a-meeting | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-player.md#detecting-when-the-user-entersleaves-a-meeting | Website documentation}
      *
      * @returns {Subject<RemotePlayer[]>} Observable who return the joined users
      */
@@ -68,7 +68,7 @@ export class WorkadventureProximityMeetingCommands extends IframeApiContribution
 
     /**
      * Detecting when a participant joined on the current meeting.
-     * {@link https://workadventu.re/map-building/api-player.md#detecting-when-a-participant-entersleaves-the-current-meeting | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-player.md#detecting-when-a-participant-entersleaves-the-current-meeting | Website documentation}
      *
      * @returns {Subject<RemotePlayer>} Observable who return the joined user
      */
@@ -81,7 +81,7 @@ export class WorkadventureProximityMeetingCommands extends IframeApiContribution
 
     /**
      * Detecting when a participant left on the current meeting.
-     * {@link https://workadventu.re/map-building/api-player.md#detecting-when-a-participant-entersleaves-the-current-meeting | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-player.md#detecting-when-a-participant-entersleaves-the-current-meeting | Website documentation}
      *
      * @returns {Subject<RemotePlayer>} Observable who return the left user
      */

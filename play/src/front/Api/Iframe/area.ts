@@ -27,7 +27,7 @@ export class WorkadventureAreaCommands extends IframeApiContribution<Workadventu
 
     /**
      * Create a new Area object (currently limited to rectangular shapes).
-     * {@link https://workadventu.re/map-building/api-room.md#create-area | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-room.md#create-area | Website documentation}
      *
      * @param {{name: string, x: number, y: number, width: number, height: number}} createAreaEvent Define the name, position and size of the area
      * @returns {Area} Area object
@@ -42,7 +42,7 @@ export class WorkadventureAreaCommands extends IframeApiContribution<Workadventu
 
     /**
      * Get an existing Area object.
-     * {@link https://workadventu.re/map-building/api-room.md#get-an-area | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-room.md#get-an-area | Website documentation}
      *
      * @param {string} name Name of the area searched
      * @returns {Area} Area found
@@ -58,7 +58,7 @@ export class WorkadventureAreaCommands extends IframeApiContribution<Workadventu
 
     /**
      * Delete Area by it's name.
-     * {@link https://workadventu.re/map-building/api-room.md#delete-area | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-room.md#delete-area | Website documentation}
      *
      * @param {string} name Area name
      * @returns {Promise<void>} Promise resolved when the removing is finished
@@ -74,7 +74,7 @@ export class WorkadventureAreaCommands extends IframeApiContribution<Workadventu
 
     /**
      * Listens to the position of the current user. The event is triggered when the user enters a given area.
-     * {@link https://workadventu.re/map-building/api-room.md#detecting-when-the-user-entersleaves-an-area | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-room.md#detecting-when-the-user-entersleaves-an-area | Website documentation}
      *
      * @param {string} areaName Area name
      * @returns {Subject<void>} An observable fired when someone enters the area
@@ -91,7 +91,7 @@ export class WorkadventureAreaCommands extends IframeApiContribution<Workadventu
 
     /**
      * Listens to the position of the current user. The event is triggered when the user leaves a given area.
-     * {@link https://workadventu.re/map-building/api-room.md#detecting-when-the-user-entersleaves-an-area | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-room.md#detecting-when-the-user-entersleaves-an-area | Website documentation}
      *
      * @param {string} areaName Area name
      * @returns {Subject<void>} An observable fired when someone leaves the area
