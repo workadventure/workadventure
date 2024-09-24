@@ -25,7 +25,7 @@ class WorkadventureMapEditorAreaCommands extends IframeApiContribution<Workadven
 
     /**
      * Listens to the position of the current user. The event is triggered when the user enters a given area.
-     * {@link https://workadventu.re/map-building/api-mapeditor.md#detecting-when-the-user-entersleaves-an-area | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-mapeditor.md#detecting-when-the-user-entersleaves-an-area | Website documentation}
      *
      * @param {string} areaName Area name
      * @returns {Subject<void>} An observable fired when someone enters the area
@@ -42,7 +42,7 @@ class WorkadventureMapEditorAreaCommands extends IframeApiContribution<Workadven
 
     /**
      * Listens to the position of the current user. The event is triggered when the user leaves a given area.
-     * {@link https://workadventu.re/map-building/api-mapeditor.md#detecting-when-the-user-entersleaves-an-area | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-mapeditor.md#detecting-when-the-user-entersleaves-an-area | Website documentation}
      *
      * @param {string} areaName Area name
      * @returns {Subject<void>} An observable fired when someone leaves the area
