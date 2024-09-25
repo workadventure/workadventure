@@ -11,6 +11,7 @@ const actionbar: BaseTranslation = {
     microphone: "Mikrofon aktiwěrowaś/deaktiwěrowaś",
     emoji: "Emojije wótcyniś / zacyniś",
     menu: "Menij wótcyniś / zacyniś",
+    calendar: "Kalender wótcyniś / zacyniś",
     mapEditor: "Editor kórty wótcyniś / zacyniś",
     bo: "Běrow we slězynje wótcyniś / zacyniś",
     subtitle: {

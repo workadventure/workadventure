@@ -49,6 +49,7 @@ import {
 import { isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
 import { MessageUserJoined } from "../../../Connection/ConnexionModels";
 import { Area } from "../../Entity/Area";
+import { extensionModuleStore } from "../../../Stores/GameSceneStore";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -149,7 +150,7 @@ export class AreasPropertiesListener {
             const area = areas?.find((area) => area.areaData.id === areaData.id);
 
             for (const property of areaData.properties) {
-                this.removePropertyFilter(property, area);
+                this.removePropertyFilter(property, area, areaData);
             }
         }
     }
@@ -200,7 +201,10 @@ export class AreasPropertiesListener {
             }
             case "personalAreaPropertyData": {
                 this.handlePersonalAreaPropertyOnEnter(property, areaData, area);
-
+                break;
+            }
+            case "extensionModule": {
+                this.handleExtensionModuleAreaPropertyOnEnter(areaData, property.subtype);
                 break;
             }
             default: {
@@ -271,7 +275,7 @@ export class AreasPropertiesListener {
         }
     }
 
-    private removePropertyFilter(property: AreaDataProperty, area?: Area) {
+    private removePropertyFilter(property: AreaDataProperty, area?: Area, areaData?: AreaData) {
         switch (property.type) {
             case "openWebsite": {
                 this.handleOpenWebsitePropertiesOnLeave(property);
@@ -303,6 +307,10 @@ export class AreasPropertiesListener {
             }
             case "personalAreaPropertyData": {
                 this.handlePersonalAreaPropertyOnLeave(area);
+                break;
+            }
+            case "extensionModule": {
+                this.handleExtensionModuleAreaPropertyOnLeave(property.subtype, areaData);
                 break;
             }
             default: {
@@ -727,6 +735,31 @@ export class AreasPropertiesListener {
             requestVisitCardsStore.set(null);
         }
         area?.unHighLightArea();
+    }
+
+    private handleExtensionModuleAreaPropertyOnLeave(subtype: string, area?: AreaData): void {
+        const extensionModule = get(extensionModuleStore);
+        for (const module of extensionModule) {
+            if (!module.areaMapEditor) continue;
+
+            const areaMapEditor = module.areaMapEditor();
+            if (areaMapEditor == undefined) continue;
+
+            areaMapEditor[subtype].handleAreaPropertyOnLeave(area);
+            inJitsiStore.set(false);
+        }
+    }
+
+    private handleExtensionModuleAreaPropertyOnEnter(area: AreaData, subtype: string): void {
+        const extensionModule = get(extensionModuleStore);
+        for (const module of extensionModule) {
+            if (!module.areaMapEditor) continue;
+
+            const areaMapEditor = module.areaMapEditor();
+            if (areaMapEditor == undefined) continue;
+            areaMapEditor[subtype].handleAreaPropertyOnEnter(area);
+            inJitsiStore.set(true);
+        }
     }
 
     private openCoWebsiteFunction(

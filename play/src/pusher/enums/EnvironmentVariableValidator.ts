@@ -3,11 +3,11 @@ import { z } from "zod";
 import {
     AbsoluteOrRelativeUrl,
     BoolAsString,
+    emptyStringToUndefined,
     PositiveIntAsString,
+    toArray,
     toBool,
     toNumber,
-    toArray,
-    emptyStringToUndefined,
 } from "@workadventure/shared-utils/src/EnvironmentVariables/EnvironmentVariableUtils";
 
 export const EnvironmentVariables = z.object({

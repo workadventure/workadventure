@@ -35,7 +35,6 @@
     let selectedDepthOption: depthOptions = depthOffset === 0 ? depthOptions.STANDING : depthOptions.CUSTOM;
 
     function getModifiedCustomEntity(): EntityPrefab {
-        console.log(inputTagOptions);
         return {
             ...customEntity,
             name: name,
