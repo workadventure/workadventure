@@ -35,15 +35,17 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
         const promises = patch.reduce((acc: Promise<void>[], operation) => {
             if (operation.op === "add" && operation.path.match(new RegExp("^/properties/*"))) {
                 const { ressourceUrl, id } = operation.value as AreaDataProperty;
-
-                (operation.value as AreaDataProperty).serverData = undefined;
-                const propertyFromNewConfig = this.newConfig.properties?.find((property) => property.id === id);
-
-                if (propertyFromNewConfig) propertyFromNewConfig.serverData = undefined;
-
                 if (!ressourceUrl) {
                     return acc;
                 }
+
+                //TODO : try to do without as
+                if ((operation.value as AreaDataProperty).serverData)
+                    (operation.value as AreaDataProperty).serverData = undefined;
+
+                const propertyFromNewConfig = this.newConfig.properties?.find((property) => property.id === id);
+
+                if (propertyFromNewConfig) propertyFromNewConfig.serverData = undefined;
                 acc.push(
                     limit(async () => {
                         const response = await _axios.post(ressourceUrl, operation.value);
@@ -99,6 +101,8 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
                     .getGameMapAreas()
                     ?.getArea(this.oldConfig.id)
                     ?.properties.find((propertyToFind) => propertyToFind.id === property.id)?.serverData;
+
+                console.log({ operation });
                 property.serverData = serverData;
                 const ressourcesUrl = property.ressourceUrl;
 
