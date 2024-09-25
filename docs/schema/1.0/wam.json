@@ -723,7 +723,6 @@
                       },
                       "required": [
                         "id",
-                        "serverData",
                         "type",
                         "shouldOpenAutomatically",
                         "displayName"

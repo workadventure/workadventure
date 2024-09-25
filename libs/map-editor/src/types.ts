@@ -135,9 +135,11 @@ export const MatrixRoomPropertyData = PropertyBase.extend({
     type: z.literal("matrixRoomPropertyData"),
     shouldOpenAutomatically: z.boolean(),
     displayName: z.string(),
-    serverData: z.object({
-        matrixRoomId: z.string().optional(),
-    }),
+    serverData: z
+        .object({
+            matrixRoomId: z.string().optional(),
+        })
+        .optional(),
 });
 export const AreaDataProperty = z.discriminatedUnion("type", [
     StartPropertyData,

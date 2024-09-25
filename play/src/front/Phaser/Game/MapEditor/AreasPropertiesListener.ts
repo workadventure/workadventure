@@ -569,11 +569,11 @@ export class AreasPropertiesListener {
     }
 
     private handleMatrixRoomAreaOnEnter(property: MatrixRoomPropertyData) {
-        if (this.scene.connection && property.serverData.matrixRoomId) {
+        if (this.scene.connection && property.serverData?.matrixRoomId) {
             this.scene.connection
                 .queryEnterChatRoomArea(property.serverData.matrixRoomId)
                 .then(() => {
-                    if (!property.serverData.matrixRoomId) {
+                    if (!property.serverData?.matrixRoomId) {
                         throw new Error("Failed to join room : roomId is undefined");
                     }
                     return gameManager.chatConnection.joinRoom(property.serverData.matrixRoomId);
@@ -779,18 +779,18 @@ export class AreasPropertiesListener {
         const actualRoom = get(selectedRoom);
         const chatVisibility = get(chatVisibilityStore);
 
-        if (actualRoom?.id === property.serverData.matrixRoomId && chatVisibility) {
+        if (actualRoom?.id === property.serverData?.matrixRoomId && chatVisibility) {
             chatVisibilityStore.set(false);
             selectedRoom.set(undefined);
         }
         chatZoneLiveStore.set(false);
 
         get(gameManager.chatConnection.rooms)
-            .find((room) => room.id === property.serverData.matrixRoomId)
+            .find((room) => room.id === property.serverData?.matrixRoomId)
             ?.leaveRoom()
             .catch((error) => console.error(error));
 
-        if (this.scene.connection && property.serverData.matrixRoomId) {
+        if (this.scene.connection && property.serverData?.matrixRoomId) {
             this.scene.connection.emitLeaveChatRoomArea(property.serverData.matrixRoomId);
         }
     }

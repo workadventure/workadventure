@@ -109,7 +109,7 @@ export class MatrixRoomAreaController extends BaseHttpController {
                     return res.status(400).send("Invalid request body");
                 }
 
-                if (isMatrixRoomPropertyData.data.serverData.matrixRoomId) {
+                if (isMatrixRoomPropertyData.data.serverData?.matrixRoomId) {
                     await matrixProvider.deleteRoom(isMatrixRoomPropertyData.data.serverData.matrixRoomId);
                 }
                 return res.status(204).send();
@@ -150,7 +150,7 @@ export class MatrixRoomAreaController extends BaseHttpController {
                     return res.status(400).send("Invalid request body");
                 }
 
-                if (isMatrixRoomPropertyData.data.serverData.matrixRoomId) {
+                if (isMatrixRoomPropertyData.data.serverData?.matrixRoomId) {
                     await matrixProvider.changeRoomName(
                         isMatrixRoomPropertyData.data.serverData.matrixRoomId,
                         isMatrixRoomPropertyData.data.displayName
