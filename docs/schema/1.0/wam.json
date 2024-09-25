@@ -43,11 +43,7 @@
                         "ressourceUrl": {
                           "type": "string"
                         },
-                        "serverData": {
-                          "type": "object",
-                          "properties": {},
-                          "additionalProperties": false
-                        },
+                        "serverData": {},
                         "type": {
                           "type": "string",
                           "const": "jitsiRoomProperty"
@@ -712,9 +708,6 @@
                               "type": "string"
                             }
                           },
-                          "required": [
-                            "matrixRoomId"
-                          ],
                           "additionalProperties": false
                         },
                         "type": {
