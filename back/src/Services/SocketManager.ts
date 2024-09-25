@@ -1572,7 +1572,6 @@ export class SocketManager {
 
     dispatchModifyAreaMessage(modifyAreaMessage: ModifyAreaMessage) {
         const editMapCommand = EditMapCommandMessage.fromPartial({
-            id: undefined,
             editMapMessage: {
                 message: {
                     $case: "modifyAreaMessage",

@@ -1401,6 +1401,8 @@ export class SocketManager implements ZoneEventListener {
     }
 
     handleUpdateChatId(client: Socket, email: string, chatId: string): Promise<void> {
+        const userData = client.getUserData();
+        userData.chatID = chatId;
         return adminService.updateChatId(email, chatId, client.getUserData().roomId);
     }
 

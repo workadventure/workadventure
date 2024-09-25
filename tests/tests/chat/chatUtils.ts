@@ -69,7 +69,7 @@ class ChatUtils {
 
   public async isChatSidebarOpen(page: Page){
     return page.getByTestId("closeChatButton").isVisible({
-      timeout : 10_000
+      timeout : 20_000
     });
   }
 

@@ -93,10 +93,11 @@ class AreaEditor {
   }
 
   async setMatrixChatRoomProperty(page: Page,shouldOpenAutomatically: boolean, roomName?: string){
+    await page.getByTestId("shouldOpenAutomaticallyCheckbox").setChecked(shouldOpenAutomatically);
     if(roomName){
+      await page.getByPlaceholder("My room").isEnabled({timeout : 20_000});
       await page.getByPlaceholder("My room").fill(roomName);
     }
-    await page.getByTestId("shouldOpenAutomaticallyCheckbox").setChecked(shouldOpenAutomatically);
   }
 
   private async fullFillAreaRight(locator: Locator, right: string) {

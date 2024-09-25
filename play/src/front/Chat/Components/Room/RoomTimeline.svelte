@@ -166,7 +166,7 @@
                     <IconArrowLeft />
                 </button>
                 <span class="tw-flex-1" />
-                <p class="tw-m-0 tw-p-0 tw-text-gray-400">{$roomName}</p>
+                <p class="tw-m-0 tw-p-0 tw-text-gray-400" data-testid="roomName">{$roomName}</p>
                 <span class="tw-flex-1" />
             </div>
             {#if shouldDisplayLoader}

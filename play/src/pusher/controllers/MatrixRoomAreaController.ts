@@ -1,6 +1,7 @@
 import { MatrixRoomPropertyData } from "@workadventure/map-editor";
 import * as Sentry from "@sentry/node";
 import { DefaultResponseLocals, Response } from "hyper-express";
+import { z } from "zod";
 import { matrixProvider } from "../services/MatrixProvider";
 import { validatePostQuery } from "../services/QueryValidator";
 import { mapStorageToken } from "../middlewares/MapStorageToken";
@@ -47,14 +48,22 @@ export class MatrixRoomAreaController extends BaseHttpController {
          */
         this.app.post("/roomArea", [mapStorageToken], async (req, res) => {
             try {
-                const body = await validatePostQuery(req, res, MatrixRoomPropertyData);
+                const body = await validatePostQuery(
+                    req,
+                    res,
+                    MatrixRoomPropertyData.extend({
+                        serverData: z.undefined(),
+                    })
+                );
 
                 if (!body) {
                     return res.status(400).send("Invalid Request Body");
                 }
 
                 const roomID = await matrixProvider.createRoomForArea();
-                body.serverData.matrixRoomId = roomID;
+                body.serverData = {
+                    matrixRoomId: roomID,
+                };
                 return res.status(201).json(body);
             } catch (error) {
                 return this.handleError(res, error);
@@ -101,6 +110,7 @@ export class MatrixRoomAreaController extends BaseHttpController {
         this.app.delete("/roomArea", [mapStorageToken], async (req, res) => {
             try {
                 const body = await req.json();
+                console.log("delete >>>>", body);
                 const isMatrixRoomPropertyData = MatrixRoomPropertyData.safeParse(body);
 
                 if (!isMatrixRoomPropertyData.success) {
@@ -144,12 +154,20 @@ export class MatrixRoomAreaController extends BaseHttpController {
                 if (!isMatrixRoomPropertyData.success) {
                     return res.status(400).send("Invalid request body");
                 }
+
+                console.log(">>>>", {
+                    roomId: isMatrixRoomPropertyData.data.serverData.matrixRoomId,
+                    displayName: isMatrixRoomPropertyData.data.displayName,
+                });
+
                 await matrixProvider.changeRoomName(
                     isMatrixRoomPropertyData.data.serverData.matrixRoomId,
                     isMatrixRoomPropertyData.data.displayName
                 );
+                console.log(">>>> changement de nom OK");
                 return res.status(200).send("Room name updated successfully");
             } catch (error) {
+                console.log(">>>> error changement de nom ...");
                 return this.handleError(res, error);
             }
         });

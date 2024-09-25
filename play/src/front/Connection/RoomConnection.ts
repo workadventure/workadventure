@@ -65,6 +65,7 @@ import {
     PublicEventFrontToPusher,
     PrivateEventFrontToPusher,
     SpaceUser,
+    LeaveChatRoomAreaMessage,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -383,7 +384,6 @@ export class RoomConnection implements RoomConnection {
                             case "editMapCommandMessage": {
                                 const message = subMessage.editMapCommandMessage;
                                 this._editMapCommandMessageStream.next(message);
-                                console.log("reception editmap message ", message);
                                 break;
                             }
                             case "joinMucRoomMessage": {
@@ -1594,9 +1594,9 @@ export class RoomConnection implements RoomConnection {
         this.send({
             message: {
                 $case: "leaveChatRoomAreaMessage",
-                leaveChatRoomAreaMessage: {
+                leaveChatRoomAreaMessage: LeaveChatRoomAreaMessage.fromPartial({
                     roomID,
-                },
+                }),
             },
         });
     }

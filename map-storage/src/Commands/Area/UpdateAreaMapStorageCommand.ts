@@ -29,18 +29,24 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
     }
 
     public async execute(): Promise<void> {
+        this;
         const patch = jsonpatch.compare(this.oldConfig, this.newConfig);
-        let shouldUpdateServerData = false;
+        let shouldNotifyUpdate = false;
         const promises = patch.reduce((acc: Promise<void>[], operation) => {
             if (operation.op === "add" && operation.path.match(new RegExp("^/properties/*"))) {
                 const { ressourceUrl, id } = operation.value as AreaDataProperty;
+
+                (operation.value as AreaDataProperty).serverData = undefined;
+                const propertyFromNewConfig = this.newConfig.properties?.find((property) => property.id === id);
+
+                if (propertyFromNewConfig) propertyFromNewConfig.serverData = undefined;
+
                 if (!ressourceUrl) {
                     return acc;
                 }
                 acc.push(
                     limit(async () => {
                         const response = await _axios.post(ressourceUrl, operation.value);
-
                         if (!response.data) {
                             return Promise.resolve();
                         }
@@ -51,33 +57,18 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
                             return Promise.resolve();
                         }
 
-                        let shouldNotifyUpdate = false;
+                        shouldNotifyUpdate = true;
 
                         this.newConfig.properties = this.newConfig.properties?.map((property) => {
                             if (property.id !== id || !isAreaDataProperty.data.serverData) {
+                                //property.serverData = undefined;
                                 return property;
                             }
 
-                            if (!property.serverData) {
-                                return isAreaDataProperty.data;
-                            }
-
-                            const responsePatch = jsonpatch.compare(
-                                property.serverData,
-                                isAreaDataProperty.data.serverData
-                            );
-
-                            if (responsePatch.length > 0) {
-                                shouldNotifyUpdate = true;
-                                shouldUpdateServerData = true;
-                            }
+                            shouldNotifyUpdate = true;
 
                             return isAreaDataProperty.data;
                         });
-
-                        if (shouldNotifyUpdate) {
-                            this.notifyAreaUpdate();
-                        }
 
                         return Promise.resolve();
                     })
@@ -86,6 +77,7 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
 
             if (operation.op === "remove" && operation.path.match(new RegExp("^/properties/*"))) {
                 const value = jsonpatch.getValueByPointer(this.oldConfig, operation.path) as AreaDataProperty;
+                if (!value) return acc;
                 const ressourceUrl = value.ressourceUrl;
                 if (ressourceUrl) {
                     acc.push(limit(() => _axios.delete(ressourceUrl, { data: value })));
@@ -102,40 +94,51 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
 
                 if (!properties) return acc;
                 const property = properties[propertyIndex];
-
+                //recuperer la valeur en cache
+                const serverData = this.gameMap
+                    .getGameMapAreas()
+                    ?.getArea(this.oldConfig.id)
+                    ?.properties.find((propertyToFind) => propertyToFind.id === property.id)?.serverData;
+                property.serverData = serverData;
                 const ressourcesUrl = property.ressourceUrl;
 
                 if (ressourcesUrl) {
                     acc.push(limit(() => _axios.patch(ressourcesUrl, property)));
                 }
+                //manage changement des server data
             }
             return acc;
         }, []);
 
         try {
             await Promise.all(promises);
-        } catch {
+            if (shouldNotifyUpdate) {
+                this.notifyAreaUpdate();
+            }
+        } catch (e) {
             //TODO : better error management
-            console.error("Failed to execute all request on ressourceUrl");
+            console.error("Failed to execute all request on ressourceUrl", e);
         }
 
-        return super.execute(shouldUpdateServerData);
+        return super.execute();
     }
     private notifyAreaUpdate() {
         const modifyAreaMessage: ModifyAreaMessage = ModifyAreaMessage.fromPartial({
             id: this.newConfig.id,
+            //id: this.newConfig.id,
             properties: this.newConfig.properties,
             modifyProperties: true,
         });
 
-        const message: DispatchModifyAreaRequest = {
+        const message: DispatchModifyAreaRequest = DispatchModifyAreaRequest.fromPartial({
             modifyAreaMessage,
-        };
+        });
 
         const roomManager = new RoomManagerClient(this.backAddress, grpc.credentials.createInsecure());
+
         roomManager.dispatchModifyAreaMessage(message, (error) => {
             //sentry
-            if (error) console.error("errorr dans le dispatch");
+            if (error) console.error("error dans le dispatch");
         });
     }
 }

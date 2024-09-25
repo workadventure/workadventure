@@ -46,15 +46,13 @@ const mapStorageServer: MapStorageServer = {
         call: ServerUnaryCall<MapStorageClearAfterUploadMessage, Empty>,
         callback: sendUnaryData<Empty>
     ): void {
-        try {
+        (async () => {
             const wamUrl = call.request.wamUrl;
             const url = new URL(wamUrl);
             const wamKey = mapPathUsingDomainWithPrefix(url.pathname, url.hostname);
-            mapsManager.clearAfterUpload(wamKey).catch((error) => {
-                throw new Error("Failed to clear after upload");
-            });
+            await mapsManager.clearAfterUpload(wamKey);
             callback(null);
-        } catch (e: unknown) {
+        })().catch((e: unknown) => {
             console.error("An error occurred in handleClearAfterUpload", e);
             Sentry.captureException(`An error occurred in handleClearAfterUpload ${JSON.stringify(e)}`);
             let message: string;
@@ -64,7 +62,7 @@ const mapStorageServer: MapStorageServer = {
                 message = "Unknown error";
             }
             callback({ name: "MapStorageError", message }, null);
-        }
+        });
     },
     handleUpdateMapToNewestMessage(
         call: ServerUnaryCall<UpdateMapToNewestWithKeyMessage, Empty>,
@@ -117,7 +115,9 @@ const mapStorageServer: MapStorageServer = {
 
             const editMapMessage = editMapCommandMessage.editMapMessage.message;
 
+            console.log(">>> before wait for lock");
             await editionLocks.waitForLock(mapKey, async () => {
+                console.log(">>> starting  wait for lock");
                 const gameMap = await mapsManager.getOrLoadGameMap(mapKey);
 
                 const { connectedUserTags, userCanEdit, userUUID } = call.request;
@@ -305,6 +305,7 @@ const mapStorageServer: MapStorageServer = {
                 // send edit map message back as a valid one
                 mapsManager.addCommandToQueue(mapKey, editMapCommandMessage);
                 callback(null, editMapCommandMessage);
+                console.log(">>> ending wait for lock");
             });
         })().catch((e: unknown) => {
             console.log(e);

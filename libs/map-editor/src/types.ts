@@ -20,7 +20,7 @@ export const PropertyBase = z.object({
     buttonLabel: z.string().optional(),
     hideButtonLabel: z.boolean().optional(),
     ressourceUrl: z.string().optional(),
-    serverData: z.object({}).optional(),
+    serverData: z.unknown().optional(),
 });
 
 export const FocusablePropertyData = PropertyBase.extend({
@@ -133,14 +133,12 @@ export const PersonalAreaPropertyData = PropertyBase.extend({
 
 export const MatrixRoomPropertyData = PropertyBase.extend({
     type: z.literal("matrixRoomPropertyData"),
-    //matrixRoomId: z.string(),
     shouldOpenAutomatically: z.boolean(),
     displayName: z.string(),
     serverData: z.object({
-        matrixRoomId: z.string(),
+        matrixRoomId: z.string().optional(),
     }),
 });
-
 export const AreaDataProperty = z.discriminatedUnion("type", [
     StartPropertyData,
     ExitPropertyData,

@@ -184,35 +184,66 @@ export class GameMapAreas {
         );
     }
 
-    public updateArea(newConfig: AtLeast<AreaData, "id">, shouldUpdateServerData = false): AreaData | undefined {
+    public updateArea(newConfig: AtLeast<AreaData, "id">): AreaData | undefined {
         const area = this.areas.get(newConfig.id);
         if (!area) {
             throw new Error(`Area to update does not exist!`);
         }
 
-        if (newConfig.properties && !shouldUpdateServerData) {
-            newConfig.properties.map((property) => {
-                if (property.serverData) {
-                    const oldDataProperty = area.properties.find((properyTofind) => properyTofind.id === property.id);
-                    if (!oldDataProperty?.serverData) return property.serverData;
-                    return oldDataProperty.serverData;
+        // console.log({ area: area.properties, newConfig: newConfig.properties });
+        //console.log({ area: area.properties[1]?.serverData, newArea: newConfig?.properties[1]?.serverData });
+        /*
+        // Custom merge function
+        const customMerge = (objValue: unknown, srcValue: unknown, key: string) => {
+            console.log("CustomMerge ..", { objValue, srcValue, key });
+
+            if (key === "serverData") {
+                const parseVersion = z
+                    .object({
+                        version: z.number(),
+                    })
+                    .catch(() => ({
+                        version: 0,
+                    }));
+
+                const parsedObjValue = parseVersion.safeParse(objValue);
+                const parsedSrcValue = parseVersion.safeParse(srcValue);
+
+                let objValueVersion = 0;
+                let srcValueVersion = 0;
+
+                if (parsedObjValue.success) {
+                    objValueVersion = parsedObjValue.data.version;
                 }
-                return property;
-            });
-        }
 
+                if (parsedSrcValue.success) {
+                    srcValueVersion = parsedSrcValue.data.version;
+                }
+
+                if (srcValueVersion && srcValueVersion >= objValueVersion) {
+                    console.log("new area : version plus grande update");
+                    return undefined;
+                }
+
+                return objValue;
+            }
+            // Default behavior for other keys: let lodash handle the merge
+            return undefined;
+        };
+
+        _.mergeWith(area, newConfig, customMerge);
+        */
+
+        // Merge the rest of the newConfig into area
         _.merge(area, newConfig);
-        // TODO: Find a way to update it without need of using conditions
 
-        if (newConfig.properties !== undefined) {
-            area.properties = newConfig.properties;
-        }
+        // console.log({ area: area.properties[1]?.serverData, newArea: newConfig?.properties[1]?.serverData });
+        //test
+        //this.areas.set(area.id, area);
 
         this.updateAreaWAM(area);
         return area;
     }
-
-    // public updateProperty(areaId : string , )
 
     public deleteArea(id: string): boolean {
         const deleted = this.areas.delete(id);

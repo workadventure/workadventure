@@ -27,6 +27,8 @@ test.describe("matrix chat area property",()=>{
 
     test.afterAll('reset matrix database',()=>{
         chatUtils.resetMatrixDatabase() 
+
+        
     });
 
     test("it should automatically open the chat when entering the area if the property is checked", async ({page, browserName}) => {
@@ -53,9 +55,8 @@ test.describe("matrix chat area property",()=>{
         await Menu.closeMapEditor(page);
         await Map.walkToPosition(page, 4 * 32, 2 * 32);
 
-        expect(await chatUtils.isChatSidebarOpen(page)).toBeTruthy();
+        await expect(page.getByTestId("closeChatButton")).toBeVisible();
         expect(await page.getByTestId("roomName").textContent()).toBe("name of new room");
-
     });
 
 
@@ -77,11 +78,10 @@ test.describe("matrix chat area property",()=>{
         await AreaEditor.addProperty(page, "Link Matrix room");
         await AreaEditor.setMatrixChatRoomProperty(page,true,"name of new room");
         
-        
         await Menu.closeMapEditor(page);
         await Map.walkToPosition(page, 4 * 32, 2 * 32);
 
-        expect(await chatUtils.isChatSidebarOpen(page)).toBeTruthy();
+        await expect(page.getByTestId("closeChatButton")).toBeVisible();
 
         await Map.walkToPosition(page,1, 1);
 
@@ -111,7 +111,7 @@ test.describe("matrix chat area property",()=>{
         await Menu.closeMapEditor(page);
         await Map.walkToPosition(page, 4 * 32, 2 * 32);
 
-        expect(await chatUtils.isChatSidebarOpen(page)).toBeTruthy();
+        await expect(page.getByTestId("closeChatButton")).toBeVisible();
 
         await page.goto(Map.url("empty"));
         await chatUtils.openChat(page);

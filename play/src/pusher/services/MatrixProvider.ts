@@ -308,8 +308,15 @@ class MatrixProvider {
             []
         );
 
-        await Promise.all(kickMembersPromises);
-        return Promise.resolve();
+        //TODO : error management in this case on vut juste tout exec
+        try {
+            await Promise.all(kickMembersPromises);
+            return;
+        } catch (e) {
+            console.error(e);
+            Sentry.captureMessage(`Failed to kick all user ${e}`);
+            return;
+        }
     }
 }
 

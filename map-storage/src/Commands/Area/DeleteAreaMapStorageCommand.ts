@@ -13,7 +13,7 @@ export class DeleteAreaMapStorageCommand extends DeleteAreaCommand {
         const promises =
             this.areaConfig?.properties.reduce((acc: Promise<void>[], property) => {
                 const ressourceUrl = property.ressourceUrl;
-                if (property.type !== "matrixRoomPropertyData" || !ressourceUrl) return acc;
+                if (!ressourceUrl) return acc;
                 acc.push(limit(() => _axios.delete(ressourceUrl, { data: property })));
 
                 return acc;

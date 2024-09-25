@@ -210,7 +210,7 @@
                     displayName: "",
                     ressourceUrl: ROOM_AREA_PUSHER_URL,
                     serverData: {
-                        matrixRoomId: "",
+                        matrixRoomId: undefined,
                     },
                 };
             default:
