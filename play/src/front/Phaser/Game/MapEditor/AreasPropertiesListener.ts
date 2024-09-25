@@ -573,6 +573,9 @@ export class AreasPropertiesListener {
             this.scene.connection
                 .queryEnterChatRoomArea(property.serverData.matrixRoomId)
                 .then(() => {
+                    if (!property.serverData.matrixRoomId) {
+                        throw new Error("Failed to join room : roomId is undefined");
+                    }
                     return gameManager.chatConnection.joinRoom(property.serverData.matrixRoomId);
                 })
                 .then((room: ChatRoom | undefined) => {
@@ -787,7 +790,7 @@ export class AreasPropertiesListener {
             ?.leaveRoom()
             .catch((error) => console.error(error));
 
-        if (this.scene.connection) {
+        if (this.scene.connection && property.serverData.matrixRoomId) {
             this.scene.connection.emitLeaveChatRoomArea(property.serverData.matrixRoomId);
         }
     }
