@@ -634,7 +634,6 @@ const roomManager = {
         callback(null);
     },
     dispatchModifyAreaMessage(call, callback) {
-        //TODO : voir pourquoi le type peut etre undefined
         if (call.request.modifyAreaMessage) socketManager.dispatchModifyAreaMessage(call.request.modifyAreaMessage);
         callback(null);
     },

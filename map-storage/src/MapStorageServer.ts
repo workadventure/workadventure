@@ -115,9 +115,7 @@ const mapStorageServer: MapStorageServer = {
 
             const editMapMessage = editMapCommandMessage.editMapMessage.message;
 
-            console.log(">>> before wait for lock");
             await editionLocks.waitForLock(mapKey, async () => {
-                console.log(">>> starting  wait for lock");
                 const gameMap = await mapsManager.getOrLoadGameMap(mapKey);
 
                 const { connectedUserTags, userCanEdit, userUUID } = call.request;
@@ -305,7 +303,6 @@ const mapStorageServer: MapStorageServer = {
                 // send edit map message back as a valid one
                 mapsManager.addCommandToQueue(mapKey, editMapCommandMessage);
                 callback(null, editMapCommandMessage);
-                console.log(">>> ending wait for lock");
             });
         })().catch((e: unknown) => {
             console.log(e);

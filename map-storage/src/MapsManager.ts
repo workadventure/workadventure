@@ -111,7 +111,6 @@ class MapsManager {
         const areas = this.loadedMaps.get(key)?.getGameMapAreas()?.getAreas().values();
 
         if (areas) {
-            console.log("delete ressource url properties >>>>>>");
             const promises = Array.from(areas).reduce((acc, currArea) => {
                 currArea.properties.forEach((property) => {
                     const ressourceUrl = property.ressourceUrl;
@@ -121,7 +120,13 @@ class MapsManager {
                 });
                 return acc;
             }, [] as Promise<unknown>[]);
-            await Promise.all(promises);
+
+            try {
+                await Promise.all(promises);
+            } catch (error) {
+                console.error("Failed to execute all request on ressourceUrl", error);
+                Sentry.captureMessage(`Failed to execute all request on ressourceUrl ${JSON.stringify(error)}`);
+            }
         }
 
         this.loadedMaps.delete(key);

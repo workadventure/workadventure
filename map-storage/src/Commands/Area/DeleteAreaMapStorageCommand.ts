@@ -1,4 +1,5 @@
 import { DeleteAreaCommand, GameMap } from "@workadventure/map-editor";
+import * as Sentry from "@sentry/node";
 import pLimit from "p-limit";
 import { _axios } from "./UpdateAreaMapStorageCommand";
 
@@ -18,7 +19,12 @@ export class DeleteAreaMapStorageCommand extends DeleteAreaCommand {
 
                 return acc;
             }, []) || [];
-        await Promise.all(promises);
-        return Promise.resolve();
+
+        try {
+            await Promise.all(promises);
+        } catch (error) {
+            console.error("Failed to execute all request on ressourceUrl", error);
+            Sentry.captureMessage(`Failed to execute all request on ressourceUrl ${JSON.stringify(error)}`);
+        }
     }
 }

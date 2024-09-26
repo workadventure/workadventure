@@ -192,6 +192,10 @@ export class GameMapAreas {
 
         _.merge(area, newConfig);
 
+        if (newConfig.properties !== undefined) {
+            area.properties = newConfig.properties;
+        }
+
         this.updateAreaWAM(area);
         return area;
     }

@@ -1,5 +1,6 @@
 import { AreaData, AreaDataProperty, AtLeast, GameMap, UpdateAreaCommand } from "@workadventure/map-editor";
 import axios from "axios";
+import * as Sentry from "@sentry/node";
 import * as jsonpatch from "fast-json-patch";
 import pLimit from "p-limit";
 import * as grpc from "@grpc/grpc-js";
@@ -22,7 +23,6 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
         dataToModify: AtLeast<AreaData, "id">,
         commandId: string | undefined,
         oldConfig: AtLeast<AreaData, "id"> | undefined,
-        //TODO : RENAME
         private backAddress: string
     ) {
         super(gameMap, dataToModify, commandId, oldConfig);
@@ -119,9 +119,9 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
             if (shouldNotifyUpdate) {
                 this.notifyAreaUpdate();
             }
-        } catch (e) {
-            //TODO : better error management
-            console.error("Failed to execute all request on ressourceUrl", e);
+        } catch (error) {
+            console.error("Failed to execute all request on ressourceUrl", error);
+            Sentry.captureMessage(`Failed to execute all request on ressourceUrl ${JSON.stringify(error)}`);
         }
 
         return super.execute();
@@ -129,7 +129,6 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
     private notifyAreaUpdate() {
         const modifyAreaMessage: ModifyAreaMessage = ModifyAreaMessage.fromPartial({
             id: this.newConfig.id,
-            //id: this.newConfig.id,
             properties: this.newConfig.properties,
             modifyProperties: true,
         });
@@ -141,8 +140,10 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
         const roomManager = new RoomManagerClient(this.backAddress, grpc.credentials.createInsecure());
 
         roomManager.dispatchModifyAreaMessage(message, (error) => {
-            //sentry
-            if (error) console.error("error dans le dispatch");
+            if (error) {
+                console.error(`Failed to dispatch modify area : ${error.name} : ${error.message}`);
+                Sentry.captureMessage(`Failed to dispatch modify area :  ${error.name} : ${error.message}`);
+            }
         });
     }
 }

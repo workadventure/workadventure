@@ -1166,7 +1166,7 @@ export class GameRoom implements BrothersFinder {
         );
     }
 
-    forwardEditMapCommandMessageFromMapEditor(editMapCommandMessage: EditMapCommandMessage) {
+    public forwardEditMapCommandMessageFromMapEditor(editMapCommandMessage: EditMapCommandMessage): void {
         this.dispatchRoomMessage(
             SubToPusherRoomMessage.fromPartial({
                 message: {
