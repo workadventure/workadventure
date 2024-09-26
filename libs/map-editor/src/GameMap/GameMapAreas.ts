@@ -3,6 +3,7 @@ import * as _ from "lodash";
 import {
     AreaData,
     AreaDataProperties,
+    AreaDataProperty,
     AtLeast,
     EntityCoordinates,
     PersonalAreaPropertyData,
@@ -190,11 +191,32 @@ export class GameMapAreas {
             throw new Error(`Area to update does not exist!`);
         }
 
-        _.merge(area, newConfig);
+        const customMerge = (objValue: unknown, srcValue: unknown, key: string) => {
+            if (key === "properties") {
+                try {
+                    const objValueParse = AreaDataProperties.parse(objValue);
+                    const srcValueParse = AreaDataProperties.parse(srcValue);
 
-        if (newConfig.properties !== undefined) {
-            area.properties = newConfig.properties;
-        }
+                    return srcValueParse.map((newProp: AreaDataProperty) => {
+                        const oldProp = objValueParse.find((prop: AreaDataProperty) => prop.id === newProp.id);
+
+                        if (oldProp && oldProp.serverData) {
+                            if (!newProp.serverData || JSON.stringify(newProp.serverData) === "{}") {
+                                newProp.serverData = oldProp.serverData;
+                            }
+                        }
+                        return newProp;
+                    });
+                } catch (error) {
+                    console.error("Failed to parse properties : ", error);
+                    //TODO : Sentry
+                    return srcValue;
+                }
+            }
+            return undefined;
+        };
+
+        _.mergeWith(area, newConfig, customMerge);
 
         this.updateAreaWAM(area);
         return area;
