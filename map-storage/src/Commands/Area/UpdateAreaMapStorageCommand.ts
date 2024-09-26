@@ -34,14 +34,20 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
         let shouldNotifyUpdate = false;
         const promises = patch.reduce((acc: Promise<void>[], operation) => {
             if (operation.op === "add" && operation.path.match(new RegExp("^/properties/*"))) {
-                const { ressourceUrl, id } = operation.value as AreaDataProperty;
+                const value = AreaDataProperty.safeParse(operation.value);
+
+                if (!value.success) {
+                    return acc;
+                }
+
+                const { ressourceUrl, id } = value.data;
                 if (!ressourceUrl) {
                     return acc;
                 }
 
-                //TODO : try to do without as
-                if ((operation.value as AreaDataProperty).serverData)
-                    (operation.value as AreaDataProperty).serverData = undefined;
+                if (value.data.serverData) {
+                    value.data.serverData = undefined;
+                }
 
                 const propertyFromNewConfig = this.newConfig.properties?.find((property) => property.id === id);
 
@@ -63,7 +69,6 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
 
                         this.newConfig.properties = this.newConfig.properties?.map((property) => {
                             if (property.id !== id || !isAreaDataProperty.data.serverData) {
-                                //property.serverData = undefined;
                                 return property;
                             }
 
@@ -102,14 +107,12 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
                     ?.getArea(this.oldConfig.id)
                     ?.properties.find((propertyToFind) => propertyToFind.id === property.id)?.serverData;
 
-                console.log({ operation });
                 property.serverData = serverData;
                 const ressourcesUrl = property.ressourceUrl;
 
                 if (ressourcesUrl) {
                     acc.push(limit(() => _axios.patch(ressourcesUrl, property)));
                 }
-                //manage changement des server data
             }
             return acc;
         }, []);

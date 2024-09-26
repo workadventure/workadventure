@@ -307,8 +307,6 @@ class MatrixProvider {
             },
             []
         );
-
-        //TODO : error management in this case on vut juste tout exec
         try {
             await Promise.all(kickMembersPromises);
             return;
