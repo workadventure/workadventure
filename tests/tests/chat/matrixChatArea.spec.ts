@@ -18,15 +18,15 @@ test.describe("matrix chat area property", () => {
         test.skip();
         return;
       }
-      chatUtils.resetMatrixDatabase();
+      await chatUtils.resetMatrixDatabase();
       await resetWamMaps(request);
 
       await page.goto(Map.url("empty"));
     }
   );
 
-  test.afterAll("reset matrix database", () => {
-    chatUtils.resetMatrixDatabase();
+  test.afterAll("reset matrix database", async () => {
+    await chatUtils.resetMatrixDatabase();
   });
 
   test("it should automatically open the chat when entering the area if the property is checked", async ({
