@@ -25,10 +25,6 @@ test.describe("matrix chat area property", () => {
     }
   );
 
-  test.afterAll("reset matrix database", async () => {
-    await chatUtils.resetMatrixDatabase();
-  });
-
   test("it should automatically open the chat when entering the area if the property is checked", async ({
     page,
     browserName,
