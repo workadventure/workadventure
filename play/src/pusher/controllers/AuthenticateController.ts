@@ -88,11 +88,6 @@ export class AuthenticateController extends BaseHttpController {
          *        description: "todo"
          *        required: false
          *        type: "string"
-         *      - name: "redirect"
-         *        in: "query"
-         *        description: "todo"
-         *        required: false
-         *        type: "string"
          *     responses:
          *       302:
          *         description: Redirects the user to the OpenID login screen
@@ -105,7 +100,6 @@ export class AuthenticateController extends BaseHttpController {
                 res,
                 z.object({
                     playUri: z.string(),
-                    redirect: z.string().optional(),
                 })
             );
             if (query === undefined) {
@@ -123,7 +117,7 @@ export class AuthenticateController extends BaseHttpController {
                 return;
             }
 
-            const loginUri = await openIDClient.authorizationUrl(res, query.redirect, query.playUri, req);
+            const loginUri = await openIDClient.authorizationUrl(res, query.playUri, req);
             res.atomic(() => {
                 res.cookie("playUri", query.playUri, undefined, {
                     httpOnly: true, // dont let browser javascript access cookie ever
