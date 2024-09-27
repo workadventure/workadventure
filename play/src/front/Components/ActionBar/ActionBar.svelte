@@ -99,7 +99,7 @@
     } from "../../Stores/MegaphoneStore";
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
-    import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
+    import { ADMIN_BO_URL } from "../../Enum/EnvironmentVariable";
     import AvailabilityStatusComponent from "./AvailabilityStatus/AvailabilityStatus.svelte";
     import { IconCheck, IconChevronDown, IconChevronUp } from "@wa-icons";
 
@@ -317,7 +317,7 @@
     }
 
     function openBo() {
-        window.open(ADMIN_URL, "_blank");
+        window.open(ADMIN_BO_URL, "_blank");
     }
 
     /*function register() {
