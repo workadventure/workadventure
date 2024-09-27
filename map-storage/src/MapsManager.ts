@@ -7,7 +7,7 @@ import { fileSystem } from "./fileSystem";
 import { MapListService } from "./Services/MapListService";
 import { WebHookService } from "./Services/WebHookService";
 import { WEB_HOOK_URL } from "./Enum/EnvironmentVariable";
-import { _axios } from "./Commands/Area/UpdateAreaMapStorageCommand";
+import { _axios } from "./Services/axiosInstance";
 const limit = pLimit(10);
 class MapsManager {
     private loadedMaps: Map<string, GameMap>;
@@ -113,9 +113,9 @@ class MapsManager {
         if (areas) {
             const promises = Array.from(areas).reduce((acc, currArea) => {
                 currArea.properties.forEach((property) => {
-                    const ressourceUrl = property.ressourceUrl;
-                    if (ressourceUrl) {
-                        acc.push(limit(() => _axios.delete(ressourceUrl, { data: property })));
+                    const resourceUrl = property.resourceUrl;
+                    if (resourceUrl) {
+                        acc.push(limit(() => _axios.delete(resourceUrl, { data: property })));
                     }
                 });
                 return acc;
@@ -124,8 +124,8 @@ class MapsManager {
             try {
                 await Promise.all(promises);
             } catch (error) {
-                console.error("Failed to execute all request on ressourceUrl", error);
-                Sentry.captureMessage(`Failed to execute all request on ressourceUrl ${JSON.stringify(error)}`);
+                console.error("Failed to execute all request on resourceUrl", error);
+                Sentry.captureMessage(`Failed to execute all request on resourceUrl ${JSON.stringify(error)}`);
             }
         }
 

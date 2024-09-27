@@ -19,7 +19,7 @@ export const PropertyBase = z.object({
     id: z.string(),
     buttonLabel: z.string().optional(),
     hideButtonLabel: z.boolean().optional(),
-    ressourceUrl: z.string().optional(),
+    resourceUrl: z.string().optional(),
     serverData: z.unknown().optional(),
 });
 

@@ -208,7 +208,7 @@
                     type,
                     shouldOpenAutomatically: false,
                     displayName: "",
-                    ressourceUrl: ROOM_AREA_PUSHER_URL,
+                    resourceUrl: ROOM_AREA_PUSHER_URL,
                     serverData: {
                         matrixRoomId: undefined,
                     },

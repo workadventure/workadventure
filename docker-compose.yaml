@@ -150,8 +150,8 @@ services:
       #Chat
       MATRIX_API_URI: http://synapse:8008/
       MATRIX_PUBLIC_URI: $MATRIX_PUBLIC_URI
-      MATRIX_ADMIN_USER: '$MATRIX_ADMIN_USER'
-      MATRIX_ADMIN_PASSWORD: '$MATRIX_ADMIN_PASSWORD'
+      MATRIX_ADMIN_USER: "$MATRIX_ADMIN_USER"
+      MATRIX_ADMIN_PASSWORD: "$MATRIX_ADMIN_PASSWORD"
       MATRIX_DOMAIN: "$MATRIX_DOMAIN"
       # oEmbed providers
       EMBEDLY_KEY: "$EMBEDLY_KEY"
@@ -261,6 +261,8 @@ services:
       SENTRY_RELEASE: $SENTRY_RELEASE
       PATH_PREFIX: ""
       MAP_STORAGE_API_TOKEN: "$MAP_STORAGE_API_TOKEN"
+      PUSHER_URL: http://play.workadventure.localhost
+      WHITELISTED_RESOURCE_URLS: ""
     volumes:
       - .:/usr/src/app
     tmpfs: /tmp

@@ -1,22 +1,13 @@
 import { AreaData, AreaDataProperty, AtLeast, GameMap, UpdateAreaCommand } from "@workadventure/map-editor";
-import axios from "axios";
 import * as Sentry from "@sentry/node";
 import * as jsonpatch from "fast-json-patch";
 import pLimit from "p-limit";
 import * as grpc from "@grpc/grpc-js";
 import { RoomManagerClient } from "@workadventure/messages/src/ts-proto-generated/services";
 import { DispatchModifyAreaRequest, ModifyAreaMessage } from "@workadventure/messages";
-import { MAP_STORAGE_API_TOKEN } from "../../Enum/EnvironmentVariable";
+import { _axios } from "../../Services/axiosInstance";
 
 const limit = pLimit(10);
-//TODO : move instance
-//TODO : whitelist ressourcesUrl;
-export const _axios = axios.create({
-    headers: {
-        Authorization: MAP_STORAGE_API_TOKEN,
-    },
-});
-
 export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
     constructor(
         gameMap: GameMap,
@@ -29,7 +20,6 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
     }
 
     public async execute(): Promise<void> {
-        this;
         const patch = jsonpatch.compare(this.oldConfig, this.newConfig);
         let shouldNotifyUpdate = false;
         const promises = patch.reduce((acc: Promise<void>[], operation) => {
@@ -40,8 +30,8 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
                     return acc;
                 }
 
-                const { ressourceUrl, id } = value.data;
-                if (!ressourceUrl) {
+                const { resourceUrl, id } = value.data;
+                if (!resourceUrl) {
                     return acc;
                 }
 
@@ -54,7 +44,7 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
                 if (propertyFromNewConfig) propertyFromNewConfig.serverData = undefined;
                 acc.push(
                     limit(async () => {
-                        const response = await _axios.post(ressourceUrl, operation.value);
+                        const response = await _axios.post(resourceUrl, operation.value);
                         if (!response.data) {
                             return Promise.resolve();
                         }
@@ -85,9 +75,9 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
             if (operation.op === "remove" && operation.path.match(new RegExp("^/properties/*"))) {
                 const value = jsonpatch.getValueByPointer(this.oldConfig, operation.path) as AreaDataProperty;
                 if (!value) return acc;
-                const ressourceUrl = value.ressourceUrl;
-                if (ressourceUrl) {
-                    acc.push(limit(() => _axios.delete(ressourceUrl, { data: value })));
+                const resourceUrl = value.resourceUrl;
+                if (resourceUrl) {
+                    acc.push(limit(() => _axios.delete(resourceUrl, { data: value })));
                 }
             }
 
@@ -108,11 +98,12 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
                     ?.properties.find((propertyToFind) => propertyToFind.id === property.id)?.serverData;
 
                 property.serverData = serverData;
-                const ressourcesUrl = property.ressourceUrl;
+                const resourcesUrl = property.resourceUrl;
 
-                if (ressourcesUrl) {
-                    acc.push(limit(() => _axios.patch(ressourcesUrl, property)));
+                if (resourcesUrl) {
+                    acc.push(limit(() => _axios.patch(resourcesUrl, property)));
                 }
+                //TODO : patch plus generic qui peut modifier les server data
             }
             return acc;
         }, []);
@@ -123,8 +114,8 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
                 this.notifyAreaUpdate();
             }
         } catch (error) {
-            console.error("Failed to execute all request on ressourceUrl", error);
-            Sentry.captureMessage(`Failed to execute all request on ressourceUrl ${JSON.stringify(error)}`);
+            console.error("Failed to execute all request on resourceUrl", error);
+            Sentry.captureMessage(`Failed to execute all request on resourceUrl ${JSON.stringify(error)}`);
         }
 
         return super.execute();
