@@ -20,6 +20,9 @@ export const EnvironmentVariables = z.object({
     ADMIN_URL: AbsoluteOrRelativeUrl.optional().describe(
         "The URL to the admin. This should be a publicly accessible URL."
     ),
+    ADMIN_BO_URL: AbsoluteOrRelativeUrl.optional().describe(
+        "The URL to the admin dashboard. Will be used to redirect the user to the admin dashboard. You can put it a URL that will automatically connect the user."
+    ),
     ADMIN_API_TOKEN: z.string().optional(),
     AUTOLOGIN_URL: AbsoluteOrRelativeUrl.optional().describe(
         "The URL to be used to automatically log someone given a token."

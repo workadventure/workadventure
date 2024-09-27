@@ -316,7 +316,7 @@ class ConnectionManager {
                         }*/
 
                         if (response.type === "redirect") {
-                            return new URL(response.urlToRedirect);
+                            return new URL(response.urlToRedirect, window.location.href);
                         }
 
                         return {
