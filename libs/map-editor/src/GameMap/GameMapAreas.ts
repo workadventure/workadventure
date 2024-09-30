@@ -1,5 +1,5 @@
 import { MathUtils } from "@workadventure/math-utils";
-import { errorHandler } from "@workadventure/shared-utils";
+import { errorHandler } from "@workadventure/shared-utils/src/ErrorHandler";
 import * as _ from "lodash";
 import {
     AreaData,
