@@ -62,8 +62,6 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
                                 return property;
                             }
 
-                            shouldNotifyUpdate = true;
-
                             return isAreaDataProperty.data;
                         });
 
@@ -91,7 +89,6 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
 
                 if (!properties) return acc;
                 const property = properties[propertyIndex];
-                //recuperer la valeur en cache
                 const serverData = this.gameMap
                     .getGameMapAreas()
                     ?.getArea(this.oldConfig.id)
@@ -101,9 +98,33 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
                 const resourcesUrl = property.resourceUrl;
 
                 if (resourcesUrl) {
-                    acc.push(limit(() => _axios.patch(resourcesUrl, property)));
+                    acc.push(
+                        limit(async () => {
+                            const response = await _axios.patch(resourcesUrl, property);
+
+                            if (!response.data) {
+                                return Promise.resolve();
+                            }
+
+                            const isAreaDataProperty = AreaDataProperty.safeParse(response.data);
+
+                            if (!isAreaDataProperty.success) {
+                                return Promise.resolve();
+                            }
+
+                            shouldNotifyUpdate = true;
+
+                            this.newConfig.properties = this.newConfig.properties?.map((oldProperty) => {
+                                if (oldProperty.id !== property.id || !isAreaDataProperty.data.serverData) {
+                                    return oldProperty;
+                                }
+
+                                return isAreaDataProperty.data;
+                            });
+                            return Promise.resolve();
+                        })
+                    );
                 }
-                //TODO : patch plus generic qui peut modifier les server data
             }
             return acc;
         }, []);

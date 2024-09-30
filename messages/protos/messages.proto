@@ -537,10 +537,6 @@ message ChatMembersAnswer {
   repeated ChatMember members = 2;
 }
 
-message CreateChatRoomForAreaAnswer{
-  string chatRoomID = 1;
-}
-
 message EnterChatRoomAreaAnswer{
 
 }

@@ -6,6 +6,7 @@ import cors from "cors";
 import { MapStorageService } from "@workadventure/messages/src/ts-proto-generated/services";
 import passport from "passport";
 import bodyParser from "body-parser";
+import { setErrorHandler } from "@workadventure/shared-utils";
 import { mapStorageServer } from "./MapStorageServer";
 import { mapsManager } from "./MapsManager";
 import { proxyFiles } from "./FileFetcher/FileFetcher";
@@ -33,6 +34,11 @@ if (SENTRY_DSN != undefined) {
         };
 
         Sentry.init(sentryOptions);
+
+        setErrorHandler((error: Error) => {
+            Sentry.captureException(error);
+        });
+
         console.info("Sentry initialized");
     } catch (e) {
         console.error("Error while initializing Sentry", e);

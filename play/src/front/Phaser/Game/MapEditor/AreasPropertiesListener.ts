@@ -275,11 +275,10 @@ export class AreasPropertiesListener {
             }
             case "matrixRoomPropertyData": {
                 newProperty = newProperty as typeof oldProperty;
-                this.handleMatrixRoomAreaOnEnter(newProperty);
                 this.handleMatrixRoomAreaOnLeave(oldProperty);
+                this.handleMatrixRoomAreaOnEnter(newProperty);
                 break;
             }
-
             case "silent":
             default: {
                 break;

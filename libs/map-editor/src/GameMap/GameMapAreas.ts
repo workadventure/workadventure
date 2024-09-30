@@ -1,4 +1,5 @@
 import { MathUtils } from "@workadventure/math-utils";
+import { errorHandler } from "@workadventure/shared-utils";
 import * as _ from "lodash";
 import {
     AreaData,
@@ -24,7 +25,6 @@ export type AreaUpdateCallback = (
 
 export class GameMapAreas {
     private wam: WAMFileFormat;
-
     private enterAreaCallbacks = Array<AreaChangeCallback>();
     private updateAreaCallbacks = Array<AreaUpdateCallback>();
     private leaveAreaCallbacks = Array<AreaChangeCallback>();
@@ -209,7 +209,7 @@ export class GameMapAreas {
                     });
                 } catch (error) {
                     console.error("Failed to parse properties : ", error);
-                    //TODO : Sentry
+                    errorHandler(new Error("Failed to parse area properties"));
                     return srcValue;
                 }
             }

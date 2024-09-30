@@ -3,6 +3,7 @@ import process from "process";
 import * as Sentry from "@sentry/node";
 import * as grpc from "@grpc/grpc-js";
 import { RoomApiService } from "@workadventure/messages/src/ts-proto-generated/room-api";
+import { setErrorHandler } from "@workadventure/shared-utils";
 import app from "./pusher/app";
 import {
     PUSHER_HTTP_PORT,
@@ -32,6 +33,11 @@ if (SENTRY_DSN != undefined) {
         };
 
         Sentry.init(sentryOptions);
+
+        setErrorHandler((error: Error) => {
+            Sentry.captureException(error);
+        });
+
         console.info("Sentry initialized");
     } catch (e) {
         console.error("Error while initializing Sentry", e);

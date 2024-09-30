@@ -6,6 +6,9 @@ import { validatePostQuery } from "../services/QueryValidator";
 import { mapStorageToken } from "../middlewares/MapStorageToken";
 import { BaseHttpController } from "./BaseHttpController";
 
+/*
+   This controller is used as the resource URL for the matrix chat area. It is called by the map storage. 
+*/
 export class MatrixRoomAreaController extends BaseHttpController {
     // Returns a map mapping map name to file name of the map
     routes(): void {
