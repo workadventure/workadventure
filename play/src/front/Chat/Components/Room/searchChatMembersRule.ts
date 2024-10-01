@@ -1,7 +1,7 @@
 import { gameManager } from "../../../Phaser/Game/GameManager";
 
 export const searchChatMembersRule = () => {
-    const chat = gameManager.getCurrentGameScene().chatConnection;
+    const chat = gameManager.chatConnection;
 
     async function searchMembers(filterText: string) {
         try {
