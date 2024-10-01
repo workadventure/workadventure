@@ -34,7 +34,6 @@ import { mapPathUsingDomainWithPrefix } from "./Services/PathMapper";
 import { LockByKey } from "./Services/LockByKey";
 import { DeleteAreaMapStorageCommand } from "./Commands/Area/DeleteAreaMapStorageCommand";
 import { UpdateAreaMapStorageCommand } from "./Commands/Area/UpdateAreaMapStorageCommand";
-import { GRPC_PORT_BACK } from "./Enum/EnvironmentVariable";
 
 const editionLocks = new LockByKey<string>();
 
@@ -109,13 +108,18 @@ const mapStorageServer: MapStorageServer = {
                 callback({ name: "MapStorageError", message: "EditMapCommand message does not exist" }, null);
                 return;
             }
+
             // The mapKey is the complete URL to the map. Let's map it to our virtual path.
             const mapUrl = new URL(call.request.mapKey);
             const mapKey = mapPathUsingDomainWithPrefix(mapUrl.pathname, mapUrl.hostname);
 
-            const editMapMessage = editMapCommandMessage.editMapMessage.message;
-
             await editionLocks.waitForLock(mapKey, async () => {
+                const editMapCommandMessage = call.request.editMapCommandMessage;
+                if (!editMapCommandMessage || !editMapCommandMessage.editMapMessage?.message) {
+                    callback({ name: "MapStorageError", message: "EditMapCommand message does not exist" }, null);
+                    return;
+                }
+                const editMapMessage = editMapCommandMessage.editMapMessage.message;
                 const gameMap = await mapsManager.getOrLoadGameMap(mapKey);
 
                 const { connectedUserTags, userCanEdit, userUUID } = call.request;
@@ -138,13 +142,18 @@ const mapStorageServer: MapStorageServer = {
                         }
                         const area = gameMap.getGameMapAreas()?.getArea(message.id);
                         if (area) {
-                            const backAddress = `${call.getPeer().split(":")[0]}:${GRPC_PORT_BACK}`;
-
                             await mapsManager.executeCommand(
                                 mapKey,
                                 mapUrl.host,
-                                new UpdateAreaMapStorageCommand(gameMap, dataToModify, commandId, area, backAddress)
+                                new UpdateAreaMapStorageCommand(gameMap, dataToModify, commandId, area)
                             );
+
+                            const newAreaData = gameMap.getGameMapAreas()?.getArea(message.id);
+
+                            if (newAreaData) {
+                                editMapMessage.modifyAreaMessage = newAreaData;
+                                editMapMessage.modifyAreaMessage.modifyServerData = true;
+                            }
                         } else {
                             console.log(`Could not find area with id: ${message.id}`);
                         }

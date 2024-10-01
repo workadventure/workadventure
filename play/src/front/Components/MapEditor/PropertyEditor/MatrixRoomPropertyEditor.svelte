@@ -1,6 +1,6 @@
 <script lang="ts">
     import { MatrixRoomPropertyData } from "@workadventure/map-editor";
-    import { createEventDispatcher, onDestroy } from "svelte";
+    import { createEventDispatcher } from "svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
     import ChatLoader from "../../../Chat/Components/ChatLoader.svelte";
     import ChatError from "../../../Chat/Components/ChatError.svelte";
@@ -14,13 +14,6 @@
     function onValueChange() {
         dispatch("change");
     }
-
-    onDestroy(() => {
-        if (property.displayName === "" || !property.displayName) {
-            property.displayName = $LL.mapEditor.properties.matrixProperties.defaultChatRoomAreaName();
-            dispatch("change");
-        }
-    });
 </script>
 
 <PropertyEditorBase
@@ -43,6 +36,7 @@
                 <input
                     id="objectName"
                     type="text"
+                    disabled={!property.serverData?.matrixRoomId}
                     placeholder={$LL.mapEditor.properties.matrixProperties.roomNameLabelPlaceholder()}
                     bind:value={property.displayName}
                     on:change={onValueChange}

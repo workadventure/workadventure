@@ -194,11 +194,19 @@ export class GameMapAreas {
         const customMerge = (objValue: unknown, srcValue: unknown, key: string) => {
             if (key === "properties") {
                 try {
-                    const objValueParse = AreaDataProperties.parse(objValue);
-                    const srcValueParse = AreaDataProperties.parse(srcValue);
+                    const objValueParse = AreaDataProperties.safeParse(objValue);
+                    const srcValueParse = AreaDataProperties.safeParse(srcValue);
 
-                    return srcValueParse.map((newProp: AreaDataProperty) => {
-                        const oldProp = objValueParse.find((prop: AreaDataProperty) => prop.id === newProp.id);
+                    if (!objValueParse.success && !srcValueParse.success) {
+                        return undefined;
+                    }
+
+                    if (!objValueParse.success || !srcValueParse.success) {
+                        return objValue ? objValue : srcValue;
+                    }
+
+                    return srcValueParse.data.map((newProp: AreaDataProperty) => {
+                        const oldProp = objValueParse.data.find((prop: AreaDataProperty) => prop.id === newProp.id);
 
                         if (oldProp && oldProp.serverData) {
                             if (!newProp.serverData || JSON.stringify(newProp.serverData) === "{}") {

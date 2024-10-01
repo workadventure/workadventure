@@ -49,7 +49,6 @@ import {
     PrivateEvent,
     LeaveSpaceMessage,
     JoinSpaceMessage,
-    ModifyAreaMessage,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -1568,23 +1567,6 @@ export class SocketManager {
         }
         // TODO fixme to notify only user kiked
         group.setOutOfBounds(true);
-    }
-
-    dispatchModifyAreaMessage(modifyAreaMessage: ModifyAreaMessage) {
-        const editMapCommand = EditMapCommandMessage.fromPartial({
-            editMapMessage: {
-                message: {
-                    $case: "modifyAreaMessage",
-                    modifyAreaMessage,
-                },
-            },
-        });
-
-        this.roomsPromises.forEach((roomPromise) => {
-            void roomPromise.then((room) => {
-                room.forwardEditMapCommandMessageFromMapEditor(editMapCommand);
-            });
-        });
     }
 }
 

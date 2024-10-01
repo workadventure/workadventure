@@ -346,7 +346,21 @@ export class MapEditorModeManager {
                 if (this.pendingCommands.length > 0) {
                     if (this.pendingCommands[0].commandId === editMapCommandMessage.id) {
                         logger("removing command of pendingList : ", editMapCommandMessage.id);
-                        this.pendingCommands.shift();
+                        const command = this.pendingCommands.shift();
+
+                        const message = editMapCommandMessage.editMapMessage?.message;
+
+                        if (
+                            command instanceof UpdateAreaFrontCommand &&
+                            message &&
+                            message.$case === "modifyAreaMessage"
+                        ) {
+                            if (message.modifyAreaMessage.modifyServerData) {
+                                command.setNewConfig(message.modifyAreaMessage);
+                                await command.execute();
+                            }
+                        }
+
                         return;
                     }
                     await this.revertPendingCommands();

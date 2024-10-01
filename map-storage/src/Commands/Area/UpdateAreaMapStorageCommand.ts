@@ -2,9 +2,6 @@ import { AreaData, AreaDataProperty, AtLeast, GameMap, UpdateAreaCommand } from 
 import * as Sentry from "@sentry/node";
 import * as jsonpatch from "fast-json-patch";
 import pLimit from "p-limit";
-import * as grpc from "@grpc/grpc-js";
-import { RoomManagerClient } from "@workadventure/messages/src/ts-proto-generated/services";
-import { DispatchModifyAreaRequest, ModifyAreaMessage } from "@workadventure/messages";
 import { _axios } from "../../Services/axiosInstance";
 
 const limit = pLimit(10);
@@ -13,15 +10,13 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
         gameMap: GameMap,
         dataToModify: AtLeast<AreaData, "id">,
         commandId: string | undefined,
-        oldConfig: AtLeast<AreaData, "id"> | undefined,
-        private backAddress: string
+        oldConfig: AtLeast<AreaData, "id"> | undefined
     ) {
         super(gameMap, dataToModify, commandId, oldConfig);
     }
 
     public async execute(): Promise<void> {
         const patch = jsonpatch.compare(this.oldConfig, this.newConfig);
-        let shouldNotifyUpdate = false;
         const promises = patch.reduce((acc: Promise<void>[], operation) => {
             if (operation.op === "add" && operation.path.match(new RegExp("^/properties/*"))) {
                 const value = AreaDataProperty.safeParse(operation.value);
@@ -54,8 +49,6 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
                         if (!isAreaDataProperty.success) {
                             return Promise.resolve();
                         }
-
-                        shouldNotifyUpdate = true;
 
                         this.newConfig.properties = this.newConfig.properties?.map((property) => {
                             if (property.id !== id || !isAreaDataProperty.data.serverData) {
@@ -112,8 +105,6 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
                                 return Promise.resolve();
                             }
 
-                            shouldNotifyUpdate = true;
-
                             this.newConfig.properties = this.newConfig.properties?.map((oldProperty) => {
                                 if (oldProperty.id !== property.id || !isAreaDataProperty.data.serverData) {
                                     return oldProperty;
@@ -131,34 +122,11 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
 
         try {
             await Promise.all(promises);
-            if (shouldNotifyUpdate) {
-                this.notifyAreaUpdate();
-            }
         } catch (error) {
             console.error("Failed to execute all request on resourceUrl", error);
             Sentry.captureMessage(`Failed to execute all request on resourceUrl ${JSON.stringify(error)}`);
         }
 
-        return super.execute();
-    }
-    private notifyAreaUpdate() {
-        const modifyAreaMessage: ModifyAreaMessage = ModifyAreaMessage.fromPartial({
-            id: this.newConfig.id,
-            properties: this.newConfig.properties,
-            modifyProperties: true,
-        });
-
-        const message: DispatchModifyAreaRequest = DispatchModifyAreaRequest.fromPartial({
-            modifyAreaMessage,
-        });
-
-        const roomManager = new RoomManagerClient(this.backAddress, grpc.credentials.createInsecure());
-
-        roomManager.dispatchModifyAreaMessage(message, (error) => {
-            if (error) {
-                console.error(`Failed to dispatch modify area : ${error.name} : ${error.message}`);
-                Sentry.captureMessage(`Failed to dispatch modify area :  ${error.name} : ${error.message}`);
-            }
-        });
+        return await super.execute();
     }
 }

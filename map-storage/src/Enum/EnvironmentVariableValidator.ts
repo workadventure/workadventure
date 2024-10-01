@@ -146,7 +146,6 @@ export const EnvironmentVariables = z.object({
         )
         .transform(emptyStringToUndefined),
     MAP_STORAGE_API_TOKEN: z.string(),
-    GRPC_PORT_BACK: PositiveIntAsString.optional().transform((val) => toNumber(val, 50051)),
     PUSHER_URL: AbsoluteOrRelativeUrl,
     WHITELISTED_RESOURCE_URLS: z
         .string()

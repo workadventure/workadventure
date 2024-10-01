@@ -217,6 +217,7 @@ message ModifyAreaMessage {
   optional uint32 height = 6;
   repeated google.protobuf.Value properties = 7;
   optional bool modifyProperties = 8;
+  optional bool modifyServerData = 9;
 }
 
 message DeleteAreaMessage {
@@ -1127,9 +1128,6 @@ message DispatchGlobalEventRequest {
   google.protobuf.Value value = 2;
 }
 
-message DispatchModifyAreaRequest {
-  ModifyAreaMessage modifyAreaMessage = 2;
-}
 
 /********************************************************************************
  * Start Chat Messages
