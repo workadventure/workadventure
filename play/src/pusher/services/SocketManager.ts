@@ -1463,15 +1463,14 @@ export class SocketManager implements ZoneEventListener {
             return Promise.reject(new Error("ChatID is undefined"));
         }
 
-        Promise.all(
-            currentChatRoomArea.map((chatRoomAreaID) => matrixProvider.kickUserFromRoom(chatID, chatRoomAreaID))
-        )
-            .then(() => {
-                return Promise.resolve();
-            })
-            .catch((error) => {
-                return Promise.reject(new Error(error));
-            });
+        try {
+            await Promise.all(
+                currentChatRoomArea.map((chatRoomAreaID) => matrixProvider.kickUserFromRoom(chatID, chatRoomAreaID))
+            );
+        } catch (error) {
+            console.error(error);
+            Sentry.captureException(error);
+        }
     }
 
     handleLeaveChatRoomArea(socket: Socket, chatRoomAreaToLeave: string) {
