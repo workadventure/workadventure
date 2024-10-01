@@ -53,6 +53,7 @@ import { MessageUserJoined } from "../../../Connection/ConnexionModels";
 import { navChat, selectedRoom } from "../../../Chat/Stores/ChatStore";
 import { Area } from "../../Entity/Area";
 import { ChatRoom } from "../../../Chat/Connection/ChatConnection";
+import { userIsConnected } from "../../../Stores/MenuStore";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -568,7 +569,7 @@ export class AreasPropertiesListener {
     }
 
     private handleMatrixRoomAreaOnEnter(property: MatrixRoomPropertyData) {
-        if (this.scene.connection && property.serverData?.matrixRoomId) {
+        if (this.scene.connection && property.serverData?.matrixRoomId && get(userIsConnected)) {
             this.scene.connection
                 .queryEnterChatRoomArea(property.serverData.matrixRoomId)
                 .then(() => {
@@ -775,6 +776,10 @@ export class AreasPropertiesListener {
     }
 
     private handleMatrixRoomAreaOnLeave(property: MatrixRoomPropertyData) {
+        if (!get(userIsConnected)) {
+            return;
+        }
+
         const actualRoom = get(selectedRoom);
         const chatVisibility = get(chatVisibilityStore);
 
