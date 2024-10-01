@@ -1,13 +1,12 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
+    import { openModal } from "svelte-modals";
     import { ChatRoom } from "../../../Connection/ChatConnection";
     import { notificationPlayingStore } from "../../../../Stores/NotificationStore";
     import LL from "../../../../../i18n/i18n-svelte";
-    import RoomOption from "./RoomOption.svelte";
-    import { IconDotsCircle, IconLogout, IconUserPlus } from "@wa-icons";
-    import { openModal } from "svelte-modals";
     import InviteParticipantsModal from "../InviteParticipantsModal.svelte";
-    import { IconDotsCircle, IconLogout, IconMute, IconUnMute } from "@wa-icons";
+    import RoomOption from "./RoomOption.svelte";
+    import { IconDotsCircle, IconLogout, IconUserPlus, IconMute, IconUnMute } from "@wa-icons";
 
     export let room: ChatRoom;
     const areNotificationsMuted = room.areNotificationsMuted;
