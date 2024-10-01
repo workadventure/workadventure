@@ -272,9 +272,9 @@ const chat: BaseTranslation = {
         createRecoveryKey: {
             title: "Chat recovery key creation",
             description:
-                "In order use end to end encryption in the chat, you need to create a recovery key. Please enter your passphrase below, a recovery key will be created.",
+                "In order use end to end encryption in the chat, you need to create a recovery key. Please enter your recovery passphrase below, a recovery key will be created.",
             privateKeyDescription:
-                "This is your private key, save it somewhere to retrieve encrypted discussions after logged out.",
+                "This is your recovery key, save it somewhere to retrieve encrypted discussions after logged out.",
             error: "Something went wrong on generateRecoveryKeyFromPassphrase",
             buttons: {
                 generate: "Generate",
@@ -283,10 +283,10 @@ const chat: BaseTranslation = {
             },
         },
         interactiveAuth: {
-            title: "Chat end to end encryption",
+            title: "End-to-end encryption for chat",
             description:
-                "For security reasons, a cross signing key must be uploaded to our server. By confirming your identity, you will save the cross signing key allowing you to read encrypted message from WorkAdventure and other clients.",
-            instruction: "Be sure to end SSO connection popup after before clicking on Finish button",
+                "For security reasons, a key must be uploaded to our server to verify your identity. By confirming your identity, you will store the key, which allows you to read encrypted messages from WA and other clients.",
+            instruction: "Make sure to complete the SSO connection before clicking the Finish button.",
             buttons: {
                 cancel: "Cancel",
                 continueSSO: "Continue with SSO",
@@ -302,7 +302,7 @@ const chat: BaseTranslation = {
             placeholder: "Enter your",
             buttons: {
                 cancel: "Cancel",
-                usePassphrase: "Use passphrase instead",
+                usePassphrase: "Use recovery passphrase instead",
                 useRecoveryKey: "Use recovery key instead",
                 confirm: "Confirm",
             },

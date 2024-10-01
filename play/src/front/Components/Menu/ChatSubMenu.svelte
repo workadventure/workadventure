@@ -6,7 +6,7 @@
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { LL } from "../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import ResetKeyBackupConfirmationModal from "./ResetKeyBackupConfirmationModal.svelte";
+    import resetKeyStorageConfirmationModal from "./ResetKeyStorageConfirmationModal.svelte";
 
     let profileIframe: HTMLIFrameElement;
     let chatSounds: boolean = localUserStore.getChatSounds();
@@ -16,8 +16,8 @@
         localUserStore.setChatSounds(chatSounds);
     }
 
-    function openResetCrossSigningKey() {
-        openModal(ResetKeyBackupConfirmationModal);
+    function openResetKeyStorage() {
+        openModal(resetKeyStorageConfirmationModal);
     }
 
     onMount(() => {
@@ -45,7 +45,7 @@
                 <button
                     type="button"
                     class="tw-w-full tw-bg-danger-900 tw-min-w-[220px] tw-flex tw-justify-center tw-items-center"
-                    on:click={openResetCrossSigningKey}>{$LL.menu.chat.resetKeyBackUpButtonLabel()}</button
+                    on:click={openResetKeyStorage}>{$LL.menu.chat.resetKeyStorageUpButtonLabel()}</button
                 >
             </section>
         {:else}

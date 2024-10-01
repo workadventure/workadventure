@@ -113,12 +113,12 @@ const menu: BaseTranslation = {
     chat: {
         matrixIDLabel: "Your Matrix ID",
         settings: "Settings",
-        resetKeyBackUpButtonLabel: "Reset your backup key",
-        resetKeyBackupConfirmationModal: {
-            title: "Backup key reset confirmation",
-            content: "You are about to reset the backup key. Are you sure?",
+        resetKeyStorageUpButtonLabel: "Reset your key storage",
+        resetKeyStorageConfirmationModal: {
+            title: "Key storage reset confirmation",
+            content: "You are about to reset the key storage. Are you sure?",
             warning:
-                "Resetting the backup key will remove your current session and all trusted users. You could lose access to some past messages, and you will no longer be recognized as a trusted user. Make sure you fully understand the consequences of this action before proceeding.",
+                "Resetting the key storage will remove your current session and all trusted users. You could lose access to some past messages, and you will no longer be recognized as a trusted user. Make sure you fully understand the consequences of this action before proceeding.",
             cancel: "Cancel",
             continue: "Continue",
         },

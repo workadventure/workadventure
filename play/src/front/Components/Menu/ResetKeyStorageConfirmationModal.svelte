@@ -8,24 +8,24 @@
 </script>
 
 <Popup {isOpen}>
-    <h1 slot="title">{$LL.menu.chat.resetKeyBackupConfirmationModal.title()}</h1>
+    <h1 slot="title">{$LL.menu.chat.resetKeyStorageConfirmationModal.title()}</h1>
     <div slot="content">
-        <p class="tw-w-full tw-text-center">{$LL.menu.chat.resetKeyBackupConfirmationModal.content()}</p>
-        <p class="tw-w-full tw-text-center">{$LL.menu.chat.resetKeyBackupConfirmationModal.warning()}</p>
+        <p class="tw-w-full tw-text-center">{$LL.menu.chat.resetKeyStorageConfirmationModal.content()}</p>
+        <p class="tw-w-full tw-text-center">{$LL.menu.chat.resetKeyStorageConfirmationModal.warning()}</p>
     </div>
     <svelte:fragment slot="action">
         <button class="tw-flex-1 tw-justify-center" on:click={() => closeModal()}
-            >{$LL.menu.chat.resetKeyBackupConfirmationModal.cancel()}
+            >{$LL.menu.chat.resetKeyStorageConfirmationModal.cancel()}
         </button>
         <button
             class="disabled:tw-text-gray-400 disabled:tw-bg-gray-500 tw-bg-secondary tw-flex-1 tw-justify-center"
             on:click={() => {
                 closeModal();
-                matrixSecurity.setupNewKeyBackup().catch(() => {
-                    console.error("Failed to setup new key backup");
+                matrixSecurity.setupNewKeyStorage().catch(() => {
+                    console.error("Failed to setup new key storage");
                 });
             }}
-            >{$LL.menu.chat.resetKeyBackupConfirmationModal.continue()}
+            >{$LL.menu.chat.resetKeyStorageConfirmationModal.continue()}
         </button>
     </svelte:fragment>
 </Popup>
