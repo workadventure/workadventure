@@ -3,11 +3,10 @@
     import { closeModal, onBeforeClose, openModal } from "svelte-modals";
     import * as Sentry from "@sentry/svelte";
     import Popup from "../../../Components/Modal/Popup.svelte";
-    import ResetKeyBackupConfirmationModal from "../../../Components/Menu/ResetKeyBackupConfirmationModal.svelte";
+    import resetKeyStorageConfirmationModal from "../../../Components/Menu/ResetKeyStorageConfirmationModal.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import { MatrixSecurity } from "./MatrixSecurity";
-    import { IconEdit, IconKey, IconRestore } from "@wa-icons";
-    import { IconEdit, IconKey, IconLoader } from "@wa-icons";
+    import { IconEdit, IconKey, IconLoader, IconRestore } from "@wa-icons";
 
     export let isOpen: boolean;
     export let keyInfo: SecretStorage.SecretStorageKeyDescription;
@@ -66,7 +65,7 @@
 
     function switchToRestoreConfirmationModal() {
         closeModal();
-        openModal(ResetKeyBackupConfirmationModal);
+        openModal(resetKeyStorageConfirmationModal);
     }
 
     onBeforeClose(() => {
@@ -106,7 +105,7 @@
             <div class="tw-flex tw-flex-row tw-justify-between">
                 <button class="tw-self-start tw-text-blue-500" on:click={switchToRestoreConfirmationModal}>
                     <IconRestore />
-                    {$LL.menu.chat.resetKeyBackUpButtonLabel()}
+                    {$LL.menu.chat.resetKeyStorageUpButtonLabel()}
                 </button>
                 <button on:click={changeAccessSecretStorageMethod} class={changeAccessSecretStorageMethodButtonClass}>
                     <IconEdit /> {$LL.chat.e2ee.accessSecretStorage.buttons.useRecoveryKey()}</button
@@ -126,7 +125,7 @@
             <div class="tw-flex tw-flex-row tw-justify-between">
                 <button class="tw-self-start tw-text-blue-500" on:click={switchToRestoreConfirmationModal}>
                     <IconRestore />
-                    {$LL.menu.chat.resetKeyBackUpButtonLabel()}
+                    {$LL.menu.chat.resetKeyStorageUpButtonLabel()}
                 </button>
                 <button on:click={changeAccessSecretStorageMethod} class={changeAccessSecretStorageMethodButtonClass}>
                     <IconEdit /> {$LL.chat.e2ee.accessSecretStorage.buttons.usePassphrase()}</button

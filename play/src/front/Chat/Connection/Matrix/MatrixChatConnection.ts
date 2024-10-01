@@ -163,6 +163,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         } catch (error) {
             this.connectionStatus.set("OFFLINE");
             console.error(error);
+            Sentry.captureMessage("Failed to init Matrix client");
         }
     }
 
