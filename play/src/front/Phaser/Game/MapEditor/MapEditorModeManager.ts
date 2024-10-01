@@ -353,12 +353,11 @@ export class MapEditorModeManager {
                         if (
                             command instanceof UpdateAreaFrontCommand &&
                             message &&
-                            message.$case === "modifyAreaMessage"
+                            message.$case === "modifyAreaMessage" &&
+                            message.modifyAreaMessage.modifyServerData === true
                         ) {
-                            if (message.modifyAreaMessage.modifyServerData) {
-                                command.setNewConfig(message.modifyAreaMessage);
-                                await command.execute();
-                            }
+                            command.setNewConfig(message.modifyAreaMessage);
+                            await command.execute();
                         }
 
                         return;

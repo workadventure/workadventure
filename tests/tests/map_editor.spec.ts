@@ -271,7 +271,7 @@ test.describe("Map editor @oidc", () => {
         await page
             .getByPlaceholder("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit")
             .first()
-            .fill("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit",{timeout : 20_000});
+            .fill("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit",{timeout: 20_000});
 
         // add property Google Sheets
         await AreaEditor.addProperty(page, "Open Google Sheets");
@@ -279,7 +279,7 @@ test.describe("Map editor @oidc", () => {
         await page
             .getByPlaceholder("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit")
             .first()
-            .fill("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit",{timeout : 20_000});
+            .fill("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit",{timeout: 20_000});
 
         // add property Google Slides
         await AreaEditor.addProperty(page, "Open Google Slides");
@@ -287,7 +287,7 @@ test.describe("Map editor @oidc", () => {
         await page
             .getByPlaceholder("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit")
             .first()
-            .fill("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit",{timeout : 20_000});
+            .fill("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit",{timeout: 20_000});
 
         // add property Google Slides
         await AreaEditor.addProperty(page, "Open Google Drive");
@@ -295,7 +295,7 @@ test.describe("Map editor @oidc", () => {
         await page
             .getByPlaceholder("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview")
             .first()
-            .fill("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview",{timeout : 20_000});
+            .fill("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview",{timeout: 20_000});
 
         await Menu.closeMapEditor(page);
 

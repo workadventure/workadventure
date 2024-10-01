@@ -1,7 +1,9 @@
 import { sendUnaryData, ServerUnaryCall } from "@grpc/grpc-js";
 import * as Sentry from "@sentry/node";
+import _ from "lodash";
 import {
     AreaData,
+    AreaDataProperties,
     AtLeast,
     CreateAreaCommand,
     CreateEntityCommand,
@@ -151,8 +153,35 @@ const mapStorageServer: MapStorageServer = {
                             const newAreaData = gameMap.getGameMapAreas()?.getArea(message.id);
 
                             if (newAreaData) {
-                                editMapMessage.modifyAreaMessage = newAreaData;
-                                editMapMessage.modifyAreaMessage.modifyServerData = true;
+                                const oldPropertiesParsed =
+                                    AreaDataProperties.safeParse(editMapMessage.modifyAreaMessage.properties).data ||
+                                    [];
+
+                                const oldServerData = oldPropertiesParsed.reduce((acc, currProperty) => {
+                                    if (currProperty.serverData) {
+                                        acc.push({
+                                            id: currProperty.id,
+                                            serverData: currProperty.serverData,
+                                        });
+                                    }
+
+                                    return acc;
+                                }, [] as { id: string; serverData: unknown }[]);
+
+                                const newServerData = newAreaData.properties.reduce((acc, currProperty) => {
+                                    if (currProperty.serverData) {
+                                        acc.push({
+                                            id: currProperty.id,
+                                            serverData: currProperty.serverData,
+                                        });
+                                    }
+                                    return acc;
+                                }, [] as { id: string; serverData: unknown }[]);
+
+                                editMapMessage.modifyAreaMessage = {
+                                    ...newAreaData,
+                                    modifyServerData: !_.isEqual(oldServerData, newServerData),
+                                };
                             }
                         } else {
                             console.log(`Could not find area with id: ${message.id}`);
