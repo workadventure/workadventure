@@ -96,7 +96,7 @@ class AreaEditor {
     await page.getByTestId("shouldOpenAutomaticallyCheckbox").setChecked(shouldOpenAutomatically);
     if(roomName){
       await page.getByPlaceholder("My room").isEnabled({timeout : 20_000});
-      await page.getByPlaceholder("My room").fill(roomName);
+      await page.getByPlaceholder("My room").fill(roomName,{timeout : 20_000});
     }
   }
 
