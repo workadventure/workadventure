@@ -4,7 +4,7 @@
     import { ChatMessage, ChatMessageReaction, ChatMessageType } from "../../Connection/ChatConnection";
     import LL, { locale } from "../../../../i18n/i18n-svelte";
     import Avatar from "../Avatar.svelte";
-    import { selectedChatMessageToEdit } from "../../Stores/ChatStore";
+    import { selectedChatMessageToEdit, messageId } from "../../Stores/ChatStore";
     import MessageOptions from "./MessageOptions.svelte";
     import MessageImage from "./Message/MessageImage.svelte";
     import MessageText from "./Message/MessageText.svelte";
@@ -39,10 +39,11 @@
 </script>
 
 <div
-    id="message"
+    tabindex="0"
+    id={messageId}
     class={`${isMyMessage && "tw-self-end tw-flex-row-reverse tw-relative"} ${
         messageFromSystem && "tw-justify-center"
-    } tw-select-text`}
+    } tw-select-text focus:tw-outline-none focus:tw-shadow-none`}
 >
     <div class={`container-grid ${isMyMessage ? "tw-justify-end grid-container-inverted" : "tw-justify-start"}`}>
         <div
