@@ -145,7 +145,7 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
 
     /**
      * Open a popup in front of the game.
-     * {@link https://workadventu.re/map-building/api-ui.md#opening-a-popup | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-ui.md#opening-a-popup | Website documentation}
      *
      * @param {string} targetObject Targeted object name
      * @param {string} message Message to display
@@ -189,7 +189,7 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
 
     /**
      * Add a custom menu item containing the text commandDescriptor in the navbar of the menu. options attribute accepts an object.
-     * {@link https://workadventu.re/map-building/api-ui.md#add-custom-menu | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-ui.md#add-custom-menu | Website documentation}
      *
      * @param {string} commandDescriptor Command description
      * @param {MenuOptions | ((commandDescriptor: string) => void)} options Manu options
@@ -289,7 +289,7 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
 
     /**
      * Displays a message at the bottom of the screen (that will disappear when space bar is pressed).
-     * {@link https://workadventu.re/map-building/api-ui.md#awaiting-user-confirmation-with-space-bar | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-ui.md#awaiting-user-confirmation-with-space-bar | Website documentation}
      *
      * @param {ActionMessageOptions} actionMessageOptions Action options
      * @returns {ActionMessage} Trigger action message
@@ -304,7 +304,7 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
 
     /**
      * Displays a player message at the top of the user head (that will disappear when space bar is pressed).
-     * {@link https://workadventu.re/map-building/api-ui.md#awaiting-user-confirmation-with-space-bar | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-ui.md#awaiting-user-confirmation-with-space-bar | Website documentation}
      *
      * @param {PlayerMessageOptions} playerMessageOptions player options
      * @returns {PlayerMessage} Trigger player message

@@ -171,6 +171,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     anAdmin: "un administrateur",
     messageDeletedByYou: "Vous avez supprimé ce message",
     messageEdited: "Modifié",
+    messageEditedError: "Impossible de modifier le message. Veuillez réessayer.",
     waiting: "En attente",
     nothingToDisplay: "Rien à afficher",
     showMore: "En afficher {number} de plus",
@@ -241,6 +242,23 @@ const chat: DeepPartial<Translation["chat"]> = {
         error: "Erreur lors de la création du salon",
         loadingCreation: "Salon en cours de création",
         creationSuccessNotification: "Salon créé",
+    },
+    manageRoomUsers: {
+        roomOption: "Participants",
+        error: "Impossible d'envoyer les invitations",
+        title: "Inviter des participants",
+        invitations: "Invitations",
+        participants: "Participants",
+        join: "Présent",
+        invite: "Invité",
+        ban: "Banni",
+        kick: "Expulsé",
+        leave: "Parti",
+        buttons: {
+            sendInvitations: "Envoyer les invitations",
+            cancel: "Annuler",
+        },
+        sendInvitationsSuccessNotification: "Invitation(s) envoyée(s)",
     },
     roomMenu: {
         leaveRoom: {

@@ -1,10 +1,12 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
+    import { openModal } from "svelte-modals";
     import { ChatRoom } from "../../../Connection/ChatConnection";
     import { notificationPlayingStore } from "../../../../Stores/NotificationStore";
     import LL from "../../../../../i18n/i18n-svelte";
+    import InviteParticipantsModal from "../InviteParticipantsModal.svelte";
     import RoomOption from "./RoomOption.svelte";
-    import { IconDotsCircle, IconLogout, IconMute, IconUnMute } from "@wa-icons";
+    import { IconDotsCircle, IconLogout, IconUserPlus, IconMute, IconUnMute } from "@wa-icons";
 
     export let room: ChatRoom;
     const areNotificationsMuted = room.areNotificationsMuted;
@@ -51,6 +53,10 @@
             .catch(() => console.error("Failed to leave room"));
     }
 
+    function openInviteParticipantsModal() {
+        openModal(InviteParticipantsModal, { room });
+    }
+
     function closeMenuAndSetMuteStatus() {
         toggleRoomOptions();
         if ($areNotificationsMuted) {
@@ -79,6 +85,12 @@
     class:tw-absolue={optionButtonRef !== undefined}
     class:tw-hidden={hideOptions}
 >
+    <RoomOption
+        IconComponent={IconUserPlus}
+        title={$LL.chat.manageRoomUsers.roomOption()}
+        on:click={openInviteParticipantsModal}
+    />
+
     <RoomOption
         IconComponent={IconLogout}
         title={$LL.chat.roomMenu.leaveRoom.label()}

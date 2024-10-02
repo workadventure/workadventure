@@ -170,6 +170,7 @@ const chat: BaseTranslation = {
     anAdmin: "an administrator",
     messageDeletedByYou: "You deleted this message",
     messageEdited: "Modified",
+    messageEditedError: "Unable to edit message. Try again.",
     waiting: "Waiting",
     nothingToDisplay: "Nothing to display",
     showMore: "Show {number} more",
@@ -240,6 +241,23 @@ const chat: BaseTranslation = {
         error: "Error on room creation",
         loadingCreation: "Room creation in progress",
         creationSuccessNotification: "Room created",
+    },
+    manageRoomUsers: {
+        roomOption: "Participants",
+        error: "Unable send invitations",
+        title: "Invite participants",
+        invitations: "Invitations",
+        participants: "Participants",
+        join: "Joined",
+        invite: "Invited",
+        ban: "Banned",
+        kick: "Kicked",
+        leave: "Leaved",
+        buttons: {
+            sendInvitations: "Send invitations",
+            cancel: "Cancel",
+        },
+        sendInvitationsSuccessNotification: "Invitations sent successfully",
     },
     roomMenu: {
         leaveRoom: {

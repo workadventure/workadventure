@@ -65,7 +65,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
     /**
      * Get the player name.
      * Important: You need to wait for the end of the initialization before accessing.
-     * {@link https://workadventu.re/map-building/api-player.md#get-the-player-name | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-player.md#get-the-player-name | Website documentation}
      *
      * @returns {string} Player name
      */
@@ -81,7 +81,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
     /**
      * Get the player UUID.
      * Important: You need to wait for the end of the initialization before accessing.
-     * {@link https://workadventu.re/map-building/api-player.md#get-the-player-uuid | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-player.md#get-the-player-uuid | Website documentation}
      * @deprecated Use WA.player.uuid instead
      *
      * @returns {string|undefined} Player UUID
@@ -96,7 +96,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
     /**
      * Get the player id.
      * Important: You need to wait for the end of the initialization before accessing.
-     * {@link https://workadventu.re/map-building/api-player.md#get-the-player-id | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-player.md#get-the-player-id | Website documentation}
      *
      * @returns {number} Player id
      */
@@ -112,7 +112,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
     /**
      * Get the player UUID.
      * Important: You need to wait for the end of the initialization before accessing.
-     * {@link https://workadventu.re/map-building/api-player.md#get-the-player-uuid | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-player.md#get-the-player-uuid | Website documentation}
      *
      * @returns {string|undefined} Player UUID
      */
@@ -128,7 +128,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
     /**
      * Get the player language.
      * Important: You need to wait for the end of the initialization before accessing.
-     * {@link https://workadventu.re/map-building/api-player.md#get-the-player-language | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-player.md#get-the-player-language | Website documentation}
      *
      * @returns {string} Player language
      */
@@ -144,7 +144,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
     /**
      * Get the player tags.
      * Important: You need to wait for the end of the initialization before accessing.
-     * {@link https://workadventu.re/map-building/api-player.md#get-the-tags-of-the-player | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-player.md#get-the-tags-of-the-player | Website documentation}
      *
      * @returns {string[]} Player tags
      */
@@ -158,7 +158,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
     /**
      * Get the player position.
      * Important: You need to wait for the end of the initialization before accessing.
-     * {@link https://workadventu.re/map-building/api-player.md#get-the-position-of-the-player | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-player.md#get-the-position-of-the-player | Website documentation}
      *
      * @returns {Position} Player position
      */
@@ -172,7 +172,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
     /**
      * Listens to the movement of the current user and calls the callback.
      * Sends an event when the user stops moving, changes direction and every 200ms when moving in the same direction.
-     * {@link https://workadventu.re/map-building/api-player.md#listen-to-player-movement | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-player.md#listen-to-player-movement | Website documentation}
      *
      * @param {HasPlayerMovedEventCallback} callback Function that will be called when the current player is moving. It contains the event
      * @return {Subscription} Subscription to the stream. Use ".unsubscribe()" to stop listening.
@@ -189,7 +189,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
 
     /**
      * Player will try to find the shortest path to the destination point and proceed to move there.
-     * {@link https://workadventu.re/map-building/api-player.md#move-player-to-position | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-player.md#move-player-to-position | Website documentation}
      *
      * @param {number} x Horizontal position
      * @param {number} y Vertical position
@@ -218,7 +218,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
      *
      * If you are using the self-hosted version of WorkAdventure and you developed your own administration panel, the token can be anything.
      * By default, self-hosted versions of WorkAdventure don't come with an administration panel, so the token string will be empty.
-     * {@link https://workadventu.re/map-building/api-player.md#get-the-user-room-token-of-the-player | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-player.md#get-the-user-room-token-of-the-player | Website documentation}
      *
      * @returns {string|undefined} User room token
      */
@@ -233,7 +233,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
 
     /**
      * Display a thin line around your player's name (the "outline").
-     * {@link https://workadventu.re/map-building/api-player.md#set-the-outline-color-of-the-player | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-player.md#set-the-outline-color-of-the-player | Website documentation}
      *
      * @param {number} red
      * @param {number} green
@@ -253,7 +253,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
 
     /**
      * Remove the thin line around your player's name (the "outline").
-     * {@link https://workadventu.re/map-building/api-player.md#set-the-outline-color-of-the-player | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-player.md#set-the-outline-color-of-the-player | Website documentation}
      *
      * @returns {Promise<void>} Promise to await to known when the outline has been removed
      */
@@ -271,7 +271,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
     /**
      * Get a value to provide connected status for the current player.
      * Important: You need to wait for the end of the initialization before accessing.
-     * {@link https://workadventu.re/map-building/api-player.md#get-the-tags-of-the-player | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-player.md#get-the-tags-of-the-player | Website documentation}
      *
      * @returns {boolean} Player tags
      */
@@ -288,7 +288,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
      * Get a base64 string of the Woka image of the current player.
      * The Woka is in "still" position facing south.
      * @returns {Promise<string>}
-     * {@link https://workadventu.re/map-building/api-player.md#get-the-woka-of-the-player | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-player.md#get-the-woka-of-the-player | Website documentation}
      *
      * @returns {Promise<string>} Current player woka in base64
      */

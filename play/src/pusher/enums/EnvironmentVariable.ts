@@ -33,6 +33,7 @@ export const API_URL = env.API_URL;
 export const ADMIN_API_URL = env.ADMIN_API_URL;
 export const ADMIN_API_RETRY_DELAY = parseInt(process.env.ADMIN_API_RETRY_DELAY || "500");
 export const ADMIN_URL = env.ADMIN_URL;
+export const ADMIN_BO_URL = env.ADMIN_BO_URL || env.ADMIN_URL;
 export const AUTOLOGIN_URL = env.AUTOLOGIN_URL ?? env.ADMIN_URL + "/workadventure/login";
 export const ADMIN_API_TOKEN = env.ADMIN_API_TOKEN;
 export const MAP_STORAGE_API_TOKEN = env.MAP_STORAGE_API_TOKEN;
@@ -125,6 +126,7 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     PUSHER_URL,
     FRONT_URL,
     ADMIN_URL,
+    ADMIN_BO_URL,
     UPLOADER_URL: env.UPLOADER_URL,
     ICON_URL: env.ICON_URL,
     STUN_SERVER: env.STUN_SERVER,

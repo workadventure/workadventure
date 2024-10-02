@@ -2,9 +2,12 @@
     import { get } from "svelte/store";
     import { ChatMessage } from "../../Connection/ChatConnection";
     import { selectedChatMessageToEdit } from "../../Stores/ChatStore";
+    import LL from "../../../../i18n/i18n-svelte";
+    import MessageInput from "./MessageInput.svelte";
     import { IconCheck, IconX } from "@wa-icons";
 
     export let message: ChatMessage;
+    let messageInput: HTMLDivElement;
 
     let inputValue = get(message.content).body;
     let editError = false;
@@ -24,13 +27,16 @@
 </script>
 
 <div>
-    <input
-        class="tw-rounded-md tw-p-1 tw-border tw-border-solid"
-        bind:value={inputValue}
-        data-testid="editMessageInput"
+    <MessageInput
+        bind:message={inputValue}
+        bind:messageInput
+        dataTestid="editMessageInput"
+        inputClass=" tw-p-1  !tw-m-0 tw-px-2 tw-max-h-36 tw-overflow-auto tw-w-full tw-h-full tw-rounded-xl  tw-block !tw-bg-white placeholder:tw-text-sm  !tw-text-black tw-border  tw-resize-none  tw-shadow-none focus:tw-ring-0"
+        dataText={$LL.chat.enter()}
     />
+
     {#if editError}
-        <p class="tw-text-red-500 tw-text-xxs tw-p-0 tw-m-0">Unable to edit message. Try again.</p>
+        <p class="tw-text-red-500 tw-text-xxs tw-p-0 tw-m-0">{$LL.chat.messageEditedError()}</p>
     {/if}
     <div class="tw-flex tw-flew-row tw-gap-2 tw-justify-end">
         <button

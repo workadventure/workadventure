@@ -48,6 +48,8 @@ export interface ChatRoom {
     readonly areNotificationsMuted: Readable<boolean>;
     readonly unmuteNotification: () => Promise<void>;
     readonly muteNotification: () => Promise<void>;
+    readonly inviteUsers: (userIds: string[]) => Promise<void>;
+    readonly members: () => { id: string; name: string; membership: ChatRoomMembership }[];
     readonly destroy: () => void;
 }
 
