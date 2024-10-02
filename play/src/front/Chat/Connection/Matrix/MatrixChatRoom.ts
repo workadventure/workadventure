@@ -178,8 +178,6 @@ export class MatrixChatRoom implements ChatRoom {
                     console.error(error);
                 });
             });
-
-        console.debug(matrixRoom.getMembers());
     }
 
     private async initMatrixRoomMessagesAndReactions() {
