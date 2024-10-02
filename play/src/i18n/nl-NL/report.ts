@@ -8,7 +8,8 @@ const report: BaseTranslation = {
         block: "Blokkeer deze gebruiker",
     },
     title: "Rapporteren",
-    content: "Stuur een rapportbericht naar de beheerders van deze kamer. Zij kunnen deze gebruiker mogelijk later verbannen.",
+    content:
+        "Stuur een rapportbericht naar de beheerders van deze kamer. Zij kunnen deze gebruiker mogelijk later verbannen.",
     message: {
         title: "Je bericht: ",
         empty: "Rapportbericht mag niet leeg zijn.",

@@ -22,7 +22,8 @@ const camera: BaseTranslation = {
         title: "Verbindingsfout met video relay server",
         titlePending: "Verbinding met video relay server in behandeling",
         error: "TURN-server is niet bereikbaar",
-        content: "De video relay server kan niet worden bereikt. Je kunt mogelijk niet met andere gebruikers communiceren.",
+        content:
+            "De video relay server kan niet worden bereikt. Je kunt mogelijk niet met andere gebruikers communiceren.",
         solutionVpn:
             "Als je <strong>via een VPN verbinding maakt</strong>, verbreek dan de verbinding met je VPN en vernieuw de webpagina.",
         solutionVpnNotAskAgain: "Begrepen. Waarschuw me niet opnieuw 🫡",

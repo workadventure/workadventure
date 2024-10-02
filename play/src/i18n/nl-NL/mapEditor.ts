@@ -89,7 +89,8 @@ const mapEditor: BaseTranslation = {
             policy: "iFrame Toestaan",
             policyPlaceholder: "fullscreen",
             errorEmbeddableLink: "De link is niet in te sluiten",
-            messageNotEmbeddableLink: "De link kan niet worden ingesloten. Het kan alleen in een nieuw tabblad worden geopend",
+            messageNotEmbeddableLink:
+                "De link kan niet worden ingesloten. Het kan alleen in een nieuw tabblad worden geopend",
             warningEmbeddableLink: "Deze link kan niet worden ingesloten.",
             errorInvalidUrl: 'Voer een geldige URL in (beginnende met "https://")',
             findOutMoreHere: "Meer informatie hier",
@@ -197,7 +198,8 @@ const mapEditor: BaseTranslation = {
         },
         excalidrawProperties: {
             label: "Open Excalidraw",
-            description: "Een open-source virtueel handgetekend stijl whiteboard. Samenwerkend en end-to-end versleuteld.",
+            description:
+                "Een open-source virtueel handgetekend stijl whiteboard. Samenwerkend en end-to-end versleuteld.",
             error: "Voer een geldige Excalidraw URL in",
             disabled: "Excalidraw-integratie is uitgeschakeld.",
         },
@@ -327,7 +329,8 @@ const mapEditor: BaseTranslation = {
                 thumbnail: "Kamerthumbnail",
             },
             helps: {
-                description: "Een beschrijving van de kaart. Kan worden gebruikt op sociale netwerken bij het delen van een link naar de kaart.",
+                description:
+                    "Een beschrijving van de kaart. Kan worden gebruikt op sociale netwerken bij het delen van een link naar de kaart.",
                 tags: "Een lijst met tags. Kan worden gebruikt om toegang tot de kaart te verlenen.",
                 thumbnail:
                     "URL naar een thumbnail-afbeelding. Deze afbeelding wordt gebruikt op sociale netwerken bij het delen van een link naar de kaart.",
