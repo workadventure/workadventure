@@ -2,13 +2,10 @@ import { Command, GameMap, WAMFileFormat } from "@workadventure/map-editor";
 import { EditMapCommandMessage } from "@workadventure/messages";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import * as Sentry from "@sentry/node";
-import pLimit from "p-limit";
 import { fileSystem } from "./fileSystem";
 import { MapListService } from "./Services/MapListService";
 import { WebHookService } from "./Services/WebHookService";
 import { WEB_HOOK_URL } from "./Enum/EnvironmentVariable";
-import { _axios } from "./Services/axiosInstance";
-const limit = pLimit(10);
 class MapsManager {
     private loadedMaps: Map<string, GameMap>;
     private loadedMapsCommandsQueue: Map<string, EditMapCommandMessage[]>;
@@ -106,29 +103,8 @@ class MapsManager {
         return gameMap;
     }
 
-    public async clearAfterUpload(key: string): Promise<void> {
+    public clearAfterUpload(key: string): void {
         console.log(`UPLOAD/DELETE DETECTED. CLEAR CACHE FOR: ${key}`);
-        const areas = this.loadedMaps.get(key)?.getGameMapAreas()?.getAreas().values();
-
-        if (areas) {
-            const promises = Array.from(areas).reduce((acc, currArea) => {
-                currArea.properties.forEach((property) => {
-                    const resourceUrl = property.resourceUrl;
-                    if (resourceUrl) {
-                        acc.push(limit(() => _axios.delete(resourceUrl, { data: property })));
-                    }
-                });
-                return acc;
-            }, [] as Promise<unknown>[]);
-
-            try {
-                await Promise.all(promises);
-            } catch (error) {
-                console.error("Failed to execute all request on resourceUrl", error);
-                Sentry.captureMessage(`Failed to execute all request on resourceUrl ${JSON.stringify(error)}`);
-            }
-        }
-
         this.loadedMaps.delete(key);
         this.loadedMapsCommandsQueue.delete(key);
         this.clearSaveMapInterval(key);

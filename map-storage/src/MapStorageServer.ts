@@ -47,23 +47,11 @@ const mapStorageServer: MapStorageServer = {
         call: ServerUnaryCall<MapStorageClearAfterUploadMessage, Empty>,
         callback: sendUnaryData<Empty>
     ): void {
-        (async () => {
-            const wamUrl = call.request.wamUrl;
-            const url = new URL(wamUrl);
-            const wamKey = mapPathUsingDomainWithPrefix(url.pathname, url.hostname);
-            await mapsManager.clearAfterUpload(wamKey);
-            callback(null);
-        })().catch((e: unknown) => {
-            console.error("An error occurred in handleClearAfterUpload", e);
-            Sentry.captureException(`An error occurred in handleClearAfterUpload ${JSON.stringify(e)}`);
-            let message: string;
-            if (typeof e === "object" && e !== null) {
-                message = e.toString();
-            } else {
-                message = "Unknown error";
-            }
-            callback({ name: "MapStorageError", message }, null);
-        });
+        const wamUrl = call.request.wamUrl;
+        const url = new URL(wamUrl);
+        const wamKey = mapPathUsingDomainWithPrefix(url.pathname, url.hostname);
+        mapsManager.clearAfterUpload(wamKey);
+        callback(null);
     },
     handleUpdateMapToNewestMessage(
         call: ServerUnaryCall<UpdateMapToNewestWithKeyMessage, Empty>,
@@ -114,6 +102,8 @@ const mapStorageServer: MapStorageServer = {
             // The mapKey is the complete URL to the map. Let's map it to our virtual path.
             const mapUrl = new URL(call.request.mapKey);
             const mapKey = mapPathUsingDomainWithPrefix(mapUrl.pathname, mapUrl.hostname);
+
+            console.log(">>>>", { mapUrl, mapkey: call.request.mapKey, mapkeyafter: mapKey });
 
             await editionLocks.waitForLock(mapKey, async () => {
                 const editMapCommandMessage = call.request.editMapCommandMessage;
