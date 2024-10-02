@@ -48,7 +48,7 @@ export interface ChatRoom {
     readonly areNotificationsMuted: Readable<boolean>;
     readonly unmuteNotification: () => Promise<void>;
     readonly muteNotification: () => Promise<void>;
-    destroy: () => void;
+    readonly destroy: () => void;
 }
 
 //Readonly attributes
