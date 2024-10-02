@@ -47,7 +47,7 @@
 </script>
 
 <div
-    tabindex="0"
+    tabindex="-1"
     id={messageId}
     class={`${isMyMessage && "tw-self-end tw-flex-row-reverse tw-relative"} ${
         messageFromSystem && "tw-justify-center"
