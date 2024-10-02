@@ -39,7 +39,6 @@
     import { mapEditorAskToClaimPersonalAreaStore, mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
     import { gameManager, GameSceneNotFoundError } from "../Phaser/Game/GameManager";
-    import { messageId } from "../Chat/Stores/ChatStore";
     import AudioManager from "./AudioManager/AudioManager.svelte";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
@@ -90,7 +89,7 @@
             (["INPUT", "TEXTAREA"].includes(target.tagName) ||
                 (target.tagName === "DIV" && target.getAttribute("role") === "textbox") ||
                 target.getAttribute("contenteditable") === "true" ||
-                target.id === messageId)
+                target.classList.contains("block-user-action"))
         ) {
             try {
                 gameManager.getCurrentGameScene().userInputManager.disableControls();
