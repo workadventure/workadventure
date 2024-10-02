@@ -296,7 +296,7 @@ const chat: BaseTranslation = {
         accessSecretStorage: {
             title: "Chat session verification",
             description:
-                "In order to verify your session and retrieve historical encrypted messages you need to enter your recovery key or passphrase.",
+                "In order to verify your session and retrieve encrypted messages, you need to enter your recovery key or passphrase.",
             passphrase: "Passphrase",
             recoveryKey: "Recovery key",
             placeholder: "Enter your",

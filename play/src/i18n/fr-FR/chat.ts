@@ -297,7 +297,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         accessSecretStorage: {
             title: "Vérification de la session du chat",
             description:
-                "Afin de vérifier votre session et récupérer l'historique des messages cryptés, vous devez saisir votre clé de récupération ou votre phrase de sécurité.",
+                "Afin de vérifier votre session et récupérer vos messages cryptés, vous devez saisir votre clé de récupération ou votre phrase de sécurité.",
             passphrase: "Phrase de sécurité",
             recoveryKey: "Clé de récupération",
             placeholder: "Entrer votre",
