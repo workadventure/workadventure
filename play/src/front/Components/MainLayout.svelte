@@ -39,6 +39,7 @@
     import { mapEditorAskToClaimPersonalAreaStore, mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
     import { gameManager, GameSceneNotFoundError } from "../Phaser/Game/GameManager";
+    import { messageId } from "../Chat/Stores/ChatStore";
     import AudioManager from "./AudioManager/AudioManager.svelte";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
@@ -71,7 +72,6 @@
     import WarningToast from "./WarningContainer/WarningToast.svelte";
     import ClaimPersonalAreaDialogBox from "./MapEditor/ClaimPersonalAreaDialogBox.svelte";
     import MainModal from "./Modal/MainModal.svelte";
-
     let mainLayout: HTMLDivElement;
     let keyboardEventIsDisable = false;
     let isMobile = isMediaBreakpointUp("md");
@@ -89,7 +89,8 @@
             target &&
             (["INPUT", "TEXTAREA"].includes(target.tagName) ||
                 (target.tagName === "DIV" && target.getAttribute("role") === "textbox") ||
-                target.getAttribute("contenteditable") === "true")
+                target.getAttribute("contenteditable") === "true" ||
+                target.id === messageId)
         ) {
             try {
                 gameManager.getCurrentGameScene().userInputManager.disableControls();
