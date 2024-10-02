@@ -16,8 +16,8 @@ _axios.interceptors.request.use(
             return config;
         }
 
-        Sentry.captureMessage(`[Map-storage] : Unauthorized Ressource URL : ${url.origin}`);
-        return Promise.reject(new Error(`Unauthorized Ressource URL: ${url.origin}`));
+        Sentry.captureMessage(`[Map-storage] : Unauthorized Resource URL : ${url.origin}`);
+        return Promise.reject(new Error(`Unauthorized Resource URL: ${url.origin}`));
     },
     (error) => {
         return Promise.reject(error);
