@@ -110,7 +110,7 @@
     "@grpc/grpc-js": "^1.8.12",
     "@joeattardi/emoji-button": "^4.6.2",
     "@matrix-org/olm": "^3.2.15",
-    "@sentry/browser": "^7.48.0",
+    "@sentry/browser": "^8.33.0",
     "@sentry/node": "^7.48.0",
     "@sentry/svelte": "^7.54.0",
     "@tailwindcss/forms": "^0.5.0",
