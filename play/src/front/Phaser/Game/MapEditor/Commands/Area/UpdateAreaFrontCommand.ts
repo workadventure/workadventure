@@ -36,6 +36,10 @@ export class UpdateAreaFrontCommand extends UpdateAreaCommand implements FrontCo
         );
     }
 
+    public setNewConfig(newConfig: AtLeast<AreaData, "id">): void {
+        this.newConfig = newConfig;
+    }
+
     public emitEvent(roomConnection: RoomConnection): void {
         roomConnection.emitMapEditorModifyArea(this.commandId, this.newConfig);
     }

@@ -6,7 +6,6 @@ import { fileSystem } from "./fileSystem";
 import { MapListService } from "./Services/MapListService";
 import { WebHookService } from "./Services/WebHookService";
 import { WEB_HOOK_URL } from "./Enum/EnvironmentVariable";
-
 class MapsManager {
     private loadedMaps: Map<string, GameMap>;
     private loadedMapsCommandsQueue: Map<string, EditMapCommandMessage[]>;
@@ -152,10 +151,10 @@ class MapsManager {
                 queue.splice(0, 1);
             } else {
                 console.error(
-                    `Command with id ${commandId} that is scheduled from removal in the queue is not the first command. This should never happen (unless the queue was purged and recreated within 30 seconds... unlikely.`,
+                    `Command with id ${commandId} that is scheduled from removal in the queue is not the first command. This should never happen (unless the queue was purged and recreated within 30 seconds... unlikely.`
                 );
                 Sentry.captureMessage(
-                    `Command with id ${commandId} that is scheduled from removal in the queue is not the first command. This should never happen (unless the queue was purged and recreated within 30 seconds... unlikely.`,
+                    `Command with id ${commandId} that is scheduled from removal in the queue is not the first command. This should never happen (unless the queue was purged and recreated within 30 seconds... unlikely.`
                 );
             }
         }, this.COMMAND_TIME_IN_QUEUE_MS);
@@ -183,7 +182,7 @@ class MapsManager {
                     console.error(e);
                     Sentry.captureException(e);
                 });
-            }, intervalMS),
+            }, intervalMS)
         );
     }
 }

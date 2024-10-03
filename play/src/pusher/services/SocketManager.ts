@@ -65,6 +65,7 @@ import { gaugeManager } from "./GaugeManager";
 import { apiClientRepository } from "./ApiClientRepository";
 import { adminService } from "./AdminService";
 import { ShortMapDescription } from "./ShortMapDescription";
+import { matrixProvider } from "./MatrixProvider";
 
 const debug = Debug("socket");
 
@@ -1400,6 +1401,8 @@ export class SocketManager implements ZoneEventListener {
     }
 
     handleUpdateChatId(client: Socket, email: string, chatId: string): Promise<void> {
+        const userData = client.getUserData();
+        userData.chatID = chatId;
         return adminService.updateChatId(email, chatId, client.getUserData().roomId);
     }
 
@@ -1447,6 +1450,44 @@ export class SocketManager implements ZoneEventListener {
                 senderUserId: socketData.userId,
             },
         });
+    }
+
+    async leaveChatRoomArea(socket: Socket): Promise<void> {
+        const { chatID, currentChatRoomArea } = socket.getUserData();
+
+        if (!currentChatRoomArea) {
+            return Promise.reject(new Error("currentChatRoomArea is undefined"));
+        }
+
+        if (!chatID) {
+            return Promise.reject(new Error("ChatID is undefined"));
+        }
+
+        try {
+            await Promise.all(
+                currentChatRoomArea.map((chatRoomAreaID) => matrixProvider.kickUserFromRoom(chatID, chatRoomAreaID))
+            );
+        } catch (error) {
+            console.error(error);
+            Sentry.captureException(error);
+        }
+    }
+
+    handleLeaveChatRoomArea(socket: Socket, chatRoomAreaToLeave: string) {
+        const socketData = socket.getUserData();
+        socketData.currentChatRoomArea = socketData.currentChatRoomArea.filter(
+            (ChatRoomArea) => ChatRoomArea !== chatRoomAreaToLeave
+        );
+    }
+
+    async handleEnterChatRoomAreaQuery(socket: Socket, roomID: string): Promise<void> {
+        const socketData = socket.getUserData();
+        if (!socketData.chatID) {
+            return Promise.reject(new Error("Error: Chat ID not found"));
+        }
+
+        socketData.currentChatRoomArea.push(roomID);
+        return matrixProvider.inviteUserToRoom(socketData.chatID, roomID).catch((error) => console.error(error));
     }
 }
 

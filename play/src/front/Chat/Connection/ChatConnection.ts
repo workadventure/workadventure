@@ -50,6 +50,7 @@ export interface ChatRoom {
     readonly muteNotification: () => Promise<void>;
     readonly inviteUsers: (userIds: string[]) => Promise<void>;
     readonly members: () => { id: string; name: string; membership: ChatRoomMembership }[];
+    readonly destroy: () => void;
 }
 
 //Readonly attributes
@@ -128,7 +129,9 @@ export interface ChatConnectionInterface {
             name: string | undefined;
         }[]
     >;
+
     joinRoom(roomId: string): Promise<ChatRoom | undefined>;
+
     destroy(): Promise<void>;
     searchChatUsers(searchText: string): Promise<{ id: string; name: string | undefined }[] | undefined>;
     isEncryptionRequiredAndNotSet: Readable<boolean>;

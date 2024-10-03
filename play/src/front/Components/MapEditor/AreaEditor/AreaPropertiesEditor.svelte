@@ -13,7 +13,7 @@
     import { v4 as uuid } from "uuid";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { mapEditorSelectedAreaPreviewStore } from "../../../Stores/MapEditorStore";
-    import { FEATURE_FLAG_BROADCAST_AREAS } from "../../../Enum/EnvironmentVariable";
+    import { FEATURE_FLAG_BROADCAST_AREAS, PUSHER_URL } from "../../../Enum/EnvironmentVariable";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { connectionManager } from "../../../Connection/ConnectionManager";
     import JitsiRoomPropertyEditor from "../PropertyEditor/JitsiRoomPropertyEditor.svelte";
@@ -29,6 +29,7 @@
     import PersonalAreaPropertyEditor from "../PropertyEditor/PersonalAreaPropertyEditor.svelte";
     import RightsPropertyEditor from "../PropertyEditor/RightsPropertyEditor.svelte";
     import { IconChevronDown, IconChevronRight } from "../../Icons";
+    import MatrixRoomPropertyEditor from "../PropertyEditor/MatrixRoomPropertyEditor.svelte";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
@@ -45,6 +46,9 @@
     let showDescriptionField = false;
     let hasPersonalAreaProperty: boolean;
     let hasRightsProperty: boolean;
+    let hasMatrixRoom: boolean;
+
+    const ROOM_AREA_PUSHER_URL = new URL("roomArea", PUSHER_URL).toString();
 
     let selectedAreaPreviewUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((currentAreaPreview) => {
         if (currentAreaPreview) {
@@ -198,6 +202,17 @@
                     allowedTags: [],
                     ownerId: null,
                 };
+            case "matrixRoomPropertyData":
+                return {
+                    id,
+                    type,
+                    shouldOpenAutomatically: false,
+                    displayName: "",
+                    resourceUrl: ROOM_AREA_PUSHER_URL,
+                    serverData: {
+                        matrixRoomId: undefined,
+                    },
+                };
             default:
                 throw new Error(`Unknown property type ${type}`);
         }
@@ -317,6 +332,7 @@
         hasplayAudioProperty = hasProperty("playAudio");
         hasPersonalAreaProperty = hasProperty("personalAreaPropertyData");
         hasRightsProperty = hasProperty("restrictedRightsPropertyData");
+        hasMatrixRoom = hasProperty("matrixRoomPropertyData");
     }
 
     function openKlaxoonActivityPicker(app: AreaDataProperty) {
@@ -433,6 +449,14 @@
                     onAddProperty("openWebsite");
                 }}
             />
+            {#if !hasMatrixRoom}
+                <AddPropertyButtonWrapper
+                    property="matrixRoomPropertyData"
+                    on:click={() => {
+                        onAddProperty("matrixRoomPropertyData");
+                    }}
+                />
+            {/if}
         </div>
         <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-mt-2">
             <AddPropertyButtonWrapper
@@ -640,6 +664,14 @@
                                 onDeleteProperty(property.id, detail);
                             }}
                             on:change={({ detail }) => onUpdateProperty(property, detail)}
+                        />
+                    {:else if property.type === "matrixRoomPropertyData"}
+                        <MatrixRoomPropertyEditor
+                            {property}
+                            on:close={({ detail }) => {
+                                onDeleteProperty(property.id, detail);
+                            }}
+                            on:change={() => onUpdateProperty(property)}
                         />
                     {/if}
                 </div>

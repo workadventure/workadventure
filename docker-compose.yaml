@@ -33,6 +33,7 @@ services:
           - "map-storage.workadventure.localhost"
           - "xmpp.workadventure.localhost"
           - "matrix.workadventure.localhost"
+          - "pusher.workadventure.localhost"
   play:
     image: thecodingmachine/nodejs:v2-20-bullseye
     command: npm run dev
@@ -87,6 +88,7 @@ services:
       SECRET_KEY: "$SECRET_KEY"
       ADMIN_API_URL: "$ADMIN_API_URL"
       ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
+      MAP_STORAGE_API_TOKEN: "$MAP_STORAGE_API_TOKEN"
       API_URL: back:50051
       DISABLE_ANONYMOUS: $DISABLE_ANONYMOUS
       #Map editor
@@ -148,8 +150,9 @@ services:
       #Chat
       MATRIX_API_URI: http://synapse:8008/
       MATRIX_PUBLIC_URI: $MATRIX_PUBLIC_URI
-      MATRIX_ADMIN_USER: '$MATRIX_ADMIN_USER'
-      MATRIX_ADMIN_PASSWORD: '$MATRIX_ADMIN_PASSWORD'
+      MATRIX_ADMIN_USER: "$MATRIX_ADMIN_USER"
+      MATRIX_ADMIN_PASSWORD: "$MATRIX_ADMIN_PASSWORD"
+      MATRIX_DOMAIN: "$MATRIX_DOMAIN"
       # oEmbed providers
       EMBEDLY_KEY: "$EMBEDLY_KEY"
       IFRAMELY_KEY: "$IFRAMELY_KEY"
@@ -167,24 +170,24 @@ services:
       - "traefik.http.routers.play.service=play"
       - "traefik.http.services.play.loadbalancer.server.port=3000"
   maps:
-      image: thecodingmachine/php:8.1-v4-apache-node12
-      environment:
-          DEBUG_MODE: "$DEBUG_MODE"
-          HOST: "0.0.0.0"
-          NODE_ENV: development
-          FRONT_URL: http://play.workadventure.localhost
-          #APACHE_DOCUMENT_ROOT: dist/
-          #APACHE_EXTENSIONS: headers
-          #APACHE_EXTENSION_HEADERS: 1
-          STARTUP_COMMAND_0: sudo a2enmod headers
-          STARTUP_COMMAND_1: yarn install
-      volumes:
-          - ./maps:/var/www/html
-      labels:
-          - "traefik.enable=true"
-          - "traefik.http.routers.maps.rule=Host(`maps.workadventure.localhost`)"
-          - "traefik.http.routers.maps.entryPoints=web,traefik"
-          - "traefik.http.services.maps.loadbalancer.server.port=80"
+    image: thecodingmachine/php:8.1-v4-apache-node12
+    environment:
+      DEBUG_MODE: "$DEBUG_MODE"
+      HOST: "0.0.0.0"
+      NODE_ENV: development
+      FRONT_URL: http://play.workadventure.localhost
+      #APACHE_DOCUMENT_ROOT: dist/
+      #APACHE_EXTENSIONS: headers
+      #APACHE_EXTENSION_HEADERS: 1
+      STARTUP_COMMAND_0: sudo a2enmod headers
+      STARTUP_COMMAND_1: yarn install
+    volumes:
+      - ./maps:/var/www/html
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.maps.rule=Host(`maps.workadventure.localhost`)"
+      - "traefik.http.routers.maps.entryPoints=web,traefik"
+      - "traefik.http.services.maps.loadbalancer.server.port=80"
 
   back:
     image: thecodingmachine/nodejs:v2-20-bullseye
@@ -257,6 +260,9 @@ services:
       SENTRY_ENVIRONMENT: $SENTRY_ENVIRONMENT
       SENTRY_RELEASE: $SENTRY_RELEASE
       PATH_PREFIX: ""
+      MAP_STORAGE_API_TOKEN: "$MAP_STORAGE_API_TOKEN"
+      PUSHER_URL: http://play.workadventure.localhost
+      WHITELISTED_RESOURCE_URLS: ""
     volumes:
       - .:/usr/src/app
     tmpfs: /tmp
@@ -443,25 +449,25 @@ services:
     image: matrixdotorg/synapse:v1.115.0
     entrypoint: /data/start.sh
     labels:
-        - "traefik.enable=true"
-        - "traefik.http.routers.matrix.rule=Host(`matrix.workadventure.localhost`)"
-        - "traefik.http.routers.matrix.entryPoints=web"
-        - "traefik.http.services.matrix.loadbalancer.server.port=8008"
-        - "traefik.http.routers.matrix.service=matrix"
+      - "traefik.enable=true"
+      - "traefik.http.routers.matrix.rule=Host(`matrix.workadventure.localhost`)"
+      - "traefik.http.routers.matrix.entryPoints=web"
+      - "traefik.http.services.matrix.loadbalancer.server.port=8008"
+      - "traefik.http.routers.matrix.service=matrix"
     volumes:
-        - ./synapse:/data/
-        #- ./synapse/start.sh:/data/start.sh
-        #- ./synapse/homeserver.template.yaml:/data/homeserver.template.yaml
-        - ./synapse/federation:/etc/nginx/vhost.d/matrix.workadventure.localhost
+      - ./synapse:/data/
+      #- ./synapse/start.sh:/data/start.sh
+      #- ./synapse/homeserver.template.yaml:/data/homeserver.template.yaml
+      - ./synapse/federation:/etc/nginx/vhost.d/matrix.workadventure.localhost
     environment:
-        VIRTUAL_HOST: "matrix.workadventure.localhost"
-        VIRTUAL_PORT: 8008
-        LETSENCRYPT_HOST: "matrix.workadventure.localhost"
-        SYNAPSE_SERVER_NAME: "matrix.workadventure.localhost"
-        SYNAPSE_REPORT_STATS: "yes"
-        MATRIX_ADMIN_USER: '$MATRIX_ADMIN_USER'
-        MATRIX_ADMIN_PASSWORD: '$MATRIX_ADMIN_PASSWORD'
-        JWT_SECRET: '$SECRET_KEY'
+      VIRTUAL_HOST: "matrix.workadventure.localhost"
+      VIRTUAL_PORT: 8008
+      LETSENCRYPT_HOST: "matrix.workadventure.localhost"
+      SYNAPSE_SERVER_NAME: "matrix.workadventure.localhost"
+      SYNAPSE_REPORT_STATS: "yes"
+      MATRIX_ADMIN_USER: "$MATRIX_ADMIN_USER"
+      MATRIX_ADMIN_PASSWORD: "$MATRIX_ADMIN_PASSWORD"
+      JWT_SECRET: "$SECRET_KEY"
 #  coturn:
 #    image: coturn/coturn:4.5.2
 #    command:

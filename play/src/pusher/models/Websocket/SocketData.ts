@@ -60,4 +60,5 @@ export type SocketData = {
     spacesFilters: Map<string, SpaceFilterMessage[]>;
     chatID?: string;
     world: string;
+    currentChatRoomArea: string[];
 };

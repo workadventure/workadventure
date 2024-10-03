@@ -1,6 +1,6 @@
 import { DeleteCustomEntityCommand, GameMap } from "@workadventure/map-editor";
 import { DeleteCustomEntityMessage } from "@workadventure/messages";
-import { CustomEntityCollectionService } from "../Services/CustomEntityCollectionService";
+import { CustomEntityCollectionService } from "../../Services/CustomEntityCollectionService";
 
 export class DeleteCustomEntityMapStorageCommand extends DeleteCustomEntityCommand {
     private customEntityCollectionService: CustomEntityCollectionService;

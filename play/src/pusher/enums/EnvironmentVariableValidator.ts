@@ -41,6 +41,7 @@ export const EnvironmentVariables = z.object({
     ALLOWED_CORS_ORIGIN: z.string().url().or(z.literal("*")).optional(),
     PUSHER_URL: AbsoluteOrRelativeUrl.optional(),
     FRONT_URL: AbsoluteOrRelativeUrl.optional(),
+    MAP_STORAGE_API_TOKEN: z.string(),
     PUBLIC_MAP_STORAGE_URL: z
         .string()
         .url()
@@ -150,7 +151,9 @@ export const EnvironmentVariables = z.object({
     GOOGLE_DRIVE_PICKER_APP_ID: z.string().optional(),
     MATRIX_API_URI: z.string().optional(),
     MATRIX_PUBLIC_URI: z.string().optional(),
-
+    MATRIX_ADMIN_USER: z.string().optional(),
+    MATRIX_ADMIN_PASSWORD: z.string().optional(),
+    MATRIX_DOMAIN: z.string().optional(),
     EMBEDLY_KEY: z.string().optional(),
 });
 

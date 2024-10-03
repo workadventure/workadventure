@@ -82,7 +82,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         private matrixSecurity: MatrixSecurity = defaultMatrixSecurity
     ) {
         this.connectionStatus = writable("CONNECTING");
-        this.roomList = new MapStore<string, MatrixChatRoom>();
+        this.roomList = new AutoDestroyingMapStore<string, MatrixChatRoom>();
+
         this.clientPromise = clientPromise;
         this.directRooms = derived(this.roomList, (roomList) => {
             return Array.from(roomList.values()).filter(
@@ -312,6 +313,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
         this.moveRoomToParentFolder(room, parentID);
     }
+
     private onClientEventRoom(room: Room) {
         this.manageRoomOrFolder(room);
     }
@@ -370,6 +372,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         const parentRoomsIDs = this.getParentRoomID(room);
         return parentRoomsIDs.length > 0 ? parentRoomsIDs[0] : undefined;
     }
+
     private tryAddRoomToParentFolder(room: Room, parentRoomID: string): boolean {
         const isSpaceRoom = room.isSpaceRoom();
         for (const [, folder] of this.roomFolders) {
@@ -426,6 +429,9 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     private createAndAddNewRootRoom(room: Room): MatrixChatRoom {
         const newRoom = new MatrixChatRoom(room);
         this.roomList.set(newRoom.id, newRoom);
+        if (get(selectedRoom)?.id === newRoom.id) {
+            selectedRoom.set(newRoom);
+        }
         return newRoom;
     }
     private onClientEventDeleteRoom(roomId: string) {
@@ -787,7 +793,14 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                     if (dmInviterId) {
                         await this.addDMRoomInAccountData(dmInviterId, roomId);
                     }
-                    res(this.createAndAddNewRootRoom(roomAfterSync));
+                    const room = this.findRoomOrFolder(roomAfterSync.roomId);
+                    if (room instanceof MatrixChatRoom) {
+                        res(room);
+                        return;
+                    }
+
+                    const roomFromRoomList = this.createAndAddNewRootRoom(roomAfterSync);
+                    res(roomFromRoomList);
                     return;
                 })
                 .catch((error) => {
@@ -834,6 +847,9 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     }
 
     clearListener() {
+        this.roomList.forEach((room) => {
+            this.roomList.delete(room.id);
+        });
         this.client?.off(ClientEvent.Room, this.handleRoom);
         this.client?.off(ClientEvent.DeleteRoom, this.handleDeleteRoom);
         this.client?.off(RoomEvent.MyMembership, this.handleMyMembership);
@@ -841,8 +857,14 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.client?.off(RoomEvent.Name, this.handleName);
         if (this.statusUnsubscriber) this.statusUnsubscriber();
     }
-
     async destroy(): Promise<void> {
         await this.client?.logout(true);
+    }
+}
+
+class AutoDestroyingMapStore<K, V extends Required<{ destroy: () => void }>> extends MapStore<K, V> {
+    override delete(key: K): boolean {
+        this.get(key)?.destroy();
+        return super.delete(key);
     }
 }

@@ -36,6 +36,7 @@ export const ADMIN_URL = env.ADMIN_URL;
 export const ADMIN_BO_URL = env.ADMIN_BO_URL || env.ADMIN_URL;
 export const AUTOLOGIN_URL = env.AUTOLOGIN_URL ?? env.ADMIN_URL + "/workadventure/login";
 export const ADMIN_API_TOKEN = env.ADMIN_API_TOKEN;
+export const MAP_STORAGE_API_TOKEN = env.MAP_STORAGE_API_TOKEN;
 export const ADMIN_SOCKETS_TOKEN = env.ADMIN_SOCKETS_TOKEN;
 export const CPU_OVERHEAT_THRESHOLD = env.CPU_OVERHEAT_THRESHOLD;
 export const PUSHER_HTTP_PORT = env.PUSHER_HTTP_PORT;
@@ -115,6 +116,9 @@ export const GOOGLE_DRIVE_PICKER_APP_ID = env.GOOGLE_DRIVE_PICKER_APP_ID;
 // Matrix
 export const MATRIX_PUBLIC_URI: string | undefined = env.MATRIX_PUBLIC_URI;
 export const MATRIX_API_URI: string | undefined = env.MATRIX_API_URI;
+export const MATRIX_ADMIN_USER: string | undefined = env.MATRIX_ADMIN_USER;
+export const MATRIX_ADMIN_PASSWORD: string | undefined = env.MATRIX_ADMIN_PASSWORD;
+export const MATRIX_DOMAIN: string | undefined = env.MATRIX_DOMAIN;
 
 // Front container:
 export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
