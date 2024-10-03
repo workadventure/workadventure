@@ -35,6 +35,7 @@ if (SENTRY_DSN != undefined) {
         Sentry.init(sentryOptions);
 
         setErrorHandler((error: Error) => {
+            console.error(error);
             Sentry.captureException(error);
         });
 
