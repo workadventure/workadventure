@@ -1,4 +1,5 @@
-import type { BaseTranslation } from "../i18n-types";
+import merge from "ts-deepmerge";
+import en_US from "../en-US";
 import audio from "./audio";
 import camera from "./camera";
 import chat from "./chat";
@@ -13,7 +14,6 @@ import refreshPrompt from "./refreshPrompt";
 import warning from "./warning";
 import emoji from "./emoji";
 import trigger from "./trigger";
-import muc from "./muc";
 import notification from "./notification";
 import cowebsite from "./cowebsite";
 import actionbar from "./actionbar";
@@ -22,8 +22,9 @@ import megaphone from "./megaphone";
 import video from "./video";
 import statusModal from "./statusModal";
 import area from "./area";
+import externalModule from "./externalModule";
 
-const en_US: BaseTranslation = {
+const nl_NL = merge(en_US, {
     area,
     audio,
     camera,
@@ -39,7 +40,6 @@ const en_US: BaseTranslation = {
     warning,
     emoji,
     trigger,
-    muc,
     notification,
     cowebsite,
     actionbar,
@@ -47,6 +47,7 @@ const en_US: BaseTranslation = {
     megaphone,
     video,
     statusModal,
-};
+    externalModule,
+});
 
-export default en_US;
+export default nl_NL;

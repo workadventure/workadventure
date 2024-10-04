@@ -1,6 +1,7 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { Translation } from "../i18n-types";
+import type { DeepPartial } from "../DeepPartial";
 
-const actionbar: BaseTranslation = {
+const actionbar: DeepPartial<Translation["actionbar"]> = {
     chat: "Openen / Sluiten chat",
     follow: "Volgen",
     unfollow: "Ontvolgen",
@@ -37,14 +38,6 @@ const actionbar: BaseTranslation = {
     },
     globalMessage: "Stuur een globale boodschap",
     roomList: "Openen / Sluiten kamer lijst",
-    externalModule: {
-        status: {
-            onLine: "Status is ok ✅",
-            offLine: "Status is offline ❌",
-            warning: "Status is waarschuwing ⚠️",
-            sync: "Status wordt gesynchroniseerd 🔄",
-        },
-    },
 };
 
 export default actionbar;

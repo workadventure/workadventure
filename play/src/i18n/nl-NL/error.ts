@@ -1,6 +1,7 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { Translation } from "../i18n-types";
+import type { DeepPartial } from "../DeepPartial";
 
-const error: BaseTranslation = {
+const error: DeepPartial<Translation["error"]> = {
     accessLink: {
         title: "Toegangskoppeling onjuist",
         subTitle: "Kaart niet gevonden. Controleer je toegangskoppeling.",

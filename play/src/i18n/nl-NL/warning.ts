@@ -1,6 +1,7 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { Translation } from "../i18n-types";
+import type { DeepPartial } from "../DeepPartial";
 
-const warning: BaseTranslation = {
+const warning: DeepPartial<Translation["warning"]> = {
     title: "Waarschuwing!",
     content: `Deze wereld nadert zijn limiet! Je kunt de capaciteit upgraden <a href="{upgradeLink}" target="_blank">hier</a>`,
     limit: "Deze wereld nadert zijn limiet!",

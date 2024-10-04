@@ -1,6 +1,7 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { Translation } from "../i18n-types";
+import type { DeepPartial } from "../DeepPartial";
 
-const chat: BaseTranslation = {
+const chat: DeepPartial<Translation["chat"]> = {
     intro: "Hier is je chatgeschiedenis:",
     enter: "Voer je bericht in...",
     menu: {

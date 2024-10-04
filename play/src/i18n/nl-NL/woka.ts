@@ -1,6 +1,7 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { Translation } from "../i18n-types";
+import type { DeepPartial } from "../DeepPartial";
 
-const woka: BaseTranslation = {
+const woka: DeepPartial<Translation["woka"]> = {
     customWoka: {
         title: "Bouw je WOKA",
         navigation: {
