@@ -1,6 +1,7 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { Translation } from "../i18n-types";
+import type { DeepPartial } from "../DeepPartial";
 
-const follow: BaseTranslation = {
+const follow: DeepPartial<Translation["follow"]> = {
     interactStatus: {
         following: "Volgt {leader}",
         waitingFollowers: "Wachten op bevestiging van volgers",

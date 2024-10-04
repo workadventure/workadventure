@@ -13,7 +13,6 @@ import report from "./report";
 import warning from "./warning";
 import woka from "./woka";
 import trigger from "./trigger";
-import muc from "./muc";
 import notification from "./notification";
 import cowebsite from "./cowebsite";
 import actionbar from "./actionbar";
@@ -39,7 +38,6 @@ const fr_FR = merge(en_US, {
     warning,
     emoji,
     trigger,
-    muc,
     notification,
     cowebsite,
     actionbar,

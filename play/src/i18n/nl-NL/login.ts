@@ -1,6 +1,7 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { Translation } from "../i18n-types";
+import type { DeepPartial } from "../DeepPartial";
 
-const login: BaseTranslation = {
+const login: DeepPartial<Translation["login"]> = {
     input: {
         name: {
             placeholder: "Voer je naam in",
