@@ -192,7 +192,8 @@ Instead, you should use the "secrets" feature of GitHub to store your private in
 
 You should create a secret named `MAP_STORAGE_API_KEY` and paste your map storage API Key there. See the [previous section](#using-the-command-line) to know how to get your API key.
 
-*Note that you can optionally create a `MAP_STORAGE_URL` and a `DIRECTORY` as well and completely bypass the `.env` file, if you need to.*
+*Note that you can optionally create a `MAP_STORAGE_URL` and a `UPLOAD_DIRECTORY` as well and completely bypass the `.env` file, if you need to.*
+*If you have both, the variables from Github secrets will be used in priority when uploading via the CI.*
 
 Now, for every change you want to make public, you just have to commit and push to your repository! Just wait a few minutes, and your map will be propagated automatically on your server.
 
