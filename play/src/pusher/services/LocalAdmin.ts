@@ -260,7 +260,6 @@ class LocalAdmin implements AdminInterface {
             authenticationMandatory: DISABLE_ANONYMOUS,
             contactPage: null,
             group: wamUrl ? "default" : null,
-            iframeAuthentication: null,
             opidLogoutRedirectUrl: null,
             opidUsernamePolicy: opidWokaNamePolicyCheck.success ? opidWokaNamePolicyCheck.data : null,
             miniLogo: null,
