@@ -15,6 +15,7 @@ import {
     Room,
     RoomEvent,
     RoomMember,
+    RoomMemberEvent,
     TimelineWindow,
 } from "matrix-js-sdk";
 import * as Sentry from "@sentry/svelte";
@@ -48,6 +49,7 @@ export class MatrixChatRoom implements ChatRoom {
     messages: SearchableArrayStore<string, MatrixChatMessage>;
     myMembership: ChatRoomMembership;
     membersId: string[];
+    members: RoomMember[];
     messageReactions: MapStore<string, MapStore<string, MatrixChatMessageReaction>>;
     hasPreviousMessage: Writable<boolean>;
     timelineWindow: TimelineWindow;
@@ -80,6 +82,10 @@ export class MatrixChatRoom implements ChatRoom {
         this.membersId = [
             ...matrixRoom.getMembersWithMembership(KnownMembership.Invite).map((member) => member.userId),
             ...matrixRoom.getMembersWithMembership(KnownMembership.Join).map((member) => member.userId),
+        ];
+        this.members = [
+            ...matrixRoom.getMembersWithMembership(KnownMembership.Invite),
+            ...matrixRoom.getMembersWithMembership(KnownMembership.Join),
         ];
         this.hasPreviousMessage = writable(false);
         this.timelineWindow = new TimelineWindow(matrixRoom.client, matrixRoom.getLiveTimeline().getTimelineSet());

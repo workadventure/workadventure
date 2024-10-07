@@ -19,7 +19,7 @@ export const chatUserFactory: (matrixChatUser: User, matrixClient: MatrixClient)
     };
 };
 
-function mapMatrixPresenceToAvailabilityStatus(presence: string = SetPresence.Offline): AvailabilityStatus {
+export function mapMatrixPresenceToAvailabilityStatus(presence: string = SetPresence.Offline): AvailabilityStatus {
     switch (presence) {
         case SetPresence.Offline:
             return AvailabilityStatus.UNCHANGED;
