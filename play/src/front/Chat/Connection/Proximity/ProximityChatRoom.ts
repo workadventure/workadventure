@@ -11,6 +11,7 @@ import {
     ChatMessageReaction,
     ChatMessageType,
     ChatRoom,
+    ChatRoomMember,
     ChatRoomMembership,
     ChatUser,
 } from "../ChatConnection";
@@ -66,6 +67,7 @@ export class ProximityChatRoom implements ChatRoom {
     messageReactions: MapStore<string, MapStore<string, ChatMessageReaction>> = new MapStore();
     myMembership: ChatRoomMembership = "member";
     membersId: string[] = [];
+    members: ChatRoomMember[] = [];
     hasPreviousMessage = writable(false);
     isEncrypted = writable(false);
     typingMembers: Writable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
@@ -427,11 +429,6 @@ export class ProximityChatRoom implements ChatRoom {
 
     inviteUsers(userIds: string[]): Promise<void> {
         return Promise.reject(new Error("Method not implemented"));
-    }
-
-    members(): { id: string; name: string; membership: ChatRoomMembership }[] {
-        console.info("Method not implemented");
-        return [];
     }
 
     public leaveSpace(spaceName: string): void {

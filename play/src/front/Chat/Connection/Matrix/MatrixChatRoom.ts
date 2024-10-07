@@ -14,8 +14,6 @@ import {
     ReceiptType,
     Room,
     RoomEvent,
-    RoomMember,
-    RoomMemberEvent,
     TimelineWindow,
 } from "matrix-js-sdk";
 import * as Sentry from "@sentry/svelte";
@@ -24,7 +22,7 @@ import { MediaEventContent, MediaEventInfo } from "matrix-js-sdk/lib/@types/medi
 import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
 import { RoomMessageEventContent } from "matrix-js-sdk/lib/@types/events";
-import { ChatRoom, ChatRoomMembership } from "../ChatConnection";
+import { ChatRoom, ChatRoomMember, ChatRoomMembership } from "../ChatConnection";
 import {
     alreadyAskForInitCryptoConfiguration,
     isAChatRoomIsVisible,
@@ -49,7 +47,7 @@ export class MatrixChatRoom implements ChatRoom {
     messages: SearchableArrayStore<string, MatrixChatMessage>;
     myMembership: ChatRoomMembership;
     membersId: string[];
-    members: RoomMember[];
+    members: ChatRoomMember[];
     messageReactions: MapStore<string, MapStore<string, MatrixChatMessageReaction>>;
     hasPreviousMessage: Writable<boolean>;
     timelineWindow: TimelineWindow;
@@ -83,10 +81,15 @@ export class MatrixChatRoom implements ChatRoom {
             ...matrixRoom.getMembersWithMembership(KnownMembership.Invite).map((member) => member.userId),
             ...matrixRoom.getMembersWithMembership(KnownMembership.Join).map((member) => member.userId),
         ];
+
         this.members = [
-            ...matrixRoom.getMembersWithMembership(KnownMembership.Invite),
-            ...matrixRoom.getMembersWithMembership(KnownMembership.Join),
+            ...matrixRoom.getMembers().map((member) => ({
+                id: member.userId,
+                name: member.name ?? member.userId,
+                membership: member.membership ?? "join",
+            })),
         ];
+
         this.hasPreviousMessage = writable(false);
         this.timelineWindow = new TimelineWindow(matrixRoom.client, matrixRoom.getLiveTimeline().getTimelineSet());
         this.isEncrypted = writable(matrixRoom.hasEncryptionStateEvent());
@@ -490,14 +493,6 @@ export class MatrixChatRoom implements ChatRoom {
         } catch (error) {
             console.error(error);
         }
-    }
-
-    members() {
-        return this.matrixRoom.getMembers().map((member: RoomMember) => ({
-            id: member.userId,
-            name: member.name ?? member.userId,
-            membership: member.membership ?? "join",
-        }));
     }
 
     private async sendFile(file: File) {
