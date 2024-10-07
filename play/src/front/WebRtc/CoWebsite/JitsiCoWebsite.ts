@@ -203,7 +203,9 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
 
                             screenWakeLock
                                 .requestWakeLock()
-                                .then((release) => (this.screenWakeRelease = release))
+                                .then((release) => {
+                                    this.screenWakeRelease = release;
+                                })
                                 .catch((error) => console.error(error));
 
                             this.updateParticipantsCountStore();
@@ -268,18 +270,24 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
 
     private closeOrUnload() {
         if (this.screenWakeRelease) {
+            this.releaseScreenWake();
+            if (this.isClosable()) {
+                coWebsiteManager.closeCoWebsite(this);
+            } else {
+                coWebsiteManager.unloadCoWebsite(this).catch((err) => {
+                    console.error("Cannot unload co-website from the Jitsi factory", err);
+                });
+            }
+        }
+    }
+
+    private releaseScreenWake() {
+        if (this.screenWakeRelease) {
             this.screenWakeRelease()
                 .then(() => {
                     this.screenWakeRelease = undefined;
                 })
                 .catch((error) => console.error(error));
-        }
-        if (this.isClosable()) {
-            coWebsiteManager.closeCoWebsite(this);
-        } else {
-            coWebsiteManager.unloadCoWebsite(this).catch((err) => {
-                console.error("Cannot unload co-website from the Jitsi factory", err);
-            });
         }
     }
 
@@ -294,6 +302,7 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
             this.destroy();
             inExternalServiceStore.set(false);
             inJitsiStore.set(false);
+            this.releaseScreenWake();
             return super.unload();
         } catch (e) {
             console.error("Cannot unload Jitsi co-website", e);

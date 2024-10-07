@@ -27,6 +27,7 @@ import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { DeviceBroadcastable } from "../Common/ConferenceWrapper";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { getIceServersConfig } from "../../Components/Video/utils";
+import { screenWakeLock } from "../../Utils/ScreenWakeLock";
 import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
 import { JitsiLocalTracks } from "./JitsiLocalTracks";
 
@@ -65,6 +66,7 @@ export class JitsiConferenceWrapper {
     private firstLocalTrackInitialized = false;
 
     private megaphoneEnabledUnsubscribe: Unsubscriber;
+    private screenWakeRelease: (() => Promise<void>) | undefined;
 
     constructor(private jitsiConference: JitsiConference, public readonly jitsiRoomName: string) {
         this._streamStore = writable<Map<string, JitsiTrackWrapper>>(new Map<string, JitsiTrackWrapper>());
@@ -105,6 +107,13 @@ export class JitsiConferenceWrapper {
             //room.setLastN(JITSI_MOZAIC_LASTN);
 
             const jitsiConferenceWrapper = new JitsiConferenceWrapper(room, jitsiRoomName);
+
+            screenWakeLock
+                .requestWakeLock()
+                .then((release) => {
+                    jitsiConferenceWrapper.screenWakeRelease = release;
+                })
+                .catch((error) => console.error(error));
 
             //let isJoined = false;
             //const localTracks: any[] = [];
@@ -356,6 +365,14 @@ export class JitsiConferenceWrapper {
         this.megaphoneEnabledUnsubscribe();
         // Remove notification for this room
         notificationPlayingStore.removeNotificationById(this.jitsiRoomName);
+
+        if (this.screenWakeRelease) {
+            this.screenWakeRelease()
+                .then(() => {
+                    this.screenWakeRelease = undefined;
+                })
+                .catch((error) => console.error(error));
+        }
     }
 
     private async createLocalTracks(types: DeviceBroadcastable[]): Promise<JitsiLocalTrack[]> {
