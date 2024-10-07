@@ -46,7 +46,7 @@
         return marked;
     }
 
-    let html = "";
+    let html = $content.body;
 
     let unsubscriber: Unsubscriber | undefined;
     onMount(() => {
