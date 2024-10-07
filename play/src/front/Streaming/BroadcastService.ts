@@ -3,7 +3,6 @@ import debug from "debug";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { ConcatenateMapStore } from "@workadventure/store-utils";
 import { RoomConnection } from "../Connection/RoomConnection";
-import { screenWakeLock } from "../Utils/ScreenWakeLock";
 import { BroadcastSpace } from "./Common/BroadcastSpace";
 import { BroadcastConnection } from "./Common/BroadcastConnection";
 import { TrackWrapper } from "./Common/TrackWrapper";
@@ -23,7 +22,6 @@ export class BroadcastService {
     private broadcastConnections: Map<string, BroadcastConnection> = new Map<string, BroadcastConnection>();
     private broadcastSpaces: BroadcastSpace[] = [];
     private tracks = new ConcatenateMapStore<string, TrackWrapper>();
-    private screenWakeRelease: (() => Promise<void>) | undefined;
 
     constructor(private roomConnection: RoomConnection, private defaultBroadcastSpaceFactory: BroadcastSpaceFactory) {}
 
@@ -49,10 +47,7 @@ export class BroadcastService {
 
         this.tracks.addStore(broadcastSpace.tracks);
         broadcastServiceLogger("joinSpace", spaceNameSlugify);
-        screenWakeLock
-            .requestWakeLock()
-            .then((release) => (this.screenWakeRelease = release))
-            .catch((error) => console.error(error));
+
         return broadcastSpace;
     }
 
@@ -70,13 +65,6 @@ export class BroadcastService {
         }
 
         jitsiLoadingStore.set(false);
-        if (this.screenWakeRelease) {
-            this.screenWakeRelease()
-                .then(() => {
-                    this.screenWakeRelease = undefined;
-                })
-                .catch((error) => console.error(error));
-        }
     }
 
     /**
