@@ -108,8 +108,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
                 return directRooms.reduce((acc, currentRoom) => {
                     currentRoom.members.forEach((member) => {
-                        if (member.userId !== myUserID) {
-                            const user = member.user;
+                        if (member.id !== myUserID) {
+                            const user = this.client?.getUser(member.id);
                             if (user) {
                                 acc.push(chatUserFactory(user, client));
                                 this.userIdsNeedingPresenceUpdate.add(user.userId);

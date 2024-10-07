@@ -85,7 +85,7 @@
             </Select>
             <p class="tw-p-0 tw-m-0 tw-pl-1 tw-font-bold">{$LL.chat.manageRoomUsers.participants()}</p>
             <ul class="tw-list-none !tw-p-0">
-                {#each room.members() as member (member.id)}
+                {#each room.members as member (member.id)}
                     <li class="tw-flex tw-mb-1 tw-justify-between">
                         <p class="tw-m-0 tw-p-0">{member.name}</p>
                         <p
