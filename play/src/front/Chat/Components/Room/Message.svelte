@@ -44,7 +44,11 @@
         messageFromSystem && "tw-justify-center"
     } tw-select-text`}
 >
-    <div class={`container-grid ${isMyMessage ? "tw-justify-end grid-container-inverted" : "tw-justify-start"}`}>
+    <div
+        class="container-grid tw-pl-4 tw-pr-5 ${isMyMessage
+            ? 'tw-justify-end grid-container-inverted'
+            : 'tw-justify-start'}"
+    >
         <div
             class="messageHeader tw-text-gray-500 tw-text-xxs tw-p-0 tw-m-0 tw-flex tw-justify-between tw-items-end"
             class:tw-flex-row-reverse={isMyMessage}
@@ -65,27 +69,30 @@
         {/if}
 
         <div
-            class="message tw-rounded-2xl tw-p-2"
-            class:tw-bg-primary={!isMyMessage && !messageFromSystem}
-            class:tw-bg-secondary={isMyMessage && !messageFromSystem}
-            class:tw-rounded-br-none={isMyMessage && !messageFromSystem}
-            class:tw-rounded-bl-none={!isMyMessage && !messageFromSystem}
+            class="message tw-min-w-20 tw-p-1
+                    {$isDeleted && !isMyMessage && !messageFromSystem ? 'tw-bg-secondary/20' : ''}
+                    {$isDeleted && isMyMessage && !messageFromSystem ? 'tw-bg-primary/20' : ''}
+                    {!isMyMessage && !messageFromSystem && !$isDeleted ? 'tw-bg-contrast tw-mr-6' : ''}
+                    {isMyMessage && !messageFromSystem && !$isDeleted ? 'tw-bg-secondary tw-ml-6' : ''}
+                    {type === 'audio' || type === 'file' ? 'tw-rounded-full' : 'tw-rounded-lg'}
+                    {reactions !== undefined ? 'tw-mb-4' : ''}"
         >
             {#if $isDeleted}
-                <p class="tw-p-0 tw-m-0 tw-text-xs tw-text-gray-400 tw-flex tw-items-center">
+                <p class="tw-p-0 tw-m-0 tw-text-xs tw-flex tw-items-center">
                     <IconTrash font-size={12} />
                     {$LL.chat.messageDeleted()}
                 </p>
+            {:else if $selectedChatMessageToEdit !== null && $selectedChatMessageToEdit.id === id}
+                <MessageEdition message={$selectedChatMessageToEdit} />
             {:else}
                 <svelte:component this={messageType[type]} {content} />
-                {#if $isModified}
-                    <p class="tw-text-gray-300 tw-text-xxxs tw-p-0 tw-m-0">({$LL.chat.messageEdited()})</p>
-                {/if}
-                {#if $selectedChatMessageToEdit !== null && $selectedChatMessageToEdit.id === id}
-                    <MessageEdition message={$selectedChatMessageToEdit} />
-                {/if}
                 {#if reactions !== undefined}
-                    <MessageReactions {reactions} />
+                    <MessageReactions classes={isMyMessage ? "tw-bg-secondary" : "tw-bg-contrast"} {reactions} />
+                {/if}
+                {#if $isModified}
+                    <div class="tw-text-white/50 tw-text-xs tw-p-0 tw-m-0 tw-px-2 tw-pb-1 tw-text-right">
+                        ({$LL.chat.messageEdited()})
+                    </div>
                 {/if}
             {/if}
         </div>
@@ -96,9 +103,13 @@
             </div>
         {/if}
     </div>
-    {#if !isQuotedMessage && !$isDeleted && message.type !== "proximity" && message.type !== "incoming" && message.type !== "outcoming"}
+    {#if !isQuotedMessage && !$isDeleted && message.type !== "proximity" && message.type !== "incoming" && message.type !== "outcoming" && ($selectedChatMessageToEdit === null || $selectedChatMessageToEdit.id !== id)}
         <div
-            class={`options tw-bg-white/30 tw-backdrop-blur-sm tw-p-1 tw-rounded-md ${!isMyMessage ? "tw-left-6" : ""}`}
+            class="options tw-backdrop-blur-sm tw-pt-1 tw-pb-1.5 tw-px-3 tw-rounded-3xl tw-z-50 {reactions !== undefined
+                ? 'tw-bottom-1'
+                : '-tw-bottom-3'} {!isMyMessage
+                ? 'tw-mr-1 tw-left-[56px] tw-bg-contrast'
+                : 'tw-right-6 tw-bg-secondary'}"
         >
             <MessageOptions {message} />
         </div>
@@ -136,7 +147,7 @@
 
     .message {
         grid-area: message;
-        min-width: 0;
+        min-width: 80px;
         overflow-wrap: anywhere;
         position: relative;
     }

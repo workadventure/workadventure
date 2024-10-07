@@ -31,7 +31,7 @@
 
 <div class="tw-flex tw-justify-between">
     <button
-        class="tw-p-0 tw-m-0 tw-text-gray-400"
+        class="TODOHUGO tw-group tw-relative tw-m-0 tw-px-3 tw-rounded-none tw-text-white/75 hover:tw-text-white tw-h-11 hover:tw-bg-contrast-200/10 tw-w-full tw-flex tw-space-x-2 tw-items-center tw-border tw-border-solid tw-border-x-0 tw-border-t tw-border-b-0 tw-border-white/10"
         on:click={() => {
             isOpen = !isOpen;
         }}

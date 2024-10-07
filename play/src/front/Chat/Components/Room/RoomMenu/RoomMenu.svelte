@@ -6,7 +6,7 @@
     import LL from "../../../../../i18n/i18n-svelte";
     import InviteParticipantsModal from "../InviteParticipantsModal.svelte";
     import RoomOption from "./RoomOption.svelte";
-    import { IconDotsCircle, IconLogout, IconUserPlus, IconMute, IconUnMute } from "@wa-icons";
+    import { IconLogout, IconUserPlus, IconMute, IconUnMute } from "@wa-icons";
 
     export let room: ChatRoom;
     const areNotificationsMuted = room.areNotificationsMuted;
@@ -74,9 +74,25 @@
 <button
     bind:this={optionButtonRef}
     on:click|preventDefault|stopPropagation={toggleRoomOptions}
-    class="tw-m-0 tw-p-0 tw-text-gray-400 hover:tw-text-white"
+    class="tw-m-0 tw-p-0 tw-flex tw-items-center tw-justify-center tw-h-7 tw-w-7 tw-invisible group-hover/chatItem:tw-visible"
 >
-    <IconDotsCircle font-size="14" />
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="icon icon-tabler icon-tabler-dots"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="#ffffff"
+        fill="none"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+    >
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M5 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+        <path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+        <path d="M19 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+    </svg>
 </button>
 <div
     on:mouseleave={toggleRoomOptions}

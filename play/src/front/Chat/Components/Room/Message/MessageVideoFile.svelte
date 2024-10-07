@@ -6,7 +6,7 @@
 </script>
 
 {#if $content.url !== undefined}
-    <video controls class="tw-w-full">
+    <video controls class="tw-w-full tw-block tw-rounded">
         <source src={$content.url} />
     </video>
 {/if}

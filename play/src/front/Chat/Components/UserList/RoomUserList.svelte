@@ -3,7 +3,7 @@
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { ChatUser } from "../../Connection/ChatConnection";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import { chatSearchBarValue, shownRoomListStore } from "../../Stores/ChatStore";
+    import { chatSearchBarValue, navChat, shownRoomListStore } from "../../Stores/ChatStore";
     import { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
     import UserList from "./UserList.svelte";
     import { IconChevronUp } from "@wa-icons";
@@ -55,6 +55,54 @@
 </script>
 
 <div class="tw-flex tw-flex-col tw-overflow-auto">
+    <div>
+        {#if $navChat === "chat"}
+            <button
+                class="tw-p-3 hover:tw-bg-white/10 tw-rounded-xl tw-aspect-square tw-w-12"
+                on:click={() => navChat.set("users")}
+            >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="icon icon-tabler icon-tabler-users"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="#ffffff"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+                    <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
+                </svg>
+            </button>
+        {:else}
+            <button
+                class="tw-p-3 hover:tw-bg-white/10 tw-rounded-2xl tw-aspect-square tw-w-12"
+                on:click={() => navChat.set("chat")}
+            >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="icon icon-tabler icon-tabler-message-circle-2"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="#ffffff"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M3 20l1.3 -3.9a9 8 0 1 1 3.4 2.9l-4.7 1" />
+                </svg>
+            </button>
+        {/if}
+    </div>
     {#each roomsWithUsers as [roomName, userInRoom] (roomName)}
         <div
             class=" users tw-flex tw-flex-col tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple tw-shrink-0"

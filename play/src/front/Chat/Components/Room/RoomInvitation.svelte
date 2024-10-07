@@ -8,11 +8,11 @@
     let roomName = room.name;
     let displayInvitationRoomActions = false;
     let loadingInvitation = false;
-
+    /*
     function toggleDisplayInvitationRoomActions() {
         displayInvitationRoomActions = !displayInvitationRoomActions;
     }
-
+*/
     function joinRoom() {
         loadingInvitation = true;
         room.joinRoom()
@@ -33,26 +33,36 @@
 </script>
 
 <div
-    class="tw-text-md tw-flex tw-gap-2 tw-flex-row tw-items-center hover:tw-bg-white hover:tw-bg-opacity-10 hover:tw-rounded-md hover:!tw-cursor-pointer tw-p-1"
+    class="tw-text-md tw-flex tw-gap-2 tw-flex-row tw-items-center hover:tw-bg-white tw-transition-all hover:tw-bg-opacity-10 hover:tw-rounded-md hover:!tw-cursor-pointer tw-p-2"
     data-testid="userInvitation"
-    on:click={toggleDisplayInvitationRoomActions}
 >
     <div class="tw-relative">
         <Avatar avatarUrl={room.avatarUrl} fallbackName={$roomName} />
     </div>
-    <p class="tw-m-0">{$roomName}</p>
-</div>
-{#if displayInvitationRoomActions}
-    {#if loadingInvitation}
-        <div class="tw-min-h-[60px] tw-text-md tw-flex tw-gap-2 tw-justify-center tw-flex-row tw-items-center tw-p-1">
-            <IconLoader class="tw-animate-spin" />
-        </div>
-    {:else}
-        <div class="tw-flex">
-            <button class="tw-text-blue-300" data-testid="acceptInvitationButton" on:click={() => joinRoom()}>
-                {$LL.chat.accept()}
-            </button>
-            <button class="tw-text-red-500" on:click={() => leaveRoom()}>{$LL.chat.decline()}</button>
-        </div>
+    <div class="tw-m-0 tw-grow tw-text-sm tw-font-bold">
+        {$roomName}
+    </div>
+    {#if displayInvitationRoomActions}
+        {#if loadingInvitation}
+            <div
+                class="tw-min-h-[60px] tw-text-md tw-flex tw-gap-2 tw-justify-center tw-flex-row tw-items-center tw-p-1"
+            >
+                <IconLoader class="tw-animate-spin" />
+            </div>
+        {:else}
+            <div class="tw-flex tw-space-x-2">
+                <button
+                    class="tw-border tw-border-solid tw-border-danger tw-text-danger hover:tw-bg-danger-400/10 tw-rounded tw-text-xs tw-py-1 tw-px-2 tw-m-0"
+                    on:click={() => leaveRoom()}>{$LL.chat.decline()}</button
+                >
+                <button
+                    class="tw-border tw-border-solid tw-border-success tw-text-success hover:tw-bg-success-400/10 tw-rounded tw-text-xs tw-py-1 tw-px-2 tw-m-0"
+                    data-testid="acceptInvitationButton"
+                    on:click={() => joinRoom()}
+                >
+                    {$LL.chat.accept()}
+                </button>
+            </div>
+        {/if}
     {/if}
-{/if}
+</div>

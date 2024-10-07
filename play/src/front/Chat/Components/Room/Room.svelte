@@ -1,7 +1,6 @@
 <script lang="ts">
     import highlightWords from "highlight-words";
     import { ChatRoom } from "../../Connection/ChatConnection";
-    import NotificationBadge from "../NotificationBadge.svelte";
     import { chatSearchBarValue, selectedRoom } from "../../Stores/ChatStore";
     import Avatar from "../Avatar.svelte";
     import EncryptionBadge from "../EncryptionBadge.svelte";
@@ -22,7 +21,7 @@
 </script>
 
 <div
-    class="tw-text-md tw-flex tw-gap-2 tw-flex-row tw-items-center hover:tw-bg-white hover:tw-bg-opacity-10 hover:tw-rounded-md hover:!tw-cursor-pointer tw-p-1"
+    class="tw-group/chatItem tw-text-md tw-flex tw-gap-2 tw-flex-row tw-items-center hover:tw-bg-white tw-transition-all hover:tw-bg-opacity-10 hover:tw-rounded-md hover:!tw-cursor-pointer tw-p-2 tw-cursor-pointer"
     class:tw-bg-white={isSelected}
     class:tw-bg-opacity-10={isSelected}
     class:tw-rounded-md={isSelected}
@@ -30,17 +29,25 @@
 >
     <div class="tw-relative">
         <Avatar avatarUrl={room.avatarUrl} fallbackName={$roomName} />
-        {#if $hasUnreadMessage}
-            <NotificationBadge type="error" />
-        {/if}
+
         {#if $isEncrypted}
             <EncryptionBadge />
         {/if}
     </div>
     <p class="tw-m-0 tw-flex-1">
         {#each chunks as chunk (chunk.key)}
-            <span class={`${chunk.match ? "tw-text-light-blue" : ""}  tw-cursor-default`}>{chunk.text}</span>
+            <span
+                class="{chunk.match ? 'tw-text-light-blue' : ''} {$hasUnreadMessage
+                    ? 'tw-text-white tw-font-bold'
+                    : 'tw-text-white/75'} tw-cursor-default tw-text-sm">{chunk.text}</span
+            >
         {/each}
     </p>
     <RoomMenu {room} />
+    {#if $hasUnreadMessage}
+        <div class="tw-flex tw-items-center tw-justify-center tw-h-7 tw-w-7 tw-relative">
+            <div class="tw-rounded-full tw-bg-success tw-h-2 tw-w-2 tw-animate-ping tw-absolute" />
+            <div class="tw-rounded-full tw-bg-success tw-h-1.5 tw-w-1.5 tw-absolute" />
+        </div>
+    {/if}
 </div>
