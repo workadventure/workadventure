@@ -70,7 +70,6 @@
 
     afterUpdate(() => {
         room.setTimelineAsRead();
-
         if (autoScroll) {
             scrollToMessageListBottom();
         } else if (onScrollTop) {
@@ -85,7 +84,8 @@
     });
 
     function scrollToMessageListBottom() {
-        messageListRef.scrollTop = messageListRef.scrollHeight;
+        //messageListRef.scrollTop = messageListRef.scrollHeight;
+        messageListRef.scroll({ top: messageListRef.scrollHeight, behavior: "smooth" });
     }
 
     function goBackAndClearSelectedChatMessage() {
@@ -236,7 +236,7 @@
                 </div>
             </div>
         {/if}
-        <MessageInputBar {room} />
+        <MessageInputBar on:sendMessage={scrollToMessageListBottom} {room} />
     {/if}
 </div>
 
