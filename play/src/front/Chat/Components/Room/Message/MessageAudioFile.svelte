@@ -15,15 +15,6 @@
         border-radius: 1px !important;
     }
 
-    video::-webkit-media-controls-enclosure {
-        background-color: transparent;
-        -moz-border-radius: 1px !important;
-        -webkit-border-radius: 1px !important;
-        border-radius: 1px !important;
-        opacity: 0.8;
-        overflow: hidden;
-    }
-
     audio::-webkit-media-controls-mute-button,
     audio::-webkit-media-controls-play-button,
     audio::-webkit-media-controls-current-time-display,
