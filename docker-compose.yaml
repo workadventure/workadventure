@@ -261,7 +261,7 @@ services:
       SENTRY_RELEASE: $SENTRY_RELEASE
       PATH_PREFIX: ""
       MAP_STORAGE_API_TOKEN: "$MAP_STORAGE_API_TOKEN"
-      PUSHER_URL: http://play.workadventure.localhost
+      PUSHER_URL: http://play:3000
       WHITELISTED_RESOURCE_URLS: ""
     volumes:
       - .:/usr/src/app
