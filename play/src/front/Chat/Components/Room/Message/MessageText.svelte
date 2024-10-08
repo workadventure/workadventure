@@ -54,6 +54,8 @@
             let promiseHtml = getMarked(value.body).then((marked) => marked.parse(value.body));
             promiseHtml
                 .then((result) => {
+                    console.log("RESULT LENGTH !!!!!");
+                    console.log(result.length);
                     html = result;
                 })
                 .catch((error) => {

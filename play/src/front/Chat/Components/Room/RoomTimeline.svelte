@@ -2,9 +2,9 @@
     import { afterUpdate, beforeUpdate, onMount } from "svelte";
     import { get } from "svelte/store";
     import { ChatRoom } from "../../Connection/ChatConnection";
+    import getCloseImg from "../../images/get-close.png";
     import { selectedChatMessageToReply, selectedRoom } from "../../Stores/ChatStore";
     import Avatar from "../Avatar.svelte";
-    import LL from "../../../../i18n/i18n-svelte";
     import { matrixSecurity } from "../../Connection/Matrix/MatrixSecurity";
     import Message from "./Message.svelte";
     import MessageInputBar from "./MessageInputBar.svelte";
@@ -213,10 +213,14 @@
         </div>
         <div
             bind:this={messageListRef}
-            class="tw-flex tw-overflow-auto tw-h-full tw-mb-1 {$messages.length && 'tw-items-end'} "
+            class="tw-flex tw-overflow-auto tw-h-full tw-mb-1 tw-justify-center {$messages.length && 'tw-items-end'} "
             on:scroll={handleScroll}
         >
-            <ul class="tw-list-none tw-p-0 tw-flex-1 tw-flex tw-flex-col tw-max-h-full tw-pt-10">
+            <ul
+                class="tw-list-none tw-p-0 tw-flex-1 tw-flex tw-flex-col tw-max-h-full tw-pt-10 {$messages.length === 0
+                    ? 'tw-items-center tw-justify-center'
+                    : 'tw-max-w-6xl'}"
+            >
                 <!--{#if room.id === "proximity" && $connectedUsers !== undefined}-->
                 <!--    <div class="tw-flex tw-flex-row tw-items-center tw-gap-2">-->
                 <!--        {#each [...$connectedUsers] as [userId, user] (userId)}-->
@@ -227,12 +231,14 @@
                 <!--    </div>-->
                 <!--{/if}-->
                 {#if $messages.length === 0}
-                    <p class="tw-self-center tw-text-md tw-text-gray-500">{$LL.chat.nothingToDisplay()}</p>
-                    <!-- TODO HUGO -->
-                    <div>Get close by someone</div>
-                    <div>
-                        Et ducimus cum et dolor. Consequatur ab voluptas qui soluta. Aspernatur natus nisi illo saepe
-                        doloribus vitae.
+                    <!-- TODO Trad HUGO -->
+                    <div class="tw-text-center tw-px-3 tw-max-w-md">
+                        <img src={getCloseImg} alt="Discussion bubble" />
+                        <div class="tw-text-lg tw-font-bold tw-text-center">Get closer to someone</div>
+                        <div class="tw-text-sm tw-opacity-50 tw-text-center">
+                            Et ducimus cum et dolor. Consequatur ab voluptas qui soluta. Aspernatur natus nisi illo
+                            saepe doloribus vitae.
+                        </div>
                     </div>
                 {/if}
                 {#each $messages as message (message.id)}

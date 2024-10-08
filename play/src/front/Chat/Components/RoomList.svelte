@@ -232,7 +232,7 @@
                         <!-- TODO HUGO -->
                     </div>
                 </div>
-                <div>
+                <div class="tw-relative">
                     <button
                         class="tw-p-3 hover:tw-bg-white/10 tw-rounded-2xl tw-aspect-square tw-w-12"
                         on:click={() => navChat.set("chat")}
@@ -259,7 +259,7 @@
                         <div />
                     {:then userProviderMerger}
                         {#if $chatStatusStore !== "OFFLINE"}
-                            <div class="">
+                            <div class="tw-absolute tw-right-0 tw-top-0">
                                 <div class="tw-p-3">
                                     <input
                                         autocomplete="new-password"

@@ -6,7 +6,6 @@
     import { IconLoader } from "@wa-icons";
     export let room: ChatRoom;
     let roomName = room.name;
-    let displayInvitationRoomActions = false;
     let loadingInvitation = false;
     /*
     function toggleDisplayInvitationRoomActions() {
@@ -42,27 +41,23 @@
     <div class="tw-m-0 tw-grow tw-text-sm tw-font-bold">
         {$roomName}
     </div>
-    {#if displayInvitationRoomActions}
-        {#if loadingInvitation}
-            <div
-                class="tw-min-h-[60px] tw-text-md tw-flex tw-gap-2 tw-justify-center tw-flex-row tw-items-center tw-p-1"
+    {#if loadingInvitation}
+        <div class="tw-min-h-[60px] tw-text-md tw-flex tw-gap-2 tw-justify-center tw-flex-row tw-items-center tw-p-1">
+            <IconLoader class="tw-animate-spin" />
+        </div>
+    {:else}
+        <div class="tw-flex tw-space-x-2">
+            <button
+                class="tw-border tw-border-solid tw-border-danger tw-text-danger hover:tw-bg-danger-400/10 tw-rounded tw-text-xs tw-py-1 tw-px-2 tw-m-0"
+                on:click={() => leaveRoom()}>{$LL.chat.decline()}</button
             >
-                <IconLoader class="tw-animate-spin" />
-            </div>
-        {:else}
-            <div class="tw-flex tw-space-x-2">
-                <button
-                    class="tw-border tw-border-solid tw-border-danger tw-text-danger hover:tw-bg-danger-400/10 tw-rounded tw-text-xs tw-py-1 tw-px-2 tw-m-0"
-                    on:click={() => leaveRoom()}>{$LL.chat.decline()}</button
-                >
-                <button
-                    class="tw-border tw-border-solid tw-border-success tw-text-success hover:tw-bg-success-400/10 tw-rounded tw-text-xs tw-py-1 tw-px-2 tw-m-0"
-                    data-testid="acceptInvitationButton"
-                    on:click={() => joinRoom()}
-                >
-                    {$LL.chat.accept()}
-                </button>
-            </div>
-        {/if}
+            <button
+                class="tw-border tw-border-solid tw-border-success tw-text-success hover:tw-bg-success-400/10 tw-rounded tw-text-xs tw-py-1 tw-px-2 tw-m-0"
+                data-testid="acceptInvitationButton"
+                on:click={() => joinRoom()}
+            >
+                {$LL.chat.accept()}
+            </button>
+        </div>
     {/if}
 </div>
