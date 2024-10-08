@@ -17,9 +17,9 @@
     const TYPINT_TIMEOUT = 10000;
 
     const selectedChatChatMessageToReplyUnsubscriber = selectedChatMessageToReply.subscribe((chatMessage) => {
-        //if (chatMessage !== null) {
-        //    messageInput.focus();
-        //}
+        if (chatMessage !== null) {
+            messageInput.focus();
+        }
     });
 
     function sendMessageOrEscapeLine(keyDownEvent: KeyboardEvent) {
