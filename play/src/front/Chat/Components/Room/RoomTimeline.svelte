@@ -6,12 +6,15 @@
     import Avatar from "../Avatar.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import { matrixSecurity } from "../../Connection/Matrix/MatrixSecurity";
+    import { localUserStore } from "../../../Connection/LocalUserStore";
     import Message from "./Message.svelte";
     import MessageInputBar from "./MessageInputBar.svelte";
     import MessageSystem from "./MessageSystem.svelte";
     import { IconArrowLeft, IconLoader } from "@wa-icons";
 
     export let room: ChatRoom;
+
+    let myChatID = localUserStore.getChatId();
 
     const NUMBER_OF_TYPING_MEMBER_TO_DISPLAY = 3;
     let typingMembers = room.typingMembers;
@@ -84,7 +87,6 @@
     });
 
     function scrollToMessageListBottom() {
-        //messageListRef.scrollTop = messageListRef.scrollHeight;
         messageListRef.scroll({ top: messageListRef.scrollHeight, behavior: "smooth" });
     }
 
@@ -156,6 +158,16 @@
     function isViewportNotFilled() {
         return messageListRef.scrollHeight <= messageListRef.clientHeight;
     }
+
+    function onUpdateMessageBody(event: CustomEvent) {
+        if (
+            autoScroll ||
+            (event.detail.id === $messages[$messages.length - 1].id &&
+                $messages[$messages.length - 1].sender?.chatId === myChatID)
+        ) {
+            scrollToMessageListBottom();
+        }
+    }
 </script>
 
 <div class="tw-flex tw-flex-col tw-flex-auto tw-h-full tw-w-full tw-max-w-full tw-pl-2">
@@ -198,7 +210,11 @@
                         {#if message.type === "outcoming" || message.type === "incoming"}
                             <MessageSystem {message} />
                         {:else}
-                            <Message {message} reactions={$messageReaction.get(message.id)} />
+                            <Message
+                                on:updateMessageBody={onUpdateMessageBody}
+                                {message}
+                                reactions={$messageReaction.get(message.id)}
+                            />
                         {/if}
                     </li>
                 {/each}
@@ -236,7 +252,7 @@
                 </div>
             </div>
         {/if}
-        <MessageInputBar on:sendMessage={scrollToMessageListBottom} {room} />
+        <MessageInputBar {room} />
     {/if}
 </div>
 
