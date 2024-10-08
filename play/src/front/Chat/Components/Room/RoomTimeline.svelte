@@ -184,7 +184,9 @@
                         <path d="M15 6l-6 6l6 6" />
                     </svg>
                 </button>
-                <div class="tw-text-md tw-font-bold tw-h-5 tw-grow tw-text-center" data-testid="roomName">{$roomName}</div>
+                <div class="tw-text-md tw-font-bold tw-h-5 tw-grow tw-text-center" data-testid="roomName">
+                    {$roomName}
+                </div>
                 <div class="back-roomlist hover:tw-bg-white/10 tw-p-3 tw-rounded-2xl tw-aspect-square tw-w-12">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"

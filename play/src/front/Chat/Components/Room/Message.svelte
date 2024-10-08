@@ -73,7 +73,7 @@
         {/if}
 
         <div
-            class="message tw-min-w-20 tw-p-1
+            class="message tw-min-w-36 tw-p-1
                     {$isDeleted && !isMyMessage && !messageFromSystem ? 'tw-bg-white/10 tw-mr-12' : ''}
                     {$isDeleted && isMyMessage && !messageFromSystem ? 'tw-bg-white/10 tw-ml-12' : ''}
                     {!isMyMessage && !messageFromSystem && !$isDeleted ? 'tw-bg-contrast tw-mr-12' : ''}
