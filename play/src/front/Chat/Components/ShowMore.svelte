@@ -27,5 +27,5 @@
     </div>
 {/if}
 {#if showNothingToDisplayMessage && items.length === 0}
-    <p class="tw-p-0 tw-m-0 tw-text-center tw-text-gray-300">{$LL.chat.nothingToDisplay()}</p>
+    <p class="tw-pt-1.5 tw-pb-3 tw-px-3 tw-m-0 tw-text-white/50 tw-italic">{$LL.chat.nothingToDisplay()}</p>
 {/if}

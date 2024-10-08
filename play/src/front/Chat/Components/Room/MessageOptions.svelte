@@ -35,19 +35,23 @@
         <a
             href={$content.url}
             download={$content.body}
-            class="tw-p-0 tw-m-0 tw-text-white hover:tw-text-white"
+            class="tw-p-0 tw-m-0 tw-text-white/50 hover:tw-text-white tw-transition-all"
             target="_blank"
         >
-            <IconArrowDown font-size={16} class="hover:tw-cursor-pointer hover:tw-text-secondary" />
+            <IconArrowDown font-size={16} class="hover:tw-cursor-pointer" />
         </a>
     {/if}
-    <button class="tw-p-0 tw-m-0 hover:tw-text-black" data-testid="replyToMessageButton" on:click={replyToMessage}>
+    <button
+        class="tw-p-0 tw-m-0 tw-text-white/50 hover:tw-text-white tw-transition-all hover:tw-cursor-pointer"
+        data-testid="replyToMessageButton"
+        on:click={replyToMessage}
+    >
         <IconArrowBackUp font-size={16} />
     </button>
     <EmojiButton on:change={addReaction} />
     {#if isMyMessage && type === "text"}
         <button
-            class="tw-p-0 tw-m-0 hover:tw-text-blue-500"
+            class="tw-p-0 tw-m-0 tw-text-white/50 hover:tw-text-white tw-transition-all hover:tw-cursor-pointer"
             data-testid="editMessageButton"
             on:click={selectMessageToEdit}
         >
@@ -55,7 +59,11 @@
         </button>
     {/if}
     {#if $isGuest === false}
-        <button class="tw-p-0 tw-m-0 hover:tw-text-red-500" data-testid="removeMessageButton" on:click={removeMessage}>
+        <button
+            class="tw-p-0 tw-m-0 tw-text-white/50 hover:tw-text-white tw-transition-all hover:tw-cursor-pointer"
+            data-testid="removeMessageButton"
+            on:click={removeMessage}
+        >
             <IconTrash font-size={16} />
         </button>
     {/if}

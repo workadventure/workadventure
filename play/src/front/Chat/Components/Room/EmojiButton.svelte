@@ -23,7 +23,7 @@
 
 <button
     data-testid="openEmojiPickerButton"
-    class="tw-p-0 tw-m-0 hover:tw-text-yellow-500"
+    class="tw-p-0 tw-m-0 tw-text-white/50 hover:tw-text-white tw-transition-all"
     bind:this={trigger}
     on:click={togglePicker}
 >

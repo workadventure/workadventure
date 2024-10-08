@@ -2,14 +2,14 @@
     import { afterUpdate, beforeUpdate, onMount } from "svelte";
     import { get } from "svelte/store";
     import { ChatRoom } from "../../Connection/ChatConnection";
+    import getCloseImg from "../../images/get-close.png";
     import { selectedChatMessageToReply, selectedRoom } from "../../Stores/ChatStore";
     import Avatar from "../Avatar.svelte";
-    import LL from "../../../../i18n/i18n-svelte";
     import { matrixSecurity } from "../../Connection/Matrix/MatrixSecurity";
     import Message from "./Message.svelte";
     import MessageInputBar from "./MessageInputBar.svelte";
     import MessageSystem from "./MessageSystem.svelte";
-    import { IconArrowLeft, IconLoader } from "@wa-icons";
+    import { IconLoader } from "@wa-icons";
 
     export let room: ChatRoom;
 
@@ -158,16 +158,54 @@
     }
 </script>
 
-<div class="tw-flex tw-flex-col tw-flex-auto tw-h-full tw-w-full tw-max-w-full tw-pl-2">
+<div class="tw-flex tw-flex-col tw-flex-auto tw-h-full tw-w-full tw-max-w-full">
     {#if room !== undefined}
         <div class="tw-flex tw-flex-col tw-gap-2">
-            <div class="tw-flex tw-flex-row tw-items-center">
-                <button class="back-roomlist tw-p-0 tw-m-0" on:click={goBackAndClearSelectedChatMessage}>
-                    <IconArrowLeft />
+            <div
+                class="tw-p-2 tw-flex tw-items-center tw-border tw-border-solid tw-border-x-0 tw-border-b tw-border-t-0 tw-border-white/10"
+            >
+                <button
+                    class="back-roomlist tw-p-3 hover:tw-bg-white/10 tw-rounded-2xl tw-aspect-square tw-w-12"
+                    on:click={goBackAndClearSelectedChatMessage}
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="icon icon-tabler icon-tabler-chevron-left"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        stroke-width="1"
+                        stroke="#ffffff"
+                        fill="none"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M15 6l-6 6l6 6" />
+                    </svg>
                 </button>
-                <span class="tw-flex-1" />
-                <p class="tw-m-0 tw-p-0 tw-text-gray-400" data-testid="roomName">{$roomName}</p>
-                <span class="tw-flex-1" />
+                <div class="tw-text-md tw-font-bold tw-h-5 tw-grow tw-text-center" data-testid="roomName">
+                    {$roomName}
+                </div>
+                <div class="back-roomlist hover:tw-bg-white/10 tw-p-3 tw-rounded-2xl tw-aspect-square tw-w-12">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="icon icon-tabler icon-tabler-dots"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        stroke-width="1"
+                        stroke="#ffffff"
+                        fill="none"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M5 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+                        <path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+                        <path d="M19 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+                    </svg>
+                </div>
             </div>
             {#if shouldDisplayLoader}
                 <div class="tw-flex tw-justify-center tw-items-center tw-w-full tw-pb-1 tw-bg-transparent">
@@ -177,10 +215,14 @@
         </div>
         <div
             bind:this={messageListRef}
-            class="tw-flex tw-overflow-auto tw-h-full {$messages.length && 'tw-items-end'} "
+            class="tw-flex tw-overflow-auto tw-h-full tw-mb-1 tw-justify-center {$messages.length && 'tw-items-end'} "
             on:scroll={handleScroll}
         >
-            <ul class="tw-list-none tw-p-0 tw-flex-1 tw-flex tw-flex-col tw-max-h-full">
+            <ul
+                class="tw-list-none tw-p-0 tw-flex-1 tw-flex tw-flex-col tw-max-h-full tw-pt-10 {$messages.length === 0
+                    ? 'tw-items-center tw-justify-center'
+                    : 'tw-max-w-6xl'}"
+            >
                 <!--{#if room.id === "proximity" && $connectedUsers !== undefined}-->
                 <!--    <div class="tw-flex tw-flex-row tw-items-center tw-gap-2">-->
                 <!--        {#each [...$connectedUsers] as [userId, user] (userId)}-->
@@ -191,10 +233,18 @@
                 <!--    </div>-->
                 <!--{/if}-->
                 {#if $messages.length === 0}
-                    <p class="tw-self-center tw-text-md tw-text-gray-500">{$LL.chat.nothingToDisplay()}</p>
+                    <!-- TODO Trad HUGO -->
+                    <div class="tw-text-center tw-px-3 tw-max-w-md">
+                        <img src={getCloseImg} alt="Discussion bubble" />
+                        <div class="tw-text-lg tw-font-bold tw-text-center">Get closer to someone</div>
+                        <div class="tw-text-sm tw-opacity-50 tw-text-center">
+                            Et ducimus cum et dolor. Consequatur ab voluptas qui soluta. Aspernatur natus nisi illo
+                            saepe doloribus vitae.
+                        </div>
+                    </div>
                 {/if}
                 {#each $messages as message (message.id)}
-                    <li data-event-id={message.id}>
+                    <li class="last:tw-pb-3" data-event-id={message.id}>
                         {#if message.type === "outcoming" || message.type === "incoming"}
                             <MessageSystem {message} />
                         {:else}

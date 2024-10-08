@@ -54,6 +54,8 @@
             let promiseHtml = getMarked(value.body).then((marked) => marked.parse(value.body));
             promiseHtml
                 .then((result) => {
+                    console.log("RESULT LENGTH !!!!!");
+                    console.log(result.length);
                     html = result;
                 })
                 .catch((error) => {
@@ -70,6 +72,19 @@
     });
 </script>
 
-<p class="tw-p-0 tw-m-0 tw-text-xs">
+<div class="message-bubble tw-m-0 tw-text-sm tw-text-white tw-py-1 tw-px-2">
     {@html sanitizeHTML(html)}
-</p>
+    <style>
+        .message-bubble p {
+            margin: 0;
+            line-height: 24px;
+        }
+        .message-bubble a {
+            text-decoration: underline;
+            opacity: 0.75;
+        }
+    </style>
+</div>
+
+<style>
+</style>
