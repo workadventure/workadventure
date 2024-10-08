@@ -1,11 +1,12 @@
 <script lang="ts">
     import { Readable, Unsubscriber } from "svelte/store";
     import { Marked } from "marked";
-    import { onDestroy, onMount } from "svelte";
+    import { onDestroy, onMount, createEventDispatcher } from "svelte";
     import { ChatMessageContent } from "../../../Connection/ChatConnection";
     import { sanitizeHTML } from "./WA-HTML-Sanitizer";
-
     export let content: Readable<ChatMessageContent>;
+
+    const dispatch = createEventDispatcher();
 
     async function getMarked(body: string): Promise<Marked> {
         let marked: Marked;
@@ -46,7 +47,7 @@
         return marked;
     }
 
-    let html = $content.body;
+    let html = "";
 
     let unsubscriber: Unsubscriber | undefined;
     onMount(() => {
@@ -59,6 +60,9 @@
                 .catch((error) => {
                     console.error("Failed to parse markdown content", error);
                     html = $content.body;
+                })
+                .finally(() => {
+                    dispatch("updateMessageBody");
                 });
         });
     });

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onDestroy, createEventDispatcher } from "svelte";
+    import { onDestroy } from "svelte";
     import { ChatRoom } from "../../Connection/ChatConnection";
     import { selectedChatMessageToReply } from "../../Stores/ChatStore";
     import { getChatEmojiPicker } from "../../EmojiPicker";
@@ -7,8 +7,6 @@
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import MessageInput from "./MessageInput.svelte";
     import { IconCircleX, IconMoodSmile, IconSend } from "@wa-icons";
-
-    const dispatch = createEventDispatcher();
 
     export let room: ChatRoom;
 
@@ -62,7 +60,6 @@
         if (stopTypingTimeOutID) {
             clearTimeout(stopTypingTimeOutID);
         }
-        dispatch("sendMessage");
     }
 
     function unselectChatMessageToReply() {

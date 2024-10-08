@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { ComponentType } from "svelte";
+    import { ComponentType, createEventDispatcher } from "svelte";
     import { MapStore } from "@workadventure/store-utils";
     import { ChatMessage, ChatMessageReaction, ChatMessageType } from "../../Connection/ChatConnection";
     import LL, { locale } from "../../../../i18n/i18n-svelte";
@@ -21,8 +21,16 @@
     export let reactions: MapStore<string, ChatMessageReaction> | undefined;
     export let replyDepth = 0;
 
+    const dispatch = createEventDispatcher();
+
     const { id, sender, isMyMessage, date, content, quotedMessage, isQuotedMessage, type, isDeleted, isModified } =
         message;
+
+    const updateMessageBody = () => {
+        dispatch("updateMessageBody", {
+            id: message.id,
+        });
+    };
 
     const messageFromSystem = type === "incoming" || type === "outcoming";
 
@@ -77,7 +85,7 @@
                     {$LL.chat.messageDeleted()}
                 </p>
             {:else}
-                <svelte:component this={messageType[type]} {content} />
+                <svelte:component this={messageType[type]} on:updateMessageBody={updateMessageBody} {content} />
                 {#if $isModified}
                     <p class="tw-text-gray-300 tw-text-xxxs tw-p-0 tw-m-0">({$LL.chat.messageEdited()})</p>
                 {/if}
