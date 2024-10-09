@@ -846,6 +846,10 @@ message LeaveSpaceRequestMessage {
   string spaceName = 1;
 }
 
+message PokeUserMessage {
+  string pokingUser = 1;
+}
+
 /**
  * Messages going from back and pusher to the front
  */
@@ -880,6 +884,7 @@ message ServerToClientMessage {
     JoinSpaceRequestMessage joinSpaceRequestMessage = 33;
     LeaveSpaceRequestMessage leaveSpaceRequestMessage = 34;
     ExternalModuleMessage externalModuleMessage = 35;
+    PokeUserMessage pokeUserMessage = 36;
   }
 }
 

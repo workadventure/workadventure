@@ -23,7 +23,3 @@ export const passStatusToOnline = () => {
     changeStatusConfirmationModalVisibility.close();
     bubbleModalVisibility.close();
 };
-
-export const askIfUserWantToJoinBubbleOf = (name: string) => {
-    bubbleModalVisibility.open(name);
-};
