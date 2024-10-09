@@ -830,7 +830,7 @@ jobs:
             LOGROCKET_ID: \"${LOGROCKET_ID}\"
             KLAXOON_CLIENT_ID: \"${KLAXOON_CLIENT_ID}\"
             GOOGLE_DRIVE_PICKER_CLIENT_ID: \"${GOOGLE_DRIVE_PICKER_CLIENT_ID}\"
-            GOOGLE_DRIVE_PICKER_APP_ID: \"${GOOGLE_DRIVE_PICKER_APP_ID}\
+            GOOGLE_DRIVE_PICKER_APP_ID: \"${GOOGLE_DRIVE_PICKER_APP_ID}\"
             MAP_STORAGE_API_TOKEN: \"${MAP_STORAGE_API_TOKEN}\"
             " > values-cd.yaml
         working-directory: contrib/helm
