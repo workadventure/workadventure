@@ -72,6 +72,7 @@
     role="textbox"
     tabindex="0"
     dir="auto"
+    lang=""
 />
 
 <style lang="scss">
