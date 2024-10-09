@@ -61,6 +61,11 @@ spec:
                 secretKeyRef:
                   name: {{ include "workadventure.fullname" . }}-secret-env-shared
                   key: SECRET_KEY
+            - name: MAP_STORAGE_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "workadventure.fullname" . }}-secret-env-shared
+                  key: MAP_STORAGE_API_TOKEN
             {{- if .Values.play.extraEnvVars }}
             {{- include "common.tplvalues.render" (dict "value" .Values.play.extraEnvVars "context" $) | nindent 12 }}
             {{- end }}
