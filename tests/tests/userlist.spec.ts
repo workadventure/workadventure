@@ -34,7 +34,7 @@ test.describe('Walk to', () =>{
 
             await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
            // Login user "Bob"
-            await login(userBob, secondPageName, 3, 'en-US', isMobileTest);
+            await login(userBob,'Bob', 3, 'en-US', isMobileTest);
             //await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
 
             await chatUtils.open(userBob,false);
