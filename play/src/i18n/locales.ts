@@ -45,6 +45,8 @@ export const setCurrentLocale = async (locale: Locales) => {
     localStorage.setItem(localStorageProperty, locale);
     await loadLocaleAsync(locale);
     setLocale(locale);
+    // Let's update the locale in the HTML lang tag
+    document.documentElement.lang = locale;
 };
 
 export const displayableLocales: { id: Locales; language: string | undefined; region: string | undefined }[] =
