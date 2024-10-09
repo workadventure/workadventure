@@ -72,10 +72,13 @@ spec:
             - secretRef:
                 name: {{ .Values.mapstorage.externalSecretName }}
             {{- end }}
-          {{- if .Values.mapstorage.extraEnvVars }}
           env:
+            - name: MAP_STORAGE_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "workadventure.fullname" . }}-secret-env-shared
+                  key: MAP_STORAGE_API_TOKEN
             {{- include "common.tplvalues.render" (dict "value" .Values.mapstorage.extraEnvVars "context" $) | nindent 12 }}
-          {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.mapstorage.service.port }}
