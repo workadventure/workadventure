@@ -23,9 +23,9 @@ class Chat {
         }
         await expect(page.locator("button#menuIcon")).toBeVisible();
         await page.click('button.chat-btn');
-        await expectInViewport('#chatWindow', page);
+        await expectInViewport('#chatModal', page);
         await expect(page.locator('button.chat-btn')).toHaveClass(/border-top-light/);
-        await expect(page.locator('#chatWindow')).toHaveClass(/show/);
+        await expect(page.locator('#chatModal')).toHaveClass(/show/);
     }
 
     get(page: Page){
