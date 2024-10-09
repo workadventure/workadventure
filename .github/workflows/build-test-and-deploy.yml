@@ -829,7 +829,6 @@ jobs:
             KLAXOON_CLIENT_ID: \"${KLAXOON_CLIENT_ID}\"
             GOOGLE_DRIVE_PICKER_CLIENT_ID: \"${GOOGLE_DRIVE_PICKER_CLIENT_ID}\"
             GOOGLE_DRIVE_PICKER_APP_ID: \"${GOOGLE_DRIVE_PICKER_APP_ID}\"
-            MAP_STORAGE_API_TOKEN: \"${MAP_STORAGE_API_TOKEN}\"
             " > values-cd.yaml
         working-directory: contrib/helm
         env:
@@ -850,7 +849,6 @@ jobs:
           KLAXOON_CLIENT_ID: ${{ secrets.KLAXOON_CLIENT_ID }}
           GOOGLE_DRIVE_PICKER_CLIENT_ID: ${{ secrets.GOOGLE_DRIVE_PICKER_CLIENT_ID }}
           GOOGLE_DRIVE_PICKER_APP_ID: ${{ secrets.GOOGLE_DRIVE_PICKER_APP_ID }}
-          MAP_STORAGE_API_TOKEN: ${{ secrets.MAP_STORAGE_API_TOKEN }}
 
 #      - name: "Printing values file"
 #        working-directory: contrib/helm
