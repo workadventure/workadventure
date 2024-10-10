@@ -62,12 +62,18 @@
             });
     }
 
-    let closeChatUserMenu = () => {
+    const closeChatUserMenu = () => {
         chatMenuActive = false;
     };
 
-    let toggleChatUSerMenu = () => {
+    const toggleChatUSerMenu = () => {
         chatMenuActive = !chatMenuActive;
+    };
+
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+        if (event.target && popoversElement && !popoversElement.contains(event.target as Node)) {
+            closeChatUserMenu();
+        }
     };
 
     onDestroy(() => {
@@ -82,12 +88,12 @@
     };
 </script>
 
+<svelte:window on:click={handleClickOutside} on:touchstart={handleClickOutside} />
 <div class="wa-dropdown">
     <button
         class="tw-text-light-purple focus:outline-none tw-m-0"
         bind:this={buttonElement}
         on:click|stopPropagation={toggleChatUSerMenu}
-        on:blur={closeChatUserMenu}
     >
         <IconDots />
     </button>
