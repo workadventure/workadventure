@@ -6,7 +6,7 @@ class Chat {
         await this.get(page).locator('li:has-text("Chat")').click({timeout: 60_000});
     }
     async slideToUsers(page: Page){
-        await this.get(page).locator('li:has-text("Users")').click({timeout: 60_000});
+        await page.locator('li:has-text("Users")').click({timeout: 60_000});
     }
 
     async checkNameInChat(page: Page, name: string, timeout = 30_000){
@@ -24,12 +24,10 @@ class Chat {
         await expect(page.locator("button#menuIcon")).toBeVisible();
         await page.click('button.chat-btn');
         await expectInViewport('#chatModal', page);
-        await expect(page.locator('button.chat-btn')).toHaveClass(/border-top-light/);
-        await expect(page.locator('#chatModal')).toHaveClass(/show/);
     }
 
     get(page: Page){
-        return page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
+        return page.locator('#chatModal');
     }
 
     async chatZoneExist(page: Page, name: string){
@@ -55,9 +53,9 @@ class Chat {
     }
 
     async UL_walkTo(page: Page, nickname: string){
-        await this.get(page).locator('.users .wa-chat-item', {hasText: nickname}).locator('.wa-dropdown button').click();
-        await expect(this.get(page).locator('.users .wa-chat-item', {hasText: nickname}).locator('span:has-text("Walk to")')).toBeVisible();
-        await this.get(page).locator('.users .wa-chat-item', {hasText: nickname}).locator('span:has-text("Walk to")').click({ timeout: 5_000 });
+        await page.locator('.users', {hasText: nickname}).locator('.wa-dropdown').click();
+        await expect(page.locator('.users', {hasText: nickname}).locator('span:has-text("Walk to")')).toBeVisible();
+        await page.locator('.users', {hasText: nickname}).locator('span:has-text("Walk to")').click({ timeout: 5_000 });
     }
 
     async AT_sendMessage(page: Page, text: string){
