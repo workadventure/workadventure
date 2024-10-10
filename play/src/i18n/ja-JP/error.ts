@@ -9,7 +9,7 @@ const error: DeepPartial<Translation["error"]> = {
     },
     connectionRejected: {
         title: "接続が拒否されました",
-        subTitle: "ワールドに参加できませんでした。後でもう一度試してみてください。",
+        subTitle: "ワールドに参加できませんでした。後でもう一度試してみてください。{error}",
         details: "詳しくは管理者にお問い合わせください。",
     },
     connectionRetry: {

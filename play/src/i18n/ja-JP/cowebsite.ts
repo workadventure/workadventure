@@ -6,4 +6,4 @@ const companion: DeepPartial<Translation["cowebsite"]> = {
     close: "閉じる",
 };
 
-export default cowebsite;
+export default companion;

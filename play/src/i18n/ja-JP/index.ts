@@ -22,6 +22,7 @@ import megaphone from "./megaphone";
 import video from "./video";
 import statusModal from "./statusModal";
 import area from "./area";
+import externalModule from "./externalModule";
 
 const ja_JP = merge(en_US, {
     area,
@@ -46,6 +47,7 @@ const ja_JP = merge(en_US, {
     megaphone,
     video,
     statusModal,
+    externalModule,
 });
 
 export default ja_JP;
