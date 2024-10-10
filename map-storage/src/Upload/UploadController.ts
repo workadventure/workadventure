@@ -823,7 +823,7 @@ export class UploadController {
                         // No cache file or invalid cache file? What the hell? Let's try to regenerate the cache file
                         await this.mapListService.generateCacheFile(req.hostname);
                         // Now that the cache file is generated, let's retry serving the file.
-                        const parsedCacheFile = this.mapListService.readCacheFile(req.hostname);
+                        const parsedCacheFile = await this.mapListService.readCacheFile(req.hostname);
                         res.json(parsedCacheFile);
                         return;
                     }
