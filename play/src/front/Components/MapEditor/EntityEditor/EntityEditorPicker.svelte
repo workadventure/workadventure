@@ -137,8 +137,13 @@
         searchTerm: string
     ) {
         if (tag === undefined) {
-            return entitiesPrefabsVariants.filter((entityPrefabVariant) =>
-                entityPrefabVariant.defaultPrefab.name.toLowerCase().includes(searchTerm.toLowerCase())
+            return entitiesPrefabsVariants.filter(
+                (entityPrefabVariant) =>
+                    entityPrefabVariant.defaultPrefab.tags
+                        .join(",")
+                        .toLocaleLowerCase()
+                        .indexOf(searchTerm.toLocaleLowerCase()) != -1 ||
+                    entityPrefabVariant.defaultPrefab.name.toLowerCase().includes(searchTerm.toLowerCase())
             );
         }
         if (selectedTag === "Custom") {
@@ -172,7 +177,9 @@
                     class="tw-p-0"
                     data-testid="clearCurrentSelection"
                     on:click={displayTagListAndClearCurrentSelection}
-                    ><IconChevronLeft />{$LL.mapEditor.entityEditor.buttons.back()}</button
+                    ><IconChevronLeft />{$LL.mapEditor.entityEditor.buttons.back()} - {selectedTag
+                        ? selectedTag
+                        : ""}</button
                 >
             {/if}
         </div>
@@ -185,7 +192,7 @@
             />
         </div>
     </div>
-    <div class="tw-flex-1 tw-overflow-auto">
+    <div class={`tw-flex-1 tw-overflow-auto ${pickedEntity ? "tw-pt-44" : ""}`}>
         {#if selectedTag === undefined && searchTerm === ""}
             <ul class="tw-list-none !tw-p-0 tw-min-w-full">
                 {#each Object.entries(getEntitiesPrefabsVariantsGroupedByTagWithCustomFirst($entitiesPrefabsVariants)) as [tag, entitiesPrefabsVariants] (tag)}
@@ -201,7 +208,7 @@
         {:else}
             {#if pickedEntityVariant && pickedEntity}
                 <div
-                    class="tw-flex tw-flex-row tw-gap-2 tw-items-center tw-justify-center tw-border-b-blue-50 tw-mb-2 tw-min-h-[200px]"
+                    class="tw-flex tw-flex-row tw-gap-2 tw-items-center tw-justify-center tw-border-b-blue-50 tw-mb-2 tw-min-h-[200px] tw-absolute tw-bg-dark-purple/90 tw-rounded-2xl tw-w-full tw-left-0 tw-top-24"
                 >
                     {#if isEditingCustomEntity}
                         <CustomEntityEditionForm
