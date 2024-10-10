@@ -137,8 +137,13 @@
         searchTerm: string
     ) {
         if (tag === undefined) {
-            return entitiesPrefabsVariants.filter((entityPrefabVariant) =>
-                entityPrefabVariant.defaultPrefab.name.toLowerCase().includes(searchTerm.toLowerCase())
+            return entitiesPrefabsVariants.filter(
+                (entityPrefabVariant) =>
+                    entityPrefabVariant.defaultPrefab.tags
+                        .join(",")
+                        .toLocaleLowerCase()
+                        .indexOf(searchTerm.toLocaleLowerCase()) != -1 ||
+                    entityPrefabVariant.defaultPrefab.name.toLowerCase().includes(searchTerm.toLowerCase())
             );
         }
         if (selectedTag === "Custom") {
