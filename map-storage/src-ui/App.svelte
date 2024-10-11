@@ -1,13 +1,9 @@
 <script lang="ts">
-    //import svelteLogo from './assets/svelte.svg'
-    //import viteLogo from '/vite.svg'
-
     import {MapsCacheFileFormat, WAMFileFormat} from "@workadventure/map-editor";
     import {onMount} from "svelte";
 
     // TODO: not perfect. We should instead get data from an env var.
     const playUrl = window.location.protocol + "//" + window.location.host.replace("map-storage.", "play.").replace("map-storage-", "play-");
-    const mapStorageUrl = window.location.protocol + "//" + window.location.host;
 
     const responsePromise = fetch<MapsCacheFileFormat>('../maps', {
         redirect: "follow"
@@ -68,6 +64,16 @@
 
     let newTmjUrl: string = "";
     let wamPath: string = "";
+
+    function normalizeMapUrl(mapUrl, name) {
+        try {
+            new URL(mapUrl);
+            return mapUrl;
+        }
+        catch {
+            return "../" + name.replace(/[^/]+$/, mapUrl);
+        }
+    }
 </script>
 
 <main>
@@ -80,15 +86,26 @@
             <p>Loading maps list...</p>
         {:then json}
             <h2>Maps list</h2>
-            <ul>
+            <table>
+                <tr>
+                    <th>
+                        WAM location
+                    </th>
+                    <th>
+                        map location
+                    </th>
+                </tr>
                 {#each Object.entries(json.maps) as [name, map]}
-                <li>
-                    <a href={mapStorageUrl + "/" + name} target="_blank">{name}</a>
-                    &rarr;
-                    <a href={map.mapUrl} target="_blank">{map.mapUrl}</a>
-                </li>
+                    <tr>
+                        <td>
+                            <a href={"../" + name} target="_blank">{name}</a>
+                        </td>
+                        <td>
+                            <a href={normalizeMapUrl(map.mapUrl, name)} target="_blank">{map.mapUrl}</a>
+                        </td>
+                    </tr>
                 {/each}
-            </ul>
+            </table>
         {:catch error}
             <p style="color: red">{error.message}</p>
         {/await}
@@ -141,5 +158,12 @@
 </main>
 
 <style>
-
+    table {
+        border-collapse: collapse;
+        text-align: left;
+    }
+    td, th {
+        padding: 0ex 1ex;
+        border: 1px solid;
+    }
 </style>
