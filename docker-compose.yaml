@@ -148,6 +148,7 @@ services:
       GOOGLE_DRIVE_PICKER_CLIENT_ID: "$GOOGLE_DRIVE_PICKER_CLIENT_ID"
       GOOGLE_DRIVE_PICKER_APP_ID: "$GOOGLE_DRIVE_PICKER_APP_ID"
       #Chat
+      MATRIX_API_URI: http://synapse:8008/
       MATRIX_PUBLIC_URI: http://matrix.workadventure.localhost
       MATRIX_ADMIN_USER: admin
       MATRIX_ADMIN_PASSWORD: MySecretPassword
