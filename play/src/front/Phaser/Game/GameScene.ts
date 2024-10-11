@@ -1080,6 +1080,7 @@ export class GameScene extends DirtyScene {
             clearTimeout(this.hideTimeout);
             this.hideTimeout = undefined;
         }
+        if (this.wamUrlFile) this.superLoad.jsonRemoveCacheByKey(this.wamUrlFile);
     }
     /**
      * @param time
