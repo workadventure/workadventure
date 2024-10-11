@@ -11,6 +11,8 @@
         mapEditorModifyCustomEntityEventStore,
         mapEditorSelectedEntityPrefabStore,
         mapEditorSelectedEntityStore,
+        SelectableTag,
+        selectCategoryStore,
     } from "../../../Stores/MapEditorStore";
     import CustomEntityEditionForm from "./CustomEntityEditionForm/CustomEntityEditionForm.svelte";
     import EntitiesGrid from "./EntitiesGrid.svelte";
@@ -21,10 +23,6 @@
     import TagListItem from "./TagListItem.svelte";
     import { IconChevronLeft, IconDeselect, IconPencil } from "@wa-icons";
 
-    type customTag = "Custom";
-
-    type selectableTag = string | undefined | customTag;
-
     const entitiesCollectionsManager = gameManager.getCurrentGameScene().getEntitiesCollectionsManager();
     const entitiesPrefabsVariants = entitiesCollectionsManager.getEntitiesPrefabsVariantStore();
 
@@ -33,7 +31,6 @@
     let selectedColor: string;
 
     let searchTerm = "";
-    let selectedTag: selectableTag = undefined;
 
     const mapEditorSelectedEntityPrefabStoreUnsubscriber = mapEditorSelectedEntityPrefabStore.subscribe(
         (prefab?: EntityPrefab) => {
@@ -82,14 +79,14 @@
     }
 
     function onSelectedTag(tag: string) {
-        selectedTag = tag;
+        selectCategoryStore.set(tag);
     }
 
     function displayTagListAndClearCurrentSelection() {
         get(mapEditorSelectedEntityStore)?.delete();
         mapEditorEntityModeStore.set("ADD");
         clearEntitySelection();
-        selectedTag = undefined;
+        selectCategoryStore.set(undefined);
         searchTerm = "";
         setIsEditingCustomEntity(false);
     }
@@ -133,7 +130,7 @@
 
     function getEntitiesPrefabsVariantsFilteredByTag(
         entitiesPrefabsVariants: EntityVariant[],
-        tag: selectableTag,
+        tag: SelectableTag,
         searchTerm: string
     ) {
         if (tag === undefined) {
@@ -146,7 +143,7 @@
                     entityPrefabVariant.defaultPrefab.name.toLowerCase().includes(searchTerm.toLowerCase())
             );
         }
-        if (selectedTag === "Custom") {
+        if ($selectCategoryStore === "Custom") {
             return entitiesPrefabsVariants.filter(
                 (entityPrefabVariant) =>
                     entityPrefabVariant.defaultPrefab.type === "Custom" &&
@@ -169,7 +166,7 @@
 <div class="tw-flex tw-flex-col tw-flex-1 tw-overflow-auto tw-gap-2">
     <div class="tw-flex tw-flex-col tw-gap-2">
         <div>
-            {#if selectedTag === undefined}
+            {#if $selectCategoryStore === undefined}
                 <p class="tw-text-[22px] tw-m-0">{$LL.mapEditor.entityEditor.header.title()}</p>
                 <p class="tw-m-0 tw-opacity-50">{$LL.mapEditor.entityEditor.header.description()}</p>
             {:else}
@@ -177,8 +174,8 @@
                     class="tw-p-0"
                     data-testid="clearCurrentSelection"
                     on:click={displayTagListAndClearCurrentSelection}
-                    ><IconChevronLeft />{$LL.mapEditor.entityEditor.buttons.back()} - {selectedTag
-                        ? selectedTag
+                    ><IconChevronLeft />{$LL.mapEditor.entityEditor.buttons.back()} - {$selectCategoryStore
+                        ? $selectCategoryStore
                         : ""}</button
                 >
             {/if}
@@ -193,7 +190,7 @@
         </div>
     </div>
     <div class={`tw-flex-1 tw-overflow-auto ${pickedEntity ? "tw-pt-44" : ""}`}>
-        {#if selectedTag === undefined && searchTerm === ""}
+        {#if $selectCategoryStore === undefined && searchTerm === ""}
             <ul class="tw-list-none !tw-p-0 tw-min-w-full">
                 {#each Object.entries(getEntitiesPrefabsVariantsGroupedByTagWithCustomFirst($entitiesPrefabsVariants)) as [tag, entitiesPrefabsVariants] (tag)}
                     <TagListItem
@@ -261,7 +258,7 @@
                 <EntitiesGrid
                     entityPrefabVariants={getEntitiesPrefabsVariantsFilteredByTag(
                         $entitiesPrefabsVariants,
-                        selectedTag,
+                        $selectCategoryStore,
                         searchTerm
                     )}
                     onSelectEntity={onPickEntityVariant}
