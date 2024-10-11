@@ -465,8 +465,8 @@ services:
       LETSENCRYPT_HOST: "matrix.workadventure.localhost"
       SYNAPSE_SERVER_NAME: "matrix.workadventure.localhost"
       SYNAPSE_REPORT_STATS: "yes"
-      MATRIX_ADMIN_USER: "$MATRIX_ADMIN_USER"
-      MATRIX_ADMIN_PASSWORD: "$MATRIX_ADMIN_PASSWORD"
+      MATRIX_ADMIN_USER: admin
+      MATRIX_ADMIN_PASSWORD: MySecretPassword
       JWT_SECRET: "$SECRET_KEY"
 #  coturn:
 #    image: coturn/coturn:4.5.2
