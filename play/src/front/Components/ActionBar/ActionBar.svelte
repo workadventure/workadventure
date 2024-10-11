@@ -100,6 +100,7 @@
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { ADMIN_BO_URL } from "../../Enum/EnvironmentVariable";
+    import { inputFormFocusStore } from "../../Stores/UserInputStore";
     import AvailabilityStatusComponent from "./AvailabilityStatus/AvailabilityStatus.svelte";
     import { IconCheck, IconChevronDown, IconChevronUp } from "@wa-icons";
 
@@ -260,6 +261,7 @@
     }
 
     function onKeyDown(e: KeyboardEvent) {
+        if ($mapEditorModeStore || $inputFormFocusStore) return;
         let key = null;
         if (e.key === "1" || e.key === "F1") {
             key = 1;
@@ -1084,7 +1086,7 @@
 {#if $emoteMenuSubStore}
     <div
         class="tw-flex tw-justify-center tw-m-auto tw-absolute tw-left-0 tw-right-0 tw-bottom-0"
-        style="margin-bottom: 4.5rem; height: auto;"
+        style="margin-bottom: 5.5rem; height: auto;"
     >
         <div class="bottom-action-bar">
             <div class="bottom-action-section tw-flex animate">
