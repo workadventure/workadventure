@@ -16,16 +16,14 @@ When editing an area, you can add the Matrix chat room property by clicking on t
 
 ![Matrix Chat Icon](../../images/editor/matrix-chat-zone/matrix-chat-zone-1.png)
 
-1. **Matrix Server Required**: Ensure you have access to a Matrix server to use this feature.
-
    ![Matrix Chat Room](../../images/editor/matrix-chat-zone/matrix-chat-zone-2.png)
 
-2. You must define a **display name** for the Matrix chat room. For example:
+1. You must define a **display name** for the Matrix chat room.
    
-3. Choose how the chat room is triggered when entering the area:
+2. Choose how the chat room is triggered when entering the area:
    - **Automatically open chat**: If this option is selected, the chat will open immediately when the user enters the area.
 
-4. If not selected, the chat can be manually opened by the user from the interface.
+3. If not selected, the chat can be manually opened by the user from the interface.
 
 
 ## Matrix Chat Room Functionality
