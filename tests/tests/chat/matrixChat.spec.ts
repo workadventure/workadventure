@@ -7,7 +7,7 @@ import ChatUtils from "./chatUtils";
 
 test.setTimeout(120000);
 
-test.describe("Matrix chat tests @oidc", () => {
+test.describe("Matrix chat tests @oidc @matrix", () => {
   test.beforeEach(
     "Ignore tests on webkit because of issue with camera and microphone",
 
