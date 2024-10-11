@@ -5,12 +5,14 @@ sidebar_position: 110
 ---
 
 # Matrix Chat Room Property
-
-You can link a Matrix chat room to a specific area on your map, allowing users to enter a chat directly when they move into the designated area. This feature requires a Matrix server to function.
+:::info
+This feature requires a Matrix server. If you are using WorkAdventure SaaS, we already provide a Matrix server out-of-the-box. If you are self-hosting, be sure to connect a Matrix server to your install.
+:::
+You can link a Matrix chat room to a specific area on your map, allowing users to enter a chat directly when they move into the designated area.
 
 ## Setting a Matrix Chat Room Area
 
-When editing an area or an entity, you can add the Matrix chat room property by clicking on the "Matrix chat" icon.
+When editing an area, you can add the Matrix chat room property by clicking on the "Matrix chat" icon.
 
 ![Matrix Chat Icon](../../images/editor/matrix-chat-zone/matrix-chat-zone-1.png)
 
