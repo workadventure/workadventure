@@ -8,7 +8,7 @@ import { oidcMatrixUserLogin } from "../utils/oidc";
 import { resetWamMaps } from "../utils/map-editor/uploader";
 import chatUtils from "./chatUtils";
 
-test.describe("matrix chat area property @matrixChatArea", () => {
+test.describe("matrix chat area property @matrix", () => {
   test.beforeEach(
     "Ignore tests on mobilechromium because map editor not available for mobile devices",
     async ({ page, request }, { project }) => {
