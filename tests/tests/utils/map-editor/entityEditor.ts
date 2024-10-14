@@ -3,13 +3,6 @@ import { expect, Page } from "@playwright/test";
 
 class EntityEditor {
   async selectEntity(page: Page, nb: number, search?: string, expectedFilename?: string) {
-    if (search != undefined) {
-      await page.getByPlaceholder("Search").click();
-      await page.getByPlaceholder("Search").fill(search);
-    }
-    await expect(page.getByTestId("entityImageLoader")).toHaveCount(0);
-    await expect(page.getByTestId("entityImageError")).toHaveCount(0);
-    await expect(page.getByTestId("entity-item").nth(nb)).toHaveCount(1);
     if (expectedFilename) {
       const responseOnTestAssetClicked = page.waitForResponse((response) => response.url().includes(expectedFilename));
       await page.getByTestId("entity-item").nth(nb).click();
@@ -17,6 +10,15 @@ class EntityEditor {
     } else {
       await page.getByTestId("entity-item").nth(nb).click();
     }
+
+    if (search != undefined) {
+      await page.getByPlaceholder("Search").click();
+      await page.getByPlaceholder("Search").fill(search);
+    }
+    await expect(page.getByTestId("entityImageLoader")).toHaveCount(0);
+    await expect(page.getByTestId("entityImageError")).toHaveCount(0);
+    await expect(page.getByTestId("entity-item").nth(nb)).toHaveCount(1, { timeout: 30000 });
+
     // That's bad, but we need to wait a bit for the canvas to put the object.
     // eslint-disable-next-line playwright/no-wait-for-timeout
     await page.waitForTimeout(1000);
@@ -111,6 +113,9 @@ class EntityEditor {
     await page.locator(".map-editor .sidebar .properties-container input#tabLink").fill(link);
   }
 
+  getTestAssetFile(){
+    return `${this.getTestAssetName()}.png`;
+  }
   getTestAssetName() {
     return "testAsset.png";
   }

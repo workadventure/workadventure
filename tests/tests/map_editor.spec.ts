@@ -450,6 +450,7 @@ test.describe("Map editor @oidc", () => {
         await oidcAdminTagLogin(page2, false);
 
         // open map editor
+        await page.bringToFront();
         await page.getByRole("button", {name: "toggle-map-editor"}).click();
         await MapEditor.openEntityEditor(page);
 
@@ -457,7 +458,7 @@ test.describe("Map editor @oidc", () => {
         await EntityEditor.uploadTestAsset(page);
 
         // Select uploaded entity and move it to the map
-        await EntityEditor.selectEntity(page, 0, EntityEditor.getTestAssetName(), EntityEditor.getTestAssetName());
+        await EntityEditor.selectEntity(page, 0, EntityEditor.getTestAssetName(), EntityEditor.getTestAssetFile());
         await EntityEditor.moveAndClick(page, 6 * 32, 6 * 32);
 
         // Add open link interaction on uploaded asset
