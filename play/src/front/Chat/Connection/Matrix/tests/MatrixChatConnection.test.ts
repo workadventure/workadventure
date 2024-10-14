@@ -1,7 +1,7 @@
 import { ClientEvent, EventType, MatrixClient, PendingEventOrdering, RoomEvent, SyncState } from "matrix-js-sdk";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { KnownMembership } from "matrix-js-sdk/lib/types";
-import { get, Readable } from "svelte/store";
+import { get, Readable, writable } from "svelte/store";
 import { AvailabilityStatus } from "@workadventure/messages";
 import { MatrixChatConnection } from "../MatrixChatConnection";
 import { CreateRoomOptions } from "../../ChatConnection";
@@ -27,6 +27,11 @@ vi.mock("../../../../Phaser/Entity/CharacterLayerManager", () => {
     };
 });
 
+vi.mock("../../../Stores/ChatStore.ts", () => {
+    return {
+        selectedRoom: writable(undefined),
+    };
+});
 describe("MatrixChatConnection", () => {
     const flushPromises = () => new Promise(setImmediate);
 

@@ -224,7 +224,7 @@ export class MatrixChatRoom implements ChatRoom {
                             this.playNewMessageSound();
                             if (!isAChatRoomIsVisible() && get(selectedRoom)?.id !== "proximity") {
                                 selectedRoom.set(this);
-                                navChat.set("chat");
+                                navChat.switchToChat();
                             }
                         }
                     }

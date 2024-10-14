@@ -416,7 +416,7 @@ export class ProximityChatRoom implements ChatRoom {
         const actualStatus = get(availabilityStatusStore);
         if (!isAChatRoomIsVisible()) {
             selectedRoom.set(this);
-            navChat.set("chat");
+            navChat.switchToChat();
             if (
                 !get(requestedMicrophoneState) &&
                 !get(requestedCameraState) &&
