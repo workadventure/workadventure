@@ -23,6 +23,9 @@ vi.mock("../InteractiveAuthDialog.svelte", () => {
     return {};
 });
 
+vi.mock("../../../Stores/ChatStore.ts", () => {
+    return {};
+});
 describe("MatrixSecurity", () => {
     describe("initClientCryptoConfiguration", () => {
         const basicMockClient = {

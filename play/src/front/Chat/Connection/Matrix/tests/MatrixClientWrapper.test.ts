@@ -14,6 +14,9 @@ vi.mock("../InteractiveAuthDialog.svelte", () => {
     return {};
 });
 
+vi.mock("../../../Stores/ChatStore.ts", () => {
+    return {};
+});
 describe("MatrixClientWrapper", () => {
     beforeEach(() => {
         vi.clearAllMocks();

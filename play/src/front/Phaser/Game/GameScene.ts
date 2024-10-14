@@ -40,6 +40,8 @@ import { lazyLoadPlayerCompanionTexture } from "../Companion/CompanionTexturesLo
 import { iframeListener } from "../../Api/IframeListener";
 import {
     DEBUG_MODE,
+    ENABLE_CHAT_DISCONNECTED_LIST,
+    ENABLE_CHAT_ONLINE_LIST,
     ENABLE_MAP_EDITOR,
     ENABLE_OPENID,
     MAX_PER_GROUP,
@@ -1540,13 +1542,15 @@ export class GameScene extends DirtyScene {
                         const allUserSpace = this.allUserSpace;
 
                         const userProviders: UserProviderInterface[] = [];
-                        if (connection) {
-                            userProviders.push(new AdminUserProvider(connection));
+
+                        if (ENABLE_CHAT_DISCONNECTED_LIST) {
+                            if (connection) {
+                                userProviders.push(new AdminUserProvider(connection));
+                            }
+                            userProviders.push(new ChatUserProvider(chatConnection));
                         }
 
-                        userProviders.push(new ChatUserProvider(chatConnection));
-
-                        if (allUserSpace) {
+                        if (allUserSpace && ENABLE_CHAT_ONLINE_LIST) {
                             userProviders.push(new WorldUserProvider(allUserSpace));
                         }
 
