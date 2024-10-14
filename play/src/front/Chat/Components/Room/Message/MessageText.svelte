@@ -6,6 +6,7 @@
     import { sanitizeHTML } from "./WA-HTML-Sanitizer";
 
     export let content: Readable<ChatMessageContent>;
+    export let hasDepth: false;
 
     async function getMarked(body: string): Promise<Marked> {
         let marked: Marked;
@@ -54,8 +55,6 @@
             let promiseHtml = getMarked(value.body).then((marked) => marked.parse(value.body));
             promiseHtml
                 .then((result) => {
-                    console.log("RESULT LENGTH !!!!!");
-                    console.log(result.length);
                     html = result;
                 })
                 .catch((error) => {
@@ -72,12 +71,11 @@
     });
 </script>
 
-<div class="message-bubble tw-m-0 tw-text-sm tw-text-white tw-py-1 tw-px-2">
+<div class="message-bubble tw-m-0 {hasDepth ? 'tw-text-xs tw-leading-4' : 'tw-text-sm' } tw-text-white tw-py-1 tw-px-2">
     {@html sanitizeHTML(html)}
     <style>
-        .message-bubble p {
-            margin: 0;
-            line-height: 24px;
+        .message-bubble p:last-of-type {
+            margin-bottom: 0;
         }
         .message-bubble a {
             text-decoration: underline;

@@ -16,12 +16,6 @@
         if (optionButtonRef === undefined) {
             return;
         }
-        if (optionRef === undefined) {
-            return;
-        }
-        const { bottom, right } = optionButtonRef.getBoundingClientRect();
-        optionRef.style.top = `${bottom}px`;
-        optionRef.style.left = `${right}px`;
         hideFolderOptions = !hideFolderOptions;
     }
     function closeMenuAndOpenCreateRoom() {
@@ -38,17 +32,33 @@
 
 <button
     data-testid={`openOptionToCreateRoomOrFolder${parentName}`}
-    class="tw-p-0 tw-m-0 tw-text-gray-400"
+    class="tw-p-0 tw-m-0 tw-p-1 tw-rounded-lg hover:tw-bg-white/10 {hideFolderOptions ? 'tw-bg-transparent' : 'tw-bg-secondary'}"
     bind:this={optionButtonRef}
     on:click|preventDefault|stopPropagation={toggleSpaceOption}
 >
-    <IconSquarePlus font-size={16} />
+    <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="icon icon-tabler icon-tabler-dots"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="#ffffff"
+            fill="none"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+    >
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M5 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+        <path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+        <path d="M19 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+    </svg>
 </button>
 <div
     on:mouseleave={toggleSpaceOption}
     bind:this={optionRef}
-    class="tw-absolute tw-bg-black/90 tw-rounded-md tw-p-1 tw-z-[1] tw-w-max"
-    class:tw-absolue={optionButtonRef !== undefined}
+    class="tw-bg-contrast/50 tw-backdrop-blur-md tw-rounded-lg tw-overflow-hidden tw-z-[1] tw-w-max tw-right-4 tw-top-10 tw-p-1"
+    class:tw-absolute={optionButtonRef !== undefined}
     class:tw-hidden={hideFolderOptions}
 >
     <RoomOption

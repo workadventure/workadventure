@@ -11,7 +11,6 @@
     export let room: ChatRoom;
     const areNotificationsMuted = room.areNotificationsMuted;
     let optionButtonRef: HTMLButtonElement | undefined = undefined;
-    let optionRef: HTMLDivElement | undefined = undefined;
     let hideOptions = true;
 
     onMount(() => {
@@ -26,12 +25,6 @@
         if (optionButtonRef === undefined) {
             return;
         }
-        if (optionRef === undefined) {
-            return;
-        }
-        const { bottom, right } = optionButtonRef.getBoundingClientRect();
-        optionRef.style.top = `${bottom}px`;
-        optionRef.style.left = `${right}px`;
         hideOptions = !hideOptions;
     }
 
@@ -74,7 +67,7 @@
 <button
     bind:this={optionButtonRef}
     on:click|preventDefault|stopPropagation={toggleRoomOptions}
-    class="tw-m-0 tw-p-0 tw-flex tw-items-center tw-justify-center tw-h-7 tw-w-7 tw-invisible group-hover/chatItem:tw-visible"
+    class="tw-m-0 tw-p-0 tw-flex tw-items-center tw-justify-center tw-h-7 tw-w-7 tw-invisible group-hover/chatItem:tw-visible hover:tw-bg-white/10 tw-rounded-lg"
 >
     <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -96,9 +89,8 @@
 </button>
 <div
     on:mouseleave={toggleRoomOptions}
-    bind:this={optionRef}
-    class="tw-absolute tw-bg-black/90 tw-rounded-md tw-p-1 tw-z-[1] tw-w-max"
-    class:tw-absolue={optionButtonRef !== undefined}
+    class="tw-bg-contrast/50 tw-backdrop-blur-md tw-rounded-lg tw-overflow-hidden tw-z-[1] tw-w-max tw-right-2 tw-top-10 tw-p-1"
+    class:tw-absolute={optionButtonRef !== undefined}
     class:tw-hidden={hideOptions}
 >
     <RoomOption
@@ -106,15 +98,16 @@
         title={$LL.chat.manageRoomUsers.roomOption()}
         on:click={openInviteParticipantsModal}
     />
-
-    <RoomOption
-        IconComponent={IconLogout}
-        title={$LL.chat.roomMenu.leaveRoom.label()}
-        on:click={closeMenuAndLeaveRoom}
-    />
     <RoomOption
         IconComponent={$areNotificationsMuted ? IconUnMute : IconMute}
         title={$areNotificationsMuted ? $LL.chat.roomMenu.unmuteRoom() : $LL.chat.roomMenu.muteRoom()}
         on:click={closeMenuAndSetMuteStatus}
+    />
+
+    <RoomOption
+            IconComponent={IconLogout}
+            title={$LL.chat.roomMenu.leaveRoom.label()}
+            bg="tw-bg-danger/50 hover:tw-bg-danger"
+            on:click={closeMenuAndLeaveRoom}
     />
 </div>
