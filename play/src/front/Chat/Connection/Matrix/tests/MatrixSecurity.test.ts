@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MatrixClient } from "matrix-js-sdk";
+import { writable } from "svelte/store";
 import { MatrixSecurity } from "../MatrixSecurity";
 
 vi.mock("../../../../Phaser/Entity/CharacterLayerManager", () => {
@@ -24,7 +25,9 @@ vi.mock("../InteractiveAuthDialog.svelte", () => {
 });
 
 vi.mock("../../../Stores/ChatStore.ts", () => {
-    return {};
+    return {
+        alreadyAskForInitCryptoConfiguration: writable(false),
+    };
 });
 describe("MatrixSecurity", () => {
     describe("initClientCryptoConfiguration", () => {
