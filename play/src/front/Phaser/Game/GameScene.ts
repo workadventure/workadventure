@@ -18,6 +18,7 @@ import {
 import { z } from "zod";
 import { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
 import {
+    AreaData,
     ENTITIES_FOLDER_PATH_NO_PREFIX,
     ENTITY_COLLECTION_FILE,
     EntityPermissions,
@@ -332,6 +333,7 @@ export class GameScene extends DirtyScene {
     private _proximityChatRoom: ProximityChatRoom | undefined;
     private _userProviderMergerDeferred: Deferred<UserProviderMerger> = new Deferred();
     private matrixClientWrapper: MatrixClientWrapper | undefined;
+    public landingAreas: AreaData[] = [];
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
@@ -1859,6 +1861,13 @@ export class GameScene extends DirtyScene {
                 const error = get(errorScreenStore);
                 if (error && error?.type === "reconnecting") errorScreenStore.delete();
                 //this.scene.stop(ReconnectingSceneName);
+
+                this.landingAreas =
+                    this.getGameMap().getGameMapAreas()?.getAreasOnPosition({
+                        x: this.CurrentPlayer.x,
+                        y: this.CurrentPlayer.y,
+                    }) || [];
+
                 this.gameMapFrontWrapper.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
                 // Init layer change listener
                 this.gameMapFrontWrapper.onEnterLayer((layers) => {
