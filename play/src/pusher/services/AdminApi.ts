@@ -673,7 +673,8 @@ class AdminApi implements AdminInterface {
     async getUrlRoomsFromSameWorld(
         roomUrl: string,
         locale?: string,
-        tags?: string[]
+        tags?: string[],
+        bypassTagFilter = false
     ): Promise<ShortMapDescriptionList> {
         /**
          * @openapi
@@ -723,6 +724,7 @@ class AdminApi implements AdminInterface {
         // Build the URL to call the API
         const url = new URL(`${ADMIN_API_URL}/api/room/sameWorld`);
         url.searchParams.append("roomUrl", roomUrl);
+        url.searchParams.append("bypassTagFilter", String(bypassTagFilter));
         if (tags) {
             url.searchParams.append("tags", tags.join(","));
         }
