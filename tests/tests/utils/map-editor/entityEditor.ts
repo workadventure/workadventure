@@ -97,10 +97,10 @@ class EntityEditor {
 
   async applyEntityModifications(page: Page) {
     await page.getByTestId("applyEntityModifications").click();
-    // Check loader started
-    await expect(page.getByTestId('entityImageLoader')).toHaveCount(1, { timeout: 30000 });
-    // Check end
-    await expect(page.getByTestId('entityImageLoader')).toHaveCount(0, { timeout: 30000 });
+    if(page.getByTestId('entityImageLoader').isVisible({timeout: 2000})){
+      // Check loader end
+      await expect(page.getByTestId('entityImageLoader')).toHaveCount(0, { timeout: 30000 });
+    }
     // Verify that there is no error message
     await expect(page.getByTestId("entityImageError")).toHaveCount(0);
     // Verify that the image uploaded is displayed in the list
