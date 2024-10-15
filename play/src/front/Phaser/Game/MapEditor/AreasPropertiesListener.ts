@@ -156,6 +156,8 @@ export class AreasPropertiesListener {
             for (const property of areaData.properties) {
                 this.removePropertyFilter(property, area);
             }
+
+            this.scene.landingAreas = this.scene.landingAreas.filter((landingArea) => landingArea.id !== areaData.id);
         }
     }
 
@@ -200,7 +202,11 @@ export class AreasPropertiesListener {
                 if (property.areaName && property.areaName !== "") {
                     url = `${property.url}#${property.areaName}`;
                 }
-                this.handleExitPropertyOnEnter(url);
+
+                if (this.scene.landingAreas.every((area) => areaData.id !== area.id)) {
+                    this.handleExitPropertyOnEnter(url);
+                }
+
                 break;
             }
             case "personalAreaPropertyData": {
@@ -926,6 +932,7 @@ export class AreasPropertiesListener {
     }
 
     private handleExitPropertyOnEnter(url: string): void {
+        this.scene;
         this.scene
             .onMapExit(Room.getRoomPathFromExitUrl(url, window.location.toString()))
             .catch((e) => console.error(e));
