@@ -2,7 +2,7 @@
     import highlightWords from "highlight-words";
     import { ChatRoom } from "../../Connection/ChatConnection";
     import NotificationBadge from "../NotificationBadge.svelte";
-    import { chatSearchBarValue, selectedRoom } from "../../Stores/ChatStore";
+    import { chatSearchBarValue,selectedRoomStore } from "../../Stores/ChatStore";
     import Avatar from "../Avatar.svelte";
     import EncryptionBadge from "../EncryptionBadge.svelte";
     import RoomMenu from "./RoomMenu/RoomMenu.svelte";
@@ -18,7 +18,7 @@
         query: $chatSearchBarValue,
     });
 
-    $: isSelected = $selectedRoom?.id === room.id;
+    $: isSelected = $selectedRoomStore?.id === room.id;
 </script>
 
 <div
@@ -26,7 +26,7 @@
     class:tw-bg-white={isSelected}
     class:tw-bg-opacity-10={isSelected}
     class:tw-rounded-md={isSelected}
-    on:click={() => selectedRoom.set(room)}
+    on:click={() => selectedRoomStore.set(room)}
 >
     <div class="tw-relative">
         <Avatar avatarUrl={room.avatarUrl} fallbackName={$roomName} />

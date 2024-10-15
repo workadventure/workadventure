@@ -1,22 +1,37 @@
 import { MatrixClient, SecretStorage } from "matrix-js-sdk";
-import { GeneratedSecretStorageKey, KeyBackupInfo } from "matrix-js-sdk/lib/crypto-api";
+import {
+    EmojiMapping,
+    GeneratedSecretStorageKey,
+    KeyBackupInfo,
+    VerificationRequest,
+    VerificationRequestEvent,
+    VerifierEvent,
+} from "matrix-js-sdk/lib/crypto-api";
 import { deriveKey } from "matrix-js-sdk/lib/crypto/key_passphrase";
 import { decodeRecoveryKey } from "matrix-js-sdk/lib/crypto/recoverykey";
 import { openModal } from "svelte-modals";
 import { writable } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
+import { VerificationMethod } from "matrix-js-sdk/lib/types";
+import { Phase } from "matrix-js-sdk/lib/crypto/verification/request/VerificationRequest";
 import { alreadyAskForInitCryptoConfiguration } from "../../Stores/ChatStore";
 import InteractiveAuthDialog from "./InteractiveAuthDialog.svelte";
 import CreateRecoveryKeyDialog from "./CreateRecoveryKeyDialog.svelte";
+import VerificationEmojiDialog from "./VerificationEmojiDialog.svelte";
+import DeviceVerificationPendingModal from "./DeviceVerificationPendingModal.svelte";
+import AskStartVerificationModal from "./AskStartVerificationModal.svelte";
+import ChooseDeviceVerificationMethodModal from "./ChooseDeviceVerificationMethodModal.svelte";
 
 export type KeyParams = { passphrase?: string; recoveryKey?: string };
 
 export class MatrixSecurity {
     isEncryptionRequiredAndNotSet = writable(false);
     private matrixClientStore: MatrixClient | null = null;
-
+    private isVerifyingDevice = false;
+    public shouldDisplayModal = false;
     constructor(
         private initializingEncryptionPromise: Promise<void> | undefined = undefined,
+        private restoreRoomMessagesPromise: Promise<void> | undefined = undefined,
         private _openModal = openModal
     ) {}
 
@@ -40,7 +55,7 @@ export class MatrixSecurity {
         }
 
         alreadyAskForInitCryptoConfiguration.set(true);
-
+        this.shouldDisplayModal = true;
         this.initializingEncryptionPromise = new Promise<void>((resolve, initializingEncryptionReject) => {
             (async () => {
                 const keyBackupInfo = await this.matrixClientStore?.getKeyBackupVersion();
@@ -112,10 +127,43 @@ export class MatrixSecurity {
                     return;
                 });
         });
-
         return;
     };
 
+    async restoreRoomsMessages() {
+        if (this.restoreRoomMessagesPromise) return this.restoreRoomMessagesPromise;
+
+        this.restoreRoomMessagesPromise = new Promise((resolve, reject) => {
+            const client = this.matrixClientStore;
+            if (!client) {
+                reject(new Error("matrix client is undefined"));
+                return;
+            }
+
+            const crypto = client.getCrypto();
+
+            if (!crypto) {
+                reject(new Error("crypto api is not available"));
+                return;
+            }
+
+            client
+                .getKeyBackupVersion()
+                .then((keyBackupInfo) => {
+                    if (keyBackupInfo !== null && keyBackupInfo !== undefined) {
+                        this.restoreBackupMessages(keyBackupInfo).catch((error) => {
+                            throw new Error(error);
+                        });
+                    }
+                    resolve();
+                })
+                .catch((error) => {
+                    throw new Error(error);
+                });
+        });
+
+        return this.restoreRoomMessagesPromise;
+    }
     updateMatrixClientStore(matrixClient: MatrixClient) {
         this.matrixClientStore = matrixClient;
     }
@@ -220,6 +268,166 @@ export class MatrixSecurity {
             Sentry.captureMessage(`Failed to reset key storage : ${error}`);
         }
     }
+
+    public async verifyOwnDevice() {
+        try {
+            if (!this.matrixClientStore) throw new Error("MatrixClientStore is null");
+
+            const crypto = this.matrixClientStore.getCrypto();
+
+            if (!crypto) throw new Error("Crypto API is undefined");
+
+            const verificationRequest = await crypto.requestOwnUserVerification();
+
+            let waitVerificationStartResolver: (
+                verificationEmojiDialogProps: VerificationEmojiDialogProps
+            ) => void | undefined;
+
+            const startVerificationPromise = new Promise<VerificationEmojiDialogProps>((resolve, reject) => {
+                waitVerificationStartResolver = resolve;
+            });
+
+            this._openModal(DeviceVerificationPendingModal, {
+                startVerificationPromise,
+                isInitiatedByMe: true,
+            });
+
+            let resolveDonePromise: () => void | undefined;
+            let rejectDonePromise: ((reason?: string | Error) => void) | undefined;
+
+            const donePromise = new Promise<void>((resolve, reject) => {
+                resolveDonePromise = resolve;
+                rejectDonePromise = reject;
+            });
+
+            verificationRequest.on(VerificationRequestEvent.Change, () => {
+                if (verificationRequest.phase === Phase.Started) {
+                    const verifier = verificationRequest.verifier;
+
+                    if (!verifier) throw new Error("Verifier is undefined");
+
+                    if (verificationRequest.chosenMethod === VerificationMethod.Sas) {
+                        verifier.on(VerifierEvent.ShowSas, (showSasCallbacks) => {
+                            const emojis = showSasCallbacks.sas.emoji;
+                            const confirmationCallback = async () => {
+                                await showSasCallbacks.confirm();
+                            };
+                            const mismatchCallback = () => {
+                                showSasCallbacks.mismatch();
+                            };
+
+                            if (!emojis || this.isVerifyingDevice) return;
+
+                            this.isVerifyingDevice = true;
+
+                            if (waitVerificationStartResolver) {
+                                waitVerificationStartResolver({
+                                    emojis,
+                                    confirmationCallback,
+                                    mismatchCallback,
+                                    donePromise,
+                                    isThisDeviceVerification: verificationRequest.initiatedByMe,
+                                });
+                            }
+                        });
+
+                        verifier.verify().catch((error) => {
+                            rejectDonePromise(error);
+                        });
+                    }
+                }
+
+                if (verificationRequest.phase === Phase.Done) {
+                    resolveDonePromise();
+                    this.isVerifyingDevice = false;
+                    this.isEncryptionRequiredAndNotSet.set(false);
+                }
+
+                if (verificationRequest.phase === Phase.Cancelled) {
+                    rejectDonePromise(new Error("verification request cancelled"));
+                    this.isVerifyingDevice = false;
+                }
+            });
+        } catch (error) {
+            Sentry.captureMessage(`Failed to verify this device :  ${error}`);
+            console.error("Failed to verify this device", error);
+        }
+    }
+
+    public openVerificationEmojiDialog(verificationEmojiDialogProps: VerificationEmojiDialogProps) {
+        this._openModal(VerificationEmojiDialog, {
+            props: verificationEmojiDialogProps,
+        });
+    }
+
+    public openAskStartVerification(askStartVerificationModalProps: AskStartVerificationModalProps) {
+        this._openModal(AskStartVerificationModal, {
+            props: askStartVerificationModalProps,
+        });
+    }
+
+    public async openChooseDeviceVerificationMethodModal() {
+        try {
+            const client = this.matrixClientStore;
+
+            if (!client) return;
+
+            const crypto = client.getCrypto();
+            const userID = client.getUserId();
+
+            if (!crypto || !userID) throw new Error("Crypto API or User ID is not defined ...");
+
+            const devices = await crypto.getUserDeviceInfo([userID]);
+
+            const myDevices = devices.get(userID);
+
+            const currentDeviceID = client.getDeviceId();
+
+            if (!currentDeviceID) throw new Error("Failed to find current device ID");
+
+            const verificationInformation = await crypto.getDeviceVerificationStatus(userID, currentDeviceID);
+
+            if (!verificationInformation) return;
+
+            const currentDeviceIsVerify = verificationInformation.signedByOwner;
+
+            const someDeviceAreVerified = !myDevices
+                ? false
+                : Array.from(myDevices.values()).some(async (device) => {
+                      if (!device.getIdentityKey()) return false;
+
+                      const verificationStatus = await crypto.getDeviceVerificationStatus(userID, device.deviceId);
+                      return !!verificationStatus?.signedByOwner;
+                  });
+
+            if (someDeviceAreVerified && !currentDeviceIsVerify) {
+                this.isEncryptionRequiredAndNotSet.set(true);
+                this._openModal(ChooseDeviceVerificationMethodModal);
+                return;
+            }
+            await this.initClientCryptoConfiguration();
+        } catch (error) {
+            console.log(error);
+            Sentry.captureMessage(`Failed to open modal to choose Verification modal method : ${error}`);
+        }
+    }
 }
 
 export const matrixSecurity = new MatrixSecurity();
+
+export type VerificationEmojiDialogProps = {
+    confirmationCallback: () => Promise<void>;
+    mismatchCallback: () => void;
+    emojis: EmojiMapping[];
+    donePromise: Promise<void>;
+    isThisDeviceVerification: boolean;
+};
+
+export type AskStartVerificationModalProps = {
+    request: VerificationRequest;
+    otherDeviceInformation: {
+        id: string | undefined;
+        ip: string | undefined;
+        name: string | undefined;
+    };
+};

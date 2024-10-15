@@ -20,7 +20,7 @@ import { iframeListener } from "../../../Api/IframeListener";
 import { SpaceInterface } from "../../../Space/SpaceInterface";
 import { SpaceRegistryInterface } from "../../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { chatVisibilityStore } from "../../../Stores/ChatStore";
-import { isAChatRoomIsVisible, navChat, selectedRoom } from "../../Stores/ChatStore";
+import { isAChatRoomIsVisible, navChat, selectedRoomStore } from "../../Stores/ChatStore";
 import { SpaceFilterInterface, SpaceUserExtended } from "../../../Space/SpaceFilter/SpaceFilter";
 import { mapExtendedSpaceUserToChatUser } from "../../UserProvider/ChatUserMapper";
 import { SimplePeer } from "../../../WebRtc/SimplePeer";
@@ -240,7 +240,7 @@ export class ProximityChatRoom implements ChatRoom {
 
         this.playNewMessageSound();
 
-        if (get(selectedRoom) !== this) {
+        if (get(selectedRoomStore) !== this) {
             this.hasUnreadMessages.set(true);
         }
         // Send bubble message to WorkAdventure scripting API
@@ -399,7 +399,7 @@ export class ProximityChatRoom implements ChatRoom {
 
             // if the proximity chat is not open, open it to see the message
             chatVisibilityStore.set(true);
-            if (get(selectedRoom) == undefined) selectedRoom.set(this);
+            if (get(selectedRoomStore) == undefined) selectedRoomStore.set(this);
         });
 
         this.spaceIsTypingSubscription?.unsubscribe();
@@ -415,7 +415,7 @@ export class ProximityChatRoom implements ChatRoom {
 
         const actualStatus = get(availabilityStatusStore);
         if (!isAChatRoomIsVisible()) {
-            selectedRoom.set(this);
+            selectedRoomStore.set(this);
             navChat.switchToChat();
             if (
                 !get(requestedMicrophoneState) &&

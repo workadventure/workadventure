@@ -23,13 +23,7 @@ import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
 import { RoomMessageEventContent } from "matrix-js-sdk/lib/@types/events";
 import { ChatRoom, ChatRoomMember, ChatRoomMembership } from "../ChatConnection";
-import {
-    alreadyAskForInitCryptoConfiguration,
-    isAChatRoomIsVisible,
-    navChat,
-    selectedChatMessageToReply,
-    selectedRoom,
-} from "../../Stores/ChatStore";
+import { isAChatRoomIsVisible, navChat, selectedChatMessageToReply, selectedRoomStore } from "../../Stores/ChatStore";
 import { gameManager } from "../../../Phaser/Game/GameManager";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import { MatrixChatMessage } from "./MatrixChatMessage";
@@ -111,9 +105,7 @@ export class MatrixChatRoom implements ChatRoom {
         );
 
         (async () => {
-            if (matrixRoom.hasEncryptionStateEvent() && !get(alreadyAskForInitCryptoConfiguration)) {
-                await matrixSecurity.initClientCryptoConfiguration();
-            }
+            await matrixSecurity.restoreRoomsMessages();
         })()
             .catch((error) => {
                 console.error(error);
@@ -189,17 +181,13 @@ export class MatrixChatRoom implements ChatRoom {
         this.matrixRoom.on(RoomEvent.Redaction, this.handleRoomRedaction);
     }
 
-    private async onRoomTimeline(
+    private onRoomTimeline(
         event: MatrixEvent,
         room: Room | undefined,
         toStartOfTimeline: boolean | undefined,
         _: boolean,
         data: IRoomTimelineData
     ) {
-        if (event.getType() === EventType.RoomEncryption && !get(alreadyAskForInitCryptoConfiguration)) {
-            await matrixSecurity.initClientCryptoConfiguration();
-        }
-
         //get age give the age of the event when the event arrived at the device
         const ageOfEvent = event.getAge();
 
@@ -222,8 +210,8 @@ export class MatrixChatRoom implements ChatRoom {
                         const senderID = event.getSender();
                         if (senderID !== this.matrixRoom.client.getSafeUserId() && !get(this.areNotificationsMuted)) {
                             this.playNewMessageSound();
-                            if (!isAChatRoomIsVisible() && get(selectedRoom)?.id !== "proximity") {
-                                selectedRoom.set(this);
+                            if (!isAChatRoomIsVisible() && get(selectedRoomStore)?.id !== "proximity") {
+                                selectedRoomStore.set(this);
                                 navChat.switchToChat();
                             }
                         }
