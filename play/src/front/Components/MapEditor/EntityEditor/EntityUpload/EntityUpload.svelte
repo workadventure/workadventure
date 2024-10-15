@@ -19,7 +19,7 @@
     $: {
         if (files) {
             const file = files.item(0);
-            if (file) {
+            if (file && isASupportedFormat(file.type)) {
                 customEntityToUpload = {
                     collectionName: "custom entities",
                     name: file.name,
@@ -30,6 +30,9 @@
                     color: "",
                     type: BASIC_TYPE,
                 };
+            } else {
+                console.error("File format not supported");
+                errorOnFile = $LL.mapEditor.entityEditor.uploadEntity.errorOnFileFormat();
             }
         }
     }
@@ -40,6 +43,9 @@
         }
     );
 
+    function isASupportedFormat(format: string): boolean {
+        return format.trim().length > 0 && ENTITY_UPLOAD_SUPPORTED_FORMATS_FRONT.includes(format);
+    }
     function completeAndResetUpload(uploadEntityMessage: UploadEntityMessage | undefined) {
         if (uploadEntityMessage === undefined && files !== undefined) {
             initFileUpload();
@@ -85,7 +91,7 @@
                 console.error("Only one file is permitted");
                 errorOnFile = $LL.mapEditor.entityEditor.uploadEntity.errorOnFileNumber();
             } else {
-                if (ENTITY_UPLOAD_SUPPORTED_FORMATS_FRONT.includes(filesFromDropEvent.item(0)?.type ?? "")) {
+                if (isASupportedFormat(filesFromDropEvent.item(0)?.type ?? "")) {
                     files = filesFromDropEvent;
                 } else {
                     console.error("File format not supported");
