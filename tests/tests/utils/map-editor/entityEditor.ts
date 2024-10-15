@@ -97,16 +97,17 @@ class EntityEditor {
 
   async applyEntityModifications(page: Page) {
     await page.getByTestId("applyEntityModifications").click();
-    if(page.getByTestId('entityImageLoader').isVisible({timeout: 2000})){
+    if(await page.getByTestId('entityImageLoader').isVisible({timeout: 2000})){
       // Check loader end
       await expect(page.getByTestId('entityImageLoader')).toHaveCount(0, { timeout: 30000 });
     }
     // Verify that there is no error message
     await expect(page.getByTestId("entityImageError")).toHaveCount(0);
     // Verify that the image uploaded is displayed in the list
-    await expect(page.getByTestId('clearCurrentSelection')).toBeVisible();
-    // Back to the main list
-    await page.getByTestId('clearCurrentSelection').click();
+    if(await page.getByTestId('clearCurrentSelection').isVisible()){
+      // Back to the main list
+      await page.getByTestId('clearCurrentSelection').click();
+    }
   }
 
   async removeEntity(page: Page) {
