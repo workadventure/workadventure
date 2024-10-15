@@ -282,6 +282,7 @@ export class GameManager {
             try {
                 this._chatConnection.clearListener();
                 await this._chatConnection.destroy();
+                this.clearChatDataFromLocalStorage();
                 this._chatConnection = undefined;
                 this.chatConnectionPromise = undefined;
             } catch (e) {
@@ -289,6 +290,13 @@ export class GameManager {
                 Sentry.captureException(e);
             }
         }
+    }
+
+    private clearChatDataFromLocalStorage(): void {
+        localUserStore.setMatrixLoginToken(null);
+        localUserStore.setMatrixUserId(null);
+        localUserStore.setMatrixAccessToken(null);
+        localUserStore.setMatrixRefreshToken(null);
     }
 }
 
