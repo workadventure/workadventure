@@ -179,12 +179,12 @@
 {#if property === "openWebsite" && subProperty === "googleDrive"}
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.googleDriveProperties.label()}
-        descriptionText={connectionManager.googleDocsToolActivated
+        descriptionText={connectionManager.googleDriveToolActivated
             ? $LL.mapEditor.properties.googleDriveProperties.description()
             : $LL.mapEditor.properties.googleDriveProperties.disabled()}
         img={googleDriveSvg}
         style={`z-index: 150;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.googleDocsToolActivated}
+        disabled={!connectionManager.googleDriveToolActivated}
         on:click={(event) => {
             dispatch("click", event);
         }}

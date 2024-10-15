@@ -510,7 +510,7 @@ class ConnectionManager {
                 this.googleSheetsToolActivated = GoogleSheetsApp?.enabled ?? GOOGLE_SHEETS_ENABLED;
 
                 const GoogleSlidesApp = connect.room.applications?.find(
-                    (app) => app.name === defautlNativeIntegrationAppName.GOOGLE_SHEETS
+                    (app) => app.name === defautlNativeIntegrationAppName.GOOGLE_SLIDES
                 );
                 this.googleSlidesToolActivated = GoogleSlidesApp?.enabled ?? GOOGLE_SLIDES_ENABLED;
 

@@ -107,3 +107,7 @@ export const cameraResistanceModeStore = derived(
         return "resist_zoom_out";
     }
 );
+
+export type CustomTag = "Custom";
+export type SelectableTag = string | CustomTag | undefined;
+export const selectCategoryStore = writable<SelectableTag>(undefined);

@@ -550,6 +550,48 @@
             "imagePath":"Furniture/Bathroom/Toilet.png",
             "direction":"Down",
             "color":"white"
+        },
+        {
+            "name":"Kakemono",
+            "tags":["basic", "pannel", "kakemono"],
+            "imagePath":"Furniture/Pannel/PannelLeft.png",
+            "direction":"Left",
+            "color":"white",
+            "collisionGrid": [
+                [
+                    0,0
+                ],
+                [
+                    0,0
+                ],
+                [
+                    0,0
+                ],
+                [
+                    1,1
+                ]
+            ]
+        },
+        {
+            "name":"Kakemono",
+            "tags":["basic", "pannel", "kakemono"],
+            "imagePath":"Furniture/Pannel/PannelRight.png",
+            "direction":"Right",
+            "color":"white",
+            "collisionGrid": [
+                [
+                    0,0
+                ],
+                [
+                    0,0
+                ],
+                [
+                    0,0
+                ],
+                [
+                    1,1
+                ]
+            ]
         }
     ]
 }
