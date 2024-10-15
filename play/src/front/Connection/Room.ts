@@ -58,6 +58,10 @@ export class Room {
             this.id = this.id.substring(1);
         }
 
+        if (this.roomUrl.pathname.endsWith("/")) {
+            this.roomUrl.pathname = this.roomUrl.pathname.slice(0, -1);
+        }
+
         this._search = new URLSearchParams(roomUrl.search);
     }
 
