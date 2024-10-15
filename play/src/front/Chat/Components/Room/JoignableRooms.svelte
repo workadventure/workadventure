@@ -2,7 +2,7 @@
     import highlightWords from "highlight-words";
     import { fade } from "svelte/transition";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    import { chatSearchBarValue, joignableRoom, selectedRoom } from "../../Stores/ChatStore";
+    import { chatSearchBarValue, joignableRoom, selectedRoomStore } from "../../Stores/ChatStore";
     import Avatar from "../Avatar.svelte";
 
     export let room: { id: string; name: string | undefined };
@@ -19,7 +19,7 @@
             const newRoom = await chat.joinRoom(room.id);
             joignableRoom.set([]);
             chatSearchBarValue.set("");
-            selectedRoom.set(newRoom);
+            selectedRoomStore.set(newRoom);
         } catch (error) {
             console.error(error);
             if (error instanceof Error) {

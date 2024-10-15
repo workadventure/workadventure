@@ -28,7 +28,7 @@ import {
     isAChatRoomIsVisible,
     navChat,
     selectedChatMessageToReply,
-    selectedRoom,
+    selectedRoomStore,
 } from "../../Stores/ChatStore";
 import { gameManager } from "../../../Phaser/Game/GameManager";
 import { localUserStore } from "../../../Connection/LocalUserStore";
@@ -111,9 +111,8 @@ export class MatrixChatRoom implements ChatRoom {
         );
 
         (async () => {
-            if (matrixRoom.hasEncryptionStateEvent() && !get(alreadyAskForInitCryptoConfiguration)) {
-                await matrixSecurity.initClientCryptoConfiguration();
-            }
+            //TODO : refacto : change name and
+            await matrixSecurity.minimalInitTest();
         })()
             .catch((error) => {
                 console.error(error);
@@ -196,10 +195,6 @@ export class MatrixChatRoom implements ChatRoom {
         _: boolean,
         data: IRoomTimelineData
     ) {
-        if (event.getType() === EventType.RoomEncryption && !get(alreadyAskForInitCryptoConfiguration)) {
-            await matrixSecurity.initClientCryptoConfiguration();
-        }
-
         //get age give the age of the event when the event arrived at the device
         const ageOfEvent = event.getAge();
 
@@ -222,8 +217,8 @@ export class MatrixChatRoom implements ChatRoom {
                         const senderID = event.getSender();
                         if (senderID !== this.matrixRoom.client.getSafeUserId() && !get(this.areNotificationsMuted)) {
                             this.playNewMessageSound();
-                            if (!isAChatRoomIsVisible() && get(selectedRoom)?.id !== "proximity") {
-                                selectedRoom.set(this);
+                            if (!isAChatRoomIsVisible() && get(selectedRoomStore)?.id !== "proximity") {
+                                selectedRoomStore.set(this);
                                 navChat.set("chat");
                             }
                         }

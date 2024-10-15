@@ -1,6 +1,8 @@
 import { derived, get, Readable, Unsubscriber, writable, Writable } from "svelte/store";
 import {
     ClientEvent,
+    CryptoEvent,
+    Device,
     Direction,
     EmittedEvents,
     EventType,
@@ -27,13 +29,15 @@ import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { AvailabilityStatus } from "@workadventure/messages";
 import { ChatConnectionInterface, ChatRoom, ChatUser, ConnectionStatus, CreateRoomOptions } from "../ChatConnection";
-import { selectedRoom } from "../../Stores/ChatStore";
+import { selectedRoomStore } from "../../Stores/ChatStore";
 import LL from "../../../../i18n/i18n-svelte";
 import { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 import { MatrixSecurity, matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity";
 import { MatrixRoomFolder } from "./MatrixRoomFolder";
 import { chatUserFactory, mapMatrixPresenceToAvailabilityStatus } from "./MatrixChatUser";
+import { canAcceptVerificationRequest, VerifierEvent } from "matrix-js-sdk/lib/crypto-api";
+import { VerificationMethod } from "matrix-js-sdk/lib/types";
 
 const CLIENT_NOT_INITIALIZED_ERROR_MSG = "MatrixClient not yet initialized";
 export const defaultWoka =
@@ -231,6 +235,31 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.client.on(RoomEvent.Name, this.handleName);
         this.client.on(ClientEvent.AccountData, this.handleAccountDataEvent);
         this.client.on(UserEvent.Presence, this.handleUserPresence);
+        //TODO : pas oublier le off
+        this.client.on(CryptoEvent.VerificationRequestReceived, async (request) => {
+            console.log(">>>> received request ...");
+            if (!canAcceptVerificationRequest(request) && request.isSelfVerification) return;
+            //TODO : Afficher une popup pour demander si on veut accepter la demande ...
+            const otherDeviceId = request.otherDeviceId;
+
+            let otherDeviceInformation: Device | undefined;
+            let ip: string | undefined;
+
+            if (otherDeviceId && request.isSelfVerification) {
+                otherDeviceInformation = await this.getOwnDeviceInformation(otherDeviceId);
+                const myOtherDeviceInformation = await this.client?.getDevice(otherDeviceId);
+                ip = myOtherDeviceInformation?.last_seen_ip;
+            }
+
+            this.matrixSecurity.openAskStartVerification({
+                request,
+                otherDeviceInformation: {
+                    ip,
+                    name: otherDeviceInformation?.displayName,
+                    id: otherDeviceId,
+                },
+            });
+        });
 
         await this.client.store.startup();
 
@@ -249,7 +278,27 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
         await this.waitInitialSync();
     }
+    private async getDevicesInformationsFor(userId: string) {
+        const client = this.client;
+        if (!client) return;
+        const crypto = this.client?.getCrypto();
+        if (!crypto) return;
+        const devicesMap = await crypto.getUserDeviceInfo([userId], true);
+        return devicesMap.get(userId);
+    }
 
+    private getOwnDevicesInformations() {
+        const myUserid = this.client?.getSafeUserId();
+        if (!myUserid) return;
+        return this.getDevicesInformationsFor(myUserid);
+    }
+
+    private async getOwnDeviceInformation(deviceId: string) {
+        const devicesMap = await this.getOwnDevicesInformations();
+        if (!devicesMap) return;
+
+        return devicesMap.get(deviceId);
+    }
     private waitInitialSync(timeout = 10_000, interval = 3500): Promise<void> {
         return new Promise((resolve, reject) => {
             const startTime = Date.now();
@@ -454,8 +503,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     private createAndAddNewRootRoom(room: Room): MatrixChatRoom {
         const newRoom = new MatrixChatRoom(room);
         this.roomList.set(newRoom.id, newRoom);
-        if (get(selectedRoom)?.id === newRoom.id) {
-            selectedRoom.set(newRoom);
+        if (get(selectedRoomStore)?.id === newRoom.id) {
+            selectedRoomStore.set(newRoom);
         }
         return newRoom;
     }
@@ -477,8 +526,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             folder.deleteNode(roomId);
         });
 
-        const currentRoom = get(selectedRoom)?.id;
-        if (currentRoom && currentRoom === roomId) selectedRoom.set(undefined);
+        const currentRoom = get(selectedRoomStore)?.id;
+        if (currentRoom && currentRoom === roomId) selectedRoomStore.set(undefined);
     }
     private onRoomEventMembership(room: Room, membership: string, prevMembership: string | undefined) {
         const { roomId } = room;
@@ -837,7 +886,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     }
 
     initEndToEndEncryption(): Promise<void> {
-        return this.matrixSecurity.initClientCryptoConfiguration();
+        //return this.matrixSecurity.initClientCryptoConfiguration();
+        return this.matrixSecurity.openChooseDeviceVerificationMethodModal();
     }
 
     private async addRoomToSpace(spaceRoomId: string, childRoomId: string): Promise<void> {
