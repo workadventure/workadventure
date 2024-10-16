@@ -160,6 +160,8 @@ import { AdminUserProvider } from "../../Chat/UserProvider/AdminUserProvider";
 import { SpaceInterface } from "../../Space/SpaceInterface";
 import { UserProviderInterface } from "../../Chat/UserProvider/UserProviderInterface";
 import { faviconManager } from "../../WebRtc/FaviconManager";
+import { ScriptingOutputAudioStreamManager } from "../../WebRtc/AudioStream/ScriptingOutputAudioStreamManager";
+import { ScriptingInputAudioStreamManager } from "../../WebRtc/AudioStream/ScriptingInputAudioStreamManager";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -295,6 +297,8 @@ export class GameScene extends DirtyScene {
     private playerVariablesManager!: PlayerVariablesManager;
     private scriptingEventsManager!: ScriptingEventsManager;
     private followManager!: FollowManager;
+    private scriptingOutputAudioStreamManager: ScriptingOutputAudioStreamManager | undefined;
+    private scriptingInputAudioStreamManager: ScriptingInputAudioStreamManager | undefined;
     private proximitySpaceManager: ProximitySpaceManager | undefined;
     private objectsByType = new Map<string, ITiledMapObject[]>();
     private embeddedWebsiteManager!: EmbeddedWebsiteManager;
@@ -1057,6 +1061,8 @@ export class GameScene extends DirtyScene {
         this.playersMovementEventDispatcher.cleanup();
         this.gameMapFrontWrapper?.close();
         this.followManager?.close();
+        this.scriptingOutputAudioStreamManager?.close();
+        this.scriptingInputAudioStreamManager?.close();
         this._spaceRegistry?.destroy();
 
         //When we leave game, the camera is stop to be reopen after.
@@ -1733,6 +1739,9 @@ export class GameScene extends DirtyScene {
                         console.warn("Connection to peers not started!");
                     }
                 });*/
+                // Set up manager of audio streams received by the scripting API (useful for bots)
+                this.scriptingOutputAudioStreamManager = new ScriptingOutputAudioStreamManager(this.simplePeer);
+                this.scriptingInputAudioStreamManager = new ScriptingInputAudioStreamManager(this.simplePeer);
 
                 this._proximityChatRoom = new ProximityChatRoom(
                     this.connection.getUserId(),
