@@ -1,7 +1,7 @@
 import type { IframeEvent, IframeQuery, IframeQueryMap, IframeQueryWrapper } from "../Events/IframeEvent";
 
-export function sendToWorkadventure(content: IframeEvent) {
-    window.parent.postMessage(content, "*");
+export function sendToWorkadventure(content: IframeEvent, transfer?: Transferable[]) {
+    window.parent.postMessage(content, "*", transfer);
 }
 
 let queryNumber = 0;

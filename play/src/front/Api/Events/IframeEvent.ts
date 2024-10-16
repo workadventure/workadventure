@@ -66,6 +66,8 @@ import { isTeleportPlayerToEventConfig } from "./TeleportPlayerToEvent";
 import { isSendEventEvent } from "./SendEventEvent";
 import { isReceiveEventEvent } from "./ReceiveEventEvent";
 import { isPlaySoundInBubbleEvent } from "./ProximityMeeting/PlaySoundInBubbleEvent";
+import { isStartStreamInBubbleEvent } from "./ProximityMeeting/StartStreamInBubbleEvent";
+import { isAppendPCMDataEvent } from "./ProximityMeeting/AppendPCMDataEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -356,6 +358,18 @@ export const isIframeEventWrapper = z.union([
         type: z.literal("restoreRoomList"),
         data: z.undefined(),
     }),
+    z.object({
+        type: z.literal("appendPCMData"),
+        data: isAppendPCMDataEvent,
+    }),
+    z.object({
+        type: z.literal("startListeningToStreamInBubble"),
+        data: isStartStreamInBubbleEvent,
+    }),
+    z.object({
+        type: z.literal("stopListeningToStreamInBubble"),
+        data: z.undefined(),
+    }),
 ]);
 
 export type IframeEvent = z.infer<typeof isIframeEventWrapper>;
@@ -527,6 +541,10 @@ export const isIframeResponseEvent = z.union([
         type: z.literal("banUser"),
         data: isBanEvent,
     }),
+    z.object({
+        type: z.literal("appendPCMData"),
+        data: isAppendPCMDataEvent,
+    }),
 ]);
 export type IframeResponseEvent = z.infer<typeof isIframeResponseEvent>;
 
@@ -675,6 +693,18 @@ export const iframeQueryMapTypeGuards = {
     },
     playSoundInBubble: {
         query: isPlaySoundInBubbleEvent,
+        answer: z.undefined(),
+    },
+    startStreamInBubble: {
+        query: isStartStreamInBubbleEvent,
+        answer: z.undefined(),
+    },
+    stopStreamInBubble: {
+        query: z.undefined(),
+        answer: z.undefined(),
+    },
+    resetAudioBuffer: {
+        query: z.undefined(),
         answer: z.undefined(),
     },
     followMe: {
