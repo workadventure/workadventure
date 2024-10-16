@@ -113,6 +113,7 @@ services:
       # Google drive picker
       - GOOGLE_DRIVE_PICKER_CLIENT_ID=${GOOGLE_DRIVE_PICKER_CLIENT_ID}
       - GOOGLE_DRIVE_PICKER_APP_ID=${GOOGLE_DRIVE_PICKER_APP_ID}
+      - MAP_STORAGE_API_TOKEN=${MAP_STORAGE_API_TOKEN:-${SECRET_KEY}}
     labels:
       traefik.enable: "true"
       traefik.http.routers.play.rule: "Host(`${DOMAIN}`) && PathPrefix(`/`)"
@@ -252,6 +253,8 @@ services:
       SENTRY_TRACES_SAMPLE_RATE: $SENTRY_TRACES_SAMPLE_RATE
       PATH_PREFIX: "/map-storage"
       ENTITY_COLLECTION_URLS: "https://${DOMAIN}/collections/FurnitureCollection.json,https://${DOMAIN}/collections/OfficeCollection.json"
+      MAP_STORAGE_API_TOKEN: "${MAP_STORAGE_API_TOKEN:-${SECRET_KEY}}"
+      PUSHER_URL: "https://${DOMAIN}/"
     volumes:
       - map-storage-data:/maps
     labels:

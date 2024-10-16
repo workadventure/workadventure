@@ -27,7 +27,7 @@ export class WorkadventureChatCommands<PublicState extends { [key: string]: unkn
 
     /**
      * Open instantly the chat window.
-     * {@link https://workadventu.re/map-building/api-chat.md#open-the-chat-window | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-chat.md#open-the-chat-window | Website documentation}
      */
     open(): void {
         sendToWorkadventure({ type: "openChat", data: undefined });
@@ -35,7 +35,7 @@ export class WorkadventureChatCommands<PublicState extends { [key: string]: unkn
 
     /**
      * Close instantly the chat window.
-     * {@link https://workadventu.re/map-building/api-chat.md#close-the-chat-window | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-chat.md#close-the-chat-window | Website documentation}
      */
     close(): void {
         sendToWorkadventure({ type: "closeChat", data: undefined });
@@ -118,7 +118,7 @@ export class WorkadventureChatCommands<PublicState extends { [key: string]: unkn
 
     /**
      * Listens to messages typed in the chat history.
-     * {@link https://workadventu.re/map-building/api-chat.md#listening-to-messages-from-the-chat | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-chat.md#listening-to-messages-from-the-chat | Website documentation}
      *
      * @param {function(message: string, event: { authorId: number|undefined, user: RemotePlayerInterface|undefined }): void} callback Function that will be called when a message is received. It contains the message typed by the user
      * @param {OnChatMessageOptions} options Options to decide if we listen only to messages from the local user (default) or from all users in the bubble.

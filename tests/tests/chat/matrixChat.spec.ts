@@ -7,7 +7,7 @@ import ChatUtils from "./chatUtils";
 
 test.setTimeout(120000);
 
-test.describe("Matrix chat tests @oidc", () => {
+test.describe("Matrix chat tests @oidc @matrix", () => {
   test.beforeEach(
     "Ignore tests on webkit because of issue with camera and microphone",
 
@@ -23,6 +23,11 @@ test.describe("Matrix chat tests @oidc", () => {
       await ChatUtils.resetMatrixDatabase();
     }
   );
+
+  test.afterAll('reset matrix database',async ()=>{
+    await ChatUtils.resetMatrixDatabase();
+});
+
   test("Open matrix Chat", async ({ page }, { project }) => {
     const isMobile = project.name === "mobilechromium";
     await login(page, "test", 3, "us-US", isMobile);
@@ -323,6 +328,27 @@ test.describe("Matrix chat tests @oidc", () => {
     await expect(page.getByText(chatMessageContent)).toBeAttached();
   });
 
+  test("Key creation should stop after the SSO process is canceled", async ({
+    page,
+    context,
+  }, { project }) => {
+    const isMobile = project.name === "mobilechromium";
+    await login(page, "test", 3, "en-US", isMobile);
+    await oidcMatrixUserLogin(page, isMobile);
+    await ChatUtils.openChat(page);
+    await ChatUtils.openCreateRoomDialog(page);
+    const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
+    await page.getByTestId("createRoomName").fill(privateChatRoom);
+    await page.getByTestId("createRoomVisibility").selectOption("private");
+    await page.getByTestId("createRoomEncryption").check();
+    await page.getByTestId("createRoomButton").click();
+
+    await ChatUtils.cancelledContinueWithSSO(page, context);
+
+    await expect(page.getByText("Chat recovery key creation")).not.toBeAttached();
+    await expect(page.getByText("Encryption not configured")).toBeAttached();
+  });
+
   test('Create a public folder' ,async({ page }, { project })=>{
     const isMobile = project.name === "mobilechromium";
     await login(page, "test", 3, "us-US", isMobile);
@@ -418,4 +444,5 @@ test.describe("Matrix chat tests @oidc", () => {
     await page.getByText(privateFolder1).click();
     await expect(page.getByText(room)).toBeAttached();  
   });
+
 });

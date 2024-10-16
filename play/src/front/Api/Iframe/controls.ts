@@ -5,7 +5,7 @@ export class WorkadventureControlsCommands extends IframeApiContribution<Workadv
 
     /**
      *  Disable player controls.
-     * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-controls | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-controls.md#disabling--restoring-controls | Website documentation}
      */
     disablePlayerControls(): void {
         sendToWorkadventure({ type: "disablePlayerControls", data: undefined });
@@ -13,7 +13,7 @@ export class WorkadventureControlsCommands extends IframeApiContribution<Workadv
 
     /**
      * Restore player controls.
-     * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-controls | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-controls.md#disabling--restoring-controls | Website documentation}
      */
     restorePlayerControls(): void {
         sendToWorkadventure({ type: "restorePlayerControls", data: undefined });
@@ -21,7 +21,7 @@ export class WorkadventureControlsCommands extends IframeApiContribution<Workadv
 
     /**
      * Turn off player microphone.
-     * {@link https://workadventu.re/map-building/api-controls.md#turn-off-webcam-or-microphone | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-controls.md#turn-off-webcam-or-microphone | Website documentation}
      */
     turnOffMicrophone(): void {
         sendToWorkadventure({ type: "turnOffMicrophone", data: undefined });
@@ -29,7 +29,7 @@ export class WorkadventureControlsCommands extends IframeApiContribution<Workadv
 
     /**
      * Turn off player webcam.
-     * {@link https://workadventu.re/map-building/api-controls.md#turn-off-webcam-or-microphone | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-controls.md#turn-off-webcam-or-microphone | Website documentation}
      */
     turnOffWebcam(): void {
         sendToWorkadventure({ type: "turnOffWebcam", data: undefined });
@@ -37,7 +37,7 @@ export class WorkadventureControlsCommands extends IframeApiContribution<Workadv
 
     /**
      * Disable player microphone.
-     * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-webcam-or-microphone | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-controls.md#disabling--restoring-webcam-or-microphone | Website documentation}
      */
     disableMicrophone(): void {
         sendToWorkadventure({ type: "disableMicrophone", data: undefined });
@@ -45,7 +45,7 @@ export class WorkadventureControlsCommands extends IframeApiContribution<Workadv
 
     /**
      * Restore player microphone.
-     * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-webcam-or-microphone | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-controls.md#disabling--restoring-webcam-or-microphone | Website documentation}
      */
     restoreMicrophone(): void {
         sendToWorkadventure({ type: "restoreMicrophone", data: undefined });
@@ -53,7 +53,7 @@ export class WorkadventureControlsCommands extends IframeApiContribution<Workadv
 
     /**
      * Disable player webcam.
-     * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-webcam-or-microphone | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-controls.md#disabling--restoring-webcam-or-microphone | Website documentation}
      */
     disableWebcam(): void {
         sendToWorkadventure({ type: "disableWebcam", data: undefined });
@@ -61,7 +61,7 @@ export class WorkadventureControlsCommands extends IframeApiContribution<Workadv
 
     /**
      * Disable player webcam.
-     * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-webcam-or-microphone | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-controls.md#disabling--restoring-webcam-or-microphone | Website documentation}
      */
     restoreWebcam(): void {
         sendToWorkadventure({ type: "restoreWebcam", data: undefined });
@@ -69,7 +69,7 @@ export class WorkadventureControlsCommands extends IframeApiContribution<Workadv
 
     /**
      * Disable proximity meetings.
-     * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-proximity-meeting | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-controls.md#disabling--restoring-proximity-meeting | Website documentation}
      */
     disablePlayerProximityMeeting(): void {
         sendToWorkadventure({ type: "disablePlayerProximityMeeting", data: undefined });
@@ -77,7 +77,7 @@ export class WorkadventureControlsCommands extends IframeApiContribution<Workadv
 
     /**
      * Restore proximity meettings.
-     * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-proximity-meeting | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-controls.md#disabling--restoring-proximity-meeting | Website documentation}
      */
     restorePlayerProximityMeeting(): void {
         sendToWorkadventure({ type: "restorePlayerProximityMeeting", data: undefined });
@@ -85,7 +85,7 @@ export class WorkadventureControlsCommands extends IframeApiContribution<Workadv
 
     /**
      * Disable map editor mode.
-     * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-map-editor | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-controls.md#disabling--restoring-map-editor | Website documentation}
      */
     disableMapEditor(): void {
         sendToWorkadventure({ type: "disableMapEditor", data: undefined });
@@ -93,7 +93,7 @@ export class WorkadventureControlsCommands extends IframeApiContribution<Workadv
 
     /**
      * Restore map editor mode.
-     * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-map-editor | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-controls.md#disabling--restoring-map-editor | Website documentation}
      */
     restoreMapEditor(): void {
         sendToWorkadventure({ type: "restoreMapEditor", data: undefined });
@@ -101,7 +101,7 @@ export class WorkadventureControlsCommands extends IframeApiContribution<Workadv
 
     /**
      * Disable screen sharing.
-     * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-screen-sharing | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-controls.md#disabling--restoring-screen-sharing | Website documentation}
      */
     disableScreenSharing(): void {
         sendToWorkadventure({ type: "disableScreenSharing", data: undefined });
@@ -109,7 +109,7 @@ export class WorkadventureControlsCommands extends IframeApiContribution<Workadv
 
     /**
      * Restore screen sharing.
-     * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-screen-sharing | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-controls.md#disabling--restoring-screen-sharing | Website documentation}
      */
     restoreScreenSharing(): void {
         sendToWorkadventure({ type: "restoreScreenSharing", data: undefined });
@@ -117,7 +117,7 @@ export class WorkadventureControlsCommands extends IframeApiContribution<Workadv
 
     /**
      * Disable wheel zoom.
-     * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-wheel-zoom | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-controls.md#disabling--restoring-wheel-zoom | Website documentation}
      */
     disableWheelZoom(): void {
         sendToWorkadventure({ type: "disableWheelZoom", data: undefined });
@@ -125,7 +125,7 @@ export class WorkadventureControlsCommands extends IframeApiContribution<Workadv
 
     /**
      * Restore wheel zoom.
-     * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-wheel-zoom | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-controls.md#disabling--restoring-wheel-zoom | Website documentation}
      */
     restoreWheelZoom(): void {
         sendToWorkadventure({ type: "restoreWheelZoom", data: undefined });
@@ -133,7 +133,7 @@ export class WorkadventureControlsCommands extends IframeApiContribution<Workadv
 
     /**
      * Disable Right Click.
-     * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-right-click | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-controls.md#disabling--restoring-right-click | Website documentation}
      */
     disableRightClick(): void {
         sendToWorkadventure({ type: "disableRightClick", data: undefined });
@@ -141,7 +141,7 @@ export class WorkadventureControlsCommands extends IframeApiContribution<Workadv
 
     /**
      * Restore Right Click.
-     * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-right-click | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-controls.md#disabling--restoring-right-click | Website documentation}
      */
     restoreRightClick(): void {
         sendToWorkadventure({ type: "restoreRightClick", data: undefined });
@@ -149,7 +149,7 @@ export class WorkadventureControlsCommands extends IframeApiContribution<Workadv
 
     /**
      * Disable invite button.
-     * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-invite-button | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-controls.md#disabling--restoring-invite-button | Website documentation}
      */
     disableInviteButton(): void {
         sendToWorkadventure({ type: "disableInviteUserButton", data: undefined });
@@ -157,7 +157,7 @@ export class WorkadventureControlsCommands extends IframeApiContribution<Workadv
 
     /**
      * Restore invite button.
-     * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-invite-user-button | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-controls.md#disabling--restoring-invite-user-button | Website documentation}
      */
     restoreInviteButton(): void {
         sendToWorkadventure({ type: "restoreInviteUserButton", data: undefined });
@@ -165,7 +165,7 @@ export class WorkadventureControlsCommands extends IframeApiContribution<Workadv
 
     /**
      * Disable room list.
-     * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-room-list | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-controls.md#disabling--restoring-room-list | Website documentation}
      */
     disableRoomList(): void {
         sendToWorkadventure({ type: "disableRoomList", data: undefined });
@@ -173,7 +173,7 @@ export class WorkadventureControlsCommands extends IframeApiContribution<Workadv
 
     /**
      * Restore room list.
-     * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-room-list | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-controls.md#disabling--restoring-room-list | Website documentation}
      */
     restoreRoomList(): void {
         sendToWorkadventure({ type: "restoreRoomList", data: undefined });

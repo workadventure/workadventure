@@ -12,7 +12,7 @@ export class WorkadventureSoundCommands extends IframeApiContribution<Workadvent
      * The Sound class that represents a loaded sound contains two methods: play(soundConfig : SoundConfig|undefined) and stop().
      *
      * The parameter soundConfig is optional, if you call play without a Sound config the sound will be played with the basic configuration.
-     * {@link https://workadventu.re/map-building/api-sound.md#load-a-sound-from-an-url | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-sound.md#load-a-sound-from-an-url | Website documentation}
      *
      * @param url
      * @returns

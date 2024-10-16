@@ -102,10 +102,11 @@
     } from "../../Stores/MegaphoneStore";
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
-    import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
     import { isActivatedStore as isCalendarActivatedStore, isCalendarVisibleStore } from "../../Stores/CalendarStore";
     import { isActivatedStore as isTodoListActivatedStore, isTodoListVisibleStore } from "../../Stores/TodoListStore";
     import { externalActionBarSvelteComponent } from "../../Stores/Utils/externalSvelteComponentStore";
+    import { ADMIN_BO_URL } from "../../Enum/EnvironmentVariable";
+    import { inputFormFocusStore } from "../../Stores/UserInputStore";
     import AvailabilityStatusComponent from "./AvailabilityStatus/AvailabilityStatus.svelte";
     import { IconCheck, IconChevronDown, IconChevronUp } from "@wa-icons";
 
@@ -267,6 +268,7 @@
     }
 
     function onKeyDown(e: KeyboardEvent) {
+        if ($mapEditorModeStore || $inputFormFocusStore) return;
         let key = null;
         if (e.key === "1" || e.key === "F1") {
             key = 1;
@@ -324,7 +326,7 @@
     }
 
     function openBo() {
-        window.open(ADMIN_URL, "_blank");
+        window.open(ADMIN_BO_URL, "_blank");
     }
 
     /*function register() {

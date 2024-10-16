@@ -1094,6 +1094,7 @@ export class GameScene extends DirtyScene {
             clearTimeout(this.hideTimeout);
             this.hideTimeout = undefined;
         }
+        if (this.wamUrlFile) this.superLoad.jsonRemoveCacheByKey(this.wamUrlFile);
     }
 
     /**
@@ -3297,8 +3298,14 @@ ${escapedMessage}
                 this.CurrentPlayer,
                 phaserLayer,
                 (
-                    object1: Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile,
-                    object2: Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile
+                    object1:
+                        | Phaser.Physics.Arcade.Body
+                        | Phaser.Tilemaps.Tile
+                        | Phaser.Types.Physics.Arcade.GameObjectWithBody,
+                    object2:
+                        | Phaser.Physics.Arcade.Body
+                        | Phaser.Tilemaps.Tile
+                        | Phaser.Types.Physics.Arcade.GameObjectWithBody
                 ) => {}
             );
             phaserLayer.setCollisionByProperty({ collides: true });

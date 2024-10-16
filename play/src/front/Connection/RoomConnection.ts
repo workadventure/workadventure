@@ -67,6 +67,7 @@ import {
     SpaceUser,
     OauthRefreshToken,
     ExternalModuleMessage,
+    LeaveChatRoomAreaMessage,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -1582,7 +1583,7 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitUpdateChatId(email: string, chatId: string) {
-        if (chatId && email)
+        if (chatId && email) {
             this.send({
                 message: {
                     $case: "updateChatIdMessage",
@@ -1592,6 +1593,33 @@ export class RoomConnection implements RoomConnection {
                     },
                 },
             });
+        }
+    }
+
+    public async queryEnterChatRoomArea(roomID: string): Promise<void> {
+        const answer = await this.query({
+            $case: "enterChatRoomAreaQuery",
+            enterChatRoomAreaQuery: {
+                roomID,
+            },
+        });
+
+        if (answer.$case !== "enterChatRoomAreaAnswer") {
+            throw new Error("Unexpected answer");
+        }
+
+        return;
+    }
+
+    public emitLeaveChatRoomArea(roomID: string): void {
+        this.send({
+            message: {
+                $case: "leaveChatRoomAreaMessage",
+                leaveChatRoomAreaMessage: LeaveChatRoomAreaMessage.fromPartial({
+                    roomID,
+                }),
+            },
+        });
     }
 
     private resetPingTimeout(): void {

@@ -72,7 +72,6 @@
     import WarningToast from "./WarningContainer/WarningToast.svelte";
     import ClaimPersonalAreaDialogBox from "./MapEditor/ClaimPersonalAreaDialogBox.svelte";
     import MainModal from "./Modal/MainModal.svelte";
-
     let mainLayout: HTMLDivElement;
     let keyboardEventIsDisable = false;
     let isMobile = isMediaBreakpointUp("md");
@@ -90,7 +89,8 @@
             target &&
             (["INPUT", "TEXTAREA"].includes(target.tagName) ||
                 (target.tagName === "DIV" && target.getAttribute("role") === "textbox") ||
-                target.getAttribute("contenteditable") === "true")
+                target.getAttribute("contenteditable") === "true" ||
+                target.classList.contains("block-user-action"))
         ) {
             try {
                 gameManager.getCurrentGameScene().userInputManager.disableControls();

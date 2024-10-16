@@ -122,10 +122,6 @@
         }
     }
 
-    function changeChatSounds() {
-        localUserStore.setChatSounds(chatSounds);
-    }
-
     function changeBlockAudio() {
         if (blockAudio) {
             audioManagerFileStore.unloadAudio();
@@ -336,10 +332,6 @@
         <label>
             <input type="checkbox" bind:checked={notification} on:change={changeNotification} />
             <span>{$LL.menu.settings.notifications()}</span>
-        </label>
-        <label>
-            <input type="checkbox" bind:checked={chatSounds} on:change={changeChatSounds} />
-            <span>{$LL.menu.settings.chatSounds()}</span>
         </label>
         <label>
             <input type="checkbox" bind:checked={forceCowebsiteTrigger} on:change={changeForceCowebsiteTrigger} />

@@ -89,7 +89,12 @@ export interface AdminInterface {
      * @param roomUrl
      * @return string[]
      */
-    getUrlRoomsFromSameWorld(roomUrl: string, locale?: string, tags?: string[]): Promise<ShortMapDescriptionList>;
+    getUrlRoomsFromSameWorld(
+        roomUrl: string,
+        locale?: string,
+        tags?: string[],
+        bypassTagFilter?: boolean
+    ): Promise<ShortMapDescriptionList>;
 
     /**
      * @param accessToken

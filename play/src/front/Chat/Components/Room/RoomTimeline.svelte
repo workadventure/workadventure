@@ -6,12 +6,15 @@
     import Avatar from "../Avatar.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import { matrixSecurity } from "../../Connection/Matrix/MatrixSecurity";
+    import { localUserStore } from "../../../Connection/LocalUserStore";
     import Message from "./Message.svelte";
-    import MessageInput from "./MessageInput.svelte";
+    import MessageInputBar from "./MessageInputBar.svelte";
     import MessageSystem from "./MessageSystem.svelte";
     import { IconArrowLeft, IconLoader } from "@wa-icons";
 
     export let room: ChatRoom;
+
+    let myChatID = localUserStore.getChatId();
 
     const NUMBER_OF_TYPING_MEMBER_TO_DISPLAY = 3;
     let typingMembers = room.typingMembers;
@@ -70,7 +73,6 @@
 
     afterUpdate(() => {
         room.setTimelineAsRead();
-
         if (autoScroll) {
             scrollToMessageListBottom();
         } else if (onScrollTop) {
@@ -85,7 +87,7 @@
     });
 
     function scrollToMessageListBottom() {
-        messageListRef.scrollTop = messageListRef.scrollHeight;
+        messageListRef.scroll({ top: messageListRef.scrollHeight, behavior: "smooth" });
     }
 
     function goBackAndClearSelectedChatMessage() {
@@ -156,9 +158,19 @@
     function isViewportNotFilled() {
         return messageListRef.scrollHeight <= messageListRef.clientHeight;
     }
+
+    function onUpdateMessageBody(event: CustomEvent) {
+        if (
+            autoScroll ||
+            (event.detail.id === $messages[$messages.length - 1].id &&
+                $messages[$messages.length - 1].sender?.chatId === myChatID)
+        ) {
+            scrollToMessageListBottom();
+        }
+    }
 </script>
 
-<div class="tw-flex tw-flex-col tw-flex-1 tw-h-full tw-w-full tw-pl-2">
+<div class="tw-flex tw-flex-col tw-flex-auto tw-h-full tw-w-full tw-max-w-full tw-pl-2">
     {#if room !== undefined}
         <div class="tw-flex tw-flex-col tw-gap-2">
             <div class="tw-flex tw-flex-row tw-items-center">
@@ -166,7 +178,7 @@
                     <IconArrowLeft />
                 </button>
                 <span class="tw-flex-1" />
-                <p class="tw-m-0 tw-p-0 tw-text-gray-400">{$roomName}</p>
+                <p class="tw-m-0 tw-p-0 tw-text-gray-400" data-testid="roomName">{$roomName}</p>
                 <span class="tw-flex-1" />
             </div>
             {#if shouldDisplayLoader}
@@ -198,7 +210,11 @@
                         {#if message.type === "outcoming" || message.type === "incoming"}
                             <MessageSystem {message} />
                         {:else}
-                            <Message {message} reactions={$messageReaction.get(message.id)} />
+                            <Message
+                                on:updateMessageBody={onUpdateMessageBody}
+                                {message}
+                                reactions={$messageReaction.get(message.id)}
+                            />
                         {/if}
                     </li>
                 {/each}
@@ -236,7 +252,7 @@
                 </div>
             </div>
         {/if}
-        <MessageInput {room} />
+        <MessageInputBar {room} />
     {/if}
 </div>
 

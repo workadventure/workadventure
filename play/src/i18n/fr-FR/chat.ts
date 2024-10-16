@@ -171,6 +171,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     anAdmin: "un administrateur",
     messageDeletedByYou: "Vous avez supprimé ce message",
     messageEdited: "Modifié",
+    messageEditedError: "Impossible de modifier le message. Veuillez réessayer.",
     waiting: "En attente",
     nothingToDisplay: "Rien à afficher",
     showMore: "En afficher {number} de plus",
@@ -242,6 +243,23 @@ const chat: DeepPartial<Translation["chat"]> = {
         loadingCreation: "Salon en cours de création",
         creationSuccessNotification: "Salon créé",
     },
+    manageRoomUsers: {
+        roomOption: "Participants",
+        error: "Impossible d'envoyer les invitations",
+        title: "Inviter des participants",
+        invitations: "Invitations",
+        participants: "Participants",
+        join: "Présent",
+        invite: "Invité",
+        ban: "Banni",
+        kick: "Expulsé",
+        leave: "Parti",
+        buttons: {
+            sendInvitations: "Envoyer les invitations",
+            cancel: "Annuler",
+        },
+        sendInvitationsSuccessNotification: "Invitation(s) envoyée(s)",
+    },
     roomMenu: {
         leaveRoom: {
             label: "Quitter le salon",
@@ -268,7 +286,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         interactiveAuth: {
             title: "Chiffrement de bout en bout",
             description:
-                "Pour des raisons de sécurité, une clé de signature croisée doit être téléchargée sur notre serveur. En confirmant votre identité, vous enregistrerez la clé de signature croisée qui vous permettra de lire les messages chiffrés de WorkAdventure et d'autres clients.",
+                "Pour des raisons de sécurité, une clé doit être téléchargée sur notre serveur pour vérifier votre identité. En confirmant votre identité, vous enregistrerez cette clé, ce qui vous permettra de lire les messages chiffrés provenant de WA et d'autres clients.",
             instruction: "Veillez à confirmer la connexion SSO avant de cliquer sur le bouton Terminer.",
             buttons: {
                 cancel: "Annuler",
@@ -279,7 +297,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         accessSecretStorage: {
             title: "Vérification de la session du chat",
             description:
-                "Afin de vérifier votre session et récupérer l'historique des messages cryptés, vous devez saisir votre clé de récupération ou votre phrase de sécurité.",
+                "Afin de vérifier votre session et récupérer vos messages cryptés, vous devez saisir votre clé de récupération ou votre phrase de sécurité.",
             passphrase: "Phrase de sécurité",
             recoveryKey: "Clé de récupération",
             placeholder: "Entrer votre",

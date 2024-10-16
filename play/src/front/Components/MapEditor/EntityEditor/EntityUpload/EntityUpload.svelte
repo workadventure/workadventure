@@ -4,7 +4,7 @@
     import { v4 as uuidv4 } from "uuid";
     import { Direction, ENTITY_UPLOAD_SUPPORTED_FORMATS_FRONT, EntityPrefab } from "@workadventure/map-editor";
     import LL from "../../../../../i18n/i18n-svelte";
-    import { mapEditorEntityUploadEventStore } from "../../../../Stores/MapEditorStore";
+    import { mapEditorEntityUploadEventStore, selectCategoryStore } from "../../../../Stores/MapEditorStore";
     import CustomEntityEditionForm from "../CustomEntityEditionForm/CustomEntityEditionForm.svelte";
     import { IconCloudUpload } from "@wa-icons";
 
@@ -12,6 +12,9 @@
     let dropZoneRef: HTMLDivElement;
     let customEntityToUpload: EntityPrefab | undefined = undefined;
     let errorOnFile: string | undefined;
+    let tagUploadInProcess: string | undefined;
+
+    const BASIC_TYPE = "Custom";
 
     $: {
         if (files) {
@@ -25,7 +28,7 @@
                     direction: Direction.Down,
                     tags: [],
                     color: "",
-                    type: "Custom",
+                    type: BASIC_TYPE,
                 };
             }
         }
@@ -41,6 +44,9 @@
         if (uploadEntityMessage === undefined && files !== undefined) {
             initFileUpload();
         }
+
+        // At the end, open the categorie of image uploaded
+        selectCategoryStore.set(tagUploadInProcess);
     }
 
     async function processFileToUpload(customEditedEntity: EntityPrefab) {
@@ -49,6 +55,8 @@
             const fileBuffer = await fileToUpload.arrayBuffer();
             const fileAsUint8Array = new Uint8Array(fileBuffer);
             const generatedId = uuidv4();
+            tagUploadInProcess =
+                customEditedEntity.tags && customEditedEntity.tags.length > 0 ? customEditedEntity.tags[0] : BASIC_TYPE;
             mapEditorEntityUploadEventStore.set({
                 id: generatedId,
                 file: fileAsUint8Array,

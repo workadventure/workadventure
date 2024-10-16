@@ -48,12 +48,12 @@ test.describe("Scripting chat functions", () => {
       return WA.chat.sendChatMessage("Test message sent", "Test machine");
     });
 
-    await expect(page.locator("#chat").locator("#message")).toContainText(
+    await expect(page.locator("#chat").locator(".messageContainer")).toContainText(
       "Test message sent"
     );
 
     await expect(
-      page.locator("#chat").locator("#message").locator(".messageHeader")
+      page.locator("#chat").locator(".messageContainer").locator(".messageHeader")
     ).toContainText("Test machine");
 
     // Test start typing

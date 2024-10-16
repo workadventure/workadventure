@@ -92,7 +92,7 @@ describe("MatrixSecurity", () => {
             await expect(matrixSecurity.initClientCryptoConfiguration()).resolves.toEqual(undefined);
             expect(consoleInfoSpy).toHaveBeenCalled();
         });
-        it("should call bootstrap / restore backup message function when crossSigning is not ready or keybackupinfo is null ", async () => {
+        it("should call bootstrap / restore backup message function when crossSigning is not ready or keybackupinfo is not null ", async () => {
             const mockCrypto = {
                 isCrossSigningReady: vi.fn().mockReturnValue(false),
                 bootstrapCrossSigning: vi.fn().mockResolvedValue({}),

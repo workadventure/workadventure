@@ -1,8 +1,10 @@
 import { MathUtils } from "@workadventure/math-utils";
+import { errorHandler } from "@workadventure/shared-utils/src/ErrorHandler";
 import * as _ from "lodash";
 import {
     AreaData,
     AreaDataProperties,
+    AreaDataProperty,
     AtLeast,
     EntityCoordinates,
     PersonalAreaPropertyData,
@@ -23,7 +25,6 @@ export type AreaUpdateCallback = (
 
 export class GameMapAreas {
     private wam: WAMFileFormat;
-
     private enterAreaCallbacks = Array<AreaChangeCallback>();
     private updateAreaCallbacks = Array<AreaUpdateCallback>();
     private leaveAreaCallbacks = Array<AreaChangeCallback>();
@@ -190,12 +191,40 @@ export class GameMapAreas {
             throw new Error(`Area to update does not exist!`);
         }
 
-        _.merge(area, newConfig);
-        // TODO: Find a way to update it without need of using conditions
+        const customMerge = (objValue: unknown, srcValue: unknown, key: string) => {
+            if (key === "properties") {
+                try {
+                    const objValueParse = AreaDataProperties.safeParse(objValue);
+                    const srcValueParse = AreaDataProperties.safeParse(srcValue);
 
-        if (newConfig.properties !== undefined) {
-            area.properties = newConfig.properties;
-        }
+                    if (!objValueParse.success && !srcValueParse.success) {
+                        return undefined;
+                    }
+
+                    if (!objValueParse.success || !srcValueParse.success) {
+                        return objValue ? objValue : srcValue;
+                    }
+
+                    return srcValueParse.data.map((newProp: AreaDataProperty) => {
+                        const oldProp = objValueParse.data.find((prop: AreaDataProperty) => prop.id === newProp.id);
+
+                        if (oldProp && oldProp.serverData) {
+                            if (!newProp.serverData || JSON.stringify(newProp.serverData) === "{}") {
+                                newProp.serverData = oldProp.serverData;
+                            }
+                        }
+                        return newProp;
+                    });
+                } catch (error) {
+                    console.error("Failed to parse properties : ", error);
+                    errorHandler(new Error("Failed to parse area properties"));
+                    return srcValue;
+                }
+            }
+            return undefined;
+        };
+
+        _.mergeWith(area, newConfig, customMerge);
 
         this.updateAreaWAM(area);
         return area;

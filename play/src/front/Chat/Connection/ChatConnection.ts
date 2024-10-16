@@ -22,6 +22,11 @@ export type PartialChatUser = Partial<ChatUser> & { chatId: string };
 
 export type ChatRoomMembership = "ban" | "join" | "knock" | "leave" | "invite" | string;
 
+export interface ChatRoomMember {
+    id: string;
+    name: string;
+    membership: ChatRoomMembership;
+}
 export interface ChatRoom {
     readonly id: string;
     readonly name: Readable<string>;
@@ -35,6 +40,7 @@ export interface ChatRoom {
     readonly myMembership: ChatRoomMembership;
     readonly setTimelineAsRead: () => void;
     readonly membersId: string[];
+    readonly members: ChatRoomMember[];
     readonly leaveRoom: () => Promise<void>;
     readonly joinRoom: () => Promise<void>;
     readonly hasPreviousMessage: Readable<boolean>;
@@ -48,6 +54,8 @@ export interface ChatRoom {
     readonly areNotificationsMuted: Readable<boolean>;
     readonly unmuteNotification: () => Promise<void>;
     readonly muteNotification: () => Promise<void>;
+    readonly inviteUsers: (userIds: string[]) => Promise<void>;
+    readonly destroy: () => void;
 }
 
 //Readonly attributes
@@ -126,7 +134,9 @@ export interface ChatConnectionInterface {
             name: string | undefined;
         }[]
     >;
+
     joinRoom(roomId: string): Promise<ChatRoom | undefined>;
+
     destroy(): Promise<void>;
     searchChatUsers(searchText: string): Promise<{ id: string; name: string | undefined }[] | undefined>;
     isEncryptionRequiredAndNotSet: Readable<boolean>;

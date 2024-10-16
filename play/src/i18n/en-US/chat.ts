@@ -170,6 +170,7 @@ const chat: BaseTranslation = {
     anAdmin: "an administrator",
     messageDeletedByYou: "You deleted this message",
     messageEdited: "Modified",
+    messageEditedError: "Unable to edit message. Try again.",
     waiting: "Waiting",
     nothingToDisplay: "Nothing to display",
     showMore: "Show {number} more",
@@ -241,6 +242,23 @@ const chat: BaseTranslation = {
         loadingCreation: "Room creation in progress",
         creationSuccessNotification: "Room created",
     },
+    manageRoomUsers: {
+        roomOption: "Participants",
+        error: "Unable send invitations",
+        title: "Invite participants",
+        invitations: "Invitations",
+        participants: "Participants",
+        join: "Joined",
+        invite: "Invited",
+        ban: "Banned",
+        kick: "Kicked",
+        leave: "Leaved",
+        buttons: {
+            sendInvitations: "Send invitations",
+            cancel: "Cancel",
+        },
+        sendInvitationsSuccessNotification: "Invitations sent successfully",
+    },
     roomMenu: {
         leaveRoom: {
             label: "Leave room",
@@ -254,9 +272,9 @@ const chat: BaseTranslation = {
         createRecoveryKey: {
             title: "Chat recovery key creation",
             description:
-                "In order use end to end encryption in the chat, you need to create a recovery key. Please enter your passphrase below, a recovery key will be created.",
+                "In order use end to end encryption in the chat, you need to create a recovery key. Please enter your recovery passphrase below, a recovery key will be created.",
             privateKeyDescription:
-                "This is your private key, save it somewhere to retrieve encrypted discussions after logged out.",
+                "This is your recovery key, save it somewhere to retrieve encrypted discussions after logged out.",
             error: "Something went wrong on generateRecoveryKeyFromPassphrase",
             buttons: {
                 generate: "Generate",
@@ -265,10 +283,10 @@ const chat: BaseTranslation = {
             },
         },
         interactiveAuth: {
-            title: "Chat end to end encryption",
+            title: "End-to-end encryption for chat",
             description:
-                "For security reasons, a cross signing key must be uploaded to our server. By confirming your identity, you will save the cross signing key allowing you to read encrypted message from WorkAdventure and other clients.",
-            instruction: "Be sure to end SSO connection popup after before clicking on Finish button",
+                "For security reasons, a key must be uploaded to our server to verify your identity. By confirming your identity, you will store the key, which allows you to read encrypted messages from WA and other clients.",
+            instruction: "Make sure to complete the SSO connection before clicking the Finish button.",
             buttons: {
                 cancel: "Cancel",
                 continueSSO: "Continue with SSO",
@@ -278,13 +296,13 @@ const chat: BaseTranslation = {
         accessSecretStorage: {
             title: "Chat session verification",
             description:
-                "In order to verify your session and retrieve historical encrypted message your need to enter your recovery key or passphrase.",
+                "In order to verify your session and retrieve encrypted messages, you need to enter your recovery key or passphrase.",
             passphrase: "Passphrase",
             recoveryKey: "Recovery key",
             placeholder: "Enter your",
             buttons: {
                 cancel: "Cancel",
-                usePassphrase: "Use passphrase instead",
+                usePassphrase: "Use recovery passphrase instead",
                 useRecoveryKey: "Use recovery key instead",
                 confirm: "Confirm",
             },

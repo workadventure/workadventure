@@ -36,5 +36,6 @@ You can trigger an action when a user enters an area. There is a list of possibl
 - [Play a sound](play-sound.md)
 - [Restricted area](restricted-area.md)
 - [Personal area](personal-area.md)
+- [Matrix chat zone](matrix-chat-zone.md)
 
 You can add multiple "Play sound" and "Open a link" actions to an area.

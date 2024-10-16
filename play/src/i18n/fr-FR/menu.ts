@@ -114,6 +114,19 @@ const menu: DeepPartial<Translation["menu"]> = {
             },
         },
     },
+    chat: {
+        matrixIDLabel: "Votre ID Matrix",
+        settings: "Paramètres",
+        resetKeyStorageUpButtonLabel: "Réinitialiser la clé de sauvegarde",
+        resetKeyStorageConfirmationModal: {
+            title: "Confirmation de la réinitialisation de la clé de sauvegarde",
+            content: "Vous êtes sur le point de réinitialiser la clé de sauvegarde. Êtes-vous sûr(e) ?",
+            warning:
+                "La réinitialisation de la clé de sauvegarde supprimera votre session actuelle et tous les utilisateurs de confiance. Vous pourriez perdre l’accès à certains messages passés et ne serez plus reconnu en tant qu’utilisateur de confiance. Assurez-vous de bien comprendre les conséquences de cette action avant de continuer.",
+            cancel: "Annuler",
+            continue: "Continuer",
+        },
+    },
     sub: {
         profile: "Profil",
         settings: "Paramètres",
@@ -122,6 +135,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "Messages globaux",
         contact: "Contact",
         report: "Remonter un bug",
+        chat: "Chat",
     },
 };
 

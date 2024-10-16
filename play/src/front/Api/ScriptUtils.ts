@@ -41,6 +41,10 @@ class ScriptUtils {
     }
 
     public getWebsiteUrl(url: string) {
+        if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            // Relative URL, let's return right away.
+            return url;
+        }
         const urlApi = new URL(url);
         // Check if the url is a klaxoon link
         if (KlaxoonService.isKlaxoonLink(urlApi)) {

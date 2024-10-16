@@ -19,6 +19,8 @@ export const PropertyBase = z.object({
     id: z.string(),
     buttonLabel: z.string().optional(),
     hideButtonLabel: z.boolean().optional(),
+    resourceUrl: z.string().optional(),
+    serverData: z.unknown().optional(),
 });
 
 export const FocusablePropertyData = PropertyBase.extend({
@@ -134,6 +136,17 @@ export const PersonalAreaPropertyData = PropertyBase.extend({
     allowedTags: z.array(z.string()).default([]),
     ownerId: z.string().nullable(), //Proto handle null here. If something goes wrong with personal area, this may be the issue
 });
+
+export const MatrixRoomPropertyData = PropertyBase.extend({
+    type: z.literal("matrixRoomPropertyData"),
+    shouldOpenAutomatically: z.boolean(),
+    displayName: z.string(),
+    serverData: z
+        .object({
+            matrixRoomId: z.string().optional(),
+        })
+        .optional(),
+});
 export const AreaDataProperty = z.discriminatedUnion("type", [
     StartPropertyData,
     ExitPropertyData,
@@ -148,6 +161,7 @@ export const AreaDataProperty = z.discriminatedUnion("type", [
     RestrictedRightsPropertyData,
     PersonalAreaPropertyData,
     ExtensionModuleAreaProperty,
+    MatrixRoomPropertyData,
 ]);
 
 export const AreaDataProperties = z.array(AreaDataProperty);
@@ -356,6 +370,7 @@ export type EntityDescriptionPropertyData = z.infer<typeof EntityDescriptionProp
 export type AreaDescriptionPropertyData = z.infer<typeof AreaDescriptionPropertyData>;
 export type RestrictedRightsPropertyData = z.infer<typeof RestrictedRightsPropertyData>;
 export type PersonalAreaPropertyData = z.infer<typeof PersonalAreaPropertyData>;
+export type MatrixRoomPropertyData = z.infer<typeof MatrixRoomPropertyData>;
 export type PersonalAreaAccessClaimMode = z.infer<typeof PersonalAreaAccessClaimMode>;
 export type ExtensionModuleAreaPropertyData = z.infer<typeof ExtensionModuleAreaProperty>;
 

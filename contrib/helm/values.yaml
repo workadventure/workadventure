@@ -48,6 +48,8 @@ commonEnv:
   ENABLE_CHAT_UPLOAD: "true"
   UPLOAD_MAX_FILESIZE: "10485760"
 
+commonSecretEnv: {}
+
 # #########################################################
 # play service
 # #########################################################
@@ -533,6 +535,7 @@ mapstorage:
     ENABLE_BEARER_AUTHENTICATION: "false"
     AUTHENTICATION_VALIDATOR_URL: ""
     ENABLE_DIGEST_AUTHENTICATION: "false"
+    WHITELISTED_RESOURCE_URLS: ""
 
   # Those environment variables should be added in "Kubernetes" format (e.g. [name: "...", valueFrom: {...}]).
   extraEnvVars: []

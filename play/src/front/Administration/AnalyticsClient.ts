@@ -363,6 +363,14 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
+    menuChat(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_menu_chat");
+            })
+            .catch((e) => console.error(e));
+    }
+
     globalMessage(): void {
         this.posthogPromise
             ?.then((posthog) => {

@@ -798,7 +798,9 @@ export class SocketManager {
                 case "getMemberQuery":
                 case "searchTagsQuery":
                 case "chatMembersQuery":
-                case "oauthRefreshTokenQuery": {
+                case "oauthRefreshTokenQuery":
+                case "enterChatRoomAreaQuery":
+                case "chatMembersQuery": {
                     break;
                 }
                 default: {

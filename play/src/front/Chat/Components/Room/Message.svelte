@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { ComponentType } from "svelte";
+    import { ComponentType, createEventDispatcher } from "svelte";
     import { MapStore } from "@workadventure/store-utils";
     import { ChatMessage, ChatMessageReaction, ChatMessageType } from "../../Connection/ChatConnection";
     import LL, { locale } from "../../../../i18n/i18n-svelte";
@@ -21,8 +21,16 @@
     export let reactions: MapStore<string, ChatMessageReaction> | undefined;
     export let replyDepth = 0;
 
+    const dispatch = createEventDispatcher();
+
     const { id, sender, isMyMessage, date, content, quotedMessage, isQuotedMessage, type, isDeleted, isModified } =
         message;
+
+    const updateMessageBody = () => {
+        dispatch("updateMessageBody", {
+            id: message.id,
+        });
+    };
 
     const messageFromSystem = type === "incoming" || type === "outcoming";
 
@@ -39,10 +47,10 @@
 </script>
 
 <div
-    id="message"
+    tabindex="-1"
     class={`${isMyMessage && "tw-self-end tw-flex-row-reverse tw-relative"} ${
         messageFromSystem && "tw-justify-center"
-    } tw-select-text`}
+    } tw-select-text focus:tw-outline-none focus:tw-shadow-none block-user-action messageContainer`}
 >
     <div class={`container-grid ${isMyMessage ? "tw-justify-end grid-container-inverted" : "tw-justify-start"}`}>
         <div
@@ -77,7 +85,7 @@
                     {$LL.chat.messageDeleted()}
                 </p>
             {:else}
-                <svelte:component this={messageType[type]} {content} />
+                <svelte:component this={messageType[type]} on:updateMessageBody={updateMessageBody} {content} />
                 {#if $isModified}
                     <p class="tw-text-gray-300 tw-text-xxxs tw-p-0 tw-m-0">({$LL.chat.messageEdited()})</p>
                 {/if}
@@ -106,13 +114,13 @@
 </div>
 
 <style>
-    #message {
+    .messageContainer {
         display: flex;
         align-items: flex-start;
         position: relative;
     }
 
-    #message:hover .options {
+    .messageContainer:hover .options {
         display: flex;
         flex-direction: row;
         gap: 2px;

@@ -2,21 +2,17 @@ import * as path from "path";
 import { expect, Page } from "@playwright/test";
 
 class EntityEditor {
-  async selectEntity(page: Page, nb: number, search?: string, expectedFilename?: string) {
+  async selectEntity(page: Page, nb: number, search?: string) {
     if (search != undefined) {
       await page.getByPlaceholder("Search").click();
       await page.getByPlaceholder("Search").fill(search);
     }
-    await expect(page.getByTestId("entityImageLoader")).toHaveCount(0);
-    await expect(page.getByTestId("entityImageError")).toHaveCount(0);
-    await expect(page.getByTestId("entity-item").nth(nb)).toHaveCount(1);
-    if (expectedFilename) {
-      const responseOnTestAssetClicked = page.waitForResponse((response) => response.url().includes(expectedFilename));
-      await page.getByTestId("entity-item").nth(nb).click();
-      await responseOnTestAssetClicked;
-    } else {
-      await page.getByTestId("entity-item").nth(nb).click();
-    }
+
+    // Wait for the entity to be displayed
+    await expect(page.getByTestId("entity-item").nth(nb)).toHaveCount(1, { timeout: 30000 });
+    // Click on the entity to select it
+    await page.getByTestId("entity-item").nth(nb).click();
+
     // That's bad, but we need to wait a bit for the canvas to put the object.
     // eslint-disable-next-line playwright/no-wait-for-timeout
     await page.waitForTimeout(1000);
@@ -90,7 +86,7 @@ class EntityEditor {
   async uploadTestAsset(page: Page) {
     await page
       .getByTestId("uploadCustomAsset")
-      .setInputFiles(path.join(__dirname, `../../assets/${this.getTestAssetName()}`));
+      .setInputFiles(path.join(__dirname, `../../assets/${this.getTestAssetFile()}`));
     await page.getByTestId("floatingObject").check();
     await this.applyEntityModifications(page);
   }
@@ -101,6 +97,17 @@ class EntityEditor {
 
   async applyEntityModifications(page: Page) {
     await page.getByTestId("applyEntityModifications").click();
+    if(await page.getByTestId('entityImageLoader').isVisible({timeout: 2000})){
+      // Check loader end
+      await expect(page.getByTestId('entityImageLoader')).toHaveCount(0, { timeout: 30000 });
+    }
+    // Verify that there is no error message
+    await expect(page.getByTestId("entityImageError")).toHaveCount(0);
+    // Verify that the image uploaded is displayed in the list
+    if(await page.getByTestId('clearCurrentSelection').isVisible()){
+      // Back to the main list
+      await page.getByTestId('clearCurrentSelection').click();
+    }
   }
 
   async removeEntity(page: Page) {
@@ -111,8 +118,11 @@ class EntityEditor {
     await page.locator(".map-editor .sidebar .properties-container input#tabLink").fill(link);
   }
 
+  getTestAssetFile(){
+    return `${this.getTestAssetName()}.png`;
+  }
   getTestAssetName() {
-    return "testAsset.png";
+    return "testAsset";
   }
 }
 

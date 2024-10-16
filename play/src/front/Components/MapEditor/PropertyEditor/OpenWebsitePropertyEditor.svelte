@@ -176,12 +176,13 @@
         dispatch("change", property.link);
     }
 
-    async function checkWebsiteProperty(): Promise<void> {
+    async function checkWebsiteProperty(protocolChecked = false): Promise<void> {
         if (property.link == undefined) return;
         // if the link is not a website, we don't need to check if it is embeddable
         embeddableLoading = true;
         error = "";
         warning = "";
+        console.info("checkWebsiteProperty", property.application, property.link);
         try {
             if (property.application == "youtube") {
                 try {
@@ -403,6 +404,30 @@
                 } finally {
                     embeddableLoading = false;
                     onValueChange();
+                }
+            }
+
+            if (property.application == "website") {
+                if (!protocolChecked) {
+                    // if the link is not a website, we don't need to check if it is embeddable
+
+                    if (
+                        property.link != undefined &&
+                        property.link != "" &&
+                        !property.link.startsWith("http://") &&
+                        !property.link.startsWith("https://")
+                    ) {
+                        property.link = "https://" + property.link;
+                        embeddableLoading = false;
+                        warning = "";
+                        onValueChange();
+                        setTimeout(() => {
+                            checkWebsiteProperty(true).catch((e) => {
+                                console.error("Error checking embeddable website", e);
+                            });
+                        }, 10);
+                        return;
+                    }
                 }
             }
 
@@ -691,7 +716,7 @@
                     bind:value={property.link}
                     on:keypress={onKeyPressed}
                     on:change={onValueChange}
-                    on:blur={checkWebsiteProperty}
+                    on:blur={() => checkWebsiteProperty()}
                     on:click={onClickInputHandler}
                     disabled={embeddableLoading}
                 />

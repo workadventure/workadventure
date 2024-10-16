@@ -34,6 +34,7 @@ import { gameManager } from "../Phaser/Game/GameManager";
 import { locales } from "../../i18n/i18n-util";
 import type { Locales } from "../../i18n/i18n-types";
 import { setCurrentLocale } from "../../i18n/locales";
+import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 import { axiosToPusher, axiosWithRetry } from "./AxiosUtils";
 import { Room } from "./Room";
 import { LocalUser } from "./LocalUser";
@@ -114,17 +115,13 @@ class ConnectionManager {
      */
     public loadOpenIDScreen(): URL | null {
         localUserStore.setAuthToken(null);
-        // FIXME: remove this._currentRoom.iframeAuthentication
-        // FIXME: remove this._currentRoom.iframeAuthentication
-        // FIXME: remove this._currentRoom.iframeAuthentication
-        // FIXME: remove this._currentRoom.iframeAuthentication
-        if (!ENABLE_OPENID || !this._currentRoom || !this._currentRoom.iframeAuthentication) {
+        if (!ENABLE_OPENID || !this._currentRoom) {
             analyticsClient.loggedWithToken();
             loginSceneVisibleIframeStore.set(false);
             return null;
         }
         analyticsClient.loggedWithSso();
-        const redirectUrl = new URL(`${this._currentRoom.iframeAuthentication}`, window.location.href);
+        const redirectUrl = new URL("login-screen", ABSOLUTE_PUSHER_URL);
         redirectUrl.searchParams.append("playUri", this._currentRoom.key);
         return redirectUrl;
     }
@@ -316,7 +313,7 @@ class ConnectionManager {
                         }*/
 
                         if (response.type === "redirect") {
-                            return new URL(response.urlToRedirect);
+                            return new URL(response.urlToRedirect, window.location.href);
                         }
 
                         return {
@@ -513,7 +510,7 @@ class ConnectionManager {
                 this.googleSheetsToolActivated = GoogleSheetsApp?.enabled ?? GOOGLE_SHEETS_ENABLED;
 
                 const GoogleSlidesApp = connect.room.applications?.find(
-                    (app) => app.name === defautlNativeIntegrationAppName.GOOGLE_SHEETS
+                    (app) => app.name === defautlNativeIntegrationAppName.GOOGLE_SLIDES
                 );
                 this.googleSlidesToolActivated = GoogleSlidesApp?.enabled ?? GOOGLE_SLIDES_ENABLED;
 

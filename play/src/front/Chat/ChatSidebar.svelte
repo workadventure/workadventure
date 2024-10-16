@@ -1,10 +1,12 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
+    import { writable } from "svelte/store";
     import { enableUserInputsStore } from "../Stores/UserInputStore";
     import { mapEditorModeStore } from "../Stores/MapEditorStore";
     import { chatVisibilityStore, INITIAL_SIDEBAR_WIDTH } from "../Stores/ChatStore";
     import Chat from "./Components/Chat.svelte";
 
+    export const chatSidebarWidthStore = writable(INITIAL_SIDEBAR_WIDTH);
     let container: HTMLElement;
 
     function closeChat() {
@@ -19,7 +21,7 @@
         }
     }
 
-    let sideBarWidth: number;
+    let sideBarWidth: number = $chatSidebarWidthStore;
 
     const handleMousedown = (e: MouseEvent) => {
         let dragX = e.clientX;
@@ -32,6 +34,7 @@
         };
         document.onmouseup = () => {
             document.onmousemove = null;
+            chatSidebarWidthStore.set(sideBarWidth);
         };
     };
 
@@ -51,6 +54,7 @@
 
         document.addEventListener("touchend", () => {
             document.removeEventListener("touchmove", onTouchMove);
+            chatSidebarWidthStore.set(sideBarWidth);
         });
     };
 
@@ -62,12 +66,14 @@
             container.style.maxWidth = document.documentElement.clientWidth + "px";
             container.style.width = document.documentElement.clientWidth + "px";
         }
+        chatSidebarWidthStore.set(sideBarWidth);
     };
 
     const onresize = () => {
         if (isChatSidebarLargerThanWindow()) {
             container.style.maxWidth = document.documentElement.clientWidth + "px";
             container.style.width = document.documentElement.clientWidth + "px";
+            chatSidebarWidthStore.set(sideBarWidth);
         }
     };
 
@@ -87,7 +93,8 @@
         bind:this={container}
         id="chat"
         data-testid="chat"
-        transition:fly={{ duration: 200, x: -INITIAL_SIDEBAR_WIDTH }}
+        transition:fly={{ duration: 200, x: -sideBarWidth }}
+        style="width: {sideBarWidth}px; max-width: {Math.min(sideBarWidth, document.documentElement.clientWidth)}px;"
         class="chatWindow !tw-min-w-full sm:!tw-min-w-[360px] tw-bg-contrast/95 tw-backdrop-blur-md tw-p-4 "
     >
         <button class="close-window" data-testid="closeChatButton" on:click={closeChat}>&#215;</button>

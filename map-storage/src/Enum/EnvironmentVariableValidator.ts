@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+    AbsoluteOrRelativeUrl,
     BoolAsString,
     emptyStringToDefault,
     emptyStringToUndefined,
@@ -144,6 +145,12 @@ export const EnvironmentVariables = z.object({
             "A comma separated list of entity collection URLs to be used when a new TMJ map is uploaded. Note: ignored if WAM_TEMPLATE_URL is set."
         )
         .transform(emptyStringToUndefined),
+    MAP_STORAGE_API_TOKEN: z.string(),
+    PUSHER_URL: AbsoluteOrRelativeUrl,
+    WHITELISTED_RESOURCE_URLS: z
+        .string()
+        .optional()
+        .transform((val) => (val && val.trim().length > 0 ? val.split(",") : [])),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

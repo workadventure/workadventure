@@ -1,0 +1,20 @@
+import type { MiddlewareNext, MiddlewarePromise, Request, Response } from "hyper-express";
+import * as Sentry from "@sentry/node";
+import { MAP_STORAGE_API_TOKEN } from "../enums/EnvironmentVariable";
+
+export function mapStorageToken(req: Request, res: Response, next: MiddlewareNext): MiddlewarePromise | void {
+    const token = req.header("authorization");
+
+    if (!MAP_STORAGE_API_TOKEN) {
+        res.status(401).end("No token configured!");
+        return;
+    }
+    if (token !== MAP_STORAGE_API_TOKEN) {
+        console.error("Map Storage access refused for token: " + token);
+        Sentry.captureException("Map storage access refused for token: " + token);
+        res.status(401).end("Incorrect token");
+        return;
+    }
+
+    next();
+}

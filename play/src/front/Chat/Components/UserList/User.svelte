@@ -59,7 +59,7 @@
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
         on:click|stopPropagation={() => openChatRoom(chatId)}
-        class="tw-text-md tw-flex tw-gap-2 tw-flex-row tw-items-center tw-justify-between hover:tw-bg-white hover:tw-bg-opacity-10 hover:tw-rounded-md hover:!tw-cursor-pointer tw-p-1"
+        class="tw-text-md tw-flex tw-gap-2 tw-flex-row tw-items-center tw-justify-between hover:tw-bg-white hover:tw-bg-opacity-10 hover:tw-rounded-md hover:!tw-cursor-pointer tw-p-1 users"
     >
         <div class={`wa-chat-item ${isAdmin ? "admin" : "user"}  tw-cursor-default`}>
             <div

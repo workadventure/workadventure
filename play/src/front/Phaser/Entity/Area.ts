@@ -4,6 +4,7 @@ import { get } from "svelte/store";
 import { GameScene } from "../Game/GameScene";
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import LL from "../../../i18n/i18n-svelte";
+import { gameManager } from "../Game/GameManager";
 
 export class Area extends Phaser.GameObjects.Rectangle {
     private areaCollider: Phaser.Physics.Arcade.Collider | undefined = undefined;
@@ -12,7 +13,13 @@ export class Area extends Phaser.GameObjects.Rectangle {
     private highlightTimeOut: undefined | NodeJS.Timeout = undefined;
     private collideTimeOut: undefined | NodeJS.Timeout = undefined;
 
-    constructor(public readonly scene: GameScene, public areaData: AreaData, collide?: boolean, overlap?: boolean) {
+    constructor(
+        public readonly scene: GameScene,
+        public areaData: AreaData,
+        collide?: boolean,
+        overlap?: boolean,
+        private connection = gameManager.getCurrentGameScene().connection
+    ) {
         super(
             scene,
             areaData.x + areaData.width * 0.5,
@@ -49,6 +56,7 @@ export class Area extends Phaser.GameObjects.Rectangle {
 
     destroy(fromScene?: boolean) {
         super.destroy(fromScene);
+
         if (this.highlightTimeOut !== undefined) {
             clearTimeout(this.highlightTimeOut);
         }

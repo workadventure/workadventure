@@ -114,6 +114,19 @@ const menu: BaseTranslation = {
             },
         },
     },
+    chat: {
+        matrixIDLabel: "Your Matrix ID",
+        settings: "Settings",
+        resetKeyStorageUpButtonLabel: "Reset your key storage",
+        resetKeyStorageConfirmationModal: {
+            title: "Key storage reset confirmation",
+            content: "You are about to reset the key storage. Are you sure?",
+            warning:
+                "Resetting the key storage will remove your current session and all trusted users. You could lose access to some past messages, and you will no longer be recognized as a trusted user. Make sure you fully understand the consequences of this action before proceeding.",
+            cancel: "Cancel",
+            continue: "Continue",
+        },
+    },
     sub: {
         profile: "Profile",
         settings: "Settings",
@@ -122,6 +135,7 @@ const menu: BaseTranslation = {
         globalMessages: "Global Messages",
         contact: "Contact",
         report: "Report Issues",
+        chat: "Chat",
     },
 };
 

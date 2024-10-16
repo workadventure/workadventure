@@ -99,8 +99,8 @@ them with a "green" or "orange" dot in the **Disconnected users** section.
 End-to-end encryption brings the highest level of security, ensuring that even WorkAdventure administrators cannot read 
 your messages. However, this means users become responsible for keeping their encryption key safe.
 
-The first time you use encryption, WorkAdventure generates an encryption key that can be saved using a passphrase.
-Be sure to store this key securely or remember the passphrase.
+The first time you use encryption, WorkAdventure generates an encryption key that can be saved using a recovery passphrase.
+Be sure to store this key securely or remember the recovery passphrase.
 
 Since the encryption key is stored in your browser and never reaches WorkAdventure servers, if you access WorkAdventure 
 from another browser, you'll need to provide this encryption key again to read your message history.
@@ -112,3 +112,11 @@ a room.
 Please note that if you receive a message while you're away, WorkAdventure will send a **notification email**. In encrypted 
 rooms, WorkAdventure cannot include a conversation snippet in the email because we can't decrypt the content. 
 Therefore, we advise enabling end-to-end encryption only if you truly need the added level of privacy.
+
+### Resetting Your Key Storage
+
+If you need to reset your key storage, you can do so via the **Reset Your Key Storage** button located in the chat menu. However, proceed with caution:
+
+**Only proceed if you have no other device with which to verify your session.**
+
+Resetting the key storage will remove your current session and all trusted users. You could lose access to some past messages, and you will no longer be recognized as a trusted user. Make sure you fully understand the consequences of this action before proceeding.

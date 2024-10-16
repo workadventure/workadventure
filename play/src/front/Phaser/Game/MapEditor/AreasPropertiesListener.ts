@@ -5,12 +5,14 @@ import {
     FocusablePropertyData,
     JitsiRoomPropertyData,
     ListenerMegaphonePropertyData,
+    MatrixRoomPropertyData,
     OpenWebsitePropertyData,
     PersonalAreaAccessClaimMode,
     PersonalAreaPropertyData,
     PlayAudioPropertyData,
     SpeakerMegaphonePropertyData,
 } from "@workadventure/map-editor";
+import * as Sentry from "@sentry/svelte";
 import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
 import { Jitsi } from "@workadventure/shared-utils";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
@@ -24,7 +26,7 @@ import { localUserStore } from "../../../Connection/LocalUserStore";
 import { Room } from "../../../Connection/Room";
 import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../../Enum/EnvironmentVariable";
 import { audioManagerFileStore, audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
-import { chatZoneLiveStore } from "../../../Stores/ChatStore";
+import { chatVisibilityStore, chatZoneLiveStore } from "../../../Stores/ChatStore";
 /**
  * @DEPRECATED - This is the old way to show trigger message
  import { layoutManagerActionStore } from "../../../Stores/LayoutManagerStore";
@@ -48,8 +50,11 @@ import {
 } from "../../../Stores/GameStore";
 import { isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
 import { MessageUserJoined } from "../../../Connection/ConnexionModels";
+import { navChat, selectedRoom } from "../../../Chat/Stores/ChatStore";
 import { Area } from "../../Entity/Area";
 import { extensionModuleStore } from "../../../Stores/GameSceneStore";
+import { ChatRoom } from "../../../Chat/Connection/ChatConnection";
+import { userIsConnected } from "../../../Stores/MenuStore";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -207,6 +212,11 @@ export class AreasPropertiesListener {
                 this.handleExtensionModuleAreaPropertyOnEnter(areaData, property.subtype);
                 break;
             }
+            case "matrixRoomPropertyData": {
+                this.handleMatrixRoomAreaOnEnter(property);
+                break;
+            }
+
             default: {
                 break;
             }
@@ -268,6 +278,12 @@ export class AreasPropertiesListener {
                 this.handlePersonalAreaPropertyOnEnter(newProperty, area);
                 break;
             }
+            case "matrixRoomPropertyData": {
+                newProperty = newProperty as typeof oldProperty;
+                this.handleMatrixRoomAreaOnLeave(oldProperty);
+                this.handleMatrixRoomAreaOnEnter(newProperty);
+                break;
+            }
             case "silent":
             default: {
                 break;
@@ -311,6 +327,10 @@ export class AreasPropertiesListener {
             }
             case "extensionModule": {
                 this.handleExtensionModuleAreaPropertyOnLeave(property.subtype, areaData);
+                break;
+            }
+            case "matrixRoomPropertyData": {
+                this.handleMatrixRoomAreaOnLeave(property);
                 break;
             }
             default: {
@@ -556,6 +576,32 @@ export class AreasPropertiesListener {
         }
     }
 
+    private handleMatrixRoomAreaOnEnter(property: MatrixRoomPropertyData) {
+        if (this.scene.connection && property.serverData?.matrixRoomId && get(userIsConnected)) {
+            this.scene.connection
+                .queryEnterChatRoomArea(property.serverData.matrixRoomId)
+                .then(() => {
+                    if (!property.serverData?.matrixRoomId) {
+                        throw new Error("Failed to join room : roomId is undefined");
+                    }
+                    return gameManager.chatConnection.joinRoom(property.serverData.matrixRoomId);
+                })
+                .then((room: ChatRoom | undefined) => {
+                    if (!room) return;
+                    selectedRoom.set(room);
+                    navChat.set("chat");
+                    chatZoneLiveStore.set(true);
+                    if (property.shouldOpenAutomatically) chatVisibilityStore.set(true);
+                })
+                .catch((error) => {
+                    Sentry.captureMessage(`Failed to join room area : ${error}`);
+                    console.error(error);
+                });
+
+            return;
+        }
+    }
+
     private handlePersonalAreaPropertyOnEnter(
         property: PersonalAreaPropertyData,
         areaData: AreaData,
@@ -759,6 +805,30 @@ export class AreasPropertiesListener {
             if (areaMapEditor == undefined) continue;
             areaMapEditor[subtype].handleAreaPropertyOnEnter(area);
             inJitsiStore.set(true);
+        }
+    }
+
+    private handleMatrixRoomAreaOnLeave(property: MatrixRoomPropertyData) {
+        if (!get(userIsConnected)) {
+            return;
+        }
+
+        const actualRoom = get(selectedRoom);
+        const chatVisibility = get(chatVisibilityStore);
+
+        if (actualRoom?.id === property.serverData?.matrixRoomId && chatVisibility) {
+            chatVisibilityStore.set(false);
+            selectedRoom.set(undefined);
+        }
+        chatZoneLiveStore.set(false);
+
+        get(gameManager.chatConnection.rooms)
+            .find((room) => room.id === property.serverData?.matrixRoomId)
+            ?.leaveRoom()
+            .catch((error) => console.error(error));
+
+        if (this.scene.connection && property.serverData?.matrixRoomId) {
+            this.scene.connection.emitLeaveChatRoomArea(property.serverData.matrixRoomId);
         }
     }
 

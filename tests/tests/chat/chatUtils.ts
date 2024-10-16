@@ -53,6 +53,10 @@ class ChatUtils {
     await page.getByText("Continue").click();
   }
 
+  public async cancelledContinueWithSSO(page:Page,context:BrowserContext){
+    await page.getByText("Cancel").click();
+  }
+
   public async restoreEncryption(page: Page) {
     await page.getByTestId("passphraseInput").fill(DEFAULT_PASSPHRASE);
     await page.getByText("Confirm").click();
@@ -66,6 +70,17 @@ class ChatUtils {
   public async closeChat(page: Page) {
     await page.getByTestId("closeChatButton").click();
   }
+
+  public async isChatSidebarOpen(page: Page){
+    return page.getByTestId("closeChatButton").isVisible({
+      timeout : 20_000
+    });
+  }
+
+  public async openRoomAreaList(page: Page){
+    return page.getByText("Rooms").click();
+  }
+
 }
 
 export default new ChatUtils();

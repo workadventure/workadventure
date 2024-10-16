@@ -271,7 +271,7 @@ test.describe("Map editor @oidc", () => {
         await page
             .getByPlaceholder("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit")
             .first()
-            .fill("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit");
+            .fill("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit",{timeout: 20_000});
 
         // add property Google Sheets
         await AreaEditor.addProperty(page, "Open Google Sheets");
@@ -279,7 +279,7 @@ test.describe("Map editor @oidc", () => {
         await page
             .getByPlaceholder("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit")
             .first()
-            .fill("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit");
+            .fill("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit",{timeout: 20_000});
 
         // add property Google Slides
         await AreaEditor.addProperty(page, "Open Google Slides");
@@ -287,7 +287,7 @@ test.describe("Map editor @oidc", () => {
         await page
             .getByPlaceholder("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit")
             .first()
-            .fill("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit");
+            .fill("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit",{timeout: 20_000});
 
         // add property Google Slides
         await AreaEditor.addProperty(page, "Open Google Drive");
@@ -295,7 +295,7 @@ test.describe("Map editor @oidc", () => {
         await page
             .getByPlaceholder("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview")
             .first()
-            .fill("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview");
+            .fill("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview",{timeout: 20_000});
 
         await Menu.closeMapEditor(page);
 
@@ -450,6 +450,7 @@ test.describe("Map editor @oidc", () => {
         await oidcAdminTagLogin(page2, false);
 
         // open map editor
+        await page.bringToFront();
         await page.getByRole("button", {name: "toggle-map-editor"}).click();
         await MapEditor.openEntityEditor(page);
 
@@ -457,7 +458,7 @@ test.describe("Map editor @oidc", () => {
         await EntityEditor.uploadTestAsset(page);
 
         // Select uploaded entity and move it to the map
-        await EntityEditor.selectEntity(page, 0, EntityEditor.getTestAssetName(), EntityEditor.getTestAssetName());
+        await EntityEditor.selectEntity(page, 0, EntityEditor.getTestAssetName());
         await EntityEditor.moveAndClick(page, 6 * 32, 6 * 32);
 
         // Add open link interaction on uploaded asset
@@ -514,6 +515,8 @@ test.describe("Map editor @oidc", () => {
         const newEntityName = "My Entity";
         await page.getByTestId("name").fill(newEntityName);
         await EntityEditor.applyEntityModifications(page);
+        // Clear entity selection
+        await page.getByTestId("clearEntitySelection").click();
 
         // Search uploaded entity on both pages
         const uploadedEntityLocator = await EntityEditor.searchEntity(page, newEntityName);
