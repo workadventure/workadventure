@@ -19,7 +19,7 @@
         "prettier": "^2.5.1",
         "prettier-plugin-svelte": "^2.6.0",
         "rollup-plugin-svelte-svg": "^1.0.0-beta.6",
-        "svelte": "^3.44.0",
+        "svelte": "^4.2.19",
         "svelte-check": "^2.2.7",
         "svelte-navigator": "^3.1.5",
         "svelte-preprocess": "^4.9.8",
