@@ -13,6 +13,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             openEmoji: "Wótcyń emoji-popup",
             closeEmoji: "Zacyń emoji-menij",
             mobile: "Mobilny menij wótcyniś",
+            calendar: "Kalender wótcyniś",
         },
     },
     visitCard: {

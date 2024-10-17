@@ -164,7 +164,7 @@
         <div
             class="tw-flex tw-flex-row tw-justify-evenly tw-items-center tw-bg-dark-purple tw-w-full tw-p-2 tw-rounded-b-3xl"
         >
-            <button class="tw-bg-dark-purple tw-p-4" on:click={close}>Fermer</button>
+            <button class="tw-bg-dark-purple tw-p-4" on:click={close}>{$LL.mapEditor.explorer.details.close()}</button>
             <button class="light tw-p-4" on:click={goTo}>
                 {$LL.mapEditor.explorer.details.moveToEntity({
                     name: $mapExplorationObjectSelectedStore?.getPrefab().name.toUpperCase(),

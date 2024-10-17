@@ -888,6 +888,16 @@ export class IoSocketController {
                                         this.sendAnswerMessage(socket, answerMessage);
                                         break;
                                     }
+                                    case "oauthRefreshTokenQuery": {
+                                        const oauthRefreshTokenAnswer =
+                                            await socketManager.handleOauthRefreshTokenQuery(
+                                                message.message.queryMessage.query.oauthRefreshTokenQuery
+                                            );
+                                        answerMessage.answer = {
+                                            $case: "oauthRefreshTokenAnswer",
+                                            oauthRefreshTokenAnswer,
+                                        };
+                                    }
                                     case "enterChatRoomAreaQuery": {
                                         await socketManager.handleEnterChatRoomAreaQuery(
                                             socket,

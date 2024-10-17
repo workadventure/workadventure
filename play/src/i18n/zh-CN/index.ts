@@ -13,7 +13,6 @@ import report from "./report";
 import warning from "./warning";
 import emoji from "./emoji";
 import trigger from "./trigger";
-import muc from "./muc";
 import notification from "./notification";
 import actionbar from "./actionbar";
 import video from "./video";
@@ -32,7 +31,6 @@ const zh_CN = merge(en_US, {
     warning,
     emoji,
     trigger,
-    muc,
     notification,
     actionbar,
     video,

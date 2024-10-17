@@ -1,6 +1,7 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { Translation } from "../i18n-types";
+import type { DeepPartial } from "../DeepPartial";
 
-const actionbar: BaseTranslation = {
+const actionbar: DeepPartial<Translation["actionbar"]> = {
     chat: "Open / Close chat",
     follow: "Follow",
     unfollow: "Unfollow",
@@ -13,6 +14,7 @@ const actionbar: BaseTranslation = {
     emoji: "Open / Close emoji",
     disableMegaphone: "Mute megaphone",
     menu: "Open / Close menu",
+    calendar: "Open / Close calendar",
     mapEditor: "Open / Close map editor",
     mapEditorMobileLocked: "Map editor is locked in mobile mode",
     mapEditorLocked: "Map editor is locked 🔐",

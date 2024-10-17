@@ -13,7 +13,6 @@ import refreshPrompt from "./refreshPrompt";
 import warning from "./warning";
 import emoji from "./emoji";
 import trigger from "./trigger";
-import muc from "./muc";
 import notification from "./notification";
 import cowebsite from "./cowebsite";
 import actionbar from "./actionbar";
@@ -22,6 +21,7 @@ import megaphone from "./megaphone";
 import video from "./video";
 import statusModal from "./statusModal";
 import area from "./area";
+import externalModule from "./externalModule";
 
 const en_US: BaseTranslation = {
     area,
@@ -39,7 +39,6 @@ const en_US: BaseTranslation = {
     warning,
     emoji,
     trigger,
-    muc,
     notification,
     cowebsite,
     actionbar,
@@ -47,6 +46,7 @@ const en_US: BaseTranslation = {
     megaphone,
     video,
     statusModal,
+    externalModule,
 };
 
 export default en_US;

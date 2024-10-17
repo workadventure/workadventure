@@ -698,6 +698,14 @@
                         "hideButtonLabel": {
                           "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/hideButtonLabel"
                         },
+                        "type": {
+                          "type": "string",
+                          "const": "extensionModule"
+                        },
+                        "subtype": {
+                          "type": "string"
+                        },
+                        "data": {},
                         "resourceUrl": {
                           "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/resourceUrl"
                         },
@@ -724,6 +732,7 @@
                       "required": [
                         "id",
                         "type",
+                        "subtype",
                         "shouldOpenAutomatically",
                         "displayName"
                       ],
