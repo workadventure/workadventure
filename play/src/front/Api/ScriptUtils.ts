@@ -67,6 +67,49 @@ class ScriptUtils {
 
         return url;
     }
+
+    public startPictureInpictureMode(videoElement?: HTMLVideoElement) {
+        if (
+            videoElement == undefined ||
+            !document.pictureInPictureEnabled ||
+            videoElement.requestPictureInPicture == undefined
+        )
+            return;
+
+        const requestPictureInPicture = (videoElement: HTMLVideoElement) => {
+            videoElement
+                .requestPictureInPicture()
+                .then((pictureInPictureWindow: PictureInPictureWindow) => {
+                    console.debug("Entered Picture in Picture mode", pictureInPictureWindow);
+                })
+                .catch((error) => {
+                    console.error("Error entering Picture in Picture mode", error);
+                });
+        };
+
+        // Try to use picture in picture mode
+        if (videoElement.readyState >= 2) {
+            requestPictureInPicture(videoElement);
+        } else {
+            videoElement.addEventListener("loadeddata", (e) => {
+                requestPictureInPicture(videoElement);
+                console.debug("Video loaded", e);
+            });
+        }
+    }
+
+    public exitPictureInpictureMode() {
+        if (!document.pictureInPictureEnabled || document.exitPictureInPicture == undefined) return;
+
+        document
+            .exitPictureInPicture()
+            .then(() => {
+                console.debug("Exited Picture in Picture mode");
+            })
+            .catch((error) => {
+                console.error("Error exiting Picture in Picture mode", error);
+            });
+    }
 }
 
 export const scriptUtils = new ScriptUtils();
