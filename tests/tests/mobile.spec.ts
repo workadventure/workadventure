@@ -79,9 +79,11 @@ test.describe('Mobile', () => {
         expect(await page.locator(`.cameras-container .other-cameras .media-container`).count()).toBe(2);
         expect(await pageJohn.locator(`.cameras-container .other-cameras .media-container`).count()).toBe(2);
 
-        pageAlice.close();
-        pageJohn.close();
-        page.close();
+        await pageAlice.close();
+        await pageJohn.close();
+        await page.close();
+        await newBrowserAlice.close();
+        await newBrowserJohn.close();
     });
 
     test('Successfully jitsi cowebsite with mobile device', async ({ page, browser }) => {

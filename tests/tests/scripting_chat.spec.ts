@@ -153,5 +153,8 @@ test.describe("Scripting chat functions", () => {
 
     const chatMessageReceived = await chatMessageReceivedPromise;
     expect(chatMessageReceived).toBe("Test message sent");
+
+    await alice.close();
+    await newBrowser.close();
   });
 });

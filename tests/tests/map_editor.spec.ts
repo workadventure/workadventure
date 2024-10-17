@@ -110,6 +110,7 @@ test.describe("Map editor @oidc", () => {
         await Menu.toggleMegaphoneButton(page);
 
         await page2.close();
+        await newBrowser.close();
 
         // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
     });
@@ -167,6 +168,7 @@ test.describe("Map editor @oidc", () => {
         });
 
         await page2.close();
+        await newBrowser.close();
     });
 
     test("Successfully set start area in the map editor", async ({page, request}, {project}) => {
@@ -481,6 +483,7 @@ test.describe("Map editor @oidc", () => {
         await expect(page2.locator(".actions-menu .actions button").nth(0)).toContainText("Open Link");
 
         await page2.close();
+        await newBrowser.close();
     });
 
     test("Successfully upload and edit asset name", async ({page, browser, request}, {project}) => {
@@ -531,6 +534,7 @@ test.describe("Map editor @oidc", () => {
         expect(uploadedEntityElement2).toContain(newEntityName);
 
         await page2.close();
+        await newBrowser.close();
     });
 
     test("Successfully upload and remove custom entity", async ({page, browser, request}, {project}) => {
@@ -573,6 +577,7 @@ test.describe("Map editor @oidc", () => {
         await expect(page2.getByTestId("entity-item")).toHaveCount(0);
 
         await page2.close();
+        await newBrowser.close();
     });
 
     test("Successfully set searchable processus for entity and zone", async ({page, browser, request}, {project}) => {
@@ -687,6 +692,7 @@ test.describe("Map editor @oidc", () => {
         // TODO : change to use the global message feature for user through megaphon settings rights
 
         await page2.close();
+        await newBrowser.close();
         await page.close();
         // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
     });
