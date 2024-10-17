@@ -5,15 +5,17 @@
         namePlayerInBubbleModalStore,
     } from "../../../../Stores/AvailabilityStatusModalsStore";
     import LL from "../../../../../i18n/i18n-svelte";
-    import { passStatusToOnline } from "../../../../Rules/StatusRules/statusChangerFunctions";
+    import { gameManager } from "../../../../Phaser/Game/GameManager";
     import ConfirmationModal from "./ConfirmationModal.svelte";
 
     const confirmationModalProps: ConfirmationModalPropsInterface = {
         handleAccept: () => {
-            passStatusToOnline();
             bubbleModalVisibility.close();
+            // We must emit a "hasMoved" event to trigger a proximity chat
+            gameManager.getCurrentGameScene().CurrentPlayer.finishFollowingPath();
         },
         handleClose: () => {
+            gameManager.getCurrentGameScene().getSimplePeer()?.closeAllConnections();
             bubbleModalVisibility.close();
         },
         acceptLabel: $LL.statusModal.accept(),

@@ -4,6 +4,7 @@ import { GameMapProperties, WAMFileFormat } from "@workadventure/map-editor";
 import { LocalUrlError } from "@workadventure/map-editor/src/LocalUrlError";
 import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
 import {
+    AvailabilityStatus,
     EditMapCommandMessage,
     EmoteEventMessage,
     isMapDetailsData,
@@ -350,6 +351,10 @@ export class GameRoom implements BrothersFinder {
                     closestItem.setOutOfBounds(false);
                 } else {
                     const closestUser: User = closestItem;
+                    if (closestUser.getAvailabilityStatus() === AvailabilityStatus.BUSY) {
+                        closestUser.poke(user);
+                        return;
+                    }
                     const group: Group = new Group(
                         this._roomUrl,
                         [user, closestUser],

@@ -1,6 +1,6 @@
 import { get, Unsubscriber } from "svelte/store";
 import type CancelablePromise from "cancelable-promise";
-import { PositionMessage_Direction } from "@workadventure/messages";
+import { AvailabilityStatus, PositionMessage_Direction } from "@workadventure/messages";
 import type { GameScene } from "../Game/GameScene";
 import type { ActiveEventList } from "../UserInput/UserInputManager";
 import { UserInputEvent } from "../UserInput/UserInputManager";
@@ -274,6 +274,18 @@ export class Player extends Character {
         return [xDistance / Math.sqrt(distance), yDistance / Math.sqrt(distance)];
     }
 
+    private moveCommon() {
+        if (this.getAvailabilityStatus() === AvailabilityStatus.BACK_IN_A_MOMENT) {
+            passStatusToOnline();
+        }
+        this.playAnimation(this._lastDirection, true);
+        this.setDepth(this.y + 16);
+
+        if (this.companion) {
+            this.companion.setTarget(this.x, this.y, this._lastDirection);
+        }
+    }
+
     /**
      * Moves the character by the given speed amount.
      */
@@ -295,13 +307,7 @@ export class Player extends Character {
                 this._lastDirection = PositionMessage_Direction.DOWN;
             }
         }
-        passStatusToOnline();
-        this.playAnimation(this._lastDirection, true);
-        this.setDepth(this.y + 16);
-
-        if (this.companion) {
-            this.companion.setTarget(this.x, this.y, this._lastDirection);
-        }
+        this.moveCommon();
     }
 
     /**
@@ -329,15 +335,9 @@ export class Player extends Character {
                 this._lastDirection = PositionMessage_Direction.DOWN;
             }
         }
-        passStatusToOnline();
-        this.playAnimation(this._lastDirection, true);
-
-        this.setDepth(this.y + 16);
-
-        if (this.companion) {
-            this.companion.setTarget(this.x, this.y, this._lastDirection);
-        }
+        this.moveCommon();
     }
+
     destroy(): void {
         this.unsubscribeVisibilityStore();
         this.unsubscribeLayoutManagerActionStore();

@@ -160,6 +160,17 @@ export class User implements Movable, CustomJsonReplacerInterface {
         return this.followedBy.size !== 0;
     }
 
+    public poke(pokingUser: User) {
+        this.socket.write({
+            message: {
+                $case: "pokeUserMessage",
+                pokeUserMessage: {
+                    pokingUser: pokingUser.name,
+                },
+            },
+        });
+    }
+
     public getOutlineColor(): number | undefined {
         return this.outlineColor;
     }

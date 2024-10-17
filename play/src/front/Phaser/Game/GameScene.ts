@@ -193,6 +193,7 @@ import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManag
 import { DEPTH_BUBBLE_CHAT_SPRITE, DEPTH_WHITE_MASK } from "./DepthIndexes";
 import { ScriptingEventsManager } from "./ScriptingEventsManager";
 import { FollowManager } from "./FollowManager";
+import { PokeManager } from "./PokeManager";
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
@@ -300,6 +301,7 @@ export class GameScene extends DirtyScene {
     private playerVariablesManager!: PlayerVariablesManager;
     private scriptingEventsManager!: ScriptingEventsManager;
     private followManager!: FollowManager;
+    private pokeManager!: PokeManager;
     private proximitySpaceManager: ProximitySpaceManager | undefined;
     private objectsByType = new Map<string, ITiledMapObject[]>();
     private embeddedWebsiteManager!: EmbeddedWebsiteManager;
@@ -1066,6 +1068,7 @@ export class GameScene extends DirtyScene {
         this.playersMovementEventDispatcher.cleanup();
         this.gameMapFrontWrapper?.close();
         this.followManager?.close();
+        this.pokeManager?.close();
         this._spaceRegistry?.destroy();
 
         // We need to destroy all the entities
@@ -1771,6 +1774,9 @@ export class GameScene extends DirtyScene {
                 // Set up follow manager
                 this.followManager = new FollowManager(this.connection, this.remotePlayersRepository);
 
+                // Set up poke manager
+                this.pokeManager = new PokeManager(this.connection);
+
                 // Set up variables manager
                 this.sharedVariablesManager = new SharedVariablesManager(
                     this.connection,
@@ -2109,7 +2115,6 @@ export class GameScene extends DirtyScene {
                 // Note: by design, the peerStore can only add or remove one user at a given time.
                 // So we know for sure that there is only one new user.
                 const peer = Array.from(peers.values())[0];
-                //askIfUserWantToJoinBubbleOf(peer.userName);
                 statusChanger.setUserNameInteraction(peer.player.name);
                 statusChanger.applyInteractionRules();
 
