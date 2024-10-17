@@ -16,6 +16,7 @@
     import { ExplorerTool } from "../../Phaser/Game/MapEditor/Tools/ExplorerTool";
     import AddPropertyButtonWrapper from "../MapEditor/PropertyEditor/AddPropertyButtonWrapper.svelte";
     import { connectionManager } from "../../Connection/ConnectionManager";
+    import { mapExplorerSearchinputFocusStore } from "../../Stores/UserInputStore";
     import { IconChevronDown, IconChevronUp } from "@wa-icons";
 
     let filter = "";
@@ -130,6 +131,20 @@
         area.setStrokeStyle(2, 0x000000);
         gameManager.getCurrentGameScene().markDirty();
     }
+
+    // Prevent the input form to be focused when clicking on the filter input
+    // The UserInputManager service automatically focus the input form when a click event is detected
+    // When user looking for entities or areas, we don't move the player
+    function focusin(event: FocusEvent) {
+        event.stopImmediatePropagation();
+        event.preventDefault();
+        mapExplorerSearchinputFocusStore.set(true);
+    }
+    function focusout(event: FocusEvent) {
+        event.stopImmediatePropagation();
+        event.preventDefault();
+        mapExplorerSearchinputFocusStore.set(false);
+    }
 </script>
 
 <div class="mapexplorer tw-flex tw-flex-col tw-overflow-auto">
@@ -143,6 +158,8 @@
                 type="search"
                 bind:value={filter}
                 on:input={onChangeFilterHandle}
+                on:focusin={focusin}
+                on:focusout={focusout}
                 placeholder={$LL.mapEditor.entityEditor.itemPicker.searchPlaceholder()}
             />
         </div>
