@@ -1,4 +1,4 @@
-import { test } from "@playwright/test";
+import {chromium, test} from "@playwright/test";
 import { evaluateScript } from "./utils/scripting";
 import { login } from "./utils/roles";
 import Map from "./utils/map";
@@ -7,7 +7,16 @@ test.describe("Scripting audio streams", () => {
   test("can play and listen to sounds", async ({
     page,
     browser,
-  }) => {
+  }, { project }) => {
+    // This test runs only on Chrome
+    // Firefox fails it because the sample rate must be equal to the microphone sample rate
+    // Safari fails it because Safari
+    if(browser.browserType() !== chromium || project.name === "mobilechromium") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     await page.goto(Map.url("empty"));
     await login(page, "bob", 3, "us-US", false);
 
