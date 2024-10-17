@@ -246,8 +246,9 @@ test.describe("Iframe API", () => {
       await page.locator("#screenSharing").isDisabled({ timeout: 10000 })
     ).toBeFalsy();
 
-    pageBob.close();
-    page.close();
+    await pageBob.close();
+    await newBrowser.close();
+    await page.close();
   });
 
   test("test disable right click user button", async ({ page, browser }, {project}) => {

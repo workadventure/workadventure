@@ -195,6 +195,7 @@ test.describe('Variables', () => {
     }).toBe(2);
 
     await page2.close();
+    await newBrowser.close();
   });
 });
 

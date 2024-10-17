@@ -63,5 +63,8 @@ test.describe("Scripting audio streams", () => {
         });
       });
     });
+
+    await alice.close();
+    await newBrowser.close();
   });
 });

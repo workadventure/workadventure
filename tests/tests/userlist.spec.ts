@@ -46,6 +46,7 @@ test.describe("Walk to", () => {
       "Bob joined the discussion"
     );
 
+    await userBob.close();
     await newBrowser.close();
   });
 });

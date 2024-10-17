@@ -85,6 +85,7 @@ test.describe('Map-storage Upload API', () => {
         await expect((await (page.locator(".test-class")).innerText())).toEqual("New version of map detected. Refresh needed");
         await expect(page2.getByText("New version of map detected. Refresh needed")).toBeHidden();
         await page2.close();
+        await newBrowser.close();
     });
 
     test('can upload ZIP file', async ({

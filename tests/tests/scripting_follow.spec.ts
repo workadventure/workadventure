@@ -96,5 +96,6 @@ test.describe('Scripting follow functions', () => {
 
         await waitForUnfollowPromise;
         await page2.close();
+        await newBrowser.close();
     });
 });

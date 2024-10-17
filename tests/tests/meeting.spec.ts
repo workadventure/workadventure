@@ -78,5 +78,6 @@ test.describe('Meeting actions test', () => {
 
         await page.close();
         await userBob.close();
+        await newBrowser.close();
     });
 });

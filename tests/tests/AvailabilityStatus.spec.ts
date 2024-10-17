@@ -25,7 +25,7 @@ test.describe('Availability Status', () => {
 
             await Menu.openStatusList(page, isMobileTest);
             await Menu.clickOnStatus(page,statusName); 
-            if((browserName === "firefox") && page.getByText(`Do you want to allow notification`).isVisible() ){
+            if((browserName === "firefox") && await page.getByText(`Do you want to allow notification`).isVisible() ){
                 await  page.locator("section:has(#notificationPermission) + footer>button.outline").click();
             }
             await Menu.openStatusList(page, isMobileTest);
@@ -165,7 +165,7 @@ test.describe('Availability Status', () => {
 
                 await Map.teleportToPosition(userBob, positionToDiscuss.x+10, positionToDiscuss.y);
                 
-                if((browserName === "firefox") && page.getByText(`Do you want to allow notification`).isVisible() ){
+                if((browserName === "firefox") && await page.getByText(`Do you want to allow notification`).isVisible() ){
                     await  page.locator("section:has(#notificationPermission) + footer>button.outline").click();
                 }
 
@@ -208,7 +208,7 @@ test.describe('Availability Status', () => {
                 await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
                 
                 
-                if((browserName === "firefox" ) && page.getByText(`Do you want to allow notification`).isVisible() ){
+                if((browserName === "firefox" ) && await page.getByText(`Do you want to allow notification`).isVisible() ){
                     await  page.locator("section:has(#notificationPermission) + footer>button.outline").click();
                 }
                 await expect(page.getByText(`${secondPageName} wants to discuss with you`)).toBeVisible();
@@ -250,7 +250,7 @@ test.describe('Availability Status', () => {
                 await login(userBob, secondPageName, 3, 'en-US', isMobileTest);
                 await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
                 
-                if((browserName === "firefox") && page.getByText(`Do you want to allow notification`).isVisible() ){
+                if((browserName === "firefox") && await page.getByText(`Do you want to allow notification`).isVisible() ){
                     await  page.locator("section:has(#notificationPermission) + footer>button.outline").click();
                 }
 
@@ -260,7 +260,8 @@ test.describe('Availability Status', () => {
                 await  page.locator("section:has(#acceptDiscussion) + footer>button.outline").click();
                 await Menu.openStatusList(page, isMobileTest);
                 await expect(page.getByText(statusName)).toHaveCSS('opacity','0.5')  
-                
+
+                await userBob.close();
                 await newBrowser.close();
             })
         })
