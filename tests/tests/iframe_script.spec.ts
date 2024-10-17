@@ -221,7 +221,7 @@ test.describe("Iframe API", () => {
     });
 
     // Second browser
-    const newBrowser = await browser.browserType().launch();
+    const newBrowser = await browser.newContext();
     const pageBob = await newBrowser.newPage();
     await pageBob.goto(
       publicTestMapUrl("tests/E2E/empty.json", "iframe_script")

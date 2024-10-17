@@ -22,7 +22,7 @@ test.describe("API WA.players", () => {
     );
     await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
 
-    const newBrowser = await browser.browserType().launch();
+    const newBrowser = await browser.newContext();
     const page2 = await newBrowser.newPage();
 
     await page2.goto(
@@ -119,7 +119,7 @@ test.describe("API WA.players", () => {
       return;
     });
 
-    const newBrowser = await browser.browserType().launch();
+    const newBrowser = await browser.newContext();
     const page2 = await newBrowser.newPage();
 
     await page2.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
@@ -241,7 +241,7 @@ test.describe("API WA.players", () => {
       return;
     });
 
-    const newBrowser = await browser.browserType().launch();
+    const newBrowser = await browser.newContext();
     const page2 = await newBrowser.newPage();
 
     await page2.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));

@@ -23,7 +23,7 @@ test.describe("Scripting audio streams", () => {
     await Map.teleportToPosition(page, 32, 32);
 
     // Open new page for alice
-    const newBrowser = await browser.browserType().launch();
+    const newBrowser = await browser.newContext();
     const alice = await newBrowser.newPage();
     await alice.goto(Map.url("empty"));
     await login(alice, "alice", 4, "us-US", false);
