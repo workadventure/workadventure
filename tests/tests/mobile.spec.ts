@@ -35,7 +35,7 @@ test.describe('Mobile', () => {
         await Menu.closeMenu(page);
 
         // Second browser
-        const newBrowserAlice = await browser.browserType().launch();
+        const newBrowserAlice = await browser.newContext();
         const pageAlice = await newBrowserAlice.newPage();
         await pageAlice.goto(Map.url("empty"));
         await pageAlice.evaluate(() => localStorage.setItem('debug', '*'));
@@ -55,7 +55,7 @@ test.describe('Mobile', () => {
         expect(await page.locator(`.cameras-container .other-cameras .media-container`).count()).toBe(1);
 
         // Second browser
-        const newBrowserJohn = await browser.browserType().launch();
+        const newBrowserJohn = await browser.newContext();
         const pageJohn = await newBrowserJohn.newPage();
         await pageJohn.goto(Map.url("empty"));
         await pageJohn.evaluate(() => localStorage.setItem('debug', '*'));

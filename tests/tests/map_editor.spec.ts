@@ -52,7 +52,7 @@ test.describe("Map editor @oidc", () => {
         await Map.teleportToPosition(page, 5 * 32, 5 * 32);
 
         // Second browser
-        const newBrowser = await browser.browserType().launch();
+        const newBrowser = await browser.newContext();
         const page2 = await newBrowser.newPage();
         await page2.goto(Map.url("empty"));
         await page2.evaluate(() => localStorage.setItem("debug", "*"));
@@ -140,7 +140,7 @@ test.describe("Map editor @oidc", () => {
         });
 
         // Second browser
-        const newBrowser = await browser.browserType().launch();
+        const newBrowser = await browser.newContext();
         const page2 = await newBrowser.newPage();
         await page2.goto(Map.url("empty"));
 
@@ -445,7 +445,7 @@ test.describe("Map editor @oidc", () => {
         await Map.teleportToPosition(page, 0, 0);
 
         // Second browser
-        const newBrowser = await browser.browserType().launch();
+        const newBrowser = await browser.newContext();
         const page2 = await newBrowser.newPage();
         await page2.goto(Map.url("empty"));
         await login(page2, "test2", 3, "en-US", false);
@@ -497,7 +497,7 @@ test.describe("Map editor @oidc", () => {
         await Map.teleportToPosition(page, 0, 0);
 
         // Second browser
-        const newBrowser = await browser.browserType().launch();
+        const newBrowser = await browser.newContext();
         const page2 = await newBrowser.newPage();
         await page2.goto(Map.url("empty"));
         await login(page2, "test2", 3, "en-US", false);
@@ -548,7 +548,7 @@ test.describe("Map editor @oidc", () => {
         await Map.teleportToPosition(page, 0, 0);
 
         // Second browser
-        const newBrowser = await browser.browserType().launch();
+        const newBrowser = await browser.newContext();
         const page2 = await newBrowser.newPage();
         await page2.goto(Map.url("empty"));
         await login(page2, "test2", 3, "en-US", false);
@@ -650,7 +650,7 @@ test.describe("Map editor @oidc", () => {
         await Map.teleportToPosition(page, 5 * 32, 5 * 32);
 
         // Second browser
-        const newBrowser = await browser.browserType().launch();
+        const newBrowser = await browser.newContext();
         const page2 = await newBrowser.newPage();
         await page2.goto(Map.url("empty"));
         await page2.evaluate(() => localStorage.setItem("debug", "*"));
