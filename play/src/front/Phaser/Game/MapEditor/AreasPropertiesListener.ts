@@ -569,7 +569,8 @@ export class AreasPropertiesListener {
     }
 
     private handleMatrixRoomAreaOnEnter(property: MatrixRoomPropertyData) {
-        if (this.scene.connection && property.serverData?.matrixRoomId && get(userIsConnected)) {
+        const isConnected = get(userIsConnected);
+        if (this.scene.connection && property.serverData?.matrixRoomId && isConnected) {
             this.scene.connection
                 .queryEnterChatRoomArea(property.serverData.matrixRoomId)
                 .then(() => {
@@ -589,8 +590,11 @@ export class AreasPropertiesListener {
                     Sentry.captureMessage(`Failed to join room area : ${error}`);
                     console.error(error);
                 });
-
             return;
+        }
+
+        if (!isConnected && property.shouldOpenAutomatically) {
+            chatVisibilityStore.set(true);
         }
     }
 
@@ -777,6 +781,7 @@ export class AreasPropertiesListener {
 
     private handleMatrixRoomAreaOnLeave(property: MatrixRoomPropertyData) {
         if (!get(userIsConnected)) {
+            chatVisibilityStore.set(false);
             return;
         }
 
