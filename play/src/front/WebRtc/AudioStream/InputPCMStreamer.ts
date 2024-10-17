@@ -1,5 +1,5 @@
 import { Subject } from "rxjs";
-import audioWorkletProcessorUrl from "./InputAudioWorkletProcessor.ts?url";
+import audioWorkletProcessorUrl from "./InputAudioWorkletProcessor.ts?worker&url";
 
 export class InputPCMStreamer {
     private readonly audioContext: AudioContext;

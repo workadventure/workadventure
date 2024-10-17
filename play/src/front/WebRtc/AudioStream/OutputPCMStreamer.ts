@@ -1,4 +1,4 @@
-import audioWorkletProcessorUrl from "./OutputAudioWorkletProcessor.ts?url";
+import audioWorkletProcessorUrl from "./OutputAudioWorkletProcessor.ts?worker&url";
 
 export class OutputPCMStreamer {
     private readonly audioContext: AudioContext;
