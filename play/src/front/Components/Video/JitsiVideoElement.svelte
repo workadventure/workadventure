@@ -11,15 +11,23 @@
 
     let aspectRatio = 1;
 
+    function onresize() {
+        aspectRatio = videoElement != undefined ? videoElement.videoWidth / videoElement.videoHeight : 1;
+        console.log(
+            "JitsiVideoElement => onresize => videoElement.videoWidth & videoElement.videoHeight",
+            jitsiTrack.getId(),
+            videoElement.videoWidth,
+            videoElement.videoHeight
+        );
+    }
+
     onMount(() => {
-        // TODO: remove this hack
-        setTimeout(() => {
-            aspectRatio = videoElement != undefined ? videoElement.videoWidth / videoElement.videoHeight : 1;
-        }, 1000);
+        videoElement.addEventListener("resize", () => onresize());
         attachTrack();
     });
 
     afterUpdate(() => {
+        videoElement.removeEventListener("resize", () => onresize());
         attachTrack();
     });
 
@@ -31,6 +39,7 @@
 <!-- svelte-ignore a11y-media-has-caption -->
 <video
     bind:this={videoElement}
+    id={jitsiTrack.getId()}
     class="tw-h-full tw-max-w-full tw-rounded-sm"
     class:object-contain={isMobileFormat || aspectRatio < 1}
     class:tw-scale-x-[-1]={isLocal && jitsiTrack.getVideoType() === "camera"}
