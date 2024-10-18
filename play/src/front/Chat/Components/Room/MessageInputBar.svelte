@@ -4,6 +4,7 @@
     import { selectedChatMessageToReply } from "../../Stores/ChatStore";
     import { getChatEmojiPicker } from "../../EmojiPicker";
     import LL from "../../../../i18n/i18n-svelte";
+    import { ENABLE_CHAT_UPLOAD } from "../../../Enum/EnvironmentVariable";
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import MessageInput from "./MessageInput.svelte";
     import { IconCircleX, IconMoodSmile, IconSend } from "@wa-icons";
@@ -118,7 +119,11 @@
     >
         <IconMoodSmile font-size={18} />
     </button>
-    <MessageFileInput {room} />
+
+    {#if ENABLE_CHAT_UPLOAD}
+        <MessageFileInput {room} />
+    {/if}
+
     <button
         data-testid="sendMessageButton"
         class="disabled:tw-opacity-30 disabled:!tw-cursor-none disabled:tw-text-white tw-p-0 tw-m-0 tw-text-secondary"

@@ -99,7 +99,7 @@ export const openChatRoom = async (chatID: string) => {
         }
 
         selectedRoom.set(room);
-        navChat.set("chat");
+        navChat.switchToChat();
         chatVisibilityStore.set(true);
     } catch (error) {
         console.error(error);

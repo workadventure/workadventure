@@ -61,4 +61,7 @@ export interface FrontConfigurationInterface {
     CARDS_ENABLED: boolean;
     EMBEDLY_KEY: string | undefined;
     MATRIX_PUBLIC_URI: string | undefined;
+    ENABLE_CHAT: boolean | undefined;
+    ENABLE_CHAT_ONLINE_LIST: boolean | undefined;
+    ENABLE_CHAT_DISCONNECTED_LIST: boolean | undefined;
 }
