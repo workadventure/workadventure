@@ -13,8 +13,8 @@ import { adminService } from "../services/AdminService";
 import { validateQuery } from "../services/QueryValidator";
 import { VerifyDomainService } from "../services/verifyDomain/VerifyDomainService";
 import { matrixProvider } from "../services/MatrixProvider";
-import { BaseHttpController } from "./BaseHttpController";
 import config from "../enums/config";
+import { BaseHttpController } from "./BaseHttpController";
 
 export class AuthenticateController extends BaseHttpController {
     private readonly redirectToMatrixFile: string;

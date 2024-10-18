@@ -1,11 +1,11 @@
 import { get, Unsubscriber } from "svelte/store";
+import axios from "axios";
 import { ChatConnectionInterface, ChatRoom } from "../../front/Chat/Connection/ChatConnection";
 import { RoomMetadataType } from "../../front/ExternalModule/ExtensionModule";
-import axios from "axios";
 
 let resolveSendToken: (value: void | PromiseLike<void>) => void;
 
-let awaitForStep: Promise<void> = new Promise((resolve) => {
+const awaitForStep: Promise<void> = new Promise((resolve) => {
     resolveSendToken = resolve;
 });
 
@@ -21,7 +21,7 @@ export class DiscordExternalModule {
     private discordBotId = "@discordbot:matrix.workadventure.localhost";
     private isFirstMessqge = true;
     private loadingFetchServer = false;
-    private step: string = "checkLogin";
+    private step = "checkLogin";
     private bridgeConnected = false;
     private needManualToken = false;
     private servers: DiscordServer[] = [];

@@ -1,10 +1,10 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
-    import { RoomMetadataType } from "../../../ExternalModule/ExtensionModule";
-    import { gameManager } from "../../../Phaser/Game/GameManager";
     import axios from "axios";
     import { get, Unsubscriber } from "svelte/store";
     import { fade } from "svelte/transition";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
+    import { RoomMetadataType } from "../../../ExternalModule/ExtensionModule";
     import { ChatRoom } from "../../Connection/ChatConnection";
 
     interface DiscordServer {
@@ -30,7 +30,7 @@
         },
     });
 
-    export let bridgeConnected: boolean = false;
+    export let bridgeConnected = false;
     let step = "checkLogin";
 
     /*
