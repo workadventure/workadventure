@@ -597,25 +597,22 @@ class IframeListener {
                 iframe.sandbox.add("allow-scripts");
                 iframe.sandbox.add("allow-top-navigation-by-user-activation");
 
+                const scriptUrlObj = new URL(scriptUrl);
+                // Note: we define the base URL to be the same as the script URL to fix some issues with some scripts using Vite.
+                const scriptUrlBase = scriptUrlObj.protocol + "//" + scriptUrlObj.host;
+
                 //iframe.src = "data:text/html;charset=utf-8," + escape(html);
-                iframe.srcdoc =
-                    "<!doctype html>\n" +
-                    "\n" +
-                    '<html lang="en">\n' +
-                    "<head>\n" +
-                    '<script src="' +
-                    window.location.protocol +
-                    "//" +
-                    window.location.host +
-                    '/iframe_api.js" ></script>\n' +
-                    "<script " +
-                    (enableModuleMode ? 'type="module" ' : "") +
-                    'src="' +
-                    scriptUrl +
-                    '" ></script>\n' +
-                    "<title></title>\n" +
-                    "</head>\n" +
-                    "</html>\n";
+                iframe.srcdoc = `
+<!doctype html>
+<html lang="en">
+<head>
+<base href="${scriptUrlBase}">
+<script src="${window.location.protocol}//${window.location.host}/iframe_api.js" ></script>
+<script ${enableModuleMode ? 'type="module" ' : ""}src="${scriptUrl}" ></script>
+<title></title>
+</head>
+</html>
+`;
 
                 iframe.addEventListener("load", () => {
                     resolve();
