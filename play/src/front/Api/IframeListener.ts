@@ -585,46 +585,54 @@ class IframeListener {
     }
 
     registerScript(scriptUrl: string, enableModuleMode = true): Promise<void> {
-        return new Promise<void>((resolve) => {
-            console.info("Loading map related script at ", scriptUrl);
+        return Promise.race([
+            new Promise<void>((resolve) => {
+                console.info("Loading map related script at ", scriptUrl);
 
-            const iframe = document.createElement("iframe");
-            iframe.id = IframeListener.getIFrameId(scriptUrl);
-            iframe.style.display = "none";
+                const iframe = document.createElement("iframe");
+                iframe.id = IframeListener.getIFrameId(scriptUrl);
+                iframe.style.display = "none";
 
-            // We are putting a sandbox on this script because it will run in the same domain as the main website.
-            iframe.sandbox.add("allow-scripts");
-            iframe.sandbox.add("allow-top-navigation-by-user-activation");
+                // We are putting a sandbox on this script because it will run in the same domain as the main website.
+                iframe.sandbox.add("allow-scripts");
+                iframe.sandbox.add("allow-top-navigation-by-user-activation");
 
-            //iframe.src = "data:text/html;charset=utf-8," + escape(html);
-            iframe.srcdoc =
-                "<!doctype html>\n" +
-                "\n" +
-                '<html lang="en">\n' +
-                "<head>\n" +
-                '<script src="' +
-                window.location.protocol +
-                "//" +
-                window.location.host +
-                '/iframe_api.js" ></script>\n' +
-                "<script " +
-                (enableModuleMode ? 'type="module" ' : "") +
-                'src="' +
-                scriptUrl +
-                '" ></script>\n' +
-                "<title></title>\n" +
-                "</head>\n" +
-                "</html>\n";
+                //iframe.src = "data:text/html;charset=utf-8," + escape(html);
+                iframe.srcdoc =
+                    "<!doctype html>\n" +
+                    "\n" +
+                    '<html lang="en">\n' +
+                    "<head>\n" +
+                    '<script src="' +
+                    window.location.protocol +
+                    "//" +
+                    window.location.host +
+                    '/iframe_api.js" ></script>\n' +
+                    "<script " +
+                    (enableModuleMode ? 'type="module" ' : "") +
+                    'src="' +
+                    scriptUrl +
+                    '" ></script>\n' +
+                    "<title></title>\n" +
+                    "</head>\n" +
+                    "</html>\n";
 
-            iframe.addEventListener("load", () => {
-                resolve();
-            });
+                iframe.addEventListener("load", () => {
+                    resolve();
+                });
 
-            document.body.prepend(iframe);
+                document.body.prepend(iframe);
 
-            this.scripts.set(scriptUrl, iframe);
-            this.registerIframe(iframe);
-        });
+                this.scripts.set(scriptUrl, iframe);
+                this.registerIframe(iframe);
+            }),
+
+            new Promise<void>((_, reject) => {
+                setTimeout(() => {
+                    reject(new Error("Timeout while loading script " + scriptUrl));
+                }, 30_000);
+            }),
+        ]);
     }
 
     private getBaseUrl(src: string, source: MessageEventSource | null): string {

@@ -874,12 +874,11 @@ export class GameScene extends DirtyScene {
                     connection.emitPlayerChatID(chatId);
                 }
             })
-            .catch((e) =>
-                console.error(
-                    "Some scripts failed to load ot the connection failed to establish to WorkAdventure server",
-                    e
-                )
-            );
+            .catch((e: unknown) => {
+                console.error("Initialization failed", e);
+                Sentry.captureException(e);
+                errorScreenStore.setException(e);
+            });
 
         if (gameManager.currentStartedRoom.backgroundColor != undefined) {
             this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
