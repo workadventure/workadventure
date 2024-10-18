@@ -57,3 +57,22 @@ To enable "debug" log level, add a `DEBUG` environment variable:
 ```dotenv
 DEBUG: *
 ```
+
+## STUN/TURN issues
+
+To verify that your STUN/TURN server is working properly, you can use
+[TrickleIce](https://webrtc.github.io/samples/src/content/peerconnection/trickle-ice/).
+
+If you have configured a static auth secret for TURN, you can use the script
+[`compute_turn_credentials.sh`](https://github.com/workadventure/workadventure/tree/develop/contrib/tools/compute_turn_credentials.sh)
+to compute a timeboxed username and password.
+
+Enabling TURN-related debug messages might also help: In a Chromium-like
+browser, enter the following in the JavaScript console and reload
+Workadventure:
+```
+localStorage.debug="CheckTurn"
+```
+
+You might also want to take a look at `chrome:webrtc-internals` (Chromium-like)
+or `about:webrtc` (Firefox) while debugging ICE candidate gathering.

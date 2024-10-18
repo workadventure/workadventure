@@ -156,9 +156,13 @@ You will be notified if your WorkAdventure version contains a known security fla
 WorkAdventure does not provide its own authentication system. Instead, you can connect WorkAdventure to an OpenID Connect
 authentication provider (like Google, GitHub, or any other provider).
 
-If you want to connect WorkAdventure to an authentication provider, you can follow the [OpenID Connect documentation](../../docs/dev/openid.md).
+If you want to connect WorkAdventure to an authentication provider, you can follow the [OpenID Connect documentation](../../docs/others/self-hosting/openid.md).
 
-When OpenID is configured, you should set up a list of restricted users [allowed to access the inline map editor](../../docs/dev/inline-map-editor.md).
+When OpenID is configured, you should set up a list of restricted users [allowed to access the inline map editor](../../docs/map-building/inline-editor/index.md).
+
+> [!NOTE]
+> We highly recommend configuring OpenID Connect. Authenticating users is mandatory to gain access to the inline map editor.
+> The inline map-editor will help you customize your maps really easily. You don't want to miss this feature.
 
 #### Connecting to a chat server
 

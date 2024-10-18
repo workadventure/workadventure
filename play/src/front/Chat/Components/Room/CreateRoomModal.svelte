@@ -8,12 +8,17 @@
     import LL from "../../../../i18n/i18n-svelte";
     import { IconAlertTriangle, IconHelpCircle, IconLoader } from "../../../Components/Icons";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
+    import { searchChatMembersRule } from "./searchChatMembersRule";
 
     export let isOpen: boolean;
+    export let parentID: string | undefined;
     let createRoomOptions: CreateRoomOptions = { visibility: "public" };
+    if (parentID) createRoomOptions.parentSpaceID = parentID;
     let createRoomError: string | undefined = undefined;
 
-    const chat = gameManager.getCurrentGameScene().chatConnection;
+    const chat = gameManager.chatConnection;
+
+    const { searchMembers } = searchChatMembersRule();
 
     let loadingRoomCreation = false;
 
@@ -50,20 +55,6 @@
                 return get(LL).chat.createRoom.historyVisibility.joined();
         }
     }
-
-    async function searchMembers(filterText: string) {
-        try {
-            const chatUsers = await chat.searchChatUsers(filterText);
-            if (chatUsers === undefined) {
-                return [];
-            }
-            return chatUsers.map((user) => ({ value: user.id, label: user.name ?? user.id }));
-        } catch (error) {
-            console.error(error);
-        }
-
-        return [];
-    }
 </script>
 
 <Popup {isOpen}>
@@ -94,6 +85,9 @@
             >
                 <option value="private">{$LL.chat.createRoom.visibility.private()}</option>
                 <option value="public">{$LL.chat.createRoom.visibility.public()}</option>
+                {#if parentID}
+                    <option value="restricted">{$LL.chat.createRoom.visibility.restricted()}</option>
+                {/if}
             </select>
 
             <p class="tw-text-xs tw-m-0 tw-p-0 tw-text-gray-400 tw-pl-1">
@@ -102,6 +96,8 @@
                     {$LL.chat.createRoom.visibility.privateDescription()}
                 {:else if createRoomOptions.visibility === "public"}
                     {$LL.chat.createRoom.visibility.publicDescription()}
+                {:else if createRoomOptions.visibility === "restricted"}
+                    {$LL.chat.createRoom.visibility.restrictedDescription()}
                 {/if}
             </p>
             {#if createRoomOptions.visibility === "private"}

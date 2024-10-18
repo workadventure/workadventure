@@ -4,10 +4,9 @@
     import { get } from "svelte/store";
     import { requestVisitCardsStore, selectedChatIDRemotePlayerStore } from "../../Stores/GameStore";
     import { LL } from "../../../i18n/i18n-svelte";
-    import { chatVisibilityStore } from "../../Stores/ChatStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { navChat, selectedRoom } from "../../Chat/Stores/ChatStore";
-    import { ChatRoom } from "../../Chat/Connection/ChatConnection";
+    import { openChatRoom } from "../../Chat/Utils";
+    import { IconLoader } from "@wa-icons";
 
     export let visitCardUrl: string;
     let w = "500px";
@@ -15,36 +14,17 @@
     let hidden = true;
     let cvIframe: HTMLIFrameElement;
 
-    const chatConnection = gameManager.getCurrentGameScene().chatConnection;
+    const chatConnection = gameManager.chatConnection;
     const selectPlayerChatID = get(selectedChatIDRemotePlayerStore);
+    const roomCreationInProgress = chatConnection.roomCreationInProgress;
 
     function closeCard() {
         requestVisitCardsStore.set(null);
     }
 
-    function canSendMessageTo(chatID: string): boolean {
-        let room: ChatRoom | undefined = chatConnection.getDirectRoomFor(chatID);
-
-        const isGuest = get(chatConnection.isGuest) ?? true;
-
-        if (!room && isGuest) return false;
-
-        return true;
-    }
-
-    async function openChat() {
+    function openChat() {
         if (!selectPlayerChatID) return;
-
-        let room: ChatRoom | undefined = chatConnection.getDirectRoomFor(selectPlayerChatID);
-
-        if (!room && get(chatConnection.isGuest)) return;
-
-        if (!room) room = await chatConnection.createDirectRoom(selectPlayerChatID);
-
-        selectedRoom.set(room);
-        navChat.set("chat");
-        chatVisibilityStore.set(true);
-        selectedChatIDRemotePlayerStore.set(null);
+        openChatRoom(selectPlayerChatID).catch((error) => console.error(error));
         closeCard();
     }
 
@@ -72,12 +52,21 @@
                 data-testid="closeVisitCard"
                 on:click={closeCard}>{$LL.menu.visitCard.close()}</button
             >
-            {#if selectPlayerChatID && canSendMessageTo(selectPlayerChatID)}
-                <button
-                    class="light tw-cursor-pointer tw-px-3 tw-mb-2 tw-mr-0"
-                    data-testid="sendMessagefromVisitCardButton"
-                    on:click={openChat}>{$LL.menu.visitCard.sendMessage()}</button
-                >
+            {#if selectPlayerChatID}
+                {#if !$roomCreationInProgress}
+                    <button
+                        class="light tw-cursor-pointer tw-px-3 tw-mb-2 tw-mr-0"
+                        data-testid="sendMessagefromVisitCardButton"
+                        on:click={openChat}>{$LL.menu.visitCard.sendMessage()}</button
+                    >
+                {:else}
+                    <button
+                        class="light tw-cursor-pointer tw-px-3 tw-mb-2 tw-mr-0"
+                        data-testid="sendMessagefromVisitCardButton"
+                    >
+                        <IconLoader class="tw-animate-spin" />
+                    </button>
+                {/if}
             {/if}
         </div>
     {/if}

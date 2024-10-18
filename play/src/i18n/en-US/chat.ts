@@ -12,7 +12,7 @@ const chat: BaseTranslation = {
     users: "Users",
     chat: "Chat",
     userList: {
-        disconnected: "Disconnected",
+        disconnected: "Not connected to the world",
         isHere: "Is on this map",
         inAnotherMap: "In another map",
         in: "In ",
@@ -23,6 +23,8 @@ const chat: BaseTranslation = {
         businessCard: "Business Card",
         sendMessage: "Send Message",
     },
+    accept: "Accept",
+    decline: "Decline",
     connecting: "Connecting to server ...",
     waitingInit: "Waiting for server initialization ...",
     waitingData: "Waiting user data ...",
@@ -42,9 +44,11 @@ const chat: BaseTranslation = {
         online: "Online",
         away: "Away",
         unavailable: "Unavailable",
-        back_in_a_moment: "Back_in_a_moment",
+        back_in_a_moment: "Back in a moment",
         do_not_disturb: "Do not disturb",
         busy: "Busy",
+        meeting: "In a meeting",
+        megaphone: "Using the megaphone",
     },
     logIn: "Log in",
     signIn: "Register or log in to enjoy all the features of the chat !",
@@ -166,8 +170,12 @@ const chat: BaseTranslation = {
     anAdmin: "an administrator",
     messageDeletedByYou: "You deleted this message",
     messageEdited: "Modified",
+    messageEditedError: "Unable to edit message. Try again.",
     waiting: "Waiting",
     nothingToDisplay: "Nothing to display",
+    showMore: "Show {number} more",
+    showLess: "Show less",
+    addRoomToFolderError: "Impossible to add the room to the folder",
     createRoom: {
         title: "Create new room",
         name: "Name",
@@ -177,6 +185,8 @@ const chat: BaseTranslation = {
             privateDescription: "Only invited guests will be able to find and join the room.",
             public: "Public",
             publicDescription: "Anyone can find and join the room.",
+            restricted: "Folder member",
+            restrictedDescription: "Visible only to members of the folder",
         },
         e2eEncryption: {
             label: "Activate end to end encryption",
@@ -197,20 +207,74 @@ const chat: BaseTranslation = {
         loadingCreation: "Room creation in progress",
         creationSuccessNotification: "Room created",
     },
+    createFolder: {
+        title: "Create new folder",
+        name: "Name",
+        visibility: {
+            label: "Visibility",
+            private: "Private",
+            privateDescription: "Only invited guests will be able to find and join the room.",
+            public: "Public",
+            publicDescription: "Anyone can find and join the room.",
+            restricted: "Folder member",
+            restrictedDescription: "Visible only to members of the folder",
+        },
+        description: {
+            label: "Description",
+            placeholder: "Description",
+        },
+        e2eEncryption: {
+            label: "Activate end to end encryption",
+            description: "You won't be able to deactivate it later.",
+        },
+        users: "Users",
+        historyVisibility: {
+            label: "Who can read history ?",
+            world_readable: "Anyone",
+            joined: "Members only (since they joined)",
+            invited: "Members only (since they were invited)",
+        },
+        buttons: {
+            create: "Create",
+            cancel: "Cancel",
+        },
+        error: "Error on room creation",
+        loadingCreation: "Room creation in progress",
+        creationSuccessNotification: "Room created",
+    },
+    manageRoomUsers: {
+        roomOption: "Participants",
+        error: "Unable send invitations",
+        title: "Invite participants",
+        invitations: "Invitations",
+        participants: "Participants",
+        join: "Joined",
+        invite: "Invited",
+        ban: "Banned",
+        kick: "Kicked",
+        leave: "Leaved",
+        buttons: {
+            sendInvitations: "Send invitations",
+            cancel: "Cancel",
+        },
+        sendInvitationsSuccessNotification: "Invitations sent successfully",
+    },
     roomMenu: {
         leaveRoom: {
             label: "Leave room",
             notification: "You have left the room",
         },
+        muteRoom: "Mute Room",
+        unmuteRoom: "Unmute Room",
     },
     e2ee: {
         encryptionNotConfigured: "Encryption not configured",
         createRecoveryKey: {
             title: "Chat recovery key creation",
             description:
-                "In order use end to end encryption in the chat, you need to create a recovery key. Please enter your passphrase below, a recovery key will be created.",
+                "In order use end to end encryption in the chat, you need to create a recovery key. Please enter your recovery passphrase below, a recovery key will be created.",
             privateKeyDescription:
-                "This is your private key, save it somewhere to retrieve encrypted discussions after logged out.",
+                "This is your recovery key, save it somewhere to retrieve encrypted discussions after logged out.",
             error: "Something went wrong on generateRecoveryKeyFromPassphrase",
             buttons: {
                 generate: "Generate",
@@ -219,10 +283,10 @@ const chat: BaseTranslation = {
             },
         },
         interactiveAuth: {
-            title: "Chat end to end encryption",
+            title: "End-to-end encryption for chat",
             description:
-                "For security reason, a cross signing key must be uploaded to our server. By confirming your identity, you will save the cross signing key allowing you to read encrypted message from WA and other clients.",
-            instruction: "Be sure to end SSO connection popup after before clicking on Finish button",
+                "For security reasons, a key must be uploaded to our server to verify your identity. By confirming your identity, you will store the key, which allows you to read encrypted messages from WA and other clients.",
+            instruction: "Make sure to complete the SSO connection before clicking the Finish button.",
             buttons: {
                 cancel: "Cancel",
                 continueSSO: "Continue with SSO",
@@ -232,19 +296,27 @@ const chat: BaseTranslation = {
         accessSecretStorage: {
             title: "Chat session verification",
             description:
-                "In order to verify your session and retrieve historical encrypted message your need to enter your recovery key or passphrase.",
+                "In order to verify your session and retrieve encrypted messages, you need to enter your recovery key or passphrase.",
             passphrase: "Passphrase",
             recoveryKey: "Recovery key",
             placeholder: "Enter your",
             buttons: {
                 cancel: "Cancel",
-                usePassphrase: "Use passphrase instead",
+                usePassphrase: "Use recovery passphrase instead",
                 useRecoveryKey: "Use recovery key instead",
                 confirm: "Confirm",
             },
         },
     },
     connectionError: "Chat not available",
+    requiresLoginForChatModal: {
+        title: "Log in to unlock the chat !",
+        content_1: "To fully enjoy this chat feature, you need to be logged into your account.",
+        content_2: "Logging in gives you access to all options and allows you to continue without interruption.",
+        content_3: " Please log in to proceed with the experience.",
+    },
+    requiresLoginForChat: "Sign in to access the chat messages",
+    featureComingSoon: "Feature coming soon!",
 };
 
 export default chat;

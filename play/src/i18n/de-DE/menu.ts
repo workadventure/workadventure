@@ -58,6 +58,8 @@ const menu: DeepPartial<Translation["menu"]> = {
         chatSounds: "Chat-Sounds",
         cowebsiteTrigger: "Jedes Mal nachfragen, bevor Webseiten oder Jitsi-Meet-Räume geöffnet werden",
         ignoreFollowRequest: "Folgeanfragen anderer Benutzer ignorieren",
+        blockAudio: "Musik und Hintergrund-Geräusche deaktivieren",
+        disableAnimations: "Karten-Animationen deaktivieren",
     },
     invite: {
         description: "Link zu diesem Raum teilen!",

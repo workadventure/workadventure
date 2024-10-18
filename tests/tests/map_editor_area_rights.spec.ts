@@ -182,6 +182,8 @@ test.describe("Map editor area with rights @oidc", () => {
     await expect(
       page2.locator(".actions-menu .actions button").nth(0)
     ).not.toBeAttached();
+    await page2.close();
+    await newBrowser.close();
   });
 
   test("Area with restricted write access : Trying to read an object with read/write access", async ({
@@ -224,6 +226,8 @@ test.describe("Map editor area with rights @oidc", () => {
     await expect(
       page2.locator(".actions-menu .actions button").nth(0)
     ).toContainText("Open Link");
+    await page2.close();
+    await newBrowser.close();
   });
 
   test("Area with restricted write access : Trying to add an object", async ({
@@ -277,6 +281,8 @@ test.describe("Map editor area with rights @oidc", () => {
         { hasText: "Open Link" }
       )
     ).not.toBeAttached();
+    await page2.close();
+    await newBrowser.close();
   });
 
   test("Area with restricted write access : Trying to add an object with write access", async ({
@@ -330,6 +336,8 @@ test.describe("Map editor area with rights @oidc", () => {
         { hasText: "Open Link" }
       )
     ).toBeAttached();
+    await page2.close();
+    await newBrowser.close();
   });
 
   test("Area with restricted write access : Trying to remove an object", async ({
@@ -382,6 +390,8 @@ test.describe("Map editor area with rights @oidc", () => {
     await expect(
       page2.locator(".actions-menu .actions button").nth(0)
     ).toContainText("Open Link");
+    await page2.close();
+    await newBrowser.close();
   });
 
   test("Area with restricted write access : Trying to remove an object with write access", async ({
@@ -435,6 +445,8 @@ test.describe("Map editor area with rights @oidc", () => {
     await expect(
       page2.locator(".actions-menu .actions button").nth(0)
     ).not.toBeAttached();
+    await page2.close();
+    await newBrowser.close();
   });
 
   test("Area with restricted write access : Trying to remove an object outside the area", async ({
@@ -488,6 +500,8 @@ test.describe("Map editor area with rights @oidc", () => {
     await expect(
       page2.locator(".actions-menu .actions button").nth(0)
     ).toContainText("Open Link");
+    await page2.close();
+    await newBrowser.close();
   });
 
   test("Claim personal area from allowed user", async ({
@@ -544,6 +558,8 @@ test.describe("Map editor area with rights @oidc", () => {
         { hasText: "Open Link" }
       )
     ).toBeAttached();
+    await page2.close();
+    await newBrowser.close();
   });
 
   test("Claim personal area from unauthorized user", async ({
@@ -580,6 +596,50 @@ test.describe("Map editor area with rights @oidc", () => {
     );
     await expect(
       page2.getByTestId("claimPersonalAreaButton")
+    ).not.toBeAttached();
+    await page2.close();
+    await newBrowser.close();
+  });
+
+  test("Claim multi personal area", async ({
+    page,
+    browser,
+    request,
+  }, { project }) => {
+    await resetWamMaps(request);
+
+    await page.goto(Map.url("empty"));
+    await login(page, "test", 3, "en-US", project.name === "mobilechromium");
+    await oidcAdminTagLogin(page, false);
+
+    // Add a first area
+    await Menu.openMapEditor(page);
+    await AreaAccessRights.openAreaEditorAndAddArea(page);
+    await page.getByTestId("personalAreaPropertyData").click();
+    await Menu.closeMapEditor(page);
+
+    // Add a second area
+    await Menu.openMapEditor(page);
+    await AreaAccessRights.openAreaEditorAndAddArea(
+      page,
+      { x: 1 * 32, y: 10 * 32 },
+      { x: 9 * 32, y: 19 * 32 },
+    );
+    await page.getByTestId("personalAreaPropertyData").click();
+    await Menu.closeMapEditor(page);
+
+    // Try to claim the area
+    await Map.rightClickToPosition(page, 6 * 32 + 10, 3 * 32 + 10);
+    await page.getByTestId("claimPersonalAreaButton").click();
+
+    // Check if the second area is claimable
+    await Map.rightClickToPosition(page, 6 * 32 + 10, 12 * 32 + 10);
+    await page.getByTestId("claimPersonalAreaButton").click();
+
+    // Check if the first area is not claimable
+    await Map.rightClickToPosition(page, 6 * 32 + 10, 3 * 32 + 10);
+    await expect(
+      page.getByTestId("claimPersonalAreaButton")
     ).not.toBeAttached();
   });
 });

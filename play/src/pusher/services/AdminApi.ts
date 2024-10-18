@@ -16,7 +16,6 @@ import {
     isErrorApiErrorData,
     isMapDetailsData,
     isRoomRedirect,
-    MucRoomDefinition,
     WokaDetail,
 } from "@workadventure/messages";
 import { z } from "zod";
@@ -93,9 +92,6 @@ export const isFetchMemberDataByUuidSuccessResponse = z.object({
         example: false,
     }),*/
     userRoomToken: extendApi(z.optional(z.string()), { description: "", example: "" }),
-    mucRooms: extendApi(z.nullable(z.array(MucRoomDefinition)), {
-        description: "The MUC room is a room of message",
-    }),
     activatedInviteUser: extendApi(z.boolean().nullable().optional(), {
         description: "Button invite is activated in the action bar",
     }),
@@ -682,7 +678,8 @@ class AdminApi implements AdminInterface {
     async getUrlRoomsFromSameWorld(
         roomUrl: string,
         locale?: string,
-        tags?: string[]
+        tags?: string[],
+        bypassTagFilter = false
     ): Promise<ShortMapDescriptionList> {
         /**
          * @openapi
@@ -732,6 +729,7 @@ class AdminApi implements AdminInterface {
         // Build the URL to call the API
         const url = new URL(`${ADMIN_API_URL}/api/room/sameWorld`);
         url.searchParams.append("roomUrl", roomUrl);
+        url.searchParams.append("bypassTagFilter", String(bypassTagFilter));
         if (tags) {
             url.searchParams.append("tags", tags.join(","));
         }
@@ -760,13 +758,12 @@ class AdminApi implements AdminInterface {
         playUri: string,
         name: string,
         message: string,
-        byUserUuid: string,
-        byUserEmail?: string
+        byUserUuid: string
     ): Promise<boolean> {
         try {
             return axios.post(
                 ADMIN_API_URL + "/api/ban",
-                { uuidToBan, playUri, name, message, byUserEmail, byUserUuid },
+                { uuidToBan, playUri, name, message, byUserUuid },
                 {
                     headers: { Authorization: `${ADMIN_API_TOKEN}` },
                 }
@@ -1123,21 +1120,54 @@ class AdminApi implements AdminInterface {
         return response.data;
     }
 
-    updateChatId(userIdentifier: string, chatId: string): void {
-        axios
-            .put(
-                `${ADMIN_URL}/api/members/${userIdentifier}/chatId`,
-                {
-                    chatId,
-                    userIdentifier,
-                },
-                {
-                    headers: { Authorization: `${ADMIN_API_TOKEN}` },
-                }
-            )
-            .catch((e) => {
-                console.error(e);
-            });
+    /**
+     * @openapi
+     * /api/members/${userIdentifier}/chatId:
+     *   put:
+     *     tags: ["AdminAPI"]
+     *     description: Sets the Chat ID (Matrix ID) of a user. The Matrix ID is received by the client first and then sent to the server.
+     *     security:
+     *      - Bearer: []
+     *     produces:
+     *      - "application/json"
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: "object"
+     *             properties:
+     *               roomUrl:
+     *                 type: string
+     *                 required: true
+     *                 description: The URL of the room
+     *                 example: "https://play.workadventu.re/@/teamSlug/worldSlug/roomSlug"
+     *               chatId:
+     *                 type: string
+     *                 required: true
+     *                 description: The chat ID to be stored
+     *                 example: "@john.doe:matrix.org"
+     *               userIdentifier:
+     *                 type: string
+     *                 required: true
+     *                 description: "It can be an uuid or an email"
+     *                 example: "998ce839-3dea-4698-8b41-ebbdf7688ad9"
+     *     responses:
+     *       200:
+     *         description: The report has been successfully saved
+     */
+    updateChatId(userIdentifier: string, chatId: string, roomUrl: string): Promise<void> {
+        return axios.put(
+            `${ADMIN_URL}/api/members/${userIdentifier}/chatId`,
+            {
+                chatId,
+                userIdentifier,
+                roomUrl,
+            },
+            {
+                headers: { Authorization: `${ADMIN_API_TOKEN}` },
+            }
+        );
     }
 
     /**
@@ -1159,10 +1189,16 @@ class AdminApi implements AdminInterface {
      *            $ref: '#/definitions/OauthRefreshToken'
      */
     async refreshOauthToken(token: string): Promise<OauthRefreshToken> {
-        const response = await axios.get(`${ADMIN_URL}/oauth/refreshtoken/${token}`, {
-            headers: { Authorization: `${ADMIN_API_TOKEN}` },
-        });
-        const refreshTokenResponse = isOauthRefreshToken.safeParse(response);
+        const response = await axios.post(
+            `${ADMIN_URL}/api/oauth/refreshtoken`,
+            {
+                accessToken: token,
+            },
+            {
+                headers: { Authorization: `${ADMIN_API_TOKEN}` },
+            }
+        );
+        const refreshTokenResponse = isOauthRefreshToken.safeParse(response.data);
         if (refreshTokenResponse.error) {
             throw new Error("Unable to parse refreshTokenResponse");
         }

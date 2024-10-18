@@ -1,5 +1,5 @@
 import { isAxiosError } from "axios";
-import type { MucRoomDefinition, LegalsData } from "@workadventure/messages";
+import type { LegalsData } from "@workadventure/messages";
 import { isMapDetailsData, isRoomRedirect, ErrorApiData, OpidWokaNamePolicy } from "@workadventure/messages";
 import { CONTACT_URL, DISABLE_ANONYMOUS, OPID_WOKA_NAME_POLICY } from "../Enum/EnvironmentVariable";
 import { ApiError } from "../Stores/Errors/ApiError";
@@ -17,7 +17,6 @@ export interface RoomRedirect {
 export class Room {
     public readonly id: string;
     private _authenticationMandatory: boolean = DISABLE_ANONYMOUS;
-    private _iframeAuthentication?: string = new URL("login-screen", ABSOLUTE_PUSHER_URL).toString();
     private _opidLogoutRedirectUrl: string = new URL("logout", ABSOLUTE_PUSHER_URL).toString();
     private _opidWokaNamePolicy: OpidWokaNamePolicy | undefined;
     private _mapUrl: string | undefined;
@@ -32,7 +31,6 @@ export class Room {
     private _loadingLogo: string | undefined;
     private _loginSceneLogo: string | undefined;
     private _metadata: unknown | undefined;
-    private _mucRooms: Array<MucRoomDefinition> | undefined;
     private _showPoweredBy: boolean | undefined = true;
     private _roomName: string | undefined;
     private _pricingUrl: string | undefined;
@@ -58,6 +56,10 @@ export class Room {
 
         if (this.id.startsWith("/")) {
             this.id = this.id.substring(1);
+        }
+
+        if (this.roomUrl.pathname.endsWith("/")) {
+            this.roomUrl.pathname = this.roomUrl.pathname.slice(0, -1);
         }
 
         this._search = new URLSearchParams(roomUrl.search);
@@ -145,8 +147,6 @@ export class Room {
                 this._group = data.group;
                 this._authenticationMandatory =
                     data.authenticationMandatory != null ? data.authenticationMandatory : DISABLE_ANONYMOUS;
-                this._iframeAuthentication =
-                    data.iframeAuthentication || new URL("login-screen", ABSOLUTE_PUSHER_URL).toString();
                 this._opidLogoutRedirectUrl =
                     data.opidLogoutRedirectUrl || new URL("logout", ABSOLUTE_PUSHER_URL).toString();
                 this._contactPage = data.contactPage || CONTACT_URL;
@@ -163,7 +163,6 @@ export class Room {
                 this._backgroundColor = data.backgroundColor ?? undefined;
                 this._metadata = data.metadata ?? undefined;
 
-                this._mucRooms = data.mucRooms ?? undefined;
                 this._roomName = data.roomName ?? undefined;
 
                 this._pricingUrl = data.pricingUrl ?? undefined;
@@ -257,10 +256,6 @@ export class Room {
         return this._authenticationMandatory;
     }
 
-    get iframeAuthentication(): string | undefined {
-        return this._iframeAuthentication;
-    }
-
     get opidLogoutRedirectUrl(): string {
         return this._opidLogoutRedirectUrl;
     }
@@ -303,10 +298,6 @@ export class Room {
 
     get metadata(): unknown {
         return this._metadata;
-    }
-
-    get mucRooms(): Array<MucRoomDefinition> | undefined {
-        return this._mucRooms;
     }
 
     get roomName(): string | undefined {

@@ -17,8 +17,6 @@ export const isAChatRoomIsVisible = () => {
     return get(selectedRoom) && get(navChat) === "chat" && get(chatVisibilityStore);
 };
 
-export const showRoom = (room: ChatRoom) => {
-    selectedRoom.set(room);
-    navChat.set("chat");
-    chatVisibilityStore.set(true);
-};
+export const alreadyAskForInitCryptoConfiguration = writable(false);
+
+export const isChatIdSentToPusher = writable(false);

@@ -10,7 +10,6 @@
         helpWebRtcSettingsVisibleStore,
     } from "../Stores/HelpSettingsStore";
     import { helpSettingsPopupBlockedStore } from "../Stores/HelpSettingsPopupBlockedStore";
-    import { layoutManagerActionVisibilityStore } from "../Stores/LayoutManagerStore";
     import { menuVisiblilityStore, warningBannerStore } from "../Stores/MenuStore";
     import { showReportScreenStore, userReportEmpty } from "../Stores/ShowReportScreenStore";
     import { followStateStore } from "../Stores/FollowStore";
@@ -47,7 +46,6 @@
     import HelpCameraSettingsPopup from "./HelpSettings/HelpCameraSettingsPopup.svelte";
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
     import HelpNotificationSettingsPopup from "./HelpSettings/HelpNotificationSettingPopup.svelte";
-    import LayoutActionManager from "./LayoutActionManager/LayoutActionManager.svelte";
     import Menu from "./Menu/Menu.svelte";
     import ReportMenu from "./ReportMenu/ReportMenu.svelte";
     import VisitCard from "./VisitCard/VisitCard.svelte";
@@ -74,7 +72,6 @@
     import WarningToast from "./WarningContainer/WarningToast.svelte";
     import ClaimPersonalAreaDialogBox from "./MapEditor/ClaimPersonalAreaDialogBox.svelte";
     import MainModal from "./Modal/MainModal.svelte";
-
     let mainLayout: HTMLDivElement;
     let keyboardEventIsDisable = false;
     let isMobile = isMediaBreakpointUp("md");
@@ -91,7 +88,9 @@
         if (
             target &&
             (["INPUT", "TEXTAREA"].includes(target.tagName) ||
-                (target.tagName === "DIV" && target.getAttribute("role") === "textbox"))
+                (target.tagName === "DIV" && target.getAttribute("role") === "textbox") ||
+                target.getAttribute("contenteditable") === "true" ||
+                target.classList.contains("block-user-action"))
         ) {
             try {
                 gameManager.getCurrentGameScene().userInputManager.disableControls();
@@ -245,10 +244,6 @@
 
         <MainModal />
     </section>
-
-    {#if $layoutManagerActionVisibilityStore}
-        <LayoutActionManager />
-    {/if}
 
     {#if $actionsMenuStore}
         <ActionsMenu />

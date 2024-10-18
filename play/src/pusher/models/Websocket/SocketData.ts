@@ -9,7 +9,6 @@ import type {
     AvailabilityStatus,
     CharacterTextureMessage,
     CompanionTextureMessage,
-    MucRoomDefinition,
     BatchMessage,
     SpaceFilterMessage,
     SubMessage,
@@ -48,7 +47,6 @@ export type SocketData = {
     visitCardUrl: string | null;
     userRoomToken: string | undefined;
     activatedInviteUser: boolean | undefined;
-    mucRooms: Array<MucRoomDefinition>;
     applications?: Array<ApplicationDefinitionInterface> | null;
     canEdit: boolean;
     spaceUser: SpaceUser;
@@ -62,4 +60,5 @@ export type SocketData = {
     spacesFilters: Map<string, SpaceFilterMessage[]>;
     chatID?: string;
     world: string;
+    currentChatRoomArea: string[];
 };

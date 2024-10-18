@@ -1,7 +1,7 @@
-import fs from 'fs';
-import path from 'path';
-import yaml from 'yaml';
-import { z } from 'zod';
+import fs from "fs";
+import path from "path";
+import yaml from "yaml";
+import { z } from "zod";
 
 const oidcProviderSchema = z.object({
     name: z.string(),
@@ -11,12 +11,12 @@ const oidcProviderSchema = z.object({
 });
 
 const configSchema = z.object({
-oidc_providers: z.array(oidcProviderSchema),
+    oidc_providers: z.array(oidcProviderSchema),
 });
 
 // Charger et parser le fichier YAML
-const configPath = path.resolve(__dirname, 'config.yml');
-const file = fs.readFileSync(configPath, 'utf8');
+const configPath = path.resolve(__dirname, "config.yml");
+const file = fs.readFileSync(configPath, "utf8");
 const config = yaml.parse(file);
 
 // Valider la configuration

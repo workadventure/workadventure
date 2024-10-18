@@ -11,4 +11,16 @@ export class BasicStatusStrategy extends StatusStrategy {
     ) {
         super(status, basicRules, timedRules, interactionRules);
     }
+
+    allowNotificationSound(): boolean {
+        switch (this.status) {
+            case AvailabilityStatus.SILENT:
+            case AvailabilityStatus.JITSI:
+            case AvailabilityStatus.BBB:
+            case AvailabilityStatus.SPEAKER:
+                return false;
+            default:
+                return true;
+        }
+    }
 }

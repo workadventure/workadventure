@@ -1,0 +1,15 @@
+version: "3.6"
+services:
+  # disables the Synapse service
+  # use with command:
+  # docker-compose -f docker-compose.yaml -f docker-compose.no-synapse.yaml up
+  synapse:
+    profiles:
+      - do-not-start
+
+  play:
+    environment:
+      MATRIX_API_URI: ""
+      MATRIX_PUBLIC_URI: ""
+      MATRIX_ADMIN_USER: ""
+      MATRIX_ADMIN_PASSWORD: ""

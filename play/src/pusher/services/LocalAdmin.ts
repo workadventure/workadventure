@@ -66,11 +66,6 @@ class LocalAdmin implements AdminInterface {
             canEdit = true;
         }
 
-        const mucRooms = [{ name: "Connected users", url: playUri, type: "default", subscribe: false }];
-        if (ENABLE_CHAT) {
-            mucRooms.push({ name: "Welcome", url: `${playUri}/forum/welcome`, type: "forum", subscribe: false });
-        }
-
         let isCharacterTexturesValid = true;
 
         const characterTextures = await localWokaService.fetchWokaDetails(characterTextureIds);
@@ -208,7 +203,6 @@ class LocalAdmin implements AdminInterface {
             isCompanionTextureValid,
             companionTexture,
             userRoomToken: undefined,
-            mucRooms,
             activatedInviteUser: true,
             canEdit,
             world: "localWorld",
@@ -266,9 +260,7 @@ class LocalAdmin implements AdminInterface {
             canEdit,
             authenticationMandatory: DISABLE_ANONYMOUS,
             contactPage: null,
-            mucRooms: null,
             group: wamUrl ? "default" : null,
-            iframeAuthentication: null,
             opidLogoutRedirectUrl: null,
             opidUsernamePolicy: opidWokaNamePolicyCheck.success ? opidWokaNamePolicyCheck.data : null,
             miniLogo: null,
@@ -348,8 +340,7 @@ class LocalAdmin implements AdminInterface {
     }
 
     getProfileUrl(accessToken: string, playUri: string): string {
-        new Error("No admin backoffice set!");
-        return "";
+        return `/profile?accessToken=${accessToken}&playUri=${playUri}`;
     }
 
     async logoutOauth(token: string): Promise<void> {
@@ -361,8 +352,7 @@ class LocalAdmin implements AdminInterface {
         playUri: string,
         name: string,
         message: string,
-        byUserUuid: string,
-        byUserEmail?: string
+        byUserUuid: string
     ): Promise<boolean> {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
@@ -403,11 +393,14 @@ class LocalAdmin implements AdminInterface {
     }
 
     getWorldChatMembers(playUri: string, searchText: string): Promise<WorldChatMembersData> {
-        return Promise.reject(new Error("No admin backoffice set!"));
+        return Promise.resolve({
+            members: [],
+            total: 0,
+        });
     }
 
-    updateChatId(userIdentifier: string, chatId: string) {
-        return Promise.resolve("No admin backoffice to updateChatID !");
+    updateChatId(userIdentifier: string, chatId: string): Promise<void> {
+        return Promise.reject(new Error("No admin backoffice to updateChatID !"));
     }
 
     refreshOauthToken(token: string): Promise<OauthRefreshToken> {

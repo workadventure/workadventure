@@ -1,14 +1,14 @@
 import { get, writable } from "svelte/store";
 import { AvailabilityStatus } from "@workadventure/messages";
 import { describe, expect, it } from "vitest";
-import { UserProvideInterface } from "../UserProvider/UserProvideInterface";
+import { UserProviderInterface } from "../UserProvider/UserProviderInterface";
 import { PartialChatUser } from "../Connection/ChatConnection";
 import { UserProviderMerger } from "./UserProviderMerger";
 
 describe("UserProviderMerger", () => {
     it("should merge and sort users by room", () => {
         // Mock data
-        const userProvider1: UserProvideInterface = {
+        const userProvider1: UserProviderInterface = {
             users: writable<PartialChatUser[]>([
                 {
                     chatId: "1",
@@ -37,7 +37,7 @@ describe("UserProviderMerger", () => {
             },
         };
 
-        const userProvider2: UserProvideInterface = {
+        const userProvider2: UserProviderInterface = {
             users: writable<PartialChatUser[]>([
                 { chatId: "2", username: "Charlie", isAdmin: true },
                 { chatId: "3", username: "Charlie" },

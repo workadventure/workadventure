@@ -318,7 +318,7 @@ export class UIWebsiteCommands extends IframeApiContribution<UIWebsiteCommands> 
 
     /**
      * Open an iFrame that is fixed in the viewport. Use this for advanced popups, additional buttons in the UI, HUD, etc... Returns a promise of a UIWebsite instance.
-     * {@link https://workadventu.re/map-building/api-ui.md#display-a-ui-website | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-ui.md#display-a-ui-website | Website documentation}
      *
      * @param {CreateUIWebsiteEvent} createUIWebsite The details of the UIWebsite to create
      * @returns {Promise<UIWebsite>} Promise to return a UIWebsite
@@ -334,7 +334,7 @@ export class UIWebsiteCommands extends IframeApiContribution<UIWebsiteCommands> 
 
     /**
      * Returns all UI websites (iframes positionned on the viewport)
-     * {@link https://workadventu.re/map-building/api-ui.md#get-all-ui-websites | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-ui.md#get-all-ui-websites | Website documentation}
      *
      * @returns {Promise<UIWebsite[]>} Promise to return all UI websites
      */
@@ -349,7 +349,7 @@ export class UIWebsiteCommands extends IframeApiContribution<UIWebsiteCommands> 
 
     /**
      * Returns one UI website (iframe positionned on the viewport) by ID.
-     * {@link https://workadventu.re/map-building/api-ui.md#get-all-ui-websites | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-ui.md#get-all-ui-websites | Website documentation}
      * @param {string} id The id of the UIWebsite
      * @returns {Promise<UIWebsite | undefined>} Promise to return UI website
      */

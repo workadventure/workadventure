@@ -363,6 +363,14 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
+    menuChat(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_menu_chat");
+            })
+            .catch((e) => console.error(e));
+    }
+
     globalMessage(): void {
         this.posthogPromise
             ?.then((posthog) => {
@@ -742,6 +750,14 @@ class AnalyticsClient {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture("wa-opened-external-module-calendar");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    openExternalModuleTodoList(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa-opened-external-module-todolist");
             })
             .catch((e) => console.error(e));
     }

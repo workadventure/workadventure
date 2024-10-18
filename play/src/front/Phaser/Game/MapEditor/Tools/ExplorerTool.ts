@@ -18,6 +18,7 @@ import { MapEditorModeManager } from "../MapEditorModeManager";
 import { EntitiesManager } from "../../GameMap/EntitiesManager";
 import { AreaPreview } from "../../../Components/MapEditor/AreaPreview";
 import { waScaleManager } from "../../../Services/WaScaleManager";
+import { mapExplorerSearchinputFocusStore } from "../../../../Stores/UserInputStore";
 import { MapEditorTool } from "./MapEditorTool";
 
 const logger = debug("explorer-tool");
@@ -35,6 +36,7 @@ export class ExplorerTool implements MapEditorTool {
     private zoomLevelBeforeExplorerMode: number | undefined;
 
     private keyDownHandler = (event: KeyboardEvent) => {
+        if (get(mapExplorerSearchinputFocusStore)) return;
         if (event.key === "ArrowDown" || event.key === "s") {
             this.downIsPressed = true;
         }
@@ -49,6 +51,7 @@ export class ExplorerTool implements MapEditorTool {
         }
     };
     private keyUpHandler = (event: KeyboardEvent) => {
+        if (get(mapExplorerSearchinputFocusStore)) return;
         // Define new zone to zoom
         if (event.key === "ArrowDown" || event.key === "s") {
             this.downIsPressed = false;

@@ -1,13 +1,15 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
+    import { openModal } from "svelte-modals";
     import { ChatRoom } from "../../../Connection/ChatConnection";
     import { notificationPlayingStore } from "../../../../Stores/NotificationStore";
     import LL from "../../../../../i18n/i18n-svelte";
+    import InviteParticipantsModal from "../InviteParticipantsModal.svelte";
     import RoomOption from "./RoomOption.svelte";
-    import { IconDotsCircle, IconLogout } from "@wa-icons";
+    import { IconDotsCircle, IconLogout, IconUserPlus, IconMute, IconUnMute } from "@wa-icons";
 
     export let room: ChatRoom;
-
+    const areNotificationsMuted = room.areNotificationsMuted;
     let optionButtonRef: HTMLButtonElement | undefined = undefined;
     let optionRef: HTMLDivElement | undefined = undefined;
     let hideOptions = true;
@@ -44,8 +46,28 @@
 
     function closeMenuAndLeaveRoom() {
         toggleRoomOptions();
-        room.leaveRoom();
-        notificationPlayingStore.playNotification($LL.chat.roomMenu.leaveRoom.notification());
+        room.leaveRoom()
+            .then(() => {
+                notificationPlayingStore.playNotification($LL.chat.roomMenu.leaveRoom.notification());
+            })
+            .catch(() => console.error("Failed to leave room"));
+    }
+
+    function openInviteParticipantsModal() {
+        openModal(InviteParticipantsModal, { room });
+    }
+
+    function closeMenuAndSetMuteStatus() {
+        toggleRoomOptions();
+        if ($areNotificationsMuted) {
+            room.unmuteNotification().catch(() => {
+                console.error("Failed to unmute room");
+            });
+            return;
+        }
+        room.muteNotification().catch(() => {
+            console.error("Failed to mute room");
+        });
     }
 </script>
 
@@ -64,8 +86,19 @@
     class:tw-hidden={hideOptions}
 >
     <RoomOption
+        IconComponent={IconUserPlus}
+        title={$LL.chat.manageRoomUsers.roomOption()}
+        on:click={openInviteParticipantsModal}
+    />
+
+    <RoomOption
         IconComponent={IconLogout}
         title={$LL.chat.roomMenu.leaveRoom.label()}
         on:click={closeMenuAndLeaveRoom}
+    />
+    <RoomOption
+        IconComponent={$areNotificationsMuted ? IconUnMute : IconMute}
+        title={$areNotificationsMuted ? $LL.chat.roomMenu.unmuteRoom() : $LL.chat.roomMenu.muteRoom()}
+        on:click={closeMenuAndSetMuteStatus}
     />
 </div>

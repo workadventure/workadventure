@@ -5,9 +5,7 @@
 
 <main>
     <div class="tw-flex tw-flex-col">
-        <span class=" tw-text-gray-500 ">
-            INTEGRATION
-        </span>
+        <span class=" tw-text-gray-500 "> INTEGRATION </span>
         <SettingsRow title="Discord">
             <Discord />
         </SettingsRow>
@@ -15,5 +13,4 @@
 </main>
 
 <style>
-
 </style>

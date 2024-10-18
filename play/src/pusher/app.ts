@@ -22,6 +22,7 @@ import { jwtTokenManager } from "./services/JWTTokenManager";
 import { CompanionService } from "./services/CompanionService";
 import { WokaService } from "./services/WokaService";
 import { UserController } from "./controllers/UserController";
+import { MatrixRoomAreaController } from "./controllers/MatrixRoomAreaController";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const LiveDirectory = require("live-directory");
 
@@ -90,11 +91,13 @@ class App {
         new AdminController(this.webserver);
         new OpenIdProfileController(this.webserver);
         new PingController(this.webserver);
+
         if (ENABLE_OPENAPI_ENDPOINT) {
             new SwaggerController(this.webserver);
         }
         new FrontController(this.webserver, liveAssets);
         new UserController(this.webserver);
+        new MatrixRoomAreaController(this.webserver);
     }
 
     public async init() {

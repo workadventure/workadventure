@@ -120,6 +120,13 @@ message UpdateChatIdMessage {
   string chatId = 2;
 }
 
+message LeaveChatRoomAreaMessage {
+  string roomID = 1;
+}
+
+
+
+
 message EmotePromptMessage {
   string emote = 2;
 }
@@ -210,6 +217,7 @@ message ModifyAreaMessage {
   optional uint32 height = 6;
   repeated google.protobuf.Value properties = 7;
   optional bool modifyProperties = 8;
+  optional bool modifyServerData = 9;
 }
 
 message DeleteAreaMessage {
@@ -320,6 +328,7 @@ message ClientToServerMessage {
     UpdateChatIdMessage updateChatIdMessage = 42;
     PublicEventFrontToPusher publicEvent = 43;
     PrivateEventFrontToPusher privateEvent = 44;
+    LeaveChatRoomAreaMessage leaveChatRoomAreaMessage = 45;
   }
 }
 
@@ -404,6 +413,7 @@ message QueryMessage {
     ChatMembersQuery chatMembersQuery = 10;
     SearchTagsQuery searchTagsQuery = 11;
     OauthRefreshTokenQuery oauthRefreshTokenQuery = 12;
+    EnterChatRoomAreaQuery enterChatRoomAreaQuery = 13;
   }
 }
 
@@ -458,6 +468,10 @@ message  SearchTagsQuery{
   string searchText = 1;
 }
 
+message EnterChatRoomAreaQuery{
+  string roomID = 1;
+}
+
 message AnswerMessage {
   int32 id = 1;
   oneof answer {
@@ -474,6 +488,7 @@ message AnswerMessage {
     ChatMembersAnswer chatMembersAnswer = 12;
     SearchTagsAnswer searchTagsAnswer = 13;
     OauthRefreshTokenAnswer oauthRefreshTokenAnswer = 14;
+    EnterChatRoomAreaAnswer enterChatRoomAreaAnswer = 15;
   }
 }
 
@@ -532,6 +547,8 @@ message ChatMembersAnswer {
 message OauthRefreshTokenAnswer {
   string message = 1;
   string token = 2;
+}
+message EnterChatRoomAreaAnswer{
 }
 
 message Member {
@@ -1158,7 +1175,6 @@ message BanUserByUuidMessage{
   string uuidToBan = 2;
   string name = 3;
   string message = 4;
-  string byUserEmail = 5;
 }
 /*********************************************************************************
  * End Chat Messages

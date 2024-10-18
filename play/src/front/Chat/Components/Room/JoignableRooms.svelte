@@ -7,7 +7,7 @@
 
     export let room: { id: string; name: string | undefined };
     let displayInvitationRoomActions = false;
-    const chat = gameManager.getCurrentGameScene().chatConnection;
+    const chat = gameManager.chatConnection;
     let joinRoomError: string | undefined = undefined;
 
     function toggleDisplayInvitationRoomActions() {

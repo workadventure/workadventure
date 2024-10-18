@@ -33,7 +33,7 @@ const debug = Debug("space");
 
 export class Space implements CustomJsonReplacerInterface {
     private readonly users: Map<number, SpaceUserExtended>;
-    private readonly metadata: Map<string, unknown>;
+    private readonly _metadata: Map<string, unknown>;
 
     private clientWatchers: Map<number, Socket>;
 
@@ -47,7 +47,7 @@ export class Space implements CustomJsonReplacerInterface {
         private eventProcessor: EventProcessor
     ) {
         this.users = new Map<number, SpaceUserExtended>();
-        this.metadata = new Map<string, unknown>();
+        this._metadata = new Map<string, unknown>();
         this.clientWatchers = new Map<number, Socket>();
         this.addClientWatcher(watcher);
         debug(`created : ${name}`);
@@ -196,7 +196,13 @@ export class Space implements CustomJsonReplacerInterface {
         }
     }
 
-    public localUpdateMetadata(metadata: { [key: string]: unknown }) {
+    public localUpdateMetadata(metadata: { [key: string]: unknown }, emit = true) {
+        // Set all value of metadata in the space
+        for (const [key, value] of Object.entries(metadata)) {
+            this._metadata.set(key, value);
+        }
+
+        if (emit === false) return;
         const subMessage: SubMessage = {
             message: {
                 $case: "updateSpaceMetadataMessage",
@@ -567,7 +573,6 @@ export class Space implements CustomJsonReplacerInterface {
 
         for (const user of this.users.values()) {
             if (user.client && user.id !== senderId) {
-                console.log("Notifying ", user.id, ` (${user.client.getUserData().userId}) of `, subMessage);
                 user.client.getUserData().emitInBatch(subMessage);
             }
         }
@@ -577,5 +582,9 @@ export class Space implements CustomJsonReplacerInterface {
         this.spaceStreamToPusher.write({
             message: pusherToBackSpaceMessage,
         });
+    }
+
+    get metadata(): Map<string, unknown> {
+        return this._metadata;
     }
 }

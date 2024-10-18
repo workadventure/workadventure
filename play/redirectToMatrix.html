@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        // The authToken can be bigger than the cookie limit max size so we need to use localStorage to store it.
+        window.localStorage.setItem("authToken", "{{authToken}}");
+
+        window.location.href = "{{{matrixRedirectUrl}}}";
+    </script>
+</head>
+<body>
+</body>
+</html>

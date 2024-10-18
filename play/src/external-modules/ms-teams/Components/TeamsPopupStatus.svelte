@@ -12,6 +12,8 @@
     let meetingSynchronised = false;
     let calendarSynchronised = false;
     let presenceSynchronised = false;
+    let todoListSynchronised = false;
+    let isGuest = false;
 
     function closeModal() {
         extensionModule.closePopUpModuleStatus();
@@ -25,6 +27,8 @@
         meetingSynchronised = extensionModule.meetingSynchronised === true;
         calendarSynchronised = extensionModule.calendarSynchronised === true;
         presenceSynchronised = extensionModule.presenceSynchronised === true;
+        todoListSynchronised = extensionModule.todoListSynchronized === true;
+        isGuest = extensionModule.isGuest === true;
     });
 </script>
 
@@ -34,65 +38,80 @@
         <img src={TeamsLogoSvg} alt="Object" class="tw-w-32 tw-h-32 tw-mb-4 tw-object-contain" />
         <p class="tw-p-2 tw-m-0">
             Teams is a Microsoft 365 app that helps your team stay connected and organized. You can chat, meet, call,
-            and collaborate all in one place.
+            and collaborate all in one place 😍
         </p>
-        {#if synchronisationStatusStore != undefined && $synchronisationStatusStore === TeamsModuleStatus.ONLINE}
+        {#if $synchronisationStatusStore === TeamsModuleStatus.ONLINE}
             <p class="tw-p-0 tw-m-0">
                 {$LL.externalModule.status.onLine()}
             </p>
-            <ul>
-                {#if meetingSynchronised}
-                    <li>Meeting ✅</li>
-                {:else}
-                    <li>Meeting ❌</li>
-                {/if}
+            {#if !isGuest}
+                <ul>
+                    {#if meetingSynchronised}
+                        <li>Meeting ✅</li>
+                    {:else}
+                        <li>Meeting ❌</li>
+                    {/if}
 
-                {#if calendarSynchronised}
-                    <li>Calendar ✅</li>
-                {:else}
-                    <li>Calendar ❌</li>
-                {/if}
+                    {#if calendarSynchronised}
+                        <li>Calendar ✅</li>
+                    {:else}
+                        <li>Calendar ❌</li>
+                    {/if}
 
-                {#if presenceSynchronised}
-                    <li>Presence ✅</li>
-                {:else}
-                    <li>Presence ❌</li>
-                {/if}
-            </ul>
+                    {#if presenceSynchronised}
+                        <li>Presence ✅</li>
+                    {:else}
+                        <li>Presence ❌</li>
+                    {/if}
+                    {#if todoListSynchronised}
+                        <li>To Do ✅</li>
+                    {:else}
+                        <li>To Do ❌</li>
+                    {/if}
+                </ul>
+            {/if}
         {/if}
 
-        {#if synchronisationStatusStore != undefined && $synchronisationStatusStore === TeamsModuleStatus.SYNC}
+        {#if $synchronisationStatusStore === TeamsModuleStatus.SYNC}
             <p class="tw-p-0 tw-m-0">
                 {$LL.externalModule.status.sync()}
             </p>
-            <ul>
-                {#if meetingSynchronised}
-                    <li>Meeting 🔄</li>
-                {:else}
-                    <li>Meeting ❌</li>
-                {/if}
+            {#if !isGuest}
+                <ul>
+                    {#if meetingSynchronised}
+                        <li>Meeting 🔄</li>
+                    {:else}
+                        <li>Meeting ❌</li>
+                    {/if}
 
-                {#if calendarSynchronised}
-                    <li>Calendar 🔄</li>
-                {:else}
-                    <li>Calendar ❌</li>
-                {/if}
+                    {#if calendarSynchronised}
+                        <li>Calendar 🔄</li>
+                    {:else}
+                        <li>Calendar ❌</li>
+                    {/if}
 
-                {#if presenceSynchronised}
-                    <li>Presence 🔄</li>
-                {:else}
-                    <li>Presence ❌</li>
-                {/if}
-            </ul>
+                    {#if presenceSynchronised}
+                        <li>Presence 🔄</li>
+                    {:else}
+                        <li>Presence ❌</li>
+                    {/if}
+
+                    {#if todoListSynchronised}
+                        <li>To Do 🔄</li>
+                    {:else}
+                        <li>To Do ❌</li>
+                    {/if}
+                </ul>
+            {/if}
         {/if}
 
-        {#if synchronisationStatusStore != undefined && $synchronisationStatusStore === TeamsModuleStatus.WARNING}
+        {#if $synchronisationStatusStore === TeamsModuleStatus.WARNING}
             <p class="tw-p-0 tw-m-0">
                 {$LL.externalModule.status.warning()}
             </p>
         {/if}
 
-        {#if synchronisationStatusStore != undefined && $synchronisationStatusStore === TeamsModuleStatus.OFFLINE}
+        {#if $synchronisationStatusStore === TeamsModuleStatus.OFFLINE}
             <p class="tw-p-0 tw-m-0">
                 {$LL.externalModule.status.offLine()}
             </p>
@@ -104,15 +123,17 @@
         <button class="tw-bg-dark-purple tw-p-4" on:click={closeModal}>
             {$LL.mapEditor.explorer.details.close()}
         </button>
-        <button
-            class="light tw-p-4"
-            on:click={goToReSync}
-            disabled={$synchronisationStatusStore === TeamsModuleStatus.ONLINE}
-            class:tw-cursor-not-allowed={$synchronisationStatusStore === TeamsModuleStatus.ONLINE}
-            class:tw-opacity-20={$synchronisationStatusStore === TeamsModuleStatus.ONLINE}
-        >
-            Sync my Teams 🚀
-        </button>
+        {#if $synchronisationStatusStore !== TeamsModuleStatus.NONE}
+            <button
+                class="light tw-p-4"
+                on:click={goToReSync}
+                disabled={$synchronisationStatusStore === TeamsModuleStatus.ONLINE}
+                class:tw-cursor-not-allowed={$synchronisationStatusStore === TeamsModuleStatus.ONLINE}
+                class:tw-opacity-20={$synchronisationStatusStore === TeamsModuleStatus.ONLINE}
+            >
+                Sync my Teams 🚀
+            </button>
+        {/if}
     </div>
 </div>
 

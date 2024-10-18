@@ -37,3 +37,5 @@ export const enableUserInputsStore = derived(
         );
     }
 );
+
+export const mapExplorerSearchinputFocusStore = writable(false);

@@ -56,6 +56,7 @@ export enum SubMenusInterface {
     globalMessages = "globalMessages",
     contact = "contact",
     report = "report",
+    chat = "chat",
 }
 
 type MenuKeys = keyof Translation["menu"]["sub"];
@@ -111,6 +112,10 @@ function createSubMenusStore() {
         {
             type: "translated",
             key: SubMenusInterface.contact,
+        },
+        {
+            type: "translated",
+            key: SubMenusInterface.chat,
         },
     ]);
     const { subscribe, update } = store;

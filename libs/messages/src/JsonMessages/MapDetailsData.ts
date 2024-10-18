@@ -3,7 +3,6 @@ import { extendApi } from "@anatine/zod-openapi";
 import { isMetaTagFavicon } from "./MetaTagFavicon";
 import { isMetaTagManifestIcon } from "./MetaTagManifestIcon";
 import { OpidWokaNamePolicy } from "./OpidWokaNamePolicy";
-import { MucRoomDefinition } from "./MucRoomDefinition";
 
 const isBbbData = z.object({
     url: extendApi(z.string(), {
@@ -137,16 +136,9 @@ export const isMapDetailsData = z.object({
         description: 'The group this room is part of (maps the notion of "world" in WorkAdventure SAAS)',
         example: "myorg/myworld",
     }),
-    mucRooms: extendApi(MucRoomDefinition.array().nullable(), {
-        description: "The MUC room is a room of message",
-    }),
     contactPage: extendApi(z.string().nullable().optional(), {
         description: "The URL to the contact page",
         example: "https://mycompany.com/contact-us",
-    }),
-    iframeAuthentication: extendApi(z.string().nullable().optional(), {
-        description: "The URL of the authentication Iframe",
-        example: "https://mycompany.com/authc",
     }),
     opidLogoutRedirectUrl: extendApi(z.string().nullable().optional(), {
         description: "The URL of the logout redirect",

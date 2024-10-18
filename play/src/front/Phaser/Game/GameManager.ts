@@ -1,9 +1,11 @@
 import { get } from "svelte/store";
+import * as Sentry from "@sentry/svelte";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import type { Room } from "../../Connection/Room";
 import { helpCameraSettingsVisibleStore } from "../../Stores/HelpSettingsStore";
 import {
+    availabilityStatusStore,
     requestedCameraDeviceIdStore,
     requestedCameraState,
     requestedMicrophoneDeviceIdStore,
@@ -19,6 +21,11 @@ import { myCameraStore } from "../../Stores/MyMediaStore";
 import { SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
 import { hasCapability } from "../../Connection/Capabilities";
+import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
+import { MATRIX_PUBLIC_URI } from "../../Enum/EnvironmentVariable";
+import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
+import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
+import { VoidChatConnection } from "../../Chat/Connection/VoidChatConnection";
 import { GameScene } from "./GameScene";
 
 /**
@@ -33,6 +40,10 @@ export class GameManager {
     // Note: this scenePlugin is the scenePlugin of the EntryScene. We should always provide a key in methods called on this scenePlugin.
     private scenePlugin!: Phaser.Scenes.ScenePlugin;
     private visitCardUrl: string | null = null;
+    private matrixServerUrl: string | undefined = undefined;
+    private chatConnectionPromise: Promise<ChatConnectionInterface> | undefined;
+    private matrixClientWrapper: MatrixClientWrapper | undefined;
+    private _chatConnection: ChatConnectionInterface | undefined;
 
     constructor() {
         this.playerName = localUserStore.getName();
@@ -218,6 +229,74 @@ export class GameManager {
 
     public get currentStartedRoom() {
         return this.startRoom;
+    }
+
+    public setMatrixServerUrl(matrixServerUrl: string | undefined) {
+        this.matrixServerUrl = matrixServerUrl;
+    }
+
+    public getMatrixServerUrl(): string | undefined {
+        return this.matrixServerUrl;
+    }
+
+    public async getChatConnection(): Promise<ChatConnectionInterface> {
+        if (this.chatConnectionPromise) {
+            return this.chatConnectionPromise;
+        }
+
+        const matrixServerUrl = this.getMatrixServerUrl() ?? MATRIX_PUBLIC_URI;
+        if (matrixServerUrl) {
+            this.matrixClientWrapper = new MatrixClientWrapper(matrixServerUrl, localUserStore);
+            const matrixClientPromise = this.matrixClientWrapper.initMatrixClient();
+
+            matrixClientPromise.catch((error) => {
+                console.error(`Failed to create matrix client : ${error}`);
+                Sentry.captureMessage(`Failed to create matrix client : ${error}`);
+            });
+
+            const matrixChatConnection = new MatrixChatConnection(matrixClientPromise, availabilityStatusStore);
+            this._chatConnection = matrixChatConnection;
+
+            this.chatConnectionPromise = matrixChatConnection.init().then(() => matrixChatConnection);
+
+            return this.chatConnectionPromise;
+        } else {
+            // No matrix connection? Let's fill the gap with a "void" object
+            this._chatConnection = new VoidChatConnection();
+            return this._chatConnection;
+        }
+    }
+    get chatConnection(): ChatConnectionInterface {
+        if (!this._chatConnection) {
+            throw new Error("_chatConnection not yet initialized");
+        }
+        return this._chatConnection;
+    }
+
+    /**
+     * Performs all cleanup actions specific to someone logging out.
+     * Currently, this logs out from the Matrix client.
+     */
+    public async logout(): Promise<void> {
+        if (this._chatConnection) {
+            try {
+                this._chatConnection.clearListener();
+                await this._chatConnection.destroy();
+                this.clearChatDataFromLocalStorage();
+                this._chatConnection = undefined;
+                this.chatConnectionPromise = undefined;
+            } catch (e) {
+                console.error("Chat connection not closed properly : ", e);
+                Sentry.captureException(e);
+            }
+        }
+    }
+
+    private clearChatDataFromLocalStorage(): void {
+        localUserStore.setMatrixLoginToken(null);
+        localUserStore.setMatrixUserId(null);
+        localUserStore.setMatrixAccessToken(null);
+        localUserStore.setMatrixRefreshToken(null);
     }
 }
 

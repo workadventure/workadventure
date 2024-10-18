@@ -22,7 +22,7 @@ test.describe("API WA.players", () => {
     );
     await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
 
-    const newBrowser = await browser.browserType().launch();
+    const newBrowser = await browser.newContext();
     const page2 = await newBrowser.newPage();
 
     await page2.goto(
@@ -61,6 +61,7 @@ test.describe("API WA.players", () => {
     );
 
     await page2.close();
+    await newBrowser.close();
 
     await expect(events).toContainText("User left: Bob");
     await getCoWebsiteIframe(page).locator("#listCurrentPlayers").click();
@@ -118,7 +119,7 @@ test.describe("API WA.players", () => {
       return;
     });
 
-    const newBrowser = await browser.browserType().launch();
+    const newBrowser = await browser.newContext();
     const page2 = await newBrowser.newPage();
 
     await page2.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
@@ -137,6 +138,7 @@ test.describe("API WA.players", () => {
     await expect(myvar).toBe(12);
 
     await page2.close();
+    await newBrowser.close();
   });
 
   const runPersistenceTest = async (
@@ -239,7 +241,7 @@ test.describe("API WA.players", () => {
       return;
     });
 
-    const newBrowser = await browser.browserType().launch();
+    const newBrowser = await browser.newContext();
     const page2 = await newBrowser.newPage();
 
     await page2.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
@@ -399,6 +401,7 @@ test.describe("API WA.players", () => {
       .toBe(undefined);
 
     await page2.close();
+    await newBrowser.close();
   };
 
   test("Test variable persistence for anonymous users.", async ({

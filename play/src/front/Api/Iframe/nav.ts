@@ -16,7 +16,7 @@ export class WorkadventureNavigationCommands extends IframeApiContribution<Worka
 
     /**
      * Opens the webpage at "url" in your browser, in a new tab.
-     * {@link https://workadventu.re/map-building/api-nav.md#opening-a-web-page-in-a-new-tab | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-nav.md#opening-a-web-page-in-a-new-tab | Website documentation}
      *
      * @param {string} url Url of the web page
      */
@@ -31,7 +31,7 @@ export class WorkadventureNavigationCommands extends IframeApiContribution<Worka
 
     /**
      * Opens the webpage at "url" in your browser in place of WorkAdventure. WorkAdventure will be completely unloaded.
-     * {@link https://workadventu.re/map-building/api-nav.md#opening-a-web-page-in-the-current-tab | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-nav.md#opening-a-web-page-in-the-current-tab | Website documentation}
      *
      * @param {string} url Url of the web page
      */
@@ -47,7 +47,7 @@ export class WorkadventureNavigationCommands extends IframeApiContribution<Worka
     /**
      * Load the map at url without unloading workadventure.
      * relative urls: "../subFolder/map.json[#start-layer-name]" global urls: "/_/global/domain/path/map.json[#start-layer-name]"
-     * {@link https://workadventu.re/map-building/api-nav.md#going-to-a-different-map-from-the-script | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-nav.md#going-to-a-different-map-from-the-script | Website documentation}
      *
      * @param {string} url Url of the web page
      */
@@ -62,7 +62,7 @@ export class WorkadventureNavigationCommands extends IframeApiContribution<Worka
 
     /**
      * Opens the webpage at "url" in an iFrame (on the right side of the screen) or close that iFrame.
-     * {@link https://workadventu.re/map-building/api-nav.md#openingclosing-web-page-in-co-websites | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-nav.md#openingclosing-web-page-in-co-websites | Website documentation}
      *
      * @param {string} url Url of the web page
      * @param {boolean|undefined} allowApi  Allows the webpage to use the "IFrame API" and execute script (it is equivalent to putting the openWebsiteAllowApi property in the map)
@@ -99,7 +99,7 @@ export class WorkadventureNavigationCommands extends IframeApiContribution<Worka
 
     /**
      * Get all opened co-websites with their ids and positions.
-     * {@link https://workadventu.re/map-building/api-nav.md#get-all-co-websites | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-nav.md#get-all-co-websites | Website documentation}
      *
      * @returns {CoWebsite[]} All Cowebsites
      */

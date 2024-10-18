@@ -18,6 +18,7 @@ import {
 import { z } from "zod";
 import { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
 import {
+    AreaData,
     ENTITIES_FOLDER_PATH_NO_PREFIX,
     ENTITY_COLLECTION_FILE,
     EntityPermissions,
@@ -43,7 +44,6 @@ import {
     DEBUG_MODE,
     ENABLE_MAP_EDITOR,
     ENABLE_OPENID,
-    MATRIX_PUBLIC_URI,
     MAX_PER_GROUP,
     POSITION_DELAY,
     PUBLIC_MAP_STORAGE_PREFIX,
@@ -149,23 +149,25 @@ import { hideBubbleConfirmationModal } from "../../Rules/StatusRules/statusChang
 import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/statusChanger";
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import { closeCoWebsite, getCoWebSite, openCoWebSite, openCoWebSiteWithoutSource } from "../../Chat/Utils";
-import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
-import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
 import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
-import { matrixSecurity } from "../../Chat/Connection/Matrix/MatrixSecurity";
 import { selectedRoom } from "../../Chat/Stores/ChatStore";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
 import { ProximitySpaceManager } from "../../WebRtc/ProximitySpaceManager";
 import { SpaceRegistryInterface } from "../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { WorldUserProvider } from "../../Chat/UserProvider/WorldUserProvider";
-import { MatrixUserProvider } from "../../Chat/UserProvider/MatrixUserProvider";
+import { ChatUserProvider } from "../../Chat/UserProvider/ChatUserProvider";
 import { UserProviderMerger } from "../../Chat/UserProviderMerger/UserProviderMerger";
 import { AdminUserProvider } from "../../Chat/UserProvider/AdminUserProvider";
 import { ExtensionModuleStatusSynchronization } from "../../Rules/StatusRules/ExtensionModuleStatusSynchronization";
-import { calendarEventsStore, isActivatedStore } from "../../Stores/CalendarStore";
+import { isActivatedStore as isCalendarActiveStore, calendarEventsStore } from "../../Stores/CalendarStore";
+import { isActivatedStore as isTodoListActiveStore, todoListsStore } from "../../Stores/TodoListStore";
 import { externalSvelteComponentStore } from "../../Stores/Utils/externalSvelteComponentStore";
 import { ExtensionModule, RoomMetadataType } from "../../ExternalModule/ExtensionModule";
 import { SpaceInterface } from "../../Space/SpaceInterface";
+import { UserProviderInterface } from "../../Chat/UserProvider/UserProviderInterface";
+import { faviconManager } from "../../WebRtc/FaviconManager";
+import { ScriptingOutputAudioStreamManager } from "../../WebRtc/AudioStream/ScriptingOutputAudioStreamManager";
+import { ScriptingInputAudioStreamManager } from "../../WebRtc/AudioStream/ScriptingInputAudioStreamManager";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -174,7 +176,6 @@ import { soundManager } from "./SoundManager";
 import { SharedVariablesManager } from "./SharedVariablesManager";
 import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
 import { DynamicAreaManager } from "./DynamicAreaManager";
-
 import { PlayerMovement } from "./PlayerMovement";
 import { PlayersPositionInterpolator } from "./PlayersPositionInterpolator";
 import { DirtyScene } from "./DirtyScene";
@@ -193,7 +194,6 @@ import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManager";
 import { DEPTH_BUBBLE_CHAT_SPRITE, DEPTH_WHITE_MASK } from "./DepthIndexes";
 import { ScriptingEventsManager } from "./ScriptingEventsManager";
-import { faviconManager } from "./../../WebRtc/FaviconManager";
 import { FollowManager } from "./FollowManager";
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
@@ -204,6 +204,7 @@ import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import Clamp = Phaser.Math.Clamp;
+import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -302,6 +303,8 @@ export class GameScene extends DirtyScene {
     private playerVariablesManager!: PlayerVariablesManager;
     private scriptingEventsManager!: ScriptingEventsManager;
     private followManager!: FollowManager;
+    private scriptingOutputAudioStreamManager: ScriptingOutputAudioStreamManager | undefined;
+    private scriptingInputAudioStreamManager: ScriptingInputAudioStreamManager | undefined;
     private proximitySpaceManager: ProximitySpaceManager | undefined;
     private objectsByType = new Map<string, ITiledMapObject[]>();
     private embeddedWebsiteManager!: EmbeddedWebsiteManager;
@@ -333,12 +336,16 @@ export class GameScene extends DirtyScene {
         this.currentCompanionTextureResolve = resolve;
         this.currentCompanionTextureReject = reject;
     });
-    public chatConnection!: ChatConnectionInterface;
     private _spaceRegistry: SpaceRegistryInterface | undefined;
     private allUserSpace: SpaceInterface | undefined;
     private _proximityChatRoom: ProximityChatRoom | undefined;
-    private _userProviderMerger: UserProviderMerger | undefined;
+    private _userProviderMergerDeferred: Deferred<UserProviderMerger> = new Deferred();
+    private matrixClientWrapper: MatrixClientWrapper | undefined;
     public extensionModule: ExtensionModule | undefined = undefined;
+    public landingAreas: AreaData[] = [];
+
+    // Add new attribut chat connection used for discord
+    public _chatConnection: ChatConnectionInterface | undefined;
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
@@ -746,6 +753,9 @@ export class GameScene extends DirtyScene {
 
         this.animatedTiles.init(this.Map);
         this.events.on("tileanimationupdate", () => (this.dirty = true));
+        if (localUserStore.getDisableAnimations()) {
+            this.animatedTiles.pause();
+        }
 
         this.initCirclesCanvas();
 
@@ -858,19 +868,28 @@ export class GameScene extends DirtyScene {
             ...scriptPromises,
             this.CurrentPlayer.getTextureLoadedPromise() as Promise<unknown>,
             this.gameMapFrontWrapper.initializedPromise.promise,
+            gameManager.getChatConnection(),
         ])
             .then(() => {
                 this.initUserPermissionsOnEntity();
                 this.hide(false);
+                gameSceneIsLoadedStore.set(true);
                 this.sceneReadyToStartDeferred.resolve();
                 this.initializeAreaManager();
+
+                const chatId = localUserStore.getChatId();
+                const email: string | null = localUserStore.getLocalUser()?.email || null;
+                const connection = this.connection;
+                if (email && chatId && connection) {
+                    connection.emitUpdateChatId(email, chatId);
+                    connection.emitPlayerChatID(chatId);
+                }
             })
-            .catch((e) =>
-                console.error(
-                    "Some scripts failed to load ot the connection failed to establish to WorkAdventure server",
-                    e
-                )
-            );
+            .catch((e: unknown) => {
+                console.error("Initialization failed", e);
+                Sentry.captureException(e);
+                errorScreenStore.setException(e);
+            });
 
         if (gameManager.currentStartedRoom.backgroundColor != undefined) {
             this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
@@ -995,6 +1014,8 @@ export class GameScene extends DirtyScene {
         if (this.allUserSpace) {
             this.spaceRegistry?.leaveSpace(this.allUserSpace);
         }
+
+        this.matrixClientWrapper?.stopClient();
         this.connection?.closeConnection();
         this.simplePeer?.closeAllConnections();
         this.simplePeer?.unregister();
@@ -1052,6 +1073,8 @@ export class GameScene extends DirtyScene {
         this.playersMovementEventDispatcher.cleanup();
         this.gameMapFrontWrapper?.close();
         this.followManager?.close();
+        this.scriptingOutputAudioStreamManager?.close();
+        this.scriptingInputAudioStreamManager?.close();
         this._spaceRegistry?.destroy();
 
         // We need to destroy all the entities
@@ -1080,6 +1103,7 @@ export class GameScene extends DirtyScene {
             clearTimeout(this.hideTimeout);
             this.hideTimeout = undefined;
         }
+        if (this.wamUrlFile) this.superLoad.jsonRemoveCacheByKey(this.wamUrlFile);
     }
 
     /**
@@ -1531,38 +1555,34 @@ export class GameScene extends DirtyScene {
                     }
                 }
 
-                //We need to add an env parameter to switch between chat services
-                const matrixClientWrapper = new MatrixClientWrapper(MATRIX_PUBLIC_URI ?? "", localUserStore);
-                const matrixClientPromise = matrixClientWrapper.initMatrixClient();
-
-                matrixClientPromise
-                    .then((matrixClient) => {
-                        matrixSecurity.updateMatrixClientStore(matrixClient);
-                    })
-                    .catch((e) => {
-                        console.error(e);
-                    });
-
                 this._spaceRegistry = new SpaceRegistry(this.connection);
-
                 this.allUserSpace = this._spaceRegistry.joinSpace(WORLD_SPACE_NAME);
-                this.chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
 
-                //init merger
+                gameManager
+                    .getChatConnection()
+                    .then((chatConnection) => {
+                        this._chatConnection = chatConnection;
+                        const connection = this.connection;
+                        const allUserSpace = this.allUserSpace;
 
-                const adminUserProvider = new AdminUserProvider(this.connection);
-                const matrixUserProvider = new MatrixUserProvider(matrixClientPromise);
-                const worldUserProvider = new WorldUserProvider(this.allUserSpace);
+                        const userProviders: UserProviderInterface[] = [];
+                        if (connection) {
+                            userProviders.push(new AdminUserProvider(connection));
+                        }
 
-                this._userProviderMerger = new UserProviderMerger([
-                    adminUserProvider,
-                    matrixUserProvider,
-                    worldUserProvider,
-                ]);
+                        userProviders.push(new ChatUserProvider(chatConnection));
 
-                const chatId = localUserStore.getChatId();
-                const email: string | null = localUserStore.getLocalUser()?.email || null;
-                if (email && chatId) this.connection.emitUpdateChatId(email, chatId);
+                        if (allUserSpace) {
+                            userProviders.push(new WorldUserProvider(allUserSpace));
+                        }
+
+                        this._userProviderMergerDeferred.resolve(new UserProviderMerger(userProviders));
+                    })
+                    .catch(() => {
+                        const errorMessage = "Failed to get chatConnection from gameManager";
+                        console.error(errorMessage);
+                        Sentry.captureMessage(errorMessage);
+                    });
 
                 this.initExtensionModule();
 
@@ -1740,6 +1760,9 @@ export class GameScene extends DirtyScene {
                         console.warn("Connection to peers not started!");
                     }
                 });*/
+                // Set up manager of audio streams received by the scripting API (useful for bots)
+                this.scriptingOutputAudioStreamManager = new ScriptingOutputAudioStreamManager(this.simplePeer);
+                this.scriptingInputAudioStreamManager = new ScriptingInputAudioStreamManager(this.simplePeer);
 
                 this._proximityChatRoom = new ProximityChatRoom(
                     this.connection.getUserId(),
@@ -1867,6 +1890,13 @@ export class GameScene extends DirtyScene {
                 const error = get(errorScreenStore);
                 if (error && error?.type === "reconnecting") errorScreenStore.delete();
                 //this.scene.stop(ReconnectingSceneName);
+
+                this.landingAreas =
+                    this.getGameMap().getGameMapAreas()?.getAreasOnPosition({
+                        x: this.CurrentPlayer.x,
+                        y: this.CurrentPlayer.y,
+                    }) || [];
+
                 this.gameMapFrontWrapper.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
                 // Init layer change listener
                 this.gameMapFrontWrapper.onEnterLayer((layers) => {
@@ -1895,6 +1925,18 @@ export class GameScene extends DirtyScene {
                     });
                 });
 
+                this.gameMapFrontWrapper.onEnterDynamicArea((areas) => {
+                    areas.forEach((area) => {
+                        iframeListener.sendEnterMapEditorAreaEvent(area.name);
+                    });
+                });
+
+                this.gameMapFrontWrapper.onLeaveDynamicArea((areas) => {
+                    areas.forEach((area) => {
+                        iframeListener.sendLeaveMapEditorAreaEvent(area.name);
+                    });
+                });
+
                 this.emoteManager = new EmoteManager(this, this.connection);
 
                 // Check WebRtc connection
@@ -1914,7 +1956,6 @@ export class GameScene extends DirtyScene {
                 this.tryMovePlayerWithMoveToUserParameter();
 
                 gameSceneStore.set(this);
-                gameSceneIsLoadedStore.set(true);
             })
             .catch((e) => console.error(e));
     }
@@ -1946,14 +1987,20 @@ export class GameScene extends DirtyScene {
                             externalModuleMessage: this.connection!.externalModuleMessage,
                             onExtensionModuleStatusChange: ExtensionModuleStatusSynchronization.onStatusChange,
                             calendarEventsStoreUpdate: calendarEventsStore.update,
+                            todoListStoreUpdate: todoListsStore.update,
                             openCoWebSite: openCoWebSiteWithoutSource,
                             closeCoWebsite,
                             getOauthRefreshToken: this.connection?.getOauthRefreshToken.bind(this.connection),
                             adminUrl: ADMIN_URL,
                             externalSvelteComponent: externalSvelteComponentStore,
+                            spaceRegistry: this.spaceRegistry,
+                            logoutCallback: () => {
+                                connectionManager.logout();
+                            },
                         });
 
-                        if (defaultExtensionModule.calendarSynchronised) isActivatedStore.set(true);
+                        if (defaultExtensionModule.calendarSynchronised) isCalendarActiveStore.set(true);
+                        if (defaultExtensionModule.todoListSynchronized) isTodoListActiveStore.set(true);
                         extensionModuleStore.add(defaultExtensionModule);
                     } catch (error) {
                         console.warn("Extension module initialization cancelled", error);
@@ -3271,8 +3318,14 @@ ${escapedMessage}
                 this.CurrentPlayer,
                 phaserLayer,
                 (
-                    object1: Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile,
-                    object2: Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile
+                    object1:
+                        | Phaser.Physics.Arcade.Body
+                        | Phaser.Tilemaps.Tile
+                        | Phaser.Types.Physics.Arcade.GameObjectWithBody,
+                    object2:
+                        | Phaser.Physics.Arcade.Body
+                        | Phaser.Tilemaps.Tile
+                        | Phaser.Types.Physics.Arcade.GameObjectWithBody
                 ) => {}
             );
             phaserLayer.setCollisionByProperty({ collides: true });
@@ -3741,10 +3794,7 @@ ${escapedMessage}
         return this._proximityChatRoom;
     }
 
-    get userProviderMerger(): UserProviderMerger {
-        if (!this._userProviderMerger) {
-            throw new Error("_userProviderMerger not yet initialized");
-        }
-        return this._userProviderMerger;
+    get userProviderMerger(): Promise<UserProviderMerger> {
+        return this._userProviderMergerDeferred.promise;
     }
 }

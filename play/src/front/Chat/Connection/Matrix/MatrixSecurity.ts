@@ -4,6 +4,8 @@ import { deriveKey } from "matrix-js-sdk/lib/crypto/key_passphrase";
 import { decodeRecoveryKey } from "matrix-js-sdk/lib/crypto/recoverykey";
 import { openModal } from "svelte-modals";
 import { writable } from "svelte/store";
+import * as Sentry from "@sentry/svelte";
+import { alreadyAskForInitCryptoConfiguration } from "../../Stores/ChatStore";
 import InteractiveAuthDialog from "./InteractiveAuthDialog.svelte";
 import CreateRecoveryKeyDialog from "./CreateRecoveryKeyDialog.svelte";
 
@@ -37,6 +39,8 @@ export class MatrixSecurity {
             return;
         }
 
+        alreadyAskForInitCryptoConfiguration.set(true);
+
         this.initializingEncryptionPromise = new Promise<void>((resolve, initializingEncryptionReject) => {
             (async () => {
                 const keyBackupInfo = await this.matrixClientStore?.getKeyBackupVersion();
@@ -54,9 +58,7 @@ export class MatrixSecurity {
                             });
                             if (!finished) {
                                 this.isEncryptionRequiredAndNotSet.set(true);
-                                return initializingEncryptionReject(
-                                    new Error("Cross-signing key upload auth canceled")
-                                );
+                                throw new Error("Cross-signing key upload auth canceled");
                             }
                         },
                         setupNewCrossSigning: keyBackupInfo === null,
@@ -70,7 +72,7 @@ export class MatrixSecurity {
                                         crypto,
                                         processCallback: (generatedKey: GeneratedSecretStorageKey | null) => {
                                             if (generatedKey === undefined) {
-                                                return reject(new Error("no generated secret storage key"));
+                                                return reject(new Error("no generated key storage"));
                                             }
                                             resolve(generatedKey);
                                         },
@@ -81,7 +83,7 @@ export class MatrixSecurity {
                             if (generatedKey === null) {
                                 this.isEncryptionRequiredAndNotSet.set(true);
                                 const createSecretStorageKeyError = new Error(
-                                    "createSecretStorageKey : no generated secret storage key"
+                                    "createSecretStorageKey : no generated key storage"
                                 );
                                 initializingEncryptionReject(createSecretStorageKeyError);
                                 return Promise.reject(createSecretStorageKeyError);
@@ -104,6 +106,7 @@ export class MatrixSecurity {
                 .bind(this)()
                 .catch((error) => {
                     console.error("initClientCryptoConfiguration error: ", error);
+                    Sentry.captureMessage(`initClientCryptoConfiguration error : ${error}`);
                     this.initializingEncryptionPromise = undefined;
                     initializingEncryptionReject(error);
                     return;
@@ -126,7 +129,7 @@ export class MatrixSecurity {
             } else if (recoveryKey) {
                 return decodeRecoveryKey(recoveryKey);
             }
-            throw new Error("Invalid input, passphrase or recoveryKey need to be provided");
+            throw new Error("Invalid input, recovery passphrase or recovery key need to be provided");
         };
     }
 
@@ -169,8 +172,52 @@ export class MatrixSecurity {
             await this.matrixClientStore.restoreKeyBackupWithSecretStorage(keyBackupInfo);
             return true;
         } catch (error) {
-            console.error("Unable to restoreKeyBackupWithCache : ", error);
+            console.error("Unable to restoreWithSecretStorage : ", error);
             return false;
+        }
+    }
+
+    public async setupNewKeyStorage() {
+        const crypto = this.matrixClientStore?.getCrypto();
+        if (!crypto) return;
+        try {
+            await crypto.bootstrapSecretStorage({
+                createSecretStorageKey: async () => {
+                    const generatedKey = await new Promise<GeneratedSecretStorageKey | null>((resolve, reject) => {
+                        this._openModal(CreateRecoveryKeyDialog, {
+                            crypto,
+                            processCallback: (generatedKey: GeneratedSecretStorageKey | null) => {
+                                if (generatedKey === undefined) {
+                                    return reject(new Error("no generated secret storage key"));
+                                }
+                                resolve(generatedKey);
+                            },
+                        });
+                    });
+
+                    if (generatedKey === null) {
+                        this.isEncryptionRequiredAndNotSet.set(true);
+                        const createSecretStorageKeyError = new Error(
+                            "createSecretStorageKey : no generated secret storage key"
+                        );
+                        return Promise.reject(createSecretStorageKeyError);
+                    }
+                    return Promise.resolve(generatedKey);
+                },
+                setupNewKeyBackup: true,
+                setupNewSecretStorage: true,
+            });
+
+            const keyBackupInfo = await this.matrixClientStore?.getKeyBackupVersion();
+
+            if (keyBackupInfo !== null && keyBackupInfo !== undefined) {
+                await this.restoreBackupMessages(keyBackupInfo);
+            }
+
+            alreadyAskForInitCryptoConfiguration.set(false);
+        } catch (error) {
+            console.error("Failed to reset KeybackUp");
+            Sentry.captureMessage(`Failed to reset key storage : ${error}`);
         }
     }
 }

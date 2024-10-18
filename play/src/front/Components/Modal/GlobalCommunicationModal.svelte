@@ -34,7 +34,8 @@
         requestedMegaphoneStore,
     } from "../../Stores/MegaphoneStore";
     import { userIsAdminStore } from "../../Stores/GameStore";
-    import { IconInfoCircle } from "@wa-icons";
+    import Tooltip from "../Util/Tooltip.svelte";
+    import { IconAlertTriangle, IconInfoCircle } from "@wa-icons";
 
     let mainModal: HTMLDivElement;
 
@@ -226,10 +227,12 @@
                             />
                             {$LL.megaphone.modal.textMessage.title()}
                         </h3>
-                        <p class="help-text">
-                            <IconInfoCircle font-size="18" />
-                            {$LL.megaphone.modal.audioMessage.noAccess()}
-                        </p>
+                        {#if !$userIsAdminStore}
+                            <p class="help-text">
+                                <IconInfoCircle font-size="18" />
+                                {$LL.megaphone.modal.audioMessage.noAccess()}
+                            </p>
+                        {/if}
                         <button class="light tw-max-w-fit" on:click={activateInputText} disabled={!$userIsAdminStore}>
                             {$LL.megaphone.modal.textMessage.button()}</button
                         >
@@ -246,10 +249,12 @@
                             />
                             {$LL.megaphone.modal.audioMessage.title()}
                         </h3>
-                        <p class="help-text">
-                            <IconInfoCircle font-size="18" />
-                            {$LL.megaphone.modal.audioMessage.noAccess()}
-                        </p>
+                        {#if !$userIsAdminStore}
+                            <p class="help-text">
+                                <IconInfoCircle font-size="18" />
+                                {$LL.megaphone.modal.audioMessage.noAccess()}
+                            </p>
+                        {/if}
                         <button class="light tw-max-w-fit" on:click={activateUploadAudio} disabled={!$userIsAdminStore}>
                             {$LL.megaphone.modal.audioMessage.button()}</button
                         >
@@ -440,12 +445,24 @@
                         </div>
                     </div>
                     <div class="tw-flex tw-flew-row tw-justify-center">
+                        {#if !$requestedCameraState && !$requestedMicrophoneState && !$requestedScreenSharingState}
+                            <span class="err tw-text-warning-900 tw-text-xs tw-italic tw-mt-1">
+                                <IconAlertTriangle font-size="12" />
+                                {$LL.warning.megaphoneNeeds()}
+                            </span>
+                        {/if}
+                    </div>
+                    <div class="tw-flex tw-flew-row tw-justify-center">
                         <button
                             class="light"
                             on:click={startLive}
                             disabled={!$requestedCameraState && !$requestedMicrophoneState}
-                            >{$LL.megaphone.modal.liveMessage.startMegaphone()}</button
                         >
+                            {#if !$requestedCameraState && !$requestedMicrophoneState && !$requestedScreenSharingState}
+                                <Tooltip text={$LL.warning.megaphoneNeeds()} />
+                            {/if}
+                            {$LL.megaphone.modal.liveMessage.startMegaphone()}
+                        </button>
                     </div>
                 </div>
             {/if}

@@ -1,10 +1,12 @@
-import { Subject } from "rxjs";
+import { Observable, Subject } from "rxjs";
 import type { JoinProximityMeetingEvent } from "../../Events/ProximityMeeting/JoinProximityMeetingEvent";
 import type { ParticipantProximityMeetingEvent } from "../../Events/ProximityMeeting/ParticipantProximityMeetingEvent";
 
-import { IframeApiContribution, queryWorkadventure } from "../IframeApiContribution";
+import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "../IframeApiContribution";
 import { RemotePlayer } from "../Players/RemotePlayer";
 import { apiCallback } from "../registeredCallbacks";
+import { AppendPCMDataEvent } from "../../Events/ProximityMeeting/AppendPCMDataEvent";
+import { AudioStream } from "./AudioStream";
 
 export class WorkadventureProximityMeetingCommands extends IframeApiContribution<WorkadventureProximityMeetingCommands> {
     private joinStream: Subject<RemotePlayer[]> | undefined;
@@ -13,6 +15,7 @@ export class WorkadventureProximityMeetingCommands extends IframeApiContribution
     private followedStream: Subject<RemotePlayer> | undefined;
     private unfollowedStream: Subject<RemotePlayer> | undefined;
     private leaveStream: Subject<void> | undefined;
+    private pcmDataStream: Subject<Float32Array> = new Subject();
 
     callbacks = [
         apiCallback({
@@ -51,11 +54,17 @@ export class WorkadventureProximityMeetingCommands extends IframeApiContribution
                 this.unfollowedStream?.next(new RemotePlayer(payloadData.user));
             },
         }),
+        apiCallback({
+            type: "appendPCMData",
+            callback: (payloadData: AppendPCMDataEvent) => {
+                this.pcmDataStream.next(payloadData.data);
+            },
+        }),
     ];
 
     /**
      * Detecting when the user enter on a meeting.
-     * {@link https://workadventu.re/map-building/api-player.md#detecting-when-the-user-entersleaves-a-meeting | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-player.md#detecting-when-the-user-entersleaves-a-meeting | Website documentation}
      *
      * @returns {Subject<RemotePlayer[]>} Observable who return the joined users
      */
@@ -68,7 +77,7 @@ export class WorkadventureProximityMeetingCommands extends IframeApiContribution
 
     /**
      * Detecting when a participant joined on the current meeting.
-     * {@link https://workadventu.re/map-building/api-player.md#detecting-when-a-participant-entersleaves-the-current-meeting | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-player.md#detecting-when-a-participant-entersleaves-the-current-meeting | Website documentation}
      *
      * @returns {Subject<RemotePlayer>} Observable who return the joined user
      */
@@ -81,7 +90,7 @@ export class WorkadventureProximityMeetingCommands extends IframeApiContribution
 
     /**
      * Detecting when a participant left on the current meeting.
-     * {@link https://workadventu.re/map-building/api-player.md#detecting-when-a-participant-entersleaves-the-current-meeting | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-player.md#detecting-when-a-participant-entersleaves-the-current-meeting | Website documentation}
      *
      * @returns {Subject<RemotePlayer>} Observable who return the left user
      */
@@ -113,6 +122,48 @@ export class WorkadventureProximityMeetingCommands extends IframeApiContribution
             data: {
                 url: url,
             },
+        });
+    }
+
+    /**
+     * Starts an audio stream played to all players in the current meeting.
+     * {@link https://docs.workadventu.re/developer/map-scripting/references/api-player/#audio-streams | Website documentation}
+     * @param {number} sampleRate - The sample rate of the audio stream expressed in Hertz.
+     */
+    async startAudioStream(sampleRate: number): Promise<AudioStream> {
+        // TODO: improve this to make sure the audio stream is correctly destroyed when the iframe is left.
+        await queryWorkadventure({
+            type: "startStreamInBubble",
+            data: {
+                sampleRate,
+            },
+        });
+        return new AudioStream();
+    }
+
+    /**
+     * Listen to the audio stream played sent by all players.
+     * The voice of all players in the bubble is merged in a single stream that is regularly sent to the callback.
+     * @param {number} sampleRate - The sample rate of the audio stream expressed in Hertz.
+     */
+    listenToAudioStream(sampleRate: number): Observable<Float32Array> {
+        return new Observable<Float32Array>((subscriber) => {
+            sendToWorkadventure({
+                type: "startListeningToStreamInBubble",
+                data: {
+                    sampleRate,
+                },
+            });
+
+            const subscription = this.pcmDataStream.subscribe(subscriber);
+
+            return () => {
+                subscription.unsubscribe();
+                sendToWorkadventure({
+                    type: "stopListeningToStreamInBubble",
+                    data: undefined,
+                });
+            };
         });
     }
 

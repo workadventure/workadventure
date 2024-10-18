@@ -21,7 +21,7 @@ test.describe('Scripting follow functions', () => {
 
         await Map.teleportToPosition(page, 32, 32);
 
-        const newBrowser = await browser.browserType().launch();
+        const newBrowser = await browser.newContext();
         const page2 = await newBrowser.newPage();
         await page2.goto(publicTestMapUrl("tests/E2E/empty.json", "scripting_follow"));
         await login(page2, "Bob", 3, "en-US", project.name === "mobilechromium");
@@ -77,6 +77,13 @@ test.describe('Scripting follow functions', () => {
             await WA.player.proximityMeeting.followMe();
         });
 
+        // The follow button is not displayed on mobile
+        if(project.name === "mobilechromium") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+
         const waitForUnfollowPromise = evaluateScript(page, async () => {
             return new Promise<void>((resolve) => {
                 WA.player.proximityMeeting.onUnfollowed().subscribe(() => {
@@ -85,15 +92,10 @@ test.describe('Scripting follow functions', () => {
             });
         });
 
-        // The follow button is not displayed on mobile
-        if(project.name === "mobilechromium") {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
-
         await page2.getByRole('button', { name: 'Unfollow' }).click();
 
         await waitForUnfollowPromise;
+        await page2.close();
+        await newBrowser.close();
     });
 });

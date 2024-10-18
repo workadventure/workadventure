@@ -275,9 +275,10 @@ export class IoSocketController {
                         lastCommandId,
                         version,
                         companionTextureId,
-                        chatID,
                         roomName,
                     } = query;
+
+                    const chatID = query.chatID ? query.chatID : undefined;
 
                     try {
                         if (version !== apiVersionHash) {
@@ -341,7 +342,6 @@ export class IoSocketController {
                             companionTexture: undefined,
                             messages: [],
                             userRoomToken: undefined,
-                            mucRooms: [],
                             activatedInviteUser: true,
                             canEdit: false,
                             world: "",
@@ -468,7 +468,6 @@ export class IoSocketController {
                             visitCardUrl: memberVisitCardUrl,
                             userRoomToken: memberUserRoomToken,
                             activatedInviteUser: userData.activatedInviteUser ?? undefined,
-                            mucRooms: userData.mucRooms || [],
                             applications: userData.applications,
                             canEdit: userData.canEdit ?? false,
                             spaceUser: SpaceUser.fromPartial({
@@ -505,6 +504,7 @@ export class IoSocketController {
                             spacesFilters: new Map<string, SpaceFilterMessage[]>(),
                             chatID,
                             world: userData.world,
+                            currentChatRoomArea: [],
                         };
 
                         /* This immediately calls open handler, you must not use res after this call */
@@ -780,7 +780,6 @@ export class IoSocketController {
                             message.message.updateSpaceMetadataMessage.spaceName = `${socket.getUserData().world}.${
                                 message.message.updateSpaceMetadataMessage.spaceName
                             }`;
-
                             await socketManager.handleUpdateSpaceMetadata(
                                 socket,
                                 message.message.updateSpaceMetadataMessage.spaceName,
@@ -804,9 +803,17 @@ export class IoSocketController {
                             break;
                         }
                         case "updateChatIdMessage": {
-                            socketManager.handleUpdateChatId(
+                            await socketManager.handleUpdateChatId(
+                                socket,
                                 message.message.updateChatIdMessage.email,
                                 message.message.updateChatIdMessage.chatId
+                            );
+                            break;
+                        }
+                        case "leaveChatRoomAreaMessage": {
+                            socketManager.handleLeaveChatRoomArea(
+                                socket,
+                                message.message.leaveChatRoomAreaMessage.roomID
                             );
                             break;
                         }
@@ -881,15 +888,17 @@ export class IoSocketController {
                                         this.sendAnswerMessage(socket, answerMessage);
                                         break;
                                     }
-                                    case "oauthRefreshTokenQuery": {
-                                        const oauthRefreshTokenAnswer =
-                                            await socketManager.handleOauthRefreshTokenQuery(
-                                                message.message.queryMessage.query.oauthRefreshTokenQuery
-                                            );
+                                    case "enterChatRoomAreaQuery": {
+                                        await socketManager.handleEnterChatRoomAreaQuery(
+                                            socket,
+                                            message.message.queryMessage.query.enterChatRoomAreaQuery.roomID
+                                        );
+
                                         answerMessage.answer = {
-                                            $case: "oauthRefreshTokenAnswer",
-                                            oauthRefreshTokenAnswer,
+                                            $case: "enterChatRoomAreaAnswer",
+                                            enterChatRoomAreaAnswer: {},
                                         };
+
                                         this.sendAnswerMessage(socket, answerMessage);
                                         break;
                                     }
@@ -1047,6 +1056,11 @@ export class IoSocketController {
                     socketData.disconnecting = true;
                     socketManager.leaveRoom(socket);
                     socketManager.leaveSpaces(socket);
+                    socketManager.leaveChatRoomArea(socket).catch((error) => {
+                        console.error(error);
+                        Sentry.captureException(error);
+                    });
+                    socketData.currentChatRoomArea = [];
                 } catch (e) {
                     Sentry.captureException(`An error occurred on "disconnect" ${e}`);
                     console.error(e);

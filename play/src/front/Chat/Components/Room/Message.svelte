@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { ComponentType } from "svelte";
+    import { ComponentType, createEventDispatcher } from "svelte";
     import { MapStore } from "@workadventure/store-utils";
     import { ChatMessage, ChatMessageReaction, ChatMessageType } from "../../Connection/ChatConnection";
     import LL, { locale } from "../../../../i18n/i18n-svelte";
@@ -15,14 +15,22 @@
     import MessageReactions from "./MessageReactions.svelte";
     import MessageIncoming from "./Message/MessageIncoming.svelte";
     import MessageOutcoming from "./Message/MessageOutcoming.svelte";
-    import MessageProximity from "./Message/MessageProximity.svelte";
     import { IconCornerDownRight, IconTrash } from "@wa-icons";
 
     export let message: ChatMessage;
     export let reactions: MapStore<string, ChatMessageReaction> | undefined;
+    export let replyDepth = 0;
+
+    const dispatch = createEventDispatcher();
 
     const { id, sender, isMyMessage, date, content, quotedMessage, isQuotedMessage, type, isDeleted, isModified } =
         message;
+
+    const updateMessageBody = () => {
+        dispatch("updateMessageBody", {
+            id: message.id,
+        });
+    };
 
     const messageFromSystem = type === "incoming" || type === "outcoming";
 
@@ -34,15 +42,15 @@
         video: MessageVideoFile as ComponentType,
         incoming: MessageIncoming as ComponentType,
         outcoming: MessageOutcoming as ComponentType,
-        proximity: MessageProximity as ComponentType,
+        proximity: MessageText as ComponentType,
     };
 </script>
 
 <div
-    id="message"
+    tabindex="-1"
     class={`${isMyMessage && "tw-self-end tw-flex-row-reverse tw-relative"} ${
         messageFromSystem && "tw-justify-center"
-    } tw-select-text`}
+    } tw-select-text focus:tw-outline-none focus:tw-shadow-none block-user-action messageContainer`}
 >
     <div class={`container-grid ${isMyMessage ? "tw-justify-end grid-container-inverted" : "tw-justify-start"}`}>
         <div
@@ -77,7 +85,7 @@
                     {$LL.chat.messageDeleted()}
                 </p>
             {:else}
-                <svelte:component this={messageType[type]} {content} />
+                <svelte:component this={messageType[type]} on:updateMessageBody={updateMessageBody} {content} />
                 {#if $isModified}
                     <p class="tw-text-gray-300 tw-text-xxxs tw-p-0 tw-m-0">({$LL.chat.messageEdited()})</p>
                 {/if}
@@ -89,10 +97,10 @@
                 {/if}
             {/if}
         </div>
-        {#if quotedMessage}
+        {#if quotedMessage && replyDepth < 2}
             <div class="response">
                 <IconCornerDownRight font-size="24" />
-                <svelte:self message={quotedMessage} />
+                <svelte:self replyDepth={replyDepth + 1} message={quotedMessage} />
             </div>
         {/if}
     </div>
@@ -106,13 +114,13 @@
 </div>
 
 <style>
-    #message {
+    .messageContainer {
         display: flex;
         align-items: flex-start;
         position: relative;
     }
 
-    #message:hover .options {
+    .messageContainer:hover .options {
         display: flex;
         flex-direction: row;
         gap: 2px;

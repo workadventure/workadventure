@@ -4,8 +4,11 @@
     import { ChatUser } from "../../Connection/ChatConnection";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { chatSearchBarValue, shownRoomListStore } from "../../Stores/ChatStore";
+    import { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
     import UserList from "./UserList.svelte";
     import { IconChevronUp } from "@wa-icons";
+
+    export let userProviderMerger: UserProviderMerger;
 
     const USERS_BY_ROOM_LIMITATION = 200;
 
@@ -13,7 +16,7 @@
         if ($shownRoomListStore === "") shownRoomListStore.set($LL.chat.userList.isHere());
     });
 
-    $: usersByRoom = gameManager.getCurrentGameScene().userProviderMerger.usersByRoomStore;
+    $: usersByRoom = userProviderMerger.usersByRoomStore;
 
     $: roomsWithUsers = Array.from($usersByRoom.entries())
         .reduce((roomsWithUsersAcc, [currentPlayUri, currentRoomWithUsers]) => {
@@ -51,12 +54,14 @@
         });
 </script>
 
-<div class="tw-flex tw-flex-col tw-overflow-hidden">
+<div class="tw-flex tw-flex-col tw-overflow-auto">
     {#each roomsWithUsers as [roomName, userInRoom] (roomName)}
         <div
-            class="tw-overflow-hidden users tw-flex tw-flex-col tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple"
+            class=" users tw-flex tw-flex-col tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple tw-shrink-0"
         >
-            <div class="tw-px-4 tw-py-3 tw-flex tw-items-center tw-flex-0">
+            <div
+                class="tw-px-4 tw-py-3 tw-flex tw-items-center tw-flex-0 tw-sticky tw-top-0 tw-z-50 tw-bg-contrast/90  "
+            >
                 <span
                     class="{roomName !== $LL.chat.userList.disconnected()
                         ? 'tw-bg-light-blue'

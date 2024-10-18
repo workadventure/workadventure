@@ -1,6 +1,6 @@
 import { AvailabilityStatus } from "@workadventure/messages";
 import { derived, Readable, writable } from "svelte/store";
-import { UserProvideInterface } from "../UserProvider/UserProvideInterface";
+import { UserProviderInterface } from "../UserProvider/UserProviderInterface";
 import { chatId, ChatUser, PartialChatUser } from "../Connection/ChatConnection";
 
 /**
@@ -19,7 +19,7 @@ export class UserProviderMerger {
         >
     >;
 
-    constructor(private userProviders: UserProvideInterface[]) {
+    constructor(private userProviders: UserProviderInterface[]) {
         this.usersByRoomStore = derived(
             this.userProviders.map((up) => up.users),
             (users) => {
@@ -28,9 +28,9 @@ export class UserProviderMerger {
                 // Step one: sort users by chatId
                 for (const usersList of users) {
                     for (const user of usersList) {
-                        const chatUserList = usersByChatId.get(user.chatId);
+                        const chatUserList = usersByChatId.get(user.chatId ?? user.uuid);
                         if (!chatUserList) {
-                            usersByChatId.set(user.chatId, [user]);
+                            usersByChatId.set(user.chatId ?? user.uuid, [user]);
                         } else {
                             chatUserList.push(user);
                         }
@@ -58,7 +58,7 @@ export class UserProviderMerger {
                     });
 
                     const defaultUser = {
-                        chatId: "",
+                        chatId: undefined,
                         username: "",
                         avatarUrl: undefined,
                         roomName: undefined,

@@ -1,8 +1,11 @@
+import fs from "fs";
 import { v4 } from "uuid";
 import { MeRequest, MeResponse, RegisterData } from "@workadventure/messages";
 import { z } from "zod";
 import * as Sentry from "@sentry/node";
 import { JsonWebTokenError } from "jsonwebtoken";
+import Mustache from "mustache";
+import type { Server } from "hyper-express";
 import { AuthTokenData, jwtTokenManager } from "../services/JWTTokenManager";
 import { openIDClient } from "../services/OpenIDClient";
 import { DISABLE_ANONYMOUS, FRONT_URL, MATRIX_PUBLIC_URI, PUSHER_URL } from "../enums/EnvironmentVariable";
@@ -11,9 +14,47 @@ import { validateQuery } from "../services/QueryValidator";
 import { VerifyDomainService } from "../services/verifyDomain/VerifyDomainService";
 import { matrixProvider } from "../services/MatrixProvider";
 import { BaseHttpController } from "./BaseHttpController";
-import config from '../enums/config';
+import config from "../enums/config";
 
 export class AuthenticateController extends BaseHttpController {
+    private readonly redirectToMatrixFile: string;
+    private readonly redirectToPlayFile: string;
+    constructor(app: Server) {
+        super(app);
+
+        let redirectToMatrixPath: string;
+        if (fs.existsSync("dist/public/redirectToMatrix.html")) {
+            // In prod mode
+            redirectToMatrixPath = "dist/public/redirectToMatrix.html";
+        } else if (fs.existsSync("redirectToMatrix.html")) {
+            // In dev mode
+            redirectToMatrixPath = "redirectToMatrix.html";
+        } else {
+            throw new Error("Could not find redirectToMatrix.html file");
+        }
+
+        this.redirectToMatrixFile = fs.readFileSync(redirectToMatrixPath, "utf8");
+
+        // Pre-parse the file for speed (and validation)
+        Mustache.parse(this.redirectToMatrixFile);
+
+        let redirectToPlayPath: string;
+        if (fs.existsSync("dist/public/redirectToPlay.html")) {
+            // In prod mode
+            redirectToPlayPath = "dist/public/redirectToPlay.html";
+        } else if (fs.existsSync("redirectToPlay.html")) {
+            // In dev mode
+            redirectToPlayPath = "redirectToPlay.html";
+        } else {
+            throw new Error("Could not find redirectToPlay.html file");
+        }
+
+        this.redirectToPlayFile = fs.readFileSync(redirectToPlayPath, "utf8");
+
+        // Pre-parse the file for speed (and validation)
+        Mustache.parse(this.redirectToPlayFile);
+    }
+
     routes(): void {
         this.openIDLogin();
         this.me();
@@ -49,11 +90,6 @@ export class AuthenticateController extends BaseHttpController {
          *        description: "todo"
          *        required: false
          *        type: "string"
-         *      - name: "redirect"
-         *        in: "query"
-         *        description: "todo"
-         *        required: false
-         *        type: "string"
          *     responses:
          *       302:
          *         description: Redirects the user to the OpenID login screen
@@ -66,7 +102,6 @@ export class AuthenticateController extends BaseHttpController {
                 res,
                 z.object({
                     playUri: z.string(),
-                    redirect: z.string().optional(),
                 })
             );
             if (query === undefined) {
@@ -84,7 +119,7 @@ export class AuthenticateController extends BaseHttpController {
                 return;
             }
 
-            const loginUri = await openIDClient.authorizationUrl(res, query.redirect, query.playUri, req);
+            const loginUri = await openIDClient.authorizationUrl(res, query.playUri, req);
             res.atomic(() => {
                 res.cookie("playUri", query.playUri, undefined, {
                     httpOnly: true, // dont let browser javascript access cookie ever
@@ -193,7 +228,7 @@ export class AuthenticateController extends BaseHttpController {
                             authToken: token,
                             locale: authTokenData?.locale,
                             matrixUserId: authTokenData?.matrixUserId,
-                            matrixServerUrl: MATRIX_PUBLIC_URI,
+                            matrixServerUrl: (resCheckTokenAuth.matrix_url as string | undefined) ?? MATRIX_PUBLIC_URI,
                             // TODO: replace ... with each property
                             ...resUserData,
                             ...resCheckTokenAuth,
@@ -297,14 +332,16 @@ export class AuthenticateController extends BaseHttpController {
                 const matrixRedirectUrl = new URL(redirectPath, matrixPublicUri);
                 matrixRedirectUrl.searchParams.append("redirectUrl", matrixCallbackUrl);
 
-                res.atomic(() => {
-                    // Let's save temporarily the auth token temporarily in a cookie to get it back when we are redirected by the Matrix server
-                    res.cookie("authToken", authToken, undefined, {
-                        httpOnly: true, // dont let browser javascript access cookie ever
-                        secure: req.secure, // only use cookie over https
-                    });
-                    res.redirect(matrixRedirectUrl.toString());
+                // Note: the authToken cannot be saved in a cookie because sometimes, it can be pretty large (>4kB)
+                // Therefore, we use localStorage to store it. So we need to render an HTML page with a script that will
+                // save the token in localStorage
+                const html = Mustache.render(this.redirectToMatrixFile, {
+                    authToken,
+                    matrixRedirectUrl: matrixRedirectUrl.toString(),
                 });
+
+                res.send(html);
+
                 return;
             }
 
@@ -338,10 +375,6 @@ export class AuthenticateController extends BaseHttpController {
             if (!playUri) {
                 throw new Error("Missing playUri in cookies");
             }
-            const authToken = req.cookies.authToken;
-            if (!authToken) {
-                throw new Error("Missing authToken in cookies");
-            }
 
             const query = validateQuery(req, res, z.object({ loginToken: z.string() }));
             if (query === undefined) {
@@ -353,9 +386,11 @@ export class AuthenticateController extends BaseHttpController {
                 res.clearCookie("authToken");
                 const playUri = new URL(req.cookies.playUri);
                 playUri.searchParams.append("matrixLoginToken", query.loginToken);
-                playUri.searchParams.append("token", authToken);
 
-                res.redirect(playUri.toString());
+                const html = Mustache.render(this.redirectToPlayFile, {
+                    playUri: playUri.toString(),
+                });
+                res.send(html);
             });
             return;
         });
@@ -507,6 +542,11 @@ export class AuthenticateController extends BaseHttpController {
      *      - name: "token"
      *        in: "query"
      *        description: "A JWT authentication token ???"
+     *        required: true
+     *        type: "string"
+     *      - name: "playUri"
+     *        in: "query"
+     *        description: "Room URL of the current virtual place"
      *        required: true
      *        type: "string"
      *     responses:
@@ -676,7 +716,6 @@ export class AuthenticateController extends BaseHttpController {
          */
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/third-party-login/login/:provider", async (req, res) => {
-
             return;
         });
     }

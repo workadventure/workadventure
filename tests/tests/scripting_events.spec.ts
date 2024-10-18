@@ -51,7 +51,7 @@ test.describe('Scripting API Events', () => {
         expect(eventTriggered).toBeTruthy();
 
         // 2. Connect 2 users and check that the events are triggered on the other user (using broadcast events)
-        const newBrowser = await browser.browserType().launch();
+        const newBrowser = await browser.newContext();
         const page2 = await newBrowser.newPage();
 
         await page2.goto(
@@ -163,5 +163,6 @@ test.describe('Scripting API Events', () => {
         expect(await result.text()).toEqual("ok");
 
         await expect.poll(() => gotExpectedGlobalNotification).toBe(true);
+        await page2.close();
     });
 });

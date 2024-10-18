@@ -91,7 +91,7 @@ export class GameMapFrontWrapper {
      */
     private areasCollisionLayer: Phaser.Tilemaps.TilemapLayer;
 
-    private perLayerCollisionGridCache: Map<number, (0 | 2 | 1)[][]> = new Map<number, (0 | 2 | 1)[][]>();
+    private perLayerCollisionGridCache: Map<number, (0 | 1 | 2 | 3)[][]> = new Map<number, (0 | 1 | 2 | 3)[][]>();
 
     private lastProperties = new Map<string, string | boolean | number>();
     private propertiesChangeCallbacks = new Map<string, Array<PropertyChangeCallback>>();
@@ -105,7 +105,7 @@ export class GameMapFrontWrapper {
     private enterDynamicAreaCallbacks = Array<DynamicAreaChangeCallback>();
     private leaveDynamicAreaCallbacks = Array<DynamicAreaChangeCallback>();
 
-    public areasManager!: AreasManager;
+    public areasManager: AreasManager | undefined;
 
     /**
      * Firing on map change, containing newest collision grid array
@@ -260,8 +260,10 @@ export class GameMapFrontWrapper {
             }
         }
 
-        for (const area of this.areasManager.getCollidingAreas()) {
-            this.registerCollisionArea(area);
+        if (this.areasManager) {
+            for (const area of this.areasManager.getCollidingAreas()) {
+                this.registerCollisionArea(area);
+            }
         }
 
         this.updateCollisionGrid(this.areasCollisionLayer, false);
@@ -269,11 +271,10 @@ export class GameMapFrontWrapper {
 
     public initializeAreaManager(userConnectedTags: string[], userCanEdit: boolean) {
         const gameMapAreas = this.getGameMap().getGameMapAreas();
+        // If gameMapAreas is undefined, we are on a public map
         if (gameMapAreas !== undefined) {
             this.areasManager = new AreasManager(this.scene, gameMapAreas, userConnectedTags, userCanEdit);
             gameMapAreas.triggerAreasChange(undefined, this.position);
-        } else {
-            console.error("Unable to load AreasManager because gameMapAreas is undefined");
         }
         // Once we have the tags, we can compute the colliding layer again
         this.recomputeAreasCollisionGrid();
@@ -398,6 +399,10 @@ export class GameMapFrontWrapper {
                     for (let x = 0; x < map.width; x += 1) {
                         // currently no case where we can make tile non-collidable with collidable object beneath, skip position
                         if (grid[y][x] === PathTileType.Exit && cachedLayer[y][x] === PathTileType.Collider) {
+                            grid[y][x] = cachedLayer[y][x];
+                            continue;
+                        }
+                        if (grid[y][x] === PathTileType.Start && cachedLayer[y][x] === PathTileType.Collider) {
                             grid[y][x] = cachedLayer[y][x];
                             continue;
                         }
@@ -874,6 +879,10 @@ export class GameMapFrontWrapper {
         if (this.isPlayerInsideAreaByCoordinates(areaData, this.position)) {
             this.triggerSpecificAreaOnEnter(areaData);
         }
+
+        if (!this.areasManager) {
+            throw new Error("AreasManager is not initialized. Are you on a public map?");
+        }
         this.areasManager.addArea(areaData);
     }
 
@@ -913,6 +922,9 @@ export class GameMapFrontWrapper {
             this.triggerSpecificAreaOnEnter(area);
             return;
         }
+        if (!this.areasManager) {
+            throw new Error("AreasManager is not initialized. Are you on a public map?");
+        }
         this.areasManager.updateArea(newConfig);
     }
 
@@ -924,6 +936,9 @@ export class GameMapFrontWrapper {
 
         if (this.isPlayerInsideAreaByCoordinates(areaData, this.position)) {
             this.triggerSpecificAreaOnLeave(areaData);
+        }
+        if (!this.areasManager) {
+            throw new Error("AreasManager is not initialized. Are you on a public map?");
         }
         this.areasManager.removeArea(areaData.id);
     }
@@ -1139,14 +1154,16 @@ export class GameMapFrontWrapper {
         }
     }
 
-    private getLayerCollisionGrid(layer: TilemapLayer): (1 | 2 | 0)[][] {
+    private getLayerCollisionGrid(layer: TilemapLayer): (1 | 2 | 3 | 0)[][] {
         let isExitLayer = false;
+        const isStartLayer = layer.layer.name === "start";
         for (const property of layer.layer.properties as { [key: string]: string | number | boolean }[]) {
             if (property.name && property.name === "exitUrl") {
                 isExitLayer = true;
-                break;
+                console.log("R1");
             }
         }
+
         return layer.layer.data.map((row) =>
             row.map((tile) =>
                 tile.properties?.[GameMapProperties.COLLIDES]
@@ -1155,6 +1172,10 @@ export class GameMapFrontWrapper {
                       tile.properties?.[GameMapProperties.EXIT_URL] ||
                       tile.properties?.[GameMapProperties.EXIT_SCENE_URL]
                     ? 2
+                    : (isStartLayer && tile.index !== -1) ||
+                      tile.properties?.[GameMapProperties.START] ||
+                      tile.properties?.[GameMapProperties.START_LAYER]
+                    ? 3
                     : 0
             )
         );

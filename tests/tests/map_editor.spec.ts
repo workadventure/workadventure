@@ -52,7 +52,7 @@ test.describe("Map editor @oidc", () => {
         await Map.teleportToPosition(page, 5 * 32, 5 * 32);
 
         // Second browser
-        const newBrowser = await browser.browserType().launch();
+        const newBrowser = await browser.newContext();
         const page2 = await newBrowser.newPage();
         await page2.goto(Map.url("empty"));
         await page2.evaluate(() => localStorage.setItem("debug", "*"));
@@ -110,6 +110,7 @@ test.describe("Map editor @oidc", () => {
         await Menu.toggleMegaphoneButton(page);
 
         await page2.close();
+        await newBrowser.close();
 
         // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
     });
@@ -139,7 +140,7 @@ test.describe("Map editor @oidc", () => {
         });
 
         // Second browser
-        const newBrowser = await browser.browserType().launch();
+        const newBrowser = await browser.newContext();
         const page2 = await newBrowser.newPage();
         await page2.goto(Map.url("empty"));
 
@@ -165,6 +166,9 @@ test.describe("Map editor @oidc", () => {
         await expect(page2.locator(".cameras-container .other-cameras .jitsi-video")).toBeVisible({
             timeout: 20_000,
         });
+
+        await page2.close();
+        await newBrowser.close();
     });
 
     test("Successfully set start area in the map editor", async ({page, request}, {project}) => {
@@ -269,7 +273,7 @@ test.describe("Map editor @oidc", () => {
         await page
             .getByPlaceholder("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit")
             .first()
-            .fill("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit");
+            .fill("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit",{timeout: 20_000});
 
         // add property Google Sheets
         await AreaEditor.addProperty(page, "Open Google Sheets");
@@ -277,7 +281,7 @@ test.describe("Map editor @oidc", () => {
         await page
             .getByPlaceholder("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit")
             .first()
-            .fill("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit");
+            .fill("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit",{timeout: 20_000});
 
         // add property Google Slides
         await AreaEditor.addProperty(page, "Open Google Slides");
@@ -285,7 +289,7 @@ test.describe("Map editor @oidc", () => {
         await page
             .getByPlaceholder("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit")
             .first()
-            .fill("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit");
+            .fill("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit",{timeout: 20_000});
 
         // add property Google Slides
         await AreaEditor.addProperty(page, "Open Google Drive");
@@ -293,7 +297,7 @@ test.describe("Map editor @oidc", () => {
         await page
             .getByPlaceholder("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview")
             .first()
-            .fill("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview");
+            .fill("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview",{timeout: 20_000});
 
         await Menu.closeMapEditor(page);
 
@@ -441,13 +445,14 @@ test.describe("Map editor @oidc", () => {
         await Map.teleportToPosition(page, 0, 0);
 
         // Second browser
-        const newBrowser = await browser.browserType().launch();
+        const newBrowser = await browser.newContext();
         const page2 = await newBrowser.newPage();
         await page2.goto(Map.url("empty"));
         await login(page2, "test2", 3, "en-US", false);
         await oidcAdminTagLogin(page2, false);
 
         // open map editor
+        await page.bringToFront();
         await page.getByRole("button", {name: "toggle-map-editor"}).click();
         await MapEditor.openEntityEditor(page);
 
@@ -455,7 +460,7 @@ test.describe("Map editor @oidc", () => {
         await EntityEditor.uploadTestAsset(page);
 
         // Select uploaded entity and move it to the map
-        await EntityEditor.selectEntity(page, 0, EntityEditor.getTestAssetName(), EntityEditor.getTestAssetName());
+        await EntityEditor.selectEntity(page, 0, EntityEditor.getTestAssetName());
         await EntityEditor.moveAndClick(page, 6 * 32, 6 * 32);
 
         // Add open link interaction on uploaded asset
@@ -476,6 +481,9 @@ test.describe("Map editor @oidc", () => {
         // check if the popup with application is opened on both pages
         await expect(page.locator(".actions-menu .actions button").nth(0)).toContainText("Open Link");
         await expect(page2.locator(".actions-menu .actions button").nth(0)).toContainText("Open Link");
+
+        await page2.close();
+        await newBrowser.close();
     });
 
     test("Successfully upload and edit asset name", async ({page, browser, request}, {project}) => {
@@ -489,7 +497,7 @@ test.describe("Map editor @oidc", () => {
         await Map.teleportToPosition(page, 0, 0);
 
         // Second browser
-        const newBrowser = await browser.browserType().launch();
+        const newBrowser = await browser.newContext();
         const page2 = await newBrowser.newPage();
         await page2.goto(Map.url("empty"));
         await login(page2, "test2", 3, "en-US", false);
@@ -510,6 +518,8 @@ test.describe("Map editor @oidc", () => {
         const newEntityName = "My Entity";
         await page.getByTestId("name").fill(newEntityName);
         await EntityEditor.applyEntityModifications(page);
+        // Clear entity selection
+        await page.getByTestId("clearEntitySelection").click();
 
         // Search uploaded entity on both pages
         const uploadedEntityLocator = await EntityEditor.searchEntity(page, newEntityName);
@@ -522,6 +532,9 @@ test.describe("Map editor @oidc", () => {
         // Expect inner html in string to contain the new entity name
         expect(uploadedEntityElement).toContain(newEntityName);
         expect(uploadedEntityElement2).toContain(newEntityName);
+
+        await page2.close();
+        await newBrowser.close();
     });
 
     test("Successfully upload and remove custom entity", async ({page, browser, request}, {project}) => {
@@ -535,7 +548,7 @@ test.describe("Map editor @oidc", () => {
         await Map.teleportToPosition(page, 0, 0);
 
         // Second browser
-        const newBrowser = await browser.browserType().launch();
+        const newBrowser = await browser.newContext();
         const page2 = await newBrowser.newPage();
         await page2.goto(Map.url("empty"));
         await login(page2, "test2", 3, "en-US", false);
@@ -562,6 +575,9 @@ test.describe("Map editor @oidc", () => {
         // Expect both pages to have no entities
         await expect(page.getByTestId("entity-item")).toHaveCount(0);
         await expect(page2.getByTestId("entity-item")).toHaveCount(0);
+
+        await page2.close();
+        await newBrowser.close();
     });
 
     test("Successfully set searchable processus for entity and zone", async ({page, browser, request}, {project}) => {
@@ -634,7 +650,7 @@ test.describe("Map editor @oidc", () => {
         await Map.teleportToPosition(page, 5 * 32, 5 * 32);
 
         // Second browser
-        const newBrowser = await browser.browserType().launch();
+        const newBrowser = await browser.newContext();
         const page2 = await newBrowser.newPage();
         await page2.goto(Map.url("empty"));
         await page2.evaluate(() => localStorage.setItem("debug", "*"));
@@ -676,6 +692,7 @@ test.describe("Map editor @oidc", () => {
         // TODO : change to use the global message feature for user through megaphon settings rights
 
         await page2.close();
+        await newBrowser.close();
         await page.close();
         // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
     });

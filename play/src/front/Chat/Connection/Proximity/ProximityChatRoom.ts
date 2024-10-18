@@ -11,6 +11,7 @@ import {
     ChatMessageReaction,
     ChatMessageType,
     ChatRoom,
+    ChatRoomMember,
     ChatRoomMembership,
     ChatUser,
 } from "../ChatConnection";
@@ -25,7 +26,8 @@ import { mapExtendedSpaceUserToChatUser } from "../../UserProvider/ChatUserMappe
 import { SimplePeer } from "../../../WebRtc/SimplePeer";
 import { bindMuteEventsToSpace } from "../../../Space/Utils/BindMuteEvents";
 import { gameManager } from "../../../Phaser/Game/GameManager";
-import { availabilityStatusStore, mediaStreamConstraintsStore } from "../../../Stores/MediaStore";
+import { availabilityStatusStore, requestedCameraState, requestedMicrophoneState } from "../../../Stores/MediaStore";
+import { localUserStore } from "../../../Connection/LocalUserStore";
 
 export class ProximityChatMessage implements ChatMessage {
     isQuotedMessage = undefined;
@@ -65,6 +67,7 @@ export class ProximityChatRoom implements ChatRoom {
     messageReactions: MapStore<string, MapStore<string, ChatMessageReaction>> = new MapStore();
     myMembership: ChatRoomMembership = "member";
     membersId: string[] = [];
+    members: ChatRoomMember[] = [];
     hasPreviousMessage = writable(false);
     isEncrypted = writable(false);
     typingMembers: Writable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
@@ -77,6 +80,9 @@ export class ProximityChatRoom implements ChatRoom {
     private spaceWatcherUserJoinedObserver: Subscription | undefined;
     private spaceWatcherUserLeftObserver: Subscription | undefined;
     private newChatMessageWritingStatusStreamUnsubscriber: Subscription;
+    areNotificationsMuted = writable(false);
+    isRoomFolder = false;
+    lastMessageTimestamp = 0;
 
     private unknownUser = {
         chatId: "0",
@@ -96,6 +102,7 @@ export class ProximityChatRoom implements ChatRoom {
         private simplePeer: SimplePeer,
         iframeListenerInstance: Pick<typeof iframeListener, "newChatMessageWritingStatusStream">,
         private playNewMessageSound = () => {
+            if (!localUserStore.getChatSounds() || get(this.areNotificationsMuted)) return;
             gameManager.getCurrentGameScene().playSound("new-message");
         }
     ) {
@@ -113,6 +120,15 @@ export class ProximityChatRoom implements ChatRoom {
                     });
                 }
             });
+    }
+
+    muteNotification(): Promise<void> {
+        this.areNotificationsMuted.set(true);
+        return Promise.resolve();
+    }
+    unmuteNotification(): Promise<void> {
+        this.areNotificationsMuted.set(false);
+        return Promise.resolve();
     }
 
     sendMessage(message: string, action: ChatMessageType = "proximity", broadcast = true): void {
@@ -140,6 +156,8 @@ export class ProximityChatRoom implements ChatRoom {
 
         // Add message to the list
         this.messages.push(newMessage);
+
+        this.lastMessageTimestamp = newMessage.date.getTime();
 
         // Use the room connection to send the message to other users of the space
         if (broadcast) {
@@ -175,6 +193,7 @@ export class ProximityChatRoom implements ChatRoom {
 
     private addOutcomingUser(spaceUser: SpaceUserExtended): void {
         this.sendMessage(get(LL).chat.timeLine.outcoming({ userName: spaceUser.name }), "outcoming", false);
+        this.removeTypingUserbyChatID(spaceUser.chatID ?? "");
 
         /*this._connection.connectedUsers.update((users) => {
             users.delete(userId);
@@ -217,6 +236,8 @@ export class ProximityChatRoom implements ChatRoom {
         // Add message to the list
         this.messages.push(newMessage);
 
+        this.lastMessageTimestamp = newMessage.date.getTime();
+
         this.playNewMessageSound();
 
         if (get(selectedRoom) !== this) {
@@ -236,10 +257,10 @@ export class ProximityChatRoom implements ChatRoom {
     setTimelineAsRead(): void {
         console.info("setTimelineAsRead => Method not implemented yet!");
     }
-    leaveRoom(): void {
+    leaveRoom(): Promise<void> {
         throw new Error("leaveRoom => Method not implemented.");
     }
-    joinRoom(): void {
+    joinRoom(): Promise<void> {
         throw new Error("joinRoom => Method not implemented.");
     }
     loadMorePreviousMessages(): Promise<void> {
@@ -287,7 +308,6 @@ export class ProximityChatRoom implements ChatRoom {
                 isTyping: true,
             },
         });
-
         return Promise.resolve({});
     }
     stopTyping(): Promise<object> {
@@ -306,11 +326,11 @@ export class ProximityChatRoom implements ChatRoom {
         if (sender === undefined) {
             return;
         }
-
+        const chatID = sender.chatID ?? "";
         this.typingMembers.update((typingMembers) => {
             if (typingMembers.find((user) => user.id === sender.chatID) == undefined) {
                 typingMembers.push({
-                    id: sender.chatID ?? "",
+                    id: chatID,
                     name: sender.name ?? null,
                     avatarUrl: sender.getWokaBase64 ?? null,
                 });
@@ -325,8 +345,16 @@ export class ProximityChatRoom implements ChatRoom {
             return;
         }
 
+        const chatID = sender.chatID ?? "";
+
         this.typingMembers.update((typingMembers) => {
-            return typingMembers.filter((user) => user.id !== sender.chatID);
+            return typingMembers.filter((user) => user.id !== chatID);
+        });
+    }
+
+    private removeTypingUserbyChatID(chatID: string) {
+        this.typingMembers.update((typingMembers) => {
+            return typingMembers.filter((user) => user.id !== chatID);
         });
     }
 
@@ -385,19 +413,22 @@ export class ProximityChatRoom implements ChatRoom {
 
         this.simplePeer.setSpaceFilter(this._spaceWatcher);
 
-        const mediaStreamConstraints = get(mediaStreamConstraintsStore);
         const actualStatus = get(availabilityStatusStore);
         if (!isAChatRoomIsVisible()) {
             selectedRoom.set(this);
             navChat.set("chat");
             if (
-                !mediaStreamConstraints.audio &&
-                !mediaStreamConstraints.video &&
+                !get(requestedMicrophoneState) &&
+                !get(requestedCameraState) &&
                 (actualStatus === AvailabilityStatus.ONLINE || actualStatus === AvailabilityStatus.AWAY)
             ) {
                 chatVisibilityStore.set(true);
             }
         }
+    }
+
+    inviteUsers(userIds: string[]): Promise<void> {
+        return Promise.reject(new Error("Method not implemented"));
     }
 
     public leaveSpace(spaceName: string): void {
@@ -423,6 +454,7 @@ export class ProximityChatRoom implements ChatRoom {
                     this.sendMessage(get(LL).chat.timeLine.outcoming({ userName: user.name }), "outcoming", false);
                 }
             }
+            this.typingMembers.set([]);
         }
 
         this.spaceWatcherUserJoinedObserver?.unsubscribe();

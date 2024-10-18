@@ -10,40 +10,40 @@ export interface StatusStrategyFactoryInterface {
 
 export class StatusChanger {
     constructor(
-        private rulesVerification: StatusRulesVerificationInterface,
-        private StatusStrategyFactory: StatusStrategyFactoryInterface,
-        private statusStrategy: StatusStrategyInterface = new BasicStatusStrategy()
+        private _rulesVerification: StatusRulesVerificationInterface,
+        private _StatusStrategyFactory: StatusStrategyFactoryInterface,
+        private _statusStrategy: StatusStrategyInterface = new BasicStatusStrategy()
     ) {
-        this.statusStrategy.applyAllRules();
+        this._statusStrategy.applyAllRules();
     }
     getActualStatus(): AvailabilityStatus {
-        return this.statusStrategy.getActualStatus();
+        return this._statusStrategy.getActualStatus();
     }
     changeStatusTo(newStatus: AvailabilityStatus) {
-        if (!this.rulesVerification.canChangeStatus(this.statusStrategy.getActualStatus()).to(newStatus)) {
+        if (!this._rulesVerification.canChangeStatus(this._statusStrategy.getActualStatus()).to(newStatus)) {
             throw new InvalidStatusTransitionError("");
         }
-        this.statusStrategy.cleanTimedRules();
+        this._statusStrategy.cleanTimedRules();
         this.setStrategy(newStatus);
-        this.statusStrategy.applyAllRules();
+        this._statusStrategy.applyAllRules();
     }
 
-    setStrategy(newStatus: AvailabilityStatus) {
-        this.statusStrategy = this.StatusStrategyFactory.createStrategy(newStatus);
+    private setStrategy(newStatus: AvailabilityStatus) {
+        this._statusStrategy = this._StatusStrategyFactory.createStrategy(newStatus);
     }
 
     setUserNameInteraction(name: string) {
-        this.statusStrategy.setUserNameInteraction(name);
+        this._statusStrategy.setUserNameInteraction(name);
     }
 
     applyInteractionRules() {
-        this.statusStrategy.applyInteractionRules();
+        this._statusStrategy.applyInteractionRules();
     }
     allowNotificationSound(): boolean {
-        return this.statusStrategy.allowNotificationSound();
+        return this._statusStrategy.allowNotificationSound();
     }
 
     applyTimedRules(): void {
-        this.statusStrategy.applyTimedRules();
+        this._statusStrategy.applyTimedRules();
     }
 }
