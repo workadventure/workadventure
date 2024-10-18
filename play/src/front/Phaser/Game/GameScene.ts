@@ -204,6 +204,7 @@ import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import Clamp = Phaser.Math.Clamp;
+import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -342,6 +343,9 @@ export class GameScene extends DirtyScene {
     private matrixClientWrapper: MatrixClientWrapper | undefined;
     public extensionModule: ExtensionModule | undefined = undefined;
     public landingAreas: AreaData[] = [];
+
+    // Add new attribut chat connection used for discord
+    public _chatConnection: ChatConnectionInterface | undefined;
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
@@ -1557,6 +1561,7 @@ export class GameScene extends DirtyScene {
                 gameManager
                     .getChatConnection()
                     .then((chatConnection) => {
+                        this._chatConnection = chatConnection;
                         const connection = this.connection;
                         const allUserSpace = this.allUserSpace;
 
