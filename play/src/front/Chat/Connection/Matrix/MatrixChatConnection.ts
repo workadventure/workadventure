@@ -233,7 +233,14 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.client.on(UserEvent.Presence, this.handleUserPresence);
 
         await this.client.store.startup();
-        await this.client.initRustCrypto();
+
+        try {
+            await this.client.initRustCrypto();
+        } catch {
+            await this.client.clearStores();
+            await this.client.initRustCrypto();
+        }
+
         await this.client.startClient({
             threadSupport: false,
             //Detached to prevent using listener on localIdReplaced for each event
