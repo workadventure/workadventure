@@ -1,4 +1,4 @@
-import { stringify } from "circular-json";
+import { stringify } from "flatted";
 import { ADMIN_API_TOKEN } from "../enums/EnvironmentVariable";
 import { socketManager } from "../services/SocketManager";
 import { CustomJsonReplacerInterface } from "../models/CustomJsonReplacerInterface";
