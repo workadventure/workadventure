@@ -33,7 +33,7 @@ test.describe('Meeting actions test', () => {
         // Move user
         await Map.teleportToPosition(page, 160, 160);
 
-        const newBrowser = await browser.browserType().launch();
+        const newBrowser = await browser.newContext();
         const userBob = await newBrowser.newPage();
         // Go to the empty map
         await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
@@ -78,5 +78,6 @@ test.describe('Meeting actions test', () => {
 
         await page.close();
         await userBob.close();
+        await newBrowser.close();
     });
 });

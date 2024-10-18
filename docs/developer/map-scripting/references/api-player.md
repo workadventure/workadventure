@@ -555,6 +555,116 @@ await WA.player.proximityMeeting.playSound("https://example.com/my_sound.mp3");
 
 The method returns a promise that resolves when the sound has been played.
 
+## Streaming sound to players in the same meeting
+
+:::warning
+This feature is experimental. The signature of the function might change in the future.
+:::
+
+You can send a stream of audio to all the players in the same bubble. A typical use case for this feature is to create a 
+voice chat in WorkAdventure. The sound can be generated on a server and streamed to the players in the bubble.
+
+```ts
+WA.player.proximityMeeting.startAudioStream(sampleRate: number): Promise<AudioStream>;
+
+interface AudioStream {
+  appendAudioData(data: Float32Array): void;
+  resetAudioBuffer(): Promise<void>;
+  close(): Promise<void>;
+}
+```
+
+The `startAudioStream` function starts an audio stream to all the players in the same bubble. The `sampleRate` parameter 
+is the sample rate of the audio stream. For a 24kHz audio stream, you would use `24000`.
+
+The function returns an `AudioStream` object that you can use to send audio data to the players.
+
+The `appendAudioData` function sends a chunk of audio data to the players. The `data` parameter is an array of
+float32 values representing the raw uncompressed audio data.
+
+You can send multiple chunks of audio data in a row. If you are sending chunks of audio data faster than the sound
+is played, the audio stream will buffer the data and play it at the correct speed.
+
+:::warning
+Please note the sound is played to all the players in the bubble except the player who called the function.
+:::
+
+If you sent too much data and want to stop the audio stream, you can call the `resetAudioBuffer` function. This will
+empty the audio buffer and stop the audio stream.
+
+Finally, when you are done with the audio stream, you can call the `close` function. This will stop the audio stream
+and free the resources.
+
+Example:
+
+The following example generates a 10 seconds long sine wave at 440Hz and sends it to the players in the bubble for 5 seconds.
+Then it stops the stream and waits for 5 seconds before closing the stream.
+
+```ts
+const sampleRate = 24000;
+
+const audioStream = await WA.player.proximityMeeting.startAudioStream(sampleRate);
+
+// Generate a sine wave
+    
+const frequency = 440;
+const amplitude = 0.5;
+const duration = 10;
+const numSamples = duration * sampleRate;
+const samples = new Float32Array(numSamples);
+for (let i = 0; i < numSamples; i++) {
+    samples[i] = amplitude * Math.sin(2 * Math.PI * frequency * i / sampleRate);
+}
+
+audioStream.appendAudioData(samples);
+
+// Wait for 5 seconds
+await new Promise((resolve) => setTimeout(resolve, 5000));
+
+// Stop the stream.
+audioStream.resetAudioBuffer();
+
+// Wait for 5 seconds
+await new Promise((resolve) => setTimeout(resolve, 5000));
+
+// Close the stream.
+await audioStream.close();
+```
+
+## Listening to the microphone of the players in the same meeting
+
+:::warning
+This feature is experimental. The signature of the function might change in the future.
+:::
+
+```ts
+WA.player.proximityMeeting.listenToAudioStream(sampleRate: number): Observable<Float32Array>
+```
+
+The `listenToAudioStream` function listens to the microphone of all the players in the same bubble. The `sampleRate` parameter
+is the sample rate of the audio stream. For a 24kHz audio stream, you would use `24000`.
+
+The function returns an RxJS `Observable` object that you can use to listen to the audio data. The observable is called
+every few milliseconds with a chunk of audio data.
+
+The voice of all players in the bubble is merged in a single mono stream.
+
+Audio data is sent as an array of float32 values representing the raw uncompressed audio data.
+
+Example:
+
+```ts
+const sampleRate = 24000;
+
+const subscription = WA.player.proximityMeeting.listenToAudioStream(sampleRate).subscribe((data: Float32Array) => {
+    // Process the audio data
+    console.log(data);
+});
+
+// When you are done listening to the audio stream, you can unsubscribe from the observable.
+subscription.unsubscribe();
+```
+
 ## Asking users to follow you
 
 :::warning
@@ -568,6 +678,8 @@ WA.player.proximityMeeting.followMe(): Promise<void>
 The `followMe` function asks all the players in the same bubble to follow the player who called the function.
 Unlike the "follow" button in the UI, all the players in the bubble will be forced to follow the player who called the function.
 They can still stop following the player by clicking on the "stop following" button in the UI.
+
+
 
 ## Stop leading users
 

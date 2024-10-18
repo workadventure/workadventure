@@ -13,7 +13,7 @@ test.describe("Walk to", () => {
     }
 
     const isMobileTest = project.name === "mobilechromium";
-    await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+    await page.goto(publicTestMapUrl("tests/E2E/empty.json", "userlist"));
 
     await login(page, "Alice", 2, "en-US", isMobileTest);
 
@@ -24,10 +24,10 @@ test.describe("Walk to", () => {
 
     await Map.teleportToPosition(page, alicePosition.x, alicePosition.y);
 
-    const newBrowser = await browser.browserType().launch();
+    const newBrowser = await browser.newContext();
     const userBob = await newBrowser.newPage();
 
-    await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+    await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", "userlist"));
     // Login user "Bob"
     await login(userBob, "Bob", 3, "en-US", isMobileTest);
     //await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
@@ -46,6 +46,7 @@ test.describe("Walk to", () => {
       "Bob joined the discussion"
     );
 
+    await userBob.close();
     await newBrowser.close();
   });
 });

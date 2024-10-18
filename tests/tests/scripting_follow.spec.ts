@@ -21,7 +21,7 @@ test.describe('Scripting follow functions', () => {
 
         await Map.teleportToPosition(page, 32, 32);
 
-        const newBrowser = await browser.browserType().launch();
+        const newBrowser = await browser.newContext();
         const page2 = await newBrowser.newPage();
         await page2.goto(publicTestMapUrl("tests/E2E/empty.json", "scripting_follow"));
         await login(page2, "Bob", 3, "en-US", project.name === "mobilechromium");
@@ -96,5 +96,6 @@ test.describe('Scripting follow functions', () => {
 
         await waitForUnfollowPromise;
         await page2.close();
+        await newBrowser.close();
     });
 });
