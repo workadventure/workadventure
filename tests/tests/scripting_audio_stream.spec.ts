@@ -1,7 +1,8 @@
-import {chromium, test} from "@playwright/test";
+import {chromium, expect, test} from "@playwright/test";
 import { evaluateScript } from "./utils/scripting";
 import { login } from "./utils/roles";
 import Map from "./utils/map";
+import {publicTestMapUrl} from "./utils/urls";
 
 test.describe("Scripting audio streams", () => {
   test("can play and listen to sounds", async ({
@@ -17,7 +18,9 @@ test.describe("Scripting audio streams", () => {
       return;
     }
 
-    await page.goto(Map.url("empty"));
+    await page.goto(
+        publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream")
+    );
     await login(page, "bob", 3, "us-US", false);
 
     await Map.teleportToPosition(page, 32, 32);
@@ -25,7 +28,9 @@ test.describe("Scripting audio streams", () => {
     // Open new page for alice
     const newBrowser = await browser.newContext();
     const alice = await newBrowser.newPage();
-    await alice.goto(Map.url("empty"));
+    await alice.goto(
+        publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream")
+    );
     await login(alice, "alice", 4, "us-US", false);
 
     // Move alice to the same position as bob
@@ -47,7 +52,10 @@ test.describe("Scripting audio streams", () => {
         samples[i] = amplitude * Math.sin(2 * Math.PI * frequency * i / sampleRate);
       }
 
-      audioStream.appendAudioData(samples);
+      window.audioStream = audioStream;
+      audioStream.appendAudioData(samples).catch((e) => {
+        window.streamInterrupted = true;
+      });
     });
 
     // Test listen to sound scripting
@@ -63,6 +71,15 @@ test.describe("Scripting audio streams", () => {
         });
       });
     });
+
+    await expect.poll(() => evaluateScript(page, () => window.streamInterrupted)).toBe(undefined);
+
+    // Now, let's reset the audio buffer
+    await evaluateScript(page, async () => {
+      window.audioStream.resetAudioBuffer();
+    });
+
+    await expect.poll(() => evaluateScript(page, () => window.streamInterrupted)).toBe(true);
 
     await alice.close();
     await newBrowser.close();

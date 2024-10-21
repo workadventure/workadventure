@@ -359,10 +359,6 @@ export const isIframeEventWrapper = z.union([
         data: z.undefined(),
     }),
     z.object({
-        type: z.literal("appendPCMData"),
-        data: isAppendPCMDataEvent,
-    }),
-    z.object({
         type: z.literal("startListeningToStreamInBubble"),
         data: isStartStreamInBubbleEvent,
     }),
@@ -701,6 +697,10 @@ export const iframeQueryMapTypeGuards = {
     },
     stopStreamInBubble: {
         query: z.undefined(),
+        answer: z.undefined(),
+    },
+    appendPCMData: {
+        query: isAppendPCMDataEvent,
         answer: z.undefined(),
     },
     resetAudioBuffer: {
