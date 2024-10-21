@@ -338,7 +338,7 @@ export class AuthenticateController extends BaseHttpController {
                     matrixRedirectUrl: matrixRedirectUrl.toString(),
                 });
 
-                res.send(html);
+                res.type("html").send(html);
 
                 return;
             }
