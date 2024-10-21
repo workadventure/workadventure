@@ -20,7 +20,8 @@ export const answerPromises = new Map<
 >();
 
 export function queryWorkadventure<T extends keyof IframeQueryMap>(
-    content: IframeQuery<T>
+    content: IframeQuery<T>,
+    transfer?: Transferable[]
 ): Promise<IframeQueryMap[T]["answer"]> {
     return new Promise<IframeQueryMap[T]["answer"]>((resolve, reject) => {
         window.parent.postMessage(
@@ -28,7 +29,8 @@ export function queryWorkadventure<T extends keyof IframeQueryMap>(
                 id: queryNumber,
                 query: content,
             } as IframeQueryWrapper<T>,
-            "*"
+            "*",
+            transfer
         );
 
         answerPromises.set(queryNumber, {
