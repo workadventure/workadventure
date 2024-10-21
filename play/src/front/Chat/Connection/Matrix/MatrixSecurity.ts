@@ -332,7 +332,9 @@ export class MatrixSecurity {
                         });
 
                         verifier.verify().catch((error) => {
-                            rejectDonePromise(error);
+                            if (rejectDonePromise) {
+                                rejectDonePromise(error);
+                            }
                         });
                     }
                 }
@@ -344,7 +346,9 @@ export class MatrixSecurity {
                 }
 
                 if (verificationRequest.phase === Phase.Cancelled) {
-                    rejectDonePromise(new Error("verification request cancelled"));
+                    if (rejectDonePromise) {
+                        rejectDonePromise(new Error("verification request cancelled"));
+                    }
                     this.isVerifyingDevice = false;
                 }
             });
@@ -407,7 +411,7 @@ export class MatrixSecurity {
             }
             await this.initClientCryptoConfiguration();
         } catch (error) {
-            console.log(error);
+            console.error(error);
             Sentry.captureMessage(`Failed to open modal to choose Verification modal method : ${error}`);
         }
     }

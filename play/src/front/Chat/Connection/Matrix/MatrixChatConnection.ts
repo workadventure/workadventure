@@ -893,7 +893,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     }
 
     initEndToEndEncryption(): Promise<void> {
-        //return this.matrixSecurity.initClientCryptoConfiguration();
         return this.matrixSecurity.openChooseDeviceVerificationMethodModal();
     }
 
