@@ -2,7 +2,7 @@
     import highlightWords from "highlight-words";
     import { ChatRoom } from "../../Connection/ChatConnection";
     import NotificationBadge from "../NotificationBadge.svelte";
-    import { chatSearchBarValue,selectedRoomStore } from "../../Stores/ChatStore";
+    import { chatSearchBarValue, selectedRoomStore } from "../../Stores/ChatStore";
     import Avatar from "../Avatar.svelte";
     import EncryptionBadge from "../EncryptionBadge.svelte";
     import RoomMenu from "./RoomMenu/RoomMenu.svelte";
