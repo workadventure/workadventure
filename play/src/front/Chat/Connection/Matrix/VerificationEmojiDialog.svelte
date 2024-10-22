@@ -36,6 +36,8 @@
                     deviceIsVerified = true;
                 })
                 .catch((error) => {
+                    console.error(error);
+                    Sentry.captureMessage(`Failed to mismatch emojis validation : ${error}`);
                     mismatchCallback();
                 })
                 .finally(() => {
@@ -95,7 +97,7 @@
                 <button class="tw-flex-1 tw-justify-center tw-bg-secondary" on:click={closeModal}
                     >{$LL.chat.verificationEmojiDialog.understood()}
                 </button>
-            {:catch e}
+            {:catch}
                 {$LL.chat.verificationEmojiDialog.error()}
             {/await}
         {:else}
