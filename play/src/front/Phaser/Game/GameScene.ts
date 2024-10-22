@@ -483,39 +483,33 @@ export class GameScene extends DirtyScene {
 
         if (this.wamUrlFile) {
             const absoluteWamFileUrl = new URL(this.wamUrlFile, window.location.href).toString();
-            //@ts-ignore
-            this.load.rexAwait((successCallback: () => void, failureCallback: (e: unknown) => void) => {
-                axiosWithRetry
-                    .get(absoluteWamFileUrl)
-                    .then((response) => {
-                        const wamFileResult = WAMFileFormat.safeParse(response.data);
-                        if (!wamFileResult.success) {
-                            this.loader.removeLoader();
-                            errorScreenStore.setError(
-                                ErrorScreenMessage.fromPartial({
-                                    type: "error",
-                                    code: "WAM_FORMAT_ERROR",
-                                    title: "Format error",
-                                    subtitle: "Invalid format while loading a WAM file",
-                                    details: wamFileResult.error.toString(),
-                                })
-                            );
-                            this.cleanupClosingScene();
 
-                            this.scene.stop(this.scene.key);
-                            this.scene.remove(this.scene.key);
-                            return;
-                        }
-                        this.wamFile = wamFileResult.data;
-                        this.mapUrlFile = new URL(this.wamFile.mapUrl, absoluteWamFileUrl).toString();
-                        this.doLoadTMJFile(this.mapUrlFile);
-                        this.loadEntityCollections();
-                        successCallback();
-                    })
-                    .catch((error) => {
-                        failureCallback(error);
-                    });
-            });
+            this.superLoad.loadPromise(
+                axiosWithRetry.get(absoluteWamFileUrl).then((response) => {
+                    const wamFileResult = WAMFileFormat.safeParse(response.data);
+                    if (!wamFileResult.success) {
+                        this.loader.removeLoader();
+                        errorScreenStore.setError(
+                            ErrorScreenMessage.fromPartial({
+                                type: "error",
+                                code: "WAM_FORMAT_ERROR",
+                                title: "Format error",
+                                subtitle: "Invalid format while loading a WAM file",
+                                details: wamFileResult.error.toString(),
+                            })
+                        );
+                        this.cleanupClosingScene();
+
+                        this.scene.stop(this.scene.key);
+                        this.scene.remove(this.scene.key);
+                        return;
+                    }
+                    this.wamFile = wamFileResult.data;
+                    this.mapUrlFile = new URL(this.wamFile.mapUrl, absoluteWamFileUrl).toString();
+                    this.doLoadTMJFile(this.mapUrlFile);
+                    this.loadEntityCollections();
+                })
+            );
         } else {
             this.doLoadTMJFile(this.mapUrlFile);
         }
