@@ -18,9 +18,8 @@ export class SuperLoaderPlugin {
     /**
      * Add any promise to the loader.
      * The loader will consider the promise as a resource that is being loaded. Loading is done when the promise is resolved or rejected.
-     * @param promise
      */
-    public loadPromise(promise: PromiseLike<unknown>) {
+    public loadPromise(promise: Promise<unknown>) {
         //eslint-disable-next-line @typescript-eslint/no-explicit-any
         (this.scene.load as any).rexAwait((successCallback: () => void, failureCallback: (e: unknown) => void) => {
             promise.then(successCallback).catch(failureCallback);
