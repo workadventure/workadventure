@@ -179,14 +179,4 @@ export class SuperLoaderPlugin {
             }
         });
     }
-
-    /**
-     * Remove a json from the cache by it's key
-     *
-     * @param key
-     */
-    public jsonRemoveCacheByKey(key: string) {
-        console.log("SuperLoadingPlugin => jsonRemoveCacheByKey => key", key);
-        this.scene.load.cacheManager.json.remove(key);
-    }
 }

@@ -112,7 +112,7 @@ import {
 import { LL, locale } from "../../../i18n/i18n-svelte";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
-import { hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connection/AxiosUtils";
+import { axiosWithRetry, hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connection/AxiosUtils";
 import { StringUtils } from "../../Utils/StringUtils";
 import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
 
@@ -483,14 +483,12 @@ export class GameScene extends DirtyScene {
 
         if (this.wamUrlFile) {
             const absoluteWamFileUrl = new URL(this.wamUrlFile, window.location.href).toString();
-            this.superLoad
-                .json(
-                    this.wamUrlFile,
-                    this.wamUrlFile,
-                    undefined,
-                    undefined,
-                    (key: string, type: string, wamFile: unknown) => {
-                        const wamFileResult = WAMFileFormat.safeParse(wamFile);
+            //@ts-ignore
+            this.load.rexAwait((successCallback: () => void, failureCallback: (e: unknown) => void) => {
+                axiosWithRetry
+                    .get(absoluteWamFileUrl)
+                    .then((response) => {
+                        const wamFileResult = WAMFileFormat.safeParse(response.data);
                         if (!wamFileResult.success) {
                             this.loader.removeLoader();
                             errorScreenStore.setError(
@@ -512,12 +510,12 @@ export class GameScene extends DirtyScene {
                         this.mapUrlFile = new URL(this.wamFile.mapUrl, absoluteWamFileUrl).toString();
                         this.doLoadTMJFile(this.mapUrlFile);
                         this.loadEntityCollections();
-                    }
-                )
-                .catch((e) => {
-                    console.error(e);
-                    throw e;
-                });
+                        successCallback();
+                    })
+                    .catch((error) => {
+                        failureCallback(error);
+                    });
+            });
         } else {
             this.doLoadTMJFile(this.mapUrlFile);
         }
@@ -1089,7 +1087,6 @@ export class GameScene extends DirtyScene {
             clearTimeout(this.hideTimeout);
             this.hideTimeout = undefined;
         }
-        if (this.wamUrlFile) this.superLoad.jsonRemoveCacheByKey(this.wamUrlFile);
     }
     /**
      * @param time
