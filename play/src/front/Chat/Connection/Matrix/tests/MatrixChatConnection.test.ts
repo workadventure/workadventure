@@ -29,7 +29,7 @@ vi.mock("../../../../Phaser/Entity/CharacterLayerManager", () => {
 
 vi.mock("../../../Stores/ChatStore.ts", () => {
     return {
-        selectedRoom: writable(undefined),
+        selectedRoomStore: writable(undefined),
     };
 });
 describe("MatrixChatConnection", () => {

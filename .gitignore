@@ -22,5 +22,6 @@ synapse/matrix.workadventure.localhost.signing.key
 synapse/homeserver.db
 synapse/homeserver.db-*
 synapse/homeserver.yaml
+synapse/media_store/*
 
 .vscode/settings.json
