@@ -43,6 +43,10 @@ declare module "phaser3-rex-plugins/plugins/webfontloader-plugin.js" {
     const content: any; // eslint-disable-line
     export default content;
 }
+declare module "phaser3-rex-plugins/plugins/awaitloader-plugin.js" {
+    const content: any; // eslint-disable-line
+    export default content;
+}
 declare module "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js" {
     import GameObject = Phaser.GameObjects.GameObject;
 

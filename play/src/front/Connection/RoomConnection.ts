@@ -111,7 +111,7 @@ import type {
 import { localUserStore } from "./LocalUserStore";
 
 // This must be greater than IoSocketController's PING_INTERVAL
-const manualPingDelay = 100000;
+const manualPingDelay = 100_000;
 
 export class RoomConnection implements RoomConnection {
     private static websocketFactory: null | ((url: string) => any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -310,25 +310,7 @@ export class RoomConnection implements RoomConnection {
                 return;
             }
 
-            // Cleanup queries:
-            const error = new Error("Socket closed with code " + event.code + ". Reason: " + event.reason);
-            for (const query of this.queries.values()) {
-                query.reject(error);
-            }
-
-            this.completeStreams();
-
-            if (this.closed || connectionManager.unloading) {
-                return;
-            }
-
-            if (event.code === 1000) {
-                // Normal closure case
-                return;
-            }
-
-            this._serverDisconnected.next();
-            this._serverDisconnected.complete();
+            this.cleanupConnection(event.code === 1000);
         });
 
         this.socket.onmessage = (messageEvent) => {
@@ -729,6 +711,28 @@ export class RoomConnection implements RoomConnection {
                 }
             }
         };
+    }
+
+    private cleanupConnection(isNormalClosure: boolean) {
+        // Cleanup queries:
+        const error = new Error("Socket closed");
+        for (const query of this.queries.values()) {
+            query.reject(error);
+        }
+
+        this.completeStreams();
+
+        if (this.closed || connectionManager.unloading) {
+            return;
+        }
+
+        if (isNormalClosure) {
+            // Normal closure case
+            return;
+        }
+
+        this._serverDisconnected.next();
+        this._serverDisconnected.complete();
     }
 
     private _userRoomToken: string | undefined;
@@ -1607,8 +1611,11 @@ export class RoomConnection implements RoomConnection {
             this.timeout = undefined;
         }
         this.timeout = setTimeout(() => {
-            console.warn("Timeout detected server-side. Is your connection down? Closing connection.");
+            console.warn(
+                "Timeout detected. No ping from the server received. Is your connection down? Closing connection."
+            );
             this.socket.close();
+            this.cleanupConnection(false);
         }, manualPingDelay);
     }
 

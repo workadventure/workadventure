@@ -3,6 +3,7 @@ import "phaser";
 import "./front/style/index.scss";
 
 import WebFontLoaderPlugin from "phaser3-rex-plugins/plugins/webfontloader-plugin.js";
+import AwaitLoaderPlugin from "phaser3-rex-plugins/plugins/awaitloader-plugin.js";
 import OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { DEBUG_MODE, SENTRY_DSN_FRONT, SENTRY_RELEASE, SENTRY_ENVIRONMENT } from "./front/Enum/EnvironmentVariable";
 import { LoginScene } from "./front/Phaser/Login/LoginScene";
@@ -145,6 +146,11 @@ const config: Phaser.Types.Core.GameConfig = {
             {
                 key: "rexWebFontLoader",
                 plugin: WebFontLoaderPlugin,
+                start: true,
+            },
+            {
+                key: "rexAwaitLoader",
+                plugin: AwaitLoaderPlugin,
                 start: true,
             },
         ],
