@@ -120,6 +120,10 @@ export class RoomConnection implements RoomConnection {
     private closed = false;
     private tags: string[] = [];
     private canEdit = false;
+
+    public readonly _serverDisconnected = new Subject<void>();
+    public readonly serverDisconnected = this._serverDisconnected.asObservable();
+
     private readonly _errorMessageStream = new Subject<ErrorMessageTsProto>();
     public readonly errorMessageStream = this._errorMessageStream.asObservable();
     private readonly _errorScreenMessageStream = new Subject<ErrorScreenMessageTsProto>();
@@ -303,7 +307,28 @@ export class RoomConnection implements RoomConnection {
             // If we are not connected yet (if a JoinRoomMessage was not sent), we need to retry.
             if (this.userId === null && !this.closed) {
                 this._connectionErrorStream.next(event);
+                return;
             }
+
+            // Cleanup queries:
+            const error = new Error("Socket closed with code " + event.code + ". Reason: " + event.reason);
+            for (const query of this.queries.values()) {
+                query.reject(error);
+            }
+
+            this.completeStreams();
+
+            if (this.closed || connectionManager.unloading) {
+                return;
+            }
+
+            if (event.code === 1000) {
+                // Normal closure case
+                return;
+            }
+
+            this._serverDisconnected.next();
+            this._serverDisconnected.complete();
         });
 
         this.socket.onmessage = (messageEvent) => {
@@ -863,31 +888,6 @@ export class RoomConnection implements RoomConnection {
                     signal: JSON.stringify(signal),
                 },
             },
-        });
-    }
-
-    public onServerDisconnected(callback: () => void): void {
-        this.socket.addEventListener("close", (event) => {
-            // FIXME: technically incorrect: if we call onServerDisconnected several times, we will run several times the code (and we probably want to run only callback() several times).
-            // FIXME: call to query.reject and this.completeStreams should probably be stored somewhere else.
-
-            // Cleanup queries:
-            const error = new Error("Socket closed with code " + event.code + ". Reason: " + event.reason);
-            for (const query of this.queries.values()) {
-                query.reject(error);
-            }
-
-            this.completeStreams();
-
-            if (this.closed === true || connectionManager.unloading) {
-                return;
-            }
-            console.info("Socket closed with code " + event.code + ". Reason: " + event.reason);
-            if (event.code === 1000) {
-                // Normal closure case
-                return;
-            }
-            callback();
         });
     }
 
