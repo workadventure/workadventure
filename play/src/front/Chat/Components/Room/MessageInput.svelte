@@ -1,13 +1,16 @@
 <script lang="ts">
+    import { createEventDispatcher } from "svelte";
+
     export let message: string;
     export let inputClass = "";
     export let dataText = "";
     export let dataTestid = "";
     export let messageInput: HTMLDivElement;
 
-    // FIXME: Try to send an event instead of passing a function in component props
     export let onKeyDown: ((event: KeyboardEvent) => void) | undefined = undefined;
     export let onInput = () => {};
+
+    const dispatch = createEventDispatcher();
 
     const handleKeyDown = (event: KeyboardEvent) => {
         if (onKeyDown) {
@@ -15,6 +18,10 @@
         }
     };
     function onPasteHandler(event: ClipboardEvent) {
+        if (event.clipboardData?.files && event.clipboardData.files.length > 0) {
+            dispatch("pasteFiles", event.clipboardData.files);
+        }
+
         if (!event.clipboardData) return;
 
         const text = event.clipboardData.getData("text");
