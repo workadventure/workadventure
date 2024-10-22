@@ -1682,7 +1682,9 @@ export class GameScene extends DirtyScene {
                     }
                 });
 
-                this.connection.onServerDisconnected(() => {
+                // The serverDisconnected stream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.serverDisconnected.subscribe(() => {
                     showConnectionIssueMessage();
                     console.info("Player disconnected from server. Reloading scene.");
                     this.cleanupClosingScene();
