@@ -14,6 +14,8 @@ import {
     ReceiptType,
     Room,
     RoomEvent,
+    RoomState,
+    RoomStateEvent,
     TimelineWindow,
 } from "matrix-js-sdk";
 import * as Sentry from "@sentry/svelte";
@@ -54,6 +56,7 @@ export class MatrixChatRoom implements ChatRoom {
     private handleRoomTimeline = this.onRoomTimeline.bind(this);
     private handleRoomName = this.onRoomName.bind(this);
     private handleRoomRedaction = this.onRoomRedaction.bind(this);
+    private handleStateEvent = this.onRoomStateEvent.bind(this);
 
     constructor(
         private matrixRoom: Room,
@@ -179,8 +182,14 @@ export class MatrixChatRoom implements ChatRoom {
         this.matrixRoom.on(RoomEvent.Timeline, this.handleRoomTimeline);
         this.matrixRoom.on(RoomEvent.Name, this.handleRoomName);
         this.matrixRoom.on(RoomEvent.Redaction, this.handleRoomRedaction);
+        this.matrixRoom.on(RoomStateEvent.Events, this.handleStateEvent);
     }
 
+    private onRoomStateEvent(event: MatrixEvent, state: RoomState, lastStateEvent: MatrixEvent | null) {
+        if (get(this.isEncrypted)) return;
+        const isEncrypted = !!state.getStateEvents(EventType.RoomEncryption)[0];
+        if (isEncrypted) this.isEncrypted.set(isEncrypted);
+    }
     private onRoomTimeline(
         event: MatrixEvent,
         room: Room | undefined,
@@ -579,6 +588,7 @@ export class MatrixChatRoom implements ChatRoom {
         this.matrixRoom.off(RoomEvent.Timeline, this.handleRoomTimeline);
         this.matrixRoom.off(RoomEvent.Name, this.handleRoomName);
         this.matrixRoom.off(RoomEvent.Redaction, this.handleRoomRedaction);
+        this.matrixRoom.off(RoomStateEvent.Events, this.handleStateEvent);
     }
 
     startTyping(): Promise<object> {
