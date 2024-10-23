@@ -7,6 +7,7 @@
     import appOnImg from "../images/applications/appOn.png";
     import appOffImg from "../images/applications/appOff.png";
     import klaxoonImg from "../images/applications/icon_klaxoon.svg";
+    import googleDriveSvg from "../images/applications/icon_google_drive.svg";
     import googleDocsSvg from "../images/applications/icon_google_docs.svg";
     import googleSheetsSvg from "../images/applications/icon_google_sheets.svg";
     import googleSlidesSvg from "../images/applications/icon_google_slides.svg";
@@ -44,6 +45,7 @@
     function oneApplicationIsActivated() {
         return (
             connectionManager.klaxoonToolActivated ||
+            connectionManager.googleDriveToolActivated ||
             connectionManager.googleDocsToolActivated ||
             connectionManager.googleSheetsToolActivated ||
             connectionManager.googleSlidesToolActivated ||
@@ -119,6 +121,21 @@
                 </div>
             {/if}
             <div class="bottom-action-section tw-flex animate">
+                {#if connectionManager.googleDriveToolActivated}
+                    <div class="tw-transition-all bottom-action-button">
+                        <Tooltip text={$LL.mapEditor.properties.googleDriveProperties.label()} />
+                        <button
+                            on:click={() => {
+                                window.open(`https://drive.google.com/drive/home`, "_blanck");
+                                appMenuOpened = false;
+                            }}
+                            id={`button-app-klaxoon`}
+                            disabled={!connectionManager.googleDriveToolActivated}
+                        >
+                            <img draggable="false" src={googleDriveSvg} style="padding: 2px" alt="Goodle Doc" />
+                        </button>
+                    </div>
+                {/if}
                 {#if connectionManager.googleDocsToolActivated}
                     <div class="tw-transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.googleDocsProperties.label()} />

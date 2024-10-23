@@ -1,12 +1,13 @@
 <script lang="ts">
     import { Readable, Unsubscriber } from "svelte/store";
     import { Marked } from "marked";
-    import { onDestroy, onMount } from "svelte";
+    import { onDestroy, onMount, createEventDispatcher } from "svelte";
     import { ChatMessageContent } from "../../../Connection/ChatConnection";
     import { sanitizeHTML } from "./WA-HTML-Sanitizer";
-
     export let content: Readable<ChatMessageContent>;
     export let hasDepth: false;
+
+    const dispatch = createEventDispatcher();
 
     async function getMarked(body: string): Promise<Marked> {
         let marked: Marked;
@@ -60,6 +61,9 @@
                 .catch((error) => {
                     console.error("Failed to parse markdown content", error);
                     html = $content.body;
+                })
+                .finally(() => {
+                    dispatch("updateMessageBody");
                 });
         });
     });
@@ -71,7 +75,10 @@
     });
 </script>
 
-<div class="message-bubble tw-m-0 {hasDepth ? 'tw-text-xs tw-leading-4' : 'tw-text-sm' } tw-text-white tw-py-1 tw-px-2">
+<div
+    class="message-bubble tw-m-0 {hasDepth ? 'tw-text-xs tw-leading-4' : 'tw-text-sm'} tw-text-white tw-py-1 tw-px-2"
+    lang=""
+>
     {@html sanitizeHTML(html)}
     <style>
         .message-bubble p:last-of-type {

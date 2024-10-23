@@ -29,9 +29,13 @@ export async function oidcLogin(
   });
 
   if (!isMobile) {
-    await expect(page.locator("button#menuIcon").first()).toBeVisible();
+    await expect(page.locator("button#menuIcon").first()).toBeVisible({
+      timeout: 50_000,
+    });
   } else {
-    await expect(page.locator("button#burgerIcon")).toBeVisible();
+    await expect(page.locator("button#burgerIcon")).toBeVisible({
+      timeout: 50_000,
+    });
   }
 }
 

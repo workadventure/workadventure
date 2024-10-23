@@ -17,6 +17,7 @@ export const axiosWithRetry = axios.create({
 });
 
 axiosRetry(axiosWithRetry, {
+    retries: Number.MAX_SAFE_INTEGER,
     retryDelay: (retryCount: number) => {
         const time = exponentialDelay(retryCount);
         if (time >= 60_000) {

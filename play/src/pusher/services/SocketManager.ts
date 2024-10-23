@@ -1024,7 +1024,7 @@ export class SocketManager implements ZoneEventListener {
         let tabUrlRooms: string[];
 
         if (playGlobalMessageEvent.broadcastToWorld) {
-            const shortDescriptions = await adminService.getUrlRoomsFromSameWorld(clientRoomUrl, "en");
+            const shortDescriptions = await adminService.getUrlRoomsFromSameWorld(clientRoomUrl, "en", [], true);
             tabUrlRooms = shortDescriptions.map((shortDescription) => shortDescription.roomUrl);
         } else {
             tabUrlRooms = [clientRoomUrl];

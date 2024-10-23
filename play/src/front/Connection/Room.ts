@@ -17,7 +17,6 @@ export interface RoomRedirect {
 export class Room {
     public readonly id: string;
     private _authenticationMandatory: boolean = DISABLE_ANONYMOUS;
-    private _iframeAuthentication?: string = new URL("login-screen", ABSOLUTE_PUSHER_URL).toString();
     private _opidLogoutRedirectUrl: string = new URL("logout", ABSOLUTE_PUSHER_URL).toString();
     private _opidWokaNamePolicy: OpidWokaNamePolicy | undefined;
     private _mapUrl: string | undefined;
@@ -57,6 +56,10 @@ export class Room {
 
         if (this.id.startsWith("/")) {
             this.id = this.id.substring(1);
+        }
+
+        if (this.roomUrl.pathname.endsWith("/")) {
+            this.roomUrl.pathname = this.roomUrl.pathname.slice(0, -1);
         }
 
         this._search = new URLSearchParams(roomUrl.search);
@@ -144,8 +147,6 @@ export class Room {
                 this._group = data.group;
                 this._authenticationMandatory =
                     data.authenticationMandatory != null ? data.authenticationMandatory : DISABLE_ANONYMOUS;
-                this._iframeAuthentication =
-                    data.iframeAuthentication || new URL("login-screen", ABSOLUTE_PUSHER_URL).toString();
                 this._opidLogoutRedirectUrl =
                     data.opidLogoutRedirectUrl || new URL("logout", ABSOLUTE_PUSHER_URL).toString();
                 this._contactPage = data.contactPage || CONTACT_URL;
@@ -253,10 +254,6 @@ export class Room {
 
     get authenticationMandatory(): boolean {
         return this._authenticationMandatory;
-    }
-
-    get iframeAuthentication(): string | undefined {
-        return this._iframeAuthentication;
     }
 
     get opidLogoutRedirectUrl(): string {

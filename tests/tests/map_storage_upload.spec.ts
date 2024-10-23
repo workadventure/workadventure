@@ -58,7 +58,7 @@ test.describe('Map-storage Upload API', () => {
         await gotoWait200(page, `/~/map1.wam?phaserMode=${RENDERER_MODE}`);
         await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
 
-        const newBrowser = await browser.browserType().launch();
+        const newBrowser = await browser.newContext();
         const page2 = await newBrowser.newPage();
         await gotoWait200(page2, `/~/map2.wam?phaserMode=${RENDERER_MODE}`);
         await login(page2, 'Bob', 5, 'en-US', project.name === "mobilechromium");
@@ -85,6 +85,7 @@ test.describe('Map-storage Upload API', () => {
         await expect((await (page.locator(".test-class")).innerText())).toEqual("New version of map detected. Refresh needed");
         await expect(page2.getByText("New version of map detected. Refresh needed")).toBeHidden();
         await page2.close();
+        await newBrowser.close();
     });
 
     test('can upload ZIP file', async ({

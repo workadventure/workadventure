@@ -111,7 +111,7 @@ import type {
 import { localUserStore } from "./LocalUserStore";
 
 // This must be greater than IoSocketController's PING_INTERVAL
-const manualPingDelay = 100000;
+const manualPingDelay = 100_000;
 
 export class RoomConnection implements RoomConnection {
     private static websocketFactory: null | ((url: string) => any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -120,6 +120,10 @@ export class RoomConnection implements RoomConnection {
     private closed = false;
     private tags: string[] = [];
     private canEdit = false;
+
+    public readonly _serverDisconnected = new Subject<void>();
+    public readonly serverDisconnected = this._serverDisconnected.asObservable();
+
     private readonly _errorMessageStream = new Subject<ErrorMessageTsProto>();
     public readonly errorMessageStream = this._errorMessageStream.asObservable();
     private readonly _errorScreenMessageStream = new Subject<ErrorScreenMessageTsProto>();
@@ -303,7 +307,10 @@ export class RoomConnection implements RoomConnection {
             // If we are not connected yet (if a JoinRoomMessage was not sent), we need to retry.
             if (this.userId === null && !this.closed) {
                 this._connectionErrorStream.next(event);
+                return;
             }
+
+            this.cleanupConnection(event.code === 1000);
         });
 
         this.socket.onmessage = (messageEvent) => {
@@ -706,6 +713,28 @@ export class RoomConnection implements RoomConnection {
         };
     }
 
+    private cleanupConnection(isNormalClosure: boolean) {
+        // Cleanup queries:
+        const error = new Error("Socket closed");
+        for (const query of this.queries.values()) {
+            query.reject(error);
+        }
+
+        this.completeStreams();
+
+        if (this.closed || connectionManager.unloading) {
+            return;
+        }
+
+        if (isNormalClosure) {
+            // Normal closure case
+            return;
+        }
+
+        this._serverDisconnected.next();
+        this._serverDisconnected.complete();
+    }
+
     private _userRoomToken: string | undefined;
 
     public get userRoomToken(): string | undefined {
@@ -863,31 +892,6 @@ export class RoomConnection implements RoomConnection {
                     signal: JSON.stringify(signal),
                 },
             },
-        });
-    }
-
-    public onServerDisconnected(callback: () => void): void {
-        this.socket.addEventListener("close", (event) => {
-            // FIXME: technically incorrect: if we call onServerDisconnected several times, we will run several times the code (and we probably want to run only callback() several times).
-            // FIXME: call to query.reject and this.completeStreams should probably be stored somewhere else.
-
-            // Cleanup queries:
-            const error = new Error("Socket closed with code " + event.code + ". Reason: " + event.reason);
-            for (const query of this.queries.values()) {
-                query.reject(error);
-            }
-
-            this.completeStreams();
-
-            if (this.closed === true || connectionManager.unloading) {
-                return;
-            }
-            console.info("Socket closed with code " + event.code + ". Reason: " + event.reason);
-            if (event.code === 1000) {
-                // Normal closure case
-                return;
-            }
-            callback();
         });
     }
 
@@ -1607,8 +1611,11 @@ export class RoomConnection implements RoomConnection {
             this.timeout = undefined;
         }
         this.timeout = setTimeout(() => {
-            console.warn("Timeout detected server-side. Is your connection down? Closing connection.");
+            console.warn(
+                "Timeout detected. No ping from the server received. Is your connection down? Closing connection."
+            );
             this.socket.close();
+            this.cleanupConnection(false);
         }, manualPingDelay);
     }
 

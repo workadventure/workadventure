@@ -54,6 +54,8 @@ import type { AddPlayerEvent } from "./Events/AddPlayerEvent";
 import { ModalEvent } from "./Events/ModalEvent";
 import { AddButtonActionBarEvent } from "./Events/Ui/ButtonActionBarEvent";
 import { ReceiveEventEvent } from "./Events/ReceiveEventEvent";
+import { AppendPCMDataEvent } from "./Events/ProximityMeeting/AppendPCMDataEvent";
+import { StartStreamInBubbleEvent } from "./Events/ProximityMeeting/StartStreamInBubbleEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -215,6 +217,15 @@ class IframeListener {
     private readonly _stopTypingProximityMessageStream: Subject<StopWritingEvent> = new Subject();
     public readonly stopTypingProximityMessageStream = this._stopTypingProximityMessageStream.asObservable();
 
+    private readonly _appendPCMDataStream: Subject<AppendPCMDataEvent> = new Subject();
+    public readonly appendPCMDataStream = this._appendPCMDataStream.asObservable();
+
+    private readonly _startListeningToStreamInBubbleStream: Subject<StartStreamInBubbleEvent> = new Subject();
+    public readonly startListeningToStreamInBubbleStream = this._startListeningToStreamInBubbleStream.asObservable();
+
+    private readonly _stopListeningToStreamInBubbleStream: Subject<void> = new Subject();
+    public readonly stopListeningToStreamInBubbleStream = this._stopListeningToStreamInBubbleStream.asObservable();
+
     private readonly iframes = new Map<HTMLIFrameElement, string | undefined>();
     private readonly iframeCloseCallbacks = new Map<MessageEventSource, Set<() => void>>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
@@ -364,6 +375,12 @@ class IframeListener {
                         this._startTypingProximityMessageStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "stopWriting") {
                         this._stopTypingProximityMessageStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type === "appendPCMData") {
+                        this._appendPCMDataStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type === "startListeningToStreamInBubble") {
+                        this._startListeningToStreamInBubbleStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type === "stopListeningToStreamInBubble") {
+                        this._stopListeningToStreamInBubbleStream.next();
                     } else if (iframeEvent.type === "openChat") {
                         this._openChatStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "closeChat") {
@@ -568,46 +585,51 @@ class IframeListener {
     }
 
     registerScript(scriptUrl: string, enableModuleMode = true): Promise<void> {
-        return new Promise<void>((resolve) => {
-            console.info("Loading map related script at ", scriptUrl);
+        return Promise.race([
+            new Promise<void>((resolve) => {
+                console.info("Loading map related script at ", scriptUrl);
 
-            const iframe = document.createElement("iframe");
-            iframe.id = IframeListener.getIFrameId(scriptUrl);
-            iframe.style.display = "none";
+                const iframe = document.createElement("iframe");
+                iframe.id = IframeListener.getIFrameId(scriptUrl);
+                iframe.style.display = "none";
 
-            // We are putting a sandbox on this script because it will run in the same domain as the main website.
-            iframe.sandbox.add("allow-scripts");
-            iframe.sandbox.add("allow-top-navigation-by-user-activation");
+                // We are putting a sandbox on this script because it will run in the same domain as the main website.
+                iframe.sandbox.add("allow-scripts");
+                iframe.sandbox.add("allow-top-navigation-by-user-activation");
 
-            //iframe.src = "data:text/html;charset=utf-8," + escape(html);
-            iframe.srcdoc =
-                "<!doctype html>\n" +
-                "\n" +
-                '<html lang="en">\n' +
-                "<head>\n" +
-                '<script src="' +
-                window.location.protocol +
-                "//" +
-                window.location.host +
-                '/iframe_api.js" ></script>\n' +
-                "<script " +
-                (enableModuleMode ? 'type="module" ' : "") +
-                'src="' +
-                scriptUrl +
-                '" ></script>\n' +
-                "<title></title>\n" +
-                "</head>\n" +
-                "</html>\n";
+                const scriptUrlObj = new URL(scriptUrl);
+                // Note: we define the base URL to be the same as the script URL to fix some issues with some scripts using Vite.
+                const scriptUrlBase = scriptUrlObj.protocol + "//" + scriptUrlObj.host;
 
-            iframe.addEventListener("load", () => {
-                resolve();
-            });
+                //iframe.src = "data:text/html;charset=utf-8," + escape(html);
+                iframe.srcdoc = `
+<!doctype html>
+<html lang="en">
+<head>
+<base href="${scriptUrlBase}">
+<script src="${window.location.protocol}//${window.location.host}/iframe_api.js" ></script>
+<script ${enableModuleMode ? 'type="module" ' : ""}src="${scriptUrl}" ></script>
+<title></title>
+</head>
+</html>
+`;
 
-            document.body.prepend(iframe);
+                iframe.addEventListener("load", () => {
+                    resolve();
+                });
 
-            this.scripts.set(scriptUrl, iframe);
-            this.registerIframe(iframe);
-        });
+                document.body.prepend(iframe);
+
+                this.scripts.set(scriptUrl, iframe);
+                this.registerIframe(iframe);
+            }),
+
+            new Promise<void>((_, reject) => {
+                setTimeout(() => {
+                    reject(new Error("Timeout while loading script " + scriptUrl));
+                }, 30_000);
+            }),
+        ]);
     }
 
     private getBaseUrl(src: string, source: MessageEventSource | null): string {
@@ -967,12 +989,16 @@ class IframeListener {
     /**
      * Sends the message to all allowed iframes.
      */
-    public postMessage(message: IframeResponseEvent, exceptOrigin?: MessageEventSource) {
+    public postMessage(
+        message: IframeResponseEvent,
+        exceptOrigin?: MessageEventSource,
+        transfer?: Transferable[]
+    ): void {
         for (const iframe of this.iframes.keys()) {
             if (exceptOrigin === iframe.contentWindow) {
                 continue;
             }
-            iframe.contentWindow?.postMessage(message, "*");
+            iframe.contentWindow?.postMessage(message, "*", transfer);
         }
     }
 

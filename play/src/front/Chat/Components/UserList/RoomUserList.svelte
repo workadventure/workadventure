@@ -59,7 +59,7 @@
         {#if $navChat === "chat"}
             <button
                 class="tw-p-3 hover:tw-bg-white/10 tw-rounded-xl tw-aspect-square tw-w-12"
-                on:click={() => navChat.set("users")}
+                on:click={() => navChat.switchToUserList()}
             >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -83,7 +83,7 @@
         {:else}
             <button
                 class="tw-p-3 hover:tw-bg-white/10 tw-rounded-2xl tw-aspect-square tw-w-12"
-                on:click={() => navChat.set("chat")}
+                on:click={() => navChat.switchToChat()}
             >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"

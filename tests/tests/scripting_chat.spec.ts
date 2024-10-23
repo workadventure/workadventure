@@ -48,12 +48,12 @@ test.describe("Scripting chat functions", () => {
       return WA.chat.sendChatMessage("Test message sent", "Test machine");
     });
 
-    await expect(page.locator("#chat").locator("#message")).toContainText(
+    await expect(page.locator("#chat").locator(".messageContainer")).toContainText(
       "Test message sent"
     );
 
     await expect(
-      page.locator("#chat").locator("#message").locator(".messageHeader")
+      page.locator("#chat").locator(".messageContainer").locator(".messageHeader")
     ).toContainText("Test machine");
 
     // Test start typing
@@ -106,7 +106,7 @@ test.describe("Scripting chat functions", () => {
     await Map.teleportToPosition(bob, 32, 32);
 
     // Open new page for alice
-    const newBrowser = await browser.browserType().launch();
+    const newBrowser = await browser.newContext();
     const alice = await newBrowser.newPage();
     await alice.goto(Map.url("empty"));
     await login(alice, "alice", 4, "us-US", false);
@@ -153,5 +153,8 @@ test.describe("Scripting chat functions", () => {
 
     const chatMessageReceived = await chatMessageReceivedPromise;
     expect(chatMessageReceived).toBe("Test message sent");
+
+    await alice.close();
+    await newBrowser.close();
   });
 });

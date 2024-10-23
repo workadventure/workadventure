@@ -99,7 +99,7 @@
     >
         <div class="close-window tw-absolute -tw-right-[4.5rem] tw-top-2 tw-p-2 tw-bg-contrast/80 tw-rounded-2xl">
             <button
-                class="close-window tw-p-3 hover:tw-bg-white/10 tw-rounded-xl tw-aspect-square tw-w-12 tw-m-0"
+                class="tw-p-3 hover:tw-bg-white/10 tw-rounded-xl tw-aspect-square tw-w-12 tw-m-0"
                 data-testid="closeChatButton"
                 on:click={closeChat}
             >
@@ -139,13 +139,6 @@
     @include media-breakpoint-up(sm) {
         .chatWindow {
             width: 100% !important;
-            .close-window {
-                right: -42px;
-                top: 0;
-                bottom: 0;
-                margin: auto;
-                z-index: 100;
-            }
         }
     }
 
@@ -159,7 +152,6 @@
         max-width: calc(100vw - 82px) !important;
         height: 100dvh !important;
         z-index: 2000;
-        pointer-events: auto;
         .close-window {
             cursor: pointer;
             align-self: end;

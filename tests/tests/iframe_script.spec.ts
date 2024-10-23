@@ -221,7 +221,7 @@ test.describe("Iframe API", () => {
     });
 
     // Second browser
-    const newBrowser = await browser.browserType().launch();
+    const newBrowser = await browser.newContext();
     const pageBob = await newBrowser.newPage();
     await pageBob.goto(
       publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
@@ -246,8 +246,9 @@ test.describe("Iframe API", () => {
       await page.locator("#screenSharing").isDisabled({ timeout: 10000 })
     ).toBeFalsy();
 
-    pageBob.close();
-    page.close();
+    await pageBob.close();
+    await newBrowser.close();
+    await page.close();
   });
 
   test("test disable right click user button", async ({ page, browser }, {project}) => {

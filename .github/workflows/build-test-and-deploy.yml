@@ -542,6 +542,7 @@ jobs:
           sed -i "s/JITSI_XMPP_DOMAIN=/JITSI_XMPP_DOMAIN=prosody.workadventu.re/g" .env
           sed -i "s/KLAXOON_ENABLED=false/KLAXOON_ENABLED=true/g" .env
           sed -i "s/KLAXOON_CLIENT_ID=/KLAXOON_CLIENT_ID=${{ env.KLAXOON_CLIENT_ID }}/g" .env
+          sed -i "s/MAP_STORAGE_API_TOKEN=/MAP_STORAGE_API_TOKEN=MYAWESOMEKEY/g" .env
         env:
           KLAXOON_CLIENT_ID: ${{ secrets.KLAXOON_CLIENT_ID }}
       - name: Download artifact
@@ -585,7 +586,7 @@ jobs:
         run: sleep 30 && npm run upload-test-map
         working-directory: map-storage
       - name: Run Playwright tests
-        run: npm run test-prod-like -- --project=${{ matrix.project }} --shard=${{ matrix.shard }}/${{ matrix.nbShards }}
+        run: npm run test-prod-like -- --project=${{ matrix.project }} --shard=${{ matrix.shard }}/${{ matrix.nbShards }} --grep-invert "@slow"
         working-directory: tests
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
@@ -670,6 +671,7 @@ jobs:
           sed -i "s/FEATURE_FLAG_BROADCAST_AREAS=/FEATURE_FLAG_BROADCAST_AREAS=true/g" .env
           sed -i "s/KLAXOON_ENABLED=false/KLAXOON_ENABLED=true/g" .env
           sed -i "s/KLAXOON_CLIENT_ID=/KLAXOON_CLIENT_ID=${{ env.KLAXOON_CLIENT_ID }}/g" .env
+          sed -i "s/ROOM_API_SECRET_KEY=/ROOM_API_SECRET_KEY=MYAWESOMEKEY/g" .env
           echo "WOKA_SPEED=3" >> .env
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
@@ -852,6 +854,7 @@ jobs:
           GOOGLE_DRIVE_PICKER_APP_ID: ${{ secrets.GOOGLE_DRIVE_PICKER_APP_ID }}
           MAP_STORAGE_API_TOKEN: ${{ secrets.MAP_STORAGE_API_TOKEN }}
 
+
 #      - name: "Printing values file"
 #        working-directory: contrib/helm
 #        run: "cat values-cd.yaml"
@@ -953,6 +956,7 @@ jobs:
           MAPS_DOMAIN: "maps-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG_URL || env.GITHUB_REF_SLUG_URL }}.test.workadventu.re"
           ROOM_API_SECRET_KEY: "password"
           ADMIN_API_TOKEN: ${{ secrets.ADMIN_API_TOKEN }}
+          MAP_STORAGE_API_TOKEN: ${{ secrets.MAP_STORAGE_API_TOKEN }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:

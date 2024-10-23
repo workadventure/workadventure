@@ -156,6 +156,8 @@ export class AreasPropertiesListener {
             for (const property of areaData.properties) {
                 this.removePropertyFilter(property, area);
             }
+
+            this.scene.landingAreas = this.scene.landingAreas.filter((landingArea) => landingArea.id !== areaData.id);
         }
     }
 
@@ -200,7 +202,11 @@ export class AreasPropertiesListener {
                 if (property.areaName && property.areaName !== "") {
                     url = `${property.url}#${property.areaName}`;
                 }
-                this.handleExitPropertyOnEnter(url);
+
+                if (this.scene.landingAreas.every((area) => areaData.id !== area.id)) {
+                    this.handleExitPropertyOnEnter(url);
+                }
+
                 break;
             }
             case "personalAreaPropertyData": {
@@ -569,7 +575,8 @@ export class AreasPropertiesListener {
     }
 
     private handleMatrixRoomAreaOnEnter(property: MatrixRoomPropertyData) {
-        if (this.scene.connection && property.serverData?.matrixRoomId && get(userIsConnected)) {
+        const isConnected = get(userIsConnected);
+        if (this.scene.connection && property.serverData?.matrixRoomId && isConnected) {
             this.scene.connection
                 .queryEnterChatRoomArea(property.serverData.matrixRoomId)
                 .then(() => {
@@ -581,7 +588,7 @@ export class AreasPropertiesListener {
                 .then((room: ChatRoom | undefined) => {
                     if (!room) return;
                     selectedRoom.set(room);
-                    navChat.set("chat");
+                    navChat.switchToChat();
                     chatZoneLiveStore.set(true);
                     if (property.shouldOpenAutomatically) chatVisibilityStore.set(true);
                 })
@@ -589,8 +596,11 @@ export class AreasPropertiesListener {
                     Sentry.captureMessage(`Failed to join room area : ${error}`);
                     console.error(error);
                 });
-
             return;
+        }
+
+        if (!isConnected && property.shouldOpenAutomatically) {
+            chatVisibilityStore.set(true);
         }
     }
 
@@ -777,6 +787,7 @@ export class AreasPropertiesListener {
 
     private handleMatrixRoomAreaOnLeave(property: MatrixRoomPropertyData) {
         if (!get(userIsConnected)) {
+            chatVisibilityStore.set(false);
             return;
         }
 
@@ -926,6 +937,7 @@ export class AreasPropertiesListener {
     }
 
     private handleExitPropertyOnEnter(url: string): void {
+        this.scene;
         this.scene
             .onMapExit(Room.getRoomPathFromExitUrl(url, window.location.toString()))
             .catch((e) => console.error(e));

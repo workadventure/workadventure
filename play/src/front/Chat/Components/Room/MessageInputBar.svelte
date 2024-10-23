@@ -4,9 +4,10 @@
     import { selectedChatMessageToReply } from "../../Stores/ChatStore";
     import { getChatEmojiPicker } from "../../EmojiPicker";
     import LL from "../../../../i18n/i18n-svelte";
+    import { ENABLE_CHAT_UPLOAD } from "../../../Enum/EnvironmentVariable";
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import MessageInput from "./MessageInput.svelte";
-    import { IconCircleX, IconMoodSmile, IconSend } from "@wa-icons";
+    import { IconCircleX, IconMoodSmile } from "@wa-icons";
 
     export let room: ChatRoom;
 
@@ -18,7 +19,7 @@
 
     const selectedChatChatMessageToReplyUnsubscriber = selectedChatMessageToReply.subscribe((chatMessage) => {
         if (chatMessage !== null) {
-            //messageInput.focus();
+            messageInput.focus();
         }
     });
 
@@ -116,26 +117,39 @@
     />
     {#if message.trim().length === 0}
         <button
-                class="disabled:tw-opacity-30 disabled:!tw-cursor-none tw-p-0 tw-m-0 tw-h-11 tw-w-11 tw-flex tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-none"
-                bind:this={emojiButtonRef}
-                on:click={openCloseEmojiPicker}
+            class="disabled:tw-opacity-30 disabled:!tw-cursor-none tw-p-0 tw-m-0 tw-h-11 tw-w-11 tw-flex tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-none"
+            bind:this={emojiButtonRef}
+            on:click={openCloseEmojiPicker}
         >
             <IconMoodSmile font-size={18} />
         </button>
-        <MessageFileInput {room} />
+
+        {#if ENABLE_CHAT_UPLOAD}
+            <MessageFileInput {room} />
+        {/if}
     {:else}
         <button
-                data-testid="sendMessageButton"
-                class="disabled:tw-opacity-30 disabled:!tw-cursor-none disabled:tw-text-white tw-py-0 tw-px-3 tw-m-0 tw-bg-secondary tw-h-full tw-rounded-none"
-                disabled={message.trim().length === 0}
-                on:click={() => sendMessage(message)}
+            data-testid="sendMessageButton"
+            class="disabled:tw-opacity-30 disabled:!tw-cursor-none disabled:tw-text-white tw-py-0 tw-px-3 tw-m-0 tw-bg-secondary tw-h-full tw-rounded-none"
+            disabled={message.trim().length === 0}
+            on:click={() => sendMessage(message)}
         >
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-send" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="icon icon-tabler icon-tabler-send"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                stroke-width="1"
+                stroke="#ffffff"
+                fill="none"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                 <path d="M10 14l11 -11" />
                 <path d="M21 3l-6.5 18a.55 .55 0 0 1 -1 0l-3.5 -7l-7 -3.5a.55 .55 0 0 1 0 -1l18 -6.5" />
             </svg>
         </button>
     {/if}
-
 </div>

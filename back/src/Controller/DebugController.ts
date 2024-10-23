@@ -1,4 +1,4 @@
-import { stringify } from "circular-json";
+import { stringify } from "flatted";
 import { HttpRequest, HttpResponse } from "uWebSockets.js";
 import { parse } from "query-string";
 import * as Sentry from "@sentry/node";

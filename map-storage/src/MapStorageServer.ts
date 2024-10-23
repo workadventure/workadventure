@@ -103,8 +103,6 @@ const mapStorageServer: MapStorageServer = {
             const mapUrl = new URL(call.request.mapKey);
             const mapKey = mapPathUsingDomainWithPrefix(mapUrl.pathname, mapUrl.hostname);
 
-            console.log(">>>>", { mapUrl, mapkey: call.request.mapKey, mapkeyafter: mapKey });
-
             await editionLocks.waitForLock(mapKey, async () => {
                 const editMapCommandMessage = call.request.editMapCommandMessage;
                 if (!editMapCommandMessage || !editMapCommandMessage.editMapMessage?.message) {

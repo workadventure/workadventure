@@ -56,7 +56,6 @@
         lastBrNode?.scrollIntoView();
         lastBrNode?.remove();
     }
-    //emit onEnter
 </script>
 
 <div
@@ -72,6 +71,7 @@
     role="textbox"
     tabindex="0"
     dir="auto"
+    lang=""
 />
 
 <style lang="scss">

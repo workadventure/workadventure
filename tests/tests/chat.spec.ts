@@ -51,7 +51,7 @@ test.describe("Chat @chat", () => {
       await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);
 
       // Second browser
-      const newBrowser = await browser.browserType().launch();
+      const newBrowser = await browser.newContext();
       const page2 = await newBrowser.newPage();
       await page2.goto(publicTestMapUrl("tests/E2E/livezone.json", "chat"));
       const nickname2 = getUniqueNickname("B");

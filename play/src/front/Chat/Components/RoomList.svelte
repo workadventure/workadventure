@@ -12,6 +12,11 @@
     import { UserProviderMerger } from "../UserProviderMerger/UserProviderMerger";
     import WokaFromUserId from "../../Components/Woka/WokaFromUserId.svelte";
     import getCloseImg from "../images/get-close.png";
+    import {
+        ENABLE_CHAT,
+        ENABLE_CHAT_DISCONNECTED_LIST,
+        ENABLE_CHAT_ONLINE_LIST,
+    } from "../../Enum/EnvironmentVariable";
     import Room from "./Room/Room.svelte";
     import RoomTimeline from "./Room/RoomTimeline.svelte";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
@@ -66,6 +71,8 @@
     let searchLoader = false;
     let searchActive = false;
 
+    const showNavBar = (ENABLE_CHAT_ONLINE_LIST || ENABLE_CHAT_DISCONNECTED_LIST) && ENABLE_CHAT;
+
     const handleKeyUp = (userProviderMerger: UserProviderMerger) => {
         clearTimeout(typingTimer);
         typingTimer = setTimeout(() => {
@@ -95,6 +102,18 @@
             });
         return;
     };
+
+    async function initChatConnectionEncryption() {
+        try {
+            await chat.initEndToEndEncryption();
+        } catch (error) {
+            console.error("Failed to initChatConnectionEncryption", error);
+        }
+    }
+
+    const chatStatusStore = chat.connectionStatus;
+    $: isEncryptionRequiredAndNotSet = chat.isEncryptionRequiredAndNotSet;
+    $: isGuest = chat.isGuest;
 
     function openRoomsIfCollapsedBeforeNewRoom(rooms: ChatRoom[]) {
         if (rooms.length !== 0 && displayRooms === false) {
@@ -131,14 +150,6 @@
         proximityChatRoom.hasUnreadMessages.set(false);
     }
 
-    async function initChatConnectionEncryption() {
-        try {
-            await chat.initEndToEndEncryption();
-        } catch (error) {
-            console.error("Failed to initChatConnectionEncryption", error);
-        }
-    }
-
     $: filteredDirectRoom = $directRooms
         .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
         .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
@@ -149,10 +160,6 @@
     $: filteredRoomInvitations = $roomInvitations
         .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
         .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
-
-    $: isGuest = chat.isGuest;
-    const chatStatusStore = chat.connectionStatus;
-    $: isEncryptionRequiredAndNotSet = chat.isEncryptionRequiredAndNotSet;
 
     $: displayTwoColumnLayout = sideBarWidth >= CHAT_LAYOUT_LIMIT;
 
@@ -177,33 +184,35 @@
             <div class="tw-p-2 tw-flex tw-items-center tw-absolute tw-w-full tw-z-40">
                 <div class={searchActive ? "tw-hidden" : ""}>
                     {#if $navChat === "chat"}
-                        <button
-                            class="tw-p-3 hover:tw-bg-white/10 tw-rounded-xl tw-aspect-square tw-w-12"
-                            on:click={() => navChat.set("users")}
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                class="icon icon-tabler icon-tabler-users"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                stroke-width="1.5"
-                                stroke="#ffffff"
-                                fill="none"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
+                        {#if showNavBar}
+                            <button
+                                class="tw-p-3 hover:tw-bg-white/10 tw-rounded-xl tw-aspect-square tw-w-12"
+                                on:click={() => navChat.switchToUserList()}
                             >
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
-                                <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
-                                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                                <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
-                            </svg>
-                        </button>
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    class="icon icon-tabler icon-tabler-users"
+                                    width="24"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    stroke-width="1.5"
+                                    stroke="#ffffff"
+                                    fill="none"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+                                    <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                                    <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
+                                </svg>
+                            </button>
+                        {/if}
                     {:else}
                         <button
                             class="tw-p-3 hover:tw-bg-white/10 tw-rounded-2xl tw-aspect-square tw-w-12"
-                            on:click={() => navChat.set("chat")}
+                            on:click={() => navChat.switchToChat()}
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -284,6 +293,7 @@
                             </svg>
                         {/if}
                     </button>
+                    <!-- searchbar -->
                     {#if searchActive}
                         {#await userProviderMergerPromise}
                             <div />
@@ -301,7 +311,6 @@
                                         on:keydown={handleKeyDown}
                                         on:keyup={() => handleKeyUp(userProviderMerger)}
                                         bind:value={$chatSearchBarValue}
-                                        autofocus
                                     />
                                 </div>
                             {/if}
@@ -531,54 +540,54 @@
                     {/if}
                 {/if}
             </div>
-            <!--{#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}-->
-            <div class="tw-sticky tw-bottom-0 tw-w-full tw-backdrop-blur-md tw-mt-3">
-                <button
-                    data-testid="restoreEncryptionButton"
-                    on:click|stopPropagation={initChatConnectionEncryption}
-                    class="tw-text-white tw-flex tw-gap-2 tw-justify-center tw-w-full tw-bg-white/20 hover:tw-bg-neutral hover:tw-brightness-100 tw-m-0 tw-rounded-none tw-py-2 tw-px-3 tw-appearance-none"
-                >
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <g clip-path="url(#clip0_4440_9037)">
-                            <path
-                                d="M19 17.9994C19.9283 17.9994 20.8185 17.6307 21.4749 16.9743C22.1313 16.3179 22.5 15.4277 22.5 14.4994C22.5 13.5712 22.1313 12.6809 21.4749 12.0246C20.8185 11.3682 19.9283 10.9994 19 10.9994H18C18.397 9.23143 17.715 7.40643 16.212 6.21243C14.709 5.01943 12.612 4.63743 10.712 5.21243C8.81201 5.78743 7.39701 7.23143 7.00001 8.99943C4.80101 8.91143 2.84501 10.3254 2.33401 12.3724C1.82201 14.4194 2.89801 16.5264 4.90001 17.3994"
-                                stroke="white"
-                                stroke-width="1.5"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
-                            <path
-                                d="M8 16C8 15.7348 8.10536 15.4804 8.29289 15.2929C8.48043 15.1054 8.73478 15 9 15H15C15.2652 15 15.5196 15.1054 15.7071 15.2929C15.8946 15.4804 16 15.7348 16 16V19C16 19.2652 15.8946 19.5196 15.7071 19.7071C15.5196 19.8946 15.2652 20 15 20H9C8.73478 20 8.48043 19.8946 8.29289 19.7071C8.10536 19.5196 8 19.2652 8 19V16Z"
-                                stroke="white"
-                                stroke-width="1.5"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
-                            <path
-                                d="M10 15V13C10 12.4696 10.2107 11.9609 10.5858 11.5858C10.9609 11.2107 11.4696 11 12 11C12.5304 11 13.0391 11.2107 13.4142 11.5858C13.7893 11.9609 14 12.4696 14 13V15"
-                                stroke="white"
-                                stroke-width="1.5"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
-                        </g>
-                        <defs>
-                            <clipPath id="clip0_4440_9037">
-                                <rect width="24" height="24" fill="white" />
-                            </clipPath>
-                        </defs>
-                    </svg>
-                    <div class="tw-text-sm tw-font-bold tw-grow tw-text-left">
-                        {$LL.chat.e2ee.encryptionNotConfigured()}
-                    </div>
-                    <div
-                        class="tw-text-xs tw-rounded tw-border tw-border-solid tw-border-white tw-py-0.5 tw-px-1.5 group-hover:tw-bg-white/10"
+            {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}
+                <div class="tw-sticky tw-bottom-0 tw-w-full tw-backdrop-blur-md tw-mt-3">
+                    <button
+                        data-testid="restoreEncryptionButton"
+                        on:click|stopPropagation={initChatConnectionEncryption}
+                        class="tw-text-white tw-flex tw-gap-2 tw-justify-center tw-w-full tw-bg-white/20 hover:tw-bg-neutral hover:tw-brightness-100 tw-m-0 tw-rounded-none tw-py-2 tw-px-3 tw-appearance-none"
                     >
-                        Configurer <!-- TODO HUGO -->
-                    </div>
-                </button>
-            </div>
-            <!--{/if}-->
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <g clip-path="url(#clip0_4440_9037)">
+                                <path
+                                    d="M19 17.9994C19.9283 17.9994 20.8185 17.6307 21.4749 16.9743C22.1313 16.3179 22.5 15.4277 22.5 14.4994C22.5 13.5712 22.1313 12.6809 21.4749 12.0246C20.8185 11.3682 19.9283 10.9994 19 10.9994H18C18.397 9.23143 17.715 7.40643 16.212 6.21243C14.709 5.01943 12.612 4.63743 10.712 5.21243C8.81201 5.78743 7.39701 7.23143 7.00001 8.99943C4.80101 8.91143 2.84501 10.3254 2.33401 12.3724C1.82201 14.4194 2.89801 16.5264 4.90001 17.3994"
+                                    stroke="white"
+                                    stroke-width="1.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                                <path
+                                    d="M8 16C8 15.7348 8.10536 15.4804 8.29289 15.2929C8.48043 15.1054 8.73478 15 9 15H15C15.2652 15 15.5196 15.1054 15.7071 15.2929C15.8946 15.4804 16 15.7348 16 16V19C16 19.2652 15.8946 19.5196 15.7071 19.7071C15.5196 19.8946 15.2652 20 15 20H9C8.73478 20 8.48043 19.8946 8.29289 19.7071C8.10536 19.5196 8 19.2652 8 19V16Z"
+                                    stroke="white"
+                                    stroke-width="1.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                                <path
+                                    d="M10 15V13C10 12.4696 10.2107 11.9609 10.5858 11.5858C10.9609 11.2107 11.4696 11 12 11C12.5304 11 13.0391 11.2107 13.4142 11.5858C13.7893 11.9609 14 12.4696 14 13V15"
+                                    stroke="white"
+                                    stroke-width="1.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                            </g>
+                            <defs>
+                                <clipPath id="clip0_4440_9037">
+                                    <rect width="24" height="24" fill="white" />
+                                </clipPath>
+                            </defs>
+                        </svg>
+                        <div class="tw-text-sm tw-font-bold tw-grow tw-text-left">
+                            {$LL.chat.e2ee.encryptionNotConfigured()}
+                        </div>
+                        <div
+                            class="tw-text-xs tw-rounded tw-border tw-border-solid tw-border-white tw-py-0.5 tw-px-1.5 group-hover:tw-bg-white/10"
+                        >
+                            Configurer <!-- TODO HUGO -->
+                        </div>
+                    </button>
+                </div>
+            {/if}
         </div>
     {/if}
     {#if $selectedRoom !== undefined}

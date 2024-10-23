@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { ComponentType } from "svelte";
+    import { ComponentType, createEventDispatcher } from "svelte";
     import { MapStore } from "@workadventure/store-utils";
     import { ChatMessage, ChatMessageReaction, ChatMessageType } from "../../Connection/ChatConnection";
     import LL, { locale } from "../../../../i18n/i18n-svelte";
@@ -21,8 +21,16 @@
     export let reactions: MapStore<string, ChatMessageReaction> | undefined;
     export let replyDepth = 0;
 
+    const dispatch = createEventDispatcher();
+
     const { id, sender, isMyMessage, date, content, quotedMessage, isQuotedMessage, type, isDeleted, isModified } =
         message;
+
+    const updateMessageBody = () => {
+        dispatch("updateMessageBody", {
+            id: message.id,
+        });
+    };
 
     const messageFromSystem = type === "incoming" || type === "outcoming";
 
@@ -40,14 +48,15 @@
 
 <div
     id="message"
+    tabindex="-1"
     class={`${isMyMessage && "tw-self-end tw-flex-row-reverse tw-relative"} ${
         messageFromSystem && "tw-justify-center"
-    } tw-select-text tw-group/message`}
+    } tw-select-text tw-group/message block-user-action messageContainer`}
 >
     <div
-        class="container-grid tw-justify-start {replyDepth === 0 ? 'tw-pl-3 tw-pr-4' : ''} {!isDeleted ? 'group-hover/message:tw-pb-4' : '' } ${isMyMessage
-            ? 'tw-justify-end grid-container-inverted'
-            : 'tw-justify-start'}"
+        class="container-grid tw-justify-start {replyDepth === 0 ? 'tw-pl-3 tw-pr-4' : ''} {!isDeleted
+            ? 'group-hover/message:tw-pb-4'
+            : ''} ${isMyMessage ? 'tw-justify-end grid-container-inverted' : 'tw-justify-start'}"
     >
         <div
             class="messageHeader tw-text-gray-500 tw-text-xxs tw-p-0 tw-m-0 tw-flex tw-justify-between tw-items-end tw-opacity-0 tw-h-0 group-hover/message:tw-pt-1 group-hover/message:tw-h-auto group-hover/message:tw-opacity-100
@@ -66,7 +75,7 @@
                 })}</span
             >
         </div>
-        {#if (!isMyMessage || isQuotedMessage) && (sender !== undefined) && (replyDepth === 0)}
+        {#if (!isMyMessage || isQuotedMessage) && sender !== undefined && replyDepth === 0}
             <div class="avatar tw-pt-1.5">
                 <Avatar avatarUrl={sender?.avatarUrl} fallbackName={sender?.username} />
             </div>
@@ -74,10 +83,18 @@
 
         <div
             class="message
-                    {$isDeleted && !isMyMessage && !messageFromSystem && replyDepth === 0 ? 'tw-bg-white/10 tw-mr-12' : ''}
-                    {$isDeleted && isMyMessage && !messageFromSystem && replyDepth === 0 ? 'tw-bg-white/10 tw-ml-12' : ''}
-                    {!isMyMessage && !messageFromSystem && !$isDeleted && replyDepth === 0 ? 'tw-bg-contrast tw-mr-12' : ''}
-                    {isMyMessage && !messageFromSystem && !$isDeleted && replyDepth === 0 ? 'tw-bg-secondary tw-ml-12' : ''}
+                    {$isDeleted && !isMyMessage && !messageFromSystem && replyDepth === 0
+                ? 'tw-bg-white/10 tw-mr-12'
+                : ''}
+                    {$isDeleted && isMyMessage && !messageFromSystem && replyDepth === 0
+                ? 'tw-bg-white/10 tw-ml-12'
+                : ''}
+                    {!isMyMessage && !messageFromSystem && !$isDeleted && replyDepth === 0
+                ? 'tw-bg-contrast tw-mr-12'
+                : ''}
+                    {isMyMessage && !messageFromSystem && !$isDeleted && replyDepth === 0
+                ? 'tw-bg-secondary tw-ml-12'
+                : ''}
                     {type === 'audio' || type === 'file' ? 'tw-rounded-full' : 'tw-rounded-xl'}
                     {reactions !== undefined && !$isDeleted && replyDepth === 0 ? 'tw-mb-4 tw-p-1' : ''}"
         >
@@ -92,7 +109,9 @@
                 {#if replyDepth > 0}
                     <div class="tw-px-2 tw-pt-1 tw-text-xxs tw-font-bold">{isMyMessage ? "You" : sender?.username}</div>
                 {/if}
-                <svelte:component this={messageType[type]} {content} hasDepth={replyDepth > 0} />
+
+                <svelte:component this={messageType[type]} on:updateMessageBody={updateMessageBody} {content} />
+
                 {#if reactions !== undefined}
                     <MessageReactions
                         classes={isMyMessage ? "tw-bg-secondary tw-right-2" : "tw-bg-contrast"}
@@ -108,7 +127,9 @@
 
             {#if !isQuotedMessage && !$isDeleted && message.type !== "proximity" && message.type !== "incoming" && message.type !== "outcoming" && ($selectedChatMessageToEdit === null || $selectedChatMessageToEdit.id !== id)}
                 <div
-                    class="options tw-backdrop-blur-sm tw-pt-1 tw-pb-1.5 tw-px-3 tw-rounded-3xl tw-z-50 -tw-bottom-4 {!isMyMessage ? 'tw-mr-2 tw-right-1 tw-bg-contrast-600' : 'tw-left-2 tw-bg-secondary-600'}"
+                    class="options tw-backdrop-blur-sm tw-pt-1 tw-pb-1.5 tw-px-3 tw-rounded-3xl tw-z-50 -tw-bottom-4 {!isMyMessage
+                        ? 'tw-mr-2 tw-right-1 tw-bg-contrast-600'
+                        : 'tw-left-2 tw-bg-secondary-600'}"
                 >
                     <MessageOptions {message} />
                 </div>
