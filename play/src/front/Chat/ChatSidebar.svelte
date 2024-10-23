@@ -97,9 +97,9 @@
         style="width: {sideBarWidth}px; max-width: {Math.min(sideBarWidth, document.documentElement.clientWidth)}px;"
         class="chatWindow !tw-min-w-full sm:!tw-min-w-[360px] tw-bg-contrast/80 tw-backdrop-blur-md tw-p-0"
     >
-        <div class="tw-absolute -tw-right-[4.5rem] tw-top-2 tw-p-2 tw-bg-contrast/80 tw-rounded-2xl">
-            <div
-                class="close-window tw-p-3 hover:tw-bg-white/10 tw-rounded-xl tw-aspect-square tw-w-12"
+        <div class="close-window tw-absolute -tw-right-[4.5rem] tw-top-2 tw-p-2 tw-bg-contrast/80 tw-rounded-2xl">
+            <button
+                class="close-window tw-p-3 hover:tw-bg-white/10 tw-rounded-xl tw-aspect-square tw-w-12 tw-m-0"
                 data-testid="closeChatButton"
                 on:click={closeChat}
             >
@@ -119,7 +119,7 @@
                     <path d="M18 6l-12 12" />
                     <path d="M6 6l12 12" />
                 </svg>
-            </div>
+            </button>
         </div>
         <Chat {sideBarWidth} />
 
@@ -139,6 +139,13 @@
     @include media-breakpoint-up(sm) {
         .chatWindow {
             width: 100% !important;
+            .close-window {
+                right: -42px;
+                top: 0;
+                bottom: 0;
+                margin: auto;
+                z-index: 100;
+            }
         }
     }
 
@@ -149,7 +156,7 @@
         min-width: 335px !important;
         width: 335px;
         pointer-events: auto;
-
+        max-width: calc(100vw - 82px) !important;
         height: 100dvh !important;
         z-index: 2000;
         pointer-events: auto;

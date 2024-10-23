@@ -110,7 +110,6 @@
     }
 
     .wa-avatar{
-        @apply tw-w-9 tw-h-9 tw-rounded-xl tw-border-2 tw-border-lighter-purple tw-border-solid;
         .wa-container{
             @apply tw-rounded-xl tw-overflow-hidden tw-w-full tw-h-full;
             img {
@@ -136,12 +135,6 @@
     }
 
     .wa-dropdown{
-        @apply tw-relative tw-bg-dark-purple/95 tw-rounded;
-
-        button{
-            @apply tw-bg-dark-purple/95;
-        }
-
         &-menu{
             @apply tw-bg-dark-purple/95 tw-absolute tw-right-0 tw-z-20 tw-min-w-[150px] tw-shadow-lg tw-border tw-rounded tw-flex tw-flex-col tw-border-solid tw-font-medium tw-text-white tw-border-light-purple tw-text-xs;
         }

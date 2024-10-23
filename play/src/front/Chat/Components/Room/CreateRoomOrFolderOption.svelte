@@ -4,7 +4,7 @@
     import CreateRoomModal from "./CreateRoomModal.svelte";
     import CreateFolderModal from "./CreateFolderModal.svelte";
     import RoomOption from "./RoomMenu/RoomOption.svelte";
-    import { IconFolder, IconMessage, IconSquarePlus } from "@wa-icons";
+    import { IconFolder, IconMessage } from "@wa-icons";
 
     export let parentID: string | undefined = undefined;
     export let parentName = "";
@@ -32,21 +32,23 @@
 
 <button
     data-testid={`openOptionToCreateRoomOrFolder${parentName}`}
-    class="tw-p-0 tw-m-0 tw-p-1 tw-rounded-lg hover:tw-bg-white/10 {hideFolderOptions ? 'tw-bg-transparent' : 'tw-bg-secondary'}"
+    class="tw-m-0 tw-p-1 tw-rounded-lg hover:tw-bg-white/10 {hideFolderOptions
+        ? 'tw-bg-transparent'
+        : 'tw-bg-secondary'}"
     bind:this={optionButtonRef}
     on:click|preventDefault|stopPropagation={toggleSpaceOption}
 >
     <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="icon icon-tabler icon-tabler-dots"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            stroke-width="1.5"
-            stroke="#ffffff"
-            fill="none"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+        xmlns="http://www.w3.org/2000/svg"
+        class="icon icon-tabler icon-tabler-dots"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="#ffffff"
+        fill="none"
+        stroke-linecap="round"
+        stroke-linejoin="round"
     >
         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
         <path d="M5 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
