@@ -30,6 +30,7 @@ import { adminService } from "../services/AdminService";
 import { validateWebsocketQuery } from "../services/QueryValidator";
 import { SocketData } from "../models/Websocket/SocketData";
 import { emitInBatch } from "../services/IoSocketHelpers";
+import { Space } from "../models/Space";
 
 type UpgradeFailedInvalidData = {
     rejected: true;
@@ -505,6 +506,14 @@ export class IoSocketController {
                             chatID,
                             world: userData.world,
                             currentChatRoomArea: [],
+                            customJsonReplacer(key: unknown, value: unknown): string | undefined {
+                                if (key === "listenedZones") {
+                                    return `listenedZones : ${(value as Set<Zone>).size}`;
+                                } else if (key === "spaces") {
+                                    return `spaces : ${(value as Space[]).length}`;
+                                }
+                                return undefined;
+                            },
                         };
 
                         /* This immediately calls open handler, you must not use res after this call */

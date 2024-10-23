@@ -452,7 +452,9 @@ export class Space implements CustomJsonReplacerInterface {
         if (key === "name") {
             return this.name;
         } else if (key === "users") {
-            return `Users : ${this.users.size}`;
+            return `Users : ${(value as Map<number, SpaceUserExtended>).size}`;
+        } else if (key === "spaceStreamToPusher") {
+            return "spaceStreamToPusher";
         }
         return undefined;
     }
