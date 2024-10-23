@@ -134,8 +134,10 @@ class ConnectionManager {
         const tokenTmp = localUserStore.getAuthToken();
         //remove token in localstorage
         localUserStore.setAuthToken(null);
-        //user logout, set connected store for menu at false
-        userIsConnected.set(false);
+        //user logout, set connected store for menu at false (actually don't do it because we are going to redirect and
+        // it shortly displays the "sign in" button before redirect happens)
+        //userIsConnected.set(false);
+
         // check if we are in a room
         if (!ENABLE_OPENID || !this._currentRoom) {
             window.location.assign("/login");

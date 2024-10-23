@@ -64,7 +64,7 @@
     }
 
     function logOut() {
-        disableMenuStores();
+        //disableMenuStores();
         return connectionManager.logout();
     }
 
