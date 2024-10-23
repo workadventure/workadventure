@@ -444,4 +444,83 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.getByText(privateFolder1).click();
     await expect(page.getByText(room)).toBeAttached();
   });
+
+  test("Verify a session with emoji", async ({ page, context, browser }, {
+    project,
+  }) => {
+    const isMobile = project.name === "mobilechromium";
+    await login(page, "test", 3, "us-US", isMobile);
+    await oidcMatrixUserLogin(page, isMobile);
+    await ChatUtils.openChat(page);
+    await ChatUtils.openCreateRoomDialog(page);
+    const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
+    await page.getByTestId("createRoomName").fill(privateChatRoom);
+    await page.getByTestId("createRoomVisibility").selectOption("private");
+    await page.getByTestId("createRoomEncryption").check();
+    await page.getByTestId("createRoomButton").click();
+    await ChatUtils.initEndToEndEncryption(privateChatRoom, page, context);
+
+    const newContext = await browser.newContext();
+    const otherPage = await newContext.newPage();
+    await otherPage.goto(Map.url("map"));
+    await login(otherPage, "testTwo", 3, "us-US", isMobile);
+    await oidcMatrixUserLogin(otherPage, isMobile);
+    await ChatUtils.openChat(otherPage);
+    await otherPage.getByText(privateChatRoom).click();
+    await otherPage.getByTestId("VerifyWithAnotherDeviceButton").click();
+
+    await page.getByTestId("VerifyTheSessionButton").click();
+
+    await page.getByTestId("matchButton").click();
+
+    await otherPage.getByTestId("matchButton").click();
+
+    await expect(page.getByTestId("understoodButton")).toBeAttached();
+
+    await expect(otherPage.getByTestId("understoodButton")).toBeAttached();
+    await otherPage.close();
+    await newContext.close();
+  });
+
+  test("Verify a session with emoji , one device click on mismatch button", async ({
+    page,
+    context,
+    browser,
+  }, { project }) => {
+    const isMobile = project.name === "mobilechromium";
+    await login(page, "test", 3, "us-US", isMobile);
+    await oidcMatrixUserLogin(page, isMobile);
+    await ChatUtils.openChat(page);
+    await ChatUtils.openCreateRoomDialog(page);
+    const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
+    await page.getByTestId("createRoomName").fill(privateChatRoom);
+    await page.getByTestId("createRoomVisibility").selectOption("private");
+    await page.getByTestId("createRoomEncryption").check();
+    await page.getByTestId("createRoomButton").click();
+    await ChatUtils.initEndToEndEncryption(privateChatRoom, page, context);
+
+    const newContext = await browser.newContext();
+    const otherPage = await newContext.newPage();
+    await otherPage.goto(Map.url("map"));
+    await login(otherPage, "testTwo", 3, "us-US", isMobile);
+    await oidcMatrixUserLogin(otherPage, isMobile);
+    await ChatUtils.openChat(otherPage);
+    await otherPage.getByText(privateChatRoom).click();
+    await otherPage.getByTestId("VerifyWithAnotherDeviceButton").click();
+
+    await page.getByTestId("VerifyTheSessionButton").click();
+
+    await page.getByTestId("matchButton").click();
+
+    await page.waitForTimeout(1000);
+
+    await otherPage.getByTestId("mismatchButton").click();
+
+    await expect(otherPage.getByTestId("errorEmojiLabel")).toBeAttached();
+
+    await page.pause();
+    
+    await otherPage.close();
+    await newContext.close();
+  });
 });

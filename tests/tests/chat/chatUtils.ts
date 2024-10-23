@@ -42,7 +42,7 @@ class ChatUtils {
 
     await page.getByText(roomName).click();
 
-    await page.getByText("Verify with security passphrase").click();
+    await page.getByTestId("VerifyWithPassphraseButton").click();
 
     //eslint-disable-next-line playwright/no-wait-for-timeout
     await page.waitForTimeout(1000);

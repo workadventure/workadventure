@@ -27,10 +27,16 @@
         {$LL.chat.chooseDeviceVerificationMethodModal.description()}
     </div>
     <svelte:fragment slot="action">
-        <button class=" tw-bg-secondary tw-flex-1 tw-justify-center tw-mx-4" on:click={startVerificationWithOtherDevice}
+        <button
+            data-testid="VerifyWithAnotherDeviceButton"
+            class=" tw-bg-secondary tw-flex-1 tw-justify-center tw-mx-4"
+            on:click={startVerificationWithOtherDevice}
             >{$LL.chat.chooseDeviceVerificationMethodModal.withOtherDevice()}
         </button>
-        <button class=" tw-bg-secondary tw-flex-1 tw-justify-center tw-mx-4" on:click={startVerificationWithPassphrase}
+        <button
+            data-testid="VerifyWithPassphraseButton"
+            class=" tw-bg-secondary tw-flex-1 tw-justify-center tw-mx-4"
+            on:click={startVerificationWithPassphrase}
             >{$LL.chat.chooseDeviceVerificationMethodModal.withPassphrase()}
         </button>
     </svelte:fragment>

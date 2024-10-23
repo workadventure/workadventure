@@ -94,19 +94,28 @@
             {#await donePromise}
                 {$LL.chat.verificationEmojiDialog.waitOtherDeviceConfirmation()}
             {:then}
-                <button class="tw-flex-1 tw-justify-center tw-bg-secondary" on:click={closeModal}
+                <button
+                    data-testid="understoodButton"
+                    class="tw-flex-1 tw-justify-center tw-bg-secondary "
+                    on:click={closeModal}
                     >{$LL.chat.verificationEmojiDialog.understood()}
                 </button>
             {:catch}
-                {$LL.chat.verificationEmojiDialog.error()}
+                <span data-testid="errorEmojiLabel">
+                    {$LL.chat.verificationEmojiDialog.error()}
+                </span>
             {/await}
         {:else}
             <button
                 class="tw-bg-danger-900 tw-flex-1 tw-justify-center tw-mx-4 tw-py-1"
+                data-testid="mismatchButton"
                 on:click={mismatchAndCloseModal}
                 >{$LL.chat.verificationEmojiDialog.mismatch()}
             </button>
-            <button class="tw-bg-secondary tw-flex-1 tw-justify-center tw-mx-4 tw-my-2 tw-py-1" on:click={confirmEmoji}
+            <button
+                data-testid="matchButton"
+                class="tw-bg-secondary tw-flex-1 tw-justify-center tw-mx-4 tw-my-2 tw-py-1"
+                on:click={confirmEmoji}
                 >{$LL.chat.verificationEmojiDialog.confirmation()}
             </button>
         {/if}
