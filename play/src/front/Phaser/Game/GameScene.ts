@@ -162,7 +162,7 @@ import { ExtensionModuleStatusSynchronization } from "../../Rules/StatusRules/Ex
 import { isActivatedStore as isCalendarActiveStore, calendarEventsStore } from "../../Stores/CalendarStore";
 import { isActivatedStore as isTodoListActiveStore, todoListsStore } from "../../Stores/TodoListStore";
 import { externalSvelteComponentStore } from "../../Stores/Utils/externalSvelteComponentStore";
-import { ExtensionModule, RoomMetadataType } from "../../ExternalModule/ExtensionModule";
+import { ExtensionModule } from "../../ExternalModule/ExtensionModule";
 import { SpaceInterface } from "../../Space/SpaceInterface";
 import { UserProviderInterface } from "../../Chat/UserProvider/UserProviderInterface";
 import { faviconManager } from "../../WebRtc/FaviconManager";
@@ -1956,52 +1956,48 @@ export class GameScene extends DirtyScene {
     }
 
     private initExtensionModule() {
-        if (this._room.metadata != undefined) {
-            const parsedRoomMetadata = RoomMetadataType.safeParse(this._room.metadata);
+        if (this._room.modules) {
+            const externalModules = import.meta.glob("../../external-modules/*/index");
 
-            if (!parsedRoomMetadata.success) {
-                console.error(
-                    "Unable to initialize Microsoft teams module due to room metadata parsing error : ",
-                    parsedRoomMetadata.error
-                );
-                return;
-            }
+            for (const moduleName of this._room.modules) {
+                const moduleFactory = externalModules[`../../external-modules/${moduleName}/index`];
 
-            for (const module of parsedRoomMetadata.data.modules ?? []) {
-                if (module !== "ms-teams") continue;
+                if (!moduleFactory) {
+                    throw new Error(`Unable to find module "${moduleName}" inside external modules`);
+                }
 
                 (async () => {
-                    try {
-                        const extensionModule = await import(`../../external-modules/ms-teams/index`);
-                        const defaultExtensionModule = extensionModule.default;
+                    const extensionModule = (await moduleFactory()) as { default: ExtensionModule };
+                    const defaultExtensionModule = extensionModule.default;
 
-                        defaultExtensionModule.init(parsedRoomMetadata.data, {
-                            workadventureStatusStore: availabilityStatusStore,
-                            userAccessToken: localUserStore.getAuthToken()!,
-                            roomId: this.roomUrl,
-                            externalModuleMessage: this.connection!.externalModuleMessage,
-                            onExtensionModuleStatusChange: ExtensionModuleStatusSynchronization.onStatusChange,
-                            calendarEventsStoreUpdate: calendarEventsStore.update,
-                            todoListStoreUpdate: todoListsStore.update,
-                            openCoWebSite: openCoWebSiteWithoutSource,
-                            closeCoWebsite,
-                            getOauthRefreshToken: this.connection?.getOauthRefreshToken.bind(this.connection),
-                            adminUrl: ADMIN_URL,
-                            externalSvelteComponent: externalSvelteComponentStore,
-                            spaceRegistry: this.spaceRegistry,
-                            logoutCallback: () => {
-                                connectionManager.logout();
-                            },
-                        });
-
-                        if (defaultExtensionModule.calendarSynchronised) isCalendarActiveStore.set(true);
-                        if (defaultExtensionModule.todoListSynchronized) isTodoListActiveStore.set(true);
-                        extensionModuleStore.add(defaultExtensionModule);
-                    } catch (error) {
-                        console.warn("Extension module initialization cancelled", error);
-                    } finally {
-                        console.info(`Extension module ${module} initialization finished`);
+                    const connection = this.connection;
+                    if (!connection) {
+                        throw new Error("Connection is undefined");
                     }
+
+                    defaultExtensionModule.init(this._room.metadata, {
+                        workadventureStatusStore: availabilityStatusStore,
+                        userAccessToken: localUserStore.getAuthToken()!,
+                        roomId: this.roomUrl,
+                        externalModuleMessage: connection.externalModuleMessage,
+                        onExtensionModuleStatusChange: ExtensionModuleStatusSynchronization.onStatusChange,
+                        calendarEventsStoreUpdate: calendarEventsStore.update,
+                        todoListStoreUpdate: todoListsStore.update,
+                        openCoWebSite: openCoWebSiteWithoutSource,
+                        closeCoWebsite,
+                        getOauthRefreshToken: connection.getOauthRefreshToken.bind(this.connection),
+                        adminUrl: ADMIN_URL,
+                        externalSvelteComponent: externalSvelteComponentStore,
+                        spaceRegistry: this.spaceRegistry,
+                        logoutCallback: () => {
+                            connectionManager.logout();
+                        },
+                    });
+
+                    if (defaultExtensionModule.calendarSynchronised) isCalendarActiveStore.set(true);
+                    if (defaultExtensionModule.todoListSynchronized) isTodoListActiveStore.set(true);
+                    extensionModuleStore.add(defaultExtensionModule);
+                    console.info(`Extension module ${module} initialization finished`);
                 })().catch((error) => console.error(error));
             }
         }

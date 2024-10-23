@@ -50,6 +50,7 @@ export class Room {
     private _reportIssuesUrl: string | undefined;
     private _entityCollectionsUrls: string[] | undefined;
     private _errorSceneLogo: string | undefined;
+    private _modules: string[] = [];
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -185,6 +186,7 @@ export class Room {
                 this._entityCollectionsUrls = data.entityCollectionsUrls ?? undefined;
 
                 this._errorSceneLogo = data.errorSceneLogo ?? undefined;
+                this._modules = data.modules ?? [];
 
                 return new MapDetail(data.mapUrl, data.wamUrl);
             } else if (errorApiDataChecking.success) {
@@ -386,5 +388,9 @@ export class Room {
 
     get errorSceneLogo(): string | undefined {
         return this._errorSceneLogo;
+    }
+
+    get modules(): string[] {
+        return this._modules;
     }
 }
