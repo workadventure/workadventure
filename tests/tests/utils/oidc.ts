@@ -51,6 +51,7 @@ export async function oidcLogout(page: Page, isMobile = false) {
   }
   await page.click("#menuIcon img:first-child");
   await page.click('button:has-text("Log out")');
+  await expect(page.getByRole('heading', { name: 'Profile' })).toBeHidden();
 }
 
 export async function oidcAdminTagLogin(page, isMobile = false) {
