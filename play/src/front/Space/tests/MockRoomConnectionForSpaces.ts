@@ -7,6 +7,7 @@ import {
     UpdateSpaceMetadataMessage,
     PublicEvent,
     PrivateEvent,
+    SpaceDestroyedMessage,
 } from "@workadventure/messages";
 import { Subject } from "rxjs";
 import { RoomConnectionForSpacesInterface } from "../SpaceRegistry/SpaceRegistry";
@@ -18,6 +19,7 @@ export class MockRoomConnectionForSpaces implements RoomConnectionForSpacesInter
     public updateSpaceMetadataMessageStream = new Subject<UpdateSpaceMetadataMessage>();
     public spacePublicMessageEvent = new Subject<PublicEvent>();
     public spacePrivateMessageEvent = new Subject<PrivateEvent>();
+    public spaceDestroyedMessage = new Subject<SpaceDestroyedMessage>();
     public emitPrivateSpaceEvent = vi.fn();
     public emitPublicSpaceEvent = vi.fn();
     public emitRemoveSpaceFilter = vi.fn();
