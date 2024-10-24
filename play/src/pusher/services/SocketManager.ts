@@ -545,7 +545,13 @@ export class SocketManager implements ZoneEventListener {
                 space.addClientWatcher(client);
             }
             space.addUser(socketData.spaceUser, client);
-            socketData.spaces.push(space);
+            if (socketData.spaces.has(spaceName)) {
+                console.error(`User ${socketData.name} is trying to join a space he is already in.`);
+                Sentry.captureException(
+                    new Error(`User ${socketData.name} is trying to join a space he is already in.`)
+                );
+            }
+            socketData.spaces.add(space.name);
 
             // client.spacesFilters = [
             //     new SpaceFilterMessage()
@@ -658,8 +664,20 @@ export class SocketManager implements ZoneEventListener {
                 id: socketData.userId,
                 chatID: playerDetailsMessage.chatID,
             });
-            socketData.spaces.forEach((space) => {
-                space.updateUser(partialSpaceUser, fieldMask);
+            socketData.spaces.forEach((spaceName) => {
+                const space = this.spaces.get(spaceName);
+                if (space) {
+                    space.updateUser(partialSpaceUser, fieldMask);
+                } else {
+                    console.error(
+                        `User ${socketData.name} thinks he is in space ${spaceName} but this space does not exist anymore.`
+                    );
+                    Sentry.captureException(
+                        new Error(
+                            `User ${socketData.name} thinks he is in space ${spaceName} but this space does not exist anymore.`
+                        )
+                    );
+                }
             });
         }
     }
@@ -739,12 +757,24 @@ export class SocketManager implements ZoneEventListener {
     leaveSpaces(socket: Socket) {
         const socketData = socket.getUserData();
         socketData.spacesFilters = new Map<string, SpaceFilterMessage[]>();
-        (socketData.spaces ?? []).forEach((space) => {
-            space.removeClientWatcher(socket);
-            space.removeUser(socketData.spaceUser.id);
-            this.deleteSpaceIfEmpty(space);
+        socketData.spaces.forEach((spaceName) => {
+            const space = this.spaces.get(spaceName);
+            if (space) {
+                space.removeClientWatcher(socket);
+                space.removeUser(socketData.spaceUser.id);
+                this.deleteSpaceIfEmpty(space);
+            } else {
+                console.error(
+                    `User ${socketData.name} thinks he is in space ${spaceName} but this space does not exist anymore.`
+                );
+                Sentry.captureException(
+                    new Error(
+                        `User ${socketData.name} thinks he is in space ${spaceName} but this space does not exist anymore.`
+                    )
+                );
+            }
         });
-        socketData.spaces = [];
+        socketData.spaces.clear();
     }
 
     private deleteSpaceIfEmpty(space: Space) {
@@ -1079,11 +1109,20 @@ export class SocketManager implements ZoneEventListener {
         this.forwardMessageToBack(client, message);
     }
 
+    private checkClientIsPartOfSpace(client: Socket, spaceName: string): void {
+        const socketData = client.getUserData();
+        if (!socketData.spaces.has(spaceName)) {
+            throw new Error(`Client is trying to do an operation on space ${spaceName} whose he is not part of`);
+        }
+    }
+
     handleAddSpaceFilterMessage(client: Socket, addSpaceFilterMessage: NonUndefinedFields<AddSpaceFilterMessage>) {
         const newFilter = addSpaceFilterMessage.spaceFilterMessage;
         const socketData = client.getUserData();
 
-        const space = socketData.spaces.find((space) => space.name === newFilter.spaceName);
+        this.checkClientIsPartOfSpace(client, newFilter.spaceName);
+
+        const space = this.spaces.get(newFilter.spaceName);
         if (space) {
             space.handleAddFilter(client, addSpaceFilterMessage);
             let spacesFilter = socketData.spacesFilters.get(space.name) || [];
@@ -1092,9 +1131,9 @@ export class SocketManager implements ZoneEventListener {
                 socketData.spacesFilters.set(space.name, spacesFilter);
             }
         } else {
-            console.error(`Add space filter called on a space (${space.name}) that does not exist on the user socket`);
+            console.error(`Add space filter called on a space (${newFilter.spaceName}) that does not exist`);
             Sentry.captureException(
-                new Error(`Add space filter called on a space (${space.name}) that does not exist on the user socket`)
+                new Error(`Add space filter called on a space (${newFilter.spaceName}) that does not exist`)
             );
         }
     }
@@ -1105,7 +1144,8 @@ export class SocketManager implements ZoneEventListener {
     ) {
         const newFilter = updateSpaceFilterMessage.spaceFilterMessage;
         const socketData = client.getUserData();
-        const space = socketData.spaces.find((space) => space.name === newFilter.spaceName);
+        this.checkClientIsPartOfSpace(client, newFilter.spaceName);
+        const space = this.spaces.get(newFilter.spaceName);
         if (space) {
             space.handleUpdateFilter(client, updateSpaceFilterMessage);
             const spacesFilter = socketData.spacesFilters.get(space.name);
@@ -1119,6 +1159,11 @@ export class SocketManager implements ZoneEventListener {
                     `SocketManager => handleUpdateSpaceFilterMessage => spacesFilter ${updateSpaceFilterMessage.spaceFilterMessage?.filterName} is undefined`
                 );
             }
+        } else {
+            console.error(`Update space filter called on a space (${newFilter.spaceName}) that does not exist`);
+            Sentry.captureException(
+                new Error(`Update space filter called on a space (${newFilter.spaceName}) that does not exist`)
+            );
         }
     }
 
@@ -1128,7 +1173,8 @@ export class SocketManager implements ZoneEventListener {
     ) {
         const oldFilter = removeSpaceFilterMessage.spaceFilterMessage;
         const socketData = client.getUserData();
-        const space = socketData.spaces.find((space) => space.name === oldFilter.spaceName);
+        this.checkClientIsPartOfSpace(client, oldFilter.spaceName);
+        const space = this.spaces.get(oldFilter.spaceName);
         if (space) {
             space.handleRemoveFilter(client, removeSpaceFilterMessage);
             const spacesFilter = socketData.spacesFilters.get(space.name);
@@ -1144,13 +1190,9 @@ export class SocketManager implements ZoneEventListener {
             }
             this.deleteSpaceIfEmpty(space);
         } else {
-            console.error(
-                `Remove space filter called on a space (${oldFilter.spaceName}) that does not exist on the user socket`
-            );
+            console.error(`Remove space filter called on a space (${oldFilter.spaceName}) that does not exist`);
             Sentry.captureException(
-                new Error(
-                    `Remove space filter called on a space (${oldFilter.spaceName}) that does not exist on the user socket`
-                )
+                new Error(`Remove space filter called on a space (${oldFilter.spaceName}) that does not exist`)
             );
         }
     }
@@ -1160,8 +1202,8 @@ export class SocketManager implements ZoneEventListener {
         const socketData = client.getUserData();
         const toUpdateValues = applyFieldMask(message.user, message.updateMask);
         merge(socketData.spaceUser, toUpdateValues);
-
-        const space = socketData.spaces.find((space) => space.name === message.spaceName);
+        this.checkClientIsPartOfSpace(client, message.spaceName);
+        const space = this.spaces.get(message.spaceName);
         if (!space) {
             throw new Error(
                 `Could not find space ${message.spaceName} when updating value(s) ${message.updateMask.join(", ")}`
@@ -1269,7 +1311,11 @@ export class SocketManager implements ZoneEventListener {
         if (space) {
             space.removeClientWatcher(client);
             space.removeUser(socketData.spaceUser.id);
-            socketData.spaces = socketData.spaces.filter((space) => space.name !== spaceName);
+            const success = socketData.spaces.delete(space.name);
+            if (!success) {
+                console.error("Could not find space", spaceName, "to leave");
+                Sentry.captureException(new Error("Could not find space " + spaceName + " to leave"));
+            }
             this.deleteSpaceIfEmpty(space);
         } else {
             console.error("Could not find space", spaceName, "to leave");
@@ -1359,24 +1405,6 @@ export class SocketManager implements ZoneEventListener {
             });
     }
 
-    // FIXME: remove this and the likes
-    handleKickOffSpaceUserMessage(
-        client: Socket,
-        spaceName: string,
-        participantId: string,
-        message: PusherToBackMessage["message"]
-    ) {
-        const socketData = client.getUserData();
-        const space = socketData.spaces.find((space) => space.name === spaceName);
-        // FIXME: the message should ALWAYS be forwarded to the back (because the same space  will live in many fronts)
-        // We probably need to refactor this part of the code into something more generic
-        if (!space) {
-            this.forwardMessageToBack(client, message);
-            return;
-        }
-        space.kickOffUser(socketData, participantId);
-    }
-
     async handleSearchMemberQuery(client: Socket, searchMemberQuery: SearchMemberQuery): Promise<SearchMemberAnswer> {
         const { roomId } = client.getUserData();
         const members = await adminService.searchMembers(roomId, searchMemberQuery.searchText);
@@ -1428,13 +1456,12 @@ export class SocketManager implements ZoneEventListener {
     // handle the public event for proximity message
     handlePublicEvent(client: Socket, publicEvent: PublicEventFrontToPusher) {
         const socketData = client.getUserData();
-        // FIXME: replace the space array with a map?
-        const space = socketData.spaces.find((space) => space.name === publicEvent.spaceName);
+
+        this.checkClientIsPartOfSpace(client, publicEvent.spaceName);
+        const space = this.spaces.get(publicEvent.spaceName);
         if (!space) {
             throw new Error(
-                `Trying to send a public event to a space that does not exist: "${
-                    publicEvent.spaceName
-                }". Existing spaces for user: ${socketData.spaces.map((space) => space.name).join(", ")}`
+                `Trying to send a public event to a space that does not exist: "${publicEvent.spaceName}".`
             );
         }
         if (!socketData.userId) {
@@ -1451,8 +1478,9 @@ export class SocketManager implements ZoneEventListener {
 
     handlePrivateEvent(client: Socket, privateEvent: PrivateEventFrontToPusher) {
         const socketData = client.getUserData();
-        // FIXME: replace the space array with a map?
-        const space = socketData.spaces.find((space) => space.name === privateEvent.spaceName);
+
+        this.checkClientIsPartOfSpace(client, privateEvent.spaceName);
+        const space = this.spaces.get(privateEvent.spaceName);
         if (!space) {
             throw new Error(
                 `Trying to send a private event to a space that does not exist: "${privateEvent.spaceName}"`

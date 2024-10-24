@@ -28,6 +28,7 @@ export type RoomConnectionForSpacesInterface = Pick<
     | "emitJoinSpace"
     | "emitUpdateSpaceMetadata"
     | "emitUpdateSpaceUserMessage"
+    | "spaceDestroyedMessage"
 >;
 
 /**
