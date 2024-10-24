@@ -476,7 +476,7 @@ export class IoSocketController {
                                 uuid: userData.userUuid,
                                 name,
                                 playUri: roomId,
-                                roomName,
+                                roomName: roomName === "" ? undefined : roomName,
                                 availabilityStatus,
                                 isLogged,
                                 color: Color.getColorByString(name),
