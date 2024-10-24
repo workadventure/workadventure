@@ -42,13 +42,11 @@ export class Space {
         private readonly localName: string,
         private spaceStreamToPusher: BackSpaceConnection,
         public backId: number,
-        watcher: Socket,
         private eventProcessor: EventProcessor
     ) {
         this.users = new Map<number, SpaceUserExtended>();
         this.metadata = new Map<string, unknown>();
         this.clientWatchers = new Map<number, Socket>();
-        this.addClientWatcher(watcher);
         debug(`created : ${name}`);
     }
 
