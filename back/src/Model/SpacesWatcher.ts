@@ -6,8 +6,8 @@ const debug = Debug("space");
 
 /**
  * SpacesWatcher is a class that represent a watcher (socket: SpaceSocket) of spaces identified by his uuid.
- * He will be notified when a user joins or leaves one of his watched space. When a user, associated to one of his
- * watched space, updates his data.
+ * It will be notified when a user joins or leaves one of his watched space. When a user, associated to one of his
+ * watched space, updates its data.
  */
 export class SpacesWatcher {
     private _spacesWatched: string[];
