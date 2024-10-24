@@ -14,7 +14,6 @@ import type {
     SubMessage,
 } from "@workadventure/messages";
 import { PusherRoom } from "../PusherRoom";
-import { Space } from "../Space";
 import { Zone } from "../Zone";
 import { PointInterface } from "./PointInterface";
 import { ViewportInterface } from "./ViewportMessage";
@@ -56,7 +55,7 @@ export type SocketData = {
     backConnection?: BackConnection;
     listenedZones: Set<Zone>;
     pusherRoom: PusherRoom | undefined;
-    spaces: Space[];
+    spaces: Set<string>;
     spacesFilters: Map<string, SpaceFilterMessage[]>;
     chatID?: string;
     world: string;

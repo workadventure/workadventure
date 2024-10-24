@@ -595,7 +595,11 @@ export class Space {
                     filters.filter((filter) => filter.spaceName !== this.name)
                 );
             }
-            socketData.spaces = socketData.spaces.filter((space) => space.name !== this.name);
+            const success = socketData.spaces.delete(this.name);
+            if (!success) {
+                console.error(`Impossible to remove space ${this.name} from the user's spaces. Space not found.`);
+                Sentry.captureException(new Error(`Impossible to remove space ${this.name} from the user's spaces.`));
+            }
         }
         // Finally, let's send a message to the front to warn that the space is deleted
     }
