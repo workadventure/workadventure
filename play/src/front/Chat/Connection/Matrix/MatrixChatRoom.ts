@@ -14,6 +14,8 @@ import {
     ReceiptType,
     Room,
     RoomEvent,
+    RoomState,
+    RoomStateEvent,
     TimelineWindow,
 } from "matrix-js-sdk";
 import * as Sentry from "@sentry/svelte";
@@ -23,13 +25,7 @@ import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
 import { RoomMessageEventContent } from "matrix-js-sdk/lib/@types/events";
 import { ChatRoom, ChatRoomMember, ChatRoomMembership } from "../ChatConnection";
-import {
-    alreadyAskForInitCryptoConfiguration,
-    isAChatRoomIsVisible,
-    navChat,
-    selectedChatMessageToReply,
-    selectedRoom,
-} from "../../Stores/ChatStore";
+import { isAChatRoomIsVisible, navChat, selectedChatMessageToReply, selectedRoomStore } from "../../Stores/ChatStore";
 import { gameManager } from "../../../Phaser/Game/GameManager";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import { MatrixChatMessage } from "./MatrixChatMessage";
@@ -60,6 +56,7 @@ export class MatrixChatRoom implements ChatRoom {
     private handleRoomTimeline = this.onRoomTimeline.bind(this);
     private handleRoomName = this.onRoomName.bind(this);
     private handleRoomRedaction = this.onRoomRedaction.bind(this);
+    private handleStateEvent = this.onRoomStateEvent.bind(this);
 
     constructor(
         private matrixRoom: Room,
@@ -111,9 +108,7 @@ export class MatrixChatRoom implements ChatRoom {
         );
 
         (async () => {
-            if (matrixRoom.hasEncryptionStateEvent() && !get(alreadyAskForInitCryptoConfiguration)) {
-                await matrixSecurity.initClientCryptoConfiguration();
-            }
+            await matrixSecurity.restoreRoomsMessages();
         })()
             .catch((error) => {
                 console.error(error);
@@ -187,19 +182,21 @@ export class MatrixChatRoom implements ChatRoom {
         this.matrixRoom.on(RoomEvent.Timeline, this.handleRoomTimeline);
         this.matrixRoom.on(RoomEvent.Name, this.handleRoomName);
         this.matrixRoom.on(RoomEvent.Redaction, this.handleRoomRedaction);
+        this.matrixRoom.on(RoomStateEvent.Events, this.handleStateEvent);
     }
 
-    private async onRoomTimeline(
+    private onRoomStateEvent(event: MatrixEvent, state: RoomState, lastStateEvent: MatrixEvent | null) {
+        if (get(this.isEncrypted)) return;
+        const isEncrypted = !!state.getStateEvents(EventType.RoomEncryption)[0];
+        if (isEncrypted) this.isEncrypted.set(isEncrypted);
+    }
+    private onRoomTimeline(
         event: MatrixEvent,
         room: Room | undefined,
         toStartOfTimeline: boolean | undefined,
         _: boolean,
         data: IRoomTimelineData
     ) {
-        if (event.getType() === EventType.RoomEncryption && !get(alreadyAskForInitCryptoConfiguration)) {
-            await matrixSecurity.initClientCryptoConfiguration();
-        }
-
         //get age give the age of the event when the event arrived at the device
         const ageOfEvent = event.getAge();
 
@@ -222,8 +219,8 @@ export class MatrixChatRoom implements ChatRoom {
                         const senderID = event.getSender();
                         if (senderID !== this.matrixRoom.client.getSafeUserId() && !get(this.areNotificationsMuted)) {
                             this.playNewMessageSound();
-                            if (!isAChatRoomIsVisible() && get(selectedRoom)?.id !== "proximity") {
-                                selectedRoom.set(this);
+                            if (!isAChatRoomIsVisible() && get(selectedRoomStore)?.id !== "proximity") {
+                                selectedRoomStore.set(this);
                                 navChat.switchToChat();
                             }
                         }
@@ -591,6 +588,7 @@ export class MatrixChatRoom implements ChatRoom {
         this.matrixRoom.off(RoomEvent.Timeline, this.handleRoomTimeline);
         this.matrixRoom.off(RoomEvent.Name, this.handleRoomName);
         this.matrixRoom.off(RoomEvent.Redaction, this.handleRoomRedaction);
+        this.matrixRoom.off(RoomStateEvent.Events, this.handleStateEvent);
     }
 
     startTyping(): Promise<object> {

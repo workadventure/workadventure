@@ -24,9 +24,9 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     }
   );
 
-  test.afterAll('reset matrix database',async ()=>{
+  test.afterAll("reset matrix database", async () => {
     await ChatUtils.resetMatrixDatabase();
-});
+  });
 
   test("Open matrix Chat", async ({ page }, { project }) => {
     const isMobile = project.name === "mobilechromium";
@@ -214,7 +214,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.getByTestId("createRoomVisibility").selectOption("private");
     await page.getByTestId("createRoomEncryption").check();
     await page.getByTestId("createRoomButton").click();
-    await ChatUtils.initEndToEndEncryption(page, context);
+    await ChatUtils.initEndToEndEncryption(privateChatRoom, page, context);
     await expect(page.getByText(privateChatRoom)).toBeAttached();
   });
 
@@ -232,7 +232,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.getByTestId("createRoomVisibility").selectOption("private");
     await page.getByTestId("createRoomEncryption").check();
     await page.getByTestId("createRoomButton").click();
-    await ChatUtils.initEndToEndEncryption(page, context);
+    await ChatUtils.initEndToEndEncryption(privateChatRoom, page, context);
     await page.getByText(privateChatRoom).click();
     const chatMessageContent = "This is a test message";
     await page.getByTestId("messageInput").fill(chatMessageContent);
@@ -251,7 +251,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.getByTestId("createRoomVisibility").selectOption("private");
     await page.getByTestId("createRoomEncryption").check();
     await page.getByTestId("createRoomButton").click();
-    await ChatUtils.initEndToEndEncryption(page, context);
+    await ChatUtils.initEndToEndEncryption(privateChatRoom, page, context);
     await page.getByText(privateChatRoom).click();
     const chatMessageContent = "This is a test message";
     await page.getByTestId("messageInput").fill(chatMessageContent);
@@ -295,7 +295,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.getByTestId("createRoomVisibility").selectOption("private");
     await page.getByTestId("createRoomEncryption").check();
     await page.getByTestId("createRoomButton").click();
-    await ChatUtils.initEndToEndEncryption(page, context);
+    await ChatUtils.initEndToEndEncryption(privateChatRoom, page, context);
     await page.getByText(privateChatRoom).click();
     const chatMessageContent = "This is a test message";
     await page.getByTestId("messageInput").fill(chatMessageContent);
@@ -345,11 +345,13 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
 
     await ChatUtils.cancelledContinueWithSSO(page, context);
 
-    await expect(page.getByText("Chat recovery key creation")).not.toBeAttached();
+    await expect(
+      page.getByText("Chat recovery key creation")
+    ).not.toBeAttached();
     await expect(page.getByText("Encryption not configured")).toBeAttached();
   });
 
-  test('Create a public folder' ,async({ page }, { project })=>{
+  test("Create a public folder", async ({ page }, { project }) => {
     const isMobile = project.name === "mobilechromium";
     await login(page, "test", 3, "us-US", isMobile);
     await oidcMatrixUserLogin(page, isMobile);
@@ -359,10 +361,10 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.getByTestId("createFolderName").fill(publicFolder);
     await page.getByTestId("createFolderVisibility").selectOption("public");
     await page.getByTestId("createFolderButton").click();
-    await expect(page.getByText(publicFolder)).toBeAttached(); 
+    await expect(page.getByText(publicFolder)).toBeAttached();
   });
 
-  test('Create a private folder', async({ page }, { project })=>{
+  test("Create a private folder", async ({ page }, { project }) => {
     const isMobile = project.name === "mobilechromium";
     await login(page, "test", 3, "us-US", isMobile);
     await oidcMatrixUserLogin(page, isMobile);
@@ -372,77 +374,74 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.getByTestId("createFolderName").fill(privateFolder);
     await page.getByTestId("createFolderVisibility").selectOption("private");
     await page.getByTestId("createFolderButton").click();
-    await expect(page.getByText(privateFolder)).toBeAttached(); 
+    await expect(page.getByText(privateFolder)).toBeAttached();
   });
 
-  test('Create a nested folder', async({ page }, { project })=>{
+  test("Create a nested folder", async ({ page }, { project }) => {
     const isMobile = project.name === "mobilechromium";
     await login(page, "test", 3, "us-US", isMobile);
     await oidcMatrixUserLogin(page, isMobile);
     await ChatUtils.openChat(page);
-    
+
     await ChatUtils.openCreateFolderDialog(page);
     const privateFolder1 = ChatUtils.getRandomName();
     await page.getByTestId("createFolderName").fill(privateFolder1);
     await page.getByTestId("createFolderVisibility").selectOption("private");
     await page.getByTestId("createFolderButton").click();
-    await expect(page.getByText(privateFolder1)).toBeAttached();  
+    await expect(page.getByText(privateFolder1)).toBeAttached();
 
     const privateFolder2 = ChatUtils.getRandomName();
-    await ChatUtils.openCreateFolderDialog(page,privateFolder1);
+    await ChatUtils.openCreateFolderDialog(page, privateFolder1);
     await page.getByTestId("createFolderName").fill(privateFolder2);
     await page.getByTestId("createFolderVisibility").selectOption("private");
     await page.getByTestId("createFolderButton").click();
 
-    await expect(page.getByText(privateFolder2)).not.toBeAttached();  
+    await expect(page.getByText(privateFolder2)).not.toBeAttached();
     await page.getByText(privateFolder1).click();
-    await expect(page.getByText(privateFolder2)).toBeAttached();  
-
+    await expect(page.getByText(privateFolder2)).toBeAttached();
   });
-  test('Create a room in a folder' ,async({ page }, { project })=>{
+  test("Create a room in a folder", async ({ page }, { project }) => {
     const isMobile = project.name === "mobilechromium";
     await login(page, "test", 3, "us-US", isMobile);
     await oidcMatrixUserLogin(page, isMobile);
     await ChatUtils.openChat(page);
-    
+
     await ChatUtils.openCreateFolderDialog(page);
     const privateFolder1 = ChatUtils.getRandomName();
     await page.getByTestId("createFolderName").fill(privateFolder1);
     await page.getByTestId("createFolderVisibility").selectOption("private");
     await page.getByTestId("createFolderButton").click();
-    await expect(page.getByText(privateFolder1)).toBeAttached();  
+    await expect(page.getByText(privateFolder1)).toBeAttached();
 
     const room = ChatUtils.getRandomName();
-    await ChatUtils.openCreateRoomDialog(page,privateFolder1);
+    await ChatUtils.openCreateRoomDialog(page, privateFolder1);
     await page.getByTestId("createRoomName").fill(room);
     await page.getByTestId("createRoomVisibility").selectOption("public");
     await page.getByTestId("createRoomButton").click();
 
     await page.getByText(privateFolder1).click();
-    await expect(page.getByText(room)).toBeAttached();  
-
+    await expect(page.getByText(room)).toBeAttached();
   });
-  
-  test('Create a restricted room', async({ page }, { project })=>{
+
+  test("Create a restricted room", async ({ page }, { project }) => {
     const isMobile = project.name === "mobilechromium";
     await login(page, "test", 3, "us-US", isMobile);
     await oidcMatrixUserLogin(page, isMobile);
     await ChatUtils.openChat(page);
-    
+
     await ChatUtils.openCreateFolderDialog(page);
     const privateFolder1 = ChatUtils.getRandomName();
     await page.getByTestId("createFolderName").fill(privateFolder1);
     await page.getByTestId("createFolderVisibility").selectOption("private");
     await page.getByTestId("createFolderButton").click();
-    await expect(page.getByText(privateFolder1)).toBeAttached();  
-    
+    await expect(page.getByText(privateFolder1)).toBeAttached();
+
     const room = ChatUtils.getRandomName();
-    await ChatUtils.openCreateRoomDialog(page,privateFolder1);
+    await ChatUtils.openCreateRoomDialog(page, privateFolder1);
     await page.getByTestId("createRoomName").fill(room);
     await page.getByTestId("createRoomVisibility").selectOption("restricted");
     await page.getByTestId("createRoomButton").click();
     await page.getByText(privateFolder1).click();
-    await expect(page.getByText(room)).toBeAttached();  
+    await expect(page.getByText(room)).toBeAttached();
   });
-
 });
