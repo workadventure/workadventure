@@ -103,16 +103,15 @@
             </button>
         {/if}
         <div class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-grow">
-            <div class="tw-text-md tw-font-bold tw-h-5">Adventurers</div>
+            <div class="tw-text-md tw-font-bold tw-h-5">{$LL.chat.adventurers()}</div>
             <div class="tw-flex tw-items-center tw-justify-center tw-text-success tw-space-x-1.5">
+                <!-- TODO HUGO -->
                 <div
                     class="tw-text-xs tw-aspect-square tw-w-5 tw-h-5 tw-border tw-border-solid tw-border-success tw-flex tw-items-center tw-justify-center tw-font-bold tw-rounded"
                 >
                     14
                 </div>
-                <!-- TODO HUGO -->
-                <div class="tw-text-xs tw-font-bold">Utilisateurs en ligne</div>
-                <!-- TODO HUGO -->
+                <div class="tw-text-xs tw-font-bold">{$LL.chat.onlineUsers()}</div>
             </div>
         </div>
         <div class="tw-h-10 tw-w-10" />

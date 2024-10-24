@@ -138,7 +138,6 @@
             {#if quotedMessage && replyDepth < 1 && !$isDeleted}
                 <div class="tw-p-1 tw-opacity-80">
                     <div class="response tw-bg-white/10 tw-rounded">
-                        <!-- TODO Refacto Hugo -->
                         <svelte:self replyDepth={replyDepth + 1} message={quotedMessage} />
                     </div>
                 </div>

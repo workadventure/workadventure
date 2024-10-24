@@ -3,6 +3,13 @@ import type { Translation } from "../i18n-types";
 
 const chat: DeepPartial<Translation["chat"]> = {
     intro: "Voici l'historique de votre chat:",
+    adventurers: "Adventurers",
+    onlineUsers: "Utilisateurs en ligne",
+    getCloserTitle: "Rapproche toi de quelqu'un",
+    getCloserDesc:
+        "Lorsque tu te rapproches d’une personne dans l’espace virtuel, une bulle de conversation s’ouvre automatiquement, te permettant de discuter en direct comme si vous étiez face à face.",
+    noMessage: "Aucun message envoyé pour l’instant !",
+    beFirst: "Soyez le premier à envoyer un message",
     enter: "Entrez votre message...",
     menu: {
         visitCard: "Carte de visite",
@@ -269,6 +276,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         unmuteRoom: "Activer les notifications",
     },
     e2ee: {
+        configure: "Configuré",
         encryptionNotConfigured: "Chiffrement non configuré",
         createRecoveryKey: {
             title: "Création d'une clé de récupération",

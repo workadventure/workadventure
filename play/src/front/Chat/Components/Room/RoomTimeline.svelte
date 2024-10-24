@@ -8,6 +8,7 @@
     import { matrixSecurity } from "../../Connection/Matrix/MatrixSecurity";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
+    import LL from "../../../../i18n/i18n-svelte";
     import Message from "./Message.svelte";
     import MessageInputBar from "./MessageInputBar.svelte";
     import MessageSystem from "./MessageSystem.svelte";
@@ -247,13 +248,11 @@
                 <!--{/if}-->
                 {#if $messages.length === 0}
                     {#if room instanceof ProximityChatRoom}
-                        <!-- TODO Trad HUGO -->
                         <li class="tw-text-center tw-px-3 tw-max-w-md">
                             <img src={getCloseImg} alt="Discussion bubble" />
-                            <div class="tw-text-lg tw-font-bold tw-text-center">Get closer to someoneds</div>
+                            <div class="tw-text-lg tw-font-bold tw-text-center">{$LL.chat.getCloserTitle()}</div>
                             <div class="tw-text-sm tw-opacity-50 tw-text-center">
-                                Et ducimus cum et dolor. Consequatur ab voluptas qui soluta. Aspernatur natus nisi illo
-                                saepe doloribus vitae.
+                                {$LL.chat.getCloserDesc()}
                             </div>
                         </li>
                     {:else}
@@ -275,8 +274,8 @@
                                 <path d="M12 11v-8h4l2 2l-2 2h-4" />
                                 <path d="M6 15h1" />
                             </svg>
-                            <div class="tw-text-lg tw-font-bold tw-text-center">No message sent yet!</div>
-                            <div class="tw-text-sm tw-opacity-50 tw-text-center">Be the first and send a message</div>
+                            <div class="tw-text-lg tw-font-bold tw-text-center">{$LL.chat.noMessage()}</div>
+                            <div class="tw-text-sm tw-opacity-50 tw-text-center">{$LL.chat.beFirst()}</div>
                             <div class="tw-absolute tw-w-10 tw-h-10 -tw-bottom-1.5 -tw-left-10">
                                 <svg
                                     width="51"

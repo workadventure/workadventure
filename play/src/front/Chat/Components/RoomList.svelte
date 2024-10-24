@@ -239,14 +239,13 @@
                             ? 'tw-hidden'
                             : ''}"
                     >
+                        <!-- TODO HUGO -->
                         <div
                             class="tw-text-xs tw-aspect-square tw-w-5 tw-h-5 tw-border tw-border-solid tw-border-success tw-flex tw-items-center tw-justify-center tw-font-bold tw-rounded"
                         >
                             14
                         </div>
-                        <!-- TODO HUGO -->
-                        <div class="tw-text-xs tw-font-bold">Utilisateurs en ligne</div>
-                        <!-- TODO HUGO -->
+                        <div class="tw-text-xs tw-font-bold">{$LL.chat.onlineUsers()}</div>
                     </div>
                 </div>
                 <div class="">
@@ -583,7 +582,7 @@
                         <div
                             class="tw-text-xs tw-rounded tw-border tw-border-solid tw-border-white tw-py-0.5 tw-px-1.5 group-hover:tw-bg-white/10"
                         >
-                            Configurer <!-- TODO HUGO -->
+                            {$LL.chat.e2ee.configure()}
                         </div>
                     </button>
                 </div>
