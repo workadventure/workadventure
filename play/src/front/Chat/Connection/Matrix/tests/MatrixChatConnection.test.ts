@@ -1,8 +1,8 @@
-import { ClientEvent, EventType, MatrixClient, PendingEventOrdering, RoomEvent, SyncState } from "matrix-js-sdk";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { KnownMembership } from "matrix-js-sdk/lib/types";
 import { get, Readable, writable } from "svelte/store";
 import { AvailabilityStatus } from "@workadventure/messages";
+import { MatrixClient } from "matrix-js-sdk/src/client";
 import { MatrixChatConnection } from "../MatrixChatConnection";
 import { CreateRoomOptions } from "../../ChatConnection";
 import { MatrixChatRoom } from "../MatrixChatRoom";

@@ -1,8 +1,8 @@
-import { Room } from "matrix-js-sdk";
 import { Writable, writable } from "svelte/store";
 import { KnownMembership } from "matrix-js-sdk/lib/types";
 import * as Sentry from "@sentry/svelte";
 import { MapStore } from "@workadventure/store-utils";
+import { Room } from "matrix-js-sdk/src/models/room";
 import { RoomFolder } from "../ChatConnection";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 export class MatrixRoomFolder implements RoomFolder {

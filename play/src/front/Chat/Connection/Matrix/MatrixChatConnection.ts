@@ -1,31 +1,20 @@
 import { derived, get, Readable, Unsubscriber, writable, Writable } from "svelte/store";
-import {
-    ClientEvent,
-    Direction,
-    EmittedEvents,
-    EventType,
-    ICreateRoomOpts,
-    ICreateRoomStateEvent,
-    IPushRule,
-    IRoomDirectoryOptions,
-    MatrixClient,
-    MatrixError,
-    MatrixEvent,
-    PendingEventOrdering,
-    PushRuleActionName,
-    Room,
-    RoomEvent,
-    SetPresence,
-    SyncState,
-    User,
-    UserEvent,
-    Visibility,
-} from "matrix-js-sdk";
 import * as Sentry from "@sentry/svelte";
 import { MapStore } from "@workadventure/store-utils";
 import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { AvailabilityStatus } from "@workadventure/messages";
+import { ClientEvent, EmittedEvents, MatrixClient, PendingEventOrdering } from "matrix-js-sdk/src/client";
+import { Room, RoomEvent } from "matrix-js-sdk/src/models/room";
+import { MatrixEvent } from "matrix-js-sdk/src/models/event";
+import { User, UserEvent } from "matrix-js-sdk/src/models/user";
+import { SetPresence, SyncState } from "matrix-js-sdk/src/sync";
+import { IPushRule, PushRuleActionName } from "matrix-js-sdk/src/@types/PushRules";
+import { Direction } from "matrix-js-sdk/src/models/event-timeline";
+import { MatrixError } from "matrix-js-sdk/src/http-api";
+import { ICreateRoomOpts, ICreateRoomStateEvent, IRoomDirectoryOptions } from "matrix-js-sdk/src/@types/requests";
+import { Visibility } from "matrix-js-sdk/src/@types/partials";
+import { EventType } from "matrix-js-sdk/src/@types/event";
 import { ChatConnectionInterface, ChatRoom, ChatUser, ConnectionStatus, CreateRoomOptions } from "../ChatConnection";
 import { selectedRoom } from "../../Stores/ChatStore";
 import LL from "../../../../i18n/i18n-svelte";

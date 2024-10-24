@@ -1,8 +1,8 @@
 import axios from "axios";
 import pLimit from "p-limit";
-import { EventType } from "matrix-js-sdk";
 import * as Sentry from "@sentry/node";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
+import { EventType } from "matrix-js-sdk/src/@types/event";
 import { MATRIX_ADMIN_USER, MATRIX_API_URI, MATRIX_DOMAIN, MATRIX_ADMIN_PASSWORD } from "../enums/EnvironmentVariable";
 const ADMIN_CHAT_ID = `@${MATRIX_ADMIN_USER}:${MATRIX_DOMAIN}`;
 

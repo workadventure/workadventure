@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { MatrixClient } from "matrix-js-sdk";
 import { writable } from "svelte/store";
+import { MatrixClient } from "matrix-js-sdk/src/client";
 import { MatrixSecurity } from "../MatrixSecurity";
 
 vi.mock("../../../../Phaser/Entity/CharacterLayerManager", () => {

@@ -1,21 +1,16 @@
 import { Buffer } from "buffer";
 import Olm from "@matrix-org/olm";
 
-import {
-    createClient,
-    ICreateClientOpts,
-    IndexedDBCryptoStore,
-    IndexedDBStore,
-    MatrixClient,
-    SecretStorage,
-} from "matrix-js-sdk";
-
 import { SecretStorageKeyDescriptionAesV1 } from "matrix-js-sdk/lib/secret-storage";
 import { openModal } from "svelte-modals";
+import { ICreateClientOpts, MatrixClient } from "matrix-js-sdk/src/client";
+import { SecretStorage, createClient } from "matrix-js-sdk/src/matrix";
+import { IndexedDBStore } from "matrix-js-sdk/lib/store/indexeddb";
 import { LocalUser } from "../../../Connection/LocalUser";
 import AccessSecretStorageDialog from "./AccessSecretStorageDialog.svelte";
 import { matrixSecurity } from "./MatrixSecurity";
 import { customMatrixLogger } from "./CustomMatrixLogger";
+import { IndexedDBCryptoStore } from "matrix-js-sdk/lib/crypto/store/indexeddb-crypto-store";
 
 globalThis.Olm = Olm;
 window.Buffer = Buffer;
