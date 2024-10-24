@@ -373,6 +373,7 @@ export class SocketManager implements ZoneEventListener {
                         this.spaceStreamsToBack.delete(backId);
                         for (const space of this.spaces.values()) {
                             if (space.backId === backId) {
+                                space.cleanup();
                                 this.spaces.delete(space.name);
                             }
                         }
@@ -1270,6 +1271,9 @@ export class SocketManager implements ZoneEventListener {
             space.removeUser(socketData.spaceUser.id);
             socketData.spaces = socketData.spaces.filter((space) => space.name !== spaceName);
             this.deleteSpaceIfEmpty(space);
+        } else {
+            console.error("Could not find space", spaceName, "to leave");
+            Sentry.captureException(new Error("Could not find space " + spaceName + " to leave"));
         }
     }
 

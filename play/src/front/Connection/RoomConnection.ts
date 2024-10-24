@@ -66,6 +66,7 @@ import {
     PrivateEventFrontToPusher,
     SpaceUser,
     LeaveChatRoomAreaMessage,
+    SpaceDestroyedMessage,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -220,6 +221,8 @@ export class RoomConnection implements RoomConnection {
     public readonly joinSpaceRequestMessage = this._joinSpaceRequestMessage.asObservable();
     private readonly _leaveSpaceRequestMessage = new Subject<LeaveSpaceRequestMessage>();
     public readonly leaveSpaceRequestMessage = this._leaveSpaceRequestMessage.asObservable();
+    private readonly _spaceDestroyedMessage = new Subject<SpaceDestroyedMessage>();
+    public readonly spaceDestroyedMessage = this._spaceDestroyedMessage.asObservable();
 
     private queries = new Map<
         number,
@@ -450,6 +453,10 @@ export class RoomConnection implements RoomConnection {
                             }
                             case "privateEvent": {
                                 this._spacePrivateMessageEvent.next(subMessage.privateEvent);
+                                break;
+                            }
+                            case "spaceDestroyedMessage": {
+                                this._spaceDestroyedMessage.next(subMessage.spaceDestroyedMessage);
                                 break;
                             }
                             default: {
@@ -1790,6 +1797,7 @@ export class RoomConnection implements RoomConnection {
         this._spacePublicMessageEvent.complete();
         this._joinSpaceRequestMessage.complete();
         this._leaveSpaceRequestMessage.complete();
+        this._spaceDestroyedMessage.complete();
     }
 
     private goToSelectYourWokaScene(): void {

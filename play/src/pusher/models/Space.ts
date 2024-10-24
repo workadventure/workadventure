@@ -566,4 +566,37 @@ export class Space {
             message: pusherToBackSpaceMessage,
         });
     }
+
+    /**
+     * Cleans up the space when the space is deleted (only useful when the connection to the back is closed or in timeout)
+     */
+    public cleanup(): void {
+        // Send a message to all
+        for (const [userId, user] of this.users.entries()) {
+            const subMessage: SubMessage = {
+                message: {
+                    $case: "removeSpaceUserMessage",
+                    removeSpaceUserMessage: {
+                        spaceName: this.name,
+                        userId,
+                        filterName: "", // Will be filled by notifyAll
+                    },
+                },
+            };
+            this.notifyAll(subMessage, user);
+        }
+        // Let's remove any reference to the space in the watchers
+        for (const watcher of this.clientWatchers.values()) {
+            const socketData = watcher.getUserData();
+            const filters = socketData.spacesFilters.get(this.name);
+            if (filters) {
+                socketData.spacesFilters.set(
+                    this.name,
+                    filters.filter((filter) => filter.spaceName !== this.name)
+                );
+            }
+            socketData.spaces = socketData.spaces.filter((space) => space.name !== this.name);
+        }
+        // Finally, let's send a message to the front to warn that the space is deleted
+    }
 }
