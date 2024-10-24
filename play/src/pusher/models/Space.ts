@@ -16,7 +16,6 @@ import merge from "lodash/merge";
 import Debug from "debug";
 import * as Sentry from "@sentry/node";
 import { Socket } from "../services/SocketManager";
-import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import { BackSpaceConnection, SocketData } from "./Websocket/SocketData";
 import { EventProcessor } from "./EventProcessor";
 
@@ -31,7 +30,7 @@ type PartialSpaceUser = Partial<Omit<SpaceUser, "id">> & Pick<SpaceUser, "id">;
 
 const debug = Debug("space");
 
-export class Space implements CustomJsonReplacerInterface {
+export class Space {
     private readonly users: Map<number, SpaceUserExtended>;
     private readonly metadata: Map<string, unknown>;
 
@@ -71,7 +70,7 @@ export class Space implements CustomJsonReplacerInterface {
                 });
             }
         });
-        debug(`${this.name} : watcher added ${socketData.name}`);
+        debug(`${this.name} : watcher added ${socketData.name}. Watcher count ${this.clientWatchers.size}`);
     }
 
     public removeClientWatcher(watcher: Socket) {
@@ -80,7 +79,7 @@ export class Space implements CustomJsonReplacerInterface {
             throw new Error("User id not found");
         }
         this.clientWatchers.delete(socketData.userId);
-        debug(`${this.name} : watcher removed ${socketData.name}`);
+        debug(`${this.name} : watcher removed ${socketData.name}. Watcher count ${this.clientWatchers.size}`);
     }
 
     public addUser(spaceUser: SpaceUser, client: Socket) {
@@ -101,7 +100,7 @@ export class Space implements CustomJsonReplacerInterface {
     public localAddUser(spaceUser: SpaceUser, client: Socket | undefined) {
         const user = { ...spaceUser, lowercaseName: spaceUser.name.toLowerCase(), client };
         this.users.set(spaceUser.id, user);
-        debug(`${this.name} : user added ${spaceUser.id}`);
+        debug(`${this.name} : user added ${spaceUser.id}. User count ${this.users.size}`);
 
         const subMessage: SubMessage = {
             message: {
@@ -177,7 +176,7 @@ export class Space implements CustomJsonReplacerInterface {
         const user = this.users.get(userId);
         if (user) {
             this.users.delete(userId);
-            debug(`${this.name} : user removed ${userId}`);
+            debug(`${this.name} : user removed ${userId}. User count ${this.users.size}`);
 
             const subMessage: SubMessage = {
                 message: {
@@ -444,19 +443,7 @@ export class Space implements CustomJsonReplacerInterface {
     }
 
     public isEmpty() {
-        return this.users.size === 0;
-    }
-
-    public customJsonReplacer(key: unknown, value: unknown): string | undefined {
-        // TODO : Better way to display date in the /dump
-        if (key === "name") {
-            return this.name;
-        } else if (key === "users") {
-            return `Users : ${(value as Map<number, SpaceUserExtended>).size}`;
-        } else if (key === "spaceStreamToPusher") {
-            return "spaceStreamToPusher";
-        }
-        return undefined;
+        return this.users.size === 0 && this.clientWatchers.size === 0;
     }
 
     // FIXME: remove this method and all others similar

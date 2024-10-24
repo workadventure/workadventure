@@ -1090,6 +1090,11 @@ export class SocketManager implements ZoneEventListener {
                 spacesFilter = [...spacesFilter, newFilter];
                 socketData.spacesFilters.set(space.name, spacesFilter);
             }
+        } else {
+            console.error(`Add space filter called on a space (${space.name}) that does not exist on the user socket`);
+            Sentry.captureException(
+                new Error(`Add space filter called on a space (${space.name}) that does not exist on the user socket`)
+            );
         }
     }
 
@@ -1136,6 +1141,16 @@ export class SocketManager implements ZoneEventListener {
                     `SocketManager => handleRemoveSpaceFilterMessage => spacesFilter ${removeSpaceFilterMessage.spaceFilterMessage?.filterName} is undefined`
                 );
             }
+            this.deleteSpaceIfEmpty(space);
+        } else {
+            console.error(
+                `Remove space filter called on a space (${oldFilter.spaceName}) that does not exist on the user socket`
+            );
+            Sentry.captureException(
+                new Error(
+                    `Remove space filter called on a space (${oldFilter.spaceName}) that does not exist on the user socket`
+                )
+            );
         }
     }
 

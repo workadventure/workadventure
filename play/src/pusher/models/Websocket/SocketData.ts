@@ -61,5 +61,4 @@ export type SocketData = {
     chatID?: string;
     world: string;
     currentChatRoomArea: string[];
-    customJsonReplacer?: (key: unknown, value: unknown) => string | undefined;
 };

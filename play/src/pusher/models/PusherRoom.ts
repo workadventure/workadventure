@@ -8,11 +8,10 @@ import { Socket } from "../services/SocketManager";
 import { PositionDispatcher } from "./PositionDispatcher";
 import type { ViewportInterface } from "./Websocket/ViewportMessage";
 import type { ZoneEventListener } from "./Zone";
-import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 
 const debug = Debug("room");
 
-export class PusherRoom implements CustomJsonReplacerInterface {
+export class PusherRoom {
     private readonly positionNotifier: PositionDispatcher;
     private versionNumber = 1;
 
@@ -240,13 +239,5 @@ export class PusherRoom implements CustomJsonReplacerInterface {
         debug("Closing connection to room %s on back server", this.roomUrl);
         this.isClosing = true;
         this.backConnection.cancel();
-    }
-
-    public customJsonReplacer(key: unknown, value: unknown): string | undefined {
-        if (key === "backConnection") {
-            const backConnection = value as ClientReadableStream<BatchToPusherRoomMessage> | undefined;
-            return backConnection ? "backConnection" : "undefined";
-        }
-        return undefined;
     }
 }
