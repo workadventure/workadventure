@@ -530,7 +530,8 @@ export class SocketManager implements ZoneEventListener {
 
             let space: Space | undefined = this.spaces.get(spaceName);
             if (!space) {
-                space = new Space(spaceName, localSpaceName, spaceStreamToBack, backId, client, eventProcessor);
+                space = new Space(spaceName, localSpaceName, spaceStreamToBack, backId, eventProcessor);
+
                 this.spaces.set(spaceName, space);
 
                 spaceStreamToBack.write({
@@ -541,9 +542,9 @@ export class SocketManager implements ZoneEventListener {
                         },
                     },
                 });
-            } else {
-                space.addClientWatcher(client);
             }
+            space.addClientWatcher(client);
+
             space.addUser(socketData.spaceUser, client);
             if (socketData.spaces.has(spaceName)) {
                 console.error(`User ${socketData.name} is trying to join a space he is already in.`);
