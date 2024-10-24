@@ -112,8 +112,10 @@ class ConnectionManager {
      * TODO fix me to be move in game manager
      *
      * Returns the URL that we need to redirect to load the OpenID screen, or "null" if no redirection needs to happen.
+     *
+     * @param manuallyTriggered - Whether the login request resulted from a click on the "Sign in" button or from a mandatory authentication.
      */
-    public loadOpenIDScreen(): URL | null {
+    public loadOpenIDScreen(manuallyTriggered: boolean): URL | null {
         localUserStore.setAuthToken(null);
         if (!ENABLE_OPENID || !this._currentRoom) {
             analyticsClient.loggedWithToken();
@@ -123,6 +125,9 @@ class ConnectionManager {
         analyticsClient.loggedWithSso();
         const redirectUrl = new URL("login-screen", ABSOLUTE_PUSHER_URL);
         redirectUrl.searchParams.append("playUri", this._currentRoom.key);
+        if (manuallyTriggered) {
+            redirectUrl.searchParams.append("manuallyTriggered", "true");
+        }
         return redirectUrl;
     }
 
@@ -205,7 +210,7 @@ class ConnectionManager {
 
         if (this.connexionType === GameConnexionTypes.login) {
             this._currentRoom = await Room.createRoom(new URL(localUserStore.getLastRoomUrl()));
-            const redirect = this.loadOpenIDScreen();
+            const redirect = this.loadOpenIDScreen(true);
             if (redirect !== null) {
                 return redirect;
             }
@@ -298,7 +303,7 @@ class ConnectionManager {
                         nextScene = "selectCharacterScene";
                     }
                 } else {
-                    const redirect = this.loadOpenIDScreen();
+                    const redirect = this.loadOpenIDScreen(false);
                     if (redirect === null) {
                         throw new Error("Unable to redirect on login page.");
                     }
@@ -335,7 +340,7 @@ class ConnectionManager {
                         console.warn("Token expired, trying to login anonymously");
                         // if the user must be connected to the current room or if the pusher error is not openid provider access error
                         if (this._currentRoom.authenticationMandatory) {
-                            const redirect = this.loadOpenIDScreen();
+                            const redirect = this.loadOpenIDScreen(false);
                             if (redirect === null) {
                                 throw new Error("Unable to redirect on login page.");
                             }

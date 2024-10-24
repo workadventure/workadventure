@@ -59,7 +59,12 @@ class OpenIDClient {
         return this.issuerPromise;
     }
 
-    public authorizationUrl(res: Response, playUri: string, req: Request): Promise<string> {
+    public authorizationUrl(
+        res: Response,
+        playUri: string,
+        req: Request,
+        manuallyTriggered: "true" | undefined
+    ): Promise<string> {
         return this.initClient().then((client) => {
             if (!OPID_SCOPE.includes("email") || !OPID_SCOPE.includes("openid")) {
                 throw new Error("Invalid scope, 'email' and 'openid' are required in OPID_SCOPE.");
@@ -89,6 +94,10 @@ class OpenIDClient {
                 state: state,
                 //nonce: nonce,
                 playUri,
+                // Whether the login was triggered by clicking on the "sign in" button (in which case the user was
+                // anonymous) or whether the login was triggered because user was not authenticated and authentication
+                // is mandatory.
+                manuallyTriggered,
 
                 code_challenge,
                 code_challenge_method: "S256",
