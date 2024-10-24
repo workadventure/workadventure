@@ -100,6 +100,7 @@ export class AuthenticateController extends BaseHttpController {
                 res,
                 z.object({
                     playUri: z.string(),
+                    manuallyTriggered: z.literal("true").optional(),
                 })
             );
             if (query === undefined) {
@@ -117,7 +118,7 @@ export class AuthenticateController extends BaseHttpController {
                 return;
             }
 
-            const loginUri = await openIDClient.authorizationUrl(res, query.playUri, req);
+            const loginUri = await openIDClient.authorizationUrl(res, query.playUri, req, query.manuallyTriggered);
             res.atomic(() => {
                 res.cookie("playUri", query.playUri, undefined, {
                     httpOnly: true, // dont let browser javascript access cookie ever
