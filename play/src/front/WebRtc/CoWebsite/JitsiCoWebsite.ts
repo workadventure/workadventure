@@ -84,14 +84,6 @@ const mergeConfig = (config?: object) => {
     };
 };
 
-const getDefaultInterfaceConfig = (enableRecording: boolean) => {
-    return {
-        ...defaultInterfaceConfig,
-        TOOLBAR_BUTTONS: defaultInterfaceConfig.TOOLBAR_BUTTONS.filter(
-            (value) => value !== "recording" || enableRecording
-        ),
-    };
-};
 const defaultInterfaceConfig = {
     SHOW_CHROME_EXTENSION_BANNER: false,
     MOBILE_APP_PROMO: false,
@@ -177,13 +169,17 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
                     const userConnectedTags = gameManager.getCurrentGameScene().connection?.getAllTags() ?? [];
                     await randomDelay();
 
-                    let enableRecording = false;
+                    const mergedConfig = mergeConfig(this.jitsiConfig);
+
                     if (
-                        userConnectedTags?.includes("admin") ||
-                        (this.jitsiConfig?.jitsiRoomAdminTag &&
-                            userConnectedTags.includes(this.jitsiConfig?.jitsiRoomAdminTag))
+                        !userConnectedTags.includes("admin") &&
+                        (!this.jitsiConfig?.jitsiRoomAdminTag ||
+                            !userConnectedTags.includes(this.jitsiConfig?.jitsiRoomAdminTag))
                     ) {
-                        enableRecording = true;
+                        mergedConfig.localRecording = {
+                            disable: true,
+                            disableSelfRecording: true,
+                        };
                     }
 
                     const options: JitsiOptions = {
@@ -192,9 +188,9 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
                         width: "100%",
                         height: "100%",
                         parentNode: coWebsiteManager.getCoWebsiteBuffer(),
-                        configOverwrite: mergeConfig(this.jitsiConfig),
+                        configOverwrite: mergedConfig,
                         interfaceConfigOverwrite: {
-                            ...getDefaultInterfaceConfig(enableRecording),
+                            ...defaultInterfaceConfig,
                             ...this.jitsiInterfaceConfig,
                         },
                     };
