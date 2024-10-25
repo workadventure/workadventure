@@ -175,7 +175,7 @@ export class MatrixSecurity {
             if (passphrase) {
                 return deriveKey(passphrase, keyInfo.passphrase.salt, keyInfo.passphrase.iterations);
             } else if (recoveryKey) {
-                return decodeRecoveryKey(recoveryKey);
+                return Promise.resolve(decodeRecoveryKey(recoveryKey));
             }
             throw new Error("Invalid input, recovery passphrase or recovery key need to be provided");
         };

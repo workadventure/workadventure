@@ -275,9 +275,9 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await oidcLogout(page, isMobile);
     await anonymLoginPromise;
     await oidcMatrixUserLogin(page, isMobile);
-    await ChatUtils.restoreEncryption(page);
     await ChatUtils.openChat(page);
     await page.getByText(privateChatRoom).click();
+    await ChatUtils.restoreEncryption(page);
     await expect(page.getByText(chatMessageContent)).toBeAttached();
   });
 
@@ -320,9 +320,10 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await anonymLoginPromise;
 
     await oidcMatrixUserLogin(page, isMobile);
-    await page.getByText("Cancel").click();
     await ChatUtils.openChat(page);
     await page.getByText(privateChatRoom).click();
+    await page.getByTestId("VerifyWithPassphraseButton").click();
+    await page.getByText("Cancel").click();
     await expect(page.getByText("Failed to decrypt")).toBeAttached();
     await ChatUtils.restoreEncryptionFromButton(page);
     await expect(page.getByText(chatMessageContent)).toBeAttached();
@@ -342,7 +343,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.getByTestId("createRoomVisibility").selectOption("private");
     await page.getByTestId("createRoomEncryption").check();
     await page.getByTestId("createRoomButton").click();
-
+    await page.getByText(privateChatRoom).click();
     await ChatUtils.cancelledContinueWithSSO(page, context);
 
     await expect(
@@ -512,14 +513,10 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
 
     await page.getByTestId("matchButton").click();
 
-    await page.waitForTimeout(1000);
-
     await otherPage.getByTestId("mismatchButton").click();
 
-    await expect(otherPage.getByTestId("errorEmojiLabel")).toBeAttached();
+    await expect(page.getByTestId("errorEmojiLabel")).toBeAttached();
 
-    await page.pause();
-    
     await otherPage.close();
     await newContext.close();
   });

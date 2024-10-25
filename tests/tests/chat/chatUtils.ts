@@ -70,10 +70,12 @@ class ChatUtils {
   }
 
   public async cancelledContinueWithSSO(page: Page, context: BrowserContext) {
+    await page.getByTestId("VerifyWithPassphraseButton").click();
     await page.getByText("Cancel").click();
   }
 
   public async restoreEncryption(page: Page) {
+    await page.getByTestId("VerifyWithPassphraseButton").click();
     await page.getByTestId("passphraseInput").fill(DEFAULT_PASSPHRASE);
     await page.getByText("Confirm").click();
   }
