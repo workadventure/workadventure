@@ -1521,11 +1521,22 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    handleLeaveChatRoomArea(socket: Socket, chatRoomAreaToLeave: string) {
+    async handleLeaveChatRoomArea(socket: Socket, chatRoomAreaToLeave: string) {
         const socketData = socket.getUserData();
         socketData.currentChatRoomArea = socketData.currentChatRoomArea.filter(
             (ChatRoomArea) => ChatRoomArea !== chatRoomAreaToLeave
         );
+
+        const chatID = socketData.chatID;
+
+        if (!chatID) {
+            return Promise.reject(new Error("ChatID is undefined"));
+        }
+        try {
+            await matrixProvider.kickUserFromRoom(chatID, chatRoomAreaToLeave);
+        } catch (error) {
+            console.error(error);
+        }
     }
 
     async handleEnterChatRoomAreaQuery(socket: Socket, roomID: string): Promise<void> {
