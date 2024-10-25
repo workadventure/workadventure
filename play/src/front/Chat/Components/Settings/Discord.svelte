@@ -7,17 +7,17 @@
     import { RoomMetadataType } from "../../../ExternalModule/ExtensionModule";
     import { ChatRoom } from "../../Connection/ChatConnection";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
+    import DiscordBotManager from "../../DiscordBotManager";
+    import { DiscordServer} from "../../../Interfaces/DiscordServerInterface";
 
-    interface DiscordServer {
-        name: string;
-        id: string;
-        isSync: boolean;
-        isBridging: boolean;
-        icon?: string;
-    }
+
+    //TODO Test DiscordBotManager Class
 
     //TODO add discord bot Id in a env file
     const discordBotId = "@discordbot:matrix.workadventure.localhost";
+
+    //initialize discordBotManager
+    let DiscordBot: DiscordBotManager;
 
 
     let chatConnection = gameManager.getCurrentGameScene()._chatConnection;
@@ -291,31 +291,47 @@
     }
 
     onMount( async () => {
-        discordbotRoom = await chatConnection?.createDirectRoom(discordBotId);
         console.log('cest monté !');
-        if (!discordbotRoom) return;
+
+        const chatConnection = await gameManager.getChatConnection();
+        DiscordBot = new DiscordBotManager(chatConnection);
+        await DiscordBot.initDiscordBotRoom();
+
+        const ping = await DiscordBot.sendMessage("ping");
+
+
+
+
+        //discordbotRoom = await chatConnection?.createDirectRoom(discordBotId);
+        // if (!discordbotRoom) return;
+
+
+
         //check if the user is already connected to discord
-        unsubscribeBotMessage = discordbotRoom.messages.subscribe(async (messages) => {
-            const lastMessage = messages[messages.length - 1];
-            if (`${lastMessage.sender?.chatId}` !== discordBotId){
-                return;
-            }
-            console.log("dans le onMount => lastMessage", lastMessage);
-            //send ping to the bot and get the response to set briggeConnection variable
-            if (get(lastMessage.content).body.includes("You're logged in as")) {
-                bridgeConnected = true;
-                discordbotRoom?.sendMessage("guild status");
-            }
-            else if (get(lastMessage.content).body.includes("not")) {
-                bridgeConnected = false;
-                if (unsubscribeBotMessage) unsubscribeBotMessage();
-            }
-            else if (get(lastMessage.content).body.includes("List of guilds:")) {
-                servers = getParsedServer(get(lastMessage.content).body);
-                if (unsubscribeBotMessage) unsubscribeBotMessage();
-            }
-            discordbotRoom?.sendMessage("ping");
-        });
+
+
+
+        // unsubscribeBotMessage = discordbotRoom.messages.subscribe(async (messages) => {
+        //     const lastMessage = messages[messages.length - 1];
+        //     if (`${lastMessage.sender?.chatId}` !== discordBotId){
+        //         return;
+        //     }
+        //     console.log("dans le onMount => lastMessage", lastMessage);
+        //     //send ping to the bot and get the response to set briggeConnection variable
+        //     if (get(lastMessage.content).body.includes("You're logged in as")) {
+        //         bridgeConnected = true;
+        //         discordbotRoom?.sendMessage("guild status");
+        //     }
+        //     else if (get(lastMessage.content).body.includes("not")) {
+        //         bridgeConnected = false;
+        //         if (unsubscribeBotMessage) unsubscribeBotMessage();
+        //     }
+        //     else if (get(lastMessage.content).body.includes("List of guilds:")) {
+        //         servers = getParsedServer(get(lastMessage.content).body);
+        //         if (unsubscribeBotMessage) unsubscribeBotMessage();
+        //     }
+        //     discordbotRoom?.sendMessage("ping");
+        // });
     });
     onDestroy(() => {
         if (unsubscribeBotMessage) unsubscribeBotMessage();
