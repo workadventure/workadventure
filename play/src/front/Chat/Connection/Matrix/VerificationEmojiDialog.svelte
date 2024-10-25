@@ -15,9 +15,9 @@
 
     let closeTimeout: ReturnType<typeof setTimeout> | undefined;
 
-    function mismatchAndCloseModal() {
+    async function mismatchAndCloseModal() {
         try {
-            mismatchCallback();
+            await mismatchCallback();
         } catch (error) {
             console.error(error);
             Sentry.captureMessage(`Failed to mismatch emojis validation : ${error}`);
@@ -37,8 +37,12 @@
                 })
                 .catch((error) => {
                     console.error(error);
-                    Sentry.captureMessage(`Failed to mismatch emojis validation : ${error}`);
-                    mismatchCallback();
+                    Sentry.captureMessage(`Failed to verify with emojis validation : ${error}`);
+                    return mismatchCallback();
+                })
+                .catch((error) => {
+                    console.error(error);
+                    Sentry.captureMessage(`Failed to verify with emojis validation : ${error}`);
                 })
                 .finally(() => {
                     closeTimeout = setTimeout(() => {

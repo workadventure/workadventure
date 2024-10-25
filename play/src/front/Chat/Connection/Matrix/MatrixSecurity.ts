@@ -171,7 +171,7 @@ export class MatrixSecurity {
     static makeInputToKey(
         keyInfo: SecretStorage.SecretStorageKeyDescription
     ): (keyParams: KeyParams) => Promise<Uint8Array> {
-        return async ({ passphrase, recoveryKey }): Promise<Uint8Array> => {
+        return ({ passphrase, recoveryKey }): Promise<Uint8Array> => {
             if (passphrase) {
                 return deriveKey(passphrase, keyInfo.passphrase.salt, keyInfo.passphrase.iterations);
             } else if (recoveryKey) {
@@ -313,7 +313,9 @@ export class MatrixSecurity {
                                 await showSasCallbacks.confirm();
                             };
                             const mismatchCallback = () => {
-                                showSasCallbacks.mismatch();
+                                //TODO : use showSasCallbacks.mismatch(); after matris-js-sdk update
+                                //showSasCallbacks.mismatch();
+                                return verificationRequest.cancel({ reason: "m.mismatched_sas" });
                             };
 
                             if (!emojis || this.isVerifyingDevice) return;
@@ -421,7 +423,7 @@ export const matrixSecurity = new MatrixSecurity();
 
 export type VerificationEmojiDialogProps = {
     confirmationCallback: () => Promise<void>;
-    mismatchCallback: () => void;
+    mismatchCallback: () => Promise<void>;
     emojis: EmojiMapping[];
     donePromise: Promise<void>;
     isThisDeviceVerification: boolean;

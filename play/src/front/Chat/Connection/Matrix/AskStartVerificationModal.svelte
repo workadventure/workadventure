@@ -46,7 +46,9 @@
         };
 
         const mismatchCallback = () => {
-            showSasCallbacks.mismatch();
+            //TODO : use showSasCallbacks.mismatch(); after matris-js-sdk update
+            //showSasCallbacks.mismatch();
+            return request.cancel({ reason: "m.mismatched_sas" });
         };
 
         if (!emojis) return;
