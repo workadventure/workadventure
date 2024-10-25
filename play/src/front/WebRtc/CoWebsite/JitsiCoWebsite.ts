@@ -2,6 +2,7 @@ import CancelablePromise from "cancelable-promise";
 import { z } from "zod";
 import { get } from "svelte/store";
 import { randomDelay } from "@workadventure/shared-utils/src/RandomDelay/RandomDelay";
+import { JitsiRoomConfigData } from "@workadventure/map-editor";
 import { inExternalServiceStore } from "../../Stores/MyMediaStore";
 import { coWebsiteManager } from "../CoWebsiteManager";
 import { jitsiExternalApiFactory } from "../JitsiExternalApiFactory";
@@ -83,6 +84,14 @@ const mergeConfig = (config?: object) => {
     };
 };
 
+const getDefaultInterfaceConfig = (enableRecording: boolean) => {
+    return {
+        ...defaultInterfaceConfig,
+        TOOLBAR_BUTTONS: defaultInterfaceConfig.TOOLBAR_BUTTONS.filter(
+            (value) => value !== "recording" || enableRecording
+        ),
+    };
+};
 const defaultInterfaceConfig = {
     SHOW_CHROME_EXTENSION_BANNER: false,
     MOBILE_APP_PROMO: false,
@@ -146,7 +155,7 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
         private roomName: string,
         private playerName: string,
         private jwt: string | undefined,
-        private jitsiConfig: object | undefined,
+        private jitsiConfig: JitsiRoomConfigData | undefined,
         private jitsiInterfaceConfig: object | undefined,
         private domain: string
     ) {
@@ -165,7 +174,18 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
             jitsiExternalApiFactory
                 .loadJitsiScript(this.domain)
                 .then(async () => {
+                    const userConnectedTags = gameManager.getCurrentGameScene().connection?.getAllTags() ?? [];
                     await randomDelay();
+
+                    let enableRecording = false;
+                    if (
+                        userConnectedTags?.includes("admin") ||
+                        (this.jitsiConfig?.jitsiRoomAdminTag &&
+                            userConnectedTags.includes(this.jitsiConfig?.jitsiRoomAdminTag))
+                    ) {
+                        enableRecording = true;
+                    }
+
                     const options: JitsiOptions = {
                         roomName: this.roomName,
                         jwt: this.jwt,
@@ -173,7 +193,10 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
                         height: "100%",
                         parentNode: coWebsiteManager.getCoWebsiteBuffer(),
                         configOverwrite: mergeConfig(this.jitsiConfig),
-                        interfaceConfigOverwrite: { ...defaultInterfaceConfig, ...this.jitsiInterfaceConfig },
+                        interfaceConfigOverwrite: {
+                            ...getDefaultInterfaceConfig(enableRecording),
+                            ...this.jitsiInterfaceConfig,
+                        },
                     };
 
                     if (!options.jwt) {
@@ -192,6 +215,7 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
                         options.onload = () => {
                             resolve();
                         }; //we want for the iframe to be loaded before triggering animations.
+
                         this.jitsiApi = new window.JitsiMeetExternalAPI(this.domain, options);
 
                         this.jitsiApi.addListener("videoConferenceJoined", () => {
