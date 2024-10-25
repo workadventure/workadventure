@@ -1519,6 +1519,8 @@ export class SocketManager implements ZoneEventListener {
             console.error(error);
             Sentry.captureException(error);
         }
+
+        return;
     }
 
     async handleLeaveChatRoomArea(socket: Socket, chatRoomAreaToLeave: string) {
@@ -1534,8 +1536,10 @@ export class SocketManager implements ZoneEventListener {
         }
         try {
             await matrixProvider.kickUserFromRoom(chatID, chatRoomAreaToLeave);
+            return;
         } catch (error) {
             console.error(error);
+            return;
         }
     }
 
