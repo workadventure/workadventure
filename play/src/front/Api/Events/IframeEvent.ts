@@ -68,6 +68,7 @@ import { isReceiveEventEvent } from "./ReceiveEventEvent";
 import { isPlaySoundInBubbleEvent } from "./ProximityMeeting/PlaySoundInBubbleEvent";
 import { isStartStreamInBubbleEvent } from "./ProximityMeeting/StartStreamInBubbleEvent";
 import { isAppendPCMDataEvent } from "./ProximityMeeting/AppendPCMDataEvent";
+import { isWamMapDataEvent } from "./WamMapDataEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -714,6 +715,10 @@ export const iframeQueryMapTypeGuards = {
     stopLeading: {
         query: z.undefined(),
         answer: z.undefined(),
+    },
+    getWamMapData: {
+        query: z.undefined(),
+        answer: isWamMapDataEvent,
     },
 };
 
