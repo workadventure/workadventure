@@ -273,6 +273,7 @@ export class GameManager {
         return this._chatConnection;
     }
 
+
     /**
      * Performs all cleanup actions specific to someone logging out.
      * Currently, this logs out from the Matrix client.

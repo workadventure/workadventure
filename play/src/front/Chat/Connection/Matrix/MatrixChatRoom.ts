@@ -220,7 +220,7 @@ export class MatrixChatRoom implements ChatRoom {
                     } else {
                         this.handleNewMessage(event);
                         const senderID = event.getSender();
-                        if (senderID !== this.matrixRoom.client.getSafeUserId() && !get(this.areNotificationsMuted)) {
+                        if (senderID !== this.matrixRoom.client.getSafeUserId() && !get(this.areNotificationsMuted) && senderID !== '@discordbot:matrix.workadventure.localhost') {
                             this.playNewMessageSound();
                             if (!isAChatRoomIsVisible() && get(selectedRoom)?.id !== "proximity") {
                                 selectedRoom.set(this);

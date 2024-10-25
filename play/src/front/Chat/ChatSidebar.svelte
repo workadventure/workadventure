@@ -95,7 +95,7 @@
         data-testid="chat"
         transition:fly={{ duration: 200, x: -sideBarWidth }}
         style="width: {sideBarWidth}px; max-width: {Math.min(sideBarWidth, document.documentElement.clientWidth)}px;"
-        class="chatWindow !tw-min-w-full sm:!tw-min-w-[360px] tw-bg-contrast/95 tw-backdrop-blur-md tw-p-4 "
+        class="chatWindow !tw-min-w-full sm:!tw-min-w-[360px] tw-bg-contrast/95 tw-backdrop-blur-md tw-p-4 tw-overflow-y-scroll "
     >
         <button class="close-window" data-testid="closeChatButton" on:click={closeChat}>&#215;</button>
         <Chat {sideBarWidth} />

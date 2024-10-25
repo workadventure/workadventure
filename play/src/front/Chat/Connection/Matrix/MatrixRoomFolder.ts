@@ -1,4 +1,4 @@
-import { Room } from "matrix-js-sdk";
+import {ClientEvent, Room, SyncState} from "matrix-js-sdk";
 import { Writable, writable } from "svelte/store";
 import { KnownMembership } from "matrix-js-sdk/lib/types";
 import * as Sentry from "@sentry/svelte";
@@ -14,23 +14,46 @@ export class MatrixRoomFolder implements RoomFolder {
 
     id: string;
     name: Writable<string>;
-    private loadRoomsAndFolderPromise: Promise<void>;
+    public readonly loadRoomsAndFolderPromise: Promise<void>;
 
     constructor(private room: Room) {
         this.name = writable(room.name);
         this.id = room.roomId;
 
         this.loadRoomsAndFolderPromise = new Promise((resolve, reject) => {
+            if(room.name==="Exchange"){
+                console.trace(">>>>roomsHierarchy", room.getMyMembership());
+            }
+
             this.room.client
                 .getRoomHierarchy(room.roomId, 100, 1)
                 .then(({ rooms: roomsHierarchy }) => {
+                    if(room.name==="Exchange"){
+                        console.log(">>>>roomsHierarchy", roomsHierarchy);
+                    }
+                    const roomsPromise : Promise<void>[] = [];
                     roomsHierarchy.forEach((cur) => {
                         const childRoom = room.client.getRoom(cur.room_id);
 
                         if (!childRoom || cur.room_id === this.id) return;
 
-                        if (childRoom.isSpaceRoom()) {
-                            this.folders.set(childRoom.roomId, new MatrixRoomFolder(childRoom));
+                        if(KnownMembership.Invite === childRoom.getMyMembership()){
+                            if(childRoom.name==="Exchange"){
+                                console.log(">>>>roomsHierarch skip child room exchange", childRoom.getMyMembership());
+                            }
+                           return; // skip the room if it is not joined
+                        }
+
+                        if(childRoom.name==="Exchange"){
+                            console.log(">>>>roomsHierarch join child room exchange", childRoom.getMyMembership());
+                        }
+
+
+                        if (childRoom.isSpaceRoom() && childRoom.getMyMembership() === KnownMembership.Join) {
+                            const newfolder = new MatrixRoomFolder(childRoom);
+                            this.folders.set(childRoom.roomId, newfolder);
+                            roomsPromise.push(newfolder.loadRoomsAndFolderPromise);
+
                         } else {
                             const matrixChatRoom = new MatrixChatRoom(childRoom);
                             if (matrixChatRoom.myMembership === KnownMembership.Join) {
@@ -38,17 +61,30 @@ export class MatrixRoomFolder implements RoomFolder {
                             }
                         }
                     });
-                    resolve();
+                    Promise.all(roomsPromise).finally(() =>resolve());
+                    //resolve();
                 })
                 .catch((error) => {
-                    console.error(error);
+                    if(room.name==="Exchange"){
+                        console.log(">>>>Failed to get folder Hierarchy roomsHierarchy  : exchange");
+                    }
+                    console.error('Failed to get folder Hierarchy roomsHierarchy :' +  error);
                     Sentry.captureMessage("Failed to get folder Hierarchy");
                     reject(new Error("Failed to get folder Hierarchy"));
                 });
         });
     }
 
-    getNode(id: string): MatrixRoomFolder | MatrixChatRoom | undefined {
+    async getNode(id: string): Promise<MatrixRoomFolder | MatrixChatRoom | undefined> {
+        try{
+
+        await this.loadRoomsAndFolderPromise;
+        }catch (e) {
+            console.error('...');
+            Sentry.captureMessage(`.... : ${e}`);
+            return undefined;
+        }
+
         const roomNode = this.rooms.get(id);
         if (roomNode) {
             return roomNode;
@@ -128,4 +164,24 @@ export class MatrixRoomFolder implements RoomFolder {
             return [];
         }
     }
+
+    private async waitForNextSync() {
+        await new Promise<void>((resolve, reject) => {
+            const resolveIfIsASyncingEvent = (state: SyncState) => {
+                if (state === SyncState.Syncing) {
+                    if (timer) clearTimeout(timer);
+                    this.room.client.off(ClientEvent.Sync, resolveIfIsASyncingEvent);
+                    resolve();
+                }
+            };
+
+            const timer = setTimeout(() => {
+                this.room.client.off(ClientEvent.Sync, resolveIfIsASyncingEvent);
+                reject(new Error("waitForSync event timeout"));
+            }, 30000);
+
+            this.room.client.on(ClientEvent.Sync, resolveIfIsASyncingEvent);
+        });
+    }
+
 }
