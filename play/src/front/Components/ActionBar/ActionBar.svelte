@@ -324,7 +324,12 @@
     }
 
     function openBo() {
-        window.open(ADMIN_BO_URL, "_blank");
+        if (!ADMIN_BO_URL) {
+            throw new Error("ADMIN_BO_URL not set");
+        }
+        const url = new URL(ADMIN_BO_URL, window.location.href);
+        url.searchParams.set("playUri", window.location.href);
+        window.open(url, "_blank");
     }
 
     /*function register() {
