@@ -10,11 +10,10 @@
 
     const dispatch = createEventDispatcher();
     let optionAdvancedActivated = false;
-    let temasOnlineMeetingId: string;
+    let temasOnlineMeetingId: string | undefined;
+    let meetingIsNotFound = false;
 
     async function onValueChange() {
-        console.log("property.data", property.data);
-
         if (!property.data) {
             property.data = {
                 msTeamsMeeting: undefined,
@@ -25,7 +24,11 @@
         if (temasOnlineMeetingId && temasOnlineMeetingId.length > 0) {
             temasOnlineMeetingId = temasOnlineMeetingId?.trim().replace(new RegExp(" ", "g"), "");
             property.data.temasOnlineMeetingId = temasOnlineMeetingId;
-            await getOnLineMeetingUrl();
+            try {
+                await getOnLineMeetingUrl();
+            } catch (e) {
+                console.info("The meeting was not found, but it is not a problem!", e);
+            }
         } else {
             property.data.msTeamsMeeting = null;
         }
@@ -37,6 +40,7 @@
     }
 
     async function getOnLineMeetingUrl() {
+        meetingIsNotFound = false;
         if (!extensionModuleAreaMapEditor.teams.getOnlineMeetingByJoinMeetingId || !temasOnlineMeetingId) return;
         try {
             const msTeamsMeeting = await extensionModuleAreaMapEditor.teams.getOnlineMeetingByJoinMeetingId(
@@ -44,12 +48,15 @@
             );
             if (msTeamsMeeting) {
                 property.data!.msTeamsMeeting = msTeamsMeeting;
+                meetingIsNotFound = false;
             } else {
-                property.data!.msTeamsMeeting = null;
+                property.data!.temasOnlineMeetingId = temasOnlineMeetingId;
+                meetingIsNotFound = true;
             }
         } catch (e) {
-            console.error("Error getting online meeting", e);
-            property.data!.msTeamsMeeting = null;
+            console.error("Error getting online meeting, meeting was not found but isn't a probelm!", e);
+            property.data!.temasOnlineMeetingId = temasOnlineMeetingId;
+            meetingIsNotFound = true;
         }
     }
 
@@ -61,9 +68,14 @@
             };
         }
 
-        if (property.data.msTeamsMeeting?.joinMeetingIdSettings.joinMeetingId) {
+        if (
+            property.data.msTeamsMeeting?.joinMeetingIdSettings &&
+            property.data.msTeamsMeeting?.joinMeetingIdSettings.joinMeetingId
+        ) {
             temasOnlineMeetingId = property.data.msTeamsMeeting.joinMeetingIdSettings.joinMeetingId;
             optionAdvancedActivated = true;
+        } else {
+            temasOnlineMeetingId = property.data.temasOnlineMeetingId;
         }
 
         dispatch("change", property.data);
@@ -96,14 +108,15 @@
             </div>
         {/if}
 
-        {#if property.data && property.data.msTeamsMeeting}
+        {#if property.data && property.data.msTeamsMeeting && property.data.msTeamsMeeting.joinMeetingIdSettings && property.data.msTeamsMeeting.joinMeetingIdSettings.joinMeetingId}
             <div class="tw-flex tw-flex-col tw-mt-2">
                 <span class="tw-text-sm">Meeting subject: {property.data.msTeamsMeeting.subject}</span>
                 <span class="tw-text-sm tw-whitespace-nowrap"
                     >Meeting ID: {property.data.msTeamsMeeting.joinMeetingIdSettings.joinMeetingId}</span
                 >
             </div>
-        {:else if temasOnlineMeetingId}
+        {/if}
+        {#if meetingIsNotFound}
             <div class="tw-flex tw-flex-col tw-items-center tw-mt-2">
                 <span class="tw-text-sm tw-text-warning-800">⚠️ Meeting not found</span>
             </div>

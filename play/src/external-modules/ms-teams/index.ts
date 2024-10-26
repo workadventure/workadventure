@@ -944,10 +944,7 @@ class MSTeams implements MSTeamsExtensionModule {
 
         // Check if the property is well formatted and have join meeting id
         if (teamsAreaProperty.data && teamsAreaProperty.data.msTeamsMeeting) {
-            console.info(
-                "Joining Teams meeting was defined in the area property",
-                teamsAreaProperty.data.msTeamsMeeting.joinMeetingIdSettings.joinMeetingId
-            );
+            console.info("Joining Teams meeting was defined in the area property");
             notificationPlayingStore.removeNotificationById(area.id);
             notificationPlayingStore.playNotification(
                 get(LL).externalModule.teams.openingMeeting(),
@@ -998,11 +995,6 @@ class MSTeams implements MSTeamsExtensionModule {
 
         const watchSpaceMetadataSubscribe = space.watchSpaceMetadata().subscribe((value) => {
             // Use time out to avoid multiple meeting creation
-            console.log(
-                "this.onlineTeamsMeetingsCreated.has(area.id)",
-                area.id,
-                this.onlineTeamsMeetingsCreated.has(area.id)
-            );
             if (this.onlineTeamsMeetingsCreated.has(area.id)) return;
 
             // If the space has a meeting, open the meeting and clear the timeout to create a new meeting
@@ -1107,7 +1099,19 @@ class MSTeams implements MSTeamsExtensionModule {
         }
     }
 
-    private async openCowebsiteTeamsMeeting(data: MSTeamsMeeting) {
+    private async openCowebsiteTeamsMeeting(data: MSTeamsMeeting | string) {
+        if (typeof data === "string") {
+            const cowebsiteOpened = await this.openPopupMeeting(
+                "Meet Now",
+                "",
+                data,
+                new Date(),
+                new Date(),
+                undefined
+            );
+            this.cowebsiteOpenedId = cowebsiteOpened.id;
+            return;
+        }
         if (this.cowebsiteOpenedId != undefined) return;
         const cowebsiteOpened = await this.openPopupMeeting(
             data.subject,
