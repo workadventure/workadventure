@@ -1162,6 +1162,7 @@ class MSTeams implements MSTeamsExtensionModule {
                     allowApi: true,
                     widthPercent: 30,
                     position: 1,
+                    allowPolicy: "clipboard-write",
                 },
                 window
             );
