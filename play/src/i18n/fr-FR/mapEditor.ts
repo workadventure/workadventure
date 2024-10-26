@@ -170,7 +170,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         restrictedRightsProperties: {
             label: "Ajouter des droits",
-            rightTitle: "Droit d'accès et d'édion via les tags utilisateur",
+            rightTitle: "Droit d'accès et d'édition via les tags utilisateur",
             rightWriteTitle: "Droits d'édition",
             rightWriteDescription:
                 "Les droits d'édition définissent qui peut modifier la zone. Les utilisateurs correspondant à l'un de ces tags peuvent créer, mettre à jour ou supprimer un objet dans la zone.",

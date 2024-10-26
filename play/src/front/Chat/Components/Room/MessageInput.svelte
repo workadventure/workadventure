@@ -56,7 +56,6 @@
         lastBrNode?.scrollIntoView();
         lastBrNode?.remove();
     }
-    //emit onEnter
 </script>
 
 <div

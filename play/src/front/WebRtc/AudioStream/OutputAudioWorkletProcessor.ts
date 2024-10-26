@@ -1,18 +1,25 @@
+interface PCMData {
+    pcmData: Float32Array;
+    id: number;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function isPcmData(data: any): data is PCMData {
+    return typeof data === "object" && data.pcmData instanceof Float32Array && typeof data.id === "number";
+}
+
 class OutputAudioWorkletProcessor extends AudioWorkletProcessor {
-    private audioQueue: Float32Array[] = [];
+    private audioQueue: PCMData[] = [];
 
     constructor() {
         super();
         this.port.onmessage = (event: MessageEvent) => {
             if (event.data.emptyBuffer === true) {
                 this.audioQueue = [];
+            } else if (isPcmData(event.data)) {
+                this.audioQueue.push(event.data);
             } else {
-                const data = event.data.pcmData;
-                if (data instanceof Float32Array) {
-                    this.audioQueue.push(data);
-                } else {
-                    console.error("Invalid data type received in worklet", event.data);
-                }
+                console.error("Invalid data type received in worklet", event.data);
             }
         };
     }
@@ -21,17 +28,20 @@ class OutputAudioWorkletProcessor extends AudioWorkletProcessor {
         const output = outputs[0];
         const outputData = output[0];
 
-        let nextChunk: Float32Array | undefined;
+        let nextChunk: PCMData | undefined;
         let currentOffset = 0;
         // eslint-disable-next-line no-cond-assign
         while ((nextChunk = this.audioQueue[0])) {
-            if (currentOffset + nextChunk.length <= outputData.length) {
-                outputData.set(nextChunk, currentOffset);
-                currentOffset += nextChunk.length;
+            if (currentOffset + nextChunk.pcmData.length <= outputData.length) {
+                outputData.set(nextChunk.pcmData, currentOffset);
+                currentOffset += nextChunk.pcmData.length;
+                const id = nextChunk.id;
+                // Send the acknoledgement back to the main thread
+                this.port.postMessage({ playedId: id });
                 this.audioQueue.shift();
             } else {
-                outputData.set(nextChunk.subarray(0, outputData.length - currentOffset), currentOffset);
-                this.audioQueue[0] = nextChunk.subarray(outputData.length - currentOffset);
+                outputData.set(nextChunk.pcmData.subarray(0, outputData.length - currentOffset), currentOffset);
+                this.audioQueue[0].pcmData = nextChunk.pcmData.subarray(outputData.length - currentOffset);
                 break;
             }
         }
