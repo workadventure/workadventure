@@ -2,18 +2,19 @@ import { notificationPlayingStore } from "../Stores/NotificationStore";
 import {ChatConnectionInterface, ChatMessage, ChatRoom} from "./Connection/ChatConnection";
 import {get, Unsubscriber} from "svelte/store";
 import {DiscordServer} from "../Interfaces/DiscordServerInterface";
-import {attempt} from "lodash";
+import {attempt, initial} from "lodash";
+import {MatrixChatConnection} from "./Connection/Matrix/MatrixChatConnection";
+import {MatrixChatRoom} from "./Connection/Matrix/MatrixChatRoom";
+import {Subscription} from "rxjs";
 
 export default class DiscordBotManager {
-    private chatConnection
-    private discordBotRoom :ChatRoom | undefined = undefined;
-    private unsubscribeBotMessage: Unsubscriber | undefined;
+    private discordBotRoom: MatrixChatRoom | undefined = undefined;
+    private botMessageSubscription: Subscription | undefined;
     private loginQrAttempt = false;
     //TODO add discord bot Id in a env file
     static DISCORD_BOT_ID = "@discordbot:matrix.workadventure.localhost";
 
-    constructor(chatConnection:  ChatConnectionInterface) {
-        this.chatConnection = chatConnection;
+    constructor(private chatConnection: MatrixChatConnection) {
     }
 
     //init the direct room with the discord bot
@@ -27,22 +28,41 @@ export default class DiscordBotManager {
 
     public async sendMessage(message: string): Promise<ChatMessage> {
         return new Promise((resolve, reject) => {
-            if(this.unsubscribeBotMessage) this.unsubscribeBotMessage();
+            if(this.botMessageSubscription) this.botMessageSubscription.unsubscribe();
             if (!this.discordBotRoom) {
                 reject("Discord bot room is not initialized");
                 return
             }
-            this.discordBotRoom.sendMessage(message);
-            this.unsubscribeBotMessage = this.discordBotRoom.messages.subscribe(async (messages) => {
-                const lastMessage = messages[messages.length - 1];
+
+            try {
+                this.discordBotRoom.sendMessage(message);
+                console.log("@@@@@ message sent to discord bot", message);
+            }
+            catch (e) {
+                console.error("Failed to send message to discord bot", e);
+                reject(e);
+            }
+
+            this.botMessageSubscription = this.discordBotRoom.messages.onPush.subscribe(async (lastMessage) => {
+                if (!this.discordBotRoom) {
+                    reject("Discord bot room is not initialized");
+                    return
+                }
+
                 if (`${lastMessage.sender?.chatId}` !== DiscordBotManager.DISCORD_BOT_ID) {
                     return;
                 }
                 else if((get(lastMessage.content).body).includes('websocket: close sent')) {
                     return;
-                } else {
+                }
+                else{
+                    console.log(
+                        "@@@@@ message received from discord bot",
+                        get(lastMessage.content),
+                    )
+
+                    if(this.botMessageSubscription) this.botMessageSubscription.unsubscribe();
                     resolve(lastMessage);
-                    if(this.unsubscribeBotMessage) this.unsubscribeBotMessage();
                     return
                 }
             });

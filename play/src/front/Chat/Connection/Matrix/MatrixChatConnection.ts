@@ -728,7 +728,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         return initial_state;
     }
 
-    async createDirectRoom(userToInvite: string): Promise<ChatRoom | undefined> {
+    async createDirectRoom(userToInvite: string): Promise<MatrixChatRoom | undefined> {
         if (!this.client) {
             return Promise.reject(CLIENT_NOT_INITIALIZED_ERROR_MSG);
         }

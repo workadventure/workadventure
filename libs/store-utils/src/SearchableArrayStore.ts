@@ -1,11 +1,13 @@
 import type { Readable, Subscriber, Unsubscriber } from "svelte/store";
 import { writable } from "svelte/store";
+import {Subject} from "rxjs";
 
 /**
  * Is it an array? Is it a map? Is it a Svelte store? This is all at once!
  *
  * The SearchableArrayStore is an array that is also a Svelte store (it will be updated each time the array is updated)
  * Furthermore, it is searchable in O(1)
+ * In addition you can listen when a new item is pushed in the array
  */
 export class SearchableArrayStore<K, V>
   extends Array<V>
@@ -13,6 +15,8 @@ export class SearchableArrayStore<K, V>
 {
   private readonly store = writable(this);
   private readonly storesByKey = new Map<K, V>();
+  private readonly _pushSubject = new Subject<V>();
+  public readonly onPush = this._pushSubject.asObservable();
 
   constructor(private getKeyCallback: (item: V) => K) {
     super();
@@ -33,7 +37,7 @@ export class SearchableArrayStore<K, V>
 
   delete(key: K): boolean {
     const index = super.findIndex((item) => this.getKeyCallback(item) === key);
-    if (index) {
+    if (index !== -1) {
       this.splice(index, 1);
       return true;
     }
@@ -55,6 +59,9 @@ export class SearchableArrayStore<K, V>
       this.storesByKey.set(this.getKeyCallback(item), item);
     }
     this.store.set(this);
+    for (const item of newItems) {
+        this._pushSubject.next(item);
+    }
     return number;
   }
 

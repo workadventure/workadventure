@@ -9,6 +9,7 @@
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
     import DiscordBotManager from "../../DiscordBotManager";
     import { DiscordServer} from "../../../Interfaces/DiscordServerInterface";
+    import {MatrixChatConnection} from "../../Connection/Matrix/MatrixChatConnection";
 
 
     //TODO Test DiscordBotManager Class
@@ -20,7 +21,7 @@
     let DiscordBot: DiscordBotManager;
 
 
-    let chatConnection = gameManager.getCurrentGameScene()._chatConnection;
+    //let chatConnection = gameManager.getCurrentGameScene()._chatConnection;
     let unsubscribeBotMessage: Unsubscriber | undefined;
     $: servers = [] as Array<DiscordServer>;
     $: qrCodeUrl = undefined as string | undefined;
@@ -116,24 +117,24 @@
     //     }
     // }
 
-    function getParsedServer(message: string): DiscordServer[] {
-        const regex = /^\* (.*) \(`(\d+)`\) - (.*)$/gm;
-
-        const matches = message.matchAll(regex);
-
-        let servers = Array.from(matches).map((match) => {
-            // const guild = guilds.find((guild: { id: string }) => guild.id === match[2]);
-            return {
-                name: match[1],
-                id: match[2],
-                isSync: !match[3].includes("never"),
-                isBridging: false,
-                // ...guild,
-            };
-        });
-        if (unsubscribeBotMessage) unsubscribeBotMessage();
-        return servers;
-    }
+    // function getParsedServer(message: string): DiscordServer[] {
+    //     const regex = /^\* (.*) \(`(\d+)`\) - (.*)$/gm;
+    //
+    //     const matches = message.matchAll(regex);
+    //
+    //     let servers = Array.from(matches).map((match) => {
+    //         // const guild = guilds.find((guild: { id: string }) => guild.id === match[2]);
+    //         return {
+    //             name: match[1],
+    //             id: match[2],
+    //             isSync: !match[3].includes("never"),
+    //             isBridging: false,
+    //             // ...guild,
+    //         };
+    //     });
+    //     if (unsubscribeBotMessage) unsubscribeBotMessage();
+    //     return servers;
+    // }
 
     function bridgeServers() {
         if (!discordbotRoom) return;
@@ -191,109 +192,126 @@
         return true
     }
 
-    async function connectToDiscord() {
-        if (!discordbotRoom) return;
+    async function connectToDiscord(): Promise<void> {
 
-        unsubscribeBotMessage = discordbotRoom.messages.subscribe(async (messages) => {
-            // console.log("unsubscribeBotMessage => discordbotRoom.messages", messages);
-            if (!discordbotRoom) return;
+        try {
+            const qrMessage = await DiscordBot.sendMessage("login-qr");
+            qrCodeUrl = get(qrMessage.content).url;
+            console.log("%%%%%% : qrCodeUrl", qrCodeUrl);
+        }
+        catch (e) {
+            console.error("Error while getting the qr code", e);
+            notificationPlayingStore.playNotification(
+                `Error while getting the qr code`,
+                "discord-logo.svg"
+            )
+            needManualToken = true;
+        }
+        return
 
-            //loadingFetchServer = true;
-            loadingFetchServer = false;
-            const lastMessage = messages[messages.length - 1];
-
-            if (`${lastMessage.sender?.chatId}` !== discordBotId){
-                return;
-            }
-            if (get(lastMessage.content).body.includes("discordapp.com")){
-                step = "getQrCode";
-            }
-            if(get(lastMessage.content).body.includes("Connecting to Discord")){
-                step = "waitLoginResponse";
-            }
-
-            console.log("step: ", step);
-            console.log("message reçu !", get(lastMessage.content).body);
-            switch (step) {
-                case "checkLogin":
-                    if (
-                        get(lastMessage.content).body.includes("You're logged in as") ||
-                        get(lastMessage.content).body.includes("You're already logged in") ||
-                        get(lastMessage.content).body.includes("Successfully logged in as") ||
-                        get(lastMessage.content).body.includes("Connecting to Discord as user")
-                    ) {
-                        bridgeConnected = true;
-                        step = "getServers";
-                        loadingFetchServer = true;
-                        discordbotRoom.sendMessage("guild status");
-                    } else {
-                        console.log("You are not connected to discord bot");
-                        bridgeConnected = false;
-                        step = "getQrCode";
-                        discordbotRoom.sendMessage("login-qr");
-                        // connectToBridge();
-                    }
-                    break;
-                case "getServers":
-                    // const guilds = await getAllGuilds();
-
-                    needManualToken = false;
-                    bridgeConnected = true;
-                    qrCodeUrl = undefined;
-
-                    const messageServers = get(lastMessage.content).body;
-
-                    servers = getParsedServer(messageServers);
-
-                    console.log("servers", servers);
-                    if (unsubscribeBotMessage) unsubscribeBotMessage();
-                    loadingFetchServer = false;
-                    break;
-                case "getQrCode":
-                    qrCodeUrl = get(lastMessage.content).url;
-                    step = "waitLoginResponse";
-                    break;
-
-                case "waitLoginResponse":
-                    if (get(lastMessage.content).body.includes("You're logged in as") ||
-                        get(lastMessage.content).body.includes("You're already logged in") ||
-                        get(lastMessage.content).body.includes("Successfully logged in as"))
-                    {
-                        step = "getServers";
-                        needManualToken = false;
-                        bridgeConnected = true;
-                        qrCodeUrl = undefined;
-                        discordbotRoom.sendMessage("guild status");
-                    }
-                    else if (get(lastMessage.content).body.includes("Connecting to Discord as user")){
-                        //wait for the nex mesage succesfully ...
-                        step = "waitLoginResponse";
-                    } else if (get(lastMessage.content).body.includes("CAPTCHAs") || needManualToken) {
-                        needManualToken = true;
-                        (async () => {
-                            await awaitForStep;
-                            step = "waitLoginResponse";
-                            discordbotRoom.sendMessage(`login-token user ${manualDiscordToken}`);
-                        })().catch((error) => {
-                            console.error("Error sending message to Discord bot:", error);
-                        });
-                        step = "checkLogin";
-                        qrCodeUrl = undefined;
-                    } else if (get(lastMessage.content).body.includes("websocket")){
-                        step = "getQrCode";
-                        discordbotRoom.sendMessage("login-qr");
-                    }
-                    break;
-            }
-        });
-        discordbotRoom.sendMessage("ping");
+        // if (!discordbotRoom) return;
+        //
+        // unsubscribeBotMessage = discordbotRoom.messages.subscribe(async (messages) => {
+        //     // console.log("unsubscribeBotMessage => discordbotRoom.messages", messages);
+        //     if (!discordbotRoom) return;
+        //
+        //     //loadingFetchServer = true;
+        //     loadingFetchServer = false;
+        //     const lastMessage = messages[messages.length - 1];
+        //
+        //     if (`${lastMessage.sender?.chatId}` !== discordBotId){
+        //         return;
+        //     }
+        //     if (get(lastMessage.content).body.includes("discordapp.com")){
+        //         step = "getQrCode";
+        //     }
+        //     if(get(lastMessage.content).body.includes("Connecting to Discord")){
+        //         step = "waitLoginResponse";
+        //     }
+        //
+        //     console.log("step: ", step);
+        //     console.log("message reçu !", get(lastMessage.content).body);
+        //     switch (step) {
+        //         case "checkLogin":
+        //             if (
+        //                 get(lastMessage.content).body.includes("You're logged in as") ||
+        //                 get(lastMessage.content).body.includes("You're already logged in") ||
+        //                 get(lastMessage.content).body.includes("Successfully logged in as") ||
+        //                 get(lastMessage.content).body.includes("Connecting to Discord as user")
+        //             ) {
+        //                 bridgeConnected = true;
+        //                 step = "getServers";
+        //                 loadingFetchServer = true;
+        //                 discordbotRoom.sendMessage("guild status");
+        //             } else {
+        //                 console.log("You are not connected to discord bot");
+        //                 bridgeConnected = false;
+        //                 step = "getQrCode";
+        //                 discordbotRoom.sendMessage("login-qr");
+        //                 // connectToBridge();
+        //             }
+        //             break;
+        //         case "getServers":
+        //             // const guilds = await getAllGuilds();
+        //
+        //             needManualToken = false;
+        //             bridgeConnected = true;
+        //             qrCodeUrl = undefined;
+        //
+        //             const messageServers = get(lastMessage.content).body;
+        //
+        //             servers = getParsedServer(messageServers);
+        //
+        //             console.log("servers", servers);
+        //             if (unsubscribeBotMessage) unsubscribeBotMessage();
+        //             loadingFetchServer = false;
+        //             break;
+        //         case "getQrCode":
+        //             qrCodeUrl = get(lastMessage.content).url;
+        //             step = "waitLoginResponse";
+        //             break;
+        //
+        //         case "waitLoginResponse":
+        //             if (get(lastMessage.content).body.includes("You're logged in as") ||
+        //                 get(lastMessage.content).body.includes("You're already logged in") ||
+        //                 get(lastMessage.content).body.includes("Successfully logged in as"))
+        //             {
+        //                 step = "getServers";
+        //                 needManualToken = false;
+        //                 bridgeConnected = true;
+        //                 qrCodeUrl = undefined;
+        //                 discordbotRoom.sendMessage("guild status");
+        //             }
+        //             else if (get(lastMessage.content).body.includes("Connecting to Discord as user")){
+        //                 //wait for the nex mesage succesfully ...
+        //                 step = "waitLoginResponse";
+        //             } else if (get(lastMessage.content).body.includes("CAPTCHAs") || needManualToken) {
+        //                 needManualToken = true;
+        //                 (async () => {
+        //                     await awaitForStep;
+        //                     step = "waitLoginResponse";
+        //                     discordbotRoom.sendMessage(`login-token user ${manualDiscordToken}`);
+        //                 })().catch((error) => {
+        //                     console.error("Error sending message to Discord bot:", error);
+        //                 });
+        //                 step = "checkLogin";
+        //                 qrCodeUrl = undefined;
+        //             } else if (get(lastMessage.content).body.includes("websocket")){
+        //                 step = "getQrCode";
+        //                 discordbotRoom.sendMessage("login-qr");
+        //             }
+        //             break;
+        //     }
+        // });
+        // discordbotRoom.sendMessage("ping");
 
     }
 
     onMount( async () => {
-        console.log('cest monté !');
-
         const chatConnection = await gameManager.getChatConnection();
+        if (!(chatConnection instanceof MatrixChatConnection)) {
+            throw new Error("Discord integration is only available with Matrix chat connection");
+        }
         DiscordBot = new DiscordBotManager(chatConnection);
         await DiscordBot.initDiscordBotRoom();
 
@@ -397,16 +415,17 @@
 <div class="tw-flex tw-flex-col tw-w-full tw-gap-5">
     {#if !bridgeConnected}
         <div class="tw-py-3 tw-px-3">
-            <button on:click={connectToDiscord}
-                    class="tw-w-full tw-p-2 tw-bg-secondary-800  tw-text-white tw-no-underline tw-rounded-md tw-text-center tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white tw-flex tw-flex-row tw-items-center"
-            >
-                Connect to Discord
-            </button>
+
             <p class=" tw-text-sm tw-text-gray-500">
                 You need to connect your Discord account to use this feature. To do so, please click on the button
                 below. You will be redirected to Discord to login. To get all Discord servers, the bot need to be
                 connected to your account. And finally, you will be able to choose which servers you want to bridge.
             </p>
+            <button on:click={connectToDiscord}
+                    class="tw-w-full tw-p-2 tw-bg-secondary-800  tw-text-white tw-no-underline tw-rounded-md tw-text-center tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white tw-flex tw-flex-row tw-items-center"
+            >
+                Connect to Discord
+            </button>
         </div>
     {/if}
     {#if loadingFetchServer}
@@ -438,6 +457,9 @@
                         class="tw-w-full tw-p-2 tw-bg-secondary-800  tw-text-white tw-no-underline tw-rounded-md tw-text-center tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white tw-flex tw-flex-row tw-items-center"
                 >
                     Login with token
+                </button>
+                <button>
+
                 </button>
             {/if}
 
