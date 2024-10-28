@@ -25,7 +25,7 @@
     }
 </script>
 
-<div class="totolist tw-bg-dark-blue/95">
+<div class="totolist tw-bg-dark-blue/95 tw-select-text">
     <div class="sidebar" in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>
         <button class="close-window" data-testid="mapEditor-close-button" on:click={closeTodoList}>&#215;</button>
 
