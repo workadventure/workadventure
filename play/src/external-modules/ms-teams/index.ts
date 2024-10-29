@@ -618,7 +618,11 @@ class MSTeams implements MSTeamsExtensionModule {
         // Get all events between today 00:00 and 23:59
         try {
             const calendarEventUrl = `/me/calendar/calendarView?$select=subject,body,bodyPreview,organizer,attendees,start,end,location,weblink,onlineMeeting&startDateTime=${startDateTime.toISOString()}&endDateTime=${endDateTime.toISOString()}`;
-            const mSTeamsCalendarEventResponse = await this.msAxiosClientV1.get(calendarEventUrl);
+            const mSTeamsCalendarEventResponse = await this.msAxiosClientV1.get(calendarEventUrl, {
+                headers: {
+                    Prefer: 'outlook.timezone="Romance Standard Time"',
+                },
+            });
             return mSTeamsCalendarEventResponse.data.value;
         } catch (e) {
             if ((e as AxiosError).response?.status === 401) {
