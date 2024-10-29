@@ -2,15 +2,19 @@ import { notificationPlayingStore } from "../Stores/NotificationStore";
 import {ChatConnectionInterface, ChatMessage, ChatRoom} from "./Connection/ChatConnection";
 import {get, Unsubscriber} from "svelte/store";
 import {DiscordServer} from "../Interfaces/DiscordServerInterface";
-import {attempt, initial} from "lodash";
+import {attempt, forEach, initial} from "lodash";
 import {MatrixChatConnection} from "./Connection/Matrix/MatrixChatConnection";
 import {MatrixChatRoom} from "./Connection/Matrix/MatrixChatRoom";
 import {Subscription} from "rxjs";
+import { connectionStatus, storedQrCodeUrl } from "./Stores/DiscordConnectionStore"
+import {success} from "@workadventure/map-editor";
+import {resolve} from "path";
 
 export default class DiscordBotManager {
     private discordBotRoom: MatrixChatRoom | undefined = undefined;
     private botMessageSubscription: Subscription | undefined;
-    private loginQrAttempt = false;
+    private waitForALoginMessage: Subscription | undefined;
+    //private loginQrAttempt = false;
     //TODO add discord bot Id in a env file
     static DISCORD_BOT_ID = "@discordbot:matrix.workadventure.localhost";
 
@@ -36,7 +40,6 @@ export default class DiscordBotManager {
 
             try {
                 this.discordBotRoom.sendMessage(message);
-                console.log("@@@@@ message sent to discord bot", message);
             }
             catch (e) {
                 console.error("Failed to send message to discord bot", e);
@@ -61,8 +64,8 @@ export default class DiscordBotManager {
                         get(lastMessage.content),
                     )
 
-                    if(this.botMessageSubscription) this.botMessageSubscription.unsubscribe();
                     resolve(lastMessage);
+                    if(this.botMessageSubscription) this.botMessageSubscription.unsubscribe();
                     return
                 }
             });
@@ -86,19 +89,88 @@ export default class DiscordBotManager {
         });
     }
 
-    public async getUserGuilds(): Promise<DiscordServer[]>{
+    public async getParsedUserGuilds(): Promise<DiscordServer[]>{
         const guildsMessage = await this.sendMessage("guild status");
         return this.getParsedGuilds(get(guildsMessage.content).body);
     }
 
-    public async getQrCode (): Promise<string> {
-        const qrMessage = await this.sendMessage("login qr");
-        return get(qrMessage.content).body;
+    public async bridgesGuilds(guilds: DiscordServer[]): Promise<boolean> {
+            if (guilds.length === 0){
+                return true;
+            }
+            for (const guild of guilds) {
+                try {
+                    await this.sendMessage(`guild bridge ${guild.id} --entire`);
+                } catch (e) {
+                    console.error("Failed to bridge guild", e);
+                    notificationPlayingStore.playNotification(`Error while bridging server: ${guild.name}`, "discord-logo.svg")
+                    return false;
+                }
+            }
+            notificationPlayingStore.playNotification(`Successfully bridging ${guilds.length > 1 ? 'all of your servers' : guilds[0].name}}`, "discord-logo.svg")
+            return true;
     }
 
-    public async loginWithToken(token: string): Promise<string> {
-        this.loginQrAttempt = false;
-        const loginResponse = await this.sendMessage(`login-token token ${token}`)
-        return get(loginResponse.content).body;
+    public async unBridgesGuilds(guilds: DiscordServer[]): Promise<boolean> {
+            if (guilds.length === 0){
+                return true;
+            }
+            for (const guild of guilds) {
+                try {
+                    await this.sendMessage(`guild unbridge ${guild.id}`);
+                } catch (e) {
+                    console.error("Failed to unbridge guild", e);
+                    notificationPlayingStore.playNotification(`Error while unbridging server: ${guild.name}`, "discord-logo.svg")
+                    return false
+                }
+            }
+            notificationPlayingStore.playNotification(`Successfully unbridging ${guilds.length>1? 'all of your servers' : guilds[0].name}`, "discord-logo.svg")
+            return true;
+    }
+
+    public async AttemptQrCode (): Promise<string> {
+        return new Promise((resolve, reject) => {
+            if (this.botMessageSubscription) this.botMessageSubscription.unsubscribe();
+            if (!this.discordBotRoom) {
+                reject("Discord bot room is not initialized");
+                return;
+            }
+
+            try {
+                this.discordBotRoom.sendMessage("login qr");
+            } catch (e) {
+                console.error("Failed to send QR code request to discord bot", e);
+                reject(e);
+            }
+
+            let messageCount = 0;
+
+            this.botMessageSubscription = this.discordBotRoom.messages.onPush.subscribe(async (lastMessage) => {
+                if (!this.discordBotRoom) {
+                    reject("Discord bot room is not initialized");
+                    return;
+                }
+
+                if (`${lastMessage.sender?.chatId}` !== DiscordBotManager.DISCORD_BOT_ID) {
+                    return;
+                } else if ((get(lastMessage.content).body).includes('websocket: close sent')) {
+                    return;
+                } else {
+                    messageCount++;
+
+                    if (messageCount === 1) {
+
+                        const qrCodeUrl = get(lastMessage.content).url;
+                        if (qrCodeUrl) {
+                            storedQrCodeUrl.set(qrCodeUrl);
+                        }
+                    } else if (messageCount === 2) {
+                        const secondMessage = get(lastMessage.content).body;
+                        if (this.botMessageSubscription) this.botMessageSubscription.unsubscribe();
+                        resolve(secondMessage);
+                    }
+                }
+            });
+        });
     }
 }
