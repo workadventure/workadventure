@@ -604,6 +604,8 @@ message SubMessage {
     KickOffMessage kickOffMessage = 22;
     PublicEvent publicEvent = 29;
     PrivateEvent privateEvent = 30;
+
+    SpaceDestroyedMessage spaceDestroyedMessage = 23;
   }
 }
 
@@ -1295,6 +1297,12 @@ message UpdateSpaceMetadataMessage{
   string spaceName = 1;
   string metadata = 2;
   google.protobuf.StringValue filterName = 3;
+}
+/**
+ * The space we were listening to has been destroyed for some awful reason (connection to back was lost)
+ */
+message SpaceDestroyedMessage {
+  string spaceName = 1;
 }
 message KickOffMessage{
   string spaceName = 1;

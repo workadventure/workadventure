@@ -16,7 +16,6 @@ import merge from "lodash/merge";
 import Debug from "debug";
 import * as Sentry from "@sentry/node";
 import { Socket } from "../services/SocketManager";
-import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import { BackSpaceConnection, SocketData } from "./Websocket/SocketData";
 import { EventProcessor } from "./EventProcessor";
 
@@ -31,7 +30,7 @@ type PartialSpaceUser = Partial<Omit<SpaceUser, "id">> & Pick<SpaceUser, "id">;
 
 const debug = Debug("space");
 
-export class Space implements CustomJsonReplacerInterface {
+export class Space {
     private readonly users: Map<number, SpaceUserExtended>;
     private readonly metadata: Map<string, unknown>;
 
@@ -43,13 +42,11 @@ export class Space implements CustomJsonReplacerInterface {
         private readonly localName: string,
         private spaceStreamToPusher: BackSpaceConnection,
         public backId: number,
-        watcher: Socket,
         private eventProcessor: EventProcessor
     ) {
         this.users = new Map<number, SpaceUserExtended>();
         this.metadata = new Map<string, unknown>();
         this.clientWatchers = new Map<number, Socket>();
-        this.addClientWatcher(watcher);
         debug(`created : ${name}`);
     }
 
@@ -71,7 +68,7 @@ export class Space implements CustomJsonReplacerInterface {
                 });
             }
         });
-        debug(`${this.name} : watcher added ${socketData.name}`);
+        debug(`${this.name} : watcher added ${socketData.name}. Watcher count ${this.clientWatchers.size}`);
     }
 
     public removeClientWatcher(watcher: Socket) {
@@ -80,7 +77,7 @@ export class Space implements CustomJsonReplacerInterface {
             throw new Error("User id not found");
         }
         this.clientWatchers.delete(socketData.userId);
-        debug(`${this.name} : watcher removed ${socketData.name}`);
+        debug(`${this.name} : watcher removed ${socketData.name}. Watcher count ${this.clientWatchers.size}`);
     }
 
     public addUser(spaceUser: SpaceUser, client: Socket) {
@@ -101,7 +98,7 @@ export class Space implements CustomJsonReplacerInterface {
     public localAddUser(spaceUser: SpaceUser, client: Socket | undefined) {
         const user = { ...spaceUser, lowercaseName: spaceUser.name.toLowerCase(), client };
         this.users.set(spaceUser.id, user);
-        debug(`${this.name} : user added ${spaceUser.id}`);
+        debug(`${this.name} : user added ${spaceUser.id}. User count ${this.users.size}`);
 
         const subMessage: SubMessage = {
             message: {
@@ -177,7 +174,7 @@ export class Space implements CustomJsonReplacerInterface {
         const user = this.users.get(userId);
         if (user) {
             this.users.delete(userId);
-            debug(`${this.name} : user removed ${userId}`);
+            debug(`${this.name} : user removed ${userId}. User count ${this.users.size}`);
 
             const subMessage: SubMessage = {
                 message: {
@@ -444,17 +441,7 @@ export class Space implements CustomJsonReplacerInterface {
     }
 
     public isEmpty() {
-        return this.users.size === 0;
-    }
-
-    public customJsonReplacer(key: unknown, value: unknown): string | undefined {
-        // TODO : Better way to display date in the /dump
-        if (key === "name") {
-            return this.name;
-        } else if (key === "users") {
-            return `Users : ${this.users.size}`;
-        }
-        return undefined;
+        return this.users.size === 0 && this.clientWatchers.size === 0;
     }
 
     // FIXME: remove this method and all others similar
@@ -576,5 +563,42 @@ export class Space implements CustomJsonReplacerInterface {
         this.spaceStreamToPusher.write({
             message: pusherToBackSpaceMessage,
         });
+    }
+
+    /**
+     * Cleans up the space when the space is deleted (only useful when the connection to the back is closed or in timeout)
+     */
+    public cleanup(): void {
+        // Send a message to all
+        for (const [userId, user] of this.users.entries()) {
+            const subMessage: SubMessage = {
+                message: {
+                    $case: "removeSpaceUserMessage",
+                    removeSpaceUserMessage: {
+                        spaceName: this.name,
+                        userId,
+                        filterName: "", // Will be filled by notifyAll
+                    },
+                },
+            };
+            this.notifyAll(subMessage, user);
+        }
+        // Let's remove any reference to the space in the watchers
+        for (const watcher of this.clientWatchers.values()) {
+            const socketData = watcher.getUserData();
+            const filters = socketData.spacesFilters.get(this.name);
+            if (filters) {
+                socketData.spacesFilters.set(
+                    this.name,
+                    filters.filter((filter) => filter.spaceName !== this.name)
+                );
+            }
+            const success = socketData.spaces.delete(this.name);
+            if (!success) {
+                console.error(`Impossible to remove space ${this.name} from the user's spaces. Space not found.`);
+                Sentry.captureException(new Error(`Impossible to remove space ${this.name} from the user's spaces.`));
+            }
+        }
+        // Finally, let's send a message to the front to warn that the space is deleted
     }
 }

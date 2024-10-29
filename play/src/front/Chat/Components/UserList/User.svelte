@@ -57,7 +57,7 @@
     </div>
 {:else}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <div on:click|stopPropagation={() => openChatRoom(chatId)} class="tw-flex tw-flex-col tw-px-2 tw-pb-2">
+    <div on:click|stopPropagation={() => openChatRoom(chatId)} class="tw-flex tw-flex-col tw-px-2 tw-pb-2 user">
         <div
             class="wa-chat-item {isAdmin
                 ? 'admin'

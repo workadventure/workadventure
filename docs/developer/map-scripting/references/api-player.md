@@ -561,7 +561,7 @@ voice chat in WorkAdventure. The sound can be generated on a server and streamed
 WA.player.proximityMeeting.startAudioStream(sampleRate: number): Promise<AudioStream>;
 
 interface AudioStream {
-  appendAudioData(data: Float32Array): void;
+  appendAudioData(data: Float32Array): Promise<void>;
   resetAudioBuffer(): Promise<void>;
   close(): Promise<void>;
 }
@@ -578,12 +578,21 @@ float32 values representing the raw uncompressed audio data.
 You can send multiple chunks of audio data in a row. If you are sending chunks of audio data faster than the sound
 is played, the audio stream will buffer the data and play it at the correct speed.
 
+`appendAudioData` returns a promise. The promise resolves only when the sound was actually dispatched/played in the bubble.
+
 :::warning
+You don't want to put an `await` in front of your call to `appendAudioData`. Indeed, you should put as much as possible
+in the audio buffer. If you wait for the sound to be played before emitting the next bit of sound, the sound will stutter.  
+:::
+
+
+:::note
 Please note the sound is played to all the players in the bubble except the player who called the function.
 :::
 
 If you sent too much data and want to stop the audio stream, you can call the `resetAudioBuffer` function. This will
-empty the audio buffer and stop the audio stream.
+empty the audio buffer and stop the audio stream. When you do so, any promise returned by `appendAudioData` that
+match a chunk of audio data that was not played yet will be rejected.
 
 Finally, when you are done with the audio stream, you can call the `close` function. This will stop the audio stream
 and free the resources.

@@ -1033,6 +1033,7 @@ export class GameScene extends DirtyScene {
         iframeListener.unregisterAnswerer("getState");
         iframeListener.unregisterAnswerer("loadTileset");
         iframeListener.unregisterAnswerer("getMapData");
+        iframeListener.unregisterAnswerer("getWamMapData");
         iframeListener.unregisterAnswerer("triggerActionMessage");
         iframeListener.unregisterAnswerer("triggerPlayerMessage");
         iframeListener.unregisterAnswerer("removeActionMessage");
@@ -2742,6 +2743,12 @@ ${escapedMessage}
         iframeListener.registerAnswerer("getMapData", () => {
             return {
                 data: this.gameMapFrontWrapper.getMap(),
+            };
+        });
+
+        iframeListener.registerAnswerer("getWamMapData", () => {
+            return {
+                data: this.gameMapFrontWrapper.getGameMap().getWam(),
             };
         });
 

@@ -28,6 +28,7 @@ export type RoomConnectionForSpacesInterface = Pick<
     | "emitJoinSpace"
     | "emitUpdateSpaceMetadata"
     | "emitUpdateSpaceUserMessage"
+    | "spaceDestroyedMessage"
 >;
 
 /**
@@ -42,6 +43,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     private updateSpaceMetadataMessageStreamSubscription: Subscription;
     private proximityPublicMessageEventSubscription: Subscription;
     private proximityPrivateMessageEventSubscription: Subscription;
+    private spaceDestroyedMessageSubscription: Subscription;
 
     constructor(private roomConnection: RoomConnectionForSpacesInterface) {
         this.addSpaceUserMessageStreamSubscription = roomConnection.addSpaceUserMessageStream.subscribe((message) => {
@@ -119,6 +121,15 @@ export class SpaceRegistry implements SpaceRegistryInterface {
             }
             space.dispatchPrivateMessage(message);
         });
+
+        this.spaceDestroyedMessageSubscription = roomConnection.spaceDestroyedMessage.subscribe((message) => {
+            console.error(`Space ${message.spaceName} destroyed. Something went wrong server-side.`);
+            Sentry.captureException(
+                new Error(`Space ${message.spaceName} destroyed. Something went wrong server-side.`)
+            );
+
+            // TODO: implement a retry mechanism.
+        });
     }
 
     joinSpace(spaceName: string, metadata: Map<string, unknown> = new Map<string, unknown>()): SpaceInterface {
@@ -157,6 +168,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         this.updateSpaceMetadataMessageStreamSubscription.unsubscribe();
         this.proximityPublicMessageEventSubscription.unsubscribe();
         this.proximityPrivateMessageEventSubscription.unsubscribe();
+        this.spaceDestroyedMessageSubscription.unsubscribe();
 
         // Technically, all spaces should have been destroyed by now.
         // If a space is not destroyed, it means that there is a bug in the code.

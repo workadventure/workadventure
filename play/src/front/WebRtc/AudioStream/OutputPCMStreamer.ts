@@ -1,3 +1,4 @@
+import { Deferred } from "ts-deferred";
 import audioWorkletProcessorUrl from "./OutputAudioWorkletProcessor.ts?worker&url";
 
 export class OutputPCMStreamer {
@@ -5,6 +6,10 @@ export class OutputPCMStreamer {
     private readonly mediaStreamDestination: MediaStreamAudioDestinationNode;
     private workletNode: AudioWorkletNode | null = null;
     private isWorkletLoaded = false;
+    // Counter to keep track of the last ID that was sent to the AudioWorkletProcessor
+    private currentPcmDataId = 0;
+    // A map to store the promises that resolve when the audio data is played
+    private readonly audioSentPromises: Map<number, Deferred<void>> = new Map<number, Deferred<void>>();
 
     constructor(sampleRate = 24000) {
         this.audioContext = new AudioContext({ sampleRate });
@@ -19,6 +24,15 @@ export class OutputPCMStreamer {
                 await this.audioContext.audioWorklet.addModule(audioWorkletProcessorUrl);
                 this.workletNode = new AudioWorkletNode(this.audioContext, "output-pcm-worklet-processor");
                 this.workletNode.connect(this.mediaStreamDestination);
+
+                this.workletNode.port.onmessage = (event: MessageEvent) => {
+                    if (event.data.playedId !== undefined) {
+                        const deferred = this.audioSentPromises.get(event.data.playedId);
+                        deferred?.resolve();
+                        this.audioSentPromises.delete(event.data.playedId);
+                    }
+                };
+
                 this.isWorkletLoaded = true;
             } catch (err) {
                 console.error("Failed to load AudioWorkletProcessor:", err);
@@ -31,15 +45,33 @@ export class OutputPCMStreamer {
         return this.mediaStreamDestination.stream;
     }
 
-    // Method to append new PCM data (Int16Array) to the audio stream
-    public appendPCMData(float32Array: Float32Array): void {
+    /**
+     * Method to append new PCM data to the audio stream.
+     * The promise resolves when the sound is played. If the audio buffer is reset with resetAudioBuffer before
+     * the data was played, the promise will reject.
+     * @param float32Array
+     */
+    public appendPCMData(float32Array: Float32Array): Promise<void> {
         if (!this.isWorkletLoaded || !this.workletNode) {
-            console.error("AudioWorklet is not loaded yet.");
-            return;
+            return Promise.reject(new Error("AudioWorklet is not loaded yet."));
         }
 
         // Send the PCM data to the AudioWorkletProcessor via its port
-        this.workletNode.port.postMessage({ pcmData: float32Array }, { transfer: [float32Array.buffer] });
+        this.workletNode.port.postMessage(
+            { pcmData: float32Array, id: this.currentPcmDataId },
+            { transfer: [float32Array.buffer] }
+        );
+        const deferred = new Deferred<void>();
+        this.audioSentPromises.set(this.currentPcmDataId, deferred);
+        this.currentPcmDataId++;
+        return deferred.promise;
+    }
+
+    private rejectNotPlayingData(): void {
+        for (const deferred of this.audioSentPromises.values()) {
+            deferred.reject(new Error("Audio buffer was reset before the data was played."));
+        }
+        this.audioSentPromises.clear();
     }
 
     public resetAudioBuffer(): void {
@@ -50,6 +82,8 @@ export class OutputPCMStreamer {
 
         // Send the PCM data to the AudioWorkletProcessor via its port
         this.workletNode.port.postMessage({ emptyBuffer: true });
+
+        this.rejectNotPlayingData();
     }
 
     // Method to close the AudioWorkletNode and clean up resources
@@ -61,6 +95,8 @@ export class OutputPCMStreamer {
 
             // Set the worklet node to null to avoid further use
             this.workletNode = null;
+
+            this.rejectNotPlayingData();
         }
 
         // Optionally, stop the AudioContext if no longer needed

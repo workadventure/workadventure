@@ -22,7 +22,11 @@
 
     $: roomsWithUsers = Array.from($usersByRoom.entries())
         .reduce((roomsWithUsersAcc, [currentPlayUri, currentRoomWithUsers]) => {
-            let roomName = currentRoomWithUsers.roomName ?? $LL.chat.userList.disconnected();
+            let roomName =
+                currentRoomWithUsers.roomName ??
+                (currentPlayUri
+                    ? new URL(currentPlayUri, window.location.href).pathname
+                    : $LL.chat.userList.disconnected());
 
             if (currentPlayUri === gameManager?.getCurrentGameScene()?.roomUrl) roomName = $LL.chat.userList.isHere();
 
