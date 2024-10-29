@@ -135,13 +135,13 @@
                 {/if}
             {/if}
 
-            {#if user.chatId && !$roomCreationInProgress}
+            {#if user.chatId && user.chatId !== user.uuid && !$roomCreationInProgress}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <span class="sendMessage wa-dropdown-item" on:click|stopPropagation={() => openChatRoom(user.chatId)}
                     ><IconMessage font-size="13" />
                     {$LL.chat.userList.sendMessage()}</span
                 >
-            {:else if roomCreationInProgress}
+            {:else if $roomCreationInProgress}
                 <div
                     class="tw-min-h-[30px] tw-text-md tw-flex tw-gap-2 tw-justify-center tw-flex-row tw-items-center tw-p-1"
                 >
