@@ -12,7 +12,7 @@
     import Message from "./Message.svelte";
     import MessageInputBar from "./MessageInputBar.svelte";
     import MessageSystem from "./MessageSystem.svelte";
-    import { IconLoader } from "@wa-icons";
+    import { IconChevronLeft, IconDots, IconLoader, IconMailBox } from "@wa-icons";
 
     export let room: ChatRoom;
 
@@ -182,43 +182,13 @@
                     class="back-roomlist tw-p-3 hover:tw-bg-white/10 tw-rounded-2xl tw-aspect-square tw-w-12"
                     on:click={goBackAndClearSelectedChatMessage}
                 >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="icon icon-tabler icon-tabler-chevron-left"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        stroke-width="1"
-                        stroke="#ffffff"
-                        fill="none"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                    >
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M15 6l-6 6l6 6" />
-                    </svg>
+                    <IconChevronLeft font-size="20" />
                 </button>
                 <div class="tw-text-md tw-font-bold tw-h-5 tw-grow tw-text-center" data-testid="roomName">
                     {$roomName}
                 </div>
                 <div class="back-roomlist hover:tw-bg-white/10 tw-p-3 tw-rounded-2xl tw-aspect-square tw-w-12">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="icon icon-tabler icon-tabler-dots"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        stroke-width="1"
-                        stroke="#ffffff"
-                        fill="none"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                    >
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M5 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
-                        <path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
-                        <path d="M19 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
-                    </svg>
+                    <IconDots font-size="20" />
                 </div>
             </div>
             {#if shouldDisplayLoader}
@@ -257,23 +227,7 @@
                         </li>
                     {:else}
                         <li class="tw-text-center tw-px-3 tw-max-w-md tw-relative">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                class="icon icon-tabler icon-tabler-mailbox tw-mb-3"
-                                width="64"
-                                height="64"
-                                viewBox="0 0 24 24"
-                                stroke-width="1"
-                                stroke="#ffffff"
-                                fill="none"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path d="M10 21v-6.5a3.5 3.5 0 0 0 -7 0v6.5h18v-6a4 4 0 0 0 -4 -4h-10.5" />
-                                <path d="M12 11v-8h4l2 2l-2 2h-4" />
-                                <path d="M6 15h1" />
-                            </svg>
+                            <IconMailBox font-size="40" />
                             <div class="tw-text-lg tw-font-bold tw-text-center">{$LL.chat.noMessage()}</div>
                             <div class="tw-text-sm tw-opacity-50 tw-text-center">{$LL.chat.beFirst()}</div>
                             <div class="tw-absolute tw-w-10 tw-h-10 -tw-bottom-1.5 -tw-left-10">

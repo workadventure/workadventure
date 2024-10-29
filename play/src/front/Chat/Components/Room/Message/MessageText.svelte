@@ -77,6 +77,7 @@
 
 <div
     class="message-bubble tw-m-0 {hasDepth ? 'tw-text-xs tw-leading-4' : 'tw-text-sm'} tw-text-white tw-py-1 tw-px-2"
+    style="padding-top: 7px;"
     lang=""
 >
     {@html sanitizeHTML(html)}

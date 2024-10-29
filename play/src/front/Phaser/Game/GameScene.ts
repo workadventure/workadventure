@@ -339,6 +339,7 @@ export class GameScene extends DirtyScene {
     private _proximityChatRoom: ProximityChatRoom | undefined;
     private _userProviderMergerDeferred: Deferred<UserProviderMerger> = new Deferred();
     private matrixClientWrapper: MatrixClientWrapper | undefined;
+    private worldUserProvider: WorldUserProvider | undefined;
     public landingAreas: AreaData[] = [];
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
@@ -1550,7 +1551,8 @@ export class GameScene extends DirtyScene {
                         }
 
                         if (allUserSpace && ENABLE_CHAT_ONLINE_LIST) {
-                            userProviders.push(new WorldUserProvider(allUserSpace));
+                            this.worldUserProvider = new WorldUserProvider(allUserSpace);
+                            userProviders.push(this.worldUserProvider);
                         }
 
                         this._userProviderMergerDeferred.resolve(new UserProviderMerger(userProviders));
@@ -3727,5 +3729,9 @@ ${escapedMessage}
 
     get userProviderMerger(): Promise<UserProviderMerger> {
         return this._userProviderMergerDeferred.promise;
+    }
+
+    get worldUserCounter(): Readable<number> {
+        return this.worldUserProvider.userCount;
     }
 }

@@ -51,17 +51,16 @@
     tabindex="-1"
     class={`${isMyMessage && "tw-self-end tw-flex-row-reverse tw-relative"} ${
         messageFromSystem && "tw-justify-center"
-    } tw-select-text tw-group/message block-user-action messageContainer`}
+    } tw-select-text tw-group/message block-user-action messageContainer tw-items-center`}
 >
     <div
-        class="container-grid tw-justify-start {replyDepth === 0 ? 'tw-pl-3 tw-pr-4' : ''} {!isDeleted
+        style={replyDepth === 0 ? "max-width: calc( 100% - 105px );" : "padding-left: 0"}
+        class="container-grid tw-justify-start {replyDepth === 0 ? 'tw-max-w-[calc(100% - 100px)]' : ''} {!isDeleted
             ? 'group-hover/message:tw-pb-4'
-            : ''} ${isMyMessage ? 'tw-justify-end grid-container-inverted' : 'tw-justify-start'}"
+            : ''} {isMyMessage ? 'tw-justify-end grid-container-inverted tw-pr-4' : 'tw-justify-start tw-pl-3'}"
     >
         <div
-            class="messageHeader tw-text-gray-500 tw-text-xxs tw-p-0 tw-m-0 tw-flex tw-justify-between tw-items-end tw-opacity-0 tw-h-0 group-hover/message:tw-pt-1 group-hover/message:tw-h-auto group-hover/message:tw-opacity-100
-                    {!isMyMessage && !messageFromSystem && !$isDeleted ? 'tw-mr-14 tw-ml-2' : ''}
-                    {isMyMessage && !messageFromSystem && !$isDeleted ? 'tw-ml-14 tw-mr-2' : ''}"
+            class="messageHeader tw-text-gray-500 tw-text-xxs tw-p-0 tw-m-0 tw-flex tw-justify-between tw-items-end tw-opacity-0 tw-h-0 group-hover/message:tw-pt-1 group-hover/message:tw-h-auto group-hover/message:tw-opacity-100 tw-mx-2"
             class:tw-flex-row-reverse={isMyMessage}
             hidden={isQuotedMessage || messageFromSystem}
         >
@@ -83,18 +82,10 @@
 
         <div
             class="message
-                    {$isDeleted && !isMyMessage && !messageFromSystem && replyDepth === 0
-                ? 'tw-bg-white/10 tw-mr-12'
-                : ''}
-                    {$isDeleted && isMyMessage && !messageFromSystem && replyDepth === 0
-                ? 'tw-bg-white/10 tw-ml-12'
-                : ''}
-                    {!isMyMessage && !messageFromSystem && !$isDeleted && replyDepth === 0
-                ? 'tw-bg-contrast tw-mr-12'
-                : ''}
-                    {isMyMessage && !messageFromSystem && !$isDeleted && replyDepth === 0
-                ? 'tw-bg-secondary tw-ml-12'
-                : ''}
+                    {$isDeleted && !isMyMessage && !messageFromSystem && replyDepth === 0 ? 'tw-bg-white/10' : ''}
+                    {$isDeleted && isMyMessage && !messageFromSystem && replyDepth === 0 ? 'tw-bg-white/10' : ''}
+                    {!isMyMessage && !messageFromSystem && !$isDeleted && replyDepth === 0 ? 'tw-bg-contrast' : ''}
+                    {isMyMessage && !messageFromSystem && !$isDeleted && replyDepth === 0 ? 'tw-bg-secondary' : ''}
                     {type === 'audio' || type === 'file' ? 'tw-rounded-full' : 'tw-rounded-xl'}
                     {reactions !== undefined && !$isDeleted && replyDepth === 0 ? 'tw-mb-4 tw-p-1' : ''}"
         >
@@ -125,16 +116,6 @@
                 {/if}
             {/if}
 
-            {#if !isQuotedMessage && !$isDeleted && message.type !== "proximity" && message.type !== "incoming" && message.type !== "outcoming" && ($selectedChatMessageToEdit === null || $selectedChatMessageToEdit.id !== id)}
-                <div
-                    class="options tw-backdrop-blur-sm tw-pt-1 tw-pb-1.5 tw-px-3 tw-rounded-3xl tw-z-50 -tw-bottom-4 {!isMyMessage
-                        ? 'tw-mr-2 tw-right-1 tw-bg-contrast-600'
-                        : 'tw-left-2 tw-bg-secondary-600'}"
-                >
-                    <MessageOptions {message} />
-                </div>
-            {/if}
-
             {#if quotedMessage && replyDepth < 1 && !$isDeleted}
                 <div class="tw-p-1 tw-opacity-80">
                     <div class="response tw-bg-white/10 tw-rounded">
@@ -144,6 +125,12 @@
             {/if}
         </div>
     </div>
+
+    {#if !isQuotedMessage && !$isDeleted && message.type !== "proximity" && message.type !== "incoming" && message.type !== "outcoming" && ($selectedChatMessageToEdit === null || $selectedChatMessageToEdit.id !== id)}
+        <div class="options tw-pt-7 tw-px-1.5 tw-z-50 {!isMyMessage ? 'tw-right-0' : 'tw-left-0'}">
+            <MessageOptions {message} />
+        </div>
+    {/if}
 </div>
 
 <style>
@@ -161,7 +148,6 @@
 
     .options {
         display: none;
-        position: absolute;
     }
 
     .container-grid {

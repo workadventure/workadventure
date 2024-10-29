@@ -26,7 +26,7 @@
     import RoomFolder from "./RoomFolder.svelte";
     import CreateRoomOrFolderOption from "./Room/CreateRoomOrFolderOption.svelte";
     import ShowMore from "./ShowMore.svelte";
-    import { IconChevronDown, IconChevronUp } from "@wa-icons";
+    import { IconChevronUp, IconCloudLock, IconMessageCircle2, IconSearch, IconUsers, IconX } from "@wa-icons";
 
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
 
@@ -70,6 +70,7 @@
 
     let searchLoader = false;
     let searchActive = false;
+    let userWorldCount = gameScene.worldUserCounter;
 
     const showNavBar = (ENABLE_CHAT_ONLINE_LIST || ENABLE_CHAT_DISCONNECTED_LIST) && ENABLE_CHAT;
 
@@ -189,24 +190,7 @@
                                 class="tw-p-3 hover:tw-bg-white/10 tw-rounded-xl tw-aspect-square tw-w-12"
                                 on:click={() => navChat.switchToUserList()}
                             >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    class="icon icon-tabler icon-tabler-users"
-                                    width="24"
-                                    height="24"
-                                    viewBox="0 0 24 24"
-                                    stroke-width="1.5"
-                                    stroke="#ffffff"
-                                    fill="none"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
-                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                    <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
-                                    <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
-                                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                                    <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
-                                </svg>
+                                <IconUsers font-size="20" />
                             </button>
                         {/if}
                     {:else}
@@ -214,21 +198,7 @@
                             class="tw-p-3 hover:tw-bg-white/10 tw-rounded-2xl tw-aspect-square tw-w-12"
                             on:click={() => navChat.switchToChat()}
                         >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                class="icon icon-tabler icon-tabler-message-circle-2"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                stroke-width="1.5"
-                                stroke="#ffffff"
-                                fill="none"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path d="M3 20l1.3 -3.9a9 8 0 1 1 3.4 2.9l-4.7 1" />
-                            </svg>
+                            <IconMessageCircle2 font-size="20" />
                         </button>
                     {/if}
                 </div>
@@ -239,11 +209,10 @@
                             ? 'tw-hidden'
                             : ''}"
                     >
-                        <!-- TODO HUGO -->
                         <div
-                            class="tw-text-xs tw-aspect-square tw-w-5 tw-h-5 tw-border tw-border-solid tw-border-success tw-flex tw-items-center tw-justify-center tw-font-bold tw-rounded"
+                            class="tw-text-xs tw-aspect-square tw-min-w-5 tw-h-5 tw-px-1 tw-border tw-border-solid tw-border-success tw-flex tw-items-center tw-justify-center tw-font-bold tw-rounded"
                         >
-                            14
+                            {$userWorldCount}
                         </div>
                         <div class="tw-text-xs tw-font-bold">{$LL.chat.onlineUsers()}</div>
                     </div>
@@ -257,39 +226,9 @@
                             <!-- TODO HUGO -->
                         {/if}
                         {#if !searchActive}
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                class="icon icon-tabler icon-tabler-search"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                stroke-width="1.5"
-                                stroke="#ffffff"
-                                fill="none"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
-                                <path d="M21 21l-6 -6" />
-                            </svg>
+                            <IconSearch font-size="20" />
                         {:else}
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                class="icon icon-tabler icon-tabler-x"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                stroke-width="1.5"
-                                stroke="#ffffff"
-                                fill="none"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path d="M18 6l-12 12" />
-                                <path d="M6 6l12 12" />
-                            </svg>
+                            <IconX font-size="20" />
                         {/if}
                     </button>
                     <!-- searchbar -->
@@ -451,13 +390,13 @@
                                 {$LL.chat.invitations()}
                             </div>
                             <div
-                                class="tw-transition-all group-hover:tw-bg-white/10 tw-p-1 tw-rounded-lg tw-aspect-square tw-flex tw-items-center tw-justify-center"
+                                class="tw-transition-all group-hover:tw-bg-white/10 tw-p-1 tw-rounded-lg tw-aspect-square tw-flex tw-items-center tw-justify-center tw-text-white"
                             >
-                                {#if displayRoomInvitations}
-                                    <IconChevronUp />
-                                {:else}
-                                    <IconChevronDown />
-                                {/if}
+                                <IconChevronUp
+                                    class={`tw-transform tw-transition ${
+                                        !displayRoomInvitations ? "" : "tw-rotate-180"
+                                    }`}
+                                />
                             </div>
                         </button>
                         {#if displayRoomInvitations}
@@ -478,13 +417,11 @@
                                 {$LL.chat.people()}
                             </div>
                             <div
-                                class="tw-transition-all group-hover:tw-bg-white/10 tw-p-1 tw-rounded-lg tw-aspect-square tw-flex tw-items-center tw-justify-center"
+                                class="tw-transition-all group-hover:tw-bg-white/10 tw-p-1 tw-rounded-lg tw-aspect-square tw-flex tw-items-center tw-justify-center tw-text-white"
                             >
-                                {#if displayDirectRooms}
-                                    <IconChevronUp />
-                                {:else}
-                                    <IconChevronDown />
-                                {/if}
+                                <IconChevronUp
+                                    class={`tw-transform tw-transition ${!displayDirectRooms ? "" : "tw-rotate-180"}`}
+                                />
                             </div>
                         </div>
                     </button>
@@ -510,13 +447,11 @@
                             <CreateRoomOrFolderOption />
                         {/if}
                         <div
-                            class="tw-transition-all group-hover:tw-bg-white/10 tw-p-1 tw-rounded-lg tw-aspect-square tw-flex tw-items-center tw-justify-center"
+                            class="tw-transition-all group-hover:tw-bg-white/10 tw-p-1 tw-rounded-lg tw-aspect-square tw-flex tw-items-center tw-justify-center tw-text-white"
                         >
-                            {#if displayRooms}
-                                <IconChevronUp />
-                            {:else}
-                                <IconChevronDown />
-                            {/if}
+                            <IconChevronUp
+                                class={`tw-transform tw-transition ${!displayRooms ? "" : "tw-rotate-180"}`}
+                            />
                         </div>
                     </button>
                     {#if displayRooms}
@@ -546,36 +481,7 @@
                         on:click|stopPropagation={initChatConnectionEncryption}
                         class="tw-text-white tw-flex tw-gap-2 tw-justify-center tw-w-full tw-bg-white/20 hover:tw-bg-neutral hover:tw-brightness-100 tw-m-0 tw-rounded-none tw-py-2 tw-px-3 tw-appearance-none"
                     >
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <g clip-path="url(#clip0_4440_9037)">
-                                <path
-                                    d="M19 17.9994C19.9283 17.9994 20.8185 17.6307 21.4749 16.9743C22.1313 16.3179 22.5 15.4277 22.5 14.4994C22.5 13.5712 22.1313 12.6809 21.4749 12.0246C20.8185 11.3682 19.9283 10.9994 19 10.9994H18C18.397 9.23143 17.715 7.40643 16.212 6.21243C14.709 5.01943 12.612 4.63743 10.712 5.21243C8.81201 5.78743 7.39701 7.23143 7.00001 8.99943C4.80101 8.91143 2.84501 10.3254 2.33401 12.3724C1.82201 14.4194 2.89801 16.5264 4.90001 17.3994"
-                                    stroke="white"
-                                    stroke-width="1.5"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                />
-                                <path
-                                    d="M8 16C8 15.7348 8.10536 15.4804 8.29289 15.2929C8.48043 15.1054 8.73478 15 9 15H15C15.2652 15 15.5196 15.1054 15.7071 15.2929C15.8946 15.4804 16 15.7348 16 16V19C16 19.2652 15.8946 19.5196 15.7071 19.7071C15.5196 19.8946 15.2652 20 15 20H9C8.73478 20 8.48043 19.8946 8.29289 19.7071C8.10536 19.5196 8 19.2652 8 19V16Z"
-                                    stroke="white"
-                                    stroke-width="1.5"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                />
-                                <path
-                                    d="M10 15V13C10 12.4696 10.2107 11.9609 10.5858 11.5858C10.9609 11.2107 11.4696 11 12 11C12.5304 11 13.0391 11.2107 13.4142 11.5858C13.7893 11.9609 14 12.4696 14 13V15"
-                                    stroke="white"
-                                    stroke-width="1.5"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                />
-                            </g>
-                            <defs>
-                                <clipPath id="clip0_4440_9037">
-                                    <rect width="24" height="24" fill="white" />
-                                </clipPath>
-                            </defs>
-                        </svg>
+                        <IconCloudLock font-size="20" />
                         <div class="tw-text-sm tw-font-bold tw-grow tw-text-left">
                             {$LL.chat.e2ee.encryptionNotConfigured()}
                         </div>

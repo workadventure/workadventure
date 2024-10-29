@@ -6,9 +6,11 @@
     import { chatSearchBarValue, navChat, shownRoomListStore } from "../../Stores/ChatStore";
     import { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
     import UserList from "./UserList.svelte";
-    import { IconChevronUp } from "@wa-icons";
+    import { IconChevronUp, IconMessageCircle2, IconUsers } from "@wa-icons";
 
+    const gameScene = gameManager.getCurrentGameScene();
     export let userProviderMerger: UserProviderMerger;
+    let userWorldCount = gameScene.worldUserCounter;
 
     const USERS_BY_ROOM_LIMITATION = 200;
 
@@ -61,45 +63,14 @@
                 class="tw-p-3 hover:tw-bg-white/10 tw-rounded-xl tw-aspect-square tw-w-12"
                 on:click={() => navChat.switchToUserList()}
             >
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="icon icon-tabler icon-tabler-users"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="#ffffff"
-                    fill="none"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                >
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                    <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
-                    <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                    <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
-                </svg>
+                <IconUsers font-size="20" />
             </button>
         {:else}
             <button
                 class="tw-p-3 hover:tw-bg-white/10 tw-rounded-2xl tw-aspect-square tw-w-12"
                 on:click={() => navChat.switchToChat()}
             >
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="icon icon-tabler icon-tabler-message-circle-2"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="#ffffff"
-                    fill="none"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                >
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                    <path d="M3 20l1.3 -3.9a9 8 0 1 1 3.4 2.9l-4.7 1" />
-                </svg>
+                <IconMessageCircle2 font-size="20" />
             </button>
         {/if}
         <div class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-grow">
@@ -107,9 +78,9 @@
             <div class="tw-flex tw-items-center tw-justify-center tw-text-success tw-space-x-1.5">
                 <!-- TODO HUGO -->
                 <div
-                    class="tw-text-xs tw-aspect-square tw-w-5 tw-h-5 tw-border tw-border-solid tw-border-success tw-flex tw-items-center tw-justify-center tw-font-bold tw-rounded"
+                    class="tw-text-xs tw-aspect-square tw-min-w-5 tw-h-5 tw-px-1 tw-border tw-border-solid tw-border-success tw-flex tw-items-center tw-justify-center tw-font-bold tw-rounded"
                 >
-                    14
+                    {$userWorldCount}
                 </div>
                 <div class="tw-text-xs tw-font-bold">{$LL.chat.onlineUsers()}</div>
             </div>

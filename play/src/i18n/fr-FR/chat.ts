@@ -3,7 +3,7 @@ import type { Translation } from "../i18n-types";
 
 const chat: DeepPartial<Translation["chat"]> = {
     intro: "Voici l'historique de votre chat:",
-    adventurers: "Adventurers",
+    adventurers: "Utilisateurs",
     onlineUsers: "Utilisateurs en ligne",
     getCloserTitle: "Rapproche toi de quelqu'un",
     getCloserDesc:

@@ -2,7 +2,7 @@ import type { BaseTranslation } from "../i18n-types";
 
 const chat: BaseTranslation = {
     intro: "Here is your chat history:",
-    adventurers: "Adventurers",
+    adventurers: "Users",
     onlineUsers: "Online user",
     getCloserTitle: "Get closer to someone",
     getCloserDesc:
