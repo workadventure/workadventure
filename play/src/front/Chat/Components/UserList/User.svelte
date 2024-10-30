@@ -87,7 +87,6 @@
             <div class={`tw-flex-auto tw-ml-3 ${!$userStatus && "tw-opacity-50"}  tw-cursor-default`}>
                 <h1 class={`tw-text-sm tw-font-bold tw-mb-0  tw-cursor-default`}>
                     {#each chunks as chunk (chunk.key)}
-                        {chatId}
                         <span class={`${chunk.match ? "tw-text-light-blue" : ""}  tw-cursor-default`}>{chunk.text}</span
                         >
                     {/each}
