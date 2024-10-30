@@ -1,6 +1,7 @@
-import { EventType, MatrixEvent, RelationType, Room } from "matrix-js-sdk";
 import { MapStore } from "@workadventure/store-utils";
 import { get, writable, Writable } from "svelte/store";
+import { Room } from "matrix-js-sdk/src/models/room";
+import { MatrixEvent } from "matrix-js-sdk/src/models/event";
 import { ChatMessageReaction, ChatUser } from "../ChatConnection";
 import { chatUserFactory } from "./MatrixChatUser";
 

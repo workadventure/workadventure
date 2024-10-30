@@ -1,28 +1,19 @@
-import {
-    ConditionKind,
-    Direction,
-    EventStatus,
-    EventType,
-    IContent,
-    IPushRule,
-    IRoomTimelineData,
-    MatrixEvent,
-    MsgType,
-    NotificationCountType,
-    PushRuleActionName,
-    PushRuleKind,
-    ReceiptType,
-    Room,
-    RoomEvent,
-    TimelineWindow,
-} from "matrix-js-sdk";
 import * as Sentry from "@sentry/svelte";
 import { get, Writable, writable } from "svelte/store";
 import { MediaEventContent, MediaEventInfo } from "matrix-js-sdk/lib/@types/media";
 import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
 import { RoomMessageEventContent } from "matrix-js-sdk/lib/@types/events";
-import { ChatRoom, ChatRoomMember, ChatRoomMembership } from "../ChatConnection";
+import { TimelineWindow } from "matrix-js-sdk/src/timeline-window";
+import { EventStatus, IContent, MatrixEvent } from "matrix-js-sdk/src/models/event";
+import { NotificationCountType, Room, RoomEvent } from "matrix-js-sdk/src/models/room";
+import { ConditionKind, IPushRule, PushRuleActionName, PushRuleKind } from "matrix-js-sdk/src/@types/PushRules";
+import { Direction } from "matrix-js-sdk/src/models/event-timeline";
+import { IRoomTimelineData } from "matrix-js-sdk/src/models/event-timeline-set";
+import { ReceiptType } from "matrix-js-sdk/src/@types/read_receipts";
+import { EventType, MsgType } from "matrix-js-sdk/src/@types/event";
+import { localUserStore } from "../../../Connection/LocalUserStore";
+import { gameManager } from "../../../Phaser/Game/GameManager";
 import {
     alreadyAskForInitCryptoConfiguration,
     isAChatRoomIsVisible,
@@ -30,11 +21,10 @@ import {
     selectedChatMessageToReply,
     selectedRoom,
 } from "../../Stores/ChatStore";
-import { gameManager } from "../../../Phaser/Game/GameManager";
-import { localUserStore } from "../../../Connection/LocalUserStore";
-import { MatrixChatMessage } from "./MatrixChatMessage";
-import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
+import { ChatRoom, ChatRoomMember, ChatRoomMembership } from "../ChatConnection";
 import { matrixSecurity } from "./MatrixSecurity";
+import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
+import { MatrixChatMessage } from "./MatrixChatMessage";
 
 type EventId = string;
 

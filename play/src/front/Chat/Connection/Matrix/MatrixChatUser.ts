@@ -1,6 +1,8 @@
-import { MatrixClient, SetPresence, User } from "matrix-js-sdk";
 import { writable } from "svelte/store";
 import { AvailabilityStatus } from "@workadventure/messages";
+import { MatrixClient } from "matrix-js-sdk/src/client";
+import { User } from "matrix-js-sdk/src/models/user";
+import { SetPresence } from "matrix-js-sdk/src/sync";
 import { ChatUser } from "../ChatConnection";
 
 export const chatUserFactory: (matrixChatUser: User, matrixClient: MatrixClient) => ChatUser = (

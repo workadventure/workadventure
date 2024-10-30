@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ICreateClientOpts } from "matrix-js-sdk";
+import { ICreateClientOpts } from "matrix-js-sdk/src/client";
 import { MatrixClientWrapperInterface, MatrixLocalUserStore, MatrixClientWrapper } from "../MatrixClientWrapper";
 
 // @vitest-environment jsdom

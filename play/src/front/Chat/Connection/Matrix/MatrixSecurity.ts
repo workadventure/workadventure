@@ -1,10 +1,11 @@
-import { MatrixClient, SecretStorage } from "matrix-js-sdk";
 import { GeneratedSecretStorageKey, KeyBackupInfo } from "matrix-js-sdk/lib/crypto-api";
 import { deriveKey } from "matrix-js-sdk/lib/crypto/key_passphrase";
 import { decodeRecoveryKey } from "matrix-js-sdk/lib/crypto/recoverykey";
 import { openModal } from "svelte-modals";
 import { writable } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
+import { MatrixClient } from "matrix-js-sdk/src/client";
+import { SecretStorage } from "matrix-js-sdk/src/matrix";
 import { alreadyAskForInitCryptoConfiguration } from "../../Stores/ChatStore";
 import InteractiveAuthDialog from "./InteractiveAuthDialog.svelte";
 import CreateRecoveryKeyDialog from "./CreateRecoveryKeyDialog.svelte";
@@ -123,7 +124,7 @@ export class MatrixSecurity {
     static makeInputToKey(
         keyInfo: SecretStorage.SecretStorageKeyDescription
     ): (keyParams: KeyParams) => Promise<Uint8Array> {
-        return async ({ passphrase, recoveryKey }): Promise<Uint8Array> => {
+        return ({ passphrase, recoveryKey }): Promise<Uint8Array> => {
             if (passphrase) {
                 return deriveKey(passphrase, keyInfo.passphrase.salt, keyInfo.passphrase.iterations);
             } else if (recoveryKey) {
