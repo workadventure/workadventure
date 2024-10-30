@@ -180,6 +180,7 @@
             >
                 <button
                     class="back-roomlist tw-p-3 hover:tw-bg-white/10 tw-rounded-2xl tw-aspect-square tw-w-12"
+                    data-testid="chatBackward"
                     on:click={goBackAndClearSelectedChatMessage}
                 >
                     <IconChevronLeft font-size="20" />

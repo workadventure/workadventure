@@ -324,7 +324,9 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await ChatUtils.openChat(page);
     await page.getByText(privateChatRoom).click();
     await expect(page.getByText("Failed to decrypt")).toBeAttached();
+    await page.getByTestId("chatBackward").click();
     await ChatUtils.restoreEncryptionFromButton(page);
+    await page.getByText(privateChatRoom).click();
     await expect(page.getByText(chatMessageContent)).toBeAttached();
   });
 
@@ -359,7 +361,8 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.getByTestId("createFolderName").fill(publicFolder);
     await page.getByTestId("createFolderVisibility").selectOption("public");
     await page.getByTestId("createFolderButton").click();
-    await expect(page.getByText(publicFolder)).toBeAttached(); 
+    await page.getByTestId("roomAccordeon").click();
+    await expect(page.getByText(publicFolder)).toBeAttached();
   });
 
   test('Create a private folder', async({ page }, { project })=>{
@@ -372,6 +375,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.getByTestId("createFolderName").fill(privateFolder);
     await page.getByTestId("createFolderVisibility").selectOption("private");
     await page.getByTestId("createFolderButton").click();
+    await page.getByTestId("roomAccordeon").click();
     await expect(page.getByText(privateFolder)).toBeAttached(); 
   });
 
@@ -386,6 +390,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.getByTestId("createFolderName").fill(privateFolder1);
     await page.getByTestId("createFolderVisibility").selectOption("private");
     await page.getByTestId("createFolderButton").click();
+    await page.getByTestId("roomAccordeon").click();
     await expect(page.getByText(privateFolder1)).toBeAttached();  
 
     const privateFolder2 = ChatUtils.getRandomName();
@@ -393,8 +398,9 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.getByTestId("createFolderName").fill(privateFolder2);
     await page.getByTestId("createFolderVisibility").selectOption("private");
     await page.getByTestId("createFolderButton").click();
-
-    await expect(page.getByText(privateFolder2)).not.toBeAttached();  
+    await page.getByTestId("roomAccordeon").click();
+    await expect(page.getByText(privateFolder2)).not.toBeAttached();
+    await page.getByTestId("roomAccordeon").click();
     await page.getByText(privateFolder1).click();
     await expect(page.getByText(privateFolder2)).toBeAttached();  
 
@@ -410,6 +416,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.getByTestId("createFolderName").fill(privateFolder1);
     await page.getByTestId("createFolderVisibility").selectOption("private");
     await page.getByTestId("createFolderButton").click();
+    await page.getByTestId("roomAccordeon").click();
     await expect(page.getByText(privateFolder1)).toBeAttached();  
 
     const room = ChatUtils.getRandomName();
@@ -417,7 +424,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.getByTestId("createRoomName").fill(room);
     await page.getByTestId("createRoomVisibility").selectOption("public");
     await page.getByTestId("createRoomButton").click();
-
+    await page.waitForTimeout(1000);
     await page.getByText(privateFolder1).click();
     await expect(page.getByText(room)).toBeAttached();  
 
@@ -434,6 +441,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.getByTestId("createFolderName").fill(privateFolder1);
     await page.getByTestId("createFolderVisibility").selectOption("private");
     await page.getByTestId("createFolderButton").click();
+    await page.getByTestId("roomAccordeon").click();
     await expect(page.getByText(privateFolder1)).toBeAttached();  
     
     const room = ChatUtils.getRandomName();

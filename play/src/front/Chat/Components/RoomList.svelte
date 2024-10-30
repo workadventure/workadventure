@@ -333,6 +333,7 @@
                         <button
                             class="tw-flex tw-items-center tw-space-x-2 tw-grow tw-m-0 tw-p-0"
                             on:click={toggleDisplayProximityChat}
+                            data-testid="toggleDisplayProximityChat"
                         >
                             <div class="tw-relative">
                                 <div
@@ -437,6 +438,7 @@
                     <button
                         class="tw-group tw-relative tw-px-3 tw-m-0 tw-rounded-none tw-text-white/75 hover:tw-text-white tw-h-11 hover:tw-bg-contrast-200/10 tw-w-full tw-flex tw-space-x-2 tw-items-center tw-border tw-border-solid tw-border-x-0 tw-border-t tw-border-b-0 tw-border-white/10"
                         on:click={toggleDisplayRooms}
+                        data-testid="roomAccordeon"
                     >
                         <div class="tw-flex tw-items-center tw-space-x-2 tw-grow tw-m-0 tw-p-0">
                             <div class="tw-text-sm tw-font-bold tw-tracking-widest tw-uppercase tw-grow tw-text-left">

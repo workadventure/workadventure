@@ -2,7 +2,7 @@ import * as Sentry from "@sentry/svelte";
 import type { Subscription } from "rxjs";
 import AnimatedTiles from "phaser-animated-tiles";
 import { Queue } from "queue-typescript";
-import type { Unsubscriber } from "svelte/store";
+import type { Readable, Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import { throttle } from "throttle-debounce";
 import { MapStore } from "@workadventure/store-utils";
@@ -3738,7 +3738,8 @@ ${escapedMessage}
         return this._userProviderMergerDeferred.promise;
     }
 
-    get worldUserCounter(): Readable<number> {
+    get worldUserCounter(): Readable<integer> {
+        // @ts-ignore
         return this.worldUserProvider.userCount;
     }
 }
