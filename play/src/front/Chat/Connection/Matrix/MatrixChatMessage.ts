@@ -104,7 +104,7 @@ export class MatrixChatMessage implements ChatMessage {
 
     public getFormattedBody(): string {
         const content = this.event.getOriginalContent();
-        return content.formatted_body
+        return content.formatted_body;
     }
 
     public mxcUrlToHttp(url: string) {
