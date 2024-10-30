@@ -38,10 +38,18 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="tw-flex tw-flex-col">
     <div
-        class="tw-flex tw-items-center tw-justify-between tw-p-4 tw-cursor-pointer tw-rounded-lg hover:tw-bg-white/10"
+        class="tw-flex tw-items-center tw-justify-between tw-p-4 tw-cursor-pointer tw-rounded-lg hover:tw-bg-white/10 {open? 'tw-bg-white/10' : ''}"
         on:click={toggleOpen}
     >
-        <div class="tw-flex-grow tw-font-semibold">{title}</div>
+        <div class="tw-flex tw-row tw-gap-3 tw-items-center tw-justify-start">
+            <div class="tw-w-6 tw-h-6 tw-flex tw-items-center tw-justify-center">
+                <slot name="icon" />
+            </div>
+            <div class="tw-flex-grow tw-font-semibold">
+                {title}
+            </div>
+            <slot name="right" />
+        </div>
         <div
             class="tw-flex tw-w-4 tw-h-4 tw-border-t-2 border-r-2 tw-transform-origin-center tw-transition-transform tw-duration-300"
             style="transform: rotate({arrowRotation}deg)"

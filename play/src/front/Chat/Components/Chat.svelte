@@ -75,9 +75,9 @@
     {/if}
     <div class="tw-flex tw-flex-row tw-gap-2 tw-items-center tw-pr-8">
         <button
-            class="hover:tw-bg-white hover:tw-bg-opacity-10 tw-flex tw-justify-center tw-items-center tw-p-2 tw-rounded-md tw-cursor-pointer"
+            class="tw-flex tw-justify-center tw-items-center tw-p-2 tw-rounded-md tw-cursor-pointer {$navChat === 'settings'? 'tw-bg-light-blue tw-text-black': 'hover:tw-bg-white hover:tw-bg-opacity-10'}"
             on:click={() => navChat.set("settings")}
-            class:tw-bg-dark-purple={$navChat === "settings"}
+            class:tw-={$navChat === "settings"}
         >
             <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -96,7 +96,7 @@
             >
         </button>
         <nav class="nav">
-            <div class="background" class:chat={$navChat === "chat"} />
+            <div class="background" class:chat={$navChat === "chat"} class:hidden={$navChat === 'settings'} />
             <ul>
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <li class:active={$navChat === "users"} on:click={() => navChat.set("users")}>

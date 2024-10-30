@@ -7,14 +7,17 @@ import {MatrixChatConnection} from "./Connection/Matrix/MatrixChatConnection";
 import {MatrixChatRoom} from "./Connection/Matrix/MatrixChatRoom";
 import {Subscription} from "rxjs";
 import { connectionStatus, storedQrCodeUrl } from "./Stores/DiscordConnectionStore"
-import {success} from "@workadventure/map-editor";
-import {resolve} from "path";
+import {MatrixChatMessage} from "./Connection/Matrix/MatrixChatMessage";
+
+interface DiscordUser {
+    id: string;
+    username: string;
+}
 
 export default class DiscordBotManager {
     private discordBotRoom: MatrixChatRoom | undefined = undefined;
     private botMessageSubscription: Subscription | undefined;
-    private waitForALoginMessage: Subscription | undefined;
-    //private loginQrAttempt = false;
+    //TODO Test DiscordBotManager Class
     //TODO add discord bot Id in a env file
     static DISCORD_BOT_ID = "@discordbot:matrix.workadventure.localhost";
 
@@ -59,11 +62,6 @@ export default class DiscordBotManager {
                     return;
                 }
                 else{
-                    console.log(
-                        "@@@@@ message received from discord bot",
-                        get(lastMessage.content),
-                    )
-
                     resolve(lastMessage);
                     if(this.botMessageSubscription) this.botMessageSubscription.unsubscribe();
                     return
@@ -72,7 +70,28 @@ export default class DiscordBotManager {
         });
     }
 
-    public getParsedGuilds(message: string): DiscordServer[] {
+    public async getCurrentDiscordUser(message?: ChatMessage): Promise<DiscordUser | null> {
+        if (!message){
+            message = await this.sendMessage("ping");
+            if (!get(message.content).body.includes("logged in as")){
+                throw new Error("Failed to get current discord user");
+            }
+        }
+        if (message){
+            const regex = /@([^\s]+) \(`(\d+)`\)/;
+            const matches = get(message.content).body.match(regex);
+            if (matches){
+                return {
+                    id: matches[2],
+                    username: matches[1],
+                };
+            }
+        }
+        return null;
+    }
+
+    //Not same as parseGuilds parseGuildsContentMessage is in case guild status response message is not a MatrixChatMessage
+    public parseGuildsContentMessage(message: string): DiscordServer[] {
         const regex = /^\* (.*) \(`(\d+)`\) - (.*)$/gm;
 
         const matches = message.matchAll(regex);
@@ -84,14 +103,37 @@ export default class DiscordBotManager {
                 id: match[2],
                 isSync: !match[3].includes("never"),
                 isBridging: false,
-                // ...guild,
             };
         });
     }
 
+    public parseGuilds(guildsMessage: MatrixChatMessage): DiscordServer[] {
+        const htmlString = guildsMessage.getFormattedBody();
+        if (!htmlString) {
+            return [];
+        }
+        const regex = /<li>(?:<img [^>]*?src="([^"]+)"[^>]*>)?\s*([^<]+)\s*\(<code>(\d+)<\/code>\)\s*-\s*(never bridge messages|bridge all messages)/g;
+
+        const  matches = htmlString.matchAll(regex);
+        return Array.from(matches).map((match) => {
+            return {
+                name: match[2].trim(),
+                id: match[3],
+                isSync: !match[4].includes("never"),
+                isBridging: false,
+                icon: guildsMessage.mxcUrlToHttp(match[1]) || undefined,
+            };
+        }).sort((a, b) => a.name.localeCompare(b.name));
+    }
+
     public async getParsedUserGuilds(): Promise<DiscordServer[]>{
         const guildsMessage = await this.sendMessage("guild status");
-        return this.getParsedGuilds(get(guildsMessage.content).body);
+        if (guildsMessage instanceof MatrixChatMessage){
+            return this.parseGuilds(guildsMessage);
+        }
+        else {
+            return this.parseGuildsContentMessage(get(guildsMessage.content).body);
+        }
     }
 
     public async bridgesGuilds(guilds: DiscordServer[]): Promise<boolean> {
@@ -172,5 +214,50 @@ export default class DiscordBotManager {
                 }
             });
         });
+    }
+    public async AttemptToken(token: string):Promise<string> {
+        return new Promise((resolve, reject) => {
+            if (this.botMessageSubscription) this.botMessageSubscription.unsubscribe();
+            if (!this.discordBotRoom) {
+                reject("Discord bot room is not initialized");
+                return;
+            }
+            try {
+                this.discordBotRoom.sendMessage(`login-token user ${token}`);
+            } catch (e) {
+                console.error("Failed to send your token to discord bot", e);
+                reject(e);
+            }
+            let messageCount = 0;
+            this.botMessageSubscription = this.discordBotRoom.messages.onPush.subscribe(async (lastMessage) => {
+                if (!this.discordBotRoom) {
+                    reject("Discord bot room is not initialized");
+                    return;
+                }
+
+                if (`${lastMessage.sender?.chatId}` !== DiscordBotManager.DISCORD_BOT_ID) {
+                    return;
+                } else if ((get(lastMessage.content).body).includes('websocket: close sent')) {
+                    return;
+                } else {
+                    messageCount++;
+                    if (messageCount === 1) {
+                        if (!(get(lastMessage.content).body.includes("Connecting to"))) {
+                            notificationPlayingStore.playNotification("Error while sending your token", "discord-logo.svg");
+                            if (this.botMessageSubscription) this.botMessageSubscription.unsubscribe();
+                            reject("Error while sending your token");
+                        }
+                    } else if (messageCount === 2) {
+                        const secondMessage = get(lastMessage.content).body;
+                        if (this.botMessageSubscription) this.botMessageSubscription.unsubscribe();
+                        resolve(secondMessage);
+                    }
+                }
+            });
+        });
+    }
+
+    destroy() {
+        if(this.botMessageSubscription) this.botMessageSubscription.unsubscribe();
     }
 }

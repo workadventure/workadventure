@@ -210,6 +210,9 @@
 .chatWindow nav .background.chat{
     @apply tw-translate-x-full;
 }
+.chatWindow nav .background.hidden{
+    @apply tw-hidden;
+}
 .chatWindow nav ul{
     @apply tw-flex tw-list-none tw-justify-between tw-w-full tw-p-0 tw-m-0;
 }

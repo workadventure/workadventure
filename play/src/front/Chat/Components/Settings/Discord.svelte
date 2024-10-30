@@ -11,38 +11,46 @@
     import { DiscordServer} from "../../../Interfaces/DiscordServerInterface";
     import {MatrixChatConnection} from "../../Connection/Matrix/MatrixChatConnection";
     import { connectionStatus, storedQrCodeUrl } from "../../Stores/DiscordConnectionStore"
-
-
-
-    //TODO Test DiscordBotManager Class
-    //TODO add discord bot Id in a env file
-    const discordBotId = "@discordbot:matrix.workadventure.localhost";
+    import DiscordLogo from "../../../Components/images/discord-logo.svg";
+    import userLogo from "../../images/user.svg";
+    import {IconDotsCircle} from "@wa-icons";
 
     //initialize discordBotManager
     let DiscordBot: DiscordBotManager;
-
-    let unsubscribeBotMessage: Unsubscriber | undefined;
 
     $: guilds = [] as Array<DiscordServer>;
     $: qrCodeUrl = $storedQrCodeUrl;
     $: needManualToken = false;
     $: bridgeConnected = false;
+    $: discordUser = null as any;
 
     let manualDiscordToken = "";
     let loadingFetchServer = false;
 
+    let showDropdown = false;
+    let dropdownRef: HTMLDivElement | undefined = undefined;
+    let buttonRef: HTMLButtonElement | undefined = undefined;
 
-    let discordbotRoom: ChatRoom | undefined;
+    function toggleDropdown() {
+        showDropdown = !showDropdown;
+    }
+    function closeDropdownOnClickOutside(event: MouseEvent) {
+        if (buttonRef && !buttonRef.contains(event.target as Node) && dropdownRef && !dropdownRef.contains(event.target as Node)) {
+            showDropdown = false;
+        }
+    }
 
     async function sendDiscordToken(): Promise<void> {
-        if (!discordbotRoom) return;
-        const response = await DiscordBot.sendMessage(`login-token user ${manualDiscordToken}`);
-        const responseContent = get(response.content).body;
-        if(responseContent.includes("Successfully logged in as")){
+        const response = await DiscordBot.AttemptToken(manualDiscordToken);
+        if(response.includes("Successfully")){
             bridgeConnected = true;
             await fetchUserGuilds();
+            notificationPlayingStore.playNotification("Successfully connected to Discord", "discord-logo.svg");
         }
-
+        else{
+            console.log("error while sending token", response);
+            notificationPlayingStore.playNotification("Error while sending token", "discord-logo.svg");
+        }
     }
 
     let serversToBridge: DiscordServer[] = [];
@@ -51,10 +59,8 @@
     function handleCheckboxChange(server: DiscordServer) {
         server.isSync = !server.isSync;
         if (server.isSync) {
-            console.log("server: ", server.name, "added !")
             serversToBridge.push(server);
         } else {
-            console.log("server: ", server.name, "removed !")
             serversToUnBridge.push(server);
         }
     }
@@ -81,7 +87,14 @@
         return guilds;
     }
 
+    async function handleLogout(): Promise<void> {
+        await DiscordBot.sendMessage("logout");
+        bridgeConnected = false;
+        guilds = [];
+    }
+
     onMount( async () => {
+        $storedQrCodeUrl = "";
         const chatConnection = await gameManager.getChatConnection();
         if (!(chatConnection instanceof MatrixChatConnection)) {
             throw new Error("Discord integration is only available with Matrix chat connection");
@@ -91,20 +104,27 @@
 
         const bridgeConnectionStatusMessage = await DiscordBot.sendMessage("ping");
         const bridgeConnectionStatus = get(bridgeConnectionStatusMessage.content).body;
+        console.log("bridgeConnectionStatus Message", bridgeConnectionStatus);
+        discordUser = await DiscordBot.getCurrentDiscordUser();
+        console.log(discordUser);
 
         if(bridgeConnectionStatus.includes("You're logged in as")||
             bridgeConnectionStatus.includes("You're already logged in") ||
             bridgeConnectionStatus.includes("Successfully logged in as")){
             bridgeConnected = true;
+
             await fetchUserGuilds() ;
         }
         else if (bridgeConnectionStatus.includes("not")) {
             bridgeConnected = false;
-            console.log('bridge detected as non connected');
+            console.info('bridge detected as non connected');
         }
+        document.addEventListener("click", closeDropdownOnClickOutside);
+
     });
     onDestroy(() => {
-        if (unsubscribeBotMessage) unsubscribeBotMessage();
+        DiscordBot.destroy();
+        document.removeEventListener("click", closeDropdownOnClickOutside);
     });
 
     function getInitials(name: string) {
@@ -142,15 +162,14 @@
     <!--{#if !bridgeConnected && qrCodeUrl === undefined && !needManualToken }-->
     {#if !bridgeConnected && qrCodeUrl.length<=0}
         <div class="tw-py-3 tw-px-3">
-
             <p class=" tw-text-sm tw-text-gray-500">
-                You need to connect your Discord account to use this feature. To do so, please click on the button
-                below. You will be redirected to Discord to login. To get all Discord servers, the bot need to be
-                connected to your account. And finally, you will be able to choose which servers you want to bridge.
+                By connecting your discord account here, you will be able to receive your messages directly in the workadventure chat.
+                After synchronizing a server, we will create the rooms it contains, you will only have to join them in the Workadventure chat.
             </p>
             <button on:click={getQrCodeUrl}
-                    class="tw-w-full tw-p-2 tw-bg-secondary-800  tw-text-white tw-no-underline tw-rounded-md tw-text-center tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white tw-flex tw-flex-row tw-items-center"
+                    class="tw-w-full tw-p-2 tw-bg-secondary-800  tw-text-white tw-no-underline tw-rounded-md tw-flex tw-flex-row tw-items-center tw-gap-3 tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white"
             >
+                <img src="{DiscordLogo}" alt="" class="tw-w-6 tw-h-6">
                 Connect to Discord
             </button>
         </div>
@@ -208,22 +227,45 @@
             </p>
         </div>
     {/if}
-    <div>
+    <div class="tw-flex tw-flex-col tw-gap-2 ">
+        {#if discordUser}
+            <div class="tw-px-2 tw-py-3 tw-flex tw-flex-row tw-gap-2 tw-items-center tw-text-white tw-border-solid tw-border-b tw-border-b-white/10 tw-border-0 tw-mb-4 tw-relative">
+                <img src="{userLogo}" alt="" class="tw-h-6 tw-w-6">
+                <p class="tw-mb-0">
+                    Logged in as <strong>@{discordUser.username}</strong>
+                </p>
+                <button class="tw-text-gray-400 hover:tw-text-white"
+                        bind:this={buttonRef}
+                        on:click|preventDefault|stopPropagation={toggleDropdown}
+                >
+                    <IconDotsCircle></IconDotsCircle>
+                </button>
+                {#if showDropdown}
+                    <div bind:this={dropdownRef} class="tw-absolute tw-top-full tw-right-0 tw-mt-2 tw-bg-contrast-900 tw-shadow-md tw-rounded-md tw-py-0 tw-z-50">
+                        <button on:click{handleLogout} class="tw-px-6 hover:tw-bg-white/10">Logout</button>
+                    </div>
+                {/if}
+            </div>
+        {/if}
         {#each guilds as server}
-            <li class="tw-flex tw-flex-row tw-gap-4 tw-py-3 tw-rounded-md tw-items-center tw-justify-between tw-mb-2 hover:tw-bg-white/10 {server.isSync? 'tw-bg-white/10' : ''}"
+            <li class="tw-flex tw-flex-row tw-gap-2 tw-py-2 tw-rounded-md tw-items-center tw-justify-between tw-mb-2 hover:tw-bg-white/10 {server.isSync? 'tw-bg-white/10' : ''}"
             >
                 <div class="tw-flex tw-flex-row tw-items-center tw-gap-2 tw-pl-2">
-                    {#if server.isSync}
-                        <div class="tw-h-3 tw-w-3 tw-bg-green-400 tw-rounded-full"></div>
-                    {/if}
+                <div class="server-icon tw-relative" class:sync={server.isSync}>
                     {#if server.icon}
                         <img
-                            src={`https://cdn.discordapp.com/icons/${server.id}/${server.icon}.png`}
+                            src={server.icon}
                             alt={server.name}
                             class="tw-w-8 tw-h-8 tw-rounded-full"
                             on:error={handleImageError}
                         />
+                    {:else}
+                        <div class="tw-w-8 tw-h-8 tw-rounded-full tw-bg-gray-300 tw-flex tw-justify-center tw-items-center tw-text-gray-700">
+                            {getInitials(server.name)}
+                        </div>
                     {/if}
+                </div>
+
                     <span>
                         {server.name}
                     </span>
@@ -250,4 +292,8 @@
 </div>
 
 <style>
+    .server-icon.sync:after{
+        content: '';
+        @apply tw-absolute tw-top-0 tw-right-0 tw-w-3 tw-h-3 tw-bg-green-500 tw-rounded-full;
+    }
 </style>
