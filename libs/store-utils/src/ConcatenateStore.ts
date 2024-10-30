@@ -1,5 +1,5 @@
-import {Readable} from "svelte/types/runtime/store";
-import {Subscriber, Unsubscriber, derived} from "svelte/store";
+import type { Readable } from "svelte/store";
+import { Subscriber, Unsubscriber, derived } from "svelte/store";
 import { ForwardableStore } from "./ForwardableStore";
 
 /**
@@ -24,13 +24,15 @@ export class ConcatenateStore<T> implements Readable<Array<T>> {
     }
 
     private updateDerived() {
-        this.store.forward(derived(this.stores, ($values) => {
-            const arr: T[] = [];
-            for (const value of $values) {
-                arr.push(...value);
-            }
-            return arr;
-        }));
+        this.store.forward(
+            derived(this.stores, ($values) => {
+                const arr: T[] = [];
+                for (const value of $values) {
+                    arr.push(...value);
+                }
+                return arr;
+            })
+        );
     }
 
     subscribe(run: Subscriber<T[]>, invalidate?: (value?: T[]) => void): Unsubscriber {

@@ -1,4 +1,4 @@
-import {get, readable, Readable, Unsubscriber} from "svelte/store";
+import { get, readable, Readable, Unsubscriber } from "svelte/store";
 
 /**
  * Creates a store that allows accessing a store inside a store. Should one of the stores be updated, the returned
@@ -27,7 +27,6 @@ export function createNestedStore<T, U>(rootStore: Readable<T>, accessor: (rootS
     }
 
     return readable<U>(initStoreValue, (set) => {
-
         let unsubscribeDeepStore: Unsubscriber | undefined;
         const unsubscribe = rootStore.subscribe((newRoot) => {
             if (unsubscribeDeepStore) {

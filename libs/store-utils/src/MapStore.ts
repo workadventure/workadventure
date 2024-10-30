@@ -1,6 +1,5 @@
 import type { Readable, Subscriber, Unsubscriber, Writable } from "svelte/store";
-import {derived, get, readable, writable} from "svelte/store";
-import {ForwardableStore} from "./ForwardableStore";
+import { derived, get, readable, writable } from "svelte/store";
 
 /**
  * Is it a Map? Is it a Store? No! It's a MapStore!
@@ -139,10 +138,13 @@ export class MapStore<K, V> extends Map<K, V> implements Readable<Map<K, V>> {
      * @param accessor
      * @param reducer
      */
-    getAggregatedStore<T, U>(accessor: (value: V) => Readable<T> | undefined, reducer: (stores: T[]) => U): Readable<U | undefined> {
+    getAggregatedStore<T, U>(
+        accessor: (value: V) => Readable<T> | undefined,
+        reducer: (stores: T[]) => U
+    ): Readable<U | undefined> {
         const initArray = new Array<T>();
 
-        for (const [key, value] of this.entries()) {
+        for (const [, value] of this.entries()) {
             const store = accessor(value);
             if (store) {
                 initArray.push(get(store));
@@ -154,7 +156,6 @@ export class MapStore<K, V> extends Map<K, V> implements Readable<Map<K, V>> {
         let unsubscriber: Unsubscriber | undefined;
 
         return readable(initStoreValue, (set) => {
-
             const globalUnsubscriber = this.subscribe((map) => {
                 if (unsubscriber) {
                     unsubscriber();
@@ -177,7 +178,7 @@ export class MapStore<K, V> extends Map<K, V> implements Readable<Map<K, V>> {
                 if (unsubscriber) {
                     unsubscriber();
                 }
-            }
+            };
         });
     }
 }

@@ -19,6 +19,13 @@
 //@import "fonts";
 //@import "tailwind";
 @import '@workadventure/tailwind/style/index.scss';
+@import "../style/breakpoints.scss";
+
+@include media-breakpoint-up(sm) {
+    .chatWindow {
+        width: 100% !important;
+    }
+}
 
 ::-webkit-scrollbar {
     width: 4px;
@@ -197,7 +204,6 @@
     }
 }
 
-
 .chatWindow nav{
     @apply tw-bg-dark-purple tw-p-1 tw-mx-3 tw-mb-1 tw-rounded-2xl tw-border-solid tw-border tw-border-light-purple tw-relative;
     width: calc( 100% - 65px );
@@ -227,4 +233,26 @@
 
 .chatWindow nav ul li.active{
     @apply tw-text-black tw-cursor-default;
+}
+
+.chatWindow {
+    color: white;
+    position: absolute !important;
+    top: 0;
+    min-width: 335px !important;
+    width: 335px;
+    pointer-events: auto;
+
+    height: 100dvh !important;
+    z-index: 2000;
+    pointer-events: auto;
+    .close-window {
+        cursor: pointer;
+        align-self: end;
+    }
+}
+
+.server-icon.sync:after {
+    content: "";
+    @apply tw-absolute tw-top-0 tw-right-0 tw-w-3 tw-h-3 tw-bg-green-500 tw-rounded-full;
 }

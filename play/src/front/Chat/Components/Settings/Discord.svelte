@@ -328,10 +328,3 @@
         {/if}
     </div>
 {/if}
-
-<style>
-    .server-icon.sync:after {
-        content: "";
-        @apply tw-absolute tw-top-0 tw-right-0 tw-w-3 tw-h-3 tw-bg-green-500 tw-rounded-full;
-    }
-</style>

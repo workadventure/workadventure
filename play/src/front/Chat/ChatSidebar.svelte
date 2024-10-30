@@ -108,30 +108,3 @@
         />
     </section>
 {/if}
-
-<style lang="scss">
-    @import "../style/breakpoints.scss";
-
-    @include media-breakpoint-up(sm) {
-        .chatWindow {
-            width: 100% !important;
-        }
-    }
-
-    .chatWindow {
-        color: white;
-        position: absolute !important;
-        top: 0;
-        min-width: 335px !important;
-        width: 335px;
-        pointer-events: auto;
-
-        height: 100dvh !important;
-        z-index: 2000;
-        pointer-events: auto;
-        .close-window {
-            cursor: pointer;
-            align-self: end;
-        }
-    }
-</style>
