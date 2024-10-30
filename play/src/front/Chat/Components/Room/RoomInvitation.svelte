@@ -7,11 +7,7 @@
     export let room: ChatRoom;
     let roomName = room.name;
     let loadingInvitation = false;
-    /*
-    function toggleDisplayInvitationRoomActions() {
-        displayInvitationRoomActions = !displayInvitationRoomActions;
-    }
-*/
+
     function joinRoom() {
         loadingInvitation = true;
         room.joinRoom()
@@ -46,11 +42,13 @@
             <IconLoader class="tw-animate-spin" />
         </div>
     {:else}
-        <div class="tw-flex tw-space-x-2">
+        <div class="tw-flex">
             <button
                 class="tw-border tw-border-solid tw-border-danger tw-text-danger hover:tw-bg-danger-400/10 tw-rounded tw-text-xs tw-py-1 tw-px-2 tw-m-0"
-                on:click={() => leaveRoom()}>{$LL.chat.decline()}</button
+                on:click={() => leaveRoom()}
             >
+                {$LL.chat.decline()}
+            </button>
             <button
                 class="tw-border tw-border-solid tw-border-success tw-text-success hover:tw-bg-success-400/10 tw-rounded tw-text-xs tw-py-1 tw-px-2 tw-m-0"
                 data-testid="acceptInvitationButton"
