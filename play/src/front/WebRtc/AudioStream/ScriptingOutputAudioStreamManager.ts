@@ -1,4 +1,3 @@
-import { Subscription } from "rxjs";
 import { Deferred } from "ts-deferred";
 import { iframeListener } from "../../Api/IframeListener";
 import { SimplePeer } from "../SimplePeer";
@@ -8,11 +7,9 @@ import { OutputPCMStreamer } from "./OutputPCMStreamer";
  * Class in charge of receiving audio streams from the scripting API and playing them.
  */
 export class ScriptingOutputAudioStreamManager {
-    private appendPCMDataStreamUnsubscriber: Subscription;
     private pcmStreamerDeferred: Deferred<OutputPCMStreamer> = new Deferred<OutputPCMStreamer>();
     private pcmStreamerResolved = false;
     private pcmStreamerResolving = false;
-    private isListening = false;
 
     constructor(simplePeer: SimplePeer) {
         iframeListener.registerAnswerer("startStreamInBubble", async (message) => {
@@ -28,14 +25,9 @@ export class ScriptingOutputAudioStreamManager {
             simplePeer.dispatchStream(pcmStreamer.getMediaStream());
         });
 
-        this.appendPCMDataStreamUnsubscriber = iframeListener.appendPCMDataStream.subscribe((message) => {
-            this.pcmStreamerDeferred.promise
-                .then((pcmStreamer) => {
-                    pcmStreamer.appendPCMData(message.data);
-                })
-                .catch((e) => {
-                    console.error("Error while appending PCM data", e);
-                });
+        iframeListener.registerAnswerer("appendPCMData", async (message) => {
+            const pcmStreamer = await this.pcmStreamerDeferred.promise;
+            await pcmStreamer.appendPCMData(message.data);
         });
 
         iframeListener.registerAnswerer("stopStreamInBubble", () => {
@@ -56,17 +48,17 @@ export class ScriptingOutputAudioStreamManager {
         });
 
         iframeListener.registerAnswerer("resetAudioBuffer", async () => {
-            console.log("Resetting audio buffer");
+            console.info("Resetting audio buffer");
             const pcmStreamer = await this.pcmStreamerDeferred.promise;
             pcmStreamer.resetAudioBuffer();
         });
     }
 
     public close(): void {
-        this.appendPCMDataStreamUnsubscriber.unsubscribe();
         iframeListener.unregisterAnswerer("startStreamInBubble");
         iframeListener.unregisterAnswerer("stopStreamInBubble");
         iframeListener.unregisterAnswerer("resetAudioBuffer");
+        iframeListener.unregisterAnswerer("appendPCMData");
 
         if (this.pcmStreamerResolved || this.pcmStreamerResolving) {
             this.pcmStreamerDeferred.promise

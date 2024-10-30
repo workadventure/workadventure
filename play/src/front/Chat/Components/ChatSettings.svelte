@@ -1,20 +1,11 @@
 <script>
-    import SettingsRow from "./Settings/SettingsRow.svelte";
+    import LL from "../../../i18n/i18n-svelte";
     import Discord from "./Settings/Discord.svelte";
-    import discordLogo from "../../Components/images/discord-logo.svg"
 </script>
 
 <main>
     <div class="tw-flex tw-flex-col">
-        <span class=" tw-text-gray-500 "> INTEGRATION </span>
-        <SettingsRow title="Discord">
-            <div slot="icon">
-                <img src="{discordLogo}" alt="Discord logo" class="tw-w-full tw-h-full">
-            </div>
-            <Discord />
-        </SettingsRow>
+        <span class=" tw-text-gray-500 "> {$LL.externalModule.discord.integration()} </span>
+        <Discord />
     </div>
 </main>
-
-<style>
-</style>

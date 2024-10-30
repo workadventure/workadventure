@@ -13,7 +13,6 @@ import { adminService } from "../services/AdminService";
 import { validateQuery } from "../services/QueryValidator";
 import { VerifyDomainService } from "../services/verifyDomain/VerifyDomainService";
 import { matrixProvider } from "../services/MatrixProvider";
-import config from "../enums/config";
 import { BaseHttpController } from "./BaseHttpController";
 
 export class AuthenticateController extends BaseHttpController {
@@ -102,6 +101,7 @@ export class AuthenticateController extends BaseHttpController {
                 res,
                 z.object({
                     playUri: z.string(),
+                    manuallyTriggered: z.literal("true").optional(),
                 })
             );
             if (query === undefined) {
@@ -119,7 +119,7 @@ export class AuthenticateController extends BaseHttpController {
                 return;
             }
 
-            const loginUri = await openIDClient.authorizationUrl(res, query.playUri, req);
+            const loginUri = await openIDClient.authorizationUrl(res, query.playUri, req, query.manuallyTriggered);
             res.atomic(() => {
                 res.cookie("playUri", query.playUri, undefined, {
                     httpOnly: true, // dont let browser javascript access cookie ever
@@ -340,7 +340,7 @@ export class AuthenticateController extends BaseHttpController {
                     matrixRedirectUrl: matrixRedirectUrl.toString(),
                 });
 
-                res.send(html);
+                res.type("html").send(html);
 
                 return;
             }
@@ -715,7 +715,7 @@ export class AuthenticateController extends BaseHttpController {
          *
          */
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
-        this.app.get("/third-party-login/login/:provider", async (req, res) => {
+        this.app.get("/third-party-login/login/:provider", (req, res) => {
             return;
         });
     }

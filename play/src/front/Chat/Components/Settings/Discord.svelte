@@ -1,19 +1,18 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
-    import axios from "axios";
-    import {get, Readable, Unsubscriber} from "svelte/store";
-    import { fade } from "svelte/transition";
+    import { get } from "svelte/store";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    import { RoomMetadataType } from "../../../ExternalModule/ExtensionModule";
-    import { ChatRoom } from "../../Connection/ChatConnection";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
-    import DiscordBotManager from "../../DiscordBotManager";
-    import { DiscordServer} from "../../../Interfaces/DiscordServerInterface";
-    import {MatrixChatConnection} from "../../Connection/Matrix/MatrixChatConnection";
-    import { connectionStatus, storedQrCodeUrl } from "../../Stores/DiscordConnectionStore"
+    import { DiscordUser, DiscordBotManager } from "../../DiscordBotManager";
+    import { DiscordServer } from "../../../Interfaces/DiscordServerInterface";
+    import { MatrixChatConnection } from "../../Connection/Matrix/MatrixChatConnection";
+    import { storedQrCodeUrl } from "../../Stores/DiscordConnectionStore";
     import DiscordLogo from "../../../Components/images/discord-logo.svg";
     import userLogo from "../../images/user.svg";
-    import {IconDotsCircle} from "@wa-icons";
+    import { userIsConnected } from "../../../Stores/MenuStore";
+    import LL from "../../../../i18n/i18n-svelte";
+    import { analyticsClient } from "../../../Administration/AnalyticsClient";
+    import { IconDotsCircle } from "@wa-icons";
 
     //initialize discordBotManager
     let DiscordBot: DiscordBotManager;
@@ -22,7 +21,7 @@
     $: qrCodeUrl = $storedQrCodeUrl;
     $: needManualToken = false;
     $: bridgeConnected = false;
-    $: discordUser = null as any;
+    $: discordUser = null as DiscordUser | null;
 
     let manualDiscordToken = "";
     let loadingFetchServer = false;
@@ -35,19 +34,23 @@
         showDropdown = !showDropdown;
     }
     function closeDropdownOnClickOutside(event: MouseEvent) {
-        if (buttonRef && !buttonRef.contains(event.target as Node) && dropdownRef && !dropdownRef.contains(event.target as Node)) {
+        if (
+            buttonRef &&
+            !buttonRef.contains(event.target as Node) &&
+            dropdownRef &&
+            !dropdownRef.contains(event.target as Node)
+        ) {
             showDropdown = false;
         }
     }
 
     async function sendDiscordToken(): Promise<void> {
         const response = await DiscordBot.AttemptToken(manualDiscordToken);
-        if(response.includes("Successfully")){
+        if (response.includes("Successfully")) {
             bridgeConnected = true;
             await fetchUserGuilds();
             notificationPlayingStore.playNotification("Successfully connected to Discord", "discord-logo.svg");
-        }
-        else{
+        } else {
             console.log("error while sending token", response);
             notificationPlayingStore.playNotification("Error while sending token", "discord-logo.svg");
         }
@@ -72,11 +75,12 @@
     }
 
     async function getQrCodeUrl(): Promise<void> {
-
         const response = await DiscordBot.AttemptQrCode();
-        if(response.includes("You're logged in as")||
+        if (
+            response.includes("You're logged in as") ||
             response.includes("You're already logged in") ||
-            response.includes("Successfully logged in as")){
+            response.includes("Successfully logged in as")
+        ) {
             bridgeConnected = true;
             await fetchUserGuilds();
         }
@@ -94,7 +98,7 @@
         discordUser = null;
     }
 
-    onMount( async () => {
+    onMount(async () => {
         $storedQrCodeUrl = "";
         const chatConnection = await gameManager.getChatConnection();
         if (!(chatConnection instanceof MatrixChatConnection)) {
@@ -107,19 +111,19 @@
         const bridgeConnectionStatus = get(bridgeConnectionStatusMessage.content).body;
         discordUser = await DiscordBot.getCurrentDiscordUser();
 
-        if(bridgeConnectionStatus.includes("You're logged in as")||
+        if (
+            bridgeConnectionStatus.includes("You're logged in as") ||
             bridgeConnectionStatus.includes("You're already logged in") ||
-            bridgeConnectionStatus.includes("Successfully logged in as")){
+            bridgeConnectionStatus.includes("Successfully logged in as")
+        ) {
             bridgeConnected = true;
 
-            await fetchUserGuilds() ;
-        }
-        else if (bridgeConnectionStatus.includes("not")) {
+            await fetchUserGuilds();
+        } else if (bridgeConnectionStatus.includes("not")) {
             bridgeConnected = false;
-            console.info('bridge detected as non connected');
+            console.info("bridge detected as non connected");
         }
         document.addEventListener("click", closeDropdownOnClickOutside);
-
     });
     onDestroy(() => {
         DiscordBot.destroy();
@@ -134,8 +138,9 @@
             .substring(0, 2)
             .toUpperCase();
     }
-    function handleImageError(event: { target: any }) {
-        const imgElement = event.target;
+
+    function handleImageError(event: Event) {
+        const imgElement: HTMLImageElement = event.target as HTMLImageElement;
         const serverName = imgElement.alt;
         const initials = getInitials(serverName);
         imgElement.style.display = "none";
@@ -152,148 +157,181 @@
             "tw-bg-gray-300",
             "tw-text-gray-700"
         );
-        imgElement.parentNode.insertBefore(initialsElement, imgElement);
+        imgElement.parentNode?.insertBefore(initialsElement, imgElement);
     }
-
 </script>
 
-<div class="tw-flex tw-flex-col tw-w-full tw-gap-5 tw-py-4">
-    <!--{#if !bridgeConnected && qrCodeUrl === undefined && !needManualToken }-->
-    {#if !bridgeConnected && qrCodeUrl.length<=0}
-        <div class="tw-py-3 tw-px-3">
-            <p class=" tw-text-sm tw-text-gray-500">
-                By connecting your discord account here, you will be able to receive your messages directly in the workadventure chat.
-                After synchronizing a server, we will create the rooms it contains, you will only have to join them in the Workadventure chat.
-            </p>
-            <button on:click={getQrCodeUrl}
-                    class="tw-w-full tw-p-2 tw-bg-secondary-800  tw-text-white tw-no-underline tw-rounded-md tw-flex tw-flex-row tw-items-center tw-gap-3 tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white"
-            >
-                <img src="{DiscordLogo}" alt="" class="tw-w-6 tw-h-6">
-                Connect to Discord
-            </button>
-        </div>
-    {/if}
-    {#if loadingFetchServer}
-        <div
-            class="tw-flex tw-flex-col tw-gap-2 tw-p-6 tw-rounded-xl tw-z-50 tw-w-full tw-justify-center tw-items-center"
-        >
-            <div
-                class="tw-loader tw-w-6 tw-h-6 tw-border-2 tw-border-t-[2px] tw-border-primary tw-rounded-full tw-animate-spin"
-                style="border-top-style: solid;"
-            />
-            <span class="tw-ml-2 tw-text-white">Get your Discord servers... 👀</span>
-        </div>
-    {/if}
-    {#if qrCodeUrl.length>0 && !needManualToken && !bridgeConnected}
-        <div class="tw-flex tw-justify-end">
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <span class=" tw-cursor-pointer" on:click={ () => (storedQrCodeUrl.set("")) } >&#10005;</span>
-        </div>
-        <img src={qrCodeUrl} alt="QR Code" />
-        <p class="tw-text-sm tw-text-gray-300">
-            Scan the QR code with your Discord app to login. QR codes are time limited, sometimes you need to regenerate one </p>
-        <button
-                on:click={getQrCodeUrl}
-                class="tw-w-full tw-p-2 tw-bg-white/10 hover:tw-bg-white/30 tw-text-white tw-no-underline tw-rounded-md tw-text-center tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white tw-flex tw-flex-row tw-items-center">
-
-            🔄 Get a new QR code
-        </button>
-        <button
-                on:click={() => needManualToken = true}
-                class="tw-w-full tw-p-2 tw-bg-secondary-800 tw-text-white tw-no-underline tw-rounded-md tw-text-center tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white tw-flex tw-flex-row tw-items-center"
-        >
-            Login with token
-        </button>
-    {/if}
-
-    {#if needManualToken && !bridgeConnected}
-        <div class="tw-flex tw-flex-col tw-items-center tw-gap-5">
-            <div class="tw-w-full tw-flex tw-justify-end">
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <span class=" tw-cursor-pointer" on:click={ () => (needManualToken = false) } >&#10005;</span>
-            </div>
-            <div class="tw-w-full ">
-                <input type="text" class="tw-w-full tw-mb-0" bind:value={manualDiscordToken} />
-                <button
-                    on:click={sendDiscordToken}
-                    class="tw-w-full tw-p-2 tw-bg-secondary-800  tw-text-white tw-no-underline tw-rounded-md tw-text-center tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white tw-flex tw-flex-row tw-items-center"
-                >
-                    Send
-                </button>
-            </div>
-            <p>
-                You need to enter our Discord token. In order to perform Discord integration see <a href="https://www.androidauthority.com/get-discord-token-3149920/">How to get my discord login token</a>
-            </p>
-        </div>
-    {/if}
-    <div class="tw-flex tw-flex-col tw-gap-2 ">
-        {#if discordUser}
-            <div class="tw-px-2 tw-py-3 tw-flex tw-flex-row tw-gap-2 tw-items-center tw-text-white tw-border-solid tw-border-b tw-border-b-white/10 tw-border-0 tw-mb-4 tw-relative">
-                <img src="{userLogo}" alt="" class="tw-h-6 tw-w-6">
-                <p class="tw-mb-0">
-                    Logged in as <strong>@{discordUser.username}</strong>
+{#if !$userIsConnected}
+    <p class="tw-text-gray-400 tw-w-full tw-text-center tw-pt-2">
+        {$LL.chat.requiresLoginForChat()}
+    </p>
+    <a
+        type="button"
+        class="btn light tw-min-w-[220px] tw-flex tw-justify-center tw-items-center tw-my-2"
+        href="/login"
+        on:click={() => analyticsClient.login()}
+    >
+        {$LL.menu.profile.login()}
+    </a>
+{:else}
+    <div class="tw-flex tw-flex-col tw-w-full tw-gap-5">
+        <!--{#if !bridgeConnected && qrCodeUrl === undefined && !needManualToken }-->
+        {#if !bridgeConnected && qrCodeUrl.length <= 0}
+            <div class="tw-py-3 tw-px-3">
+                <p class=" tw-text-sm tw-text-gray-500">
+                    By connecting your discord account here, you will be able to receive your messages directly in the
+                    workadventure chat. After synchronizing a server, we will create the rooms it contains, you will
+                    only have to join them in the Workadventure chat.
                 </p>
-                <button class="tw-text-gray-400 hover:tw-text-white"
-                        bind:this={buttonRef}
-                        on:click|preventDefault|stopPropagation={toggleDropdown}
+                <button
+                    on:click={getQrCodeUrl}
+                    class="tw-w-full tw-p-2 tw-bg-secondary-800  tw-text-white tw-no-underline tw-rounded-md tw-flex tw-flex-row tw-items-center tw-gap-3 tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white"
                 >
-                    <IconDotsCircle></IconDotsCircle>
+                    <img src={DiscordLogo} alt="" class="tw-w-6 tw-h-6" />
+                    Connect to Discord
                 </button>
-                {#if showDropdown}
-                    <div bind:this={dropdownRef} class="tw-absolute tw-top-full tw-right-0 tw-mt-2 tw-bg-contrast-900 tw-shadow-md tw-rounded-md tw-py-0 tw-z-50">
-                        <button on:click|preventDefault|stopPropagation={handleLogout}
-                                class="tw-px-6 hover:tw-bg-white/10">Logout</button>
-                    </div>
-                {/if}
             </div>
         {/if}
-        {#each guilds as server}
-            <li class="tw-flex tw-flex-row tw-gap-2 tw-py-2 tw-rounded-md tw-items-center tw-justify-between tw-mb-2 hover:tw-bg-white/10 {server.isSync? 'tw-bg-white/10' : ''}"
+        {#if loadingFetchServer}
+            <div
+                class="tw-flex tw-flex-col tw-gap-2 tw-p-6 tw-rounded-xl tw-z-50 tw-w-full tw-justify-center tw-items-center"
             >
-                <div class="tw-flex tw-flex-row tw-items-center tw-gap-2 tw-pl-2">
-                <div class="server-icon tw-relative" class:sync={server.isSync}>
-                    {#if server.icon}
-                        <img
-                            src={server.icon}
-                            alt={server.name}
-                            class="tw-w-8 tw-h-8 tw-rounded-full"
-                            on:error={handleImageError}
-                        />
-                    {:else}
-                        <div class="tw-w-8 tw-h-8 tw-rounded-full tw-bg-gray-300 tw-flex tw-justify-center tw-items-center tw-text-gray-700">
-                            {getInitials(server.name)}
+                <div
+                    class="tw-loader tw-w-6 tw-h-6 tw-border-2 tw-border-t-[2px] tw-border-primary tw-rounded-full tw-animate-spin"
+                    style="border-top-style: solid;"
+                />
+                <span class="tw-ml-2 tw-text-white">Get your Discord servers... 👀</span>
+            </div>
+        {/if}
+        {#if qrCodeUrl.length > 0 && !needManualToken && !bridgeConnected}
+            <div class="tw-flex tw-justify-end">
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <span class=" tw-cursor-pointer" on:click={() => storedQrCodeUrl.set("")}>&#10005;</span>
+            </div>
+            <img src={qrCodeUrl} alt="QR Code" />
+            <p class="tw-text-sm tw-text-gray-300">
+                Scan the QR code with your Discord app to login. QR codes are time limited, sometimes you need to
+                regenerate one
+            </p>
+            <button
+                on:click={getQrCodeUrl}
+                class="tw-w-full tw-p-2 tw-bg-white/10 hover:tw-bg-white/30 tw-text-white tw-no-underline tw-rounded-md tw-text-center tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white tw-flex tw-flex-row tw-items-center"
+            >
+                🔄 Get a new QR code
+            </button>
+            <button
+                on:click={() => (needManualToken = true)}
+                class="tw-w-full tw-p-2 tw-bg-secondary-800 tw-text-white tw-no-underline tw-rounded-md tw-text-center tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white tw-flex tw-flex-row tw-items-center"
+            >
+                Login with token
+            </button>
+        {/if}
+
+        {#if needManualToken && !bridgeConnected}
+            <div class="tw-flex tw-flex-col tw-items-center tw-gap-5">
+                <div class="tw-w-full tw-flex tw-justify-end">
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <span class=" tw-cursor-pointer" on:click={() => (needManualToken = false)}>&#10005;</span>
+                </div>
+                <div class="tw-w-full ">
+                    <input type="text" class="tw-w-full tw-mb-0" bind:value={manualDiscordToken} />
+                    <button
+                        on:click={sendDiscordToken}
+                        class="tw-w-full tw-p-2 tw-bg-secondary-800  tw-text-white tw-no-underline tw-rounded-md tw-text-center tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white tw-flex tw-flex-row tw-items-center"
+                    >
+                        Send
+                    </button>
+                </div>
+                <p>
+                    You need to enter our Discord token. In order to perform Discord integration see <a
+                        href="https://www.androidauthority.com/get-discord-token-3149920/"
+                        >How to get my discord login token</a
+                    >
+                </p>
+            </div>
+        {/if}
+        <div class="tw-flex tw-flex-col tw-gap-2 ">
+            {#if discordUser}
+                <div
+                    class="tw-px-2 tw-py-3 tw-flex tw-flex-row tw-gap-2 tw-items-center tw-text-white tw-border-solid tw-border-b tw-border-b-white/10 tw-border-0 tw-mb-4 tw-relative"
+                >
+                    <img src={userLogo} alt="" class="tw-h-6 tw-w-6" />
+                    <p class="tw-mb-0">
+                        Logged in as <strong>@{discordUser.username}</strong>
+                    </p>
+                    <button
+                        class="tw-text-gray-400 hover:tw-text-white"
+                        bind:this={buttonRef}
+                        on:click|preventDefault|stopPropagation={toggleDropdown}
+                    >
+                        <IconDotsCircle />
+                    </button>
+                    {#if showDropdown}
+                        <div
+                            bind:this={dropdownRef}
+                            class="tw-absolute tw-top-full tw-right-0 tw-mt-2 tw-bg-contrast-900 tw-shadow-md tw-rounded-md tw-py-0 tw-z-50"
+                        >
+                            <button
+                                on:click|preventDefault|stopPropagation={handleLogout}
+                                class="tw-px-6 hover:tw-bg-white/10">Logout</button
+                            >
                         </div>
                     {/if}
                 </div>
+            {/if}
+            {#each guilds as server (server.id)}
+                <li
+                    class="tw-flex tw-flex-row tw-gap-2 tw-py-2 tw-rounded-md tw-items-center tw-justify-between tw-mb-2 hover:tw-bg-white/10 {server.isSync
+                        ? 'tw-bg-white/10'
+                        : ''}"
+                >
+                    <div class="tw-flex tw-flex-row tw-items-center tw-gap-2 tw-pl-2">
+                        <div class="server-icon tw-relative" class:sync={server.isSync}>
+                            {#if server.icon}
+                                <img
+                                    src={server.icon}
+                                    alt={server.name}
+                                    class="tw-w-8 tw-h-8 tw-rounded-full"
+                                    on:error={handleImageError}
+                                />
+                            {:else}
+                                <div
+                                    class="tw-w-8 tw-h-8 tw-rounded-full tw-bg-gray-300 tw-flex tw-justify-center tw-items-center tw-text-gray-700"
+                                >
+                                    {getInitials(server.name)}
+                                </div>
+                            {/if}
+                        </div>
 
-                    <span>
-                        {server.name}
-                    </span>
-                </div>
-                <input
+                        <span>
+                            {server.name}
+                        </span>
+                    </div>
+                    <input
                         type="checkbox"
                         checked={server.isSync}
                         class="tw-mr-[5%]"
                         on:change={() => handleCheckboxChange(server)}
-                />
-            </li>
-        {/each}
-    </div>
-    {#if bridgeConnected && guilds.length > 0 }
-        <div class="tw-sticky tw-bottom-0 flex items-center justify-center">
-            <button
-                class="tw-w-full tw-p-2 tw-bg-secondary-800  tw-text-white tw-no-underline tw-rounded-md tw-text-center tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white tw-flex tw-flex-row tw-items-center"
-                on:click={bridgeServers}
-            >
-                Save and sync 🔌
-            </button>
+                    />
+                </li>
+            {/each}
         </div>
-    {/if}
-</div>
+        {#if bridgeConnected && guilds.length > 0}
+            <div class="tw-sticky tw-bottom-0 flex items-center justify-center">
+                <button
+                    class="tw-w-full tw-p-2 tw-bg-secondary-800  tw-text-white tw-no-underline tw-rounded-md tw-text-center tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white tw-flex tw-flex-row tw-items-center"
+                    on:click={bridgeServers}
+                >
+                    Save and sync 🔌
+                </button>
+            </div>
+        {/if}
+    </div>
+{/if}
 
 <style>
-    .server-icon.sync:after{
-        content: '';
+    .server-icon.sync:after {
+        content: "";
         @apply tw-absolute tw-top-0 tw-right-0 tw-w-3 tw-h-3 tw-bg-green-500 tw-rounded-full;
     }
 </style>

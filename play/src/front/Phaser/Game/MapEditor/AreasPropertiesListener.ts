@@ -596,7 +596,7 @@ export class AreasPropertiesListener {
                 .then((room: ChatRoom | undefined) => {
                     if (!room) return;
                     selectedRoom.set(room);
-                    navChat.set("chat");
+                    navChat.switchToChat();
                     chatZoneLiveStore.set(true);
                     if (property.shouldOpenAutomatically) chatVisibilityStore.set(true);
                 })

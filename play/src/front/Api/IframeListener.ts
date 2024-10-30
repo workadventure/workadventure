@@ -54,7 +54,6 @@ import type { AddPlayerEvent } from "./Events/AddPlayerEvent";
 import { ModalEvent } from "./Events/ModalEvent";
 import { AddButtonActionBarEvent } from "./Events/Ui/ButtonActionBarEvent";
 import { ReceiveEventEvent } from "./Events/ReceiveEventEvent";
-import { AppendPCMDataEvent } from "./Events/ProximityMeeting/AppendPCMDataEvent";
 import { StartStreamInBubbleEvent } from "./Events/ProximityMeeting/StartStreamInBubbleEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
@@ -217,9 +216,6 @@ class IframeListener {
     private readonly _stopTypingProximityMessageStream: Subject<StopWritingEvent> = new Subject();
     public readonly stopTypingProximityMessageStream = this._stopTypingProximityMessageStream.asObservable();
 
-    private readonly _appendPCMDataStream: Subject<AppendPCMDataEvent> = new Subject();
-    public readonly appendPCMDataStream = this._appendPCMDataStream.asObservable();
-
     private readonly _startListeningToStreamInBubbleStream: Subject<StartStreamInBubbleEvent> = new Subject();
     public readonly startListeningToStreamInBubbleStream = this._startListeningToStreamInBubbleStream.asObservable();
 
@@ -375,8 +371,6 @@ class IframeListener {
                         this._startTypingProximityMessageStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "stopWriting") {
                         this._stopTypingProximityMessageStream.next(iframeEvent.data);
-                    } else if (iframeEvent.type === "appendPCMData") {
-                        this._appendPCMDataStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "startListeningToStreamInBubble") {
                         this._startListeningToStreamInBubbleStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "stopListeningToStreamInBubble") {
@@ -597,25 +591,22 @@ class IframeListener {
                 iframe.sandbox.add("allow-scripts");
                 iframe.sandbox.add("allow-top-navigation-by-user-activation");
 
+                const scriptUrlObj = new URL(scriptUrl, window.location.href);
+                // Note: we define the base URL to be the same as the script URL to fix some issues with some scripts using Vite.
+                const scriptUrlBase = scriptUrlObj.protocol + "//" + scriptUrlObj.host;
+
                 //iframe.src = "data:text/html;charset=utf-8," + escape(html);
-                iframe.srcdoc =
-                    "<!doctype html>\n" +
-                    "\n" +
-                    '<html lang="en">\n' +
-                    "<head>\n" +
-                    '<script src="' +
-                    window.location.protocol +
-                    "//" +
-                    window.location.host +
-                    '/iframe_api.js" ></script>\n' +
-                    "<script " +
-                    (enableModuleMode ? 'type="module" ' : "") +
-                    'src="' +
-                    scriptUrl +
-                    '" ></script>\n' +
-                    "<title></title>\n" +
-                    "</head>\n" +
-                    "</html>\n";
+                iframe.srcdoc = `
+<!doctype html>
+<html lang="en">
+<head>
+<base href="${scriptUrlBase}">
+<script src="${window.location.protocol}//${window.location.host}/iframe_api.js" ></script>
+<script ${enableModuleMode ? 'type="module" ' : ""}src="${scriptUrl}" ></script>
+<title></title>
+</head>
+</html>
+`;
 
                 iframe.addEventListener("load", () => {
                     resolve();

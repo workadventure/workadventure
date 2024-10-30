@@ -6,6 +6,8 @@ import LL from "../../../i18n/i18n-svelte";
 import { askDialogStore } from "../../Stores/MeetingStore";
 import { currentLiveStreamingSpaceStore } from "../../Stores/MegaphoneStore";
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
+import { gameManager } from "../../Phaser/Game/GameManager";
+import { peerStore } from "../../Stores/PeerStore";
 
 /**
  * This function listens to the space events and mutes the user when a mute request is received.
@@ -37,18 +39,18 @@ export function bindMuteEventsToSpace(space: SpaceInterface) {
         }
     });
 
+    // Observe private event to ckick the user of the space and proximity discussion
     // We can safely ignore the subscription because it will be automatically completed when the space is destroyed.
     // eslint-disable-next-line rxjs/no-ignored-subscription,svelte/no-ignored-unsubscribe
     space.observePrivateEvent("kickOffUser").subscribe((event) => {
-        // FIXME: kick off should probably kick the user of the world, right???
-        // In this case, maybe kickoff does not belong to a space but is a more generic message???
         isSpeakerStore.set(false);
         currentLiveStreamingSpaceStore.set(undefined);
-        //const scene = gameManager.getCurrentGameScene();
-
-        //scene.broadcastService.leaveSpace(subMessage.kickOffMessage.spaceName);
-
+        const scene = gameManager.getCurrentGameScene();
+        scene.broadcastService.leaveSpace(event.spaceName);
         chatZoneLiveStore.set(false);
+        // Close all connection simple peer
+        scene.getSimplePeer().closeAllConnections();
+        peerStore.cleanupStore();
     });
 
     // We can safely ignore the subscription because it will be automatically completed when the space is destroyed.

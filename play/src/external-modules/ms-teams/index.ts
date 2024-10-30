@@ -618,7 +618,11 @@ class MSTeams implements MSTeamsExtensionModule {
         // Get all events between today 00:00 and 23:59
         try {
             const calendarEventUrl = `/me/calendar/calendarView?$select=subject,body,bodyPreview,organizer,attendees,start,end,location,weblink,onlineMeeting&startDateTime=${startDateTime.toISOString()}&endDateTime=${endDateTime.toISOString()}`;
-            const mSTeamsCalendarEventResponse = await this.msAxiosClientV1.get(calendarEventUrl);
+            const mSTeamsCalendarEventResponse = await this.msAxiosClientV1.get(calendarEventUrl, {
+                headers: {
+                    Prefer: 'outlook.timezone="Romance Standard Time"',
+                },
+            });
             return mSTeamsCalendarEventResponse.data.value;
         } catch (e) {
             if ((e as AxiosError).response?.status === 401) {
@@ -944,10 +948,7 @@ class MSTeams implements MSTeamsExtensionModule {
 
         // Check if the property is well formatted and have join meeting id
         if (teamsAreaProperty.data && teamsAreaProperty.data.msTeamsMeeting) {
-            console.info(
-                "Joining Teams meeting was defined in the area property",
-                teamsAreaProperty.data.msTeamsMeeting.joinMeetingIdSettings.joinMeetingId
-            );
+            console.info("Joining Teams meeting was defined in the area property");
             notificationPlayingStore.removeNotificationById(area.id);
             notificationPlayingStore.playNotification(
                 get(LL).externalModule.teams.openingMeeting(),
@@ -998,11 +999,6 @@ class MSTeams implements MSTeamsExtensionModule {
 
         const watchSpaceMetadataSubscribe = space.watchSpaceMetadata().subscribe((value) => {
             // Use time out to avoid multiple meeting creation
-            console.log(
-                "this.onlineTeamsMeetingsCreated.has(area.id)",
-                area.id,
-                this.onlineTeamsMeetingsCreated.has(area.id)
-            );
             if (this.onlineTeamsMeetingsCreated.has(area.id)) return;
 
             // If the space has a meeting, open the meeting and clear the timeout to create a new meeting
@@ -1107,7 +1103,19 @@ class MSTeams implements MSTeamsExtensionModule {
         }
     }
 
-    private async openCowebsiteTeamsMeeting(data: MSTeamsMeeting) {
+    private async openCowebsiteTeamsMeeting(data: MSTeamsMeeting | string) {
+        if (typeof data === "string") {
+            const cowebsiteOpened = await this.openPopupMeeting(
+                "Meet Now",
+                "",
+                data,
+                new Date(),
+                new Date(),
+                undefined
+            );
+            this.cowebsiteOpenedId = cowebsiteOpened.id;
+            return;
+        }
         if (this.cowebsiteOpenedId != undefined) return;
         const cowebsiteOpened = await this.openPopupMeeting(
             data.subject,
@@ -1158,6 +1166,7 @@ class MSTeams implements MSTeamsExtensionModule {
                     allowApi: true,
                     widthPercent: 30,
                     position: 1,
+                    allowPolicy: "clipboard-write",
                 },
                 window
             );

@@ -57,7 +57,7 @@ export class WorkadventureAreaCommands extends IframeApiContribution<Workadventu
     }
 
     /**
-     * Delete Area by it's name.
+     * Delete Area by its name.
      * {@link https://docs.workadventu.re/map-building/api-room.md#delete-area | Website documentation}
      *
      * @param {string} name Area name

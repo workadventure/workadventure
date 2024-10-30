@@ -11,6 +11,9 @@ const externalModule: BaseTranslation = {
         openingMeeting: "Opening Teams Meeting...",
         unableJoinMeeting: "Unable to join Teams Meeting!",
     },
+    discord: {
+        integration: "INTEGRATION",
+    },
 };
 
 export default externalModule;

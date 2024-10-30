@@ -1,28 +1,26 @@
+import { get } from "svelte/store";
+import { Subscription } from "rxjs";
 import { notificationPlayingStore } from "../Stores/NotificationStore";
-import {ChatConnectionInterface, ChatMessage, ChatRoom} from "./Connection/ChatConnection";
-import {get, Unsubscriber} from "svelte/store";
-import {DiscordServer} from "../Interfaces/DiscordServerInterface";
-import {attempt, forEach, initial} from "lodash";
-import {MatrixChatConnection} from "./Connection/Matrix/MatrixChatConnection";
-import {MatrixChatRoom} from "./Connection/Matrix/MatrixChatRoom";
-import {Subscription} from "rxjs";
-import { connectionStatus, storedQrCodeUrl } from "./Stores/DiscordConnectionStore"
-import {MatrixChatMessage} from "./Connection/Matrix/MatrixChatMessage";
+import { DiscordServer } from "../Interfaces/DiscordServerInterface";
+import { ChatMessage } from "./Connection/ChatConnection";
+import { MatrixChatConnection } from "./Connection/Matrix/MatrixChatConnection";
+import { MatrixChatRoom } from "./Connection/Matrix/MatrixChatRoom";
+import { storedQrCodeUrl } from "./Stores/DiscordConnectionStore";
+import { MatrixChatMessage } from "./Connection/Matrix/MatrixChatMessage";
 
-interface DiscordUser {
+export interface DiscordUser {
     id: string;
     username: string;
 }
 
-export default class DiscordBotManager {
+export class DiscordBotManager {
     private discordBotRoom: MatrixChatRoom | undefined = undefined;
     private botMessageSubscription: Subscription | undefined;
     //TODO Test DiscordBotManager Class
     //TODO add discord bot Id in a env file
     static DISCORD_BOT_ID = "@discordbot:matrix.workadventure.localhost";
 
-    constructor(private chatConnection: MatrixChatConnection) {
-    }
+    constructor(private chatConnection: MatrixChatConnection) {}
 
     //init the direct room with the discord bot
     public async initDiscordBotRoom() {
@@ -35,52 +33,46 @@ export default class DiscordBotManager {
 
     public async sendMessage(message: string): Promise<ChatMessage> {
         return new Promise((resolve, reject) => {
-            if(this.botMessageSubscription) this.botMessageSubscription.unsubscribe();
+            if (this.botMessageSubscription) this.botMessageSubscription.unsubscribe();
             if (!this.discordBotRoom) {
-                reject("Discord bot room is not initialized");
-                return
+                throw new Error("Discord bot room is not initialized");
             }
 
             try {
                 this.discordBotRoom.sendMessage(message);
-            }
-            catch (e) {
+            } catch (e) {
                 console.error("Failed to send message to discord bot", e);
                 reject(e);
             }
 
-            this.botMessageSubscription = this.discordBotRoom.messages.onPush.subscribe(async (lastMessage) => {
+            this.botMessageSubscription = this.discordBotRoom.messages.onPush.subscribe((lastMessage) => {
                 if (!this.discordBotRoom) {
-                    reject("Discord bot room is not initialized");
-                    return
+                    return reject(new Error("Discord bot room is not initialized"));
                 }
 
                 if (`${lastMessage.sender?.chatId}` !== DiscordBotManager.DISCORD_BOT_ID) {
                     return;
-                }
-                else if((get(lastMessage.content).body).includes('websocket: close sent')) {
+                } else if (get(lastMessage.content).body.includes("websocket: close sent")) {
                     return;
-                }
-                else{
-                    resolve(lastMessage);
-                    if(this.botMessageSubscription) this.botMessageSubscription.unsubscribe();
-                    return
+                } else {
+                    if (this.botMessageSubscription) this.botMessageSubscription.unsubscribe();
+                    return resolve(lastMessage);
                 }
             });
         });
     }
 
     public async getCurrentDiscordUser(message?: ChatMessage): Promise<DiscordUser | null> {
-        if (!message){
+        if (!message) {
             message = await this.sendMessage("ping");
-            if (!get(message.content).body.includes("logged in as")){
+            if (!get(message.content).body.includes("logged in as")) {
                 throw new Error("Failed to get current discord user");
             }
         }
-        if (message){
+        if (message) {
             const regex = /@([^\s]+) \(`(\d+)`\)/;
             const matches = get(message.content).body.match(regex);
-            if (matches){
+            if (matches) {
                 return {
                     id: matches[2],
                     username: matches[1],
@@ -112,69 +104,103 @@ export default class DiscordBotManager {
         if (!htmlString) {
             return [];
         }
-        const regex = /<li>(?:<img [^>]*?src="([^"]+)"[^>]*>)?\s*([^<]+)\s*\(<code>(\d+)<\/code>\)\s*-\s*(never bridge messages|bridge all messages)/g;
+        const regex =
+            /<li>(?:<img [^>]*?src="([^"]+)"[^>]*>)?\s*([^<]+)\s*\(<code>(\d+)<\/code>\)\s*-\s*(never bridge messages|bridge all messages)/g;
 
-        const  matches = htmlString.matchAll(regex);
-        return Array.from(matches).map((match) => {
-            return {
-                name: match[2].trim(),
-                id: match[3],
-                isSync: !match[4].includes("never"),
-                isBridging: false,
-                icon: guildsMessage.mxcUrlToHttp(match[1]) || undefined,
-            };
-        }).sort((a, b) => a.name.localeCompare(b.name));
+        const matches = htmlString.matchAll(regex);
+        return Array.from(matches)
+            .map((match) => {
+                return {
+                    name: match[2].trim(),
+                    id: match[3],
+                    isSync: !match[4].includes("never"),
+                    isBridging: false,
+                    icon: guildsMessage.mxcUrlToHttp(match[1]) || undefined,
+                };
+            })
+            .sort((a, b) => a.name.localeCompare(b.name));
     }
 
-    public async getParsedUserGuilds(): Promise<DiscordServer[]>{
+    public async getParsedUserGuilds(): Promise<DiscordServer[]> {
         const guildsMessage = await this.sendMessage("guild status");
-        if (guildsMessage instanceof MatrixChatMessage){
+        if (guildsMessage instanceof MatrixChatMessage) {
             return this.parseGuilds(guildsMessage);
-        }
-        else {
+        } else {
             return this.parseGuildsContentMessage(get(guildsMessage.content).body);
         }
     }
 
     public async bridgesGuilds(guilds: DiscordServer[]): Promise<boolean> {
-            if (guilds.length === 0){
+        if (guilds.length === 0) {
+            return false;
+        }
+        const promiseAllSendMessages: Array<Promise<void>> = [];
+        for (const guild of guilds) {
+            promiseAllSendMessages.push(
+                (async () => {
+                    try {
+                        await this.sendMessage(`guild bridge ${guild.id}`);
+                        notificationPlayingStore.playNotification(
+                            `Successfully bridging ${guilds.length > 1 ? "all of your servers" : guilds[0].name}}`,
+                            "discord-logo.svg"
+                        );
+                    } catch (e) {
+                        console.error("Failed to bridge guild", e);
+                        notificationPlayingStore.playNotification(
+                            `Error while bridging server: ${guild.name}`,
+                            "discord-logo.svg"
+                        );
+                    }
+                })()
+            );
+        }
+        return Promise.all(promiseAllSendMessages)
+            .then(() => {
                 return true;
-            }
-            for (const guild of guilds) {
-                try {
-                    await this.sendMessage(`guild bridge ${guild.id} --entire`);
-                } catch (e) {
-                    console.error("Failed to bridge guild", e);
-                    notificationPlayingStore.playNotification(`Error while bridging server: ${guild.name}`, "discord-logo.svg")
-                    return false;
-                }
-            }
-            notificationPlayingStore.playNotification(`Successfully bridging ${guilds.length > 1 ? 'all of your servers' : guilds[0].name}}`, "discord-logo.svg")
-            return true;
+            })
+            .catch(() => {
+                return false;
+            });
     }
 
     public async unBridgesGuilds(guilds: DiscordServer[]): Promise<boolean> {
-            if (guilds.length === 0){
+        if (guilds.length === 0) {
+            return false;
+        }
+        const promiseAllSendMessages: Array<Promise<void>> = [];
+        for (const guild of guilds) {
+            promiseAllSendMessages.push(
+                (async () => {
+                    try {
+                        await this.sendMessage(`guild unbridge ${guild.id}`);
+                        notificationPlayingStore.playNotification(
+                            `Successfully unbridging ${guilds.length > 1 ? "all of your servers" : guilds[0].name}`,
+                            "discord-logo.svg"
+                        );
+                    } catch (e) {
+                        console.error("Failed to unbridge guild", e);
+                        notificationPlayingStore.playNotification(
+                            `Error while unbridging server: ${guild.name}`,
+                            "discord-logo.svg"
+                        );
+                    }
+                })()
+            );
+        }
+        return Promise.all(promiseAllSendMessages)
+            .then(() => {
                 return true;
-            }
-            for (const guild of guilds) {
-                try {
-                    await this.sendMessage(`guild unbridge ${guild.id}`);
-                } catch (e) {
-                    console.error("Failed to unbridge guild", e);
-                    notificationPlayingStore.playNotification(`Error while unbridging server: ${guild.name}`, "discord-logo.svg")
-                    return false
-                }
-            }
-            notificationPlayingStore.playNotification(`Successfully unbridging ${guilds.length>1? 'all of your servers' : guilds[0].name}`, "discord-logo.svg")
-            return true;
+            })
+            .catch(() => {
+                return false;
+            });
     }
 
-    public async AttemptQrCode (): Promise<string> {
+    public async AttemptQrCode(): Promise<string> {
         return new Promise((resolve, reject) => {
             if (this.botMessageSubscription) this.botMessageSubscription.unsubscribe();
             if (!this.discordBotRoom) {
-                reject("Discord bot room is not initialized");
+                reject(new Error("Discord bot room is not initialized"));
                 return;
             }
 
@@ -187,21 +213,19 @@ export default class DiscordBotManager {
 
             let messageCount = 0;
 
-            this.botMessageSubscription = this.discordBotRoom.messages.onPush.subscribe(async (lastMessage) => {
+            this.botMessageSubscription = this.discordBotRoom.messages.onPush.subscribe((lastMessage) => {
                 if (!this.discordBotRoom) {
-                    reject("Discord bot room is not initialized");
-                    return;
+                    throw new Error("Discord bot room is not initialized");
                 }
 
                 if (`${lastMessage.sender?.chatId}` !== DiscordBotManager.DISCORD_BOT_ID) {
                     return;
-                } else if ((get(lastMessage.content).body).includes('websocket: close sent')) {
+                } else if (get(lastMessage.content).body.includes("websocket: close sent")) {
                     return;
                 } else {
                     messageCount++;
 
                     if (messageCount === 1) {
-
                         const qrCodeUrl = get(lastMessage.content).url;
                         if (qrCodeUrl) {
                             storedQrCodeUrl.set(qrCodeUrl);
@@ -215,12 +239,11 @@ export default class DiscordBotManager {
             });
         });
     }
-    public async AttemptToken(token: string):Promise<string> {
+    public async AttemptToken(token: string): Promise<string> {
         return new Promise((resolve, reject) => {
             if (this.botMessageSubscription) this.botMessageSubscription.unsubscribe();
             if (!this.discordBotRoom) {
-                reject("Discord bot room is not initialized");
-                return;
+                throw new Error("Discord bot room is not initialized");
             }
             try {
                 this.discordBotRoom.sendMessage(`login-token user ${token}`);
@@ -229,28 +252,30 @@ export default class DiscordBotManager {
                 reject(e);
             }
             let messageCount = 0;
-            this.botMessageSubscription = this.discordBotRoom.messages.onPush.subscribe(async (lastMessage) => {
+            this.botMessageSubscription = this.discordBotRoom.messages.onPush.subscribe((lastMessage) => {
                 if (!this.discordBotRoom) {
-                    reject("Discord bot room is not initialized");
-                    return;
+                    return reject(new Error("Discord bot room is not initialized"));
                 }
 
                 if (`${lastMessage.sender?.chatId}` !== DiscordBotManager.DISCORD_BOT_ID) {
                     return;
-                } else if ((get(lastMessage.content).body).includes('websocket: close sent')) {
+                } else if (get(lastMessage.content).body.includes("websocket: close sent")) {
                     return;
                 } else {
                     messageCount++;
                     if (messageCount === 1) {
-                        if (!(get(lastMessage.content).body.includes("Connecting to"))) {
-                            notificationPlayingStore.playNotification("Error while sending your token", "discord-logo.svg");
+                        if (!get(lastMessage.content).body.includes("Connecting to")) {
+                            notificationPlayingStore.playNotification(
+                                "Error while sending your token",
+                                "discord-logo.svg"
+                            );
                             if (this.botMessageSubscription) this.botMessageSubscription.unsubscribe();
-                            reject("Error while sending your token");
+                            return reject(new Error("Error while sending your token"));
                         }
                     } else if (messageCount === 2) {
                         const secondMessage = get(lastMessage.content).body;
                         if (this.botMessageSubscription) this.botMessageSubscription.unsubscribe();
-                        resolve(secondMessage);
+                        return resolve(secondMessage);
                     }
                 }
             });
@@ -258,6 +283,6 @@ export default class DiscordBotManager {
     }
 
     destroy() {
-        if(this.botMessageSubscription) this.botMessageSubscription.unsubscribe();
+        if (this.botMessageSubscription) this.botMessageSubscription.unsubscribe();
     }
 }

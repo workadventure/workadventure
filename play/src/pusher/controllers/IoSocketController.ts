@@ -475,7 +475,7 @@ export class IoSocketController {
                                 uuid: userData.userUuid,
                                 name,
                                 playUri: roomId,
-                                roomName,
+                                roomName: roomName === "" ? undefined : roomName,
                                 availabilityStatus,
                                 isLogged,
                                 color: Color.getColorByString(name),
@@ -500,7 +500,7 @@ export class IoSocketController {
                             backConnection: undefined,
                             listenedZones: new Set<Zone>(),
                             pusherRoom: undefined,
-                            spaces: [],
+                            spaces: new Set<string>(),
                             spacesFilters: new Map<string, SpaceFilterMessage[]>(),
                             chatID,
                             world: userData.world,
@@ -811,7 +811,7 @@ export class IoSocketController {
                             break;
                         }
                         case "leaveChatRoomAreaMessage": {
-                            socketManager.handleLeaveChatRoomArea(
+                            await socketManager.handleLeaveChatRoomArea(
                                 socket,
                                 message.message.leaveChatRoomAreaMessage.roomID
                             );

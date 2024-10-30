@@ -2,6 +2,7 @@ import CancelablePromise from "cancelable-promise";
 import { z } from "zod";
 import { get } from "svelte/store";
 import { randomDelay } from "@workadventure/shared-utils/src/RandomDelay/RandomDelay";
+import { JitsiRoomConfigData } from "@workadventure/map-editor";
 import { inExternalServiceStore } from "../../Stores/MyMediaStore";
 import { coWebsiteManager } from "../CoWebsiteManager";
 import { jitsiExternalApiFactory } from "../JitsiExternalApiFactory";
@@ -146,7 +147,7 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
         private roomName: string,
         private playerName: string,
         private jwt: string | undefined,
-        private jitsiConfig: object | undefined,
+        private jitsiConfig: JitsiRoomConfigData | undefined,
         private jitsiInterfaceConfig: object | undefined,
         private domain: string
     ) {
@@ -165,15 +166,33 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
             jitsiExternalApiFactory
                 .loadJitsiScript(this.domain)
                 .then(async () => {
+                    const userConnectedTags = gameManager.getCurrentGameScene().connection?.getAllTags() ?? [];
                     await randomDelay();
+
+                    const mergedConfig = mergeConfig(this.jitsiConfig);
+
+                    if (
+                        !userConnectedTags.includes("admin") &&
+                        (!this.jitsiConfig?.jitsiRoomAdminTag ||
+                            !userConnectedTags.includes(this.jitsiConfig?.jitsiRoomAdminTag))
+                    ) {
+                        mergedConfig.localRecording = {
+                            disable: true,
+                            disableSelfRecording: true,
+                        };
+                    }
+
                     const options: JitsiOptions = {
                         roomName: this.roomName,
                         jwt: this.jwt,
                         width: "100%",
                         height: "100%",
                         parentNode: coWebsiteManager.getCoWebsiteBuffer(),
-                        configOverwrite: mergeConfig(this.jitsiConfig),
-                        interfaceConfigOverwrite: { ...defaultInterfaceConfig, ...this.jitsiInterfaceConfig },
+                        configOverwrite: mergedConfig,
+                        interfaceConfigOverwrite: {
+                            ...defaultInterfaceConfig,
+                            ...this.jitsiInterfaceConfig,
+                        },
                     };
 
                     if (!options.jwt) {
@@ -192,6 +211,7 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
                         options.onload = () => {
                             resolve();
                         }; //we want for the iframe to be loaded before triggering animations.
+
                         this.jitsiApi = new window.JitsiMeetExternalAPI(this.domain, options);
 
                         this.jitsiApi.addListener("videoConferenceJoined", () => {

@@ -42,6 +42,8 @@ import { iframeListener } from "../../Api/IframeListener";
 import {
     ADMIN_URL,
     DEBUG_MODE,
+    ENABLE_CHAT_DISCONNECTED_LIST,
+    ENABLE_CHAT_ONLINE_LIST,
     ENABLE_MAP_EDITOR,
     ENABLE_OPENID,
     MAX_PER_GROUP,
@@ -111,7 +113,7 @@ import {
 import { LL, locale } from "../../../i18n/i18n-svelte";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
-import { hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connection/AxiosUtils";
+import { axiosWithRetry, hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connection/AxiosUtils";
 import { StringUtils } from "../../Utils/StringUtils";
 import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
 
@@ -168,6 +170,7 @@ import { UserProviderInterface } from "../../Chat/UserProvider/UserProviderInter
 import { faviconManager } from "../../WebRtc/FaviconManager";
 import { ScriptingOutputAudioStreamManager } from "../../WebRtc/AudioStream/ScriptingOutputAudioStreamManager";
 import { ScriptingInputAudioStreamManager } from "../../WebRtc/AudioStream/ScriptingInputAudioStreamManager";
+import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -204,7 +207,6 @@ import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import Clamp = Phaser.Math.Clamp;
-import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -489,41 +491,33 @@ export class GameScene extends DirtyScene {
 
         if (this.wamUrlFile) {
             const absoluteWamFileUrl = new URL(this.wamUrlFile, window.location.href).toString();
-            this.superLoad
-                .json(
-                    this.wamUrlFile,
-                    this.wamUrlFile,
-                    undefined,
-                    undefined,
-                    (key: string, type: string, wamFile: unknown) => {
-                        const wamFileResult = WAMFileFormat.safeParse(wamFile);
-                        if (!wamFileResult.success) {
-                            this.loader.removeLoader();
-                            errorScreenStore.setError(
-                                ErrorScreenMessage.fromPartial({
-                                    type: "error",
-                                    code: "WAM_FORMAT_ERROR",
-                                    title: "Format error",
-                                    subtitle: "Invalid format while loading a WAM file",
-                                    details: wamFileResult.error.toString(),
-                                })
-                            );
-                            this.cleanupClosingScene();
 
-                            this.scene.stop(this.scene.key);
-                            this.scene.remove(this.scene.key);
-                            return;
-                        }
-                        this.wamFile = wamFileResult.data;
-                        this.mapUrlFile = new URL(this.wamFile.mapUrl, absoluteWamFileUrl).toString();
-                        this.doLoadTMJFile(this.mapUrlFile);
-                        this.loadEntityCollections();
+            this.superLoad.loadPromise(
+                axiosWithRetry.get(absoluteWamFileUrl).then((response) => {
+                    const wamFileResult = WAMFileFormat.safeParse(response.data);
+                    if (!wamFileResult.success) {
+                        this.loader.removeLoader();
+                        errorScreenStore.setError(
+                            ErrorScreenMessage.fromPartial({
+                                type: "error",
+                                code: "WAM_FORMAT_ERROR",
+                                title: "Format error",
+                                subtitle: "Invalid format while loading a WAM file",
+                                details: wamFileResult.error.toString(),
+                            })
+                        );
+                        this.cleanupClosingScene();
+
+                        this.scene.stop(this.scene.key);
+                        this.scene.remove(this.scene.key);
+                        return;
                     }
-                )
-                .catch((e) => {
-                    console.error(e);
-                    throw e;
-                });
+                    this.wamFile = wamFileResult.data;
+                    this.mapUrlFile = new URL(this.wamFile.mapUrl, absoluteWamFileUrl).toString();
+                    this.doLoadTMJFile(this.mapUrlFile);
+                    this.loadEntityCollections();
+                })
+            );
         } else {
             this.doLoadTMJFile(this.mapUrlFile);
         }
@@ -1049,6 +1043,7 @@ export class GameScene extends DirtyScene {
         iframeListener.unregisterAnswerer("getState");
         iframeListener.unregisterAnswerer("loadTileset");
         iframeListener.unregisterAnswerer("getMapData");
+        iframeListener.unregisterAnswerer("getWamMapData");
         iframeListener.unregisterAnswerer("triggerActionMessage");
         iframeListener.unregisterAnswerer("triggerPlayerMessage");
         iframeListener.unregisterAnswerer("removeActionMessage");
@@ -1103,7 +1098,6 @@ export class GameScene extends DirtyScene {
             clearTimeout(this.hideTimeout);
             this.hideTimeout = undefined;
         }
-        if (this.wamUrlFile) this.superLoad.jsonRemoveCacheByKey(this.wamUrlFile);
     }
 
     /**
@@ -1566,13 +1560,15 @@ export class GameScene extends DirtyScene {
                         const allUserSpace = this.allUserSpace;
 
                         const userProviders: UserProviderInterface[] = [];
-                        if (connection) {
-                            userProviders.push(new AdminUserProvider(connection));
+
+                        if (ENABLE_CHAT_DISCONNECTED_LIST) {
+                            if (connection) {
+                                userProviders.push(new AdminUserProvider(connection));
+                            }
+                            userProviders.push(new ChatUserProvider(chatConnection));
                         }
 
-                        userProviders.push(new ChatUserProvider(chatConnection));
-
-                        if (allUserSpace) {
+                        if (allUserSpace && ENABLE_CHAT_ONLINE_LIST) {
                             userProviders.push(new WorldUserProvider(allUserSpace));
                         }
 
@@ -1698,7 +1694,9 @@ export class GameScene extends DirtyScene {
                     }
                 });
 
-                this.connection.onServerDisconnected(() => {
+                // The serverDisconnected stream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.serverDisconnected.subscribe(() => {
                     showConnectionIssueMessage();
                     console.info("Player disconnected from server. Reloading scene.");
                     this.cleanupClosingScene();
@@ -2809,6 +2807,12 @@ ${escapedMessage}
         iframeListener.registerAnswerer("getMapData", () => {
             return {
                 data: this.gameMapFrontWrapper.getMap(),
+            };
+        });
+
+        iframeListener.registerAnswerer("getWamMapData", () => {
+            return {
+                data: this.gameMapFrontWrapper.getGameMap().getWam(),
             };
         });
 

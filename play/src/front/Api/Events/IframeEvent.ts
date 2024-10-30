@@ -68,6 +68,7 @@ import { isReceiveEventEvent } from "./ReceiveEventEvent";
 import { isPlaySoundInBubbleEvent } from "./ProximityMeeting/PlaySoundInBubbleEvent";
 import { isStartStreamInBubbleEvent } from "./ProximityMeeting/StartStreamInBubbleEvent";
 import { isAppendPCMDataEvent } from "./ProximityMeeting/AppendPCMDataEvent";
+import { isWamMapDataEvent } from "./WamMapDataEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -357,10 +358,6 @@ export const isIframeEventWrapper = z.union([
     z.object({
         type: z.literal("restoreRoomList"),
         data: z.undefined(),
-    }),
-    z.object({
-        type: z.literal("appendPCMData"),
-        data: isAppendPCMDataEvent,
     }),
     z.object({
         type: z.literal("startListeningToStreamInBubble"),
@@ -703,6 +700,10 @@ export const iframeQueryMapTypeGuards = {
         query: z.undefined(),
         answer: z.undefined(),
     },
+    appendPCMData: {
+        query: isAppendPCMDataEvent,
+        answer: z.undefined(),
+    },
     resetAudioBuffer: {
         query: z.undefined(),
         answer: z.undefined(),
@@ -714,6 +715,10 @@ export const iframeQueryMapTypeGuards = {
     stopLeading: {
         query: z.undefined(),
         answer: z.undefined(),
+    },
+    getWamMapData: {
+        query: z.undefined(),
+        answer: isWamMapDataEvent,
     },
 };
 

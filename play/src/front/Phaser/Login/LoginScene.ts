@@ -30,7 +30,7 @@ export class LoginScene extends ResizableScene {
             gameManager.currentStartedRoom &&
             gameManager.currentStartedRoom.authenticationMandatory
         ) {
-            const redirect = connectionManager.loadOpenIDScreen();
+            const redirect = connectionManager.loadOpenIDScreen(false);
             if (redirect !== null) {
                 window.location.assign(redirect.toString());
             }
