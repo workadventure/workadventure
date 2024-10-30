@@ -193,7 +193,7 @@ export class ProximityChatRoom implements ChatRoom {
 
     private addOutcomingUser(spaceUser: SpaceUserExtended): void {
         this.sendMessage(get(LL).chat.timeLine.outcoming({ userName: spaceUser.name }), "outcoming", false);
-        this.removeTypingUserbyChatID(spaceUser.chatID ?? "");
+        this.removeTypingUserbyID(spaceUser.id.toString());
 
         /*this._connection.connectedUsers.update((users) => {
             users.delete(userId);
@@ -326,11 +326,11 @@ export class ProximityChatRoom implements ChatRoom {
         if (sender === undefined) {
             return;
         }
-        const chatID = sender.chatID ?? "";
+        const id = sender.id.toString();
         this.typingMembers.update((typingMembers) => {
-            if (typingMembers.find((user) => user.id === sender.chatID) == undefined) {
+            if (typingMembers.find((user) => user.id === id) == undefined) {
                 typingMembers.push({
-                    id: chatID,
+                    id,
                     name: sender.name ?? null,
                     avatarUrl: sender.getWokaBase64 ?? null,
                 });
@@ -345,16 +345,16 @@ export class ProximityChatRoom implements ChatRoom {
             return;
         }
 
-        const chatID = sender.chatID ?? "";
+        const id = sender.id.toString();
 
         this.typingMembers.update((typingMembers) => {
-            return typingMembers.filter((user) => user.id !== chatID);
+            return typingMembers.filter((user) => user.id !== id);
         });
     }
 
-    private removeTypingUserbyChatID(chatID: string) {
+    private removeTypingUserbyID(id: string) {
         this.typingMembers.update((typingMembers) => {
-            return typingMembers.filter((user) => user.id !== chatID);
+            return typingMembers.filter((user) => user.id !== id);
         });
     }
 
