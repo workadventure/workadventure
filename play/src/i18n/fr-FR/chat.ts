@@ -26,6 +26,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     accept: "Accepter",
     decline: "Refuser",
+    join: "Rejoindre",
     connecting: "Connexion au serveur ...",
     waitingInit: "Attente de l'initialisation du serveur ...",
     waitingData: "En attentes des informations de l'utilisateur ...",

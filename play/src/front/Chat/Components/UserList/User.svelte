@@ -58,7 +58,9 @@
 {:else}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
-        on:click|stopPropagation={() => openChatRoom(chatId)}
+        on:click|stopPropagation={() => {
+            if (user.chatId !== user.uuid && !isMe) openChatRoom(chatId).catch((error) => console.error(error));
+        }}
         class="tw-text-md tw-flex tw-gap-2 tw-flex-row tw-items-center tw-justify-between hover:tw-bg-white hover:tw-bg-opacity-10 hover:tw-rounded-md hover:!tw-cursor-pointer tw-p-1 user"
     >
         <div class={`wa-chat-item ${isAdmin ? "admin" : "user"}  tw-cursor-default`}>
@@ -85,6 +87,7 @@
             <div class={`tw-flex-auto tw-ml-3 ${!$userStatus && "tw-opacity-50"}  tw-cursor-default`}>
                 <h1 class={`tw-text-sm tw-font-bold tw-mb-0  tw-cursor-default`}>
                     {#each chunks as chunk (chunk.key)}
+                        {chatId}
                         <span class={`${chunk.match ? "tw-text-light-blue" : ""}  tw-cursor-default`}>{chunk.text}</span
                         >
                     {/each}
