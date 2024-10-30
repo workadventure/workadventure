@@ -91,6 +91,7 @@
         await DiscordBot.sendMessage("logout");
         bridgeConnected = false;
         guilds = [];
+        discordUser = null;
     }
 
     onMount( async () => {
@@ -104,9 +105,7 @@
 
         const bridgeConnectionStatusMessage = await DiscordBot.sendMessage("ping");
         const bridgeConnectionStatus = get(bridgeConnectionStatusMessage.content).body;
-        console.log("bridgeConnectionStatus Message", bridgeConnectionStatus);
         discordUser = await DiscordBot.getCurrentDiscordUser();
-        console.log(discordUser);
 
         if(bridgeConnectionStatus.includes("You're logged in as")||
             bridgeConnectionStatus.includes("You're already logged in") ||
@@ -242,7 +241,8 @@
                 </button>
                 {#if showDropdown}
                     <div bind:this={dropdownRef} class="tw-absolute tw-top-full tw-right-0 tw-mt-2 tw-bg-contrast-900 tw-shadow-md tw-rounded-md tw-py-0 tw-z-50">
-                        <button on:click{handleLogout} class="tw-px-6 hover:tw-bg-white/10">Logout</button>
+                        <button on:click|preventDefault|stopPropagation={handleLogout}
+                                class="tw-px-6 hover:tw-bg-white/10">Logout</button>
                     </div>
                 {/if}
             </div>
