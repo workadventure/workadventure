@@ -179,167 +179,165 @@
     >
         {$LL.menu.profile.login()}
     </a>
+{:else if bridgeConnected === null}
+    <div class="tw-flex tw-items-center tw-justify-center tw-p-8">
+        <div
+            class="tw-loader tw-w-6 tw-h-6 tw-border-2 tw-border-t-[2px] tw-border-primary tw-rounded-full tw-animate-spin"
+            style="border-top-style: solid;"
+        />
+    </div>
 {:else}
-    {#if bridgeConnected === null}
-        <div class="tw-flex tw-items-center tw-justify-center tw-p-8">
-            <div
-                    class="tw-loader tw-w-6 tw-h-6 tw-border-2 tw-border-t-[2px] tw-border-primary tw-rounded-full tw-animate-spin"
-                    style="border-top-style: solid;"
-            />
-        </div>
-    {:else}
-        <div class="tw-flex tw-flex-col tw-w-full tw-gap-5">
-            <!--{#if !bridgeConnected && qrCodeUrl === undefined && !needManualToken }-->
-            {#if !bridgeConnected && qrCodeUrl.length <= 0}
-                <div class="tw-py-3 tw-px-3">
-                    <p class=" tw-text-sm tw-text-gray-500">
-                        {$LL.externalModule.discord.explainText()}
-                    </p>
-                    <button
-                        on:click={getQrCodeUrl}
-                        class="tw-w-full tw-p-2 tw-bg-secondary-800  tw-text-white tw-no-underline tw-rounded-md tw-flex tw-flex-row tw-items-center tw-gap-3 tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white"
-                    >
-                        <img src={DiscordLogo} alt="" class="tw-w-6 tw-h-6" />
-                        {$LL.externalModule.discord.login()}
-                    </button>
-                </div>
-            {/if}
-            {#if loadingFetchServer}
-                <div
-                    class="tw-flex tw-flex-col tw-gap-2 tw-p-6 tw-rounded-xl tw-z-50 tw-w-full tw-justify-center tw-items-center"
-                >
-                    <div
-                        class="tw-loader tw-w-6 tw-h-6 tw-border-2 tw-border-t-[2px] tw-border-primary tw-rounded-full tw-animate-spin"
-                        style="border-top-style: solid;"
-                    />
-                    <span class="tw-ml-2 tw-text-white">{$LL.externalModule.discord.fetchingServer()}</span>
-                </div>
-            {/if}
-            {#if qrCodeUrl.length > 0 && !needManualToken && !bridgeConnected}
-                <div class="tw-flex tw-justify-end">
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <span class=" tw-cursor-pointer" on:click={() => storedQrCodeUrl.set("")}>&#10005;</span>
-                </div>
-                <img src={qrCodeUrl} alt="QR Code" />
-                <p class="tw-text-sm tw-text-gray-300">
-                    Scan the QR code with your Discord app to login. QR codes are time limited, sometimes you need to
-                    regenerate one
-                    {$LL.externalModule.discord.qrCodeExplainText()}
+    <div class="tw-flex tw-flex-col tw-w-full tw-gap-5">
+        <!--{#if !bridgeConnected && qrCodeUrl === undefined && !needManualToken }-->
+        {#if !bridgeConnected && qrCodeUrl.length <= 0}
+            <div class="tw-py-3 tw-px-3">
+                <p class=" tw-text-sm tw-text-gray-500">
+                    {$LL.externalModule.discord.explainText()}
                 </p>
-
                 <button
                     on:click={getQrCodeUrl}
-                    class="tw-w-full tw-p-2 tw-bg-white/10 hover:tw-bg-white/30 tw-text-white tw-no-underline tw-rounded-md tw-text-center tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white tw-flex tw-flex-row tw-items-center"
+                    class="tw-w-full tw-p-2 tw-bg-secondary-800  tw-text-white tw-no-underline tw-rounded-md tw-flex tw-flex-row tw-items-center tw-gap-3 tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white"
                 >
-                    {$LL.externalModule.discord.qrCodeRegenerate()}
+                    <img src={DiscordLogo} alt="" class="tw-w-6 tw-h-6" />
+                    {$LL.externalModule.discord.login()}
                 </button>
-                <button
-                    on:click={() => (needManualToken = true)}
-                    class="tw-w-full tw-p-2 tw-bg-secondary-800 tw-text-white tw-no-underline tw-rounded-md tw-text-center tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white tw-flex tw-flex-row tw-items-center"
-                >
-                    {$LL.externalModule.discord.loginToken()}
-                </button>
-            {/if}
-
-            {#if needManualToken && !bridgeConnected}
-                <div class="tw-flex tw-flex-col tw-items-center tw-gap-5">
-                    <div class="tw-w-full tw-flex tw-justify-end">
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                        <span class=" tw-cursor-pointer" on:click={() => (needManualToken = false)}>&#10005;</span>
-                    </div>
-                    <div class="tw-w-full ">
-                        <input type="text" class="tw-w-full tw-mb-0" bind:value={manualDiscordToken} />
-                        <button
-                            on:click={sendDiscordToken}
-                            class="tw-w-full tw-p-2 tw-bg-secondary-800  tw-text-white tw-no-underline tw-rounded-md tw-text-center tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white tw-flex tw-flex-row tw-items-center"
-                        >
-                            {$LL.externalModule.discord.sendDiscordToken()}
-                        </button>
-                    </div>
-                    <p>
-                        {$LL.externalModule.discord.tokenNeeded()} <a
-                            href="https://www.androidauthority.com/get-discord-token-3149920/"
-                            >{$LL.externalModule.discord.howToGetTokenButton()}</a
-                        >
-                    </p>
-                </div>
-            {/if}
-            <div class="tw-flex tw-flex-col tw-gap-2 ">
-                {#if discordUser}
-                    <div
-                        class="tw-px-2 tw-py-3 tw-flex tw-flex-row tw-gap-2 tw-items-center tw-text-white tw-border-solid tw-border-b tw-border-b-white/10 tw-border-0 tw-mb-4 tw-relative"
-                    >
-                        <img src={userLogo} alt="" class="tw-h-6 tw-w-6" />
-                        <p class="tw-mb-0">
-                            {$LL.externalModule.discord.loggedIn} <strong>@{discordUser.username}</strong>
-                        </p>
-                        <button
-                            class="tw-text-gray-400 hover:tw-text-white tx-relative"
-                            bind:this={buttonRef}
-                            on:click|preventDefault|stopPropagation={toggleDropdown}
-                        >
-                            <IconDotsCircle />
-                        </button>
-                        {#if showDropdown}
-                            <div
-                                    bind:this={dropdownRef}
-                                    class="tw-absolute tw-top-full tw-right-0 tw-mt-2 tw-bg-contrast-900 tw-shadow-md tw-rounded-md tw-py-0 tw-z-50"
-                            >
-                                <button
-                                        on:click|preventDefault|stopPropagation={handleLogout}
-                                        class="tw-px-6 hover:tw-bg-white/10">Logout</button
-                                >
-                            </div>
-                        {/if}
-                    </div>
-                {/if}
-                {#each guilds as server (server.id)}
-                    <li
-                        class="tw-flex tw-flex-row tw-gap-2 tw-py-2 tw-rounded-md tw-items-center tw-justify-between tw-mb-2 hover:tw-bg-white/10 {server.isSync
-                            ? 'tw-bg-white/10'
-                            : ''}"
-                    >
-                        <div class="tw-flex tw-flex-row tw-items-center tw-gap-2 tw-pl-2">
-                            <div class="server-icon tw-relative" class:sync={server.isSync}>
-                                {#if server.icon}
-                                    <img
-                                        src={server.icon}
-                                        alt={server.name}
-                                        class="tw-w-8 tw-h-8 tw-rounded-full"
-                                        on:error={handleImageError}
-                                    />
-                                {:else}
-                                    <div
-                                        class="tw-w-8 tw-h-8 tw-rounded-full tw-bg-gray-300 tw-flex tw-justify-center tw-items-center tw-text-gray-700"
-                                    >
-                                        {getInitials(server.name)}
-                                    </div>
-                                {/if}
-                            </div>
-
-                            <span>
-                                {server.name}
-                            </span>
-                        </div>
-                        <input
-                            type="checkbox"
-                            checked={server.isSync}
-                            class="tw-mr-[5%]"
-                            on:change={() => handleCheckboxChange(server)}
-                        />
-                    </li>
-                {/each}
             </div>
-            {#if bridgeConnected && guilds.length > 0}
-                <div class="tw-sticky tw-bottom-0 flex items-center justify-center">
+        {/if}
+        {#if loadingFetchServer}
+            <div
+                class="tw-flex tw-flex-col tw-gap-2 tw-p-6 tw-rounded-xl tw-z-50 tw-w-full tw-justify-center tw-items-center"
+            >
+                <div
+                    class="tw-loader tw-w-6 tw-h-6 tw-border-2 tw-border-t-[2px] tw-border-primary tw-rounded-full tw-animate-spin"
+                    style="border-top-style: solid;"
+                />
+                <span class="tw-ml-2 tw-text-white">{$LL.externalModule.discord.fetchingServer()}</span>
+            </div>
+        {/if}
+        {#if qrCodeUrl.length > 0 && !needManualToken && !bridgeConnected}
+            <div class="tw-flex tw-justify-end">
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <span class=" tw-cursor-pointer" on:click={() => storedQrCodeUrl.set("")}>&#10005;</span>
+            </div>
+            <img src={qrCodeUrl} alt="QR Code" />
+            <p class="tw-text-sm tw-text-gray-300">
+                Scan the QR code with your Discord app to login. QR codes are time limited, sometimes you need to
+                regenerate one
+                {$LL.externalModule.discord.qrCodeExplainText()}
+            </p>
+
+            <button
+                on:click={getQrCodeUrl}
+                class="tw-w-full tw-p-2 tw-bg-white/10 hover:tw-bg-white/30 tw-text-white tw-no-underline tw-rounded-md tw-text-center tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white tw-flex tw-flex-row tw-items-center"
+            >
+                {$LL.externalModule.discord.qrCodeRegenerate()}
+            </button>
+            <button
+                on:click={() => (needManualToken = true)}
+                class="tw-w-full tw-p-2 tw-bg-secondary-800 tw-text-white tw-no-underline tw-rounded-md tw-text-center tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white tw-flex tw-flex-row tw-items-center"
+            >
+                {$LL.externalModule.discord.loginToken()}
+            </button>
+        {/if}
+
+        {#if needManualToken && !bridgeConnected}
+            <div class="tw-flex tw-flex-col tw-items-center tw-gap-5">
+                <div class="tw-w-full tw-flex tw-justify-end">
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <span class=" tw-cursor-pointer" on:click={() => (needManualToken = false)}>&#10005;</span>
+                </div>
+                <div class="tw-w-full ">
+                    <input type="text" class="tw-w-full tw-mb-0" bind:value={manualDiscordToken} />
                     <button
+                        on:click={sendDiscordToken}
                         class="tw-w-full tw-p-2 tw-bg-secondary-800  tw-text-white tw-no-underline tw-rounded-md tw-text-center tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white tw-flex tw-flex-row tw-items-center"
-                        on:click={bridgeServers}
                     >
-                        {$LL.externalModule.discord.saveSync()}
+                        {$LL.externalModule.discord.sendDiscordToken()}
                     </button>
                 </div>
+                <p>
+                    {$LL.externalModule.discord.tokenNeeded()}
+                    <a href="https://www.androidauthority.com/get-discord-token-3149920/"
+                        >{$LL.externalModule.discord.howToGetTokenButton()}</a
+                    >
+                </p>
+            </div>
+        {/if}
+        <div class="tw-flex tw-flex-col tw-gap-2 ">
+            {#if discordUser}
+                <div
+                    class="tw-px-2 tw-py-3 tw-flex tw-flex-row tw-gap-2 tw-items-center tw-text-white tw-border-solid tw-border-b tw-border-b-white/10 tw-border-0 tw-mb-4 tw-relative"
+                >
+                    <img src={userLogo} alt="" class="tw-h-6 tw-w-6" />
+                    <p class="tw-mb-0">
+                        {$LL.externalModule.discord.loggedIn} <strong>@{discordUser.username}</strong>
+                    </p>
+                    <button
+                        class="tw-text-gray-400 hover:tw-text-white tx-relative"
+                        bind:this={buttonRef}
+                        on:click|preventDefault|stopPropagation={toggleDropdown}
+                    >
+                        <IconDotsCircle />
+                    </button>
+                    {#if showDropdown}
+                        <div
+                            bind:this={dropdownRef}
+                            class="tw-absolute tw-top-full tw-right-0 tw-mt-2 tw-bg-contrast-900 tw-shadow-md tw-rounded-md tw-py-0 tw-z-50"
+                        >
+                            <button
+                                on:click|preventDefault|stopPropagation={handleLogout}
+                                class="tw-px-6 hover:tw-bg-white/10">Logout</button
+                            >
+                        </div>
+                    {/if}
+                </div>
             {/if}
+            {#each guilds as server (server.id)}
+                <li
+                    class="tw-flex tw-flex-row tw-gap-2 tw-py-2 tw-rounded-md tw-items-center tw-justify-between tw-mb-2 hover:tw-bg-white/10 {server.isSync
+                        ? 'tw-bg-white/10'
+                        : ''}"
+                >
+                    <div class="tw-flex tw-flex-row tw-items-center tw-gap-2 tw-pl-2">
+                        <div class="server-icon tw-relative" class:sync={server.isSync}>
+                            {#if server.icon}
+                                <img
+                                    src={server.icon}
+                                    alt={server.name}
+                                    class="tw-w-8 tw-h-8 tw-rounded-full"
+                                    on:error={handleImageError}
+                                />
+                            {:else}
+                                <div
+                                    class="tw-w-8 tw-h-8 tw-rounded-full tw-bg-gray-300 tw-flex tw-justify-center tw-items-center tw-text-gray-700"
+                                >
+                                    {getInitials(server.name)}
+                                </div>
+                            {/if}
+                        </div>
+
+                        <span>
+                            {server.name}
+                        </span>
+                    </div>
+                    <input
+                        type="checkbox"
+                        checked={server.isSync}
+                        class="tw-mr-[5%]"
+                        on:change={() => handleCheckboxChange(server)}
+                    />
+                </li>
+            {/each}
         </div>
-    {/if}
+        {#if bridgeConnected && guilds.length > 0}
+            <div class="tw-sticky tw-bottom-0 flex items-center justify-center">
+                <button
+                    class="tw-w-full tw-p-2 tw-bg-secondary-800  tw-text-white tw-no-underline tw-rounded-md tw-text-center tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white tw-flex tw-flex-row tw-items-center"
+                    on:click={bridgeServers}
+                >
+                    {$LL.externalModule.discord.saveSync()}
+                </button>
+            </div>
+        {/if}
+    </div>
 {/if}

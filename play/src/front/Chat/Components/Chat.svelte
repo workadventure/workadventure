@@ -112,9 +112,9 @@
                         </ul>
                     </nav>
                     <button
-                            class="close-window !tw-relative !tw-m-0 !tw-p-0 !tw-right-0"
-                            data-testid="closeChatButton"
-                            on:click={closeChat}>&#215;</button
+                        class="close-window !tw-relative !tw-m-0 !tw-p-0 !tw-right-0"
+                        data-testid="closeChatButton"
+                        on:click={closeChat}>&#215;</button
                     >
                 </div>
             {/if}

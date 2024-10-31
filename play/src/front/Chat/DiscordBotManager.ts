@@ -54,10 +54,14 @@ export class DiscordBotManager {
                     return;
                 } else if (get(lastMessage.content).body.includes("websocket: close sent")) {
                     return;
-                } else if(get(lastMessage.content).body.includes("welcome from bridge bot")){
+                } else if (get(lastMessage.content).body.includes("welcome from bridge bot")) {
                     //ignoring the welcome message
                     return;
-                }else if(get(lastMessage.content).body.includes('This room has been registered as your bridge management/status room.')){
+                } else if (
+                    get(lastMessage.content).body.includes(
+                        "This room has been registered as your bridge management/status room."
+                    )
+                ) {
                     //ignoring the room registration message
                     return;
                 } else {
