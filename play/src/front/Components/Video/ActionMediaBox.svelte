@@ -16,6 +16,7 @@
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { SpaceUserExtended } from "../../Space/SpaceFilter/SpaceFilter";
+    import { peerStore } from "../../Stores/PeerStore";
     import reportImg from "./images/report.svg";
 
     export let embedScreen: EmbedScreen;
@@ -68,6 +69,7 @@
             $case: "kickOffUser",
             kickOffUser: {},
         });
+        peerStore.removePeer(spaceUser.id);
     }
 
     function pin() {

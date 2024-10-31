@@ -105,7 +105,12 @@
     import { isActivatedStore as isCalendarActivatedStore, isCalendarVisibleStore } from "../../Stores/CalendarStore";
     import { isActivatedStore as isTodoListActivatedStore, isTodoListVisibleStore } from "../../Stores/TodoListStore";
     import { externalActionBarSvelteComponent } from "../../Stores/Utils/externalSvelteComponentStore";
-    import { ADMIN_BO_URL } from "../../Enum/EnvironmentVariable";
+    import {
+        ADMIN_BO_URL,
+        ENABLE_CHAT,
+        ENABLE_CHAT_DISCONNECTED_LIST,
+        ENABLE_CHAT_ONLINE_LIST,
+    } from "../../Enum/EnvironmentVariable";
     import { inputFormFocusStore } from "../../Stores/UserInputStore";
     import AvailabilityStatusComponent from "./AvailabilityStatus/AvailabilityStatus.svelte";
     import { IconCheck, IconChevronDown, IconChevronUp } from "@wa-icons";
@@ -326,7 +331,12 @@
     }
 
     function openBo() {
-        window.open(ADMIN_BO_URL, "_blank");
+        if (!ADMIN_BO_URL) {
+            throw new Error("ADMIN_BO_URL not set");
+        }
+        const url = new URL(ADMIN_BO_URL, window.location.href);
+        url.searchParams.set("playUri", window.location.href);
+        window.open(url, "_blank");
     }
 
     /*function register() {
@@ -832,40 +842,43 @@
                     </div>
                 {/if}
 
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div
-                    on:click={() => analyticsClient.openedChat()}
-                    on:click={toggleChat}
-                    class="bottom-action-button tw-relative"
-                >
-                    {#if !isMobile}
-                        <Tooltip text={$LL.actionbar.chat()} />
-                    {/if}
+                {#if ENABLE_CHAT || ENABLE_CHAT_ONLINE_LIST || ENABLE_CHAT_DISCONNECTED_LIST}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div
+                        on:click={() => analyticsClient.openedChat()}
+                        on:click={toggleChat}
+                        class="bottom-action-button tw-relative"
+                    >
+                        {#if !isMobile}
+                            <Tooltip text={$LL.actionbar.chat()} />
+                        {/if}
 
-                    <button class:border-top-light={$chatVisibilityStore} class="chat-btn">
-                        <img draggable="false" src={bubbleImg} style="padding: 2px" alt="Toggle chat" />
-                    </button>
-                    {#if $chatZoneLiveStore || $peerStore.size > 0 || $chatHasUnreadMessage || $proximityChatRoomHasUnreadMessage}
-                        <div class="tw-absolute tw-top-1 tw-right-0.5">
+                        <button class:border-top-light={$chatVisibilityStore} class="chat-btn">
+                            <img draggable="false" src={bubbleImg} style="padding: 2px" alt="Toggle chat" />
+                        </button>
+                        {#if $chatZoneLiveStore || $peerStore.size > 0 || $chatHasUnreadMessage || $proximityChatRoomHasUnreadMessage}
+                            <div class="tw-absolute tw-top-1 tw-right-0.5">
+                                <span
+                                    class={`tw-w-4 tw-h-4 ${
+                                        $peerStore.size > 0 ? "tw-bg-pop-green" : "tw-bg-pop-red"
+                                    } tw-block tw-rounded-full tw-absolute tw-top-0 tw-right-0 tw-animate-ping`}
+                                />
+                                <span
+                                    class={`tw-w-3 tw-h-3 ${
+                                        $peerStore.size > 0 ? "tw-bg-pop-green" : "tw-bg-pop-red"
+                                    } tw-block tw-rounded-full tw-absolute tw-top-0.5 tw-right-0.5`}
+                                />
+                            </div>
+                        {:else if $totalMessagesToSee > 0}
                             <span
-                                class={`tw-w-4 tw-h-4 ${
-                                    $peerStore.size > 0 ? "tw-bg-pop-green" : "tw-bg-pop-red"
-                                } tw-block tw-rounded-full tw-absolute tw-top-0 tw-right-0 tw-animate-ping`}
-                            />
-                            <span
-                                class={`tw-w-3 tw-h-3 ${
-                                    $peerStore.size > 0 ? "tw-bg-pop-green" : "tw-bg-pop-red"
-                                } tw-block tw-rounded-full tw-absolute tw-top-0.5 tw-right-0.5`}
-                            />
-                        </div>
-                    {:else if $totalMessagesToSee > 0}
-                        <span
-                            class="tw-absolute tw-top-1.5 tw-right-1 tw-items-center tw-justify-center tw-px-1 tw-py-0.5 tw-text-xxs tw-font-bold tw-leading-none tw-text-white tw-bg-pop-red tw-rounded-full"
-                        >
-                            {$totalMessagesToSee}
-                        </span>
-                    {/if}
-                </div>
+                                class="tw-absolute tw-top-1.5 tw-right-1 tw-items-center tw-justify-center tw-px-1 tw-py-0.5 tw-text-xxs tw-font-bold tw-leading-none tw-text-white tw-bg-pop-red tw-rounded-full"
+                            >
+                                {$totalMessagesToSee}
+                            </span>
+                        {/if}
+                    </div>
+                {/if}
+
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div on:click|stopPropagation={toggleEmojiPicker} class="bottom-action-button">
                     {#if !isMobile}

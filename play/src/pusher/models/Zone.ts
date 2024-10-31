@@ -22,7 +22,6 @@ import * as Sentry from "@sentry/node";
 import { apiClientRepository } from "../services/ApiClientRepository";
 import type { PositionDispatcher } from "../models/PositionDispatcher";
 import { Socket } from "../services/SocketManager";
-import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 
 const debug = Debug("zone");
 
@@ -171,7 +170,7 @@ interface ZoneDescriptor {
     y: number;
 }
 
-export class Zone implements CustomJsonReplacerInterface {
+export class Zone {
     //private things: Set<Movable> = new Set<Movable>();
     private users: Map<number, UserDescriptor> = new Map<number, UserDescriptor>();
     private groups: Map<number, GroupDescriptor> = new Map<number, GroupDescriptor>();
@@ -500,18 +499,5 @@ export class Zone implements CustomJsonReplacerInterface {
 
         this.listeners.delete(listener);
         userData.listenedZones.delete(this);
-    }
-
-    public customJsonReplacer(key: unknown, value: unknown): string | undefined {
-        if (key === "listeners") {
-            return `${(value as Set<Socket>).size} listener(s) registered`;
-        }
-        if (key === "positionDispatcher") {
-            return "positionDispatcher";
-        }
-        if (key === "backConnection") {
-            return value !== undefined ? "backConnection" : "undefined";
-        }
-        return undefined;
     }
 }

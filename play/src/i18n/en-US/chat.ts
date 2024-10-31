@@ -25,6 +25,7 @@ const chat: BaseTranslation = {
     },
     accept: "Accept",
     decline: "Decline",
+    join: "Join",
     connecting: "Connecting to server ...",
     waitingInit: "Waiting for server initialization ...",
     waitingData: "Waiting user data ...",

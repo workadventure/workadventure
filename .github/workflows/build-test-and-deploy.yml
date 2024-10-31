@@ -586,7 +586,7 @@ jobs:
         run: sleep 30 && npm run upload-test-map
         working-directory: map-storage
       - name: Run Playwright tests
-        run: npm run test-prod-like -- --project=${{ matrix.project }} --shard=${{ matrix.shard }}/${{ matrix.nbShards }}
+        run: npm run test-prod-like -- --project=${{ matrix.project }} --shard=${{ matrix.shard }}/${{ matrix.nbShards }} --grep-invert "@slow"
         working-directory: tests
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
@@ -815,6 +815,7 @@ jobs:
             GOOGLE_DOCS_ENABLED: true
             GOOGLE_SHEETS_ENABLED: true
             GOOGLE_SLIDES_ENABLED: true
+            DEBUG: \"*\"
           commonSecretEnv:
             ADMIN_API_TOKEN: \"${ADMIN_API_TOKEN}\"
             ADMIN_SOCKETS_TOKEN: \"${ADMIN_SOCKETS_TOKEN}\"

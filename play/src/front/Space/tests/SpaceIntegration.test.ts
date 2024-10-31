@@ -6,17 +6,25 @@ import {
     AddSpaceUserPusherToFrontMessage,
     RemoveSpaceUserPusherToFrontMessage,
     UpdateSpaceUserPusherToFrontMessage,
+    KickOffUserPrivateMessage,
+    MuteAudioForEverybodyPublicMessage,
+    MuteAudioPrivateMessage,
+    MuteVideoForEverybodyPublicMessage,
+    MuteVideoPrivateMessage,
+    SpaceDestroyedMessage,
+    SpaceIsTyping,
+    SpaceMessage,
+    UpdateSpaceFilterMessage,
 } from "@workadventure/messages";
 import { Subject } from "rxjs";
 import { describe, expect, it, vi, assert } from "vitest";
 import { get } from "svelte/store";
-import { SpaceRegistry } from "../SpaceRegistry/SpaceRegistry";
-import { RoomConnection } from "../../Connection/RoomConnection";
+import { RoomConnectionForSpacesInterface, SpaceRegistry } from "../SpaceRegistry/SpaceRegistry";
 import { SpaceUserExtended } from "../SpaceFilter/SpaceFilter";
 
 /* eslint @typescript-eslint/unbound-method: 0 */
 
-class MockRoomConnection {
+class MockRoomConnection implements RoomConnectionForSpacesInterface {
     public addSpaceUserMessageStream = new Subject<AddSpaceUserPusherToFrontMessage>();
     public updateSpaceUserMessageStream = new Subject<UpdateSpaceUserPusherToFrontMessage>();
     public removeSpaceUserMessageStream = new Subject<RemoveSpaceUserPusherToFrontMessage>();
@@ -28,6 +36,41 @@ class MockRoomConnection {
     public emitLeaveSpace = vi.fn();
     public spacePublicMessageEvent = new Subject<PublicEvent>();
     public spacePrivateMessageEvent = new Subject<PrivateEvent>();
+    public spaceDestroyedMessage = new Subject<SpaceDestroyedMessage>();
+    public emitPrivateSpaceEvent(
+        spaceName: string,
+        spaceEvent: NonNullable<
+            | { $case: "muteVideo"; muteVideo: MuteVideoPrivateMessage }
+            | { $case: "muteAudio"; muteAudio: MuteAudioPrivateMessage }
+            | { $case: "kickOffUser"; kickOffUser: KickOffUserPrivateMessage }
+            | undefined
+        >,
+        receiverUserId: number
+    ): void {
+        throw new Error("Method not implemented.");
+    }
+    public emitPublicSpaceEvent(
+        spaceName: string,
+        spaceEvent: NonNullable<
+            | { $case: "spaceMessage"; spaceMessage: SpaceMessage }
+            | { $case: "spaceIsTyping"; spaceIsTyping: SpaceIsTyping }
+            | { $case: "muteAudioForEverybody"; muteAudioForEverybody: MuteAudioForEverybodyPublicMessage }
+            | { $case: "muteVideoForEverybody"; muteVideoForEverybody: MuteVideoForEverybodyPublicMessage }
+            | undefined
+        >
+    ): void {
+        throw new Error("Method not implemented.");
+    }
+    public emitUpdateSpaceFilter(filter: UpdateSpaceFilterMessage): void {
+        throw new Error("Method not implemented.");
+    }
+    public emitUpdateSpaceMetadata(spaceName: string, metadata: { [key: string]: unknown }): void {
+        throw new Error("Method not implemented.");
+    }
+    public emitUpdateSpaceUserMessage(spaceName: string, spaceUser: Omit<Partial<SpaceUser>, "id">): void {
+        throw new Error("Method not implemented.");
+    }
+
     // Add any other methods or properties that need to be mocked
 }
 
@@ -45,7 +88,7 @@ const flushPromises = () => new Promise(setImmediate);
 
 describe("", () => {
     it("should emit event when you create space and spaceFilter", () => {
-        const roomConnection = new MockRoomConnection() as unknown as RoomConnection;
+        const roomConnection = new MockRoomConnection();
         const spaceRegistry = new SpaceRegistry(roomConnection);
 
         const spaceName = "space1";
@@ -73,7 +116,7 @@ describe("", () => {
 
     it("should add user inSpaceFilter._users when receive AddSpaceUserMessage", async () => {
         const roomConnection = new MockRoomConnection();
-        const spaceRegistry = new SpaceRegistry(roomConnection as unknown as RoomConnection);
+        const spaceRegistry = new SpaceRegistry(roomConnection);
 
         const spaceName = "space1";
 
@@ -124,7 +167,7 @@ describe("", () => {
 
     it("should define reactive property after... ", async () => {
         const roomConnection = new MockRoomConnection();
-        const spaceRegistry = new SpaceRegistry(roomConnection as unknown as RoomConnection);
+        const spaceRegistry = new SpaceRegistry(roomConnection);
 
         const spaceName = "space1";
 
@@ -170,7 +213,7 @@ describe("", () => {
 
     it("... ", async () => {
         const roomConnection = new MockRoomConnection();
-        const spaceRegistry = new SpaceRegistry(roomConnection as unknown as RoomConnection);
+        const spaceRegistry = new SpaceRegistry(roomConnection);
 
         const spaceName = "space1";
 
@@ -238,7 +281,7 @@ describe("", () => {
 
     it("should forward public events to the space", async () => {
         const roomConnection = new MockRoomConnection();
-        const spaceRegistry = new SpaceRegistry(roomConnection as unknown as RoomConnection);
+        const spaceRegistry = new SpaceRegistry(roomConnection);
 
         const spaceName = "space1";
 
@@ -278,7 +321,7 @@ describe("", () => {
 
     it("should forward private events to the space", async () => {
         const roomConnection = new MockRoomConnection();
-        const spaceRegistry = new SpaceRegistry(roomConnection as unknown as RoomConnection);
+        const spaceRegistry = new SpaceRegistry(roomConnection);
 
         const spaceName = "space1";
 

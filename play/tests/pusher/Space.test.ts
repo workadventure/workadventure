@@ -102,11 +102,12 @@ describe("Space", () => {
     const client = mock<Socket>({
         getUserData: vi.fn().mockReturnValue(clientData),
     });
-    const space = new Space("test", "localTest", backSpaceConnection, 1, client, new EventProcessor());
+    const space = new Space("test", "localTest", backSpaceConnection, 1, new EventProcessor());
     it("should return true because Space is empty", () => {
         expect(space.isEmpty()).toBe(true);
     });
     it("should notify client and back that a new user is added", () => {
+        space.addClientWatcher(client);
         const spaceUser = SpaceUser.fromPartial({
             id: 1,
             uuid: "uuid-test",

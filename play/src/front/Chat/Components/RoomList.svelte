@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { get } from "svelte/store";
+    import { get, Unsubscriber } from "svelte/store";
     // eslint-disable-next-line import/no-unresolved
     import { onDestroy, onMount } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
@@ -38,8 +38,23 @@
     let displayRooms = false;
     let displayRoomInvitations = false;
 
+    let proximityChatRoomHasUserInProximityChatSubscribtion: Unsubscriber | undefined;
+    let _hasUserInProximityChat = false;
+    let proximityChatRoomHasUnreadMessagesSubscribtion: Unsubscriber | undefined;
+    let _hasUnreadMessages = false;
+
     onMount(() => {
         expandOrCollapseRoomsIfEmpty();
+        proximityChatRoomHasUserInProximityChatSubscribtion = proximityChatRoom.hasUserInProximityChat.subscribe(
+            (hasUserInProximityChat) => {
+                _hasUserInProximityChat = hasUserInProximityChat;
+            }
+        );
+        proximityChatRoomHasUnreadMessagesSubscribtion = proximityChatRoom.hasUnreadMessages.subscribe(
+            (hasUnreadMessages) => {
+                _hasUnreadMessages = hasUnreadMessages;
+            }
+        );
     });
 
     const directRoomsUnsubscriber = rooms.subscribe((rooms) => openRoomsIfCollapsedBeforeNewRoom(rooms));
@@ -50,6 +65,8 @@
     onDestroy(() => {
         directRoomsUnsubscriber();
         roomInvitationsUnsubscriber();
+        if (proximityChatRoomHasUserInProximityChatSubscribtion) proximityChatRoomHasUserInProximityChatSubscribtion();
+        if (proximityChatRoomHasUnreadMessagesSubscribtion) proximityChatRoomHasUnreadMessagesSubscribtion();
     });
 
     function openRoomsIfCollapsedBeforeNewRoom(rooms: ChatRoom[]) {
@@ -223,14 +240,25 @@
                     <IconChevronRight />
                     {$LL.chat.proximity()}
                     <div>
-                        <div class="tw-absolute tw-top-1 -tw-right-6 tw-w-8 tw-h-8">
-                            <span
-                                class="tw-w-4 tw-h-4 tw-block tw-rounded-full tw-absolute tw-top-0 tw-right-0 tw-animate-ping tw-bg-pop-green"
-                            />
-                            <span
-                                class="tw-w-3 tw-h-3  tw-block tw-rounded-full tw-absolute tw-top-0.5 tw-right-0.5 tw-bg-pop-green"
-                            />
-                        </div>
+                        {#if _hasUnreadMessages}
+                            <div class="tw-absolute tw-top-1 -tw-right-6 tw-w-8 tw-h-8">
+                                <span
+                                    class="tw-w-4 tw-h-4 tw-block tw-rounded-full tw-absolute tw-top-0 tw-right-0 tw-animate-ping tw-bg-pop-red"
+                                />
+                                <span
+                                    class="tw-w-3 tw-h-3  tw-block tw-rounded-full tw-absolute tw-top-0.5 tw-right-0.5 tw-bg-pop-red"
+                                />
+                            </div>
+                        {:else if _hasUserInProximityChat}
+                            <div class="tw-absolute tw-top-1 -tw-right-6 tw-w-8 tw-h-8">
+                                <span
+                                    class="tw-w-4 tw-h-4 tw-block tw-rounded-full tw-absolute tw-top-0 tw-right-0 tw-animate-ping tw-bg-pop-green"
+                                />
+                                <span
+                                    class="tw-w-3 tw-h-3  tw-block tw-rounded-full tw-absolute tw-top-0.5 tw-right-0.5 tw-bg-pop-green"
+                                />
+                            </div>
+                        {/if}
                     </div>
                 </button>
             </div>
