@@ -188,7 +188,7 @@
                 <div class="tw-text-md tw-font-bold tw-h-5 tw-grow tw-text-center" data-testid="roomName">
                     {$roomName}
                 </div>
-                <div class="back-roomlist hover:tw-bg-white/10 tw-p-3 tw-rounded-2xl tw-aspect-square tw-w-12">
+                <div class="hover:tw-bg-white/10 tw-p-3 tw-rounded-2xl tw-aspect-square tw-w-12">
                     <IconDots font-size="20" />
                 </div>
             </div>
