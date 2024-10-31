@@ -219,6 +219,8 @@
         if ($mapEditorModeStore) gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
         analyticsClient.toggleMapEditor(!$mapEditorModeStore);
         mapEditorModeStore.switchMode(!$mapEditorModeStore);
+        isTodoListVisibleStore.set(false);
+        isCalendarVisibleStore.set(false);
     }
 
     function clickEmoji(selected?: number) {
@@ -394,10 +396,14 @@
 
     function openExternalModuleCalendar() {
         isCalendarVisibleStore.set(!$isCalendarVisibleStore);
+        isTodoListVisibleStore.set(false);
+        mapEditorModeStore.switchMode(false);
     }
 
     function openExternalModuleTodoList() {
         isTodoListVisibleStore.set(!$isTodoListVisibleStore);
+        isCalendarVisibleStore.set(false);
+        mapEditorModeStore.switchMode(false);
     }
 
     let totalMessagesToSee = writable<number>(0);
