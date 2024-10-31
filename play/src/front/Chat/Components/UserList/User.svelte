@@ -91,7 +91,6 @@
                 <div class="tw-flex tw-items-center tw-h-4">
                     <div class="tw-text-sm tw-font-bold tw-mb-0 tw-cursor-default tw-flex tw-items-center">
                         {#each chunks as chunk (chunk.key)}
-                            {chatId}
                             <div class={`${chunk.match ? "tw-text-light-blue" : ""}  tw-cursor-default`}>
                                 {chunk.text}
                             </div>
