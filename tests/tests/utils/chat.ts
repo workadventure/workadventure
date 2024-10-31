@@ -6,7 +6,7 @@ class Chat {
         await this.get(page).locator('li:has-text("Chat")').click({timeout: 60_000});
     }
     async slideToUsers(page: Page){
-        await page.locator('li:has-text("Users")').click({timeout: 60_000});
+        await page.locator('.userList').click({timeout: 60_000});
     }
 
     async checkNameInChat(page: Page, name: string, timeout = 30_000){

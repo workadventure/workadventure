@@ -187,7 +187,7 @@
                     {#if $navChat === "chat"}
                         {#if showNavBar}
                             <button
-                                class="tw-p-3 hover:tw-bg-white/10 tw-rounded-xl tw-aspect-square tw-w-12"
+                                class="userList tw-p-3 hover:tw-bg-white/10 tw-rounded-xl tw-aspect-square tw-w-12"
                                 on:click={() => navChat.switchToUserList()}
                             >
                                 <IconUsers font-size="20" />
