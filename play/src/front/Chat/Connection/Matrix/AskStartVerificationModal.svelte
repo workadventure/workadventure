@@ -4,6 +4,7 @@
     import { ShowSasCallbacks, VerificationRequestEvent, Verifier, VerifierEvent } from "matrix-js-sdk/lib/crypto-api";
     import { VerificationMethod } from "matrix-js-sdk/lib/types";
     import { Phase } from "matrix-js-sdk/lib/crypto/verification/request/VerificationRequest";
+    import { Deferred } from "ts-deferred";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import { AskStartVerificationModalProps, matrixSecurity } from "./MatrixSecurity";
@@ -12,14 +13,9 @@
     export let props: AskStartVerificationModalProps;
     const { request, otherDeviceInformation } = props;
     let errorLabel: string | undefined = "";
-    let resolveDonePromise: (() => void) | undefined;
-    let rejectDonePromise: ((reason?: string | Error) => void) | undefined;
-    const donePromise = new Promise<void>((resolve, reject) => {
-        resolveDonePromise = resolve;
-        rejectDonePromise = reject;
-    });
-
+    const doneDeferred = new Deferred<void>();
     let verifier: Verifier | undefined;
+
     async function acceptToStartVerification() {
         try {
             await request.accept();
@@ -59,7 +55,7 @@
             emojis,
             confirmationCallback,
             mismatchCallback,
-            donePromise,
+            donePromise: doneDeferred.promise,
             isThisDeviceVerification: request.initiatedByMe,
         });
 
@@ -67,20 +63,20 @@
             console.error("error with verify ...");
             errorLabel = "Failed to start verification ...";
             Sentry.captureMessage(`Failed to start verification ${error}`);
-            if (rejectDonePromise) rejectDonePromise();
+            doneDeferred.reject();
             verifier?.off(VerifierEvent.ShowSas, handleVerifierEventShowSas);
             request.off(VerificationRequestEvent.Change, handleChangeVerificationRequestEvent);
         });
     };
     const handleChangeVerificationRequestEvent = () => {
         if (request.phase === Phase.Done) {
-            if (resolveDonePromise) resolveDonePromise();
+            doneDeferred.resolve();
             verifier?.off(VerifierEvent.ShowSas, handleVerifierEventShowSas);
             request.off(VerificationRequestEvent.Change, handleChangeVerificationRequestEvent);
         }
         if (request.phase === Phase.Cancelled) {
             errorLabel = "request was cancelled ...";
-            if (rejectDonePromise) rejectDonePromise();
+            doneDeferred.reject();
             verifier?.off(VerifierEvent.ShowSas, handleVerifierEventShowSas);
             request.off(VerificationRequestEvent.Change, handleChangeVerificationRequestEvent);
         }

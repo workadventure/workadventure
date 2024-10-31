@@ -14,6 +14,7 @@ import { writable } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import { VerificationMethod } from "matrix-js-sdk/lib/types";
 import { Phase } from "matrix-js-sdk/lib/crypto/verification/request/VerificationRequest";
+import { Deferred } from "ts-deferred";
 import { alreadyAskForInitCryptoConfiguration } from "../../Stores/ChatStore";
 import InteractiveAuthDialog from "./InteractiveAuthDialog.svelte";
 import CreateRecoveryKeyDialog from "./CreateRecoveryKeyDialog.svelte";
@@ -279,26 +280,14 @@ export class MatrixSecurity {
 
             const verificationRequest = await crypto.requestOwnUserVerification();
 
-            let waitVerificationStartResolver: (
-                verificationEmojiDialogProps: VerificationEmojiDialogProps
-            ) => void | undefined;
-
-            const startVerificationPromise = new Promise<VerificationEmojiDialogProps>((resolve, reject) => {
-                waitVerificationStartResolver = resolve;
-            });
+            const startVerificationDeferred = new Deferred<VerificationEmojiDialogProps>();
 
             this._openModal(DeviceVerificationPendingModal, {
-                startVerificationPromise,
+                startVerificationPromise: startVerificationDeferred.promise,
                 isInitiatedByMe: true,
             });
 
-            let resolveDonePromise: () => void | undefined;
-            let rejectDonePromise: ((reason?: string | Error) => void) | undefined;
-
-            const donePromise = new Promise<void>((resolve, reject) => {
-                resolveDonePromise = resolve;
-                rejectDonePromise = reject;
-            });
+            const doneVerificationDeferred = new Deferred<void>();
 
             verificationRequest.on(VerificationRequestEvent.Change, () => {
                 if (verificationRequest.phase === Phase.Started) {
@@ -306,51 +295,49 @@ export class MatrixSecurity {
 
                     if (!verifier) throw new Error("Verifier is undefined");
 
-                    if (verificationRequest.chosenMethod === VerificationMethod.Sas) {
-                        verifier.on(VerifierEvent.ShowSas, (showSasCallbacks) => {
-                            const emojis = showSasCallbacks.sas.emoji;
-                            const confirmationCallback = async () => {
-                                await showSasCallbacks.confirm();
-                            };
-                            const mismatchCallback = () => {
-                                //TODO : use showSasCallbacks.mismatch(); after matris-js-sdk update
-                                //showSasCallbacks.mismatch();
-                                return verificationRequest.cancel({ reason: "m.mismatched_sas" });
-                            };
+                    switch (verificationRequest.chosenMethod) {
+                        case VerificationMethod.Sas:
+                            verifier.on(VerifierEvent.ShowSas, (showSasCallbacks) => {
+                                const emojis = showSasCallbacks.sas.emoji;
+                                const confirmationCallback = async () => {
+                                    await showSasCallbacks.confirm();
+                                };
+                                const mismatchCallback = () => {
+                                    //TODO : use showSasCallbacks.mismatch(); after matris-js-sdk update
+                                    //showSasCallbacks.mismatch();
+                                    return verificationRequest.cancel({ reason: "m.mismatched_sas" });
+                                };
 
-                            if (!emojis || this.isVerifyingDevice) return;
+                                if (!emojis || this.isVerifyingDevice) return;
 
-                            this.isVerifyingDevice = true;
+                                this.isVerifyingDevice = true;
 
-                            if (waitVerificationStartResolver) {
-                                waitVerificationStartResolver({
+                                startVerificationDeferred.resolve({
                                     emojis,
                                     confirmationCallback,
                                     mismatchCallback,
-                                    donePromise,
+                                    donePromise: doneVerificationDeferred.promise,
                                     isThisDeviceVerification: verificationRequest.initiatedByMe,
                                 });
-                            }
-                        });
+                            });
 
-                        verifier.verify().catch((error) => {
-                            if (rejectDonePromise) {
-                                rejectDonePromise(error);
-                            }
-                        });
+                            verifier.verify().catch((error) => {
+                                doneVerificationDeferred.reject(error);
+                            });
+                            break;
+                        default:
+                            throw new Error("The chosen verification method is not implemented");
                     }
                 }
 
                 if (verificationRequest.phase === Phase.Done) {
-                    resolveDonePromise();
+                    doneVerificationDeferred.resolve();
                     this.isVerifyingDevice = false;
                     this.isEncryptionRequiredAndNotSet.set(false);
                 }
 
                 if (verificationRequest.phase === Phase.Cancelled) {
-                    if (rejectDonePromise) {
-                        rejectDonePromise(new Error("verification request cancelled"));
-                    }
+                    doneVerificationDeferred.reject(new Error("verification request cancelled"));
                     this.isVerifyingDevice = false;
                 }
             });

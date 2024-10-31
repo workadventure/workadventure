@@ -268,8 +268,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                     });
                 })
                 .catch((error) => {
-                    console.error("Failed to get informations from other device : ", error);
-                    Sentry.captureMessage(`Failed to get informations from other device : ${error}`);
+                    console.error("Failed to get information from other device : ", error);
+                    Sentry.captureMessage(`Failed to get information from other device : ${error}`);
                 });
         }
     }
@@ -285,7 +285,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             name: otherDeviceInformation?.displayName,
         };
     }
-    private async getDevicesInformationsFor(userId: string) {
+    private async getDevicesInformationFor(userId: string) {
         const client = this.client;
         if (!client) return;
         const crypto = this.client?.getCrypto();
@@ -294,14 +294,14 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         return devicesMap.get(userId);
     }
 
-    private getOwnDevicesInformations() {
+    private getOwnDevicesInformation() {
         const myUserid = this.client?.getSafeUserId();
         if (!myUserid) return;
-        return this.getDevicesInformationsFor(myUserid);
+        return this.getDevicesInformationFor(myUserid);
     }
 
     private async getOwnDeviceInformation(deviceId: string) {
-        const devicesMap = await this.getOwnDevicesInformations();
+        const devicesMap = await this.getOwnDevicesInformation();
         if (!devicesMap) return;
 
         return devicesMap.get(deviceId);
