@@ -1955,10 +1955,10 @@ export class GameScene extends DirtyScene {
 
     private initExtensionModule() {
         if (this._room.modules) {
-            const externalModules = import.meta.glob("../../external-modules/*/index");
+            const externalModules = import.meta.glob("../../external-modules/*/index.ts");
 
             for (const moduleName of this._room.modules) {
-                const moduleFactory = externalModules[`../../external-modules/${moduleName}/index`];
+                const moduleFactory = externalModules[`../../external-modules/${moduleName}/index.ts`];
 
                 if (!moduleFactory) {
                     throw new Error(`Unable to find module "${moduleName}" inside external modules`);
