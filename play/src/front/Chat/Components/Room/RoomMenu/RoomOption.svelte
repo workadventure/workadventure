@@ -4,7 +4,7 @@
     export let IconComponent: ComponentType;
     export let title: string;
     export let dataTestId: string | undefined = undefined;
-    export let bg = "hover:tw-bg-white/10"
+    export let bg = "hover:tw-bg-white/10";
     const dispatch = createEventDispatcher();
 </script>
 
