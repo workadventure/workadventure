@@ -9,7 +9,6 @@
     export let parentID: string | undefined = undefined;
     export let parentName = "";
     let optionButtonRef: HTMLButtonElement | undefined = undefined;
-    let optionRef: HTMLDivElement | undefined = undefined;
     let hideFolderOptions = true;
 
     function toggleSpaceOption() {
@@ -42,7 +41,6 @@
 </button>
 <div
     on:mouseleave={toggleSpaceOption}
-    bind:this={optionRef}
     class="tw-bg-contrast/50 tw-backdrop-blur-md tw-rounded-lg tw-overflow-hidden tw-z-[1] tw-w-max tw-right-4 tw-top-10 tw-p-1"
     class:tw-absolute={optionButtonRef !== undefined}
     class:tw-hidden={hideFolderOptions}
