@@ -81,7 +81,7 @@
 
 <div class="tw-flex tw-flex-col tw-gap-2 tw-h-full">
     <div id="chatModal" class="tw-absolute tw-to-50%" />
-    <div class="tw-flex tw-flex-row tw-justify-between tw-items-center tw-gap-2">
+    <div class="tw-flex tw-flex-row tw-justify-between tw-items-start tw-gap-2">
         <div class="tw-flex tw-flex-col tw-gap-2 tw-w-full">
             {#if showNavBar}
                 <div class="tw-flex tw-flex-row tw-gap-1 tw-items-center">
@@ -111,6 +111,11 @@
                             </li>
                         </ul>
                     </nav>
+                    <button
+                            class="close-window !tw-relative !tw-m-0 !tw-p-0 !tw-right-0"
+                            data-testid="closeChatButton"
+                            on:click={closeChat}>&#215;</button
+                    >
                 </div>
             {/if}
             <!-- searchbar -->
@@ -132,11 +137,6 @@
                 {/if}
             {/await}
         </div>
-        <button
-            class="close-window !tw-relative !tw-m-0 !tw-p-0 !tw-right-0"
-            data-testid="closeChatButton"
-            on:click={closeChat}>&#215;</button
-        >
     </div>
     <div class="tw-flex tw-flex-col tw-gap-2 !tw-flex-1 tw-min-h-0">
         {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}

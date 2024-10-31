@@ -54,6 +54,12 @@ export class DiscordBotManager {
                     return;
                 } else if (get(lastMessage.content).body.includes("websocket: close sent")) {
                     return;
+                } else if(get(lastMessage.content).body.includes("welcome from bridge bot")){
+                    //ignoring the welcome message
+                    return;
+                }else if(get(lastMessage.content).body.includes('This room has been registered as your bridge management/status room.')){
+                    //ignoring the room registration message
+                    return;
                 } else {
                     if (this.botMessageSubscription) this.botMessageSubscription.unsubscribe();
                     return resolve(lastMessage);
@@ -66,7 +72,7 @@ export class DiscordBotManager {
         if (!message) {
             message = await this.sendMessage("ping");
             if (!get(message.content).body.includes("logged in as")) {
-                throw new Error("Failed to get current discord user");
+                return null;
             }
         }
         if (message) {
