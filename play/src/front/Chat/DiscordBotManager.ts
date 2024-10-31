@@ -25,7 +25,10 @@ export class DiscordBotManager {
     //init the direct room with the discord bot
     public async initDiscordBotRoom() {
         try {
-            this.discordBotRoom = await this.chatConnection.createDirectRoom(DiscordBotManager.DISCORD_BOT_ID);
+            const discordChatRoom = await this.chatConnection.createDirectRoom(DiscordBotManager.DISCORD_BOT_ID);
+            if (discordChatRoom instanceof MatrixChatRoom) {
+                this.discordBotRoom = discordChatRoom;
+            }
         } catch (error) {
             console.error("Failed to create direct room with the bot", error);
         }
