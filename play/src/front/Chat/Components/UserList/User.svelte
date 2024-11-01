@@ -10,7 +10,7 @@
     import { defaultColor, defaultWoka } from "../../Connection/Matrix/MatrixChatConnection";
     import { openChatRoom } from "../../Utils";
     import UserActionButton from "./UserActionButton.svelte";
-    import { IconLoader } from "@wa-icons";
+    import { IconLoader, IconSend } from "@wa-icons";
 
     export let user: ChatUser;
 
@@ -56,13 +56,7 @@
         <IconLoader class="tw-animate-spin" />
     </div>
 {:else}
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <div
-        on:click|stopPropagation={() => {
-            if (user.chatId !== user.uuid && !isMe) openChatRoom(chatId).catch((error) => console.error(error));
-        }}
-        class="tw-flex tw-flex-col tw-px-2 tw-pb-2 user"
-    >
+    <div class="tw-flex tw-flex-col tw-px-2 tw-pb-2 user">
         <div
             class="wa-chat-item {isAdmin
                 ? 'admin'
@@ -109,7 +103,7 @@
                                 class="tw-text-xxs tw-bg-secondary tw-rounded-sm tw-px-1 tw-py-0.5 tw-ml-1"
                                 title={$LL.chat.role.admin()}
                             >
-                                ADMIN
+                                {$LL.chat.role.adminShort()}
                             </div>
                         {/if}
                     </div>
@@ -135,32 +129,19 @@
                     {/if}
                 </div>
             </div>
-            <div
-                class="group-hover/chatItem:tw-opacity-100 tw-opacity-0 tw-transition-all
-"
-            >
+            <div class="group-hover/chatItem:tw-opacity-100 tw-opacity-0 tw-transition-all">
                 {#if !isMe}
                     <UserActionButton {user} />
                 {/if}
             </div>
-            <div
-                class="tw-transition-all group-hover/chatItem:tw-bg-white/10 tw-p-1 tw-rounded-lg tw-aspect-square tw-flex tw-items-center tw-justify-center tw-text-white group-hover/chatItem:tw-opacity-100 tw-opacity-0"
+            <button
+                class="tw-transition-all group-hover/chatItem:tw-bg-white/10 tw-p-1 tw-rounded-lg tw-aspect-square tw-flex tw-items-center tw-justify-center tw-text-white group-hover/chatItem:tw-opacity-100 tw-opacity-0 tw-m-0"
+                on:click|stopPropagation={() => {
+                    if (user.chatId !== user.uuid && !isMe) openChatRoom(chatId).catch((error) => console.error(error));
+                }}
             >
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    width="20"
-                    height="20"
-                    stroke-width="2"
-                >
-                    <path d="M10 14l11 -11" />
-                    <path d="M21 3l-6.5 18a.55 .55 0 0 1 -1 0l-3.5 -7l-7 -3.5a.55 .55 0 0 1 0 -1l18 -6.5" />
-                </svg>
-            </div>
+                <IconSend font-size="16" />
+            </button>
         </div>
     </div>
 

@@ -45,6 +45,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     availableRooms: "Salon(s) disponible(s)",
     proximity: "Bulle de discussion",
     role: {
+        adminShort: "Admin",
         admin: "Administrateur",
         member: "Membre",
         visitor: "Visiteur",

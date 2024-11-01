@@ -3739,7 +3739,9 @@ ${escapedMessage}
     }
 
     get worldUserCounter(): Readable<integer> {
-        // @ts-ignore
+        if (!this.worldUserProvider) {
+            throw new Error("this.worldUserProvider not yet initialized");
+        }
         return this.worldUserProvider.userCount;
     }
 }

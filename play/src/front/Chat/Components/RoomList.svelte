@@ -12,6 +12,7 @@
     import { UserProviderMerger } from "../UserProviderMerger/UserProviderMerger";
     import WokaFromUserId from "../../Components/Woka/WokaFromUserId.svelte";
     import getCloseImg from "../images/get-close.png";
+    import LoadingSmall from "../images/loading-small.svelte";
     import {
         ENABLE_CHAT,
         ENABLE_CHAT_DISCONNECTED_LIST,
@@ -223,7 +224,7 @@
                         on:click={() => (searchActive = !searchActive)}
                     >
                         {#if searchLoader}
-                            <!-- TODO HUGO -->
+                            <LoadingSmall />
                         {/if}
                         {#if !searchActive}
                             <IconSearch font-size="20" />
@@ -503,14 +504,13 @@
         <div class="tw-flex tw-flex-col tw-flex-1 tw-pl-4">
             <div class="tw-text-center tw-px-3 tw-max-w-md">
                 <img src={getCloseImg} alt="Discussion bubble" />
-                <div class="tw-text-lg tw-font-bold tw-text-center">Get closer to someoneds</div>
+                <div class="tw-text-lg tw-font-bold tw-text-center">{$LL.chat.getCloserTitle()}</div>
                 <div class="tw-text-sm tw-opacity-50 tw-text-center">
                     Et ducimus cum et dolor. Consequatur ab voluptas qui soluta. Aspernatur natus nisi illo saepe
                     doloribus vitae.
                 </div>
             </div>
             <p class="tw-self-center tw-text-md tw-text-gray-500">{$LL.chat.nothingToDisplay()}</p>
-            XXXX
         </div>
     {/if}
 </div>

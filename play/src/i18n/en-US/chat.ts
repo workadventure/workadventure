@@ -44,6 +44,7 @@ const chat: BaseTranslation = {
     availableRooms: "Available rooms",
     proximity: "Proximity Chat",
     role: {
+        adminShort: "Admin",
         admin: "Administrator",
         member: "Member",
         visitor: "Visitor",

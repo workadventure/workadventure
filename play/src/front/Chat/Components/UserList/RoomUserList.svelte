@@ -78,9 +78,8 @@
             </button>
         {/if}
         <div class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-grow">
-            <div class="tw-text-md tw-font-bold tw-h-5">{$LL.chat.adventurers()}</div>
+            <div class="tw-text-md tw-font-bold tw-h-5">{$LL.chat.users()}</div>
             <div class="tw-flex tw-items-center tw-justify-center tw-text-success tw-space-x-1.5">
-                <!-- TODO HUGO -->
                 <div
                     class="tw-text-xs tw-aspect-square tw-min-w-5 tw-h-5 tw-px-1 tw-border tw-border-solid tw-border-success tw-flex tw-items-center tw-justify-center tw-font-bold tw-rounded"
                 >
