@@ -3,7 +3,7 @@
     import { get } from "svelte/store";
     import { ChatRoom } from "../../Connection/ChatConnection";
     import getCloseImg from "../../images/get-close.png";
-    import { selectedChatMessageToReply, selectedRoom } from "../../Stores/ChatStore";
+    import { selectedChatMessageToReply, selectedRoomStore } from "../../Stores/ChatStore";
     import Avatar from "../Avatar.svelte";
     import { matrixSecurity } from "../../Connection/Matrix/MatrixSecurity";
     import { localUserStore } from "../../../Connection/LocalUserStore";
@@ -94,7 +94,7 @@
 
     function goBackAndClearSelectedChatMessage() {
         selectedChatMessageToReply.set(null);
-        selectedRoom.set(undefined);
+        selectedRoomStore.set(undefined);
     }
 
     function handleScroll() {

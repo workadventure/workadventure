@@ -42,7 +42,7 @@
     let listProps: AvailabilityStatusListPropsInterface = {
         currentStatus: $availabilityStatusStore,
         listStatusTitle: $LL.actionbar.listStatusTitle.enable(),
-        statusInformations: getStatusInformation(statusToShow),
+        statusInformation: getStatusInformation(statusToShow),
     };
 
     let buttonProps: AvailabilityStatusPropsInterface = {

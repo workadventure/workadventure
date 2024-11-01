@@ -4,7 +4,7 @@
     import { onDestroy, onMount } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import LL from "../../../i18n/i18n-svelte";
-    import { chatSearchBarValue, joignableRoom, navChat, selectedRoom } from "../Stores/ChatStore";
+    import { chatSearchBarValue, joignableRoom, navChat, selectedRoomStore } from "../Stores/ChatStore";
     import { ChatRoom } from "../Connection/ChatConnection";
     import { INITIAL_SIDEBAR_WIDTH } from "../../Stores/ChatStore";
     import { userIsConnected } from "../../Stores/MenuStore";
@@ -148,7 +148,7 @@
     }
 
     function toggleDisplayProximityChat() {
-        selectedRoom.set(proximityChatRoom);
+        selectedRoomStore.set(proximityChatRoom);
         proximityChatRoom.hasUnreadMessages.set(false);
     }
 
@@ -178,7 +178,7 @@
     class="tw-flex-1 tw-flex tw-flex-row tw-overflow-auto"
     class:!tw-flex-row={sideBarWidth > INITIAL_SIDEBAR_WIDTH * 2 && $navChat === "chat"}
 >
-    {#if $selectedRoom === undefined || displayTwoColumnLayout}
+    {#if $selectedRoomStore === undefined || displayTwoColumnLayout}
         <div
             class="tw-w-full tw-border tw-border-solid tw-border-y-0 tw-border-l-0 tw-border-white/10 tw-relative tw-overflow-y-auto tw-overflow-x-none"
             style={displayTwoColumnLayout ? `width:335px ;flex : 0 0 auto` : ``}
@@ -498,9 +498,9 @@
             {/if}
         </div>
     {/if}
-    {#if $selectedRoom !== undefined}
-        <RoomTimeline room={$selectedRoom} />
-    {:else if $selectedRoom === undefined && sideBarWidth >= CHAT_LAYOUT_LIMIT}
+    {#if $selectedRoomStore !== undefined}
+        <RoomTimeline room={$selectedRoomStore} />
+    {:else if $selectedRoomStore === undefined && sideBarWidth >= CHAT_LAYOUT_LIMIT}
         <div class="tw-flex tw-flex-col tw-flex-1 tw-pl-4">
             <div class="tw-text-center tw-px-3 tw-max-w-md">
                 <img src={getCloseImg} alt="Discussion bubble" />
