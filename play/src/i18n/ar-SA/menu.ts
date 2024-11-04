@@ -47,9 +47,9 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
         privacySettings: {
             title: "وضع الغياب", // Absence mode
-            explanation: "إذا لم يكن تبويب WorkAdventure نشطًا، سيتم التبديل إلى \"وضع الغياب\".", // If the WorkAdventure tab is not active, it will switch to "absence mode".
-            cameraToggle: "اترك الكاميرا مفعلة في \"وضع الغياب\".", // Keep camera active in "absence mode".
-            microphoneToggle: "اترك الميكروفون مفعلاً في \"وضع الغياب\".", // Keep microphone active in "absence mode".
+            explanation: 'إذا لم يكن تبويب WorkAdventure نشطًا، سيتم التبديل إلى "وضع الغياب".', // If the WorkAdventure tab is not active, it will switch to "absence mode".
+            cameraToggle: 'اترك الكاميرا مفعلة في "وضع الغياب".', // Keep camera active in "absence mode".
+            microphoneToggle: 'اترك الميكروفون مفعلاً في "وضع الغياب".', // Keep microphone active in "absence mode".
         },
         save: "حفظ", // Save
         otherSettings: "إعدادات أخرى", // Other settings
@@ -90,8 +90,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
         createMap: {
             title: "إنشاء خريطة خاصة", // Create your own map
-            description:
-                "يمكنك أيضًا إنشاء خريطتك الخاصة. اتبع دليلنا خطوة بخطوة.", // You can also create your own map. Follow our step-by-step guide.
+            description: "يمكنك أيضًا إنشاء خريطتك الخاصة. اتبع دليلنا خطوة بخطوة.", // You can also create your own map. Follow our step-by-step guide.
         },
     },
     about: {

@@ -189,8 +189,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             accessClaimMode: "وضع المطالبة بالوصول", // "Zugriffsbeanspruchungsmodus"
             dynamicAccessClaimMode: "ديناميكي", // "Dynamisch"
             staticAccessClaimMode: "ثابت", // "Statisch"
-            dynamicAccessDescription:
-                "يمكن لأي شخص لديه وسوم مستخدمين مناسبة المطالبة بملكية المنطقة.", // "Jeder mit den entsprechenden Benutzertags kann das Eigentum an der Zone beanspruchen."
+            dynamicAccessDescription: "يمكن لأي شخص لديه وسوم مستخدمين مناسبة المطالبة بملكية المنطقة.", // "Jeder mit den entsprechenden Benutzertags kann das Eigentum an der Zone beanspruchen."
             staticAccessDescription: "تعريف المالك للمنطقة يدويًا.", // "Manuell den Eigentümer der Zone definieren."
             allowedTags: "وسوم المستخدمين المسموح بها", // "Erlaubte Benutzertags"
             allowedUser: "مستخدم مسموح", // "Erlaubter Benutzer"
@@ -199,8 +198,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         excalidrawProperties: {
             label: "فتح إكسكاليدرا", // "Excalidraw öffnen"
-            description:
-                "لوحة بيضاء مفتوحة المصدر بأسلوب مرسوم يدويًا. تعاونية ومشفرة من النهاية إلى النهاية.", // "Ein Open-Source-Whiteboard im handgezeichneten Stil. Kollaborativ und Ende-zu-Ende-verschlüsselt."
+            description: "لوحة بيضاء مفتوحة المصدر بأسلوب مرسوم يدويًا. تعاونية ومشفرة من النهاية إلى النهاية.", // "Ein Open-Source-Whiteboard im handgezeichneten Stil. Kollaborativ und Ende-zu-Ende-verschlüsselt."
             error: "يرجى إدخال رابط إكسكاليدرا صالح", // "Bitte geben Sie eine gültige Excalidraw-URL ein"
             disabled: "تم تعطيل تكامل إكسكاليدرا.", // "Excalidraw-Integration ist deaktiviert."
         },
@@ -214,32 +212,34 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         areaSerchable: "قابل للبحث في وضع الاستكشاف // Searchable in exploration mode",
         addDescriptionField: "إضافة وصف // Add description",
         actionPopupOnPersonalAreaWithEntities: {
-              title: "إجراء مطلوب // Action required",
-              description: "يحتوي هذا المجال الشخصي على كائن واحد أو أكثر. ماذا تريد أن تفعل معه؟ // This personal area contains one or more objects. What would you like to do with it?",
-              buttons: {
-                   keep: "احتفظ // Keep",
-                   remove: "أزل // Remove",
-                   cancel: "إلغاء // Cancel",
-              },
+            title: "إجراء مطلوب // Action required",
+            description:
+                "يحتوي هذا المجال الشخصي على كائن واحد أو أكثر. ماذا تريد أن تفعل معه؟ // This personal area contains one or more objects. What would you like to do with it?",
+            buttons: {
+                keep: "احتفظ // Keep",
+                remove: "أزل // Remove",
+                cancel: "إلغاء // Cancel",
+            },
         },
-   },
-   areaEditorInstructions: {
+    },
+    areaEditorInstructions: {
         title: "كيف يعمل؟ // How does it work?",
         description: "ارسم منطقة على الخريطة لإنشاء منطقة جديدة. // Draw an area on the map to create a new one.",
-   },
-   entityEditor: {
+    },
+    entityEditor: {
         header: {
-              title: "أضف كائن إلى خريطتك // Add an object to your map",
-              description: "ابحث، حمّل أو اختر كائنًا موجودًا وأضفه إلى الخريطة. // Search, upload, or select an existing object and add it to the map.",
+            title: "أضف كائن إلى خريطتك // Add an object to your map",
+            description:
+                "ابحث، حمّل أو اختر كائنًا موجودًا وأضفه إلى الخريطة. // Search, upload, or select an existing object and add it to the map.",
         },
         title: "وضع الكائن // Place object",
         editing: "تعديل: {name} // Editing: {name}",
         itemPicker: {
-              searchPlaceholder: "بحث // Search",
-              backToSelectObject: "العودة لاختيار الكائن // Back to select object",
+            searchPlaceholder: "بحث // Search",
+            backToSelectObject: "العودة لاختيار الكائن // Back to select object",
         },
         trashTool: {
-              delete: "انقر على الكائن لحذفه! // Click on the object to delete it!",
+            delete: "انقر على الكائن لحذفه! // Click on the object to delete it!",
         },
         deleteButton: "حذف // Delete",
         testInteractionButton: "اختبار التفاعل // Test interaction",
@@ -253,107 +253,117 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         objectSearchable: "قابل للبحث في وضع الاستكشاف // Searchable in exploration mode",
         addDescriptionField: "إضافة وصف // Add description",
         uploadEntity: {
-              title: "إضافة صورة // Add image",
-              description: "اسحب وأفلت صورتك أو اخترها لإضافتها إلى الخريطة. // Drag & drop your image or select it to add it to the map.",
-              dragDrop: "اسحب وأفلت أو // Drag and drop or",
-              chooseFile: "اختر ملف // Choose file",
-              errorOnFileFormat: "تنسيق الملف غير مدعوم // File format not supported",
-              errorOnFileNumber: "التحميل المتعدد للملفات غير مدعوم // Multiple file uploads are not supported",
+            title: "إضافة صورة // Add image",
+            description:
+                "اسحب وأفلت صورتك أو اخترها لإضافتها إلى الخريطة. // Drag & drop your image or select it to add it to the map.",
+            dragDrop: "اسحب وأفلت أو // Drag and drop or",
+            chooseFile: "اختر ملف // Choose file",
+            errorOnFileFormat: "تنسيق الملف غير مدعوم // File format not supported",
+            errorOnFileNumber: "التحميل المتعدد للملفات غير مدعوم // Multiple file uploads are not supported",
         },
         images: "صورة{{s}} // Image{{s}}",
         noImage: "لا توجد صورة // No image",
         customEntityEditorForm: {
-              imageName: "اسم الصورة // Image name",
-              tags: "وسوم // Tags",
-              objectType: "نوع الكائن // Object type",
-              floatingObject: "كائن عائم // Floating object",
-              floatingObjectDescription: "يمكن وضع الكائن العائم بحرية على الخريطة. وإلا، سيتم ضبطه على شبكة الخريطة. // A floating object can be placed freely on the map. Otherwise, it will snap to the map's grid.",
-              depth: "العمق // Depth",
-              groundLevel: "مستوى الأرض // Ground level",
-              custom: "مخصص // Custom",
-              standing: "واقف // Standing",
+            imageName: "اسم الصورة // Image name",
+            tags: "وسوم // Tags",
+            objectType: "نوع الكائن // Object type",
+            floatingObject: "كائن عائم // Floating object",
+            floatingObjectDescription:
+                "يمكن وضع الكائن العائم بحرية على الخريطة. وإلا، سيتم ضبطه على شبكة الخريطة. // A floating object can be placed freely on the map. Otherwise, it will snap to the map's grid.",
+            depth: "العمق // Depth",
+            groundLevel: "مستوى الأرض // Ground level",
+            custom: "مخصص // Custom",
+            standing: "واقف // Standing",
         },
         buttons: {
-              editEntity: "تعديل الكائن // Edit entity",
-              back: "عودة // Back",
-              cancel: "إلغاء // Cancel",
-              delete: "حذف // Delete",
-              save: "حفظ // Save",
-              upload: "تحميل // Upload",
+            editEntity: "تعديل الكائن // Edit entity",
+            back: "عودة // Back",
+            cancel: "إلغاء // Cancel",
+            delete: "حذف // Delete",
+            save: "حفظ // Save",
+            upload: "تحميل // Upload",
         },
-   },
-   settings: {
+    },
+    settings: {
         loading: "جارٍ التحميل... // Loading...",
         megaphone: {
-              title: "الميغا فون // Megaphone",
-              description: "الميغا فون هو أداة تمكنك من بث صوتك إلى العالم بأسره أو إلى غرفة محددة. // The megaphone is a tool that allows you to broadcast your voice to the entire world or to a specific room.",
-              inputs: {
-                   spaceName: "اسم الغرفة // Room name",
-                   spaceNameHelper: "اسم الغرفة التي يمكن استخدام الميغا فون فيها. إذا تركته فارغًا، يمكن استخدامه في العالم بأسره. // The name of the room where the megaphone can be used. If left empty, it can be used worldwide.",
-                   scope: "النطاق // Scope",
-                   world: "العالم // World",
-                   room: "الغرفة // Room",
-                   rights: "الصلاحيات // Rights",
-                   rightsHelper: "الصلاحيات التي يجب أن يمتلكها المستخدم لاستخدام الميغا فون. إذا تركته فارغًا، يمكن لأي شخص استخدام الميغا فون. // The rights a user must have to use the megaphone. If left empty, anyone can use the megaphone.",
-                   error: {
-                        title: "خطأ // Error",
-                        save: {
-                              success: "تم حفظ إعدادات الميغا فون بنجاح // Megaphone settings saved successfully",
-                              fail: "فشل في حفظ إعدادات الميغا فون // Failed to save megaphone settings",
-                        },
-                   },
-              },
+            title: "الميغا فون // Megaphone",
+            description:
+                "الميغا فون هو أداة تمكنك من بث صوتك إلى العالم بأسره أو إلى غرفة محددة. // The megaphone is a tool that allows you to broadcast your voice to the entire world or to a specific room.",
+            inputs: {
+                spaceName: "اسم الغرفة // Room name",
+                spaceNameHelper:
+                    "اسم الغرفة التي يمكن استخدام الميغا فون فيها. إذا تركته فارغًا، يمكن استخدامه في العالم بأسره. // The name of the room where the megaphone can be used. If left empty, it can be used worldwide.",
+                scope: "النطاق // Scope",
+                world: "العالم // World",
+                room: "الغرفة // Room",
+                rights: "الصلاحيات // Rights",
+                rightsHelper:
+                    "الصلاحيات التي يجب أن يمتلكها المستخدم لاستخدام الميغا فون. إذا تركته فارغًا، يمكن لأي شخص استخدام الميغا فون. // The rights a user must have to use the megaphone. If left empty, anyone can use the megaphone.",
+                error: {
+                    title: "خطأ // Error",
+                    save: {
+                        success: "تم حفظ إعدادات الميغا فون بنجاح // Megaphone settings saved successfully",
+                        fail: "فشل في حفظ إعدادات الميغا فون // Failed to save megaphone settings",
+                    },
+                },
+            },
         },
         room: {
-              title: "إعدادات الغرفة // Room settings",
-              description: "قم بتكوين غرفتك // Configure your room",
-              inputs: {
-                   name: "اسم الغرفة // Room name",
-                   description: "وصف الغرفة // Room description",
-                   tags: "وسوم // Tags",
-                   copyright: "ترخيص الغرفة // Room license",
-                   thumbnail: "صورة مصغرة للغرفة // Room thumbnail",
-              },
-              helps: {
-                   description: "وصف للخريطة. يمكن استخدامه في شبكات التواصل الاجتماعي عند مشاركة رابط الخريطة. // A description of the map. Can be used on social networks when sharing a map link.",
-                   tags: "قائمة من الوسوم. يمكن استخدامها لمنح الوصول إلى الخريطة. // A list of tags. Can be used to grant access to the map.",
-                   thumbnail: "رابط إلى صورة مصغرة. تُستخدم هذه الصورة في شبكات التواصل الاجتماعي عند مشاركة رابط الخريطة. // URL to a thumbnail image. This image is used on social networks when sharing a map link.",
-                   copyright: "إشعار حقوق الطبع والنشر لهذه الخريطة. يمكن أن يكون رابطًا لترخيص. قد تحتوي أجزاء من هذه الخريطة مثل مجموعات البلاط أو الصور على حقوق طبع ونشر خاصة بها. // Copyright notice for this map. Can be a link to a license. Parts of this map like tilesets or images may have their own copyrights.",
-              },
-              actions: {
-                   save: "حفظ // Save",
-                   confirm: "تأكيد // Confirm",
-                   success: "تم حفظ إعدادات الغرفة // Room settings saved",
-                   error: "خطأ في حفظ إعدادات الغرفة // Error saving room settings",
-              },
-              confirmSave: "أكد أنك تريد حفظ التغييرات على الخريطة. سيؤدي هذا إلى إنشاء إصدار جديد من الخريطة، وفصل جميع اللاعبين، وإعادة تحميل الخريطة لجميع اللاعبين. // Confirm that you want to save changes to the map. This will create a new version of the map, disconnect all players, and reload the map for all players.",
+            title: "إعدادات الغرفة // Room settings",
+            description: "قم بتكوين غرفتك // Configure your room",
+            inputs: {
+                name: "اسم الغرفة // Room name",
+                description: "وصف الغرفة // Room description",
+                tags: "وسوم // Tags",
+                copyright: "ترخيص الغرفة // Room license",
+                thumbnail: "صورة مصغرة للغرفة // Room thumbnail",
+            },
+            helps: {
+                description:
+                    "وصف للخريطة. يمكن استخدامه في شبكات التواصل الاجتماعي عند مشاركة رابط الخريطة. // A description of the map. Can be used on social networks when sharing a map link.",
+                tags: "قائمة من الوسوم. يمكن استخدامها لمنح الوصول إلى الخريطة. // A list of tags. Can be used to grant access to the map.",
+                thumbnail:
+                    "رابط إلى صورة مصغرة. تُستخدم هذه الصورة في شبكات التواصل الاجتماعي عند مشاركة رابط الخريطة. // URL to a thumbnail image. This image is used on social networks when sharing a map link.",
+                copyright:
+                    "إشعار حقوق الطبع والنشر لهذه الخريطة. يمكن أن يكون رابطًا لترخيص. قد تحتوي أجزاء من هذه الخريطة مثل مجموعات البلاط أو الصور على حقوق طبع ونشر خاصة بها. // Copyright notice for this map. Can be a link to a license. Parts of this map like tilesets or images may have their own copyrights.",
+            },
+            actions: {
+                save: "حفظ // Save",
+                confirm: "تأكيد // Confirm",
+                success: "تم حفظ إعدادات الغرفة // Room settings saved",
+                error: "خطأ في حفظ إعدادات الغرفة // Error saving room settings",
+            },
+            confirmSave:
+                "أكد أنك تريد حفظ التغييرات على الخريطة. سيؤدي هذا إلى إنشاء إصدار جديد من الخريطة، وفصل جميع اللاعبين، وإعادة تحميل الخريطة لجميع اللاعبين. // Confirm that you want to save changes to the map. This will create a new version of the map, disconnect all players, and reload the map for all players.",
         },
-   },
-   explorer: {
+    },
+    explorer: {
         title: "استكشاف الغرفة // Explore room",
-        description: "يسمح باستكشاف الغرفة. يمكنك التحرك في الغرفة والتفاعل مع الكائنات. هناك وضعان: 'استكشاف' و 'بحث'. في 'وضع البحث'، يمكنك البحث عن الكيانات والمناطق في الغرفة أو تصفيتها. في 'وضع الاستكشاف'، يمكنك التحرك بحرية في الغرفة. // Allows exploring the room. You can move around the room and interact with objects. There are 2 modes: 'Exploration' and 'Search'. In 'Search mode', you can search for entities and areas in the room or filter them. In 'Exploration mode', you can move freely in the room.",
+        description:
+            "يسمح باستكشاف الغرفة. يمكنك التحرك في الغرفة والتفاعل مع الكائنات. هناك وضعان: 'استكشاف' و 'بحث'. في 'وضع البحث'، يمكنك البحث عن الكيانات والمناطق في الغرفة أو تصفيتها. في 'وضع الاستكشاف'، يمكنك التحرك بحرية في الغرفة. // Allows exploring the room. You can move around the room and interact with objects. There are 2 modes: 'Exploration' and 'Search'. In 'Search mode', you can search for entities and areas in the room or filter them. In 'Exploration mode', you can move freely in the room.",
         noEntitiesFound: "لم يتم العثور على كائن في الغرفة 🙅‍♂️ // No entity found in the room 🙅‍♂️",
         entitiesFound: "تم العثور على {{s}} كائنات // {{s}} objects found",
         noAreasFound: "لم يتم العثور على منطقة في الغرفة 🙅‍♀️ // No area found in the room 🙅‍♀️",
         areasFound: "تم العثور على {{s}} مناطق // {{s}} areas found",
         noDescriptionFound: "لم يتم العثور على وصف 🫥 // No description found 🫥",
         details: {
-              close: "إغلاق // Close",
-              moveToEntity: "الانتقال إلى الكائن {name} // Move to entity {name}",
-              moveToArea: "الانتقال إلى المنطقة {name} // Move to area {name}",
-              errorMovingToObject: "الكائن غير متاح بعد 🚫 // The object is not accessible yet 🚫",
+            close: "إغلاق // Close",
+            moveToEntity: "الانتقال إلى الكائن {name} // Move to entity {name}",
+            moveToArea: "الانتقال إلى المنطقة {name} // Move to area {name}",
+            errorMovingToObject: "الكائن غير متاح بعد 🚫 // The object is not accessible yet 🚫",
         },
-   },
-   listRoom: {
+    },
+    listRoom: {
         isFetching: "جارٍ تحميل قائمة الغرف... ⤵️ // Fetching room list... ⤵️",
         noRoomFound: "لم يتم العثور على غرفة 🙅‍♂️ // No room found 🙅‍♂️",
         items: "{countEntity} كائنات / {countArea} مناطق // {countEntity} entities / {countArea} areas",
         close: "إغلاق // Close",
-        movingToRoom: "الانتقال إلى الغرفة: {roomNameSelected}... إلى اللقاء... 🫡 // Moving to room: {roomNameSelected}... See you soon... 🫡",
+        movingToRoom:
+            "الانتقال إلى الغرفة: {roomNameSelected}... إلى اللقاء... 🫡 // Moving to room: {roomNameSelected}... See you soon... 🫡",
         searchLabel: "ابحث عن غرفة // Search for a room",
         searchPlaceholder: "اكتب... // Type...",
-   },
-  };
-  
-  export default mapEditor;
-  
+    },
+};
+
+export default mapEditor;
