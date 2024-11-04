@@ -1,6 +1,7 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { DeepPartial } from "../DeepPartial";
+import type { Translation } from "../i18n-types";
 
-const megaphone: BaseTranslation = {
+const megaphone: DeepPartial<Translation["megaphone"]> = {
     modal: {
         selectCamera: "Seleziona una fotocamera 📹",
         selectMicrophone: "Seleziona un microfono 🎙️",

@@ -1,6 +1,7 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { DeepPartial } from "../DeepPartial";
+import type { Translation } from "../i18n-types";
 
-const audio: BaseTranslation = {
+const audio: DeepPartial<Translation["audio"]> = {
     manager: {
         reduce: "Riduci il volume del lettore audio mentre parli",
         allow: "Consenti audio",

@@ -1,6 +1,7 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { DeepPartial } from "../DeepPartial";
+import type { Translation } from "../i18n-types";
 
-const report: BaseTranslation = {
+const report: DeepPartial<Translation["report"]> = {
     block: {
         title: "Blocca",
         content: "Blocca qualsiasi comunicazione da e verso {userName}. Questo può essere annullato.",
@@ -8,7 +9,8 @@ const report: BaseTranslation = {
         block: "Blocca questo utente",
     },
     title: "Segnala",
-    content: "Invia un messaggio di segnalazione agli amministratori di questa stanza. Potrebbero successivamente bannare questo utente.",
+    content:
+        "Invia un messaggio di segnalazione agli amministratori di questa stanza. Potrebbero successivamente bannare questo utente.",
     message: {
         title: "Il tuo messaggio: ",
         empty: "Il messaggio di segnalazione non può essere vuoto.",

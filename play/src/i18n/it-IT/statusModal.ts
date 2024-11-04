@@ -1,6 +1,7 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { DeepPartial } from "../DeepPartial";
+import type { Translation } from "../i18n-types";
 
-const statusModal: BaseTranslation = {
+const trigger: DeepPartial<Translation["trigger"]> = {
     accept: "Accetta",
     close: "Chiudi",
     confirm: "Conferma",

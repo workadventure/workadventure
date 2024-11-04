@@ -1,6 +1,7 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { DeepPartial } from "../DeepPartial";
+import type { Translation } from "../i18n-types";
 
-const warning: BaseTranslation = {
+const warning: DeepPartial<Translation["warning"]> = {
     title: "Avvertimento!",
     content: `Questo mondo è vicino al suo limite! Puoi aumentare la sua capacità <a href="{upgradeLink}" target="_blank">qui</a>`,
     limit: "Questo mondo è vicino al suo limite!",
@@ -16,7 +17,8 @@ const warning: BaseTranslation = {
     connectionLostSubtitle: "Riconnessione in corso",
     waitingConnectionTitle: "In attesa di connessione",
     waitingConnectionSubtitle: "Connessione in corso",
-    megaphoneNeeds: "Per usare il megafono, devi attivare la tua fotocamera o il tuo microfono o condividere il tuo schermo.",
+    megaphoneNeeds:
+        "Per usare il megafono, devi attivare la tua fotocamera o il tuo microfono o condividere il tuo schermo.",
     mapEditorShortCut: "Si è verificato un errore durante il tentativo di aprire l'editor della mappa.",
     mapEditorNotEnabled: "L'editor della mappa non è abilitato in questo mondo.",
     popupBlocked: {

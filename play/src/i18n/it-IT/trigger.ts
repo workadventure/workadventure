@@ -1,6 +1,7 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { DeepPartial } from "../DeepPartial";
+import type { Translation } from "../i18n-types";
 
-const trigger: BaseTranslation = {
+const trigger: DeepPartial<Translation["trigger"]> = {
     cowebsite: `[SPAZIO] per aprire il sito web 👀`,
     jitsiRoom: "[SPAZIO] per entrare in Jitsi 👀",
     newTab: "[SPAZIO] per aprire una nuova scheda 👀",

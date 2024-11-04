@@ -1,6 +1,7 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { DeepPartial } from "../DeepPartial";
+import type { Translation } from "../i18n-types";
 
-const camera: BaseTranslation = {
+const camera: DeepPartial<Translation["camera"]> = {
     enable: {
         title: "Accendi la tua fotocamera e il microfono",
         start: "Andiamo!",
@@ -22,7 +23,8 @@ const camera: BaseTranslation = {
         title: "Errore di connessione al server di inoltro video",
         titlePending: "Connessione al server di inoltro video in sospeso",
         error: "Il server TURN non è raggiungibile",
-        content: "Il server di inoltro video non può essere raggiunto. Potresti non essere in grado di comunicare con altri utenti.",
+        content:
+            "Il server di inoltro video non può essere raggiunto. Potresti non essere in grado di comunicare con altri utenti.",
         solutionVpn:
             "Se stai <strong>connettendoti tramite una VPN</strong>, disconnettiti dalla VPN e ricarica la pagina web.",
         solutionVpnNotAskAgain: "Capito. Non avvisarmi più 🫡",

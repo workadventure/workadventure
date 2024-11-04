@@ -1,6 +1,7 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { DeepPartial } from "../DeepPartial";
+import type { Translation } from "../i18n-types";
 
-const notification: BaseTranslation = {
+const notification: DeepPartial<Translation["notification"]> = {
     discussion: "vuole discutere con te",
     message: "invia un messaggio",
     chatRoom: "nella chat room",
