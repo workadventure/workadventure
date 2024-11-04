@@ -79,30 +79,30 @@ If you are self-hosting WorkAdventure, then you will have to configure the map s
    The directory name appear in the URL of your map.
 
    Be careful, if you upload two separate maps within the same directory, the second will erase the first one. So we recommand you to set a custom directory name for each project as long as they are in the same Admin world.
-  </TabItem>
-  
+   </TabItem>
+
   <TabItem label="Self-hosted" value="self-hosted">
 
-  **Your API Key:**
+**Your API Key:**
 
-  The system administrator that installed the WorkAdventure server should have provided you with an API key.
+The system administrator that installed the WorkAdventure server should have provided you with an API key.
 
-  - For **docker-compose deployements**, it is the value of the `MAP_STORAGE_AUTHENTICATION_TOKEN` environment variable.
-    Also, be sure to have the `MAP_STORAGE_ENABLE_BEARER_AUTHENTICATION` set to `"true"` in your `.env` file.
-  - For **Helm deployments** , it is the value of the `mapstorage.env.AUTHENTICATION_TOKEN` value in your `values.yaml` file.
-    Also, be sure to have the `mapstorage.env.ENABLE_BEARER_AUTHENTICATION` set to `"true"` in your `values.yaml` file.
+- For **docker-compose deployements**, it is the value of the `MAP_STORAGE_AUTHENTICATION_TOKEN` environment variable.
+  Also, be sure to have the `MAP_STORAGE_ENABLE_BEARER_AUTHENTICATION` set to `"true"` in your `.env` file.
+- For **Helm deployments** , it is the value of the `mapstorage.env.AUTHENTICATION_TOKEN` value in your `values.yaml` file.
+  Also, be sure to have the `mapstorage.env.ENABLE_BEARER_AUTHENTICATION` set to `"true"` in your `values.yaml` file.
 
-  **The URL of your map storage:**
+**The URL of your map storage:**
 
-  The map storage URL depends on your install.
+The map storage URL depends on your install.
 
-  - For **docker-compose deployments**, it should be `https://[workadventure-server]/map-storage/` if you are using the default configuration.
-  - For **Helm deployments**, it should also be `https://[workadventure-server]/map-storage/` if you are using `singleDomain: true` in your `values.yaml` file,
-    or `https://mapstorage.[workadventure-server]` if `singleDomain: false` in your `values.yaml` file.
+- For **docker-compose deployments**, it should be `https://[workadventure-server]/map-storage/` if you are using the default configuration.
+- For **Helm deployments**, it should also be `https://[workadventure-server]/map-storage/` if you are using `singleDomain: true` in your `values.yaml` file,
+  or `https://mapstorage.[workadventure-server]` if `singleDomain: false` in your `values.yaml` file.
 
-  **Directory:**
-  You can also add a `directory name` if you want. It will be the folder where all your uploaded files will be stored in.
-  If you leave this blank, there will be no directory.
+**Directory:**
+You can also add a `directory name` if you want. It will be the folder where all your uploaded files will be stored in.
+If you leave this blank, there will be no directory.
 
   </TabItem>
 </Tabs>
@@ -126,10 +126,10 @@ Now, for every change you want to make public, you just have run the command aga
 When you run the `npm run upload` command, the following things happen:
 
 1. First, your map files are "built". During the build phase:
-  1.1. The tilesets of your map are optimized and chunked. Any tile that is not used is removed. This is done to reduce the total size of the map and results in faster loading time.
-  1.2. The scripts of your map are compiled and bundled. This happens if you developed some specific features on your map using the Scripting API. The compilation phase translates files from Typescript to Javascript. The bundling phase takes all the Javascript files and merges them into a single file.
-  1.3. The result of the build is written in the dist directory.
-  1.4. The content of the public directory is copied to the dist directory.
+   1.1. The tilesets of your map are optimized and chunked. Any tile that is not used is removed. This is done to reduce the total size of the map and results in faster loading time.
+   1.2. The scripts of your map are compiled and bundled. This happens if you developed some specific features on your map using the Scripting API. The compilation phase translates files from Typescript to Javascript. The bundling phase takes all the Javascript files and merges them into a single file.
+   1.3. The result of the build is written in the dist directory.
+   1.4. The content of the public directory is copied to the dist directory.
 2. Then, a ZIP file of the dist directory is created and sent to the WorkAdventure "map-storage" server. This server is in charge of hosting the map files. When it receives the ZIP file, it unzips it and stores the files in the directory you configured as 'Upload directory'. For each `.tmj` file the server finds, it will check if there exists a matching `.wam` file. If not, it will create one. WAM files are used to store any part of the map edited by the Map editor of WorkAdventure (like the list of objects or areas, the microphone settings, etc.)
 
 :::danger Backup your original files!
