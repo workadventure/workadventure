@@ -1550,7 +1550,13 @@ export class SocketManager implements ZoneEventListener {
         }
 
         socketData.currentChatRoomArea.push(roomID);
-        return matrixProvider.inviteUserToRoom(socketData.chatID, roomID).catch((error) => console.error(error));
+        const isAdmin = socketData.tags.includes("admin");
+
+        await matrixProvider.inviteUserToRoom(socketData.chatID, roomID).catch((e) => console.error(e));
+
+        if (isAdmin) {
+            await matrixProvider.promoteUserToModerator(socketData.chatID, roomID).catch((e) => console.error(e));
+        }
     }
 }
 

@@ -1,26 +1,13 @@
 import axios from "axios";
 import pLimit from "p-limit";
-import { EventType } from "matrix-js-sdk";
+import { EventType, ICreateRoomOpts, Visibility } from "matrix-js-sdk";
 import * as Sentry from "@sentry/node";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
-import { MATRIX_ADMIN_USER, MATRIX_API_URI, MATRIX_DOMAIN, MATRIX_ADMIN_PASSWORD } from "../enums/EnvironmentVariable";
+import { MATRIX_ADMIN_PASSWORD, MATRIX_ADMIN_USER, MATRIX_API_URI, MATRIX_DOMAIN } from "../enums/EnvironmentVariable";
+
 const ADMIN_CHAT_ID = `@${MATRIX_ADMIN_USER}:${MATRIX_DOMAIN}`;
 
 const limit = pLimit(10);
-interface CreateRoomOptions {
-    visibility: string;
-    initial_state: {
-        type: EventType;
-        state_key?: string;
-        content:
-            | {
-                  history_visibility: string;
-              }
-            | {
-                  via: string[];
-              };
-    }[];
-}
 class MatrixProvider {
     private accessToken: string | undefined;
     private lastAccessTokenDate: number = Date.now();
@@ -98,18 +85,21 @@ class MatrixProvider {
     }
 
     async createRoomForArea(): Promise<string> {
-        const options: CreateRoomOptions = {
-            visibility: "private",
+        const options: ICreateRoomOpts = {
+            visibility: Visibility.Private,
             initial_state: [
                 {
                     type: EventType.RoomHistoryVisibility,
                     content: { history_visibility: "joined" },
                 },
             ],
+            power_level_content_override: {
+                invite: 100,
+            },
         };
 
         if (this.roomAreaFolderID && MATRIX_DOMAIN) {
-            options.initial_state.push({
+            options.initial_state?.push({
                 type: EventType.SpaceParent,
                 state_key: this.roomAreaFolderID,
                 content: {
@@ -150,6 +140,43 @@ class MatrixProvider {
         }
     }
 
+    async promoteUserToModerator(userID: string, roomID: string): Promise<void> {
+        const actualPowerLevelsResponse = await axios.get(
+            `${MATRIX_API_URI}_matrix/client/r0/rooms/${roomID}/state/m.room.power_levels`,
+            {
+                headers: {
+                    Authorization: "Bearer " + (await this.getAccessToken()),
+                },
+            }
+        );
+
+        if (actualPowerLevelsResponse.status !== 200) {
+            throw new Error("Failed get actual powerLevels " + actualPowerLevelsResponse.status);
+        }
+
+        const response = await axios.put(
+            `${MATRIX_API_URI}_matrix/client/r0/rooms/${roomID}/state/m.room.power_levels`,
+            {
+                ...actualPowerLevelsResponse.data,
+                users: {
+                    //TODO : typer la reponse
+                    ...actualPowerLevelsResponse.data.users,
+                    [userID]: 50,
+                },
+            },
+            {
+                headers: {
+                    Authorization: "Bearer " + (await this.getAccessToken()),
+                },
+            }
+        );
+
+        if (response.status === 200) {
+            return;
+        } else {
+            throw new Error("Failed with status " + response.status);
+        }
+    }
     async inviteUserToRoom(userID: string, roomID: string): Promise<void> {
         if (!roomID) {
             console.error("roomID is undefined or null");
