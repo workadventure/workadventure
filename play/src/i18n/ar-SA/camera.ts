@@ -10,8 +10,7 @@ const camera: DeepPartial<Translation["camera"]> = {
         title: "مطلوب الوصول إلى الكاميرا / الميكروفون", // Access to camera/microphone required
         permissionDenied: "تم رفض الوصول", // Access denied
         content: "يجب السماح بالوصول إلى الكاميرا والميكروفون في المتصفح.", // Access to camera and microphone must be allowed in the browser.
-        firefoxContent:
-            'يرجى النقر على زر "حفظ هذا القرار" لمنع طلبات الإذن المتكررة في Firefox.', // Please click the "Save this decision" button to prevent repeated permission requests in Firefox.
+        firefoxContent: 'يرجى النقر على زر "حفظ هذا القرار" لمنع طلبات الإذن المتكررة في Firefox.', // Please click the "Save this decision" button to prevent repeated permission requests in Firefox.
         refresh: "تحديث", // Refresh
         continue: "المتابعة بدون كاميرا", // Continue without camera
         screen: {
@@ -23,10 +22,8 @@ const camera: DeepPartial<Translation["camera"]> = {
         title: "خادم ترحيل الفيديو لا يستجيب - خطأ", // The video relay server is not responding - Error
         titlePending: "الاتصال بخادم ترحيل الفيديو", // Connecting to the video relay server
         error: 'خادم "TURN" غير متاح', // "TURN" server not reachable
-        content:
-            "لم يتمكن من إنشاء اتصال بخادم ترحيل الفيديو. قد لا تتمكن من التواصل مع المستخدمين الآخرين.", // A connection to the video relay server could not be established. You may not be able to communicate with other users.
-        solutionVpn:
-            "إذا كنت تتصل عبر VPN، يرجى قطع الاتصال بـ VPN وتحديث الصفحة.", // If you are connecting via VPN, please disconnect from the VPN and refresh the page.
+        content: "لم يتمكن من إنشاء اتصال بخادم ترحيل الفيديو. قد لا تتمكن من التواصل مع المستخدمين الآخرين.", // A connection to the video relay server could not be established. You may not be able to communicate with other users.
+        solutionVpn: "إذا كنت تتصل عبر VPN، يرجى قطع الاتصال بـ VPN وتحديث الصفحة.", // If you are connecting via VPN, please disconnect from the VPN and refresh the page.
         solutionHotspot:
             "إذا كنت في شبكة مقيدة (شبكة الشركة...)، حاول تغيير الشبكة. على سبيل المثال، قم بإنشاء نقطة اتصال Wi-Fi باستخدام هاتفك واتصل عبر هاتفك.", // If you are in a restricted network (company network...), try changing the network. For example, create a Wi-Fi hotspot with your phone and connect via your phone.
         solutionNetworkAdmin: "إذا كنت مسؤول الشبكة، تحقق من", // If you are a network administrator, check the

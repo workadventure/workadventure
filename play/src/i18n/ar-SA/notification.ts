@@ -12,8 +12,7 @@ const notification: DeepPartial<Translation["notification"]> = {
         permissionDenied: "تم الرفض", // access denied
         content:
             "لا تفوت أي مناقشة. قم بتمكين الإشعارات لتكون على علم عندما يريد شخص ما التحدث معك، حتى لو لم تكن في علامة تبويب WorkAdventure.", // don't miss any discussion. Enable notifications to be informed when someone wants to talk to you, even if you are not in the WorkAdventure tab.
-        firefoxContent:
-            'يرجى النقر على مربع "تذكر هذا القرار" إذا كنت لا تريد أن يستمر Firefox في طلب الإذن.', // please click on the "Remember this decision" box if you don't want Firefox to keep asking for permission.
+        firefoxContent: 'يرجى النقر على مربع "تذكر هذا القرار" إذا كنت لا تريد أن يستمر Firefox في طلب الإذن.', // please click on the "Remember this decision" box if you don't want Firefox to keep asking for permission.
         refresh: "تحديث", // refresh
         continue: "المتابعة بدون إشعار", // continue without notification
         screen: {
