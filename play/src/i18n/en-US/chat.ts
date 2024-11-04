@@ -209,6 +209,7 @@ const chat: BaseTranslation = {
             invited: "Members only (since they were invited)",
         },
         buttons: {
+            edit: "Edit",
             create: "Create",
             cancel: "Cancel",
         },

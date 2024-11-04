@@ -12,6 +12,7 @@
     import { UserProviderMerger } from "../UserProviderMerger/UserProviderMerger";
     import WokaFromUserId from "../../Components/Woka/WokaFromUserId.svelte";
     import getCloseImg from "../images/get-close.png";
+    import messageSmileyImg from "../images/message-smiley.svg";
     import LoadingSmall from "../images/loading-small.svelte";
     import {
         ENABLE_CHAT,
@@ -219,40 +220,38 @@
                     </div>
                 </div>
                 <div class="">
-                    <button
-                        class="tw-p-3 hover:tw-bg-white/10 tw-rounded-xl tw-aspect-square tw-w-12 tw-relative tw-z-50"
-                        on:click={() => (searchActive = !searchActive)}
-                    >
-                        {#if searchLoader}
-                            <LoadingSmall />
-                        {/if}
-                        {#if !searchActive}
-                            <IconSearch font-size="20" />
-                        {:else}
-                            <IconX font-size="20" />
-                        {/if}
-                    </button>
+                    {#if $chatStatusStore !== "OFFLINE"}
+                        <button
+                            class="tw-p-3 hover:tw-bg-white/10 tw-rounded-xl tw-aspect-square tw-w-12 tw-relative tw-z-50"
+                            on:click={() => (searchActive = !searchActive)}
+                        >
+                            {#if searchLoader}
+                                <LoadingSmall />
+                            {/if}
+                            {#if !searchActive}
+                                <IconSearch font-size="20" />
+                            {:else}
+                                <IconX font-size="20" />
+                            {/if}
+                        </button>
+                    {:else}
+                        <div class="tw-w-12" />
+                    {/if}
                     <!-- searchbar -->
-                    {#if searchActive}
+                    {#if searchActive && $chatStatusStore !== "OFFLINE"}
                         {#await userProviderMergerPromise}
                             <div />
                         {:then userProviderMerger}
-                            {#if $chatStatusStore !== "OFFLINE"}
-                                <div
-                                    class="tw-absolute tw-w-full tw-h-full tw-z-40 tw-right-0 tw-top-0 tw-bg-contrast/30"
-                                >
-                                    <input
-                                        autocomplete="new-password"
-                                        class="wa-searchbar tw-block tw-text-white placeholder:tw-text-white/50 tw-w-full placeholder:tw-text-sm tw-border-none tw-pl-6 tw-pr-20 tw-bg-transparent tw-py-3 tw-text-base tw-h-full"
-                                        placeholder={$navChat === "users"
-                                            ? $LL.chat.searchUser()
-                                            : $LL.chat.searchChat()}
-                                        on:keydown={handleKeyDown}
-                                        on:keyup={() => handleKeyUp(userProviderMerger)}
-                                        bind:value={$chatSearchBarValue}
-                                    />
-                                </div>
-                            {/if}
+                            <div class="tw-absolute tw-w-full tw-h-full tw-z-40 tw-right-0 tw-top-0 tw-bg-contrast/30">
+                                <input
+                                    autocomplete="new-password"
+                                    class="wa-searchbar tw-block tw-text-white placeholder:tw-text-white/50 tw-w-full placeholder:tw-text-sm tw-border-none tw-pl-6 tw-pr-20 tw-bg-transparent tw-py-3 tw-text-base tw-h-full"
+                                    placeholder={$navChat === "users" ? $LL.chat.searchUser() : $LL.chat.searchChat()}
+                                    on:keydown={handleKeyDown}
+                                    on:keyup={() => handleKeyUp(userProviderMerger)}
+                                    bind:value={$chatSearchBarValue}
+                                />
+                            </div>
                         {/await}
                     {/if}
                 </div>
@@ -271,43 +270,7 @@
 
                 {#if !$userIsConnected}
                     <div class="tw-flex-col tw-items-center tw-justify-center tw-text-center tw-px-4 tw-py-12">
-                        <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <g clip-path="url(#clip0_4453_23480)">
-                                <path
-                                    d="M48 10.666C50.1217 10.666 52.1566 11.5089 53.6569 13.0092C55.1571 14.5095 56 16.5443 56 18.666V39.9993C56 42.1211 55.1571 44.1559 53.6569 45.6562C52.1566 47.1565 50.1217 47.9994 48 47.9994H34.6667L21.3333 55.9994V47.9994H16C13.8783 47.9994 11.8434 47.1565 10.3431 45.6562C8.84286 44.1559 8 42.1211 8 39.9993V18.666C8 16.5443 8.84286 14.5095 10.3431 13.0092C11.8434 11.5089 13.8783 10.666 16 10.666H48Z"
-                                    stroke="white"
-                                    stroke-width="2.66667"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                />
-                                <path
-                                    d="M25.333 24H25.3597"
-                                    stroke="white"
-                                    stroke-width="2.66667"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                />
-                                <path
-                                    d="M38.667 24H38.6937"
-                                    stroke="white"
-                                    stroke-width="2.66667"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                />
-                                <path
-                                    d="M25.333 34.666C26.202 35.5529 27.2393 36.2576 28.384 36.7386C29.5288 37.2196 30.758 37.4674 31.9997 37.4674C33.2414 37.4674 34.4706 37.2196 35.6153 36.7386C36.7601 36.2576 37.7973 35.5529 38.6663 34.666"
-                                    stroke="white"
-                                    stroke-width="2.66667"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                />
-                            </g>
-                            <defs>
-                                <clipPath id="clip0_4453_23480">
-                                    <rect width="64" height="64" fill="white" />
-                                </clipPath>
-                            </defs>
-                        </svg>
+                        <img src={messageSmileyImg} alt="Smiley happy" />
                         <div class="tw-w-full tw-text-center tw-text-lg tw-font-bold">
                             {$LL.chat.requiresLoginForChat()}
                         </div>
@@ -410,7 +373,8 @@
                         {/if}
                     {/if}
 
-                    <button
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div
                         class="tw-group tw-relative tw-px-3 tw-m-0 tw-rounded-none tw-text-white/75 hover:tw-text-white tw-h-11 hover:tw-bg-contrast-200/10 tw-w-full tw-flex tw-space-x-2 tw-items-center tw-border tw-border-solid tw-border-x-0 tw-border-t tw-border-b-0 tw-border-white/10"
                         on:click={toggleDisplayDirectRooms}
                     >
@@ -426,7 +390,7 @@
                                 />
                             </div>
                         </div>
-                    </button>
+                    </div>
 
                     {#if displayDirectRooms}
                         <div class="tw-flex tw-flex-col tw-px-2 tw-pb-2">
@@ -436,7 +400,8 @@
                         </div>
                     {/if}
 
-                    <button
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div
                         class="tw-group tw-relative tw-px-3 tw-m-0 tw-rounded-none tw-text-white/75 hover:tw-text-white tw-h-11 hover:tw-bg-contrast-200/10 tw-w-full tw-flex tw-space-x-2 tw-items-center tw-border tw-border-solid tw-border-x-0 tw-border-t tw-border-b-0 tw-border-white/10"
                         on:click={toggleDisplayRooms}
                         data-testid="roomAccordeon"
@@ -456,7 +421,7 @@
                                 class={`tw-transform tw-transition ${!displayRooms ? "" : "tw-rotate-180"}`}
                             />
                         </div>
-                    </button>
+                    </div>
                     {#if displayRooms}
                         <div class="tw-px-2 tw-pb-2">
                             <ShowMore items={filteredRooms} maxNumber={8} idKey="id" let:item={room}>

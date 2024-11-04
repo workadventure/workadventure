@@ -43,14 +43,14 @@
             data-testid="cancelMessageEditionButton"
             on:click={() => selectedChatMessageToEdit.set(null)}
         >
-            Cancel
+            {$LL.chat.createRoom.buttons.cancel()}
         </button>
         <button
             class="tw-bg-white hover:tw-bg-white/80 tw-text-secondary tw-py-0.5 tw-text-sm tw-px-3 tw-w-20 tw-text-center tw-items-center tw-justify-center"
             data-testid="saveMessageEditionButton"
             on:click={() => editMessage(inputValue)}
         >
-            Edit
+            {$LL.chat.createRoom.buttons.edit()}
         </button>
     </div>
 </div>

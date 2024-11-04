@@ -210,6 +210,7 @@ const chat: DeepPartial<Translation["chat"]> = {
             invited: "Seulement les membres (depuis leur invitation)",
         },
         buttons: {
+            edit: "Editer",
             create: "Créer",
             cancel: "Annuler",
         },

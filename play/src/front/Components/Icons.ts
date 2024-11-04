@@ -49,3 +49,4 @@ export { default as IconExclamation } from "~icons/tabler/message-2-exclamation"
 export { default as IconCloudLock } from "~icons/tabler/cloud-lock";
 export { default as IconMessageCircle2 } from "~icons/tabler/message-circle-2";
 export { default as IconVerify } from "~icons/tabler/rosetteDiscountCheck";
+export { default as IconInbox } from "~icons/tabler/mailbox";
