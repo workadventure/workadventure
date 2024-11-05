@@ -14,7 +14,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     emoji: "فتح / إغلاق الرموز التعبيرية", // open / close emoji
     disableMegaphone: "تعطيل مكبر الصوت", // disable megaphone
     menu: "فتح / إغلاق القائمة", // open / close menu
-    calendar: "فتح / إغلاق الجدول", // open / close calendar
+    calendar: "فتح / إغلاق التقويم", // open / close calendar
     mapEditor: "فتح / إغلاق محرر الخرائط", // open / close map manager
     mapEditorMobileLocked: "محرر الخرائط مقفل في الوضع المحمول", // map editor is locked in mobile mode
     mapEditorLocked: "محرر الخرائط مقفل 🔐", // map editor is locked
