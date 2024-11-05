@@ -41,5 +41,3 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
 };
 
 export default actionbar;
-
-export default actionbar;
