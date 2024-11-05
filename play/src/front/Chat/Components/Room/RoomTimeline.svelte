@@ -13,8 +13,6 @@
     import { IconArrowLeft, IconLoader } from "@wa-icons";
 
     export let room: ChatRoom;
-    //TODO : delete 
-    const permissionLevel = room.permissionLevel;
     let myChatID = localUserStore.getChatId();
 
     const NUMBER_OF_TYPING_MEMBER_TO_DISPLAY = 3;
@@ -173,7 +171,6 @@
 
 <div class="tw-flex tw-flex-col tw-flex-auto tw-h-full tw-w-full tw-max-w-full tw-pl-2">
     {#if room !== undefined}
-        {$permissionLevel}
         <div class="tw-flex tw-flex-col tw-gap-2">
             <div class="tw-flex tw-flex-row tw-items-center">
                 <button class="back-roomlist tw-p-0 tw-m-0" on:click={goBackAndClearSelectedChatMessage}>
@@ -195,15 +192,6 @@
             on:scroll={handleScroll}
         >
             <ul class="tw-list-none tw-p-0 tw-flex-1 tw-flex tw-flex-col tw-max-h-full">
-                <!--{#if room.id === "proximity" && $connectedUsers !== undefined}-->
-                <!--    <div class="tw-flex tw-flex-row tw-items-center tw-gap-2">-->
-                <!--        {#each [...$connectedUsers] as [userId, user] (userId)}-->
-                <!--            <div class="avatar">-->
-                <!--                <Avatar avatarUrl={user.avatarUrl} fallbackName={user?.username} color={user?.color} />-->
-                <!--            </div>-->
-                <!--        {/each}-->
-                <!--    </div>-->
-                <!--{/if}-->
                 {#if $messages.length === 0}
                     <p class="tw-self-center tw-text-md tw-text-gray-500">{$LL.chat.nothingToDisplay()}</p>
                 {/if}
@@ -225,7 +213,6 @@
 
         {#if $typingMembers.length > 0}
             <div class="tw-flex tw-row tw-w-full tw-text-gray-300 tw-text-sm  tw-m-0 tw-px-2 tw-mb-2">
-                <!-- {$typingMembers.map(typingMember => typingMember.name).slice(0, NUMBER_OF_TYPING_MEMBER_TO_DISPLAY)} -->
                 {#each $typingMembers
                     .map((typingMember, index) => ({ ...typingMember, index }))
                     .slice(0, NUMBER_OF_TYPING_MEMBER_TO_DISPLAY) as typingMember (typingMember.id)}

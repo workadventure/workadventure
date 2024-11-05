@@ -159,7 +159,6 @@ class MatrixProvider {
             {
                 ...(actualPowerLevelsResponse.data ?? {}),
                 users: {
-                    //TODO : typer la reponse
                     ...(actualPowerLevelsResponse.data.users ?? {}),
                     [userID]: 50,
                 },

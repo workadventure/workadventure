@@ -1,13 +1,18 @@
 <script lang="ts">
     import highlightWords from "highlight-words";
-    import { ChatRoom } from "../../Connection/ChatConnection";
+    import {
+        ChatRoom,
+        ChatRoomMembershipManagement,
+        ChatRoomModeration,
+        ChatRoomNotificationControl,
+    } from "../../Connection/ChatConnection";
     import NotificationBadge from "../NotificationBadge.svelte";
     import { chatSearchBarValue, selectedRoomStore } from "../../Stores/ChatStore";
     import Avatar from "../Avatar.svelte";
     import EncryptionBadge from "../EncryptionBadge.svelte";
     import RoomMenu from "./RoomMenu/RoomMenu.svelte";
 
-    export let room: ChatRoom;
+    export let room: ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl;
 
     let hasUnreadMessage = room.hasUnreadMessages;
     let roomName = room.name;

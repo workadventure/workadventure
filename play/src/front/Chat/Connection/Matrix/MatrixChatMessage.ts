@@ -15,7 +15,7 @@ export class MatrixChatMessage implements ChatMessage {
     type: ChatMessageType;
     isDeleted: Writable<boolean>;
     isModified: Writable<boolean>;
-    readonly canDelete : Writable<boolean>;
+    readonly canDelete: Writable<boolean>;
 
     constructor(private event: MatrixEvent, private room: Room, isQuotedMessage?: boolean) {
         this.id = event.getId() ?? uuidv4();
@@ -34,15 +34,19 @@ export class MatrixChatMessage implements ChatMessage {
         let myPowerLevel = 0;
         let senderPowerLevel = 0;
 
-        if(myRoomMember){
-            myPowerLevel = myRoomMember.powerLevelNorm
+        if (myRoomMember) {
+            myPowerLevel = myRoomMember.powerLevelNorm;
         }
 
-        if(senderRoomMember){
-            senderPowerLevel = senderRoomMember.powerLevelNorm
+        if (senderRoomMember) {
+            senderPowerLevel = senderRoomMember.powerLevelNorm;
         }
 
-        const hasSufficientPowerLevel = this.room.getLiveTimeline().getState(Direction.Backward)?.hasSufficientPowerLevelFor("redact",myPowerLevel) ?? false;
+        const hasSufficientPowerLevel =
+            this.room
+                .getLiveTimeline()
+                .getState(Direction.Backward)
+                ?.hasSufficientPowerLevelFor("redact", myPowerLevel) ?? false;
 
         this.canDelete = writable(this.isMyMessage || (hasSufficientPowerLevel && myPowerLevel > senderPowerLevel));
 

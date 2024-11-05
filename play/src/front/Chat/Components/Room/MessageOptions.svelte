@@ -1,7 +1,6 @@
 <script lang="ts">
     import { ChatMessage } from "../../Connection/ChatConnection";
     import { selectedChatMessageToEdit, selectedChatMessageToReply } from "../../Stores/ChatStore";
-    import { gameManager } from "../../../Phaser/Game/GameManager";
     import EmojiButton from "./EmojiButton.svelte";
     import { IconArrowBackUp, IconArrowDown, IconPencil, IconTrash } from "@wa-icons";
 
@@ -24,10 +23,6 @@
     }
 
     const { content, isMyMessage, type, canDelete } = message;
-
-    const chat = gameManager.chatConnection;
-
-    $: isGuest = chat.isGuest;
 </script>
 
 <div class="tw-flex tw-flex-row tw-gap-1 tw-items-center">

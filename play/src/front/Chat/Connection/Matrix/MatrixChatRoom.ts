@@ -2,7 +2,6 @@ import {
     ConditionKind,
     Direction,
     EventStatus,
-    EventTimeline,
     EventType,
     IContent,
     IPushRule,
@@ -15,30 +14,42 @@ import {
     ReceiptType,
     Room,
     RoomEvent,
-    RoomMemberEvent,
+    RoomMember,
     RoomState,
     RoomStateEvent,
     TimelineWindow,
 } from "matrix-js-sdk";
 import * as Sentry from "@sentry/svelte";
-import { get, Writable, writable } from "svelte/store";
+import { derived, get, Readable, Writable, writable } from "svelte/store";
 import { MediaEventContent, MediaEventInfo } from "matrix-js-sdk/lib/@types/media";
 import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
 import { RoomMessageEventContent } from "matrix-js-sdk/lib/@types/events";
-import { ChatPermissionLevel, ChatRoom, ChatRoomMember, ChatRoomMembership } from "../ChatConnection";
+import {
+    ChatPermissionLevel,
+    ChatRoom,
+    ChatRoomMember,
+    ChatRoomMembership,
+    ChatRoomMembershipManagement,
+    ChatRoomModeration,
+    ChatRoomNotificationControl,
+    memberTypingInformation,
+} from "../ChatConnection";
 import { isAChatRoomIsVisible, navChat, selectedChatMessageToReply, selectedRoomStore } from "../../Stores/ChatStore";
 import { gameManager } from "../../../Phaser/Game/GameManager";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { matrixSecurity } from "./MatrixSecurity";
+import { MatrixChatRoomMember } from "./MatrixRoomMember";
 
 type EventId = string;
 
 type ModerationAction = "ban" | "kick" | "invite" | "redact";
 
-export class MatrixChatRoom implements ChatRoom {
+export class MatrixChatRoom
+    implements ChatRoom, ChatRoomMembershipManagement, ChatRoomModeration, ChatRoomNotificationControl
+{
     readonly id: string;
     readonly name: Writable<string>;
     readonly type: "multiple" | "direct";
@@ -47,13 +58,13 @@ export class MatrixChatRoom implements ChatRoom {
     messages: SearchableArrayStore<string, MatrixChatMessage>;
     myMembership: ChatRoomMembership;
     membersId: string[];
-    members: ChatRoomMember[];
+    members: Writable<MatrixChatRoomMember[]>;
     messageReactions: MapStore<string, MapStore<string, MatrixChatMessageReaction>>;
     hasPreviousMessage: Writable<boolean>;
     timelineWindow: TimelineWindow;
     inMemoryEventsContent: Map<EventId, IContent>;
     isEncrypted!: Writable<boolean>;
-    typingMembers: Writable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
+    typingMembers: Readable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
     isRoomFolder = false;
     areNotificationsMuted = writable(false);
 
@@ -63,6 +74,7 @@ export class MatrixChatRoom implements ChatRoom {
     private handleRoomName = this.onRoomName.bind(this);
     private handleRoomRedaction = this.onRoomRedaction.bind(this);
     private handleStateEvent = this.onRoomStateEvent.bind(this);
+    private handleNewMember = this.onRoomNewMember.bind(this);
 
     constructor(
         private matrixRoom: Room,
@@ -85,68 +97,29 @@ export class MatrixChatRoom implements ChatRoom {
             ...matrixRoom.getMembersWithMembership(KnownMembership.Join).map((member) => member.userId),
         ];
 
-        //TODO : add powerLevel to compare with user powerr level
-        this.members = [
-            ...matrixRoom.getMembers().map((member) => ({
-                id: member.userId,
-                name: member.name ?? member.userId,
-                membership: member.membership ?? "join",
-            })),
-        ];
+        this.members = writable([
+            ...matrixRoom
+                .getMembers()
+                .map((member) => new MatrixChatRoomMember(member, this.matrixRoom.client.baseUrl)),
+        ]);
+
+        this.hasPreviousMessage = writable(false);
 
         const myRoomMember = this.matrixRoom.getMember(this.matrixRoom.client.getSafeUserId());
 
         if (myRoomMember) {
-            this.permissionLevel.set(this.getPermissionLevel(myRoomMember.powerLevelNorm));
+            this.permissionLevel.set(MatrixChatRoomMember.getPermissionLevel(myRoomMember.powerLevelNorm));
         }
 
         this.timelineWindow = new TimelineWindow(matrixRoom.client, matrixRoom.getLiveTimeline().getTimelineSet());
         this.isEncrypted = writable(matrixRoom.hasEncryptionStateEvent());
-        this.typingMembers = writable([]);
 
-        void this.matrixRoom.getMembersWithMembership(KnownMembership.Join).forEach((member) => {
-            //TODO: Create a E2E test for this ...
-            //TODO : fixme typing problems / memory leak ...
-            member.on(RoomMemberEvent.Typing, (event, member) => {
-                const typingMember = member.user;
-                if (!typingMember) return;
-
-                const typingMemberInformation = {
-                    id: typingMember.userId,
-                    name: typingMember.displayName || null,
-                    avatarUrl: typingMember.avatarUrl || null,
-                };
-
-                const myUserID = this.matrixRoom.client.getSafeUserId();
-
-                if (!typingMemberInformation.id || typingMemberInformation.id === myUserID) return;
-
-                const isAlreadyTyping = get(this.typingMembers).some((memberInformation) => {
-                    return memberInformation.id === typingMemberInformation.id;
-                });
-
-                if (isAlreadyTyping) {
-                    this.typingMembers.update((currentTypingMemberList) => {
-                        return currentTypingMemberList.filter((member) => member.id !== typingMemberInformation.id);
-                    });
-                    return;
-                }
-
-                typingMemberInformation.avatarUrl = typingMemberInformation.avatarUrl
-                    ? this.matrixRoom.client.mxcUrlToHttp(typingMemberInformation.avatarUrl ?? "", 48, 48)
-                    : typingMemberInformation.avatarUrl;
-
-                this.typingMembers.update((currentTypingMemberList) => {
-                    return [...currentTypingMemberList, typingMemberInformation];
-                });
-            });
-            member.on(RoomMemberEvent.PowerLevel, (event, member) => {
-                if (member.userId === this.matrixRoom.client.getSafeUserId()) {
-                    this.permissionLevel.set(this.getPermissionLevel(member.powerLevelNorm));
-                }
-            });
-        });
-
+        this.typingMembers = derived(
+            get(this.members).map((member) => member.isTypingInformation),
+            (membersInformation) => {
+                return membersInformation.filter((member) => member !== null) as memberTypingInformation[];
+            }
+        );
         this.isRoomFolder = matrixRoom.isSpaceRoom();
         this.inMemoryEventsContent = new Map<EventId, MatrixEvent>();
 
@@ -238,8 +211,15 @@ export class MatrixChatRoom implements ChatRoom {
         this.matrixRoom.on(RoomEvent.Name, this.handleRoomName);
         this.matrixRoom.on(RoomEvent.Redaction, this.handleRoomRedaction);
         this.matrixRoom.on(RoomStateEvent.Events, this.handleStateEvent);
+        this.matrixRoom.on(RoomStateEvent.NewMember, this.handleNewMember);
     }
 
+    private onRoomNewMember(event: MatrixEvent, state: RoomState, member: RoomMember) {
+        this.members.update((members) => [
+            ...members,
+            new MatrixChatRoomMember(member, this.matrixRoom.client.baseUrl),
+        ]);
+    }
     private onRoomStateEvent(event: MatrixEvent, state: RoomState, lastStateEvent: MatrixEvent | null) {
         if (get(this.isEncrypted)) return;
         const isEncrypted = !!state.getStateEvents(EventType.RoomEncryption)[0];
@@ -644,6 +624,10 @@ export class MatrixChatRoom implements ChatRoom {
         this.matrixRoom.off(RoomEvent.Name, this.handleRoomName);
         this.matrixRoom.off(RoomEvent.Redaction, this.handleRoomRedaction);
         this.matrixRoom.off(RoomStateEvent.Events, this.handleStateEvent);
+        this.matrixRoom.off(RoomStateEvent.NewMember, this.handleNewMember);
+        get(this.members).forEach((member) => {
+            member.destroy();
+        });
     }
 
     startTyping(): Promise<object> {
@@ -660,49 +644,27 @@ export class MatrixChatRoom implements ChatRoom {
         return this.matrixRoom.getLastActiveTimestamp();
     }
 
-    private getPermissionLevel(powerLevel: number): ChatPermissionLevel {
-        return powerLevel >= 100
-            ? ChatPermissionLevel.ADMIN
-            : powerLevel >= 50
-            ? ChatPermissionLevel.MODERATOR
-            : ChatPermissionLevel.USER;
-    }
-    private getPowerLevel(chatPermissionLevel: ChatPermissionLevel): number {
-        switch(chatPermissionLevel){
-            case ChatPermissionLevel.USER:
-                return 0
-            case ChatPermissionLevel.MODERATOR:
-                return 50
-            case ChatPermissionLevel.ADMIN:
-                return 100
-            default:
-                throw new Error(`${chatPermissionLevel} is not handle`);
+    public hasPermissionFor(action: ModerationAction, member?: ChatRoomMember): boolean {
+        const powerLevel = MatrixChatRoomMember.getPowerLevel(get(this.permissionLevel));
+        const otherUserPowerLevel = member ? MatrixChatRoomMember.getPowerLevel(get(member.permissionLevel)) : 0;
 
-        }
-    }
-    public hasPermissionFor(
-        action: ModerationAction,
-    ): boolean {
-        const powerLevel = this.getPowerLevel(get(this.permissionLevel));
-        return this.matrixRoom.getLiveTimeline().getState(Direction.Backward)?.hasSufficientPowerLevelFor(action,powerLevel) ?? false ;
+        return (
+            (this.matrixRoom
+                .getLiveTimeline()
+                .getState(Direction.Backward)
+                ?.hasSufficientPowerLevelFor(action, powerLevel) ??
+                false) &&
+            powerLevel > otherUserPowerLevel
+        );
     }
 
-    public async  kickUser(userID : string,reason?: string):Promise<void>{
-        try{
-            await this.matrixRoom.client.kick(this.id,userID,reason);
-        }catch(e){
-            //TODO:
-            console.error("....");
-            Sentry.captureMessage("");
-        }
+    public async kick(userID: string, reason?: string): Promise<void> {
+        await this.matrixRoom.client.kick(this.id, userID, reason);
     }
-    public async  banUser(userID : string,reason?: string):Promise<void>{
-        try{
-            await this.matrixRoom.client.ban(this.id,userID,reason);
-        }catch(e){
-            //TODO:
-            console.error("....");
-            Sentry.captureMessage("");
-        }
+    public async ban(userID: string, reason?: string): Promise<void> {
+        await this.matrixRoom.client.ban(this.id, userID, reason);
+    }
+    public async unban(userID: string, reason?: string): Promise<void> {
+        await this.matrixRoom.client.unban(this.id, userID);
     }
 }

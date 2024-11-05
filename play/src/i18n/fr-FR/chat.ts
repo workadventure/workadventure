@@ -247,7 +247,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     manageRoomUsers: {
         roomOption: "Participants",
         error: "Impossible d'envoyer les invitations",
-        title: "Inviter des participants",
+        title: "Gérer les participants",
         invitations: "Invitations",
         participants: "Participants",
         join: "Présent",
@@ -258,6 +258,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         buttons: {
             sendInvitations: "Envoyer les invitations",
             cancel: "Annuler",
+            ban: "Bannir",
+            kick: "Expulser",
+            unban: "Débannir",
+            invite: "Inviter",
         },
         sendInvitationsSuccessNotification: "Invitation(s) envoyée(s)",
     },

@@ -1,0 +1,146 @@
+<script lang="ts">
+    import * as Sentry from "@sentry/svelte";
+    import LL from "../../../../i18n/i18n-svelte";
+    import { ChatRoomMember, ChatRoomMembership, ChatRoomModeration } from "../../Connection/ChatConnection";
+    import { IconLoader } from "@wa-icons";
+    export let member: ChatRoomMember;
+    export let room: ChatRoomModeration;
+
+    let banInProgress = false;
+    let kickInProgress = false;
+    let unbanInProgress = false;
+    let inviteInProgress = false;
+    let disableModerationButton = banInProgress || kickInProgress || unbanInProgress || inviteInProgress;
+
+    $: ({ name, membership, id } = member);
+
+    function getTranslatedMembership(membership: ChatRoomMembership) {
+        switch (membership) {
+            case "join":
+                return $LL.chat.manageRoomUsers.join();
+            case "invite":
+                return $LL.chat.manageRoomUsers.invite();
+            case "ban":
+                return $LL.chat.manageRoomUsers.ban();
+            case "leave":
+                return $LL.chat.manageRoomUsers.leave();
+            default:
+                return $LL.chat.manageRoomUsers.invite();
+        }
+    }
+
+    const banUser = () => {
+        banInProgress = true;
+        room.ban(id)
+            .catch((e) => {
+                console.error(e);
+                Sentry.captureMessage(`Failed to ban user : ${e}`);
+            })
+            .finally(() => {
+                banInProgress = false;
+            });
+    };
+
+    const unbanUser = () => {
+        unbanInProgress = true;
+
+        room.unban(id)
+            .catch((e) => {
+                console.error(e);
+                Sentry.captureMessage(`Failed to unban user : ${e}`);
+            })
+            .finally(() => {
+                unbanInProgress = false;
+            });
+    };
+
+    const kickUser = () => {
+        kickInProgress = true;
+        room.kick(id)
+            .catch((e) => {
+                console.error(e);
+                Sentry.captureMessage(`Failed to kick user : ${e}`);
+            })
+            .finally(() => {
+                kickInProgress = false;
+            });
+    };
+
+    const inviteUser = () => {
+        inviteInProgress = true;
+        room.inviteUsers([id])
+            .catch((e) => {
+                console.error(e);
+                Sentry.captureMessage(`Failed to invite user : ${e}`);
+            })
+            .finally(() => {
+                inviteInProgress = false;
+            });
+    };
+</script>
+
+<li class="tw-flex tw-mb-1 tw-justify-between">
+    <p class="tw-m-0 tw-p-0">{$name}</p>
+    <div class="tw-flex tw-gap-2">
+        {#if room.hasPermissionFor("invite", member) && $membership === "leave"}
+            <button
+                class="tw-m-0 tw-px-2 tw-py-1 tw-bg-green-500 tw-rounded-md"
+                disabled={disableModerationButton}
+                on:click={inviteUser}
+            >
+                {#if inviteInProgress}
+                    <IconLoader class="tw-animate-spin" />
+                {:else}
+                    {$LL.chat.manageRoomUsers.buttons.invite()}
+                {/if}
+            </button>
+        {/if}
+        {#if room.hasPermissionFor("kick", member) && $membership !== "leave" && $membership !== "ban"}
+            <button
+                class="tw-m-0 tw-px-2 tw-py-1 tw-bg-orange-500 tw-rounded-md"
+                disabled={disableModerationButton}
+                on:click={kickUser}
+            >
+                {#if kickInProgress}
+                    <IconLoader class="tw-animate-spin" />
+                {:else}
+                    {$LL.chat.manageRoomUsers.buttons.kick()}
+                {/if}
+            </button>
+        {/if}
+        {#if room.hasPermissionFor("ban", member)}
+            {#if $membership === "ban"}
+                <button
+                    disabled={disableModerationButton}
+                    class="tw-m-0 tw-px-2 tw-py-1 tw-bg-green-500 tw-rounded-md"
+                    on:click={unbanUser}
+                >
+                    {#if unbanInProgress}
+                        <IconLoader class="tw-animate-spin" />
+                    {:else}
+                        {$LL.chat.manageRoomUsers.buttons.unban()}
+                    {/if}
+                </button>
+            {:else}
+                <button
+                    class="tw-m-0 tw-px-2 tw-py-1 tw-bg-red-500 tw-rounded-md"
+                    disabled={disableModerationButton}
+                    on:click={banUser}
+                >
+                    {#if banInProgress}
+                        <IconLoader class="tw-animate-spin" />
+                    {:else}
+                        {$LL.chat.manageRoomUsers.buttons.ban()}
+                    {/if}
+                </button>
+            {/if}
+        {/if}
+        <p
+            class="tw-m-0 tw-ml-4 tw-px-2 tw-py-1 tw-bg-green-500 tw-rounded-md"
+            class:tw-bg-orange-500={$membership === "invite"}
+            class:tw-bg-red-500={$membership === "ban" || $membership === "leave"}
+        >
+            {getTranslatedMembership($membership)}
+        </p>
+    </div>
+</li>

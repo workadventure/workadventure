@@ -28,7 +28,14 @@ import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { AvailabilityStatus } from "@workadventure/messages";
 import { canAcceptVerificationRequest, VerificationRequest } from "matrix-js-sdk/lib/crypto-api";
-import { ChatConnectionInterface, ChatRoom, ChatUser, ConnectionStatus, CreateRoomOptions } from "../ChatConnection";
+import {
+    ChatConnectionInterface,
+    ChatRoom,
+    ChatRoomMembershipManagement,
+    ChatUser,
+    ConnectionStatus,
+    CreateRoomOptions,
+} from "../ChatConnection";
 import { selectedRoomStore } from "../../Stores/ChatStore";
 import LL from "../../../../i18n/i18n-svelte";
 import { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
@@ -110,7 +117,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 }
 
                 return directRooms.reduce((acc, currentRoom) => {
-                    currentRoom.members.forEach((member) => {
+                    get(currentRoom.members).forEach((member) => {
                         if (member.id !== myUserID) {
                             const user = this.client?.getUser(member.id);
                             if (user) {
@@ -730,7 +737,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         return initial_state;
     }
 
-    async createDirectRoom(userToInvite: string): Promise<ChatRoom | undefined> {
+    async createDirectRoom(userToInvite: string): Promise<(ChatRoom & ChatRoomMembershipManagement) | undefined> {
         if (!this.client) {
             return Promise.reject(CLIENT_NOT_INITIALIZED_ERROR_MSG);
         }
@@ -772,7 +779,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         }
     }
 
-    getDirectRoomFor(userID: string): ChatRoom | undefined {
+    getDirectRoomFor(userID: string): (ChatRoom & ChatRoomMembershipManagement) | undefined {
         const directRooms = Array.from(this.roomList.values())
             .filter((room) => {
                 return (

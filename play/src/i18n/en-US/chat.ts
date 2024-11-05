@@ -246,7 +246,7 @@ const chat: BaseTranslation = {
     manageRoomUsers: {
         roomOption: "Participants",
         error: "Unable send invitations",
-        title: "Invite participants",
+        title: "Manage participants",
         invitations: "Invitations",
         participants: "Participants",
         join: "Joined",
@@ -257,6 +257,10 @@ const chat: BaseTranslation = {
         buttons: {
             sendInvitations: "Send invitations",
             cancel: "Cancel",
+            ban: "Ban",
+            kick: "Kick",
+            unban: "Unban",
+            invite: "Invite",
         },
         sendInvitationsSuccessNotification: "Invitations sent successfully",
     },

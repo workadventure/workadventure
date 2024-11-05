@@ -2,20 +2,23 @@
     import Select from "svelte-select";
     import { closeModal } from "svelte-modals";
     import { fade } from "svelte/transition";
+    import { get } from "svelte/store";
     import Popup from "../../../Components/Modal/Popup.svelte";
-    import { ChatRoom, ChatRoomMembership } from "../../Connection/ChatConnection";
+    import { ChatRoomMembershipManagement, ChatRoomModeration } from "../../Connection/ChatConnection";
     import LL from "../../../../i18n/i18n-svelte";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
     import { searchChatMembersRule } from "./searchChatMembersRule";
+    import RoomParticipant from "./RoomParticipant.svelte";
     import { IconLoader } from "@wa-icons";
 
     export let isOpen: boolean;
-    export let room: ChatRoom;
+    export let room: ChatRoomMembershipManagement & ChatRoomModeration;
+    const members = room.members;
 
     const { searchMembers } = searchChatMembersRule();
 
     let invitations: { value: string; label: string }[] = [];
-
+    let filterText = "";
     let sendingInvitationsToRoom = false;
     let invitationToRoomError: string | undefined = undefined;
 
@@ -23,7 +26,7 @@
         try {
             sendingInvitationsToRoom = true;
             await room.inviteUsers(invitations.map((invitation) => invitation.value));
-            closeModal();
+            //closeModal();
             notificationPlayingStore.playNotification($LL.chat.manageRoomUsers.sendInvitationsSuccessNotification());
         } catch (error) {
             console.error(error);
@@ -33,21 +36,6 @@
         } finally {
             sendingInvitationsToRoom = false;
             setTimeout(() => (invitationToRoomError = undefined), 2000);
-        }
-    }
-
-    function getTranslatedMembership(membership: ChatRoomMembership) {
-        switch (membership) {
-            case "join":
-                return $LL.chat.manageRoomUsers.join();
-            case "invite":
-                return $LL.chat.manageRoomUsers.invite();
-            case "ban":
-                return $LL.chat.manageRoomUsers.ban();
-            case "leave":
-                return $LL.chat.manageRoomUsers.leave();
-            default:
-                return $LL.chat.manageRoomUsers.invite();
         }
     }
 </script>
@@ -77,6 +65,7 @@
                 --item-hover-color="black"
                 --clear-select-color="red"
                 loadOptions={searchMembers}
+                bind:filterText
                 placeholder={$LL.chat.createRoom.users()}
             >
                 <div slot="item" let:item>
@@ -84,18 +73,15 @@
                 </div>
             </Select>
             <p class="tw-p-0 tw-m-0 tw-pl-1 tw-font-bold">{$LL.chat.manageRoomUsers.participants()}</p>
-            <ul class="tw-list-none !tw-p-0">
-                {#each room.members as member (member.id)}
-                    <li class="tw-flex tw-mb-1 tw-justify-between">
-                        <p class="tw-m-0 tw-p-0">{member.name}</p>
-                        <p
-                            class="tw-m-0 tw-px-2 tw-py-1 tw-bg-green-500 tw-rounded-md"
-                            class:tw-bg-orange-500={member.membership === "invite"}
-                            class:tw-bg-red-500={member.membership === "ban" || member.membership === "leave"}
-                        >
-                            {getTranslatedMembership(member.membership)}
-                        </p>
-                    </li>
+            <ul class="tw-list-none !tw-p-0 tw-max-h-96 tw-overflow-auto">
+                {#each $members
+                    .filter((participant) => {
+                        return (invitations || []).length > 0 ? invitations.some( (invitation) => get(participant.name).includes(invitation.label) ) : true;
+                    })
+                    .sort((participantA, participantB) => {
+                        return get(participantA.name).localeCompare(get(participantB.name));
+                    }) as member (member.id)}
+                    <RoomParticipant {member} {room} />
                 {/each}
             </ul>
         {/if}
