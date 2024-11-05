@@ -34,6 +34,7 @@ export class ProximityChatMessage implements ChatMessage {
     quotedMessage = undefined;
     isDeleted = writable(false);
     isModified = writable(false);
+    canDelete = writable(false);
 
     constructor(
         public id: string,

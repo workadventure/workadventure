@@ -23,7 +23,7 @@
         message.addReaction(event.detail).catch((error) => console.error(error));
     }
 
-    const { content, isMyMessage, type } = message;
+    const { content, isMyMessage, type, canDelete } = message;
 
     const chat = gameManager.chatConnection;
 
@@ -54,7 +54,7 @@
             <IconPencil font-size={16} />
         </button>
     {/if}
-    {#if $isGuest === false}
+    {#if $canDelete}
         <button class="tw-p-0 tw-m-0 hover:tw-text-red-500" data-testid="removeMessageButton" on:click={removeMessage}>
             <IconTrash font-size={16} />
         </button>

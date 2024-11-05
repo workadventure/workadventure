@@ -157,10 +157,10 @@ class MatrixProvider {
         const response = await axios.put(
             `${MATRIX_API_URI}_matrix/client/r0/rooms/${roomID}/state/m.room.power_levels`,
             {
-                ...actualPowerLevelsResponse.data,
+                ...(actualPowerLevelsResponse.data ?? {}),
                 users: {
                     //TODO : typer la reponse
-                    ...actualPowerLevelsResponse.data.users,
+                    ...(actualPowerLevelsResponse.data.users ?? {}),
                     [userID]: 50,
                 },
             },

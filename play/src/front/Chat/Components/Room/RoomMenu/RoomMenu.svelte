@@ -85,11 +85,13 @@
     class:tw-absolue={optionButtonRef !== undefined}
     class:tw-hidden={hideOptions}
 >
-    <RoomOption
-        IconComponent={IconUserPlus}
-        title={$LL.chat.manageRoomUsers.roomOption()}
-        on:click={openInviteParticipantsModal}
-    />
+    {#if room.hasPermissionFor("invite")}   
+        <RoomOption
+            IconComponent={IconUserPlus}
+            title={$LL.chat.manageRoomUsers.roomOption()}
+            on:click={openInviteParticipantsModal}
+        />
+    {/if}
 
     <RoomOption
         IconComponent={IconLogout}

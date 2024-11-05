@@ -13,7 +13,8 @@
     import { IconArrowLeft, IconLoader } from "@wa-icons";
 
     export let room: ChatRoom;
-
+    //TODO : delete 
+    const permissionLevel = room.permissionLevel;
     let myChatID = localUserStore.getChatId();
 
     const NUMBER_OF_TYPING_MEMBER_TO_DISPLAY = 3;
@@ -172,6 +173,7 @@
 
 <div class="tw-flex tw-flex-col tw-flex-auto tw-h-full tw-w-full tw-max-w-full tw-pl-2">
     {#if room !== undefined}
+        {$permissionLevel}
         <div class="tw-flex tw-flex-col tw-gap-2">
             <div class="tw-flex tw-flex-row tw-items-center">
                 <button class="back-roomlist tw-p-0 tw-m-0" on:click={goBackAndClearSelectedChatMessage}>

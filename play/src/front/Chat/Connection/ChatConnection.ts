@@ -22,10 +22,20 @@ export type PartialChatUser = Partial<ChatUser> & { chatId: string };
 
 export type ChatRoomMembership = "ban" | "join" | "knock" | "leave" | "invite" | string;
 
+export enum ChatPermissionLevel {
+    USER = "USER",
+    MODERATOR = "MODERATOR",
+    ADMIN = "ADMIN",
+}
+
+export type ModerationAction = "ban" | "kick" | "invite" | "redact";
+
 export interface ChatRoomMember {
     id: string;
     name: string;
     membership: ChatRoomMembership;
+    //TODO : optionnal ? 
+    permissionLevel?: ChatPermissionLevel;
 }
 export interface ChatRoom {
     readonly id: string;
@@ -56,6 +66,8 @@ export interface ChatRoom {
     readonly muteNotification: () => Promise<void>;
     readonly inviteUsers: (userIds: string[]) => Promise<void>;
     readonly destroy: () => void;
+    readonly permissionLevel: ChatPermissionLevel;
+    readonly hasPermissionFor: (action: ModerationAction)=> boolean; 
 }
 
 //Readonly attributes
@@ -73,6 +85,7 @@ export interface ChatMessage {
     isDeleted: Readable<boolean>;
     isModified: Readable<boolean>;
     addReaction: (reaction: string) => Promise<void>;
+    canDelete : Readable<boolean>;
 }
 
 export interface ChatMessageReaction {
