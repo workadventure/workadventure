@@ -30,15 +30,23 @@ export const shownRoomListStore = writable<string>("");
 export const chatSearchBarValue = writable<string>("");
 
 const createSelectedRoomStore = () => {
-    const { subscribe, set } = writable<ChatRoom | undefined>(undefined);
+    const { subscribe, update } = writable<ChatRoom | undefined>(undefined);
 
     const customSet = (value: ChatRoom | undefined) => {
-        set(value);
-        if (value && get(value.isEncrypted) && !get(alreadyAskForInitCryptoConfiguration)) {
-            matrixSecurity.openChooseDeviceVerificationMethodModal().catch((error) => {
-                console.error(error);
-            });
-        }
+        update((currentValue) => {
+            if (
+                currentValue !== value &&
+                value &&
+                get(value.isEncrypted) &&
+                !get(alreadyAskForInitCryptoConfiguration)
+            ) {
+                matrixSecurity.openChooseDeviceVerificationMethodModal().catch((error) => {
+                    console.error(error);
+                });
+            }
+
+            return value;
+        });
     };
 
     return {
