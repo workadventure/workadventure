@@ -2,10 +2,10 @@ import type { Translation } from "../i18n-types";
 import type { DeepPartial } from "../DeepPartial";
 
 const actionbar: DeepPartial<Translation["actionbar"]> = {
-    chat: "فتح / إغلاق الدردشة", // open / close chat
+    chat: "فتح/إغلاق المحادثة", // open / close chat
     follow: "متابعة", // follow
     unfollow: "إلغاء المتابعة", // unfollow
-    lock: "قفل / فتح المناقشة", // lock / unlock discussion
+    lock: "قفل/فتح المحادثة", // lock / unlock discussion
     screensharing: "بدء / إيقاف مشاركة الشاشة", // start / stop screen sharing
     layout: "تغيير طريقة العرض", // toggle grid view
     disableLayout: "غير متاح عندما يكون هناك شخص واحد فقط في الاجتماع", // not available when only one person is in the meeting
@@ -33,10 +33,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     status: {
         ONLINE: "متصل", // online
         BACK_IN_A_MOMENT: "سأعود قريبا", // back in a moment
-        DO_NOT_DISTURB: "عدم الإزعاج", // do not disturb
+        DO_NOT_DISTURB: "الرجاء عدم الإزعاج", // do not disturb
         BUSY: "مشغول", // busy
     },
-    globalMessage: "إرسال رسالة عالمية", // send a global message
+    globalMessage: "إرسال رسالة عامة", // send a global message
     roomList: "فتح / إغلاق قائمة الغرف", // open / close room list
 };
 
