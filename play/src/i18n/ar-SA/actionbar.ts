@@ -7,15 +7,15 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     unfollow: "إلغاء المتابعة", // unfollow
     lock: "قفل / فتح المناقشة", // lock / unlock discussion
     screensharing: "بدء / إيقاف مشاركة الشاشة", // start / stop screen sharing
-    layout: "تبديل عرض الشبكة", // toggle grid view
+    layout: "تغيير طريقة العرض", // toggle grid view
     disableLayout: "غير متاح عندما يكون هناك شخص واحد فقط في الاجتماع", // not available when only one person is in the meeting
     camera: "بدء / إيقاف الكاميرا", // start / stop camera
     microphone: "كتم / إلغاء كتم الميكروفون", // mute / unmute microphone
     emoji: "فتح / إغلاق الرموز التعبيرية", // open / close emoji
     disableMegaphone: "تعطيل مكبر الصوت", // disable megaphone
     menu: "فتح / إغلاق القائمة", // open / close menu
-    calendar: "فتح / إغلاق التقويم", // open / close calendar
-    mapEditor: "فتح / إغلاق مدير الخرائط", // open / close map manager
+    calendar: "فتح / إغلاق الجدول", // open / close calendar
+    mapEditor: "فتح / إغلاق محرر الخرائط", // open / close map manager
     mapEditorMobileLocked: "محرر الخرائط مقفل في الوضع المحمول", // map editor is locked in mobile mode
     mapEditorLocked: "محرر الخرائط مقفل 🔐", // map editor is locked
     bo: "فتح المكتب الخلفي", // open back office
@@ -32,7 +32,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
 
     status: {
         ONLINE: "متصل", // online
-        BACK_IN_A_MOMENT: "سأعود حالاً", // back in a moment
+        BACK_IN_A_MOMENT: "سأعود قريبا", // back in a moment
         DO_NOT_DISTURB: "عدم الإزعاج", // do not disturb
         BUSY: "مشغول", // busy
     },
