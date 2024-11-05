@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
+    //import { locale } from 'svelte-i18n';
     import { audioManagerVisibilityStore } from "../Stores/AudioManagerStore";
     import { hasEmbedScreen } from "../Stores/EmbedScreensStore";
     import { emoteDataStoreLoading, emoteMenuStore } from "../Stores/EmoteStore";
@@ -121,6 +122,8 @@
 
     document.addEventListener("focusin", handleFocusInEvent);
     document.addEventListener("focusout", handleFocusOutEvent);
+
+    // const currentLanguage = get(locale);
 </script>
 
 <!-- Components ordered by z-index -->
