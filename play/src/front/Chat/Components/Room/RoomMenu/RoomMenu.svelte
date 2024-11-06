@@ -89,7 +89,7 @@
     class:tw-absolue={optionButtonRef !== undefined}
     class:tw-hidden={hideOptions}
 >
-    {#if room.hasPermissionFor("invite")}
+    {#if room.hasPermissionFor("invite") || room.hasPermissionFor("ban") || room.hasPermissionFor("kick")}
         <RoomOption
             IconComponent={IconUserEdit}
             title={$LL.chat.manageRoomUsers.roomOption()}
