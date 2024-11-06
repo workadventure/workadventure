@@ -51,7 +51,7 @@ jobs:
           push: true
           tags: |
             thecodingmachine/workadventure-play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-            ${{ github.ref == 'refs/heads/master' && format('thecodingmachine/workadventure-play:master@{0}', github.sha) || '' }}
+            ${{ github.ref == 'refs/heads/master' && format('thecodingmachine/workadventure-play:master-{0}', github.sha) || '' }}
           cache-from: |
             type=registry,ref=thecodingmachine/workadventure-play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
             type=registry,ref=thecodingmachine/workadventure-play:develop
@@ -161,7 +161,7 @@ jobs:
           push: true
           tags: |
             thecodingmachine/workadventure-back:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-            ${{ github.ref == 'refs/heads/master' && format('thecodingmachine/workadventure-back:master@{0}', github.sha) || '' }}
+            ${{ github.ref == 'refs/heads/master' && format('thecodingmachine/workadventure-back:master-{0}', github.sha) || '' }}
           cache-from: |
             type=registry,ref=thecodingmachine/workadventure-back:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
             type=registry,ref=thecodingmachine/workadventure-back:develop
@@ -251,7 +251,7 @@ jobs:
           push: true
           tags: |
             thecodingmachine/workadventure-uploader:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-            ${{ github.ref == 'refs/heads/master' && format('thecodingmachine/workadventure-uploader:master@{0}', github.sha) || '' }}
+            ${{ github.ref == 'refs/heads/master' && format('thecodingmachine/workadventure-uploader:master-{0}', github.sha) || '' }}
           cache-from: |
             type=registry,ref=thecodingmachine/workadventure-uploader:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
             type=registry,ref=thecodingmachine/workadventure-uploader:develop
@@ -317,7 +317,7 @@ jobs:
           push: true
           tags: |
             thecodingmachine/workadventure-maps:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-            ${{ github.ref == 'refs/heads/master' && format('thecodingmachine/workadventure-maps:master@{0}', github.sha) || '' }}
+            ${{ github.ref == 'refs/heads/master' && format('thecodingmachine/workadventure-maps:master-{0}', github.sha) || '' }}
           cache-from: |
             type=registry,ref=thecodingmachine/workadventure-maps:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
             type=registry,ref=thecodingmachine/workadventure-maps:develop
@@ -386,7 +386,7 @@ jobs:
           push: true
           tags: |
             thecodingmachine/workadventure-map-storage:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-            ${{ github.ref == 'refs/heads/master' && format('thecodingmachine/workadventure-map-storage:master@{0}', github.sha) || '' }}
+            ${{ github.ref == 'refs/heads/master' && format('thecodingmachine/workadventure-map-storage:master-{0}', github.sha) || '' }}
           cache-from: |
             type=registry,ref=thecodingmachine/workadventure-map-storage:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
             type=registry,ref=thecodingmachine/workadventure-map-storage:develop
