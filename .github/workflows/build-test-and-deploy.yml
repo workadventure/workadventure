@@ -49,7 +49,9 @@ jobs:
           file: play/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: thecodingmachine/workadventure-play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          tags: |
+            thecodingmachine/workadventure-play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+            ${{ github.ref == 'refs/heads/master' && format('thecodingmachine/workadventure-play:master@{0}', github.sha) || '' }}
           cache-from: |
             type=registry,ref=thecodingmachine/workadventure-play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
             type=registry,ref=thecodingmachine/workadventure-play:develop
@@ -157,7 +159,9 @@ jobs:
           file: back/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: thecodingmachine/workadventure-back:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          tags: |
+            thecodingmachine/workadventure-back:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+            ${{ github.ref == 'refs/heads/master' && format('thecodingmachine/workadventure-back:master@{0}', github.sha) || '' }}
           cache-from: |
             type=registry,ref=thecodingmachine/workadventure-back:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
             type=registry,ref=thecodingmachine/workadventure-back:develop
@@ -245,7 +249,9 @@ jobs:
         with:
           file: uploader/Dockerfile
           push: true
-          tags: thecodingmachine/workadventure-uploader:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          tags: |
+            thecodingmachine/workadventure-uploader:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+            ${{ github.ref == 'refs/heads/master' && format('thecodingmachine/workadventure-uploader:master@{0}', github.sha) || '' }}
           cache-from: |
             type=registry,ref=thecodingmachine/workadventure-uploader:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
             type=registry,ref=thecodingmachine/workadventure-uploader:develop
@@ -309,7 +315,9 @@ jobs:
           context: maps/
           file: maps/Dockerfile
           push: true
-          tags: thecodingmachine/workadventure-maps:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          tags: |
+            thecodingmachine/workadventure-maps:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+            ${{ github.ref == 'refs/heads/master' && format('thecodingmachine/workadventure-maps:master@{0}', github.sha) || '' }}
           cache-from: |
             type=registry,ref=thecodingmachine/workadventure-maps:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
             type=registry,ref=thecodingmachine/workadventure-maps:develop
@@ -376,7 +384,9 @@ jobs:
           file: map-storage/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: thecodingmachine/workadventure-map-storage:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          tags: |
+            thecodingmachine/workadventure-map-storage:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+            ${{ github.ref == 'refs/heads/master' && format('thecodingmachine/workadventure-map-storage:master@{0}', github.sha) || '' }}
           cache-from: |
             type=registry,ref=thecodingmachine/workadventure-map-storage:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
             type=registry,ref=thecodingmachine/workadventure-map-storage:develop
