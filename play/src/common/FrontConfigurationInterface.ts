@@ -1,6 +1,7 @@
 import type { OpidWokaNamePolicy } from "@workadventure/messages";
 
 export interface FrontConfigurationInterface {
+    DISCORD_BOT_ID: string;
     DEBUG_MODE: boolean;
     PUSHER_URL: string;
     FRONT_URL: string;

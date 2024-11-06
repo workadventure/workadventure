@@ -35,6 +35,7 @@ import { localUserStore } from "../../../Connection/LocalUserStore";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { matrixSecurity } from "./MatrixSecurity";
+import { DISCORD_BOT_ID} from "../../../Enum/EnvironmentVariable";
 
 type EventId = string;
 
@@ -220,6 +221,10 @@ export class MatrixChatRoom implements ChatRoom {
                     } else {
                         this.handleNewMessage(event);
                         const senderID = event.getSender();
+                        if(senderID === DISCORD_BOT_ID) {
+                            console.log("Discord bot message", DISCORD_BOT_ID);
+                            return;
+                        }
                         if (senderID !== this.matrixRoom.client.getSafeUserId() && !get(this.areNotificationsMuted)) {
                             this.playNewMessageSound();
                             if (!isAChatRoomIsVisible() && get(selectedRoom)?.id !== "proximity") {

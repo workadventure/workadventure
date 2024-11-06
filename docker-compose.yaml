@@ -153,6 +153,7 @@ services:
       MATRIX_ADMIN_USER: admin
       MATRIX_ADMIN_PASSWORD: MySecretPassword
       MATRIX_DOMAIN: matrix.workadventure.localhost
+      DISCORD_BOT_ID: "@discordbot:matrix.workadventure.localhost"
       # oEmbed providers
       EMBEDLY_KEY: "$EMBEDLY_KEY"
       IFRAMELY_KEY: "$IFRAMELY_KEY"

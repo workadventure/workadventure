@@ -7,6 +7,7 @@ import { MatrixChatConnection } from "./Connection/Matrix/MatrixChatConnection";
 import { MatrixChatRoom } from "./Connection/Matrix/MatrixChatRoom";
 import { storedQrCodeUrl } from "./Stores/DiscordConnectionStore";
 import { MatrixChatMessage } from "./Connection/Matrix/MatrixChatMessage";
+import { DISCORD_BOT_ID} from "../Enum/EnvironmentVariable";
 
 export interface DiscordUser {
     id: string;
@@ -18,12 +19,17 @@ export class DiscordBotManager {
     private botMessageSubscription: Subscription | undefined;
     //TODO Test DiscordBotManager Class
     //TODO add discord bot Id in a env file
-    static DISCORD_BOT_ID = "@discordbot:matrix.workadventure.localhost";
+    static DISCORD_BOT_ID = DISCORD_BOT_ID;
 
     constructor(private chatConnection: MatrixChatConnection) {}
 
     //init the direct room with the discord bot
     public async initDiscordBotRoom() {
+        console.info("Discord bot id is: ", DISCORD_BOT_ID)
+        if (!DiscordBotManager.DISCORD_BOT_ID){
+            console.error("Discord bot id is not defined");
+            return
+        }
         try {
             const discordChatRoom = await this.chatConnection.createDirectRoom(DiscordBotManager.DISCORD_BOT_ID);
             if (discordChatRoom instanceof MatrixChatRoom) {
