@@ -39,10 +39,11 @@ RUN --mount=type=secret,id=SENTRY_RELEASE \
     export SENTRY_ORG=$(cat /run/secrets/SENTRY_ORG) && \
     export SENTRY_PROJECT=$(cat /run/secrets/SENTRY_PROJECT) && \
     export SENTRY_ENVIRONMENT=$(cat /run/secrets/SENTRY_ENVIRONMENT) && \
+    export MAX_OLD_SPACE_SIZE=$(node -e "console.log(Math.round(require('v8').getHeapStatistics().heap_size_limit / (1024 * 1024)))") && \
     cd play && \
     npm run typesafe-i18n && \
     npm run build-iframe-api && \
-    SENTRY_RELEASE=$SENTRY_RELEASE SENTRY_URL=$SENTRY_URL SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN SENTRY_ORG=$SENTRY_ORG SENTRY_PROJECT=$SENTRY_PROJECT SENTRY_ENVIRONMENT=$SENTRY_ENVIRONMENT NODE_OPTIONS="--max-old-space-size=8192" npm run build
+    SENTRY_RELEASE=$SENTRY_RELEASE SENTRY_URL=$SENTRY_URL SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN SENTRY_ORG=$SENTRY_ORG SENTRY_PROJECT=$SENTRY_PROJECT SENTRY_ENVIRONMENT=$SENTRY_ENVIRONMENT NODE_OPTIONS="--max-old-space-size=$MAX_OLD_SPACE_SIZE" npm run build
 
 # final production image
 FROM node:20.8-bullseye-slim
