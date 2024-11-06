@@ -2,7 +2,7 @@
     import * as Sentry from "@sentry/svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import { ChatRoomMember, ChatRoomMembership, ChatRoomModeration } from "../../Connection/ChatConnection";
-    import { IconLoader } from "@wa-icons";
+    import { IconLoader, IconCheck, IconForbid, IconClock, IconPoint, IconMail, IconDoorExit } from "@wa-icons";
     export let member: ChatRoomMember;
     export let room: ChatRoomModeration;
 
@@ -77,6 +77,25 @@
                 inviteInProgress = false;
             });
     };
+
+    const getIconForMembership = (membership: ChatRoomMembership) => {
+        switch (membership) {
+            case "ban":
+                return IconForbid;
+            case "join":
+                return IconCheck;
+            case "invite":
+                return IconMail;
+            case "knock":
+                return IconClock;
+            case "leave":
+                return IconDoorExit;
+            default:
+                Sentry.captureMessage("Failed to get icon for membership :  " + membership);
+                console.error("Failed to get icon for membership :  " + membership);
+                return IconPoint;
+        }
+    };
 </script>
 
 <li class="tw-flex tw-mb-1 tw-justify-between">
@@ -136,10 +155,11 @@
             {/if}
         {/if}
         <p
-            class="tw-m-0 tw-ml-4 tw-px-2 tw-py-1 tw-bg-green-500 tw-rounded-md"
+            class="tw-m-0 tw-ml-4 tw-px-2 tw-py-1 tw-bg-green-500 tw-rounded-3xl tw-min-w-[6rem] tw-text-center tw-content-center"
             class:tw-bg-orange-500={$membership === "invite"}
             class:tw-bg-red-500={$membership === "ban" || $membership === "leave"}
         >
+            <svelte:component this={getIconForMembership($membership)} />
             {getTranslatedMembership($membership)}
         </p>
     </div>

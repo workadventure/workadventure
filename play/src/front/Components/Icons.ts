@@ -44,3 +44,7 @@ export { default as IconMute } from "~icons/tabler/volume3";
 export { default as IconRestore } from "~icons/tabler/restore";
 export { default as IconVerify } from "~icons/tabler/rosetteDiscountCheck";
 export { default as IconUserEdit } from "~icons/tabler/user-edit";
+export { default as IconMail } from "~icons/tabler/mail";
+export { default as IconClock } from "~icons/tabler/clock";
+export { default as IconPoint } from "~icons/tabler/point";
+export { default as IconDoorExit } from "~icons/tabler/door-exit";
