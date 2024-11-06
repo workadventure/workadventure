@@ -10,7 +10,7 @@
     import LL from "../../../../../i18n/i18n-svelte";
     import InviteParticipantsModal from "../InviteParticipantsModal.svelte";
     import RoomOption from "./RoomOption.svelte";
-    import { IconDotsCircle, IconLogout, IconUserPlus, IconMute, IconUnMute } from "@wa-icons";
+    import { IconDotsCircle, IconLogout, IconUserEdit, IconMute, IconUnMute } from "@wa-icons";
 
     export let room: ChatRoomMembershipManagement & ChatRoomNotificationControl & ChatRoomModeration;
     const areNotificationsMuted = room.areNotificationsMuted;
@@ -91,7 +91,7 @@
 >
     {#if room.hasPermissionFor("invite")}
         <RoomOption
-            IconComponent={IconUserPlus}
+            IconComponent={IconUserEdit}
             title={$LL.chat.manageRoomUsers.roomOption()}
             on:click={openInviteParticipantsModal}
         />

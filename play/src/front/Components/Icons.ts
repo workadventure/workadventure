@@ -43,3 +43,4 @@ export { default as IconUnMute } from "~icons/tabler/volume";
 export { default as IconMute } from "~icons/tabler/volume3";
 export { default as IconRestore } from "~icons/tabler/restore";
 export { default as IconVerify } from "~icons/tabler/rosetteDiscountCheck";
+export { default as IconUserEdit } from "~icons/tabler/user-edit";
