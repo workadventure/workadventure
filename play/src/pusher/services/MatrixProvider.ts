@@ -95,6 +95,8 @@ class MatrixProvider {
             ],
             power_level_content_override: {
                 invite: 100,
+                ban: 50,
+                kick: 50,
             },
         };
 
