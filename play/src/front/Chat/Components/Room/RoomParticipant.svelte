@@ -98,12 +98,12 @@
     };
 </script>
 
-<li class="tw-flex tw-mb-1 tw-justify-between">
+<li class="tw-flex tw-my-1 tw-justify-between tw-items-center">
     <p class="tw-m-0 tw-p-0">{$name}</p>
-    <div class="tw-flex tw-gap-2">
+    <div class="tw-flex tw-gap-2 tw-content-center">
         {#if room.hasPermissionFor("invite", member) && $membership === "leave"}
             <button
-                class="tw-m-0 tw-px-2 tw-py-1 tw-bg-green-500 tw-rounded-md"
+                class="tw-max-h-min tw-m-0 tw-px-2 tw-py-1 tw-bg-green-500 tw-rounded-md"
                 disabled={disableModerationButton}
                 on:click={inviteUser}
             >
@@ -116,7 +116,7 @@
         {/if}
         {#if room.hasPermissionFor("kick", member) && $membership !== "leave" && $membership !== "ban"}
             <button
-                class="tw-m-0 tw-px-2 tw-py-1 tw-bg-orange-500 tw-rounded-md"
+                class="tw-max-h-min tw-m-0 tw-px-2 tw-py-1 tw-bg-orange-500 tw-rounded-md"
                 disabled={disableModerationButton}
                 on:click={kickUser}
             >
@@ -131,7 +131,7 @@
             {#if $membership === "ban"}
                 <button
                     disabled={disableModerationButton}
-                    class="tw-m-0 tw-px-2 tw-py-1 tw-bg-green-500 tw-rounded-md"
+                    class="tw-max-h-min tw-m-0 tw-px-2 tw-py-1 tw-bg-green-500 tw-rounded-md"
                     on:click={unbanUser}
                 >
                     {#if unbanInProgress}
@@ -142,7 +142,7 @@
                 </button>
             {:else}
                 <button
-                    class="tw-m-0 tw-px-2 tw-py-1 tw-bg-red-500 tw-rounded-md"
+                    class="tw-max-h-min tw-m-0 tw-px-2 tw-py-1 tw-bg-red-500 tw-rounded-md"
                     disabled={disableModerationButton}
                     on:click={banUser}
                 >
@@ -155,7 +155,7 @@
             {/if}
         {/if}
         <p
-            class="tw-m-0 tw-ml-4 tw-px-2 tw-py-1 tw-bg-green-500 tw-rounded-3xl tw-min-w-[6rem] tw-text-center tw-content-center"
+            class="tw-max-h-min tw-m-0 tw-ml-4 tw-px-2 tw-py-1 tw-bg-green-500 tw-rounded-3xl tw-min-w-[6rem] tw-text-center tw-content-center"
             class:tw-bg-orange-500={$membership === "invite"}
             class:tw-bg-red-500={$membership === "ban" || $membership === "leave"}
         >

@@ -26,7 +26,6 @@
         try {
             sendingInvitationsToRoom = true;
             await room.inviteUsers(invitations.map((invitation) => invitation.value));
-            //closeModal();
             notificationPlayingStore.playNotification($LL.chat.manageRoomUsers.sendInvitationsSuccessNotification());
         } catch (error) {
             console.error(error);
@@ -53,11 +52,10 @@
                     {$LL.chat.manageRoomUsers.error()} : <b><i>{invitationToRoomError}</i></b>
                 </div>
             {/if}
-            <p class="tw-p-0 tw-m-0 tw-pl-1 tw-font-bold">{$LL.chat.manageRoomUsers.invitations()}</p>
             <Select
                 bind:value={invitations}
                 multiple
-                class="!tw-border-light-purple tw-border tw-border-solid !tw-bg-contrast !tw-rounded-xl"
+                class="!tw-border-light-purple tw-border tw-border-solid !tw-bg-contrast !tw-rounded-xl !tw-mb-3"
                 inputStyles="box-shadow:none !important"
                 --border-focused="2px solid rgb(146 142 187)"
                 --input-color="white"
