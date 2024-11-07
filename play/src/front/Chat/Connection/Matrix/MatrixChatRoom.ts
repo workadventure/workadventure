@@ -222,7 +222,6 @@ export class MatrixChatRoom implements ChatRoom {
                         this.handleNewMessage(event);
                         const senderID = event.getSender();
                         if(senderID === DISCORD_BOT_ID) {
-                            console.log("Discord bot message", DISCORD_BOT_ID);
                             return;
                         }
                         if (senderID !== this.matrixRoom.client.getSafeUserId() && !get(this.areNotificationsMuted)) {

@@ -1,7 +1,6 @@
 import type { OpidWokaNamePolicy } from "@workadventure/messages";
 
 export interface FrontConfigurationInterface {
-    DISCORD_BOT_ID: string;
     DEBUG_MODE: boolean;
     PUSHER_URL: string;
     FRONT_URL: string;
@@ -65,4 +64,5 @@ export interface FrontConfigurationInterface {
     ENABLE_CHAT: boolean | undefined;
     ENABLE_CHAT_ONLINE_LIST: boolean | undefined;
     ENABLE_CHAT_DISCONNECTED_LIST: boolean | undefined;
+    DISCORD_BOT_ID: string | undefined;
 }

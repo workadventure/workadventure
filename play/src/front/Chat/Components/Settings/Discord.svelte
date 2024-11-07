@@ -23,6 +23,7 @@
     $: qrCodeUrl = $storedQrCodeUrl;
     $: needManualToken = false;
     $: bridgeConnected = null as boolean | null;
+    $: bridgeError = null as boolean | null;
     $: discordUser = null as DiscordUser | null;
 
     let manualDiscordToken = "";
@@ -48,7 +49,7 @@
 
     async function sendDiscordToken(): Promise<void> {
         const response = await DiscordBot.AttemptToken(manualDiscordToken);
-        if (response.includes("Successfully")) {
+        if (response.includes("Successfully") || response.includes("Connecting")) {
             bridgeConnected = true;
             await fetchUserGuilds();
             notificationPlayingStore.playNotification("Successfully connected to Discord", "discord-logo.svg");
@@ -88,6 +89,16 @@
             bridgeConnected = true;
             await fetchUserGuilds();
         }
+        else if(response.includes("captchat")) {
+            notificationPlayingStore.playNotification("Error your account is protected by captcha", "discord-logo.svg");
+            needManualToken = true;
+            qrCodeUrl = "";
+        }
+        else {
+            notificationPlayingStore.playNotification("Error while connecting with qr code try with your token", "discord-logo.svg");
+            needManualToken = true;
+            qrCodeUrl = "";
+        }
     }
 
     async function fetchUserGuilds(): Promise<DiscordServer[]> {
@@ -112,8 +123,15 @@
         }
         DiscordBot = new DiscordBotManager(chatConnection);
         await DiscordBot.initDiscordBotRoom();
-
-        const bridgeConnectionStatusMessage = await DiscordBot.sendMessage("ping");
+        let bridgeConnectionStatusMessage;
+        try {
+            bridgeConnectionStatusMessage = await DiscordBot.sendMessage("ping");
+        } catch (e) {
+                console.error("Discord bot not connected", e);
+                bridgeConnected = false;
+                bridgeError = true;
+                return;
+        }
         const bridgeConnectionStatus = get(bridgeConnectionStatusMessage.content).body;
         discordUser = await DiscordBot.getCurrentDiscordUser();
 
@@ -186,10 +204,14 @@
             style="border-top-style: solid;"
         />
     </div>
+{:else if bridgeError}
+    <div class="tw-full tw-bg-red-500 tw-py-6 tw-px-2 tw-flex tw-items-center tw-justify-center tw-rounded-lg">
+        <p class="tw-text-white tw-mb-0">Error while starting the bridge</p>
+    </div>
 {:else}
     <div class="tw-flex tw-flex-col tw-w-full tw-gap-5">
         <!--{#if !bridgeConnected && qrCodeUrl === undefined && !needManualToken }-->
-        {#if !bridgeConnected && qrCodeUrl.length <= 0}
+        {#if !bridgeConnected && qrCodeUrl.length <= 0 && !needManualToken}
             <div class="tw-py-3 tw-px-3">
                 <p class=" tw-text-sm tw-text-gray-500">
                     {$LL.externalModule.discord.explainText()}
@@ -203,17 +225,7 @@
                 </button>
             </div>
         {/if}
-        {#if loadingFetchServer}
-            <div
-                class="tw-flex tw-flex-col tw-gap-2 tw-p-6 tw-rounded-xl tw-z-50 tw-w-full tw-justify-center tw-items-center"
-            >
-                <div
-                    class="tw-loader tw-w-6 tw-h-6 tw-border-2 tw-border-t-[2px] tw-border-primary tw-rounded-full tw-animate-spin"
-                    style="border-top-style: solid;"
-                />
-                <span class="tw-ml-2 tw-text-white">{$LL.externalModule.discord.fetchingServer()}</span>
-            </div>
-        {/if}
+
         {#if qrCodeUrl.length > 0 && !needManualToken && !bridgeConnected}
             <div class="tw-flex tw-justify-end">
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -247,7 +259,8 @@
                     <span class=" tw-cursor-pointer" on:click={() => (needManualToken = false)}>&#10005;</span>
                 </div>
                 <div class="tw-w-full ">
-                    <input type="text" class="tw-w-full tw-mb-0" bind:value={manualDiscordToken} />
+                    <label for="discordToken" class="tw-text-white tw-mb-2">Discord Token</label>
+                    <input type="text" class="tw-w-full tw-mb-0" bind:value={manualDiscordToken} id="discordToken" />
                     <button
                         on:click={sendDiscordToken}
                         class="tw-w-full tw-p-2 tw-bg-secondary-800  tw-text-white tw-no-underline tw-rounded-md tw-text-center tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white tw-flex tw-flex-row tw-items-center"
@@ -266,12 +279,15 @@
         <div class="tw-flex tw-flex-col tw-gap-2 ">
             {#if discordUser}
                 <div
-                    class="tw-px-2 tw-py-3 tw-flex tw-flex-row tw-gap-2 tw-items-center tw-text-white tw-border-solid tw-border-b tw-border-b-white/10 tw-border-0 tw-mb-4 tw-relative"
+                    class="tw-px-2 tw-py-3 tw-flex tw-flex-row tw-gap-2 tw-items-center tw-justify-around tw-text-white tw-border-solid tw-border-b tw-border-b-white/10 tw-border-0 tw-mb-4 tw-relative"
                 >
-                    <img src={userLogo} alt="" class="tw-h-6 tw-w-6" />
-                    <p class="tw-mb-0">
-                        {$LL.externalModule.discord.loggedIn} <strong>@{discordUser.username}</strong>
-                    </p>
+                    <div class="tw-flex tw-row tw-gap-2">
+                        <img src={userLogo} alt="" class="tw-h-6 tw-w-6" />
+                        <p class="tw-mb-0">
+                            {$LL.externalModule.discord.loggedIn} <strong>@{discordUser.username}</strong>
+                        </p>
+                    </div>
+
                     <button
                         class="tw-text-gray-400 hover:tw-text-white tx-relative"
                         bind:this={buttonRef}
@@ -337,6 +353,17 @@
                 >
                     {$LL.externalModule.discord.saveSync()}
                 </button>
+            </div>
+        {/if}
+        {#if loadingFetchServer}
+            <div
+                    class="tw-flex tw-flex-col tw-gap-2 tw-p-6 tw-rounded-xl tw-z-50 tw-w-full tw-justify-center tw-items-center"
+            >
+                <div
+                        class="tw-loader tw-w-6 tw-h-6 tw-border-2 tw-border-t-[2px] tw-border-primary tw-rounded-full tw-animate-spin"
+                        style="border-top-style: solid;"
+                />
+                <span class="tw-ml-2 tw-text-white">{$LL.externalModule.discord.fetchingServer()}</span>
             </div>
         {/if}
     </div>
