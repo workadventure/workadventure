@@ -17,6 +17,8 @@
     let optionButtonRef: HTMLButtonElement | undefined = undefined;
     let optionRef: HTMLDivElement | undefined = undefined;
     let hideOptions = true;
+    const shouldDisplayManageParticipantButton =
+        room.hasPermissionFor("invite") || room.hasPermissionFor("ban") || room.hasPermissionFor("kick");
 
     onMount(() => {
         document.addEventListener("click", closeRoomOptionsOnClickOutside);
@@ -76,6 +78,7 @@
 </script>
 
 <button
+    data-testid="toggleRoomMenu"
     bind:this={optionButtonRef}
     on:click|preventDefault|stopPropagation={toggleRoomOptions}
     class="tw-m-0 tw-p-0 tw-text-gray-400 hover:tw-text-white"
@@ -89,8 +92,9 @@
     class:tw-absolue={optionButtonRef !== undefined}
     class:tw-hidden={hideOptions}
 >
-    {#if room.hasPermissionFor("invite") || room.hasPermissionFor("ban") || room.hasPermissionFor("kick")}
+    {#if shouldDisplayManageParticipantButton}
         <RoomOption
+            dataTestId="manageParticipantOption"
             IconComponent={IconUserEdit}
             title={$LL.chat.manageRoomUsers.roomOption()}
             on:click={openInviteParticipantsModal}

@@ -32,6 +32,7 @@
     class:tw-bg-opacity-10={isSelected}
     class:tw-rounded-md={isSelected}
     on:click={() => selectedRoomStore.set(room)}
+    data-testid={$roomName}
 >
     <div class="tw-relative">
         <Avatar avatarUrl={room.avatarUrl} fallbackName={$roomName} />

@@ -173,7 +173,11 @@
     {#if room !== undefined}
         <div class="tw-flex tw-flex-col tw-gap-2">
             <div class="tw-flex tw-flex-row tw-items-center">
-                <button class="back-roomlist tw-p-0 tw-m-0" on:click={goBackAndClearSelectedChatMessage}>
+                <button
+                    class="back-roomlist tw-p-0 tw-m-0"
+                    on:click={goBackAndClearSelectedChatMessage}
+                    data-testid="goBackToRoomListButton"
+                >
                     <IconArrowLeft />
                 </button>
                 <span class="tw-flex-1" />
