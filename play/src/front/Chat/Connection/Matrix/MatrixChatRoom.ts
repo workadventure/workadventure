@@ -117,7 +117,9 @@ export class MatrixChatRoom
         this.typingMembers = derived(
             get(this.members).map((member) => member.isTypingInformation),
             (membersInformation) => {
-                return membersInformation.filter((member) => member !== null) as memberTypingInformation[];
+                return membersInformation.filter(
+                    (member) => member !== null && member.id !== this.matrixRoom.client.getUserId()
+                ) as memberTypingInformation[];
             }
         );
         this.isRoomFolder = matrixRoom.isSpaceRoom();
