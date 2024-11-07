@@ -81,7 +81,7 @@ export const RoomMetadataType = z.object({
                 .optional(),
         })
         .optional(),
-    modules: z.enum(["ms-teams"]).array(),
+    modules: z.enum(["ms-teams", "discord"]).array(),
     msTeamsSettings: z.object({
         communication: z.boolean(),
         status: z.boolean(),
@@ -89,6 +89,10 @@ export const RoomMetadataType = z.object({
         statusWorkAdventureToTeams: z.boolean(),
         calendar: z.boolean(),
         todoList: z.boolean().optional(),
+    }),
+    discordSettings: z.object({
+        discordMandatory: z.boolean(),
+        discordAllowedGuilds: z.string()
     }),
 });
 
