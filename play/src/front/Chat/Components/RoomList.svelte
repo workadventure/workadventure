@@ -342,7 +342,7 @@
                         <p class="tw-p-0 tw-m-0 tw-text-gray-400">{$LL.chat.availableRooms()}</p>
                         <div class="tw-flex tw-flex-col">
                             {#each $joignableRoom as room (room.id)}
-                                <JoignableRooms {room} />x
+                                <JoignableRooms {room} />
                             {/each}
                         </div>
                     {/if}

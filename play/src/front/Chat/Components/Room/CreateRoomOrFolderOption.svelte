@@ -21,11 +21,13 @@
         openModal(CreateRoomModal, {
             parentID,
         });
+        hideFolderOptions = true;
     }
     function openCreateSpace() {
         openModal(CreateFolderModal, {
             parentID,
         });
+        hideFolderOptions = true;
     }
 </script>
 

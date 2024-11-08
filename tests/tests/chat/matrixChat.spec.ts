@@ -347,6 +347,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.getByTestId("createRoomButton").click();
     await page.getByText(privateChatRoom).click();
     await ChatUtils.cancelledContinueWithSSO(page, context);
+    await page.getByTestId("chatBackward").click();
 
     await expect(
       page.getByText("Chat recovery key creation")
