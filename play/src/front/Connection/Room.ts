@@ -14,6 +14,11 @@ export interface RoomRedirect {
     redirectUrl: string;
 }
 
+export interface DiscordSettings {
+    enableDiscordMandatory: number;
+    discordAllowedGuilds: string;
+}
+
 export class Room {
     public readonly id: string;
     private _authenticationMandatory: boolean = DISABLE_ANONYMOUS;
@@ -50,6 +55,7 @@ export class Room {
     private _reportIssuesUrl: string | undefined;
     private _entityCollectionsUrls: string[] | undefined;
     private _errorSceneLogo: string | undefined;
+    private _discordSettings: DiscordSettings | undefined;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -125,9 +131,14 @@ export class Room {
 
             const data = result.data;
 
+            console.log("getMapDetail", data);
             const roomRedirectChecking = isRoomRedirect.safeParse(data);
             const mapDetailsDataChecking = isMapDetailsData.safeParse(data);
             const errorApiDataChecking = ErrorApiData.safeParse(data);
+
+            console.log("roomRedirectChecking", roomRedirectChecking);
+            console.log("mapDetailsDataChecking", mapDetailsDataChecking);
+            console.log("errorApiDataChecking", errorApiDataChecking);
 
             if (roomRedirectChecking.success) {
                 const data = roomRedirectChecking.data;
@@ -162,6 +173,7 @@ export class Room {
                 this._showPoweredBy = data.showPoweredBy ?? true;
                 this._backgroundColor = data.backgroundColor ?? undefined;
                 this._metadata = data.metadata ?? undefined;
+                console.log(">>>>>>>>metadata", this._metadata);
 
                 this._roomName = data.roomName ?? undefined;
 
@@ -386,5 +398,9 @@ export class Room {
 
     get errorSceneLogo(): string | undefined {
         return this._errorSceneLogo;
+    }
+
+    get discordSettings(): DiscordSettings | undefined {
+        return this._discordSettings;
     }
 }

@@ -85,14 +85,15 @@ export const RoomMetadataType = z.object({
     msTeamsSettings: z.object({
         communication: z.boolean(),
         status: z.boolean(),
-        statusTeamsToWorkAdventure: z.boolean(),
-        statusWorkAdventureToTeams: z.boolean(),
+        statusTeamsToWorkAdventure: z.boolean().default(false),
+        statusWorkAdventureToTeams: z.boolean().default(false),
         calendar: z.boolean(),
         todoList: z.boolean().optional(),
     }),
     discordSettings: z.object({
-        discordMandatory: z.boolean(),
-        discordAllowedGuilds: z.string()
+        enableDiscordBridge: z.boolean().default(true),
+        enableDiscordMandatory: z.boolean().default(false),
+        discordAllowedGuilds: z.string().default("")
     }),
 });
 

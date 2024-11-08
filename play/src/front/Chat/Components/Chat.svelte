@@ -16,6 +16,7 @@
     import RoomList from "./RoomList.svelte";
     import ChatSettings from "./ChatSettings.svelte";
     import { IconShieldLock } from "@wa-icons";
+    import { enableDiscordBridge } from "../Stores/DiscordConnectionStore";
 
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
 
@@ -96,8 +97,10 @@
                         <img src={discordLogo} alt="Discord logo" class="tw-w-6" />
                     </button>
                     <nav class="nav">
-                        {#if $navChat === "users" || $navChat === "chat"}
-                            <div class="background" class:chat={$navChat === "chat"} />
+                        {#if $enableDiscordBridge}
+                            {#if $navChat === "users" || $navChat === "chat"}
+                                <div class="background" class:chat={$navChat === "chat"} />
+                            {/if}
                         {/if}
                         <ul>
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -149,7 +152,9 @@
             >
         {/if}
         {#if $navChat === "settings"}
-            <ChatSettings />
+            {#if $enableDiscordBridge}
+                <ChatSettings />
+            {/if}
         {:else if $navChat === "users"}
             {#await userProviderMergerPromise}
                 <div />
