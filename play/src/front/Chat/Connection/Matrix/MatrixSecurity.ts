@@ -30,7 +30,6 @@ export class MatrixSecurity {
     private matrixClientStore: MatrixClient | null = null;
     private isVerifyingDevice = false;
     public shouldDisplayModal = false;
-    private isVerifyingDevice = false;
     constructor(
         private initializingEncryptionPromise: Promise<void> | undefined = undefined,
         private restoreRoomMessagesPromise: Promise<void> | undefined = undefined,
