@@ -126,9 +126,7 @@
     const hasPermissionToBan = room.hasPermissionTo("ban", member);
 
     $: availableRoles =
-        $permissionLevel === ChatPermissionLevel.ADMIN
-            ? []
-            : room.getAllowedRolesToAssign().filter((role) => room.canModifyRoleOf());
+        $permissionLevel === ChatPermissionLevel.ADMIN && room.canModifyRoleOf() ? [] : room.getAllowedRolesToAssign();
 </script>
 
 <li class="tw-flex tw-my-1 tw-justify-between tw-items-center">
