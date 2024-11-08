@@ -205,7 +205,9 @@
                     {/if}
                 </div>
                 <div class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-grow">
-                    <div class="tw-text-md tw-font-bold tw-h-5 {searchActive ? 'tw-hidden' : ''}">Chat</div>
+                    <div class="tw-text-md tw-font-bold tw-h-5 {searchActive ? 'tw-hidden' : ''}">
+                        {$LL.chat.chat()}
+                    </div>
                     <div
                         class="tw-flex tw-items-center tw-justify-center tw-text-success tw-space-x-1.5 {searchActive
                             ? 'tw-hidden'
