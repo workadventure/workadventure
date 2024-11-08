@@ -468,7 +468,7 @@
     {#if $selectedRoomStore !== undefined}
         <RoomTimeline room={$selectedRoomStore} />
     {:else if $selectedRoomStore === undefined && sideBarWidth >= CHAT_LAYOUT_LIMIT}
-        <div class="tw-flex tw-flex-col tw-flex-1 tw-pl-4">
+        <div class="tw-flex tw-flex-col tw-flex-1 tw-pl-4 tw-items-center">
             <div class="tw-text-center tw-px-3 tw-max-w-md">
                 <img src={getCloseImg} alt="Discussion bubble" />
                 <div class="tw-text-lg tw-font-bold tw-text-center">{$LL.chat.getCloserTitle()}</div>
