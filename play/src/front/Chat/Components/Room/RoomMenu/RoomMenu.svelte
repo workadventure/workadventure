@@ -17,8 +17,12 @@
     let optionButtonRef: HTMLButtonElement | undefined = undefined;
     let optionRef: HTMLDivElement | undefined = undefined;
     let hideOptions = true;
-    const shouldDisplayManageParticipantButton =
-        room.hasPermissionFor("invite") || room.hasPermissionFor("ban") || room.hasPermissionFor("kick");
+
+    const hasPermissionToInvite = room.hasPermissionTo("invite");
+    const hasPermissionToKick = room.hasPermissionTo("kick");
+    const hasPermissionToBan = room.hasPermissionTo("ban");
+
+    $: shouldDisplayManageParticipantButton = $hasPermissionToInvite || $hasPermissionToKick || $hasPermissionToBan;
 
     onMount(() => {
         document.addEventListener("click", closeRoomOptionsOnClickOutside);

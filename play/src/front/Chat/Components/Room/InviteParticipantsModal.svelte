@@ -22,6 +22,7 @@
     let sendingInvitationsToRoom = false;
     let invitationToRoomError: string | undefined = undefined;
 
+    const hasPermissionToInvite = room.hasPermissionTo("invite");
     async function inviteUsersAndCloseModalOnSuccess() {
         try {
             sendingInvitationsToRoom = true;
@@ -94,7 +95,7 @@
             <button
                 data-testid="createRoomButton"
                 class="disabled:tw-text-gray-400 disabled:tw-bg-gray-500 tw-bg-secondary tw-flex-1 tw-justify-center"
-                disabled={invitations === undefined || invitations.length === 0 || !room.hasPermissionFor("invite")}
+                disabled={invitations === undefined || invitations.length === 0 || !$hasPermissionToInvite}
                 on:click={inviteUsersAndCloseModalOnSuccess}
                 >{$LL.chat.manageRoomUsers.buttons.sendInvitations()}
             </button>

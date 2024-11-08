@@ -1,7 +1,12 @@
 <script lang="ts">
     import * as Sentry from "@sentry/svelte";
     import LL from "../../../../i18n/i18n-svelte";
-    import { ChatRoomMember, ChatRoomMembership, ChatRoomModeration } from "../../Connection/ChatConnection";
+    import {
+        ChatRoomMember,
+        ChatRoomMembership,
+        ChatRoomModeration,
+        ChatPermissionLevel,
+    } from "../../Connection/ChatConnection";
     import { IconLoader, IconCheck, IconForbid, IconClock, IconPoint, IconMail, IconDoorExit } from "@wa-icons";
     export let member: ChatRoomMember;
     export let room: ChatRoomModeration;
@@ -12,7 +17,7 @@
     let inviteInProgress = false;
     let disableModerationButton = banInProgress || kickInProgress || unbanInProgress || inviteInProgress;
 
-    $: ({ name, membership, id } = member);
+    $: ({ name, membership, id, permissionLevel } = member);
 
     function getTranslatedMembership(membership: ChatRoomMembership) {
         switch (membership) {
@@ -96,12 +101,40 @@
                 return IconPoint;
         }
     };
+
+    function getTranslatedPermissionLevel(permission: ChatPermissionLevel) {
+        switch (permission) {
+            case ChatPermissionLevel.USER:
+                return $LL.chat.manageRoomUsers.roles.USER;
+            case ChatPermissionLevel.MODERATOR:
+                return $LL.chat.manageRoomUsers.roles.MODERATOR;
+            case ChatPermissionLevel.ADMIN:
+                return $LL.chat.manageRoomUsers.roles.ADMIN;
+        }
+    }
+
+    function onPermissionLevelChange(event: Event) {
+        const target = event.target as HTMLSelectElement;
+
+        if (!target) return;
+
+        room.changePermissionLevelFor(member, target.value as ChatPermissionLevel).catch((e) => console.error(e));
+    }
+
+    const hasPermissionToInvite = room.hasPermissionTo("invite", member);
+    const hasPermissionToKick = room.hasPermissionTo("kick", member);
+    const hasPermissionToBan = room.hasPermissionTo("ban", member);
+
+    $: availableRoles =
+        $permissionLevel === ChatPermissionLevel.ADMIN
+            ? []
+            : room.getAllowedRolesToAssign().filter((role) => room.canModifyRoleOf());
 </script>
 
 <li class="tw-flex tw-my-1 tw-justify-between tw-items-center">
     <p class="tw-m-0 tw-p-0">{$name}</p>
     <div class="tw-flex tw-gap-2 tw-content-center">
-        {#if room.hasPermissionFor("invite", member) && $membership === "leave"}
+        {#if $hasPermissionToInvite && $membership === "leave"}
             <button
                 class="tw-max-h-min tw-m-0 tw-px-2 tw-py-1 tw-bg-green-500 tw-rounded-md"
                 disabled={disableModerationButton}
@@ -114,7 +147,7 @@
                 {/if}
             </button>
         {/if}
-        {#if room.hasPermissionFor("kick", member) && $membership !== "leave" && $membership !== "ban"}
+        {#if $hasPermissionToKick && $membership !== "leave" && $membership !== "ban"}
             <button
                 class="tw-max-h-min tw-m-0 tw-px-2 tw-py-1 tw-bg-orange-500 tw-rounded-md"
                 disabled={disableModerationButton}
@@ -127,7 +160,7 @@
                 {/if}
             </button>
         {/if}
-        {#if room.hasPermissionFor("ban", member)}
+        {#if $hasPermissionToBan}
             {#if $membership === "ban"}
                 <button
                     disabled={disableModerationButton}
@@ -162,5 +195,17 @@
             <svelte:component this={getIconForMembership($membership)} />
             {getTranslatedMembership($membership)}
         </p>
+        {#if availableRoles.length > 0}
+            <select
+                value={$permissionLevel}
+                on:change={onPermissionLevelChange}
+                name="permissionLevel"
+                id="permissionLevel"
+            >
+                {#each availableRoles as permissionLevelOption (permissionLevelOption)}
+                    <option value={permissionLevelOption}>{getTranslatedPermissionLevel(permissionLevelOption)}</option>
+                {/each}
+            </select>
+        {/if}
     </div>
 </li>

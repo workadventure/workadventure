@@ -262,6 +262,11 @@ const chat: BaseTranslation = {
             unban: "Unban",
             invite: "Invite",
         },
+        roles: {
+            USER: "User",
+            ADMIN: "Admin",
+            MODERATOR: "Moderator",
+        },
         sendInvitationsSuccessNotification: "Invitations sent successfully",
     },
     roomMenu: {

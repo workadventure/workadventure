@@ -61,7 +61,6 @@ export interface ChatRoom {
 export interface ChatRoomMembershipManagement {
     readonly name: Readable<string>;
     readonly myMembership: ChatRoomMembership;
-    readonly membersId: string[];
     readonly members: Readable<ChatRoomMember[]>;
     readonly joinRoom: () => Promise<void>;
     readonly leaveRoom: () => Promise<void>;
@@ -75,10 +74,13 @@ export interface ChatRoomNotificationControl {
 
 export interface ChatRoomModeration {
     readonly inviteUsers: (userIds: string[]) => Promise<void>;
-    readonly hasPermissionFor: (action: ModerationAction, member?: ChatRoomMember) => boolean;
+    readonly hasPermissionTo: (action: ModerationAction, member?: ChatRoomMember) => Readable<boolean>;
     readonly kick: (userID: string) => Promise<void>;
     readonly ban: (userID: string) => Promise<void>;
     readonly unban: (userID: string) => Promise<void>;
+    readonly changePermissionLevelFor: (member: ChatRoomMember, permissionLevel: ChatPermissionLevel) => Promise<void>;
+    readonly getAllowedRolesToAssign: () => ChatPermissionLevel[];
+    readonly canModifyRoleOf: () => boolean;
 }
 
 //Readonly attributes

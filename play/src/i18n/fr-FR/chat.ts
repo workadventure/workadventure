@@ -263,6 +263,11 @@ const chat: DeepPartial<Translation["chat"]> = {
             unban: "Débannir",
             invite: "Inviter",
         },
+        roles: {
+            USER: "Utilisateur",
+            ADMIN: "Admin",
+            MODERATOR: "Moderateur",
+        },
         sendInvitationsSuccessNotification: "Invitation(s) envoyée(s)",
     },
     roomMenu: {

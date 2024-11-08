@@ -782,9 +782,13 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     getDirectRoomFor(userID: string): (ChatRoom & ChatRoomMembershipManagement) | undefined {
         const directRooms = Array.from(this.roomList.values())
             .filter((room) => {
+                const memberIDs = get(room.members).map(
+                    (member) => member.id && ["join", "invite"].includes(get(member.membership))
+                );
+
                 return (
                     room.type === "direct" &&
-                    room.membersId.some((memberId) => memberId === userID && room.membersId.length === 2)
+                    memberIDs.some((memberId) => memberId === userID && memberIDs.length === 2)
                 );
             })
             .map((room) => room);
