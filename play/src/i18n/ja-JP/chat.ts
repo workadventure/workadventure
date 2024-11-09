@@ -295,7 +295,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     requiresLoginForChatModal: {
         title: "チャットのロックを解除するにはログインしてください",
         content_1: "チャットを十分に楽しむには、ログインする必要があります。",
-        content_2: "ログインすると、すべてのオプションにアクセスでき、中断することなく続けることができます。",
+        content_2: "ログインするとすべてのオプションにアクセスでき、中断することなく続けることができます。",
         content_3: " 体験を続けるにはログインしてください。",
     },
     requiresLoginForChat: "チャットメッセージにアクセスするにはログインしてください。",
