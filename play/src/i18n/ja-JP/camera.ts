@@ -38,7 +38,7 @@ const camera: DeepPartial<Translation["camera"]> = {
         silentZone: "サイレントゾーン",
         nameTag: "あなた",
     },
-    disable: "Turn off your camera",
+    disable: "カメラをオフにする",
     menu: {
         moreAction: "その他のアクション",
         closeMenu: "メニューを閉じる",
