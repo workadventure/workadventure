@@ -3,7 +3,8 @@ import type { Translation } from "../i18n-types";
 
 const warning: DeepPartial<Translation["warning"]> = {
     title: "警告!",
-    content: 'このワールドは限界に近づいています。<a href="{upgradeLink}" target="_blank">ここ</a>から容量をアップグレードできます。',
+    content:
+        'このワールドは限界に近づいています。<a href="{upgradeLink}" target="_blank">ここ</a>から容量をアップグレードできます。',
     limit: "このワールドは限界に近づいています。",
     accessDenied: {
         camera: "カメラへのアクセスが拒否されました。ここをクリックしてブラウザの権限を確認してください。",

@@ -10,8 +10,8 @@ const camera: DeepPartial<Translation["camera"]> = {
         title: "カメラとマイクへのアクセスが必要です",
         permissionDenied: "拒否されました。",
         content: "ブラウザからカメラとマイクへのアクセスを許可する必要があります。",
-        firefoxContent: 
-            '今後 Firefox からの問い合わせを受けたくない場合は「今後も同様に処理する」にチェックを付けてください。',
+        firefoxContent:
+            "今後 Firefox からの問い合わせを受けたくない場合は「今後も同様に処理する」にチェックを付けてください。",
         refresh: "更新",
         continue: "カメラなしで続ける",
         screen: {
@@ -24,13 +24,13 @@ const camera: DeepPartial<Translation["camera"]> = {
         titlePending: "ビデオ中継サーバー接続保留",
         error: "TURN サーバーにアクセスできません",
         content: "ビデオ中継サーバーにアクセスできません。他のユーザーと通信できない可能性があります。",
-        solutionVpn:
-            "<strong>VPN 経由で接続している</strong>場合は、VPN を切断してページを更新してください。",
+        solutionVpn: "<strong>VPN 経由で接続している</strong>場合は、VPN を切断してページを更新してください。",
         solutionVpnNotAskAgain: "わかりました。もう警告しないでください 🫡",
         solutionHotspot:
             "企業ネットワークなど制限されたネットワークを使用している場合は、ネットワークを切り替えてみてください。例えば、携帯電話で Wi-Fi ホットスポットを作成して、携帯電話経由で接続してください。",
-        solutionNetworkAdmin: "あなたが<strong>ネットワーク管理者</strong>であれば、「ネットワーク準備」ガイドを確認してください。",
-        preparingYouNetworkGuide: '',
+        solutionNetworkAdmin:
+            "あなたが<strong>ネットワーク管理者</strong>であれば、「ネットワーク準備」ガイドを確認してください。",
+        preparingYouNetworkGuide: "",
         refresh: "更新",
         continue: "続ける",
     },

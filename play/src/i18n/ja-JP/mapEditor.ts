@@ -90,8 +90,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             policy: "iFrame の許可",
             policyPlaceholder: "フルスクリーン",
             errorEmbeddableLink: "リンクは埋め込みできません",
-            messageNotEmbeddableLink:
-                "リンクは埋め込みできません。新しいタブでのみ開くことができます。",
+            messageNotEmbeddableLink: "リンクは埋め込みできません。新しいタブでのみ開くことができます。",
             warningEmbeddableLink: "このリンクを埋め込むことはできません。",
             errorInvalidUrl: '有効な URL ("https://" で始まるもの) を入力してください。',
             findOutMoreHere: "詳細はこちら",
@@ -201,15 +200,13 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         excalidrawProperties: {
             label: "エクスカリドローを開く",
-            description:
-                "オープンソースの仮想手描き風ホワイトボード。共同作業とエンド・ツー・エンド暗号化に対応。",
+            description: "オープンソースの仮想手描き風ホワイトボード。共同作業とエンド・ツー・エンド暗号化に対応。",
             error: "有効なエクスカリドローの URL を入力してください。",
             disabled: "エクスカリドローとの統合は無効です。",
         },
         cardsProperties: {
             label: "カードを開く",
-            description:
-                "オンラインで、MS Teams で、モバイルで、素早く簡単に知識を共有できるソリューションです。",
+            description: "オンラインで、MS Teams で、モバイルで、素早く簡単に知識を共有できるソリューションです。",
             error: "有効なカードの URL を入力してください。",
             disabled: "カードとの統合は無効です。",
         },
@@ -228,7 +225,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             buttons: {
                 keep: "保持",
                 remove: "削除",
-               cancel: "キャンセル",
+                cancel: "キャンセル",
             },
         },
     },
@@ -363,7 +360,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             moveToEntity: "エンティティ {name} に移動",
             moveToArea: "エリア {name} に移動",
             errorMovingToObject: "オブジェクトにはまだアクセスできません 🚫",
-       },
+        },
     },
     listRoom: {
         isFetching: "ルームリストの取得中... ⤵️",
