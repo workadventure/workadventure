@@ -9,16 +9,9 @@
     import { INITIAL_SIDEBAR_WIDTH } from "../../Stores/ChatStore";
     import { userIsConnected } from "../../Stores/MenuStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import { UserProviderMerger } from "../UserProviderMerger/UserProviderMerger";
     import WokaFromUserId from "../../Components/Woka/WokaFromUserId.svelte";
     import getCloseImg from "../images/get-close.png";
     import messageSmileyImg from "../images/message-smiley.svg";
-    import LoadingSmall from "../images/loading-small.svelte";
-    import {
-        ENABLE_CHAT,
-        ENABLE_CHAT_DISCONNECTED_LIST,
-        ENABLE_CHAT_ONLINE_LIST,
-    } from "../../Enum/EnvironmentVariable";
     import Room from "./Room/Room.svelte";
     import RoomTimeline from "./Room/RoomTimeline.svelte";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
@@ -28,14 +21,12 @@
     import RoomFolder from "./RoomFolder.svelte";
     import CreateRoomOrFolderOption from "./Room/CreateRoomOrFolderOption.svelte";
     import ShowMore from "./ShowMore.svelte";
-    import { IconChevronUp, IconCloudLock, IconMessageCircle2, IconSearch, IconUsers, IconX } from "@wa-icons";
+    import ChatHeader from "./ChatHeader.svelte";
+    import { IconChevronUp, IconCloudLock } from "@wa-icons";
 
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
 
-    const gameScene = gameManager.getCurrentGameScene();
-
     const proximityChatRoom = gameManager.getCurrentGameScene().proximityChatRoom;
-    const userProviderMergerPromise = gameScene.userProviderMerger;
     const chat = gameManager.chatConnection;
 
     const chatConnectionStatus = chat.connectionStatus;
@@ -52,10 +43,6 @@
     let displayRooms = false;
     let displayRoomInvitations = false;
 
-    const DONE_TYPING_INTERVAL = 2000;
-    let searchValue = "";
-    let typingTimer: ReturnType<typeof setTimeout>;
-
     onMount(() => {
         expandOrCollapseRoomsIfEmpty();
     });
@@ -70,42 +57,6 @@
         roomInvitationsUnsubscriber();
     });
 
-    let searchLoader = false;
-    let searchActive = false;
-    let userWorldCount = gameScene.worldUserCounter;
-
-    const showNavBar = (ENABLE_CHAT_ONLINE_LIST || ENABLE_CHAT_DISCONNECTED_LIST) && ENABLE_CHAT;
-
-    const handleKeyUp = (userProviderMerger: UserProviderMerger) => {
-        clearTimeout(typingTimer);
-        typingTimer = setTimeout(() => {
-            searchLoader = true;
-            if ($navChat === "chat" && $chatSearchBarValue.trim() !== "") {
-                searchAccessibleRooms();
-            }
-
-            userProviderMerger.setFilter($chatSearchBarValue).finally(() => {
-                searchLoader = false;
-            });
-        }, DONE_TYPING_INTERVAL);
-    };
-
-    const handleKeyDown = () => {
-        if (searchValue === "") joignableRoom.set([]);
-        clearTimeout(typingTimer);
-    };
-
-    const searchAccessibleRooms = () => {
-        chat.searchAccessibleRooms($chatSearchBarValue)
-            .then((chatRooms: { id: string; name: string | undefined }[]) => {
-                joignableRoom.set(chatRooms);
-            })
-            .finally(() => {
-                searchLoader = false;
-            });
-        return;
-    };
-
     async function initChatConnectionEncryption() {
         try {
             await chat.initEndToEndEncryption();
@@ -114,7 +65,6 @@
         }
     }
 
-    const chatStatusStore = chat.connectionStatus;
     $: isEncryptionRequiredAndNotSet = chat.isEncryptionRequiredAndNotSet;
     $: isGuest = chat.isGuest;
 
@@ -184,80 +134,7 @@
             class="tw-w-full tw-border tw-border-solid tw-border-y-0 tw-border-l-0 tw-border-white/10 tw-relative tw-overflow-y-auto tw-overflow-x-none"
             style={displayTwoColumnLayout ? `width:335px ;flex : 0 0 auto` : ``}
         >
-            <div class="tw-p-2 tw-flex tw-items-center tw-absolute tw-w-full tw-z-40">
-                <div class={searchActive ? "tw-hidden" : ""}>
-                    {#if $navChat === "chat"}
-                        {#if showNavBar}
-                            <button
-                                class="userList tw-p-3 hover:tw-bg-white/10 tw-rounded-xl tw-aspect-square tw-w-12"
-                                on:click={() => navChat.switchToUserList()}
-                            >
-                                <IconUsers font-size="20" />
-                            </button>
-                        {/if}
-                    {:else}
-                        <button
-                            class="tw-p-3 hover:tw-bg-white/10 tw-rounded-2xl tw-aspect-square tw-w-12"
-                            on:click={() => navChat.switchToChat()}
-                        >
-                            <IconMessageCircle2 font-size="20" />
-                        </button>
-                    {/if}
-                </div>
-                <div class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-grow">
-                    <div class="tw-text-md tw-font-bold tw-h-5 {searchActive ? 'tw-hidden' : ''}">
-                        {$LL.chat.chat()}
-                    </div>
-                    <div
-                        class="tw-flex tw-items-center tw-justify-center tw-text-success tw-space-x-1.5 {searchActive
-                            ? 'tw-hidden'
-                            : ''}"
-                    >
-                        <div
-                            class="tw-text-xs tw-aspect-square tw-min-w-5 tw-h-5 tw-px-1 tw-border tw-border-solid tw-border-success tw-flex tw-items-center tw-justify-center tw-font-bold tw-rounded"
-                        >
-                            {$userWorldCount}
-                        </div>
-                        <div class="tw-text-xs tw-font-bold">{$LL.chat.onlineUsers()}</div>
-                    </div>
-                </div>
-                <div class="">
-                    {#if $chatStatusStore !== "OFFLINE"}
-                        <button
-                            class="tw-p-3 hover:tw-bg-white/10 tw-rounded-xl tw-aspect-square tw-w-12 tw-relative tw-z-50"
-                            on:click={() => (searchActive = !searchActive)}
-                        >
-                            {#if searchLoader}
-                                <LoadingSmall />
-                            {/if}
-                            {#if !searchActive}
-                                <IconSearch font-size="20" />
-                            {:else}
-                                <IconX font-size="20" />
-                            {/if}
-                        </button>
-                    {:else}
-                        <div class="tw-w-12" />
-                    {/if}
-                    <!-- searchbar -->
-                    {#if searchActive && $chatStatusStore !== "OFFLINE"}
-                        {#await userProviderMergerPromise}
-                            <div />
-                        {:then userProviderMerger}
-                            <div class="tw-absolute tw-w-full tw-h-full tw-z-40 tw-right-0 tw-top-0 tw-bg-contrast/30">
-                                <input
-                                    autocomplete="new-password"
-                                    class="wa-searchbar tw-block tw-text-white placeholder:tw-text-white/50 tw-w-full placeholder:tw-text-sm tw-border-none tw-pl-6 tw-pr-20 tw-bg-transparent tw-py-3 tw-text-base tw-h-full"
-                                    placeholder={$navChat === "users" ? $LL.chat.searchUser() : $LL.chat.searchChat()}
-                                    on:keydown={handleKeyDown}
-                                    on:keyup={() => handleKeyUp(userProviderMerger)}
-                                    bind:value={$chatSearchBarValue}
-                                />
-                            </div>
-                        {/await}
-                    {/if}
-                </div>
-            </div>
+            <ChatHeader />
             <div
                 class="tw-relative tw-pt-[72px] {$isEncryptionRequiredAndNotSet === true && $isGuest === false
                     ? ' tw-h-[calc(100%-2rem)]'

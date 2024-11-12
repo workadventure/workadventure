@@ -3,14 +3,13 @@
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { ChatUser } from "../../Connection/ChatConnection";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import { chatSearchBarValue, navChat, shownRoomListStore } from "../../Stores/ChatStore";
+    import { chatSearchBarValue, shownRoomListStore } from "../../Stores/ChatStore";
     import { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
+    import ChatHeader from "../ChatHeader.svelte";
     import UserList from "./UserList.svelte";
-    import { IconChevronUp, IconMessageCircle2, IconUsers } from "@wa-icons";
+    import { IconChevronUp } from "@wa-icons";
 
-    const gameScene = gameManager.getCurrentGameScene();
     export let userProviderMerger: UserProviderMerger;
-    let userWorldCount = gameScene.worldUserCounter;
 
     const USERS_BY_ROOM_LIMITATION = 200;
 
@@ -61,35 +60,7 @@
 </script>
 
 <div class="tw-flex tw-flex-col tw-overflow-auto tw-h-full">
-    <div class="tw-p-2 tw-flex tw-items-center tw-absolute tw-w-full tw-z-40">
-        {#if $navChat === "chat"}
-            <button
-                class="userList tw-p-3 hover:tw-bg-white/10 tw-rounded-xl tw-aspect-square tw-w-12"
-                on:click={() => navChat.switchToUserList()}
-            >
-                <IconUsers font-size="20" />
-            </button>
-        {:else}
-            <button
-                class="tw-p-3 hover:tw-bg-white/10 tw-rounded-2xl tw-aspect-square tw-w-12"
-                on:click={() => navChat.switchToChat()}
-            >
-                <IconMessageCircle2 font-size="20" />
-            </button>
-        {/if}
-        <div class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-grow">
-            <div class="tw-text-md tw-font-bold tw-h-5">{$LL.chat.users()}</div>
-            <div class="tw-flex tw-items-center tw-justify-center tw-text-success tw-space-x-1.5">
-                <div
-                    class="tw-text-xs tw-aspect-square tw-min-w-5 tw-h-5 tw-px-1 tw-border tw-border-solid tw-border-success tw-flex tw-items-center tw-justify-center tw-font-bold tw-rounded"
-                >
-                    {$userWorldCount}
-                </div>
-                <div class="tw-text-xs tw-font-bold">{$LL.chat.onlineUsers()}</div>
-            </div>
-        </div>
-        <div class="tw-h-10 tw-w-10" />
-    </div>
+    <ChatHeader />
     {#each roomsWithUsers as [roomName, userInRoom] (roomName)}
         <div class=" users tw-flex tw-flex-col tw-shrink-0 tw-relative tw-pt-[72px] tw-h-full">
             <button
