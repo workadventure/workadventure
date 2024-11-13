@@ -172,3 +172,9 @@ https://{{ .Values.domainName }}/maps
 {{- define "workadventure.isBooleanText" -}}
 {{- if or (or (or (eq . "false") (eq . "0")) (not .)) (eq . "FALSE") -}}{{- else -}}1{{- end -}}
 {{- end }}
+
+{{- define "imagePullSecret" }}
+{{- with .Values.imageCredentials }}
+{{- printf "{\"auths\":{\"%s\":{\"username\":\"%s\",\"password\":\"%s\",\"email\":\"%s\",\"auth\":\"%s\"}}}" (required "imageCredentials.registry is required when imageCredentials.enabled = true" .registry) (required "imageCredentials.username is required when imageCredentials.enabled = true" .username) (required "imageCredentials.password is required when imageCredentials.enabled = true" .password) (required "imageCredentials.email is required when imageCredentials.enabled = true" .email) (printf "%s:%s" .username  (required "imageCredentials.password is required when imageCredentials.enabled = true" .password) | b64enc) | b64enc }}
+{{- end }}
+{{- end }}
