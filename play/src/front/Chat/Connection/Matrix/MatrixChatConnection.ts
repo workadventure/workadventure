@@ -1,6 +1,7 @@
 import { derived, get, Readable, Unsubscriber, writable, Writable } from "svelte/store";
 import {
     ClientEvent,
+    CryptoEvent,
     Direction,
     EmittedEvents,
     EventType,
@@ -26,8 +27,9 @@ import { MapStore } from "@workadventure/store-utils";
 import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { AvailabilityStatus } from "@workadventure/messages";
+import { canAcceptVerificationRequest, VerificationRequest } from "matrix-js-sdk/lib/crypto-api";
 import { ChatConnectionInterface, ChatRoom, ChatUser, ConnectionStatus, CreateRoomOptions } from "../ChatConnection";
-import { selectedRoom } from "../../Stores/ChatStore";
+import { selectedRoomStore } from "../../Stores/ChatStore";
 import LL from "../../../../i18n/i18n-svelte";
 import { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
 import { MatrixChatRoom } from "./MatrixChatRoom";
@@ -54,6 +56,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     private handleName: (room: Room) => void;
     private handleAccountDataEvent: (event: MatrixEvent) => void;
     private handleUserPresence: (event: MatrixEvent | undefined, user: User) => void;
+    private handleVerificationRequestReceived: (request: VerificationRequest) => void;
     private statusUnsubscriber: Unsubscriber | undefined;
     private isClientReady = false;
     private usersStatus: MapStore<string, AvailabilityStatus>;
@@ -158,6 +161,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.handleName = this.onRoomNameEvent.bind(this);
         this.handleAccountDataEvent = this.onAccountDataEvent.bind(this);
         this.handleUserPresence = this.onUserPresenceEvent.bind(this);
+        this.handleVerificationRequestReceived = this.onVerificationRequestReceived.bind(this);
 
         this.statusUnsubscriber = this.statusStore.subscribe((status: AvailabilityStatus) => {
             this.setPresence(status);
@@ -231,6 +235,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.client.on(RoomEvent.Name, this.handleName);
         this.client.on(ClientEvent.AccountData, this.handleAccountDataEvent);
         this.client.on(UserEvent.Presence, this.handleUserPresence);
+        this.client.on(CryptoEvent.VerificationRequestReceived, this.handleVerificationRequestReceived);
 
         await this.client.store.startup();
 
@@ -250,6 +255,57 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         await this.waitInitialSync();
     }
 
+    private onVerificationRequestReceived(request: VerificationRequest) {
+        if (!canAcceptVerificationRequest(request) || !request.isSelfVerification) return;
+        const otherDeviceId = request.otherDeviceId;
+
+        if (otherDeviceId) {
+            this.getDeviceInformationForAskStartVerificationModal(otherDeviceId)
+                .then((otherDeviceInformation) => {
+                    this.matrixSecurity.openAskStartVerification({
+                        request,
+                        otherDeviceInformation,
+                    });
+                })
+                .catch((error) => {
+                    console.error("Failed to get information from other device : ", error);
+                    Sentry.captureMessage(`Failed to get information from other device : ${error}`);
+                });
+        }
+    }
+
+    private async getDeviceInformationForAskStartVerificationModal(deviceId: string) {
+        const otherDeviceInformation = await this.getOwnDeviceInformation(deviceId);
+        const myOtherDeviceInformation = await this.client?.getDevice(deviceId);
+        const ip = myOtherDeviceInformation?.last_seen_ip;
+
+        return {
+            ip,
+            id: deviceId,
+            name: otherDeviceInformation?.displayName,
+        };
+    }
+    private async getDevicesInformationFor(userId: string) {
+        const client = this.client;
+        if (!client) return;
+        const crypto = this.client?.getCrypto();
+        if (!crypto) return;
+        const devicesMap = await crypto.getUserDeviceInfo([userId], true);
+        return devicesMap.get(userId);
+    }
+
+    private getOwnDevicesInformation() {
+        const myUserid = this.client?.getSafeUserId();
+        if (!myUserid) return;
+        return this.getDevicesInformationFor(myUserid);
+    }
+
+    private async getOwnDeviceInformation(deviceId: string) {
+        const devicesMap = await this.getOwnDevicesInformation();
+        if (!devicesMap) return;
+
+        return devicesMap.get(deviceId);
+    }
     private waitInitialSync(timeout = 10_000, interval = 3500): Promise<void> {
         return new Promise((resolve, reject) => {
             const startTime = Date.now();
@@ -454,8 +510,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     private createAndAddNewRootRoom(room: Room): MatrixChatRoom {
         const newRoom = new MatrixChatRoom(room);
         this.roomList.set(newRoom.id, newRoom);
-        if (get(selectedRoom)?.id === newRoom.id) {
-            selectedRoom.set(newRoom);
+        if (get(selectedRoomStore)?.id === newRoom.id) {
+            selectedRoomStore.set(newRoom);
         }
         return newRoom;
     }
@@ -477,8 +533,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             folder.deleteNode(roomId);
         });
 
-        const currentRoom = get(selectedRoom)?.id;
-        if (currentRoom && currentRoom === roomId) selectedRoom.set(undefined);
+        const currentRoom = get(selectedRoomStore)?.id;
+        if (currentRoom && currentRoom === roomId) selectedRoomStore.set(undefined);
     }
     private onRoomEventMembership(room: Room, membership: string, prevMembership: string | undefined) {
         const { roomId } = room;
@@ -837,7 +893,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     }
 
     initEndToEndEncryption(): Promise<void> {
-        return this.matrixSecurity.initClientCryptoConfiguration();
+        return this.matrixSecurity.openChooseDeviceVerificationMethodModal();
     }
 
     private async addRoomToSpace(spaceRoomId: string, childRoomId: string): Promise<void> {
@@ -881,7 +937,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.client?.off("RoomState.events" as EmittedEvents, this.handleRoomStateEvent);
         this.client?.off(RoomEvent.Name, this.handleName);
         this.client?.off(UserEvent.Presence, this.handleUserPresence);
-
+        this.client?.off(CryptoEvent.VerificationRequestReceived, this.handleVerificationRequestReceived);
         if (this.statusUnsubscriber) this.statusUnsubscriber();
     }
     async destroy(): Promise<void> {

@@ -2,7 +2,7 @@
     import { afterUpdate, beforeUpdate, onMount } from "svelte";
     import { get } from "svelte/store";
     import { ChatRoom } from "../../Connection/ChatConnection";
-    import { selectedChatMessageToReply, selectedRoom } from "../../Stores/ChatStore";
+    import { selectedChatMessageToReply, selectedRoomStore } from "../../Stores/ChatStore";
     import Avatar from "../Avatar.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import { matrixSecurity } from "../../Connection/Matrix/MatrixSecurity";
@@ -92,7 +92,7 @@
 
     function goBackAndClearSelectedChatMessage() {
         selectedChatMessageToReply.set(null);
-        selectedRoom.set(undefined);
+        selectedRoomStore.set(undefined);
     }
 
     function handleScroll() {

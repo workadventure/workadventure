@@ -12,6 +12,7 @@ import {
 
 import { SecretStorageKeyDescriptionAesV1 } from "matrix-js-sdk/lib/secret-storage";
 import { openModal } from "svelte-modals";
+import { VerificationMethod } from "matrix-js-sdk/lib/types";
 import { LocalUser } from "../../../Connection/LocalUser";
 import AccessSecretStorageDialog from "./AccessSecretStorageDialog.svelte";
 import { matrixSecurity } from "./MatrixSecurity";
@@ -134,6 +135,11 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
                 },
             },
             logger: customMatrixLogger,
+            verificationMethods: [
+                VerificationMethod.Sas,
+                //VerificationMethod.ShowQrCode,
+                //VerificationMethod.Reciprocate,
+            ],
         };
 
         if (this.clientClosed) {
@@ -253,6 +259,10 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
         }
 
         const key = await new Promise<Uint8Array | null>((resolve, reject) => {
+            if (!matrixSecurity.shouldDisplayModal) {
+                resolve(null);
+                return;
+            }
             openModal(AccessSecretStorageDialog, {
                 keyInfo,
                 matrixClient: this.client,

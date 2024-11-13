@@ -3,7 +3,7 @@
     import { fade } from "svelte/transition";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    import { chatSearchBarValue, joignableRoom, selectedRoom } from "../../Stores/ChatStore";
+    import { chatSearchBarValue, joignableRoom, selectedRoomStore } from "../../Stores/ChatStore";
     import Avatar from "../Avatar.svelte";
     import { IconLoader } from "@wa-icons";
 
@@ -18,7 +18,7 @@
             const newRoom = await chat.joinRoom(room.id);
             joignableRoom.set([]);
             chatSearchBarValue.set("");
-            selectedRoom.set(newRoom);
+            selectedRoomStore.set(newRoom);
         } catch (error) {
             console.error(error);
             if (error instanceof Error) {

@@ -152,7 +152,7 @@ import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/sta
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import { closeCoWebsite, getCoWebSite, openCoWebSite, openCoWebSiteWithoutSource } from "../../Chat/Utils";
 import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
-import { selectedRoom } from "../../Chat/Stores/ChatStore";
+import { selectedRoomStore } from "../../Chat/Stores/ChatStore";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
 import { ProximitySpaceManager } from "../../WebRtc/ProximitySpaceManager";
 import { SpaceRegistryInterface } from "../../Space/SpaceRegistry/SpaceRegistryInterface";
@@ -2494,7 +2494,7 @@ ${escapedMessage}
                         const room = this.proximityChatRoom;
 
                         room.addExternalMessage("local", chatMessage.message, chatMessage.options.author);
-                        selectedRoom.set(room);
+                        selectedRoomStore.set(room);
                         chatVisibilityStore.set(true);
                         break;
                     }
@@ -2502,7 +2502,7 @@ ${escapedMessage}
                         const room = this.proximityChatRoom;
 
                         room.addExternalMessage("bubble", chatMessage.message);
-                        selectedRoom.set(room);
+                        selectedRoomStore.set(room);
                         chatVisibilityStore.set(true);
                     }
                 }
