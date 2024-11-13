@@ -11,6 +11,7 @@ import { InputPCMStreamer } from "./InputPCMStreamer";
  */
 export class ScriptingInputAudioStreamManager {
     private appendPCMDataStreamUnsubscriber: Subscription | undefined;
+    private audioActivityUnsubscriber: Subscription | undefined;
     private startListeningToStreamInBubbleStreamUnsubscriber: Subscription;
     private stopListeningToStreamInBubbleStreamUnsubscriber: Subscription;
     private pcmStreamerDeferred: Deferred<InputPCMStreamer> = new Deferred<InputPCMStreamer>();
@@ -55,10 +56,19 @@ export class ScriptingInputAudioStreamManager {
                         // It looks like a bug in the browser to me (the ArrayBuffer was detached from the worklet process
                         // and should be attached to the main process and detachable again to the scripting iframe).
                     });
+                    this.audioActivityUnsubscriber = pcmStreamer.voiceEvent.subscribe((event) => {
+                        iframeListener.postMessage(
+                            {
+                                type: "audioActivity",
+                                data: event,
+                            },
+                            undefined
+                        );
+                    });
 
                     // Let's add all the peers to the stream
                     get(peerStore).forEach((peer) => {
-                        this.addMediaStreamStore(peer.streamStore);
+                        this.addMediaStreamStore(peer.streamStore, peer.userId);
                     });
                 })().catch((e) => {
                     console.error("Error while starting listening to streams", e);
@@ -71,6 +81,8 @@ export class ScriptingInputAudioStreamManager {
 
                 this.appendPCMDataStreamUnsubscriber?.unsubscribe();
                 this.appendPCMDataStreamUnsubscriber = undefined;
+                this.audioActivityUnsubscriber?.unsubscribe();
+                this.audioActivityUnsubscriber = undefined;
 
                 // Let's remove all the peers to the stream
                 get(peerStore).forEach((peer) => {
@@ -97,7 +109,7 @@ export class ScriptingInputAudioStreamManager {
 
         this.videoPeerAddedUnsubscriber = simplePeer.videoPeerAdded.subscribe((peer) => {
             if (this.isListening) {
-                this.addMediaStreamStore(peer.streamStore);
+                this.addMediaStreamStore(peer.streamStore, peer.userId);
             }
         });
 
@@ -108,13 +120,26 @@ export class ScriptingInputAudioStreamManager {
         });
     }
 
-    private addMediaStreamStore(streamStore: Readable<MediaStream | null>): void {
+    private addMediaStreamStore(streamStore: Readable<MediaStream | null>, userId: number): void {
         let lastValue: MediaStream | undefined = undefined;
         const unsubscriber = streamStore.subscribe((stream) => {
+            let streamAdded = false;
             if (stream) {
                 this.pcmStreamerDeferred.promise
                     .then((pcmStreamer) => {
-                        pcmStreamer.addMediaStream(stream);
+                        if (stream.getAudioTracks().length > 0) {
+                            pcmStreamer.addMediaStream(stream, userId);
+                            streamAdded = true;
+                        }
+
+                        // Let's listen when a track is added or removed.
+                        stream.addEventListener("addtrack", (event) => {
+                            if (!streamAdded && stream.getAudioTracks().length > 0) {
+                                pcmStreamer.addMediaStream(stream, userId);
+                                streamAdded = true;
+                            }
+                        });
+
                         lastValue = stream;
                     })
                     .catch((e) => {
