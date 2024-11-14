@@ -4,8 +4,8 @@
     import { selectedChatMessageToReply } from "../../Stores/ChatStore";
     import { getChatEmojiPicker } from "../../EmojiPicker";
     import LL from "../../../../i18n/i18n-svelte";
-    import { ENABLE_CHAT_UPLOAD } from "../../../Enum/EnvironmentVariable";
     import { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import MessageInput from "./MessageInput.svelte";
     import { IconCircleX, IconMoodSmile, IconSend } from "@wa-icons";
@@ -201,7 +201,7 @@
         <IconMoodSmile font-size={18} />
     </button>
 
-    {#if ENABLE_CHAT_UPLOAD}
+    {#if gameManager.enableChatUpload()}
         <MessageFileInput {room} />
     {/if}
 

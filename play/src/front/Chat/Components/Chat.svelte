@@ -4,11 +4,6 @@
     import { chatSearchBarValue, joignableRoom, navChat } from "../Stores/ChatStore";
     import { INITIAL_SIDEBAR_WIDTH } from "../../Stores/ChatStore";
     import { UserProviderMerger } from "../UserProviderMerger/UserProviderMerger";
-    import {
-        ENABLE_CHAT,
-        ENABLE_CHAT_DISCONNECTED_LIST,
-        ENABLE_CHAT_ONLINE_LIST,
-    } from "../../Enum/EnvironmentVariable";
     import RoomUserList from "./UserList/RoomUserList.svelte";
     import ChatLoader from "./ChatLoader.svelte";
     import RoomList from "./RoomList.svelte";
@@ -16,9 +11,11 @@
 
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
 
-    const showNavBar = (ENABLE_CHAT_ONLINE_LIST || ENABLE_CHAT_DISCONNECTED_LIST) && ENABLE_CHAT;
-
     const gameScene = gameManager.getCurrentGameScene();
+
+    const showNavBar =
+        (gameManager.enableOnlineList() || gameManager.enableDisconnectedList()) && gameManager.enableChat();
+
     const chat = gameManager.chatConnection;
     const userProviderMergerPromise = gameScene.userProviderMerger;
     const DONE_TYPING_INTERVAL = 2000;

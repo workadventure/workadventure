@@ -150,7 +150,6 @@ import { hideBubbleConfirmationModal } from "../../Rules/StatusRules/statusChang
 import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/statusChanger";
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import { getCoWebSite, openCoWebSite } from "../../Chat/Utils";
-import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
 import { selectedRoomStore } from "../../Chat/Stores/ChatStore";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
@@ -333,7 +332,6 @@ export class GameScene extends DirtyScene {
         this.currentCompanionTextureResolve = resolve;
         this.currentCompanionTextureReject = reject;
     });
-    private _chatConnection: ChatConnectionInterface | undefined;
     private _spaceRegistry: SpaceRegistryInterface | undefined;
     private allUserSpace: SpaceInterface | undefined;
     private _proximityChatRoom: ProximityChatRoom | undefined;
@@ -1543,14 +1541,14 @@ export class GameScene extends DirtyScene {
 
                         const userProviders: UserProviderInterface[] = [];
 
-                        if (ENABLE_CHAT_DISCONNECTED_LIST) {
+                        if (ENABLE_CHAT_DISCONNECTED_LIST && this._room.enableChatDisconnectedList) {
                             if (connection) {
                                 userProviders.push(new AdminUserProvider(connection));
                             }
                             userProviders.push(new ChatUserProvider(chatConnection));
                         }
 
-                        if (allUserSpace && ENABLE_CHAT_ONLINE_LIST) {
+                        if (allUserSpace && ENABLE_CHAT_ONLINE_LIST && this._room.enableChatOnlineList) {
                             userProviders.push(new WorldUserProvider(allUserSpace));
                         }
 
@@ -3734,5 +3732,9 @@ ${escapedMessage}
 
     get userProviderMerger(): Promise<UserProviderMerger> {
         return this._userProviderMergerDeferred.promise;
+    }
+
+    get currentRoom(): Room {
+        return this._room;
     }
 }
