@@ -13,7 +13,7 @@ You can for instance:
 *   Organize interactions between an iframe and your map (for instance, walking on a special zone might add a product in the cart of an eCommerce website...)
 *   etc...
 
-Please note that scripting in WorkAdventure is at an early stage of development and that more features might be added in the future. You can actually voice your opinion about useful features by adding [an issue on Github](https://github.com/thecodingmachine/workadventure/issues).
+Please note that scripting in WorkAdventure is at an early stage of development and that more features might be added in the future. You can actually voice your opinion about useful features by adding [an issue on GitHub](https://github.com/thecodingmachine/workadventure/issues).
 
 :::caution
 **Beware:** Scripts are executed in the browser of the current user only. Generally speaking, scripts cannot be used to trigger a change that will be displayed on other users screen.

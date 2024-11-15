@@ -24,7 +24,7 @@ In order to build your own map for WorkAdventure, you need:
 
 WorkAdventure comes with a "map starter kit" that we highly recommend using to start designing your map quickly.
 It contains **a good default tileset** for building an office and it contains tools to upload your map on WorkAdventure
-or on Github Pages. It also comes with a local web server for testing purpose and with
+or on GitHub Pages. It also comes with a local web server for testing purpose and with
 TypeScript support (if you are looking to use the [Map Scripting API](/developer/map-scripting/)).
 
 When designing your map with Tiled, there are a number of settings that [must absolutely be respected in order to be 
@@ -37,7 +37,7 @@ If you need to create additional maps, copy the "map starter kit" default map an
 
 ## Downloading the Map Starter Kit
 
-Go to the [Github map starter kit repository page](https://github.com/workadventure/map-starter-kit) and click the **"Code"** button.
+Go to the [GitHub map starter kit repository page](https://github.com/workadventure/map-starter-kit) and click the **"Code"** button.
 
 ![Open the "code" button](../images/navigate_to_repo.png)
 
@@ -58,7 +58,7 @@ If you want to do so, unfold the "Using GitHub to work on a map as a team" detai
 
 Start by [creating a GitHub account](https://github.com/join) if you don't already have one.
 
-Then, go to the [Github map starter kit repository page](https://github.com/workadventure/map-starter-kit) and click the **"Use this template"** button.
+Then, go to the [GitHub map starter kit repository page](https://github.com/workadventure/map-starter-kit) and click the **"Use this template"** button.
 
 ![The "Use this template" button](../images/use_this_template.png)
 

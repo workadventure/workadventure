@@ -61,7 +61,12 @@ export const EnvironmentVariables = z.object({
     OPID_LOCALE_CLAIM: z.string().optional(),
     USERNAME_POLICY: z.string().optional(),
     DISABLE_ANONYMOUS: BoolAsString.optional().transform((val) => toBool(val, false)),
-    PROMETHEUS_AUTHORIZATION_TOKEN: z.string().optional(),
+    PROMETHEUS_AUTHORIZATION_TOKEN: z.string().optional().describe("The token to access the Prometheus metrics."),
+    PROMETHEUS_PORT: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 0))
+        .describe(
+            "The port to access the Prometheus metrics. If not set, the default port is used AND an authorization token is required."
+        ),
     ENABLE_CHAT: BoolAsString.optional().transform((val) => toBool(val, true)),
     ENABLE_CHAT_UPLOAD: BoolAsString.optional().transform((val) => toBool(val, true)),
     ENABLE_CHAT_ONLINE_LIST: BoolAsString.optional().transform((val) => toBool(val, true)),
