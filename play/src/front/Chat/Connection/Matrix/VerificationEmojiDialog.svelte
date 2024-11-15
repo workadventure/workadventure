@@ -75,9 +75,9 @@
             </div>
             <div class="tw-flex tw-flex-wrap tw-justify-center tw-gap-12 tw-mt-8">
                 {#each emojis as [emoji, label], index (index)}
-                    <div class="tw-flex tw-flex-col tw-items-center tw-gap-2 tw-w-14">
+                    <div class="tw-flex tw-flex-col tw-items-center tw-gap-2">
                         <div class="tw-scale-[2.5]">{emoji}</div>
-                        <div>
+                        <div class="tw-text-center tw-w-full">
                             {Object.keys($LL.chat.emojis).includes(label)
                                 ? //FIXME : try to find a method to delete ts-ignore
                                   // @ts-ignore

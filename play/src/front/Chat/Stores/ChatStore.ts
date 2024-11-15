@@ -2,18 +2,15 @@ import { get, writable } from "svelte/store";
 import { ChatMessage as NewChatMessage, ChatRoom } from "../Connection/ChatConnection";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
 import { matrixSecurity } from "../Connection/Matrix/MatrixSecurity";
-import { ENABLE_CHAT, ENABLE_CHAT_DISCONNECTED_LIST, ENABLE_CHAT_ONLINE_LIST } from "../../Enum/EnvironmentVariable";
+import { ENABLE_CHAT_DISCONNECTED_LIST, ENABLE_CHAT_ONLINE_LIST } from "../../Enum/EnvironmentVariable";
 
 function createNavChatStore() {
-    const defaultValue = ENABLE_CHAT ? "chat" : "users";
-    const { subscribe, set } = writable<"chat" | "users">(defaultValue);
+    const { subscribe, set } = writable<"chat" | "users">("chat");
 
     return {
         subscribe,
         switchToChat() {
-            if (ENABLE_CHAT) {
-                set("chat");
-            }
+            set("chat");
         },
         switchToUserList() {
             if (ENABLE_CHAT_ONLINE_LIST || ENABLE_CHAT_DISCONNECTED_LIST) {

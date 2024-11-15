@@ -146,7 +146,7 @@
                 <ChatError />
             {/if}
 
-            {#if !$userIsConnected}
+            {#if !$userIsConnected && gameManager.getCurrentGameScene().room.isChatEnabled}
                 <p class="tw-text-gray-400 tw-w-full tw-text-center tw-pt-2">
                     {$LL.chat.requiresLoginForChat()}
                 </p>

@@ -1556,14 +1556,14 @@ export class GameScene extends DirtyScene {
 
                         const userProviders: UserProviderInterface[] = [];
 
-                        if (ENABLE_CHAT_DISCONNECTED_LIST) {
+                        if (ENABLE_CHAT_DISCONNECTED_LIST && this._room.isChatDisconnectedListEnabled) {
                             if (connection) {
                                 userProviders.push(new AdminUserProvider(connection));
                             }
                             userProviders.push(new ChatUserProvider(chatConnection));
                         }
 
-                        if (allUserSpace && ENABLE_CHAT_ONLINE_LIST) {
+                        if (allUserSpace && ENABLE_CHAT_ONLINE_LIST && this._room.isChatOnlineListEnabled) {
                             userProviders.push(new WorldUserProvider(allUserSpace));
                         }
 
