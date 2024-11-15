@@ -13,6 +13,8 @@ const actionbar: BaseTranslation = {
     emoji: "Open / Close emoji",
     disableMegaphone: "Disable megaphone",
     menu: "Open / Close menu",
+    calendar: "Open / Close calendar",
+    todoList: "Open / Close todo list",
     mapEditor: "Open / Close map manager",
     mapEditorMobileLocked: "Map editor is locked on mobile mode",
     mapEditorLocked: "Map editor is locked 🔐",
@@ -36,6 +38,7 @@ const actionbar: BaseTranslation = {
     },
     globalMessage: "Send a global message",
     roomList: "Open / Close room list",
+    appList: "Open / Close app list",
 };
 
 export default actionbar;

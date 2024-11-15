@@ -38,6 +38,7 @@
     } from "../Stores/AvailabilityStatusModalsStore";
     import { mapEditorAskToClaimPersonalAreaStore, mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
+    import { externalPopupSvelteComponent } from "../Stores/Utils/externalSvelteComponentStore";
     import { gameManager, GameSceneNotFoundError } from "../Phaser/Game/GameManager";
     import AudioManager from "./AudioManager/AudioManager.svelte";
     import ActionBar from "./ActionBar/ActionBar.svelte";
@@ -150,7 +151,7 @@
 
         {#if $notificationPlayingStore}
             <div class="tw-flex tw-flex-col tw-absolute tw-w-auto tw-right-0">
-                {#each [...$notificationPlayingStore.values()] as notification (notification.id)}
+                {#each [...$notificationPlayingStore.values()] as notification, index (`${index}-${notification.id}`)}
                     <Notification {notification} />
                 {/each}
             </div>
@@ -233,6 +234,12 @@
         {/if}
         {#if $warningMessageStore.length > 0}
             <WarningToast />
+        {/if}
+
+        {#if $externalPopupSvelteComponent.size > 0}
+            {#each [...$externalPopupSvelteComponent.entries()] as [key, value] (key)}
+                <svelte:component this={value.componentType} extensionModule={value.extensionModule} />
+            {/each}
         {/if}
 
         <MainModal />

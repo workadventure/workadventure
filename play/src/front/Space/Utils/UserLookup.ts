@@ -9,13 +9,13 @@ export function lookupUserById(
     spaceFilter: SpaceFilterInterface,
     timeout?: number
 ): Promise<SpaceUserExtended> {
-    console.log("LOOKING UP USER BY ID", id);
+    console.info("LOOKING UP USER BY ID", id);
     const promise = new Promise<SpaceUserExtended>((resolve, reject) => {
         let instantUnsubscribe = false;
         let unsubscribe: Unsubscriber | undefined;
         // eslint-disable-next-line prefer-const
         unsubscribe = spaceFilter.usersStore.subscribe((users) => {
-            console.log("USERS", users);
+            console.info("USERS", users);
             const user = users.get(id);
             if (user) {
                 resolve(user);

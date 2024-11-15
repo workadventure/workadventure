@@ -12,6 +12,8 @@ const menu: BaseTranslation = {
             openEmoji: "Open emoji selected popup",
             closeEmoji: "Close emoji menu",
             mobile: "Open mobile menu",
+            calendar: "Open calendar",
+            todoList: "Open todo list",
         },
     },
     visitCard: {
@@ -59,6 +61,8 @@ const menu: BaseTranslation = {
         cowebsiteTrigger: "Always ask before opening websites and Jitsi Meet rooms",
         ignoreFollowRequest: "Ignore requests to follow other users",
         proximityDiscussionVolume: "Proximity discussion volume",
+        blockAudio: "Block ambient sounds and music",
+        disableAnimations: "Disable map tile animations",
     },
     invite: {
         description: "Share the link of the room!",

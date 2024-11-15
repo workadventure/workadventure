@@ -1,6 +1,7 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { Translation } from "../i18n-types";
+import type { DeepPartial } from "../DeepPartial";
 
-const actionbar: BaseTranslation = {
+const actionbar: DeepPartial<Translation["actionbar"]> = {
     chat: "Chat wótcyniś / zacyniś",
     follow: "Folgen",
     unfollow: "Entfolgen",
@@ -11,6 +12,7 @@ const actionbar: BaseTranslation = {
     microphone: "Mikrofon aktiwěrowaś/deaktiwěrowaś",
     emoji: "Emojije wótcyniś / zacyniś",
     menu: "Menij wótcyniś / zacyniś",
+    calendar: "Kalender wótcyniś / zacyniś",
     mapEditor: "Editor kórty wótcyniś / zacyniś",
     bo: "Běrow we slězynje wótcyniś / zacyniś",
     subtitle: {

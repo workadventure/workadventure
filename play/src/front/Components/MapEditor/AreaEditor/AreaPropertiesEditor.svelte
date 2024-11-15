@@ -29,6 +29,8 @@
     import PersonalAreaPropertyEditor from "../PropertyEditor/PersonalAreaPropertyEditor.svelte";
     import RightsPropertyEditor from "../PropertyEditor/RightsPropertyEditor.svelte";
     import { IconChevronDown, IconChevronRight } from "../../Icons";
+    import { extensionModuleStore } from "../../../Stores/GameSceneStore";
+    import { ExtensionModule, ExtensionModuleAreaProperty } from "../../../ExternalModule/ExtensionModule";
     import MatrixRoomPropertyEditor from "../PropertyEditor/MatrixRoomPropertyEditor.svelte";
 
     let properties: AreaDataProperties = [];
@@ -202,6 +204,16 @@
                     allowedTags: [],
                     ownerId: null,
                 };
+            case "extensionModule":
+                if (subtype === undefined) {
+                    throw new Error("Missing subtype for extensionModule");
+                }
+                return {
+                    id,
+                    type,
+                    subtype,
+                    data: null,
+                };
             case "matrixRoomPropertyData":
                 return {
                     id,
@@ -356,6 +368,17 @@
     function toggleDescriptionField() {
         showDescriptionField = !showDescriptionField;
     }
+
+    let extensionModulesAreaMapEditor = $extensionModuleStore.reduce(
+        (acc: { [key: string]: ExtensionModuleAreaProperty }[], module: ExtensionModule) => {
+            const areaProperty = module.areaMapEditor?.();
+            if (areaProperty != undefined) {
+                acc.push(areaProperty);
+            }
+            return acc;
+        },
+        []
+    );
 </script>
 
 {#if $mapEditorSelectedAreaPreviewStore === undefined}
@@ -449,6 +472,21 @@
                     onAddProperty("openWebsite");
                 }}
             />
+            {#if extensionModulesAreaMapEditor.length > 0}
+                {#each extensionModulesAreaMapEditor as extensionModuleAreaMapEditor, index (`extensionModulesAreaMapEditor-${index}`)}
+                    {#each Object.entries(extensionModuleAreaMapEditor) as [subtype, index] (`extensionModuleAreaMapEditor-${index}`)}
+                        {#if extensionModuleAreaMapEditor[subtype].shouldDisplayButton(properties)}
+                            <AddPropertyButtonWrapper
+                                property="extensionModule"
+                                subProperty={subtype}
+                                on:click={() => {
+                                    onAddProperty("extensionModule", subtype);
+                                }}
+                            />
+                        {/if}
+                    {/each}
+                {/each}
+            {/if}
             {#if !hasMatrixRoom && MATRIX_PUBLIC_URI}
                 <AddPropertyButtonWrapper
                     property="matrixRoomPropertyData"
@@ -665,6 +703,18 @@
                             }}
                             on:change={({ detail }) => onUpdateProperty(property, detail)}
                         />
+                    {:else if property.type === "extensionModule" && extensionModulesAreaMapEditor.length > 0}
+                        {#each extensionModulesAreaMapEditor as extensionModuleAreaMapEditor, index (`extensionModulesAreaMapEditor-${index}`)}
+                            <svelte:component
+                                this={extensionModuleAreaMapEditor[property.subtype].AreaPropertyEditor}
+                                {property}
+                                {extensionModuleAreaMapEditor}
+                                on:close={() => {
+                                    onDeleteProperty(property.id);
+                                }}
+                                on:change={() => onUpdateProperty(property)}
+                            />
+                        {/each}
                     {:else if property.type === "matrixRoomPropertyData"}
                         <MatrixRoomPropertyEditor
                             {property}
