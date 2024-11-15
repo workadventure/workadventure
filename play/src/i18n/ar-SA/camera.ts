@@ -8,7 +8,7 @@ const camera: DeepPartial<Translation["camera"]> = {
     },
     help: {
         title: "مطلوب الوصول إلى الكاميرا / الميكروفون", // Access to camera/microphone required
-        permissionDenied: "تم رفض الوصول", // Access denied
+        permissionDenied: "تم الرفض", // Access denied
         content: "يجب السماح بالوصول إلى الكاميرا والميكروفون في المتصفح.", // Access to camera and microphone must be allowed in the browser.
         firefoxContent: 'يرجى النقر على زر "حفظ هذا القرار" لمنع طلبات الإذن المتكررة في Firefox.', // Please click the "Save this decision" button to prevent repeated permission requests in Firefox.
         refresh: "تحديث", // Refresh
@@ -35,9 +35,9 @@ const camera: DeepPartial<Translation["camera"]> = {
         silentZone: "منطقة صامتة", // Silent zone
         nameTag: "أنت", // You
     },
-    disable: "تعطيل الكاميرا", // Disable camera
+    disable: "إيقاف الكاميرا", // Disable camera
     menu: {
-        moreAction: "المزيد من الإجراءات", // More actions
+        moreAction: "خيارات إضافية", // More actions
         closeMenu: "إغلاق القائمة", // Close menu
         senPrivateMessage: "إرسال رسالة خاصة (قريبًا)", // Send private message (coming soon)
         kickoffUser: "طرد المستخدم", // Kick off user
