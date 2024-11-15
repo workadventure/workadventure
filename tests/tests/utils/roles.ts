@@ -4,7 +4,7 @@ export async function login(
     page: Page,
     userName = 'Alice',
     characterNumber = 2,
-    browserLanguage: string | null = 'en-US', 
+    browserLanguage: string | null = 'en-US',
     isMobile = false
 ) {
   // window.localStorage.setItem('language', browserLanguage)

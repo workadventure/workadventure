@@ -25,17 +25,30 @@ document.addEventListener("focusout", (event) => {
     }
 });
 
+export const mapExplorerSearchinputFocusStore = writable(false);
+
 //derived from the focus on Menu, ConsoleGlobal, Chat and ...
 export const enableUserInputsStore = derived(
-    [menuInputFocusStore, chatInputFocusStore, showReportScreenStore, inputFormFocusStore],
-    ([$menuInputFocusStore, $chatInputFocusStore, $showReportScreenStore, $inputFormFocusStore]) => {
+    [
+        menuInputFocusStore,
+        chatInputFocusStore,
+        showReportScreenStore,
+        inputFormFocusStore,
+        mapExplorerSearchinputFocusStore,
+    ],
+    ([
+        $menuInputFocusStore,
+        $chatInputFocusStore,
+        $showReportScreenStore,
+        $inputFormFocusStore,
+        $mapExplorerSearchinputFocusStore,
+    ]) => {
         return (
             !$menuInputFocusStore &&
             !$chatInputFocusStore &&
             !($showReportScreenStore !== userReportEmpty) &&
-            !$inputFormFocusStore
+            !$inputFormFocusStore &&
+            !$mapExplorerSearchinputFocusStore
         );
     }
 );
-
-export const mapExplorerSearchinputFocusStore = writable(false);

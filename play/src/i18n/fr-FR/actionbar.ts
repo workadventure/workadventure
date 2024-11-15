@@ -1,6 +1,7 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { Translation } from "../i18n-types";
+import type { DeepPartial } from "../DeepPartial";
 
-const actionbar: BaseTranslation = {
+const actionbar: DeepPartial<Translation["actionbar"]> = {
     chat: "Ouvrir / Fermer le chat",
     follow: "Suivre",
     unfollow: "Ne plus suivre",
@@ -13,6 +14,8 @@ const actionbar: BaseTranslation = {
     emoji: "Ouvrir / Fermer les émoticônes",
     disableMegaphone: "Couper le mégaphone",
     menu: "Ouvrir / Fermer le menu",
+    calendar: "Ouvrir / Fermer le calendrier",
+    todoList: "Ouvrir / Fermer la liste de tâches",
     mapEditor: "Ouvrir / Fermer l'éditeur de carte",
     mapEditorMobileLocked: "L'éditeur de carte est verrouillé en mode mobile",
     mapEditorLocked: "L'éditeur de carte est verrouillé 🔐",
@@ -35,6 +38,8 @@ const actionbar: BaseTranslation = {
     },
     globalMessage: "Envoyer un message global",
     roomList: "Ouvrir / Fermer la liste des salons",
+    appList: "Ouvrir / Fermer la liste des apps",
+    featureNotAvailable: "Fonctionnalité non disponible pour votre salon 😭",
 };
 
 export default actionbar;

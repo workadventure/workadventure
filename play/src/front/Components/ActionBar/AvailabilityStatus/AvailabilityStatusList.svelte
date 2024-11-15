@@ -4,8 +4,9 @@
     import { resetAllStatusStoreExcept } from "../../../Rules/StatusRules/statusChangerFunctions";
     import { availabilityStatusMenuStore } from "../../../Stores/AvailabilityStatusMenuStore";
     import { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
-    import { AvailabilityStatusListPropsInterface } from "./Interfaces/AvailabilityStatusPropsInterface";
+    import { externalAvailibilitySatusSvelteComponent } from "../../../Stores/Utils/externalSvelteComponentStore";
     import AvailabilityStatusCircle from "./AvailabilityStatusCircle.svelte";
+    import { AvailabilityStatusListPropsInterface } from "./Interfaces/AvailabilityStatusPropsInterface";
 
     export let props: AvailabilityStatusListPropsInterface;
 
@@ -37,7 +38,12 @@
             before:tw-border-b-contrast/80 tw-transition-all before:tw-rotate-180"
     transition:fly={{ y: 40, duration: 150 }}
 >
-    <div class="tw-flex tw-flex-row tw-justify-around tw-text-xs tw-pb-3 tw-pt-2">
+    {#if $externalAvailibilitySatusSvelteComponent.size > 0}
+        {#each [...$externalAvailibilitySatusSvelteComponent.entries()] as [key, value] (`${key}`)}
+            <svelte:component this={value.componentType} extensionModule={value.extensionModule} />
+        {/each}
+    {/if}
+    <div class="tw-flex tw-flex-row tw-justify-between tw-text-xs tw-p-2 tw-pb-0">
         <div class="tw-font-bold tw-opacity-80">{listStatusTitle.toUpperCase()}</div>
         <svg width="18px" height="18px" viewBox="0 0 24.00 24.00" fill="none" xmlns="http://www.w3.org/2000/svg"
             ><g id="SVGRepo_bgCarrier" stroke-width="0" /><g

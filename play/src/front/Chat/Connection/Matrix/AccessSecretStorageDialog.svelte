@@ -5,6 +5,7 @@
     import Popup from "../../../Components/Modal/Popup.svelte";
     import resetKeyStorageConfirmationModal from "../../../Components/Menu/ResetKeyStorageConfirmationModal.svelte";
     import LL from "../../../../i18n/i18n-svelte";
+    import { chatInputFocusStore } from "../../../Stores/ChatStore";
     import { MatrixSecurity } from "./MatrixSecurity";
     import { IconEdit, IconKey, IconLoader, IconRestore } from "@wa-icons";
 
@@ -74,6 +75,15 @@
         }
     });
 
+    function focusChatInput() {
+        // Disable input manager to prevent the game from receiving the input
+        chatInputFocusStore.set(true);
+    }
+    function unfocusChatInput() {
+        // Enable input manager to allow the game to receive the input
+        chatInputFocusStore.set(false);
+    }
+
     $: confirmInputDisabled =
         accessSecretStorageMethod === "passphrase"
             ? passphraseInput.trim().length === 0
@@ -101,6 +111,8 @@
                         ? checkAndSubmitRecoveryOrPassphraseIfValid().catch((error) => console.error(error))
                         : undefined;
                 }}
+                on:focusin={focusChatInput}
+                on:focusout={unfocusChatInput}
             />
             <div class="tw-flex tw-flex-row tw-justify-between">
                 <button class="tw-self-start tw-text-blue-500" on:click={switchToRestoreConfirmationModal}>
@@ -121,6 +133,8 @@
                 data-testid="recoveryKeyInput"
                 class="tw-w-full tw-rounded-xl tw-text-white placeholder:tw-text-sm tw-px-3 tw-py-2 tw-p tw-border-light-purple tw-border tw-border-solid tw-bg-contrast"
                 bind:value={recoveryKeyInput}
+                on:focusin={focusChatInput}
+                on:focusout={unfocusChatInput}
             />
             <div class="tw-flex tw-flex-row tw-justify-between">
                 <button class="tw-self-start tw-text-blue-500" on:click={switchToRestoreConfirmationModal}>

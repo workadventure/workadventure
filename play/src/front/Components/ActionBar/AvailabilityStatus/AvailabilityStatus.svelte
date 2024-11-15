@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onDestroy } from "svelte";
+    import * as Sentry from "@sentry/svelte";
     import { AvailabilityStatus } from "@workadventure/messages";
     import { availabilityStatusMenuStore } from "../../../Stores/AvailabilityStatusMenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
@@ -61,7 +62,12 @@
     };
 
     const unsubcribeToAvailabilityStatusStore = availabilityStatusStore.subscribe((newStatus: AvailabilityStatus) => {
-        statusChanger.changeStatusTo(newStatus);
+        try {
+            statusChanger.changeStatusTo(newStatus);
+        } catch (e) {
+            console.error("Error while changing status", e);
+            Sentry.captureException(e);
+        }
         buttonProps = {
             ...buttonProps,
             statusColorHex: getColorHexOfStatus($availabilityStatusStore),
@@ -78,6 +84,7 @@
     });
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
     id="AvailabilityStatus"
     on:click|stopPropagation={toggleStatusPicker}

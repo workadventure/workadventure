@@ -52,7 +52,7 @@ import image8 from './images/element/8-sync.jpg';
 2. Click on the "Sign in" button.
 3. On the login page, **do not try to enter your email and password**. Instead, in the "Where your conversations live" 
    section, click the "Edit" button.
-4. On the "Select your server screen", but sure to type: **"chat.workadventu.re"**
+4. On the "Select your server screen", be sure to type: **"chat.workadventu.re"**
 
 <table>
     <tr>
