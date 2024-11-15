@@ -83,6 +83,7 @@ export class ProximityChatRoom implements ChatRoom {
     areNotificationsMuted = writable(false);
     isRoomFolder = false;
     lastMessageTimestamp = 0;
+    hasUserInProximityChat = writable(false);
 
     private unknownUser = {
         chatId: "0",
@@ -380,6 +381,7 @@ export class ProximityChatRoom implements ChatRoom {
         this._spaceWatcher = this._space.watchAllUsers();
         this.usersUnsubscriber = this._spaceWatcher.usersStore.subscribe((users) => {
             this.users = users;
+            this.hasUserInProximityChat.set(users.size > 1);
         });
 
         this.spaceWatcherUserJoinedObserver = this._spaceWatcher.observeUserJoined.subscribe((spaceUser) => {
@@ -456,6 +458,7 @@ export class ProximityChatRoom implements ChatRoom {
             }
             this.typingMembers.set([]);
         }
+        this.hasUserInProximityChat.set(false);
 
         this.spaceWatcherUserJoinedObserver?.unsubscribe();
         this.spaceWatcherUserLeftObserver?.unsubscribe();

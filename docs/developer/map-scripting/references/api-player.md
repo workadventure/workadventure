@@ -414,6 +414,10 @@ using type guards or a type checking library like Zod.
 ```typescript
 WA.player.moveTo(x: number, y: number, speed?: number): Promise<{ x: number, y: number, cancelled: boolean }>;
 ```
+:::caution
+The parameters `x` and `y` are numbers of **pixels**, not tiles. So make sure to multiply them by 32 if you are counting tiles.
+:::
+
 Player will try to find shortest path to the destination point and proceed to move there.
 ```typescript
 // Let's move player to x: 250 y: 250 with speed of 10
@@ -446,6 +450,9 @@ const result = await WA.player.moveTo(250, 250, 10);
 ```typescript
 WA.player.teleport(x: number, y: number): Promise<void>;
 ```
+:::caution
+The parameters `x` and `y` are numbers of **pixels**, not tiles. So make sure to multiply them by 32 if you are counting tiles.
+:::
 
 Player will be teleported to the destination point.
 

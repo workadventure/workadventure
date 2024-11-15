@@ -80,7 +80,7 @@ export class InputPCMStreamer {
             this.audioContext
                 .close()
                 .then(() => {
-                    console.log("AudioContext closed.");
+                    console.info("AudioContext closed.");
                 })
                 .catch((err) => {
                     console.error("Error closing AudioContext:", err);

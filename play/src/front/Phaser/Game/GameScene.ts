@@ -40,6 +40,7 @@ import { lazyLoadPlayerCharacterTextures } from "../Entity/PlayerTexturesLoading
 import { lazyLoadPlayerCompanionTexture } from "../Companion/CompanionTexturesLoadingManager";
 import { iframeListener } from "../../Api/IframeListener";
 import {
+    ADMIN_URL,
     DEBUG_MODE,
     ENABLE_CHAT_DISCONNECTED_LIST,
     ENABLE_CHAT_ONLINE_LIST,
@@ -123,7 +124,7 @@ import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 import type { AskPositionEvent } from "../../Api/Events/AskPositionEvent";
 import { chatVisibilityStore, forceRefreshChatStore } from "../../Stores/ChatStore";
 import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
-import { gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
+import { extensionModuleStore, gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
 import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
@@ -149,7 +150,7 @@ import { JitsiBroadcastSpace } from "../../Streaming/Jitsi/JitsiBroadcastSpace";
 import { hideBubbleConfirmationModal } from "../../Rules/StatusRules/statusChangerFunctions";
 import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/statusChanger";
 import { warningMessageStore } from "../../Stores/ErrorStore";
-import { getCoWebSite, openCoWebSite } from "../../Chat/Utils";
+import { closeCoWebsite, getCoWebSite, openCoWebSite, openCoWebSiteWithoutSource } from "../../Chat/Utils";
 import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
 import { selectedRoomStore } from "../../Chat/Stores/ChatStore";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
@@ -159,6 +160,11 @@ import { WorldUserProvider } from "../../Chat/UserProvider/WorldUserProvider";
 import { ChatUserProvider } from "../../Chat/UserProvider/ChatUserProvider";
 import { UserProviderMerger } from "../../Chat/UserProviderMerger/UserProviderMerger";
 import { AdminUserProvider } from "../../Chat/UserProvider/AdminUserProvider";
+import { ExtensionModuleStatusSynchronization } from "../../Rules/StatusRules/ExtensionModuleStatusSynchronization";
+import { isActivatedStore as isCalendarActiveStore, calendarEventsStore } from "../../Stores/CalendarStore";
+import { isActivatedStore as isTodoListActiveStore, todoListsStore } from "../../Stores/TodoListStore";
+import { externalSvelteComponentStore } from "../../Stores/Utils/externalSvelteComponentStore";
+import { ExtensionModule, RoomMetadataType } from "../../ExternalModule/ExtensionModule";
 import { SpaceInterface } from "../../Space/SpaceInterface";
 import { UserProviderInterface } from "../../Chat/UserProvider/UserProviderInterface";
 import { faviconManager } from "../../WebRtc/FaviconManager";
@@ -172,7 +178,6 @@ import { soundManager } from "./SoundManager";
 import { SharedVariablesManager } from "./SharedVariablesManager";
 import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
 import { DynamicAreaManager } from "./DynamicAreaManager";
-
 import { PlayerMovement } from "./PlayerMovement";
 import { PlayersPositionInterpolator } from "./PlayersPositionInterpolator";
 import { DirtyScene } from "./DirtyScene";
@@ -337,6 +342,7 @@ export class GameScene extends DirtyScene {
     private _proximityChatRoom: ProximityChatRoom | undefined;
     private _userProviderMergerDeferred: Deferred<UserProviderMerger> = new Deferred();
     private matrixClientWrapper: MatrixClientWrapper | undefined;
+    public extensionModule: ExtensionModule | undefined = undefined;
     public landingAreas: AreaData[] = [];
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
@@ -737,6 +743,9 @@ export class GameScene extends DirtyScene {
 
         this.animatedTiles.init(this.Map);
         this.events.on("tileanimationupdate", () => (this.dirty = true));
+        if (localUserStore.getDisableAnimations()) {
+            this.animatedTiles.pause();
+        }
 
         this.initCirclesCanvas();
 
@@ -1059,6 +1068,11 @@ export class GameScene extends DirtyScene {
         this.scriptingInputAudioStreamManager?.close();
         this._spaceRegistry?.destroy();
 
+        // We need to destroy all the entities
+        get(extensionModuleStore).forEach((extensionModule) => {
+            extensionModule.destroy();
+        });
+
         //When we leave game, the camera is stop to be reopen after.
         // I think that we could keep camera status and the scene can manage camera setup
         //TODO find wy chrome don't manage correctly a multiple ask mediaDevices
@@ -1081,6 +1095,7 @@ export class GameScene extends DirtyScene {
             this.hideTimeout = undefined;
         }
     }
+
     /**
      * @param time
      * @param delta The delta time in ms since the last frame. This is a smoothed and capped value based on the FPS rate.
@@ -1560,6 +1575,8 @@ export class GameScene extends DirtyScene {
                         Sentry.captureMessage(errorMessage);
                     });
 
+                this.initExtensionModule();
+
                 this.tryOpenMapEditorWithToolEditorParameter();
 
                 this.subscribeToStores();
@@ -1934,6 +1951,58 @@ export class GameScene extends DirtyScene {
                 gameSceneStore.set(this);
             })
             .catch((e) => console.error(e));
+    }
+
+    private initExtensionModule() {
+        if (this._room.metadata != undefined) {
+            const parsedRoomMetadata = RoomMetadataType.safeParse(this._room.metadata);
+
+            if (!parsedRoomMetadata.success) {
+                console.error(
+                    "Unable to initialize Microsoft teams module due to room metadata parsing error : ",
+                    parsedRoomMetadata.error
+                );
+                return;
+            }
+
+            for (const module of parsedRoomMetadata.data.modules ?? []) {
+                if (module !== "ms-teams") continue;
+
+                (async () => {
+                    try {
+                        const extensionModule = await import(`../../../external-modules/ms-teams/index`);
+                        const defaultExtensionModule = extensionModule.default;
+
+                        defaultExtensionModule.init(parsedRoomMetadata.data, {
+                            workadventureStatusStore: availabilityStatusStore,
+                            userAccessToken: localUserStore.getAuthToken()!,
+                            roomId: this.roomUrl,
+                            externalModuleMessage: this.connection!.externalModuleMessage,
+                            onExtensionModuleStatusChange: ExtensionModuleStatusSynchronization.onStatusChange,
+                            calendarEventsStoreUpdate: calendarEventsStore.update,
+                            todoListStoreUpdate: todoListsStore.update,
+                            openCoWebSite: openCoWebSiteWithoutSource,
+                            closeCoWebsite,
+                            getOauthRefreshToken: this.connection?.getOauthRefreshToken.bind(this.connection),
+                            adminUrl: ADMIN_URL,
+                            externalSvelteComponent: externalSvelteComponentStore,
+                            spaceRegistry: this.spaceRegistry,
+                            logoutCallback: () => {
+                                connectionManager.logout();
+                            },
+                        });
+
+                        if (defaultExtensionModule.calendarSynchronised) isCalendarActiveStore.set(true);
+                        if (defaultExtensionModule.todoListSynchronized) isTodoListActiveStore.set(true);
+                        extensionModuleStore.add(defaultExtensionModule);
+                    } catch (error) {
+                        console.warn("Extension module initialization cancelled", error);
+                    } finally {
+                        console.info(`Extension module ${module} initialization finished`);
+                    }
+                })().catch((error) => console.error(error));
+            }
+        }
     }
 
     private subscribeToStores(): void {
@@ -2703,13 +2772,7 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("closeCoWebsite", (coWebsiteId) => {
-            const coWebsite = coWebsiteManager.getCoWebsiteById(coWebsiteId);
-
-            if (!coWebsite) {
-                throw new Error("Unknown co-website");
-            }
-
-            return coWebsiteManager.closeCoWebsite(coWebsite);
+            return closeCoWebsite(coWebsiteId);
         });
 
         iframeListener.registerAnswerer("closeCoWebsites", () => {

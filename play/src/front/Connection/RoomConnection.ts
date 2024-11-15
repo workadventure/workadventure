@@ -65,6 +65,8 @@ import {
     PublicEventFrontToPusher,
     PrivateEventFrontToPusher,
     SpaceUser,
+    OauthRefreshToken,
+    ExternalModuleMessage,
     LeaveChatRoomAreaMessage,
     SpaceDestroyedMessage,
 } from "@workadventure/messages";
@@ -221,6 +223,8 @@ export class RoomConnection implements RoomConnection {
     public readonly joinSpaceRequestMessage = this._joinSpaceRequestMessage.asObservable();
     private readonly _leaveSpaceRequestMessage = new Subject<LeaveSpaceRequestMessage>();
     public readonly leaveSpaceRequestMessage = this._leaveSpaceRequestMessage.asObservable();
+    private readonly _externalModuleMessage = new Subject<ExternalModuleMessage>();
+    public readonly externalModuleMessage = this._externalModuleMessage.asObservable();
     private readonly _spaceDestroyedMessage = new Subject<SpaceDestroyedMessage>();
     public readonly spaceDestroyedMessage = this._spaceDestroyedMessage.asObservable();
 
@@ -709,6 +713,10 @@ export class RoomConnection implements RoomConnection {
                 }
                 case "leaveSpaceRequestMessage": {
                     this._leaveSpaceRequestMessage.next(message.leaveSpaceRequestMessage);
+                    break;
+                }
+                case "externalModuleMessage": {
+                    this._externalModuleMessage.next(message.externalModuleMessage);
                     break;
                 }
                 default: {
@@ -1572,6 +1580,19 @@ export class RoomConnection implements RoomConnection {
         return answer.chatMembersAnswer;
     }
 
+    public async getOauthRefreshToken(tokenToRefresh: string): Promise<OauthRefreshToken> {
+        const answer = await this.query({
+            $case: "oauthRefreshTokenQuery",
+            oauthRefreshTokenQuery: {
+                tokenToRefresh,
+            },
+        });
+        if (answer.$case !== "oauthRefreshTokenAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.oauthRefreshTokenAnswer;
+    }
+
     public emitUpdateChatId(email: string, chatId: string) {
         if (chatId && email) {
             this.send({
@@ -1797,6 +1818,7 @@ export class RoomConnection implements RoomConnection {
         this._spacePublicMessageEvent.complete();
         this._joinSpaceRequestMessage.complete();
         this._leaveSpaceRequestMessage.complete();
+        this._externalModuleMessage.complete();
         this._spaceDestroyedMessage.complete();
     }
 

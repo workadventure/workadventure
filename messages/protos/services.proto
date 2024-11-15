@@ -28,6 +28,7 @@ service RoomManager {
   rpc listenEvent(EventRequest) returns (stream EventResponse); // Listen to events dispatched in the room
   rpc handleMapStorageUploadMapDetected(MapStorageClearAfterUploadMessage) returns (google.protobuf.Empty);
   rpc dispatchGlobalEvent(DispatchGlobalEventRequest) returns (google.protobuf.Empty); // Dispatch a scripting API message to ALL rooms
+  rpc dispatchExternalModuleMessage(ExternalModuleMessage) returns (google.protobuf.Empty); // Dispatch an externam module message to room and user if is defined
 }
 
 /**

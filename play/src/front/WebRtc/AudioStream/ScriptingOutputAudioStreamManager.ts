@@ -48,7 +48,7 @@ export class ScriptingOutputAudioStreamManager {
         });
 
         iframeListener.registerAnswerer("resetAudioBuffer", async () => {
-            console.log("Resetting audio buffer");
+            console.info("Resetting audio buffer");
             const pcmStreamer = await this.pcmStreamerDeferred.promise;
             pcmStreamer.resetAudioBuffer();
         });
