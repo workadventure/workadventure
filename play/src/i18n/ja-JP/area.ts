@@ -1,6 +1,7 @@
-import type { BaseTranslation } from "../i18n-types";
+import { DeepPartial } from "../DeepPartial";
+import type { Translation } from "../i18n-types";
 
-const area: BaseTranslation = {
+const area: DeepPartial<Translation["area"]> = {
     noAccess: "申し訳ありませんが、このエリアへのアクセス権がありません。",
     personalArea: {
         claimDescription: "ここはパーソナルエリアです。あなたのパーソナルエリアにしたいですか？",

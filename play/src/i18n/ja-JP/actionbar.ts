@@ -1,6 +1,7 @@
-import type { BaseTranslation } from "../i18n-types";
+import { DeepPartial } from "../DeepPartial";
+import type { Translation } from "../i18n-types";
 
-const actionbar: BaseTranslation = {
+const actionbar: DeepPartial<Translation["actionbar"]> = {
     chat: "チャットの表示／非表示",
     follow: "フォローする",
     unfollow: "フォローしない",

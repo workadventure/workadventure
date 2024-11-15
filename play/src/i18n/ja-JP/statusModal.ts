@@ -1,6 +1,7 @@
-import type { BaseTranslation } from "../i18n-types";
+import { DeepPartial } from "../DeepPartial";
+import type { Translation } from "../i18n-types";
 
-const statusModal: BaseTranslation = {
+const statusModal: DeepPartial<Translation["statusModal"]> = {
     accept: "受け入れる",
     close: "閉じる",
     confirm: "確認する",
