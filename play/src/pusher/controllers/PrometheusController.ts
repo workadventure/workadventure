@@ -1,6 +1,6 @@
 import { register, collectDefaultMetrics } from "prom-client";
 import type { Request, Response, Server } from "hyper-express";
-import { PROMETHEUS_AUTHORIZATION_TOKEN } from "../enums/EnvironmentVariable";
+import { PROMETHEUS_AUTHORIZATION_TOKEN, PROMETHEUS_PORT } from "../enums/EnvironmentVariable";
 import { BaseHttpController } from "./BaseHttpController";
 
 export class PrometheusController extends BaseHttpController {
@@ -16,30 +16,32 @@ export class PrometheusController extends BaseHttpController {
     }
 
     private async metrics(req: Request, res: Response): Promise<void> {
-        if (!PROMETHEUS_AUTHORIZATION_TOKEN) {
+        if (!PROMETHEUS_PORT && !PROMETHEUS_AUTHORIZATION_TOKEN) {
             res.atomic(() => {
                 res.status(501).send("Prometheus endpoint is disabled.");
             });
             return;
         }
-        const authorizationHeader = req.header("Authorization");
-        if (!authorizationHeader) {
-            res.atomic(() => {
-                res.status(401).send("Undefined authorization header");
-            });
-            return;
-        }
-        if (!authorizationHeader.startsWith("Bearer ")) {
-            res.atomic(() => {
-                res.status(401).send('Authorization header should start with "Bearer"');
-            });
-            return;
-        }
-        if (authorizationHeader.substring(7) !== PROMETHEUS_AUTHORIZATION_TOKEN) {
-            res.atomic(() => {
-                res.status(401).send("Incorrect authorization header sent.");
-            });
-            return;
+        if (PROMETHEUS_AUTHORIZATION_TOKEN) {
+            const authorizationHeader = req.header("Authorization");
+            if (!authorizationHeader) {
+                res.atomic(() => {
+                    res.status(401).send("Undefined authorization header");
+                });
+                return;
+            }
+            if (!authorizationHeader.startsWith("Bearer ")) {
+                res.atomic(() => {
+                    res.status(401).send('Authorization header should start with "Bearer"');
+                });
+                return;
+            }
+            if (authorizationHeader.substring(7) !== PROMETHEUS_AUTHORIZATION_TOKEN) {
+                res.atomic(() => {
+                    res.status(401).send("Incorrect authorization header sent.");
+                });
+                return;
+            }
         }
 
         const metrics = await register.metrics();

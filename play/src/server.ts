@@ -14,6 +14,7 @@ import {
     SENTRY_RELEASE,
     SENTRY_TRACES_SAMPLE_RATE,
     SENTRY_ENVIRONMENT,
+    PROMETHEUS_PORT,
 } from "./pusher/enums/EnvironmentVariable";
 import RoomApiServer from "./room-api/RoomApiServer";
 
@@ -50,6 +51,12 @@ if (SENTRY_DSN != undefined) {
 
     app.listen(PUSHER_HTTP_PORT)
         .then(() => console.info(`WorkAdventure Pusher started on port ${PUSHER_HTTP_PORT}!`))
+        .catch((e) => {
+            console.error(e);
+            Sentry.captureException(e);
+        });
+    app.listenPrometheusPort()
+        ?.then(() => console.info(`WorkAdventure Prometheus started on port ${PROMETHEUS_PORT}!`))
         .catch((e) => {
             console.error(e);
             Sentry.captureException(e);
