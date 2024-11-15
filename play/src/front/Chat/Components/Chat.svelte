@@ -12,9 +12,10 @@
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
 
     const gameScene = gameManager.getCurrentGameScene();
+    const currentRoom = gameScene.room;
 
     const showNavBar =
-        (gameManager.enableOnlineList() || gameManager.enableDisconnectedList()) && gameManager.enableChat();
+        (currentRoom.isChatOnlineListEnabled || currentRoom.isChatDisconnectedListEnabled) && currentRoom.isChatEnabled;
 
     const chat = gameManager.chatConnection;
     const userProviderMergerPromise = gameScene.userProviderMerger;

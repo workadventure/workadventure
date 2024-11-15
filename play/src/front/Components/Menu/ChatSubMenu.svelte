@@ -32,7 +32,7 @@
 
 <div class="customize-main">
     <div class="submenu">
-        {#if gameManager.enableChat()}
+        {#if gameManager.getCurrentGameScene().room.isChatEnabled}
             {#if $userIsConnected}
                 <h3 class="blue-title tw-pt-2">{$LL.menu.chat.matrixIDLabel()}</h3>
                 <div class="tw-flex tw-w-full tw-justify-center tw-py-1">

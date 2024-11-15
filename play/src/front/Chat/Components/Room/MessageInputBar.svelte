@@ -201,7 +201,7 @@
         <IconMoodSmile font-size={18} />
     </button>
 
-    {#if gameManager.enableChatUpload()}
+    {#if gameManager.getCurrentGameScene().room.isChatUploadEnabled}
         <MessageFileInput {room} />
     {/if}
 
