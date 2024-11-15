@@ -236,7 +236,10 @@ export const isMapDetailsData = z.object({
     errorSceneLogo: extendApi(z.string().nullable().optional(), {
         description: "The URL of the error image to be used on the ErrorScene",
         example: "https://example.com/error_logo_login.png",
-    })
+    }),
+    modules: extendApi(z.array(z.string()).optional().nullable(), {
+        description: "List of external-modules to load",
+    }),
 });
 
 export type MapDetailsData = z.infer<typeof isMapDetailsData>;

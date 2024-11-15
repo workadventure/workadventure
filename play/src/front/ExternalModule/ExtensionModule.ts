@@ -4,7 +4,6 @@ import { CalendarEventInterface, TodoListInterface } from "@workadventure/shared
 import { ComponentType } from "svelte";
 import { AreaData, AreaDataProperties } from "@workadventure/map-editor";
 import { Observable } from "rxjs";
-import { z } from "zod";
 import { OpenCoWebsiteObject } from "../Chat/Utils";
 import { SpaceRegistryInterface } from "../Space/SpaceRegistry/SpaceRegistryInterface";
 
@@ -51,7 +50,7 @@ export interface ExtensionModuleAreaProperty {
 
 export interface ExtensionModule {
     id: string;
-    init: (roomMetadata: RoomMetadataType, options: ExtensionModuleOptions) => void;
+    init: (roomMetadata: unknown, options: ExtensionModuleOptions) => void;
     joinMeeting: () => void;
     destroy: () => void;
     areaMapEditor?: () => { [key: string]: ExtensionModuleAreaProperty } | undefined;
@@ -67,29 +66,3 @@ export interface ExtensionModule {
     calendarSynchronised: boolean;
     todoListSynchronized: boolean;
 }
-
-export const RoomMetadataType = z.object({
-    player: z
-        .object({
-            accessTokens: z
-                .array(
-                    z.object({
-                        token: z.string(),
-                        provider: z.string(),
-                    })
-                )
-                .optional(),
-        })
-        .optional(),
-    modules: z.enum(["ms-teams"]).array(),
-    msTeamsSettings: z.object({
-        communication: z.boolean(),
-        status: z.boolean(),
-        statusTeamsToWorkAdventure: z.boolean(),
-        statusWorkAdventureToTeams: z.boolean(),
-        calendar: z.boolean(),
-        todoList: z.boolean().optional(),
-    }),
-});
-
-export type RoomMetadataType = z.infer<typeof RoomMetadataType>;
