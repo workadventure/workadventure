@@ -1,7 +1,15 @@
 import { isAxiosError } from "axios";
 import type { LegalsData } from "@workadventure/messages";
 import { isMapDetailsData, isRoomRedirect, ErrorApiData, OpidWokaNamePolicy } from "@workadventure/messages";
-import { CONTACT_URL, DISABLE_ANONYMOUS, OPID_WOKA_NAME_POLICY } from "../Enum/EnvironmentVariable";
+import {
+    CONTACT_URL,
+    DISABLE_ANONYMOUS,
+    ENABLE_CHAT,
+    ENABLE_CHAT_DISCONNECTED_LIST,
+    ENABLE_CHAT_ONLINE_LIST,
+    ENABLE_CHAT_UPLOAD,
+    OPID_WOKA_NAME_POLICY,
+} from "../Enum/EnvironmentVariable";
 import { ApiError } from "../Stores/Errors/ApiError";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 import { axiosWithRetry } from "./AxiosUtils";
@@ -168,10 +176,11 @@ export class Room {
                 this._pricingUrl = data.pricingUrl ?? undefined;
                 this._legals = data.legals ?? undefined;
 
-                this._enableChat = data.enableChat ?? undefined;
-                this._enableChatUpload = data.enableChatUpload ?? undefined;
-                this._enableChatOnlineList = data.enableChatOnlineList ?? undefined;
-                this._enableChatDisconnectedList = data.enableChatDisconnectedList ?? undefined;
+                this._enableChat = (data.enableChat ?? true) && ENABLE_CHAT;
+                this._enableChatUpload = (data.enableChatUpload ?? true) && ENABLE_CHAT_UPLOAD;
+                this._enableChatOnlineList = (data.enableChatOnlineList ?? true) && ENABLE_CHAT_ONLINE_LIST;
+                this._enableChatDisconnectedList =
+                    (data.enableChatDisconnectedList ?? true) && ENABLE_CHAT_DISCONNECTED_LIST;
 
                 this._iconClothes = data.customizeWokaScene?.clothesIcon ?? undefined;
                 this._iconAccessory = data.customizeWokaScene?.accessoryIcon ?? undefined;
@@ -312,28 +321,28 @@ export class Room {
         return this._pricingUrl;
     }
 
-    get enableChat(): boolean {
+    get isChatEnabled(): boolean {
         if (this._enableChat === undefined) {
             return true;
         }
         return this._enableChat;
     }
 
-    get enableChatUpload(): boolean {
+    get isChatUploadEnabled(): boolean {
         if (this._enableChatUpload === undefined) {
             return true;
         }
         return this._enableChatUpload;
     }
 
-    get enableChatOnlineList(): boolean {
+    get isChatOnlineListEnabled(): boolean {
         if (this._enableChatOnlineList === undefined) {
             return true;
         }
         return this._enableChatOnlineList;
     }
 
-    get enableChatDisconnectedList(): boolean {
+    get isChatDisconnectedListEnabled(): boolean {
         if (this._enableChatDisconnectedList === undefined) {
             return true;
         }
