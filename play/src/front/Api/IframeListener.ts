@@ -222,6 +222,12 @@ class IframeListener {
     private readonly _stopListeningToStreamInBubbleStream: Subject<void> = new Subject();
     public readonly stopListeningToStreamInBubbleStream = this._stopListeningToStreamInBubbleStream.asObservable();
 
+    /*private readonly _startListeningToAudioActivityInBubbleStream: Subject<string> = new Subject();
+    public readonly startListeningToAudioActivityInBubbleStream = this._startListeningToAudioActivityInBubbleStream.asObservable();
+
+    private readonly _stopListeningToAudioActivityInBubbleStream: Subject<void> = new Subject();
+    public readonly stopListeningToAudioActivityInBubbleStream = this._stopListeningToAudioActivityInBubbleStream.asObservable();*/
+
     private readonly iframes = new Map<HTMLIFrameElement, string | undefined>();
     private readonly iframeCloseCallbacks = new Map<MessageEventSource, Set<() => void>>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
@@ -375,6 +381,10 @@ class IframeListener {
                         this._startListeningToStreamInBubbleStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "stopListeningToStreamInBubble") {
                         this._stopListeningToStreamInBubbleStream.next();
+                    /*} else if (iframeEvent.type === "startListeningToAudioActivityInBubble") {
+                        this._startListeningToAudioActivityInBubbleStream.next();
+                    } else if (iframeEvent.type === "stopListeningToAudioActivityInBubble") {
+                        this._stopListeningToAudioActivityInBubbleStream.next();*/
                     } else if (iframeEvent.type === "openChat") {
                         this._openChatStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "closeChat") {
