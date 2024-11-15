@@ -5,7 +5,6 @@ import { RoomManagerService, SpaceManagerService } from "@workadventure/messages
 import App from "./src/App";
 import { roomManager } from "./src/RoomManager";
 import {
-    HTTP_PORT,
     GRPC_PORT,
     ENABLE_TELEMETRY,
     SENTRY_DSN,
@@ -19,7 +18,7 @@ import { spaceManager } from "./src/SpaceManager";
 if (ENABLE_TELEMETRY) {
     telemetryService.startTelemetry().catch((e) => console.error(e));
 }
-App.listen(HTTP_PORT, () => console.log(`WorkAdventure HTTP API starting on port %d!`, HTTP_PORT));
+App.listen();
 
 // Sentry integration
 if (SENTRY_DSN != undefined) {
