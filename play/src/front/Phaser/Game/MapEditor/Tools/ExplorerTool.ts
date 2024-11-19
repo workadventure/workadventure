@@ -18,7 +18,7 @@ import { MapEditorModeManager } from "../MapEditorModeManager";
 import { EntitiesManager } from "../../GameMap/EntitiesManager";
 import { AreaPreview } from "../../../Components/MapEditor/AreaPreview";
 import { waScaleManager } from "../../../Services/WaScaleManager";
-import { mapExplorerSearchinputFocusStore } from "../../../../Stores/UserInputStore";
+import { enableUserInputsStore } from "../../../../Stores/UserInputStore";
 import { MapEditorTool } from "./MapEditorTool";
 
 const logger = debug("explorer-tool");
@@ -33,10 +33,11 @@ export class ExplorerTool implements MapEditorTool {
     private lastCameraCenterXToZoom = 0;
     private lastCameraCenterYToZoom = 0;
     private mapExplorationEntitiesSubscribe: Unsubscriber | undefined;
+    private enableUserInputsStoreSubscribe: Unsubscriber | undefined;
     private zoomLevelBeforeExplorerMode: number | undefined;
 
     private keyDownHandler = (event: KeyboardEvent) => {
-        if (get(mapExplorerSearchinputFocusStore)) return;
+        if (!get(enableUserInputsStore)) return;
         if (event.key === "ArrowDown" || event.key === "s") {
             this.downIsPressed = true;
         }
@@ -51,7 +52,7 @@ export class ExplorerTool implements MapEditorTool {
         }
     };
     private keyUpHandler = (event: KeyboardEvent) => {
-        if (get(mapExplorerSearchinputFocusStore)) return;
+        if (!get(enableUserInputsStore)) return;
         // Define new zone to zoom
         if (event.key === "ArrowDown" || event.key === "s") {
             this.downIsPressed = false;
@@ -129,7 +130,7 @@ export class ExplorerTool implements MapEditorTool {
     }
 
     public update(time: number, dt: number): void {
-        if (get(mapExplorerSearchinputFocusStore)) return;
+        if (!get(enableUserInputsStore)) return;
         const factorToMove = 10 * (1 / waScaleManager.zoomModifier);
         if (this.downIsPressed) {
             this.scene.getCameraManager().scrollCamera(0, factorToMove);
@@ -201,6 +202,7 @@ export class ExplorerTool implements MapEditorTool {
 
         // Unsubscribe to entities store
         if (this.mapExplorationEntitiesSubscribe) this.mapExplorationEntitiesSubscribe();
+        if (this.enableUserInputsStoreSubscribe) this.enableUserInputsStoreSubscribe();
 
         // Disable store of map exploration mode
         mapExplorationObjectSelectedStore.set(undefined);
@@ -270,11 +272,16 @@ export class ExplorerTool implements MapEditorTool {
         // Create flash animation
         this.scene.cameras.main.flash();
 
-        // Use zoom factor to refresh the camera position
-        // FIXME: delete this timeout when the camera position will be updated in the same time
-        /*setTimeout(() => {
-            this.scene.zoomByFactor(1, 1);
-        }, 200);*/
+        // Make that to be sure that when the map explorer is open, the user don't move with the camera or keyboard
+        // See the part of code in UserInputManager.ts that automatically enable the controle when the store is defined to true
+        this.enableUserInputsStoreSubscribe = enableUserInputsStore.subscribe((value) => {
+            if (!value) return;
+            // FIXME: use queue microtask to avoid the setTimeout
+            setTimeout(() => {
+                // Disable controls of the scene
+                this.scene.userInputManager.disableControls();
+            }, 100);
+        });
     }
     public destroy(): void {
         this.clear();
