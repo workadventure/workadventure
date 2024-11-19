@@ -129,6 +129,7 @@ export class ExplorerTool implements MapEditorTool {
     }
 
     public update(time: number, dt: number): void {
+        if (get(mapExplorerSearchinputFocusStore)) return;
         const factorToMove = 10 * (1 / waScaleManager.zoomModifier);
         if (this.downIsPressed) {
             this.scene.getCameraManager().scrollCamera(0, factorToMove);

@@ -7,6 +7,7 @@
     import LL from "../../../../i18n/i18n-svelte";
     import { IconHelpCircle, IconLoader } from "../../../Components/Icons";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
+    import { chatInputFocusStore } from "../../../Stores/ChatStore";
 
     export let isOpen: boolean;
     export let parentID: string | undefined;
@@ -53,6 +54,15 @@
 
         return [];
     }
+
+    function focusChatInput() {
+        // Disable input manager to prevent the game from receiving the input
+        chatInputFocusStore.set(true);
+    }
+    function unfocusChatInput() {
+        // Enable input manager to allow the game to receive the input
+        chatInputFocusStore.set(false);
+    }
 </script>
 
 <Popup {isOpen}>
@@ -73,6 +83,8 @@
                 class="tw-w-full tw-rounded-xl tw-text-white placeholder:tw-text-sm tw-px-3 tw-py-2 tw-p tw-border-light-purple tw-border tw-border-solid tw-bg-contrast"
                 placeholder={$LL.chat.createFolder.name()}
                 bind:value={createFolderOptions.name}
+                on:focusin={focusChatInput}
+                on:focusout={unfocusChatInput}
                 data-testid="createFolderName"
             />
             <p class="tw-p-0 tw-m-0 tw-pl-1 tw-font-bold">{$LL.chat.createFolder.visibility.label()}</p>

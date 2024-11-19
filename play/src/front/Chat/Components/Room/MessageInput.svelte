@@ -9,6 +9,8 @@
 
     export let onKeyDown: ((event: KeyboardEvent) => void) | undefined = undefined;
     export let onInput = () => {};
+    export let focusin = (event: FocusEvent) => {};
+    export let focusout = (event: FocusEvent) => {};
 
     const dispatch = createEventDispatcher();
 
@@ -73,6 +75,8 @@
     on:keydown={handleKeyDown}
     on:input={onInput}
     on:paste={onPasteHandler}
+    on:focusin={focusin}
+    on:focusout={focusout}
     class={inputClass}
     data-text={dataText}
     role="textbox"
