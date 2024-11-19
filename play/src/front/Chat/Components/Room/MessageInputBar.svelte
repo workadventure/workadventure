@@ -6,6 +6,7 @@
     import LL from "../../../../i18n/i18n-svelte";
     import { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
     import { gameManager } from "../../../Phaser/Game/GameManager";
+    import { chatInputFocusStore } from "../../../Stores/ChatStore";
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import MessageInput from "./MessageInput.svelte";
     import { IconCircleX, IconMoodSmile, IconSend } from "@wa-icons";
@@ -141,6 +142,17 @@
         return (bytes / Math.pow(1024, i)).toFixed(2) + " " + sizes[i];
     }
 
+    function focusin(event: FocusEvent) {
+        event.stopImmediatePropagation();
+        event.preventDefault();
+        chatInputFocusStore.set(true);
+    }
+    function focusout(event: FocusEvent) {
+        event.stopImmediatePropagation();
+        event.preventDefault();
+        chatInputFocusStore.set(false);
+    }
+
     $: quotedMessageContent = $selectedChatMessageToReply?.content;
 </script>
 
@@ -187,6 +199,8 @@
         onKeyDown={sendMessageOrEscapeLine}
         onInput={onInputHandler}
         on:pasteFiles={onPasteFiles}
+        {focusin}
+        {focusout}
         bind:message
         bind:messageInput
         inputClass="message-input tw-flex-grow !tw-m-0 tw-px-2 tw-max-h-36 tw-overflow-auto  tw-h-full tw-rounded-xl wa-searchbar tw-block tw-text-white placeholder:tw-text-sm  tw-border-light-purple tw-border !tw-bg-transparent tw-resize-none tw-border-none tw-outline-none tw-shadow-none focus:tw-ring-0"

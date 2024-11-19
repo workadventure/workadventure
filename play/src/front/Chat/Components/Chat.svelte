@@ -2,7 +2,7 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue, joignableRoom, navChat } from "../Stores/ChatStore";
-    import { INITIAL_SIDEBAR_WIDTH } from "../../Stores/ChatStore";
+    import { chatInputFocusStore, INITIAL_SIDEBAR_WIDTH } from "../../Stores/ChatStore";
     import { UserProviderMerger } from "../UserProviderMerger/UserProviderMerger";
     import RoomUserList from "./UserList/RoomUserList.svelte";
     import ChatLoader from "./ChatLoader.svelte";
@@ -63,6 +63,15 @@
         }
     }
 
+    function focusChatInput() {
+        // Disable input manager to prevent the game from receiving the input
+        chatInputFocusStore.set(true);
+    }
+    function unfocusChatInput() {
+        // Enable input manager to allow the game to receive the input
+        chatInputFocusStore.set(false);
+    }
+
     const chatStatusStore = chat.connectionStatus;
     $: isEncryptionRequiredAndNotSet = chat.isEncryptionRequiredAndNotSet;
     $: isGuest = chat.isGuest;
@@ -100,6 +109,8 @@
                             on:keydown={handleKeyDown}
                             on:keyup={() => handleKeyUp(userProviderMerger)}
                             bind:value={$chatSearchBarValue}
+                            on:focusin={focusChatInput}
+                            on:focusout={unfocusChatInput}
                         />
                     </div>
                 </div>

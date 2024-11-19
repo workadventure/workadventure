@@ -5,6 +5,7 @@
     import { ProximityChatRoom } from "../../../Connection/Proximity/ProximityChatRoom";
     import Tooltip from "../../../../Components/Util/Tooltip.svelte";
     import { LL } from "../../../../../i18n/i18n-svelte";
+    import { chatInputFocusStore } from "../../../../Stores/ChatStore";
     import { IconLoader, IconPaperclip } from "@wa-icons";
 
     let files: FileList | undefined = undefined;
@@ -27,6 +28,15 @@
             selectedChatMessageToReply.set(null);
         }
     }
+
+    function focusChatInput() {
+        // Disable input manager to prevent the game from receiving the input
+        chatInputFocusStore.set(true);
+    }
+    function unfocusChatInput() {
+        // Enable input manager to allow the game to receive the input
+        chatInputFocusStore.set(false);
+    }
 </script>
 
 <div>
@@ -41,6 +51,8 @@
         multiple
         bind:files
         data-testid="uploadCustomAsset"
+        on:focusin={focusChatInput}
+        on:focusout={unfocusChatInput}
     />
     <label for="upload" class="tw-p-0 tw-m-0">
         {#if files !== undefined}
