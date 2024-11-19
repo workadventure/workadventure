@@ -369,7 +369,7 @@ class LocalAdmin implements AdminInterface {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
 
-    saveCompanionTexture(userIdentifier: string, texture: string, roomUrl: string): Promise<void> {
+    saveCompanionTexture(userIdentifier: string, texture: string | null, roomUrl: string): Promise<void> {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
 
