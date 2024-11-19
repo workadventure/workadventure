@@ -1205,56 +1205,70 @@
                 {/if}
 
                 <!-- Calendar integration -->
-                {#if $isCalendarActivatedStore}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div
-                        on:dragstart|preventDefault={noDrag}
-                        on:click={() => analyticsClient.openExternalModuleCalendar()}
-                        on:click={openExternalModuleCalendar}
-                        class="bottom-action-button"
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <div
+                    on:dragstart|preventDefault={noDrag}
+                    on:click={() => analyticsClient.openExternalModuleCalendar()}
+                    on:click={openExternalModuleCalendar}
+                    class="bottom-action-button"
+                >
+                    {#if !isMobile}
+                        <Tooltip
+                            text={$isCalendarActivatedStore
+                                ? $LL.actionbar.calendar()
+                                : $LL.actionbar.featureNotAvailable()}
+                        />
+                    {/if}
+                    <button
+                        id="calendarIcon"
+                        class:border-top-light={$isCalendarVisibleStore}
+                        class:!tw-cursor-not-allowed={!$isCalendarActivatedStore}
+                        class:!no-pointer-events={!$isCalendarActivatedStore}
+                        disabled={!$isCalendarActivatedStore}
                     >
-                        {#if !isMobile}
-                            <Tooltip text={$LL.actionbar.calendar()} />
-                        {/if}
-                        <button id="calendarIcon" class:border-top-light={$isCalendarVisibleStore}>
-                            <img
-                                draggable="false"
-                                src={calendarSvg}
-                                style="padding: 2px"
-                                alt={$LL.menu.icon.open.calendar()}
-                            />
-                            <!-- Current day dislayed only work with the image ../images/calendar.svg -->
-                            <!---<span
-                                class="tw-absolute tw-top-5 tw-text-white tw-rounded-full tw-px-1 tw-py-0.5 tw-text-xxs tw-font-bold tw-leading-none"
-                            >
-                                {new Date().getDate()}
-                            </span>-->
-                        </button>
-                    </div>
-                {/if}
+                        <img
+                            draggable="false"
+                            src={calendarSvg}
+                            style="padding: 2px"
+                            alt={$LL.menu.icon.open.calendar()}
+                            class:disable-opacity={!$isCalendarActivatedStore}
+                            class:!tw-cursor-not-allowed={!$isCalendarActivatedStore}
+                        />
+                    </button>
+                </div>
 
                 <!-- Todo List Integration -->
-                {#if $isTodoListActivatedStore}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div
-                        on:dragstart|preventDefault={noDrag}
-                        on:click={() => analyticsClient.openExternalModuleTodoList()}
-                        on:click={openExternalModuleTodoList}
-                        class="bottom-action-button"
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <div
+                    on:dragstart|preventDefault={noDrag}
+                    on:click={() => analyticsClient.openExternalModuleTodoList()}
+                    on:click={openExternalModuleTodoList}
+                    class="bottom-action-button"
+                >
+                    {#if !isMobile}
+                        <Tooltip
+                            text={$isTodoListActivatedStore
+                                ? $LL.actionbar.calendar()
+                                : $LL.actionbar.featureNotAvailable()}
+                        />
+                    {/if}
+                    <button
+                        id="todoListIcon"
+                        class:border-top-light={$isTodoListVisibleStore}
+                        class:!tw-cursor-not-allowed={!$isTodoListActivatedStore}
+                        class:!no-pointer-events={!$isTodoListActivatedStore}
+                        disabled={!$isTodoListActivatedStore}
                     >
-                        {#if !isMobile}
-                            <Tooltip text={$LL.actionbar.todoList()} />
-                        {/if}
-                        <button id="todoListIcon" class:border-top-light={$isTodoListVisibleStore}>
-                            <img
-                                draggable="false"
-                                src={todoListSvg}
-                                style="padding: 2px"
-                                alt={$LL.menu.icon.open.todoList()}
-                            />
-                        </button>
-                    </div>
-                {/if}
+                        <img
+                            draggable="false"
+                            src={todoListSvg}
+                            style="padding: 2px"
+                            alt={$LL.menu.icon.open.todoList()}
+                            class:disable-opacity={!$isTodoListActivatedStore}
+                            class:!tw-cursor-not-allowed={!$isTodoListActivatedStore}
+                        />
+                    </button>
+                </div>
             </div>
 
             <div class="bottom-action-section tw-flex animate">

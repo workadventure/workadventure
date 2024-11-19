@@ -39,6 +39,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     globalMessage: "Envoyer un message global",
     roomList: "Ouvrir / Fermer la liste des salons",
     appList: "Ouvrir / Fermer la liste des apps",
+    featureNotAvailable: "Fonctionnalité non disponible pour votre salon 😭",
 };
 
 export default actionbar;
