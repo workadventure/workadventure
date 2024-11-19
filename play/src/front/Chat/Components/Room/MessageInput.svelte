@@ -9,8 +9,12 @@
 
     export let onKeyDown: ((event: KeyboardEvent) => void) | undefined = undefined;
     export let onInput = () => {};
-    export let focusin = (event: FocusEvent) => {};
-    export let focusout = (event: FocusEvent) => {};
+    export let focusin = (event: FocusEvent) => {
+        console.info("Not used focusin", event);
+    };
+    export let focusout = (event: FocusEvent) => {
+        console.info("Not used focusout", event);
+    };
 
     const dispatch = createEventDispatcher();
 
