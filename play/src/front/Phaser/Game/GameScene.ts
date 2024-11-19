@@ -1961,7 +1961,8 @@ export class GameScene extends DirtyScene {
                 const moduleFactory = externalModules[`../../external-modules/${moduleName}/index.ts`];
 
                 if (!moduleFactory) {
-                    throw new Error(`Unable to find module "${moduleName}" inside external modules`);
+                    console.warn(`Unable to find module "${moduleName}" inside external modules`);
+                    return;
                 }
 
                 (async () => {
