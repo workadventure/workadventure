@@ -6,7 +6,8 @@ import { UserProviderInterface } from "./UserProviderInterface";
 import { mapExtendedSpaceUserToChatUser } from "./ChatUserMapper";
 
 export class WorldUserProvider implements UserProviderInterface {
-    users: Readable<PartialChatUser[]>;
+    public readonly users: Readable<PartialChatUser[]>;
+    public readonly userCount: Readable<number>;
     private readonly _filter: AllUsersSpaceFilterInterface;
 
     constructor(allUsersInWorldSpace: SpaceInterface) {
@@ -19,6 +20,7 @@ export class WorldUserProvider implements UserProviderInterface {
             },
             []
         );
+        this.userCount = derived(this.users, (users) => users.length);
     }
 
     setFilter(searchText: string): Promise<void> {

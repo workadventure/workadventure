@@ -71,7 +71,7 @@ class ChatUtils {
 
   public async cancelledContinueWithSSO(page: Page, context: BrowserContext) {
     await page.getByTestId("VerifyWithPassphraseButton").click();
-    await page.getByText("Cancel").click();
+    await page.getByTestId("cancelSSO").click();
   }
 
   public async restoreEncryption(page: Page) {

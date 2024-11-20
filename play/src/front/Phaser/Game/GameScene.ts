@@ -2,7 +2,7 @@ import * as Sentry from "@sentry/svelte";
 import type { Subscription } from "rxjs";
 import AnimatedTiles from "phaser-animated-tiles";
 import { Queue } from "queue-typescript";
-import type { Unsubscriber } from "svelte/store";
+import type { Readable, Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import { throttle } from "throttle-debounce";
 import { MapStore } from "@workadventure/store-utils";
@@ -342,6 +342,7 @@ export class GameScene extends DirtyScene {
     private _proximityChatRoom: ProximityChatRoom | undefined;
     private _userProviderMergerDeferred: Deferred<UserProviderMerger> = new Deferred();
     private matrixClientWrapper: MatrixClientWrapper | undefined;
+    private worldUserProvider: WorldUserProvider | undefined;
     public extensionModule: ExtensionModule | undefined = undefined;
     public landingAreas: AreaData[] = [];
 
@@ -1564,7 +1565,8 @@ export class GameScene extends DirtyScene {
                         }
 
                         if (allUserSpace && ENABLE_CHAT_ONLINE_LIST && this._room.isChatOnlineListEnabled) {
-                            userProviders.push(new WorldUserProvider(allUserSpace));
+                            this.worldUserProvider = new WorldUserProvider(allUserSpace);
+                            userProviders.push(this.worldUserProvider);
                         }
 
                         this._userProviderMergerDeferred.resolve(new UserProviderMerger(userProviders));
@@ -3792,5 +3794,12 @@ ${escapedMessage}
 
     get userProviderMerger(): Promise<UserProviderMerger> {
         return this._userProviderMergerDeferred.promise;
+    }
+
+    get worldUserCounter(): Readable<integer> {
+        if (!this.worldUserProvider) {
+            throw new Error("this.worldUserProvider not yet initialized");
+        }
+        return this.worldUserProvider.userCount;
     }
 }

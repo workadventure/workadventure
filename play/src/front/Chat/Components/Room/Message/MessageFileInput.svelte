@@ -54,7 +54,10 @@
         on:focusin={focusChatInput}
         on:focusout={unfocusChatInput}
     />
-    <label for="upload" class="tw-p-0 tw-m-0">
+    <label
+        for="upload"
+        class="tw-p-0 tw-m-0 tw-h-11 tw-w-11 tw-flex tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-none"
+    >
         {#if files !== undefined}
             <IconLoader class="tw-animate-spin" font-size={18} />
         {:else}
