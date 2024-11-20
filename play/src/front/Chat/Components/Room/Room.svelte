@@ -22,12 +22,15 @@
     $: isSelected = $selectedRoomStore?.id === room.id;
 </script>
 
-<button
+<div
     class="tw-group/chatItem tw-relative tw-mb-[1px] tw-text-md tw-m-0 tw-flex tw-gap-2 tw-flex-row tw-items-center hover:tw-bg-white tw-transition-all hover:tw-bg-opacity-10 hover:tw-rounded-md hover:!tw-cursor-pointer tw-p-2 tw-cursor-pointer tw-w-full"
     class:tw-bg-white={isSelected}
     class:tw-bg-opacity-10={isSelected}
     class:tw-rounded-md={isSelected}
     on:click={() => selectedRoomStore.set(room)}
+    on:keyup={() => selectedRoomStore.set(room)}
+    role="button"
+    tabindex="0"
 >
     <div class="tw-relative">
         <Avatar avatarUrl={room.avatarUrl} fallbackName={$roomName} />
@@ -55,4 +58,4 @@
             <div class="tw-rounded-full tw-bg-secondary-200 tw-h-1.5 tw-w-1.5 tw-absolute" />
         </div>
     {/if}
-</button>
+</div>
