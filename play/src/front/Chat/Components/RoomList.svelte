@@ -36,7 +36,7 @@
     let rooms = chat.rooms;
     //TODO : Make a distinction between invitations to a room or a space;
     let roomInvitations = chat.invitations;
-    let roomFolders = chat.roomFolders;
+    let roomFolders = chat.folders;
     let proximityHasUnreadMessages = proximityChatRoom.hasUnreadMessages;
 
     let displayDirectRooms = false;
@@ -333,6 +333,8 @@
                                 rooms={rootRoomFolder.rooms}
                                 isGuest={$isGuest}
                                 id={rootRoomFolder.id}
+                                invitations={rootRoomFolder.invitations}
+                                folder = {rootRoomFolder}
                             />
                         {/each}
                     {/if}

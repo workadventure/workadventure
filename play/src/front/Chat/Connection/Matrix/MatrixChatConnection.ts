@@ -4,6 +4,7 @@ import {
     CryptoEvent,
     Direction,
     EmittedEvents,
+    EventTimeline,
     EventType,
     ICreateRoomOpts,
     ICreateRoomStateEvent,
@@ -16,6 +17,7 @@ import {
     PushRuleActionName,
     Room,
     RoomEvent,
+    RoomStateEvent,
     SetPresence,
     SyncState,
     User,
@@ -73,6 +75,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         MatrixRoomFolder["id"],
         MatrixRoomFolder
     >();
+    folders: Readable<MatrixRoomFolder[]>;
     directRoomsUsers: Readable<ChatUser[]>;
     clientPromise: Promise<MatrixClient>;
     constructor(
@@ -95,7 +98,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.clientPromise = clientPromise;
         this.directRooms = derived(this.roomList, (roomList) => {
             return Array.from(roomList.values()).filter(
-                (room) => room.myMembership === KnownMembership.Join && room.type === "direct"
+                (room) => get(room.myMembership) === KnownMembership.Join && room.type === "direct"
             );
         });
 
@@ -125,23 +128,38 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             []
         );
 
-        this.invitations = derived(this.roomList, (roomList) => {
-            return Array.from(roomList.values()).filter((room) => room.myMembership === KnownMembership.Invite);
-        });
+        this.invitations = derived(
+            [
+                this.roomList,
+                this.roomFolders,
+                ...Array.from(this.roomList.values()).map((room) => room.myMembership),
+                ...Array.from(this.roomFolders.values()).map((folder) => folder.myMembership),
+            ],
+            (memberships) => {
+                return [
+                    ...Array.from(this.roomList.values()).filter(
+                        (room) => get(room.myMembership) === KnownMembership.Invite
+                    ),
+                    ...Array.from(this.roomFolders.values()).filter(
+                        (folder) => get(folder.myMembership) === KnownMembership.Invite
+                    ),
+                ];
+            }
+        );
 
         this.rooms = derived(this.roomList, (roomList) => {
             return Array.from(roomList.values()).filter(
-                (room) => room.myMembership === KnownMembership.Join && room.type === "multiple"
+                (room) => get(room.myMembership) === KnownMembership.Join && room.type === "multiple"
             );
         });
 
         this.hasUnreadMessages = derived(
             this.roomList,
-            ($roomList, set) => {
+            (roomList, set) => {
                 // Create a listener for each `hasUnreadMessages` store
-                const unsubscribes = Array.from($roomList.values()).map((room) =>
+                const unsubscribes = Array.from(roomList.values()).map((room) =>
                     room.hasUnreadMessages.subscribe(() => {
-                        set(Array.from($roomList.values()).some((someRoom) => get(someRoom.hasUnreadMessages)));
+                        set(Array.from(roomList.values()).some((someRoom) => get(someRoom.hasUnreadMessages)));
                     })
                 );
 
@@ -151,6 +169,14 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             false
         );
 
+        this.folders = derived(
+            [this.roomFolders, ...Array.from(this.roomFolders.values()).map((folder) => folder.myMembership)],
+            (folderList) => {
+                return Array.from(this.roomFolders.values()).filter(
+                    (folder) => get(folder.myMembership) === KnownMembership.Join
+                );
+            }
+        );
         this.usersStatus = new MapStore<string, AvailabilityStatus>();
         this.isEncryptionRequiredAndNotSet = this.matrixSecurity.isEncryptionRequiredAndNotSet;
 
@@ -231,12 +257,11 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.client.on(ClientEvent.Room, this.handleRoom);
         this.client.on(ClientEvent.DeleteRoom, this.handleDeleteRoom);
         this.client.on(RoomEvent.MyMembership, this.handleMyMembership);
-        this.client.on("RoomState.events" as EmittedEvents, this.handleRoomStateEvent);
+        this.client.on(RoomStateEvent.Events as EmittedEvents, this.handleRoomStateEvent);
         this.client.on(RoomEvent.Name, this.handleName);
         this.client.on(ClientEvent.AccountData, this.handleAccountDataEvent);
         this.client.on(UserEvent.Presence, this.handleUserPresence);
         this.client.on(CryptoEvent.VerificationRequestReceived, this.handleVerificationRequestReceived);
-
         await this.client.store.startup();
 
         try {
@@ -360,75 +385,137 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         }
     }
 
-    private onRoomNameEvent(room: Room): void {
+    private async onRoomNameEvent(room: Room): Promise<void> {
         const { roomId, name } = room;
-        const roomInConnection = this.findRoomOrFolder(roomId);
+        const roomInConnection = await this.findRoomOrFolder(roomId);
 
         if (roomInConnection) {
             roomInConnection.name.set(name);
             return;
         }
-
-        this.manageRoomOrFolder(room);
+        try {
+            await this.manageRoomOrFolder(room);
+        } catch (e) {
+            console.error("Failed to manage : ", e);
+        }
     }
     private onRoomStateEvent(event: MatrixEvent): void {
-        if (!this.client) return;
+        if (!this.client) {
+            console.log(">>>>>@ Client is not initialized. Returning...");
+            return;
+        }
+
         const eventType = event.getType();
-
-        if (eventType !== "m.space.child") return;
-
+        if (eventType !== "m.space.child") {
+            //console.log(`>>>>>Event type is not 'm.space.child'. Event type: ${eventType}. Returning...`);
+            return;
+        }
+        console.log(">>>>@ debut ");
         const roomID = event.getStateKey();
-        if (!roomID) return;
+        if (!roomID) {
+            console.log(">>>>>@Room ID is missing in the event. Returning...");
+            return;
+        }
 
-        const room = this.client?.getRoom(roomID);
-        if (!room) return;
+        const room = this.client.getRoom(roomID);
+        if (!room) {
+            console.log(`>>>>>@ Room with ID ${roomID} not found. Returning...`);
+            return;
+        }
 
         this.roomList.delete(roomID);
         this.roomFolders.delete(roomID);
 
         const parentID = event.getRoomId();
-        if (!parentID) return;
+        if (!parentID) {
+            console.log(">>>>>@ Parent ID is missing in the event. Returning...");
+            return;
+        }
 
         const parentRoom = this.client.getRoom(parentID);
-        if (!parentRoom) return;
+        if (!parentRoom) {
+            console.log(`>>>>>@ Parent room with ID ${parentID} not found. Returning...`);
+            return;
+        }
 
+        console.log(`>>>>>@ Moving room with ID ${roomID} to parent folder with ID ${parentID}.`);
         this.moveRoomToParentFolder(room, parentID);
     }
-
-    private onClientEventRoom(room: Room) {
-        this.manageRoomOrFolder(room);
+    private async onClientEventRoom(room: Room) {
+        try {
+            await this.manageRoomOrFolder(room);
+        } catch (e) {
+            console.error("Failed to manage : ", e);
+        }
     }
-    private moveRoomToParentFolder(room: Room, parentID: string): void {
+
+
+    //TODO : voir ce que donne le get room apres le 1er async et prendre en compte les events : seulement apres le 1er sync 
+    private async moveRoomToParentFolder(room: Room, parentID: string): Promise<void> {
         const isSpaceRoom = room.isSpaceRoom();
+        console.log(
+            ">@1",
+            Array.from(this.roomFolders.values()).map((folder) => ({
+                name: get(folder.name),
+                id: folder.id,
+            }))
+        );
+
         for (const [, folder] of this.roomFolders) {
             if (folder.id === parentID) {
                 if (isSpaceRoom) {
-                    folder.folders.set(room.roomId, new MatrixRoomFolder(room));
+                    const newFolder = new MatrixRoomFolder(room);
+                    folder.folderList.set(room.roomId, newFolder);
+                    //TODO : try/catch
+                    await newFolder.init();
                 } else {
-                    folder.rooms.set(room.roomId, new MatrixChatRoom(room));
+                    folder.roomList.set(room.roomId, new MatrixChatRoom(room));
                 }
                 break;
             }
 
-            const node = folder.getNode(parentID);
-            if (node && node instanceof MatrixRoomFolder) {
-                if (isSpaceRoom) {
-                    node.folders.set(room.roomId, new MatrixRoomFolder(room));
+            try {
+                const node = await folder.getNode(parentID);
+                console.log(
+                    ">@2",
+                    Array.from(folder.folderList.values()).map((folder) => ({
+                        name: get(folder.name),
+                        id: folder.id,
+                    }))
+                );
+
+                if (node && node instanceof MatrixRoomFolder) {
+                    console.log(">@ on a retrouvé le bon node ...");
+                    if (isSpaceRoom) {
+                        //Creer les folders en 2 temps 1) new 2init
+                        const newFolder = new MatrixRoomFolder(room);
+                        node.folderList.set(room.roomId, newFolder);
+                        await newFolder.init();
+                    } else {
+                        node.roomList.set(room.roomId, new MatrixChatRoom(room));
+                    }
+                    break;
                 } else {
-                    node.rooms.set(room.roomId, new MatrixChatRoom(room));
+                    console.log(">@ pas de parent trouvé  :");
+                    //Récuperer le parent avec un get room
                 }
-                break;
+            } catch (e) {
+                console.log(">@ error dans getNode  :", e);
             }
         }
     }
-    private manageRoomOrFolder(room: Room): void {
+    private async manageRoomOrFolder(room: Room): Promise<void> {
         const { roomId } = room;
-
-        if (this.findRoomOrFolder(roomId)) return;
+        //TODO: si on trouve la room juste mettre a jour les infos
+        if (await this.findRoomOrFolder(roomId)) {
+            // return;
+        }
 
         if (!this.isUserMemberOrInvited(room)) return;
 
         const parentRoomID = this.getFirstParentRoomID(room);
+
+        console.log(`roomParentID ${parentRoomID} for room ${room.name}`);
 
         if (parentRoomID) {
             const isAdded = this.tryAddRoomToParentFolder(room, parentRoomID);
@@ -437,7 +524,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 this.createAndAddNewRootRoom(room);
             }
         } else {
-            this.handleOrphanRoom(room);
+            await this.handleOrphanRoom(room);
         }
     }
     private isUserMemberOrInvited(room: Room): boolean {
@@ -454,15 +541,16 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         return parentRoomsIDs.length > 0 ? parentRoomsIDs[0] : undefined;
     }
 
-    private tryAddRoomToParentFolder(room: Room, parentRoomID: string): boolean {
+    private async tryAddRoomToParentFolder(room: Room, parentRoomID: string): Promise<boolean> {
+        //TODO : try /catch
         const isSpaceRoom = room.isSpaceRoom();
         for (const [, folder] of this.roomFolders) {
-            const parentFolder = folder.id === parentRoomID ? folder : folder.getNode(parentRoomID);
+            const parentFolder = folder.id === parentRoomID ? folder : await folder.getNode(parentRoomID);
             if (parentFolder && parentFolder instanceof MatrixRoomFolder) {
                 if (isSpaceRoom) {
                     this.roomFolders.delete(room.roomId);
                 } else {
-                    parentFolder.rooms.set(room.roomId, new MatrixChatRoom(room));
+                    parentFolder.roomList.set(room.roomId, new MatrixChatRoom(room));
                 }
                 return true;
             }
@@ -470,29 +558,37 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
         return false;
     }
-    private handleOrphanRoom(room: Room): void {
+    private async handleOrphanRoom(room: Room): Promise<void> {
         if (room.isSpaceRoom()) {
-            this.createAndAddNewRootFolder(room);
+            await this.createAndAddNewRootFolder(room);
         } else {
             this.createAndAddNewRootRoom(room);
         }
     }
-    private findRoomOrFolder(roomId: string): MatrixRoomFolder | MatrixChatRoom | undefined {
+
+    private async findRoomOrFolder(roomId: string): Promise<MatrixRoomFolder | MatrixChatRoom | undefined> {
         const roomInRoomList = this.roomList.get(roomId);
         if (roomInRoomList) {
             return roomInRoomList;
         }
 
-        for (const [, folder] of this.roomFolders) {
-            const roomOrFolder = folder.id === roomId ? folder : folder.getNode(roomId);
-            if (roomOrFolder) {
-                return roomOrFolder;
-            }
+        const getNodePromise = Array.from(this.roomFolders.values()).map((folder) => {
+            return folder.id === roomId ? folder : folder.getNode(roomId);
+        });
+
+        const nodes = await Promise.all(getNodePromise);
+        const node = nodes.filter((node) => node)[0];
+
+        if (!node) {
+            return undefined;
         }
-        return undefined;
+
+        return node;
     }
-    private createAndAddNewRootFolder(room: Room): void {
+
+    private async createAndAddNewRootFolder(room: Room): Promise<void> {
         const newFolder = new MatrixRoomFolder(room);
+        await newFolder.init();
         this.roomFolders.set(room.roomId, newFolder);
 
         newFolder
@@ -515,46 +611,78 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         }
         return newRoom;
     }
-    private onClientEventDeleteRoom(roomId: string) {
-        this.deleteRoom(roomId);
+    private async onClientEventDeleteRoom(roomId: string) {
+        await this.deleteRoom(roomId);
     }
-    private deleteRoom(roomId: string) {
+    private async deleteRoom(roomId: string) {
         const isRootRoom = this.roomList.delete(roomId);
         if (isRootRoom) {
             return;
         }
-        const isRootFolder = this.roomFolders.has(roomId);
+        const isRootFolder = this.roomFolders.delete(roomId);
 
         if (isRootFolder) {
             return;
         }
 
-        this.roomFolders.forEach((folder) => {
-            folder.deleteNode(roomId);
+        const deleteRoomPromise = Array.from(this.roomFolders.values()).map((roomFolder) => {
+            return roomFolder.deleteNode(roomId);
         });
+
+        await Promise.all(deleteRoomPromise);
 
         const currentRoom = get(selectedRoomStore)?.id;
         if (currentRoom && currentRoom === roomId) selectedRoomStore.set(undefined);
     }
-    private onRoomEventMembership(room: Room, membership: string, prevMembership: string | undefined) {
-        const { roomId } = room;
-        const existingMatrixChatRoom = this.roomList.has(roomId) || this.roomFolders.has(roomId);
 
-        if (membership !== prevMembership && existingMatrixChatRoom) {
+    private async onRoomEventMembership(room: Room, membership: string, prevMembership: string | undefined) {
+        //TODO : voir si on peut gérer coté room
+        console.log(">>>>>>", room.name, room.getMyMembership(), room.isSpaceRoom(), room.roomId);
+        const { roomId } = room;
+        // const existingMatrixChatRoom = this.roomList.has(roomId) || this.roomFolders.has(roomId);
+
+        if (membership !== prevMembership) {
             if (membership === KnownMembership.Join) {
                 this.roomList.delete(roomId);
-                this.manageRoomOrFolder(room);
+                this.roomFolders.delete(roomId);
+                try {
+                    await this.manageRoomOrFolder(room);
+                } catch (e) {
+                    console.error("Failed to manageRoomOrFolder :", e);
+                }
                 return;
             }
+        }
 
-            if (membership === KnownMembership.Invite) {
+        if (membership === KnownMembership.Invite) {
+            try {
+                const client = await this.clientPromise;
+                if (!client) throw new Error("1");
+                const userId = client.getSafeUserId();
+                if (!userId) throw new Error(" ");
+
+                const inviteEvent = room
+                    .getLiveTimeline()
+                    .getState(EventTimeline.FORWARDS)
+                    ?.getStateEvents("m.room.member", userId);
+                //TODO : remplacer par var env
+                const ADMIN_CHAT_ID = "@admin:matrix.workadventure.localhost"; //`@${MATRIX_ADMIN_USER}:${MATRIX_DOMAIN}`;
+
+                console.log(">>>>> room invitation : ", inviteEvent?.getSender());
+                if (inviteEvent?.getSender() === ADMIN_CHAT_ID) {
+                    await client.joinRoom(room.roomId);
+                }
+
+                return;
+            } catch (e) {
+                console.error("Failed to joinRoom ...");
                 this.createAndAddNewRootRoom(room);
                 return;
             }
         }
 
         if (membership === KnownMembership.Leave || membership === KnownMembership.Ban) {
-            this.deleteRoom(roomId);
+            await this.deleteRoom(roomId);
             return;
         }
     }
@@ -874,7 +1002,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                     if (dmInviterId) {
                         await this.addDMRoomInAccountData(dmInviterId, roomId);
                     }
-                    const room = this.findRoomOrFolder(roomAfterSync.roomId);
+                    const room = await this.findRoomOrFolder(roomAfterSync.roomId);
                     if (room instanceof MatrixChatRoom) {
                         res(room);
                         return;

@@ -10,9 +10,11 @@
 
     function joinRoom() {
         loadingInvitation = true;
+        
         room.joinRoom()
             .then(() => {
-                selectedRoomStore.set(room);
+                //TODO : si c'est un folder ne pas ouvrir 
+               // selectedRoomStore.set(room);
             })
             .finally(() => {
                 loadingInvitation = false;
@@ -42,7 +44,7 @@
             <IconLoader class="tw-animate-spin" />
         </div>
     {:else}
-        <div class="tw-flex">
+        <div class="tw-flex tw-gap-1">
             <button
                 class="tw-border tw-border-solid tw-border-danger tw-text-danger hover:tw-bg-danger-400/10 tw-rounded tw-text-xs tw-py-1 tw-px-2 tw-m-0"
                 on:click={() => leaveRoom()}

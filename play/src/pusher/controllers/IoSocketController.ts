@@ -817,6 +817,37 @@ export class IoSocketController {
                             );
                             break;
                         }
+                        case "deleteAdminManageChatRoomMessage":{
+                            await socketManager.handleDeleteAdminManageChatRoom(socket , message.message.deleteAdminManageChatRoomMessage.roomID)
+                            break;
+                        }
+                        case "updateAdminManageChatRoomMessage":{
+                            await socketManager.handleUpdateAdminManageChatRoom(
+                                socket,
+                                message.message.updateAdminManageChatRoomMessage.roomID,
+                                message.message.updateAdminManageChatRoomMessage.memberTags,
+                                message.message.updateAdminManageChatRoomMessage.moderatorTags,
+                                message.message.updateAdminManageChatRoomMessage.historyVisibility,
+                                message.message.updateAdminManageChatRoomMessage.roomName
+                            )
+                            break;
+                        }
+                        case "createAdminManageChatRoomMessage": {
+
+                            console.log({historyVisibility: message.message.createAdminManageChatRoomMessage.historyVisibility});
+                            
+                            await socketManager.handleCreateAdminManageChatRoom(
+                                socket,
+                                message.message.createAdminManageChatRoomMessage.folderId,
+                                message.message.createAdminManageChatRoomMessage.memberTags,
+                                message.message.createAdminManageChatRoomMessage.moderatorTags,
+                                message.message.createAdminManageChatRoomMessage.roomName,
+                                message.message.createAdminManageChatRoomMessage.topic,
+                                message.message.createAdminManageChatRoomMessage.historyVisibility,
+                            )
+
+                            break;
+                        }
                         case "queryMessage": {
                             try {
                                 const answerMessage: AnswerMessage = {
@@ -908,6 +939,19 @@ export class IoSocketController {
                                             oauthRefreshTokenAnswer: await socketManager.handleOauthRefreshTokenQuery(
                                                 message.message.queryMessage.query.oauthRefreshTokenQuery
                                             ),
+                                        };
+                                        this.sendAnswerMessage(socket, answerMessage);
+                                        break;
+                                    }
+
+                                    case "getAllAdminManageChatRoomQuery" : {
+                                        const chatRoomsInformation = await socketManager.handleGetAdminManageChatRoom(socket); 
+                                        console.log(chatRoomsInformation);
+                                        answerMessage.answer = {
+                                            $case: "getAllAdminManageChatRoomAnswer",
+                                            getAllAdminManageChatRoomAnswer: {
+                                                chatRoomsInformation
+                                            },
                                         };
                                         this.sendAnswerMessage(socket, answerMessage);
                                         break;
