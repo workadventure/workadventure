@@ -15,24 +15,19 @@ import { navChat, selectedRoomStore } from "./Stores/ChatStore";
 import { ChatRoom } from "./Connection/ChatConnection";
 import RequiresLoginForChatModal from "./Components/RequiresLoginForChatModal.svelte";
 
+export type OpenCoWebsiteObject = {
+    url: string;
+    allowApi?: boolean;
+    allowPolicy?: string;
+    widthPercent?: number;
+    position?: number;
+    closable?: boolean;
+    lazy?: boolean;
+};
+
+//enlever les events lié au chat dans iframelistener
 export const openCoWebSite = async (
-    {
-        url,
-        allowApi,
-        allowPolicy,
-        closable,
-        lazy,
-        position,
-        widthPercent,
-    }: {
-        url: string;
-        allowApi?: boolean | undefined;
-        allowPolicy?: string | undefined;
-        widthPercent?: number | undefined;
-        position?: number | undefined;
-        closable?: boolean | undefined;
-        lazy?: boolean | undefined;
-    },
+    { url, allowApi, allowPolicy, widthPercent, position, closable, lazy }: OpenCoWebsiteObject,
     source: MessageEventSource | null
 ) => {
     if (!url || !source) {
@@ -47,15 +42,7 @@ export const openCoWebSite = async (
         closable
     );
 
-    coWebsiteManager.addCoWebsiteToStore(coWebsite, position);
-
-    if (lazy === undefined || !lazy) {
-        await coWebsiteManager.loadCoWebsite(coWebsite);
-    }
-
-    return {
-        id: coWebsite.getId(),
-    };
+    return openSimpleCowebsite(coWebsite, position, lazy);
 };
 
 export const getCoWebSite = () => {
@@ -105,4 +92,45 @@ export const openChatRoom = async (chatID: string) => {
         console.error(error);
         Sentry.captureMessage("Failed to create room");
     }
+};
+
+export const openCoWebSiteWithoutSource = async ({
+    url,
+    allowApi,
+    allowPolicy,
+    widthPercent,
+    position,
+    closable,
+    lazy,
+}: OpenCoWebsiteObject) => {
+    if (!url) {
+        throw new Error("Unknown query source");
+    }
+
+    const coWebsite: SimpleCoWebsite = new SimpleCoWebsite(new URL(url), allowApi, allowPolicy, widthPercent, closable);
+
+    return openSimpleCowebsite(coWebsite, position, lazy);
+};
+
+const openSimpleCowebsite = async (coWebsite: SimpleCoWebsite, position?: number, lazy?: boolean) => {
+    coWebsiteManager.addCoWebsiteToStore(coWebsite, position);
+
+    if (lazy === undefined || !lazy) {
+        await coWebsiteManager.loadCoWebsite(coWebsite);
+    }
+
+    return {
+        id: coWebsite.getId(),
+    };
+};
+
+export const closeCoWebsite = (coWebsiteId: string) => {
+    const coWebsite = coWebsiteManager.getCoWebsiteById(coWebsiteId);
+
+    if (!coWebsite) {
+        console.warn("Unknown co-website, probably already closed", coWebsiteId);
+        return;
+    }
+
+    return coWebsiteManager.closeCoWebsite(coWebsite);
 };

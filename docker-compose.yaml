@@ -65,7 +65,7 @@ services:
       FRONT_URL: http://play.workadventure.localhost
       UPLOADER_URL: http://uploader.workadventure.localhost
       ICON_URL: http://icon.workadventure.localhost
-      STUN_SERVER: "stun:stun.l.google.com:19302"
+      STUN_SERVER: "$STUN_SERVER"
       TURN_SERVER: "$TURN_SERVER"
       DISABLE_NOTIFICATIONS: "$DISABLE_NOTIFICATIONS"
       SKIP_RENDER_OPTIMIZATIONS: "$SKIP_RENDER_OPTIMIZATIONS"

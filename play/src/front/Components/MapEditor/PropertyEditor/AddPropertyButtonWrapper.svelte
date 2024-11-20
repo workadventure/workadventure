@@ -16,6 +16,8 @@
     import messageSvg from "../../images/applications/icon_message.svg";
     import LL from "../../../../i18n/i18n-svelte";
     import { connectionManager } from "../../../Connection/ConnectionManager";
+    import { extensionModuleStore } from "../../../Stores/GameSceneStore";
+    import { ExtensionModule, ExtensionModuleAreaProperty } from "../../../ExternalModule/ExtensionModule";
     import AddPropertyButton from "./AddPropertyButton.svelte";
 
     export let property: AreaDataPropertiesKeys | EntityDataPropertiesKeys;
@@ -23,6 +25,17 @@
     export let isActive = false;
 
     const dispatch = createEventDispatcher();
+
+    let modulesExtensionMapEditor = $extensionModuleStore.reduce(
+        (acc: { [key: string]: ExtensionModuleAreaProperty }[], module: ExtensionModule) => {
+            const areaProperty = module.areaMapEditor?.();
+            if (areaProperty != undefined) {
+                acc.push(areaProperty);
+            }
+            return acc;
+        },
+        []
+    );
 </script>
 
 {#if property === "personalAreaPropertyData"}
@@ -275,6 +288,17 @@
             dispatch("click", event);
         }}
     />
+{/if}
+
+{#if property === "extensionModule" && modulesExtensionMapEditor.length > 0 && subProperty !== undefined}
+    {#each modulesExtensionMapEditor as moduleExtension, index (`modulesExtensionMapEditor-${index}`)}
+        <svelte:component
+            this={moduleExtension[subProperty].AddAreaPropertyButton}
+            on:click={(event) => {
+                dispatch("click", event);
+            }}
+        />
+    {/each}
 {/if}
 
 {#if property === "matrixRoomPropertyData"}

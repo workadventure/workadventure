@@ -1,4 +1,11 @@
-import type { AdminApiData, ErrorApiData, MapDetailsData, MemberData, RoomRedirect } from "@workadventure/messages";
+import type {
+    AdminApiData,
+    ErrorApiData,
+    MapDetailsData,
+    MemberData,
+    OauthRefreshToken,
+    RoomRedirect,
+} from "@workadventure/messages";
 import { Capabilities } from "@workadventure/messages";
 import { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
 import { ShortMapDescriptionList } from "./ShortMapDescription";
@@ -118,7 +125,7 @@ export interface AdminInterface {
 
     saveTextures(userIdentifier: string, textures: string[], roomUrl: string): Promise<void>;
 
-    saveCompanionTexture(userIdentifier: string, texture: string, roomUrl: string): Promise<void>;
+    saveCompanionTexture(userIdentifier: string, texture: string | null, roomUrl: string): Promise<void>;
 
     getCapabilities(): Promise<Capabilities>;
 
@@ -131,4 +138,6 @@ export interface AdminInterface {
     getWorldChatMembers(playUri: string, searchText: string): Promise<WorldChatMembersData>;
 
     updateChatId(userIdentifier: string, chatId: string, roomUrl: string): Promise<void>;
+
+    refreshOauthToken(token: string): Promise<OauthRefreshToken>;
 }

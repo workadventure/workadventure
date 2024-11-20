@@ -227,10 +227,12 @@
                             />
                             {$LL.megaphone.modal.textMessage.title()}
                         </h3>
-                        <p class="help-text">
-                            <IconInfoCircle font-size="18" />
-                            {$LL.megaphone.modal.audioMessage.noAccess()}
-                        </p>
+                        {#if !$userIsAdminStore}
+                            <p class="help-text">
+                                <IconInfoCircle font-size="18" />
+                                {$LL.megaphone.modal.audioMessage.noAccess()}
+                            </p>
+                        {/if}
                         <button class="light tw-max-w-fit" on:click={activateInputText} disabled={!$userIsAdminStore}>
                             {$LL.megaphone.modal.textMessage.button()}</button
                         >
@@ -247,10 +249,12 @@
                             />
                             {$LL.megaphone.modal.audioMessage.title()}
                         </h3>
-                        <p class="help-text">
-                            <IconInfoCircle font-size="18" />
-                            {$LL.megaphone.modal.audioMessage.noAccess()}
-                        </p>
+                        {#if !$userIsAdminStore}
+                            <p class="help-text">
+                                <IconInfoCircle font-size="18" />
+                                {$LL.megaphone.modal.audioMessage.noAccess()}
+                            </p>
+                        {/if}
                         <button class="light tw-max-w-fit" on:click={activateUploadAudio} disabled={!$userIsAdminStore}>
                             {$LL.megaphone.modal.audioMessage.button()}</button
                         >

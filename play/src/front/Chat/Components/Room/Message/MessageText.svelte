@@ -21,8 +21,7 @@
             marked = new Marked(
                 markedHighlightModule.markedHighlight({
                     langPrefix: "hljs language-",
-                    highlight(code, lang, info) {
-                        console.log("Highlighting code", code, lang, info);
+                    highlight(code, lang) {
                         const language = hljsModule.default.getLanguage(lang) ? lang : "plaintext";
                         return hljsModule.default.highlight(code, { language }).value;
                     },

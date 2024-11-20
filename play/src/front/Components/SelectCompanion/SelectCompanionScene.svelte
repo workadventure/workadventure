@@ -18,7 +18,7 @@
     }
 
     function noCompanion() {
-        selectCompanionScene.closeScene();
+        selectCompanionScene.noCompagnion().catch((e) => console.error(e));
     }
 
     function selectCompanion() {

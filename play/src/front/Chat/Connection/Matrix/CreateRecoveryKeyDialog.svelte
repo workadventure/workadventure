@@ -4,6 +4,7 @@
     import { GeneratedSecretStorageKey } from "matrix-js-sdk/lib/crypto-api";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import LL from "../../../../i18n/i18n-svelte";
+    import { chatInputFocusStore } from "../../../Stores/ChatStore";
     import { IconFileDownload } from "@wa-icons";
 
     export let isOpen: boolean;
@@ -53,6 +54,15 @@
 
         isPrivateKeyDownloaded = true;
     }
+
+    function focusChatInput() {
+        // Disable input manager to prevent the game from receiving the input
+        chatInputFocusStore.set(true);
+    }
+    function unfocusChatInput() {
+        // Enable input manager to allow the game to receive the input
+        chatInputFocusStore.set(false);
+    }
 </script>
 
 <Popup {isOpen}>
@@ -63,6 +73,8 @@
             data-testid="passphraseInput"
             class="tw-w-full tw-rounded-xl tw-text-white placeholder:tw-text-sm tw-px-3 tw-py-2 tw-p tw-border-light-purple tw-border tw-border-solid tw-bg-contrast"
             bind:value={passphraseInput}
+            on:focusin={focusChatInput}
+            on:focusout={unfocusChatInput}
         />
         {#if generatedSecretStorageKey?.encodedPrivateKey}
             <p>{$LL.chat.e2ee.createRecoveryKey.privateKeyDescription()}</p>

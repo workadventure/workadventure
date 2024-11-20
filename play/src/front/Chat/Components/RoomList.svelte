@@ -43,8 +43,23 @@
     let displayRooms = false;
     let displayRoomInvitations = false;
 
+    //let proximityChatRoomHasUserInProximityChatSubscribtion: Unsubscriber | undefined;
+    //let _hasUserInProximityChat = false;
+    //let proximityChatRoomHasUnreadMessagesSubscribtion: Unsubscriber | undefined;
+    //let _hasUnreadMessages = false;
+
     onMount(() => {
         expandOrCollapseRoomsIfEmpty();
+        /*proximityChatRoomHasUserInProximityChatSubscribtion = proximityChatRoom.hasUserInProximityChat.subscribe(
+            (hasUserInProximityChat) => {
+                _hasUserInProximityChat = hasUserInProximityChat;
+            }
+        );
+        proximityChatRoomHasUnreadMessagesSubscribtion = proximityChatRoom.hasUnreadMessages.subscribe(
+            (hasUnreadMessages) => {
+                _hasUnreadMessages = hasUnreadMessages;
+            }
+        );*/
     });
 
     const directRoomsUnsubscriber = rooms.subscribe((rooms) => openRoomsIfCollapsedBeforeNewRoom(rooms));
@@ -55,6 +70,8 @@
     onDestroy(() => {
         directRoomsUnsubscriber();
         roomInvitationsUnsubscriber();
+        //if (proximityChatRoomHasUserInProximityChatSubscribtion) proximityChatRoomHasUserInProximityChatSubscribtion();
+        //if (proximityChatRoomHasUnreadMessagesSubscribtion) proximityChatRoomHasUnreadMessagesSubscribtion();
     });
 
     async function initChatConnectionEncryption() {
@@ -147,7 +164,7 @@
                     <ChatError />
                 {/if}
 
-                {#if !$userIsConnected}
+                {#if !$userIsConnected && gameManager.getCurrentGameScene().room.isChatEnabled}
                     <div class="tw-flex-col tw-items-center tw-justify-center tw-text-center tw-px-4 tw-py-12">
                         <img src={messageSmileyImg} alt="Smiley happy" />
                         <div class="tw-w-full tw-text-center tw-text-lg tw-font-bold">

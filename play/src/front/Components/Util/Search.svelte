@@ -3,7 +3,7 @@
     import { searchValue } from "../../Stores/Utils/SearchStore";
 
     export let id: string | undefined;
-    export let placeHolder: string = $LL.muc.userList.search();
+    export let placeHolder: string = $LL.chat.userList.search();
     export let disabled = false;
     export let onChangeSearchHandler = (value: string) => {
         searchValue.set(value);

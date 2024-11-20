@@ -1,8 +1,10 @@
 <script lang="ts">
+    import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
     import { LL, locale } from "../../../i18n/i18n-svelte";
     import type { Locales } from "../../../i18n/i18n-types";
     import { displayableLocales, setCurrentLocale } from "../../../i18n/locales";
+    import { gameManager } from "../../Phaser/Game/GameManager";
 
     import infoImg from "../images/info.svg";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
@@ -19,9 +21,11 @@
 
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification();
+    let blockAudio: boolean = localUserStore.getBlockAudio();
     let forceCowebsiteTrigger: boolean = localUserStore.getForceCowebsiteTrigger();
     let ignoreFollowRequests: boolean = localUserStore.getIgnoreFollowRequests();
     let decreaseAudioPlayerVolumeWhileTalking: boolean = localUserStore.getDecreaseAudioPlayerVolumeWhileTalking();
+    let disableAnimations: boolean = localUserStore.getDisableAnimations();
     let valueLocale: string = $locale;
     let valueCameraPrivacySettings = localUserStore.getCameraPrivacySettings();
     let valueMicrophonePrivacySettings = localUserStore.getMicrophonePrivacySettings();
@@ -117,6 +121,14 @@
         }
     }
 
+    function changeBlockAudio() {
+        if (blockAudio) {
+            audioManagerFileStore.unloadAudio();
+            audioManagerVisibilityStore.set(false);
+        }
+        localUserStore.setBlockAudio(blockAudio);
+    }
+
     function changeForceCowebsiteTrigger() {
         // Analytics Client
         analyticsClient.settingAskWebsite(forceCowebsiteTrigger ? "true" : "false");
@@ -136,6 +148,15 @@
         analyticsClient.settingDecreaseAudioVolume(decreaseAudioPlayerVolumeWhileTalking ? "true" : "false");
 
         localUserStore.setDecreaseAudioPlayerVolumeWhileTalking(decreaseAudioPlayerVolumeWhileTalking);
+    }
+
+    function changeDisableAnimations() {
+        localUserStore.setDisableAnimations(disableAnimations);
+        if (disableAnimations) {
+            gameManager.getCurrentGameScene().animatedTiles.pause();
+        } else {
+            gameManager.getCurrentGameScene().animatedTiles.resume();
+        }
     }
 
     function changeCameraPrivacySettings() {
@@ -326,6 +347,14 @@
                 on:change={changeDecreaseAudioPlayerVolumeWhileTalking}
             />
             <span>{$LL.audio.manager.reduce()}</span>
+        </label>
+        <label>
+            <input type="checkbox" bind:checked={blockAudio} on:change={changeBlockAudio} />
+            <span>{$LL.menu.settings.blockAudio()}</span>
+        </label>
+        <label>
+            <input type="checkbox" bind:checked={disableAnimations} on:change={changeDisableAnimations} />
+            <span>{$LL.menu.settings.disableAnimations()}</span>
         </label>
     </section>
 </div>

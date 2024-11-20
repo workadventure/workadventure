@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { chatInputFocusStore } from "../../Stores/ChatStore";
+
     let searchActive = false;
     import { chatSearchBarValue, navChat, joignableRoom } from "../Stores/ChatStore";
     import {
@@ -53,6 +55,15 @@
             });
         return;
     };
+
+    function focusChatInput() {
+        // Disable input manager to prevent the game from receiving the input
+        chatInputFocusStore.set(true);
+    }
+    function unfocusChatInput() {
+        // Enable input manager to allow the game to receive the input
+        chatInputFocusStore.set(false);
+    }
 </script>
 
 <div class="tw-p-2 tw-flex tw-items-center tw-absolute tw-w-full tw-z-40">
@@ -127,6 +138,8 @@
                         on:keydown={handleKeyDown}
                         on:keyup={() => handleKeyUp(userProviderMerger)}
                         bind:value={$chatSearchBarValue}
+                        on:focusin={focusChatInput}
+                        on:focusout={unfocusChatInput}
                     />
                 </div>
             {/await}

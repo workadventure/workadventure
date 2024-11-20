@@ -1,7 +1,11 @@
 import type { AxiosResponse } from "axios";
 import axios, { isAxiosError } from "axios";
-import type { AdminApiData, MapDetailsData, RoomRedirect } from "@workadventure/messages";
 import {
+    AdminApiData,
+    isOauthRefreshToken,
+    MapDetailsData,
+    OauthRefreshToken,
+    RoomRedirect,
     MemberData,
     Capabilities,
     CompanionDetail,
@@ -24,6 +28,7 @@ import {
     ADMIN_API_TOKEN,
     ADMIN_API_URL,
     OPID_PROFILE_SCREEN_PROVIDER,
+    ADMIN_URL,
 } from "../enums/EnvironmentVariable";
 import type { AdminInterface } from "./AdminInterface";
 import type { AuthTokenData } from "./JWTTokenManager";
@@ -934,7 +939,7 @@ class AdminApi implements AdminInterface {
         return;
     }
 
-    async saveCompanionTexture(userIdentifier: string, texture: string, roomUrl: string): Promise<void> {
+    async saveCompanionTexture(userIdentifier: string, texture: string | null, roomUrl: string): Promise<void> {
         if (this.capabilities["api/save-textures"] === undefined) {
             // Save-name is not implemented in admin. Do nothing.
             return;
@@ -1153,7 +1158,7 @@ class AdminApi implements AdminInterface {
      */
     updateChatId(userIdentifier: string, chatId: string, roomUrl: string): Promise<void> {
         return axios.put(
-            `${ADMIN_API_URL}/api/members/${userIdentifier}/chatId`,
+            `${ADMIN_URL}/api/members/${userIdentifier}/chatId`,
             {
                 chatId,
                 userIdentifier,
@@ -1163,6 +1168,41 @@ class AdminApi implements AdminInterface {
                 headers: { Authorization: `${ADMIN_API_TOKEN}` },
             }
         );
+    }
+
+    /**
+     * @openapi
+     * /oauth/refreshtoken/{token}:
+     *   get:
+     *     description: Get the refreshed token from expired one
+     *     tags:
+     *      - Admin endpoint
+     *     parameters:
+     *      - name: "token"
+     *        in: "path"
+     *        required: true
+     *        type: "string"
+     *        description: The expired refresh
+     *     responses:
+     *       200:
+     *        schema:
+     *            $ref: '#/definitions/OauthRefreshToken'
+     */
+    async refreshOauthToken(token: string): Promise<OauthRefreshToken> {
+        const response = await axios.post(
+            `${ADMIN_URL}/api/oauth/refreshtoken`,
+            {
+                accessToken: token,
+            },
+            {
+                headers: { Authorization: `${ADMIN_API_TOKEN}` },
+            }
+        );
+        const refreshTokenResponse = isOauthRefreshToken.safeParse(response.data);
+        if (refreshTokenResponse.error) {
+            throw new Error("Unable to parse refreshTokenResponse");
+        }
+        return refreshTokenResponse.data;
     }
 }
 

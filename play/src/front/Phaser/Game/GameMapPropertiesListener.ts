@@ -339,6 +339,9 @@ export class GameMapPropertiesListener {
         });
 
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.PLAY_AUDIO, (newValue, oldValue, allProps) => {
+            if (localUserStore.getBlockAudio()) {
+                return;
+            }
             const volume = allProps.get(GameMapProperties.AUDIO_VOLUME) as number | undefined;
             const loop = allProps.get(GameMapProperties.AUDIO_LOOP) as boolean | undefined;
             newValue === undefined
@@ -367,7 +370,7 @@ export class GameMapPropertiesListener {
 
         // Muc zone
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.CHAT_NAME, (newValue, oldValue, allProps) => {
-            if (!this.scene.room.enableChat) {
+            if (!this.scene.room.isChatEnabled) {
                 return;
             }
 
