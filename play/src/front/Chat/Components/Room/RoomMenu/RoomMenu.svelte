@@ -1,18 +1,28 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
     import { openModal } from "svelte-modals";
-    import { ChatRoom } from "../../../Connection/ChatConnection";
+    import {
+        ChatRoomMembershipManagement,
+        ChatRoomNotificationControl,
+        ChatRoomModeration,
+    } from "../../../Connection/ChatConnection";
     import { notificationPlayingStore } from "../../../../Stores/NotificationStore";
     import LL from "../../../../../i18n/i18n-svelte";
     import InviteParticipantsModal from "../InviteParticipantsModal.svelte";
     import RoomOption from "./RoomOption.svelte";
-    import { IconDotsCircle, IconLogout, IconUserPlus, IconMute, IconUnMute } from "@wa-icons";
+    import { IconDotsCircle, IconLogout, IconUserEdit, IconMute, IconUnMute } from "@wa-icons";
 
-    export let room: ChatRoom;
+    export let room: ChatRoomMembershipManagement & ChatRoomNotificationControl & ChatRoomModeration;
     const areNotificationsMuted = room.areNotificationsMuted;
     let optionButtonRef: HTMLButtonElement | undefined = undefined;
     let optionRef: HTMLDivElement | undefined = undefined;
     let hideOptions = true;
+
+    const hasPermissionToInvite = room.hasPermissionTo("invite");
+    const hasPermissionToKick = room.hasPermissionTo("kick");
+    const hasPermissionToBan = room.hasPermissionTo("ban");
+
+    $: shouldDisplayManageParticipantButton = $hasPermissionToInvite || $hasPermissionToKick || $hasPermissionToBan;
 
     onMount(() => {
         document.addEventListener("click", closeRoomOptionsOnClickOutside);
@@ -72,6 +82,7 @@
 </script>
 
 <button
+    data-testid="toggleRoomMenu"
     bind:this={optionButtonRef}
     on:click|preventDefault|stopPropagation={toggleRoomOptions}
     class="tw-m-0 tw-p-0 tw-text-gray-400 hover:tw-text-white"
@@ -85,11 +96,14 @@
     class:tw-absolue={optionButtonRef !== undefined}
     class:tw-hidden={hideOptions}
 >
-    <RoomOption
-        IconComponent={IconUserPlus}
-        title={$LL.chat.manageRoomUsers.roomOption()}
-        on:click={openInviteParticipantsModal}
-    />
+    {#if shouldDisplayManageParticipantButton}
+        <RoomOption
+            dataTestId="manageParticipantOption"
+            IconComponent={IconUserEdit}
+            title={$LL.chat.manageRoomUsers.roomOption()}
+            on:click={openInviteParticipantsModal}
+        />
+    {/if}
 
     <RoomOption
         IconComponent={IconLogout}

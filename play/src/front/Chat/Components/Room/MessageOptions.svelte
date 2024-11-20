@@ -1,7 +1,6 @@
 <script lang="ts">
     import { ChatMessage } from "../../Connection/ChatConnection";
     import { selectedChatMessageToEdit, selectedChatMessageToReply } from "../../Stores/ChatStore";
-    import { gameManager } from "../../../Phaser/Game/GameManager";
     import EmojiButton from "./EmojiButton.svelte";
     import { IconArrowBackUp, IconArrowDown, IconPencil, IconTrash } from "@wa-icons";
 
@@ -23,11 +22,7 @@
         message.addReaction(event.detail).catch((error) => console.error(error));
     }
 
-    const { content, isMyMessage, type } = message;
-
-    const chat = gameManager.chatConnection;
-
-    $: isGuest = chat.isGuest;
+    const { content, isMyMessage, type, canDelete } = message;
 </script>
 
 <div class="tw-flex tw-flex-row tw-gap-1 tw-items-center">
@@ -54,7 +49,7 @@
             <IconPencil font-size={16} />
         </button>
     {/if}
-    {#if $isGuest === false}
+    {#if $canDelete}
         <button class="tw-p-0 tw-m-0 hover:tw-text-red-500" data-testid="removeMessageButton" on:click={removeMessage}>
             <IconTrash font-size={16} />
         </button>
