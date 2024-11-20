@@ -58,7 +58,6 @@ import { isAddPlayerEvent, isRemotePlayerChangedEvent } from "./AddPlayerEvent";
 import { isSetPlayerVariableEvent } from "./SetPlayerVariableEvent";
 import { isSettingsEvent } from "./SettingsEvent";
 import { isChatVisibilityEvent } from "./ChatVisibilityEvent";
-import { isNotificationEvent } from "./NotificationEvent";
 import { isShowBusinessCardEvent } from "./ShowBusinessCardEvent";
 import { isModalEvent } from "./ModalEvent";
 import { isAddButtonActionBarEvent, isRemoveButtonActionBarEvent } from "./Ui/ButtonActionBarEvent";
@@ -67,6 +66,9 @@ import { isTeleportPlayerToEventConfig } from "./TeleportPlayerToEvent";
 import { isSendEventEvent } from "./SendEventEvent";
 import { isReceiveEventEvent } from "./ReceiveEventEvent";
 import { isPlaySoundInBubbleEvent } from "./ProximityMeeting/PlaySoundInBubbleEvent";
+import { isStartStreamInBubbleEvent } from "./ProximityMeeting/StartStreamInBubbleEvent";
+import { isAppendPCMDataEvent } from "./ProximityMeeting/AppendPCMDataEvent";
+import { isWamMapDataEvent } from "./WamMapDataEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -262,14 +264,6 @@ export const isIframeEventWrapper = z.union([
         data: z.undefined(),
     }),
     z.object({
-        type: z.literal("chatTotalMessagesToSee"),
-        data: z.number(),
-    }),
-    z.object({
-        type: z.literal("notification"),
-        data: isNotificationEvent,
-    }),
-    z.object({
         type: z.literal("login"),
         data: z.undefined(),
     }),
@@ -365,6 +359,14 @@ export const isIframeEventWrapper = z.union([
         type: z.literal("restoreRoomList"),
         data: z.undefined(),
     }),
+    z.object({
+        type: z.literal("startListeningToStreamInBubble"),
+        data: isStartStreamInBubbleEvent,
+    }),
+    z.object({
+        type: z.literal("stopListeningToStreamInBubble"),
+        data: z.undefined(),
+    }),
 ]);
 
 export type IframeEvent = z.infer<typeof isIframeEventWrapper>;
@@ -405,6 +407,14 @@ export const isIframeResponseEvent = z.union([
     z.object({
         type: z.literal("leaveEvent"),
         data: isEnterLeaveEvent,
+    }),
+    z.object({
+        type: z.literal("enterMapEditorAreaEvent"),
+        data: isChangeAreaEvent,
+    }),
+    z.object({
+        type: z.literal("leaveMapEditorAreaEvent"),
+        data: isChangeAreaEvent,
     }),
     z.object({
         type: z.literal("enterLayerEvent"),
@@ -527,6 +537,10 @@ export const isIframeResponseEvent = z.union([
     z.object({
         type: z.literal("banUser"),
         data: isBanEvent,
+    }),
+    z.object({
+        type: z.literal("appendPCMData"),
+        data: isAppendPCMDataEvent,
     }),
 ]);
 export type IframeResponseEvent = z.infer<typeof isIframeResponseEvent>;
@@ -678,6 +692,22 @@ export const iframeQueryMapTypeGuards = {
         query: isPlaySoundInBubbleEvent,
         answer: z.undefined(),
     },
+    startStreamInBubble: {
+        query: isStartStreamInBubbleEvent,
+        answer: z.undefined(),
+    },
+    stopStreamInBubble: {
+        query: z.undefined(),
+        answer: z.undefined(),
+    },
+    appendPCMData: {
+        query: isAppendPCMDataEvent,
+        answer: z.undefined(),
+    },
+    resetAudioBuffer: {
+        query: z.undefined(),
+        answer: z.undefined(),
+    },
     followMe: {
         query: z.undefined(),
         answer: z.undefined(),
@@ -685,6 +715,10 @@ export const iframeQueryMapTypeGuards = {
     stopLeading: {
         query: z.undefined(),
         answer: z.undefined(),
+    },
+    getWamMapData: {
+        query: z.undefined(),
+        answer: isWamMapDataEvent,
     },
 };
 

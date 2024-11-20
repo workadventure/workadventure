@@ -6,7 +6,7 @@
 </script>
 
 <PropertyEditorBase on:close={() => dispatch("close")}>
-    <span slot="header" class="tw-flex tw-justify-center tw-items-center">Microsoft teams meeting</span>
+    <span slot="header" class="flex justify-center items-center">Microsoft teams meeting</span>
     <span slot="content">
         <p>Entering in this area, a user will enter in Microsoft team meeting automatically.</p>
     </span>

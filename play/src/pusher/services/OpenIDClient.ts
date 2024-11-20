@@ -61,9 +61,9 @@ class OpenIDClient {
 
     public authorizationUrl(
         res: Response,
-        redirect: string | undefined,
         playUri: string,
-        req: Request
+        req: Request,
+        manuallyTriggered: "true" | undefined
     ): Promise<string> {
         return this.initClient().then((client) => {
             if (!OPID_SCOPE.includes("email") || !OPID_SCOPE.includes("openid")) {
@@ -94,7 +94,10 @@ class OpenIDClient {
                 state: state,
                 //nonce: nonce,
                 playUri,
-                redirect: redirect,
+                // Whether the login was triggered by clicking on the "sign in" button (in which case the user was
+                // anonymous) or whether the login was triggered because user was not authenticated and authentication
+                // is mandatory.
+                manuallyTriggered,
 
                 code_challenge,
                 code_challenge_method: "S256",

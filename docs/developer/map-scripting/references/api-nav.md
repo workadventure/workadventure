@@ -96,7 +96,7 @@ Get all opened co-websites with their ids and positions.
 Example:
 
 ```ts
-const coWebsites = await WA.nav.getCowebSites();
+const coWebsites = await WA.nav.getCoWebSites();
 ```
 
 ### Redirecting user to the "login" page

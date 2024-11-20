@@ -149,6 +149,11 @@
                         plugin: WebFontLoaderPlugin,
                         start: true,
                     },
+                    {
+                        key: "rexAwaitLoader",
+                        plugin: AwaitLoaderPlugin,
+                        start: true,
+                    },
                 ],
             },
             physics: {

@@ -1,15 +1,16 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
+    import { openModal } from "svelte-modals";
     import { ChatRoom } from "../../../Connection/ChatConnection";
     import { notificationPlayingStore } from "../../../../Stores/NotificationStore";
     import LL from "../../../../../i18n/i18n-svelte";
+    import InviteParticipantsModal from "../InviteParticipantsModal.svelte";
     import RoomOption from "./RoomOption.svelte";
-    import { IconDotsCircle, IconLogout } from "@wa-icons";
+    import { IconLogout, IconUserPlus, IconMute, IconUnMute, IconDots } from "@wa-icons";
 
     export let room: ChatRoom;
-
+    const areNotificationsMuted = room.areNotificationsMuted;
     let optionButtonRef: HTMLButtonElement | undefined = undefined;
-    let optionRef: HTMLDivElement | undefined = undefined;
     let hideOptions = true;
 
     onMount(() => {
@@ -24,12 +25,6 @@
         if (optionButtonRef === undefined) {
             return;
         }
-        if (optionRef === undefined) {
-            return;
-        }
-        const { bottom, right } = optionButtonRef.getBoundingClientRect();
-        optionRef.style.top = `${bottom}px`;
-        optionRef.style.left = `${right}px`;
         hideOptions = !hideOptions;
     }
 
@@ -44,28 +39,59 @@
 
     function closeMenuAndLeaveRoom() {
         toggleRoomOptions();
-        room.leaveRoom();
-        notificationPlayingStore.playNotification($LL.chat.roomMenu.leaveRoom.notification());
+        room.leaveRoom()
+            .then(() => {
+                notificationPlayingStore.playNotification($LL.chat.roomMenu.leaveRoom.notification());
+            })
+            .catch(() => console.error("Failed to leave room"));
+    }
+
+    function openInviteParticipantsModal() {
+        openModal(InviteParticipantsModal, { room });
+    }
+
+    function closeMenuAndSetMuteStatus() {
+        toggleRoomOptions();
+        if ($areNotificationsMuted) {
+            room.unmuteNotification().catch(() => {
+                console.error("Failed to unmute room");
+            });
+            return;
+        }
+        room.muteNotification().catch(() => {
+            console.error("Failed to mute room");
+        });
     }
 </script>
 
 <button
     bind:this={optionButtonRef}
     on:click|preventDefault|stopPropagation={toggleRoomOptions}
-    class="tw-m-0 tw-p-0 tw-text-gray-400 hover:tw-text-white"
+    class="m-0 p-0 flex items-center justify-center h-7 w-7 invisible group-hover/chatItem:visible hover:bg-white/10 rounded-lg"
 >
-    <IconDotsCircle font-size="14" />
+    <IconDots font-size="16" />
 </button>
 <div
     on:mouseleave={toggleRoomOptions}
-    bind:this={optionRef}
-    class="tw-absolute tw-bg-black/90 tw-rounded-md tw-p-1 tw-z-[1] tw-w-max"
-    class:tw-absolue={optionButtonRef !== undefined}
-    class:tw-hidden={hideOptions}
+    class="bg-contrast/50 backdrop-blur-md rounded-lg overflow-hidden z-[1] w-max right-2 top-10 p-1"
+    class:absolute={optionButtonRef !== undefined}
+    class:hidden={hideOptions}
 >
+    <RoomOption
+        IconComponent={IconUserPlus}
+        title={$LL.chat.manageRoomUsers.roomOption()}
+        on:click={openInviteParticipantsModal}
+    />
+    <RoomOption
+        IconComponent={$areNotificationsMuted ? IconUnMute : IconMute}
+        title={$areNotificationsMuted ? $LL.chat.roomMenu.unmuteRoom() : $LL.chat.roomMenu.muteRoom()}
+        on:click={closeMenuAndSetMuteStatus}
+    />
+
     <RoomOption
         IconComponent={IconLogout}
         title={$LL.chat.roomMenu.leaveRoom.label()}
+        bg="bg-danger/50 hover:bg-danger"
         on:click={closeMenuAndLeaveRoom}
     />
 </div>

@@ -32,36 +32,36 @@
     }
 </script>
 
-<div class="teams-menu tw-min-h-fit tw-rounded-3xl tw-overflow-visible" transition:fly={{ x: 1000, duration: 500 }}>
-    <div class="tw-p-8 tw-flex tw-flex-col tw-justify-center tw-items-center">
-        <h1 class="tw-p-2">Join your Teams meeting 🎉</h1>
-        <img src={TeamsLogoPng} alt="Object" class="tw-w-32 tw-h-32 tw-mb-4 tw-object-contain" />
-        <p class="tw-py-2 tw-m-0">subject: <span class="tw-font-bold">{subject}</span></p>
-        <p class="tw-py-2 tw-m-0">meetingId: {meetingId}</p>
-        <p class="tw-py-2 tw-m-0">start: {startDateTime.toLocaleString()}</p>
-        <p class="tw-py-2 tw-m-0">end: {endDateTime.toLocaleString()}</p>
+<div class="teams-menu min-h-fit rounded-3xl overflow-visible" transition:fly={{ x: 1000, duration: 500 }}>
+    <div class="p-8 flex flex-col justify-center items-center">
+        <h1 class="p-2">Join your Teams meeting 🎉</h1>
+        <img src={TeamsLogoPng} alt="Object" class="w-32 h-32 mb-4 object-contain" />
+        <p class="py-2 m-0">subject: <span class="font-bold">{subject}</span></p>
+        <p class="py-2 m-0">meetingId: {meetingId}</p>
+        <p class="py-2 m-0">start: {startDateTime.toLocaleString()}</p>
+        <p class="py-2 m-0">end: {endDateTime.toLocaleString()}</p>
         {#if passcode}
-            <p class="tw-py-2 tw-m-0">passcode: {passcode}</p>
+            <p class="py-2 m-0">passcode: {passcode}</p>
         {/if}
     </div>
-    <div class="tw-p-4 tw-flex tw-flex-col tw-justify-center tw-items-center">
-        <button class="tw-bg-dark-purple tw-p-4 tw-mb-4 tw-rounded-xl tw-text-white" on:click={gotToYourApp}>
+    <div class="p-4 flex flex-col justify-center items-center">
+        <button class="bg-dark-purple p-4 mb-4 rounded-xl text-white" on:click={gotToYourApp}>
             Join on the Teams app ⌨️
         </button>
 
         <a
             href={joinWebUrl}
             target="_blank"
-            class="tw-bg-white tw-p-4 tw-rounded-xl tw-mb-4 tw-text-dark-purple"
+            class="bg-white p-4 rounded-xl mb-4 text-dark-purple"
             on:click={closeModal}
         >
             Open on a new tab 🌐
         </a>
     </div>
     <div
-        class="tw-flex tw-flex-row tw-justify-evenly tw-items-center tw-bg-dark-purple tw-w-full tw-p-2 tw-rounded-b-3xl"
+        class="flex flex-row justify-evenly items-center bg-dark-purple w-full p-2 rounded-b-3xl"
     >
-        <button class="tw-bg-dark-purple tw-p-4" on:click={closeModal}>
+        <button class="bg-dark-purple p-4" on:click={closeModal}>
             {$LL.mapEditor.explorer.details.close()}
         </button>
     </div>

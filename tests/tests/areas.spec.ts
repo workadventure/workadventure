@@ -37,4 +37,40 @@ test.describe('Areas', () => {
         await expect(page.getByText('Silent zone',{exact:true})).toBeVisible();
     });
 
+    test('blocking audio areas', async ({ page, browser }, { project }) => {
+        if(project.name === "mobilechromium") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+
+        // Open audio test map
+        await page.goto(publicTestMapUrl("tests/E2E/audio.json", "areas"));
+        await login(page);
+
+        // Verify audio area is working
+        await evaluateScript(page, async () => {
+            console.log('Waiting for WA.onInit()');
+            await WA.onInit();
+            console.log('Moving player to audio area');
+            await WA.player.moveTo(240, 144);
+            return;
+        });
+        await expect(page.locator('div.main-audio-manager')).toBeVisible();
+
+        // Enable audio area blocking
+        await page.click('button#menuIcon');
+        await page.click('text=Settings');
+        await page.click('text=Block ambient sounds and music');
+
+        // Verify audio area is working
+        await evaluateScript(page, async () => {
+            console.log('Waiting for WA.onInit()');
+            await WA.onInit();
+            console.log('Moving player to audio area');
+            await WA.player.moveTo(176, 144);
+            return;
+        });
+        await expect(page.locator('div.main-audio-manager')).toBeHidden();
+    });
 });

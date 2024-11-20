@@ -12,8 +12,8 @@
     }
 </script>
 
-<section class="action tw-flex tw-flex-row tw-justify-center">
-    <button type="submit" class="outline tw-mr-2 backTodefaultWoka" on:click={backToPreviousScene}
+<section class="action flex flex-row justify-center">
+    <button type="submit" class="outline mr-2 backTodefaultWoka" on:click={backToPreviousScene}
         >{$LL.woka.customWoka.navigation.backTodefaultWoka()}</button
     >
 </section>

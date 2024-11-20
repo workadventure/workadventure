@@ -19,6 +19,7 @@ export enum AreaPreviewEvent {
     Copied = "AreaPreview:Copied",
     Updated = "AreaPreview:Updated",
     Delete = "AreaPreview:Delete",
+    UpdateVisibility = "AreaPreview:UpdateVisibility",
 }
 
 const DEFAULT_COLOR = 0x0000ff;
@@ -131,6 +132,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
         if (!value) {
             this.showSizeAlteringSquares(false);
         }
+        this.emit(AreaPreviewEvent.UpdateVisibility, value);
         return this;
     }
 
@@ -513,6 +515,12 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                     name: "Silent",
                     color: "FF5A5F",
                 };
+            case "extensionModule": {
+                return {
+                    name: "Extension",
+                    color: "464EB8",
+                };
+            }
             default:
                 return {
                     name: "",

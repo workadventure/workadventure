@@ -28,6 +28,8 @@ const actionbar: BaseTranslation = {
     bo: "Back office",
     globalMessage: "Send global message",
     mapEditor: "Map editor",
+    mapEditorMobileLocked: "Map editor is locked on mobile mode",
+    mapEditorLocked: "Map editor is locked 🔐",
     app: "Open / close applications",
     camera: {
         disabled: "Your camera is disabled",
@@ -102,5 +104,7 @@ const actionbar: BaseTranslation = {
             sync: "Status is syncing 🔄",
         },
     },
+    appList: "Open / Close app list",
+    featureNotAvailable: "Feature not available for your room 😭",
 };
 export default actionbar;

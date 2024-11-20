@@ -30,6 +30,7 @@ import type { Popup } from "./front/Api/Iframe/Ui/Popup";
 import type { Sound } from "./front/Api/Iframe/Sound/Sound";
 import { answerPromises, queryWorkadventure } from "./front/Api/Iframe/IframeApiContribution";
 import camera from "./front/Api/Iframe/camera";
+import mapEditor from "./front/Api/Iframe/mapEditor";
 export type {
     CreateUIWebsiteEvent,
     ModifyUIWebsiteEvent,
@@ -112,12 +113,13 @@ const wa = {
     camera,
     state: globalState,
     event,
+    mapEditor,
 
     /**
      * When your script / iFrame loads WorkAdventure, it takes a few milliseconds for your
      * script / iFrame to exchange data with WorkAdventure. You should wait for the WorkAdventure
      * API to be fully ready using the WA.onInit() method.
-     * {@link https://workadventu.re/map-building/api-start.md#waiting-for-workadventure-api-to-be-available | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-start.md#waiting-for-workadventure-api-to-be-available | Website documentation}
      *
      * Some properties (like the current username, or the room ID) are not available until WA.onInit has completed.
      *
@@ -130,7 +132,7 @@ const wa = {
     /**
      * The metadata sent by the administration website.
      * Important: You need to wait for the end of the initialization before accessing.
-     * {@link https://workadventu.re/map-building/api-metadata.md | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-metadata.md | Website documentation}
      *
      * @returns {unknown|undefined} Metadata
      */
@@ -141,7 +143,7 @@ const wa = {
     /**
      * The iframeId (only set if the code is executed from a UIWebsite iframe)
      * Important: You need to wait for the end of the initialization before accessing.
-     * {@link https://workadventu.re/map-building/api-ui.md#get-ui-website-by-id | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-ui.md#get-ui-website-by-id | Website documentation}
      *
      * @returns {string|undefined} IframeId
      */

@@ -21,16 +21,16 @@
     }
 </script>
 
-<div class="teams-menu tw-min-h-fit tw-rounded-3xl tw-overflow-visible" transition:fly={{ x: 1000, duration: 500 }}>
-    <div class="tw-p-8 tw-flex tw-flex-col tw-justify-center tw-items-center">
-        <h1 class="tw-p-2">Teams Microsoft Meetings 🎉</h1>
-        <img src={TeamsLogoPng} alt="Object" class="tw-w-32 tw-h-32 tw-mb-4 tw-object-contain" />
-        <p class="tw-p-2 tw-m-0">
+<div class="teams-menu min-h-fit rounded-3xl overflow-visible" transition:fly={{ x: 1000, duration: 500 }}>
+    <div class="p-8 flex flex-col justify-center items-center">
+        <h1 class="p-2">Teams Microsoft Meetings 🎉</h1>
+        <img src={TeamsLogoPng} alt="Object" class="w-32 h-32 mb-4 object-contain" />
+        <p class="p-2 m-0">
             Teams is a Microsoft 365 app that helps your team stay connected and organized. You can chat, meet, call,
             and collaborate all in one place.
         </p>
         {#if $synchronisationStatusStore === ExternalModuleStatus.ONLINE}
-            <p class="tw-p-0 tw-m-0">
+            <p class="p-0 m-0">
                 {$LL.actionbar.externalModule.status.onLine()}
             </p>
             <ul>
@@ -55,7 +55,7 @@
         {/if}
 
         {#if $synchronisationStatusStore === ExternalModuleStatus.SYNC}
-            <p class="tw-p-0 tw-m-0">
+            <p class="p-0 m-0">
                 {$LL.actionbar.externalModule.status.sync()}
             </p>
             <ul>
@@ -80,29 +80,29 @@
         {/if}
 
         {#if $synchronisationStatusStore === ExternalModuleStatus.WARNING}
-            <p class="tw-p-0 tw-m-0">
+            <p class="p-0 m-0">
                 {$LL.actionbar.externalModule.status.warning()}
             </p>
         {/if}
 
         {#if $synchronisationStatusStore === ExternalModuleStatus.OFFLINE}
-            <p class="tw-p-0 tw-m-0">
+            <p class="p-0 m-0">
                 {$LL.actionbar.externalModule.status.offLine()}
             </p>
         {/if}
     </div>
     <div
-        class="tw-flex tw-flex-row tw-justify-evenly tw-items-center tw-bg-dark-purple tw-w-full tw-p-2 tw-rounded-b-3xl"
+        class="flex flex-row justify-evenly items-center bg-dark-purple w-full p-2 rounded-b-3xl"
     >
-        <button class="tw-bg-dark-purple tw-p-4" on:click={closeModal}>
+        <button class="bg-dark-purple p-4" on:click={closeModal}>
             {$LL.mapEditor.explorer.details.close()}
         </button>
         <button
-            class="light tw-p-4"
+            class="light p-4"
             on:click={goToReSync}
             disabled={$synchronisationStatusStore === ExternalModuleStatus.ONLINE}
-            class:tw-cursor-not-allowed={$synchronisationStatusStore === ExternalModuleStatus.ONLINE}
-            class:tw-opacity-20={$synchronisationStatusStore === ExternalModuleStatus.ONLINE}
+            class:cursor-not-allowed={$synchronisationStatusStore === ExternalModuleStatus.ONLINE}
+            class:opacity-20={$synchronisationStatusStore === ExternalModuleStatus.ONLINE}
         >
             Sync my Teams 🚀
         </button>

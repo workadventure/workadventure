@@ -6,7 +6,8 @@
 </script>
 
 {#if $content.url !== undefined}
-    <video controls class="tw-w-full">
+    <!-- svelte-ignore a11y-media-has-caption -->
+    <video controls class="w-full block rounded">
         <source src={$content.url} />
     </video>
 {/if}

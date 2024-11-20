@@ -34,6 +34,7 @@ import { gameManager } from "../Phaser/Game/GameManager";
 import { locales } from "../../i18n/i18n-util";
 import type { Locales } from "../../i18n/i18n-types";
 import { setCurrentLocale } from "../../i18n/locales";
+import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 import { axiosToPusher, axiosWithRetry } from "./AxiosUtils";
 import { Room } from "./Room";
 import { LocalUser } from "./LocalUser";
@@ -111,21 +112,22 @@ class ConnectionManager {
      * TODO fix me to be move in game manager
      *
      * Returns the URL that we need to redirect to load the OpenID screen, or "null" if no redirection needs to happen.
+     *
+     * @param manuallyTriggered - Whether the login request resulted from a click on the "Sign in" button or from a mandatory authentication.
      */
-    public loadOpenIDScreen(): URL | null {
+    public loadOpenIDScreen(manuallyTriggered: boolean): URL | null {
         localUserStore.setAuthToken(null);
-        // FIXME: remove this._currentRoom.iframeAuthentication
-        // FIXME: remove this._currentRoom.iframeAuthentication
-        // FIXME: remove this._currentRoom.iframeAuthentication
-        // FIXME: remove this._currentRoom.iframeAuthentication
-        if (!ENABLE_OPENID || !this._currentRoom || !this._currentRoom.iframeAuthentication) {
+        if (!ENABLE_OPENID || !this._currentRoom) {
             analyticsClient.loggedWithToken();
             loginSceneVisibleIframeStore.set(false);
             return null;
         }
         analyticsClient.loggedWithSso();
-        const redirectUrl = new URL(`${this._currentRoom.iframeAuthentication}`, window.location.href);
+        const redirectUrl = new URL("login-screen", ABSOLUTE_PUSHER_URL);
         redirectUrl.searchParams.append("playUri", this._currentRoom.key);
+        if (manuallyTriggered) {
+            redirectUrl.searchParams.append("manuallyTriggered", "true");
+        }
         return redirectUrl;
     }
 
@@ -137,8 +139,10 @@ class ConnectionManager {
         const tokenTmp = localUserStore.getAuthToken();
         //remove token in localstorage
         localUserStore.setAuthToken(null);
-        //user logout, set connected store for menu at false
-        userIsConnected.set(false);
+        //user logout, set connected store for menu at false (actually don't do it because we are going to redirect and
+        // it shortly displays the "sign in" button before redirect happens)
+        //userIsConnected.set(false);
+
         // check if we are in a room
         if (!ENABLE_OPENID || !this._currentRoom) {
             window.location.assign("/login");
@@ -149,13 +153,7 @@ class ConnectionManager {
         redirectUrl.searchParams.append("playUri", this._currentRoom.key);
         redirectUrl.searchParams.append("token", tokenTmp ?? "");
 
-        gameManager
-            .getCurrentGameScene()
-            .chatConnection.destroy()
-            .catch((error) => {
-                console.error("Chat connection not closed properly : ", error);
-            })
-            .finally(() => window.location.assign(redirectUrl));
+        gameManager.logout().finally(() => window.location.assign(redirectUrl));
     }
 
     /**
@@ -212,7 +210,7 @@ class ConnectionManager {
 
         if (this.connexionType === GameConnexionTypes.login) {
             this._currentRoom = await Room.createRoom(new URL(localUserStore.getLastRoomUrl()));
-            const redirect = this.loadOpenIDScreen();
+            const redirect = this.loadOpenIDScreen(true);
             if (redirect !== null) {
                 return redirect;
             }
@@ -305,7 +303,7 @@ class ConnectionManager {
                         nextScene = "selectCharacterScene";
                     }
                 } else {
-                    const redirect = this.loadOpenIDScreen();
+                    const redirect = this.loadOpenIDScreen(false);
                     if (redirect === null) {
                         throw new Error("Unable to redirect on login page.");
                     }
@@ -322,7 +320,7 @@ class ConnectionManager {
                         }*/
 
                         if (response.type === "redirect") {
-                            return new URL(response.urlToRedirect);
+                            return new URL(response.urlToRedirect, window.location.href);
                         }
 
                         return {
@@ -342,7 +340,7 @@ class ConnectionManager {
                         console.warn("Token expired, trying to login anonymously");
                         // if the user must be connected to the current room or if the pusher error is not openid provider access error
                         if (this._currentRoom.authenticationMandatory) {
-                            const redirect = this.loadOpenIDScreen();
+                            const redirect = this.loadOpenIDScreen(false);
                             if (redirect === null) {
                                 throw new Error("Unable to redirect on login page.");
                             }
@@ -519,7 +517,7 @@ class ConnectionManager {
                 this.googleSheetsToolActivated = GoogleSheetsApp?.enabled ?? GOOGLE_SHEETS_ENABLED;
 
                 const GoogleSlidesApp = connect.room.applications?.find(
-                    (app) => app.name === defautlNativeIntegrationAppName.GOOGLE_SHEETS
+                    (app) => app.name === defautlNativeIntegrationAppName.GOOGLE_SLIDES
                 );
                 this.googleSlidesToolActivated = GoogleSlidesApp?.enabled ?? GOOGLE_SLIDES_ENABLED;
 
@@ -636,19 +634,18 @@ class ConnectionManager {
             return response;
         }
 
-        const { authToken, userUuid, email, username, locale, visitCardUrl, matrixUserId } = response;
+        const { authToken, userUuid, email, username, locale, visitCardUrl, matrixUserId, matrixServerUrl } = response;
 
         localUserStore.setAuthToken(authToken);
         this.localUser = new LocalUser(userUuid, email, matrixUserId /*, isMatrixRegistered*/);
         localUserStore.saveUser(this.localUser);
         this.authToken = authToken;
 
-        /*
         if (matrixServerUrl) {
-            setMatrixServerDetails(matrixServerUrl);
+            gameManager.setMatrixServerUrl(matrixServerUrl);
         } else {
-            noMatrixServerUrl();
-        }*/
+            gameManager.setMatrixServerUrl(undefined);
+        }
 
         if (visitCardUrl) {
             gameManager.setVisitCardUrl(visitCardUrl);
@@ -724,7 +721,7 @@ class ConnectionManager {
         }
     }
 
-    async saveCompanionTexture(texture: string): Promise<void> {
+    async saveCompanionTexture(texture: string | null): Promise<void> {
         if (hasCapability("api/save-textures") && this.authToken !== undefined) {
             await axiosToPusher.post(
                 "save-companion-texture",

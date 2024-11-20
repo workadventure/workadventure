@@ -1,17 +1,17 @@
 import { sendUnaryData, ServerUnaryCall } from "@grpc/grpc-js";
 import * as Sentry from "@sentry/node";
+import _ from "lodash";
 import {
     AreaData,
+    AreaDataProperties,
     AtLeast,
     CreateAreaCommand,
     CreateEntityCommand,
-    DeleteAreaCommand,
     DeleteEntityCommand,
     EntityCoordinates,
     EntityDataProperties,
     EntityDimensions,
     EntityPermissions,
-    UpdateAreaCommand,
     UpdateEntityCommand,
     UpdateWAMMetadataCommand,
     UpdateWAMSettingCommand,
@@ -27,13 +27,15 @@ import {
 } from "@workadventure/messages";
 import { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
 import { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated/services";
-import { DeleteCustomEntityMapStorageCommand } from "./Commands/DeleteCustomEntityMapStorageCommand";
-import { ModifyCustomEntityMapStorageCommand } from "./Commands/ModifyCustomEntityMapStorageCommand";
-import { UploadEntityMapStorageCommand } from "./Commands/UploadEntityMapStorageCommand";
+import { DeleteCustomEntityMapStorageCommand } from "./Commands/CustomEntity/DeleteCustomEntityMapStorageCommand";
+import { ModifyCustomEntityMapStorageCommand } from "./Commands/CustomEntity/ModifyCustomEntityMapStorageCommand";
+import { UploadEntityMapStorageCommand } from "./Commands/CustomEntity/UploadEntityMapStorageCommand";
 import { entitiesManager } from "./EntitiesManager";
 import { mapsManager } from "./MapsManager";
 import { mapPathUsingDomainWithPrefix } from "./Services/PathMapper";
 import { LockByKey } from "./Services/LockByKey";
+import { DeleteAreaMapStorageCommand } from "./Commands/Area/DeleteAreaMapStorageCommand";
+import { UpdateAreaMapStorageCommand } from "./Commands/Area/UpdateAreaMapStorageCommand";
 
 const editionLocks = new LockByKey<string>();
 
@@ -45,23 +47,11 @@ const mapStorageServer: MapStorageServer = {
         call: ServerUnaryCall<MapStorageClearAfterUploadMessage, Empty>,
         callback: sendUnaryData<Empty>
     ): void {
-        try {
-            const wamUrl = call.request.wamUrl;
-            const url = new URL(wamUrl);
-            const wamKey = mapPathUsingDomainWithPrefix(url.pathname, url.hostname);
-            mapsManager.clearAfterUpload(wamKey);
-            callback(null);
-        } catch (e: unknown) {
-            console.error("An error occurred in handleClearAfterUpload", e);
-            Sentry.captureException(`An error occurred in handleClearAfterUpload ${JSON.stringify(e)}`);
-            let message: string;
-            if (typeof e === "object" && e !== null) {
-                message = e.toString();
-            } else {
-                message = "Unknown error";
-            }
-            callback({ name: "MapStorageError", message }, null);
-        }
+        const wamUrl = call.request.wamUrl;
+        const url = new URL(wamUrl);
+        const wamKey = mapPathUsingDomainWithPrefix(url.pathname, url.hostname);
+        mapsManager.clearAfterUpload(wamKey);
+        callback(null);
     },
     handleUpdateMapToNewestMessage(
         call: ServerUnaryCall<UpdateMapToNewestWithKeyMessage, Empty>,
@@ -108,13 +98,18 @@ const mapStorageServer: MapStorageServer = {
                 callback({ name: "MapStorageError", message: "EditMapCommand message does not exist" }, null);
                 return;
             }
+
             // The mapKey is the complete URL to the map. Let's map it to our virtual path.
             const mapUrl = new URL(call.request.mapKey);
             const mapKey = mapPathUsingDomainWithPrefix(mapUrl.pathname, mapUrl.hostname);
 
-            const editMapMessage = editMapCommandMessage.editMapMessage.message;
-
             await editionLocks.waitForLock(mapKey, async () => {
+                const editMapCommandMessage = call.request.editMapCommandMessage;
+                if (!editMapCommandMessage || !editMapCommandMessage.editMapMessage?.message) {
+                    callback({ name: "MapStorageError", message: "EditMapCommand message does not exist" }, null);
+                    return;
+                }
+                const editMapMessage = editMapCommandMessage.editMapMessage.message;
                 const gameMap = await mapsManager.getOrLoadGameMap(mapKey);
 
                 const { connectedUserTags, userCanEdit, userUUID } = call.request;
@@ -140,8 +135,42 @@ const mapStorageServer: MapStorageServer = {
                             await mapsManager.executeCommand(
                                 mapKey,
                                 mapUrl.host,
-                                new UpdateAreaCommand(gameMap, dataToModify, commandId)
+                                new UpdateAreaMapStorageCommand(gameMap, dataToModify, commandId, area)
                             );
+
+                            const newAreaData = gameMap.getGameMapAreas()?.getArea(message.id);
+
+                            if (newAreaData) {
+                                const oldPropertiesParsed =
+                                    AreaDataProperties.safeParse(editMapMessage.modifyAreaMessage.properties).data ||
+                                    [];
+
+                                const oldServerData = oldPropertiesParsed.reduce((acc, currProperty) => {
+                                    if (currProperty.serverData) {
+                                        acc.push({
+                                            id: currProperty.id,
+                                            serverData: currProperty.serverData,
+                                        });
+                                    }
+
+                                    return acc;
+                                }, [] as { id: string; serverData: unknown }[]);
+
+                                const newServerData = newAreaData.properties.reduce((acc, currProperty) => {
+                                    if (currProperty.serverData) {
+                                        acc.push({
+                                            id: currProperty.id,
+                                            serverData: currProperty.serverData,
+                                        });
+                                    }
+                                    return acc;
+                                }, [] as { id: string; serverData: unknown }[]);
+
+                                editMapMessage.modifyAreaMessage = {
+                                    ...newAreaData,
+                                    modifyServerData: !_.isEqual(oldServerData, newServerData),
+                                };
+                            }
                         } else {
                             console.log(`Could not find area with id: ${message.id}`);
                         }
@@ -165,7 +194,7 @@ const mapStorageServer: MapStorageServer = {
                         await mapsManager.executeCommand(
                             mapKey,
                             mapUrl.host,
-                            new DeleteAreaCommand(gameMap, message.id, commandId)
+                            new DeleteAreaMapStorageCommand(gameMap, message.id, commandId)
                         );
                         break;
                     }

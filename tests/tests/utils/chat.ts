@@ -3,11 +3,10 @@ import {expectInViewport} from "./viewport";
 
 class Chat {
     async slideToChat(page: Page){
-        await this.get(page).locator('li:has-text("Chat")').click({timeout: 30_000});
+        await this.get(page).locator('li:has-text("Chat")').click({timeout: 60_000});
     }
     async slideToUsers(page: Page){
-        await this.get(page).locator('li:has-text("Users")')
-        await this.get(page).locator('li:has-text("Users")').click({timeout: 30_000});
+        await page.locator('.userList').click({timeout: 60_000});
     }
 
     async checkNameInChat(page: Page, name: string, timeout = 30_000){
@@ -24,13 +23,11 @@ class Chat {
         }
         await expect(page.locator("button#menuIcon")).toBeVisible();
         await page.click('button.chat-btn');
-        await expectInViewport('#chatWindow', page);
-        await expect(page.locator('button.chat-btn')).toHaveClass(/border-top-light/);
-        await expect(page.locator('#chatWindow')).toHaveClass(/show/);
+        await expectInViewport('#chatModal', page);
     }
 
     get(page: Page){
-        return page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
+        return page.locator('#chatModal');
     }
 
     async chatZoneExist(page: Page, name: string){
@@ -56,9 +53,9 @@ class Chat {
     }
 
     async UL_walkTo(page: Page, nickname: string){
-        await this.get(page).locator('.users .wa-chat-item', {hasText: nickname}).locator('.wa-dropdown button').click();
-        await expect(this.get(page).locator('.users .wa-chat-item', {hasText: nickname}).locator('span:has-text("Walk to")')).toBeVisible();
-        await this.get(page).locator('.users .wa-chat-item', {hasText: nickname}).locator('span:has-text("Walk to")').click({ timeout: 5_000 });
+        await page.locator('.user', {hasText: nickname}).locator('.wa-dropdown').click();
+        await expect(page.locator('.user', {hasText: nickname}).locator('span:has-text("Walk to")')).toBeVisible();
+        await page.locator('.user', {hasText: nickname}).locator('span:has-text("Walk to")').click({ timeout: 5_000 });
     }
 
     async AT_sendMessage(page: Page, text: string){
@@ -136,9 +133,9 @@ class Chat {
     }
 
     async expandUsers(page: Page){
-        //await expect(page.locator('#users div:has-text("Users") button .feather-chevron-up')).toHaveClass(/rotate-180/);
+        //await expect(page.locator('#users div:has-text("Users") button .feather-chevron-up')).toHaveClass(/tw-rotate-180/);
         await this.get(page).locator('#users div:has-text("Users") button > .feather-chevron-up').click();
-        //await expect(page.locator('#users div:has-text("Users") button .feather-chevron-up')).not.toHaveClass(/rotate-180/);
+        //await expect(page.locator('#users div:has-text("Users") button .feather-chevron-up')).not.toHaveClass(/tw-rotate-180/);
     }
 
     async forumExist(page: Page, name: string) {

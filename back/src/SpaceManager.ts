@@ -25,12 +25,12 @@ const spaceManager = {
             }
             try {
                 switch (message.message.$case) {
-                    case "watchSpaceMessage": {
-                        socketManager.handleWatchSpaceMessage(pusher, message.message.watchSpaceMessage);
+                    case "joinSpaceMessage": {
+                        socketManager.handleJoinSpaceMessage(pusher, message.message.joinSpaceMessage);
                         break;
                     }
-                    case "unwatchSpaceMessage": {
-                        socketManager.handleUnwatchSpaceMessage(pusher, message.message.unwatchSpaceMessage);
+                    case "leaveSpaceMessage": {
+                        socketManager.handleLeaveSpaceMessage(pusher, message.message.leaveSpaceMessage);
                         break;
                     }
                     case "addSpaceUserMessage": {
@@ -56,44 +56,17 @@ const spaceManager = {
                         pusher.clearPongTimeout();
                         break;
                     }
+                    // FIXME: kickOffMessage should go through the room (unless we plan to ban from the user list). If so, it should be a private message.
                     case "kickOffMessage": {
                         socketManager.handleKickSpaceUserMessage(pusher, message.message.kickOffMessage);
                         break;
                     }
-                    case "muteMicrophoneMessage": {
-                        socketManager.handleMuteMicrophoneSpaceUserMessage(
-                            pusher,
-                            message.message.muteMicrophoneMessage
-                        );
+                    case "publicEvent": {
+                        socketManager.handlePublicEvent(pusher, message.message.publicEvent);
                         break;
                     }
-                    case "muteVideoMessage": {
-                        socketManager.handleMuteVideoSpaceUserMessage(pusher, message.message.muteVideoMessage);
-                        break;
-                    }
-                    case "muteMicrophoneEverybodyMessage": {
-                        socketManager.handleMuteMicrophoneEverybodySpaceUserMessage(
-                            pusher,
-                            message.message.muteMicrophoneEverybodyMessage
-                        );
-                        break;
-                    }
-                    case "muteVideoEverybodyMessage": {
-                        socketManager.handleMuteVideoEverybodySpaceUserMessage(
-                            pusher,
-                            message.message.muteVideoEverybodyMessage
-                        );
-                        break;
-                    }
-                    case "askMuteMicrophoneMessage": {
-                        socketManager.handleMuteMicrophoneSpaceUserMessage(
-                            pusher,
-                            message.message.askMuteMicrophoneMessage
-                        );
-                        break;
-                    }
-                    case "askMuteVideoMessage": {
-                        socketManager.handleMuteVideoSpaceUserMessage(pusher, message.message.askMuteVideoMessage);
+                    case "privateEvent": {
+                        socketManager.handlePrivateEvent(pusher, message.message.privateEvent);
                         break;
                     }
                     case "publicEvent": {

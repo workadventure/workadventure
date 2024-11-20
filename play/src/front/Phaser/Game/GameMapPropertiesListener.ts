@@ -19,7 +19,7 @@ import { Room } from "../../Connection/Room";
 import { LL } from "../../../i18n/i18n-svelte";
 import { inBbbStore, inJitsiStore, inOpenWebsite, isSpeakerStore, silentStore } from "../../Stores/MediaStore";
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
-import { currentLiveStreamingNameStore } from "../../Stores/MegaphoneStore";
+import { currentLiveStreamingSpaceStore } from "../../Stores/MegaphoneStore";
 import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
 import { Area } from "../Entity/Area";
 import { popupStore } from "../../Stores/PopupStore";
@@ -385,6 +385,9 @@ export class GameMapPropertiesListener {
         });
 
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.PLAY_AUDIO, (newValue, oldValue, allProps) => {
+            if (localUserStore.getBlockAudio()) {
+                return;
+            }
             const volume = allProps.get(GameMapProperties.AUDIO_VOLUME) as number | undefined;
             const loop = allProps.get(GameMapProperties.AUDIO_LOOP) as boolean | undefined;
             newValue === undefined
@@ -413,7 +416,7 @@ export class GameMapPropertiesListener {
 
         // Muc zone
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.CHAT_NAME, (newValue, oldValue, allProps) => {
-            if (!this.scene.room.enableChat) {
+            if (!this.scene.room.isChatEnabled) {
                 return;
             }
 
@@ -448,15 +451,13 @@ export class GameMapPropertiesListener {
         });
 
         this.gameMapFrontWrapper.onEnterArea((newAreas) => {
-            if (
-                this.gameMapFrontWrapper.areasManager == undefined ||
-                this.gameMapFrontWrapper.areasManager.getAreaByUd == undefined
-            )
+            if (this.gameMapFrontWrapper.areasManager === undefined) {
                 return;
+            }
             // Hide the area if the user has no access
             const areas: Area[] = [];
             for (const area of newAreas) {
-                const areaObject = this.gameMapFrontWrapper.areasManager.getAreaByUd(area.id);
+                const areaObject = this.gameMapFrontWrapper.areasManager.getAreaById(area.id);
                 if (areaObject) areas.push(areaObject);
             }
             this.onEnterAreasHandler(newAreas, areas);
@@ -465,12 +466,12 @@ export class GameMapPropertiesListener {
         this.gameMapFrontWrapper.onLeaveArea((oldAreas) => {
             if (
                 this.gameMapFrontWrapper.areasManager == undefined ||
-                this.gameMapFrontWrapper.areasManager.getAreaByUd == undefined
+                this.gameMapFrontWrapper.areasManager.getAreaById == undefined
             )
                 return;
             const areas: Area[] = [];
             for (const area of oldAreas) {
-                const areaObject = this.gameMapFrontWrapper.areasManager.getAreaByUd(area.id);
+                const areaObject = this.gameMapFrontWrapper.areasManager.getAreaById(area.id);
                 if (areaObject) areas.push(areaObject);
             }
             this.onLeaveAreasHandler(oldAreas, areas);
@@ -723,8 +724,8 @@ export class GameMapPropertiesListener {
                 "handleSpeakerMegaphonePropertiesOnEnter => joinSpace => speakerZone.value : ",
                 speakerZone.value
             );
-            currentLiveStreamingNameStore.set(speakerZone.value);
-            this.scene.broadcastService.joinSpace(speakerZone.value, false);
+            const broadcastSpace = this.scene.broadcastService.joinSpace(speakerZone.value, false);
+            currentLiveStreamingSpaceStore.set(broadcastSpace.space);
             /*if (get(requestedCameraState) || get(requestedMicrophoneState)) {
                 requestedMegaphoneStore.set(true);
             }*/
@@ -738,7 +739,7 @@ export class GameMapPropertiesListener {
         const speakerZone = place.properties.find((property) => property.name === GameMapProperties.SPEAKER_MEGAPHONE);
         if (speakerZone && speakerZone.type === "string" && speakerZone.value !== undefined) {
             isSpeakerStore.set(false);
-            currentLiveStreamingNameStore.set(undefined);
+            currentLiveStreamingSpaceStore.set(undefined);
             this.scene.broadcastService.leaveSpace(speakerZone.value);
         }
     }
@@ -756,13 +757,13 @@ export class GameMapPropertiesListener {
                 listenerZone.value
             );
             if (speakerZoneName) {
-                currentLiveStreamingNameStore.set(speakerZoneName);
                 // TODO remove this log after testing
                 console.info(
                     "handleListenerMegaphonePropertiesOnEnter => joinSpace => speakerZoneName : ",
                     speakerZoneName
                 );
-                this.scene.broadcastService.joinSpace(speakerZoneName, false);
+                const broadcastSpace = this.scene.broadcastService.joinSpace(speakerZoneName, false);
+                currentLiveStreamingSpaceStore.set(broadcastSpace.space);
             }
         }
     }
@@ -780,7 +781,7 @@ export class GameMapPropertiesListener {
                 listenerZone.value
             );
             if (speakerZoneName) {
-                currentLiveStreamingNameStore.set(undefined);
+                currentLiveStreamingSpaceStore.set(undefined);
                 this.scene.broadcastService.leaveSpace(speakerZoneName);
             }
         }
@@ -860,6 +861,16 @@ export class GameMapPropertiesListener {
             return;
         }
 
+        this.scene.CurrentPlayer.destroyText(actionTriggerUuid);
+        const callback = this.actionTriggerCallback.get(actionTriggerUuid);
+        if (callback) {
+            this.scene.userInputManager.removeSpaceEventListener(callback);
+            this.actionTriggerCallback.delete(actionTriggerUuid);
+        }
+
+        /**
+         * @DEPRECATED - This is the old way to show trigger message
+        const actionStore = get(layoutManagerActionStore);
         const action =
             actionStore && actionStore.length > 0
                 ? actionStore.find((action) => action.uuid === actionTriggerUuid)

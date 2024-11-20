@@ -95,6 +95,7 @@ const mapEditor: BaseTranslation = {
             findOutMoreHere: "Find out more here",
             openPickerSelector: "Open picker selector",
             forcedInNewTab: "Forced in new tab",
+            openApplication: "Open application",
         },
         advancedOptions: "Advanced Options",
         speakerMegaphoneProperties: {
@@ -207,6 +208,14 @@ const mapEditor: BaseTranslation = {
                 "Quickest and easyestsolution to share your knowledge in no time, online, on MS Teams and on mobile.",
             error: "Please enter a valid Cards URL",
             disabled: "Cards integration is disabled.",
+        },
+        matrixProperties: {
+            label: "Link Matrix room",
+            description: "Link Matrix room to your area",
+            openAutomaticallyChatLabel: "Automatically open chat",
+            roomNameLabel: "Display name of room",
+            roomNameLabelPlaceholder: "My room",
+            defaultChatRoomAreaName: "Room Area",
         },
     },
     areaEditor: {

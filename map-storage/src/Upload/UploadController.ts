@@ -22,8 +22,12 @@ import { ENTITY_COLLECTION_URLS, MAX_UNCOMPRESSED_SIZE, WAM_TEMPLATE_URL } from 
 import { passportAuthenticator } from "../Services/Authentication";
 import { uploadDetector } from "../Services/UploadDetector";
 import { MapListService } from "../Services/MapListService";
+import { mapsManager } from "../MapsManager";
+import { _axios } from "../Services/axiosInstance";
 import { FileSystemInterface } from "./FileSystemInterface";
 import { FileNotFoundError } from "./FileNotFoundError";
+
+const limit = pLimit(10);
 
 const upload = multer({
     storage: multer.diskStorage({}),
@@ -638,9 +642,37 @@ export class UploadController {
 
                 const virtualPath = mapPath(filePath, req);
 
+                const isWamFile = filePath.endsWith(".wam");
+
+                if (isWamFile) {
+                    const gameMap = await mapsManager.getOrLoadGameMap(virtualPath);
+                    const areas = gameMap.getGameMapAreas()?.getAreas().values();
+
+                    if (areas) {
+                        const promises = Array.from(areas).reduce((acc, currArea) => {
+                            currArea.properties.forEach((property) => {
+                                const resourceUrl = property.resourceUrl;
+                                if (resourceUrl) {
+                                    acc.push(limit(() => _axios.delete(resourceUrl, { data: property })));
+                                }
+                            });
+                            return acc;
+                        }, [] as Promise<unknown>[]);
+
+                        try {
+                            await Promise.all(promises);
+                        } catch (error) {
+                            console.error("Failed to execute all request on resourceUrl", error);
+                            Sentry.captureMessage(
+                                `Failed to execute all request on resourceUrl ${JSON.stringify(error)}`
+                            );
+                        }
+                    }
+                }
+
                 await this.fileSystem.deleteFiles(virtualPath);
 
-                if (filePath.endsWith(".wam")) {
+                if (isWamFile) {
                     // FIXME: We should call the refresh for all WAM files deleted (in subdirectories too)
                     uploadDetector.refresh(this.getFullUrlFromRequest(req)).catch((err) => {
                         console.error(err);
@@ -791,7 +823,7 @@ export class UploadController {
                         // No cache file or invalid cache file? What the hell? Let's try to regenerate the cache file
                         await this.mapListService.generateCacheFile(req.hostname);
                         // Now that the cache file is generated, let's retry serving the file.
-                        const parsedCacheFile = this.mapListService.readCacheFile(req.hostname);
+                        const parsedCacheFile = await this.mapListService.readCacheFile(req.hostname);
                         res.json(parsedCacheFile);
                         return;
                     }

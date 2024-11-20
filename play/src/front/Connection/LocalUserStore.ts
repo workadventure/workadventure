@@ -17,9 +17,11 @@ const audioPlayerVolumeKey = "audioVolume";
 const audioPlayerMuteKey = "audioMute";
 const helpCameraSettingsShown = "helpCameraSettingsShown";
 const fullscreenKey = "fullscreen";
+const blockAudio = "blockAudio";
 const forceCowebsiteTriggerKey = "forceCowebsiteTrigger";
 const ignoreFollowRequests = "ignoreFollowRequests";
 const decreaseAudioPlayerVolumeWhileTalking = "decreaseAudioPlayerVolumeWhileTalking";
+const disableAnimations = "disableAnimations";
 const lastRoomUrl = "lastRoomUrl";
 const authToken = "authToken";
 const notification = "notificationPermission";
@@ -40,6 +42,7 @@ const matrixDeviceId = "matrixDeviceId";
 const matrixLoginToken = "matrixLoginToken";
 const requestedStatus = "RequestedStatus";
 const matrixGuest = "matrixGuest";
+const volumeProximityDiscussion = "volumeProximityDiscussion";
 
 const JwtAuthToken = z
     .object({
@@ -171,6 +174,13 @@ class LocalUserStore {
         return localStorage.getItem(fullscreenKey) === "true";
     }
 
+    setBlockAudio(value: boolean): void {
+        localStorage.setItem(blockAudio, value.toString());
+    }
+    getBlockAudio(): boolean {
+        return localStorage.getItem(blockAudio) === "true";
+    }
+
     setForceCowebsiteTrigger(value: boolean): void {
         localStorage.setItem(forceCowebsiteTriggerKey, value.toString());
     }
@@ -191,6 +201,13 @@ class LocalUserStore {
     }
     getDecreaseAudioPlayerVolumeWhileTalking(): boolean {
         return localStorage.getItem(decreaseAudioPlayerVolumeWhileTalking) === "true";
+    }
+
+    setDisableAnimations(value: boolean): void {
+        localStorage.setItem(disableAnimations, value.toString());
+    }
+    getDisableAnimations(): boolean {
+        return localStorage.getItem(disableAnimations) === "true";
     }
 
     async setLastRoomUrl(roomUrl: string): Promise<void> {
@@ -592,6 +609,14 @@ class LocalUserStore {
 
     setGuest(isGuest: boolean): void {
         localStorage.setItem(matrixGuest, isGuest.toString());
+    }
+
+    getVolumeProximityDiscussion(): number {
+        return parseFloat(localStorage.getItem(volumeProximityDiscussion) || "1");
+    }
+
+    setVolumeProximityDiscussion(value: number): void {
+        localStorage.setItem(volumeProximityDiscussion, `${value}`);
     }
 }
 

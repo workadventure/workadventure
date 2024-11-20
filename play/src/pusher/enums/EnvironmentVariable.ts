@@ -33,8 +33,10 @@ export const API_URL = env.API_URL;
 export const ADMIN_API_URL = env.ADMIN_API_URL;
 export const ADMIN_API_RETRY_DELAY = parseInt(process.env.ADMIN_API_RETRY_DELAY || "500");
 export const ADMIN_URL = env.ADMIN_URL;
+export const ADMIN_BO_URL = env.ADMIN_BO_URL || env.ADMIN_URL;
 export const AUTOLOGIN_URL = env.AUTOLOGIN_URL ?? env.ADMIN_URL + "/workadventure/login";
 export const ADMIN_API_TOKEN = env.ADMIN_API_TOKEN;
+export const MAP_STORAGE_API_TOKEN = env.MAP_STORAGE_API_TOKEN;
 export const ADMIN_SOCKETS_TOKEN = env.ADMIN_SOCKETS_TOKEN;
 export const CPU_OVERHEAT_THRESHOLD = env.CPU_OVERHEAT_THRESHOLD;
 export const PUSHER_HTTP_PORT = env.PUSHER_HTTP_PORT;
@@ -63,6 +65,7 @@ export const OPID_WOKA_NAME_POLICY = env.OPID_WOKA_NAME_POLICY || "user_input";
 export const OPID_TAGS_CLAIM = env.OPID_TAGS_CLAIM || "tags";
 export const DISABLE_ANONYMOUS: boolean = env.DISABLE_ANONYMOUS;
 export const PROMETHEUS_AUTHORIZATION_TOKEN = env.PROMETHEUS_AUTHORIZATION_TOKEN;
+export const PROMETHEUS_PORT = env.PROMETHEUS_PORT === env.PUSHER_HTTP_PORT ? 0 : env.PROMETHEUS_PORT;
 export const ENABLE_CHAT: boolean = env.ENABLE_CHAT;
 export const ENABLE_CHAT_UPLOAD: boolean = env.ENABLE_CHAT_UPLOAD;
 export const ENABLE_CHAT_ONLINE_LIST: boolean = env.ENABLE_CHAT_ONLINE_LIST;
@@ -112,9 +115,11 @@ export const GOOGLE_DRIVE_PICKER_CLIENT_ID = env.GOOGLE_DRIVE_PICKER_CLIENT_ID;
 export const GOOGLE_DRIVE_PICKER_API_KEY = env.GOOGLE_DRIVE_PICKER_API_KEY;
 export const GOOGLE_DRIVE_PICKER_APP_ID = env.GOOGLE_DRIVE_PICKER_APP_ID;
 // Matrix
-export const MATRIX_DOMAIN: string = env.MATRIX_DOMAIN || "";
 export const MATRIX_PUBLIC_URI: string | undefined = env.MATRIX_PUBLIC_URI;
 export const MATRIX_API_URI: string | undefined = env.MATRIX_API_URI;
+export const MATRIX_ADMIN_USER: string | undefined = env.MATRIX_ADMIN_USER;
+export const MATRIX_ADMIN_PASSWORD: string | undefined = env.MATRIX_ADMIN_PASSWORD;
+export const MATRIX_DOMAIN: string | undefined = env.MATRIX_DOMAIN;
 
 // Front container:
 export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
@@ -122,6 +127,7 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     PUSHER_URL,
     FRONT_URL,
     ADMIN_URL,
+    ADMIN_BO_URL,
     UPLOADER_URL: env.UPLOADER_URL,
     ICON_URL: env.ICON_URL,
     STUN_SERVER: env.STUN_SERVER,
@@ -177,4 +183,7 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     GOOGLE_DRIVE_PICKER_APP_ID: env.GOOGLE_DRIVE_PICKER_APP_ID,
     EMBEDLY_KEY: env.EMBEDLY_KEY,
     MATRIX_PUBLIC_URI,
+    ENABLE_CHAT,
+    ENABLE_CHAT_ONLINE_LIST,
+    ENABLE_CHAT_DISCONNECTED_LIST,
 };

@@ -5,12 +5,14 @@ import {
     FocusablePropertyData,
     JitsiRoomPropertyData,
     ListenerMegaphonePropertyData,
+    MatrixRoomPropertyData,
     OpenWebsitePropertyData,
     PersonalAreaAccessClaimMode,
     PersonalAreaPropertyData,
     PlayAudioPropertyData,
     SpeakerMegaphonePropertyData,
 } from "@workadventure/map-editor";
+import * as Sentry from "@sentry/svelte";
 import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
 import { Jitsi } from "@workadventure/shared-utils";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
@@ -24,31 +26,37 @@ import { localUserStore } from "../../../Connection/LocalUserStore";
 import { Room } from "../../../Connection/Room";
 import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../../Enum/EnvironmentVariable";
 import { audioManagerFileStore, audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
-import { chatZoneLiveStore } from "../../../Stores/ChatStore";
+import { chatVisibilityStore, chatZoneLiveStore } from "../../../Stores/ChatStore";
 /**
  * @DEPRECATED - This is the old way to show trigger message
  import { layoutManagerActionStore } from "../../../Stores/LayoutManagerStore";
  */
 import { inJitsiStore, inOpenWebsite, isSpeakerStore, silentStore } from "../../../Stores/MediaStore";
-import { currentLiveStreamingNameStore } from "../../../Stores/MegaphoneStore";
+import { currentLiveStreamingSpaceStore } from "../../../Stores/MegaphoneStore";
 import { notificationPlayingStore } from "../../../Stores/NotificationStore";
 import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
 import { JitsiCoWebsite } from "../../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { SimpleCoWebsite } from "../../../WebRtc/CoWebsite/SimpleCoWebsite";
+import { coWebsiteManager } from "../../../WebRtc/CoWebsiteManager";
 import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../../WebRtc/LayoutManager";
 import { gameManager } from "../GameManager";
 import { OpenCoWebsite } from "../GameMapPropertiesListener";
 import { GameScene } from "../GameScene";
 import { mapEditorAskToClaimPersonalAreaStore } from "../../../Stores/MapEditorStore";
-import { requestVisitCardsStore, selectedChatIDRemotePlayerStore } from "../../../Stores/GameStore";
+import {
+    canRequestVisitCardsStore,
+    requestVisitCardsStore,
+    selectedChatIDRemotePlayerStore,
+} from "../../../Stores/GameStore";
 import { isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
 import { MessageUserJoined } from "../../../Connection/ConnexionModels";
+import { navChat, selectedRoomStore } from "../../../Chat/Stores/ChatStore";
 import { Area } from "../../Entity/Area";
-import { popupStore } from "../../../Stores/PopupStore";
-import JitsiPopup from "../../../Components/PopUp/PopUpJitsi.svelte";
-import PopUpTab from "../../../Components/PopUp/PopUpTab.svelte"; // Replace 'path/to/PopUpTab' with the actual path to the PopUpTab class
-import PopUpCowebsite from "../../../Components/PopUp/PopupCowebsite.svelte"; // Import the necessary module
-import { coWebsiteManager } from "../../../Stores/CoWebsiteStore";
+import { extensionModuleStore } from "../../../Stores/GameSceneStore";
+import { ChatRoom } from "../../../Chat/Connection/ChatConnection";
+import { userIsConnected } from "../../../Stores/MenuStore";
+import {popupStore} from "../../../Stores/PopupStore";
+import PopUpTab from "../../../Components/PopUp/PopUpTab.svelte";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -69,6 +77,10 @@ export class AreasPropertiesListener {
         for (const areaData of areasData) {
             // analytics event for area
             analyticsClient.enterAreaMapEditor(areaData.id, areaData.name);
+
+            // TODO: fix me to use listener event through GameScene
+            // Send event to enter in the area
+            iframeListener.sendEnterMapEditorAreaEvent(areaData.name);
 
             if (!areaData.properties) {
                 continue;
@@ -131,6 +143,10 @@ export class AreasPropertiesListener {
             // analytics event for area
             analyticsClient.leaveAreaMapEditor(areaData.id, areaData.name);
 
+            // TODO: fix me to use listener event through GameScene
+            // Send event to leave the area
+            iframeListener.sendLeaveMapEditorAreaEvent(areaData.name);
+
             if (!areaData.properties) {
                 continue;
             }
@@ -143,6 +159,8 @@ export class AreasPropertiesListener {
             for (const property of areaData.properties) {
                 this.removePropertyFilter(property, area, areaData);
             }
+
+            this.scene.landingAreas = this.scene.landingAreas.filter((landingArea) => landingArea.id !== areaData.id);
         }
     }
 
@@ -187,7 +205,11 @@ export class AreasPropertiesListener {
                 if (property.areaName && property.areaName !== "") {
                     url = `${property.url}#${property.areaName}`;
                 }
-                this.handleExitPropertyOnEnter(url);
+
+                if (this.scene.landingAreas.every((area) => areaData.id !== area.id)) {
+                    this.handleExitPropertyOnEnter(url);
+                }
+
                 break;
             }
             case "personalAreaPropertyData": {
@@ -198,6 +220,11 @@ export class AreasPropertiesListener {
                 this.handleExtensionModuleAreaPropertyOnEnter(areaData, property.subtype);
                 break;
             }
+            case "matrixRoomPropertyData": {
+                this.handleMatrixRoomAreaOnEnter(property);
+                break;
+            }
+
             default: {
                 break;
             }
@@ -259,6 +286,18 @@ export class AreasPropertiesListener {
                 this.handlePersonalAreaPropertyOnEnter(newProperty, area);
                 break;
             }
+            case "personalAreaPropertyData": {
+                newProperty = newProperty as typeof oldProperty;
+                this.handlePersonalAreaPropertyOnLeave();
+                this.handlePersonalAreaPropertyOnEnter(newProperty, area);
+                break;
+            }
+            case "matrixRoomPropertyData": {
+                newProperty = newProperty as typeof oldProperty;
+                this.handleMatrixRoomAreaOnLeave(oldProperty);
+                this.handleMatrixRoomAreaOnEnter(newProperty);
+                break;
+            }
             case "silent":
             default: {
                 break;
@@ -302,6 +341,10 @@ export class AreasPropertiesListener {
             }
             case "extensionModule": {
                 this.handleExtensionModuleAreaPropertyOnLeave(property.subtype, areaData);
+                break;
+            }
+            case "matrixRoomPropertyData": {
+                this.handleMatrixRoomAreaOnLeave(property);
                 break;
             }
             default: {
@@ -367,9 +410,8 @@ export class AreasPropertiesListener {
                             scriptUtils.openTab(property.link as string);
                         },
                         userInputManager: this.scene.userInputManager,
-                    },
-                    actionId
-                );*/
+                 });
+                 */
             } else {
                 scriptUtils.openTab(property.link);
             }
@@ -598,12 +640,43 @@ export class AreasPropertiesListener {
         }
     }
 
+    private handleMatrixRoomAreaOnEnter(property: MatrixRoomPropertyData) {
+        const isConnected = get(userIsConnected);
+        if (this.scene.connection && property.serverData?.matrixRoomId && isConnected) {
+            this.scene.connection
+                .queryEnterChatRoomArea(property.serverData.matrixRoomId)
+                .then(() => {
+                    if (!property.serverData?.matrixRoomId) {
+                        throw new Error("Failed to join room : roomId is undefined");
+                    }
+                    return gameManager.chatConnection.joinRoom(property.serverData.matrixRoomId);
+                })
+                .then((room: ChatRoom | undefined) => {
+                    if (!room) return;
+                    selectedRoomStore.set(room);
+                    navChat.switchToChat();
+                    chatZoneLiveStore.set(true);
+                    if (property.shouldOpenAutomatically) chatVisibilityStore.set(true);
+                })
+                .catch((error) => {
+                    Sentry.captureMessage(`Failed to join room area : ${error}`);
+                    console.error(error);
+                });
+            return;
+        }
+
+        if (!isConnected && property.shouldOpenAutomatically) {
+            chatVisibilityStore.set(true);
+        }
+    }
+
     private handlePersonalAreaPropertyOnEnter(
         property: PersonalAreaPropertyData,
         areaData: AreaData,
         area?: Area
     ): void {
         if (property.ownerId !== null) {
+            canRequestVisitCardsStore.set(true);
             this.displayPersonalAreaOwnerVisitCard(property.ownerId, areaData, area);
         } else if (property.accessClaimMode === PersonalAreaAccessClaimMode.enum.dynamic) {
             this.displayPersonalAreaClaimDialogBox(property, areaData, area);
@@ -618,6 +691,7 @@ export class AreasPropertiesListener {
                 connection
                     .queryMember(ownerId)
                     .then((member: Member) => {
+                        if (get(canRequestVisitCardsStore) === false) return;
                         if (member?.visitCardUrl) {
                             requestVisitCardsStore.set(member.visitCardUrl);
                         }
@@ -704,12 +778,22 @@ export class AreasPropertiesListener {
             return;
         }
 
-        const action =
-            actionStore && actionStore.length > 0
-                ? actionStore.find((action) => action.uuid === actionTriggerUuid)
-                : undefined;
+        this.scene.CurrentPlayer.destroyText(actionTriggerUuid);
+        const callback = this.actionTriggerCallback.get(actionTriggerUuid);
+        if (callback) {
+            this.scene.userInputManager.removeSpaceEventListener(callback);
+            this.actionTriggerCallback.delete(actionTriggerUuid);
+        }
 
-        if (action) {
+        /**
+         * @DEPRECATED - This is the old way to show trigger message
+         const actionStore = get(layoutManagerActionStore);
+         const action =
+         actionStore && actionStore.length > 0
+         ? actionStore.find((action) => action.uuid === actionTriggerUuid)
+         : undefined;
+
+         if (action) {
             popupStore.removePopup(actionTriggerUuid);
         }
 
@@ -776,6 +860,67 @@ export class AreasPropertiesListener {
             }
         });
         inJitsiStore.set(false);
+    }
+
+    private handlePersonalAreaPropertyOnLeave(area?: Area): void {
+        // Reset this store to indicate that the user is no longer in the personal area and cannot request or display their business card.
+        canRequestVisitCardsStore.set(false);
+
+        mapEditorAskToClaimPersonalAreaStore.set(undefined);
+        if (get(requestVisitCardsStore)) {
+            requestVisitCardsStore.set(null);
+        }
+        area?.unHighLightArea();
+    }
+
+    private handleExtensionModuleAreaPropertyOnLeave(subtype: string, area?: AreaData): void {
+        const extensionModule = get(extensionModuleStore);
+        for (const module of extensionModule) {
+            if (!module.areaMapEditor) continue;
+
+            const areaMapEditor = module.areaMapEditor();
+            if (areaMapEditor == undefined) continue;
+
+            areaMapEditor[subtype].handleAreaPropertyOnLeave(area);
+            inJitsiStore.set(false);
+        }
+    }
+
+    private handleExtensionModuleAreaPropertyOnEnter(area: AreaData, subtype: string): void {
+        const extensionModule = get(extensionModuleStore);
+        for (const module of extensionModule) {
+            if (!module.areaMapEditor) continue;
+
+            const areaMapEditor = module.areaMapEditor();
+            if (areaMapEditor == undefined) continue;
+            areaMapEditor[subtype].handleAreaPropertyOnEnter(area);
+            inJitsiStore.set(true);
+        }
+    }
+
+    private handleMatrixRoomAreaOnLeave(property: MatrixRoomPropertyData) {
+        if (!get(userIsConnected)) {
+            chatVisibilityStore.set(false);
+            return;
+        }
+
+        const actualRoom = get(selectedRoomStore);
+        const chatVisibility = get(chatVisibilityStore);
+
+        if (actualRoom?.id === property.serverData?.matrixRoomId && chatVisibility) {
+            chatVisibilityStore.set(false);
+            selectedRoomStore.set(undefined);
+        }
+        chatZoneLiveStore.set(false);
+
+        get(gameManager.chatConnection.rooms)
+            .find((room) => room.id === property.serverData?.matrixRoomId)
+            ?.leaveRoom()
+            .catch((error) => console.error(error));
+
+        if (this.scene.connection && property.serverData?.matrixRoomId) {
+            this.scene.connection.emitLeaveChatRoomArea(property.serverData.matrixRoomId);
+        }
     }
 
     private handlePersonalAreaPropertyOnLeave(area?: Area): void {
@@ -866,8 +1011,8 @@ export class AreasPropertiesListener {
     private handleSpeakerMegaphonePropertyOnEnter(property: SpeakerMegaphonePropertyData): void {
         if (property.name !== undefined && property.id !== undefined) {
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
-            currentLiveStreamingNameStore.set(uniqRoomName);
-            this.scene.broadcastService.joinSpace(uniqRoomName, false);
+            const broadcastSpace = this.scene.broadcastService.joinSpace(uniqRoomName, false);
+            currentLiveStreamingSpaceStore.set(broadcastSpace.space);
             isSpeakerStore.set(true);
             //requestedMegaphoneStore.set(true);
             if (property.chatEnabled) {
@@ -880,7 +1025,7 @@ export class AreasPropertiesListener {
         if (property.name !== undefined && property.id !== undefined) {
             isSpeakerStore.set(false);
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
-            currentLiveStreamingNameStore.set(undefined);
+            currentLiveStreamingSpaceStore.set(undefined);
             this.scene.broadcastService.leaveSpace(uniqRoomName);
             if (property.chatEnabled) {
                 this.handleLeaveMucRoom(uniqRoomName);
@@ -896,8 +1041,8 @@ export class AreasPropertiesListener {
             );
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
-                currentLiveStreamingNameStore.set(uniqRoomName);
-                this.scene.broadcastService.joinSpace(uniqRoomName, false);
+                const broadcastSpace = this.scene.broadcastService.joinSpace(uniqRoomName, false);
+                currentLiveStreamingSpaceStore.set(broadcastSpace.space);
                 if (property.chatEnabled) {
                     this.handleJoinMucRoom(uniqRoomName, "live");
                 }
@@ -913,7 +1058,7 @@ export class AreasPropertiesListener {
             );
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
-                currentLiveStreamingNameStore.set(undefined);
+                currentLiveStreamingSpaceStore.set(undefined);
                 this.scene.broadcastService.leaveSpace(uniqRoomName);
                 if (property.chatEnabled) {
                     this.handleLeaveMucRoom(uniqRoomName);
@@ -937,6 +1082,7 @@ export class AreasPropertiesListener {
     }
 
     private handleExitPropertyOnEnter(url: string): void {
+        this.scene;
         this.scene
             .onMapExit(Room.getRoomPathFromExitUrl(url, window.location.toString()))
             .catch((e) => console.error(e));

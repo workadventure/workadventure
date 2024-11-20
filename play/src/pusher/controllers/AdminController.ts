@@ -405,7 +405,6 @@ export class AdminController extends BaseHttpController {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.post("/external-module/event", [adminToken], async (req: Request, res: Response) => {
             const body = await req.json();
-            console.log("dispatchExternalModuleEvent => body", body);
             try {
                 if (typeof body.data.moduleId !== "string") {
                     throw new Error("Incorrect roomId parameter");

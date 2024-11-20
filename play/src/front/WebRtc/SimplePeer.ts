@@ -1,6 +1,7 @@
 import { get } from "svelte/store";
-import type { Subscription } from "rxjs";
+import { Subject, Subscription } from "rxjs";
 import * as Sentry from "@sentry/svelte";
+import { Deferred } from "ts-deferred";
 import type {
     WebRtcDisconnectMessageInterface,
     WebRtcSignalReceivedMessageInterface,
@@ -12,6 +13,7 @@ import { peerStore, screenSharingPeerStore } from "../Stores/PeerStore";
 import { batchGetUserMediaStore } from "../Stores/MediaStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { nbSoundPlayedInBubbleStore } from "../Stores/ApparentMediaContraintStore";
+import { SpaceFilterInterface } from "../Space/SpaceFilter/SpaceFilter";
 import { askDialogStore } from "../Stores/MeetingStore";
 import { RemotePlayersRepository } from "../Phaser/Game/RemotePlayersRepository";
 import { mediaManager, NotificationType } from "./MediaManager";
@@ -24,7 +26,6 @@ export interface UserSimplePeerInterface {
     initiator?: boolean;
     webRtcUser?: string | undefined;
     webRtcPassword?: string | undefined;
-    webRtcSpaceName?: string | undefined;
 }
 
 export type RemotePeer = VideoPeer | ScreenSharingPeer;
@@ -37,6 +38,19 @@ export class SimplePeer {
     private readonly rxJsUnsubscribers: Subscription[] = [];
     private lastWebrtcUserName: string | undefined;
     private lastWebrtcPassword: string | undefined;
+    private spaceFilterDeferred = new Deferred<SpaceFilterInterface>();
+
+    private readonly _videoPeerAdded = new Subject<VideoPeer>();
+    public readonly videoPeerAdded = this._videoPeerAdded.asObservable();
+
+    private readonly _videoPeerRemoved = new Subject<VideoPeer>();
+    public readonly videoPeerRemoved = this._videoPeerRemoved.asObservable();
+
+    private readonly _screenSharingPeerAdded = new Subject<ScreenSharingPeer>();
+    public readonly screenSharingPeerAdded = this._screenSharingPeerAdded.asObservable();
+
+    private readonly _screenSharingPeerRemoved = new Subject<ScreenSharingPeer>();
+    public readonly screenSharingPeerRemoved = this._screenSharingPeerRemoved.asObservable();
 
     constructor(private Connection: RoomConnection, private remotePlayersRepository: RemotePlayersRepository) {
         //we make sure we don't get any old peer.
@@ -155,6 +169,7 @@ export class SimplePeer {
         const peerConnection = peerStore.getPeer(user.userId);
         if (peerConnection) {
             if (peerConnection.destroyed) {
+                this._videoPeerRemoved.next(peerConnection);
                 peerConnection.toClose = true;
                 peerConnection.destroy();
                 peerStore.removePeer(user.userId);
@@ -174,7 +189,7 @@ export class SimplePeer {
             user.initiator ? user.initiator : false,
             player,
             this.Connection,
-            user.webRtcSpaceName
+            this.spaceFilterDeferred.promise
         );
 
         peer.toClose = false;
@@ -188,6 +203,11 @@ export class SimplePeer {
                     Sentry.captureException(e);
                 });
             }
+
+            // Now, in case a stream is generated from the scripting API, we need to send it to the new peer
+            if (this.scriptingApiStream) {
+                peer.addStream(this.scriptingApiStream);
+            }
         });
 
         //Create a notification for first user in circle discussion
@@ -197,6 +217,7 @@ export class SimplePeer {
 
         analyticsClient.addNewParticipant(peer.uniqueId, user.userId, uuid);
         peerStore.addPeer(user.userId, peer);
+        this._videoPeerAdded.next(peer);
         return peer;
     }
 
@@ -210,6 +231,7 @@ export class SimplePeer {
         const peerScreenSharingConnection = screenSharingPeerStore.getPeer(user.userId);
         if (peerScreenSharingConnection) {
             if (peerScreenSharingConnection.destroyed) {
+                this._screenSharingPeerRemoved.next(peerScreenSharingConnection);
                 peerScreenSharingConnection.toClose = true;
                 peerScreenSharingConnection.destroy();
                 screenSharingPeerStore.removePeer(user.userId);
@@ -251,6 +273,7 @@ export class SimplePeer {
 
         // When a connection is established to a video stream, and if a screen sharing is taking place,
         screenSharingPeerStore.addPeer(user.userId, peer);
+        this._screenSharingPeerAdded.next(peer);
         return peer;
     }
 
@@ -267,6 +290,8 @@ export class SimplePeer {
             if (peer === undefined) {
                 return;
             }
+            this._videoPeerRemoved.next(peer);
+
             //create temp peer to close
             peer.toClose = true;
             peer.destroy();
@@ -276,7 +301,7 @@ export class SimplePeer {
             this.closeScreenSharingConnection(userId);
 
             // Close the ask dialog by user ID
-            askDialogStore.closeDialogByUserId(peer.userUuid);
+            askDialogStore.closeDialogByUserId(peer.userId);
         } catch (err) {
             console.error("An error occurred in closeConnection", err);
         }
@@ -305,6 +330,7 @@ export class SimplePeer {
             if (peer === undefined) {
                 return;
             }
+            this._screenSharingPeerRemoved.next(peer);
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
             peer.destroy();
@@ -491,5 +517,26 @@ export class SimplePeer {
                 }
             })().catch(reject);
         });
+    }
+
+    private scriptingApiStream: MediaStream | undefined = undefined;
+
+    /**
+     * Sends the stream passed in parameter to all the peers.
+     * Used to send streams generated by the scripting API.
+     */
+    public dispatchStream(mediaStream: MediaStream) {
+        for (const videoPeer of get(peerStore).values()) {
+            videoPeer.addStream(mediaStream);
+        }
+        this.scriptingApiStream = mediaStream;
+    }
+
+    setSpaceFilter(spaceFilter: SpaceFilterInterface | undefined) {
+        if (spaceFilter) {
+            this.spaceFilterDeferred.resolve(spaceFilter);
+        } else {
+            this.spaceFilterDeferred = new Deferred<SpaceFilterInterface>();
+        }
     }
 }

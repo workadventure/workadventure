@@ -18,3 +18,5 @@ export * from "./Events/ChatEvent";
 export * from "./Events/BanEvent";
 export * from "./Woka/defaultWoka";
 export * from "./Calendar/EventInterface";
+export * from "./TodoList/TodoListInterface";
+export { errorHandler, setErrorHandler } from "./ErrorHandler";

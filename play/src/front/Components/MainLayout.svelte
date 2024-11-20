@@ -33,6 +33,8 @@
     } from "../Stores/AvailabilityStatusModalsStore";
     import { mapEditorAskToClaimPersonalAreaStore, mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
+    import { externalPopupSvelteComponent } from "../Stores/Utils/externalSvelteComponentStore";
+    import { gameManager, GameSceneNotFoundError } from "../Phaser/Game/GameManager";
     import { extensionActivateComponentModuleStore, extensionModuleStore } from "../Stores/GameSceneStore";
     import { gameManager } from "../Phaser/Game/GameManager";
     import { hasEmbedScreen } from "../Stores/EmbedScreensStore";
@@ -40,7 +42,7 @@
     import HelpCameraSettingsPopup from "./HelpSettings/HelpCameraSettingsPopup.svelte";
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
     import HelpNotificationSettingsPopup from "./HelpSettings/HelpNotificationSettingPopup.svelte";
-    import LayoutActionManager from "./LayoutActionManager/LayoutActionManager.svelte";
+    import HelpNotificationSettingsPopup from "./HelpSettings/HelpNotificationSettingPopup.svelte";
     import Menu from "./Menu/Menu.svelte";
     import ReportMenu from "./ReportMenu/ReportMenu.svelte";
     import VisitCard from "./VisitCard/VisitCard.svelte";
@@ -65,8 +67,16 @@
     import WarningToast from "./WarningContainer/WarningToast.svelte";
     import ClaimPersonalAreaDialogBox from "./MapEditor/ClaimPersonalAreaDialogBox.svelte";
     import MainModal from "./Modal/MainModal.svelte";
-
+    import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
     let mainLayout: HTMLDivElement;
+    let keyboardEventIsDisable = false;
+    let isMobile = isMediaBreakpointUp("md");
+    const resizeObserver = new ResizeObserver(() => {
+        isMobile = isMediaBreakpointUp("md");
+    });
+
+    onMount(() => {
+        resizeObserver.observe(mainLayout);
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
 
     window.addEventListener("resize", () => {
@@ -75,6 +85,45 @@
             canvasHeight.set(window.innerHeight);
         }
     });
+
+    const handleFocusInEvent = (event: FocusEvent) => {
+        const target = event.target as HTMLElement | null;
+        if (
+            target &&
+            (["INPUT", "TEXTAREA"].includes(target.tagName) ||
+                (target.tagName === "DIV" && target.getAttribute("role") === "textbox") ||
+                target.getAttribute("contenteditable") === "true" ||
+                target.classList.contains("block-user-action"))
+        ) {
+            try {
+                gameManager.getCurrentGameScene().userInputManager.disableControls();
+                keyboardEventIsDisable = true;
+            } catch (error) {
+                if (error instanceof GameSceneNotFoundError) {
+                    keyboardEventIsDisable = false;
+                    return;
+                }
+                throw error;
+            }
+        }
+    };
+
+    const handleFocusOutEvent = () => {
+        if (!keyboardEventIsDisable) return;
+        try {
+            gameManager.getCurrentGameScene().userInputManager.restoreControls();
+            keyboardEventIsDisable = false;
+        } catch (error) {
+            if (error instanceof GameSceneNotFoundError) {
+                keyboardEventIsDisable = false;
+                return;
+            }
+            throw error;
+        }
+    };
+
+    document.addEventListener("focusin", handleFocusInEvent);
+    document.addEventListener("focusout", handleFocusOutEvent);
 </script>
 
 <!-- Components ordered by z-index -->
@@ -119,7 +168,7 @@
 
             {#if $notificationPlayingStore}
                 <div class="flex flex-col absolute w-auto right-0">
-                    {#each [...$notificationPlayingStore.values()] as notification (notification.id)}
+                    {#each [...$notificationPlayingStore.values()] as notification, index (`${index}-${notification.id}`)}
                         <Notification {notification} />
                     {/each}
                 </div>
@@ -136,6 +185,10 @@
             {#if $helpCameraSettingsVisibleStore}
                 <HelpCameraSettingsPopup />
             {/if}
+
+        {#if $helpNotificationSettingsVisibleStore}
+            <HelpNotificationSettingsPopup />
+        {/if}
 
         {#if $helpNotificationSettingsVisibleStore}
             <HelpNotificationSettingsPopup />
@@ -177,15 +230,19 @@
                 <MuteDialogBox />
             {/if}
 
-        {#if $mapEditorAskToClaimPersonalAreaStore}
-            <ClaimPersonalAreaDialogBox />
-        {/if}
+            {#if $mapEditorAskToClaimPersonalAreaStore}
+                <ClaimPersonalAreaDialogBox />
+            {/if}
+
+            {#if $mapEditorAskToClaimPersonalAreaStore}
+                <ClaimPersonalAreaDialogBox />
+            {/if}
 
             {#if $mapExplorationObjectSelectedStore}
                 <ObjectDetails />
             {/if}
 
-            {#if $modalVisibilityStore}
+            {#if $roomListVisibilityStore}
                 <MapList />
             {/if}
 
@@ -193,29 +250,10 @@
                 <WarningToast />
             {/if}
 
-        {#if $extensionActivateComponentModuleStore}
-            {#if $extensionModuleStore != undefined && $extensionModuleStore.components != undefined}
-                {#each $extensionModuleStore.components() as ExternalModuleComponent, index (index)}
-                    <svelte:component
-                        this={ExternalModuleComponent}
-                        synchronisationStatusStore={gameManager.getCurrentGameScene().extensionModule?.statusStore}
-                        meetingSynchronised={gameManager.getCurrentGameScene().extensionModule?.meetingSynchronised}
-                        calendarSynchronised={gameManager.getCurrentGameScene().extensionModule?.calendarSynchronised}
-                        presenceSynchronised={gameManager.getCurrentGameScene().extensionModule?.presenceSynchronised}
-                        on:checkmodulecynschronisation={() => {
-                            if (
-                                $extensionModuleStore != undefined &&
-                                $extensionModuleStore.checkModuleSynschronisation != undefined
-                            )
-                                $extensionModuleStore.checkModuleSynschronisation();
-                            extensionActivateComponentModuleStore.set(false);
-                        }}
-                        on:close={() => {
-                            extensionActivateComponentModuleStore.set(false);
-                        }}
-                    />
-                {/each}
-            {/if}
+        {#if $externalPopupSvelteComponent.size > 0}
+            {#each [...$externalPopupSvelteComponent.entries()] as [key, value] (key)}
+                <svelte:component this={value.componentType} extensionModule={value.extensionModule} />
+            {/each}
         {/if}
 
         <MainModal />
@@ -252,8 +290,6 @@
     {#if $notificationPermissionModalVisibility}
         <NotificationPermissionModal />
     {/if}
-    <!-- audio when user have a message TODO delete it with new chat -->
-    <audio id="newMessageSound" src="/resources/objects/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
 
     <Lazy
         on:onload={() => emoteDataStoreLoading.set(true)}

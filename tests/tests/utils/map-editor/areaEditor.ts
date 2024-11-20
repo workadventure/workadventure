@@ -92,7 +92,15 @@ class AreaEditor {
 
   async setOpenLinkProperty(page: Page, link: string, option = "Show immediately on enter") {
     await page.locator(".map-editor .sidebar .properties-container select#trigger").selectOption({ label: option });
-    await page.locator(".map-editor .sidebar .properties-container input#tabLink").fill(link);
+    await page.locator(".map-editor .sidebar .properties-container input#tabLink").fill(link,{timeout : 20_000});
+  }
+
+  async setMatrixChatRoomProperty(page: Page,shouldOpenAutomatically: boolean, roomName?: string){
+    await page.getByTestId("shouldOpenAutomaticallyCheckbox").setChecked(shouldOpenAutomatically);
+    if(roomName){
+      await page.getByPlaceholder("My room").isEnabled({timeout : 20_000});
+      await page.getByPlaceholder("My room").fill(roomName,{timeout : 20_000});
+    }
   }
 
   private async fullFillAreaRight(locator: Locator, right: string) {

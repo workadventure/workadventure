@@ -8,16 +8,24 @@ export class LockByKey<T> {
     public async waitForLock(key: T, callback: () => Promise<void>): Promise<void> {
         let lockPromise = this.locks.get(key);
 
-        if (lockPromise) {
-            await lockPromise;
+        try {
+            if (lockPromise) {
+                await lockPromise;
+            }
+        } catch {
+            /* empty */
         }
 
         lockPromise = callback();
 
         this.locks.set(key, lockPromise);
-        await lockPromise;
-        if (this.locks.get(key) === lockPromise) {
-            this.locks.delete(key);
+
+        try {
+            await lockPromise;
+        } finally {
+            if (this.locks.get(key) === lockPromise) {
+                this.locks.delete(key);
+            }
         }
     }
 }

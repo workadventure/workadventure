@@ -1,13 +1,13 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { onDestroy } from "svelte";
+    import { writable } from "svelte/store";
     import { enableUserInputsStore } from "../Stores/UserInputStore";
     import { mapEditorModeStore } from "../Stores/MapEditorStore";
     import { chatVisibilityStore, INITIAL_SIDEBAR_WIDTH } from "../Stores/ChatStore";
-    import { LocalSpaceProviderSingleton } from "../Space/SpaceProvider/SpaceStore";
-    import { CONNECTED_USER_FILTER_NAME, WORLD_SPACE_NAME } from "../Space/Space";
     import Chat from "./Components/Chat.svelte";
+    import { IconX } from "@wa-icons";
 
+    export const chatSidebarWidthStore = writable(INITIAL_SIDEBAR_WIDTH);
     let container: HTMLElement;
 
     function closeChat() {
@@ -22,28 +22,7 @@
         }
     }
 
-    const chatVisibilityStoreUnsubscriber = chatVisibilityStore.subscribe((isVisible: boolean) => {
-        const SpaceProvider = LocalSpaceProviderSingleton.getInstance();
-        if (!SpaceProvider) return;
-
-        const allWorldUserSpace = SpaceProvider.get(WORLD_SPACE_NAME);
-        const connectedUsersFilter = allWorldUserSpace.getSpaceFilter(CONNECTED_USER_FILTER_NAME);
-
-        if (isVisible) {
-            connectedUsersFilter.setFilter({
-                $case: "spaceFilterEverybody",
-                spaceFilterEverybody: {},
-            });
-        } else {
-            connectedUsersFilter.setFilter(undefined);
-        }
-    });
-
-    onDestroy(() => {
-        chatVisibilityStoreUnsubscriber();
-    });
-
-    let sideBarWidth;
+    let sideBarWidth: number = $chatSidebarWidthStore;
 
     const handleMousedown = (e: MouseEvent) => {
         let dragX = e.clientX;
@@ -56,6 +35,7 @@
         };
         document.onmouseup = () => {
             document.onmousemove = null;
+            chatSidebarWidthStore.set(sideBarWidth);
         };
     };
 
@@ -75,35 +55,62 @@
 
         document.addEventListener("touchend", () => {
             document.removeEventListener("touchmove", onTouchMove);
+            chatSidebarWidthStore.set(sideBarWidth);
         });
     };
 
     const handleDbClick = () => {
-        if (container.style.width === document.documentElement.clientWidth + "px") {
+        if (isChatBarInFullScreen()) {
             container.style.maxWidth = INITIAL_SIDEBAR_WIDTH + "px";
             container.style.width = INITIAL_SIDEBAR_WIDTH + "px";
         } else {
             container.style.maxWidth = document.documentElement.clientWidth + "px";
             container.style.width = document.documentElement.clientWidth + "px";
         }
+        chatSidebarWidthStore.set(sideBarWidth);
+    };
+
+    const onresize = () => {
+        if (isChatSidebarLargerThanWindow()) {
+            container.style.maxWidth = document.documentElement.clientWidth + "px";
+            container.style.width = document.documentElement.clientWidth + "px";
+            chatSidebarWidthStore.set(sideBarWidth);
+        }
+    };
+
+    const isChatSidebarLargerThanWindow = () => {
+        return sideBarWidth >= document.documentElement.clientWidth;
+    };
+
+    const isChatBarInFullScreen = () => {
+        return sideBarWidth === document.documentElement.clientWidth;
     };
 </script>
 
-<svelte:window on:keydown={onKeyDown} />
+<svelte:window on:keydown={onKeyDown} on:resize={onresize} />
 {#if $chatVisibilityStore}
     <section
         bind:clientWidth={sideBarWidth}
         bind:this={container}
         id="chat"
         data-testid="chat"
-        transition:fly={{ duration: 200, x: -INITIAL_SIDEBAR_WIDTH }}
-        class="chatWindow !tw-min-w-full sm:!tw-min-w-[360px] tw-bg-contrast/95 tw-backdrop-blur-md tw-p-4 "
+        transition:fly={{ duration: 200, x: -sideBarWidth }}
+        style="width: {sideBarWidth}px; max-width: {Math.min(sideBarWidth, document.documentElement.clientWidth)}px;"
+        class="chatWindow !min-w-full sm:!min-w-[360px] bg-contrast/80 backdrop-blur-md p-0"
     >
-        <button class="close-window" data-testid="closeChatButton" on:click={closeChat}>&#215;</button>
+        <div class="close-window absolute -right-[4.5rem] top-2 p-2 bg-contrast/80 rounded-2xl">
+            <button
+                class="p-3 hover:bg-white/10 rounded-xl aspect-square w-12 m-0"
+                data-testid="closeChatButton"
+                on:click={closeChat}
+            >
+                <IconX font-size="20" />
+            </button>
+        </div>
         <Chat {sideBarWidth} />
 
         <div
-            class="!tw-absolute !tw-right-1 !tw-top-0 !tw-bottom-0 !tw-m-auto !tw-w-1.5 !tw-h-32 !tw-bg-white !tw-rounded !tw-cursor-col-resize"
+            class="!absolute !right-1 !top-0 !bottom-0 !m-auto !w-1 !h-32 !bg-white !rounded !cursor-col-resize"
             id="resize-bar"
             on:mousedown={handleMousedown}
             on:dblclick={handleDbClick}
@@ -123,19 +130,14 @@
 
     .chatWindow {
         color: white;
-        //display: flex;
-        //flex-direction: column;
         position: absolute !important;
         top: 0;
         min-width: 335px !important;
         width: 335px;
-        height: 100vh !important;
-        z-index: 2000;
         pointer-events: auto;
-
-        height: 100vh !important;
+        max-width: calc(100vw - 82px) !important;
+        height: 100dvh !important;
         z-index: 2000;
-        pointer-events: auto;
         .close-window {
             cursor: pointer;
             align-self: end;

@@ -13,7 +13,7 @@
     import { v4 as uuid } from "uuid";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { mapEditorSelectedAreaPreviewStore } from "../../../Stores/MapEditorStore";
-    import { FEATURE_FLAG_BROADCAST_AREAS } from "../../../Enum/EnvironmentVariable";
+    import { FEATURE_FLAG_BROADCAST_AREAS, MATRIX_PUBLIC_URI, PUSHER_URL } from "../../../Enum/EnvironmentVariable";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { connectionManager } from "../../../Connection/ConnectionManager";
     import JitsiRoomPropertyEditor from "../PropertyEditor/JitsiRoomPropertyEditor.svelte";
@@ -30,6 +30,8 @@
     import RightsPropertyEditor from "../PropertyEditor/RightsPropertyEditor.svelte";
     import { IconChevronDown, IconChevronRight } from "../../Icons";
     import { extensionModuleStore } from "../../../Stores/GameSceneStore";
+    import { ExtensionModule, ExtensionModuleAreaProperty } from "../../../ExternalModule/ExtensionModule";
+    import MatrixRoomPropertyEditor from "../PropertyEditor/MatrixRoomPropertyEditor.svelte";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
@@ -46,6 +48,9 @@
     let showDescriptionField = false;
     let hasPersonalAreaProperty: boolean;
     let hasRightsProperty: boolean;
+    let hasMatrixRoom: boolean;
+
+    const ROOM_AREA_PUSHER_URL = new URL("roomArea", PUSHER_URL).toString();
 
     let selectedAreaPreviewUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((currentAreaPreview) => {
         if (currentAreaPreview) {
@@ -209,6 +214,17 @@
                     subtype,
                     data: null,
                 };
+            case "matrixRoomPropertyData":
+                return {
+                    id,
+                    type,
+                    shouldOpenAutomatically: false,
+                    displayName: "",
+                    resourceUrl: ROOM_AREA_PUSHER_URL,
+                    serverData: {
+                        matrixRoomId: undefined,
+                    },
+                };
             default:
                 throw new Error(`Unknown property type ${type}`);
         }
@@ -328,6 +344,7 @@
         hasplayAudioProperty = hasProperty("playAudio");
         hasPersonalAreaProperty = hasProperty("personalAreaPropertyData");
         hasRightsProperty = hasProperty("restrictedRightsPropertyData");
+        hasMatrixRoom = hasProperty("matrixRoomPropertyData");
     }
 
     function openKlaxoonActivityPicker(app: AreaDataProperty) {
@@ -352,16 +369,23 @@
         showDescriptionField = !showDescriptionField;
     }
 
-    let extensionModuleAreaMapEditor = $extensionModuleStore?.areaMapEditor
-        ? $extensionModuleStore.areaMapEditor()
-        : undefined;
+    let extensionModulesAreaMapEditor = $extensionModuleStore.reduce(
+        (acc: { [key: string]: ExtensionModuleAreaProperty }[], module: ExtensionModule) => {
+            const areaProperty = module.areaMapEditor?.();
+            if (areaProperty != undefined) {
+                acc.push(areaProperty);
+            }
+            return acc;
+        },
+        []
+    );
 </script>
 
 {#if $mapEditorSelectedAreaPreviewStore === undefined}
     {$LL.mapEditor.areaEditor.editInstructions()}
 {:else}
-    <div class="tw-overflow-auto">
-        <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
+    <div class="overflow-auto">
+        <div class="properties-buttons flex flex-row flex-wrap">
             {#if !hasPersonalAreaProperty && !hasRightsProperty}
                 <AddPropertyButtonWrapper
                     property="personalAreaPropertyData"
@@ -375,7 +399,7 @@
                 />
             {/if}
         </div>
-        <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
+        <div class="properties-buttons flex flex-row flex-wrap">
             {#if !hasFocusableProperty}
                 <AddPropertyButtonWrapper
                     property="focusable"
@@ -448,21 +472,31 @@
                     onAddProperty("openWebsite");
                 }}
             />
-            {#if extensionModuleAreaMapEditor !== undefined}
-                {#each Object.entries(extensionModuleAreaMapEditor) as [subtype, index] (index)}
-                    {#if extensionModuleAreaMapEditor[subtype].shouldDisplayButton(properties)}
-                        <AddPropertyButtonWrapper
-                            property="extensionModule"
-                            subProperty={subtype}
-                            on:click={() => {
-                                onAddProperty("extensionModule", subtype);
-                            }}
-                        />
-                    {/if}
+            {#if extensionModulesAreaMapEditor.length > 0}
+                {#each extensionModulesAreaMapEditor as extensionModuleAreaMapEditor, index (`extensionModulesAreaMapEditor-${index}`)}
+                    {#each Object.entries(extensionModuleAreaMapEditor) as [subtype, index] (`extensionModuleAreaMapEditor-${index}`)}
+                        {#if extensionModuleAreaMapEditor[subtype].shouldDisplayButton(properties)}
+                            <AddPropertyButtonWrapper
+                                property="extensionModule"
+                                subProperty={subtype}
+                                on:click={() => {
+                                    onAddProperty("extensionModule", subtype);
+                                }}
+                            />
+                        {/if}
+                    {/each}
                 {/each}
             {/if}
+            {#if !hasMatrixRoom && MATRIX_PUBLIC_URI}
+                <AddPropertyButtonWrapper
+                    property="matrixRoomPropertyData"
+                    on:click={() => {
+                        onAddProperty("matrixRoomPropertyData");
+                    }}
+                />
+            {/if}
         </div>
-        <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-mt-2">
+        <div class="properties-buttons flex flex-row flex-wrap mt-2">
             <AddPropertyButtonWrapper
                 property="openWebsite"
                 subProperty="klaxoon"
@@ -527,7 +561,7 @@
                 }}
             />
         </div>
-        <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-mt-2">
+        <div class="properties-buttons flex flex-row flex-wrap mt-2">
             {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
                 <AddPropertyButtonWrapper
                     property="openWebsite"
@@ -550,11 +584,11 @@
         </div>
         <div class="area-name-container">
             {#if !showDescriptionField}
-                <button class="tw-pl-0 tw-text-blue-500" on:click={toggleDescriptionField}>
+                <button class="pl-0 text-blue-500" on:click={toggleDescriptionField}>
                     <IconChevronRight />{$LL.mapEditor.areaEditor.addDescriptionField()}</button
                 >
             {:else}
-                <button class="tw-pl-0 tw-text-blue-500" on:click={toggleDescriptionField}>
+                <button class="pl-0 text-blue-500" on:click={toggleDescriptionField}>
                     <IconChevronDown />{$LL.mapEditor.areaEditor.addDescriptionField()}</button
                 >
                 <label for="objectDescription">{$LL.mapEditor.areaEditor.areaDescription()}</label>
@@ -669,12 +703,25 @@
                             }}
                             on:change={({ detail }) => onUpdateProperty(property, detail)}
                         />
-                    {:else if property.type === "extensionModule" && extensionModuleAreaMapEditor !== undefined}
-                        <svelte:component
-                            this={extensionModuleAreaMapEditor[property.subtype].AreaPropertyEditor}
-                            on:close={() => {
-                                onDeleteProperty(property.id);
+                    {:else if property.type === "extensionModule" && extensionModulesAreaMapEditor.length > 0}
+                        {#each extensionModulesAreaMapEditor as extensionModuleAreaMapEditor, index (`extensionModulesAreaMapEditor-${index}`)}
+                            <svelte:component
+                                this={extensionModuleAreaMapEditor[property.subtype].AreaPropertyEditor}
+                                {extensionModuleAreaMapEditor}
+                                {property}
+                                on:close={() => {
+                                    onDeleteProperty(property.id);
+                                }}
+                                on:change={() => onUpdateProperty(property)}
+                            />
+                        {/each}
+                    {:else if property.type === "matrixRoomPropertyData"}
+                        <MatrixRoomPropertyEditor
+                            {property}
+                            on:close={({ detail }) => {
+                                onDeleteProperty(property.id, detail);
                             }}
+                            on:change={() => onUpdateProperty(property)}
                         />
                     {/if}
                 </div>
@@ -734,17 +781,17 @@
         border-radius: 9999px;
         border-width: 1px;
         border-style: solid;
-        --tw-border-opacity: 1;
-        border-color: rgb(77 75 103 / var(--tw-border-opacity));
-        --tw-bg-opacity: 1;
-        background-color: rgb(15 31 45 / var(--tw-bg-opacity));
+        --border-opacity: 1;
+        border-color: rgb(77 75 103 / var(--border-opacity));
+        --bg-opacity: 1;
+        background-color: rgb(15 31 45 / var(--bg-opacity));
         background-image: none;
         padding: 0px;
-        --tw-text-opacity: 1;
-        color: rgb(242 253 255 / var(--tw-text-opacity));
+        --text-opacity: 1;
+        color: rgb(242 253 255 / var(--text-opacity));
         outline: 2px solid transparent;
         outline-offset: 2px;
-        cursor: url(/src/front/style/images/cursor_pointer.png), pointer;
+        cursor: url(../../../../../public/static/images/cursor_pointer.png), pointer;
     }
 
     .input-switch::before {
@@ -754,29 +801,29 @@
         height: 1.25rem;
         width: 1.25rem;
         border-radius: 9999px;
-        --tw-bg-opacity: 1;
-        background-color: rgb(146 142 187 / var(--tw-bg-opacity));
+        --bg-opacity: 1;
+        background-color: rgb(146 142 187 / var(--bg-opacity));
         transition-property: all;
         transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
         transition-duration: 150ms;
-        --tw-content: "";
-        content: var(--tw-content);
+        --content: "";
+        content: var(--content);
     }
 
     .input-switch:checked {
-        --tw-border-opacity: 1;
-        border-color: rgb(146 142 187 / var(--tw-border-opacity));
+        --border-opacity: 1;
+        border-color: rgb(146 142 187 / var(--border-opacity));
     }
 
     .input-switch:checked::before {
         left: 13px;
         top: -3px;
-        --tw-bg-opacity: 1;
-        background-color: rgb(65 86 246 / var(--tw-bg-opacity));
-        content: var(--tw-content);
-        /*--tw-shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
---tw-shadow-colored: 0 0 7px 0 var(--tw-shadow-color);
-box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);*/
+        --bg-opacity: 1;
+        background-color: rgb(65 86 246 / var(--bg-opacity));
+        content: var(--content);
+        /*--shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
+--shadow-colored: 0 0 7px 0 var(--shadow-color);
+box-shadow: var(--ring-offset-shadow, 0 0 #0000), var(--ring-shadow, 0 0 #0000), var(--shadow);*/
     }
 
     .input-switch:disabled {

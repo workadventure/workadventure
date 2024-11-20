@@ -1,9 +1,12 @@
 <script lang="ts">
     import LL from "../../../i18n/i18n-svelte";
-    import { IconCircleX } from "../../Components/Icons";
+    import { IconExclamation } from "@wa-icons";
+    export let label = $LL.chat.connectionError();
 </script>
 
-<div class="tw-text-red-500 tw-text-xl tw-flex tw-flex-col tw-items-center tw-mt-20">
-    <IconCircleX font-size={40} />
-    <p>{$LL.chat.connectionError()}</p>
+<div class="">
+    <div class="text-white bg-danger font-bold flex items-center px-3 py-2 space-x-3">
+        <IconExclamation font-size="20" />
+        <div>{label}</div>
+    </div>
 </div>

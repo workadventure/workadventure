@@ -135,7 +135,7 @@ export class MediaManager {
         }
     }
 
-    public createNotification(userName: string, notificationType: NotificationType, forum: string | null = null) {
+    public createNotification(userName: string, notificationType: NotificationType, chatRoom: string | null = null) {
         if (document.hasFocus()) {
             return;
         }
@@ -153,7 +153,7 @@ export class MediaManager {
                 case NotificationType.message:
                     new Notification(
                         `${userName} ${get(LL).notification.message()} ${
-                            forum !== null && get(LL).notification.forum() + " " + forum
+                            chatRoom !== null && get(LL).notification.chatRoom() + " " + chatRoom
                         }`,
                         options
                     );

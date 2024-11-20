@@ -1,12 +1,15 @@
 <script lang="ts">
     import { get, Readable, Unsubscriber, writable } from "svelte/store";
+    import { writable } from "svelte/store";
     import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
     import {IconArrowDown, IconCheck, IconChevronDown, IconChevronUp} from "@wa-icons";
+    import { AvailabilityStatus } from "@workadventure/messages";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import {
         availabilityStatusStore,
         cameraListStore,
+        isSpeakerStore,
         microphoneListStore,
         requestedCameraDeviceIdStore,
         requestedCameraState,
@@ -23,6 +26,10 @@
     import tooltipArrow from "../images/arrow-top.svg";
 
     import HelpTooltip from "../Tooltip/HelpTooltip.svelte";
+    import calendarSvg from "../images/applications/outlook.svg";
+    import todoListSvg from "../images/applications/todolist.png";
+    import burgerMenuImg from "../images/menu.svg";
+    import AppSvg from "../images/action-app.svg";
 
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { embedScreenLayoutStore, hasEmbedScreen } from "../../Stores/EmbedScreensStore";
@@ -80,11 +87,12 @@
         requestedMegaphoneStore,
     } from "../../Stores/MegaphoneStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
-    import { isActivatedStore, isCalendarVisibleStore } from "../../Stores/CalendarStore";
+    import { isActivatedStore as isCalendarActivatedStore, isCalendarVisibleStore } from "../../Stores/CalendarStore";
+    import { isActivatedStore as isTodoListActivatedStore, isTodoListVisibleStore } from "../../Stores/TodoListStore";
     import { extensionActivateComponentModuleStore, extensionModuleStore } from "../../Stores/GameSceneStore";
-    import { ExternalModuleStatus } from "../../ExternalModule/ExtensionModule";
+    import { externalActionBarSvelteComponent } from "../../Stores/Utils/externalSvelteComponentStore";
     import AvailabilityStatusComponent from "./AvailabilityStatus/AvailabilityStatus.svelte";
-    import { ADMIN_URL, ENABLE_OPENID } from "../../Enum/EnvironmentVariable";
+    import { ADMIN_URL, ADMIN_BO_URL, ENABLE_OPENID } from "../../Enum/EnvironmentVariable";
     import Woka from "../Woka/WokaFromUserId.svelte";
     import Companion from "../Companion/Companion.svelte";
     import { loginSceneVisibleStore } from "../../Stores/LoginSceneStore";
@@ -126,6 +134,9 @@
     import { connectionManager } from "../../Connection/ConnectionManager";
     import { canvasWidth } from "../../Stores/CoWebsiteStore";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
+    import { inputFormFocusStore } from "../../Stores/UserInputStore";
+    import AvailabilityStatusComponent from "./AvailabilityStatus/AvailabilityStatus.svelte";
+    import { IconCheck, IconChevronDown, IconChevronUp } from "@wa-icons";
 
     // gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
     let userName = gameManager.getPlayerName() || "";
@@ -242,6 +253,7 @@
             emoteMenuSubStore.closeEmoteMenu();
         } else {
             emoteMenuSubStore.openEmoteMenu();
+            appMenuOpened = false;
         }
     }
 
@@ -269,6 +281,8 @@
         if ($mapEditorModeStore) gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
         analyticsClient.toggleMapEditor(!$mapEditorModeStore);
         mapEditorModeStore.switchMode(!$mapEditorModeStore);
+        isTodoListVisibleStore.set(false);
+        isCalendarVisibleStore.set(false);
     }
 
     function clickEmoji(selected?: number) {
@@ -323,6 +337,7 @@
     }
 
     function onKeyDown(e: KeyboardEvent) {
+        if ($mapEditorModeStore || $inputFormFocusStore) return;
         let key = null;
         if (e.key === "1" || e.key === "F1") {
             key = 1;
@@ -364,7 +379,12 @@
     }
 
     function openBo() {
-        window.open(ADMIN_URL, "_blank");
+        if (!ADMIN_BO_URL) {
+            throw new Error("ADMIN_BO_URL not set");
+        }
+        const url = new URL(ADMIN_BO_URL, window.location.href);
+        url.searchParams.set("playUri", window.location.href);
+        window.open(url, "_blank");
     }
 
     function openEditNameScene() {
@@ -442,26 +462,31 @@
 
     function openExternalModuleCalendar() {
         isCalendarVisibleStore.set(!$isCalendarVisibleStore);
+        isTodoListVisibleStore.set(false);
+        mapEditorModeStore.switchMode(false);
     }
 
-    let subscribers = new Array<Unsubscriber>();
+    function openExternalModuleTodoList() {
+        isTodoListVisibleStore.set(!$isTodoListVisibleStore);
+        isCalendarVisibleStore.set(false);
+        mapEditorModeStore.switchMode(false);
+    }
+
     let totalMessagesToSee = writable<number>(0);
-    let externalModuleStatusStore: Readable<ExternalModuleStatus> | undefined;
-    let extensionModuleStoreSubscription: Unsubscriber | undefined;
+
+    const proximityChatRoom = gameManager.getCurrentGameScene().proximityChatRoom;
+    const chatConnection = gameManager.chatConnection;
+
+    const proximityChatRoomHasUnreadMessage = proximityChatRoom.hasUnreadMessages;
+
+    const chatHasUnreadMessage = chatConnection.hasUnreadMessages;
+
     onMount(() => {
         //resizeObserver.observe(mainHtmlDiv);
-        extensionModuleStoreSubscription = extensionModuleStore.subscribe((value) => {
-            externalModuleStatusStore = value?.statusStore;
-        });
     });
 
     onDestroy(() => {
         //resizeObserver.disconnect();
-        if (extensionModuleStoreSubscription) extensionModuleStoreSubscription();
-        // subscribers.map((subscriber) => subscriber());
-        subscribers.forEach((subscriber) => subscriber());
-        // unsubscribechatTotalMessagesToSeeStream?.unsubscribe();
-        //chatTotalMessagesSubscription?.unsubscribe();
     });
 
     function buttonActionBarTrigger(id: string) {
@@ -470,12 +495,13 @@
     }
 
     let isMobile = isMediaBreakpointUp("md");
-    new ResizeObserver(() => {
+    // FIXME: the code below was stopping the map editor when going in small screen
+    /*const resizeObserver = new ResizeObserver(() => {
         isMobile = isMediaBreakpointUp("md");
         if (isMobile) {
             mapEditorModeStore.set(false);
         }
-    });
+    });*/
 
     // function playSoundClick() {
     //     sound.play().catch((e) => console.error(e));
@@ -487,15 +513,12 @@
       sound.play().catch(e => console.error(e));
     }
 
-
-    // function showRoomList() {
-    //     resetChatVisibility();
-    //     resetModalVisibility();
-    //     roomListVisibilityStore.set(true);
-    // }*/
+        roomListVisibilityStore.set(true);
+    }*/
 
     const onClickOutside = () => {
         if ($emoteMenuSubStore) emoteMenuSubStore.closeEmoteMenu();
+        if (appMenuOpened) appMenuOpened = false;
     };
 
     let isActiveMobileMenu = false;
@@ -521,8 +544,10 @@
         }
     }
 
-    function showExternalModule() {
-        extensionActivateComponentModuleStore.set(true);
+    let appMenuOpened = false;
+    function openAppMenu() {
+        emoteMenuSubStore.closeEmoteMenu();
+        appMenuOpened = !appMenuOpened;
     }
 </script>
 
@@ -755,6 +780,41 @@
                                     </div>
                                 {/if}
                             </div>
+                            <!-- svelte-ignore a11y-click-events-have-key-events -->
+                            <div
+                                    class="group/btn-app bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square {$canvasWidth <
+                                768
+                                    ? 'hidden'
+                                    : 'block'}"
+                                    on:click={openAppMenu()}
+                                    on:click={(helpActive = undefined)}
+                                    on:mouseenter={() => {
+                                    !navigating ? (helpActive = "apps") : "";
+                                }}
+                                    on:mouseleave={() => {
+                                    !navigating ? (helpActive = undefined) : "";
+                                }}
+                            >
+                                <div
+                                        class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 rounded aspect-square flex items-center justify-center transition-all {appMenuOpened
+                                        ? 'bg-secondary group-hover/bg-secondary-600'
+                                        : ' group-hover/btn-emoji:bg-white/10'}"
+                                >
+                                    <EmojiIcon
+                                            strokeColor={appMenuOpened
+                                            ? "stroke-white fill-white"
+                                            : "stroke-white fill-transparent"}
+                                            hover="group-hover/btn-emoji:fill-white"
+                                    />
+                                </div>
+                                {#if helpActive === "apps" && !appMenuOpened}
+                                    <HelpTooltip
+                                            title={$LL.actionbar.help.apps.title()}
+                                            desc={$LL.actionbar.help.apps.desc()}
+                                    />
+                                {/if}
+                            </div>
+
                             {#if $bottomActionBarVisibilityStore}
                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <div
@@ -1949,6 +2009,131 @@
         </div>
     {/if}
 </div>
+
+{#if appMenuOpened && ($roomListActivated || $isCalendarActivatedStore || $isTodoListActivatedStore || $externalActionBarSvelteComponent.size > 0)}
+    <div
+        class="flex justify-center m-auto absolute left-0 right-0 bottom-0"
+        style="margin-bottom: 5.5rem; height: auto;"
+    >
+        <div class="bottom-action-bar">
+            <div class="bottom-action-section flex animate">
+                <!-- Room list part -->
+                {#if $roomListActivated}
+                    <!-- TODO button hep -->
+                    <!-- Room list button -->
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div
+                        on:dragstart|preventDefault={noDrag}
+                        on:click={() => analyticsClient.openedRoomList()}
+                        on:click={showRoomList}
+                        class="bottom-action-button"
+                    >
+                        {#if !isMobile}
+                            <Tooltip text={$LL.actionbar.roomList()} />
+                        {/if}
+
+                        <button id="roomListIcon" class:border-top-light={$roomListVisibilityStore}>
+                            <!-- svelte-ignore a11y-img-redundant-alt -->
+                            <img
+                                draggable="false"
+                                src={worldImg}
+                                style="padding: 2px"
+                                alt="Image for room list modal"
+                            />
+                        </button>
+                    </div>
+                {/if}
+
+                <!-- Calendar integration -->
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <div
+                    on:dragstart|preventDefault={noDrag}
+                    on:click={() => analyticsClient.openExternalModuleCalendar()}
+                    on:click={openExternalModuleCalendar}
+                    class="bottom-action-button"
+                >
+                    {#if !isMobile}
+                        <Tooltip
+                            text={$isCalendarActivatedStore
+                                ? $LL.actionbar.calendar()
+                                : $LL.actionbar.featureNotAvailable()}
+                        />
+                    {/if}
+                    <button
+                        id="calendarIcon"
+                        class:border-top-light={$isCalendarVisibleStore}
+                        class:!cursor-not-allowed={!$isCalendarActivatedStore}
+                        class:!no-pointer-events={!$isCalendarActivatedStore}
+                        disabled={!$isCalendarActivatedStore}
+                    >
+                        <img
+                            draggable="false"
+                            src={calendarSvg}
+                            style="padding: 2px"
+                            alt={$LL.menu.icon.open.calendar()}
+                            class:disable-opacity={!$isCalendarActivatedStore}
+                            class:!cursor-not-allowed={!$isCalendarActivatedStore}
+                        />
+                    </button>
+                </div>
+
+                <!-- Todo List Integration -->
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <div
+                    on:dragstart|preventDefault={noDrag}
+                    on:click={() => analyticsClient.openExternalModuleTodoList()}
+                    on:click={openExternalModuleTodoList}
+                    class="bottom-action-button"
+                >
+                    {#if !isMobile}
+                        <Tooltip
+                            text={$isTodoListActivatedStore
+                                ? $LL.actionbar.calendar()
+                                : $LL.actionbar.featureNotAvailable()}
+                        />
+                    {/if}
+                    <button
+                        id="todoListIcon"
+                        class:border-top-light={$isTodoListVisibleStore}
+                        class:!cursor-not-allowed={!$isTodoListActivatedStore}
+                        class:!no-pointer-events={!$isTodoListActivatedStore}
+                        disabled={!$isTodoListActivatedStore}
+                    >
+                        <img
+                            draggable="false"
+                            src={todoListSvg}
+                            style="padding: 2px"
+                            alt={$LL.menu.icon.open.todoList()}
+                            class:disable-opacity={!$isTodoListActivatedStore}
+                            class:!cursor-not-allowed={!$isTodoListActivatedStore}
+                        />
+                    </button>
+                </div>
+            </div>
+
+            <div class="bottom-action-section flex animate">
+                <!-- External module action bar -->
+                {#if $externalActionBarSvelteComponent.size > 0}
+                    {#each [...$externalActionBarSvelteComponent.entries()] as [id, value] (`externalActionBarSvelteComponent-${id}`)}
+                        <svelte:component
+                            this={value.componentType}
+                            extensionModule={value.extensionModule}
+                            {isMobile}
+                        />
+                    {/each}
+                {/if}
+            </div>
+
+            <div class="bottom-action-section flex animate">
+                <div class="transition-all bottom-action-button">
+                    <button on:click|preventDefault={openAppMenu}>
+                        <img draggable="false" src={closeImg} style="padding: 8px" alt={$LL.actionbar.appList()} />
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+{/if}
 
 <style lang="scss">
     @import "../../style/breakpoints.scss";

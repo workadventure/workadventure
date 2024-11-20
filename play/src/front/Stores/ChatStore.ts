@@ -1,11 +1,9 @@
 import { writable } from "svelte/store";
-import { Subject } from "rxjs";
 
 export const chatZoneLiveStore = writable(false);
 export const chatVisibilityStore = writable(false);
 
-export const _newChatMessageSubject = new Subject<string>();
-export const newChatMessageSubject = _newChatMessageSubject.asObservable();
+export const chatInputFocusStore = writable(false);
 
 // Call "forceRefresh" to force the refresh of the chat iframe.
 function createForceRefreshChatStore() {

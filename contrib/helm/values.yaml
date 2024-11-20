@@ -23,7 +23,18 @@ domainNamePrefix: "-"
 # If empty, a secret key will be generated and stored in the "shared-env-secret" secret.
 secretKey: ""
 
+# This sections will be used "as is" in the deployments (in the spec.template.spec.containers[0].imagePullSecrets section).
+# If you want to use a private registry and have basic needs, we recommend using the "imageCredentials" section instead.
 imagePullSecrets: []
+
+# If you want to use a private registry, you can use this section. All deployments will use the same credentials.
+imageCredentials:
+  enabled: false
+  registry: ""
+  username: ""
+  password: ""
+  email: ""
+
 nameOverride: ""
 fullnameOverride: ""
 
@@ -47,6 +58,9 @@ commonEnv:
   ENABLE_CHAT: "true"
   ENABLE_CHAT_UPLOAD: "true"
   UPLOAD_MAX_FILESIZE: "10485760"
+
+commonSecretEnv:
+  MAP_STORAGE_API_TOKEN: ""
 
 # #########################################################
 # play service
@@ -111,7 +125,7 @@ play:
   # see configuration reference: https://github.com/workadventure/workadventure/blob/master/contrib/docker/.env.prod.template
   env:
     JITSI_PRIVATE_MODE: "false"
-    START_ROOM_URL: /_/global/raw.githubusercontent.com/workadventure/map-starter-kit/master/map.tmj
+    START_ROOM_URL: /_/global/raw.githubusercontent.com/workadventure/map-starter-kit/master/office.tmj
     ENABLE_CHAT_ONLINE_LIST: "true"
     ENABLE_CHAT_DISCONNECTED_LIST: "true"
     MAX_HISTORY_CHAT: 0
@@ -366,13 +380,6 @@ maps:
 
   # see configuration reference: https://github.com/workadventure/workadventure/blob/master/contrib/docker/.env.prod.template
   env: {}
-    # AWS_DEFAULT_REGION:
-    # AWS_BUCKET:
-    # AWS_URL:
-    # AWS_ENDPOINT:
-    # # or
-    # REDIS_HOST:
-  # REDIS_PORT:
 
   # Those environment variables should be added in "Kubernetes" format (e.g. [name: "...", valueFrom: {...}]).
   extraEnvVars: []
@@ -540,6 +547,7 @@ mapstorage:
     ENABLE_BEARER_AUTHENTICATION: "false"
     AUTHENTICATION_VALIDATOR_URL: ""
     ENABLE_DIGEST_AUTHENTICATION: "false"
+    WHITELISTED_RESOURCE_URLS: ""
 
   # Those environment variables should be added in "Kubernetes" format (e.g. [name: "...", valueFrom: {...}]).
   extraEnvVars: []

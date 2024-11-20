@@ -75,8 +75,18 @@ export class AreasManager {
         mapEditorActivatedForThematics.set(isGameMapHasSpecificAreas);
     }
 
-    public getAreaByUd(areaId: string): Area | undefined {
+    public getAreaById(areaId: string): Area | undefined {
         return this.areas.find((area) => area.areaData.id === areaId);
+    }
+
+    public getAreasByPropertyType(propertyType: string): Area[] {
+        return this.areas.reduce((areas, area) => {
+            const areaFound = area.areaData.properties.find((property) => property.type === propertyType);
+            if (areaFound) {
+                areas.push(area);
+            }
+            return areas;
+        }, [] as Area[]);
     }
 
     /**

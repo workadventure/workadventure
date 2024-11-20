@@ -2,9 +2,11 @@
     import { get } from "svelte/store";
     import { ChatMessage } from "../../Connection/ChatConnection";
     import { selectedChatMessageToEdit } from "../../Stores/ChatStore";
-    import { IconCheck, IconX } from "@wa-icons";
+    import LL from "../../../../i18n/i18n-svelte";
+    import MessageInput from "./MessageInput.svelte";
 
     export let message: ChatMessage;
+    let messageInput: HTMLDivElement;
 
     let inputValue = get(message.content).body;
     let editError = false;
@@ -24,28 +26,31 @@
 </script>
 
 <div>
-    <input
-        class="tw-rounded-md tw-p-1 tw-border tw-border-solid"
-        bind:value={inputValue}
-        data-testid="editMessageInput"
+    <MessageInput
+        bind:message={inputValue}
+        bind:messageInput
+        dataTestid="editMessageInput"
+        inputClass=" p-1  !m-0 px-2 max-h-36 overflow-auto w-full h-full rounded-xl !leading-6 block !text-sm !text-white !bg-white/20 placeholder:text-sm  !text-black border  resize-none  shadow-none focus:ring-0"
+        dataText={$LL.chat.enter()}
     />
+
     {#if editError}
-        <p class="tw-text-red-500 tw-text-xxs tw-p-0 tw-m-0">Unable to edit message. Try again.</p>
+        <p class="text-red-500 text-xxs p-0 m-0">{$LL.chat.messageEditedError()}</p>
     {/if}
-    <div class="tw-flex tw-flew-row tw-gap-2 tw-justify-end">
+    <div class="flex flew-row gap-2 justify-end mt-0.5">
         <button
-            class="tw-text-xs tw-text-red-500 tw-p-0 tw-m-0"
+            class="hover:bg-white/10 text-white py-0.5 text-sm px-3 w-20 text-center items-center justify-center"
             data-testid="cancelMessageEditionButton"
             on:click={() => selectedChatMessageToEdit.set(null)}
         >
-            <IconX font-size={16} />
+            {$LL.chat.createRoom.buttons.cancel()}
         </button>
         <button
-            class="tw-text-xs tw-text-green-500 tw-p-0 tw-m-0"
+            class="bg-white hover:bg-white/80 text-secondary py-0.5 text-sm px-3 w-20 text-center items-center justify-center"
             data-testid="saveMessageEditionButton"
             on:click={() => editMessage(inputValue)}
         >
-            <IconCheck font-size={16} />
+            {$LL.chat.createRoom.buttons.edit()}
         </button>
     </div>
 </div>

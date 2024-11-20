@@ -16,6 +16,6 @@ export interface AvailabilityStatusPropsInterface {
 
 export interface AvailabilityStatusListPropsInterface {
     currentStatus: AvailabilityStatus;
-    statusInformations: Array<StatusInformationInterface>;
+    statusInformation: Array<StatusInformationInterface>;
     listStatusTitle: string;
 }

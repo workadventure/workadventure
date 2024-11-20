@@ -1,7 +1,6 @@
-import { stringify } from "circular-json";
+import { dumpVariable } from "@workadventure/shared-utils/src/Debug/dumpVariable";
 import { ADMIN_API_TOKEN } from "../enums/EnvironmentVariable";
 import { socketManager } from "../services/SocketManager";
-import { CustomJsonReplacerInterface } from "../models/CustomJsonReplacerInterface";
 import { BaseHttpController } from "./BaseHttpController";
 
 export class DebugController extends BaseHttpController {
@@ -21,41 +20,20 @@ export class DebugController extends BaseHttpController {
             }
 
             res.atomic(() => {
-                res.header("Content-Type", "application/json");
+                //res.header("Content-Type", "application/json");
 
                 res.send(
-                    stringify(socketManager, function (key: unknown, value: unknown) {
-                        const customObj = CustomJsonReplacerInterface.safeParse(this);
-                        if (customObj.success) {
-                            const val = customObj.data.customJsonReplacer(key, value);
-                            if (val !== undefined) {
-                                return val;
+                    dumpVariable(socketManager, (originalValue) => {
+                        if (originalValue && typeof originalValue === "object" && originalValue.constructor) {
+                            if (originalValue.constructor.name === "uWS.WebSocket") {
+                                return "WebSocket";
+                            } else if (originalValue.constructor.name === "ClientDuplexStreamImpl") {
+                                return "ClientDuplexStreamImpl";
+                            } else if (originalValue.constructor.name === "ClientReadableStreamImpl") {
+                                return "ClientReadableStreamImpl";
                             }
                         }
-
-                        if (key === "socket") {
-                            return "Socket";
-                        }
-                        if (key === "batchedMessages") {
-                            return "BatchedMessages";
-                        }
-                        if (value instanceof Map) {
-                            const obj: { [key: string | number]: unknown } = {};
-                            for (const [mapKey, mapValue] of value.entries()) {
-                                if (typeof mapKey === "number" || typeof mapKey === "string") {
-                                    obj[mapKey] = mapValue;
-                                }
-                            }
-                            return obj;
-                        } else if (value instanceof Set) {
-                            const obj: Array<unknown> = [];
-                            for (const setValue of value.values()) {
-                                obj.push(setValue);
-                            }
-                            return obj;
-                        } else {
-                            return value;
-                        }
+                        return originalValue;
                     })
                 );
             });

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        // The authToken can be bigger than the cookie limit max size so we need to use localStorage to store it.
+        const token = window.localStorage.getItem("authToken");
+
+        const playUrl = new URL("{{{playUri}}}");
+        playUrl.searchParams.append("token", token);
+
+
+        window.location.href = playUrl.toString();
+    </script>
+</head>
+<body>
+</body>
+</html>

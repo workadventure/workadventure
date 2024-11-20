@@ -24,7 +24,7 @@ In order to build your own map for WorkAdventure, you need:
 
 WorkAdventure comes with a "map starter kit" that we highly recommend using to start designing your map quickly.
 It contains **a good default tileset** for building an office and it contains tools to upload your map on WorkAdventure
-or on Github Pages. It also comes with a local web server for testing purpose and with
+or on GitHub Pages. It also comes with a local web server for testing purpose and with
 TypeScript support (if you are looking to use the [Map Scripting API](/developer/map-scripting/)).
 
 When designing your map with Tiled, there are a number of settings that [must absolutely be respected in order to be 
@@ -37,7 +37,7 @@ If you need to create additional maps, copy the "map starter kit" default map an
 
 ## Downloading the Map Starter Kit
 
-Go to the [Github map starter kit repository page](https://github.com/workadventure/map-starter-kit) and click the **"Code"** button.
+Go to the [GitHub map starter kit repository page](https://github.com/workadventure/map-starter-kit) and click the **"Code"** button.
 
 ![Open the "code" button](../images/navigate_to_repo.png)
 
@@ -58,7 +58,7 @@ If you want to do so, unfold the "Using GitHub to work on a map as a team" detai
 
 Start by [creating a GitHub account](https://github.com/join) if you don't already have one.
 
-Then, go to the [Github map starter kit repository page](https://github.com/workadventure/map-starter-kit) and click the **"Use this template"** button.
+Then, go to the [GitHub map starter kit repository page](https://github.com/workadventure/map-starter-kit) and click the **"Use this template"** button.
 
 ![The "Use this template" button](../images/use_this_template.png)
 
@@ -73,7 +73,7 @@ You will be prompted to enter a repository name for your map.
 
 ### Loading the map in Tiled
 
-The sample map is in the file `map.tmj`. You can load this file in [Tiled](https://www.mapeditor.org/).
+The sample map is in the file `office.tmj`. You can load this file in [Tiled](https://www.mapeditor.org/).
 
 Now, it's up to you to edit the map and write your own map.
 
@@ -111,9 +111,9 @@ The local web server can only be used to test your map locally. In particular, t
 ### Adding more map files
 
 If you want to add more maps to your project, no need to duplicate the whole starter kit.
-Instead, simply copy and paste the `map.tmj` file. You can give any name to this file, but it must have the `.tmj` extension.
+Instead, simply copy and paste the `office.tmj` file. You can give any name to this file, but it must have the `.tmj` extension.
 
-From here, you can access your map by modifying the URL in the browser and replacing `map.tmj` by your new map name.
+From here, you can access your map by modifying the URL in the browser and replacing `office.tmj` by your new map name.
 For example, if you have a map named `map2.tmj`, you can access it by visiting `http://play.workadventure.localhost/_/some_random_chars/localhost:5137/map2.tmj`.
 
 ## Need some help?

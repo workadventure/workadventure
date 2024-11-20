@@ -66,6 +66,7 @@ export class UpdateAreaCommand extends Command {
             "jitsiRoomProperty",
             "personalAreaPropertyData",
             "restrictedRightsPropertyData",
+            "matrixRoomPropertyData",
         ];
         const foundKeys: AreaDataPropertiesKeys[] = [];
         const propertiesToRemove: string[] = [];

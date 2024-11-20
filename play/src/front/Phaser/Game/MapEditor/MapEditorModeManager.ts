@@ -1,4 +1,4 @@
-import { Command, UpdateWAMSettingCommand } from "@workadventure/map-editor";
+import { Command, PersonalAreaPropertyData, UpdateWAMSettingCommand } from "@workadventure/map-editor";
 import { get, Unsubscriber } from "svelte/store";
 import { EditMapCommandMessage } from "@workadventure/messages";
 import pLimit from "p-limit";
@@ -10,10 +10,11 @@ import {
     mapEditorAskToClaimPersonalAreaStore,
     mapEditorModeStore,
     mapEditorSelectedToolStore,
-    mapEditorVisibilityStore,
 } from "../../../Stores/MapEditorStore";
 import { mapEditorActivated, mapEditorActivatedForThematics } from "../../../Stores/MenuStore";
 import { localUserStore } from "../../../Connection/LocalUserStore";
+import LL from "../../../../i18n/i18n-svelte";
+import { gameManager } from "../GameManager";
 import { AreaEditorTool } from "./Tools/AreaEditorTool";
 import type { MapEditorTool } from "./Tools/MapEditorTool";
 import { FloorEditorTool } from "./Tools/FloorEditorTool";
@@ -76,16 +77,10 @@ export class MapEditorModeManager {
 
     private mapEditorModeUnsubscriber!: Unsubscriber;
 
-    private ctrlKey?: Phaser.Input.Keyboard.Key;
-    private shiftKey?: Phaser.Input.Keyboard.Key;
-
     private isReverting: Promise<void> = Promise.resolve();
 
     constructor(scene: GameScene) {
         this.scene = scene;
-
-        this.ctrlKey = this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.CTRL);
-        this.shiftKey = this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
 
         this.localCommandsHistory = [];
         this.pendingCommands = [];
@@ -249,8 +244,8 @@ export class MapEditorModeManager {
 
     public handleKeyDownEvent(event: KeyboardEvent): void {
         this.currentlyActiveTool?.handleKeyDownEvent(event);
-        const mapEditorVisibilityStoreValue = get(mapEditorVisibilityStore);
-        if (!mapEditorVisibilityStoreValue) return;
+        const mapEditorModeStoreValue = get(mapEditorModeStore);
+        if (!mapEditorModeStoreValue) return;
 
         const mapEditorModeActivated = get(mapEditorActivated);
         switch (event.key.toLowerCase()) {
@@ -294,8 +289,8 @@ export class MapEditorModeManager {
             case "z": {
                 if (!mapEditorModeActivated) break;
                 // Todo replace with key combo https://photonstorm.github.io/phaser3-docs/Phaser.Input.Keyboard.KeyCombo.html
-                if (this.ctrlKey?.isDown) {
-                    if (this.shiftKey?.isDown) {
+                if (event.ctrlKey || event.metaKey) {
+                    if (event.shiftKey) {
                         this.runningUndoRedoCommand = this.runningUndoRedoCommand
                             .then(() => {
                                 return this.redoCommand();
@@ -344,7 +339,20 @@ export class MapEditorModeManager {
                 if (this.pendingCommands.length > 0) {
                     if (this.pendingCommands[0].commandId === editMapCommandMessage.id) {
                         logger("removing command of pendingList : ", editMapCommandMessage.id);
-                        this.pendingCommands.shift();
+                        const command = this.pendingCommands.shift();
+
+                        const message = editMapCommandMessage.editMapMessage?.message;
+
+                        if (
+                            command instanceof UpdateAreaFrontCommand &&
+                            message &&
+                            message.$case === "modifyAreaMessage" &&
+                            message.modifyAreaMessage.modifyServerData === true
+                        ) {
+                            command.setNewConfig(message.modifyAreaMessage);
+                            await command.execute();
+                        }
+
                         return;
                     }
                     await this.revertPendingCommands();
@@ -459,7 +467,7 @@ export class MapEditorModeManager {
         return this.scene;
     }
 
-    public claimPersonalArea() {
+    public claimPersonalArea(userName: string) {
         const areaDataToClaim = get(mapEditorAskToClaimPersonalAreaStore);
         const userUUID = localUserStore.getLocalUser()?.uuid;
         if (areaDataToClaim === undefined) {
@@ -478,10 +486,48 @@ export class MapEditorModeManager {
             return;
         }
 
+        // Get and revoke the personal area of the user if it exists
+        const gameMapFrontWrapper = gameManager.getCurrentGameScene().getGameMapFrontWrapper();
+        for (const area of gameMapFrontWrapper.areasManager?.getAreasByPropertyType("personalAreaPropertyData") ?? []) {
+            const property = area.areaData.properties.find(
+                (property) => property.type === "personalAreaPropertyData"
+            ) as PersonalAreaPropertyData | undefined;
+            if (!property || property.ownerId !== userUUID) continue;
+
+            // The user already has a personal area, revoke it
+            const oldAreaDataToRevok = structuredClone(area.areaData);
+            // Define the new name of the area
+            merge(area.areaData, {
+                name: get(LL).area.personalArea.claimDescription(),
+            });
+            // Define the new owner of the area
+            merge(property, {
+                ownerId: null,
+            });
+
+            this.executeCommand(
+                new UpdateAreaFrontCommand(
+                    this.getScene().getGameMap(),
+                    area.areaData,
+                    undefined,
+                    oldAreaDataToRevok,
+                    this.editorTools.AreaEditor as AreaEditorTool,
+                    this.scene.getGameMapFrontWrapper()
+                )
+            ).catch((error) => console.error(error));
+        }
+
         const oldAreaData = structuredClone(areaDataToClaim);
         const property = areaDataToClaim.properties.find((property) => property.type === "personalAreaPropertyData");
         if (property) {
-            merge(property, { ownerId: userUUID });
+            // Define the new name of the area
+            merge(areaDataToClaim, {
+                name: get(LL).area.personalArea.personalSpaceWithNames({ name: userName }),
+            });
+            // Define the new owner of the area
+            merge(property, {
+                ownerId: userUUID,
+            });
         }
 
         this.executeCommand(

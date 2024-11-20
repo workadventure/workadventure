@@ -189,6 +189,7 @@
                 step="0.025"
                 bind:this={audioPlayerVol}
                 on:change={setVolume}
+                on:input={setVolume}
                 on:keydown={disallowKeys}
                 class="grow"
             />

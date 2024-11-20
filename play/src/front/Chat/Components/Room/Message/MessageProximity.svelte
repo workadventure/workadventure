@@ -5,6 +5,6 @@
     export let content: Readable<ChatMessageContent>;
 </script>
 
-<p class="tw-p-0 tw-m-0 tw-text-xs">
+<p class="p-0 m-0 text-xs">
     {$content.body}
 </p>

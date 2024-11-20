@@ -23,6 +23,7 @@
     import CustomSubMenu from "./CustomSubMenu.svelte";
     import GuestSubMenu from "./GuestSubMenu.svelte";
     import ReportSubMenu from "./ReportSubMenu.svelte";
+    import ChatSubMenu from "./ChatSubMenu.svelte";
 
     let activeSubMenu: MenuItem = $subMenusStore[$activeSubMenuStore];
     let activeComponent: typeof ProfileSubMenu | typeof CustomSubMenu = ProfileSubMenu;
@@ -90,6 +91,10 @@
                     activeComponent = ReportSubMenu;
                     analyticsClient.reportIssue();
                     break;
+                case SubMenusInterface.chat:
+                    activeComponent = ChatSubMenu;
+                    analyticsClient.menuChat();
+                    break;
             }
         } else {
             const customMenu = customMenuIframe.get(menu.key);
@@ -135,7 +140,7 @@
         <nav
             class="mt-0 @md/main-layout:mt-24 mr-16 @md/main-layout:mr-0 flex flex-row @md/main-layout:flex-col items-stretch @md/main-layout:items-start overflow-hidden overflow-x-scroll @md/main-layout:overflow-auto px-4 @md/main-layout:px-0"
         >
-            {#each $subMenusStore as submenu, i (submenu.key + "_" + submenu.type)}
+            {#each $subMenusStore as submenu, i (`${submenu.key}_${submenu.type}`)}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class="menu-item-container group flex py-4 px-4 relative transition-all w-auto @md/main-layout:w-full @md/main-layout:hover:pl-6 hover:opacity-100 cursor-pointer before:z-1 before:transition-all before:content-[''] before:absolute before:h-full before:w-0 before:top-0 before:right-0 before:bg-contrast/80 {activeSubMenu ===

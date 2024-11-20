@@ -1,21 +1,16 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { AvailabilityStatus } from "@workadventure/messages";
-    import { Readable, Unsubscriber } from "svelte/store";
-    import { onDestroy, onMount } from "svelte";
     import { resetAllStatusStoreExcept } from "../../../Rules/StatusRules/statusChangerFunctions";
     import { availabilityStatusMenuStore } from "../../../Stores/AvailabilityStatusMenuStore";
     import { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
-    import { extensionModuleStore } from "../../../Stores/GameSceneStore";
-
-    import businessSvg from "../../images/applications/business.svg";
-    import { ExternalModuleStatus } from "../../../ExternalModule/ExtensionModule";
+    import { externalAvailibilitySatusSvelteComponent } from "../../../Stores/Utils/externalSvelteComponentStore";
     import AvailabilityStatusCircle from "./AvailabilityStatusCircle.svelte";
     import { AvailabilityStatusListPropsInterface } from "./Interfaces/AvailabilityStatusPropsInterface";
 
     export let props: AvailabilityStatusListPropsInterface;
 
-    $: ({ listStatusTitle, statusInformations, currentStatus } = props);
+    $: ({ listStatusTitle, statusInformation, currentStatus } = props);
 
     const handleKeyPress = (e: KeyboardEvent, newStatus: RequestedStatus | AvailabilityStatus.ONLINE | null) => {
         if (newStatus === AvailabilityStatus.ONLINE) newStatus = null;
@@ -32,46 +27,24 @@
     const handleOutsideClick = () => {
         if ($availabilityStatusMenuStore) availabilityStatusMenuStore.closeAvailabilityStatusMenu();
     };
-
-    const openTeamsDoc = () => {
-        // TODO open the doc to sync teams
-    };
-    let externalModuleStatusStore: Readable<ExternalModuleStatus> | undefined;
-    let extensionModuleStoreSubscription: Unsubscriber | undefined;
-    onMount(() => {
-        if ($extensionModuleStore) externalModuleStatusStore = $extensionModuleStore.statusStore;
-        extensionModuleStoreSubscription = extensionModuleStore.subscribe((value) => {
-            externalModuleStatusStore = value?.statusStore;
-        });
-    });
-    onDestroy(() => {
-        if (extensionModuleStoreSubscription) extensionModuleStoreSubscription();
-    });
 </script>
 
 <svelte:window on:click={handleOutsideClick} on:touchend={handleOutsideClick} />
 
 <div
-    class="tw-absolute tw-mt-2 tw-bottom-24 tw-mx-auto sm:tw-bottom-16 tw-bottom-2' tw-bg-dark-purple/75 tw-backdrop-blur tw-rounded-lg tw-py-2 tw-w-48 tw-text-white
-            before:tw-content-[''] before:tw-absolute before:tw-w-0 before:tw-h-0 before:tw--bottom-[14px] before:tw-left-8
-            before:tw-border-solid before:tw-border-8 before:tw-border-transparent
-            before:tw-border-b-contrast/80 tw-transition-all before:tw-rotate-180"
+    class="absolute mt-2 bottom-24 mx-auto sm:bottom-16 bottom-2' bg-dark-purple/75 backdrop-blur rounded-lg py-2 w-48 text-white
+            before:content-[''] before:absolute before:w-0 before:h-0 before:-bottom-[14px] before:left-8
+            before:border-solid before:border-8 before:border-transparent
+            before:border-b-contrast/80 transition-all before:rotate-180"
     transition:fly={{ y: 40, duration: 150 }}
 >
-    <div class="tw-flex tw-flex-row tw-justify-between tw-text-xs tw-p-2 tw-pb-3 hover:tw-bg-dark-purple/80">
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <p class="tw-opacity-80 tw-cursor-pointer tw-m-0 tw-p-0" on:click={openTeamsDoc}>
-            Teams presence synchronized
-            <span class="tw-text-xxxs"
-                >{externalModuleStatusStore == undefined || $externalModuleStatusStore === ExternalModuleStatus.OFFLINE
-                    ? "❌"
-                    : "✅"}</span
-            >
-        </p>
-        <img draggable="false" src={businessSvg} class="tw-w-6" style="padding: 2px;" alt="Teams" />
-    </div>
-    <div class="tw-flex tw-flex-row tw-justify-between tw-text-xs tw-p-2 tw-pb-0">
-        <div class="tw-font-bold tw-opacity-80">{listStatusTitle.toUpperCase()}</div>
+    {#if $externalAvailibilitySatusSvelteComponent.size > 0}
+        {#each [...$externalAvailibilitySatusSvelteComponent.entries()] as [key, value] (`${key}`)}
+            <svelte:component this={value.componentType} extensionModule={value.extensionModule} />
+        {/each}
+    {/if}
+    <div class="flex flex-row justify-between text-xs p-2 pb-0">
+        <div class="font-bold opacity-80">{listStatusTitle.toUpperCase()}</div>
         <svg width="18px" height="18px" viewBox="0 0 24.00 24.00" fill="none" xmlns="http://www.w3.org/2000/svg"
             ><g id="SVGRepo_bgCarrier" stroke-width="0" /><g
                 id="SVGRepo_tracerCarrier"
@@ -88,30 +61,30 @@
             </g></svg
         >
     </div>
-    {#each statusInformations as statusInformation (statusInformation.AvailabilityStatus)}
+    {#each statusInformation as statusInformationValue (statusInformationValue.AvailabilityStatus)}
         <div
-            class="changeStatusButton tw-px-5 tw-py-10px tw-h-full tw-m-0 tw-cursor-pointer tw-list-none hover:tw-bg-dark-purple/80"
+            class="changeStatusButton px-5 py-10px h-full m-0 cursor-pointer list-none hover:bg-dark-purple/80"
             on:keyup={(e) => {
-                handleKeyPress(e, statusInformation.AvailabilityStatus);
+                handleKeyPress(e, statusInformationValue.AvailabilityStatus);
             }}
-            on:click|stopPropagation={() => handleClick(statusInformation.AvailabilityStatus)}
+            on:click|stopPropagation={() => handleClick(statusInformationValue.AvailabilityStatus)}
         >
-            <div class="tw-flex tw-justify-start tw-my-1 tw-py-1.5 tw-cursor-pointer">
+            <div class="flex justify-start my-1 py-1.5 cursor-pointer">
                 <AvailabilityStatusCircle
                     cursorType="pointer"
                     position="relative"
-                    colorHex={statusInformation.colorHex}
+                    colorHex={statusInformationValue.colorHex}
                 />
                 <div
-                    class="tw-px-4 tw-cursor-pointer {currentStatus !== statusInformation.AvailabilityStatus
+                    class="px-4 cursor-pointer {currentStatus !== statusInformationValue.AvailabilityStatus
                         ? ''
-                        : 'tw-opacity-50'}"
+                        : 'opacity-50'}"
                 >
-                    {statusInformation.label}
+                    {statusInformationValue.label}
                 </div>
-                {#if currentStatus === statusInformation.AvailabilityStatus}
+                {#if currentStatus === statusInformationValue.AvailabilityStatus}
                     <div>
-                        <svg class="tw-cursor-pointer" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <svg class="cursor-pointer" width="24" height="24" viewBox="0 0 24 24" fill="none">
                             <path
                                 d="M10.5858 13.4142L7.75735 10.5858L6.34314 12L10.5858 16.2427L17.6568 9.1716L16.2426 7.75739L10.5858 13.4142Z"
                                 xmlns="http://www.w3.org/2000/svg"

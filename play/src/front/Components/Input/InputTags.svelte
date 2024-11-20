@@ -37,7 +37,7 @@
     }
 </script>
 
-<div class="input-tags flex flex-col pb-5 text-dark-purple">
+<div class={"flex flex-col pb-5 text-dark-purple"}>
     {#if label}
         <label for="selector" class="text-white">
             {label}

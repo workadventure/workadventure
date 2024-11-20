@@ -9,16 +9,16 @@
 {#if $users.size > 0}
     <div
         on:click={() => reaction.react()}
-        class="tw-bg-white/50 tw-flex tw-flex-row tw-gap-1 tw-p-1 tw-rounded-md hover:tw-bg-white/20 tw-text-white hover:tw-cursor-pointer"
+        class="group flex flex-row space-x-1 py-1.5 px-2 hover:bg-white/20 text-white hover:cursor-pointer"
         data-testid={`${key}_reactionButton`}
     >
-        <p class="tw-text-xxs tw-p-0 tw-m-0 hover:tw-cursor-pointer">{key}</p>
-        <p
-            class="tw-text-xxs tw-p-0 tw-m-0 hover:tw-cursor-pointer"
-            class:tw-font-extrabold={$reacted}
-            class:tw-text-secondary={$reacted}
+        <div
+            class="group-hover:scale-[2.5] group-hover:rotate-3 transition-all text-xs p-0 m-0 hover:cursor-pointer"
         >
+            {key}
+        </div>
+        <div class="text-xs p-0 m-0 hover:cursor-pointer text-white" class:font-extrabold={$reacted}>
             {$users.size}
-        </p>
+        </div>
     </div>
 {/if}

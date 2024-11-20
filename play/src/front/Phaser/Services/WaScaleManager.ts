@@ -1,4 +1,4 @@
-import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
+import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import type { Game } from "../Game/Game";
 import { ResizableScene } from "../Login/ResizableScene";
@@ -93,6 +93,7 @@ export class WaScaleManager {
                 scene.events.once(Phaser.Scenes.Events.RENDER, () => scene.onResize());
             }
         }
+
         this.game.markDirty();
     }
 

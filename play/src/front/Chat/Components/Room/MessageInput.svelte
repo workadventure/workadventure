@@ -1,125 +1,105 @@
 <script lang="ts">
-    import { onDestroy } from "svelte";
-    import { ChatRoom } from "../../Connection/ChatConnection";
-    import { selectedChatMessageToReply } from "../../Stores/ChatStore";
-    import { getChatEmojiPicker } from "../../EmojiPicker";
-    import LL from "../../../../i18n/i18n-svelte";
-    import MessageFileInput from "./Message/MessageFileInput.svelte";
-    import { IconCircleX, IconMoodSmile, IconSend } from "@wa-icons";
+    import { createEventDispatcher } from "svelte";
 
-    export let room: ChatRoom;
+    export let message: string;
+    export let inputClass = "";
+    export let dataText = "";
+    export let dataTestid = "";
+    export let messageInput: HTMLDivElement;
 
-    let message = "";
-    let messageInput: HTMLTextAreaElement;
-    let emojiButtonRef: HTMLButtonElement;
-    let stopTypingTimeOutID: undefined | ReturnType<typeof setTimeout>;
-    const TYPINT_TIMEOUT = 10000;
+    export let onKeyDown: ((event: KeyboardEvent) => void) | undefined = undefined;
+    export let onInput = () => {};
+    export let focusin = (event: FocusEvent) => {
+        console.info("Not used focusin", event);
+    };
+    export let focusout = (event: FocusEvent) => {
+        console.info("Not used focusout", event);
+    };
 
-    const selectedChatChatMessageToReplyUnsubscriber = selectedChatMessageToReply.subscribe((chatMessage) => {
-        if (chatMessage !== null) {
-            messageInput.focus();
+    const dispatch = createEventDispatcher();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+        if (onKeyDown) {
+            onKeyDown(event);
         }
-    });
-
-    function sendMessageOrEscapeLine(keyDownEvent: KeyboardEvent) {
-        if (stopTypingTimeOutID) clearTimeout(stopTypingTimeOutID);
-        room.startTyping()
-            .then(() => {
-                stopTypingTimeOutID = setTimeout(() => {
-                    room.stopTyping().catch((error) => console.error(error));
-                    stopTypingTimeOutID = undefined;
-                }, TYPINT_TIMEOUT);
-            })
-            .catch((error) => console.error(error));
-
-        if (keyDownEvent.key === "Enter" || message == "" || message == undefined) {
-            if (stopTypingTimeOutID) clearTimeout(stopTypingTimeOutID);
-            room.stopTyping().catch((error) => console.error(error));
+    };
+    function onPasteHandler(event: ClipboardEvent) {
+        if (event.clipboardData?.files && event.clipboardData.files.length > 0) {
+            dispatch("pasteFiles", event.clipboardData.files);
         }
 
-        if (keyDownEvent.key === "Enter" && keyDownEvent.shiftKey) {
+        if (!event.clipboardData) return;
+
+        const text = event.clipboardData.getData("text");
+
+        insertTextAtCursor(text);
+        message = messageInput.innerHTML;
+        event.preventDefault();
+    }
+    function insertTextAtCursor(text: string) {
+        const selection = window.getSelection();
+        if (!selection || !selection.rangeCount) {
             return;
         }
-        if (keyDownEvent.key === "Enter" && !keyDownEvent.shiftKey) {
-            keyDownEvent.preventDefault();
+
+        const range = selection.getRangeAt(0);
+        range.deleteContents();
+
+        const lines = text.split("\n").reverse();
+        let textNode: Text | undefined;
+        let lastBrNode: HTMLBRElement | undefined;
+        for (const line of lines) {
+            const br = document.createElement("br");
+            range.insertNode(br);
+            if (textNode === undefined) {
+                lastBrNode = br;
+            }
+            textNode = document.createTextNode(line);
+            // Insertion in a range object is done in reverse order.
+            range.insertNode(textNode);
         }
-        if (keyDownEvent.key === "Enter" && message.trim().length !== 0) {
-            sendMessage(message);
-            return;
-        }
+
+        selection.removeAllRanges();
+        selection.addRange(range);
+        // Move the cursor to the end of the inserted text
+        selection.collapseToEnd();
+        // The code above is adding on purpose an additional <br> at the end of the message.
+        // This way, we can scroll to the end of the message.
+        // Once we have scrolled, we can remove the last <br> tag
+        lastBrNode?.scrollIntoView();
+        lastBrNode?.remove();
     }
-
-    function sendMessage(messageToSend: string) {
-        room?.sendMessage(messageToSend);
-        messageInput.value = "";
-        message = "";
-        if (stopTypingTimeOutID) {
-            clearTimeout(stopTypingTimeOutID);
-        }
-    }
-
-    function unselectChatMessageToReply() {
-        selectedChatMessageToReply.set(null);
-    }
-
-    function onInputHandler() {
-        if (message == "" || message == undefined) {
-            if (stopTypingTimeOutID) clearTimeout(stopTypingTimeOutID);
-            room.stopTyping().catch((error) => console.error(error));
-        }
-    }
-
-    onDestroy(() => {
-        selectedChatChatMessageToReplyUnsubscriber();
-    });
-
-    const emojiPicker = getChatEmojiPicker({ right: "0" });
-    emojiPicker.on("emoji", ({ emoji }) => {
-        message += emoji;
-    });
-
-    function openCloseEmojiPicker() {
-        emojiPicker.isPickerVisible() ? emojiPicker.hidePicker() : emojiPicker.showPicker(emojiButtonRef);
-    }
-
-    $: quotedMessageContent = $selectedChatMessageToReply?.content;
 </script>
 
-{#if $selectedChatMessageToReply !== null}
-    <div class="tw-flex tw-p-2 tw-items-center tw-gap-1">
-        <p class="tw-bg-brand-blue tw-rounded-md tw-p-2 tw-text-xs tw-m-0" style:overflow-wrap="anywhere">
-            {$quotedMessageContent?.body}
-        </p>
-        <button class="tw-p-0 tw-m-0" on:click={unselectChatMessageToReply}>
-            <IconCircleX />
-        </button>
-    </div>
-{/if}
-<div class="tw-flex tw-items-center tw-gap-1 tw-border tw-border-solid tw-rounded-xl tw-pr-1 tw-border-light-purple">
-    <textarea
-        data-testid="messageInput"
-        rows={1}
-        bind:value={message}
-        bind:this={messageInput}
-        on:keydown={sendMessageOrEscapeLine}
-        on:input={onInputHandler}
-        class="tw-w-full tw-rounded-xl wa-searchbar tw-block tw-text-white placeholder:tw-text-sm tw-px-3 tw-py-1 tw-border-light-purple tw-border tw-bg-transparent tw-resize-none tw-m-0 tw-pr-5 tw-border-none tw-outline-none tw-shadow-none focus:tw-ring-0"
-        placeholder={$LL.chat.enter()}
-    />
-    <button
-        class="disabled:tw-opacity-30 disabled:!tw-cursor-none tw-p-0 tw-m-0"
-        bind:this={emojiButtonRef}
-        on:click={openCloseEmojiPicker}
-    >
-        <IconMoodSmile font-size={18} />
-    </button>
-    <MessageFileInput {room} />
-    <button
-        data-testid="sendMessageButton"
-        class="disabled:tw-opacity-30 disabled:!tw-cursor-none disabled:tw-text-white tw-p-0 tw-m-0 tw-text-secondary"
-        disabled={message.trim().length === 0}
-        on:click={() => sendMessage(message)}
-    >
-        <IconSend font-size={20} />
-    </button>
-</div>
+<div
+    data-testid={dataTestid}
+    bind:innerHTML={message}
+    contenteditable="true"
+    bind:this={messageInput}
+    on:keydown={handleKeyDown}
+    on:input={onInput}
+    on:paste={onPasteHandler}
+    on:focusin={focusin}
+    on:focusout={focusout}
+    class={inputClass}
+    data-text={dataText}
+    role="textbox"
+    tabindex="0"
+    dir="auto"
+    lang=""
+/>
+
+<style lang="scss">
+    .message-input::before {
+        content: attr(data-text);
+        color: rgba(211, 211, 211, 0.5);
+        pointer-events: none;
+        z-index: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .message-input:focus::before,
+    .message-input:not(:empty)::before {
+        content: "";
+    }
+</style>

@@ -28,9 +28,14 @@ spec:
         {{- include "workadventure.selectorLabels" . | nindent 8 }}
         role: mapstorage
     spec:
-      {{- with .Values.imagePullSecrets }}
+      {{- if or .Values.imageCredentials.enabled .Values.imagePullSecrets }}
       imagePullSecrets:
+        {{- if .Values.imageCredentials.enabled }}
+        - name: {{ include "workadventure.fullname" . }}-pull-secret
+        {{- end }}
+      {{- with .Values.imagePullSecrets }}
         {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- end }}
       serviceAccountName: {{ include "workadventure.serviceAccountName" . }}
       securityContext:
@@ -72,10 +77,15 @@ spec:
             - secretRef:
                 name: {{ .Values.mapstorage.externalSecretName }}
             {{- end }}
-          {{- if .Values.mapstorage.extraEnvVars }}
           env:
+            - name: MAP_STORAGE_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "workadventure.fullname" . }}-secret-env-shared
+                  key: MAP_STORAGE_API_TOKEN
+            {{- if .Values.mapstorage.extraEnvVars }}
             {{- include "common.tplvalues.render" (dict "value" .Values.mapstorage.extraEnvVars "context" $) | nindent 12 }}
-          {{- end }}
+            {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.mapstorage.service.port }}

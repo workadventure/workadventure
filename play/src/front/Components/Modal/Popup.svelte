@@ -3,6 +3,7 @@
     import { closeModal } from "svelte-modals";
 
     export let isOpen = false;
+    export let withAction = true;
 </script>
 
 {#if isOpen}
@@ -23,11 +24,13 @@
             </h1>
             <slot name="content" />
         </div>
+        {#if withAction}
         <div
                 class="footer flex flex-row justify-evenly items-center bg-dark-purple w-full p-2 rounded-b-3xl"
         >
             <slot name="action" />
         </div>
+        {/if}
     </div>
 {/if}
 

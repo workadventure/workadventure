@@ -363,6 +363,14 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
+    menuChat(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_menu_chat");
+            })
+            .catch((e) => console.error(e));
+    }
+
     globalMessage(): void {
         this.posthogPromise
             ?.then((posthog) => {
@@ -746,10 +754,42 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
+    openExternalModuleTodoList(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa-opened-external-module-todolist");
+            })
+            .catch((e) => console.error(e));
+    }
+
     openExternalModule(): void {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture("wa-opened-external-module");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    settingAudioVolume(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_setting_audio_volume");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    openPicker(applicationName: string): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_map-editor_open_picker", { applicationName });
+            })
+            .catch((e) => console.error(e));
+    }
+
+    openApplicationWithoutPicker(applicationName: string): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_map-editor_open_application", { applicationName });
             })
             .catch((e) => console.error(e));
     }

@@ -13,9 +13,11 @@
     import workerWhiteSvg from "../../images/applications/worker_white.svg";
     import teamWhiteSvg from "../../images/applications/team_white.svg";
     import cardsPng from "../../images/applications/icon_cards.svg";
+    import messageSvg from "../../images/applications/icon_message.svg";
     import LL from "../../../../i18n/i18n-svelte";
     import { connectionManager } from "../../../Connection/ConnectionManager";
     import { extensionModuleStore } from "../../../Stores/GameSceneStore";
+    import { ExtensionModule, ExtensionModuleAreaProperty } from "../../../ExternalModule/ExtensionModule";
     import AddPropertyButton from "./AddPropertyButton.svelte";
 
     export let property: AreaDataPropertiesKeys | EntityDataPropertiesKeys;
@@ -24,9 +26,16 @@
 
     const dispatch = createEventDispatcher();
 
-    let moduleExtensionMapEditor = $extensionModuleStore?.areaMapEditor
-        ? $extensionModuleStore.areaMapEditor()
-        : undefined;
+    let modulesExtensionMapEditor = $extensionModuleStore.reduce(
+        (acc: { [key: string]: ExtensionModuleAreaProperty }[], module: ExtensionModule) => {
+            const areaProperty = module.areaMapEditor?.();
+            if (areaProperty != undefined) {
+                acc.push(areaProperty);
+            }
+            return acc;
+        },
+        []
+    );
 </script>
 
 {#if property === "personalAreaPropertyData"}
@@ -183,12 +192,12 @@
 {#if property === "openWebsite" && subProperty === "googleDrive"}
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.googleDriveProperties.label()}
-        descriptionText={connectionManager.googleDocsToolActivated
+        descriptionText={connectionManager.googleDriveToolActivated
             ? $LL.mapEditor.properties.googleDriveProperties.description()
             : $LL.mapEditor.properties.googleDriveProperties.disabled()}
         img={googleDriveSvg}
         style={`z-index: 150;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.googleDocsToolActivated}
+        disabled={!connectionManager.googleDriveToolActivated}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -281,9 +290,24 @@
     />
 {/if}
 
-{#if property === "extensionModule" && moduleExtensionMapEditor !== undefined && subProperty !== undefined}
-    <svelte:component
-        this={moduleExtensionMapEditor[subProperty].AddAreaPropertyButton}
+{#if property === "extensionModule" && modulesExtensionMapEditor.length > 0 && subProperty !== undefined}
+    {#each modulesExtensionMapEditor as moduleExtension, index (`modulesExtensionMapEditor-${index}`)}
+        <svelte:component
+            this={moduleExtension[subProperty].AddAreaPropertyButton}
+            on:click={(event) => {
+                dispatch("click", event);
+            }}
+        />
+    {/each}
+{/if}
+
+{#if property === "matrixRoomPropertyData"}
+    <AddPropertyButton
+        headerText={$LL.mapEditor.properties.matrixProperties.label()}
+        descriptionText={$LL.mapEditor.properties.matrixProperties.description()}
+        img={messageSvg}
+        style={`z-index: 180;${isActive ? "background-color: #4156f6;" : ""}`}
+        testId="matrixRoomPropertyData"
         on:click={(event) => {
             dispatch("click", event);
         }}

@@ -1,6 +1,7 @@
 import CancelablePromise from "cancelable-promise";
 import { z } from "zod";
 import { get } from "svelte/store";
+import { JitsiRoomConfigData } from "@workadventure/map-editor";
 import { inJitsiStore, requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { SimpleCoWebsite } from "./SimpleCoWebsite";
 
@@ -123,18 +124,17 @@ export const defaultInterfaceConfig = {
 };
 
 export class JitsiCoWebsite extends SimpleCoWebsite {
-    private jitsiApi?: JitsiApi;
-    private loadPromise: CancelablePromise | undefined;
 
     constructor(
         url: URL,
         widthPercent: number | undefined,
         closable: boolean | undefined,
+        // FIXME: unused private variables.
         private roomName: string,
         private playerName: string,
         private jwt: string | undefined,
-        public jitsiConfig: object | undefined,
-        public jitsiInterfaceConfig: object | undefined,
+        public readonly jitsiConfig: JitsiRoomConfigData | undefined,
+        public readonly jitsiInterfaceConfig: object | undefined,
         private domain: string
     ) {
         super(url, false, undefined, widthPercent, closable);

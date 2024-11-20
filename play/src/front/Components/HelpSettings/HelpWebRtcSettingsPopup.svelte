@@ -80,9 +80,13 @@
             <!--<li>{@html $LL.camera.webrtc.solutionNetworkAdmin()}<a href="" target="_blank">{$LL.camera.webrtc.preparingYouNetworkGuide()}</a></li>-->
         </ul>
     </section>
-    <section class="tw-flex tw-row tw-justify-center tw-content-center tw-items-center tw-text-xs">
-        <input type="checkbox" id="askagain" class="tw-mx-1" bind:checked={notAskAgain} on:change={onChangesAskAgain} />
-        <label for="askagain" class="tw-m-0 tw-mx-1">{$LL.camera.webrtc.solutionVpnNotAskAgain()}</label>
+    <section class="flex row justify-center content-center items-center text-xs">
+        <input type="checkbox" id="askagain" class="mx-1" bind:checked={notAskAgain} on:change={onChangesAskAgain} />
+        <label for="askagain" class="m-0 mx-1">{$LL.camera.webrtc.solutionVpnNotAskAgain()}</label>
+    </section>
+    <section class="flex row justify-center content-center items-center text-xs">
+        <input type="checkbox" id="askagain" class="mx-1" bind:checked={notAskAgain} on:change={onChangesAskAgain} />
+        <label for="askagain" class="m-0 mx-1">{$LL.camera.webrtc.solutionVpnNotAskAgain()}</label>
     </section>
     <section class="flex row justify-center">
         <button class="light" on:click|preventDefault={refresh}>{$LL.camera.webrtc.refresh()}</button>

@@ -1,4 +1,6 @@
 export * from "./ts-proto-generated/messages";
+export * from "./protobuf-transformers/undefinedChecker";
+export * from "./protobuf-transformers/transformers";
 
 export * from "./JsonMessages/AdminApiData";
 export * from "./JsonMessages/ApiVersion";
@@ -10,7 +12,6 @@ export * from "./JsonMessages/ErrorApiData";
 export * from "./JsonMessages/MapDetailsData";
 export * from "./JsonMessages/MetaTagFavicon";
 export * from "./JsonMessages/MetaTagManifestIcon";
-export * from "./JsonMessages/MucRoomDefinition";
 export * from "./JsonMessages/PlayerTextures";
 export * from "./JsonMessages/RegisterData";
 export * from "./JsonMessages/RoomRedirect";

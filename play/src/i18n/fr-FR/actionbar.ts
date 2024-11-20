@@ -1,6 +1,7 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { Translation } from "../i18n-types";
+import type { DeepPartial } from "../DeepPartial";
 
-const actionbar: BaseTranslation = {
+const actionbar: DeepPartial<Translation["actionbar"]> = {
     understand: "C'est compris",
     edit: "Modifier",
     cancel: "Annuler",
@@ -21,6 +22,7 @@ const actionbar: BaseTranslation = {
     quest: "Mes badges",
     megaphone: "Utiliser le mégaphone",
     calendar: "Ouvrir / Fermer le calendrier",
+    todoList: "Ouvrir / Fermer la liste de tâches",
     test: "Tester ma configuration",
     editCamMic: "Modifier ma camera / micro",
     accountType: "Compte gratuit",
@@ -29,6 +31,8 @@ const actionbar: BaseTranslation = {
     bo: "Back office",
     globalMessage: "Envoyer un message global",
     mapEditor: "Éditeur de carte",
+    mapEditorMobileLocked: "L'éditeur de carte est verrouillé en mode mobile",
+    mapEditorLocked: "L'éditeur de carte est verrouillé 🔐",
     app: "Ouvrir / Fermer les applications",
     camera: {
         disabled: "Votre caméra est désactivé",
@@ -99,6 +103,8 @@ const actionbar: BaseTranslation = {
             sync: "Le statut est en synchronisation 🔄",
         },
     },
+    appList: "Ouvrir / Fermer la liste des apps",
+    featureNotAvailable: "Fonctionnalité non disponible pour votre salon 😭",
 };
 
 export default actionbar;

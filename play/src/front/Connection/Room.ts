@@ -1,7 +1,15 @@
 import { isAxiosError } from "axios";
-import type { MucRoomDefinition, LegalsData } from "@workadventure/messages";
+import type { LegalsData } from "@workadventure/messages";
 import { isMapDetailsData, isRoomRedirect, ErrorApiData, OpidWokaNamePolicy } from "@workadventure/messages";
-import { CONTACT_URL, DISABLE_ANONYMOUS, OPID_WOKA_NAME_POLICY } from "../Enum/EnvironmentVariable";
+import {
+    CONTACT_URL,
+    DISABLE_ANONYMOUS,
+    ENABLE_CHAT,
+    ENABLE_CHAT_DISCONNECTED_LIST,
+    ENABLE_CHAT_ONLINE_LIST,
+    ENABLE_CHAT_UPLOAD,
+    OPID_WOKA_NAME_POLICY,
+} from "../Enum/EnvironmentVariable";
 import { ApiError } from "../Stores/Errors/ApiError";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 import { axiosWithRetry } from "./AxiosUtils";
@@ -17,7 +25,6 @@ export interface RoomRedirect {
 export class Room {
     public readonly id: string;
     private _authenticationMandatory: boolean = DISABLE_ANONYMOUS;
-    private _iframeAuthentication?: string = new URL("login-screen", ABSOLUTE_PUSHER_URL).toString();
     private _opidLogoutRedirectUrl: string = new URL("logout", ABSOLUTE_PUSHER_URL).toString();
     private _opidWokaNamePolicy: OpidWokaNamePolicy | undefined;
     private _mapUrl: string | undefined;
@@ -32,7 +39,6 @@ export class Room {
     private _loadingLogo: string | undefined;
     private _loginSceneLogo: string | undefined;
     private _metadata: unknown | undefined;
-    private _mucRooms: Array<MucRoomDefinition> | undefined;
     private _showPoweredBy: boolean | undefined = true;
     private _roomName: string | undefined;
     private _pricingUrl: string | undefined;
@@ -52,12 +58,17 @@ export class Room {
     private _reportIssuesUrl: string | undefined;
     private _entityCollectionsUrls: string[] | undefined;
     private _errorSceneLogo: string | undefined;
+    private _modules: string[] = [];
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
 
         if (this.id.startsWith("/")) {
             this.id = this.id.substring(1);
+        }
+
+        if (this.roomUrl.pathname.endsWith("/")) {
+            this.roomUrl.pathname = this.roomUrl.pathname.slice(0, -1);
         }
 
         this._search = new URLSearchParams(roomUrl.search);
@@ -145,8 +156,6 @@ export class Room {
                 this._group = data.group;
                 this._authenticationMandatory =
                     data.authenticationMandatory != null ? data.authenticationMandatory : DISABLE_ANONYMOUS;
-                this._iframeAuthentication =
-                    data.iframeAuthentication || new URL("login-screen", ABSOLUTE_PUSHER_URL).toString();
                 this._opidLogoutRedirectUrl =
                     data.opidLogoutRedirectUrl || new URL("logout", ABSOLUTE_PUSHER_URL).toString();
                 this._contactPage = data.contactPage || CONTACT_URL;
@@ -163,16 +172,16 @@ export class Room {
                 this._backgroundColor = data.backgroundColor ?? undefined;
                 this._metadata = data.metadata ?? undefined;
 
-                this._mucRooms = data.mucRooms ?? undefined;
                 this._roomName = data.roomName ?? undefined;
 
                 this._pricingUrl = data.pricingUrl ?? undefined;
                 this._legals = data.legals ?? undefined;
 
-                this._enableChat = data.enableChat ?? undefined;
-                this._enableChatUpload = data.enableChatUpload ?? undefined;
-                this._enableChatOnlineList = data.enableChatOnlineList ?? undefined;
-                this._enableChatDisconnectedList = data.enableChatDisconnectedList ?? undefined;
+                this._enableChat = (data.enableChat ?? true) && ENABLE_CHAT;
+                this._enableChatUpload = (data.enableChatUpload ?? true) && ENABLE_CHAT_UPLOAD;
+                this._enableChatOnlineList = (data.enableChatOnlineList ?? true) && ENABLE_CHAT_ONLINE_LIST;
+                this._enableChatDisconnectedList =
+                    (data.enableChatDisconnectedList ?? true) && ENABLE_CHAT_DISCONNECTED_LIST;
 
                 this._iconClothes = data.customizeWokaScene?.clothesIcon ?? undefined;
                 this._iconAccessory = data.customizeWokaScene?.accessoryIcon ?? undefined;
@@ -186,6 +195,7 @@ export class Room {
                 this._entityCollectionsUrls = data.entityCollectionsUrls ?? undefined;
 
                 this._errorSceneLogo = data.errorSceneLogo ?? undefined;
+                this._modules = data.modules ?? [];
 
                 return new MapDetail(data.mapUrl, data.wamUrl);
             } else if (errorApiDataChecking.success) {
@@ -257,10 +267,6 @@ export class Room {
         return this._authenticationMandatory;
     }
 
-    get iframeAuthentication(): string | undefined {
-        return this._iframeAuthentication;
-    }
-
     get opidLogoutRedirectUrl(): string {
         return this._opidLogoutRedirectUrl;
     }
@@ -305,10 +311,6 @@ export class Room {
         return this._metadata;
     }
 
-    get mucRooms(): Array<MucRoomDefinition> | undefined {
-        return this._mucRooms;
-    }
-
     get roomName(): string | undefined {
         return this._roomName;
     }
@@ -321,28 +323,28 @@ export class Room {
         return this._pricingUrl;
     }
 
-    get enableChat(): boolean {
+    get isChatEnabled(): boolean {
         if (this._enableChat === undefined) {
             return true;
         }
         return this._enableChat;
     }
 
-    get enableChatUpload(): boolean {
+    get isChatUploadEnabled(): boolean {
         if (this._enableChatUpload === undefined) {
             return true;
         }
         return this._enableChatUpload;
     }
 
-    get enableChatOnlineList(): boolean {
+    get isChatOnlineListEnabled(): boolean {
         if (this._enableChatOnlineList === undefined) {
             return true;
         }
         return this._enableChatOnlineList;
     }
 
-    get enableChatDisconnectedList(): boolean {
+    get isChatDisconnectedListEnabled(): boolean {
         if (this._enableChatDisconnectedList === undefined) {
             return true;
         }
@@ -395,5 +397,9 @@ export class Room {
 
     get errorSceneLogo(): string | undefined {
         return this._errorSceneLogo;
+    }
+
+    get modules(): string[] {
+        return this._modules;
     }
 }

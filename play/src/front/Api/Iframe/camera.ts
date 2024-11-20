@@ -18,7 +18,7 @@ export class WorkAdventureCameraCommands extends IframeApiContribution<WorkAdven
 
     /**
      * Set camera to follow the player.
-     * {@link https://workadventu.re/map-building/api-camera.md#start-following-player | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-camera.md#start-following-player | Website documentation}
      *
      * @param smooth Smooth transition
      */
@@ -33,7 +33,7 @@ export class WorkAdventureCameraCommands extends IframeApiContribution<WorkAdven
      * Set camera to look at given spot. Setting width and height will adjust zoom.
      * Set lock to true to lock camera in this position.
      * Set smooth to true for smooth transition.
-     * {@link https://workadventu.re/map-building/api-camera.md#set-spot-for-camera-to-look-at | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-camera.md#set-spot-for-camera-to-look-at | Website documentation}
      *
      * @param {number} x Horizontal position
      * @param {number} y Vertical position
@@ -52,7 +52,7 @@ export class WorkAdventureCameraCommands extends IframeApiContribution<WorkAdven
     /**
      * Listens to updates of the camera viewport.
      * It will trigger for every update of the camera's properties (position or scale for instance).
-     * {@link https://workadventu.re/map-building/api-camera.md#listen-to-camera-updates | Website documentation}
+     * {@link https://docs.workadventu.re/map-building/api-camera.md#listen-to-camera-updates | Website documentation}
      *
      * @returns {Subject<WasCameraUpdatedEvent>} An observable firing event when the camera is updated
      */

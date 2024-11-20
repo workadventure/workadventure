@@ -11,6 +11,7 @@ const env = window.env;
 export const DEBUG_MODE = env.DEBUG_MODE;
 export const PUSHER_URL = env.PUSHER_URL;
 export const ADMIN_URL = env.ADMIN_URL;
+export const ADMIN_BO_URL = env.ADMIN_BO_URL;
 export const UPLOADER_URL = env.UPLOADER_URL;
 export const ICON_URL = env.ICON_URL;
 export const STUN_SERVER = env.STUN_SERVER;
@@ -76,3 +77,9 @@ export const PUBLIC_MAP_STORAGE_PREFIX = env.PUBLIC_MAP_STORAGE_PREFIX;
 //Chat ENV
 export const EMBEDLY_KEY = env.EMBEDLY_KEY;
 export const MATRIX_PUBLIC_URI = env.MATRIX_PUBLIC_URI;
+
+export const ENABLE_CHAT = env.ENABLE_CHAT;
+
+export const ENABLE_CHAT_ONLINE_LIST = env.ENABLE_CHAT_ONLINE_LIST;
+
+export const ENABLE_CHAT_DISCONNECTED_LIST = env.ENABLE_CHAT_DISCONNECTED_LIST;

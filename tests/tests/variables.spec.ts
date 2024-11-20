@@ -172,7 +172,7 @@ test.describe('Variables', () => {
       '../maps/tests/Variables/Cache/variables_tmp.json'
     );
 
-    const newBrowser = await browser.browserType().launch();
+    const newBrowser = await browser.newContext();
     const page2 = await newBrowser.newPage();
 
     startRecordLogs(page2);
@@ -195,6 +195,7 @@ test.describe('Variables', () => {
     }).toBe(2);
 
     await page2.close();
+    await newBrowser.close();
   });
 });
 

@@ -1,6 +1,7 @@
 import {
     AddSpaceFilterMessage,
-    PartialSpaceUser,
+    NonUndefinedFields,
+    noUndefined,
     PrivateEvent,
     PublicEvent,
     PusherToBackSpaceMessage,
@@ -10,32 +11,42 @@ import {
     SubMessage,
     UpdateSpaceFilterMessage,
 } from "@workadventure/messages";
+import { applyFieldMask } from "protobuf-fieldmask";
+import merge from "lodash/merge";
 import Debug from "debug";
 import * as Sentry from "@sentry/node";
 import { Socket } from "../services/SocketManager";
-import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import { BackSpaceConnection, SocketData } from "./Websocket/SocketData";
+import { EventProcessor } from "./EventProcessor";
 
-type SpaceUserExtended = { lowercaseName: string } & SpaceUser;
+export type SpaceUserExtended = {
+    lowercaseName: string;
+    // If the user is connected to this pusher, we store the socket to be able to contact the user directly.
+    // Useful to forward public and private event that are dispatched even if the space is not watched.
+    client: Socket | undefined;
+} & SpaceUser;
+
+type PartialSpaceUser = Partial<Omit<SpaceUser, "id">> & Pick<SpaceUser, "id">;
 
 const debug = Debug("space");
 
-export class Space implements CustomJsonReplacerInterface {
+export class Space {
     private readonly users: Map<number, SpaceUserExtended>;
-    private readonly metadata: Map<string, unknown>;
+    private readonly _metadata: Map<string, unknown>;
 
     private clientWatchers: Map<number, Socket>;
 
     constructor(
         public readonly name: string,
+        // The local name is the name of the space in the browser (i.e. the name without the "world" prefix)
+        private readonly localName: string,
         private spaceStreamToPusher: BackSpaceConnection,
         public backId: number,
-        watcher: Socket
+        private eventProcessor: EventProcessor
     ) {
         this.users = new Map<number, SpaceUserExtended>();
-        this.metadata = new Map<string, unknown>();
+        this._metadata = new Map<string, unknown>();
         this.clientWatchers = new Map<number, Socket>();
-        this.addClientWatcher(watcher);
         debug(`created : ${name}`);
     }
 
@@ -57,7 +68,7 @@ export class Space implements CustomJsonReplacerInterface {
                 });
             }
         });
-        debug(`${this.name} : watcher added ${socketData.name}`);
+        debug(`${this.name} : watcher added ${socketData.name}. Watcher count ${this.clientWatchers.size}`);
     }
 
     public removeClientWatcher(watcher: Socket) {
@@ -66,132 +77,79 @@ export class Space implements CustomJsonReplacerInterface {
             throw new Error("User id not found");
         }
         this.clientWatchers.delete(socketData.userId);
-        debug(`${this.name} : watcher removed ${socketData.name}`);
+        debug(`${this.name} : watcher removed ${socketData.name}. Watcher count ${this.clientWatchers.size}`);
     }
 
-    public addUser(spaceUser: SpaceUser) {
+    public addUser(spaceUser: SpaceUser, client: Socket) {
         const pusherToBackSpaceMessage: PusherToBackSpaceMessage = {
             message: {
                 $case: "addSpaceUserMessage",
                 addSpaceUserMessage: {
                     spaceName: this.name,
                     user: spaceUser,
-                    filterName: undefined,
                 },
             },
         };
         this.spaceStreamToPusher.write(pusherToBackSpaceMessage);
         debug(`${this.name} : user add sent ${spaceUser.id}`);
-        this.localAddUser(spaceUser);
+        this.localAddUser(spaceUser, client);
     }
 
-    public localAddUser(spaceUser: SpaceUser) {
-        const user = { ...spaceUser, lowercaseName: spaceUser.name.toLowerCase() };
+    public localAddUser(spaceUser: SpaceUser, client: Socket | undefined) {
+        const user = { ...spaceUser, lowercaseName: spaceUser.name.toLowerCase(), client };
         this.users.set(spaceUser.id, user);
-        debug(`${this.name} : user added ${spaceUser.id}`);
+        debug(`${this.name} : user added ${spaceUser.id}. User count ${this.users.size}`);
 
         const subMessage: SubMessage = {
             message: {
                 $case: "addSpaceUserMessage",
                 addSpaceUserMessage: {
-                    spaceName: this.name,
+                    spaceName: this.localName,
                     user: spaceUser,
-                    filterName: undefined,
+                    filterName: "", // Will be filled by notifyAll
                 },
             },
         };
         this.notifyAll(subMessage, user);
     }
 
-    public updateUser(spaceUser: PartialSpaceUser, world: string) {
+    public updateUser(spaceUser: PartialSpaceUser, updateMask: string[]) {
         const pusherToBackSpaceMessage: PusherToBackSpaceMessage = {
             message: {
                 $case: "updateSpaceUserMessage",
                 updateSpaceUserMessage: {
                     spaceName: this.name,
-                    user: spaceUser,
-                    filterName: undefined,
+                    user: SpaceUser.fromPartial(spaceUser),
+                    updateMask,
                 },
             },
         };
         this.spaceStreamToPusher.write(pusherToBackSpaceMessage);
-        this.localUpdateUser(spaceUser, world);
+        this.localUpdateUser(spaceUser, updateMask);
     }
-    public localUpdateUser(spaceUser: PartialSpaceUser, world: string) {
+    public localUpdateUser(spaceUser: PartialSpaceUser, updateMask: string[]) {
         const user = this.users.get(spaceUser.id);
-        let oldUser: SpaceUserExtended | undefined;
         if (!user) {
             console.error("User not found in this space", spaceUser);
             return;
         }
+        const oldUser: SpaceUserExtended | undefined = { ...user };
 
-        //const updatedUser = merge(user,spaceUser) as SpaceUserExtended;
+        const updateValues = applyFieldMask(spaceUser, updateMask);
 
-        if (user) {
-            oldUser = structuredClone(user);
-            if (spaceUser.tags.length > 0) {
-                user.tags = spaceUser.tags;
-            }
-            if (spaceUser.name) {
-                user.name = spaceUser.name;
-                user.lowercaseName = spaceUser.name.toLowerCase();
-            }
-            if (spaceUser.playUri) {
-                user.playUri = spaceUser.playUri;
-            }
-            if (spaceUser.color) {
-                user.color = spaceUser.color;
-            }
-            if (spaceUser.characterTextures.length > 0) {
-                user.characterTextures = spaceUser.characterTextures;
-            }
-            if (spaceUser.isLogged !== undefined) {
-                user.isLogged = spaceUser.isLogged;
-            }
-            if (spaceUser.availabilityStatus !== undefined) {
-                user.availabilityStatus = spaceUser.availabilityStatus;
-            }
-            if (spaceUser.roomName) {
-                user.roomName = spaceUser.roomName;
-            }
-            if (spaceUser.visitCardUrl) {
-                user.visitCardUrl = spaceUser.visitCardUrl;
-            }
-            if (spaceUser.screenSharingState !== undefined) {
-                user.screenSharingState = spaceUser.screenSharingState;
-            }
-            if (spaceUser.microphoneState !== undefined) {
-                user.microphoneState = spaceUser.microphoneState;
-            }
-            if (spaceUser.cameraState !== undefined) {
-                user.cameraState = spaceUser.cameraState;
-            }
-            if (spaceUser.megaphoneState !== undefined) {
-                user.megaphoneState = spaceUser.megaphoneState;
-            }
-            if (spaceUser.jitsiParticipantId) {
-                user.jitsiParticipantId = spaceUser.jitsiParticipantId;
-            }
-            if (spaceUser.uuid) {
-                user.uuid = spaceUser.uuid;
-            }
-
-            if (spaceUser.chatID) {
-                user.chatID = spaceUser.chatID;
-            }
-        }
+        merge(user, updateValues);
 
         if (spaceUser.name) user.lowercaseName = spaceUser.name.toLowerCase();
 
         debug(`${this.name} : user updated ${spaceUser.id}`);
-
         const subMessage: SubMessage = {
             message: {
                 $case: "updateSpaceUserMessage",
                 updateSpaceUserMessage: {
-                    spaceName: `${this.name}`,
-                    user: spaceUser,
-                    filterName: undefined,
+                    spaceName: this.name,
+                    user: SpaceUser.fromPartial(spaceUser),
+                    filterName: "", // Will be filled by notifyAll
+                    updateMask,
                 },
             },
         };
@@ -205,7 +163,6 @@ export class Space implements CustomJsonReplacerInterface {
                 removeSpaceUserMessage: {
                     spaceName: this.name,
                     userId,
-                    filterName: undefined,
                 },
             },
         };
@@ -217,7 +174,7 @@ export class Space implements CustomJsonReplacerInterface {
         const user = this.users.get(userId);
         if (user) {
             this.users.delete(userId);
-            debug(`${this.name} : user removed ${userId}`);
+            debug(`${this.name} : user removed ${userId}. User count ${this.users.size}`);
 
             const subMessage: SubMessage = {
                 message: {
@@ -225,7 +182,7 @@ export class Space implements CustomJsonReplacerInterface {
                     removeSpaceUserMessage: {
                         spaceName: this.name,
                         userId,
-                        filterName: undefined,
+                        filterName: "", // Will be filled by notifyAll
                     },
                 },
             };
@@ -236,7 +193,13 @@ export class Space implements CustomJsonReplacerInterface {
         }
     }
 
-    public localUpdateMetadata(metadata: { [key: string]: unknown }) {
+    public localUpdateMetadata(metadata: { [key: string]: unknown }, emit = true) {
+        // Set all value of metadata in the space
+        for (const [key, value] of Object.entries(metadata)) {
+            this._metadata.set(key, value);
+        }
+
+        if (emit === false) return;
         const subMessage: SubMessage = {
             message: {
                 $case: "updateSpaceMetadataMessage",
@@ -250,19 +213,12 @@ export class Space implements CustomJsonReplacerInterface {
         this.notifyAllMetadata(subMessage);
     }
 
-    private removeSpaceNamePrefix(spaceName: string, prefix: string): string {
-        return spaceName.replace(`${prefix}.`, "");
-    }
-
     private notifyAllMetadata(subMessage: SubMessage) {
         this.clientWatchers.forEach((watcher) => {
             const socketData = watcher.getUserData();
             if (subMessage.message?.$case === "updateSpaceMetadataMessage") {
                 debug(`${this.name} : metadata update sent to ${socketData.name}`);
-                subMessage.message.updateSpaceMetadataMessage.spaceName = this.removeSpaceNamePrefix(
-                    subMessage.message.updateSpaceMetadataMessage.spaceName,
-                    socketData.world
-                );
+                subMessage.message.updateSpaceMetadataMessage.spaceName = this.localName;
 
                 socketData.emitInBatch(subMessage);
             }
@@ -289,27 +245,18 @@ export class Space implements CustomJsonReplacerInterface {
                     case "addSpaceUserMessage":
                         subMessage.message.addSpaceUserMessage.filterName = spaceFilter.filterName;
                         debug(`${this.name} : user ${youngUser.lowercaseName} add sent to ${socketData.name}`);
-                        subMessage.message.addSpaceUserMessage.spaceName = this.removeSpaceNamePrefix(
-                            subMessage.message.addSpaceUserMessage.spaceName,
-                            socketData.world
-                        );
+                        subMessage.message.addSpaceUserMessage.spaceName = this.localName;
                         socketData.emitInBatch(subMessage);
                         break;
                     case "removeSpaceUserMessage":
-                        subMessage.message.removeSpaceUserMessage.spaceName = this.removeSpaceNamePrefix(
-                            subMessage.message.removeSpaceUserMessage.spaceName,
-                            socketData.world
-                        );
+                        subMessage.message.removeSpaceUserMessage.spaceName = this.localName;
                         subMessage.message.removeSpaceUserMessage.filterName = spaceFilter.filterName;
                         socketData.emitInBatch(subMessage);
                         debug(`${this.name} : user ${youngUser.lowercaseName} remove sent to ${socketData.name}`);
                         break;
                     case "updateSpaceUserMessage": {
                         subMessage.message.updateSpaceUserMessage.filterName = spaceFilter.filterName;
-                        subMessage.message.updateSpaceUserMessage.spaceName = this.removeSpaceNamePrefix(
-                            subMessage.message.updateSpaceUserMessage.spaceName,
-                            socketData.world
-                        );
+                        subMessage.message.updateSpaceUserMessage.spaceName = this.localName;
 
                         const shouldRemoveUser: boolean = oldUser
                             ? this.filterOneUser(spaceFilter, oldUser) && !this.filterOneUser(spaceFilter, youngUser)
@@ -393,14 +340,15 @@ export class Space implements CustomJsonReplacerInterface {
 
     public handleAddFilter(watcher: Socket, addSpaceFilterMessage: AddSpaceFilterMessage) {
         const newFilter = addSpaceFilterMessage.spaceFilterMessage;
-        if (newFilter) {
-            debug(`${this.name} : filter added (${newFilter.filterName}) for ${watcher.getUserData().userId}`);
-            const newData = this.filter(newFilter);
-            const userData = watcher.getUserData();
-            const currentSpaceFilterList = userData.spacesFilters.get(this.name) ?? [];
-            userData.spacesFilters.set(this.name, [...(currentSpaceFilterList || []), newFilter]);
-            this.delta(watcher, this.users, newData, newFilter.filterName);
+        if (!newFilter) {
+            throw new Error("Filter is required in addSpaceFilterMessage");
         }
+        debug(`${this.name} : filter added (${newFilter.filterName}) for ${watcher.getUserData().userId}`);
+        const newData = this.filter(newFilter);
+        const userData = watcher.getUserData();
+        const currentSpaceFilterList = userData.spacesFilters.get(this.name) ?? [];
+        userData.spacesFilters.set(this.name, [...(currentSpaceFilterList || []), newFilter]);
+        this.delta(watcher, new Map(), newData, newFilter.filterName);
     }
 
     public handleUpdateFilter(watcher: Socket, updateSpaceFilterMessage: UpdateSpaceFilterMessage) {
@@ -423,15 +371,15 @@ export class Space implements CustomJsonReplacerInterface {
         const oldFilter = removeSpaceFilterMessage.spaceFilterMessage;
         if (!oldFilter) return;
         debug(`${this.name} : filter removed (${oldFilter.filterName}) for ${watcher.getUserData().userId}`);
-        const oldUsers = this.filter(oldFilter);
-        this.delta(watcher, oldUsers, this.users, undefined);
+        //const oldUsers = this.filter(oldFilter);
+        //this.delta(watcher, oldUsers, new Map(), undefined);
     }
 
     private delta(
         watcher: Socket,
         oldData: Map<number, SpaceUserExtended>,
         newData: Map<number, SpaceUserExtended>,
-        filterName: string | undefined
+        filterName: string
     ) {
         let addedUsers = 0;
         // Check delta between responses by old and new filter
@@ -457,12 +405,12 @@ export class Space implements CustomJsonReplacerInterface {
         );
     }
 
-    private notifyMeAddUser(watcher: Socket, user: SpaceUserExtended, filterName: string | undefined) {
+    private notifyMeAddUser(watcher: Socket, user: SpaceUserExtended, filterName: string) {
         const subMessage: SubMessage = {
             message: {
                 $case: "addSpaceUserMessage",
                 addSpaceUserMessage: {
-                    spaceName: this.removeSpaceNamePrefix(this.name, watcher.getUserData().world),
+                    spaceName: this.localName,
                     user,
                     filterName,
                 },
@@ -471,7 +419,7 @@ export class Space implements CustomJsonReplacerInterface {
         this.notifyMe(watcher, subMessage);
     }
 
-    private notifyMeUpdateUser(watcher: Socket, user: SpaceUserExtended, filterName: string | undefined) {
+    /*private notifyMeUpdateUser(watcher: Socket, user: SpaceUserExtended, filterName: string | undefined) {
         const subMessage: SubMessage = {
             message: {
                 $case: "updateSpaceUserMessage",
@@ -483,13 +431,13 @@ export class Space implements CustomJsonReplacerInterface {
             },
         };
         this.notifyMe(watcher, subMessage);
-    }
-    private notifyMeRemoveUser(watcher: Socket, user: SpaceUserExtended, filterName: string | undefined) {
+    }*/
+    private notifyMeRemoveUser(watcher: Socket, user: SpaceUserExtended, filterName: string) {
         const subMessage: SubMessage = {
             message: {
                 $case: "removeSpaceUserMessage",
                 removeSpaceUserMessage: {
-                    spaceName: this.removeSpaceNamePrefix(this.name, watcher.getUserData().world),
+                    spaceName: this.localName,
                     userId: user.id,
                     filterName,
                 },
@@ -499,19 +447,10 @@ export class Space implements CustomJsonReplacerInterface {
     }
 
     public isEmpty() {
-        return this.users.size === 0;
+        return this.users.size === 0 && this.clientWatchers.size === 0;
     }
 
-    public customJsonReplacer(key: unknown, value: unknown): string | undefined {
-        // TODO : Better way to display date in the /dump
-        if (key === "name") {
-            return this.name;
-        } else if (key === "users") {
-            return `Users : ${this.users.size}`;
-        }
-        return undefined;
-    }
-
+    // FIXME: remove this method and all others similar
     public kickOffUser(senderDara: SocketData, userId: string) {
         if (!senderDara.tags.includes("admin")) return;
         const subMessage: SubMessage = {
@@ -524,120 +463,151 @@ export class Space implements CustomJsonReplacerInterface {
                 },
             },
         };
-        this.notifyAllUsers(subMessage);
+        this.notifyAllUsers(subMessage, 0);
     }
 
-    public muteMicrophoneUser(senderDara: SocketData, userId: string) {
-        let subMessage: SubMessage = {
-            message: {
-                $case: "muteMicrophoneMessage",
-                muteMicrophoneMessage: {
-                    spaceName: this.name,
-                    userId,
-                    filterName: undefined,
-                },
-            },
-        };
-        if (!senderDara.tags.includes("admin")) {
-            subMessage = {
+    public sendPublicEvent(message: NonUndefinedFields<PublicEvent>) {
+        const spaceEvent = noUndefined(message.spaceEvent);
+
+        // FIXME: this should be unnecessary because of the noUndefined call above
+        // noUndefined does not seem to return an appropriate type
+        if (!spaceEvent.event) {
+            throw new Error("Event is required in spaceEvent");
+        }
+
+        const sender = this.users.get(message.senderUserId);
+
+        if (!sender) {
+            throw new Error(`Public message sender ${message.senderUserId} not found in space ${this.name}`);
+        }
+
+        this.notifyAllUsers(
+            {
                 message: {
-                    $case: "askMuteMicrophoneMessage",
-                    askMuteMicrophoneMessage: {
-                        spaceName: this.name,
-                        userId,
-                        filterName: undefined,
+                    $case: "publicEvent",
+                    publicEvent: {
+                        senderUserId: message.senderUserId,
+                        spaceEvent: {
+                            event: this.eventProcessor.processPublicEvent(spaceEvent.event, sender),
+                        },
+                        // The name of the space in the browser is the local name (i.e. the name without the "world" prefix)
+                        spaceName: this.localName,
                     },
                 },
-            };
-        }
-        this.notifyAllUsers(subMessage);
+            },
+            message.senderUserId
+        );
     }
 
-    public muteVideoUser(senderDara: SocketData, userId: string) {
-        let subMessage: SubMessage = {
+    public sendPrivateEvent(message: NonUndefinedFields<PrivateEvent>) {
+        // [...this.clientWatchers.values()].forEach((watcher) => {
+        //     const socketData = watcher.getUserData();
+        //     if (socketData.userId === message.receiverUserId) {
+        //         socketData.emitInBatch({
+        //             message: {
+        //                 $case: "privateEvent",
+        //                 privateEvent: message,
+        //             },
+        //         });
+        //     }
+        // });
+        const spaceEvent = noUndefined(message.spaceEvent);
+
+        // FIXME: this should be unnecessary because of the noUndefined call above
+        // noUndefined does not seem to return an appropriate type
+        if (!spaceEvent.event) {
+            throw new Error("Event is required in spaceEvent");
+        }
+
+        const receiver = this.users.get(message.receiverUserId);
+
+        if (!receiver) {
+            throw new Error(`Private message receiver ${message.receiverUserId} not found in space ${this.name}`);
+        }
+
+        const sender = this.users.get(message.senderUserId);
+
+        if (!sender) {
+            throw new Error(`Private message sender ${message.senderUserId} not found in space ${this.name}`);
+        }
+
+        receiver.client?.getUserData().emitInBatch({
             message: {
-                $case: "muteVideoMessage",
-                muteVideoMessage: {
-                    spaceName: this.name,
-                    userId,
-                    filterName: undefined,
-                },
-            },
-        };
-        if (!senderDara.tags.includes("admin")) {
-            subMessage = {
-                message: {
-                    $case: "askMuteVideoMessage",
-                    askMuteVideoMessage: {
-                        spaceName: this.name,
-                        userId,
-                        filterName: undefined,
+                $case: "privateEvent",
+                privateEvent: {
+                    senderUserId: message.senderUserId,
+                    receiverUserId: message.receiverUserId,
+                    spaceEvent: {
+                        event: this.eventProcessor.processPrivateEvent(spaceEvent.event, sender, receiver),
                     },
+                    // The name of the space in the browser is the local name (i.e. the name without the "world" prefix)
+                    spaceName: this.localName,
                 },
-            };
-        }
-        this.notifyAllUsers(subMessage);
-    }
-
-    public muteMicrophoneEverybodyUser(senderDara: SocketData, userId: string) {
-        if (!senderDara.tags.includes("admin")) return;
-        const subMessage: SubMessage = {
-            message: {
-                $case: "muteMicrophoneEverybodyMessage",
-                muteMicrophoneEverybodyMessage: {
-                    spaceName: this.name,
-                    userId,
-                    filterName: undefined,
-                },
-            },
-        };
-        this.notifyAllUsers(subMessage);
-    }
-
-    public muteVideoEverybodyUser(senderDara: SocketData, userId: string) {
-        if (!senderDara.tags.includes("admin")) return;
-        const subMessage: SubMessage = {
-            message: {
-                $case: "muteVideoEverybodyMessage",
-                muteVideoEverybodyMessage: {
-                    spaceName: this.name,
-                    userId,
-                    filterName: undefined,
-                },
-            },
-        };
-        this.notifyAllUsers(subMessage);
-    }
-
-    public sendPublicEvent(message: PublicEvent) {
-        this.notifyAllUsers({
-            message: {
-                $case: "publicEvent",
-                publicEvent: message,
             },
         });
     }
 
-    public sendPrivateEvent(message: PrivateEvent) {
-        [...this.clientWatchers.values()].forEach((watcher) => {
-            const socketData = watcher.getUserData();
-            if (socketData.userId === message.receiverUserId) {
-                socketData.emitInBatch({
-                    message: {
-                        $case: "privateEvent",
-                        privateEvent: message,
-                    },
-                });
-            }
-        });
-    }
-
-    // Notify all users in this space
-    private notifyAllUsers(subMessage: SubMessage) {
-        this.clientWatchers.forEach((watcher) => {
+    /**
+     * Notify all users in this space expect the sender. Notification is done despite users watching or not.
+     * It is used solely for public events.
+     */
+    private notifyAllUsers(subMessage: SubMessage, senderId: number) {
+        /*this.clientWatchers.forEach((watcher) => {
             const socketData = watcher.getUserData();
             debug(`${this.name} : kickOff sent to ${socketData.name}`);
             socketData.emitInBatch(subMessage);
+        });*/
+
+        for (const user of this.users.values()) {
+            if (user.client && user.id !== senderId) {
+                user.client.getUserData().emitInBatch(subMessage);
+            }
+        }
+    }
+
+    public forwardMessageToSpaceBack(pusherToBackSpaceMessage: PusherToBackSpaceMessage["message"]) {
+        this.spaceStreamToPusher.write({
+            message: pusherToBackSpaceMessage,
         });
+    }
+
+    get metadata(): Map<string, unknown> {
+        return this._metadata;
+    }
+    /**
+     * Cleans up the space when the space is deleted (only useful when the connection to the back is closed or in timeout)
+     */
+    public cleanup(): void {
+        // Send a message to all
+        for (const [userId, user] of this.users.entries()) {
+            const subMessage: SubMessage = {
+                message: {
+                    $case: "removeSpaceUserMessage",
+                    removeSpaceUserMessage: {
+                        spaceName: this.name,
+                        userId,
+                        filterName: "", // Will be filled by notifyAll
+                    },
+                },
+            };
+            this.notifyAll(subMessage, user);
+        }
+        // Let's remove any reference to the space in the watchers
+        for (const watcher of this.clientWatchers.values()) {
+            const socketData = watcher.getUserData();
+            const filters = socketData.spacesFilters.get(this.name);
+            if (filters) {
+                socketData.spacesFilters.set(
+                    this.name,
+                    filters.filter((filter) => filter.spaceName !== this.name)
+                );
+            }
+            const success = socketData.spaces.delete(this.name);
+            if (!success) {
+                console.error(`Impossible to remove space ${this.name} from the user's spaces. Space not found.`);
+                Sentry.captureException(new Error(`Impossible to remove space ${this.name} from the user's spaces.`));
+            }
+        }
+        // Finally, let's send a message to the front to warn that the space is deleted
     }
 }

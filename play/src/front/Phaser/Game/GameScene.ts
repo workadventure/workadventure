@@ -2,7 +2,7 @@ import * as Sentry from "@sentry/svelte";
 import type { Subscription } from "rxjs";
 import AnimatedTiles from "phaser-animated-tiles";
 import { Queue } from "queue-typescript";
-import type { Unsubscriber } from "svelte/store";
+import type { Readable, Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import { throttle } from "throttle-debounce";
 import { MapStore } from "@workadventure/store-utils";
@@ -14,13 +14,11 @@ import {
     availabilityStatusToJSON,
     ErrorScreenMessage,
     PositionMessage_Direction,
-    PrivateEvent,
-    PublicEvent,
-    SpaceFilterMessage,
 } from "@workadventure/messages";
 import { z } from "zod";
 import { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
 import {
+    AreaData,
     ENTITIES_FOLDER_PATH_NO_PREFIX,
     ENTITY_COLLECTION_FILE,
     EntityPermissions,
@@ -43,9 +41,10 @@ import { iframeListener } from "../../Api/IframeListener";
 import {
     ADMIN_URL,
     DEBUG_MODE,
+    ENABLE_CHAT_DISCONNECTED_LIST,
+    ENABLE_CHAT_ONLINE_LIST,
     ENABLE_MAP_EDITOR,
     ENABLE_OPENID,
-    MATRIX_PUBLIC_URI,
     MAX_PER_GROUP,
     POSITION_DELAY,
     PUBLIC_MAP_STORAGE_PREFIX,
@@ -112,7 +111,7 @@ import {
 import { LL, locale } from "../../../i18n/i18n-svelte";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
-import { hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connection/AxiosUtils";
+import { axiosWithRetry, hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connection/AxiosUtils";
 import { StringUtils } from "../../Utils/StringUtils";
 import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
 
@@ -121,7 +120,7 @@ import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
 import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
 import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 import type { AskPositionEvent } from "../../Api/Events/AskPositionEvent";
-import { _newChatMessageSubject, chatVisibilityStore, forceRefreshChatStore } from "../../Stores/ChatStore";
+import { chatVisibilityStore, forceRefreshChatStore } from "../../Stores/ChatStore";
 import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
 import { extensionModuleStore, gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
 import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
@@ -137,40 +136,38 @@ import {
     WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM,
 } from "../../Stores/MapEditorStore";
 import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
+import { SpaceRegistry } from "../../Space/SpaceRegistry/SpaceRegistry";
 import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer, debugZoom } from "../../Utils/Debuggers";
 import { checkCoturnServer } from "../../Components/Video/utils";
 import { BroadcastService } from "../../Streaming/BroadcastService";
-import { liveStreamingEnabledStore, megaphoneCanBeUsedStore, megaphoneUrlStore } from "../../Stores/MegaphoneStore";
+import { megaphoneCanBeUsedStore, megaphoneSpaceStore } from "../../Stores/MegaphoneStore";
 import { CompanionTextureError } from "../../Exception/CompanionTextureError";
 import { SelectCompanionScene, SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { scriptUtils } from "../../Api/ScriptUtils";
-import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { JitsiBroadcastSpace } from "../../Streaming/Jitsi/JitsiBroadcastSpace";
-import { notificationPlayingStore } from "../../Stores/NotificationStore";
-import { askDialogStore } from "../../Stores/MeetingStore";
 import { hideBubbleConfirmationModal } from "../../Rules/StatusRules/statusChangerFunctions";
 import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/statusChanger";
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import { closeCoWebsite, getCoWebSite, openCoWebSite, openCoWebSiteWithoutSource } from "../../Chat/Utils";
-import { LocalSpaceProviderSingleton } from "../../Space/SpaceProvider/SpaceStore";
-import { CONNECTED_USER_FILTER_NAME, WORLD_SPACE_NAME } from "../../Space/Space";
-import { StreamSpaceWatcherSingleton } from "../../Space/SpaceWatcher/SocketSpaceWatcher";
-import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
-import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
 import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
-import { matrixSecurity } from "../../Chat/Connection/Matrix/MatrixSecurity";
-import { proximityRoomConnection, selectedRoom } from "../../Chat/Stores/ChatStore";
-import { ProximityChatConnection } from "../../Chat/Connection/Proximity/ProximityChatConnection";
+import { selectedRoomStore } from "../../Chat/Stores/ChatStore";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
+import { ProximitySpaceManager } from "../../WebRtc/ProximitySpaceManager";
+import { SpaceRegistryInterface } from "../../Space/SpaceRegistry/SpaceRegistryInterface";
+import { WorldUserProvider } from "../../Chat/UserProvider/WorldUserProvider";
+import { ChatUserProvider } from "../../Chat/UserProvider/ChatUserProvider";
+import { UserProviderMerger } from "../../Chat/UserProviderMerger/UserProviderMerger";
+import { AdminUserProvider } from "../../Chat/UserProvider/AdminUserProvider";
 import { ExtensionModuleStatusSynchronization } from "../../Rules/StatusRules/ExtensionModuleStatusSynchronization";
-import { calendarEventsStore, isActivatedStore } from "../../Stores/CalendarStore";
-import { ExtensionModule, RoomMetadataType } from "../../ExternalModule/ExtensionModule";
-import { popupStore } from "../../Stores/PopupStore";
-import PopUpRoomAccessDenied from "../../Components/PopUp/PopUpRoomAccessDenied.svelte";
-import PopUpMapEditorNotEnabled from "../../Components/PopUp/PopUpMapEditorNotEnabled.svelte";
-import PopUpMapEditorShortcut from "../../Components/PopUp/PopUpMapEditorShortcut.svelte";
-import PopUpTriggerActionMessage from "../../Components/PopUp/PopUpTriggerActionMessage.svelte";
-import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
+import { isActivatedStore as isCalendarActiveStore, calendarEventsStore } from "../../Stores/CalendarStore";
+import { isActivatedStore as isTodoListActiveStore, todoListsStore } from "../../Stores/TodoListStore";
+import { externalSvelteComponentStore } from "../../Stores/Utils/externalSvelteComponentStore";
+import { ExtensionModule } from "../../ExternalModule/ExtensionModule";
+import { SpaceInterface } from "../../Space/SpaceInterface";
+import { UserProviderInterface } from "../../Chat/UserProvider/UserProviderInterface";
+import { faviconManager } from "../../WebRtc/FaviconManager";
+import { ScriptingOutputAudioStreamManager } from "../../WebRtc/AudioStream/ScriptingOutputAudioStreamManager";
+import { ScriptingInputAudioStreamManager } from "../../WebRtc/AudioStream/ScriptingInputAudioStreamManager";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -179,7 +176,6 @@ import { soundManager } from "./SoundManager";
 import { SharedVariablesManager } from "./SharedVariablesManager";
 import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
 import { DynamicAreaManager } from "./DynamicAreaManager";
-
 import { PlayerMovement } from "./PlayerMovement";
 import { PlayersPositionInterpolator } from "./PlayersPositionInterpolator";
 import { DirtyScene } from "./DirtyScene";
@@ -197,6 +193,7 @@ import { PlayerVariablesManager } from "./PlayerVariablesManager";
 import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManager";
 import { DEPTH_BUBBLE_CHAT_SPRITE, DEPTH_WHITE_MASK } from "./DepthIndexes";
 import { ScriptingEventsManager } from "./ScriptingEventsManager";
+import { FollowManager } from "./FollowManager";
 import { faviconManager } from "./../../WebRtc/FaviconManager";
 import { FollowManager } from "./FollowManager";
 import { UIWebsiteManager } from "./UI/UIWebsiteManager";
@@ -224,6 +221,8 @@ interface DeleteGroupEventInterface {
     type: "DeleteGroupEvent";
     groupId: number;
 }
+
+const WORLD_SPACE_NAME = "allWorldUser";
 
 export class GameScene extends DirtyScene {
     Terrains: Array<Phaser.Tilemaps.Tileset>;
@@ -305,6 +304,9 @@ export class GameScene extends DirtyScene {
     private playerVariablesManager!: PlayerVariablesManager;
     private scriptingEventsManager!: ScriptingEventsManager;
     private followManager!: FollowManager;
+    private scriptingOutputAudioStreamManager: ScriptingOutputAudioStreamManager | undefined;
+    private scriptingInputAudioStreamManager: ScriptingInputAudioStreamManager | undefined;
+    private proximitySpaceManager: ProximitySpaceManager | undefined;
     private objectsByType = new Map<string, ITiledMapObject[]>();
     private embeddedWebsiteManager!: EmbeddedWebsiteManager;
     private areaManager!: DynamicAreaManager;
@@ -322,7 +324,6 @@ export class GameScene extends DirtyScene {
     private throttledSendViewportToServer!: () => void;
     private playersDebugLogAlreadyDisplayed = false;
     private hideTimeout: ReturnType<typeof setTimeout> | undefined;
-    private uiWebsiteManager: UIWebsiteManager;
     // The promise that will resolve to the current player textures. This will be available only after connection is established.
     private currentPlayerTexturesResolve!: (value: string[]) => void;
     private currentPlayerTexturesReject!: (reason: unknown) => void;
@@ -336,8 +337,14 @@ export class GameScene extends DirtyScene {
         this.currentCompanionTextureResolve = resolve;
         this.currentCompanionTextureReject = reject;
     });
-    public chatConnection!: ChatConnectionInterface;
+    private _spaceRegistry: SpaceRegistryInterface | undefined;
+    private allUserSpace: SpaceInterface | undefined;
+    private _proximityChatRoom: ProximityChatRoom | undefined;
+    private _userProviderMergerDeferred: Deferred<UserProviderMerger> = new Deferred();
+    private matrixClientWrapper: MatrixClientWrapper | undefined;
+    private worldUserProvider: WorldUserProvider | undefined;
     public extensionModule: ExtensionModule | undefined = undefined;
+    public landingAreas: AreaData[] = [];
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
@@ -363,7 +370,6 @@ export class GameScene extends DirtyScene {
         this.connectionAnswerPromiseDeferred = new Deferred<RoomJoinedMessageInterface>();
         this.loader = new Loader(this);
         this.superLoad = new SuperLoaderPlugin(this);
-        this.uiWebsiteManager = new UIWebsiteManager();
     }
 
     private _broadcastService: BroadcastService | undefined;
@@ -402,6 +408,8 @@ export class GameScene extends DirtyScene {
         this.load.audio("audio-report-message", "/resources/objects/report-message.mp3");
         this.load.audio("audio-megaphone", "/resources/objects/megaphone.mp3");
         this.load.audio("audio-cloud", "/resources/objects/cloud.mp3");
+        this.load.audio("new-message", "/resources/objects/new-message.mp3");
+
         this.sound.pauseOnBlur = false;
 
         this.load.on(FILE_LOAD_ERROR, (file: { src: string }) => {
@@ -480,41 +488,33 @@ export class GameScene extends DirtyScene {
 
         if (this.wamUrlFile) {
             const absoluteWamFileUrl = new URL(this.wamUrlFile, window.location.href).toString();
-            this.superLoad
-                .json(
-                    this.wamUrlFile,
-                    this.wamUrlFile,
-                    undefined,
-                    undefined,
-                    (key: string, type: string, wamFile: unknown) => {
-                        const wamFileResult = WAMFileFormat.safeParse(wamFile);
-                        if (!wamFileResult.success) {
-                            this.loader.removeLoader();
-                            errorScreenStore.setError(
-                                ErrorScreenMessage.fromPartial({
-                                    type: "error",
-                                    code: "WAM_FORMAT_ERROR",
-                                    title: "Format error",
-                                    subtitle: "Invalid format while loading a WAM file",
-                                    details: wamFileResult.error.toString(),
-                                })
-                            );
-                            this.cleanupClosingScene();
 
-                            this.scene.stop(this.scene.key);
-                            this.scene.remove(this.scene.key);
-                            return;
-                        }
-                        this.wamFile = wamFileResult.data;
-                        this.mapUrlFile = new URL(this.wamFile.mapUrl, absoluteWamFileUrl).toString();
-                        this.doLoadTMJFile(this.mapUrlFile);
-                        this.loadEntityCollections();
+            this.superLoad.loadPromise(
+                axiosWithRetry.get(absoluteWamFileUrl).then((response) => {
+                    const wamFileResult = WAMFileFormat.safeParse(response.data);
+                    if (!wamFileResult.success) {
+                        this.loader.removeLoader();
+                        errorScreenStore.setError(
+                            ErrorScreenMessage.fromPartial({
+                                type: "error",
+                                code: "WAM_FORMAT_ERROR",
+                                title: "Format error",
+                                subtitle: "Invalid format while loading a WAM file",
+                                details: wamFileResult.error.toString(),
+                            })
+                        );
+                        this.cleanupClosingScene();
+
+                        this.scene.stop(this.scene.key);
+                        this.scene.remove(this.scene.key);
+                        return;
                     }
-                )
-                .catch((e) => {
-                    console.error(e);
-                    throw e;
-                });
+                    this.wamFile = wamFileResult.data;
+                    this.mapUrlFile = new URL(this.wamFile.mapUrl, absoluteWamFileUrl).toString();
+                    this.doLoadTMJFile(this.mapUrlFile);
+                    this.loadEntityCollections();
+                })
+            );
         } else {
             this.doLoadTMJFile(this.mapUrlFile);
         }
@@ -744,6 +744,9 @@ export class GameScene extends DirtyScene {
 
         this.animatedTiles.init(this.Map);
         this.events.on("tileanimationupdate", () => (this.dirty = true));
+        if (localUserStore.getDisableAnimations()) {
+            this.animatedTiles.pause();
+        }
 
         this.initCirclesCanvas();
 
@@ -838,24 +841,46 @@ export class GameScene extends DirtyScene {
             this.connect();
         }
 
+        /*this.connectionAnswerPromiseDeferred.promise.then((connectionAnswer) => {
+            console.warn("Connection established", connectionAnswer);
+        });
+        this.CurrentPlayer.getTextureLoadedPromise().then((textures) => {
+            console.warn("Current player textures loaded", textures);
+        });
+        this.gameMapFrontWrapper.initializedPromise.then(() => {
+            console.warn("GameMapFrontWrapper initialized");
+        });
+        Promise.all(scriptPromises).then(() => {
+            console.warn("All scripts loaded");
+        });*/
+
         Promise.all([
             this.connectionAnswerPromiseDeferred.promise as Promise<unknown>,
             ...scriptPromises,
             this.CurrentPlayer.getTextureLoadedPromise() as Promise<unknown>,
-            this.gameMapFrontWrapper.initializedPromise,
+            this.gameMapFrontWrapper.initializedPromise.promise,
+            gameManager.getChatConnection(),
         ])
             .then(() => {
                 this.initUserPermissionsOnEntity();
                 this.hide(false);
+                gameSceneIsLoadedStore.set(true);
                 this.sceneReadyToStartDeferred.resolve();
                 this.initializeAreaManager();
+
+                const chatId = localUserStore.getChatId();
+                const email: string | null = localUserStore.getLocalUser()?.email || null;
+                const connection = this.connection;
+                if (email && chatId && connection) {
+                    connection.emitUpdateChatId(email, chatId);
+                    connection.emitPlayerChatID(chatId);
+                }
             })
-            .catch((e) =>
-                console.error(
-                    "Some scripts failed to load ot the connection failed to establish to WorkAdventure server",
-                    e
-                )
-            );
+            .catch((e: unknown) => {
+                console.error("Initialization failed", e);
+                Sentry.captureException(e);
+                errorScreenStore.setException(e);
+            });
 
         if (gameManager.currentStartedRoom.backgroundColor != undefined) {
             this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
@@ -893,17 +918,15 @@ export class GameScene extends DirtyScene {
             console.error('Error while fetching new room "' + roomUrl.toString() + '"', e);
 
             //show information room access denied
-            popupStore.addPopup(
-                PopUpRoomAccessDenied,
-                {
-                    message: get(LL).warning.accessDenied.room(),
-                    click: () => {
-                        popupStore.removePopup("roomAccessDenied");
-                    },
-                    userInputManager: this.userInputManager,
+            layoutManagerActionStore.addAction({
+                uuid: "roomAccessDenied",
+                type: "warning",
+                message: get(LL).warning.accessDenied.room(),
+                callback: () => {
+                    layoutManagerActionStore.removeAction("roomAccessDenied");
                 },
-                "roomAccessDenied"
-            );
+                userInputManager: this.userInputManager,
+            });
 
             this.mapTransitioning = false;
             return;
@@ -947,6 +970,7 @@ export class GameScene extends DirtyScene {
     }
 
     public playSound(sound: string) {
+        if (!statusChanger.allowNotificationSound()) return;
         this.sound.play(sound, {
             volume: 0.2,
         });
@@ -971,13 +995,18 @@ export class GameScene extends DirtyScene {
         }
 
         iframeListener.cleanup();
-        this.uiWebsiteManager.closeAll();
+        uiWebsiteManager.closeAll();
         followUsersStore.stopFollowing();
 
         audioManagerFileStore.unloadAudio();
-        //layoutManagerActionStore.clearActions();
+        layoutManagerActionStore.clearActions();
 
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
+        if (this.allUserSpace) {
+            this.spaceRegistry?.leaveSpace(this.allUserSpace);
+        }
+
+        this.matrixClientWrapper?.stopClient();
         this.connection?.closeConnection();
         this.simplePeer?.closeAllConnections();
         this.simplePeer?.unregister();
@@ -988,6 +1017,8 @@ export class GameScene extends DirtyScene {
         this.cameraManager?.destroy();
         this.mapEditorModeManager?.destroy();
         this._broadcastService?.destroy();
+        this.proximitySpaceManager?.destroy();
+        this._proximityChatRoom?.destroy();
         this.peerStoreUnsubscriber?.();
         this.mapEditorModeStoreUnsubscriber?.();
         this.refreshPromptStoreStoreUnsubscriber?.();
@@ -1009,6 +1040,7 @@ export class GameScene extends DirtyScene {
         iframeListener.unregisterAnswerer("getState");
         iframeListener.unregisterAnswerer("loadTileset");
         iframeListener.unregisterAnswerer("getMapData");
+        iframeListener.unregisterAnswerer("getWamMapData");
         iframeListener.unregisterAnswerer("triggerActionMessage");
         iframeListener.unregisterAnswerer("triggerPlayerMessage");
         iframeListener.unregisterAnswerer("removeActionMessage");
@@ -1033,10 +1065,14 @@ export class GameScene extends DirtyScene {
         this.playersMovementEventDispatcher.cleanup();
         this.gameMapFrontWrapper?.close();
         this.followManager?.close();
-        this.extensionModule?.destroy();
-        extensionModuleStore.set(undefined);
+        this.scriptingOutputAudioStreamManager?.close();
+        this.scriptingInputAudioStreamManager?.close();
+        this._spaceRegistry?.destroy();
 
-        LocalSpaceProviderSingleton.getInstance().destroy();
+        // We need to destroy all the entities
+        get(extensionModuleStore).forEach((extensionModule) => {
+            extensionModule.destroy();
+        });
 
         //When we leave game, the camera is stop to be reopen after.
         // I think that we could keep camera status and the scene can manage camera setup
@@ -1510,41 +1546,38 @@ export class GameScene extends DirtyScene {
                     }
                 }
 
-                if (this.connection) {
-                    //We need to add an env parameter to switch between chat services
-                    const matrixClientWrapper = new MatrixClientWrapper(MATRIX_PUBLIC_URI ?? "", localUserStore);
-                    const matrixClientPromise = matrixClientWrapper.initMatrixClient();
+                this._spaceRegistry = new SpaceRegistry(this.connection);
+                this.allUserSpace = this._spaceRegistry.joinSpace(WORLD_SPACE_NAME);
 
-                    matrixClientPromise
-                        .then((matrixClient) => {
-                            matrixSecurity.updateMatrixClientStore(matrixClient);
-                        })
-                        .catch((e) => {
-                            console.error(e);
-                        });
+                gameManager
+                    .getChatConnection()
+                    .then((chatConnection) => {
+                        const connection = this.connection;
+                        const allUserSpace = this.allUserSpace;
 
-                    this.chatConnection = new MatrixChatConnection(this.connection, matrixClientPromise);
+                        const userProviders: UserProviderInterface[] = [];
 
-                    // initialise the proximity chat connection
-                    proximityRoomConnection.set(
-                        new ProximityChatConnection(
-                            this.connection,
-                            this.connection.getUserId(),
-                            localUserStore.getLocalUser()?.uuid ?? "Unknown"
-                        )
-                    );
+                        if (ENABLE_CHAT_DISCONNECTED_LIST && this._room.isChatDisconnectedListEnabled) {
+                            if (connection) {
+                                userProviders.push(new AdminUserProvider(connection));
+                            }
+                            userProviders.push(new ChatUserProvider(chatConnection));
+                        }
 
-                    const chatId = localUserStore.getChatId();
-                    const email: string | null = localUserStore.getLocalUser()?.email || null;
-                    if (email && chatId) this.connection.emitUpdateChatId(email, chatId);
+                        if (allUserSpace && ENABLE_CHAT_ONLINE_LIST && this._room.isChatOnlineListEnabled) {
+                            this.worldUserProvider = new WorldUserProvider(allUserSpace);
+                            userProviders.push(this.worldUserProvider);
+                        }
 
-                    this.initExtensionModule();
-                }
+                        this._userProviderMergerDeferred.resolve(new UserProviderMerger(userProviders));
+                    })
+                    .catch(() => {
+                        const errorMessage = "Failed to get chatConnection from gameManager";
+                        console.error(errorMessage);
+                        Sentry.captureMessage(errorMessage);
+                    });
 
-                const spaceProvider = LocalSpaceProviderSingleton.getInstance(onConnect.connection.socket);
-                StreamSpaceWatcherSingleton.getInstance(onConnect.connection.socket);
-
-                spaceProvider.add(WORLD_SPACE_NAME).watch(CONNECTED_USER_FILTER_NAME);
+                this.initExtensionModule();
 
                 this.tryOpenMapEditorWithToolEditorParameter();
 
@@ -1658,7 +1691,9 @@ export class GameScene extends DirtyScene {
                     }
                 });
 
-                this.connection.onServerDisconnected(() => {
+                // The serverDisconnected stream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.serverDisconnected.subscribe(() => {
                     showConnectionIssueMessage();
                     console.info("Player disconnected from server. Reloading scene.");
                     this.cleanupClosingScene();
@@ -1720,6 +1755,17 @@ export class GameScene extends DirtyScene {
                         console.warn("Connection to peers not started!");
                     }
                 });*/
+                // Set up manager of audio streams received by the scripting API (useful for bots)
+                this.scriptingOutputAudioStreamManager = new ScriptingOutputAudioStreamManager(this.simplePeer);
+                this.scriptingInputAudioStreamManager = new ScriptingInputAudioStreamManager(this.simplePeer);
+
+                this._proximityChatRoom = new ProximityChatRoom(
+                    this.connection.getUserId(),
+                    this._spaceRegistry,
+                    this.simplePeer,
+                    iframeListener
+                );
+                this.proximitySpaceManager = new ProximitySpaceManager(this.connection, this._proximityChatRoom);
 
                 userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
 
@@ -1787,11 +1833,16 @@ export class GameScene extends DirtyScene {
                     (
                         connection: RoomConnection,
                         spaceName: string,
-                        spaceFilter: SpaceFilterMessage,
                         broadcastService: BroadcastService,
                         playSound: boolean
                     ) => {
-                        return new JitsiBroadcastSpace(connection, spaceName, spaceFilter, broadcastService, playSound);
+                        return new JitsiBroadcastSpace(
+                            connection,
+                            spaceName,
+                            broadcastService,
+                            playSound,
+                            this.spaceRegistry
+                        );
                     }
                 );
                 this._broadcastService = broadcastService;
@@ -1805,194 +1856,27 @@ export class GameScene extends DirtyScene {
                             megaphoneSettingsMessage.url &&
                             get(availabilityStatusStore) !== AvailabilityStatus.DO_NOT_DISTURB
                         ) {
-                            const oldMegaphoneUrl = get(megaphoneUrlStore);
+                            const oldMegaphoneSpace = get(megaphoneSpaceStore);
 
-                            if (oldMegaphoneUrl && megaphoneSettingsMessage.url !== oldMegaphoneUrl) {
-                                spaceProvider.delete(oldMegaphoneUrl);
+                            if (
+                                this._spaceRegistry &&
+                                oldMegaphoneSpace &&
+                                megaphoneSettingsMessage.url !== oldMegaphoneSpace.getName()
+                            ) {
+                                this._spaceRegistry.leaveSpace(oldMegaphoneSpace);
                             }
-                            broadcastService.joinSpace(megaphoneSettingsMessage.url);
-                            megaphoneUrlStore.set(megaphoneSettingsMessage.url);
+
+                            const broadcastStore = broadcastService.joinSpace(megaphoneSettingsMessage.url);
+                            megaphoneSpaceStore.set(broadcastStore.space);
                         }
                     }
                 });
                 this._broadcastService = broadcastService;
 
-                // The megaphoneSettingsMessageStream is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.megaphoneSettingsMessageStream.subscribe((megaphoneSettingsMessage) => {
-                    if (megaphoneSettingsMessage) {
-                        megaphoneCanBeUsedStore.set(megaphoneSettingsMessage.enabled);
-                        if (
-                            megaphoneSettingsMessage.url &&
-                            get(availabilityStatusStore) !== AvailabilityStatus.DO_NOT_DISTURB
-                        ) {
-                            broadcastService.joinSpace(megaphoneSettingsMessage.url);
-                            megaphoneUrlStore.set(megaphoneSettingsMessage.url);
-                        }
-                    }
-                });
-
-                // The muteMicrophoneSpaceUserMessage is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.muteMicrophoneMessage.subscribe(() => {
-                    notificationPlayingStore.playNotification(
-                        get(LL).notification.askToMuteMicrophone(),
-                        "microphone-off.png"
-                    );
-                    requestedMicrophoneState.disableMicrophone();
-                });
-
-                // The muteVideoSpaceUserMessage is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.muteVideoMessage.subscribe(() => {
-                    notificationPlayingStore.playNotification(get(LL).notification.askToMuteCamera(), "camera-off.png");
-                    requestedCameraState.disableWebcam();
-                });
-
-                // The muteMicrophoneEverybodySpaceUserMessage is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.muteMicrophoneEverybodyMessage.subscribe(() => {
-                    notificationPlayingStore.playNotification(
-                        get(LL).notification.askToMuteMicrophone(),
-                        "microphone-off.png"
-                    );
-                    requestedMicrophoneState.disableMicrophone();
-                });
-
-                // The muteVideoEverybodySpaceUserMessage is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.muteVideoEverybodyMessage.subscribe(() => {
-                    notificationPlayingStore.playNotification(get(LL).notification.askToMuteCamera(), "camera-off.png");
-                    requestedCameraState.disableWebcam();
-                });
-
-                // The askMuteVideoSpaceUserMessage is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.askMuteVideoMessage.subscribe((askMuteVideoMessage) => {
-                    notificationPlayingStore.playNotification(get(LL).notification.askToMuteCamera(), "camera-off.png");
-                    askDialogStore.addAskDialog(
-                        askMuteVideoMessage.userId,
-                        get(LL).notification.askToMuteCamera(),
-                        () => {
-                            requestedCameraState.disableWebcam();
-                        }
-                    );
-                });
-
-                // The askMuteMicrophoneSpaceUserMessage is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.askMuteMicrophoneMessage.subscribe((askMuteMicrophoneMessage) => {
-                    notificationPlayingStore.playNotification(
-                        get(LL).notification.askToMuteMicrophone(),
-                        "microphone-off.png"
-                    );
-                    askDialogStore.addAskDialog(
-                        askMuteMicrophoneMessage.userId,
-                        get(LL).notification.askToMuteMicrophone(),
-                        () => {
-                            requestedMicrophoneState.disableMicrophone();
-                        }
-                    );
-                });
-
-                // The mutedMessage is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.mutedMessage.subscribe(() => {
-                    notificationPlayingStore.playNotification(
-                        get(LL).notification.askToMuteMicrophone(),
-                        "microphone-off.png"
-                    );
-                    requestedMicrophoneState.disableMicrophone();
-                });
-
-                // The mutedVideoMessage is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.mutedVideoMessage.subscribe(() => {
-                    notificationPlayingStore.playNotification(get(LL).notification.askToMuteCamera(), "camera-off.png");
-                    requestedCameraState.disableWebcam();
-                });
-
-                // The askMutedMessage is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.askMutedMessage.subscribe((askMutedMessage) => {
-                    notificationPlayingStore.playNotification(
-                        get(LL).notification.askToMuteMicrophone(),
-                        "microphone-off.png"
-                    );
-                    askDialogStore.addAskDialog(
-                        askMutedMessage.userUuid,
-                        get(LL).notification.askToMuteMicrophone(),
-                        () => {
-                            requestedMicrophoneState.disableMicrophone();
-                        }
-                    );
-                });
-
-                // The askMutedVideoMessage is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.askMutedVideoMessage.subscribe((askMutedVideoMessage) => {
-                    notificationPlayingStore.playNotification(get(LL).notification.askToMuteCamera(), "camera-off.png");
-                    askDialogStore.addAskDialog(
-                        askMutedVideoMessage.userUuid,
-                        get(LL).notification.askToMuteCamera(),
-                        () => {
-                            requestedCameraState.disableWebcam();
-                        }
-                    );
-                });
-
                 // The errorMessageStream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.errorMessageStream.subscribe((errorMessage) => {
                     warningMessageStore.addWarningMessage(errorMessage.message);
-                });
-
-                // The proximityPrivateMessageToClientMessageStream is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.proximityPrivateMessageEvent.subscribe((privateEvent: PrivateEvent) => {
-                    console.info("proximity private message not implemented yet!");
-                });
-
-                // The proximityPublicMessageToClientMessageStream is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.proximityPublicMessageEvent.subscribe((publicEvent: PublicEvent) => {
-                    if (publicEvent.spaceEvent!.event?.$case != "spaceMessage") {
-                        return;
-                    }
-
-                    const _proximityRoomConnection = get(proximityRoomConnection);
-                    if (!_proximityRoomConnection) return;
-
-                    const room = get(_proximityRoomConnection?.rooms)[0];
-                    if (!room || !room.addNewMessage) return;
-
-                    // The user sending the message is myself. Do not show the message.
-                    const proximityUserId = publicEvent.senderUserId;
-                    if (proximityUserId == undefined || proximityUserId === this.connection?.getUserId()) {
-                        return;
-                    }
-                    room.addNewMessage(publicEvent.spaceEvent!.event.spaceMessage.message, proximityUserId);
-
-                    // if the proximity chat is not open, open it to see the message
-                    chatVisibilityStore.set(true);
-                    if (get(selectedRoom) == undefined) selectedRoom.set(room);
-                });
-
-                // the typingProximityMessageToClientMessageStream is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.typingProximityEvent.subscribe((publicEvent: PublicEvent) => {
-                    if (publicEvent.spaceEvent!.event?.$case != "spaceIsTyping") return;
-
-                    const _proximityRoomConnection = get(proximityRoomConnection);
-                    if (!_proximityRoomConnection) return;
-
-                    const room = get(_proximityRoomConnection?.rooms)[0];
-                    if (!room || !(room instanceof ProximityChatRoom)) return;
-
-                    if (publicEvent.senderUserId != undefined)
-                        if (publicEvent.spaceEvent!.event.spaceIsTyping.isTyping)
-                            room.addTypingUser(publicEvent.senderUserId);
-                        else room.removeTypingUser(publicEvent.senderUserId);
                 });
 
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
@@ -2002,9 +1886,13 @@ export class GameScene extends DirtyScene {
                 if (error && error?.type === "reconnecting") errorScreenStore.delete();
                 //this.scene.stop(ReconnectingSceneName);
 
-                //init user position and play trigger to check layers properties
-                this.gameMapFrontWrapper.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
+                this.landingAreas =
+                    this.getGameMap().getGameMapAreas()?.getAreasOnPosition({
+                        x: this.CurrentPlayer.x,
+                        y: this.CurrentPlayer.y,
+                    }) || [];
 
+                this.gameMapFrontWrapper.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
                 // Init layer change listener
                 this.gameMapFrontWrapper.onEnterLayer((layers) => {
                     layers.forEach((layer) => {
@@ -2032,6 +1920,18 @@ export class GameScene extends DirtyScene {
                     });
                 });
 
+                this.gameMapFrontWrapper.onEnterDynamicArea((areas) => {
+                    areas.forEach((area) => {
+                        iframeListener.sendEnterMapEditorAreaEvent(area.name);
+                    });
+                });
+
+                this.gameMapFrontWrapper.onLeaveDynamicArea((areas) => {
+                    areas.forEach((area) => {
+                        iframeListener.sendLeaveMapEditorAreaEvent(area.name);
+                    });
+                });
+
                 this.emoteManager = new EmoteManager(this, this.connection);
 
                 // Check WebRtc connection
@@ -2051,47 +1951,54 @@ export class GameScene extends DirtyScene {
                 this.tryMovePlayerWithMoveToUserParameter();
 
                 gameSceneStore.set(this);
-                gameSceneIsLoadedStore.set(true);
             })
             .catch((e) => console.error(e));
     }
 
     private initExtensionModule() {
-        if (this._room.metadata != undefined) {
-            const parsedRoomMetadata = RoomMetadataType.safeParse(this._room.metadata);
+        if (this._room.modules) {
+            const externalModules = import.meta.glob("../../external-modules/*/index.ts");
 
-            if (!parsedRoomMetadata.success) {
-                console.error(
-                    "Unable to initialize Microsoft teams module due to room metadata parsing error : ",
-                    parsedRoomMetadata.error
-                );
-                return;
-            }
+            for (const moduleName of this._room.modules) {
+                const moduleFactory = externalModules[`../../external-modules/${moduleName}/index.ts`];
 
-            if (parsedRoomMetadata.data.msteams === true) {
+                if (!moduleFactory) {
+                    console.warn(`Unable to find module "${moduleName}" inside external modules`);
+                    return;
+                }
+
                 (async () => {
-                    try {
-                        const extensionModule = await import("../../../ms-teams/MSTeams");
-                        this.extensionModule = extensionModule.default;
+                    const extensionModule = (await moduleFactory()) as { default: ExtensionModule };
+                    const defaultExtensionModule = extensionModule.default;
 
-                        this.extensionModule.init(parsedRoomMetadata.data, {
-                            workadventureStatusStore: availabilityStatusStore,
-                            onExtensionModuleStatusChange: ExtensionModuleStatusSynchronization.onStatusChange,
-                            getOauthRefreshToken: this.connection?.getOauthRefreshToken.bind(this.connection),
-                            calendarEventsStoreUpdate: calendarEventsStore.update,
-                            userAccessToken: localUserStore.getAuthToken()!,
-                            adminUrl: ADMIN_URL,
-                            roomId: this.roomUrl,
-                            externalModuleMessage: this.connection!.externalModuleMessage,
-                            openCoWebSite: openCoWebSiteWithoutSource,
-                            closeCoWebsite,
-                        });
-                        // TODO change that to check if the calendar synchro is enabled from admin
-                        if (parsedRoomMetadata.data.teamsstings.calendar) isActivatedStore.set(true);
-                        extensionModuleStore.set(this.extensionModule);
-                    } catch (error) {
-                        console.warn("Extension module initialization cancelled", error);
+                    const connection = this.connection;
+                    if (!connection) {
+                        throw new Error("Connection is undefined");
                     }
+
+                    defaultExtensionModule.init(this._room.metadata, {
+                        workadventureStatusStore: availabilityStatusStore,
+                        userAccessToken: localUserStore.getAuthToken()!,
+                        roomId: this.roomUrl,
+                        externalModuleMessage: connection.externalModuleMessage,
+                        onExtensionModuleStatusChange: ExtensionModuleStatusSynchronization.onStatusChange,
+                        calendarEventsStoreUpdate: calendarEventsStore.update,
+                        todoListStoreUpdate: todoListsStore.update,
+                        openCoWebSite: openCoWebSiteWithoutSource,
+                        closeCoWebsite,
+                        getOauthRefreshToken: connection.getOauthRefreshToken.bind(this.connection),
+                        adminUrl: ADMIN_URL,
+                        externalSvelteComponent: externalSvelteComponentStore,
+                        spaceRegistry: this.spaceRegistry,
+                        logoutCallback: () => {
+                            connectionManager.logout();
+                        },
+                    });
+
+                    if (defaultExtensionModule.calendarSynchronised) isCalendarActiveStore.set(true);
+                    if (defaultExtensionModule.todoListSynchronized) isTodoListActiveStore.set(true);
+                    extensionModuleStore.add(defaultExtensionModule);
+                    console.info(`Extension module ${module} initialization finished`);
                 })().catch((error) => console.error(error));
             }
         }
@@ -2189,30 +2096,6 @@ export class GameScene extends DirtyScene {
         this.embedScreenLayoutStoreUnsubscriber = embedScreenLayoutStore.subscribe((layout) => {
             //this.reposition();
         });
-
-        this.unsubscribers.push(
-            requestedCameraState.subscribe((state) => {
-                this.connection?.emitCameraState(state);
-            })
-        );
-
-        this.unsubscribers.push(
-            requestedMicrophoneState.subscribe((state) => {
-                this.connection?.emitMicrophoneState(state);
-            })
-        );
-
-        this.unsubscribers.push(
-            requestedScreenSharingState.subscribe((state) => {
-                this.connection?.emitScreenSharingState(state);
-            })
-        );
-
-        this.unsubscribers.push(
-            liveStreamingEnabledStore.subscribe((state) => {
-                this.connection?.emitMegaphoneState(state);
-            })
-        );
 
         const talkIconVolumeTreshold = 10;
         let oldPeersNumber = 0;
@@ -2319,10 +2202,10 @@ export class GameScene extends DirtyScene {
             }
 
             if (newPeerNumber > oldPeersNumber) {
-                if (statusChanger.allowNotificationSound()) this.playSound("audio-webrtc-in");
+                this.playSound("audio-webrtc-in");
                 faviconManager.pushNotificationFavicon();
             } else if (newPeerNumber < oldPeersNumber) {
-                if (statusChanger.allowNotificationSound()) this.playSound("audio-webrtc-out");
+                this.playSound("audio-webrtc-out");
                 faviconManager.pushOriginalFavicon();
             }
 
@@ -2598,9 +2481,9 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
+            // FIXME: aren't we making a weird loop here?
             iframeListener.addPersonnalMessageStream.subscribe((text) => {
                 iframeListener.sendUserInputChat(text, undefined);
-                _newChatMessageSubject.next(text);
             })
         );
 
@@ -2608,34 +2491,19 @@ ${escapedMessage}
             iframeListener.chatMessageStream.subscribe((chatMessage) => {
                 switch (chatMessage.options.scope) {
                     case "local": {
-                        const _proximityRoomConnection = get(proximityRoomConnection);
-                        if (!_proximityRoomConnection) return;
+                        const room = this.proximityChatRoom;
 
-                        const room = get(_proximityRoomConnection.rooms)[0];
-                        if (!room || !room.addExternalMessage) return;
-
-                        room.addExternalMessage(chatMessage.message, chatMessage.options.author);
-                        selectedRoom.set(room);
+                        room.addExternalMessage("local", chatMessage.message, chatMessage.options.author);
+                        selectedRoomStore.set(room);
                         chatVisibilityStore.set(true);
                         break;
                     }
                     case "bubble": {
-                        const _proximityRoomConnection = get(proximityRoomConnection);
-                        if (!_proximityRoomConnection) return;
+                        const room = this.proximityChatRoom;
 
-                        const room = get(_proximityRoomConnection.rooms)[0];
-                        if (!room || !room.addExternalMessage) return;
-
-                        room.addExternalMessage(chatMessage.message);
-                        selectedRoom.set(room);
+                        room.addExternalMessage("bubble", chatMessage.message);
+                        selectedRoomStore.set(room);
                         chatVisibilityStore.set(true);
-
-                        // Send the message to other users in the bubble
-                        // TODO: the message should be sent by not myself
-                        const spaceName = (room as ProximityChatRoom).getSpaceName();
-                        if (spaceName) this.connection?.emitProximityPublicMessage(spaceName, chatMessage.message);
-                        else console.warn("No space name found for the bubble chat");
-                        break;
                     }
                 }
             })
@@ -2643,22 +2511,14 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.startTypingProximityMessageStream.subscribe((sartWriting) => {
-                const _proximityRoomConnection = get(proximityRoomConnection);
-                if (!_proximityRoomConnection) return;
-
-                const room = get(_proximityRoomConnection.rooms)[0];
-                if (!room || !(room instanceof ProximityChatRoom)) return;
+                const room = this.proximityChatRoom;
 
                 room.addExternalTypingUser(btoa(sartWriting.author ?? "unknow"), sartWriting.author ?? "unknow", null);
             })
         );
         this.iframeSubscriptionList.push(
             iframeListener.stopTypingProximityMessageStream.subscribe((stopWriting) => {
-                const _proximityRoomConnection = get(proximityRoomConnection);
-                if (!_proximityRoomConnection) return;
-
-                const room = get(_proximityRoomConnection.rooms)[0];
-                if (!room || !(room instanceof ProximityChatRoom)) return;
+                const room = this.proximityChatRoom;
 
                 room.removeExternalTypingUser(btoa(stopWriting.author ?? "unknow"));
             })
@@ -2920,15 +2780,15 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("openUIWebsite", (websiteConfig) => {
-            return this.uiWebsiteManager.open(websiteConfig);
+            return uiWebsiteManager.open(websiteConfig);
         });
 
         iframeListener.registerAnswerer("getUIWebsites", () => {
-            return this.uiWebsiteManager.getAll();
+            return uiWebsiteManager.getAll();
         });
 
         iframeListener.registerAnswerer("getUIWebsiteById", (websiteId) => {
-            const website = this.uiWebsiteManager.getById(websiteId);
+            const website = uiWebsiteManager.getById(websiteId);
             if (!website) {
                 throw new Error("Unknown ui-website");
             }
@@ -2936,12 +2796,18 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("closeUIWebsite", (websiteId) => {
-            return this.uiWebsiteManager.close(websiteId);
+            return uiWebsiteManager.close(websiteId);
         });
 
         iframeListener.registerAnswerer("getMapData", () => {
             return {
                 data: this.gameMapFrontWrapper.getMap(),
+            };
+        });
+
+        iframeListener.registerAnswerer("getWamMapData", () => {
+            return {
+                data: this.gameMapFrontWrapper.getGameMap().getWam(),
             };
         });
 
@@ -3116,6 +2982,13 @@ ${escapedMessage}
             })
         );
 
+        iframeListener.registerAnswerer("triggerPlayerMessage", (message) =>
+            this.CurrentPlayer.playText(message.uuid, message.message, undefined, () => {
+                this.CurrentPlayer.destroyText(message.uuid);
+                iframeListener.sendActionMessageTriggered(message.uuid);
+            })
+        );
+
         iframeListener.registerAnswerer("setVariable", (event, source) => {
             // TODO: "setVariable" message has a useless "target"
             // TODO: "setVariable" message has a useless "target"
@@ -3147,6 +3020,10 @@ ${escapedMessage}
 
         iframeListener.registerAnswerer("removeActionMessage", (message) => {
             popupStore.removePopup(message.uuid);
+        });
+
+        iframeListener.registerAnswerer("removePlayerMessage", (message) => {
+            this.CurrentPlayer.destroyText(message.uuid);
         });
 
         iframeListener.registerAnswerer("removePlayerMessage", (message) => {
@@ -3463,8 +3340,14 @@ ${escapedMessage}
                 this.CurrentPlayer,
                 phaserLayer,
                 (
-                    object1: Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile,
-                    object2: Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile
+                    object1:
+                        | Phaser.Physics.Arcade.Body
+                        | Phaser.Tilemaps.Tile
+                        | Phaser.Types.Physics.Arcade.GameObjectWithBody,
+                    object2:
+                        | Phaser.Physics.Arcade.Body
+                        | Phaser.Tilemaps.Tile
+                        | Phaser.Types.Physics.Arcade.GameObjectWithBody
                 ) => {}
             );
             phaserLayer.setCollisionByProperty({ collides: true });
@@ -3916,5 +3799,31 @@ ${escapedMessage}
 
     private disableCameraResistance(): void {
         this.cameraManager.disableResistanceZone();
+    }
+
+    //get spaceStore(): Promise<SpaceProviderInterface> {
+    get spaceRegistry(): SpaceRegistryInterface {
+        if (!this._spaceRegistry) {
+            throw new Error("_spaceRegistry not yet initialized");
+        }
+        return this._spaceRegistry;
+    }
+
+    get proximityChatRoom(): ProximityChatRoom {
+        if (!this._proximityChatRoom) {
+            throw new Error("_proximityChatRoom not yet initialized");
+        }
+        return this._proximityChatRoom;
+    }
+
+    get userProviderMerger(): Promise<UserProviderMerger> {
+        return this._userProviderMergerDeferred.promise;
+    }
+
+    get worldUserCounter(): Readable<integer> {
+        if (!this.worldUserProvider) {
+            throw new Error("this.worldUserProvider not yet initialized");
+        }
+        return this.worldUserProvider.userCount;
     }
 }

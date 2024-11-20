@@ -34,6 +34,10 @@
                 }
             }
 
+            button.large {
+              @apply w-max;
+            }
+
             .border-top-light {
                 border-top: 4px solid theme("colors.light-blue");
                 @apply pt-0;

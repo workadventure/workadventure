@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MatrixClient } from "matrix-js-sdk";
+import { writable } from "svelte/store";
 import { MatrixSecurity } from "../MatrixSecurity";
 
 vi.mock("../../../../Phaser/Entity/CharacterLayerManager", () => {
@@ -12,6 +13,22 @@ vi.mock("../../../../Phaser/Entity/CharacterLayerManager", () => {
     };
 });
 
+vi.mock("../AccessSecretStorageDialog.svelte", () => {
+    return {};
+});
+
+vi.mock("../CreateRecoveryKeyDialog.svelte", () => {
+    return {};
+});
+vi.mock("../InteractiveAuthDialog.svelte", () => {
+    return {};
+});
+
+vi.mock("../../../Stores/ChatStore.ts", () => {
+    return {
+        alreadyAskForInitCryptoConfiguration: writable(false),
+    };
+});
 describe("MatrixSecurity", () => {
     describe("initClientCryptoConfiguration", () => {
         const basicMockClient = {
@@ -81,7 +98,7 @@ describe("MatrixSecurity", () => {
             await expect(matrixSecurity.initClientCryptoConfiguration()).resolves.toEqual(undefined);
             expect(consoleInfoSpy).toHaveBeenCalled();
         });
-        it("should call bootstrap / restore backup message function when crossSigning is not ready or keybackupinfo is null ", async () => {
+        it("should call bootstrap / restore backup message function when crossSigning is not ready or keybackupinfo is not null ", async () => {
             const mockCrypto = {
                 isCrossSigningReady: vi.fn().mockReturnValue(false),
                 bootstrapCrossSigning: vi.fn().mockResolvedValue({}),

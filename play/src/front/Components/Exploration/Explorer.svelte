@@ -16,6 +16,7 @@
     import { ExplorerTool } from "../../Phaser/Game/MapEditor/Tools/ExplorerTool";
     import AddPropertyButtonWrapper from "../MapEditor/PropertyEditor/AddPropertyButtonWrapper.svelte";
     import { connectionManager } from "../../Connection/ConnectionManager";
+    import { mapExplorerSearchinputFocusStore } from "../../Stores/UserInputStore";
     import { IconChevronDown, IconChevronUp } from "@wa-icons";
 
     let filter = "";
@@ -130,6 +131,20 @@
         area.setStrokeStyle(2, 0x000000);
         gameManager.getCurrentGameScene().markDirty();
     }
+
+    // Prevent the input form to be focused when clicking on the filter input
+    // The UserInputManager service automatically focus the input form when a click event is detected
+    // When user looking for entities or areas, we don't move the player
+    function focusin(event: FocusEvent) {
+        event.stopImmediatePropagation();
+        event.preventDefault();
+        mapExplorerSearchinputFocusStore.set(true);
+    }
+    function focusout(event: FocusEvent) {
+        event.stopImmediatePropagation();
+        event.preventDefault();
+        mapExplorerSearchinputFocusStore.set(false);
+    }
 </script>
 
 <div class="mapexplorer flex flex-col overflow-auto">
@@ -139,10 +154,12 @@
     <div class="flex flex-col justify-center">
         <div class="flex flex-col justify-center items-center">
             <input
-                    class="filter-input h-8 m-5"
+                class="filter-input h-8 m-5"
                 type="search"
                 bind:value={filter}
                 on:input={onChangeFilterHandle}
+                on:focusin={focusin}
+                on:focusout={focusout}
                 placeholder={$LL.mapEditor.entityEditor.itemPicker.searchPlaceholder()}
             />
         </div>
@@ -226,7 +243,7 @@
 
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div
-                class="entities p-4 rounded-2xl flex flex-row justify-around items-center cursor-pointer"
+            class="entities p-4 rounded-2xl flex flex-row justify-around items-center cursor-pointer"
             on:click={toggleEntityList}
         >
             <img class="w-10 h-auto mr-2 pointer-events-none" src={EntityToolImg} alt="link icon" />
@@ -241,7 +258,7 @@
                     <IconChevronUp class="pointer-events-none" font-size="32" />
                 {/if}
             {:else}
-                    <p class="m-0">{$LL.mapEditor.explorer.noEntitiesFound()}</p>
+                <p class="m-0">{$LL.mapEditor.explorer.noEntitiesFound()}</p>
             {/if}
         </div>
 
@@ -254,14 +271,14 @@
                         on:mouseenter={() => highlightEntity(entity)}
                         on:mouseleave={() => unhighlightEntity(entity)}
                         on:click={() => mapExplorationObjectSelectedStore.set(entity)}
-                            class="item p-4 rounded-2xl flex flex-row justify-around items-center cursor-pointer"
+                        class="item p-4 rounded-2xl flex flex-row justify-around items-center cursor-pointer"
                     >
                         <img
-                                class="w-10 h-auto mr-2 pointer-events-none"
+                            class="w-10 h-auto mr-2 pointer-events-none"
                             src={entity.getPrefab().imagePath}
                             alt="link icon"
                         />
-                            <span class="pointer-events-none font-bold"
+                        <span class="pointer-events-none font-bold"
                             >{entity.getEntityData().name ?? entity.getPrefab().name}</span
                         >
                     </div>
@@ -271,12 +288,12 @@
 
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div
-                class="areas p-4 rounded-2xl flex flex-row justify-around items-center cursor-pointer"
+            class="areas p-4 rounded-2xl flex flex-row justify-around items-center cursor-pointer"
             on:click={toggleAreaList}
         >
-                <img class="w-10 h-auto mr-2 pointer-events-none" src={AreaToolImg} alt="link icon" />
+            <img class="w-10 h-auto mr-2 pointer-events-none" src={AreaToolImg} alt="link icon" />
             {#if $areasListFiltered.size > 0}
-                    <span class="pointer-events-none"
+                <span class="pointer-events-none"
                     >{$areasListFiltered.size}
                     {$LL.mapEditor.explorer.areasFound($areasListFiltered.size > 1)}</span
                 >
@@ -286,11 +303,11 @@
                     <IconChevronUp class="pointer-events-none" font-size="32" />
                 {/if}
             {:else}
-                    <p class="m-0">{$LL.mapEditor.explorer.noAreasFound()}</p>
+                <p class="m-0">{$LL.mapEditor.explorer.noAreasFound()}</p>
             {/if}
         </div>
         {#if areaListActive && $areasListFiltered.size > 0}
-                <div class="area-items p-4 flex flex-col">
+            <div class="area-items p-4 flex flex-col">
                 {#if $areasListFiltered.size > 0}
                     {#each [...$areasListFiltered] as [key, area] (key)}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -299,13 +316,17 @@
                             on:mouseenter={() => highlightArea(area)}
                             on:mouseleave={() => unhighlightArea(area)}
                             on:click={() => mapExplorationObjectSelectedStore.set(area)}
-                                class="item p-4 rounded-2xl flex flex-row justify-around items-center cursor-pointer"
+                            class="item p-4 rounded-2xl flex flex-row justify-around items-center cursor-pointer"
                         >
-                                <img class="w-10 h-auto mr-2 pointer-events-none" src={AreaToolImg} alt="link icon" />
+                            <img
+                                class="w-10 h-auto mr-2 pointer-events-none"
+                                src={AreaToolImg}
+                                alt="link icon"
+                            />
                             <span
-                                    class="pointer-events-none w-32"
-                                    class:italic={!area.getAreaData().name || area.getAreaData().name == ""}
-                                    class:font-bold={area.getAreaData().name && area.getAreaData().name != ""}
+                                class="pointer-events-none w-32"
+                                class:italic={!area.getAreaData().name || area.getAreaData().name == ""}
+                                class:font-bold={area.getAreaData().name && area.getAreaData().name != ""}
                             >
                                 {area.getAreaData().name || "No name"}
                             </span>

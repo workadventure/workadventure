@@ -61,7 +61,8 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
                     const screenSharingTrackWrapper = trackWrapper.screenSharingTrackWrapper;
                     if (
                         !screenSharingTrackWrapper.isEmpty() &&
-                        screenSharingTrackWrapper.jitsiTrackWrapper.spaceUser?.screenSharingState !== false
+                        screenSharingTrackWrapper.jitsiTrackWrapper.getImmediateSpaceUser()?.screenSharingState !==
+                            false
                     ) {
                         addPeer(screenSharingTrackWrapper);
                     }

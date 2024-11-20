@@ -22,6 +22,7 @@ export class Player extends Character {
     private followingPathPromiseResolve?: (result: { x: number; y: number; cancelled: boolean }) => void;
     private pathWalkingSpeed?: number;
     private readonly unsubscribeVisibilityStore: Unsubscriber;
+    //private readonly unsubscribeLayoutManagerActionStore: Unsubscriber;
 
     constructor(
         Scene: GameScene,
@@ -43,6 +44,13 @@ export class Player extends Character {
                 this.finishFollowingPath(true);
             }
         });
+
+        /*this.unsubscribeLayoutManagerActionStore = layoutManagerActionStore.subscribe((actions) => {
+            this.destroyAllText();
+            actions.forEach((action) => {
+                this.playText(action.uuid, `${action.message}`, -1, action.callback, undefined, action.type);
+            });
+        });*/
     }
 
     public moveUser(delta: number, activeUserInputEvents: ActiveEventList): void {
@@ -331,6 +339,7 @@ export class Player extends Character {
     }
     destroy(): void {
         this.unsubscribeVisibilityStore();
+        //this.unsubscribeLayoutManagerActionStore();
         super.destroy();
     }
 }

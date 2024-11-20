@@ -1,11 +1,8 @@
 import { writable } from "svelte/store";
 import debug from "debug";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
-import { SpaceFilterMessage } from "@workadventure/messages";
 import { ConcatenateMapStore } from "@workadventure/store-utils";
 import { RoomConnection } from "../Connection/RoomConnection";
-import { screenWakeLock } from "../Utils/ScreenWakeLock";
-import { SpaceFilterInterface } from "../Space/SpaceFilter/SpaceFilter";
 import { BroadcastSpace } from "./Common/BroadcastSpace";
 import { BroadcastConnection } from "./Common/BroadcastConnection";
 import { TrackWrapper } from "./Common/TrackWrapper";
@@ -17,7 +14,6 @@ const broadcastServiceLogger = debug("BroadcastService");
 export type BroadcastSpaceFactory = (
     connection: RoomConnection,
     spaceName: string,
-    spaceFilter: SpaceFilterMessage,
     broadcastService: BroadcastService,
     playSound: boolean
 ) => BroadcastSpace;
@@ -26,7 +22,6 @@ export class BroadcastService {
     private broadcastConnections: Map<string, BroadcastConnection> = new Map<string, BroadcastConnection>();
     private broadcastSpaces: BroadcastSpace[] = [];
     private tracks = new ConcatenateMapStore<string, TrackWrapper>();
-    private screenWakeRelease: (() => Promise<void>) | undefined;
 
     constructor(private roomConnection: RoomConnection, private defaultBroadcastSpaceFactory: BroadcastSpaceFactory) {}
 
@@ -44,27 +39,15 @@ export class BroadcastService {
     ): BroadcastSpace {
         const spaceNameSlugify = slugify(spaceName);
 
-        const spaceFilter: SpaceFilterMessage = {
-            filterName: "watchSpaceLiveStreaming",
-            spaceName: spaceNameSlugify,
-            filter: {
-                $case: "spaceFilterLiveStreaming",
-                spaceFilterLiveStreaming: {},
-            },
-        };
-
         const broadcastSpace = broadcastSpaceFactory
-            ? broadcastSpaceFactory(this.roomConnection, spaceNameSlugify, spaceFilter, this, playSound)
-            : this.defaultBroadcastSpaceFactory(this.roomConnection, spaceNameSlugify, spaceFilter, this, playSound);
+            ? broadcastSpaceFactory(this.roomConnection, spaceNameSlugify, this, playSound)
+            : this.defaultBroadcastSpaceFactory(this.roomConnection, spaceNameSlugify, this, playSound);
 
         this.broadcastSpaces.push(broadcastSpace);
 
         this.tracks.addStore(broadcastSpace.tracks);
         broadcastServiceLogger("joinSpace", spaceNameSlugify);
-        screenWakeLock
-            .requestWakeLock()
-            .then((release) => (this.screenWakeRelease = release))
-            .catch((error) => console.error(error));
+
         return broadcastSpace;
     }
 
@@ -82,13 +65,6 @@ export class BroadcastService {
         }
 
         jitsiLoadingStore.set(false);
-        if (this.screenWakeRelease) {
-            this.screenWakeRelease()
-                .then(() => {
-                    this.screenWakeRelease = undefined;
-                })
-                .catch((error) => console.error(error));
-        }
     }
 
     /**
@@ -122,6 +98,7 @@ export class BroadcastService {
      * @param provider Provider name
      * @returns The broadcast connection or undefined if not found
      */
+    /*
     private canDisconnectProvider(provider: string): boolean {
         return this.broadcastSpaces
             .filter((space) => space.provider === provider)
@@ -131,6 +108,7 @@ export class BroadcastService {
                     .every((spaceFilter: SpaceFilterInterface) => spaceFilter.getUsers().length === 0)
             );
     }
+    */
 
     /**
      * Destroy the broadcast service
@@ -145,9 +123,9 @@ export class BroadcastService {
      * Check if the broadcast service can disconnect
      * @param provider Provider name
      */
-    public checkIfCanDisconnect(provider: string) {
+    public disconnectProvider(provider: string) {
         const providerConnection = this.broadcastConnections.get(provider);
-        if (this.canDisconnectProvider(provider) && providerConnection !== undefined) {
+        if (/*this.canDisconnectProvider(provider) && */ providerConnection !== undefined) {
             broadcastServiceLogger("Disconnecting from broadcast connection");
             providerConnection
                 .disconnect()

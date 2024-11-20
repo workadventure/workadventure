@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
     import { fly } from "svelte/transition";
+    import { IconChevronRight } from "@wa-icons";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
@@ -11,7 +12,6 @@
     import { userIsAdminStore } from "../../Stores/GameStore";
     import Megaphone from "./ConfigureMyRoom/Megaphone.svelte";
     import RoomSettings from "./ConfigureMyRoom/RoomSettings.svelte";
-    import { IconChevronRight } from "@wa-icons";
 
     let isVisible: boolean;
 

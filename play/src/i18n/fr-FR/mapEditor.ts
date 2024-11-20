@@ -97,6 +97,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             findOutMoreHere: "En savoir plus ici",
             openPickerSelector: "Ouvrir le sélecteur",
             forcedInNewTab: "Ouverture forcée dans un nouvel onglet",
+            openApplication: "Ouvrir l'application",
         },
         advancedOptions: "Options avancées",
         speakerMegaphoneProperties: {
@@ -169,7 +170,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         restrictedRightsProperties: {
             label: "Ajouter des droits",
-            rightTitle: "Droit d'accès et d'édion via les tags utilisateur",
+            rightTitle: "Droit d'accès et d'édition via les tags utilisateur",
             rightWriteTitle: "Droits d'édition",
             rightWriteDescription:
                 "Les droits d'édition définissent qui peut modifier la zone. Les utilisateurs correspondant à l'un de ces tags peuvent créer, mettre à jour ou supprimer un objet dans la zone.",
@@ -205,6 +206,14 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "Simplifiez l'accès aux savoirs de vos équipes, clients et partenaires ! Format digeste, accessible sur tous supports.",
             error: "Veuillez entrer une URL Cards valide",
             disabled: "L'intégration Cards est désactivée.",
+        },
+        matrixProperties: {
+            label: "Lier un salon Matrix",
+            description: "Lier un salon Matrix",
+            openAutomaticallyChatLabel: "Ouvrir le chat automatiquement",
+            roomNameLabel: "Nom du salon",
+            roomNameLabelPlaceholder: "Mon Salon",
+            defaultChatRoomAreaName: "Salon de zone",
         },
     },
     areaEditor: {

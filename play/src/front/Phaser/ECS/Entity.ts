@@ -10,17 +10,16 @@ import {
 } from "@workadventure/map-editor";
 import merge from "lodash/merge";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
-import { get, Unsubscriber } from "svelte/store";
-import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
-
+import { Unsubscriber, get } from "svelte/store";
 import { ActionsMenuAction, actionsMenuStore } from "../../Stores/ActionsMenuStore";
 import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { createColorStore } from "../../Stores/OutlineColorStore";
+import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
+import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { ActivatableInterface } from "../Game/ActivatableInterface";
 import { GameScene } from "../Game/GameScene";
 import { OutlineableInterface } from "../Game/OutlineableInterface";
 import { SpeechDomElement } from "../Entity/SpeechDomElement";
-import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
 
 export enum EntityEvent {
     Moved = "EntityEvent:Moved",
@@ -384,11 +383,10 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                                     property.width,
                                     property.closable
                                 );
-                                try {
-                                    coWebsiteManager.addCoWebsiteToStore(coWebsite);
-                                } catch (error) {
-                                    console.error("Error during loading a co-website: " + coWebsite.getUrl(), error);
-                                }
+                                coWebsiteManager.addCoWebsiteToStore(coWebsite, undefined);
+                                coWebsiteManager.loadCoWebsite(coWebsite).catch(() => {
+                                    console.error("Error during loading a co-website: " + coWebsite.getUrl());
+                                });
                             }
                             actionsMenuStore.clear();
                         },

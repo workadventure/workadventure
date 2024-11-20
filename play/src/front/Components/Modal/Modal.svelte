@@ -99,7 +99,7 @@
                     </button>
                 {/if}
             {/if}
-            <button on:click|preventDefault|stopPropagation={close} class="btn btn-danger rounded">
+            <button on:click|preventDefault|stopPropagation={close} class="btn btn-danger rounded" data-testid="close-modal-button">
                 <XIcon />
             </button>
         </div>

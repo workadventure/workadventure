@@ -5,6 +5,7 @@ export interface FrontConfigurationInterface {
     PUSHER_URL: string;
     FRONT_URL: string;
     ADMIN_URL: string | undefined;
+    ADMIN_BO_URL: string | undefined;
     UPLOADER_URL: string;
     ICON_URL: string;
     STUN_SERVER: string | undefined;
@@ -60,4 +61,7 @@ export interface FrontConfigurationInterface {
     CARDS_ENABLED: boolean;
     EMBEDLY_KEY: string | undefined;
     MATRIX_PUBLIC_URI: string | undefined;
+    ENABLE_CHAT: boolean | undefined;
+    ENABLE_CHAT_ONLINE_LIST: boolean | undefined;
+    ENABLE_CHAT_DISCONNECTED_LIST: boolean | undefined;
 }

@@ -89,7 +89,12 @@ export interface AdminInterface {
      * @param roomUrl
      * @return string[]
      */
-    getUrlRoomsFromSameWorld(roomUrl: string, locale?: string, tags?: string[]): Promise<ShortMapDescriptionList>;
+    getUrlRoomsFromSameWorld(
+        roomUrl: string,
+        locale?: string,
+        tags?: string[],
+        bypassTagFilter?: boolean
+    ): Promise<ShortMapDescriptionList>;
 
     /**
      * @param accessToken
@@ -108,8 +113,7 @@ export interface AdminInterface {
         playUri: string,
         name: string,
         message: string,
-        byUserUuid: string,
-        byUserEmail?: string
+        byUserUuid: string
     ): Promise<boolean>;
 
     getTagsList(roomUrl: string): Promise<string[]>;
@@ -121,7 +125,7 @@ export interface AdminInterface {
 
     saveTextures(userIdentifier: string, textures: string[], roomUrl: string): Promise<void>;
 
-    saveCompanionTexture(userIdentifier: string, texture: string, roomUrl: string): Promise<void>;
+    saveCompanionTexture(userIdentifier: string, texture: string | null, roomUrl: string): Promise<void>;
 
     getCapabilities(): Promise<Capabilities>;
 
@@ -133,7 +137,7 @@ export interface AdminInterface {
 
     getWorldChatMembers(playUri: string, searchText: string): Promise<WorldChatMembersData>;
 
-    updateChatId(userIdentifier: string, chatId: string): void;
+    updateChatId(userIdentifier: string, chatId: string, roomUrl: string): Promise<void>;
 
     refreshOauthToken(token: string): Promise<OauthRefreshToken>;
 }

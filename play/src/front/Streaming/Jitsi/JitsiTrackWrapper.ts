@@ -1,6 +1,8 @@
+// eslint-disable-next-line import/no-unresolved
 import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
 import { Readable, readable, Unsubscriber, Writable, writable } from "svelte/store";
 import { Subscription } from "rxjs";
+import { Deferred } from "ts-deferred";
 import { SoundMeter } from "../../Phaser/Components/SoundMeter";
 import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
 import { TrackWrapper } from "../Common/TrackWrapper";
@@ -8,7 +10,11 @@ import { SpaceUserExtended } from "../../Space/SpaceFilter/SpaceFilter";
 import { JitsiTrackStreamWrapper } from "./JitsiTrackStreamWrapper";
 
 export class JitsiTrackWrapper implements TrackWrapper {
+    /**
+     * @deprecated
+     */
     private _spaceUser: SpaceUserExtended | undefined;
+    private _spaceUserDeferred = new Deferred<SpaceUserExtended>();
     public readonly cameraTrackWrapper: JitsiTrackStreamWrapper = new JitsiTrackStreamWrapper(this, "video/audio");
     public readonly screenSharingTrackWrapper: JitsiTrackStreamWrapper = new JitsiTrackStreamWrapper(this, "desktop");
     private _audioStreamStore: Writable<MediaStream | null> = writable<MediaStream | null>(null);
@@ -188,23 +194,33 @@ export class JitsiTrackWrapper implements TrackWrapper {
         this.screenSharingTrackWrapper.setVideoTrack(undefined);
     }
 
-    get spaceUser(): SpaceUserExtended | undefined {
-        return this._spaceUser;
+    get spaceUser(): Promise<SpaceUserExtended> {
+        return this._spaceUserDeferred.promise;
     }
 
-    set spaceUser(value: SpaceUserExtended | undefined) {
+    setSpaceUser(value: SpaceUserExtended | undefined) {
+        this._spaceUserDeferred.resolve(value);
         this._spaceUser = value;
-        this.spaceUserUpdateSubscribe = this._spaceUser?.updateSubject.subscribe((event) => {
-            if (event.changes.screenSharingState) {
-                // This is the only reliable way to know if the screen sharing is active or not
-                // Indeed, if the user stops the screen sharing using the "Stop sharing" button in the OS, the screen sharing track is not removed
-                // When the user starts the screen sharing again, the track is not replaced and therefore, we cannot put the screen sharing track in full screen again.
-                // With this trick, we can force the screen sharing to go full screen again.
+        if (!this.spaceUserUpdateSubscribe) {
+            this.spaceUserUpdateSubscribe = value?.updateSubject.subscribe((event) => {
+                if (event.changes.screenSharingState) {
+                    // This is the only reliable way to know if the screen sharing is active or not
+                    // Indeed, if the user stops the screen sharing using the "Stop sharing" button in the OS, the screen sharing track is not removed
+                    // When the user starts the screen sharing again, the track is not replaced and therefore, we cannot put the screen sharing track in full screen again.
+                    // With this trick, we can force the screen sharing to go full screen again.
 
-                // Let's notify the embedded store that a new screen-sharing has started
-                this.highlightScreenSharing();
-            }
-        });
+                    // Let's notify the embedded store that a new screen-sharing has started
+                    this.highlightScreenSharing();
+                }
+            });
+        }
+    }
+
+    /**
+     * @deprecated
+     */
+    public getImmediateSpaceUser(): SpaceUserExtended | undefined {
+        return this._spaceUser;
     }
 
     private highlightScreenSharing(): void {
@@ -212,9 +228,13 @@ export class JitsiTrackWrapper implements TrackWrapper {
             // Never highlight our own screen sharing
             return;
         }
-        // Notifions le magasin intégré qu'un nouveau partage d'écran a commencé
-        highlightedEmbedScreen.toggleHighlight(this.screenSharingTrackWrapper);
+        // Let's notify the embedded store that a new screen-sharing has started
+        highlightedEmbedScreen.highlight({
+            type: "streamable",
+            embed: this.screenSharingTrackWrapper,
+        });
     }
+
     get volumeStore(): Readable<number[] | undefined> | undefined {
         return this._volumeStore;
     }
@@ -233,26 +253,41 @@ export class JitsiTrackWrapper implements TrackWrapper {
         return this.cameraTrackWrapper.isEmpty() && this.screenSharingTrackWrapper.isEmpty();
     }
 
-    public kickoff() {
-        if (this.spaceUser?.jitsiParticipantId)
-            this.spaceUser?.emitter?.emitKickOffUserMessage(this.spaceUser.jitsiParticipantId);
-    }
+    // public kickoff() {
+    //     if (this.spaceUser?.jitsiParticipantId) {
+    //         this.spaceUser.emitPrivateEvent({
+    //             $case: "kickOffUser",
+    //             kickOffUser: {
+    //             },
+    //         });
+    //     }
+    // }
 
-    public muteMicrophoneEverybody() {
-        this.spaceUser?.emitter?.emitMuteEveryBodySpace();
-    }
+    // public muteMicrophoneEverybody() {
+    //     this.spaceUser?.space.emitPublicMessage({
+    //         $case: "muteAudioForEverybody",
+    //         muteAudioForEverybody: {},
+    //     });
+    // }
 
-    public muteVideoEverybody() {
-        this.spaceUser?.emitter?.emitMuteVideoEveryBodySpace();
-    }
+    /*public muteVideoEverybody() {
+        this.spaceUser?.space.emitPublicMessage({
+            $case: "muteVideoForEverybody",
+            muteVideoForEverybody: {},
+        });
+    }*/
 
-    public muteMicrophonePartcipant() {
-        if (this.spaceUser?.jitsiParticipantId)
-            this.spaceUser?.emitter?.emitMuteParticipantIdSpace(this.spaceUser.jitsiParticipantId);
-    }
+    // public muteMicrophoneParticipant() {
+    //     this.spaceUser?.emitPrivateEvent({
+    //         $case: "muteAudio",
+    //         muteAudio: {},
+    //     });
+    // }
 
-    public muteVideoParticipant() {
-        if (this.spaceUser?.jitsiParticipantId)
-            this.spaceUser?.emitter?.emitMuteVideoParticipantIdSpace(this.spaceUser.jitsiParticipantId);
-    }
+    // public muteVideoParticipant() {
+    //     this.spaceUser?.emitPrivateEvent({
+    //         $case: "muteVideo",
+    //         muteVideo: {},
+    //     });
+    // }
 }

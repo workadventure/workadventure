@@ -64,6 +64,7 @@ services:
       - OPID_USERNAME_CLAIM
       - OPID_LOCALE_CLAIM
       - OPID_LOGOUT_REDIRECT_URL
+      - FALLBACK_LOCALE
       - ENABLE_CHAT
       - ENABLE_CHAT_UPLOAD
       - ENABLE_CHAT_ONLINE_LIST
@@ -78,7 +79,7 @@ services:
       - ADMIN_URL
       - ROOM_API_PORT=50051
       - ROOM_API_SECRET_KEY=${ROOM_API_SECRET_KEY}
-      - GRPC_VERBOSITY=DEBUG
+      - GRPC_VERBOSITY=ERROR
       - GRPC_TRACE=all
       - SENTRY_ORG=${SENTRY_ORG}
       - SENTRY_PROJECT=${SENTRY_PROJECT}
@@ -112,6 +113,7 @@ services:
       # Google drive picker
       - GOOGLE_DRIVE_PICKER_CLIENT_ID=${GOOGLE_DRIVE_PICKER_CLIENT_ID}
       - GOOGLE_DRIVE_PICKER_APP_ID=${GOOGLE_DRIVE_PICKER_APP_ID}
+      - MAP_STORAGE_API_TOKEN=${MAP_STORAGE_API_TOKEN:-${SECRET_KEY}}
     labels:
       traefik.enable: "true"
       traefik.http.routers.play.rule: "Host(`${DOMAIN}`) && PathPrefix(`/`)"
@@ -251,6 +253,8 @@ services:
       SENTRY_TRACES_SAMPLE_RATE: $SENTRY_TRACES_SAMPLE_RATE
       PATH_PREFIX: "/map-storage"
       ENTITY_COLLECTION_URLS: "https://${DOMAIN}/collections/FurnitureCollection.json,https://${DOMAIN}/collections/OfficeCollection.json"
+      MAP_STORAGE_API_TOKEN: "${MAP_STORAGE_API_TOKEN:-${SECRET_KEY}}"
+      PUSHER_URL: "https://${DOMAIN}/"
     volumes:
       - map-storage-data:/maps
     labels:

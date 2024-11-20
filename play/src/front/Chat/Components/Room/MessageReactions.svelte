@@ -4,9 +4,10 @@
     import Reaction from "./Reaction.svelte";
 
     export let reactions: MapStore<string, ChatMessageReaction>;
+    export let classes = "";
 </script>
 
-<div class="tw-flex tw-flex-row tw-gap-1 tw-mt-1 tw-flex-wrap">
+<div class="absolute -bottom-4 flex flex-row flex-wrap rounded-3xl {classes}">
     {#each [...$reactions] as [reactionKey, reaction] (reactionKey)}
         <Reaction {reaction} />
     {/each}

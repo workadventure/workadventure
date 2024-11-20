@@ -3,6 +3,7 @@ import process from "process";
 import * as Sentry from "@sentry/node";
 import * as grpc from "@grpc/grpc-js";
 import { RoomApiService } from "@workadventure/messages/src/ts-proto-generated/room-api";
+import { setErrorHandler } from "@workadventure/shared-utils";
 import app from "./pusher/app";
 import {
     PUSHER_HTTP_PORT,
@@ -13,6 +14,7 @@ import {
     SENTRY_RELEASE,
     SENTRY_TRACES_SAMPLE_RATE,
     SENTRY_ENVIRONMENT,
+    PROMETHEUS_PORT,
 } from "./pusher/enums/EnvironmentVariable";
 import RoomApiServer from "./room-api/RoomApiServer";
 
@@ -32,6 +34,12 @@ if (SENTRY_DSN != undefined) {
         };
 
         Sentry.init(sentryOptions);
+
+        setErrorHandler((error: Error) => {
+            console.error(error);
+            Sentry.captureException(error);
+        });
+
         console.info("Sentry initialized");
     } catch (e) {
         console.error("Error while initializing Sentry", e);
@@ -43,6 +51,12 @@ if (SENTRY_DSN != undefined) {
 
     app.listen(PUSHER_HTTP_PORT)
         .then(() => console.info(`WorkAdventure Pusher started on port ${PUSHER_HTTP_PORT}!`))
+        .catch((e) => {
+            console.error(e);
+            Sentry.captureException(e);
+        });
+    app.listenPrometheusPort()
+        ?.then(() => console.info(`WorkAdventure Prometheus started on port ${PROMETHEUS_PORT}!`))
         .catch((e) => {
             console.error(e);
             Sentry.captureException(e);

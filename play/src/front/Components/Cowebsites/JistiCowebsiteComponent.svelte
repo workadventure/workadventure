@@ -77,13 +77,28 @@
         jitsiExternalApiFactory
             .loadJitsiScript(domain)
             .then(() => {
+                const userConnectedTags = gameManager.getCurrentGameScene().connection?.getAllTags() ?? [];
+
+                const mergedConfig = mergeConfig(actualCowebsite.jitsiConfig);
+
+                if (
+                    !userConnectedTags.includes("admin") &&
+                    (!this.jitsiConfig?.jitsiRoomAdminTag ||
+                        !userConnectedTags.includes(this.jitsiConfig?.jitsiRoomAdminTag))
+                ) {
+                    mergedConfig.localRecording = {
+                        disable: true,
+                        disableSelfRecording: true,
+                    };
+                }
+
                 const options: JitsiOptions = {
                     roomName: roomName,
                     jwt: jwt,
                     width: "100%",
                     height: "100%",
                     parentNode: jitsiContainer,
-                    configOverwrite: mergeConfig(),
+                    configOverwrite: mergedConfig,
                     interfaceConfigOverwrite: {
                         ...defaultInterfaceConfig,
                         ...actualCowebsite.jitsiInterfaceConfig,

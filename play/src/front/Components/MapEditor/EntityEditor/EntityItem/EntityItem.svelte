@@ -9,15 +9,16 @@
     const dispatch = createEventDispatcher();
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
     data-testid="entity-item"
-    class={`tw-flex tw-cursor-pointer tw-border-solid tw-border-transparent tw-h-full tw-w-full hover:tw-rounded-2xl hover:tw-border-white  ${
-        isActive ? "tw-border-solid tw-border-yellow-400 tw-rounded-2xl" : ""
+    class={`flex cursor-pointer border-solid border-transparent h-full w-full bg-white/10 rounded-2xl hover:bg-white/20 hover:border-white hover:animate-pulse ${
+        isActive ? "border-solid border-yellow-400 rounded-2xl" : ""
     }`}
     on:click={() => dispatch("selectEntity", entityVariant)}
 >
     <EntityImage
-        classNames="tw-cursor-pointer tw-w-14 tw-h-14 tw-object-contain tw-m-auto"
+        classNames="cursor-pointer w-14 h-14 object-contain m-auto"
         imageSource={entityVariant.defaultPrefab.imagePath}
         imageAlt={entityVariant.defaultPrefab.name}
     />

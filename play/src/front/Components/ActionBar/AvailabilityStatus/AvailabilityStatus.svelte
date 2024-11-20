@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onDestroy } from "svelte";
+    import * as Sentry from "@sentry/svelte";
     import { AvailabilityStatus } from "@workadventure/messages";
     import { availabilityStatusMenuStore } from "../../../Stores/AvailabilityStatusMenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
@@ -42,7 +43,7 @@
     let listProps: AvailabilityStatusListPropsInterface = {
         currentStatus: $availabilityStatusStore,
         listStatusTitle: $LL.actionbar.listStatusTitle.enable(),
-        statusInformations: getStatusInformation(statusToShow),
+        statusInformation: getStatusInformation(statusToShow),
     };
 
     let buttonProps: AvailabilityStatusPropsInterface = {
@@ -65,6 +66,7 @@
             statusChanger.changeStatusTo(newStatus);
         } catch (e) {
             console.error("Error while changing status", e);
+            Sentry.captureException(e);
         }
         buttonProps = {
             ...buttonProps,
@@ -86,7 +88,7 @@
 <div
     id="AvailabilityStatus"
     on:click|stopPropagation={toggleStatusPicker}
-    class="bottom-action-button tw-w-full tw-overflow-ellipsis tw-max-w-24"
+    class="bottom-action-button w-full overflow-ellipsis max-w-24"
 >
     <AvailabilityStatusButton props={buttonProps} />
     {#if $availabilityStatusMenuStore}

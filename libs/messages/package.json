@@ -4,7 +4,8 @@
   "description": "Google Protobuf generated messages",
   "main": "./src/index.ts",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
   },
   "author": "WorkAdventure",
   "license": "ISC",

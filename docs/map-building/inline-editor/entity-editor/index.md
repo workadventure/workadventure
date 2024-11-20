@@ -116,3 +116,10 @@ In order to move or select an object, it must be created from the inline map edi
 
 If the object is a sprite part of the Tiled map, you won't be able to move it. You will have to delete it from the Tiled
 map and recreate it in the inline map editor.
+
+## Special thanks
+
+:::info Sponsored feature ❤️
+This work has been supported by the French government in the context of the "Programme d'Investissements d'Avenir" 
+(Investments for the Future Program), managed by the National Research Agency (ANR) under the reference ANR-21-DMES-0001.
+:::

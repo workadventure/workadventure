@@ -11,7 +11,7 @@
 
 <PopupGeneric {isOpen}>
     <h1 slot="title">{$LL.mapEditor.areaEditor.actionPopupOnPersonalAreaWithEntities.title()}</h1>
-    <div slot="content" class="tw-whitespace-nowrap">
+    <div slot="content" class="whitespace-nowrap">
         {$LL.mapEditor.areaEditor.actionPopupOnPersonalAreaWithEntities.description()}
     </div>
     <svelte:fragment slot="action">

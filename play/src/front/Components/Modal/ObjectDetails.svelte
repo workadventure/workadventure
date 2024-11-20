@@ -147,7 +147,7 @@
                     {$mapExplorationObjectSelectedStore?.getPrefab().name.toUpperCase()}
                 </h1>
             {/if}
-            <img src={$mapExplorationObjectSelectedStore?.getPrefab().imagePath} alt="Object" class="w-32 h-32 mb-4 tw-object-contain" />
+            <img src={$mapExplorationObjectSelectedStore?.getPrefab().imagePath} alt="Object" class="w-32 h-32 mb-4 object-contain" />
             <p class="p-0 m-0">
                 {description ?? $LL.mapEditor.explorer.noDescriptionFound()}
             </p>
@@ -158,7 +158,7 @@
             {/each}
         </div>
         <div class="flex flex-row justify-evenly items-center bg-dark-purple w-full p-2 rounded-b-3xl">
-            <button class="bg-dark-purple p-4" on:click={close}>Fermer</button>
+            <button class="bg-dark-purple p-4" on:click={close}>{$LL.mapEditor.explorer.details.close()}</button>
             <button class="light p-4" on:click={goTo}>
                 {$LL.mapEditor.explorer.details.moveToEntity({
                     name: $mapExplorationObjectSelectedStore?.getPrefab().name.toUpperCase(),

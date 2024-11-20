@@ -42,12 +42,12 @@ class AreaAccessRights {
     await AreaEditor.setAreaRightProperty(page, writeRights, readRights);
   }
 
-  async openAreaEditorAndAddArea(page) {
+  async openAreaEditorAndAddArea(page, topLeft?: Coordinates, bottomRight?: Coordinates) {
     await MapEditor.openAreaEditor(page);
     await AreaEditor.drawArea(
       page,
-      this.areaSize.topLeft,
-      this.areaSize.bottomRight
+      topLeft || this.areaSize.topLeft,
+      bottomRight || this.areaSize.bottomRight
     );
   }
 

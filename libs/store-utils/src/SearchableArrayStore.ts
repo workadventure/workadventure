@@ -41,8 +41,17 @@ export class SearchableArrayStore<K, V>
   }
 
   push(...items: V[]): number {
-    const number = super.push(...items);
-    for (const item of items) {
+
+    const {
+      newItems,
+      updatedItems,
+    } = this.separateNewAndUpdatedItems(items)
+
+    updatedItems.forEach((item)=>this.update(item));
+
+    const number = super.push(...newItems);
+
+    for (const item of newItems) {
       this.storesByKey.set(this.getKeyCallback(item), item);
     }
     this.store.set(this);
@@ -50,8 +59,15 @@ export class SearchableArrayStore<K, V>
   }
 
   unshift(...items: V[]): number {
-    const number = super.unshift(...items);
-    for (const item of items) {
+    const {
+      newItems,
+      updatedItems,
+    } = this.separateNewAndUpdatedItems(items)
+
+    updatedItems.forEach((item)=>this.update(item));
+    const number = super.unshift(...newItems);
+
+    for (const item of newItems) {
       this.storesByKey.set(this.getKeyCallback(item), item);
     }
     this.store.set(this);
@@ -118,7 +134,27 @@ export class SearchableArrayStore<K, V>
     const index = super.findIndex(
       (item) => this.getKeyCallback(item) === this.getKeyCallback(value)
     );
+    
     this[index] = value;
     this.store.set(this);
+  }
+
+  private separateNewAndUpdatedItems(items : V[]):{newItems:V[],updatedItems:V[]}{
+    return items.reduce((acc,currItem)=>{
+      if(this.storesByKey.has(this.getKeyCallback(currItem))){
+        acc.updatedItems.push(currItem)
+      }else{
+        acc.newItems.push(currItem)
+      }
+
+      return acc;
+    },{
+      newItems:[],
+      updatedItems:[]
+    } as 
+      {
+        newItems:V[],
+        updatedItems:V[]
+      }) 
   }
 }

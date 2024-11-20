@@ -1,13 +1,11 @@
 <script lang="ts">
     import { ChatMessage } from "../../Connection/ChatConnection";
     import { selectedChatMessageToEdit, selectedChatMessageToReply } from "../../Stores/ChatStore";
-    import { getChatEmojiPicker } from "../../EmojiPicker";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    import { IconArrowBackUp, IconArrowDown, IconMoodSmile, IconPencil, IconTrash } from "@wa-icons";
+    import EmojiButton from "./EmojiButton.svelte";
+    import { IconArrowBackUp, IconArrowDown, IconPencil, IconTrash } from "@wa-icons";
 
     export let message: ChatMessage;
-
-    let optionRef: HTMLDivElement;
 
     function replyToMessage() {
         selectedChatMessageToReply.set(message);
@@ -21,47 +19,39 @@
         selectedChatMessageToEdit.set(message);
     }
 
-    const emojiPicker = getChatEmojiPicker();
-
-    emojiPicker.on("emoji", ({ emoji }) => {
-        message.addReaction(emoji).catch((error) => console.error(error));
-    });
-
-    function openCloseEmojiPicker() {
-        emojiPicker.togglePicker(optionRef);
+    function addReaction(event: CustomEvent<string>) {
+        message.addReaction(event.detail).catch((error) => console.error(error));
     }
 
     const { content, isMyMessage, type } = message;
 
-    const chat = gameManager.getCurrentGameScene().chatConnection;
+    const chat = gameManager.chatConnection;
 
     $: isGuest = chat.isGuest;
 </script>
 
-<div class="tw-flex tw-flex-row tw-gap-1 tw-items-center" bind:this={optionRef}>
+<div class="flex flex-row gap-1 items-center">
     {#if message.type !== "text"}
         <a
             href={$content.url}
             download={$content.body}
-            class="tw-p-0 tw-m-0 tw-text-white hover:tw-text-white"
+            class="p-0 m-0 text-white/50 hover:text-white transition-all"
             target="_blank"
         >
-            <IconArrowDown font-size={16} class="hover:tw-cursor-pointer hover:tw-text-secondary" />
+            <IconArrowDown font-size={16} class="hover:cursor-pointer" />
         </a>
     {/if}
-    <button class="tw-p-0 tw-m-0 hover:tw-text-black" data-testid="replyToMessageButton" on:click={replyToMessage}>
+    <button
+        class="p-0 m-0 text-white/50 hover:text-white transition-all hover:cursor-pointer"
+        data-testid="replyToMessageButton"
+        on:click={replyToMessage}
+    >
         <IconArrowBackUp font-size={16} />
     </button>
-    <button
-        data-testid="openEmojiPickerButton"
-        class="tw-p-0 tw-m-0 hover:tw-text-yellow-500"
-        on:click={openCloseEmojiPicker}
-    >
-        <IconMoodSmile font-size={16} />
-    </button>
+    <EmojiButton on:change={addReaction} />
     {#if isMyMessage && type === "text"}
         <button
-            class="tw-p-0 tw-m-0 hover:tw-text-blue-500"
+            class="p-0 m-0 text-white/50 hover:text-white transition-all hover:cursor-pointer"
             data-testid="editMessageButton"
             on:click={selectMessageToEdit}
         >
@@ -69,7 +59,11 @@
         </button>
     {/if}
     {#if $isGuest === false}
-        <button class="tw-p-0 tw-m-0 hover:tw-text-red-500" data-testid="removeMessageButton" on:click={removeMessage}>
+        <button
+            class="p-0 m-0 text-white/50 hover:text-white transition-all hover:cursor-pointer"
+            data-testid="removeMessageButton"
+            on:click={removeMessage}
+        >
             <IconTrash font-size={16} />
         </button>
     {/if}

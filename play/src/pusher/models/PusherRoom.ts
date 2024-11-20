@@ -8,15 +8,12 @@ import { Socket } from "../services/SocketManager";
 import { PositionDispatcher } from "./PositionDispatcher";
 import type { ViewportInterface } from "./Websocket/ViewportMessage";
 import type { ZoneEventListener } from "./Zone";
-import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 
 const debug = Debug("room");
 
-export class PusherRoom implements CustomJsonReplacerInterface {
+export class PusherRoom {
     private readonly positionNotifier: PositionDispatcher;
     private versionNumber = 1;
-    //eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public mucRooms: Array<any> = [];
 
     private backConnection!: ClientReadableStream<BatchToPusherRoomMessage>;
     private isClosing = false;
@@ -27,14 +24,6 @@ export class PusherRoom implements CustomJsonReplacerInterface {
     constructor(public readonly roomUrl: string, private socketListener: ZoneEventListener) {
         // A zone is 10 sprites wide.
         this.positionNotifier = new PositionDispatcher(this.roomUrl, 320, 320, this.socketListener);
-
-        // By default, create a MUC room whose name is the name of the room.
-        this.mucRooms = [
-            {
-                name: "Connected users",
-                uri: roomUrl,
-            },
-        ];
     }
 
     public setViewport(socket: Socket, viewport: ViewportInterface): void {
@@ -43,10 +32,6 @@ export class PusherRoom implements CustomJsonReplacerInterface {
 
     public join(socket: Socket): void {
         this.listeners.add(socket);
-
-        if (!this.mucRooms) {
-            return;
-        }
 
         socket.getUserData().pusherRoom = this;
     }
@@ -254,13 +239,5 @@ export class PusherRoom implements CustomJsonReplacerInterface {
         debug("Closing connection to room %s on back server", this.roomUrl);
         this.isClosing = true;
         this.backConnection.cancel();
-    }
-
-    public customJsonReplacer(key: unknown, value: unknown): string | undefined {
-        if (key === "backConnection") {
-            const backConnection = value as ClientReadableStream<BatchToPusherRoomMessage> | undefined;
-            return backConnection ? "backConnection" : "undefined";
-        }
-        return undefined;
     }
 }

@@ -282,7 +282,7 @@
             }}
         />
     </div>
-    <div class="properties-buttons flex flex-row flex-wrap tw-m-2">
+    <div class="properties-buttons flex flex-row flex-wrap m-2">
         <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="klaxoon"
@@ -340,7 +340,7 @@
             }}
         />
     </div>
-    <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-m-2">
+    <div class="properties-buttons flex flex-row flex-wrap m-2">
         {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
             <AddPropertyButtonWrapper
                 property="openWebsite"
@@ -479,7 +479,7 @@
         color: rgb(242 253 255 / var(--text-opacity));
         outline: 2px solid transparent;
         outline-offset: 2px;
-        cursor: url(/src/front/style/images/cursor_pointer.png), pointer;
+        cursor: url(../../../../../public/static/images/cursor_pointer.png), pointer;
     }
 
     .input-switch::before {

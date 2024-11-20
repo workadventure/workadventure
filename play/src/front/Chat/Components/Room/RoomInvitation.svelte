@@ -1,40 +1,61 @@
 <script lang="ts">
     import { ChatRoom } from "../../Connection/ChatConnection";
-    import { selectedRoom } from "../../Stores/ChatStore";
+    import { selectedRoomStore } from "../../Stores/ChatStore";
     import Avatar from "../Avatar.svelte";
-
+    import { LL } from "../../../../i18n/i18n-svelte";
+    import { IconLoader } from "@wa-icons";
     export let room: ChatRoom;
     let roomName = room.name;
-    let displayInvitationRoomActions = false;
-
-    function toggleDisplayInvitationRoomActions() {
-        displayInvitationRoomActions = !displayInvitationRoomActions;
-    }
+    let loadingInvitation = false;
 
     function joinRoom() {
-        room.joinRoom();
-        selectedRoom.set(room);
+        loadingInvitation = true;
+        room.joinRoom()
+            .then(() => {
+                selectedRoomStore.set(room);
+            })
+            .finally(() => {
+                loadingInvitation = false;
+            });
     }
 
     function leaveRoom() {
-        room.leaveRoom();
+        loadingInvitation = true;
+        room.leaveRoom().finally(() => {
+            loadingInvitation = false;
+        });
     }
 </script>
 
 <div
-    class="tw-text-md tw-flex tw-gap-2 tw-flex-row tw-items-center hover:tw-bg-white hover:tw-bg-opacity-10 hover:tw-rounded-md hover:!tw-cursor-pointer tw-p-1"
+    class="text-md flex gap-2 flex-row items-center hover:bg-white transition-all hover:bg-opacity-10 hover:rounded-md hover:!cursor-pointer p-2"
     data-testid="userInvitation"
-    on:click={toggleDisplayInvitationRoomActions}
 >
-    <div class="tw-relative">
+    <div class="relative">
         <Avatar avatarUrl={room.avatarUrl} fallbackName={$roomName} />
     </div>
-    <p class="tw-m-0">{$roomName}</p>
-</div>
-{#if displayInvitationRoomActions}
-    <div class="tw-flex">
-        <button class="tw-text-blue-300" data-testid="acceptInvitationButton" on:click={() => joinRoom()}>Accept</button
-        >
-        <button class="tw-text-red-500" on:click={() => leaveRoom()}>Decline</button>
+    <div class="m-0 grow text-sm font-bold">
+        {$roomName}
     </div>
-{/if}
+    {#if loadingInvitation}
+        <div class="min-h-[60px] text-md flex gap-2 justify-center flex-row items-center p-1">
+            <IconLoader class="animate-spin" />
+        </div>
+    {:else}
+        <div class="flex">
+            <button
+                class="border border-solid border-danger text-danger hover:bg-danger-400/10 rounded text-xs py-1 px-2 m-0"
+                on:click={() => leaveRoom()}
+            >
+                {$LL.chat.decline()}
+            </button>
+            <button
+                class="border border-solid border-success text-success hover:bg-success-400/10 rounded text-xs py-1 px-2 m-0"
+                data-testid="acceptInvitationButton"
+                on:click={() => joinRoom()}
+            >
+                {$LL.chat.accept()}
+            </button>
+        </div>
+    {/if}
+</div>

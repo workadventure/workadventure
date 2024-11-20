@@ -35,16 +35,16 @@ test.describe('Meeting actions test', () => {
         await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
 
         // Move user
-    await Map.walkTo(page, 'ArrowRight', 5000);
+        await Map.teleportToPosition(page, 160, 160);
 
-        const newBrowser = await browser.browserType().launch();
+        const newBrowser = await browser.newContext();
         const userBob = await newBrowser.newPage();
         // Go to the empty map
         await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
         // Login user "Bob"
         await login(userBob, 'Bob', 5, 'en-US', project.name === "mobilechromium");
         // Move user
-    await Map.walkTo(userBob, 'ArrowRight', 5000);
+        await Map.teleportToPosition(userBob, 160, 160);
 
         // The user in the bubble meeting should be visible
     await expect(page.locator('#container-media')).toBeVisible({timeout: 30_000});
@@ -57,15 +57,21 @@ test.describe('Meeting actions test', () => {
         // Click on the mute button
     await page.click('#cameras-container #camera-box #video-media-box #user-menu #mute-audio-user');
 
-        // Check if "Bob" user receive the request to be metued
-    await expect(userBob.locator('.interact-menu')).toBeVisible({timeout: 30_000});
+        // Check if "Bob" user receive the request to be muted
+        await expect(userBob.locator('.interact-menu')).toBeVisible({timeout: 30_000});
         // Click on the accept button
         await userBob.click('.interact-menu .accept-request');
 
         // Check if the user has been muted
     await expect(page.locator('.cameras-container .other-cameras .video-container .muted-video')).toBeVisible({timeout: 20_000});
         // Click on the mute video button
-    await page.click('#cameras-container #camera-box #video-media-box .action-button#mute-video-user');
+
+        // First, move the mouse out to force closing the action menu.
+        // This action menu is automatically closed on Firefox because it refreshes the stream, which Chrome does not.
+        await page.mouse.move(1, 1);
+        await expect(page.locator('.cameras-container .other-cameras .video-container .action-button#mute-video-user')).toBeHidden();
+        await page.click('.cameras-container .other-cameras .video-container .action-button#more-action');
+        await page.click('#cameras-container #camera-box #video-media-box .action-button#mute-video-user');
 
         // Check if "Bob" user receive the request to be muted
         await expect(userBob.locator('.interact-menu')).toBeVisible({timeout: 30_000});
@@ -160,5 +166,8 @@ test.describe('Meeting actions test', () => {
     // Check if the user has been muted
     await expect(page.locator('#cameras-container #camera-box .jitsi-video video')).toBeHidden({timeout: 10_000});
 
-    });
+    await page.close();
+    await userBob.close();
+    await newBrowser.close();
+  });
 });

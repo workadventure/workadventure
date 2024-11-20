@@ -1,10 +1,13 @@
 <script lang="ts">
+    import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
     import { fly } from "svelte/transition";
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
     import { LL, locale } from "../../../i18n/i18n-svelte";
     import type { Locales } from "../../../i18n/i18n-types";
     import { displayableLocales, setCurrentLocale } from "../../../i18n/locales";
+    import { gameManager } from "../../Phaser/Game/GameManager";
 
+    import infoImg from "../images/info.svg";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import {
@@ -15,13 +18,15 @@
     } from "../../Enum/EnvironmentVariable";
     import { videoBandwidthStore } from "../../Stores/MediaStore";
     import { screenShareBandwidthStore } from "../../Stores/ScreenSharingStore";
+    import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
 
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification();
-    let chatSounds: boolean = localUserStore.getChatSounds();
+    let blockAudio: boolean = localUserStore.getBlockAudio();
     let forceCowebsiteTrigger: boolean = localUserStore.getForceCowebsiteTrigger();
     let ignoreFollowRequests: boolean = localUserStore.getIgnoreFollowRequests();
     let decreaseAudioPlayerVolumeWhileTalking: boolean = localUserStore.getDecreaseAudioPlayerVolumeWhileTalking();
+    let disableAnimations: boolean = localUserStore.getDisableAnimations();
     let valueLocale: string = $locale;
     let valueCameraPrivacySettings = localUserStore.getCameraPrivacySettings();
     let valueMicrophonePrivacySettings = localUserStore.getMicrophonePrivacySettings();
@@ -36,6 +41,8 @@
             : initialScreenShareBandwidth === PEER_SCREEN_SHARE_LOW_BANDWIDTH
             ? 1
             : 2;
+
+    let volumeProximityDiscussion = localUserStore.getVolumeProximityDiscussion();
 
     let previewCameraPrivacySettings = valueCameraPrivacySettings;
     let previewMicrophonePrivacySettings = valueMicrophonePrivacySettings;
@@ -89,7 +96,7 @@
             if (document.fullscreenElement !== null && !fullscreen) {
                 document.exitFullscreen().catch((e) => console.error(e));
             } else {
-                body.requestFullscreen().catch((e) => console.error(e));
+                document.documentElement.requestFullscreen().catch((e) => console.error(e));
             }
             localUserStore.setFullscreen(fullscreen);
         }
@@ -115,8 +122,12 @@
         }
     }
 
-    function changeChatSounds() {
-        localUserStore.setChatSounds(chatSounds);
+    function changeBlockAudio() {
+        if (blockAudio) {
+            audioManagerFileStore.unloadAudio();
+            audioManagerVisibilityStore.set(false);
+        }
+        localUserStore.setBlockAudio(blockAudio);
     }
 
     function changeForceCowebsiteTrigger() {
@@ -140,6 +151,15 @@
         localUserStore.setDecreaseAudioPlayerVolumeWhileTalking(decreaseAudioPlayerVolumeWhileTalking);
     }
 
+    function changeDisableAnimations() {
+        localUserStore.setDisableAnimations(disableAnimations);
+        if (disableAnimations) {
+            gameManager.getCurrentGameScene().animatedTiles.pause();
+        } else {
+            gameManager.getCurrentGameScene().animatedTiles.resume();
+        }
+    }
+
     function changeCameraPrivacySettings() {
         // Analytics Client
         analyticsClient.settingMicrophone(valueCameraPrivacySettings ? "true" : "false");
@@ -158,6 +178,12 @@
             previewMicrophonePrivacySettings = valueMicrophonePrivacySettings;
             localUserStore.setMicrophonePrivacySettings(valueMicrophonePrivacySettings);
         }
+    }
+
+    function updateVolumeProximityDiscussion() {
+        analyticsClient.settingAudioVolume();
+        localUserStore.setVolumeProximityDiscussion(volumeProximityDiscussion);
+        volumeProximityDiscussionStore.set(volumeProximityDiscussion);
     }
 </script>
 
@@ -413,6 +439,56 @@
                 />
             </div>
         </div>
+
+        <h3 class="blue-title">{$LL.menu.settings.proximityDiscussionVolume()}</h3>
+        <div class="flex w-full justify-center">
+            <div class="flex flex-col w-10/12 lg:w-6/12">
+                <ul class="flex justify-between w-full px-[10px] mb-5">
+                    <li class="flex justify-center relative">
+                        <span class="absolute">0</span>
+                    </li>
+                    <li class="flex justify-center relative">
+                        <span class="absolute">1</span>
+                    </li>
+                    <li class="flex justify-center relative">
+                        <span class="absolute">2</span>
+                    </li>
+                    <li class="flex justify-center relative">
+                        <span class="absolute">3</span>
+                    </li>
+                    <li class="flex justify-center relative">
+                        <span class="absolute">4</span>
+                    </li>
+                    <li class="flex justify-center relative">
+                        <span class="absolute">5</span>
+                    </li>
+                    <li class="flex justify-center relative">
+                        <span class="absolute">6</span>
+                    </li>
+                    <li class="flex justify-center relative">
+                        <span class="absolute">7</span>
+                    </li>
+                    <li class="flex justify-center relative">
+                        <span class="absolute">8</span>
+                    </li>
+                    <li class="flex justify-center relative">
+                        <span class="absolute">9</span>
+                    </li>
+                    <li class="flex justify-center relative">
+                        <span class="absolute">10</span>
+                    </li>
+                </ul>
+                <input
+                    type="range"
+                    class="w-full"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    bind:value={volumeProximityDiscussion}
+                    on:change={updateVolumeProximityDiscussion}
+                />
+            </div>
+        </div>
     </section>
     <section class="flex flex-col p-0 first:pt-0 pt-8 m-0">
         <div class="bg-contrast font-bold text-lg p-4 flex items-center">
@@ -637,6 +713,14 @@
             <div class="ml-3 text-white/50 font-regular peer-checked:text-white">
                 {$LL.audio.manager.reduce()}
             </div>
+        </label>
+        <label>
+            <input type="checkbox" bind:checked={blockAudio} on:change={changeBlockAudio} />
+            <span>{$LL.menu.settings.blockAudio()}</span>
+        </label>
+        <label>
+            <input type="checkbox" bind:checked={disableAnimations} on:change={changeDisableAnimations} />
+            <span>{$LL.menu.settings.disableAnimations()}</span>
         </label>
     </section>
 </div>

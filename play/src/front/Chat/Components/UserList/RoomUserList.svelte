@@ -4,88 +4,94 @@
     import { ChatUser } from "../../Connection/ChatConnection";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { chatSearchBarValue, shownRoomListStore } from "../../Stores/ChatStore";
+    import { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
+    import ChatHeader from "../ChatHeader.svelte";
     import UserList from "./UserList.svelte";
     import { IconChevronUp } from "@wa-icons";
 
-    const chat = gameManager.getCurrentGameScene().chatConnection;
-    const DISCONNECTED_LABEL = "disconnected";
-    const DISCONNECTED_USERS_LIMITATION = 200;
+    export let userProviderMerger: UserProviderMerger;
+
+    const USERS_BY_ROOM_LIMITATION = 200;
 
     onMount(() => {
         if ($shownRoomListStore === "") shownRoomListStore.set($LL.chat.userList.isHere());
     });
 
-    $: userConnected = chat.connectedUsers;
-    $: filteredUserConnected = Array.from($userConnected.values()).filter(({ username }) =>
-        username ? username.toLocaleLowerCase().includes($chatSearchBarValue) : false
-    );
+    $: usersByRoom = userProviderMerger.usersByRoomStore;
 
-    $: usersByRoom = filteredUserConnected.reduce((acc, curr) => {
-        let room = curr.roomName ?? DISCONNECTED_LABEL;
+    $: roomsWithUsers = Array.from($usersByRoom.entries())
+        .reduce((roomsWithUsersAcc, [currentPlayUri, currentRoomWithUsers]) => {
+            let roomName =
+                currentRoomWithUsers.roomName ??
+                (currentPlayUri
+                    ? new URL(currentPlayUri, window.location.href).pathname
+                    : $LL.chat.userList.disconnected());
 
-        room = room === gameManager?.getCurrentGameScene()?.room?.roomName ? $LL.chat.userList.isHere() : room;
-        const userList: Array<ChatUser> = acc.get(room) ?? [];
+            if (currentPlayUri === gameManager?.getCurrentGameScene()?.roomUrl) roomName = $LL.chat.userList.isHere();
 
-        userList.push(curr);
-        acc.set(room, userList);
+            const myId = gameManager.getCurrentGameScene().connection?.getUserId();
 
-        return acc;
-    }, new Map<string, ChatUser[]>());
+            const users = currentRoomWithUsers.users
+                .filter(({ username }) => {
+                    return username
+                        ? username.toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase())
+                        : false;
+                })
+                .sort((chatUserA: ChatUser, chatUserB: ChatUser) => {
+                    if (chatUserA.id === myId) return -1;
+                    if (chatUserB.id === myId) return 1;
+                    return chatUserA.username?.localeCompare(chatUserB.username || "") || -1;
+                })
+                .slice(0, USERS_BY_ROOM_LIMITATION);
 
-    $: userDisconnected = chat.userDisconnected;
-    $: filteredUserDisconnected = Array.from($userDisconnected.values())
-        .filter(
-            ({ id, username }) =>
-                (username ? username.toLocaleLowerCase().includes($chatSearchBarValue) : false) &&
-                filteredUserConnected.every((user: ChatUser) => user.id !== id)
-        )
-        .slice(0, DISCONNECTED_USERS_LIMITATION);
+            if (users.length > 0) roomsWithUsersAcc.push([roomName, users]);
 
-    $: roomsWithUsers = [
-        ...Array.from(usersByRoom?.entries() || []).sort(
-            ([aKey, _aValue]: [string, ChatUser[]], [bKey, _bValue]: [string, ChatUser[]]) =>
-                aKey === $LL.chat.userList.isHere() ? -1 : aKey.localeCompare(bKey)
-        ),
-        [DISCONNECTED_LABEL, filteredUserDisconnected ?? []],
-    ] as Array<[string, ChatUser[]]>;
+            return roomsWithUsersAcc;
+        }, [] as [string, ChatUser[]][])
+        .sort(([aKey, _aValue]: [string, ChatUser[]], [bKey, _bValue]: [string, ChatUser[]]) => {
+            if (aKey === $LL.chat.userList.disconnected()) return 1;
+            if (bKey === $LL.chat.userList.disconnected()) return -1;
+
+            if (aKey === $LL.chat.userList.isHere()) return -1;
+            if (bKey === $LL.chat.userList.isHere()) return 1;
+
+            return aKey.localeCompare(bKey);
+        });
 </script>
 
-<div class="tw-flex tw-flex-col tw-overflow-hidden">
+<div class="flex flex-col overflow-auto h-full">
+    <ChatHeader />
     {#each roomsWithUsers as [roomName, userInRoom] (roomName)}
-        {#if userInRoom && userInRoom.length > 0}
-            <div
-                class="tw-overflow-hidden users tw-flex tw-flex-col tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple"
+        <div class=" users flex flex-col shrink-0 relative pt-[72px] h-full">
+            <button
+                class="group relative px-3 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center border border-solid border-x-0 border-t border-b-0 border-white/10 text-white outline-none border-y-0 appearance-none m-0"
+                on:click={() => shownRoomListStore.set($shownRoomListStore === roomName ? "" : roomName)}
             >
-                <div class="tw-px-4 tw-py-3 tw-flex tw-items-center tw-flex-0">
-                    <span
-                        class="{roomName !== DISCONNECTED_LABEL
-                            ? 'tw-bg-light-blue'
-                            : 'tw-bg-gray'} tw-text-dark-purple tw-min-w-[20px] tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
+                {#if roomName !== $LL.chat.userList.disconnected()}
+                    <div
+                        class="{roomName !== $LL.chat.userList.disconnected()
+                            ? 'bg-white/10'
+                            : 'bg-gray'} text-white min-w-[20px] h-5 text-sm font-semibold flex items-center justify-center rounded"
                     >
-                        {#if userInRoom?.length && userInRoom.length > 0 && roomName !== DISCONNECTED_LABEL}
-                            {userInRoom?.length}
-                        {/if}
-                    </span>
-                    <p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">
-                        {roomName}
-                    </p>
-                    <button
-                        class="tw-text-lighter-purple"
-                        on:click={() => shownRoomListStore.set($shownRoomListStore === roomName ? "" : roomName)}
-                    >
-                        <IconChevronUp
-                            class={`tw-transform tw-transition ${
-                                $shownRoomListStore === roomName ? "" : "tw-rotate-180"
-                            }`}
-                        />
-                    </button>
-                </div>
-                {#if $shownRoomListStore === roomName}
-                    <div class="tw-flex tw-flex-col tw-flex-1 tw-overflow-auto">
-                        <UserList userList={userInRoom} />
+                        {userInRoom.length}
                     </div>
                 {/if}
-            </div>
-        {/if}
+                <div class="text-white text-sm font-bold tracking-widest uppercase grow text-left">
+                    {roomName}
+                </div>
+                <div
+                    class="transition-all group-hover:bg-white/10 p-1 rounded-lg aspect-square flex items-center justify-center text-white"
+                >
+                    <IconChevronUp
+                        class={`transform transition ${$shownRoomListStore === roomName ? "" : "rotate-180"}`}
+                    />
+                </div>
+            </button>
+            {#if $shownRoomListStore === roomName}
+                <div class="flex flex-col flex-1 overflow-auto">
+                    <UserList userList={userInRoom} />
+                </div>
+            {/if}
+        </div>
     {/each}
 </div>

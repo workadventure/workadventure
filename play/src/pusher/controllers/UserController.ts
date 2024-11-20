@@ -215,7 +215,7 @@ export class UserController extends BaseHttpController {
                     req,
                     res,
                     z.object({
-                        texture: z.string(),
+                        texture: z.string().nullable(),
                         roomUrl: z.string(),
                     })
                 );

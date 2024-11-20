@@ -22,10 +22,10 @@ flowchart TB
     Y3[Your computer] -- upload map --> WS[Your web server]
     WA3[WorkAdventure] -. load map .-> WS
   end
-  subgraph Github pages
+  subgraph GitHub pages
     direction BT
-    Y2[Your computer] -- push --> GH[Github]
-    GH[Github] -- Github actions --> GHP[Github Pages]
+    Y2[Your computer] -- push --> GH[GitHub]
+    GH[GitHub] -- GitHub actions --> GHP[GitHub Pages]
     WA2[WorkAdventure] -. load map .-> GHP
   end
   subgraph WorkAdventure

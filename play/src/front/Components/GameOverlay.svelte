@@ -28,9 +28,11 @@
     import bgMap from "./images/map-exemple.png";
     import defaultLoader from "./images/Workadventure.gif";
     import GlobalCommunicationModal from "./Modal/GlobalCommunicationModal.svelte";
-    import {isActivatedStore, isCalendarVisibleStore} from "../Stores/CalendarStore";
+    import { isActivatedStore as calendarIsActivatedStore, isCalendarVisibleStore } from "../Stores/CalendarStore";
+    import { isActivatedStore as todoListIsActivatedStore, isTodoListVisibleStore } from "../Stores/TodoListStore";
     import Calendar from "./Calendar/Calendar.svelte";
     import ChatSidebar from "../Chat/ChatSidebar.svelte";
+    import TodoList from "./TodoList/TodoList.svelte";
 
     export let game: Game;
 
@@ -89,8 +91,11 @@
 
         <MainLayout />
     {/key}
-    {#if $isActivatedStore && $isCalendarVisibleStore}
+    {#if $calendarIsActivatedStore && $isCalendarVisibleStore}
         <Calendar />
+    {/if}
+    {#if $todoListIsActivatedStore && $isTodoListVisibleStore}
+        <TodoList />
     {/if}
 {/if}
 <!-- </div> -->

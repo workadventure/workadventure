@@ -127,7 +127,7 @@
                 </div>
             {/if}
             {#if (isArea && triggerOptionActivated && triggerOnActionChoosen) || !isArea}
-                <div class="value-input tw-flex tw-flex-col">
+                <div class="value-input flex flex-col">
                     <label for="triggerMessage">{$LL.mapEditor.properties.linkProperties.triggerMessage()}</label>
                     <input
                         id="triggerMessage"
@@ -226,7 +226,7 @@
         color: rgb(242 253 255 / var(--text-opacity));
         outline: 2px solid transparent;
         outline-offset: 2px;
-        cursor: url(/src/front/style/images/cursor_pointer.png), pointer;
+        cursor: url(../../../../../public/static/images/cursor_pointer.png), pointer;
     }
     .input-switch::before {
         position: absolute;

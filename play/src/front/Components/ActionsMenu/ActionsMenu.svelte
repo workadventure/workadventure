@@ -64,19 +64,19 @@
                             {actionsMenuData.menuName}
                         </div>
                         <div>
-                            <div class="chip chip-sm chip-danger ml-2">Administrateur</div>
+                            <div class="chip chip-sm chip-danger ml-2">Administrator</div>
                         </div>
                     </div>
                 </div>
+                {#if actionsMenuData.menuDescription}
                 <p class="text-sm opacity-50 text-white px-4">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore
-                    et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-                    aliquip ex ea commodo consequat.
+                    {actionsMenuData.menuDescription}
                 </p>
+                {/if}
             </div>
         {/if}
         <div class="flex items-center bg-contrast" class:margin-close={!actionsMenuData.menuName}>
-            <button type="button" class="btn btn-ghost justify-center basis-1/2 m-2 w-full" on:click={closeActionsMenu}>
+            <button type="button" class="btn btn-ghost justify-center basis-1/2 m-2 w-full" on:click|preventDefault|stopPropagation={closeActionsMenu}>
                 {$LL.actionbar.close()}
             </button>
             {#if sortedActions}

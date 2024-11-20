@@ -20,6 +20,7 @@
     import ScreenShareIcon from "../Icons/ScreenShareIcon.svelte";
     import { highlightFullScreen, setHeightScreenShare } from "../../Stores/ActionsCamStore";
     import ChevronRightIcon from "../Icons/ChevronRightIcon.svelte";
+    import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
     import ActionMediaBox from "./ActionMediaBox.svelte";
     import {IconArrowDown, IconArrowUp} from "@wa-icons";
 
@@ -41,6 +42,8 @@
     let unsubscribeChangeOutput: Unsubscriber;
     let unsubscribeStreamStore: Unsubscriber;
     let unsubscribeConstraintStore: Unsubscriber;
+    let unsubscribeVolumeProximityDiscussionStore: Unsubscriber;
+
     let embedScreen: Streamable;
     let cameraContainer: HTMLDivElement;
     let videoElement: HTMLVideoElementExt;
@@ -195,12 +198,19 @@
             if (!wasVideoEnabled && isHightlighted) highlightedEmbedScreen.removeHighlight();
             updateRatio();
         });
+
+        unsubscribeVolumeProximityDiscussionStore = volumeProximityDiscussionStore.subscribe((volume) => {
+            if (videoElement) {
+                videoElement.volume = volume;
+            }
+        });
     });
 
     onDestroy(() => {
         if (unsubscribeChangeOutput) unsubscribeChangeOutput();
         if (unsubscribeStreamStore) unsubscribeStreamStore();
         if (unsubscribeConstraintStore) unsubscribeConstraintStore();
+        if (unsubscribeVolumeProximityDiscussionStore) unsubscribeVolumeProximityDiscussionStore();
         destroyed = true;
         sinkIdPromise.cancel();
         if (noVideoTimeout) {
@@ -272,6 +282,10 @@
         setTimeout(() => {
             aspectRatio = videoElement != undefined ? videoElement.videoWidth / videoElement.videoHeight : 1;
         }, 1000);
+    }
+
+    function onLoadVideoElement() {
+        videoElement.volume = $volumeProximityDiscussionStore;
     }
 </script>
 
@@ -365,6 +379,7 @@
         <!-- svelte-ignore a11y-media-has-caption -->
         <video
             bind:this={videoElement}
+            on:loadedmetadata={onLoadVideoElement}
             class="h-full flex w-full justify-center aspect-video"
             class:h-0={!videoEnabled}
             class:w-0={!videoEnabled}
