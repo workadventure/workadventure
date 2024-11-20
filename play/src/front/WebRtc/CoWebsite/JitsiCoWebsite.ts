@@ -152,6 +152,7 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
         private domain: string,
         private jitsiRoomAdminTag: string | null
     ) {
+        console.log({jitsiConfig});
         super(url, false, undefined, widthPercent, closable);
     }
 
@@ -171,6 +172,8 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
                     await randomDelay();
 
                     const mergedConfig = mergeConfig(this.jitsiConfig);
+
+                    console.log({userConnectedTags , JitsiRoomAdminTag : this.jitsiConfig?.jitsiRoomAdminTag, jitsiConfig : this.jitsiConfig});
 
                     if (
                         !userConnectedTags.includes("admin") &&

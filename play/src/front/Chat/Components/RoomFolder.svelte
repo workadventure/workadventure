@@ -8,25 +8,35 @@
     import CreateRoomOrFolderOption from "./Room/CreateRoomOrFolderOption.svelte";
     import ShowMore from "./ShowMore.svelte";
     import { IconChevronDown, IconChevronUp } from "@wa-icons";
+    import RoomInvitation from "./Room/RoomInvitation.svelte";
 
-    export let folders: Readable<Map<string, RoomFolder>>;
-    export let rooms: Readable<Map<string, ChatRoom>>;
+    export let folders: Readable<RoomFolder[]>;
+    export let rooms: Readable<ChatRoom[]>;
+    export let invitations: Readable<ChatRoom[]>;
     export let name: Readable<string>;
     export let isGuest: boolean;
     export let isOpen: boolean;
     export let id: string;
 
-    const isFoldersOpen: { [key: string]: boolean } = {};
+    //TODO : garder seulement le folder pour recuperer toutes les props 
+    export let folder : ChatRoom;
 
-    $: filteredRoom = Array.from($rooms.values())
-        .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
-        .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
+    
+    const isFoldersOpen: { [key: string]: boolean } = {};
+    
+    $: filteredRoom = $rooms
+    .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
+    .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
+    
+    $: console.log('>>>>>>>',Array.from($rooms.values()),filteredRoom);
 
     $folders.forEach((folder) => {
         if (!(folder.id in isFoldersOpen)) {
             isFoldersOpen[folder.id] = false;
         }
     });
+
+    let displayRoomInvitations = $invitations.length > 0
 </script>
 
 <div class="tw-mx-2 tw-p-1 tw-bg-contrast-300/10 tw-rounded-lg tw-mb-4">
@@ -44,7 +54,7 @@
             </div>
         </button>
         {#if isGuest === false}
-            <CreateRoomOrFolderOption parentID={id} parentName={$name} />
+            <CreateRoomOrFolderOption parentID={id} parentName={$name} {folder} />
         {/if}
         {#if isOpen}
             <IconChevronUp />
@@ -54,13 +64,21 @@
     </div>
 
     {#if isOpen}
-        <div class="tw-flex tw-flex-col tw-overflow-auto">
-            {#each Array.from($folders.values()) as folder (folder.id)}
+    <div class="tw-flex tw-flex-col tw-overflow-auto">
+            {#if displayRoomInvitations}
+            <div class="tw-flex tw-flex-col tw-overflow-auto tw-pl-3 tw-pr-4 tw-pb-3">
+                <ShowMore items={$invitations} maxNumber={8} idKey="id" let:item={room}>
+                    <RoomInvitation {room} />
+                </ShowMore>
+            </div>
+        {/if}
+
+            {#each $folders as folder (folder.id)}
                 <svelte:self
                     bind:isOpen={isFoldersOpen[folder.id]}
                     id={folder.id}
                     name={folder.name}
-                    folders={folder.folders}
+                    folders={folder.folderList}
                     rooms={folder.rooms}
                     {isGuest}
                 />
@@ -68,7 +86,7 @@
             <ShowMore items={filteredRoom} maxNumber={8} idKey="id" let:item={room} showNothingToDisplayMessage={false}>
                 <Room {room} />
             </ShowMore>
-            {#if $rooms.size === 0 && $folders.size === 0}
+            {#if $rooms.length === 0 && $folders.length === 0 && $invitations.length === 0}
                 <p class="tw-py-2 tw-px-3 tw-m-0 tw-text-white/50 tw-italic tw-text-sm">
                     {$LL.chat.nothingToDisplay()}
                 </p>

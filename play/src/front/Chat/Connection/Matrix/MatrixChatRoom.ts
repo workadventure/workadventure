@@ -41,7 +41,7 @@ export class MatrixChatRoom implements ChatRoom {
     readonly hasUnreadMessages: Writable<boolean>;
     avatarUrl: string | undefined;
     messages: SearchableArrayStore<string, MatrixChatMessage>;
-    myMembership: ChatRoomMembership;
+    myMembership: Writable<ChatRoomMembership>;
     membersId: string[];
     members: ChatRoomMember[];
     messageReactions: MapStore<string, MapStore<string, MatrixChatMessageReaction>>;
@@ -57,6 +57,7 @@ export class MatrixChatRoom implements ChatRoom {
     private handleRoomName = this.onRoomName.bind(this);
     private handleRoomRedaction = this.onRoomRedaction.bind(this);
     private handleStateEvent = this.onRoomStateEvent.bind(this);
+    private handleMyMembership = this.onRoomMyMembership.bind(this);
 
     constructor(
         private matrixRoom: Room,
@@ -73,7 +74,7 @@ export class MatrixChatRoom implements ChatRoom {
         this.messages = new SearchableArrayStore((item: MatrixChatMessage) => item.id);
         this.messageReactions = new MapStore<string, MapStore<string, MatrixChatMessageReaction>>();
         this.sendMessage = this.sendMessage.bind(this);
-        this.myMembership = matrixRoom.getMyMembership();
+        this.myMembership = writable(matrixRoom.getMyMembership());
         this.membersId = [
             ...matrixRoom.getMembersWithMembership(KnownMembership.Invite).map((member) => member.userId),
             ...matrixRoom.getMembersWithMembership(KnownMembership.Join).map((member) => member.userId),
@@ -183,7 +184,13 @@ export class MatrixChatRoom implements ChatRoom {
         this.matrixRoom.on(RoomEvent.Name, this.handleRoomName);
         this.matrixRoom.on(RoomEvent.Redaction, this.handleRoomRedaction);
         this.matrixRoom.on(RoomStateEvent.Events, this.handleStateEvent);
+        this.matrixRoom.on(RoomEvent.MyMembership, this.handleMyMembership);
     }
+
+    protected onRoomMyMembership(room : Room) {
+        console.log('>>> mymembership change in ' , room.getMyMembership());
+        this.myMembership.set(room.getMyMembership());
+    } 
 
     private onRoomStateEvent(event: MatrixEvent, state: RoomState, lastStateEvent: MatrixEvent | null) {
         if (get(this.isEncrypted)) return;
@@ -424,6 +431,7 @@ export class MatrixChatRoom implements ChatRoom {
     }
 
     async joinRoom(): Promise<void> {
+        console.log(">>>>> try to join room", get(this.myMembership));
         try {
             await this.matrixRoom.client.joinRoom(this.id);
             return;

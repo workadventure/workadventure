@@ -1,122 +1,189 @@
 import { Room } from "matrix-js-sdk";
-import { Writable, writable } from "svelte/store";
+import { derived, get, Readable, Writable, writable } from "svelte/store";
 import { KnownMembership } from "matrix-js-sdk/lib/types";
 import * as Sentry from "@sentry/svelte";
 import { MapStore } from "@workadventure/store-utils";
-import { RoomFolder } from "../ChatConnection";
+import { ChatRoomMembership, RoomFolder } from "../ChatConnection";
 import { MatrixChatRoom } from "./MatrixChatRoom";
-export class MatrixRoomFolder implements RoomFolder {
-    rooms: MapStore<MatrixChatRoom["id"], MatrixChatRoom> = new MapStore<MatrixChatRoom["id"], MatrixChatRoom>();
-    folders: MapStore<MatrixRoomFolder["id"], MatrixRoomFolder> = new MapStore<
+import { Deferred } from "ts-deferred";
+export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
+    roomList: MapStore<MatrixChatRoom["id"], MatrixChatRoom> = new MapStore<MatrixChatRoom["id"], MatrixChatRoom>();
+    x;
+    folderList: MapStore<MatrixRoomFolder["id"], MatrixRoomFolder> = new MapStore<
         MatrixRoomFolder["id"],
         MatrixRoomFolder
     >();
 
-    id: string;
-    name: Writable<string>;
-    private loadRoomsAndFolderPromise: Promise<void>;
+    readonly rooms: Readable<MatrixChatRoom[]>;
+    readonly invitations: Readable<MatrixChatRoom[]>;
+    readonly folders: Readable<RoomFolder[]>;
+
+    private loadRoomsAndFolderPromise = new Deferred<void>();
+    private joinRoomDeferred = new Deferred<void>();
 
     constructor(private room: Room) {
-        this.name = writable(room.name);
-        this.id = room.roomId;
-
-        this.loadRoomsAndFolderPromise = new Promise((resolve, reject) => {
-            this.room.client
-                .getRoomHierarchy(room.roomId, 100, 1)
-                .then(({ rooms: roomsHierarchy }) => {
-                    roomsHierarchy.forEach((cur) => {
-                        const childRoom = room.client.getRoom(cur.room_id);
-
-                        if (!childRoom || cur.room_id === this.id) return;
-
-                        if (childRoom.isSpaceRoom()) {
-                            this.folders.set(childRoom.roomId, new MatrixRoomFolder(childRoom));
-                        } else {
-                            const matrixChatRoom = new MatrixChatRoom(childRoom);
-                            if (matrixChatRoom.myMembership === KnownMembership.Join) {
-                                this.rooms.set(childRoom.roomId, matrixChatRoom);
-                            }
-                        }
-                    });
-                    resolve();
-                })
-                .catch((error) => {
-                    console.error(error);
-                    Sentry.captureMessage("Failed to get folder Hierarchy");
-                    reject(new Error("Failed to get folder Hierarchy"));
-                });
-        });
-    }
-
-    getNode(id: string): MatrixRoomFolder | MatrixChatRoom | undefined {
-        const roomNode = this.rooms.get(id);
-        if (roomNode) {
-            return roomNode;
-        }
-        const folderNode = this.folders.get(id);
-
-        if (folderNode) {
-            return folderNode;
-        }
-
-        for (const [, folder] of this.folders) {
-            const node = folder.getNode(id);
-            if (node) {
-                return node;
+        super(room);
+        console.log(">@ constructor folder : ", get(this.name));
+        this.invitations = derived(
+            [
+                this.roomList,
+                this.folderList,
+                ...Array.from(this.roomList.values()).map((room) => room.myMembership),
+                ...Array.from(this.folderList.values()).map((folder) => folder.myMembership),
+            ],
+            (_) => {
+                return [
+                    ...Array.from(this.roomList.values()).filter(
+                        (room) => get(room.myMembership) === KnownMembership.Invite
+                    ),
+                    ...Array.from(this.folderList.values()).filter(
+                        (folder) => get(folder.myMembership) === KnownMembership.Invite
+                    ),
+                ];
             }
-        }
+        );
 
-        return undefined;
+        this.rooms = derived(
+            [this.roomList, ...Array.from(this.roomList.values()).map((room) => room.myMembership)],
+            (_) => {
+                return [
+                    ...Array.from(this.roomList.values()).filter(
+                        (room) => get(room.myMembership) === KnownMembership.Join
+                    ),
+                ];
+            }
+        );
+
+        this.folders = derived(
+            [this.folderList, ...Array.from(this.folderList.values()).map((folder) => folder.myMembership)],
+            (_) => {
+                return [
+                    ...Array.from(this.folderList.values()).filter(
+                        (folder) => get(folder.myMembership) === KnownMembership.Join
+                    ),
+                ];
+            }
+        );
+
+        if (get(this.myMembership) === KnownMembership.Join) this.joinRoomDeferred.resolve();
+        //this.init();
     }
 
-    deleteNode(id: string): boolean {
-        const isDeletedInRoomList = this.rooms.delete(id);
-        if (isDeletedInRoomList) {
-            return true;
+    async init() {
+        console.log(">@ init folder : ", get(this.name));
+        try {
+            await this.joinRoomDeferred.promise;
+            await this.refreshFolderHierarchy();
+            this.loadRoomsAndFolderPromise.resolve();
+        } catch (e) {
+            this.loadRoomsAndFolderPromise.reject(e);
+            console.error('>@',e);
+            //TODO : Sentry
+        }finally{
+            console.log(">@ fin folder : ", get(this.name));
         }
+    }
+    async getNode(id: string): Promise<MatrixRoomFolder | MatrixChatRoom | undefined> {
+        try {
+            await this.loadRoomsAndFolderPromise.promise;
 
-        const isDeletedInFolderList = this.folders.delete(id);
-        if (isDeletedInFolderList) {
-            return true;
+            const roomNode = this.roomList.get(id);
+            if (roomNode) {
+                return roomNode;
+            }
+            const folderNode = this.folderList.get(id);
+
+            if (folderNode) {
+                return folderNode;
+            }
+
+            const getNodePromise = Array.from(this.folderList.values()).map((folder) => {
+                return folder.getParentOfNode(id);
+            });
+
+            const nodes = await Promise.all(getNodePromise);
+
+            console.log(">@", { nodes });
+            const node = nodes.filter((value) => value)[0];
+
+            if (!node) throw new Error("...");
+
+            return node;
+        } catch (e) {
+            //console.error()
+            //Sentry.captureMessage();
+        } finally {
+            return undefined;
         }
+    }
 
-        for (const [, folder] of this.folders) {
-            if (folder.deleteNode(id)) {
+    async deleteNode(id: string): Promise<boolean> {
+        try {
+            await this.loadRoomsAndFolderPromise.promise;
+            const isDeletedInRoomList = this.roomList.delete(id);
+            if (isDeletedInRoomList) {
                 return true;
             }
-        }
 
-        return false;
+            const isDeletedInFolderList = this.folderList.delete(id);
+            if (isDeletedInFolderList) {
+                return true;
+            }
+
+            const deleteNodePromise = Array.from(this.folderList.values()).map((folder) => {
+                return folder.deleteNode(id);
+            });
+
+            const responses = await Promise.all(deleteNodePromise);
+
+            return responses.some((response) => response);
+        } catch (e) {
+            // console.error();
+            // Sentry.captureMessage();
+        } finally {
+            return false;
+        }
     }
 
-    getParentOfNode(id: string): MatrixRoomFolder | undefined {
-        const roomNode = this.rooms.get(id);
-        if (roomNode) {
-            return this;
-        }
-        const folderNode = this.folders.get(id);
-
-        if (folderNode) {
-            return this;
-        }
-
-        for (const [, folder] of this.folders) {
-            const parentNode = folder.getParentOfNode(id);
-            if (parentNode) {
-                return parentNode;
+    async getParentOfNode(id: string): Promise<MatrixRoomFolder | undefined> {
+        try {
+            await this.loadRoomsAndFolderPromise.promise;
+            const roomNode = this.roomList.get(id);
+            if (roomNode) {
+                return this;
             }
-        }
+            const folderNode = this.folderList.get(id);
 
-        return undefined;
+            if (folderNode) {
+                return this;
+            }
+
+            const getParentOfNodePromise = Array.from(this.folderList.values()).map((folder) => {
+                return folder.getParentOfNode(id);
+            });
+
+            const parentFolders = await Promise.all(getParentOfNodePromise);
+
+            const parentFolder = parentFolders.filter((value) => value)[0];
+
+            if (!parentFolder) throw new Error("...");
+
+            return parentFolder;
+        } catch (e) {
+            // console.error();
+            // Sentry.captureMessage();
+        } finally {
+            return undefined;
+        }
     }
 
     async getRoomsIdInNode(): Promise<string[]> {
         try {
-            await this.loadRoomsAndFolderPromise;
+            await this.loadRoomsAndFolderPromise.promise;
 
-            const roomIDs = Array.from(this.rooms.keys());
-            const folders = this.folders;
-            const foldersID = Array.from(this.rooms.keys());
+            const roomIDs = Array.from(this.roomList.keys());
+            const folders = this.folderList;
+            const foldersID = Array.from(this.roomList.keys());
 
             const nestedRoomIDs = await Promise.all(
                 Array.from(folders.values()).map((folder) => folder.getRoomsIdInNode())
@@ -127,5 +194,38 @@ export class MatrixRoomFolder implements RoomFolder {
             console.error("Error fetching room IDs:", error);
             return [];
         }
+    }
+
+    async refreshFolderHierarchy() {
+        await this.joinRoomDeferred.promise;
+        const { rooms: roomsHierarchy } = await this.room.client.getRoomHierarchy(this.id, 100, 1);
+
+        roomsHierarchy.forEach((cur) => {
+            const childRoom = this.room.client.getRoom(cur.room_id);
+
+            if (!childRoom || cur.room_id === this.id) return;
+
+            if (childRoom.isSpaceRoom()) {
+                this.folderList.set(childRoom.roomId, new MatrixRoomFolder(childRoom));
+            } else {
+                const matrixChatRoom = new MatrixChatRoom(childRoom);
+                if (
+                    get(matrixChatRoom.myMembership) === KnownMembership.Join ||
+                    get(matrixChatRoom.myMembership) === KnownMembership.Invite
+                ) {
+                    console.log(`>>>>>>> this folder : ${get(this.name)} has room ${cur.name}`);
+                    this.roomList.set(childRoom.roomId, matrixChatRoom);
+                }
+            }
+        });
+    }
+
+    protected override onRoomMyMembership(room: Room) {
+        console.log(">>>>>>>>>override");
+        if (room.getMyMembership() === KnownMembership.Join) {
+            console.log(">>>>>>>>>override onRoomMyMembership resolse  ");
+            this.joinRoomDeferred.resolve();
+        }
+        super.onRoomMyMembership(room);
     }
 }

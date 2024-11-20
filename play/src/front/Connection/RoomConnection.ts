@@ -70,6 +70,9 @@ import {
     ExternalModuleMessage,
     LeaveChatRoomAreaMessage,
     SpaceDestroyedMessage,
+    DeleteAdminManageChatRoomMessage,
+    UpdateAdminManageChatRoomMessage,
+    CreateAdminManageChatRoomMessage,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -1668,6 +1671,71 @@ export class RoomConnection implements RoomConnection {
             },
         });
     }
+
+    public emitDeleteAdminManageChatRoom(roomID: string): void {
+        this.send({
+            message: {
+                $case: "deleteAdminManageChatRoomMessage",
+                deleteAdminManageChatRoomMessage: DeleteAdminManageChatRoomMessage.fromPartial({
+                    roomID,
+                }),
+            },
+        });
+    }
+
+    public emitUpdateAdminManageChatRoom(roomID: string, memberTags: string[] | undefined,moderatorTags: string[] | undefined,historyVisibility:string | undefined,roomName:string | undefined): void {
+        this.send({
+            message: {
+                $case: "updateAdminManageChatRoomMessage",
+                updateAdminManageChatRoomMessage: UpdateAdminManageChatRoomMessage.fromPartial({
+                    roomID,
+                    memberTags,
+                    moderatorTags,
+                    historyVisibility,
+                    roomName
+                }),
+            },
+        });
+    }
+
+    public emitCreateAdminManageChatRoom(
+        folderId: string,
+        roomName: string,
+        memberTags: string[],
+        moderatorTags: string[],
+        topic: string,
+        historyVisibility: string
+    ): void {
+        this.send({
+            message : {
+                $case: "createAdminManageChatRoomMessage",
+                createAdminManageChatRoomMessage: CreateAdminManageChatRoomMessage.fromPartial({
+                    folderId,
+                    roomName,
+                    memberTags,
+                    moderatorTags,
+                    topic,
+                    historyVisibility
+                }),
+            }
+        });
+
+    }
+
+    public async queryAllAdminManageChatRoomQuery(){
+        const answer = await this.query({
+            $case: "getAllAdminManageChatRoomQuery",
+            getAllAdminManageChatRoomQuery: {},
+        });
+
+        if (answer.$case !== "getAllAdminManageChatRoomAnswer") {
+            throw new Error("Unexpected answer");
+        }
+
+        console.log({answer : answer.getAllAdminManageChatRoomAnswer.chatRoomsInformation})
+        return answer.getAllAdminManageChatRoomAnswer.chatRoomsInformation; 
+    }
+
 
     private resetPingTimeout(): void {
         if (this.timeout) {

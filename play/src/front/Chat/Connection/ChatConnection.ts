@@ -37,7 +37,7 @@ export interface ChatRoom {
     readonly messageReactions: MapStore<string, MapStore<string, ChatMessageReaction>>;
     readonly sendMessage: (message: string) => void;
     readonly sendFiles: (files: FileList) => Promise<void>;
-    readonly myMembership: ChatRoomMembership;
+    readonly myMembership: Readable<ChatRoomMembership>;
     readonly setTimelineAsRead: () => void;
     readonly membersId: string[];
     readonly members: ChatRoomMember[];
@@ -96,8 +96,9 @@ export type historyVisibility = (typeof historyVisibilityOptions)[number];
 export interface RoomFolder {
     id: string;
     name: Readable<string>;
-    rooms: MapStore<ChatRoom["id"], ChatRoom>;
-    folders: MapStore<RoomFolder["id"], RoomFolder>;
+    rooms: Readable<ChatRoom[]>;
+    folders: Readable<RoomFolder[]>;
+    invitations: Readable<ChatRoom[]>;
 }
 
 export interface CreateRoomOptions {
@@ -122,7 +123,7 @@ export interface ChatConnectionInterface {
     directRooms: Readable<ChatRoom[]>;
     rooms: Readable<ChatRoom[]>;
     invitations: Readable<ChatRoom[]>;
-    roomFolders: MapStore<RoomFolder["id"], RoomFolder>;
+    folders: Readable<RoomFolder[]>;
     createRoom: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string }>;
     createFolder: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string }>;
     createDirectRoom(userChatId: string): Promise<ChatRoom | undefined>;

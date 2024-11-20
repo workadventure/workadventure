@@ -40,6 +40,7 @@ import { MetaTagsDefaultValue } from "./MetaTagsBuilder";
 import { localCompanionService } from "./LocalCompanionSevice";
 import { ShortMapDescription, ShortMapDescriptionList } from "./ShortMapDescription";
 import { WorldChatMembersData } from "./WorldChatMembersData";
+import { ICreateRoomOpts } from "matrix-js-sdk";
 
 /**
  * A local class mocking a real admin if no admin is configured.
@@ -405,6 +406,18 @@ class LocalAdmin implements AdminInterface {
 
     refreshOauthToken(token: string): Promise<OauthRefreshToken> {
         return Promise.reject(new Error("No admin backoffice set!"));
+    }
+
+    createAdminManageChatRoom(folderId : string,tags : string[],chatRoomOptions : ICreateRoomOpts,roomUrl : string):Promise<string>{
+        return Promise.reject(new Error("No admin backoffice to create chat room  !"));
+    }
+
+    updateAdminManageChatRoomTags(roomId :string , tags :string[],roomUrl : string) : Promise<void>{
+        return Promise.reject(new Error("No admin backoffice to update chat room  !"));
+    }
+    
+    deleteAdminManageChatRoom(roomId : string) : Promise<void>{
+        return Promise.reject(new Error("No admin backoffice to delete chat room !"));
     }
 }
 
