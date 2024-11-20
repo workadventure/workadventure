@@ -37,7 +37,7 @@ import { notificationPlayingStore } from "../../../Stores/NotificationStore";
 import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
 import { JitsiCoWebsite } from "../../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { SimpleCoWebsite } from "../../../WebRtc/CoWebsite/SimpleCoWebsite";
-import { coWebsiteManager } from "../../../WebRtc/CoWebsiteManager";
+import { coWebsiteManager} from "../../../Stores/CoWebsiteStore";
 import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../../WebRtc/LayoutManager";
 import { gameManager } from "../GameManager";
 import { OpenCoWebsite } from "../GameMapPropertiesListener";
@@ -56,7 +56,9 @@ import { extensionModuleStore } from "../../../Stores/GameSceneStore";
 import { ChatRoom } from "../../../Chat/Connection/ChatConnection";
 import { userIsConnected } from "../../../Stores/MenuStore";
 import {popupStore} from "../../../Stores/PopupStore";
-import PopUpTab from "../../../Components/PopUp/PopUpTab.svelte";
+import PopupCowebsite from "../../../Components/PopUp/PopupCowebsite.svelte";
+import JitsiPopup from "../../../Components/PopUp/PopUpJitsi.svelte";
+import PopUpTab from "../../../Components/PopUp/PopUpTab.svelte"; // Replace 'path/to/PopUpTab' with the actual path to the PopUpTab class
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -286,12 +288,6 @@ export class AreasPropertiesListener {
                 this.handlePersonalAreaPropertyOnEnter(newProperty, area);
                 break;
             }
-            case "personalAreaPropertyData": {
-                newProperty = newProperty as typeof oldProperty;
-                this.handlePersonalAreaPropertyOnLeave();
-                this.handlePersonalAreaPropertyOnEnter(newProperty, area);
-                break;
-            }
             case "matrixRoomPropertyData": {
                 newProperty = newProperty as typeof oldProperty;
                 this.handleMatrixRoomAreaOnLeave(oldProperty);
@@ -438,7 +434,7 @@ export class AreasPropertiesListener {
 
 
             popupStore.addPopup(
-                PopUpCowebsite,
+                PopupCowebsite,
                 {
                     message: message,
                     click: () => {
@@ -778,22 +774,12 @@ export class AreasPropertiesListener {
             return;
         }
 
-        this.scene.CurrentPlayer.destroyText(actionTriggerUuid);
-        const callback = this.actionTriggerCallback.get(actionTriggerUuid);
-        if (callback) {
-            this.scene.userInputManager.removeSpaceEventListener(callback);
-            this.actionTriggerCallback.delete(actionTriggerUuid);
-        }
+        const action =
+            actionStore && actionStore.length > 0
+                ? actionStore.find((action) => action.uuid === actionTriggerUuid)
+                : undefined;
 
-        /**
-         * @DEPRECATED - This is the old way to show trigger message
-         const actionStore = get(layoutManagerActionStore);
-         const action =
-         actionStore && actionStore.length > 0
-         ? actionStore.find((action) => action.uuid === actionTriggerUuid)
-         : undefined;
-
-         if (action) {
+        if (action) {
             popupStore.removePopup(actionTriggerUuid);
         }
 
@@ -921,30 +907,6 @@ export class AreasPropertiesListener {
         if (this.scene.connection && property.serverData?.matrixRoomId) {
             this.scene.connection.emitLeaveChatRoomArea(property.serverData.matrixRoomId);
         }
-    }
-
-    private handlePersonalAreaPropertyOnLeave(area?: Area): void {
-        mapEditorAskToClaimPersonalAreaStore.set(undefined);
-        if (get(requestVisitCardsStore)) {
-            requestVisitCardsStore.set(null);
-        }
-        area?.unHighLightArea();
-    }
-
-    private handleExtensionModuleAreaPropertyOnLeave(subtype: string, area?: AreaData): void {
-        const areaMapEditor = this.scene.extensionModule?.areaMapEditor && this.scene.extensionModule?.areaMapEditor();
-        if (areaMapEditor === undefined) {
-            return;
-        }
-        areaMapEditor[subtype].handleAreaPropertyOnLeave(area);
-    }
-
-    private handleExtensionModuleAreaPropertyOnEnter(area: AreaData, subtype: string): void {
-        const areaMapEditor = this.scene.extensionModule?.areaMapEditor && this.scene.extensionModule?.areaMapEditor();
-        if (areaMapEditor === undefined) {
-            return;
-        }
-        areaMapEditor[subtype].handleAreaPropertyOnEnter(area);
     }
 
     private openCoWebsiteFunction(

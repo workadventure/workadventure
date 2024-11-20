@@ -38,6 +38,7 @@ import { waScaleManager } from "../Services/WaScaleManager";
 import { lazyLoadPlayerCharacterTextures } from "../Entity/PlayerTexturesLoadingManager";
 import { lazyLoadPlayerCompanionTexture } from "../Companion/CompanionTexturesLoadingManager";
 import { iframeListener } from "../../Api/IframeListener";
+import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
 import {
     ADMIN_URL,
     DEBUG_MODE,
@@ -165,7 +166,6 @@ import { externalSvelteComponentStore } from "../../Stores/Utils/externalSvelteC
 import { ExtensionModule } from "../../ExternalModule/ExtensionModule";
 import { SpaceInterface } from "../../Space/SpaceInterface";
 import { UserProviderInterface } from "../../Chat/UserProvider/UserProviderInterface";
-import { faviconManager } from "../../WebRtc/FaviconManager";
 import { ScriptingOutputAudioStreamManager } from "../../WebRtc/AudioStream/ScriptingOutputAudioStreamManager";
 import { ScriptingInputAudioStreamManager } from "../../WebRtc/AudioStream/ScriptingInputAudioStreamManager";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
@@ -193,10 +193,9 @@ import { PlayerVariablesManager } from "./PlayerVariablesManager";
 import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManager";
 import { DEPTH_BUBBLE_CHAT_SPRITE, DEPTH_WHITE_MASK } from "./DepthIndexes";
 import { ScriptingEventsManager } from "./ScriptingEventsManager";
+import { faviconManager } from "../../WebRtc/FaviconManager";
 import { FollowManager } from "./FollowManager";
-import { faviconManager } from "./../../WebRtc/FaviconManager";
-import { FollowManager } from "./FollowManager";
-import { UIWebsiteManager } from "./UI/UIWebsiteManager";
+import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
@@ -206,6 +205,11 @@ import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import Clamp = Phaser.Math.Clamp;
+import {popupStore} from "../../Stores/PopupStore";
+import PopUpRoomAccessDenied from "../../Components/PopUp/PopUpRoomAccessDenied.svelte";
+import PopUpTriggerActionMessage from "../../Components/PopUp/PopUpTriggerActionMessage.svelte";
+import PopUpMapEditorNotEnabled from "../../Components/PopUp/PopUpMapEditorNotEnabled.svelte";
+import PopUpMapEditorShortcut from "../../Components/PopUp/PopUpMapEditorShortcut.svelte";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -918,15 +922,17 @@ export class GameScene extends DirtyScene {
             console.error('Error while fetching new room "' + roomUrl.toString() + '"', e);
 
             //show information room access denied
-            layoutManagerActionStore.addAction({
-                uuid: "roomAccessDenied",
-                type: "warning",
-                message: get(LL).warning.accessDenied.room(),
-                callback: () => {
-                    layoutManagerActionStore.removeAction("roomAccessDenied");
+            popupStore.addPopup(
+                PopUpRoomAccessDenied,
+                {
+                    message: get(LL).warning.accessDenied.room(),
+                    click: () => {
+                        popupStore.removePopup("roomAccessDenied");
+                    },
+                    userInputManager: this.userInputManager,
                 },
-                userInputManager: this.userInputManager,
-            });
+                "roomAccessDenied"
+            );
 
             this.mapTransitioning = false;
             return;
@@ -999,7 +1005,6 @@ export class GameScene extends DirtyScene {
         followUsersStore.stopFollowing();
 
         audioManagerFileStore.unloadAudio();
-        layoutManagerActionStore.clearActions();
 
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
         if (this.allUserSpace) {

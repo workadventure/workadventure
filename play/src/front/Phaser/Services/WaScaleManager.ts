@@ -1,4 +1,4 @@
-import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
+import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import type { Game } from "../Game/Game";
 import { ResizableScene } from "../Login/ResizableScene";

@@ -30,7 +30,4 @@ export interface TrackStreamWrapperInterface {
     kickoff(): void;*/
 
     blockOrReportUser(): void;
-
-    sendProximityPublicMessage(message: string): void;
-    sendProximityPrivateMessage(message: string): void;
 }

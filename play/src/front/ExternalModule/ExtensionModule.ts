@@ -30,7 +30,7 @@ export interface ExtensionModuleOptions {
     openCoWebSite: (
         openCoWebsiteObject: OpenCoWebsiteObject,
         source: MessageEventSource | null
-    ) => Promise<{ id: string }>;
+    ) => { id: string };
     closeCoWebsite: (id: string) => unknown;
     adminUrl?: string;
     getOauthRefreshToken?: (tokenToRefresh: string) => Promise<OauthRefreshToken>;

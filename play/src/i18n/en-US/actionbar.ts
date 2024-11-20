@@ -16,6 +16,7 @@ const actionbar: BaseTranslation = {
     hideMode: "Hide mode",
     lightMode: "Light mode",
     calendar: "Open / Close calendar",
+    todoList: "Open / Close todo list",
     woka: "Customize your avatar",
     companion: "Add companion",
     quest: "Achievements",

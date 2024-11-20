@@ -31,10 +31,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         activate: "Activate your microphone",
     },
     status: {
-        online: "Online",
-        away: "Away",
-        disturb: "Do not disturb",
-        offline: "Offline",
+        ONLINE: "Online",
+        AWAY: "Away",
+        DO_NOT_DISTURB: "Do not disturb",
+        OFFLINE: "Offline",
     },
     subtitle: {
         camera: "Camera",
@@ -44,39 +44,30 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     help: {
         chat: {
             title: "Send text message",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
         users: {
             title: "Display user's list",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
         emoji: {
             title: "Display an emoji",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
         follow: {
             title: "Ask to follow",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
         unfollow: {
             title: "Stop following",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
         lock: {
             title: "Lock conversation",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
         mic: {
             title: "Enable/disable your microphone",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
         cam: {
             title: "Enable/disable your camera",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
         share: {
             title: "Share your screen",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
     },
 };

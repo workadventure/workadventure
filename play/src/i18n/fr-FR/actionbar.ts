@@ -7,7 +7,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     cancel: "Annuler",
     close: "Fermer",
     login: "Se connecter",
-    logout: "Se déconnecter",
+    //logout: "Se déconnecter",
     admin: "Admin",
     startScreenSharing: "Partager mon écran",
     stopScreenSharing: "Arrêter le partage",

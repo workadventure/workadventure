@@ -6,7 +6,7 @@ import { iframeListener } from "../Api/IframeListener";
 import { connectionManager } from "../Connection/ConnectionManager";
 import { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 import { SimpleCoWebsite } from "../WebRtc/CoWebsite/SimpleCoWebsite";
-import { coWebsiteManager } from "../WebRtc/CoWebsiteManager";
+import { coWebsiteManager} from "../Stores/CoWebsiteStore";
 import { scriptUtils } from "../Api/ScriptUtils";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { userIsConnected } from "../Stores/MenuStore";
@@ -20,14 +20,12 @@ export type OpenCoWebsiteObject = {
     allowApi?: boolean;
     allowPolicy?: string;
     widthPercent?: number;
-    position?: number;
     closable?: boolean;
-    lazy?: boolean;
 };
 
 //enlever les events lié au chat dans iframelistener
-export const openCoWebSite = async (
-    { url, allowApi, allowPolicy, widthPercent, position, closable, lazy }: OpenCoWebsiteObject,
+export const openCoWebSite = (
+    { url, allowApi, allowPolicy, widthPercent, closable }: OpenCoWebsiteObject,
     source: MessageEventSource | null
 ) => {
     if (!url || !source) {
@@ -42,7 +40,7 @@ export const openCoWebSite = async (
         closable
     );
 
-    return openSimpleCowebsite(coWebsite, position, lazy);
+    return openSimpleCowebsite(coWebsite);
 };
 
 export const getCoWebSite = () => {
@@ -94,14 +92,12 @@ export const openChatRoom = async (chatID: string) => {
     }
 };
 
-export const openCoWebSiteWithoutSource = async ({
+export const openCoWebSiteWithoutSource = ({
     url,
     allowApi,
     allowPolicy,
     widthPercent,
-    position,
     closable,
-    lazy,
 }: OpenCoWebsiteObject) => {
     if (!url) {
         throw new Error("Unknown query source");
@@ -109,15 +105,11 @@ export const openCoWebSiteWithoutSource = async ({
 
     const coWebsite: SimpleCoWebsite = new SimpleCoWebsite(new URL(url), allowApi, allowPolicy, widthPercent, closable);
 
-    return openSimpleCowebsite(coWebsite, position, lazy);
+    return openSimpleCowebsite(coWebsite);
 };
 
-const openSimpleCowebsite = async (coWebsite: SimpleCoWebsite, position?: number, lazy?: boolean) => {
-    coWebsiteManager.addCoWebsiteToStore(coWebsite, position);
-
-    if (lazy === undefined || !lazy) {
-        await coWebsiteManager.loadCoWebsite(coWebsite);
-    }
+const openSimpleCowebsite = (coWebsite: SimpleCoWebsite) => {
+    coWebsiteManager.addCoWebsiteToStore(coWebsite);
 
     return {
         id: coWebsite.getId(),
