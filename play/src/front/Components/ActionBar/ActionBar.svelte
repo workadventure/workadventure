@@ -1,6 +1,5 @@
 <script lang="ts">
     import { get, Readable, Unsubscriber, writable } from "svelte/store";
-    import { writable } from "svelte/store";
     import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
     import {IconArrowDown, IconCheck, IconChevronDown, IconChevronUp} from "@wa-icons";
@@ -135,8 +134,6 @@
     import { canvasWidth } from "../../Stores/CoWebsiteStore";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
     import { inputFormFocusStore } from "../../Stores/UserInputStore";
-    import AvailabilityStatusComponent from "./AvailabilityStatus/AvailabilityStatus.svelte";
-    import { IconCheck, IconChevronDown, IconChevronUp } from "@wa-icons";
 
     // gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
     let userName = gameManager.getPlayerName() || "";

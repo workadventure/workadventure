@@ -16,7 +16,6 @@
         modalVisibilityStore,
         roomListVisibilityStore,
         showLimitRoomModalStore,
-        showModalGlobalComminucationVisibilityStore,
     } from "../Stores/ModalStore";
     import { actionsMenuStore } from "../Stores/ActionsMenuStore";
     import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore";
@@ -35,13 +34,10 @@
     import { warningMessageStore } from "../Stores/ErrorStore";
     import { externalPopupSvelteComponent } from "../Stores/Utils/externalSvelteComponentStore";
     import { gameManager, GameSceneNotFoundError } from "../Phaser/Game/GameManager";
-    import { extensionActivateComponentModuleStore, extensionModuleStore } from "../Stores/GameSceneStore";
-    import { gameManager } from "../Phaser/Game/GameManager";
     import { hasEmbedScreen } from "../Stores/EmbedScreensStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import HelpCameraSettingsPopup from "./HelpSettings/HelpCameraSettingsPopup.svelte";
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
-    import HelpNotificationSettingsPopup from "./HelpSettings/HelpNotificationSettingPopup.svelte";
     import HelpNotificationSettingsPopup from "./HelpSettings/HelpNotificationSettingPopup.svelte";
     import Menu from "./Menu/Menu.svelte";
     import ReportMenu from "./ReportMenu/ReportMenu.svelte";
@@ -61,24 +57,22 @@
     import ChangeStatusConfirmationModal from "./ActionBar/AvailabilityStatus/Modals/ChangeStatusConfirmationModal.svelte";
     import BubbleConfirmationModal from "./ActionBar/AvailabilityStatus/Modals/BubbleConfirmationModal.svelte";
     import NotificationPermissionModal from "./ActionBar/AvailabilityStatus/Modals/NotificationPermissionModal.svelte";
-    import GlobalCommunicationModal from "./Modal/GlobalCommunicationModal.svelte";
     import ObjectDetails from "./Modal/ObjectDetails.svelte";
     import MapList from "./Exploration/MapList.svelte";
     import WarningToast from "./WarningContainer/WarningToast.svelte";
     import ClaimPersonalAreaDialogBox from "./MapEditor/ClaimPersonalAreaDialogBox.svelte";
     import MainModal from "./Modal/MainModal.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
-    let mainLayout: HTMLDivElement;
+    //let mainLayout: HTMLDivElement;
     let keyboardEventIsDisable = false;
-    let isMobile = isMediaBreakpointUp("md");
+    /*let isMobile = isMediaBreakpointUp("md");
     const resizeObserver = new ResizeObserver(() => {
         isMobile = isMediaBreakpointUp("md");
-    });
+    });*/
 
-    onMount(() => {
-        resizeObserver.observe(mainLayout);
-    import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
 
+    // FIXME: This is WRONG. The MainLayout component can be called several times, and the canvasWidth and canvasHeight
+    // will be set several times. we need to move this code somewhere else.
     window.addEventListener("resize", () => {
         if ($coWebsites.length < 1) {
             canvasWidth.set(window.innerWidth);
