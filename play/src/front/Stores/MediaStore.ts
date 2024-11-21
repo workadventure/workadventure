@@ -7,7 +7,6 @@ import { isIOS } from "../WebRtc/DeviceUtils";
 import { ObtainedMediaStreamConstraints } from "../WebRtc/P2PMessages/ConstraintMessage";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { RequestedStatus } from "../Rules/StatusRules/statusRules";
-import { HtmlUtils } from "../WebRtc/HtmlUtils";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 import { BrowserTooOldError } from "./Errors/BrowserTooOldError";
 import { errorStore } from "./ErrorStore";

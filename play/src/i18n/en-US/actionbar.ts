@@ -90,13 +90,28 @@ const actionbar: BaseTranslation = {
             title: "Share your screen",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
+        apps: {
+            title: "Third part applications",
+            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        },
+        roomList: {
+            title: "Room list",
+            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        },
+        calendar: {
+            title: "Calendar",
+            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        },
+        todolist: {
+            title: "Todolist",
+            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        },
     },
     listStatusTitle: {
         enable: "Change your status",
         inMeeting: "Have a good meeting 🤓",
         inSilentZone: "Enjoy the silent zone 😁",
     },
-    roomList: "Open / Close room list",
     externalModule: {
         status: {
             onLine: "Status is ok ✅",
@@ -105,7 +120,6 @@ const actionbar: BaseTranslation = {
             sync: "Status is syncing 🔄",
         },
     },
-    appList: "Open / Close app list",
     featureNotAvailable: "Feature not available for your room 😭",
 };
 export default actionbar;

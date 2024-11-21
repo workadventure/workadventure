@@ -2,7 +2,6 @@
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
     import { Color } from "@workadventure/shared-utils";
-    import {IconArrowDown, IconArrowUp} from "@wa-icons";
     import { onDestroy, onMount } from "svelte";
     import { Unsubscriber } from "svelte/store";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
@@ -11,6 +10,7 @@
     import { highlightFullScreen, setHeightScreenShare } from "../../Stores/ActionsCamStore";
     import { srcObject } from "./utils";
     import BanReportBox from "./BanReportBox.svelte";
+    import { IconArrowDown, IconArrowUp } from "@wa-icons";
 
     export let peer: ScreenSharingPeer;
     let streamStore = peer.streamStore;

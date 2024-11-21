@@ -1,7 +1,6 @@
 <script lang="ts">
-    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { writable } from "svelte/store";
-    import { EmbedScreen, highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
+    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import MoreActionSvg from "../images/ellipsis.svg";
     import MicrophoneCloseSvg from "../images/microphone-close.svg";
     import banUserSvg from "../images/ban-user.svg";
@@ -17,7 +16,6 @@
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { Streamable } from "../../Stores/StreamableCollectionStore";
-    import { mediaStreamConstraintsStore } from "../../Stores/MediaStore";
     import { SpaceUserExtended } from "../../Space/SpaceFilter/SpaceFilter";
     import { peerStore } from "../../Stores/PeerStore";
     import reportImg from "./images/report.svg";
@@ -25,6 +23,8 @@
     export let embedScreen: Streamable;
     export let trackStreamWrapper: TrackStreamWrapperInterface;
     export let videoEnabled: boolean;
+
+    let moreActionOpened = writable<boolean>(false);
 
     function muteAudio(spaceUser: SpaceUserExtended) {
         spaceUser.emitPrivateEvent({
@@ -108,7 +108,7 @@
         <button
             id="more-action"
             class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"
->
+        >
             <img src={MoreActionSvg} class="w-4 h-4" alt="Ellipsis icon" />
         </button>
     {:else}
@@ -124,108 +124,108 @@
         {#await trackStreamWrapper.getExtendedSpaceUser()}
             <div />
         {:then spaceUser}
-    <!-- Pin -->
-    {#if videoEnabled}
-        <button
-            class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"
-            on:click={() => analyticsClient.pinMeetingAction()}
-            on:click|preventDefault|stopPropagation={() => pin()}
-        >
+            <!-- Pin -->
+            {#if videoEnabled}
+                <button
+                    class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"
+                    on:click={() => analyticsClient.pinMeetingAction()}
+                    on:click|preventDefault|stopPropagation={() => pin()}
+                >
                     <img src={PinSvg} class="w-4 h-4" alt="Ellipsis icon" />
                     <Tooltip text={$LL.camera.menu.pin()} rightPosition="true" />
-        </button>
-    {/if}
+                </button>
+            {/if}
 
-    <!-- Mute audio user -->
-    <button
-        id="mute-audio-user"
-        class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"
-        on:click={() => analyticsClient.muteMicrophoneMeetingAction()}
+            <!-- Mute audio user -->
+            <button
+                id="mute-audio-user"
+                class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"
+                on:click={() => analyticsClient.muteMicrophoneMeetingAction()}
                 on:click|preventDefault|stopPropagation={() => muteAudio(spaceUser)}
-    >
+            >
                 <img src={MicrophoneCloseSvg} class="w-4 h-4" alt="Ellipsis icon" />
                 <Tooltip text={$LL.camera.menu.muteAudioUser()} rightPosition="true" />
-    </button>
+            </button>
 
-    <!-- Mute audio every body -->
-    {#if $userIsAdminStore}
-        <button
-            class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"
-            on:click={() => analyticsClient.muteMicrophoneEverybodyMeetingAction()}
+            <!-- Mute audio every body -->
+            {#if $userIsAdminStore}
+                <button
+                    class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"
+                    on:click={() => analyticsClient.muteMicrophoneEverybodyMeetingAction()}
                     on:click|preventDefault|stopPropagation={() => muteAudioEveryBody(spaceUser)}
-        >
-            <img src={MicrophoneCloseSvg} class="w-4 h-4" alt="Ellipsis icon" />
-            <Tooltip text={$LL.camera.menu.muteAudioEveryBody()} rightPosition="true" />
-        </button>
-    {/if}
+                >
+                    <img src={MicrophoneCloseSvg} class="w-4 h-4" alt="Ellipsis icon" />
+                    <Tooltip text={$LL.camera.menu.muteAudioEveryBody()} rightPosition="true" />
+                </button>
+            {/if}
 
-    <!-- Mute video -->
-    <button
-        id="mute-video-user"
-        class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"
-        on:click={() => analyticsClient.muteVideoMeetingAction()}
+            <!-- Mute video -->
+            <button
+                id="mute-video-user"
+                class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"
+                on:click={() => analyticsClient.muteVideoMeetingAction()}
                 on:click|preventDefault|stopPropagation={() => muteVideo(spaceUser)}
-    >
-        <img src={NoVideoSvg} class="w-4 h-4" alt="Ellipsis icon" />
-        <Tooltip text={$LL.camera.menu.muteVideoUser()} rightPosition="true" />
-    </button>
+            >
+                <img src={NoVideoSvg} class="w-4 h-4" alt="Ellipsis icon" />
+                <Tooltip text={$LL.camera.menu.muteVideoUser()} rightPosition="true" />
+            </button>
 
-    <!-- Mute video every body -->
-    {#if $userIsAdminStore}
-        <button
-            class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"
-            on:click={() => analyticsClient.muteVideoEverybodyMeetingAction()}
+            <!-- Mute video every body -->
+            {#if $userIsAdminStore}
+                <button
+                    class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"
+                    on:click={() => analyticsClient.muteVideoEverybodyMeetingAction()}
                     on:click|preventDefault|stopPropagation={() => muteVideoEveryBody(spaceUser)}
-        >
-            <img src={NoVideoSvg} class="w-4 h-4" alt="Ellipsis icon" />
-            <Tooltip text={$LL.camera.menu.muteVideoEveryBody()} rightPosition="true" />
-        </button>
-    {/if}
+                >
+                    <img src={NoVideoSvg} class="w-4 h-4" alt="Ellipsis icon" />
+                    <Tooltip text={$LL.camera.menu.muteVideoEveryBody()} rightPosition="true" />
+                </button>
+            {/if}
 
-    <!-- Kickoff user -->
-    {#if $userIsAdminStore}
-        <button
-            id="kickoff-user"
-            class="action-button flex flex-row items-center justify-center p-0 ml-1 cursor-pointer"
-            on:click={() => analyticsClient.kickoffMeetingAction()}
+            <!-- Kickoff user -->
+            {#if $userIsAdminStore}
+                <button
+                    id="kickoff-user"
+                    class="action-button flex flex-row items-center justify-center p-0 ml-1 cursor-pointer"
+                    on:click={() => analyticsClient.kickoffMeetingAction()}
                     on:click|preventDefault|stopPropagation={() => kickoff(spaceUser)}
-        >
-            <img src={banUserSvg} class="w-4 h-4" alt="Ellipsis icon" />
-            <Tooltip text={$LL.camera.menu.kickoffUser()} rightPosition="true" />
-        </button>
-    {/if}
+                >
+                    <img src={banUserSvg} class="w-4 h-4" alt="Ellipsis icon" />
+                    <Tooltip text={$LL.camera.menu.kickoffUser()} rightPosition="true" />
+                </button>
+            {/if}
 
-    <!-- Send private message -->
-<!--    <button-->
-<!--        class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"-->
-<!--        on:click={() => analyticsClient.sendPrivateMessageMeetingAction()}-->
-<!--        on:click|preventDefault|stopPropagation={() => sendPrivateMessage()}-->
-<!--    >-->
-<!--        <img src={BubbleTalkPng} class="w-8 h-8" alt="Ellipsis icon" />-->
-<!--        <Tooltip text={$LL.camera.menu.senPrivateMessage()} rightPosition="true" />-->
-<!--    </button>-->
+            <!-- Send private message -->
+            <!--    <button-->
+            <!--        class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"-->
+            <!--        on:click={() => analyticsClient.sendPrivateMessageMeetingAction()}-->
+            <!--        on:click|preventDefault|stopPropagation={() => sendPrivateMessage()}-->
+            <!--    >-->
+            <!--        <img src={BubbleTalkPng} class="w-8 h-8" alt="Ellipsis icon" />-->
+            <!--        <Tooltip text={$LL.camera.menu.senPrivateMessage()} rightPosition="true" />-->
+            <!--    </button>-->
 
-    <!-- Show visit card-->
-    <button
-        class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"
-        on:click={() => analyticsClient.sendPrivateMessageMeetingAction()}
-        on:click|preventDefault|stopPropagation={() => visitCard()}
-    >
-        <img src={NoVideoSvg} class="w-4 h-4" alt="Ellipsis icon" />
-        <!-- <Tooltip text={$LL.camera.menu.showVisitCard()} leftPosition="true" /> -->
-    </button>
+            <!-- Show visit card-->
+            <button
+                class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"
+                on:click={() => analyticsClient.sendPrivateMessageMeetingAction()}
+                on:click|preventDefault|stopPropagation={() => visitCard()}
+            >
+                <img src={NoVideoSvg} class="w-4 h-4" alt="Ellipsis icon" />
+                <!-- <Tooltip text={$LL.camera.menu.showVisitCard()} leftPosition="true" /> -->
+            </button>
 
-    <!-- Block or report user -->
+            <!-- Block or report user -->
             {#if trackStreamWrapper instanceof VideoPeer}
-        <button
-            class="action-button flex flex-row items-center justify-center p-0 mr-1 cursor-pointer"
-            on:click={() => analyticsClient.reportMeetingAction()}
-            on:click|preventDefault|stopPropagation={() => openBlockOrReportPopup()}
-        >
-            <img src={reportImg} class="w-4 h-4" alt="Ellipsis icon" />
-            <Tooltip text={$LL.camera.menu.blockOrReportUser()} rightPosition="true" />
-        </button>
-    {/if}
+                <button
+                    class="action-button flex flex-row items-center justify-center p-0 mr-1 cursor-pointer"
+                    on:click={() => analyticsClient.reportMeetingAction()}
+                    on:click|preventDefault|stopPropagation={() => openBlockOrReportPopup()}
+                >
+                    <img src={reportImg} class="w-4 h-4" alt="Ellipsis icon" />
+                    <Tooltip text={$LL.camera.menu.blockOrReportUser()} rightPosition="true" />
+                </button>
+            {/if}
         {/await}
     {/if}
 </div>

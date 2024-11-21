@@ -1,13 +1,12 @@
 <script lang="ts">
-    import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
     import { fly } from "svelte/transition";
+    import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
     import { LL, locale } from "../../../i18n/i18n-svelte";
     import type { Locales } from "../../../i18n/i18n-types";
     import { displayableLocales, setCurrentLocale } from "../../../i18n/locales";
     import { gameManager } from "../../Phaser/Game/GameManager";
 
-    import infoImg from "../images/info.svg";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import {
@@ -648,22 +647,6 @@
             <div class="block bg-contrast peer-checked:bg-secondary w-12 h-7 rounded-full" />
             <div class="ml-3 text-white/50 font-regular peer-checked:text-white">
                 {$LL.menu.settings.notifications()}
-            </div>
-        </label>
-        <label for="chatSounds-toggle" class="flex cursor-pointer items-center relative m-4">
-            <input
-                type="checkbox"
-                id="chatSounds-toggle"
-                class="peer sr-only"
-                bind:checked={chatSounds}
-                on:change={changeChatSounds}
-            />
-            <div
-                class="dot peer-checked:translate-x-full peer-checked:bg-white absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition"
-            />
-            <div class="block bg-contrast peer-checked:bg-secondary w-12 h-7 rounded-full" />
-            <div class="ml-3 text-white/50 font-regular peer-checked:text-white">
-                {$LL.menu.settings.chatSounds()}
             </div>
         </label>
         <label for="cowebsiteTrigger-toggle" class="flex cursor-pointer items-center relative m-4">

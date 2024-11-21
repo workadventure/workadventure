@@ -22,7 +22,7 @@
     import ChevronRightIcon from "../Icons/ChevronRightIcon.svelte";
     import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
     import ActionMediaBox from "./ActionMediaBox.svelte";
-    import {IconArrowDown, IconArrowUp} from "@wa-icons";
+    import { IconArrowDown, IconArrowUp } from "@wa-icons";
 
     // Extend the HTMLVideoElement interface to add the setSinkId method.
     // See https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
@@ -371,7 +371,7 @@
                 </div>
 
                 {#if showUserSubMenu}
-                    <ActionMediaBox {embedScreen} trackStreamWraper={peer} {videoEnabled} />
+                    <ActionMediaBox {embedScreen} trackStreamWrapper={peer} {videoEnabled} />
                 {/if}
             </div>
         </div>

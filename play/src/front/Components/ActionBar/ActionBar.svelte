@@ -1,14 +1,11 @@
 <script lang="ts">
-    import { get, Readable, Unsubscriber, writable } from "svelte/store";
+    import { get, writable } from "svelte/store";
     import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
-    import {IconArrowDown, IconCheck, IconChevronDown, IconChevronUp} from "@wa-icons";
-    import { AvailabilityStatus } from "@workadventure/messages";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import {
         availabilityStatusStore,
         cameraListStore,
-        isSpeakerStore,
         microphoneListStore,
         requestedCameraDeviceIdStore,
         requestedCameraState,
@@ -27,8 +24,6 @@
     import HelpTooltip from "../Tooltip/HelpTooltip.svelte";
     import calendarSvg from "../images/applications/outlook.svg";
     import todoListSvg from "../images/applications/todolist.png";
-    import burgerMenuImg from "../images/menu.svg";
-    import AppSvg from "../images/action-app.svg";
 
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { embedScreenLayoutStore, hasEmbedScreen } from "../../Stores/EmbedScreensStore";
@@ -88,10 +83,8 @@
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { isActivatedStore as isCalendarActivatedStore, isCalendarVisibleStore } from "../../Stores/CalendarStore";
     import { isActivatedStore as isTodoListActivatedStore, isTodoListVisibleStore } from "../../Stores/TodoListStore";
-    import { extensionActivateComponentModuleStore, extensionModuleStore } from "../../Stores/GameSceneStore";
     import { externalActionBarSvelteComponent } from "../../Stores/Utils/externalSvelteComponentStore";
-    import AvailabilityStatusComponent from "./AvailabilityStatus/AvailabilityStatus.svelte";
-    import { ADMIN_URL, ADMIN_BO_URL, ENABLE_OPENID } from "../../Enum/EnvironmentVariable";
+    import { ADMIN_BO_URL, ENABLE_OPENID } from "../../Enum/EnvironmentVariable";
     import Woka from "../Woka/WokaFromUserId.svelte";
     import Companion from "../Companion/Companion.svelte";
     import { loginSceneVisibleStore } from "../../Stores/LoginSceneStore";
@@ -132,8 +125,10 @@
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { connectionManager } from "../../Connection/ConnectionManager";
     import { canvasWidth } from "../../Stores/CoWebsiteStore";
-    import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
     import { inputFormFocusStore } from "../../Stores/UserInputStore";
+
+    import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
+    import { IconArrowDown } from "@wa-icons";
 
     // gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
     let userName = gameManager.getPlayerName() || "";
@@ -471,13 +466,6 @@
 
     let totalMessagesToSee = writable<number>(0);
 
-    const proximityChatRoom = gameManager.getCurrentGameScene().proximityChatRoom;
-    const chatConnection = gameManager.chatConnection;
-
-    const proximityChatRoomHasUnreadMessage = proximityChatRoom.hasUnreadMessages;
-
-    const chatHasUnreadMessage = chatConnection.hasUnreadMessages;
-
     onMount(() => {
         //resizeObserver.observe(mainHtmlDiv);
     });
@@ -518,33 +506,16 @@
         if (appMenuOpened) appMenuOpened = false;
     };
 
-    let isActiveMobileMenu = false;
-    let openMobileMenu = false;
-    let openMobileMenuTimeout: ReturnType<typeof setTimeout> | undefined;
-    let closeAfterunusedTimeout: ReturnType<typeof setTimeout> | undefined;
-    function activeMobileMenu() {
-        isActiveMobileMenu = !isActiveMobileMenu;
-        if (isActiveMobileMenu) {
-            if (openMobileMenuTimeout) clearTimeout(openMobileMenuTimeout);
-            openMobileMenuTimeout = setTimeout(() => {
-                openMobileMenu = true;
-            }, 200);
-            if (closeAfterunusedTimeout) clearTimeout(closeAfterunusedTimeout);
-            closeAfterunusedTimeout = setTimeout(() => {
-                if (openMobileMenuTimeout) clearTimeout(openMobileMenuTimeout);
-                isActiveMobileMenu = false;
-                openMobileMenu = false;
-            }, 30000);
-        } else {
-            if (openMobileMenuTimeout) clearTimeout(openMobileMenuTimeout);
-            openMobileMenu = false;
-        }
-    }
-
     let appMenuOpened = false;
     function openAppMenu() {
         emoteMenuSubStore.closeEmoteMenu();
         appMenuOpened = !appMenuOpened;
+    }
+    function showRoomList() {
+        resetChatVisibility();
+        resetModalVisibility();
+
+        roomListVisibilityStore.set(true);
     }
 </script>
 
@@ -779,35 +750,35 @@
                             </div>
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div
-                                    class="group/btn-app bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square {$canvasWidth <
+                                class="group/btn-app bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square {$canvasWidth <
                                 768
                                     ? 'hidden'
                                     : 'block'}"
-                                    on:click={openAppMenu()}
-                                    on:click={(helpActive = undefined)}
-                                    on:mouseenter={() => {
+                                on:click={openAppMenu()}
+                                on:click={(helpActive = undefined)}
+                                on:mouseenter={() => {
                                     !navigating ? (helpActive = "apps") : "";
                                 }}
-                                    on:mouseleave={() => {
+                                on:mouseleave={() => {
                                     !navigating ? (helpActive = undefined) : "";
                                 }}
                             >
                                 <div
-                                        class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 rounded aspect-square flex items-center justify-center transition-all {appMenuOpened
+                                    class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 rounded aspect-square flex items-center justify-center transition-all {appMenuOpened
                                         ? 'bg-secondary group-hover/bg-secondary-600'
                                         : ' group-hover/btn-emoji:bg-white/10'}"
                                 >
                                     <EmojiIcon
-                                            strokeColor={appMenuOpened
+                                        strokeColor={appMenuOpened
                                             ? "stroke-white fill-white"
                                             : "stroke-white fill-transparent"}
-                                            hover="group-hover/btn-emoji:fill-white"
+                                        hover="group-hover/btn-emoji:fill-white"
                                     />
                                 </div>
                                 {#if helpActive === "apps" && !appMenuOpened}
                                     <HelpTooltip
-                                            title={$LL.actionbar.help.apps.title()}
-                                            desc={$LL.actionbar.help.apps.desc()}
+                                        title={$LL.actionbar.help.apps.title()}
+                                        desc={$LL.actionbar.help.apps.desc()}
                                     />
                                 {/if}
                             </div>
@@ -901,16 +872,15 @@
                                     {#if helpActive === "follow" || !emoteMenuSubStore}
                                         {#if $followStateStore === "active"}
                                             <HelpTooltip
-                                                    title={$LL.actionbar.help.unfollow.title()}
-                                                    desc={$LL.actionbar.help.unfollow.desc()}
+                                                title={$LL.actionbar.help.unfollow.title()}
+                                                desc={$LL.actionbar.help.unfollow.desc()}
                                             />
                                         {:else}
                                             <HelpTooltip
-                                                    title={$LL.actionbar.help.follow.title()}
-                                                    desc={$LL.actionbar.help.follow.desc()}
+                                                title={$LL.actionbar.help.follow.title()}
+                                                desc={$LL.actionbar.help.follow.desc()}
                                             />
                                         {/if}
-
                                     {/if}
                                 </div>
                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -1012,10 +982,10 @@
                                         />
                                     {:else}
                                         <ChevronDownIcon
-                                                height="h-4"
-                                                width="w-4"
-                                                classList="aspect-square transition-all {cameraActive ? '' : 'rotate-180'}"
-                                                strokeWidth="2"
+                                            height="h-4"
+                                            width="w-4"
+                                            classList="aspect-square transition-all {cameraActive ? '' : 'rotate-180'}"
+                                            strokeWidth="2"
                                         />
                                     {/if}
                                 </div>
@@ -2026,17 +1996,32 @@
                         class="bottom-action-button"
                     >
                         {#if !isMobile}
-                            <Tooltip text={$LL.actionbar.roomList()} />
+                            <HelpTooltip
+                                title={$LL.actionbar.help.roomList.title()}
+                                desc={$LL.actionbar.help.roomList.desc()}
+                            />
                         {/if}
 
                         <button id="roomListIcon" class:border-top-light={$roomListVisibilityStore}>
-                            <!-- svelte-ignore a11y-img-redundant-alt -->
-                            <img
-                                draggable="false"
-                                src={worldImg}
-                                style="padding: 2px"
-                                alt="Image for room list modal"
-                            />
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                width="32"
+                                height="32"
+                                stroke-width="1.5"
+                            >
+                                <path d="M21 12a9 9 0 1 0 -9 9" />
+                                <path d="M3.6 9h16.8" />
+                                <path d="M3.6 15h7.9" />
+                                <path d="M11.5 3a17 17 0 0 0 0 18" />
+                                <path d="M12.5 3a16.984 16.984 0 0 1 2.574 8.62" />
+                                <path d="M18 18m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+                                <path d="M20.2 20.2l1.8 1.8" />
+                            </svg>
                         </button>
                     </div>
                 {/if}
@@ -2050,10 +2035,11 @@
                     class="bottom-action-button"
                 >
                     {#if !isMobile}
-                        <Tooltip
-                            text={$isCalendarActivatedStore
-                                ? $LL.actionbar.calendar()
+                        <HelpTooltip
+                            title={$isCalendarActivatedStore
+                                ? $LL.actionbar.help.calendar.title()
                                 : $LL.actionbar.featureNotAvailable()}
+                            desc={$isCalendarActivatedStore ? $LL.actionbar.help.calendar.desc() : ""}
                         />
                     {/if}
                     <button
@@ -2083,10 +2069,11 @@
                     class="bottom-action-button"
                 >
                     {#if !isMobile}
-                        <Tooltip
-                            text={$isTodoListActivatedStore
-                                ? $LL.actionbar.calendar()
+                        <HelpTooltip
+                            title={$isTodoListActivatedStore
+                                ? $LL.actionbar.help.todolist.title()
                                 : $LL.actionbar.featureNotAvailable()}
+                            desc={$isTodoListActivatedStore ? $LL.actionbar.help.todolist.desc() : ""}
                         />
                     {/if}
                     <button
@@ -2124,7 +2111,7 @@
             <div class="bottom-action-section flex animate">
                 <div class="transition-all bottom-action-button">
                     <button on:click|preventDefault={openAppMenu}>
-                        <img draggable="false" src={closeImg} style="padding: 8px" alt={$LL.actionbar.appList()} />
+                        <XIcon width="w-4" height="h-4" />
                     </button>
                 </div>
             </div>

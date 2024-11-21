@@ -854,7 +854,6 @@ export class GameMapPropertiesListener {
             return;
         }
 
-        const actionStore = get(popupStore); // layoutManagerActionStore
         const actionTriggerUuid = this.coWebsitesActionTriggerByPlace.get(this.getIdFromPlace(place));
 
         if (!actionTriggerUuid) {

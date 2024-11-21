@@ -15,6 +15,9 @@
     import { forceRefreshChatStore } from "../Stores/ChatStore";
     import { loaderVisibleStore } from "../Stores/LoaderStore";
     import { showModalGlobalComminucationVisibilityStore } from "../Stores/ModalStore";
+    import { isActivatedStore as calendarIsActivatedStore, isCalendarVisibleStore } from "../Stores/CalendarStore";
+    import { isActivatedStore as todoListIsActivatedStore, isTodoListVisibleStore } from "../Stores/TodoListStore";
+    import ChatSidebar from "../Chat/ChatSidebar.svelte";
     import LoginScene from "./Login/LoginScene.svelte";
     import MainLayout from "./MainLayout.svelte";
     import SelectCharacterScene from "./SelectCharacter/SelectCharacterScene.svelte";
@@ -28,10 +31,7 @@
     import bgMap from "./images/map-exemple.png";
     import defaultLoader from "./images/Workadventure.gif";
     import GlobalCommunicationModal from "./Modal/GlobalCommunicationModal.svelte";
-    import { isActivatedStore as calendarIsActivatedStore, isCalendarVisibleStore } from "../Stores/CalendarStore";
-    import { isActivatedStore as todoListIsActivatedStore, isTodoListVisibleStore } from "../Stores/TodoListStore";
     import Calendar from "./Calendar/Calendar.svelte";
-    import ChatSidebar from "../Chat/ChatSidebar.svelte";
     import TodoList from "./TodoList/TodoList.svelte";
 
     export let game: Game;

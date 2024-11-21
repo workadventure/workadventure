@@ -1,5 +1,4 @@
 <script lang="ts">
-    import {IconArrowDown, IconArrowUp} from "@wa-icons";
     import { onDestroy, onMount } from "svelte";
     import { Unsubscriber } from "svelte/store";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
@@ -7,6 +6,8 @@
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import { highlightFullScreen, setHeightScreenShare } from "../../Stores/ActionsCamStore";
     import { srcObject } from "./utils";
+
+    import { IconArrowDown, IconArrowUp } from "@wa-icons";
 
     export let peer: ScreenSharingLocalMedia;
     let stream = peer.stream;

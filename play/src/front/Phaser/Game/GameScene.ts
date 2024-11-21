@@ -168,6 +168,12 @@ import { SpaceInterface } from "../../Space/SpaceInterface";
 import { UserProviderInterface } from "../../Chat/UserProvider/UserProviderInterface";
 import { ScriptingOutputAudioStreamManager } from "../../WebRtc/AudioStream/ScriptingOutputAudioStreamManager";
 import { ScriptingInputAudioStreamManager } from "../../WebRtc/AudioStream/ScriptingInputAudioStreamManager";
+import { faviconManager } from "../../WebRtc/FaviconManager";
+import { popupStore } from "../../Stores/PopupStore";
+import PopUpRoomAccessDenied from "../../Components/PopUp/PopUpRoomAccessDenied.svelte";
+import PopUpTriggerActionMessage from "../../Components/PopUp/PopUpTriggerActionMessage.svelte";
+import PopUpMapEditorNotEnabled from "../../Components/PopUp/PopUpMapEditorNotEnabled.svelte";
+import PopUpMapEditorShortcut from "../../Components/PopUp/PopUpMapEditorShortcut.svelte";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -193,7 +199,6 @@ import { PlayerVariablesManager } from "./PlayerVariablesManager";
 import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManager";
 import { DEPTH_BUBBLE_CHAT_SPRITE, DEPTH_WHITE_MASK } from "./DepthIndexes";
 import { ScriptingEventsManager } from "./ScriptingEventsManager";
-import { faviconManager } from "../../WebRtc/FaviconManager";
 import { FollowManager } from "./FollowManager";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import EVENT_TYPE = Phaser.Scenes.Events;
@@ -205,11 +210,6 @@ import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import Clamp = Phaser.Math.Clamp;
-import {popupStore} from "../../Stores/PopupStore";
-import PopUpRoomAccessDenied from "../../Components/PopUp/PopUpRoomAccessDenied.svelte";
-import PopUpTriggerActionMessage from "../../Components/PopUp/PopUpTriggerActionMessage.svelte";
-import PopUpMapEditorNotEnabled from "../../Components/PopUp/PopUpMapEditorNotEnabled.svelte";
-import PopUpMapEditorShortcut from "../../Components/PopUp/PopUpMapEditorShortcut.svelte";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -2768,7 +2768,7 @@ ${escapedMessage}
             })
         );
 
-        iframeListener.registerAnswerer("openCoWebsite", async (openCoWebsite, source) => {
+        iframeListener.registerAnswerer("openCoWebsite", (openCoWebsite, source) => {
             return openCoWebSite(openCoWebsite, source);
         });
 

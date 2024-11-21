@@ -1,7 +1,6 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
     import { fly } from "svelte/transition";
-    import { IconChevronRight } from "@wa-icons";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
@@ -12,6 +11,8 @@
     import { userIsAdminStore } from "../../Stores/GameStore";
     import Megaphone from "./ConfigureMyRoom/Megaphone.svelte";
     import RoomSettings from "./ConfigureMyRoom/RoomSettings.svelte";
+
+    import { IconChevronRight } from "@wa-icons";
 
     let isVisible: boolean;
 
@@ -45,7 +46,9 @@
 
 <div class="configure-my-room" in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>
     <div class="hover:bg-white/10">
-        <button class="close-window {isVisible ? 'visible' : ''} " on:click|preventDefault|stopPropagation={close}>&#215;</button>
+        <button class="close-window {isVisible ? 'visible' : ''} " on:click|preventDefault|stopPropagation={close}
+            >&#215;</button
+        >
     </div>
     <div class="menu mx-auto flex">
         <h3>{$LL.mapEditor.sideBar.configureMyRoom()}</h3>

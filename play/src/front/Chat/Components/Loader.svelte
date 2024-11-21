@@ -1,10 +1,10 @@
 <script lang="ts">
     export let text: string;
     export let height = "h-screen";
-    export let className: string = "";
+    export let className: string;
 </script>
 
-<div class="grid place-items-center {height} loader ${className}">
+<div class="grid place-items-center {height} loader {className}">
     <div class="flex items-center flex-col">
         <svg
             xmlns="http://www.w3.org/2000/svg"
