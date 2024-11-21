@@ -1,4 +1,5 @@
 import axios from "axios";
+import Debug from "debug";
 
 import type { AreaData, AtLeast, EntityDimensions, WAMEntityData } from "@workadventure/map-editor";
 import {
@@ -1581,16 +1582,26 @@ export class RoomConnection implements RoomConnection {
     }
 
     public async getOauthRefreshToken(tokenToRefresh: string): Promise<OauthRefreshToken> {
-        const answer = await this.query({
-            $case: "oauthRefreshTokenQuery",
-            oauthRefreshTokenQuery: {
-                tokenToRefresh,
-            },
-        });
-        if (answer.$case !== "oauthRefreshTokenAnswer") {
-            throw new Error("Unexpected answer");
+        try {
+            const answer = await this.query({
+                $case: "oauthRefreshTokenQuery",
+                oauthRefreshTokenQuery: {
+                    tokenToRefresh,
+                },
+            });
+            if (answer.$case !== "oauthRefreshTokenAnswer") {
+                throw new Error("Unexpected answer");
+            }
+            return answer.oauthRefreshTokenAnswer;
+        } catch (error) {
+            // FIWME: delete me when the fresh token query and answer are stable
+            Debug(
+                `RoomConnection => getOauthRefreshToken => Error getting oauth refresh token: ${
+                    (error as Error).message
+                }`
+            );
+            throw error;
         }
-        return answer.oauthRefreshTokenAnswer;
     }
 
     public emitUpdateChatId(email: string, chatId: string) {
