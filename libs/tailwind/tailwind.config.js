@@ -47,10 +47,6 @@ module.exports = {
         '01': '0.1',
         140: "1.4",
       },
-      scale: {
-        '01': '0.1',
-        140: "1.4",
-      },
       keyframes: {
         shake: {
           '0%': { transform: 'rotate(0.0deg)' },
@@ -73,5 +69,8 @@ module.exports = {
     require("@tailwindcss/forms"),
     require("@workadventure/design-system")
   ],
+  workadventureUi: {
+    oswaldFontUrl: './fonts/Oswald.ttf',
+  },
 
 };
