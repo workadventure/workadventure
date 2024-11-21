@@ -1248,7 +1248,7 @@
                     {#if !isMobile}
                         <Tooltip
                             text={$isTodoListActivatedStore
-                                ? $LL.actionbar.calendar()
+                                ? $LL.actionbar.todoList()
                                 : $LL.actionbar.featureNotAvailable()}
                         />
                     {/if}
