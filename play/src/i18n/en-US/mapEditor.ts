@@ -61,6 +61,7 @@ const mapEditor: BaseTranslation = {
                 cancel: "Cancel",
                 validate: "Validate",
             },
+            disabled: "Jitsi integration is disabled for this room ❌",
         },
         audioProperties: {
             label: "Play Audio File",

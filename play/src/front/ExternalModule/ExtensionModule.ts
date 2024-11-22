@@ -26,6 +26,7 @@ export interface ExtensionModuleOptions {
     roomId: string;
     externalModuleMessage: Observable<ExternalModuleMessage>;
     externalSvelteComponent: Readable<ExternalSvelteComponentStore>;
+    externalRestrictedMapEditorProperties?: Readable<string[]>;
     onExtensionModuleStatusChange: (workAdventureNewStatus: AvailabilityStatus) => void;
     openCoWebSite: (
         openCoWebsiteObject: OpenCoWebsiteObject,

@@ -62,6 +62,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "Annuler",
                 validate: "Valider",
             },
+            disabled: "L'intégration Jitsi est désactivée pour cette carte ❌",
         },
         audioProperties: {
             label: "Jouer un fichier audio",
