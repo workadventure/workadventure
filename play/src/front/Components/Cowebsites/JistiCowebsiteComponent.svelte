@@ -50,7 +50,7 @@
     };
 
     function updateParticipantsCountStore() {
-        jitsiParticipantsCountStore.set(this.jitsiApi?.getParticipantsInfo().length ?? 0);
+        jitsiParticipantsCountStore.set(jitsiApi?.getParticipantsInfo().length ?? 0);
     }
 
     const onParticipantsCountChange = () => {
@@ -83,8 +83,8 @@
 
                 if (
                     !userConnectedTags.includes("admin") &&
-                    (!this.jitsiConfig?.jitsiRoomAdminTag ||
-                        !userConnectedTags.includes(this.jitsiConfig?.jitsiRoomAdminTag))
+                    (!actualCowebsite.jitsiConfig?.jitsiRoomAdminTag ||
+                        !userConnectedTags.includes(actualCowebsite.jitsiConfig?.jitsiRoomAdminTag))
                 ) {
                     mergedConfig.localRecording = {
                         disable: true,

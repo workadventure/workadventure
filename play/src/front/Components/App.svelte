@@ -269,7 +269,7 @@
 </script>
 
 <div class="h-screen w-screen responsive-position" id="main-container" bind:this={gameContainer}>
-    <div id="game" class="w-screen h-screen relative {$fullScreenCowebsite ? 'hidden' : ''}" bind:this={gameDiv}>
+    <div id="game" class="relative {$fullScreenCowebsite ? 'hidden' : ''}" bind:this={gameDiv}>
         <GameOverlay {game} />
     </div>
     {#if $coWebsites.length > 0}
@@ -282,4 +282,14 @@
 </div>
 
 <style>
+    .responsive-position {
+        display: flex;
+        flex-direction: column-reverse;
+    }
+    @media (min-width: 768px) {
+        .responsive-position {
+            display: flex;
+            flex-direction: row;
+        }
+    }
 </style>
