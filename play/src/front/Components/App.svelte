@@ -109,6 +109,17 @@
 
         const hdpiManager = new HdpiManager(640 * 480, 196 * 196);
         const { game: gameSize, real: realSize } = hdpiManager.getOptimalGameSize({ width, height });
+        console.log("SIZE INFO :");
+        console.log("width");
+        console.log(width);
+        console.log("height");
+        console.log(height);
+        console.log("gameDiv");
+        console.log(gameDiv);
+        console.log("gameSize.width");
+        console.log(gameSize.width);
+        console.log("gameSize.height");
+        console.log(gameSize.height);
 
         const config: Phaser.Types.Core.GameConfig = {
             type: mode,
@@ -258,7 +269,7 @@
 </script>
 
 <div class="h-screen w-screen responsive-position" id="main-container" bind:this={gameContainer}>
-    <div id="game" class="relative {$fullScreenCowebsite ? 'hidden' : ''}" bind:this={gameDiv}>
+    <div id="game" class="w-screen h-screen relative {$fullScreenCowebsite ? 'hidden' : ''}" bind:this={gameDiv}>
         <GameOverlay {game} />
     </div>
     {#if $coWebsites.length > 0}
@@ -271,14 +282,4 @@
 </div>
 
 <style>
-    .responsive-position {
-        display: flex;
-        flex-direction: column-reverse;
-    }
-    @media (min-width: 768px) {
-        .responsive-position {
-            display: flex;
-            flex-direction: row;
-        }
-    }
 </style>

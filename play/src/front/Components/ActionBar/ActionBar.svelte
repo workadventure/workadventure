@@ -1980,7 +1980,7 @@
 {#if appMenuOpened && ($roomListActivated || $isCalendarActivatedStore || $isTodoListActivatedStore || $externalActionBarSvelteComponent.size > 0)}
     <div
         class="flex justify-center m-auto absolute left-0 right-0 bottom-0"
-        style="margin-bottom: 5.5rem; height: auto;"
+        style="margin-bottom: 5.5rem; height: auto;display:none;"
     >
         <div class="bottom-action-bar">
             <div class="bottom-action-section flex animate">
