@@ -1998,7 +1998,7 @@ export class GameScene extends DirtyScene {
                     if (defaultExtensionModule.calendarSynchronised) isCalendarActiveStore.set(true);
                     if (defaultExtensionModule.todoListSynchronized) isTodoListActiveStore.set(true);
                     extensionModuleStore.add(defaultExtensionModule);
-                    console.info(`Extension module ${module} initialization finished`);
+                    console.info(`Extension module ${moduleName} initialization finished`);
                 })().catch((error) => console.error(error));
             }
         }
