@@ -8,7 +8,7 @@ Live demo [here](https://play.staging.workadventu.re/@/tcm/workadventure/wa-vill
 # WorkAdventure
 
 WorkAdventure is a web-based collaborative workspace presented in the form of a
-16-bit video game.
+32-bit video game.
 
 In WorkAdventure you can move around your office and talk to your colleagues (using a video-chat system, triggered when you approach someone).
 
