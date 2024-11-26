@@ -1,4 +1,4 @@
-ARG NODE_OPTIONS
+ARG NODE_OPTIONS="--max-old-space-size=16384"
 
 # protobuf build
 FROM --platform=$BUILDPLATFORM node:20.8-bullseye-slim AS proto-builder
