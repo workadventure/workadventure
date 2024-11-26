@@ -27,11 +27,13 @@
         {#if hasImage}
             <img alt="Help GIF" src={image} class="w-full -mt-[2px]" loading="lazy" />
         {/if}
-        <div class="font-lg bold px-4 pt-3 {hasImage && hasDesc ? 'pb-1' : ''}">
+        <div class="text-lg bold px-4 pt-2 leading-5 {hasImage && hasDesc ? 'pb-1' : ''}">
             {title}
         </div>
         {#if hasDesc}
-            {desc}
+            <div class="px-4 text-xs italic opacity-80 leading-4">
+                {desc}
+            </div>
         {/if}
     </div>
 </div>

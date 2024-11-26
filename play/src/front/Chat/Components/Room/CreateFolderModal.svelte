@@ -74,7 +74,7 @@
             </div>
         {:else}
             {#if createFolderError !== undefined}
-                <div class="bg-red-500 p-2 rounded-md">
+                <div class="bg-red-500 p-2 rounded">
                     {$LL.chat.createFolder.error()} : <b><i>{createFolderError}</i></b>
                 </div>
             {/if}
@@ -142,8 +142,7 @@
         {#if loadingFolderCreation}
             <p>{$LL.chat.createFolder.loadingCreation()}</p>
         {:else}
-            <button class="flex-1 justify-center" on:click={closeModal}
-                >{$LL.chat.createFolder.buttons.cancel()}</button
+            <button class="flex-1 justify-center" on:click={closeModal}>{$LL.chat.createFolder.buttons.cancel()}</button
             >
             <button
                 data-testid="createFolderButton"

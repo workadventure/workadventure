@@ -80,7 +80,7 @@
                     {roomName}
                 </div>
                 <div
-                    class="transition-all group-hover:bg-white/10 p-1 rounded-lg aspect-square flex items-center justify-center text-white"
+                    class="transition-all group-hover:bg-white/10 p-1 rounded aspect-square flex items-center justify-center text-white"
                 >
                     <IconChevronUp
                         class={`transform transition ${$shownRoomListStore === roomName ? "" : "rotate-180"}`}

@@ -4,7 +4,6 @@
     import { onDestroy, onMount } from "svelte";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import {
-        availabilityStatusStore,
         cameraListStore,
         microphoneListStore,
         requestedCameraDeviceIdStore,
@@ -32,6 +31,7 @@
     import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { chatVisibilityStore, chatZoneLiveStore } from "../../Stores/ChatStore";
+    import { navChat } from "../../Chat/Stores/ChatStore";
     import {
         inExternalServiceStore,
         myCameraStore,
@@ -127,8 +127,11 @@
     import { canvasWidth } from "../../Stores/CoWebsiteStore";
     import { inputFormFocusStore } from "../../Stores/UserInputStore";
 
+    import AppsIcon from "../Icons/AppsIcon.svelte";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
+    import AvailabilityStatus from "./AvailabilityStatus/AvailabilityStatus.svelte";
     import { IconArrowDown } from "@wa-icons";
+    //import AvailabilityStatusCircle from "./AvailabilityStatus/AvailabilityStatusCircle.svelte";
 
     // gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
     let userName = gameManager.getPlayerName() || "";
@@ -142,6 +145,7 @@
     let navigating = false;
     let camMenuIsDropped = false;
     let smallArrowVisible = true;
+    let appMenuOpened = false;
     //const sound = new Audio("/resources/objects/webrtc-out-button.mp3");
 
     function focusModeOn() {
@@ -212,21 +216,6 @@
         }
     }
 
-    /*
-    TODO Hugo
-    function getStatus() {
-        switch ($availabilityStatusStore) {
-            case 1:
-                return "Online";
-            case 2:
-                return "Away";
-            default:
-                return "Do not disturb";
-        }
-    }
-
-     */
-
     function lockClick() {
         gameManager.getCurrentGameScene().connection?.emitLockGroup(!$currentPlayerGroupLockStateStore);
     }
@@ -241,12 +230,15 @@
     }
 
     function toggleEmojiPicker() {
+        console.log("HEY toggleEmojiPicker");
         if ($emoteMenuSubStore == true) {
             emoteMenuSubStore.closeEmoteMenu();
         } else {
             emoteMenuSubStore.openEmoteMenu();
             appMenuOpened = false;
         }
+        console.log("L239");
+        console.log($emoteMenuSubStore);
     }
 
     function toggleGlobalMessage() {
@@ -506,10 +498,11 @@
         if (appMenuOpened) appMenuOpened = false;
     };
 
-    let appMenuOpened = false;
     function openAppMenu() {
         emoteMenuSubStore.closeEmoteMenu();
         appMenuOpened = !appMenuOpened;
+        console.log("L504");
+        console.log(appMenuOpened);
     }
     function showRoomList() {
         resetChatVisibility();
@@ -525,7 +518,7 @@
     class="@container/actions position-responsive w-full z-[301] transition-all pointer-events-none bp-menu {$peerStore.size >
         0 && $highlightFullScreen
         ? 'hidden'
-        : ''} {$canvasWidth < 768 ? 'absolute bottom-0' : 'relative top-0 bottom-auto'}"
+        : ''}"
 >
     <div class="flex w-full p-2 space-x-2 @xl/actions:p-4 @xl/actions:space-x-4">
         <div
@@ -546,6 +539,7 @@
                     data-testid="chat-btn"
                     on:click={() => analyticsClient.openedChat()}
                     on:click={toggleChat}
+                    on:click={() => navChat.switchToChat()}
                     on:mouseenter={() => {
                         !navigating ? (helpActive = "chat") : "";
                     }}
@@ -564,17 +558,8 @@
                     {/if}
                     {#if $chatZoneLiveStore || $peerStore.size > 0}
                         <div>
-                            <span
-                                class="w-4 h-4 block rounded-full absolute -top-1 -left-1 animate-ping {$peerStore.size >
-                                0
-                                    ? 'bg-success'
-                                    : 'bg-danger'}"
-                            />
-                            <span
-                                class="w-3 h-3 block rounded-full absolute -top-0.5 -left-0.5 {$peerStore.size > 0
-                                    ? 'bg-success'
-                                    : 'bg-danger'}"
-                            />
+                            <span class="w-4 h-4 block rounded-full absolute -top-1 -left-1 animate-ping bg-white" />
+                            <span class="w-3 h-3 block rounded-full absolute -top-0.5 -left-0.5 bg-white" />
                         </div>
                     {:else if $totalMessagesToSee > 0}
                         <div
@@ -591,6 +576,7 @@
                         ? 'hidden'
                         : 'block'}"
                     on:click={toggleChat}
+                    on:click={() => navChat.switchToUserList()}
                 >
                     <div
                         class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 rounded group-hover/btn-users:bg-white/10 aspect-square flex items-center justify-center transition-all"
@@ -618,10 +604,7 @@
                         <div class="flex items-center">
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div
-                                class="group/btn-emoji bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square {$canvasWidth <
-                                768
-                                    ? 'hidden'
-                                    : 'block'}"
+                                class="group/btn-emoji bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square"
                                 on:click={toggleEmojiPicker}
                                 on:click={(helpActive = undefined)}
                                 on:mouseenter={() => {
@@ -750,46 +733,188 @@
                             </div>
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div
-                                class="group/btn-app bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square {$canvasWidth <
-                                768
-                                    ? 'hidden'
-                                    : 'block'}"
-                                on:click={openAppMenu()}
-                                on:click={(helpActive = undefined)}
-                                on:mouseenter={() => {
-                                    !navigating ? (helpActive = "apps") : "";
-                                }}
-                                on:mouseleave={() => {
-                                    !navigating ? (helpActive = undefined) : "";
-                                }}
+                                class="group/btn-apps bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:squircle-lg last:rounded-r-lg aspect-square"
                             >
-                                <div
+                                <button
                                     class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 rounded aspect-square flex items-center justify-center transition-all {appMenuOpened
                                         ? 'bg-secondary group-hover/bg-secondary-600'
-                                        : ' group-hover/btn-emoji:bg-white/10'}"
+                                        : ' group-hover/btn-apps:bg-white/10'}"
+                                    on:click|preventDefault={openAppMenu}
+                                    on:click={(helpActive = undefined)}
+                                    on:mouseenter={() => {
+                                        !navigating ? (helpActive = "apps") : "";
+                                    }}
+                                    on:mouseleave={() => {
+                                        !navigating ? (helpActive = undefined) : "";
+                                    }}
                                 >
-                                    <EmojiIcon
+                                    <AppsIcon
                                         strokeColor={appMenuOpened
                                             ? "stroke-white fill-white"
                                             : "stroke-white fill-transparent"}
-                                        hover="group-hover/btn-emoji:fill-white"
+                                        hover="group-hover/btn-apps:fill-white"
                                     />
-                                </div>
+                                </button>
                                 {#if helpActive === "apps" && !appMenuOpened}
                                     <HelpTooltip
                                         title={$LL.actionbar.help.apps.title()}
                                         desc={$LL.actionbar.help.apps.desc()}
                                     />
                                 {/if}
+                                {#if appMenuOpened && ($roomListActivated || $isCalendarActivatedStore || $isTodoListActivatedStore || $externalActionBarSvelteComponent.size > 0)}
+                                    <div
+                                        class="flex justify-center m-auto absolute left-0 right-0 bottom-0"
+                                        style="margin-bottom: 5.5rem; height: auto;"
+                                    >
+                                        <div class="bottom-action-bar">
+                                            <div class="bottom-action-section flex animate">
+                                                <!-- Room list part -->
+                                                {#if $roomListActivated}
+                                                    <!-- TODO button hep -->
+                                                    <!-- Room list button -->
+                                                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                                    <div
+                                                        on:dragstart|preventDefault={noDrag}
+                                                        on:click={() => analyticsClient.openedRoomList()}
+                                                        on:click={showRoomList}
+                                                        class="bottom-action-button"
+                                                    >
+                                                        {#if !isMobile}
+                                                            <HelpTooltip
+                                                                title={$LL.actionbar.help.roomList.title()}
+                                                                desc={$LL.actionbar.help.roomList.desc()}
+                                                            />
+                                                        {/if}
+
+                                                        <button
+                                                            id="roomListIcon"
+                                                            class:border-top-light={$roomListVisibilityStore}
+                                                        >
+                                                            <svg
+                                                                xmlns="http://www.w3.org/2000/svg"
+                                                                viewBox="0 0 24 24"
+                                                                fill="none"
+                                                                stroke="currentColor"
+                                                                stroke-linecap="round"
+                                                                stroke-linejoin="round"
+                                                                width="32"
+                                                                height="32"
+                                                                stroke-width="1.5"
+                                                            >
+                                                                <path d="M21 12a9 9 0 1 0 -9 9" />
+                                                                <path d="M3.6 9h16.8" />
+                                                                <path d="M3.6 15h7.9" />
+                                                                <path d="M11.5 3a17 17 0 0 0 0 18" />
+                                                                <path d="M12.5 3a16.984 16.984 0 0 1 2.574 8.62" />
+                                                                <path d="M18 18m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+                                                                <path d="M20.2 20.2l1.8 1.8" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                {/if}
+
+                                                <!-- Calendar integration -->
+                                                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                                <div
+                                                    on:dragstart|preventDefault={noDrag}
+                                                    on:click={() => analyticsClient.openExternalModuleCalendar()}
+                                                    on:click={openExternalModuleCalendar}
+                                                    class="bottom-action-button"
+                                                >
+                                                    {#if !isMobile}
+                                                        <HelpTooltip
+                                                            title={$isCalendarActivatedStore
+                                                                ? $LL.actionbar.help.calendar.title()
+                                                                : $LL.actionbar.featureNotAvailable()}
+                                                            desc={$isCalendarActivatedStore
+                                                                ? $LL.actionbar.help.calendar.desc()
+                                                                : ""}
+                                                        />
+                                                    {/if}
+                                                    <button
+                                                        id="calendarIcon"
+                                                        class:border-top-light={$isCalendarVisibleStore}
+                                                        class:!cursor-not-allowed={!$isCalendarActivatedStore}
+                                                        class:!no-pointer-events={!$isCalendarActivatedStore}
+                                                        disabled={!$isCalendarActivatedStore}
+                                                    >
+                                                        <img
+                                                            draggable="false"
+                                                            src={calendarSvg}
+                                                            style="padding: 2px"
+                                                            alt={$LL.menu.icon.open.calendar()}
+                                                            class:disable-opacity={!$isCalendarActivatedStore}
+                                                            class:!cursor-not-allowed={!$isCalendarActivatedStore}
+                                                        />
+                                                    </button>
+                                                </div>
+
+                                                <!-- Todo List Integration -->
+                                                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                                <div
+                                                    on:dragstart|preventDefault={noDrag}
+                                                    on:click={() => analyticsClient.openExternalModuleTodoList()}
+                                                    on:click={openExternalModuleTodoList}
+                                                    class="bottom-action-button"
+                                                >
+                                                    {#if !isMobile}
+                                                        <HelpTooltip
+                                                            title={$isTodoListActivatedStore
+                                                                ? $LL.actionbar.help.todolist.title()
+                                                                : $LL.actionbar.featureNotAvailable()}
+                                                            desc={$isTodoListActivatedStore
+                                                                ? $LL.actionbar.help.todolist.desc()
+                                                                : ""}
+                                                        />
+                                                    {/if}
+                                                    <button
+                                                        id="todoListIcon"
+                                                        class:border-top-light={$isTodoListVisibleStore}
+                                                        class:!cursor-not-allowed={!$isTodoListActivatedStore}
+                                                        class:!no-pointer-events={!$isTodoListActivatedStore}
+                                                        disabled={!$isTodoListActivatedStore}
+                                                    >
+                                                        <img
+                                                            draggable="false"
+                                                            src={todoListSvg}
+                                                            style="padding: 2px"
+                                                            alt={$LL.menu.icon.open.todoList()}
+                                                            class:disable-opacity={!$isTodoListActivatedStore}
+                                                            class:!cursor-not-allowed={!$isTodoListActivatedStore}
+                                                        />
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div class="bottom-action-section flex animate">
+                                                <!-- External module action bar -->
+                                                {#if $externalActionBarSvelteComponent.size > 0}
+                                                    {#each [...$externalActionBarSvelteComponent.entries()] as [id, value] (`externalActionBarSvelteComponent-${id}`)}
+                                                        <svelte:component
+                                                            this={value.componentType}
+                                                            extensionModule={value.extensionModule}
+                                                            {isMobile}
+                                                        />
+                                                    {/each}
+                                                {/if}
+                                            </div>
+
+                                            <div class="bottom-action-section flex animate">
+                                                <div class="transition-all bottom-action-button">
+                                                    <button on:click|preventDefault={openAppMenu}>
+                                                        <XIcon width="w-4" height="h-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {/if}
                             </div>
 
                             {#if $bottomActionBarVisibilityStore}
                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <div
-                                    class="group/btn-layout bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg aspect-square {$canvasWidth <
-                                    768
-                                        ? 'hidden'
-                                        : 'block'}"
+                                    class="group/btn-layout bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg aspect-square"
                                 >
                                     <div
                                         class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 rounded btn-layout/btn-more:bg-white/10 aspect-square flex items-center justify-center transition-all"
@@ -918,6 +1043,28 @@
                             {/if}
                         </div>
                     </div>
+                {:else}
+                    <div
+                        class="flex flex-col items-center justify-center rounded-lg bg-danger-900/50 text-white mt-12 px-6 py-4 backdrop-blur"
+                    >
+                        <picture class="h-8">
+                            <source
+                                srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f910/512.webp"
+                                type="image/webp"
+                            />
+                            <img
+                                src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f910/512.gif"
+                                alt="🤐"
+                                width="96"
+                                height="96"
+                                class="absolute left-0 right-0 m-auto -top-12"
+                            />
+                        </picture>
+                        <div class="text-lg font-bold">{$LL.actionbar.silentTitle()}</div>
+                        <p class="text-xs italic m-0 text-center opacity-80 leading-3">
+                            {$LL.actionbar.silentDesc()}
+                        </p>
+                    </div>
                 {/if}
                 <div in:fly={{ delay: 1000, y: -200, duration: 750 }}>
                     <!-- ACTION WRAPPER : CAM & MIC -->
@@ -973,21 +1120,12 @@
                                     class="absolute bottom-1 left-0 right-0 m-auto hover:bg-white/10 h-5 w-5 flex items-center justify-center rounded-sm"
                                     on:click|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}
                                 >
-                                    {#if cameraActive}
-                                        <ChevronUpIcon
-                                            height="h-4"
-                                            width="w-4"
-                                            classList="aspect-square transition-all {cameraActive ? '' : 'rotate-180'}"
-                                            strokeWidth="2"
-                                        />
-                                    {:else}
-                                        <ChevronDownIcon
-                                            height="h-4"
-                                            width="w-4"
-                                            classList="aspect-square transition-all {cameraActive ? '' : 'rotate-180'}"
-                                            strokeWidth="2"
-                                        />
-                                    {/if}
+                                    <ChevronUpIcon
+                                        height="h-4"
+                                        width="w-4"
+                                        classList="aspect-square transition-all {cameraActive ? '' : 'rotate-180'}"
+                                        strokeWidth="2"
+                                    />
                                 </div>
                             </div>
                         {/if}
@@ -1230,33 +1368,6 @@
                                 on:mouseleave={() => {
                                     !navigating ? (helpActive = undefined) : "";
                                 }}
-                            >
-                                <div
-                                    class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 p-1 m-0 rounded group-[.disabled]/btn-screen-share:bg-secondary hover:bg-white/10 flex items-center justify-center transition-all {$requestedScreenSharingState &&
-                                    !$silentStore
-                                        ? 'bg-secondary hover:bg-danger'
-                                        : ''}"
-                                >
-                                    {#if $requestedScreenSharingState && !$silentStore}
-                                        <ScreenShareOffIcon />
-                                    {:else}
-                                        <ScreenShareIcon />
-                                    {/if}
-                                </div>
-                                {#if helpActive === "share" || !emoteMenuSubStore}
-                                    <HelpTooltip
-                                        title={$LL.actionbar.help.share.title()}
-                                        desc={$LL.actionbar.help.share.desc()}
-                                    />
-                                {/if}
-                            </div>
-                            <div
-                                class="group/btn-menu-cam relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square {$canvasWidth <
-                                768
-                                    ? 'hidden'
-                                    : 'block'}"
-                                on:click={() => (camMenuIsDropped = !camMenuIsDropped)}
-                                on:click={() => (smallArrowVisible = !smallArrowVisible)}
                             >
                                 <div
                                     class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 p-1 m-0 rounded group-[.disabled]/btn-screen-share:bg-secondary hover:bg-white/10 flex items-center justify-center transition-all {$requestedScreenSharingState &&
@@ -1596,26 +1707,7 @@
                                 >
                                     {userName}
                                 </div>
-                                <div class="text-xxs bold whitespace-nowrap select-none flex items-center">
-                                    {#if $availabilityStatusStore === 1}
-                                        <div class="aspect-square h-2 w-2 bg-success rounded-full mr-2" />
-                                        <div class="text-success hidden @xl/actions:block">
-                                            {$LL.actionbar.status.ONLINE()}
-                                        </div>
-                                    {/if}
-                                    {#if $availabilityStatusStore === 2}
-                                        <div class="aspect-square h-2 w-2 bg-warning rounded-full mr-2" />
-                                        <div class="text-warning hidden @xl/actions:block">
-                                            {$LL.actionbar.status.AWAY()}
-                                        </div>
-                                    {/if}
-                                    {#if $availabilityStatusStore === 3}
-                                        <div class="aspect-square h-2 w-2 bg-danger rounded-full mr-2" />
-                                        <div class="text-danger hidden @xl/actions:block">
-                                            {$LL.actionbar.status.DO_NOT_DISTURB()}
-                                        </div>
-                                    {/if}
-                                </div>
+                                <!--<AvailabilityStatusCircle />-->
                             </div>
                             <div>
                                 <ChevronDownIcon
@@ -1649,56 +1741,11 @@
                                     </div>
                                 </a>
                                 <div class="h-[1px] w-full bg-white/20 my-2" />
+                                <AvailabilityStatus />
+                                <!--
+                                TODO HUGO
                                 <button
-                                    class="group flex px-4 py-1 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
-                                    on:click={() => openEditNameScene()}
-                                >
-                                    <div class="aspect-square h-2 w-2 bg-success rounded-full ml-2 mr-3" />
-                                    <div
-                                        class="mr-3 grow text-left {$availabilityStatusStore === 1 ? '' : 'opacity-50'}"
-                                    >
-                                        {$LL.actionbar.status.ONLINE()}
-                                    </div>
-                                    {#if $availabilityStatusStore === 1}
-                                        <div class="">
-                                            <CheckIcon height="h-4" width="h-4" />
-                                        </div>
-                                    {/if}
-                                </button>
-                                <button
-                                    class="group flex px-4 py-1 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
-                                    on:click={() => openEditNameScene()}
-                                >
-                                    <div class="aspect-square h-2 w-2 bg-warning rounded-full ml-2 mr-3" />
-                                    <div
-                                        class="mr-3 grow text-left {$availabilityStatusStore === 2 ? '' : 'opacity-50'}"
-                                    >
-                                        {$LL.actionbar.status.AWAY()}
-                                    </div>
-                                    {#if $availabilityStatusStore === 2}
-                                        <div class="">
-                                            <CheckIcon height="h-4" width="h-4" />
-                                        </div>
-                                    {/if}
-                                </button>
-                                <button
-                                    class="group flex px-4 py-1 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
-                                    on:click={() => openEditNameScene()}
-                                >
-                                    <div class="aspect-square h-2 w-2 bg-danger rounded-full ml-2 mr-3" />
-                                    <div
-                                        class="mr-3 grow text-left {$availabilityStatusStore === 3 ? '' : 'opacity-50'}"
-                                    >
-                                        {$LL.actionbar.status.DO_NOT_DISTURB()}
-                                    </div>
-                                    {#if $availabilityStatusStore === 3}
-                                        <div class="">
-                                            <CheckIcon height="h-4" width="h-4" />
-                                        </div>
-                                    {/if}
-                                </button>
-                                <button
-                                    class="group flex px-4 py-1 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
+                                    class="group flex px-4 py-1 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full text-left"
                                     on:click={() => openEditNameScene()}
                                 >
                                     <div class="aspect-square h-2 w-2 bg-neutral rounded-full ml-2 mr-3" />
@@ -1713,27 +1760,28 @@
                                         </div>
                                     {/if}
                                 </button>
+                                -->
                                 <div class="h-[1px] w-full bg-white/20 my-2" />
                                 <button
-                                    class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
+                                    class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full text-left"
                                     on:click={() => openEditNameScene()}
                                 >
                                     <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center">
                                         <ProfilIcon />
                                     </div>
-                                    <div>{$LL.actionbar.profil()}</div>
+                                    <div class="text-left">{$LL.actionbar.profil()}</div>
                                 </button>
                                 <button
-                                    class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
+                                    class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full text-left"
                                     on:click={() => openEditSkinScene()}
                                 >
                                     <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center">
                                         <Woka userId={-1} placeholderSrc="" customWidth="26px" customHeight="26px" />
                                     </div>
-                                    <div>{$LL.actionbar.woka()}</div>
+                                    <div class="text-left">{$LL.actionbar.woka()}</div>
                                 </button>
                                 <button
-                                    class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full pointer-events-auto"
+                                    class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full pointer-events-auto text-left"
                                     on:click={() => openEditCompanionScene()}
                                 >
                                     <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center">
@@ -1744,35 +1792,35 @@
                                             height="26px"
                                         />
                                     </div>
-                                    <div>{$LL.actionbar.companion()}</div>
+                                    <div class="text-left">{$LL.actionbar.companion()}</div>
                                 </button>
                                 <button
-                                    class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full pointer-events-auto"
+                                    class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full pointer-events-auto text-left"
                                 >
                                     <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center">
                                         <AchievementIcon />
                                     </div>
-                                    <div>{$LL.actionbar.quest()}</div>
+                                    <div class="text-left">{$LL.actionbar.quest()}</div>
                                 </button>
                                 <div class="h-[1px] w-full bg-white/20 my-2" />
                                 <button
-                                    class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
+                                    class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full text-left"
                                     on:click={openEnableCameraScene}
                                 >
                                     <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center">
                                         <CamSettingsIcon />
                                     </div>
-                                    <div>{$LL.actionbar.editCamMic()}</div>
+                                    <div class="text-left">{$LL.actionbar.editCamMic()}</div>
                                 </button>
                                 <button
-                                    class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
+                                    class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full text-left"
                                     id="settings"
                                     on:click={() => showMenuItem(SubMenusInterface.settings)}
                                 >
                                     <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center">
                                         <SettingsIcon />
                                     </div>
-                                    <div>{$LL.actionbar.otherSettings()}</div>
+                                    <div class="text-left">{$LL.actionbar.otherSettings()}</div>
                                 </button>
                             </div>
                         </div>
@@ -1781,7 +1829,7 @@
                 <div
                     class="group/btn-burger relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 rounded-l-lg rounded-r-lg aspect-square block @lg:hidden"
                 >
-                    <div
+                    <button
                         on:click={() => (burgerOpen = !burgerOpen)}
                         on:blur={() => (burgerOpen = false)}
                         on:click|preventDefault={close}
@@ -1792,16 +1840,14 @@
                         {:else}
                             <XIcon />
                         {/if}
-                    </div>
+                    </button>
                 </div>
             </div>
         </div>
     </div>
     {#if burgerOpen}
         <div
-            class="w-48 bg-contrast/80 absolute {$canvasWidth < 768
-                ? 'bottom-20'
-                : 'bottom-auto top-18'} right-2 top-auto z-[1000] py-4 rounded-lg text-right text-white no-underline pointer-events-auto block @lg:hidden before:content-[''] before:absolute before:w-0 before:h-0 sm:before:-top-[14px] sm:before:bottom-auto before:-bottom-4 before:top-auto before:rotate-180 sm:before:rotate-0 before:right-5 before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all"
+            class="w-48 bg-contrast/80 absolute right-2 top-auto z-[1000] py-4 rounded-lg text-right text-white no-underline pointer-events-auto block @lg:hidden before:content-[''] before:absolute before:w-0 before:h-0 sm:before:-top-[14px] sm:before:bottom-auto before:-bottom-4 before:top-auto before:rotate-180 sm:before:rotate-0 before:right-5 before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all"
             transition:fly={{ y: 40, duration: 150 }}
         >
             <div class="block @md/actions:hidden">
@@ -1977,151 +2023,6 @@
     {/if}
 </div>
 
-{#if appMenuOpened && ($roomListActivated || $isCalendarActivatedStore || $isTodoListActivatedStore || $externalActionBarSvelteComponent.size > 0)}
-    <div
-        class="flex justify-center m-auto absolute left-0 right-0 bottom-0"
-        style="margin-bottom: 5.5rem; height: auto;display:none;"
-    >
-        <div class="bottom-action-bar">
-            <div class="bottom-action-section flex animate">
-                <!-- Room list part -->
-                {#if $roomListActivated}
-                    <!-- TODO button hep -->
-                    <!-- Room list button -->
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div
-                        on:dragstart|preventDefault={noDrag}
-                        on:click={() => analyticsClient.openedRoomList()}
-                        on:click={showRoomList}
-                        class="bottom-action-button"
-                    >
-                        {#if !isMobile}
-                            <HelpTooltip
-                                title={$LL.actionbar.help.roomList.title()}
-                                desc={$LL.actionbar.help.roomList.desc()}
-                            />
-                        {/if}
-
-                        <button id="roomListIcon" class:border-top-light={$roomListVisibilityStore}>
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                width="32"
-                                height="32"
-                                stroke-width="1.5"
-                            >
-                                <path d="M21 12a9 9 0 1 0 -9 9" />
-                                <path d="M3.6 9h16.8" />
-                                <path d="M3.6 15h7.9" />
-                                <path d="M11.5 3a17 17 0 0 0 0 18" />
-                                <path d="M12.5 3a16.984 16.984 0 0 1 2.574 8.62" />
-                                <path d="M18 18m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
-                                <path d="M20.2 20.2l1.8 1.8" />
-                            </svg>
-                        </button>
-                    </div>
-                {/if}
-
-                <!-- Calendar integration -->
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div
-                    on:dragstart|preventDefault={noDrag}
-                    on:click={() => analyticsClient.openExternalModuleCalendar()}
-                    on:click={openExternalModuleCalendar}
-                    class="bottom-action-button"
-                >
-                    {#if !isMobile}
-                        <HelpTooltip
-                            title={$isCalendarActivatedStore
-                                ? $LL.actionbar.help.calendar.title()
-                                : $LL.actionbar.featureNotAvailable()}
-                            desc={$isCalendarActivatedStore ? $LL.actionbar.help.calendar.desc() : ""}
-                        />
-                    {/if}
-                    <button
-                        id="calendarIcon"
-                        class:border-top-light={$isCalendarVisibleStore}
-                        class:!cursor-not-allowed={!$isCalendarActivatedStore}
-                        class:!no-pointer-events={!$isCalendarActivatedStore}
-                        disabled={!$isCalendarActivatedStore}
-                    >
-                        <img
-                            draggable="false"
-                            src={calendarSvg}
-                            style="padding: 2px"
-                            alt={$LL.menu.icon.open.calendar()}
-                            class:disable-opacity={!$isCalendarActivatedStore}
-                            class:!cursor-not-allowed={!$isCalendarActivatedStore}
-                        />
-                    </button>
-                </div>
-
-                <!-- Todo List Integration -->
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div
-                    on:dragstart|preventDefault={noDrag}
-                    on:click={() => analyticsClient.openExternalModuleTodoList()}
-                    on:click={openExternalModuleTodoList}
-                    class="bottom-action-button"
-                >
-                    {#if !isMobile}
-                        <HelpTooltip
-                            title={$isTodoListActivatedStore
-                                ? $LL.actionbar.help.todolist.title()
-                                : $LL.actionbar.featureNotAvailable()}
-                            desc={$isTodoListActivatedStore ? $LL.actionbar.help.todolist.desc() : ""}
-                        />
-                    {/if}
-                    <button
-                        id="todoListIcon"
-                        class:border-top-light={$isTodoListVisibleStore}
-                        class:!cursor-not-allowed={!$isTodoListActivatedStore}
-                        class:!no-pointer-events={!$isTodoListActivatedStore}
-                        disabled={!$isTodoListActivatedStore}
-                    >
-                        <img
-                            draggable="false"
-                            src={todoListSvg}
-                            style="padding: 2px"
-                            alt={$LL.menu.icon.open.todoList()}
-                            class:disable-opacity={!$isTodoListActivatedStore}
-                            class:!cursor-not-allowed={!$isTodoListActivatedStore}
-                        />
-                    </button>
-                </div>
-            </div>
-
-            <div class="bottom-action-section flex animate">
-                <!-- External module action bar -->
-                {#if $externalActionBarSvelteComponent.size > 0}
-                    {#each [...$externalActionBarSvelteComponent.entries()] as [id, value] (`externalActionBarSvelteComponent-${id}`)}
-                        <svelte:component
-                            this={value.componentType}
-                            extensionModule={value.extensionModule}
-                            {isMobile}
-                        />
-                    {/each}
-                {/if}
-            </div>
-
-            <div class="bottom-action-section flex animate">
-                <div class="transition-all bottom-action-button">
-                    <button on:click|preventDefault={openAppMenu}>
-                        <XIcon width="w-4" height="h-4" />
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-{/if}
-
 <style lang="scss">
     @import "../../style/breakpoints.scss";
-    * {
-        font-family: "Roboto Condensed";
-    }
 </style>

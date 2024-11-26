@@ -158,10 +158,7 @@
 
 {#if $selectedChatMessageToReply !== null}
     <div class="flex py-2 px-3 items-center gap-2 relative bg-contrast/50 absolute">
-        <p
-            class="bg-contrast-800 rounded-md p-2 text-sm m-0 truncate w-full "
-            style:overflow-wrap="anywhere"
-        >
+        <p class="bg-contrast-800 rounded p-2 text-sm m-0 truncate w-full " style:overflow-wrap="anywhere">
             {$quotedMessageContent?.body}
         </p>
         <button class="p-0 m-0" on:click={unselectChatMessageToReply}>
@@ -172,7 +169,7 @@
 
 {#if files.length > 0 && !(room instanceof ProximityChatRoom)}
     <div class="w-full pt-2 !bg-blue-300/10 rounded-xl">
-        <div class="flex p-2  gap-2 w-full overflow-x-scroll overflow-y-hidden rounded-lg ">
+        <div class="flex p-2  gap-2 w-full overflow-x-scroll overflow-y-hidden rounded-md ">
             {#each filesPreview as preview (preview.id)}
                 <div
                     class="relative content-center h-[15rem] w-[15rem]  min-h-[15rem] min-w-[15rem] overflow-hidden rounded-xl backdrop-opacity-10"

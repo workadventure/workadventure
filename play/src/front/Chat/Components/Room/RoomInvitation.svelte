@@ -28,7 +28,7 @@
 </script>
 
 <div
-    class="text-md flex gap-2 flex-row items-center hover:bg-white transition-all hover:bg-opacity-10 hover:rounded-md hover:!cursor-pointer p-2"
+    class="text-md flex gap-2 flex-row items-center hover:bg-white transition-all hover:bg-opacity-10 hover:rounded hover:!cursor-pointer p-2"
     data-testid="userInvitation"
 >
     <div class="relative">

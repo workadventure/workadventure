@@ -23,10 +23,10 @@
 </script>
 
 <div
-    class="group/chatItem relative mb-[1px] text-md m-0 flex gap-2 flex-row items-center hover:bg-white transition-all hover:bg-opacity-10 hover:rounded-md hover:!cursor-pointer p-2 cursor-pointer w-full"
+    class="group/chatItem relative mb-[1px] text-md m-0 flex gap-2 flex-row items-center hover:bg-white transition-all hover:bg-opacity-10 hover:rounded hover:!cursor-pointer p-2 cursor-pointer w-full"
     class:bg-white={isSelected}
     class:bg-opacity-10={isSelected}
-    class:rounded-md={isSelected}
+    class:rounded={isSelected}
     on:click={() => selectedRoomStore.set(room)}
     on:keyup={() => selectedRoomStore.set(room)}
     role="button"

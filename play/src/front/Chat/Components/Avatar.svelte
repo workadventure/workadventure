@@ -34,7 +34,7 @@
 {:else}
     <div
         class:chatAvatar={isChatAvatar}
-        class="rounded bg-amber-600 h-7 w-7 text-center uppercase text-white flex items-center justify-center font-bold"
+        class="rounded-sm bg-amber-600 h-7 w-7 text-center uppercase text-white flex items-center justify-center font-bold"
         style:background-color={`${color ? color : getColorByString(fallbackName)}`}
     >
         {fallbackName.charAt(0)}

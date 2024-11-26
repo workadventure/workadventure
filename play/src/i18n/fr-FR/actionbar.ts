@@ -33,7 +33,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     mapEditor: "Éditeur de carte",
     mapEditorMobileLocked: "L'éditeur de carte est verrouillé en mode mobile",
     mapEditorLocked: "L'éditeur de carte est verrouillé 🔐",
-    app: "Ouvrir / Fermer les applications",
+    app: "Applications",
     camera: {
         disabled: "Votre caméra est désactivé",
         activate: "Activer votre camera",
@@ -103,7 +103,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             sync: "Le statut est en synchronisation 🔄",
         },
     },
-    appList: "Ouvrir / Fermer la liste des apps",
+    appList: "Liste des apps",
     featureNotAvailable: "Fonctionnalité non disponible pour votre salon 😭",
 };
 

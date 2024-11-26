@@ -76,7 +76,7 @@
             </div>
         {:else}
             {#if createRoomError !== undefined}
-                <div class="bg-red-500 p-2 rounded-md">
+                <div class="bg-red-500 p-2 rounded">
                     {$LL.chat.createRoom.error()} : <b><i>{createRoomError}</i></b>
                 </div>
             {/if}
@@ -168,9 +168,7 @@
         {#if loadingRoomCreation}
             <p>{$LL.chat.createRoom.loadingCreation()}</p>
         {:else}
-            <button class="flex-1 justify-center" on:click={closeModal}
-                >{$LL.chat.createRoom.buttons.cancel()}</button
-            >
+            <button class="flex-1 justify-center" on:click={closeModal}>{$LL.chat.createRoom.buttons.cancel()}</button>
             <button
                 data-testid="createRoomButton"
                 class="disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"

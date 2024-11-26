@@ -67,13 +67,13 @@
 <button
     bind:this={optionButtonRef}
     on:click|preventDefault|stopPropagation={toggleRoomOptions}
-    class="m-0 p-0 flex items-center justify-center h-7 w-7 invisible group-hover/chatItem:visible hover:bg-white/10 rounded-lg"
+    class="m-0 p-0 flex items-center justify-center h-7 w-7 invisible group-hover/chatItem:visible hover:bg-white/10 rounded"
 >
     <IconDots font-size="16" />
 </button>
 <div
     on:mouseleave={toggleRoomOptions}
-    class="bg-contrast/50 backdrop-blur-md rounded-lg overflow-hidden z-[1] w-max right-2 top-10 p-1"
+    class="bg-contrast/50 backdrop-blur-md rounded-md overflow-hidden z-[1] w-max right-2 top-10 p-1"
     class:absolute={optionButtonRef !== undefined}
     class:hidden={hideOptions}
 >

@@ -45,7 +45,7 @@
 </script>
 
 <div
-    class="text-md flex gap-2 flex-row items-center hover:bg-white hover:bg-opacity-10 hover:rounded-md hover:!cursor-pointer p-1"
+    class="text-md flex gap-2 flex-row items-center hover:bg-white hover:bg-opacity-10 hover:rounded hover:!cursor-pointer p-1"
 >
     <div class="relative">
         <Avatar avatarUrl={null} fallbackName={room.name} />
@@ -67,5 +67,5 @@
 {/if}
 
 {#if joinRoomError}
-    <div transition:fade class="flex bg-red-500 rounded-md p-2">{joinRoomError}</div>
+    <div transition:fade class="flex bg-red-500 rounded p-2">{joinRoomError}</div>
 {/if}

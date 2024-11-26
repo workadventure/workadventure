@@ -61,7 +61,7 @@
             </div>
         {:else}
             {#if invitationToRoomError}
-                <div transition:fade class="bg-red-500 p-2 rounded-md text-ellipsis overflow-hidden">
+                <div transition:fade class="bg-red-500 p-2 rounded text-ellipsis overflow-hidden">
                     {$LL.chat.manageRoomUsers.error()} : <b><i>{invitationToRoomError}</i></b>
                 </div>
             {/if}
@@ -89,7 +89,7 @@
                     <li class="flex mb-1 justify-between">
                         <p class="m-0 p-0">{member.name}</p>
                         <p
-                            class="m-0 px-2 py-1 bg-green-500 rounded-md"
+                            class="m-0 px-2 py-1 bg-green-500 rounded"
                             class:bg-orange-500={member.membership === "invite"}
                             class:bg-red-500={member.membership === "ban" || member.membership === "leave"}
                         >

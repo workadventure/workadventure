@@ -100,7 +100,7 @@
     >
         <div class="close-window absolute -right-[4.5rem] top-2 p-2 bg-contrast/80 rounded-2xl">
             <button
-                class="p-3 hover:bg-white/10 rounded-xl aspect-square w-12 m-0"
+                class="p-3 hover:bg-white/10 rounded aspect-square w-12 m-0"
                 data-testid="closeChatButton"
                 on:click={closeChat}
             >

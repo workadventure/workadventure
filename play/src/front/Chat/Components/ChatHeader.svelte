@@ -71,14 +71,14 @@
         {#if showNavBar}
             {#if $navChat === "chat"}
                 <button
-                    class="userList p-3 hover:bg-white/10 rounded-xl aspect-square w-12"
+                    class="userList p-3 hover:bg-white/10 rounded aspect-square w-12 h-12"
                     on:click={() => navChat.switchToUserList()}
                 >
                     <IconUsers font-size="20" />
                 </button>
             {:else}
                 <button
-                    class="p-3 hover:bg-white/10 rounded-2xl aspect-square w-12"
+                    class="p-3 hover:bg-white/10 rounded aspect-square w-12 h-12"
                     on:click={() => navChat.switchToChat()}
                 >
                     <IconMessageCircle2 font-size="20" />
@@ -94,13 +94,9 @@
                 {$LL.chat.users()}
             {/if}
         </div>
-        <div
-            class="flex items-center justify-center text-success space-x-1.5 {searchActive
-                ? 'hidden'
-                : ''}"
-        >
+        <div class="flex items-center justify-center text-success space-x-1.5 {searchActive ? 'hidden' : ''}">
             <div
-                class="text-xs aspect-square min-w-5 h-5 px-1 border border-solid border-success flex items-center justify-center font-bold rounded"
+                class="text-xs aspect-square min-w-5 h-5 px-1 border border-solid border-success flex items-center justify-center font-bold rounded-sm"
             >
                 {$userWorldCount}
             </div>
@@ -110,7 +106,7 @@
     <div class="">
         {#if $chatStatusStore !== "OFFLINE"}
             <button
-                class="p-3 hover:bg-white/10 rounded-xl aspect-square w-12 relative z-50"
+                class="p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 relative z-50"
                 on:click={() => (searchActive = !searchActive)}
             >
                 {#if searchLoader}

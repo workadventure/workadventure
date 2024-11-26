@@ -91,7 +91,7 @@
 <svelte:window on:click={handleClickOutside} on:touchstart={handleClickOutside} />
 <div class="wa-dropdown">
     <button
-        class="m-0 p-1 rounded-lg hover:bg-white/10 bg-transparent"
+        class="m-0 p-1 rounded-md hover:bg-white/10 bg-transparent"
         bind:this={buttonElement}
         on:click|stopPropagation={toggleChatUSerMenu}
     >
@@ -144,9 +144,7 @@
                     {$LL.chat.userList.sendMessage()}</span
                 >
             {:else if $roomCreationInProgress}
-                <div
-                    class="min-h-[30px] text-md flex gap-2 justify-center flex-row items-center p-1"
-                >
+                <div class="min-h-[30px] text-md flex gap-2 justify-center flex-row items-center p-1">
                     <IconLoader class="animate-spin" />
                 </div>
             {/if}

@@ -153,7 +153,7 @@
         >
             <ChatHeader />
             <div
-                class="relative pt-[72px] {$isEncryptionRequiredAndNotSet === true && $isGuest === false
+                class="relative pt-16 {$isEncryptionRequiredAndNotSet === true && $isGuest === false
                     ? ' h-[calc(100%-2rem)]'
                     : 'h-full'}"
             >
@@ -172,7 +172,7 @@
                         </div>
                         <div class="flex justify-center">
                             <a
-                                class="flex justify-center rounded-lg h-10 bg-secondary hover:bg-secondary-800 hover:no-underline hover:text-white no-underline transition-all items-center my-4 text-base px-8 text-white"
+                                class="flex justify-center rounded h-10 bg-secondary hover:bg-secondary-800 hover:no-underline hover:text-white no-underline transition-all items-center my-4 text-base px-8 text-white"
                                 href="/login"
                                 on:click={() => analyticsClient.login()}
                             >
@@ -182,11 +182,9 @@
                     </div>
                 {/if}
 
-                <div
-                    class="px-2 py-3 border border-solid border-x-0 border-t border-y-0 border-b-0 border-white/10"
-                >
+                <div class="px-2 py-3 border border-solid border-x-0 border-t border-y-0 border-b-0 border-white/10">
                     <div
-                        class="group relative px-3 rounded-md h-11 w-full flex space-x-2 items-center {$proximityHasUnreadMessages
+                        class="group relative px-3 rounded h-11 w-full flex space-x-2 items-center {$proximityHasUnreadMessages
                             ? 'hover:bg-contrast-200/20 bg-contrast-200/10'
                             : 'hover:bg-contrast-200/10'}"
                     >
@@ -224,9 +222,7 @@
                             </div>
                             {#if $proximityHasUnreadMessages}
                                 <div class="flex items-center justify-center h-7 w-7 relative">
-                                    <div
-                                        class="rounded-full bg-secondary-200 h-2 w-2 animate-ping absolute"
-                                    />
+                                    <div class="rounded-full bg-secondary-200 h-2 w-2 animate-ping absolute" />
                                     <div class="rounded-full bg-secondary-200 h-1.5 w-1.5 absolute" />
                                 </div>
                             {/if}
@@ -251,12 +247,10 @@
                                 {$LL.chat.invitations()}
                             </div>
                             <div
-                                class="transition-all group-hover:bg-white/10 p-1 rounded-lg aspect-square flex items-center justify-center text-white"
+                                class="transition-all group-hover:bg-white/10 p-1 rounded aspect-square flex items-center justify-center text-white"
                             >
                                 <IconChevronUp
-                                    class={`transform transition ${
-                                        !displayRoomInvitations ? "" : "rotate-180"
-                                    }`}
+                                    class={`transform transition ${!displayRoomInvitations ? "" : "rotate-180"}`}
                                 />
                             </div>
                         </button>
@@ -279,7 +273,7 @@
                                 {$LL.chat.people()}
                             </div>
                             <div
-                                class="transition-all group-hover:bg-white/10 p-1 rounded-lg aspect-square flex items-center justify-center text-white"
+                                class="transition-all group-hover:bg-white/10 p-1 rounded aspect-square flex items-center justify-center text-white"
                             >
                                 <IconChevronUp
                                     class={`transform transition ${!displayDirectRooms ? "" : "rotate-180"}`}
@@ -311,11 +305,9 @@
                             <CreateRoomOrFolderOption />
                         {/if}
                         <div
-                            class="transition-all group-hover:bg-white/10 p-1 rounded-lg aspect-square flex items-center justify-center text-white"
+                            class="transition-all group-hover:bg-white/10 p-1 rounded aspect-square flex items-center justify-center text-white"
                         >
-                            <IconChevronUp
-                                class={`transform transition ${!displayRooms ? "" : "rotate-180"}`}
-                            />
+                            <IconChevronUp class={`transform transition ${!displayRooms ? "" : "rotate-180"}`} />
                         </div>
                     </div>
                     {#if displayRooms}

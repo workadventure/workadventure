@@ -60,15 +60,13 @@
         <div
             class="wa-chat-item {isAdmin
                 ? 'admin'
-                : 'user'} group/chatItem relative mb-[1px] text-md flex gap-2 flex-row items-center hover:bg-white transition-all hover:bg-opacity-10 hover:rounded-md hover:!cursor-pointer px-2 py-2 cursor-pointer"
+                : 'user'} group/chatItem relative mb-[1px] text-md flex gap-2 flex-row items-center hover:bg-white transition-all hover:bg-opacity-10 hover:rounded hover:!cursor-pointer px-2 py-2 cursor-pointer"
         >
             <div
-                class="relative wa-avatar {!$userStatus
-                    ? 'opacity-50'
-                    : ''} cursor-default w-7 h-7 rounded-lg"
+                class="relative wa-avatar {!$userStatus ? 'opacity-50' : ''} cursor-default w-7 h-7 rounded-md"
                 style={`background-color: ${color ?? defaultColor}`}
             >
-                <div class="w-7 h-7 rounded-lg overflow-hidden">
+                <div class="w-7 h-7 rounded-md overflow-hidden">
                     <div
                         class="translate-y-[3px] -translate-x-[3px] group-hover/chatItem:translate-y-[0] transition-all"
                     >
@@ -112,10 +110,7 @@
                     {#if isMe}
                         {$LL.chat.you()}
                     {:else if $userStatus}
-                        <div
-                            class="flex items-center brightness-150"
-                            style="color:{getColorHexOfStatus($userStatus)}"
-                        >
+                        <div class="flex items-center brightness-150" style="color:{getColorHexOfStatus($userStatus)}">
                             {#if $userStatus}
                                 <div
                                     class="rounded-full mr-1 h-1.5 w-1.5"
@@ -136,7 +131,7 @@
             </div>
             {#if !isMe}
                 <button
-                    class="transition-all group-hover/chatItem:bg-white/10 p-1 rounded-lg aspect-square flex items-center justify-center text-white group-hover/chatItem:opacity-100 opacity-0 m-0"
+                    class="transition-all group-hover/chatItem:bg-white/10 p-1 rounded-md aspect-square flex items-center justify-center text-white group-hover/chatItem:opacity-100 opacity-0 m-0"
                     on:click|stopPropagation={() => {
                         if (user.chatId !== user.uuid && !isMe)
                             openChatRoom(chatId).catch((error) => console.error(error));

@@ -27,5 +27,5 @@
             <path d="M15 4h5v5" />
         </svg>
     </div>
-    <img class="w-full object-contain max-h-52 rounded-md" src={$content.url} alt={$content.body} />
+    <img class="w-full object-contain max-h-52 rounded" src={$content.url} alt={$content.body} />
 </a>
