@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { fly } from "svelte/transition";
     import { emoteDataStoreLoading, emoteMenuStore } from "../Stores/EmoteStore";
     import { requestVisitCardsStore } from "../Stores/GameStore";
     import {
@@ -12,11 +13,7 @@
     import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
     import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
     import { soundPlayingStore } from "../Stores/SoundPlayingStore";
-    import {
-        modalVisibilityStore,
-        roomListVisibilityStore,
-        showLimitRoomModalStore,
-    } from "../Stores/ModalStore";
+    import { modalVisibilityStore, roomListVisibilityStore, showLimitRoomModalStore } from "../Stores/ModalStore";
     import { actionsMenuStore } from "../Stores/ActionsMenuStore";
     import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore";
     import { uiWebsitesStore } from "../Stores/UIWebsiteStore";
@@ -69,7 +66,6 @@
     const resizeObserver = new ResizeObserver(() => {
         isMobile = isMediaBreakpointUp("md");
     });*/
-
 
     // FIXME: This is WRONG. The MainLayout component can be called several times, and the canvasWidth and canvasHeight
     // will be set several times. we need to move this code somewhere else.
@@ -133,9 +129,9 @@
 
     <div class="flex flex-col min-h-screen sm:flex-col-reverse">
         <section id="main-layout-main" class="pb-0 flex-1 pointer-events-none h-full w-full">
-            <div class="popups">
+            <div class="popups ">
                 {#each $popupStore.slice().reverse() as popup (popup.uuid)}
-                    <div class="popupwrapper">
+                    <div class="popupwrapper" transition:fly={{ delay: 50, y: 150, duration: 250 }}>
                         <svelte:component
                             this={popup.component}
                             {...popup.props}
@@ -180,13 +176,13 @@
                 <HelpCameraSettingsPopup />
             {/if}
 
-        {#if $helpNotificationSettingsVisibleStore}
-            <HelpNotificationSettingsPopup />
-        {/if}
+            {#if $helpNotificationSettingsVisibleStore}
+                <HelpNotificationSettingsPopup />
+            {/if}
 
-        {#if $helpNotificationSettingsVisibleStore}
-            <HelpNotificationSettingsPopup />
-        {/if}
+            {#if $helpNotificationSettingsVisibleStore}
+                <HelpNotificationSettingsPopup />
+            {/if}
 
             {#if $helpWebRtcSettingsVisibleStore !== "hidden" && $proximityMeetingStore === true}
                 <HelpWebRtcSettingsPopup />
@@ -244,13 +240,13 @@
                 <WarningToast />
             {/if}
 
-        {#if $externalPopupSvelteComponent.size > 0}
-            {#each [...$externalPopupSvelteComponent.entries()] as [key, value] (key)}
-                <svelte:component this={value.componentType} extensionModule={value.extensionModule} />
-            {/each}
-        {/if}
+            {#if $externalPopupSvelteComponent.size > 0}
+                {#each [...$externalPopupSvelteComponent.entries()] as [key, value] (key)}
+                    <svelte:component this={value.componentType} extensionModule={value.extensionModule} />
+                {/each}
+            {/if}
 
-        <MainModal />
+            <MainModal />
         </section>
         <div class="">
             <ActionBar />
@@ -260,19 +256,6 @@
     {#if $actionsMenuStore}
         <ActionsMenu />
     {/if}
-
-    <!-- svelte-ignore missing-declaration -->
-    <div class="popups">
-        {#each $popupStore.slice().reverse() as popup (popup.uuid)}
-            <div class="popupwrapper">
-                <svelte:component
-                    this={popup.component}
-                    {...popup.props}
-                    on:close={() => popupStore.removePopup(popup.uuid)}
-                />
-            </div>
-        {/each}
-    </div>
 
     {#if $changeStatusConfirmationModalVisibility}
         <ChangeStatusConfirmationModal />
@@ -299,16 +282,16 @@
 
     .popups {
         position: fixed;
-        position: fixed;
+        z-index: 1000;
         width: 100%;
-        height: 100%;
+        height: calc(100% - 96px);
+        display: flex;
+        justify-content: center;
     }
 
     .popupwrapper {
         position: absolute;
-        top: 80%;
-        left: 50%;
-        transform: translate(-50%, -50%);
+        bottom: 16px;
     }
 
     .popupwrapper:nth-child(1) {
@@ -316,26 +299,26 @@
     }
 
     .popupwrapper:nth-child(2) {
-        top: 77%;
-        transform: translate(-50%, -50%) scale(0.95);
+        bottom: 24px;
         filter: blur(2px);
+        opacity: 0.8;
     }
 
     .popupwrapper:nth-child(3) {
-        top: 74%;
-        transform: translate(-50%, -50%) scale(0.9);
+        bottom: 32px;
+        opacity: 0.6;
         filter: blur(4px);
     }
 
     .popupwrapper:nth-child(4) {
-        top: 72%;
-        transform: translate(-50%, -50%) scale(0.85);
+        bottom: 40px;
+        opacity: 0.4;
         filter: blur(4px);
     }
 
     .popupwrapper:nth-child(5) {
-        top: 68%;
-        transform: translate(-50%, -50%) scale(0.8);
+        bottom: 48px;
+        opacity: 0.2;
         filter: blur(4px);
     }
 

@@ -581,7 +581,7 @@
             </div>
         </div>
         <div
-            class="@xxs/actions:justify-center justify-end main-action justify-center pointer-events-auto min-w-32 @sm/actions:min-w-[192px] max-w-[424px]"
+            class="@xxs/actions:justify-center justify-end main-action pointer-events-auto min-w-32 @sm/actions:min-w-[192px] max-w-[424px]"
         >
             <div class="flex justify-center relative space-x-0 @md/actions:space-x-2 @xl/actions:space-x-4">
                 {#if !$silentStore}
@@ -1307,7 +1307,7 @@
                             </div>
                         {/if}
                         <!-- NAV : CAMERA START -->
-                        {#if $myCameraStore && !$silentStore}
+                        {#if !$inExternalServiceStore && $myCameraStore && !$silentStore}
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div
                                 class="group/btn-cam relative bg-contrast/80 backdrop-blur p-2 aspect-square {$peerStore.size >
