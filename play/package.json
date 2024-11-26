@@ -17,7 +17,7 @@
     "dev": "cross-env concurrently --kill-others-on-fail \"npm:dev-front\" \"npm:typesafe-i18n-watch\" \"npm:watch-iframe-api\" \"npm:svelte-check-watch\" \"npm:dev-pusher\"",
     "dev-front": "cross-env vite",
     "dev-pusher": "TSX_TSCONFIG_PATH=tsconfig-pusher.json tsx watch --clear-screen=false --inspect=0.0.0.0:9229 ./src/server.ts",
-    "build": " NODE_OPTIONS=--max-old-space-size=16384 cross-env vite build",
+    "build": "cross-env vite build",
     "typecheck": "cross-env tsc --noEmit",
     "profile": "tsc && node --prof ./dist/server.js",
     "push-sentry-sourcemaps": "tsc --project tsconfig-pusher.json && sentry-cli releases new $SENTRY_RELEASE && sentry-cli releases files $SENTRY_RELEASE upload-sourcemaps dist --log-level debug && sentry-cli releases finalize $SENTRY_RELEASE",
