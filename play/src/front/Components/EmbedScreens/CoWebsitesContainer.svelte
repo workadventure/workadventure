@@ -327,7 +327,7 @@
             </div>
         {/if}
 
-        <div class="tab-bar flex items-center w-full overflow-x-auto">
+        <div class="tab-bar flex items-center space-x-2 w-full overflow-x-auto">
             {#if !vertical}
                 <!-- 300 is corresponding to the width of a tab so we calculate to know if it will fit -->
                 {#each $coWebsites.slice(0, numberMaxOfCowebsite) as coWebsite, index (coWebsite.getId())}
@@ -438,8 +438,8 @@
 
     <div
         class={vertical
-            ? "absolute left-1 top-0 bottom-0 m-auto w-1.5 h-40 bg-white rounded cursor-col-resize responsive-resize-bar"
-            : "absolute left-1 top-0 bottom-0 m-auto w-1.5 h-40 bg-white rounded cursor-col-resize"}
+            ? "absolute left-1 top-0 bottom-0 m-auto w-1 h-40 bg-white rounded cursor-col-resize responsive-resize-bar"
+            : "absolute left-1 top-0 bottom-0 m-auto w-1 h-40 bg-white rounded cursor-col-resize"}
         class:resize-bar={resizeBarHide}
         bind:this={resizeBar}
         on:mousedown={resizeCowebsite}

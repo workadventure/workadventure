@@ -95,7 +95,7 @@
     {/if}
 
     <div class="flex justify-around items-center w-full">
-        <div class="p-2 text-ellipsis overflow-hidden">
+        <div class="p-2 grow text-ellipsis overflow-hidden">
             <div
                 class="bold leading-3 text-ellipsis pb-1 pt-1 max-w-[150px] whitespace-nowrap overflow-hidden {active
                     ? 'fill-white'
@@ -128,35 +128,44 @@
             {#if isDuplicable}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
-                    class="group hover:bg-contrast transition-all aspect-ratio h-8 w-8 rounded flex items-center justify-center"
+                    class="group {active
+                        ? 'hover:bg-contrast/10'
+                        : 'hover:bg-white/10'} transition-all aspect-ratio h-8 w-8 rounded flex items-center justify-center"
                     on:click={copyUrl}
                 >
                     <ExternalLinkIcon
-                        classList="h-4 w-4 aspect-ratio transition-all {active
-                            ? 'group-hover:stroke-white stroke-contrast fill-transparent'
-                            : 'stroke-white fill-transparent'}"
+                        height="h-4"
+                        width="w-4"
+                        strokeColor={active ? "stroke-contrast" : "stroke-white"}
+                        hover={active ? "" : ""}
                     />
                 </div>
             {/if}
             <div
-                class="group hover:bg-contrast transition-all aspect-ratio h-8 w-8 rounded flex items-center justify-center"
+                class="group {active
+                    ? 'hover:bg-contrast/10'
+                    : 'hover:bg-white/10'} transition-all aspect-ratio h-8 w-8 rounded flex items-center justify-center"
                 on:click={() => window.open(coWebsite.getUrl().toString(), "_blank")}
             >
                 <CopyIcon
-                    classList="h-4 w-4 aspect-ratio transition-all {active
-                        ? 'group-hover:stroke-white stroke-contrast fill-transparent'
-                        : 'stroke-white fill-transparent'}"
+                    height="h-4"
+                    width="w-4"
+                    strokeColor={active ? "stroke-contrast" : "stroke-white"}
+                    hover={active ? "" : ""}
                 />
             </div>
             {#if coWebsite.isClosable() === true}
                 <div
-                    class="group hover:bg-contrast transition-all aspect-ratio h-8 w-8 rounded flex items-center justify-center"
+                    class="group {active
+                        ? 'hover:bg-contrast/10'
+                        : 'hover:bg-white/10'} transition-all aspect-ratio h-8 w-8 rounded flex items-center justify-center"
                     on:click={closeTab}
                 >
                     <XIcon
-                        classList="h-4 w-4 aspect-ratio transition-all {active
-                            ? 'group-hover:stroke-white stroke-contrast fill-transparent'
-                            : 'stroke-white fill-transparent'}"
+                        height="h-4"
+                        width="w-4"
+                        strokeColor={active ? "stroke-contrast" : "stroke-white"}
+                        hover={active ? "" : ""}
                     />
                 </div>
             {/if}

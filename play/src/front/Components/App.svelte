@@ -1,6 +1,7 @@
 <script lang="ts">
     /* eslint no-undef: 0 */
     import { onMount } from "svelte";
+    import { fly } from "svelte/transition";
     import * as Sentry from "@sentry/svelte";
     import WebFontLoaderPlugin from "phaser3-rex-plugins/plugins/webfontloader-plugin.js";
     import AwaitLoaderPlugin from "phaser3-rex-plugins/plugins/awaitloader-plugin.js";
@@ -273,7 +274,7 @@
         <GameOverlay {game} />
     </div>
     {#if $coWebsites.length > 0}
-        <div bind:this={cowebsiteContainer}>
+        <div transition:fly={{ duration: 200, x: widthPercent }} bind:this={cowebsiteContainer}>
             {#if flexBasis !== undefined}
                 <CoWebsitesContainer />
             {/if}

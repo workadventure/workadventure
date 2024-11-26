@@ -129,9 +129,7 @@
 
     import AppsIcon from "../Icons/AppsIcon.svelte";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
-    import AvailabilityStatus from "./AvailabilityStatus/AvailabilityStatus.svelte";
     import { IconArrowDown } from "@wa-icons";
-    //import AvailabilityStatusCircle from "./AvailabilityStatus/AvailabilityStatusCircle.svelte";
 
     // gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
     let userName = gameManager.getPlayerName() || "";
@@ -230,15 +228,12 @@
     }
 
     function toggleEmojiPicker() {
-        console.log("HEY toggleEmojiPicker");
         if ($emoteMenuSubStore == true) {
             emoteMenuSubStore.closeEmoteMenu();
         } else {
             emoteMenuSubStore.openEmoteMenu();
             appMenuOpened = false;
         }
-        console.log("L239");
-        console.log($emoteMenuSubStore);
     }
 
     function toggleGlobalMessage() {
@@ -484,25 +479,15 @@
     //     sound.play().catch((e) => console.error(e));
     // }
 
-    /*
-    TODO Hugo : Add Room list
-    function playSoundClick() {
-      sound.play().catch(e => console.error(e));
-    }
-
-        roomListVisibilityStore.set(true);
-    }*/
-
     const onClickOutside = () => {
-        if ($emoteMenuSubStore) emoteMenuSubStore.closeEmoteMenu();
-        if (appMenuOpened) appMenuOpened = false;
+        //if ($emoteMenuSubStore) emoteMenuSubStore.closeEmoteMenu();
+        //if (appMenuOpened) appMenuOpened = false;
+        console.log("Trouble on click outside : it cause open and directly close emote / Appmenu");
     };
 
     function openAppMenu() {
         emoteMenuSubStore.closeEmoteMenu();
         appMenuOpened = !appMenuOpened;
-        console.log("L504");
-        console.log(appMenuOpened);
     }
     function showRoomList() {
         resetChatVisibility();
@@ -733,7 +718,7 @@
                             </div>
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div
-                                class="group/btn-apps bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:squircle-lg last:rounded-r-lg aspect-square"
+                                class="group/btn-apps bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square"
                             >
                                 <button
                                     class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 rounded aspect-square flex items-center justify-center transition-all {appMenuOpened
@@ -779,12 +764,14 @@
                                                         on:click={showRoomList}
                                                         class="bottom-action-button"
                                                     >
+                                                        <!--
                                                         {#if !isMobile}
                                                             <HelpTooltip
                                                                 title={$LL.actionbar.help.roomList.title()}
                                                                 desc={$LL.actionbar.help.roomList.desc()}
                                                             />
                                                         {/if}
+                                                        -->
 
                                                         <button
                                                             id="roomListIcon"
@@ -821,6 +808,7 @@
                                                     on:click={openExternalModuleCalendar}
                                                     class="bottom-action-button"
                                                 >
+                                                    <!--
                                                     {#if !isMobile}
                                                         <HelpTooltip
                                                             title={$isCalendarActivatedStore
@@ -831,6 +819,7 @@
                                                                 : ""}
                                                         />
                                                     {/if}
+                                                    -->
                                                     <button
                                                         id="calendarIcon"
                                                         class:border-top-light={$isCalendarVisibleStore}
@@ -857,6 +846,7 @@
                                                     on:click={openExternalModuleTodoList}
                                                     class="bottom-action-button"
                                                 >
+                                                    <!--
                                                     {#if !isMobile}
                                                         <HelpTooltip
                                                             title={$isTodoListActivatedStore
@@ -867,6 +857,7 @@
                                                                 : ""}
                                                         />
                                                     {/if}
+                                                    -->
                                                     <button
                                                         id="todoListIcon"
                                                         class:border-top-light={$isTodoListVisibleStore}
@@ -1555,14 +1546,6 @@
                                     >
                                         {$LL.actionbar.login()}
                                     </a>
-                                {:else}
-                                    <button
-                                        on:click={() => analyticsClient.logout()}
-                                        on:click={() => connectionManager.logout()}
-                                        class="btn btn-secondary h-12 @sm/actions:h-10 @xl/actions:h-12 text-base @sm/actions:text-sm @xl/actions:text-base rounded select-none ml-2 !px-4 transition-all"
-                                    >
-                                        {$LL.menu.profile.logout()}
-                                    </button>
                                 {/if}
                             </div>
                         </div>
@@ -1699,15 +1682,18 @@
                             class="flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded space-x-2 pl-2 pr-3"
                         >
                             <Woka userId={-1} placeholderSrc="" customWidth="32px" customHeight="32px" />
-                            <div
-                                class="grow flex items-center flex-row @xl/actions:flex-col justify-start text-left pr-2"
-                            >
+                            <div class="grow flex flex-row @xl/actions:flex-col justify-start text-left pr-2">
                                 <div
                                     class="font-bold text-white leading-5 whitespace-nowrap select-none text-base @sm/actions:text-sm @xl/actions:text-base order-last @xl/actions:order-first flex items-center"
                                 >
                                     {userName}
                                 </div>
-                                <!--<AvailabilityStatusCircle />-->
+                                <div class="text-xxs bold whitespace-nowrap select-none flex items-center">
+                                    <div class="aspect-square h-2 w-2 bg-success rounded-full mr-2" />
+                                    <div class="text-success hidden @xl/actions:block">
+                                        {$LL.actionbar.status.ONLINE()}
+                                    </div>
+                                </div>
                             </div>
                             <div>
                                 <ChevronDownIcon
@@ -1732,7 +1718,7 @@
                                     class="group flex px-2 transition-all cursor-pointer text-sm font-bold w-full text-white no-underline"
                                 >
                                     <div class="flex items-center px-3 py-3 w-full bg-white/10 rounded">
-                                        <div class="w-full text-left">{$LL.actionbar.accountType()}</div>
+                                        <div class="w-full text-left leading-4">{$LL.actionbar.accountType()}</div>
                                         <div class="">
                                             <div class="btn btn-light btn-sm">
                                                 {$LL.actionbar.upgrade()}
@@ -1741,26 +1727,30 @@
                                     </div>
                                 </a>
                                 <div class="h-[1px] w-full bg-white/20 my-2" />
-                                <AvailabilityStatus />
-                                <!--
-                                TODO HUGO
                                 <button
                                     class="group flex px-4 py-1 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full text-left"
                                     on:click={() => openEditNameScene()}
                                 >
-                                    <div class="aspect-square h-2 w-2 bg-neutral rounded-full ml-2 mr-3" />
-                                    <div
-                                        class="mr-3 grow text-left {$availabilityStatusStore === 4 ? '' : 'opacity-50'}"
-                                    >
-                                        {$LL.actionbar.status.OFFLINE()}
+                                    <div class="aspect-square h-2 w-2 bg-success rounded-full ml-2 mr-3" />
+                                    <div class="mr-3 grow text-left opacity-50 leading-4">En ligne</div>
+                                    <div class="">
+                                        <CheckIcon height="h-4" width="h-4" />
                                     </div>
-                                    {#if $availabilityStatusStore === 4}
-                                        <div class="">
-                                            <CheckIcon height="h-4" width="h-4" />
-                                        </div>
-                                    {/if}
                                 </button>
-                                -->
+                                <button
+                                    class="group flex px-4 py-1 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full text-left"
+                                    on:click={() => openEditNameScene()}
+                                >
+                                    <div class="aspect-square h-2 w-2 bg-warning rounded-full ml-2 mr-3 leading-4" />
+                                    <div class="mr-3 grow text-left">Absent</div>
+                                </button>
+                                <button
+                                    class="group flex px-4 py-1 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full text-left"
+                                    on:click={() => openEditNameScene()}
+                                >
+                                    <div class="aspect-square h-2 w-2 bg-danger rounded-full ml-2 mr-3 leading-4" />
+                                    <div class="mr-3 grow text-left">Ne pas déranger</div>
+                                </button>
                                 <div class="h-[1px] w-full bg-white/20 my-2" />
                                 <button
                                     class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full text-left"
@@ -1769,7 +1759,7 @@
                                     <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center">
                                         <ProfilIcon />
                                     </div>
-                                    <div class="text-left">{$LL.actionbar.profil()}</div>
+                                    <div class="text-left leading-4">{$LL.actionbar.profil()}</div>
                                 </button>
                                 <button
                                     class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full text-left"
@@ -1778,7 +1768,7 @@
                                     <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center">
                                         <Woka userId={-1} placeholderSrc="" customWidth="26px" customHeight="26px" />
                                     </div>
-                                    <div class="text-left">{$LL.actionbar.woka()}</div>
+                                    <div class="text-left leading-4">{$LL.actionbar.woka()}</div>
                                 </button>
                                 <button
                                     class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full pointer-events-auto text-left"
@@ -1792,7 +1782,7 @@
                                             height="26px"
                                         />
                                     </div>
-                                    <div class="text-left">{$LL.actionbar.companion()}</div>
+                                    <div class="text-left leading-4">{$LL.actionbar.companion()}</div>
                                 </button>
                                 <button
                                     class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full pointer-events-auto text-left"
@@ -1810,7 +1800,7 @@
                                     <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center">
                                         <CamSettingsIcon />
                                     </div>
-                                    <div class="text-left">{$LL.actionbar.editCamMic()}</div>
+                                    <div class="text-left leading-4">{$LL.actionbar.editCamMic()}</div>
                                 </button>
                                 <button
                                     class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full text-left"
@@ -1820,7 +1810,36 @@
                                     <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center">
                                         <SettingsIcon />
                                     </div>
-                                    <div class="text-left">{$LL.actionbar.otherSettings()}</div>
+                                    <div class="text-left leading-4">{$LL.actionbar.otherSettings()}</div>
+                                </button>
+
+                                <button
+                                    on:click={() => analyticsClient.logout()}
+                                    on:click={() => connectionManager.logout()}
+                                    class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full text-left"
+                                >
+                                    <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center">
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            width="18"
+                                            height="18"
+                                            stroke-width="2"
+                                        >
+                                            <path
+                                                d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2"
+                                            />
+                                            <path d="M9 12h12l-3 -3" />
+                                            <path d="M18 15l3 -3" />
+                                        </svg>
+                                    </div>
+                                    <div class="text-left leading-4">
+                                        {$LL.menu.profile.logout()}
+                                    </div>
                                 </button>
                             </div>
                         </div>
