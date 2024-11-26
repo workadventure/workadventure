@@ -110,26 +110,52 @@
     {/if}
 {/if}
 {#if property === "speakerMegaphone"}
-    <AddPropertyButton
-        headerText={$LL.mapEditor.properties.speakerMegaphoneProperties.label()}
-        descriptionText={$LL.mapEditor.properties.speakerMegaphoneProperties.description()}
-        img={"resources/icons/icon_speaker.png"}
-        style={`z-index: 250;${isActive ? "background-color: #4156f6;" : ""}`}
-        on:click={(event) => {
-            dispatch("click", event);
-        }}
-    />
+    {#if $mapEditorRestrictedPropertiesStore.includes("speakerMegaphone")}
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.speakerMegaphoneProperties.label()}
+            descriptionText={$LL.mapEditor.properties.speakerMegaphoneProperties.disabled()}
+            img={"resources/icons/icon_speaker.png"}
+            style={`z-index: 260;${isActive ? "background-color: #4156f6;cursor:not-allowed;" : ""}`}
+            on:click={(event) => {
+                dispatch("click", event);
+            }}
+            disabled={true}
+        />
+    {:else}
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.speakerMegaphoneProperties.label()}
+            descriptionText={$LL.mapEditor.properties.speakerMegaphoneProperties.description()}
+            img={"resources/icons/icon_speaker.png"}
+            style={`z-index: 250;${isActive ? "background-color: #4156f6;" : ""}`}
+            on:click={(event) => {
+                dispatch("click", event);
+            }}
+        />
+    {/if}
 {/if}
 {#if property === "listenerMegaphone"}
-    <AddPropertyButton
-        headerText={$LL.mapEditor.properties.listenerMegaphoneProperties.label()}
-        descriptionText={$LL.mapEditor.properties.listenerMegaphoneProperties.description()}
-        img={"resources/icons/icon_listener.png"}
-        style={`z-index: 240;${isActive ? "background-color: #4156f6;" : ""}`}
-        on:click={(event) => {
-            dispatch("click", event);
-        }}
-    />
+    {#if $mapEditorRestrictedPropertiesStore.includes("speakerMegaphone")}
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.listenerMegaphoneProperties.label()}
+            descriptionText={$LL.mapEditor.properties.listenerMegaphoneProperties.disabled()}
+            img={"resources/icons/icon_listener.png"}
+            style={`z-index: 260;${isActive ? "background-color: #4156f6;cursor:not-allowed;" : ""}`}
+            on:click={(event) => {
+                dispatch("click", event);
+            }}
+            disabled={true}
+        />
+    {:else}
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.listenerMegaphoneProperties.label()}
+            descriptionText={$LL.mapEditor.properties.listenerMegaphoneProperties.description()}
+            img={"resources/icons/icon_listener.png"}
+            style={`z-index: 240;${isActive ? "background-color: #4156f6;" : ""}`}
+            on:click={(event) => {
+                dispatch("click", event);
+            }}
+        />
+    {/if}
 {/if}
 {#if property === "start"}
     <AddPropertyButton
