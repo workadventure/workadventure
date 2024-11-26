@@ -1971,6 +1971,10 @@ export class GameScene extends DirtyScene {
                 (async () => {
                     const extensionModule = (await moduleFactory()) as { default: ExtensionModule };
                     const defaultExtensionModule = extensionModule.default;
+                    // Check if the module is already initialized
+                    if (get(extensionModuleStore).find((module) => module.id === defaultExtensionModule.id)) {
+                        return;
+                    }
 
                     const connection = this.connection;
                     if (!connection) {
