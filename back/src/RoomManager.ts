@@ -203,14 +203,6 @@ const roomManager = {
                             case "privateEvent": {
                                 throw new Error("Cannot reach here, this is handled by the space manager");
                             }
-                            case "publicEvent": {
-                                socketManager.handlePublicEventMessage(user, message.message.publicEvent);
-                                break;
-                            }
-                            case "privateEvent": {
-                                socketManager.handlePrivateEventMessage(user, message.message.privateEvent);
-                                break;
-                            }
                             default: {
                                 const _exhaustiveCheck: never = message.message;
                             }
