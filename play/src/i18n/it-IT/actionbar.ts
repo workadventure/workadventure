@@ -30,7 +30,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         BUSY: "Occupato",
     },
     globalMessage: "Invia un messaggio globale",
-    roomList: "Apri / Chiudi lista delle stanze",
+    //roomList: "Apri / Chiudi lista delle stanze",
     appList: "Apri / Chiudi lista delle applicazioni",
     help: {
         mic: {
@@ -56,8 +56,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         emoji: {
             title: "Apri / Chiudi emoji",
-        }
-    }
+        },
+    },
 };
 
 export default actionbar;

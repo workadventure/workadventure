@@ -35,7 +35,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         BUSY: "Beschäftigt",
     },
     globalMessage: "Sende eine globale Nachricht",
-    roomList: "Raumliste öffnen / schließen",
+    //roomList: "Raumliste öffnen / schließen",
     help: {
         chat: {
             title: "Chat öffnen / schließen",
@@ -57,7 +57,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         share: {
             title: "Bildschirmfreigabe starten / stoppen",
         },
-
-    }
+    },
 };
 export default actionbar;

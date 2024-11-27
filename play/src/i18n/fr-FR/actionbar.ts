@@ -94,7 +94,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         inMeeting: "Bonne réunion 🤓",
         inSilentZone: "Profitez de la zone silencieuse 😁",
     },
-    roomList: "Ouvrir / Fermer la liste des salons",
+    //roomList: "Ouvrir / Fermer la liste des salons",
     externalModule: {
         status: {
             onLine: "Le statut est ok ✅",

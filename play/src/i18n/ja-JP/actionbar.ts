@@ -28,7 +28,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         BUSY: "忙しい",
     },
     globalMessage: "グローバルメッセージの送信",
-    roomList: "ルームリストの表示／非表示",
+    //roomList: "ルームリストの表示／非表示",
     appList: "アプリリストの表示／非表示",
     help: {
         chat: {
@@ -41,7 +41,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "フォローしない",
         },
         lock: {
-            title: "会話のロック／アンロック"
+            title: "会話のロック／アンロック",
         },
         share: {
             title: "画面共有の開始／停止",
@@ -55,7 +55,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         emoji: {
             title: "絵文字の表示／非表示",
         },
-    }
+    },
 };
 
 export default actionbar;
