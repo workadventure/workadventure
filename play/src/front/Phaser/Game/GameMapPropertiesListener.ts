@@ -195,6 +195,10 @@ export class GameMapPropertiesListener {
                     .safeParse(allProps.get(GameMapProperties.JITSI_CLOSABLE));
                 const jitsiClosable = isJitsiClosable.success ? isJitsiClosable.data : true;
 
+                const isJitsiRoomAdminTag = z.string().safeParse(allProps.get(GameMapProperties.JITSI_ADMIN_ROOM_TAG));
+
+                const jitsiRoomAdminTag = isJitsiRoomAdminTag.success ? isJitsiRoomAdminTag.data : null;
+
                 const coWebsite = new JitsiCoWebsite(
                     new URL(domain),
                     jitsiWidth,
@@ -204,7 +208,8 @@ export class GameMapPropertiesListener {
                     jwt,
                     jitsiConfig,
                     jitsiInterfaceConfig,
-                    domainWithoutProtocol
+                    domainWithoutProtocol,
+                    jitsiRoomAdminTag
                 );
 
                 coWebsiteManager.addCoWebsiteToStore(coWebsite, 0);
