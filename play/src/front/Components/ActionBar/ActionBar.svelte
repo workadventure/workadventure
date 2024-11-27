@@ -506,10 +506,7 @@
         : ''}"
 >
     <div class="flex w-full p-2 space-x-2 @xl/actions:p-4 @xl/actions:space-x-4">
-        <div
-            class="justify-start flex-1 pointer-events-auto w-32"
-            transition:fly={{ delay: 500, y: -200, duration: 750 }}
-        >
+        <div class="justify-start flex-1 pointer-events-auto w-32">
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div
                 class="flex relative transition-all duration-150 z-[2] {$chatVisibilityStore ? 'hidden' : ''}"
@@ -585,7 +582,7 @@
         >
             <div class="flex justify-center relative space-x-0 @md/actions:space-x-2 @xl/actions:space-x-4">
                 {#if !$silentStore}
-                    <div in:fly={{ delay: 750, y: -200, duration: 750 }}>
+                    <div>
                         <div class="flex items-center">
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div
@@ -718,7 +715,7 @@
                             </div>
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div
-                                class="group/btn-apps bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square"
+                                class="group/btn-apps bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square relative"
                             >
                                 <button
                                     class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 rounded aspect-square flex items-center justify-center transition-all {appMenuOpened
@@ -747,10 +744,7 @@
                                     />
                                 {/if}
                                 {#if appMenuOpened && ($roomListActivated || $isCalendarActivatedStore || $isTodoListActivatedStore || $externalActionBarSvelteComponent.size > 0)}
-                                    <div
-                                        class="flex justify-center m-auto absolute left-0 right-0 bottom-0"
-                                        style="margin-bottom: 5.5rem; height: auto;"
-                                    >
+                                    <div class="flex justify-center m-auto absolute left-0 right-0 bottom-0">
                                         <div class="bottom-action-bar">
                                             <div class="bottom-action-section flex animate">
                                                 <!-- Room list part -->
@@ -1057,7 +1051,7 @@
                         </p>
                     </div>
                 {/if}
-                <div in:fly={{ delay: 1000, y: -200, duration: 750 }}>
+                <div>
                     <!-- ACTION WRAPPER : CAM & MIC -->
                     <div class="group/hardware flex items-center relative">
                         {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore}
@@ -1458,7 +1452,6 @@
                             >
                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <div
-                                    in:fly={{}}
                                     on:dragstart|preventDefault={noDrag}
                                     on:click={() =>
                                         analyticsClient.clickOnCustomButton(
@@ -1508,7 +1501,6 @@
                                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                                     <div
                                         class="flex flex-initial"
-                                        in:fly={{}}
                                         on:dragstart|preventDefault={noDrag}
                                         on:click={() => analyticsClient.clickOnCustomButton(button.id, button.label)}
                                         on:click={() => {
@@ -1525,7 +1517,6 @@
                                 {/each}
                                 {#if $inviteUserActivated}
                                     <button
-                                        in:fly={{}}
                                         on:dragstart|preventDefault={noDrag}
                                         on:click={() => analyticsClient.openInvite()}
                                         on:click={() => showMenuItem(SubMenusInterface.invite)}

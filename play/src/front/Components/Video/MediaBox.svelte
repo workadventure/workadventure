@@ -48,7 +48,7 @@
 {#if streamable instanceof VideoPeer}
     {#if $constraintStore || $statusStore === "error" || $statusStore === "connecting"}
         <div
-            class="media-container transition-all justify-center relative h-full w-full"
+            class="pointer-events-auto media-container transition-all justify-center relative h-full w-full"
             class:hightlighted={isHightlighted}
             class:mx-auto={isHightlighted && !videoEnabled}
             class:m-auto={!isHightlighted && !videoEnabled}
@@ -70,7 +70,7 @@
     </div>
 {:else if streamable instanceof JitsiTrackStreamWrapper}
     <div
-        class="media-container media-box-shape-color pointer-events-auto screen-blocker"
+        class="media-container media-box-shape-color pointer-events-auto screen-blocker pointer-event-auto"
         class:hightlighted={isHightlighted}
         class:mr-6={isHightlighted && streamable.getVideoTrack()}
         class:flex={!isHightlighted}

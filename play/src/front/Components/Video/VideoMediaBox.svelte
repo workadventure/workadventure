@@ -19,7 +19,7 @@
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import ScreenShareIcon from "../Icons/ScreenShareIcon.svelte";
     import { highlightFullScreen, setHeightScreenShare } from "../../Stores/ActionsCamStore";
-    import ChevronRightIcon from "../Icons/ChevronRightIcon.svelte";
+    import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
     import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
     import ActionMediaBox from "./ActionMediaBox.svelte";
     import { IconArrowDown, IconArrowUp } from "@wa-icons";
@@ -356,13 +356,13 @@
                     {/if}
                 </div>
                 <div
-                    class="pt-1 rounded-sm hover:bg-white/20 right-0 top-0 bottom-0 m-auto h-6 transition-all pointer-events-auto {showUserSubMenu
+                    class="pt-1 h-5 w-5 flex items-center justify-center mr-1 rounded-sm hover:bg-white/20 right-0 top-0 bottom-0 m-auto transition-all pointer-events-auto {showUserSubMenu
                         ? 'bg-white/20 hover:bg-white/30'
                         : ''}"
                     id="user-menu-btn"
                     on:click={() => (showUserSubMenu = !showUserSubMenu)}
                 >
-                    <ChevronRightIcon
+                    <ChevronDownIcon
                         strokeWidth="2.5"
                         height="h-4"
                         width="w-4"

@@ -104,7 +104,7 @@
     // }
 </script>
 
-<div class="presentation-layout flex flex-col-reverse md:flex-col">
+<div class="presentation-layout flex flex-col-reverse md:flex-col pointer-events-none">
     {#if $streamableCollectionStore.size > 0 || $myCameraStore}
         <div class="justify-end md:justify-center" bind:this={camContainer}>
             {#if $jitsiLoadingStore}

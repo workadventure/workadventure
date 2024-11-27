@@ -72,14 +72,16 @@
         ? 'flex justify-center gap-4 whitespace-nowrap relative overflow-x-auto overflow-y-hidden m-0 mx-auto my-0 w-full max-w-full'
         : 'not-highlighted mt-0'} {$highlightFullScreen && $highlightedEmbedScreen ? 'hidden' : ''} {$canvasWidth < 768
         ? 'mt-12'
-        : ''} "
+        : ''} pointer-events-none"
     id="cameras-container"
 >
     {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
         {#if !highlightedEmbedScreen || $highlightedEmbedScreen !== peer}
             {#key uniqueId}
                 <div
-                    class={isHightlighted ? "w-[230px] all-cameras-highlighted" : "w-full all-cameras m-auto"}
+                    class={isHightlighted
+                        ? " pointer-events-auto w-[230px] all-cameras-highlighted"
+                        : "w-full all-cameras m-auto"}
                     id="camera-box"
                 >
                     <MediaBox streamable={peer} />
@@ -91,7 +93,9 @@
     {#if $myCameraStore}
         <div
             id="unique-mycam"
-            class={isHightlighted ? "w-[230px] all-cameras-highlighted " : "w-full all-cameras m-auto"}
+            class={isHightlighted
+                ? "w-[230px] all-cameras-highlighted pointer-events-auto"
+                : "w-full all-cameras m-auto pointer-event-auto"}
         >
             <MyCamera />
         </div>

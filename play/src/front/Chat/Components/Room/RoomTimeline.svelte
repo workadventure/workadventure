@@ -12,7 +12,7 @@
     import Message from "./Message.svelte";
     import MessageInputBar from "./MessageInputBar.svelte";
     import MessageSystem from "./MessageSystem.svelte";
-    import { IconChevronLeft, IconDots, IconLoader, IconMailBox } from "@wa-icons";
+    import { IconChevronLeft, IconLoader, IconMailBox } from "@wa-icons";
 
     export let room: ChatRoom;
 
@@ -175,9 +175,7 @@
 <div class="flex flex-col flex-auto h-full w-full max-w-full">
     {#if room !== undefined}
         <div class="flex flex-col gap-2">
-            <div
-                class="p-2 flex items-center border border-solid border-x-0 border-b border-t-0 border-white/10"
-            >
+            <div class="p-2 flex items-center border border-solid border-x-0 border-b border-t-0 border-white/10">
                 <button
                     class="back-roomlist p-3 hover:bg-white/10 rounded-2xl aspect-square w-12"
                     data-testid="chatBackward"
@@ -188,9 +186,7 @@
                 <div class="text-md font-bold h-5 grow text-center" data-testid="roomName">
                     {$roomName}
                 </div>
-                <div class="hover:bg-white/10 p-3 rounded-2xl aspect-square w-12">
-                    <IconDots font-size="20" />
-                </div>
+                <div class="p-3 rounded-2xl aspect-square w-12" />
             </div>
             {#if shouldDisplayLoader}
                 <div class="flex justify-center items-center w-full pb-1 bg-transparent">
@@ -282,15 +278,11 @@
                 {/each}
 
                 {#if $typingMembers.length > NUMBER_OF_TYPING_MEMBER_TO_DISPLAY}
-                    <div
-                        class={`rounded-full h-6 w-6 text-center uppercase text-white bg-gray-400 -ml-1 chatAvatar`}
-                    >
+                    <div class={`rounded-full h-6 w-6 text-center uppercase text-white bg-gray-400 -ml-1 chatAvatar`}>
                         +{$typingMembers.length - NUMBER_OF_TYPING_MEMBER_TO_DISPLAY}
                     </div>
                 {/if}
-                <div
-                    class="message rounded-2xl px-3 rounded-bl-none bg-contrast flex text-lg ml-1"
-                >
+                <div class="message rounded-2xl px-3 rounded-bl-none bg-contrast flex text-lg ml-1">
                     <div class="animate-bounce-1">.</div>
                     <div class="animate-bounce-2">.</div>
                     <div class="animate-bounce-3">.</div>

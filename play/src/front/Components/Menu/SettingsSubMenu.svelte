@@ -697,13 +697,37 @@
                 {$LL.audio.manager.reduce()}
             </div>
         </label>
-        <label>
-            <input type="checkbox" bind:checked={blockAudio} on:change={changeBlockAudio} />
-            <span>{$LL.menu.settings.blockAudio()}</span>
+        <label for="changeBlockAudio" class="flex cursor-pointer items-center relative m-4">
+            <input
+                type="checkbox"
+                id="changeBlockAudio"
+                class="peer sr-only"
+                bind:checked={blockAudio}
+                on:change={changeBlockAudio}
+            />
+            <div
+                class="dot peer-checked:translate-x-full peer-checked:bg-white absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition"
+            />
+            <div class="block bg-contrast peer-checked:bg-secondary w-12 h-7 rounded-full" />
+            <div class="ml-3 text-white/50 font-regular peer-checked:text-white">
+                {$LL.menu.settings.blockAudio()}
+            </div>
         </label>
-        <label>
-            <input type="checkbox" bind:checked={disableAnimations} on:change={changeDisableAnimations} />
-            <span>{$LL.menu.settings.disableAnimations()}</span>
+        <label for="changeDisableAnimations" class="flex cursor-pointer items-center relative m-4">
+            <input
+                type="checkbox"
+                id="changeDisableAnimations"
+                class="peer sr-only"
+                bind:checked={disableAnimations}
+                on:change={changeDisableAnimations}
+            />
+            <div
+                class="dot peer-checked:translate-x-full peer-checked:bg-white absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition"
+            />
+            <div class="block bg-contrast peer-checked:bg-secondary w-12 h-7 rounded-full" />
+            <div class="ml-3 text-white/50 font-regular peer-checked:text-white">
+                {$LL.menu.settings.disableAnimations()}
+            </div>
         </label>
     </section>
 </div>

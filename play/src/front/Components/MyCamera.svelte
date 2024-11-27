@@ -102,9 +102,7 @@
     bind:this={cameraContainer}
     data-testid={!$mediaStreamConstraintsStore.video && "test-class-video"}
 >
-    <div
-        class="z-[251] absolute right-6 bottom-4 sm:right-auto sm:bottom-auto aspect-ratio p-4 {small ? 'hidden' : ''}"
-    >
+    <div class="z-[251] absolute right-3 top-1 aspect-ratio p-2 {small ? 'hidden' : ''}">
         {#if $mediaStreamConstraintsStore.audio}
             <SoundMeterWidget volume={$localVolumeStore} classcss="absolute" barColor="white" />
         {:else}

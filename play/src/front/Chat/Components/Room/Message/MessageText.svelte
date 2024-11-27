@@ -82,7 +82,7 @@
     {@html sanitizeHTML(html)}
     <style>
         .message-bubble p:last-of-type {
-            margin-bottom: 0;
+            margin: 0;
         }
         .message-bubble a {
             text-decoration: underline;

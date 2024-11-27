@@ -46,22 +46,26 @@
     {/if}
 </section>
 <section
-    class="action flex flex-row justify-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-[calc(50%-35vh)] h-10"
+    class="action flex flex-row justify-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-[calc(50%-35vh)]"
 >
     {#if $customizeAvailableStore}
         <button
             type="submit"
             class="btn btn-lg btn-light btn-border mr-4 selectCharacterSceneFormCustomYourOwnSubmit"
             on:click={() => analyticsClient.selectCustomWoka()}
-            on:click={customizeScene}>{$LL.woka.selectWoka.customize()}</button
+            on:click={customizeScene}
         >
+            <div class="btn-label">{$LL.woka.selectWoka.customize()}</div>
+        </button>
     {/if}
     <button
         type="submit"
         class="btn btn-lg btn-secondary selectCharacterSceneFormSubmit"
         on:click={() => analyticsClient.selectWoka()}
-        on:click={cameraScene}>{$LL.woka.selectWoka.continue()}</button
+        on:click={cameraScene}
     >
+        <div class="btn-label">{$LL.woka.selectWoka.continue()}</div>
+    </button>
 </section>
 
 <style lang="scss">

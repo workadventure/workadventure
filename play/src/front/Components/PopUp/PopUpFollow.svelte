@@ -10,7 +10,7 @@
     }
 </script>
 
-<div class="bg-contrast/80 backdrop-blur text-white rounded-lg overflow-hidden animation w-[400px] h-[100px]">
+<div class="bg-contrast/80 backdrop-blur text-white rounded-lg overflow-hidden animation w-[400px] min-h-[100px]">
     <div class="flex p-4 space-x-4 pointer-events-auto">
         <div class="">
             <button class="btn btn-light btn-sm -mb-8 z-[2000] responsive-close-button" on:click={closeBanner}>
