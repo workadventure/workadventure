@@ -803,6 +803,7 @@ jobs:
           appVersion: \"${DEPLOY_REF}\"
           domainName: ${NAMESPACE}.test.workadventu.re
           forceRedeploy: true
+          prepullImages: true
           play:
             secretEnv:
               ROOM_API_SECRET_KEY: \"password\"
