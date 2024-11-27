@@ -69,7 +69,7 @@
         <SelectCharacterScene {game} />
     </div>
 {:else if $selectCompanionSceneVisibleStore}
-    <div class="bg-contrast">
+    <div>
         <SelectCompanionScene {game} />
     </div>
 {:else if $enableCameraSceneVisibilityStore}
