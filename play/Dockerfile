@@ -26,7 +26,6 @@ COPY --from=proto-builder /usr/libs/messages/src ./libs/messages/src
 COPY play ./play
 COPY --from=proto-builder /usr/src/generated play/src/messages/generated
 ENV NODE_ENV=production
-# upgrade RAM available to 8G
 RUN --mount=type=secret,id=SENTRY_RELEASE \
     --mount=type=secret,id=SENTRY_URL \
     --mount=type=secret,id=SENTRY_AUTH_TOKEN \
