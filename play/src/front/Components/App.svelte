@@ -238,6 +238,9 @@
     }
 
     function updateDynamicStyles() {
+        if (!activeCowebsite) {
+            return;
+        }
         widthPercent = activeCowebsite.getWidthPercent() || 50;
 
         if (widthPercent < 25) widthPercent = 25;
