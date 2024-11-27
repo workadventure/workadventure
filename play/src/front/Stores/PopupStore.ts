@@ -26,12 +26,21 @@ function createPopupStore() {
                 if (uuid === undefined) {
                     uuid = v4();
                 }
-
-                list.push({
-                    uuid,
-                    component: popup,
-                    props,
-                });
+                // Look for an existing popup with the same uuid, and if existing, replace it
+                const index = list.findIndex((item) => item.uuid === uuid);
+                if (index !== -1) {
+                    list[index] = {
+                        uuid,
+                        component: popup,
+                        props,
+                    };
+                } else {
+                    list.push({
+                        uuid,
+                        component: popup,
+                        props,
+                    });
+                }
                 return list;
             });
         },
