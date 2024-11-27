@@ -74,6 +74,7 @@ Add a custom menu item containing the text `commandDescriptor` in the navbar of 
 - `iframe: string` : A click on the custom menu will open the `iframe` inside the menu.
 - `key?: string` : A unique identifier for your menu item.
 - `allowApi?: boolean` : Allow the iframe of the custom menu to use the Scripting API.
+- `allow?: string` : The `allow` attribute used by the iframe.
 
 Important : `options` accepts only `callback` or `iframe` not both.
 

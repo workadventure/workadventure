@@ -11,6 +11,7 @@ export type UnregisterMenuEvent = z.infer<typeof isUnregisterMenuEvent>;
 
 export const isMenuRegisterOptions = z.object({
     allowApi: z.boolean(),
+    allow: z.string().optional(),
 });
 
 /**
