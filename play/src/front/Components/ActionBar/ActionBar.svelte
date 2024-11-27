@@ -482,7 +482,7 @@
     const onClickOutside = () => {
         //if ($emoteMenuSubStore) emoteMenuSubStore.closeEmoteMenu();
         //if (appMenuOpened) appMenuOpened = false;
-        console.log("Trouble on click outside : it cause open and directly close emote / Appmenu");
+        //console.log("Trouble on click outside : it cause open and directly close emote / Appmenu");
     };
 
     function openAppMenu() {
