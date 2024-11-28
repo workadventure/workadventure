@@ -71,7 +71,7 @@
                     <div
                         class="{roomName !== $LL.chat.userList.disconnected()
                             ? 'bg-white/10'
-                            : 'bg-gray'} text-white min-w-[20px] h-5 text-sm font-semibold flex items-center justify-center rounded"
+                            : 'bg-gray'} text-white min-w-[20px] h-5 text-sm font-semibold flex items-center justify-center rounded-sm"
                     >
                         {userInRoom.length}
                     </div>

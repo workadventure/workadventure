@@ -15,25 +15,6 @@
                 @apply min-h-[2rem] h-8 sm:h-10 outline-none;
             }
 
-            .bottom-action-button:first-child {
-                button {
-                    @apply rounded-l-lg rounded-r-none;
-                }
-            }
-
-            .bottom-action-button:last-child {
-                button {
-                    @apply rounded-r-lg rounded-l-none;
-                }
-            }
-
-            /* one item */
-            .bottom-action-button:first-child:nth-last-child(1) {
-                button {
-                    @apply rounded-r-lg rounded-l-lg;
-                }
-            }
-
             button.large {
               @apply w-max;
             }

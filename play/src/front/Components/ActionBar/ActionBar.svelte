@@ -742,9 +742,17 @@
                                     />
                                 {/if}
                                 {#if appMenuOpened && ($roomListActivated || $isCalendarActivatedStore || $isTodoListActivatedStore || $externalActionBarSvelteComponent.size > 0)}
-                                    <div class="flex justify-center m-auto absolute left-0 right-0 bottom-0">
+                                    <div class="flex justify-center m-auto absolute -left-1.5 top-[69px]">
+                                        <img
+                                            alt="Sub menu arrow"
+                                            loading="eager"
+                                            src={tooltipArrow}
+                                            class="content-[''] absolute -top-1 left-9 m-auto w-2 h-1"
+                                        />
                                         <div class="bottom-action-bar">
-                                            <div class="bottom-action-section flex animate">
+                                            <div
+                                                class="bottom-action-section flex flex-col animate bg-contrast/80 backdrop-blur-md rounded-lg p-1"
+                                            >
                                                 <!-- Room list part -->
                                                 {#if $roomListActivated}
                                                     <!-- TODO button hep -->
@@ -754,6 +762,7 @@
                                                         on:dragstart|preventDefault={noDrag}
                                                         on:click={() => analyticsClient.openedRoomList()}
                                                         on:click={showRoomList}
+                                                        on:click={openAppMenu}
                                                         class="bottom-action-button"
                                                     >
                                                         <!--
@@ -767,7 +776,7 @@
 
                                                         <button
                                                             id="roomListIcon"
-                                                            class:border-top-light={$roomListVisibilityStore}
+                                                            class="h-12 hover:bg-white/10 rounded-md flex w-full space-x-2 items-center px-3"
                                                         >
                                                             <svg
                                                                 xmlns="http://www.w3.org/2000/svg"
@@ -776,8 +785,8 @@
                                                                 stroke="currentColor"
                                                                 stroke-linecap="round"
                                                                 stroke-linejoin="round"
-                                                                width="32"
-                                                                height="32"
+                                                                width="24"
+                                                                height="24"
                                                                 stroke-width="1.5"
                                                             >
                                                                 <path d="M21 12a9 9 0 1 0 -9 9" />
@@ -788,6 +797,9 @@
                                                                 <path d="M18 18m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
                                                                 <path d="M20.2 20.2l1.8 1.8" />
                                                             </svg>
+                                                            <div class="whitespace-nowrap bold grow pr-2">
+                                                                Room List
+                                                            </div>
                                                         </button>
                                                     </div>
                                                 {/if}
@@ -798,6 +810,7 @@
                                                     on:dragstart|preventDefault={noDrag}
                                                     on:click={() => analyticsClient.openExternalModuleCalendar()}
                                                     on:click={openExternalModuleCalendar}
+                                                    on:click={openAppMenu}
                                                     class="bottom-action-button"
                                                 >
                                                     <!--
@@ -814,12 +827,14 @@
                                                     -->
                                                     <button
                                                         id="calendarIcon"
-                                                        class:border-top-light={$isCalendarVisibleStore}
+                                                        class="h-12 hover:bg-white/10 rounded-md flex w-full space-x-2 items-center px-3"
                                                         class:!cursor-not-allowed={!$isCalendarActivatedStore}
                                                         class:!no-pointer-events={!$isCalendarActivatedStore}
+                                                        on:click={openAppMenu}
                                                         disabled={!$isCalendarActivatedStore}
                                                     >
-                                                        <IconCalendar />
+                                                        <IconCalendar width="24" height="24" />
+                                                        <div class="whitespace-nowrap bold grow pr-2">Calendar</div>
                                                     </button>
                                                 </div>
 
@@ -829,6 +844,7 @@
                                                     on:dragstart|preventDefault={noDrag}
                                                     on:click={() => analyticsClient.openExternalModuleTodoList()}
                                                     on:click={openExternalModuleTodoList}
+                                                    on:click={openAppMenu}
                                                     class="bottom-action-button"
                                                 >
                                                     <!--
@@ -845,12 +861,13 @@
                                                     -->
                                                     <button
                                                         id="todoListIcon"
-                                                        class:border-top-light={$isTodoListVisibleStore}
+                                                        class="h-12 hover:bg-white/10 rounded-md flex w-full space-x-2 items-center px-3"
                                                         class:!cursor-not-allowed={!$isTodoListActivatedStore}
                                                         class:!no-pointer-events={!$isTodoListActivatedStore}
                                                         disabled={!$isTodoListActivatedStore}
                                                     >
-                                                        <IconCheckList />
+                                                        <IconCheckList width="24" height="24" />
+                                                        <div class="whitespace-nowrap bold grow pr-2">Todo List</div>
                                                     </button>
                                                 </div>
                                             </div>
@@ -866,14 +883,6 @@
                                                         />
                                                     {/each}
                                                 {/if}
-                                            </div>
-
-                                            <div class="bottom-action-section flex animate">
-                                                <div class="transition-all bottom-action-button">
-                                                    <button on:click|preventDefault={openAppMenu}>
-                                                        <XIcon width="w-4" height="h-4" />
-                                                    </button>
-                                                </div>
                                             </div>
                                         </div>
                                     </div>
