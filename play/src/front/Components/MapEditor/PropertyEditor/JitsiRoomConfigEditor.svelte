@@ -10,7 +10,6 @@
         startWithAudioMuted: false,
         startWithVideoMuted: false,
     };
-    let jitsiRoomAdminTag = "";
 
     type JitsiRoomConfigDataKeys = "startWithAudioMuted" | "startWithVideoMuted";
 
@@ -20,13 +19,13 @@
 
     export let visibilityValue: boolean;
     export let config: JitsiRoomConfigData;
+    export let jitsiRoomAdminTag = "";
     let currentConfig: JitsiRoomConfigData = {};
 
     onMount(() => {
         currentConfig = {};
         if (config !== undefined) {
             currentConfig = structuredClone(config);
-            jitsiRoomAdminTag = config.jitsiRoomAdminTag ?? "";
         }
     });
 
@@ -50,11 +49,7 @@
 
     function validate() {
         visibilityValue = false;
-        let returnValue: JitsiRoomConfigData = structuredClone(currentConfig);
-        dispatch("change", {
-            ...returnValue,
-            jitsiRoomAdminTag: jitsiRoomAdminTag == "" ? null : jitsiRoomAdminTag,
-        });
+        dispatch("change");
     }
 
     function onKeyDown(e: KeyboardEvent) {
