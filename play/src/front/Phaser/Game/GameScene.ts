@@ -1073,6 +1073,7 @@ export class GameScene extends DirtyScene {
         get(extensionModuleStore).forEach((extensionModule) => {
             extensionModule.destroy();
         });
+        extensionModuleStore.set([]);
 
         //When we leave game, the camera is stop to be reopen after.
         // I think that we could keep camera status and the scene can manage camera setup
