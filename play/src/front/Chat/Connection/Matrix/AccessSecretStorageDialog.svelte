@@ -103,7 +103,7 @@
                 type="password"
                 autocomplete="new-password"
                 data-testid="passphraseInput"
-                class="w-full rounded-xl text-white placeholder:text-sm px-3 py-2 p border-light-purple border border-solid bg-contrast"
+                class="w-full rounded-md text-white placeholder:text-sm px-3 py-2 p border-light-purple border border-solid bg-contrast"
                 placeholder={`${$LL.chat.e2ee.accessSecretStorage.placeholder()} ${$LL.chat.e2ee.accessSecretStorage.passphrase()}`}
                 bind:value={passphraseInput}
                 on:keydown={(key) => {
@@ -131,7 +131,7 @@
                 type="password"
                 autocomplete="new-password"
                 data-testid="recoveryKeyInput"
-                class="w-full rounded-xl text-white placeholder:text-sm px-3 py-2 p border-light-purple border border-solid bg-contrast"
+                class="w-full rounded-md text-white placeholder:text-sm px-3 py-2 p border-light-purple border border-solid bg-contrast"
                 bind:value={recoveryKeyInput}
                 on:focusin={focusChatInput}
                 on:focusout={unfocusChatInput}

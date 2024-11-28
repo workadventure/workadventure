@@ -80,7 +80,7 @@
             {/if}
             <p class="p-0 m-0 pl-1 font-bold">{$LL.chat.createFolder.name()}</p>
             <input
-                class="w-full rounded-xl text-white placeholder:text-sm px-3 py-2 p border-light-purple border border-solid bg-contrast"
+                class="w-full rounded-md text-white placeholder:text-sm px-3 py-2 p border-light-purple border border-solid bg-contrast"
                 placeholder={$LL.chat.createFolder.name()}
                 bind:value={createFolderOptions.name}
                 on:focusin={focusChatInput}
@@ -91,7 +91,7 @@
             <select
                 data-testid="createFolderVisibility"
                 bind:value={createFolderOptions.visibility}
-                class="m-0 bg-contrast rounded-xl"
+                class="m-0 bg-contrast rounded-md"
             >
                 <option value="private">{$LL.chat.createFolder.visibility.private()}</option>
                 <option value="public">{$LL.chat.createFolder.visibility.public()}</option>
@@ -109,7 +109,7 @@
                 {$LL.chat.createFolder.description.label()}
             </p>
             <textarea
-                class="resize-none w-full rounded-xl text-white placeholder:text-sm px-3 py-2 p border-light-purple border border-solid bg-contrast"
+                class="resize-none w-full rounded-md text-white placeholder:text-sm px-3 py-2 p border-light-purple border border-solid bg-contrast"
                 rows="4"
                 bind:value={createFolderOptions.description}
                 placeholder={$LL.chat.createFolder.description.label()}
@@ -121,7 +121,7 @@
             <Select
                 bind:value={createFolderOptions.invite}
                 multiple
-                class="!border-light-purple border border-solid !bg-contrast !rounded-xl"
+                class="!border-light-purple border border-solid !bg-contrast !rounded-md"
                 inputStyles="box-shadow:none !important"
                 --border-focused="2px solid rgb(146 142 187)"
                 --input-color="white"

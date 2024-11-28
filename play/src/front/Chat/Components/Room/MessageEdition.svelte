@@ -30,7 +30,7 @@
         bind:message={inputValue}
         bind:messageInput
         dataTestid="editMessageInput"
-        inputClass=" p-1  !m-0 px-2 max-h-36 overflow-auto w-full h-full rounded-xl !leading-6 block !text-sm !text-white !bg-white/20 placeholder:text-sm  !text-black border  resize-none  shadow-none focus:ring-0"
+        inputClass=" p-1  !m-0 px-2 max-h-36 overflow-auto w-full h-full rounded-md !leading-6 block !text-sm !text-white !bg-white/20 placeholder:text-sm  !text-black border  resize-none  shadow-none focus:ring-0"
         dataText={$LL.chat.enter()}
     />
 

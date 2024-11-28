@@ -54,7 +54,7 @@
     } select-text group/message block-user-action messageContainer items-center`}
 >
     <div
-        style={replyDepth === 0 ? "max-width: calc( 100% - 105px );" : "padding-left: 0"}
+        style={replyDepth === 0 ? "max-width: calc( 100% - 50px );" : "padding-left: 0"}
         class="container-grid justify-start {replyDepth === 0 ? 'max-w-[calc(100% - 100px)]' : ''} {!isDeleted
             ? 'group-hover/message:pb-4'
             : ''} {isMyMessage ? 'justify-end grid-container-inverted pr-4' : 'justify-start pl-3'}"
@@ -86,7 +86,7 @@
                     {$isDeleted && isMyMessage && !messageFromSystem && replyDepth === 0 ? 'bg-white/10' : ''}
                     {!isMyMessage && !messageFromSystem && !$isDeleted && replyDepth === 0 ? 'bg-contrast' : ''}
                     {isMyMessage && !messageFromSystem && !$isDeleted && replyDepth === 0 ? 'bg-secondary' : ''}
-                    {type === 'audio' || type === 'file' ? 'rounded-full' : 'rounded-xl'}
+                    {type === 'audio' || type === 'file' ? 'rounded-full' : 'rounded-md'}
                     {reactions !== undefined && !$isDeleted && replyDepth === 0 ? 'mb-4 p-1' : ''}"
         >
             {#if $isDeleted}
@@ -104,10 +104,7 @@
                 <svelte:component this={messageType[type]} on:updateMessageBody={updateMessageBody} {content} />
 
                 {#if reactions !== undefined}
-                    <MessageReactions
-                        classes={isMyMessage ? "bg-secondary right-2" : "bg-contrast"}
-                        {reactions}
-                    />
+                    <MessageReactions classes={isMyMessage ? "bg-secondary right-2" : "bg-contrast"} {reactions} />
                 {/if}
                 {#if $isModified}
                     <div class="text-white/50 text-xxs p-0 m-0 px-2 pb-1 text-right">

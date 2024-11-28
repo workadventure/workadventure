@@ -82,7 +82,7 @@
             {/if}
             <p class="p-0 m-0 pl-1 font-bold">{$LL.chat.createRoom.name()}</p>
             <input
-                class="w-full rounded-xl text-white placeholder:text-sm px-3 py-2 p border-light-purple border border-solid bg-contrast"
+                class="w-full rounded-md text-white placeholder:text-sm px-3 py-2 p border-light-purple border border-solid bg-contrast"
                 placeholder={$LL.chat.createRoom.name()}
                 bind:value={createRoomOptions.name}
                 on:focusin={focusChatInput}
@@ -93,7 +93,7 @@
             <select
                 data-testid="createRoomVisibility"
                 bind:value={createRoomOptions.visibility}
-                class="m-0 bg-contrast rounded-xl"
+                class="m-0 bg-contrast rounded-md"
             >
                 <option value="private">{$LL.chat.createRoom.visibility.private()}</option>
                 <option value="public">{$LL.chat.createRoom.visibility.public()}</option>
@@ -133,7 +133,7 @@
             <Select
                 bind:value={createRoomOptions.invite}
                 multiple
-                class="!border-light-purple border border-solid !bg-contrast !rounded-xl"
+                class="!border-light-purple border border-solid !bg-contrast !rounded-md"
                 inputStyles="box-shadow:none !important"
                 --border-focused="2px solid rgb(146 142 187)"
                 --input-color="white"

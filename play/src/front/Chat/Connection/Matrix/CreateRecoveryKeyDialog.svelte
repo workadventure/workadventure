@@ -71,7 +71,7 @@
         <p>{$LL.chat.e2ee.createRecoveryKey.description()}</p>
         <input
             data-testid="passphraseInput"
-            class="w-full rounded-xl text-white placeholder:text-sm px-3 py-2 p border-light-purple border border-solid bg-contrast"
+            class="w-full rounded-md text-white placeholder:text-sm px-3 py-2 p border-light-purple border border-solid bg-contrast"
             bind:value={passphraseInput}
             on:focusin={focusChatInput}
             on:focusout={unfocusChatInput}

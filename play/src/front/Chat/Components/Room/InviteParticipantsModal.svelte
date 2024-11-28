@@ -69,7 +69,7 @@
             <Select
                 bind:value={invitations}
                 multiple
-                class="!border-light-purple border border-solid !bg-contrast !rounded-xl"
+                class="!border-light-purple border border-solid !bg-contrast !rounded-md"
                 inputStyles="box-shadow:none !important"
                 --border-focused="2px solid rgb(146 142 187)"
                 --input-color="white"

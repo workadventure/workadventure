@@ -21,8 +21,6 @@
     import tooltipArrow from "../images/arrow-top.svg";
 
     import HelpTooltip from "../Tooltip/HelpTooltip.svelte";
-    import calendarSvg from "../images/applications/outlook.svg";
-    import todoListSvg from "../images/applications/todolist.png";
 
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { embedScreenLayoutStore, hasEmbedScreen } from "../../Stores/EmbedScreensStore";
@@ -129,9 +127,9 @@
 
     import AppsIcon from "../Icons/AppsIcon.svelte";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
-    import { IconArrowDown } from "@wa-icons";
+    import { IconArrowDown, IconCheckList, IconCalendar } from "@wa-icons";
 
-    // gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
+    // gameManager.currenwStartedRoom?.miniLogo ?? WorkAdventureImg;
     let userName = gameManager.getPlayerName() || "";
     export const className = "";
     let microphoneActive = false;
@@ -821,14 +819,7 @@
                                                         class:!no-pointer-events={!$isCalendarActivatedStore}
                                                         disabled={!$isCalendarActivatedStore}
                                                     >
-                                                        <img
-                                                            draggable="false"
-                                                            src={calendarSvg}
-                                                            style="padding: 2px"
-                                                            alt={$LL.menu.icon.open.calendar()}
-                                                            class:disable-opacity={!$isCalendarActivatedStore}
-                                                            class:!cursor-not-allowed={!$isCalendarActivatedStore}
-                                                        />
+                                                        <IconCalendar />
                                                     </button>
                                                 </div>
 
@@ -859,14 +850,7 @@
                                                         class:!no-pointer-events={!$isTodoListActivatedStore}
                                                         disabled={!$isTodoListActivatedStore}
                                                     >
-                                                        <img
-                                                            draggable="false"
-                                                            src={todoListSvg}
-                                                            style="padding: 2px"
-                                                            alt={$LL.menu.icon.open.todoList()}
-                                                            class:disable-opacity={!$isTodoListActivatedStore}
-                                                            class:!cursor-not-allowed={!$isTodoListActivatedStore}
-                                                        />
+                                                        <IconCheckList />
                                                     </button>
                                                 </div>
                                             </div>

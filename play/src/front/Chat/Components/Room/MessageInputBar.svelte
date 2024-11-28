@@ -168,11 +168,11 @@
 {/if}
 
 {#if files.length > 0 && !(room instanceof ProximityChatRoom)}
-    <div class="w-full pt-2 !bg-blue-300/10 rounded-xl">
+    <div class="w-full pt-2 !bg-blue-300/10 rounded-md">
         <div class="flex p-2  gap-2 w-full overflow-x-scroll overflow-y-hidden rounded-md ">
             {#each filesPreview as preview (preview.id)}
                 <div
-                    class="relative content-center h-[15rem] w-[15rem]  min-h-[15rem] min-w-[15rem] overflow-hidden rounded-xl backdrop-opacity-10"
+                    class="relative content-center h-[15rem] w-[15rem]  min-h-[15rem] min-w-[15rem] overflow-hidden rounded-md backdrop-opacity-10"
                 >
                     <button class="absolute right-1 top-1 !pr-0" on:click={() => deleteFile(preview.id)}>
                         <IconCircleX class="hover:cursor-pointer hover:opacity-10" font-size="24" />
@@ -203,7 +203,7 @@
         {focusout}
         bind:message
         bind:messageInput
-        inputClass="message-input flex-grow !m-0 px-5 py-2.5 max-h-36 overflow-auto  h-full rounded-xl wa-searchbar block text-white placeholder:text-base border-light-purple border !bg-transparent resize-none border-none outline-none shadow-none focus:ring-0"
+        inputClass="message-input flex-grow !m-0 px-5 py-2.5 max-h-36 overflow-auto  h-full rounded-md wa-searchbar block text-white placeholder:text-base border-light-purple border !bg-transparent resize-none border-none outline-none shadow-none focus:ring-0"
         dataText={$LL.chat.enter()}
         dataTestid="messageInput"
     />
