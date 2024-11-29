@@ -15,6 +15,7 @@ import {
     OPID_PROFILE_SCREEN_PROVIDER,
     REPORT_ISSUES_URL,
 } from "../Enum/EnvironmentVariable";
+import { gameManager } from "../Phaser/Game/GameManager";
 import { userIsAdminStore } from "./GameStore";
 
 export const menuIconVisiblilityStore = writable(false);
@@ -314,7 +315,15 @@ function createAdditionalButtonsMenu() {
         subscribe,
         addAdditionnalButtonActionBar(button: AddButtonActionBarEvent) {
             update((additionnalButtonsMenu) => {
-                additionnalButtonsMenu.set(button.id, button);
+                if (button.type === "action") {
+                    additionnalButtonsMenu.set(button.id, {
+                        ...button,
+                        imageSrc: new URL(button.imageSrc, gameManager.currentStartedRoom.mapUrl).toString(),
+                    });
+                } else {
+                    additionnalButtonsMenu.set(button.id, button);
+                }
+
                 return additionnalButtonsMenu;
             });
         },
