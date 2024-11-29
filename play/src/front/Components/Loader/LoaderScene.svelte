@@ -9,7 +9,11 @@
     const bgColor = gameManager.currentStartedRoom.backgroundColor ?? "#1B2A41";
 </script>
 
-<div class="relative z-50 h-screen w-screen" in:fade={{ duration: 100 }} out:fade={{ delay: 500, duration: 300 }}>
+<div
+    class="absolute top-0 left-0 z-50 h-screen w-screen"
+    in:fade={{ duration: 100 }}
+    out:fade={{ delay: 500, duration: 300 }}
+>
     <div class="flex items-center min-h-screen w-full w-screen bg-contrast/80 backdrop-blur relative z-30">
         <div class="">
             <!--
