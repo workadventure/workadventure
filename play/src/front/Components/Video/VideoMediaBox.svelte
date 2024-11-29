@@ -68,7 +68,7 @@
     function updateScreenSize() {
         if (window.innerWidth < 768) {
             isMobile = true;
-        } else if (window.innerWidth > 768 && window.innerWidth < 1024) {
+        } else {
             isMobile = false;
         }
     }
@@ -300,10 +300,13 @@
     data-testid={!$mediaStreamConstraintsStore.audio && "test-class"}
 >
     <div
-        class="aspect-video z-20 rounded-lg transition-all h-full bg-no-repeat bg-center bg-contrast/80 backdrop-blur{$mediaStreamConstraintsStore.audio
+        class="z-20 rounded-lg transition-all bg-no-repeat bg-center bg-contrast/80 backdrop-blur{$mediaStreamConstraintsStore.audio
             ? 'border-8 border-solid border-color rounded-lg'
             : ''}"
-        style="background-image: url({loaderImg})"
+        style={videoEnabled ? "background-image: url(" + loaderImg + ")" : ""}
+        class:aspect-video={videoEnabled}
+        class:h-full={videoEnabled}
+        class:h-11={!videoEnabled}
         class:flex-col={videoEnabled}
         class:items-center={!videoEnabled || $statusStore === "connecting" || $statusStore === "error"}
         class:px-7={!videoEnabled}
