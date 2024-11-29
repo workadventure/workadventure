@@ -327,7 +327,8 @@ export class MapValidator {
                                 });
                             }
                             break;
-                        case "exitInstance" || "exitSceneUrl":
+                        case "exitInstance":
+                        case "exitSceneUrl":
                             errors.push({
                                 type: "warning",
                                 message:
