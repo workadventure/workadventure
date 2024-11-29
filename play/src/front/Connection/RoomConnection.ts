@@ -1086,6 +1086,19 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitMapEditorModifyArea(commandId: string, config: AtLeast<AreaData, "id">): void {
+        // We need to round the values because previous versions of WorkAdventure saved them as floats
+        if (config.x !== undefined) {
+            config.x = Math.round(config.x);
+        }
+        if (config.y !== undefined) {
+            config.y = Math.round(config.y);
+        }
+        if (config.width !== undefined) {
+            config.width = Math.round(config.width);
+        }
+        if (config.height !== undefined) {
+            config.height = Math.round(config.height);
+        }
         this.send({
             message: {
                 $case: "editMapCommandMessage",
@@ -1143,6 +1156,18 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitMapEditorCreateArea(commandId: string, config: AreaData): void {
+        if (config.x !== undefined) {
+            config.x = Math.round(config.x);
+        }
+        if (config.y !== undefined) {
+            config.y = Math.round(config.y);
+        }
+        if (config.width !== undefined) {
+            config.width = Math.round(config.width);
+        }
+        if (config.height !== undefined) {
+            config.height = Math.round(config.height);
+        }
         this.send({
             message: {
                 $case: "editMapCommandMessage",
