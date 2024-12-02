@@ -18,7 +18,8 @@ class EntitiesFileMigration {
     constructor() {
         this.migrations = {
             "0.0": (fileContent: any) => this.migrate_v0_to_v1(fileContent),
-            "1.0": (fileContent) => fileContent,
+            "1.0": (fileContent) => this.migrate_v1_to_v2(fileContent),
+            "2.0": (fileContent) => fileContent,
         };
     }
 
@@ -56,6 +57,35 @@ class EntitiesFileMigration {
                 id: `${fileContent.collectionName}:${entity.name}:${entity.color}:${entity.direction}`,
             })),
         };
+    }
+
+    private migrate_v1_to_v2(fileContent: any): any {
+        return {
+            ...fileContent,
+            version: "2.0",
+            areas: fileContent.areas.map((area: any) => ({
+                ...area,
+                properties: area.properties.map((property: any) => {
+                    if (property.type === "jitsiRoomProperty") {
+                        const jitsiRoomAdminTag = property.jitsiRoomConfig.jitsiRoomAdminTag;
+
+                        delete property.jitsiRoomConfig.jitsiRoomAdminTag;
+
+                        return {
+                            ...property,
+                            jitsiRoomConfig: property.jitsiRoomConfig,
+                            jitsiRoomAdminTag,
+                        };
+                    }
+
+                    return property;
+                }),
+            })),
+        };
+    }
+
+    public getLatestVersion(): string {
+        return Object.keys(this.migrations)[Object.keys(this.migrations).length - 1];
     }
 }
 
