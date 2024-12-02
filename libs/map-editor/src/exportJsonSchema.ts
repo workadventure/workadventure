@@ -9,4 +9,10 @@ const jsonSchema = zodToJsonSchema(WAMFileFormat, {
 
 const latestVersion = entitiesFileMigration.getLatestVersion();
 
+const schemaDir = __dirname + `/../../../docs/schema/${latestVersion}`;
+
+if (!fs.existsSync(schemaDir)) {
+    fs.mkdirSync(schemaDir, { recursive: true });
+}
+
 fs.writeFileSync(__dirname + `/../../../docs/schema/${latestVersion}/wam.json`, JSON.stringify(jsonSchema, null, 2));
