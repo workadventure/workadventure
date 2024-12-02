@@ -2,6 +2,7 @@ import { Command, GameMap, WAMFileFormat } from "@workadventure/map-editor";
 import { EditMapCommandMessage } from "@workadventure/messages";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import * as Sentry from "@sentry/node";
+import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
 import { fileSystem } from "./fileSystem";
 import { MapListService } from "./Services/MapListService";
 import { WebHookService } from "./Services/WebHookService";
@@ -48,7 +49,7 @@ class MapsManager {
         const wamFile = await command.execute();
 
         // Security check: Check that the map is valid after the change (it should be, but better safe than sorry)
-        const map = gameMap.getWam();
+        const map = wamFileMigration.migrate(gameMap.getWam());
         WAMFileFormat.parse(map);
 
         if (wamFile != undefined) {

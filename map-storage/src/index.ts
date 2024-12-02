@@ -7,6 +7,7 @@ import { MapStorageService } from "@workadventure/messages/src/ts-proto-generate
 import passport from "passport";
 import bodyParser from "body-parser";
 import { setErrorHandler } from "@workadventure/shared-utils/src/ErrorHandler";
+import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
 import { mapStorageServer } from "./MapStorageServer";
 import { mapsManager } from "./MapsManager";
 import { proxyFiles } from "./FileFetcher/FileFetcher";
@@ -100,7 +101,7 @@ app.get("*.wam", (req, res, next) => {
     // Maybe the map is already in memory (in case this map is edited by the current map storage)
     const gameMap = mapsManager.getGameMap(key);
     if (gameMap) {
-        res.send(gameMap.getWam());
+        res.send(wamFileMigration.migrate(gameMap.getWam()));
     } else {
         // Let's load the map, but do not put it in memory (because it might become outdated if another map-storage
         // changes the map)

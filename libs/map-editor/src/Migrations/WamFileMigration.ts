@@ -1,33 +1,33 @@
-import { EntityCollectionRaw } from "../types";
+import { WAMFileFormat } from "../types";
+import { Migrations } from "./EntitiesFileMigration";
 
 /**
  * Eslint rules are disabled here, because we don't want to type for all possible version of the file.
  * Only the last version has his own type
  */
 /* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/restrict-template-expressions */
-export interface Migrations {
-    [migrationVersionKey: string]: (fileContent: any) => any;
-}
 /**
- * This class takes a representation of any entity collection file (whatever the version of the file)
+ * This class takes a representation of any wam file (whatever the version of the file)
  * and will return a version of that file updated to the latest version.
  */
-class EntitiesFileMigration {
+class WamFileMigration {
     private readonly migrations: Migrations;
 
     constructor() {
         this.migrations = {
-            "0.0": (fileContent: any) => this.migrate_v0_to_v1(fileContent),
-            "1.0": (fileContent) => fileContent,
+            "1.0.0": (fileContent: any) => this.migrate_v1_to_v2(fileContent),
+            "2.0.0": (fileContent) => fileContent,
         };
     }
 
-    public migrate(entitiesFileContent: any): EntityCollectionRaw {
+    public migrate(wamFileContent: any): WAMFileFormat {
+        console.log(">>>>> migrate", { wamFileContent });
         for (const [version, migrationFunction] of Object.entries(this.migrations)) {
-            const fileVersion = entitiesFileContent.version ?? "0.0";
+            const fileVersion = wamFileContent.version ?? "1.0.0";
             if (fileVersion === version) {
+                console.log(">>>>> migrate", { version });
                 try {
-                    entitiesFileContent = migrationFunction(entitiesFileContent);
+                    wamFileContent = migrationFunction(wamFileContent);
                 } catch (error) {
                     // Remove this when tsconfig target is ES2022 (only supported on ES2022)
                     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -44,16 +44,31 @@ class EntitiesFileMigration {
             }
         }
 
-        return EntityCollectionRaw.parse(entitiesFileContent);
+        return WAMFileFormat.parse(wamFileContent);
     }
 
-    private migrate_v0_to_v1(fileContent: any): any {
+    private migrate_v1_to_v2(fileContent: any): any {
+        console.log(">>>>> migrate_v1_to_v2", { fileContent });
         return {
             ...fileContent,
-            version: "1.0",
-            collection: fileContent.collection.map((entity: any) => ({
-                ...entity,
-                id: `${fileContent.collectionName}:${entity.name}:${entity.color}:${entity.direction}`,
+            version: "2.0.0",
+            areas: fileContent.areas.map((area: any) => ({
+                ...area,
+                properties: area.properties.map((property: any) => {
+                    if (property.type === "jitsiRoomProperty") {
+                        const jitsiRoomAdminTag = property.jitsiRoomConfig.jitsiRoomAdminTag;
+
+                        delete property.jitsiRoomConfig.jitsiRoomAdminTag;
+
+                        return {
+                            ...property,
+                            jitsiRoomConfig: property.jitsiRoomConfig,
+                            jitsiRoomAdminTag,
+                        };
+                    }
+
+                    return property;
+                }),
             })),
         };
     }
@@ -63,4 +78,4 @@ class EntitiesFileMigration {
     }
 }
 
-export const entitiesFileMigration = new EntitiesFileMigration();
+export const wamFileMigration = new WamFileMigration();

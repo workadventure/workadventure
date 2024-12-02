@@ -27,6 +27,7 @@ import {
     GameMapProperties,
     WAMFileFormat,
 } from "@workadventure/map-editor";
+import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
 import { userMessageManager } from "../../Administration/UserMessageManager";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
@@ -198,6 +199,7 @@ import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManag
 import { DEPTH_BUBBLE_CHAT_SPRITE, DEPTH_WHITE_MASK } from "./DepthIndexes";
 import { ScriptingEventsManager } from "./ScriptingEventsManager";
 import { FollowManager } from "./FollowManager";
+
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
@@ -486,13 +488,12 @@ export class GameScene extends DirtyScene {
         });
 
         this.load.scenePlugin("AnimatedTiles", AnimatedTiles, "animatedTiles", "animatedTiles");
-
         if (this.wamUrlFile) {
             const absoluteWamFileUrl = new URL(this.wamUrlFile, window.location.href).toString();
 
             this.superLoad.loadPromise(
                 axiosWithRetry.get(absoluteWamFileUrl).then((response) => {
-                    const wamFileResult = WAMFileFormat.safeParse(response.data);
+                    const wamFileResult = WAMFileFormat.safeParse(wamFileMigration.migrate(response.data));
                     if (!wamFileResult.success) {
                         this.loader.removeLoader();
                         errorScreenStore.setError(
