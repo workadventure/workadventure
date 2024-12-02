@@ -472,7 +472,17 @@
                     onAddProperty("openWebsite");
                 }}
             />
-            {#if extensionModulesAreaMapEditor.length > 0}
+            {#if !hasMatrixRoom && MATRIX_PUBLIC_URI}
+                <AddPropertyButtonWrapper
+                    property="matrixRoomPropertyData"
+                    on:click={() => {
+                        onAddProperty("matrixRoomPropertyData");
+                    }}
+                />
+            {/if}
+        </div>
+        {#if extensionModulesAreaMapEditor.length > 0}
+            <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-mt-2">
                 {#each extensionModulesAreaMapEditor as extensionModuleAreaMapEditor, index (`extensionModulesAreaMapEditor-${index}`)}
                     {#each Object.entries(extensionModuleAreaMapEditor) as [subtype, index] (`extensionModuleAreaMapEditor-${index}`)}
                         {#if extensionModuleAreaMapEditor[subtype].shouldDisplayButton(properties)}
@@ -486,16 +496,8 @@
                         {/if}
                     {/each}
                 {/each}
-            {/if}
-            {#if !hasMatrixRoom && MATRIX_PUBLIC_URI}
-                <AddPropertyButtonWrapper
-                    property="matrixRoomPropertyData"
-                    on:click={() => {
-                        onAddProperty("matrixRoomPropertyData");
-                    }}
-                />
-            {/if}
-        </div>
+            </div>
+        {/if}
         <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-mt-2">
             <AddPropertyButtonWrapper
                 property="openWebsite"

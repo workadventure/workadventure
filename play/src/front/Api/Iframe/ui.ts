@@ -39,6 +39,10 @@ interface MenuDescriptor {
      * A unique technical key identifying this menu
      */
     key?: string;
+    /**
+     * The "allow" attribute of the iframe tag.
+     */
+    allow?: string;
 }
 
 export type MenuOptions = RequireOnlyOne<MenuDescriptor, "callback" | "iframe">;
@@ -202,6 +206,7 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
         if (typeof options === "function") {
             options = {
                 callback: options,
+                allow: undefined,
             };
         }
 
@@ -209,6 +214,7 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
             ...options,
             allowApi: options.allowApi === undefined ? options.iframe !== undefined : options.allowApi,
             key: options.key ?? v4(),
+            allow: options.allow,
         };
 
         const menu = new Menu(finalOptions.key);
@@ -222,6 +228,7 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
                     key: finalOptions.key,
                     options: {
                         allowApi: finalOptions.allowApi,
+                        allow: finalOptions.allow,
                     },
                 },
             });

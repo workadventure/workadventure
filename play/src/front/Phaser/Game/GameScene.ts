@@ -132,6 +132,7 @@ import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import {
     cameraResistanceModeStore,
     mapEditorModeStore,
+    mapEditorRestrictedPropertiesStore,
     mapEditorSelectedToolStore,
     mapEditorWamSettingsEditorToolCurrentMenuItemStore,
     mapExplorationModeStore,
@@ -1073,6 +1074,7 @@ export class GameScene extends DirtyScene {
         get(extensionModuleStore).forEach((extensionModule) => {
             extensionModule.destroy();
         });
+        extensionModuleStore.set([]);
 
         //When we leave game, the camera is stop to be reopen after.
         // I think that we could keep camera status and the scene can manage camera setup
@@ -1970,6 +1972,10 @@ export class GameScene extends DirtyScene {
                 (async () => {
                     const extensionModule = (await moduleFactory()) as { default: ExtensionModule };
                     const defaultExtensionModule = extensionModule.default;
+                    // Check if the module is already initialized
+                    if (get(extensionModuleStore).find((module) => module.id === defaultExtensionModule.id)) {
+                        return;
+                    }
 
                     const connection = this.connection;
                     if (!connection) {
@@ -1993,12 +1999,13 @@ export class GameScene extends DirtyScene {
                         logoutCallback: () => {
                             connectionManager.logout();
                         },
+                        externalRestrictedMapEditorProperties: mapEditorRestrictedPropertiesStore,
                     });
 
                     if (defaultExtensionModule.calendarSynchronised) isCalendarActiveStore.set(true);
                     if (defaultExtensionModule.todoListSynchronized) isTodoListActiveStore.set(true);
                     extensionModuleStore.add(defaultExtensionModule);
-                    console.info(`Extension module ${module} initialization finished`);
+                    console.info(`Extension module ${moduleName} initialization finished`);
                 })().catch((error) => console.error(error));
             }
         }

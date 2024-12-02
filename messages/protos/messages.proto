@@ -211,8 +211,8 @@ message EditMapCommandWithKeyMessage {
 message ModifyAreaMessage {
   string id = 1;
   optional string name = 2;
-  optional uint32 x = 3;
-  optional uint32 y = 4;
+  optional int32 x = 3;
+  optional int32 y = 4;
   optional uint32 width = 5;
   optional uint32 height = 6;
   repeated google.protobuf.Value properties = 7;
@@ -226,8 +226,8 @@ message DeleteAreaMessage {
 
 message CreateAreaMessage {
   string id = 1;
-  uint32 x = 2;
-  uint32 y = 3;
+  int32 x = 2;
+  int32 y = 3;
   uint32 width = 4;
   uint32 height = 5;
   string name = 6;
@@ -236,8 +236,8 @@ message CreateAreaMessage {
 
 message CreateEntityMessage {
   string id = 1;
-  uint32 x = 2;
-  uint32 y = 3;
+  int32 x = 2;
+  int32 y = 3;
   string collectionName = 4;
   string prefabId = 5;
   repeated google.protobuf.Value properties = 6;
@@ -287,8 +287,8 @@ message DeleteCustomEntityMessage {
 
 message ModifyEntityMessage {
   string id = 1;
-  uint32 x = 2;
-  uint32 y = 3;
+  int32 x = 2;
+  int32 y = 3;
   repeated google.protobuf.Value properties = 4;
   optional bool modifyProperties = 5;
   optional string name = 6;
