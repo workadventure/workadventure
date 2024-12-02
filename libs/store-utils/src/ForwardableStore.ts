@@ -1,8 +1,7 @@
-import {Readable} from "svelte/types/runtime/store";
-import {Subscriber, Unsubscriber, writable, Writable} from "svelte/store";
+import type { Readable } from "svelte/store";
+import { Subscriber, Unsubscriber, writable, Writable } from "svelte/store";
 
 export class ForwardableStore<T> implements Readable<T> {
-
     private store: Writable<T>;
     private innerStoreUnsubscriber: Unsubscriber | undefined;
 
@@ -14,7 +13,7 @@ export class ForwardableStore<T> implements Readable<T> {
         if (this.innerStoreUnsubscriber) {
             this.innerStoreUnsubscriber();
         }
-        this.innerStoreUnsubscriber = store.subscribe(value => {
+        this.innerStoreUnsubscriber = store.subscribe((value) => {
             this.store.set(value);
         });
     }

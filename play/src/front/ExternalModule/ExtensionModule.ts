@@ -6,6 +6,7 @@ import { AreaData, AreaDataProperties } from "@workadventure/map-editor";
 import { Observable } from "rxjs";
 import { OpenCoWebsiteObject } from "../Chat/Utils";
 import { SpaceRegistryInterface } from "../Space/SpaceRegistry/SpaceRegistryInterface";
+import { z } from "zod";
 
 export interface ExternalSvelteComponentStore {
     addActionBarComponent: (key: string, externsionModule: ExtensionModule, componentType: ComponentType) => void;
@@ -67,3 +68,26 @@ export interface ExtensionModule {
     calendarSynchronised: boolean;
     todoListSynchronized: boolean;
 }
+
+export const RoomMetadataType = z.object({
+    player: z
+        .object({
+            accessTokens: z
+                .array(
+                    z.object({
+                        token: z.string(),
+                        provider: z.string(),
+                    })
+                )
+                .optional(),
+        })
+        .optional(),
+    modules: z.string().array(),
+    discordSettings: z.object({
+        enableDiscordBridge: z.boolean().default(true),
+        enableDiscordMandatory: z.boolean().default(false),
+        discordAllowedGuilds: z.string().default("")
+    }),
+});
+
+export type RoomMetadataType = z.infer<typeof RoomMetadataType>;

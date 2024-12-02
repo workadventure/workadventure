@@ -130,6 +130,7 @@
     $: filteredRoomInvitations = $roomInvitations
         .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
         .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
+    $: isGuest = chat.isGuest;
 
     $: displayTwoColumnLayout = sideBarWidth >= CHAT_LAYOUT_LIMIT;
 
