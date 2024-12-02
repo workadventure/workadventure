@@ -37,6 +37,12 @@ class Menu {
         await expect(await page.getByTestId('profile-menu')).toBeHidden();
     }
 
+    async waitForMenu(page: Page, timeout = 30_000) {
+        await expect(page.getByTestId('action-admin')).toBeVisible({
+            timeout
+        });
+    }
+
     async closeMapEditor(page: Page) {
         await page.locator('.map-editor .configure-my-room .close-window').click()
         await page.locator('.map-editor .sidebar .close-window').click()

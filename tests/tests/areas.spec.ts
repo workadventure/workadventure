@@ -4,6 +4,7 @@ import {expect, test} from '@playwright/test';
 import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
 import {publicTestMapUrl} from "./utils/urls";
+import Menu from "./utils/menu";
 
 test.describe('Areas', () => {
     test('can edit Tiled area from scripting API', async ({ page }, { project }) => {
@@ -34,7 +35,7 @@ test.describe('Areas', () => {
             silentArea.height = 600;
             return;
         });
-        await expect(page.getByText('Silent zone',{exact:true})).toBeVisible();
+        await expect(page.getByText('You\'re in a silent zone')).toBeVisible();
     });
 
     test('blocking audio areas', async ({ page, browser }, { project }) => {
@@ -59,7 +60,7 @@ test.describe('Areas', () => {
         await expect(page.locator('div.main-audio-manager')).toBeVisible();
 
         // Enable audio area blocking
-        await page.click('button#menuIcon');
+        await Menu.openMenu(page, false);
         await page.click('text=Settings');
         await page.click('text=Block ambient sounds and music');
 
