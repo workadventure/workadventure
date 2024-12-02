@@ -61,6 +61,7 @@ const mapEditor: BaseTranslation = {
                 cancel: "Cancel",
                 validate: "Validate",
             },
+            disabled: "Jitsi integration is disabled for this room ❌",
         },
         audioProperties: {
             label: "Play Audio File",
@@ -103,12 +104,14 @@ const mapEditor: BaseTranslation = {
             description: "",
             nameLabel: "Name",
             namePlaceholder: "MySpeakerZone",
+            disabled: "Speaker zone is disabled for this room ❌",
         },
         listenerMegaphoneProperties: {
             label: "Attendees zone",
             description: "",
             nameLabel: "SpeakerZone Name",
             namePlaceholder: "MySpeakerZone",
+            disabled: "Attendees zone is disabled for this room ❌",
         },
         chatEnabled: "Associate a dedicated chat channel",
         startProperties: {

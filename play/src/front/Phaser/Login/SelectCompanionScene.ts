@@ -120,6 +120,14 @@ export class SelectCompanionScene extends ResizableScene {
         this.closeScene();
     }
 
+    public async noCompagnion(): Promise<void> {
+        localUserStore.setCompanionTextureId(null);
+        gameManager.setCompanionTextureId(null);
+        await connectionManager.saveCompanionTexture(null);
+
+        this.closeScene();
+    }
+
     public closeScene() {
         // next scene
         this.scene.stop(SelectCompanionSceneName);

@@ -39,6 +39,7 @@ const actionbar: BaseTranslation = {
     globalMessage: "Send a global message",
     roomList: "Open / Close room list",
     appList: "Open / Close app list",
+    featureNotAvailable: "Feature not available for your room 😭",
 };
 
 export default actionbar;

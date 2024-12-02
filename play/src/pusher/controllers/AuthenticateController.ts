@@ -390,7 +390,7 @@ export class AuthenticateController extends BaseHttpController {
                 const html = Mustache.render(this.redirectToPlayFile, {
                     playUri: playUri.toString(),
                 });
-                res.send(html);
+                res.type("html").send(html);
             });
             return;
         });

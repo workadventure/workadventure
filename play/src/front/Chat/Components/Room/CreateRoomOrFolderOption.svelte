@@ -4,51 +4,46 @@
     import CreateRoomModal from "./CreateRoomModal.svelte";
     import CreateFolderModal from "./CreateFolderModal.svelte";
     import RoomOption from "./RoomMenu/RoomOption.svelte";
-    import { IconFolder, IconMessage, IconSquarePlus } from "@wa-icons";
+    import { IconDots, IconFolder, IconMessage } from "@wa-icons";
 
     export let parentID: string | undefined = undefined;
     export let parentName = "";
     let optionButtonRef: HTMLButtonElement | undefined = undefined;
-    let optionRef: HTMLDivElement | undefined = undefined;
     let hideFolderOptions = true;
 
     function toggleSpaceOption() {
         if (optionButtonRef === undefined) {
             return;
         }
-        if (optionRef === undefined) {
-            return;
-        }
-        const { bottom, right } = optionButtonRef.getBoundingClientRect();
-        optionRef.style.top = `${bottom}px`;
-        optionRef.style.left = `${right}px`;
         hideFolderOptions = !hideFolderOptions;
     }
     function closeMenuAndOpenCreateRoom() {
         openModal(CreateRoomModal, {
             parentID,
         });
+        hideFolderOptions = true;
     }
     function openCreateSpace() {
         openModal(CreateFolderModal, {
             parentID,
         });
+        hideFolderOptions = true;
     }
 </script>
 
 <button
     data-testid={`openOptionToCreateRoomOrFolder${parentName}`}
-    class="tw-p-0 tw-m-0 tw-text-gray-400"
+    class="tw-m-0 tw-p-1 tw-rounded-lg hover:tw-bg-white/10 {hideFolderOptions
+        ? 'tw-bg-transparent'
+        : 'tw-bg-secondary'}"
     bind:this={optionButtonRef}
     on:click|preventDefault|stopPropagation={toggleSpaceOption}
 >
-    <IconSquarePlus font-size={16} />
+    <IconDots />
 </button>
 <div
-    on:mouseleave={toggleSpaceOption}
-    bind:this={optionRef}
-    class="tw-absolute tw-bg-black/90 tw-rounded-md tw-p-1 tw-z-[1] tw-w-max"
-    class:tw-absolue={optionButtonRef !== undefined}
+    class="tw-bg-contrast/50 tw-backdrop-blur-md tw-rounded-lg tw-overflow-hidden tw-z-50 tw-w-max tw-right-4 tw-top-10 tw-p-1"
+    class:tw-absolute={optionButtonRef !== undefined}
     class:tw-hidden={hideFolderOptions}
 >
     <RoomOption

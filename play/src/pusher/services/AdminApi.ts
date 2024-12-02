@@ -939,7 +939,7 @@ class AdminApi implements AdminInterface {
         return;
     }
 
-    async saveCompanionTexture(userIdentifier: string, texture: string, roomUrl: string): Promise<void> {
+    async saveCompanionTexture(userIdentifier: string, texture: string | null, roomUrl: string): Promise<void> {
         if (this.capabilities["api/save-textures"] === undefined) {
             // Save-name is not implemented in admin. Do nothing.
             return;

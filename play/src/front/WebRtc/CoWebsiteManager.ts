@@ -138,7 +138,7 @@ class CoWebsiteManager {
         // No need to unsubscribe, we are in a singleton.
         // eslint-disable-next-line svelte/no-ignored-unsubscribe
         mainCoWebsite.subscribe((coWebsite) => {
-            this.buttonCloseCoWebsite.hidden = !coWebsite?.isClosable() ?? false;
+            this.buttonCloseCoWebsite.hidden = !coWebsite?.isClosable();
         });
 
         this.holderListeners();

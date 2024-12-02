@@ -1,12 +1,12 @@
 import { AvailabilityStatus, ExternalModuleMessage, OauthRefreshToken } from "@workadventure/messages";
-import { Readable, Updater } from "svelte/store";
+import { Readable, Updater, Writable } from "svelte/store";
 import { CalendarEventInterface, TodoListInterface } from "@workadventure/shared-utils";
 import { ComponentType } from "svelte";
 import { AreaData, AreaDataProperties } from "@workadventure/map-editor";
 import { Observable } from "rxjs";
-import { z } from "zod";
 import { OpenCoWebsiteObject } from "../Chat/Utils";
 import { SpaceRegistryInterface } from "../Space/SpaceRegistry/SpaceRegistryInterface";
+import { z } from "zod";
 
 export interface ExternalSvelteComponentStore {
     addActionBarComponent: (key: string, externsionModule: ExtensionModule, componentType: ComponentType) => void;
@@ -27,6 +27,7 @@ export interface ExtensionModuleOptions {
     roomId: string;
     externalModuleMessage: Observable<ExternalModuleMessage>;
     externalSvelteComponent: Readable<ExternalSvelteComponentStore>;
+    externalRestrictedMapEditorProperties?: Writable<string[]>;
     onExtensionModuleStatusChange: (workAdventureNewStatus: AvailabilityStatus) => void;
     openCoWebSite: (
         openCoWebsiteObject: OpenCoWebsiteObject,
@@ -51,7 +52,7 @@ export interface ExtensionModuleAreaProperty {
 
 export interface ExtensionModule {
     id: string;
-    init: (roomMetadata: RoomMetadataType, options: ExtensionModuleOptions) => void;
+    init: (roomMetadata: unknown, options: ExtensionModuleOptions) => void;
     joinMeeting: () => void;
     destroy: () => void;
     areaMapEditor?: () => { [key: string]: ExtensionModuleAreaProperty } | undefined;
@@ -81,15 +82,7 @@ export const RoomMetadataType = z.object({
                 .optional(),
         })
         .optional(),
-    modules: z.enum(["ms-teams", "discord"]).array(),
-    msTeamsSettings: z.object({
-        communication: z.boolean(),
-        status: z.boolean(),
-        statusTeamsToWorkAdventure: z.boolean().default(false),
-        statusWorkAdventureToTeams: z.boolean().default(false),
-        calendar: z.boolean(),
-        todoList: z.boolean().optional(),
-    }),
+    modules: z.string().array(),
     discordSettings: z.object({
         enableDiscordBridge: z.boolean().default(true),
         enableDiscordMandatory: z.boolean().default(false),

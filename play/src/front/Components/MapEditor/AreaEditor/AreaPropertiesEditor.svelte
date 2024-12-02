@@ -472,7 +472,17 @@
                     onAddProperty("openWebsite");
                 }}
             />
-            {#if extensionModulesAreaMapEditor.length > 0}
+            {#if !hasMatrixRoom && MATRIX_PUBLIC_URI}
+                <AddPropertyButtonWrapper
+                    property="matrixRoomPropertyData"
+                    on:click={() => {
+                        onAddProperty("matrixRoomPropertyData");
+                    }}
+                />
+            {/if}
+        </div>
+        {#if extensionModulesAreaMapEditor.length > 0}
+            <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-mt-2">
                 {#each extensionModulesAreaMapEditor as extensionModuleAreaMapEditor, index (`extensionModulesAreaMapEditor-${index}`)}
                     {#each Object.entries(extensionModuleAreaMapEditor) as [subtype, index] (`extensionModuleAreaMapEditor-${index}`)}
                         {#if extensionModuleAreaMapEditor[subtype].shouldDisplayButton(properties)}
@@ -486,16 +496,8 @@
                         {/if}
                     {/each}
                 {/each}
-            {/if}
-            {#if !hasMatrixRoom && MATRIX_PUBLIC_URI}
-                <AddPropertyButtonWrapper
-                    property="matrixRoomPropertyData"
-                    on:click={() => {
-                        onAddProperty("matrixRoomPropertyData");
-                    }}
-                />
-            {/if}
-        </div>
+            </div>
+        {/if}
         <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-mt-2">
             <AddPropertyButtonWrapper
                 property="openWebsite"
@@ -707,8 +709,8 @@
                         {#each extensionModulesAreaMapEditor as extensionModuleAreaMapEditor, index (`extensionModulesAreaMapEditor-${index}`)}
                             <svelte:component
                                 this={extensionModuleAreaMapEditor[property.subtype].AreaPropertyEditor}
-                                {property}
                                 {extensionModuleAreaMapEditor}
+                                {property}
                                 on:close={() => {
                                     onDeleteProperty(property.id);
                                 }}
@@ -791,7 +793,7 @@
         color: rgb(242 253 255 / var(--tw-text-opacity));
         outline: 2px solid transparent;
         outline-offset: 2px;
-        cursor: url(/src/front/style/images/cursor_pointer.png), pointer;
+        cursor: url(../../../../../public/static/images/cursor_pointer.png), pointer;
     }
 
     .input-switch::before {

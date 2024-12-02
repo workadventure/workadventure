@@ -65,6 +65,7 @@ export const OPID_WOKA_NAME_POLICY = env.OPID_WOKA_NAME_POLICY || "user_input";
 export const OPID_TAGS_CLAIM = env.OPID_TAGS_CLAIM || "tags";
 export const DISABLE_ANONYMOUS: boolean = env.DISABLE_ANONYMOUS;
 export const PROMETHEUS_AUTHORIZATION_TOKEN = env.PROMETHEUS_AUTHORIZATION_TOKEN;
+export const PROMETHEUS_PORT = env.PROMETHEUS_PORT === env.PUSHER_HTTP_PORT ? 0 : env.PROMETHEUS_PORT;
 export const ENABLE_CHAT: boolean = env.ENABLE_CHAT;
 export const ENABLE_CHAT_UPLOAD: boolean = env.ENABLE_CHAT_UPLOAD;
 export const ENABLE_CHAT_ONLINE_LIST: boolean = env.ENABLE_CHAT_ONLINE_LIST;

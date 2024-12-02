@@ -50,7 +50,7 @@ import {
 } from "../../../Stores/GameStore";
 import { isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
 import { MessageUserJoined } from "../../../Connection/ConnexionModels";
-import { navChat, selectedRoom } from "../../../Chat/Stores/ChatStore";
+import { navChat, selectedRoomStore } from "../../../Chat/Stores/ChatStore";
 import { Area } from "../../Entity/Area";
 import { extensionModuleStore } from "../../../Stores/GameSceneStore";
 import { ChatRoom } from "../../../Chat/Connection/ChatConnection";
@@ -595,7 +595,7 @@ export class AreasPropertiesListener {
                 })
                 .then((room: ChatRoom | undefined) => {
                     if (!room) return;
-                    selectedRoom.set(room);
+                    selectedRoomStore.set(room);
                     navChat.switchToChat();
                     chatZoneLiveStore.set(true);
                     if (property.shouldOpenAutomatically) chatVisibilityStore.set(true);
@@ -824,12 +824,12 @@ export class AreasPropertiesListener {
             return;
         }
 
-        const actualRoom = get(selectedRoom);
+        const actualRoom = get(selectedRoomStore);
         const chatVisibility = get(chatVisibilityStore);
 
         if (actualRoom?.id === property.serverData?.matrixRoomId && chatVisibility) {
             chatVisibilityStore.set(false);
-            selectedRoom.set(undefined);
+            selectedRoomStore.set(undefined);
         }
         chatZoneLiveStore.set(false);
 

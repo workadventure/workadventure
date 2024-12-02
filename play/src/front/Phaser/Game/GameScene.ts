@@ -2,7 +2,7 @@ import * as Sentry from "@sentry/svelte";
 import type { Subscription } from "rxjs";
 import AnimatedTiles from "phaser-animated-tiles";
 import { Queue } from "queue-typescript";
-import type { Unsubscriber } from "svelte/store";
+import type { Readable, Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import { throttle } from "throttle-debounce";
 import { MapStore } from "@workadventure/store-utils";
@@ -132,6 +132,7 @@ import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import {
     cameraResistanceModeStore,
     mapEditorModeStore,
+    mapEditorRestrictedPropertiesStore,
     mapEditorSelectedToolStore,
     mapEditorWamSettingsEditorToolCurrentMenuItemStore,
     mapExplorationModeStore,
@@ -152,7 +153,7 @@ import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/sta
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import { closeCoWebsite, getCoWebSite, openCoWebSite, openCoWebSiteWithoutSource } from "../../Chat/Utils";
 import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
-import { selectedRoom } from "../../Chat/Stores/ChatStore";
+import { selectedRoomStore } from "../../Chat/Stores/ChatStore";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
 import { ProximitySpaceManager } from "../../WebRtc/ProximitySpaceManager";
 import { SpaceRegistryInterface } from "../../Space/SpaceRegistry/SpaceRegistryInterface";
@@ -164,7 +165,7 @@ import { ExtensionModuleStatusSynchronization } from "../../Rules/StatusRules/Ex
 import { isActivatedStore as isCalendarActiveStore, calendarEventsStore } from "../../Stores/CalendarStore";
 import { isActivatedStore as isTodoListActiveStore, todoListsStore } from "../../Stores/TodoListStore";
 import { externalSvelteComponentStore } from "../../Stores/Utils/externalSvelteComponentStore";
-import { ExtensionModule, RoomMetadataType } from "../../ExternalModule/ExtensionModule";
+import { ExtensionModule } from "../../ExternalModule/ExtensionModule";
 import { SpaceInterface } from "../../Space/SpaceInterface";
 import { UserProviderInterface } from "../../Chat/UserProvider/UserProviderInterface";
 import { faviconManager } from "../../WebRtc/FaviconManager";
@@ -343,6 +344,7 @@ export class GameScene extends DirtyScene {
     private _proximityChatRoom: ProximityChatRoom | undefined;
     private _userProviderMergerDeferred: Deferred<UserProviderMerger> = new Deferred();
     private matrixClientWrapper: MatrixClientWrapper | undefined;
+    private worldUserProvider: WorldUserProvider | undefined;
     public extensionModule: ExtensionModule | undefined = undefined;
     public landingAreas: AreaData[] = [];
 
@@ -1076,6 +1078,7 @@ export class GameScene extends DirtyScene {
         get(extensionModuleStore).forEach((extensionModule) => {
             extensionModule.destroy();
         });
+        extensionModuleStore.set([]);
 
         //When we leave game, the camera is stop to be reopen after.
         // I think that we could keep camera status and the scene can manage camera setup
@@ -1561,15 +1564,16 @@ export class GameScene extends DirtyScene {
 
                         const userProviders: UserProviderInterface[] = [];
 
-                        if (ENABLE_CHAT_DISCONNECTED_LIST) {
+                        if (ENABLE_CHAT_DISCONNECTED_LIST && this._room.isChatDisconnectedListEnabled) {
                             if (connection) {
                                 userProviders.push(new AdminUserProvider(connection));
                             }
                             userProviders.push(new ChatUserProvider(chatConnection));
                         }
 
-                        if (allUserSpace && ENABLE_CHAT_ONLINE_LIST) {
-                            userProviders.push(new WorldUserProvider(allUserSpace));
+                        if (allUserSpace && ENABLE_CHAT_ONLINE_LIST && this._room.isChatOnlineListEnabled) {
+                            this.worldUserProvider = new WorldUserProvider(allUserSpace);
+                            userProviders.push(this.worldUserProvider);
                         }
 
                         this._userProviderMergerDeferred.resolve(new UserProviderMerger(userProviders));
@@ -1959,52 +1963,54 @@ export class GameScene extends DirtyScene {
     }
 
     private initExtensionModule() {
-        if (this._room.metadata != undefined) {
-            const parsedRoomMetadata = RoomMetadataType.safeParse(this._room.metadata);
+        if (this._room.modules) {
+            const externalModules = import.meta.glob("../../external-modules/*/index.ts");
 
-            if (!parsedRoomMetadata.success) {
-                console.error(
-                    "Unable to initialize Microsoft teams module due to room metadata parsing error : ",
-                    parsedRoomMetadata.error
-                );
-                return;
-            }
+            for (const moduleName of this._room.modules) {
+                const moduleFactory = externalModules[`../../external-modules/${moduleName}/index.ts`];
 
-            for (const module of parsedRoomMetadata.data.modules ?? []) {
-                if (module !== "ms-teams") continue;
+                if (!moduleFactory) {
+                    console.warn(`Unable to find module "${moduleName}" inside external modules`);
+                    return;
+                }
 
                 (async () => {
-                    try {
-                        const extensionModule = await import(`../../../external-modules/ms-teams/index`);
-                        const defaultExtensionModule = extensionModule.default;
-
-                        defaultExtensionModule.init(parsedRoomMetadata.data, {
-                            workadventureStatusStore: availabilityStatusStore,
-                            userAccessToken: localUserStore.getAuthToken()!,
-                            roomId: this.roomUrl,
-                            externalModuleMessage: this.connection!.externalModuleMessage,
-                            onExtensionModuleStatusChange: ExtensionModuleStatusSynchronization.onStatusChange,
-                            calendarEventsStoreUpdate: calendarEventsStore.update,
-                            todoListStoreUpdate: todoListsStore.update,
-                            openCoWebSite: openCoWebSiteWithoutSource,
-                            closeCoWebsite,
-                            getOauthRefreshToken: this.connection?.getOauthRefreshToken.bind(this.connection),
-                            adminUrl: ADMIN_URL,
-                            externalSvelteComponent: externalSvelteComponentStore,
-                            spaceRegistry: this.spaceRegistry,
-                            logoutCallback: () => {
-                                connectionManager.logout();
-                            },
-                        });
-
-                        if (defaultExtensionModule.calendarSynchronised) isCalendarActiveStore.set(true);
-                        if (defaultExtensionModule.todoListSynchronized) isTodoListActiveStore.set(true);
-                        extensionModuleStore.add(defaultExtensionModule);
-                    } catch (error) {
-                        console.warn("Extension module initialization cancelled", error);
-                    } finally {
-                        console.info(`Extension module ${module} initialization finished`);
+                    const extensionModule = (await moduleFactory()) as { default: ExtensionModule };
+                    const defaultExtensionModule = extensionModule.default;
+                    // Check if the module is already initialized
+                    if (get(extensionModuleStore).find((module) => module.id === defaultExtensionModule.id)) {
+                        return;
                     }
+
+                    const connection = this.connection;
+                    if (!connection) {
+                        throw new Error("Connection is undefined");
+                    }
+
+                    defaultExtensionModule.init(this._room.metadata, {
+                        workadventureStatusStore: availabilityStatusStore,
+                        userAccessToken: localUserStore.getAuthToken()!,
+                        roomId: this.roomUrl,
+                        externalModuleMessage: connection.externalModuleMessage,
+                        onExtensionModuleStatusChange: ExtensionModuleStatusSynchronization.onStatusChange,
+                        calendarEventsStoreUpdate: calendarEventsStore.update,
+                        todoListStoreUpdate: todoListsStore.update,
+                        openCoWebSite: openCoWebSiteWithoutSource,
+                        closeCoWebsite,
+                        getOauthRefreshToken: connection.getOauthRefreshToken.bind(this.connection),
+                        adminUrl: ADMIN_URL,
+                        externalSvelteComponent: externalSvelteComponentStore,
+                        spaceRegistry: this.spaceRegistry,
+                        logoutCallback: () => {
+                            connectionManager.logout();
+                        },
+                        externalRestrictedMapEditorProperties: mapEditorRestrictedPropertiesStore,
+                    });
+
+                    if (defaultExtensionModule.calendarSynchronised) isCalendarActiveStore.set(true);
+                    if (defaultExtensionModule.todoListSynchronized) isTodoListActiveStore.set(true);
+                    extensionModuleStore.add(defaultExtensionModule);
+                    console.info(`Extension module ${moduleName} initialization finished`);
                 })().catch((error) => console.error(error));
             }
         }
@@ -2499,7 +2505,7 @@ ${escapedMessage}
                         const room = this.proximityChatRoom;
 
                         room.addExternalMessage("local", chatMessage.message, chatMessage.options.author);
-                        selectedRoom.set(room);
+                        selectedRoomStore.set(room);
                         chatVisibilityStore.set(true);
                         break;
                     }
@@ -2507,7 +2513,7 @@ ${escapedMessage}
                         const room = this.proximityChatRoom;
 
                         room.addExternalMessage("bubble", chatMessage.message);
-                        selectedRoom.set(room);
+                        selectedRoomStore.set(room);
                         chatVisibilityStore.set(true);
                     }
                 }
@@ -3800,5 +3806,12 @@ ${escapedMessage}
 
     get userProviderMerger(): Promise<UserProviderMerger> {
         return this._userProviderMergerDeferred.promise;
+    }
+
+    get worldUserCounter(): Readable<integer> {
+        if (!this.worldUserProvider) {
+            throw new Error("this.worldUserProvider not yet initialized");
+        }
+        return this.worldUserProvider.userCount;
     }
 }

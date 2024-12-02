@@ -55,7 +55,7 @@
                         month: "long",
                         day: "2-digit",
                         year: "numeric",
-                    })}
+                    })} (beta)
                 </h3>
                 <h4 class="tw-text-l tw-text-left">Your meeting today 🗓️ ({$calendarEventsStore.size})</h4>
             </div>

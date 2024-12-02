@@ -11,7 +11,7 @@ import { scriptUtils } from "../Api/ScriptUtils";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { userIsConnected } from "../Stores/MenuStore";
 import { chatVisibilityStore } from "../Stores/ChatStore";
-import { navChat, selectedRoom } from "./Stores/ChatStore";
+import { navChat, selectedRoomStore } from "./Stores/ChatStore";
 import { ChatRoom } from "./Connection/ChatConnection";
 import RequiresLoginForChatModal from "./Components/RequiresLoginForChatModal.svelte";
 
@@ -85,7 +85,7 @@ export const openChatRoom = async (chatID: string) => {
             room.joinRoom().catch((error: unknown) => console.error(error));
         }
 
-        selectedRoom.set(room);
+        selectedRoomStore.set(room);
         navChat.switchToChat();
         chatVisibilityStore.set(true);
     } catch (error) {

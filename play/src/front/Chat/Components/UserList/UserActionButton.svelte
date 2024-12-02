@@ -12,7 +12,7 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { showReportScreenStore } from "../../../Stores/ShowReportScreenStore";
     import { openChatRoom } from "../../Utils";
-    import { IconForbid, IconDots, IconMessage, IconLoader } from "@wa-icons";
+    import { IconForbid, IconMessage, IconLoader, IconDots } from "@wa-icons";
 
     export let user: ChatUser;
 
@@ -91,53 +91,53 @@
 <svelte:window on:click={handleClickOutside} on:touchstart={handleClickOutside} />
 <div class="wa-dropdown">
     <button
-        class="tw-text-light-purple focus:outline-none tw-m-0"
+        class="tw-m-0 tw-p-1 tw-rounded-lg hover:tw-bg-white/10 tw-bg-transparent"
         bind:this={buttonElement}
         on:click|stopPropagation={toggleChatUSerMenu}
     >
-        <IconDots />
+        <IconDots font-size="16" />
     </button>
     <!-- on:mouseleave={closeChatUserMenu} -->
     {#if chatMenuActive}
         <div bind:this={popoversElement} class={`wa-dropdown-menu tw-mr-1 tw-absolute`}>
-            {#if user.roomName}
-                {#if isInTheSameMap}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <span
-                        class="walk-to wa-dropdown-item"
-                        on:click|stopPropagation={() => {
-                            goTo("user", user.playUri ?? "", user.uuid ?? "");
-                            closeChatUserMenu();
-                        }}
-                        ><img class="noselect" src={walk} alt="Walk to logo" height="13" width="13" />
-                        {$LL.chat.userList.walkTo()}</span
-                    >
-                {:else}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <span
-                        class="teleport wa-dropdown-item"
-                        on:click|stopPropagation={() => {
-                            goTo("room", user.playUri ?? "", user.uuid ?? "");
-                            closeChatUserMenu();
-                        }}
-                        ><img class="noselect" src={teleport} alt="Teleport to logo" height="13" width="13" />
-                        {$LL.chat.userList.teleport()}</span
-                    >
-                {/if}
+            {#if isInTheSameMap}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
-                {#if user.visitCardUrl}
-                    <span
-                        class="businessCard wa-dropdown-item"
-                        on:click|stopPropagation={() => showBusinessCard(user.visitCardUrl)}
-                        ><img class="noselect" src={businessCard} alt="Business card" height="13" width="13" />
-                        {$LL.chat.userList.businessCard()}</span
-                    >
-                {/if}
+                <span
+                    class="walk-to wa-dropdown-item tw-flex tw-gap-2 tw-items-center hover:tw-bg-white/10 tw-m-0 tw-p-2 tw-w-full tw-text-sm tw-rounded"
+                    on:click|stopPropagation={() => {
+                        goTo("user", user.playUri ?? "", user.uuid ?? "");
+                        closeChatUserMenu();
+                    }}
+                    ><img class="noselect" src={walk} alt="Walk to logo" height="13" width="13" />
+                    {$LL.chat.userList.walkTo()}</span
+                >
+            {:else if user.playUri}
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <span
+                    class="teleport wa-dropdown-item tw-flex tw-gap-2 tw-items-center hover:tw-bg-white/10 tw-m-0 tw-p-2 tw-w-full tw-text-sm tw-rounded"
+                    on:click|stopPropagation={() => {
+                        goTo("room", user.playUri ?? "", user.uuid ?? "");
+                        closeChatUserMenu();
+                    }}
+                    ><img class="noselect" src={teleport} alt="Teleport to logo" height="13" width="13" />
+                    {$LL.chat.userList.teleport()}</span
+                >
+            {/if}
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            {#if user.visitCardUrl}
+                <span
+                    class="businessCard wa-dropdown-item tw-flex tw-gap-2 tw-items-center hover:tw-bg-white/10 tw-m-0 tw-p-2 tw-w-full tw-text-sm tw-rounded"
+                    on:click|stopPropagation={() => showBusinessCard(user.visitCardUrl)}
+                    ><img class="noselect" src={businessCard} alt="Business card" height="13" width="13" />
+                    {$LL.chat.userList.businessCard()}</span
+                >
             {/if}
 
             {#if user.chatId && user.chatId !== user.uuid && !$roomCreationInProgress}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <span class="sendMessage wa-dropdown-item" on:click|stopPropagation={() => openChatRoom(user.chatId)}
+                <span
+                    class="sendMessage wa-dropdown-item tw-flex tw-gap-2 tw-items-center hover:tw-bg-white/10 tw-m-0 tw-p-2 tw-w-full tw-text-sm tw-rounded"
+                    on:click|stopPropagation={() => openChatRoom(user.chatId)}
                     ><IconMessage font-size="13" />
                     {$LL.chat.userList.sendMessage()}</span
                 >

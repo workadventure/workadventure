@@ -105,12 +105,7 @@
     import { isActivatedStore as isCalendarActivatedStore, isCalendarVisibleStore } from "../../Stores/CalendarStore";
     import { isActivatedStore as isTodoListActivatedStore, isTodoListVisibleStore } from "../../Stores/TodoListStore";
     import { externalActionBarSvelteComponent } from "../../Stores/Utils/externalSvelteComponentStore";
-    import {
-        ADMIN_BO_URL,
-        ENABLE_CHAT,
-        ENABLE_CHAT_DISCONNECTED_LIST,
-        ENABLE_CHAT_ONLINE_LIST,
-    } from "../../Enum/EnvironmentVariable";
+    import { ADMIN_BO_URL } from "../../Enum/EnvironmentVariable";
     import { inputFormFocusStore } from "../../Stores/UserInputStore";
     import AvailabilityStatusComponent from "./AvailabilityStatus/AvailabilityStatus.svelte";
     import { IconCheck, IconChevronDown, IconChevronUp } from "@wa-icons";
@@ -219,6 +214,8 @@
         if ($mapEditorModeStore) gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
         analyticsClient.toggleMapEditor(!$mapEditorModeStore);
         mapEditorModeStore.switchMode(!$mapEditorModeStore);
+        isTodoListVisibleStore.set(false);
+        isCalendarVisibleStore.set(false);
     }
 
     function clickEmoji(selected?: number) {
@@ -394,10 +391,14 @@
 
     function openExternalModuleCalendar() {
         isCalendarVisibleStore.set(!$isCalendarVisibleStore);
+        isTodoListVisibleStore.set(false);
+        mapEditorModeStore.switchMode(false);
     }
 
     function openExternalModuleTodoList() {
         isTodoListVisibleStore.set(!$isTodoListVisibleStore);
+        isCalendarVisibleStore.set(false);
+        mapEditorModeStore.switchMode(false);
     }
 
     let totalMessagesToSee = writable<number>(0);
@@ -841,44 +842,40 @@
                         </button>
                     </div>
                 {/if}
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <div
+                    on:click={() => analyticsClient.openedChat()}
+                    on:click={toggleChat}
+                    class="bottom-action-button tw-relative"
+                >
+                    {#if !isMobile}
+                        <Tooltip text={$LL.actionbar.chat()} />
+                    {/if}
 
-                {#if ENABLE_CHAT || ENABLE_CHAT_ONLINE_LIST || ENABLE_CHAT_DISCONNECTED_LIST}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div
-                        on:click={() => analyticsClient.openedChat()}
-                        on:click={toggleChat}
-                        class="bottom-action-button tw-relative"
-                    >
-                        {#if !isMobile}
-                            <Tooltip text={$LL.actionbar.chat()} />
-                        {/if}
-
-                        <button class:border-top-light={$chatVisibilityStore} class="chat-btn">
-                            <img draggable="false" src={bubbleImg} style="padding: 2px" alt="Toggle chat" />
-                        </button>
-                        {#if $chatZoneLiveStore || $peerStore.size > 0 || $chatHasUnreadMessage || $proximityChatRoomHasUnreadMessage}
-                            <div class="tw-absolute tw-top-1 tw-right-0.5">
-                                <span
-                                    class={`tw-w-4 tw-h-4 ${
-                                        $peerStore.size > 0 ? "tw-bg-pop-green" : "tw-bg-pop-red"
-                                    } tw-block tw-rounded-full tw-absolute tw-top-0 tw-right-0 tw-animate-ping`}
-                                />
-                                <span
-                                    class={`tw-w-3 tw-h-3 ${
-                                        $peerStore.size > 0 ? "tw-bg-pop-green" : "tw-bg-pop-red"
-                                    } tw-block tw-rounded-full tw-absolute tw-top-0.5 tw-right-0.5`}
-                                />
-                            </div>
-                        {:else if $totalMessagesToSee > 0}
+                    <button class:border-top-light={$chatVisibilityStore} class="chat-btn">
+                        <img draggable="false" src={bubbleImg} style="padding: 2px" alt="Toggle chat" />
+                    </button>
+                    {#if $chatZoneLiveStore || $peerStore.size > 0 || $chatHasUnreadMessage || $proximityChatRoomHasUnreadMessage}
+                        <div class="tw-absolute tw-top-1 tw-right-0.5">
                             <span
-                                class="tw-absolute tw-top-1.5 tw-right-1 tw-items-center tw-justify-center tw-px-1 tw-py-0.5 tw-text-xxs tw-font-bold tw-leading-none tw-text-white tw-bg-pop-red tw-rounded-full"
-                            >
-                                {$totalMessagesToSee}
-                            </span>
-                        {/if}
-                    </div>
-                {/if}
-
+                                class={`tw-w-4 tw-h-4 ${
+                                    $peerStore.size > 0 ? "tw-bg-pop-green" : "tw-bg-pop-red"
+                                } tw-block tw-rounded-full tw-absolute tw-top-0 tw-right-0 tw-animate-ping`}
+                            />
+                            <span
+                                class={`tw-w-3 tw-h-3 ${
+                                    $peerStore.size > 0 ? "tw-bg-pop-green" : "tw-bg-pop-red"
+                                } tw-block tw-rounded-full tw-absolute tw-top-0.5 tw-right-0.5`}
+                            />
+                        </div>
+                    {:else if $totalMessagesToSee > 0}
+                        <span
+                            class="tw-absolute tw-top-1.5 tw-right-1 tw-items-center tw-justify-center tw-px-1 tw-py-0.5 tw-text-xxs tw-font-bold tw-leading-none tw-text-white tw-bg-pop-red tw-rounded-full"
+                        >
+                            {$totalMessagesToSee}
+                        </span>
+                    {/if}
+                </div>
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div on:click|stopPropagation={toggleEmojiPicker} class="bottom-action-button">
                     {#if !isMobile}
@@ -1208,56 +1205,70 @@
                 {/if}
 
                 <!-- Calendar integration -->
-                {#if $isCalendarActivatedStore}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div
-                        on:dragstart|preventDefault={noDrag}
-                        on:click={() => analyticsClient.openExternalModuleCalendar()}
-                        on:click={openExternalModuleCalendar}
-                        class="bottom-action-button"
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <div
+                    on:dragstart|preventDefault={noDrag}
+                    on:click={() => analyticsClient.openExternalModuleCalendar()}
+                    on:click={openExternalModuleCalendar}
+                    class="bottom-action-button"
+                >
+                    {#if !isMobile}
+                        <Tooltip
+                            text={$isCalendarActivatedStore
+                                ? $LL.actionbar.calendar()
+                                : $LL.actionbar.featureNotAvailable()}
+                        />
+                    {/if}
+                    <button
+                        id="calendarIcon"
+                        class:border-top-light={$isCalendarVisibleStore}
+                        class:!tw-cursor-not-allowed={!$isCalendarActivatedStore}
+                        class:!no-pointer-events={!$isCalendarActivatedStore}
+                        disabled={!$isCalendarActivatedStore}
                     >
-                        {#if !isMobile}
-                            <Tooltip text={$LL.actionbar.calendar()} />
-                        {/if}
-                        <button id="calendarIcon" class:border-top-light={$isCalendarVisibleStore}>
-                            <img
-                                draggable="false"
-                                src={calendarSvg}
-                                style="padding: 2px"
-                                alt={$LL.menu.icon.open.calendar()}
-                            />
-                            <!-- Current day dislayed only work with the image ../images/calendar.svg -->
-                            <!---<span
-                                class="tw-absolute tw-top-5 tw-text-white tw-rounded-full tw-px-1 tw-py-0.5 tw-text-xxs tw-font-bold tw-leading-none"
-                            >
-                                {new Date().getDate()}
-                            </span>-->
-                        </button>
-                    </div>
-                {/if}
+                        <img
+                            draggable="false"
+                            src={calendarSvg}
+                            style="padding: 2px"
+                            alt={$LL.menu.icon.open.calendar()}
+                            class:disable-opacity={!$isCalendarActivatedStore}
+                            class:!tw-cursor-not-allowed={!$isCalendarActivatedStore}
+                        />
+                    </button>
+                </div>
 
                 <!-- Todo List Integration -->
-                {#if $isTodoListActivatedStore}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div
-                        on:dragstart|preventDefault={noDrag}
-                        on:click={() => analyticsClient.openExternalModuleTodoList()}
-                        on:click={openExternalModuleTodoList}
-                        class="bottom-action-button"
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <div
+                    on:dragstart|preventDefault={noDrag}
+                    on:click={() => analyticsClient.openExternalModuleTodoList()}
+                    on:click={openExternalModuleTodoList}
+                    class="bottom-action-button"
+                >
+                    {#if !isMobile}
+                        <Tooltip
+                            text={$isTodoListActivatedStore
+                                ? $LL.actionbar.todoList()
+                                : $LL.actionbar.featureNotAvailable()}
+                        />
+                    {/if}
+                    <button
+                        id="todoListIcon"
+                        class:border-top-light={$isTodoListVisibleStore}
+                        class:!tw-cursor-not-allowed={!$isTodoListActivatedStore}
+                        class:!no-pointer-events={!$isTodoListActivatedStore}
+                        disabled={!$isTodoListActivatedStore}
                     >
-                        {#if !isMobile}
-                            <Tooltip text={$LL.actionbar.todoList()} />
-                        {/if}
-                        <button id="todoListIcon" class:border-top-light={$isTodoListVisibleStore}>
-                            <img
-                                draggable="false"
-                                src={todoListSvg}
-                                style="padding: 2px"
-                                alt={$LL.menu.icon.open.todoList()}
-                            />
-                        </button>
-                    </div>
-                {/if}
+                        <img
+                            draggable="false"
+                            src={todoListSvg}
+                            style="padding: 2px"
+                            alt={$LL.menu.icon.open.todoList()}
+                            class:disable-opacity={!$isTodoListActivatedStore}
+                            class:!tw-cursor-not-allowed={!$isTodoListActivatedStore}
+                        />
+                    </button>
+                </div>
             </div>
 
             <div class="bottom-action-section tw-flex animate">

@@ -764,7 +764,7 @@ class ConnectionManager {
         }
     }
 
-    async saveCompanionTexture(texture: string): Promise<void> {
+    async saveCompanionTexture(texture: string | null): Promise<void> {
         if (hasCapability("api/save-textures") && this.authToken !== undefined) {
             await axiosToPusher.post(
                 "save-companion-texture",

@@ -5,6 +5,7 @@
     import { mapEditorModeStore } from "../Stores/MapEditorStore";
     import { chatVisibilityStore, INITIAL_SIDEBAR_WIDTH } from "../Stores/ChatStore";
     import Chat from "./Components/Chat.svelte";
+    import { IconX } from "@wa-icons";
 
     export const chatSidebarWidthStore = writable(INITIAL_SIDEBAR_WIDTH);
     let container: HTMLElement;
@@ -95,12 +96,21 @@
         data-testid="chat"
         transition:fly={{ duration: 200, x: -sideBarWidth }}
         style="width: {sideBarWidth}px; max-width: {Math.min(sideBarWidth, document.documentElement.clientWidth)}px;"
-        class="chatWindow !tw-min-w-full sm:!tw-min-w-[360px] tw-bg-contrast/95 tw-backdrop-blur-md tw-p-4 tw-overflow-y-scroll "
+        class="chatWindow !tw-min-w-full sm:!tw-min-w-[360px] tw-bg-contrast/80 tw-backdrop-blur-md tw-p-0"
     >
-        <Chat {sideBarWidth} on:close={closeChat} />
+        <div class="close-window tw-absolute -tw-right-[4.5rem] tw-top-2 tw-p-2 tw-bg-contrast/80 tw-rounded-2xl">
+            <button
+                class="tw-p-3 hover:tw-bg-white/10 tw-rounded-xl tw-aspect-square tw-w-12 tw-m-0"
+                data-testid="closeChatButton"
+                on:click={closeChat}
+            >
+                <IconX font-size="20" />
+            </button>
+        </div>
+        <Chat {sideBarWidth} />
 
         <div
-            class="!tw-absolute !tw-right-1 !tw-top-0 !tw-bottom-0 !tw-m-auto !tw-w-1.5 !tw-h-32 !tw-bg-white !tw-rounded !tw-cursor-col-resize"
+            class="!tw-absolute !tw-right-1 !tw-top-0 !tw-bottom-0 !tw-m-auto !tw-w-1 !tw-h-32 !tw-bg-white !tw-rounded !tw-cursor-col-resize"
             id="resize-bar"
             on:mousedown={handleMousedown}
             on:dblclick={handleDbClick}
@@ -108,3 +118,29 @@
         />
     </section>
 {/if}
+
+<style lang="scss">
+    @import "../style/breakpoints.scss";
+
+    @include media-breakpoint-up(sm) {
+        .chatWindow {
+            width: 100% !important;
+        }
+    }
+
+    .chatWindow {
+        color: white;
+        position: absolute !important;
+        top: 0;
+        min-width: 335px !important;
+        width: 335px;
+        pointer-events: auto;
+        max-width: calc(100vw - 82px) !important;
+        height: 100dvh !important;
+        z-index: 2000;
+        .close-window {
+            cursor: pointer;
+            align-self: end;
+        }
+    }
+</style>

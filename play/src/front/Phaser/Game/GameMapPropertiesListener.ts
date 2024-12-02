@@ -370,7 +370,7 @@ export class GameMapPropertiesListener {
 
         // Muc zone
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.CHAT_NAME, (newValue, oldValue, allProps) => {
-            if (!this.scene.room.enableChat) {
+            if (!this.scene.room.isChatEnabled) {
                 return;
             }
 
