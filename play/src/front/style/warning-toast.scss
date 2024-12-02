@@ -1,5 +1,5 @@
 .warning-toast {
-  @apply tw-rounded tw-px-2 tw-py-1 tw-z-10;
+  @apply rounded px-2 py-1 z-10;
   position: absolute;
   top: 1%;
   max-height: clamp(150px, 10vh, 15vh); /*replace @media for small screen*/
@@ -15,9 +15,9 @@
 
 
   /* TODO : delete after systemUI import */
-  border-color: rgb(77 75 103 / var(--tw-border-opacity));
+  border-color: rgb(77 75 103 / var(--border-opacity));
   background-color: rgb(39 39 54 / 0.8);
-  --tw-backdrop-blur: blur(4px);
-  -webkit-backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);
-  backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);
+  --backdrop-blur: blur(4px);
+  -webkit-backdrop-filter: var(--backdrop-blur) var(--backdrop-brightness) var(--backdrop-contrast) var(--backdrop-grayscale) var(--backdrop-hue-rotate) var(--backdrop-invert) var(--backdrop-opacity) var(--backdrop-saturate) var(--backdrop-sepia);
+  backdrop-filter: var(--backdrop-blur) var(--backdrop-brightness) var(--backdrop-contrast) var(--backdrop-grayscale) var(--backdrop-hue-rotate) var(--backdrop-invert) var(--backdrop-opacity) var(--backdrop-saturate) var(--backdrop-sepia);
 }

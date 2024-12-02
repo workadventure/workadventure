@@ -40,9 +40,9 @@
         dispatch("close");
     }}
 >
-    <span slot="header" class="tw-flex tw-justify-center tw-items-center">
+    <span slot="header" class="flex justify-center items-center">
         <img
-            class="tw-w-6 tw-mr-1"
+            class="w-6 mr-1"
             src="resources/icons/icon_listener.png"
             alt={$LL.mapEditor.properties.listenerMegaphoneProperties.description()}
         />
@@ -53,7 +53,7 @@
             <label for="speakerZoneSelector">{$LL.mapEditor.properties.listenerMegaphoneProperties.nameLabel()}</label>
             <select
                 id="speakerZoneSelector"
-                class="tw-w-full"
+                class="w-full"
                 bind:value={property.speakerZoneName}
                 on:change={onValueChange}
             >

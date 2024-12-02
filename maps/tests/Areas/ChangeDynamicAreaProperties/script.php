@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
     <script src="<?php echo $_SERVER["FRONT_URL"] ?>/iframe_api.js"></script>
     <script>
@@ -20,14 +21,14 @@
                 const onAreaLeaveField = document.getElementById('onAreaLeave');
 
                 const area = WA.room.area.create({
-                        name: 'Center',
-                        x: 224,
-                        y: 256,
-                        width: 514,
-                        height: 292,
-                    });
+                    name: 'Center',
+                    x: 224,
+                    y: 256,
+                    width: 514,
+                    height: 292,
+                });
 
-                    area.setProperty('focusable', true);
+                area.setProperty('focusable', true);
 
                 WA.room.area.onEnter('Center').subscribe(() => {
                     console.log(onAreaEnterField.value || 'default area enter message');
@@ -49,17 +50,19 @@
         })
     </script>
 </head>
-<body style="color: #ffffff">
-focusable: <input type="checkbox" id="focusable" value=1 checked /><br/>
-zoom_margin: <input type="text" id="zoom_margin" value=0 /><br/>
-silent: <input type="checkbox" id="silent" value=0 /><br/>
-openWebsite: <input type="text" id="openWebiste" value="https://workadventu.re/" /><br/>
-jitsiRoom: <input type="text" id="jitsiRoom" value="Meeting Room" /><br/>
-jitsiTrigger: <input type="text" id="jitsiTrigger" value="onaction" /><br/>
-onAreaEnterLog: <input type="text" id="onAreaEnter" value="Area entered" /><br/>
-onAreaLeaveLog: <input type="text" id="onAreaLeave" value="Area left" /><br/>
 
-<button id="updateButton">Update</button>
+<body style="color: #ffffff">
+    focusable: <input type="checkbox" id="focusable" value=1 checked /><br />
+    zoom_margin: <input type="text" id="zoom_margin" value=0 /><br />
+    silent: <input type="checkbox" id="silent" value=0 /><br />
+    openWebsite: <input type="text" id="openWebiste" value="https://workadventu.re/" /><br />
+    jitsiRoom: <input type="text" id="jitsiRoom" value="Meeting Room" /><br />
+    jitsiTrigger: <input type="text" id="jitsiTrigger" value="onaction" /><br />
+    onAreaEnterLog: <input type="text" id="onAreaEnter" value="Area entered" /><br />
+    onAreaLeaveLog: <input type="text" id="onAreaLeave" value="Area left" /><br />
+
+    <button id="updateButton">Update</button>
 
 </body>
+
 </html>

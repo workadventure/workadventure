@@ -1,5 +1,7 @@
 import { get, writable } from "svelte/store";
+import PopUpSound from "../Components/PopUp/PopUpSound.svelte";
 import { peerStore } from "./PeerStore";
+import { popupStore } from "./PopupStore";
 
 export interface audioManagerVolume {
     muted: boolean;
@@ -90,9 +92,15 @@ function createAudioManagerFileStore() {
 }
 
 export const audioManagerVisibilityStore = writable(false);
+export const AudioManagerStorePopup = audioManagerVisibilityStore.subscribe((audioVisibility) => {
+    if (audioVisibility === true) {
+        popupStore.addPopup(PopUpSound, {}, "popupsound");
+    } else {
+        popupStore.removePopup("popupsound");
+    }
+});
 
 export const audioManagerVolumeStore = createAudioManagerVolumeStore();
-
 export const audioManagerFileStore = createAudioManagerFileStore();
 
 // Not unsubscribing is ok, this is a singleton.

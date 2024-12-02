@@ -114,24 +114,24 @@
 </script>
 
 <PropertyEditorBase on:close={onRemoveProperty}>
-    <span slot="header" class="tw-flex tw-justify-center tw-items-center">
+    <span slot="header" class="flex justify-center items-center">
         {$LL.mapEditor.properties.personalAreaConfiguration.label()}
     </span>
     <span slot="content">
         {#if personalAreaPropertyData !== undefined}
-            <div class="tw-overflow-y-auto tw-overflow-x-hidden tw-flex tw-flex-col tw-gap-2">
+            <div class="overflow-y-auto overflow-x-hidden flex flex-col gap-2">
                 <p class="help-text">
                     <IconInfoCircle font-size="18" />
                     {$LL.mapEditor.properties.personalAreaConfiguration.description()}
                 </p>
                 {#if personalAreaOwner}
-                    <div class="tw-flex tw-flex-col">
+                    <div class="flex flex-col">
                         <label for="ownerInput">{$LL.mapEditor.properties.personalAreaConfiguration.owner()}</label>
-                        <p class="tw-m-0 tw-text-blue-500">
+                        <p class="m-0 text-blue-500">
                             {personalAreaOwner}
                         </p>
                         <button
-                            class="tw-self-center tw-text-red-500"
+                            class="self-center text-red-500"
                             data-testid="revokeAccessButton"
                             on:click={revokeOwner}
                         >
@@ -140,14 +140,14 @@
                     </div>
                 {:else}
                     <div>
-                        <p class="tw-p-0">
+                        <p class="p-0">
                             {$LL.mapEditor.properties.personalAreaConfiguration.accessClaimMode()}
                         </p>
                         <select
                             data-testid="accessClaimMode"
                             bind:value={personalAreaPropertyData.accessClaimMode}
                             on:change={onClaimModeChange}
-                            class="tw-p-1 tw-rounded-md tw-bg-dark-purple !tw-border-solid !tw-border !tw-border-gray-400 tw-text-white tw-min-w-full"
+                            class="p-1 rounded-md bg-dark-purple !border-solid !border !border-gray-400 text-white min-w-full"
                         >
                             {#each PersonalAreaAccessClaimMode.options as claimMode (claimMode)}
                                 <option value={claimMode}

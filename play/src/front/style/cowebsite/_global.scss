@@ -1,5 +1,5 @@
 #cowebsite {
-    @apply tw-bg-dark-blue/80;
+    @apply bg-dark-blue/50 backdrop-blur;
     position: fixed;
     z-index: 820;
     transition: transform 0.5s;
@@ -19,20 +19,22 @@
     }
 
     aside {
-        @apply tw-bg-dark-blue;
         align-items: center;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
 
         #cowebsite-aside-holder {
-            @apply tw-bg-dark-blue;
             height: 20px;
             flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
             width: 100%;
+            padding: 16px 0;
+            &:hover {
+                @apply bg-contrast/80;
+            }
 
             img {
                 width: 80%;
@@ -48,7 +50,7 @@
             justify-content: flex-start;
 
             img {
-                @apply tw-h-9 tw-w-9;
+                @apply h-9 w-9;
             }
 
             #cowebsite-swipe {
@@ -60,7 +62,7 @@
         }
 
         .top-right-btn {
-            @apply tw-w-11 tw-h-11 tw-justify-center tw-content-center;
+            @apply w-11 h-11 justify-center content-center;
             transform: scale(0.5);
             cursor: pointer;
         }

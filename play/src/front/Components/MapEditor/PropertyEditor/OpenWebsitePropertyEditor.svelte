@@ -617,82 +617,82 @@
     }}
     on:keypress={onKeyPressed}
 >
-    <span slot="header" class="tw-flex tw-justify-center tw-items-center">
+    <span slot="header" class="flex justify-center items-center">
         {#if property.application === "youtube"}
             <img
-                class="tw-w-6 tw-mr-1"
+                class="w-6 mr-1"
                 src={youtubeSvg}
                 alt={$LL.mapEditor.properties.youtubeProperties.description()}
             />
             {$LL.mapEditor.properties.youtubeProperties.label()}
         {:else if property.application === "klaxoon"}
             <img
-                class="tw-w-6 tw-mr-1"
+                class="w-6 mr-1"
                 src={klaxoonSvg}
                 alt={$LL.mapEditor.properties.klaxoonProperties.description()}
             />
             {$LL.mapEditor.properties.klaxoonProperties.label()}
         {:else if property.application === "googleDocs"}
             <img
-                class="tw-w-6 tw-mr-1"
+                class="w-6 mr-1"
                 src={googleDocsSvg}
                 alt={$LL.mapEditor.properties.googleDocsProperties.description()}
             />
             {$LL.mapEditor.properties.googleDocsProperties.label()}
         {:else if property.application === "googleSheets"}
             <img
-                class="tw-w-6 tw-mr-1"
+                class="w-6 mr-1"
                 src={googleSheetsSvg}
                 alt={$LL.mapEditor.properties.googleSheetsProperties.description()}
             />
             {$LL.mapEditor.properties.googleSheetsProperties.label()}
         {:else if property.application === "googleSlides"}
             <img
-                class="tw-w-6 tw-mr-1"
+                class="w-6 mr-1"
                 src={googleSlidesSvg}
                 alt={$LL.mapEditor.properties.googleSlidesProperties.description()}
             />
             {$LL.mapEditor.properties.googleSlidesProperties.label()}
         {:else if property.application === "googleDrive"}
             <img
-                class="tw-w-6 tw-mr-1"
+                class="w-6 mr-1"
                 src={googleDriveSvg}
                 alt={$LL.mapEditor.properties.googleDriveProperties.description()}
             />
             {$LL.mapEditor.properties.googleDriveProperties.label()}
         {:else if property.application === "eraser"}
-            <img class="tw-w-6 tw-mr-1" src={eraserSvg} alt={$LL.mapEditor.properties.eraserProperties.description()} />
+            <img class="w-6 mr-1" src={eraserSvg} alt={$LL.mapEditor.properties.eraserProperties.description()} />
             {$LL.mapEditor.properties.eraserProperties.label()}
         {:else if property.application === "excalidraw"}
             <img
-                class="tw-w-6 tw-mr-1"
+                class="w-6 mr-1"
                 src={excalidrawSvg}
                 alt={$LL.mapEditor.properties.excalidrawProperties.description()}
             />
             {$LL.mapEditor.properties.excalidrawProperties.label()}
         {:else if property.application === "cards"}
-            <img class="tw-w-6 tw-mr-1" src={cardPng} alt={$LL.mapEditor.properties.cardsProperties.description()} />
+            <img class="w-6 mr-1" src={cardPng} alt={$LL.mapEditor.properties.cardsProperties.description()} />
             {$LL.mapEditor.properties.cardsProperties.label()}
         {:else if property.application === "website"}
-            <img class="tw-w-6 tw-mr-1" src={icon} alt={$LL.mapEditor.properties.linkProperties.description()} />
+            <img class="w-6 mr-1" src={icon} alt={$LL.mapEditor.properties.linkProperties.description()} />
             {$LL.mapEditor.properties.linkProperties.label()}
         {:else}
-            <img class="tw-w-6 tw-mr-1" src={property.icon} alt={property.label} />
+            <img class="w-6 mr-1" src={property.icon} alt={property.label} />
             {property.label}
         {/if}
     </span>
     <span slot="content">
         {#if property.poster}
-            <div class="tw-text-center">
-                <img class="tw-w-20 tw-mr-1" src={property.poster} alt="" />
+            <div class="text-center">
+                <img class="w-20 mr-1" src={property.poster} alt="" />
             </div>
         {/if}
         {#if isArea}
             <div>
-                <label class="tw-m-0" for="trigger">{$LL.mapEditor.properties.linkProperties.trigger()}</label>
+                <label class="m-0" for="trigger">{$LL.mapEditor.properties.linkProperties.trigger()}</label>
                 <select
                     id="trigger"
-                    class="tw-w-full tw-m-0"
+                    class="w-full m-0"
                     bind:value={property.trigger}
                     on:change={onTriggerValueChange}
                 >
@@ -705,9 +705,9 @@
                 </select>
             </div>
         {/if}
-        <div class="value-input tw-flex tw-flex-col">
+        <div class="value-input flex flex-col">
             <label for="tabLink">{$LL.mapEditor.properties.linkProperties.linkLabel()}</label>
-            <div class="tw-flex tw-flex-row">
+            <div class="flex flex-row">
                 <input
                     id="tabLink"
                     type="url"
@@ -721,9 +721,9 @@
                     disabled={embeddableLoading}
                 />
                 {#if property.application === "googleDocs" || property.application === "googleSheets" || property.application === "googleSlides" || property.application === "klaxoon" || property.application === "googleDrive"}
-                    <div class="tw-flex tw-flex-row tw-items-center tw-justify-center">
+                    <div class="flex flex-row items-center justify-center">
                         <img
-                            class="tw-w-6 tw-ml-4 tw-items-center tw-cursor-pointer"
+                            class="w-6 ml-4 items-center cursor-pointer"
                             src={pickerSvg}
                             alt={$LL.mapEditor.properties.linkProperties.openPickerSelector()}
                             on:keydown
@@ -737,9 +737,9 @@
                         />
                     </div>
                 {:else if property.application === "cards" || property.application === "eraser" || property.application === "excalidraw"}
-                    <div class="tw-flex tw-flex-row tw-items-center tw-justify-center">
+                    <div class="flex flex-row items-center justify-center">
                         <img
-                            class="tw-w-6 tw-ml-4 tw-items-center tw-cursor-pointer"
+                            class="w-6 ml-4 items-center cursor-pointer"
                             src={pickerSvg}
                             alt={`${$LL.mapEditor.properties.linkProperties.openApplication()} ${property.application}`}
                             on:keydown
@@ -757,13 +757,13 @@
                 {/if}
             </div>
             {#if error !== ""}
-                <span class="err tw-text-danger-900 tw-text-xs tw-italic tw-mt-1">{error}</span>
+                <span class="err text-danger-900 text-xs italic mt-1">{error}</span>
             {/if}
             {#if warning !== ""}
-                <span class="err tw-text-warning-900 tw-text-xs tw-italic tw-mt-1">{warning}</span>
+                <span class="err text-warning-900 text-xs italic mt-1">{warning}</span>
             {/if}
             {#if !embeddable && error === ""}
-                <span class="err tw-text-warning-900 tw-text-xs tw-italic tw-mt-1"
+                <span class="err text-warning-900 text-xs italic mt-1"
                     ><IconAlertTriangle font-size="12" />
                     {$LL.mapEditor.properties.linkProperties.messageNotEmbeddableLink()}.
                     <a
@@ -774,7 +774,7 @@
             {/if}
         </div>
         {#if !property.hideButtonLabel}
-            <div class="value-input tw-flex tw-flex-col">
+            <div class="value-input flex flex-col">
                 <label for="linkButton">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
                 <input id="linkButton" type="text" bind:value={property.buttonLabel} on:change={onValueChange} />
             </div>
@@ -783,9 +783,9 @@
             <label for="advancedOption">{$LL.mapEditor.properties.advancedOptions()}</label>
             <input id="advancedOption" type="checkbox" class="input-switch" bind:checked={optionAdvancedActivated} />
         </div>
-        <div class:active={optionAdvancedActivated} class="advanced-option tw-px-2">
+        <div class:active={optionAdvancedActivated} class="advanced-option px-2">
             {#if (isArea && triggerOptionActivated && triggerOnActionChoosen) || !isArea}
-                <div class="value-input tw-flex tw-flex-col">
+                <div class="value-input flex flex-col">
                     <label for="triggerMessage">{$LL.mapEditor.properties.linkProperties.triggerMessage()}</label>
                     <input
                         id="triggerMessage"
@@ -808,16 +808,16 @@
                 />
             </div>
             {#if property.forceNewTab == true}
-                <div class="tw-mb-3">
-                    <span class="err tw-text-warning-900 tw-text-xs tw-italic">
+                <div class="mb-3">
+                    <span class="err text-warning-900 text-xs italic">
                         <IconAlertTriangle font-size="12" />
                         {$LL.mapEditor.properties.linkProperties.forcedInNewTab()}
                     </span>
                 </div>
             {/if}
             {#if !embeddable && !property.newTab}
-                <div class="tw-mb-3">
-                    <span class="err tw-text-warning-900 tw-text-xs tw-italic"
+                <div class="mb-3">
+                    <span class="err text-warning-900 text-xs italic"
                         ><IconAlertTriangle font-size="12" />
                         {$LL.mapEditor.properties.linkProperties.warningEmbeddableLink()}.
                         <a
@@ -863,7 +863,7 @@
                     />
                 </div>
                 {#if policy != undefined}
-                    <div class="value-input tw-flex tw-flex-col">
+                    <div class="value-input flex flex-col">
                         <InputTags
                             label={$LL.mapEditor.properties.linkProperties.policy()}
                             options={policyOption}

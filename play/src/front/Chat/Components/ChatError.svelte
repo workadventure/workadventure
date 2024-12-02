@@ -5,7 +5,7 @@
 </script>
 
 <div class="">
-    <div class="tw-text-white tw-bg-danger tw-font-bold tw-flex tw-items-center tw-px-3 tw-py-2 tw-space-x-3">
+    <div class="text-white bg-danger font-bold flex items-center px-3 py-2 space-x-3">
         <IconExclamation font-size="20" />
         <div>{label}</div>
     </div>

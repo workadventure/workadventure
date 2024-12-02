@@ -45,7 +45,7 @@
     {/if}
     <input
         id="upload"
-        class="tw-hidden"
+        class="hidden"
         disabled={isProximityChatRoom}
         type="file"
         multiple
@@ -56,14 +56,14 @@
     />
     <label
         for="upload"
-        class="tw-p-0 tw-m-0 tw-h-11 tw-w-11 tw-flex tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-none"
+        class="p-0 m-0 h-11 w-11 flex items-center justify-center hover:bg-white/10 rounded-none"
     >
         {#if files !== undefined}
-            <IconLoader class="tw-animate-spin" font-size={18} />
+            <IconLoader class="animate-spin" font-size={18} />
         {:else}
             <IconPaperclip
-                class="hover:!tw-cursor-pointer {room instanceof ProximityChatRoom
-                    ? 'tw-opacity-30 !tw-cursor-none'
+                class="hover:!cursor-pointer {room instanceof ProximityChatRoom
+                    ? 'opacity-30 !cursor-none'
                     : ''}"
                 font-size={18}
             />

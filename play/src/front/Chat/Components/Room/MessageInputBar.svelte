@@ -157,36 +157,33 @@
 </script>
 
 {#if $selectedChatMessageToReply !== null}
-    <div class="tw-flex tw-py-2 tw-px-3 tw-items-center tw-gap-2 tw-relative tw-bg-contrast/50 tw-absolute">
-        <p
-            class="tw-bg-contrast-800 tw-rounded-md tw-p-2 tw-text-sm tw-m-0 tw-truncate tw-w-full "
-            style:overflow-wrap="anywhere"
-        >
+    <div class="flex py-2 px-3 items-center gap-2 relative bg-contrast/50 absolute">
+        <p class="bg-contrast-800 rounded p-2 text-sm m-0 truncate w-full " style:overflow-wrap="anywhere">
             {$quotedMessageContent?.body}
         </p>
-        <button class="tw-p-0 tw-m-0" on:click={unselectChatMessageToReply}>
+        <button class="p-0 m-0" on:click={unselectChatMessageToReply}>
             <IconCircleX />
         </button>
     </div>
 {/if}
 
 {#if files.length > 0 && !(room instanceof ProximityChatRoom)}
-    <div class="tw-w-full tw-pt-2 !tw-bg-blue-300/10 tw-rounded-xl">
-        <div class="tw-flex tw-p-2  tw-gap-2 tw-w-full tw-overflow-x-scroll tw-overflow-y-hidden tw-rounded-lg ">
+    <div class="w-full pt-2 !bg-blue-300/10 rounded-md">
+        <div class="flex p-2  gap-2 w-full overflow-x-scroll overflow-y-hidden rounded-md ">
             {#each filesPreview as preview (preview.id)}
                 <div
-                    class="tw-relative tw-content-center tw-h-[15rem] tw-w-[15rem]  tw-min-h-[15rem] tw-min-w-[15rem] tw-overflow-hidden tw-rounded-xl tw-backdrop-opacity-10"
+                    class="relative content-center h-[15rem] w-[15rem]  min-h-[15rem] min-w-[15rem] overflow-hidden rounded-md backdrop-opacity-10"
                 >
-                    <button class="tw-absolute tw-right-1 tw-top-1 !tw-pr-0" on:click={() => deleteFile(preview.id)}>
-                        <IconCircleX class="hover:tw-cursor-pointer hover:tw-opacity-10" font-size="24" />
+                    <button class="absolute right-1 top-1 !pr-0" on:click={() => deleteFile(preview.id)}>
+                        <IconCircleX class="hover:cursor-pointer hover:opacity-10" font-size="24" />
                     </button>
                     {#if preview.type.includes("image") && typeof preview.url === "string"}
-                        <img class="tw-w-full tw-h-full" src={preview.url} alt={preview.name} />
+                        <img class="w-full h-full" src={preview.url} alt={preview.name} />
                     {:else}
-                        <div class="tw-text-center">
+                        <div class="text-center">
                             {preview.name}
                         </div>
-                        <div class="tw-absolute tw-bottom-0 tw-left-0">
+                        <div class="absolute bottom-0 left-0">
                             {formatBytes(preview.size)}
                         </div>
                     {/if}
@@ -196,7 +193,7 @@
     </div>
 {/if}
 <div
-    class="tw-flex tw-w-full tw-flex-none tw-items-center tw-border tw-border-solid tw-border-b-0 tw-border-x-0 tw-border-t-1 tw-border-white/10 tw-bg-contrast/50"
+    class="flex w-full flex-none items-center border border-solid border-b-0 border-x-0 border-t-1 border-white/10 bg-contrast/50"
 >
     <MessageInput
         onKeyDown={sendMessageOrEscapeLine}
@@ -206,13 +203,13 @@
         {focusout}
         bind:message
         bind:messageInput
-        inputClass="message-input tw-flex-grow !tw-m-0 tw-px-5 tw-py-2.5 tw-max-h-36 tw-overflow-auto  tw-h-full tw-rounded-xl wa-searchbar tw-block tw-text-white placeholder:tw-text-base tw-border-light-purple tw-border !tw-bg-transparent tw-resize-none tw-border-none tw-outline-none tw-shadow-none focus:tw-ring-0"
+        inputClass="message-input flex-grow !m-0 px-5 py-2.5 max-h-36 overflow-auto  h-full rounded-md wa-searchbar block text-white placeholder:text-base border-light-purple border !bg-transparent resize-none border-none outline-none shadow-none focus:ring-0"
         dataText={$LL.chat.enter()}
         dataTestid="messageInput"
     />
     {#if message.trim().length === 0}
         <button
-            class="disabled:tw-opacity-30 disabled:!tw-cursor-none tw-p-0 tw-m-0 tw-h-11 tw-w-11 tw-flex tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-none"
+            class="disabled:opacity-30 disabled:!cursor-none p-0 m-0 h-11 w-11 flex items-center justify-center hover:bg-white/10 rounded-none"
             bind:this={emojiButtonRef}
             on:click={openCloseEmojiPicker}
         >
@@ -225,7 +222,7 @@
     {:else}
         <button
             data-testid="sendMessageButton"
-            class="disabled:tw-opacity-30 disabled:!tw-cursor-none disabled:tw-text-white tw-py-0 tw-px-3 tw-m-0 tw-bg-secondary tw-h-full tw-rounded-none"
+            class="disabled:opacity-30 disabled:!cursor-none disabled:text-white py-0 px-3 m-0 bg-secondary h-full rounded-none"
             disabled={message.trim().length === 0 && files.length === 0}
             on:click={() => sendMessage(message)}
         >

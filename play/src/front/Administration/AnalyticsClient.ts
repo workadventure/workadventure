@@ -469,6 +469,14 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
+    selectCompanion(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_companionscene_select");
+            })
+            .catch((e) => console.error(e));
+    }
+
     selectCustomWoka(): void {
         this.posthogPromise
             ?.then((posthog) => {

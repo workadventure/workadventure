@@ -4,6 +4,7 @@
     import { emoteMenuStore, emoteDataStore } from "../../Stores/EmoteStore";
     import { LL } from "../../../i18n/i18n-svelte";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
+    import { bottomActionBarVisibilityStore } from "../../Stores/BottomActionBarStore";
 
     let emojiContainer: HTMLElement;
     let picker: EmojiButton;
@@ -12,15 +13,14 @@
         picker = new EmojiButton({
             rootElement: emojiContainer,
             styleProperties: {
-                "--font": "Press Start 2P",
-                "--background-color": "#23222c",
+                "--font": "Roboto Condensed",
                 "--text-color": "#ffffff",
                 "--secondary-text-color": "#ffffff",
                 "--category-button-color": "#ffffff",
-                "--category-button-active-color": "#56eaff",
+                "--category-button-active-color": "rgb(103, 233, 123)",
             },
             position: {
-                bottom: "8rem",
+                top: "8.5rem",
             },
             emojisPerRow: isMediaBreakpointUp("md") ? 6 : 8,
             autoFocusSearch: false,
@@ -88,7 +88,7 @@
 <svelte:window on:keydown={onKeyDown} use:clickOutside />
 
 <div class="emote-menu-container">
-    <div class="emote-menu" bind:this={emojiContainer} />
+    <div class="emote-menu {$bottomActionBarVisibilityStore ? 'active-discussion' : ''}" bind:this={emojiContainer} />
 </div>
 
 <style lang="scss">

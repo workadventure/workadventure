@@ -4,7 +4,7 @@ import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('Translation', () => {
   test('can be switched to French', async ({
-    page,
+    page
   }, { project }) => {
     // Skip test for mobile device
     if(project.name === "mobilechromium") {
@@ -25,12 +25,12 @@ test.describe('Translation', () => {
           await page.click('button#burgerIcon');
       }
     }
-    await page.click('#menuIcon img:first-child');
+    await page.getByTestId('action-user').click();         // new way
     await page.click('button:has-text("Settings")');
     await page.selectOption('.languages-switcher', 'fr-FR');
 
     await page.reload();
-    
+
     if(project.name === "mobilechromium"){
       await expect(page.locator('button#burgerIcon')).toBeVisible();
       const mobileMenuVisible = await page.locator('button#burgerIcon img.tw-rotate-0').isVisible();
@@ -38,7 +38,7 @@ test.describe('Translation', () => {
           await page.click('button#burgerIcon');
       }
     }
-    await page.click('#menuIcon img:first-child');
+    await page.getByTestId('action-user').click();         // new way
     await expect(page.locator('button:has-text("Paramètres")')).toBeVisible();
   });
 });

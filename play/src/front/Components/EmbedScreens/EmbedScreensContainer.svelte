@@ -1,25 +1,20 @@
 <script lang="ts">
-    import { LayoutMode } from "../../WebRtc/LayoutManager";
-    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
-    import PresentationLayout from "./Layouts/PresentationLayout.svelte";
-    import MozaicLayout from "./Layouts/MozaicLayout.svelte";
     import "../../style/wa-theme/video-ui.scss";
+    import { focusMode, rightMode, lightMode } from "../../Stores/ActionsCamStore";
+    import PresentationLayout from "./Layouts/PresentationLayout.svelte";
 </script>
 
-<div id="embedScreensContainer">
-    {#if $embedScreenLayoutStore === LayoutMode.Presentation}
-        <PresentationLayout />
-    {:else}
-        <MozaicLayout />
-    {/if}
+<div
+    id="embedScreensContainer"
+    class="{$focusMode
+        ? `group relative h-full w-full @sm/main-layout @xl/main-layout items-center pointer-events-auto transition-all`
+        : `group relative h-full w-full @sm/main-layout @xl/main-layout items-center pointer-events-auto transition-all`}
+        {$rightMode
+        ? 'group relative h-full w-full @sm/main-layout @xl/main-layout items-center pointer-events-auto transition-all flex flex-col'
+        : 'group relative h-full w-full @sm/main-layout @xl/main-layout items-center pointer-events-auto transition-all'}
+        {$lightMode
+        ? 'group relative h-full w-full @sm/main-layout @xl/main-layout items-center pointer-events-auto transition-all'
+        : ''}"
+>
+    <PresentationLayout />
 </div>
-
-<style lang="scss">
-    #embedScreensContainer {
-        display: flex;
-        padding-top: 0;
-        padding-bottom: 0;
-        height: 100%;
-        position: relative;
-    }
-</style>

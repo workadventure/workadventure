@@ -59,6 +59,8 @@ test.describe("Map editor @oidc", () => {
         await login(page2, "test2", 5, "en-US", false);
         await oidcAdminTagLogin(page2, false);
 
+    // await page.pause();
+    // await Menu.openMenuAdmin(page);
         await Menu.openMapEditor(page);
         await MapEditor.openConfigureMyRoom(page);
         await ConfigureMyRoom.selectMegaphoneItemInCMR(page);
@@ -110,8 +112,7 @@ test.describe("Map editor @oidc", () => {
         await Menu.toggleMegaphoneButton(page);
 
         await page2.close();
-        await newBrowser.close();
-
+await newBrowser.close();
         // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
     });
 
@@ -127,6 +128,7 @@ test.describe("Map editor @oidc", () => {
 
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
+    // await expect(page.locator('canvas')).toBeVisible();
         await AreaEditor.drawArea(page, {x: 1 * 32 * 1.5, y: 5}, {x: 9 * 32 * 1.5, y: 4 * 32 * 1.5});
         await AreaEditor.addProperty(page, "Speaker zone");
         await AreaEditor.setSpeakerMegaphoneProperty(page, `${browser.browserType().name()}SpeakerZone`);
@@ -226,7 +228,7 @@ test.describe("Map editor @oidc", () => {
         await oidcAdminTagLogin(page, false);
 
         //await Menu.openMapEditor(page);
-        await page.getByRole("button", {name: "toggle-map-editor"}).click();
+        await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
         await AreaEditor.drawArea(page, {x: 13 * 32, y: 13 * 32}, {x: 15 * 32, y: 15 * 32});
         await AreaEditor.setAreaName(page, "My app zone");
@@ -261,7 +263,7 @@ test.describe("Map editor @oidc", () => {
         await oidcAdminTagLogin(page, false);
 
         //await Menu.openMapEditor(page);
-        await page.getByRole("button", {name: "toggle-map-editor"}).click();
+        await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
         await AreaEditor.drawArea(page, {x: 13 * 32, y: 13 * 32}, {x: 15 * 32, y: 15 * 32});
 
@@ -273,7 +275,7 @@ test.describe("Map editor @oidc", () => {
         await page
             .getByPlaceholder("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit")
             .first()
-            .fill("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit",{timeout: 20_000});
+            .fill("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit");
 
         // add property Google Sheets
         await AreaEditor.addProperty(page, "Open Google Sheets");
@@ -281,7 +283,7 @@ test.describe("Map editor @oidc", () => {
         await page
             .getByPlaceholder("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit")
             .first()
-            .fill("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit",{timeout: 20_000});
+            .fill("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit");
 
         // add property Google Slides
         await AreaEditor.addProperty(page, "Open Google Slides");
@@ -289,7 +291,7 @@ test.describe("Map editor @oidc", () => {
         await page
             .getByPlaceholder("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit")
             .first()
-            .fill("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit",{timeout: 20_000});
+            .fill("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit");
 
         // add property Google Slides
         await AreaEditor.addProperty(page, "Open Google Drive");
@@ -297,7 +299,7 @@ test.describe("Map editor @oidc", () => {
         await page
             .getByPlaceholder("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview")
             .first()
-            .fill("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview",{timeout: 20_000});
+            .fill("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview");
 
         await Menu.closeMapEditor(page);
 
@@ -318,7 +320,7 @@ test.describe("Map editor @oidc", () => {
         await oidcAdminTagLogin(page, false);
 
         // open map editor
-        await page.getByRole("button", {name: "toggle-map-editor"}).click();
+        await Menu.openMapEditor(page);
         await MapEditor.openEntityEditor(page);
 
         // select entity and push it into the map
@@ -382,7 +384,7 @@ test.describe("Map editor @oidc", () => {
         await oidcAdminTagLogin(page, false);
 
         // open map editor
-        await page.getByRole("button", {name: "toggle-map-editor"}).click();
+        await Menu.openMapEditor(page);
         await MapEditor.openEntityEditor(page);
 
         // select entity and push it into the map

@@ -22,6 +22,8 @@
 
     let state: "loading" | "playing" | "not_allowed" | "error" = "loading";
 
+    let currentVolume: number = localUserStore.getAudioPlayerVolume();
+
     onMount(() => {
         let volume = Math.min(localUserStore.getAudioPlayerVolume(), get(audioManagerVolumeStore).volume);
         audioManagerVolumeStore.setVolume(volume);
@@ -92,8 +94,10 @@
         if (get(audioManagerVolumeStore).muted) {
             audioPlayerVolumeIcon.classList.add("muted");
             audioPlayerVol.value = "0";
+            currentVolume = 0;
         } else {
             let volume = HTMLAudioPlayer.volume;
+            currentVolume = volume;
             audioPlayerVol.value = "" + volume;
             audioPlayerVolumeIcon.classList.remove("muted");
             if (volume == 0) {
@@ -131,19 +135,25 @@
 </script>
 
 <div
-    class="main-audio-manager"
+    class="main-audio-manager absolute bottom-4 w-[500px] left-0 right-0 m-auto rounded-lg p-4 mb-7"
     transition:fly={{ y: -200, duration: 500 }}
     class:hidden={state !== "playing" && state !== "not_allowed"}
 >
-    <div class:hidden={state !== "playing"}>
-        <div class="audio-manager-player-volume">
-            <span id="audioplayer_volume_icon_playing" bind:this={audioPlayerVolumeIcon} on:click={onMute}>
+    <div class:hidden={state !== "playing"} class="">
+        <div class="font-lg text-center text-white mb-4 opacity-50">
+            {$LL.audio.volumeCtrl()}
+        </div>
+        <div class="audio-manager-player-volume flex items-center justify-center">
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <div
+                id="audioplayer_volume_icon_playing"
+                bind:this={audioPlayerVolumeIcon}
+                on:click={onMute}
+                class="pr-4 flex items-center"
+            >
                 <svg
-                    width="2em"
-                    height="2em"
                     viewBox="0 0 19.54 18.03"
-                    class="bi bi-volume-up"
-                    fill="white"
+                    class="bi bi-volume-up h-6 w-6 fill-white"
                     xmlns="http://www.w3.org/2000/svg"
                 >
                     <path
@@ -171,7 +181,7 @@
                         />
                     </g>
                 </svg>
-            </span>
+            </div>
             <input
                 type="range"
                 min="0"
@@ -181,17 +191,19 @@
                 on:change={setVolume}
                 on:input={setVolume}
                 on:keydown={disallowKeys}
+                class="grow"
             />
+            <div class="text-white ml-4">
+                {Math.round(currentVolume * 100)}<span class="opacity-50">%</span>
+            </div>
         </div>
         <section class="audio-manager-file">
             <audio class="audio-manager-audioplayer" bind:this={HTMLAudioPlayer} />
         </section>
     </div>
-    <div class:hidden={state !== "not_allowed"} class="tw-text-center tw-flex tw-justify-center">
-        <button
-            type="button"
-            class="btn light tw-justify-center tw-font-bold tw-text-xs sm:tw-text-base tw-w-fit"
-            on:click={tryPlay}>{$LL.audio.manager.allow()}</button
+    <div class:hidden={state !== "not_allowed"} class="text-center flex justify-center">
+        <button type="button" class="btn light justify-center font-bold text-xs sm:text-base w-fit" on:click={tryPlay}
+            >{$LL.audio.manager.allow()}</button
         >
     </div>
 </div>

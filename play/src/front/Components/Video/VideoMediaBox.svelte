@@ -1,28 +1,28 @@
 <script lang="ts">
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
-    import { Color } from "@workadventure/shared-utils";
     import { onDestroy, onMount } from "svelte";
     import { Unsubscriber } from "svelte/store";
     import CancelablePromise from "cancelable-promise";
     import Debug from "debug";
-    import type { VideoPeer } from "../../WebRtc/VideoPeer";
+    import { VideoPeer } from "../../WebRtc/VideoPeer";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
-    import type { EmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import { LL } from "../../../i18n/i18n-svelte";
 
     import Woka from "../Woka/WokaFromUserId.svelte";
-    import { isMediaBreakpointOnly } from "../../Utils/BreakpointsUtils";
-    // @ts-ignore
-    import microphoneOffImg from "../images/microphone-off.png";
-    import { LayoutMode } from "../../WebRtc/LayoutManager";
-    import { selectDefaultSpeaker, speakerSelectedStore } from "../../Stores/MediaStore";
-    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
+    import { mediaStreamConstraintsStore, selectDefaultSpeaker, speakerSelectedStore } from "../../Stores/MediaStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import loaderImg from "../images/loader.svg";
+    import MicOffIcon from "../Icons/MicOffIcon.svelte";
+    import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
+    import ScreenShareIcon from "../Icons/ScreenShareIcon.svelte";
+    import { highlightFullScreen, setHeightScreenShare } from "../../Stores/ActionsCamStore";
+    import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
     import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
     import ActionMediaBox from "./ActionMediaBox.svelte";
+    import { IconArrowDown, IconArrowUp } from "@wa-icons";
 
     // Extend the HTMLVideoElement interface to add the setSinkId method.
     // See https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
@@ -31,15 +31,12 @@
         requestVideoFrameCallback(callback: VideoFrameRequestCallback, options?: IdleRequestOptions): number;
     }
 
-    export let clickable = false;
     export let isHightlighted = false;
     export let peer: VideoPeer;
 
     let streamStore = peer.streamStore;
     let volumeStore = peer.volumeStore;
     let name = peer.player.name;
-    let backGroundColor = Color.getColorByString(peer.player.name);
-    let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
     let statusStore = peer.statusStore;
     let constraintStore = peer.constraintsStore;
     let unsubscribeChangeOutput: Unsubscriber;
@@ -47,33 +44,80 @@
     let unsubscribeConstraintStore: Unsubscriber;
     let unsubscribeVolumeProximityDiscussionStore: Unsubscriber;
 
-    let embedScreen: EmbedScreen;
-    let videoContainer: HTMLDivElement;
+    let embedScreen: Streamable;
+    let cameraContainer: HTMLDivElement;
     let videoElement: HTMLVideoElementExt;
-    let minimized = isMediaBreakpointOnly("md");
     let noVideoTimeout: ReturnType<typeof setTimeout> | undefined;
-
     let destroyed = false;
     let currentDeviceId: string | undefined;
-
     let displayNoVideoWarning = false;
-
+    let showUserSubMenu = false;
     let aspectRatio = 1;
+    let isHighlighted = false;
+    let menuDrop = false;
+    let unsubscribeHighlightEmbedScreen: Unsubscriber;
+    let isMobile: boolean;
+    let fullScreen = false;
 
     const debug = Debug("VideoMediaBox");
 
-    $: videoEnabled = $constraintStore ? $constraintStore.video : false;
-
     if (peer) {
-        embedScreen = {
-            type: "streamable",
-            embed: peer as unknown as Streamable,
-        };
+        embedScreen = peer as unknown as Streamable;
     }
 
-    const resizeObserver = new ResizeObserver(() => {
-        minimized = isMediaBreakpointOnly("md");
+    function updateScreenSize() {
+        if (window.innerWidth < 768) {
+            isMobile = true;
+        } else {
+            isMobile = false;
+        }
+    }
+
+    $: isMobile, calcHeightVideo();
+    $: videoEnabled = $constraintStore ? $constraintStore.video : false;
+    $: isHighlighted = $highlightedEmbedScreen === peer;
+
+    function calcHeightVideo() {
+        if (!cameraContainer) {
+            return;
+        }
+
+        if ($highlightedEmbedScreen === peer && !$highlightFullScreen && !isMobile) {
+            if (typeof setHeightScreenShare !== "undefined") {
+                cameraContainer.style.height = `${$setHeightScreenShare}px`;
+                cameraContainer.style.width = `${document.documentElement.clientWidth}px`;
+            }
+        } else if ($highlightFullScreen && $highlightedEmbedScreen === peer && isMobile) {
+            cameraContainer.style.height = "auto";
+            cameraContainer.style.width = "100%";
+            cameraContainer.style.marginTop = "80%";
+        } else {
+            cameraContainer.style.marginTop = "0";
+            cameraContainer.style.height = "100%";
+            cameraContainer.style.width = "100%";
+        }
+    }
+
+    unsubscribeHighlightEmbedScreen = highlightedEmbedScreen.subscribe((value) => {
+        if (value) {
+            isHightlighted = true;
+        } else {
+            isHightlighted = false;
+        }
     });
+
+    $: isHighlighted = $highlightedEmbedScreen === embedScreen;
+
+    function toggleFullScreen() {
+        highlightFullScreen.update((current) => !current);
+        calcHeightVideo();
+    }
+
+    function untogglefFullScreen() {
+        highlightedEmbedScreen.removeHighlight();
+        highlightFullScreen.set(false);
+        calcHeightVideo();
+    }
 
     // TODO: check the race condition when setting sinkId is solved.
     // Also, read: https://github.com/nwjs/nw.js/issues/4340
@@ -83,8 +127,10 @@
     let sinkIdPromise = CancelablePromise.resolve();
 
     onMount(() => {
-        resizeObserver.observe(videoContainer);
-
+        window.addEventListener("resize", updateScreenSize);
+        window.addEventListener("resize", calcHeightVideo);
+        updateScreenSize();
+        calcHeightVideo();
         unsubscribeChangeOutput = speakerSelectedStore.subscribe((deviceId) => {
             if (deviceId !== undefined) {
                 setAudioOutput(deviceId);
@@ -115,7 +161,7 @@
                 }
                 return;
             });
-            updateRatio();
+            // updateRatio();
         });
 
         // Let's display a warning if the video stream never reaches the user.
@@ -149,7 +195,7 @@
             }
 
             wasVideoEnabled = constraints?.video ?? false;
-            if (!wasVideoEnabled && isHightlighted) highlightedEmbedScreen.toggleHighlight(embedScreen);
+            if (!wasVideoEnabled && isHightlighted) highlightedEmbedScreen.removeHighlight();
             updateRatio();
         });
 
@@ -171,6 +217,10 @@
             clearTimeout(noVideoTimeout);
             noVideoTimeout = undefined;
         }
+        if (unsubscribeHighlightEmbedScreen) unsubscribeHighlightEmbedScreen();
+        highlightFullScreen.set(false);
+        window.removeEventListener("resize", updateScreenSize);
+        window.removeEventListener("resize", calcHeightVideo);
     });
 
     //sets the ID of the audio device to use for output
@@ -234,11 +284,6 @@
         }, 1000);
     }
 
-    function hightlight() {
-        if (!clickable || !videoEnabled) return;
-        highlightedEmbedScreen.toggleHighlight(embedScreen);
-    }
-
     function onLoadVideoElement() {
         videoElement.volume = $volumeProximityDiscussionStore;
     }
@@ -246,153 +291,298 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
-    class="video-container"
-    class:tw-h-full={$embedScreenLayoutStore === LayoutMode.VideoChat}
-    class:video-off={!videoEnabled}
-    bind:this={videoContainer}
+    class="group/screenshare flex justify-center mx-auto aspect-video {$highlightFullScreen
+        ? 'h-[100%] w-[100%] fixed top-0 left-0'
+        : 'h-full relative w-full'}"
+    class:test-class-deux={!$mediaStreamConstraintsStore.audio}
     on:click={() => analyticsClient.pinMeetingAction()}
-    on:click={() => hightlight()}
+    bind:this={cameraContainer}
+    data-testid={!$mediaStreamConstraintsStore.audio && "test-class"}
 >
-    <ActionMediaBox {embedScreen} trackStreamWrapper={peer} {videoEnabled} />
-
     <div
-        style={videoEnabled
-            ? ""
-            : `border: solid 2px ${backGroundColor}; color: ${textColor}; background-color: ${backGroundColor}; color: ${textColor};`}
-        class="tw-flex tw-w-full"
-        class:tw-flex-col={videoEnabled}
-        class:tw-h-full={videoEnabled}
-        class:tw-items-center={!videoEnabled || $statusStore === "connecting" || $statusStore === "error"}
-        class:tw-pl-7={!videoEnabled}
-        class:tw-pr-2={!videoEnabled}
-        class:tw-rounded={!videoEnabled}
-        class:tw-flex-row={!videoEnabled}
-        class:tw-relative={!videoEnabled}
-        class:tw-justify-center={$statusStore === "connecting" || $statusStore === "error"}
+        class="z-20 rounded-lg transition-all bg-no-repeat bg-center bg-contrast/80 backdrop-blur{$mediaStreamConstraintsStore.audio
+            ? 'border-8 border-solid border-color rounded-lg'
+            : ''}"
+        style={videoEnabled ? "background-image: url(" + loaderImg + ")" : ""}
+        class:aspect-video={videoEnabled}
+        class:h-full={videoEnabled}
+        class:h-11={!videoEnabled}
+        class:flex-col={videoEnabled}
+        class:items-center={!videoEnabled || $statusStore === "connecting" || $statusStore === "error"}
+        class:px-7={!videoEnabled}
+        class:flex-row={!videoEnabled}
+        class:relative={!videoEnabled}
+        class:justify-center={$statusStore === "connecting" || $statusStore === "error"}
+        class:object-contain={isHightlighted || aspectRatio < 1}
     >
         {#if $statusStore === "connecting"}
             <div class="connecting-spinner" />
         {:else if $statusStore === "error"}
             <div class="rtc-error" />
         {/if}
+
+        {#if $statusStore === "connected"}
+            <div class="z-[251] absolute right-0 bottom-0 sm:right-auto sm:bottom-auto aspect-ratio p-4">
+                {#if $mediaStreamConstraintsStore.audio}
+                    <SoundMeterWidget
+                        volume={$volumeStore}
+                        classcss="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
+                        barColor="white"
+                    />
+                {:else}
+                    <MicOffIcon />
+                {/if}
+            </div>
+        {/if}
+
+        <div
+            class="absolute w-fit h-fit bottom-0 left-0 sm:left-4 sm:bottom-4 z-30 responsive-dimension bg-contrast/90 rounded"
+        >
+            <div
+                class="flex justify-between {$mediaStreamConstraintsStore.audio
+                    ? 'background-color bg-contrast/90 rounded'
+                    : ''} "
+            >
+                <div class="relative rounded backdrop-blur px-2 py-1 text-white text-sm pl-12 bold ">
+                    <div class="absolute left-1 -top-1 z-30" style="image-rendering:pixelated">
+                        <Woka
+                            userId={peer.userId}
+                            placeholderSrc={""}
+                            customHeight="42&& !$cameraEnergySavingStorepx"
+                            customWidth="42px"
+                        />
+                    </div>
+                    {name}
+
+                    {#if $requestedScreenSharingState === true}
+                        <ScreenShareIcon />
+                    {/if}
+                </div>
+                <div
+                    class="pt-1 h-5 w-5 flex items-center justify-center mr-1 rounded-sm hover:bg-white/20 right-0 top-0 bottom-0 m-auto transition-all pointer-events-auto {showUserSubMenu
+                        ? 'bg-white/20 hover:bg-white/30'
+                        : ''}"
+                    id="user-menu-btn"
+                    on:click={() => (showUserSubMenu = !showUserSubMenu)}
+                >
+                    <ChevronDownIcon
+                        strokeWidth="2.5"
+                        height="h-4"
+                        width="w-4"
+                        classList="aspect-ratio transition-all {showUserSubMenu ? 'rotate-180' : ''}"
+                    />
+                </div>
+
+                {#if showUserSubMenu}
+                    <ActionMediaBox {embedScreen} trackStreamWrapper={peer} {videoEnabled} />
+                {/if}
+            </div>
+        </div>
+
         <!-- svelte-ignore a11y-media-has-caption -->
         <video
             bind:this={videoElement}
             on:loadedmetadata={onLoadVideoElement}
-            class:tw-h-0={!videoEnabled}
-            class:tw-w-0={!videoEnabled}
-            class:object-contain={minimized || isHightlighted || aspectRatio < 1}
-            class:tw-max-h-[230px]={videoEnabled && !isHightlighted}
-            class:tw-max-h-full={videoEnabled && !isHightlighted && $embedScreenLayoutStore === LayoutMode.VideoChat}
-            class:tw-max-h-[80vh]={videoEnabled && isHightlighted}
-            class:tw-h-full={videoEnabled}
-            class:tw-rounded={videoEnabled}
-            style={$embedScreenLayoutStore === LayoutMode.Presentation ? `border: solid 2px ${backGroundColor}` : ""}
+            class="h-full flex w-full justify-center aspect-video"
+            class:h-0={!videoEnabled}
+            class:w-0={!videoEnabled}
+            class:object-contain={isHightlighted || aspectRatio < 1}
+            class:rounded-lg={videoEnabled}
             autoplay
             playsinline
         />
 
+        <div
+            class={isHighlighted
+                ? "w-8 h-8 bg-contrast/80 flex rounded-sm z-10 opacity-0 group-hover/screenshare:opacity-100 absolute inset-0 mx-auto"
+                : "hidden"}
+            on:click={() => (menuDrop = !menuDrop)}
+        >
+            {#if menuDrop}
+                <IconArrowUp class="w-4 h-4 m-auto flex items-center text-white" />
+            {:else}
+                <IconArrowDown class="w-4 h-4 m-auto flex items-center text-white" />
+            {/if}
+        </div>
+
         {#if videoEnabled}
             {#if displayNoVideoWarning}
                 <div
-                    class="tw-flex media-box-camera-on-size tw-absolute tw-w-full tw-h-full ntw-justify-center tw-items-center tw-bg-danger/50 tw-text-white"
+                    class="absolute w-full h-full left-0 top-0 flex justify-center items-center bg-danger/50 text-white"
                 >
-                    <div class="tw-text-center">
-                        <h1>{$LL.video.connection_issue()}</h1>
-                        <p>{$LL.video.no_video_stream_received()}</p>
+                    <div class="text-center">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="icon icon-tabler icon-tabler-camera-exclamation"
+                            width="32"
+                            height="32"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="#ffffff"
+                            fill="none"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path
+                                d="M15 20h-10a2 2 0 0 1 -2 -2v-9a2 2 0 0 1 2 -2h1a2 2 0 0 0 2 -2a1 1 0 0 1 1 -1h6a1 1 0 0 1 1 1a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v3.5"
+                            />
+                            <path d="M9 13a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" />
+                            <path d="M19 16v3" />
+                            <path d="M19 22v.01" />
+                        </svg>
+                        <div class="text-lg bold">{$LL.video.no_video_stream_received()}</div>
+                        <div class="italic text-xs opacity-50">
+                            {$LL.menu.sub.help()}
+                        </div>
                     </div>
                 </div>
             {/if}
-            <div class="nametag-webcam-container container-end media-box-camera-on-size video-on-responsive-height">
-                <i class="tw-flex">
-                    <span
-                        style="background-color: {backGroundColor}; color: {textColor};"
-                        class="nametag-text nametag-shape tw-pr-3 tw-pl-5 tw-h-4 tw-max-h-8">{name}</span
-                    >
-                </i>
-            </div>
-            <div class="woka-webcam-container container-end video-on-responsive-height tw-pb-1 tw-left-0">
-                <div
-                    class="tw-flex {($constraintStore && $constraintStore.video !== false) || minimized
-                        ? ''
-                        : 'no-video'}"
-                >
-                    <Woka userId={peer.userId} placeholderSrc={""} customHeight="20px" customWidth="20px" />
-                </div>
-            </div>
-            {#if $constraintStore && $constraintStore.audio !== false}
-                <div
-                    class="voice-meter-webcam-container media-box-camera-off-size tw-flex tw-flex-col tw-absolute tw-items-end tw-pr-2 tw-w-full"
-                >
-                    <SoundMeterWidget volume={$volumeStore} classcss="tw-absolute" barColor="blue" />
-                </div>
-            {:else}
-                <div
-                    class="voice-meter-webcam-container media-box-camera-off-size tw-flex tw-flex-col tw-absolute tw-items-end tw-pr-2"
-                >
-                    <img draggable="false" src={microphoneOffImg} class="tw-flex tw-p-1 tw-h-8 tw-w-8" alt="Mute" />
-                </div>
-            {/if}
-        {:else if $embedScreenLayoutStore === LayoutMode.VideoChat}
-            <div
-                class="tw-flex tw-flex-col tw-justify-center tw-items-center tw-content-center tw-h-full tw-w-full tw-gap-2"
-            >
-                <Woka userId={peer.userId} placeholderSrc={""} customHeight="100px" customWidth="100px" />
-                <span
-                    style={`background-color: ${backGroundColor}; color: ${textColor}`}
-                    class="tw-font-semibold tw-text-sm tw-not-italic tw-break-words tw-px-2 tw-overflow-y-auto tw-max-h-10"
-                >
-                    {name}
-                </span>
-            </div>
-            {#if $constraintStore && $constraintStore.audio !== false}
-                <SoundMeterWidget
-                    volume={$volumeStore}
-                    classcss="voice-meter-cam-off tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform tw-absolute tw-top-2 tw-right-4"
-                    barColor={textColor}
-                />
-            {:else}
-                <img
-                    draggable="false"
-                    src={microphoneOffImg}
-                    class="tw-flex tw-p-1 tw-h-8 tw-w-8 voice-meter-cam-off tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform tw-absolute tw-top-2 tw-right-2"
-                    alt="Mute"
-                    class:tw-brightness-0={textColor === "black"}
-                    class:tw-brightness-100={textColor === "white"}
-                />
-            {/if}
-        {:else}
-            <Woka userId={peer.userId} placeholderSrc={""} customHeight="32px" customWidth="32px" />
-            <span
-                class="tw-font-semibold tw-text-sm tw-not-italic tw-break-words tw-px-2 tw-overflow-y-auto tw-max-h-10"
-            >
-                {name}
-            </span>
-            {#if $constraintStore && $constraintStore.audio !== false}
-                <SoundMeterWidget
-                    volume={$volumeStore}
-                    classcss="voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
-                    barColor={textColor}
-                />
-            {:else}
-                <img
-                    draggable="false"
-                    src={microphoneOffImg}
-                    class="tw-flex tw-p-1 tw-h-8 tw-w-8 voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
-                    alt="Mute"
-                    class:tw-brightness-0={textColor === "black"}
-                    class:tw-brightness-100={textColor === "white"}
-                />
-            {/if}
         {/if}
+    </div>
+    <div
+        class={isHighlighted
+            ? "hidden"
+            : "absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-full aspect-ratio bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 cursor-pointer"}
+        on:click={() => highlightedEmbedScreen.highlight(peer)}
+        on:click={calcHeightVideo}
+    >
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="icon icon-tabler cursor-pointer icon-tabler-arrows-minimize"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="#ffffff"
+            fill="none"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+        >
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M16 4l4 0l0 4" />
+            <path d="M14 10l6 -6" />
+            <path d="M8 20l-4 0l0 -4" />
+            <path d="M4 20l6 -6" />
+            <path d="M16 20l4 0l0 -4" />
+            <path d="M14 14l6 6" />
+            <path d="M8 4l-4 0l0 4" />
+            <path d="M4 4l6 6" />
+        </svg>
+    </div>
+
+    <div
+        class={isHighlighted && menuDrop
+            ? "absolute top-0 bottom-0 right-0 left-0 m-auto h-28 w-60 z-20 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 flex items-center justify-center cursor-pointer"
+            : "hidden"}
+    >
+        <div class="flex flex-col justify-evenly cursor-pointer h-full w-full">
+            <div
+                class="svg w-full hover:bg-white/10 flex justify-around items-center z-25 rounded-lg"
+                on:click={untogglefFullScreen}
+                on:click={() => (menuDrop = !menuDrop)}
+            >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="icon icon-tabler cursor-pointer icon-tabler-arrows-maximize"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="#ffffff"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M5 9l4 0l0 -4" />
+                    <path d="M3 3l6 6" />
+                    <path d="M5 15l4 0l0 4" />
+                    <path d="M3 21l6 -6" />
+                    <path d="M19 9l-4 0l0 -4" />
+                    <path d="M15 9l6 -6" />
+                    <path d="M19 15l-4 0l0 4" />
+                    <path d="M15 15l6 6" />
+                </svg>
+                <p class="font-bold text-white">Reduce the screen</p>
+            </div>
+            <div class="h-[1px] z-30 w-full bg-white/20" />
+            <div
+                class="muted-video w-full hover:bg-white/10 flex justify-around cursor-pointer items-center z-25 rounded-lg"
+                on:click={toggleFullScreen}
+                on:click={() => (menuDrop = !menuDrop)}
+                on:click={() => (fullScreen = !fullScreen)}
+            >
+                {#if $highlightFullScreen}
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="icon icon-tabler cursor-pointer icon-tabler-arrows-maximize"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="#ffffff"
+                        fill="none"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M5 9l4 0l0 -4" />
+                        <path d="M3 3l6 6" />
+                        <path d="M5 15l4 0l0 4" />
+                        <path d="M3 21l6 -6" />
+                        <path d="M19 9l-4 0l0 -4" />
+                        <path d="M15 9l6 -6" />
+                        <path d="M19 15l-4 0l0 4" />
+                        <path d="M15 15l6 6" />
+                    </svg>
+                    <p class="font-bold cursor-pointer text-white">Untoggle full screen</p>
+                {:else}
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="icon icon-tabler cursor-pointer icon-tabler-arrows-minimize"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="#ffffff"
+                        fill="none"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M16 4l4 0l0 4" />
+                        <path d="M14 10l6 -6" />
+                        <path d="M8 20l-4 0l0 -4" />
+                        <path d="M4 20l6 -6" />
+                        <path d="M16 20l4 0l0 -4" />
+                        <path d="M14 14l6 6" />
+                        <path d="M8 4l-4 0l0 4" />
+                        <path d="M4 4l6 6" />
+                    </svg>
+                    <p class="font-bold cursor-pointer text-white">Toggle full screen</p>
+                {/if}
+            </div>
+        </div>
     </div>
 </div>
 
-<style lang="scss">
-    video {
-        object-fit: cover;
-        &.object-contain {
-            object-fit: contain;
+<!-- </div> -->
+<style>
+    .border-color {
+        border-color: #4156f6;
+    }
+
+    .background-color {
+        background-color: #4156f6;
+    }
+
+    @container (max-width: 767px) {
+        .responsive-dimension {
+            scale: 0.7;
+            position: absolute;
+            top: 0;
+            left: 0;
         }
     }
 </style>

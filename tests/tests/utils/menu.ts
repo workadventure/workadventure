@@ -1,14 +1,17 @@
 import {expect, Page} from "@playwright/test";
 
 class Menu {
+
     async openChat(page: Page) {
         await page.click('button.chat-btn');
         await expect(page.locator('#chat.chatWindow')).toBeVisible();
     }
 
     async openMapEditor(page: Page) {
-        await page.getByRole('button', {name: 'toggle-map-editor'}).click();
-        await expect(await page.getByRole('button', {name: 'toggle-map-editor'}).first()).toHaveClass(/border-top-light/);
+        await page.getByTestId('action-admin').click({timeout: 30_000});
+        await page.getByTestId('map-editor').click();
+        await expect(await page.getByTestId('map-editor')).toBeHidden();
+        // await expect(await page.getByRole('button', {name: 'toggle-map-editor'}).first()).toHaveClass(/border-top-light/);
     }
 
     async openMenu(page: Page, isMobile: boolean) {
@@ -19,26 +22,34 @@ class Menu {
                 await page.click('button#burgerIcon');
             }
         }
-        await page.click('#menuIcon img:first-child');
-        await expect(await page.locator('#menuIcon')).toHaveClass(/border-top-light/);
+        await page.getByTestId('action-user').click({timeout: 30_000});
+        await expect(await page.getByTestId('profile-menu')).toHaveClass(/backdrop-blur/);
+    }
+
+    async openMenuAdmin(page: Page) {
+        // await page.pause();
+        await page.getByTestId('action-admin').click();
+        await expect(await page.getByTestId('admin-menu')).toHaveClass(/backdrop-blur/);
     }
 
     async closeMenu(page: Page) {
-        await page.locator('.menu-container').getByRole('button', { name: '×' }).click();
-        await expect(await page.locator('#menuIcon')).not.toHaveClass(/border-top-light/);
+        await page.getByTestId('action-user').click({timeout: 30_000});
+        await expect(await page.getByTestId('profile-menu')).toBeHidden();
     }
 
     async closeMapEditor(page: Page) {
-        await page.getByRole('button', {name: 'toggle-map-editor'}).click();
-        await expect(await page.getByRole('button', {name: 'toggle-map-editor'}).first()).not.toHaveClass(/border-top-light/);
+        await page.locator('.map-editor .configure-my-room .close-window').click()
+        await page.locator('.map-editor .sidebar .close-window').click()
+        await expect(await page.locator('.map-editor .configure-my-room .close-window')).toBeHidden();
     }
 
     async toggleMegaphoneButton(page: Page) {
-        await page.locator('.bottom-action-bar .bottom-action-button #megaphone').click({timeout: 5_000});
+        await page.getByTestId('action-admin').click({timeout: 30_000});
+        await page.getByTestId('global-message').click({timeout: 30_000});
     }
 
     async isThereMegaphoneButton(page: Page) {
-        await expect(await page.locator('.bottom-action-bar .bottom-action-button #megaphone')).toBeVisible({timeout: 30_000});
+        await page.locator('.configure-my-room .content .items-center #megaphone');
     }
 
     async isNotThereMegaphoneButton(page: Page) {

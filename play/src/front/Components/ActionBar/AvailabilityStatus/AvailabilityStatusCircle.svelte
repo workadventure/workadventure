@@ -5,17 +5,17 @@
     export let componentClass = "";
 </script>
 
-<div class="tw-relative tw-cursor-{cursorType} {componentClass}" style="--color:{colorHex}">
+<div class="relative cursor-{cursorType} {componentClass}" style="--color:{colorHex}">
     <div
-        class="tw-h-5 tw-w-5 tw-bg-green tw-cursor-{cursorType}  {position === 'absolute'
-            ? `tw-${position} tw--top-8 tw--left-4`
-            : `tw-${position} tw-scale-70`}"
+        class="h-5 w-5 bg-green cursor-{cursorType}  {position === 'absolute'
+            ? `${position} -top-8 -left-4`
+            : `${position} scale-70`}"
     >
         <div
             id="innerCircle"
-            class="circle tw-absolute tw-cursor-{cursorType}  tw-rounded-full tw-h-5 tw-w-5 tw-scale-[0.7] tw-bg-opacity-80"
+            class="circle absolute cursor-{cursorType}  rounded-full h-5 w-5 scale-[0.7] bg-opacity-80"
         />
-        <div class="circle tw-absolute tw-cursor-{cursorType}   tw-rounded-full tw-h-5 tw-w-5 tw-bg-opacity-30" />
+        <div class="circle absolute cursor-{cursorType}   rounded-full h-5 w-5 bg-opacity-30" />
     </div>
 </div>
 

@@ -67,6 +67,7 @@ const menu: BaseTranslation = {
     invite: {
         description: "Share the link of the room!",
         copy: "Copy",
+        copied: "Copied",
         share: "Share",
         walkAutomaticallyToPosition: "Walk automatically to my position",
         selectEntryPoint: "Select an entry point",
@@ -136,6 +137,7 @@ const menu: BaseTranslation = {
         contact: "Contact",
         report: "Report Issues",
         chat: "Chat",
+        help: "Help & tutorials",
     },
 };
 

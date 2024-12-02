@@ -4,8 +4,8 @@
 </script>
 
 <div
-    class:tw-bg-green-500={type === "success"}
-    class:tw-bg-orange-500={type === "warning"}
-    class:tw-bg-red-500={type === "error"}
-    class="tw-absolute tw-top-[-4px] tw-right-[-4px] tw-h-3 tw-w-3 tw-rounded-full"
+    class:bg-green-500={type === "success"}
+    class:bg-orange-500={type === "warning"}
+    class:bg-red-500={type === "error"}
+    class="absolute top-[-4px] right-[-4px] h-3 w-3 rounded-full"
 />

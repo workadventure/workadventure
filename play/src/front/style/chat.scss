@@ -27,11 +27,11 @@
     background: none;
 }
 ::-webkit-scrollbar-thumb {
-    @apply tw-bg-lighter-purple;
+    @apply bg-lighter-purple;
     border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:active {
-    @apply tw-bg-light-blue;
+    @apply bg-light-blue;
 }
 
 .emoji-picker__overlay{
@@ -54,14 +54,14 @@
             opacity: 0.8;
             position: relative;
             .caption{
-                @apply tw-absolute tw-bg-dark-blue tw-px-2 tw-py-1 tw-rounded-xl tw-border-lighter-purple tw-border tw-border-solid;
+                @apply absolute bg-dark-blue px-2 py-1 rounded-xl border-lighter-purple border border-solid;
                 display: none;
                 top: -32px;
                 left: 50%;
                 transform: translateX(-50%);
                 z-index: 10;
                 &::before{
-                    @apply tw-absolute tw-border-t-lighter-purple;
+                    @apply absolute border-t-lighter-purple;
                     left: calc( 50% - 10px );
                     top: 100.5%;
                     content: '';
@@ -73,7 +73,7 @@
                     border-top-style: solid;
                 }
                 &::after{
-                    @apply tw-absolute tw-border-t-dark-blue;
+                    @apply absolute border-t-dark-blue;
                     margin-left: -50%;
                     top: 100%;
                     content: '';
@@ -100,9 +100,9 @@
     }
 }
 .wa-message-body{
-    @apply tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left;
+    @apply rounded-lg bg-dark text-xs px-3 py-2 text-left;
     p{
-        @apply tw-whitespace-pre-line;
+        @apply whitespace-pre-line;
         margin: 0;
         .mention{
             margin: 0 2px;
@@ -114,7 +114,7 @@
     }
 
     .file {
-        @apply tw-mt-1;
+        @apply mt-1;
         position: relative;
         &:hover {
             .actions {
@@ -132,16 +132,16 @@
             border-radius: 0.25rem;
             border-width: 1px;
             border-style: solid;
-            --tw-border-opacity: 1;
-            border-color: rgb(77 75 103 / var(--tw-border-opacity));
+            --border-opacity: 1;
+            border-color: rgb(77 75 103 / var(--border-opacity));
             background-color: rgb(27 27 41 / 0.95);
             font-size: 0.75rem;
             line-height: 1rem;
             font-weight: 500;
-            color: rgb(255 255 255 / var(--tw-text-opacity));
-            --tw-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-            --tw-shadow-colored: 0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);
-            box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+            color: rgb(255 255 255 / var(--text-opacity));
+            --shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-colored: 0 10px 15px -3px var(--shadow-color), 0 4px 6px -4px var(--shadow-color);
+            box-shadow: var(--ring-offset-shadow, 0 0 #0000), var(--ring-shadow, 0 0 #0000), var(--shadow);
             z-index: 1;
 
             .action {
@@ -156,8 +156,8 @@
                 }
 
                 &:hover {
-                    --tw-bg-opacity: 1;
-                    background-color: rgb(77 75 103 / var(--tw-bg-opacity));
+                    --bg-opacity: 1;
+                    background-color: rgb(77 75 103 / var(--bg-opacity));
                 }
             }
 
@@ -169,15 +169,15 @@
         }
 
         .other-content {
-            @apply tw-p-0.5 tw-cursor-pointer tw-rounded tw-mr-0.5;
+            @apply p-0.5 cursor-pointer rounded mr-0.5;
             position: relative;
             display: flex;
             flex-direction: row;
             align-items: center;
-            --tw-bg-opacity: 1;
-            border: solid 1px rgb(77 75 103 / var(--tw-bg-opacity));
+            --bg-opacity: 1;
+            border: solid 1px rgb(77 75 103 / var(--bg-opacity));
             &:hover {
-                background-color: rgb(77 75 103 / var(--tw-bg-opacity));
+                background-color: rgb(77 75 103 / var(--bg-opacity));
             }
             .icon{
             }
@@ -192,29 +192,29 @@
 .selected {
     .wa-message{
         &::after{
-            @apply tw-animate-ping;
+            @apply animate-ping;
         }
     }
 }
 
 
 .chatWindow nav{
-    @apply tw-bg-dark-purple tw-p-1 tw-mx-3 tw-mb-1 tw-rounded-2xl tw-border-solid tw-border tw-border-light-purple tw-relative;
+    @apply bg-dark-purple p-1 mx-3 mb-1 rounded-2xl border-solid border border-light-purple relative;
     width: calc( 100% - 65px );
 }
 .chatWindow nav .background{
-    @apply tw-rounded-xl tw-transition-transform tw-transform tw-bg-light-blue tw-absolute;
+    @apply rounded-xl transition-transform transform bg-light-blue absolute;
     height: 26px;
     width: 48.5%;
 }
 .chatWindow nav .background.chat{
-    @apply tw-translate-x-full;
+    @apply translate-x-full;
 }
 .chatWindow nav ul{
-    @apply tw-flex tw-list-none tw-justify-between tw-w-full tw-p-0 tw-m-0;
+    @apply flex list-none justify-between w-full p-0 m-0;
 }
 .chatWindow nav ul li{
-    @apply tw-text-center tw-rounded tw-font-bold tw-transition-transform tw-transform tw-cursor-pointer tw-rounded-2xl;
+    @apply text-center rounded font-bold transition-transform transform cursor-pointer rounded-2xl;
     padding: 1px 0;
     width: 48.5%;
 }
@@ -223,5 +223,5 @@
 }
 
 .chatWindow nav ul li.active{
-    @apply tw-text-black tw-cursor-default;
+    @apply text-black cursor-default;
 }

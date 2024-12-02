@@ -37,14 +37,14 @@
 </script>
 
 <ConfirmationModal props={confirmationModalProps}>
-    <div id="notificationPermission" class="tw-grow tw-text-center tw-text-xl">
+    <div id="notificationPermission" class="grow text-center text-xl">
         {$LL.statusModal.allowNotification()}
     </div>
     {#if loading}
-        <div class="tw-absolute tw-inset-0 tw-bg-dark-purple/70 tw-flex tw-items-center tw-justify-center">
+        <div class="absolute inset-0 bg-dark-purple/70 flex items-center justify-center">
             <div
                 style="border-top-color:transparent"
-                class="tw-w-16 tw-h-16 tw-border-2 tw-border-white tw-border-solid tw-rounded-full tw-animate-spin tw-mb-5"
+                class="w-16 h-16 border-2 border-white border-solid rounded-full animate-spin mb-5"
             />
         </div>
     {/if}

@@ -88,7 +88,7 @@
 <div
     id="AvailabilityStatus"
     on:click|stopPropagation={toggleStatusPicker}
-    class="bottom-action-button tw-w-full tw-overflow-ellipsis tw-max-w-24"
+    class="bottom-action-button w-full overflow-ellipsis max-w-24"
 >
     <AvailabilityStatusButton props={buttonProps} />
     {#if $availabilityStatusMenuStore}

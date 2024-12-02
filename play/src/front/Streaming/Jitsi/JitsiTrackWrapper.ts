@@ -229,10 +229,7 @@ export class JitsiTrackWrapper implements TrackWrapper {
             return;
         }
         // Let's notify the embedded store that a new screen-sharing has started
-        highlightedEmbedScreen.highlight({
-            type: "streamable",
-            embed: this.screenSharingTrackWrapper,
-        });
+        highlightedEmbedScreen.toggleHighlight(this.screenSharingTrackWrapper);
     }
 
     get volumeStore(): Readable<number[] | undefined> | undefined {

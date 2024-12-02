@@ -21,5 +21,5 @@
 </script>
 
 <ConfirmationModal props={confirmationModalProps}>
-    <div class="tw-grow tw-text-center tw-text-xl">{$LL.statusModal.goBackToOnlineStatusLabel()}</div>
+    <div class="grow text-center text-xl">{$LL.statusModal.goBackToOnlineStatusLabel()}</div>
 </ConfirmationModal>

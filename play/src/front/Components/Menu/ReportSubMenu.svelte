@@ -8,7 +8,7 @@
 </script>
 
 <div style="height: calc(100% - 40px);">
-    <section class="tw-h-full">
-        <iframe title="contact" src={getReportIssuesUrl()} class="tw-border-0 tw-w-full tw-h-full" />
+    <section class="h-full">
+        <iframe title="contact" src={getReportIssuesUrl()} class="border-0 w-full h-full" />
     </section>
 </div>
