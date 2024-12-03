@@ -614,7 +614,7 @@
                                 {/if}
                                 {#if $emoteMenuSubStore}
                                     <div
-                                        class="flex justify-center m-auto absolute left-0 right-0 top-[70px] w-auto z-[500]"
+                                        class="flex justify-center m-auto absolute left-0 -right-2 top-[70px] w-auto z-[500]"
                                         transition:fly={{ y: 20, duration: 150 }}
                                     >
                                         <img
@@ -624,7 +624,7 @@
                                             class="content-[''] absolute -top-1 left-0 right-0 m-auto w-2 h-1"
                                         />
                                         <div
-                                            class="bottom-action-bar bg-contrast/80 transition-all backdrop-blur rounded-lg px-3 flex flex-col items-stretch items-center pointer-events-auto justify-center m-auto bottom-6 md:bottom-4 z-[251] transition-transform duration-300 md:flex-row"
+                                            class="bottom-action-bar bg-contrast/80 transition-all backdrop-blur-md rounded-md px-1 flex flex-col items-stretch items-center pointer-events-auto justify-center m-auto bottom-6 md:bottom-4 z-[251] transition-transform duration-300 md:flex-row"
                                         >
                                             <div class="flex animate flex-row flex items-center">
                                                 <div class="py-1 flex">
@@ -635,7 +635,7 @@
                                                                     clickEmoji(key);
                                                                 }}
                                                                 id={`button-${$emoteDataStore.get(key)?.name}`}
-                                                                class="group emoji py-2 px-2 block m-0 rounded-none flex items-center transition-all rounded-sm {$emoteMenuStore &&
+                                                                class="group emoji py-2 px-2 m-0 flex items-center transition-all rounded {$emoteMenuStore &&
                                                                 $emoteMenuSubCurrentEmojiSelectedStore === key
                                                                     ? 'bg-secondary'
                                                                     : 'hover:bg-white/20'}"
@@ -659,7 +659,7 @@
                                                     {/each}
                                                 </div>
                                                 <div
-                                                    class="transition-all bottom-action-button flex items-center h-full pl-4 relative before:content-[''] before:absolute before:top-0 before:left-1 before:w-[1px] before:h-full before:bg-white/10"
+                                                    class="transition-all bottom-action-button flex items-center h-full pl-2 relative before:content-[''] before:absolute before:top-0 before:left-1 before:w-[1px] before:h-full before:bg-white/10"
                                                 >
                                                     <button
                                                         class="btn btn-sm btn-ghost btn-light flex"
@@ -751,7 +751,7 @@
                                         />
                                         <div class="bottom-action-bar">
                                             <div
-                                                class="bottom-action-section flex flex-col animate bg-contrast/80 backdrop-blur-md rounded-lg p-1"
+                                                class="bottom-action-section flex flex-col animate bg-contrast/80 backdrop-blur-md rounded-md p-1"
                                             >
                                                 <!-- Room list part -->
                                                 {#if $roomListActivated}
@@ -776,7 +776,7 @@
 
                                                         <button
                                                             id="roomListIcon"
-                                                            class="h-12 hover:bg-white/10 rounded-md flex w-full space-x-2 items-center px-3"
+                                                            class="hover:bg-white/10 rounded flex w-full space-x-2 items-center p-2"
                                                         >
                                                             <svg
                                                                 xmlns="http://www.w3.org/2000/svg"
@@ -785,8 +785,8 @@
                                                                 stroke="currentColor"
                                                                 stroke-linecap="round"
                                                                 stroke-linejoin="round"
-                                                                width="24"
-                                                                height="24"
+                                                                width="20"
+                                                                height="20"
                                                                 stroke-width="1.5"
                                                             >
                                                                 <path d="M21 12a9 9 0 1 0 -9 9" />
@@ -797,8 +797,10 @@
                                                                 <path d="M18 18m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
                                                                 <path d="M20.2 20.2l1.8 1.8" />
                                                             </svg>
-                                                            <div class="whitespace-nowrap bold grow pr-2">
-                                                                Room List
+                                                            <div
+                                                                class="whitespace-nowrap bold text-sm grow pr-2 text-left"
+                                                            >
+                                                                {$LL.actionbar.help.roomList.title()}
                                                             </div>
                                                         </button>
                                                     </div>
@@ -827,14 +829,16 @@
                                                     -->
                                                     <button
                                                         id="calendarIcon"
-                                                        class="h-12 hover:bg-white/10 rounded-md flex w-full space-x-2 items-center px-3"
+                                                        class="hover:bg-white/10 rounded flex w-full space-x-2 items-center p-2"
                                                         class:!cursor-not-allowed={!$isCalendarActivatedStore}
                                                         class:!no-pointer-events={!$isCalendarActivatedStore}
                                                         on:click={openAppMenu}
                                                         disabled={!$isCalendarActivatedStore}
                                                     >
-                                                        <IconCalendar width="24" height="24" />
-                                                        <div class="whitespace-nowrap bold grow pr-2">Calendar</div>
+                                                        <IconCalendar width="20" height="20" />
+                                                        <div class="whitespace-nowrap bold text-sm grow pr-2 text-left">
+                                                            {$LL.actionbar.calendar()}
+                                                        </div>
                                                     </button>
                                                 </div>
 
@@ -861,13 +865,15 @@
                                                     -->
                                                     <button
                                                         id="todoListIcon"
-                                                        class="h-12 hover:bg-white/10 rounded-md flex w-full space-x-2 items-center px-3"
+                                                        class="hover:bg-white/10 rounded flex w-full space-x-2 items-center p-2"
                                                         class:!cursor-not-allowed={!$isTodoListActivatedStore}
                                                         class:!no-pointer-events={!$isTodoListActivatedStore}
                                                         disabled={!$isTodoListActivatedStore}
                                                     >
-                                                        <IconCheckList width="24" height="24" />
-                                                        <div class="whitespace-nowrap bold grow pr-2">Todo List</div>
+                                                        <IconCheckList width="20" height="20" />
+                                                        <div class="whitespace-nowrap bold text-sm grow pr-2 text-left">
+                                                            {$LL.actionbar.todoList()}
+                                                        </div>
                                                     </button>
                                                 </div>
                                             </div>
@@ -1297,13 +1303,13 @@
                                         </div>
                                     {/if}
                                 </div>
-                                <div class="relative z-10 flex p-2 bg-contrast/50">
+                                <div class="relative z-10 flex gap-2 p-2 bg-contrast/50">
                                     <button
-                                        class="btn btn-xs btn-ghost btn-light justify-center w-full mr-3 rounded"
+                                        class="btn btn-sm btn-ghost btn-light justify-center w-full rounded"
                                         on:click={openEnableCameraScene}>{$LL.actionbar.test()}</button
                                     >
                                     <button
-                                        class="btn btn-xs btn-border btn-light justify-center w-full cursor-pointer rounded"
+                                        class="btn btn-sm btn-border btn-light justify-center w-full cursor-pointer rounded"
                                         on:click|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}
                                         >{$LL.actionbar.close()}</button
                                     >
@@ -1752,7 +1758,9 @@
                                     class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
                                     on:click={() => openEditNameScene()}
                                 >
-                                    <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
+                                    <div
+                                        class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center"
+                                    >
                                         <ProfilIcon />
                                     </div>
                                     <div class="text-left leading-4 flex items-center">{$LL.actionbar.profil()}</div>
@@ -1761,7 +1769,9 @@
                                     class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
                                     on:click={() => openEditSkinScene()}
                                 >
-                                    <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
+                                    <div
+                                        class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center"
+                                    >
                                         <Woka userId={-1} placeholderSrc="" customWidth="26px" customHeight="26px" />
                                     </div>
                                     <div class="text-left leading-4 flex items-center">{$LL.actionbar.woka()}</div>
@@ -1770,7 +1780,9 @@
                                     class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
                                     on:click={() => openEditCompanionScene()}
                                 >
-                                    <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
+                                    <div
+                                        class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center"
+                                    >
                                         <Companion
                                             userId={-1}
                                             placeholderSrc="./static/images/default-companion.png"
@@ -1783,7 +1795,9 @@
                                 <button
                                     class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
                                 >
-                                    <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
+                                    <div
+                                        class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center"
+                                    >
                                         <AchievementIcon />
                                     </div>
                                     <div class="text-left flex items-center">{$LL.actionbar.quest()}</div>
@@ -1795,20 +1809,28 @@
                                     class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
                                     on:click={openEnableCameraScene}
                                 >
-                                    <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
+                                    <div
+                                        class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center"
+                                    >
                                         <CamSettingsIcon />
                                     </div>
-                                    <div class="text-left leading-4 flex items-center">{$LL.actionbar.editCamMic()}</div>
+                                    <div class="text-left leading-4 flex items-center">
+                                        {$LL.actionbar.editCamMic()}
+                                    </div>
                                 </button>
                                 <button
                                     class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
                                     id="settings"
                                     on:click={() => showMenuItem(SubMenusInterface.settings)}
                                 >
-                                    <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
+                                    <div
+                                        class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center"
+                                    >
                                         <SettingsIcon />
                                     </div>
-                                    <div class="text-left leading-4 flex items-center">{$LL.actionbar.otherSettings()}</div>
+                                    <div class="text-left leading-4 flex items-center">
+                                        {$LL.actionbar.otherSettings()}
+                                    </div>
                                 </button>
 
                                 <button
@@ -1816,10 +1838,18 @@
                                     on:click={() => connectionManager.logout()}
                                     class="group flex p-2 gap-2 items-center hover:bg-danger-600 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
                                 >
-                                    <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
-                                        <IconLogout height="20" width="20" class="stroke-danger-600 group-hover:stroke-white" />
+                                    <div
+                                        class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center"
+                                    >
+                                        <IconLogout
+                                            height="20"
+                                            width="20"
+                                            class="stroke-danger-600 group-hover:stroke-white"
+                                        />
                                     </div>
-                                    <div class="text-left leading-4 text-danger-600 group-hover:text-white flex items-center">
+                                    <div
+                                        class="text-left leading-4 text-danger-600 group-hover:text-white flex items-center"
+                                    >
                                         {$LL.menu.profile.logout()}
                                     </div>
                                 </button>

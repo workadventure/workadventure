@@ -12,8 +12,8 @@ const menu: BaseTranslation = {
             openEmoji: "Open emoji selected popup",
             closeEmoji: "Close emoji menu",
             mobile: "Open mobile menu",
-            calendar: "Open calendar",
-            todoList: "Open todo list",
+            calendar: "Calendar",
+            todoList: "Todo list",
         },
     },
     visitCard: {
