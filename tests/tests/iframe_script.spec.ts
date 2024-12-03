@@ -2,6 +2,8 @@ import { chromium, expect, test } from "@playwright/test";
 import { login } from "./utils/roles";
 import { evaluateScript } from "./utils/scripting";
 import { publicTestMapUrl } from "./utils/urls";
+import Menu from "./utils/menu";
+import {oidcAdminTagLogin} from "./utils/oidc";
 
 test.describe("Iframe API", () => {
   test("can be called from an iframe loading a script", async ({ page }, {
@@ -139,6 +141,7 @@ test.describe("Iframe API", () => {
     await page.goto(publicTestMapUrl("tests/E2E/empty.json", "iframe_script"));
 
     await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+    await oidcAdminTagLogin(page, false);
 
     // Create a script to evaluate function to disable map editor
     await evaluateScript(page, async () => {
@@ -147,10 +150,13 @@ test.describe("Iframe API", () => {
       WA.controls.disableMapEditor();
     });
 
+    await Menu.openMenuAdmin(page);
+
     // Check if the map editor is disabled
-    expect(
-      await page.locator("#mapEditorIcon").isDisabled({ timeout: 10000 })
-    ).toBeTruthy();
+    await expect(
+        page.getByText("Map editor")
+      //await page.locator("#mapEditorIcon").isDisabled({ timeout: 10000 })
+    ).toBeHidden();
 
     // Create a script to evaluate function to enable map editor
     await evaluateScript(page, async () => {
@@ -160,11 +166,11 @@ test.describe("Iframe API", () => {
     });
 
     // Check if the map editor is enabled
-    expect(
-      await page.locator("#mapEditorIcon").isDisabled({ timeout: 10000 })
-    ).toBeFalsy();
+    await expect(
+        page.getByText("Map editor")
+    ).toBeVisible();
 
-    page.close();
+    await page.close();
   });
 
   test("test disable invite user button", async ({ page }, { project }) => {
@@ -197,7 +203,7 @@ test.describe("Iframe API", () => {
       await page.locator("#invite-btn").isVisible({ timeout: 10000 })
     ).toBeTruthy();
 
-    page.close();
+    await page.close();
   });
 
   test("test disable screen sharing", async ({ page, browser }, {project}) => {
@@ -229,6 +235,7 @@ test.describe("Iframe API", () => {
     await pageBob.evaluate(() => localStorage.setItem("debug", "*"));
     await login(pageBob, "Bob", 5, 'en-US', project.name === "mobilechromium");
 
+    await pageBob.pause();
     // Check if the screen sharing is disabled
     expect(
       await page.locator("#screenSharing").isDisabled({ timeout: 10000 })
@@ -296,7 +303,7 @@ test.describe("Iframe API", () => {
 
     // TODO: check if the right click is enabled
 
-    page.close();
+    await page.close();
   });
 
   // TDODO: disable and restore wheel zoom

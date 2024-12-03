@@ -49,6 +49,7 @@
         subMenusStore,
         mapEditorActivated,
         userIsConnected,
+        mapManagerActivated,
     } from "../../Stores/MenuStore";
     import {
         emoteDataStore,
@@ -1550,7 +1551,7 @@
                         </div>
                     </div>
                 {/if}
-                {#if $mapEditorActivated || $userHasAccessToBackOfficeStore}
+                {#if ($mapEditorActivated && $mapManagerActivated) || $userHasAccessToBackOfficeStore}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
                         data-testid="action-admin"
@@ -1590,7 +1591,7 @@
                                 transition:fly={{ y: 40, duration: 150 }}
                             >
                                 <ul class="p-1 m-0">
-                                    {#if $mapEditorActivated}
+                                    {#if $mapEditorActivated && $mapManagerActivated}
                                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                                         <li
                                             class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"

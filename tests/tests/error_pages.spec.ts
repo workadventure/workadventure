@@ -54,7 +54,7 @@ test.describe('Error pages', () => {
     await page.fill('input[name="loginSceneName"]', 'Alice');
     await page.click('button.loginSceneFormSubmit');
     await page.click('button.selectCharacterSceneFormSubmit');
-    await page.click("text=Let's go!");
+    await page.click("text=Save");
 
     await expect(page.getByText('An error occurred')).toBeVisible();
   });
