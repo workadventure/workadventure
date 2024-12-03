@@ -17,6 +17,7 @@ import {
 } from "../Enum/EnvironmentVariable";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { userIsAdminStore } from "./GameStore";
+import { emoteMenuSubStore } from "./EmoteStore";
 
 export const menuIconVisiblilityStore = writable(false);
 export const menuVisiblilityStore = writable(false);
@@ -348,4 +349,8 @@ additionnalButtonsMenu.subscribe((map) => {
     addActionButtonActionBarEvent.set(
         [...map.values()].filter((c) => c.type === "action") as AddActionButtonActionBarEvent[]
     );
+});
+
+export const helpTextDisabledStore = derived(emoteMenuSubStore, ($emoteMenuSubStore) => {
+    return $emoteMenuSubStore !== null;
 });

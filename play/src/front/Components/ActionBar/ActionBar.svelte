@@ -128,6 +128,7 @@
 
     import AppsIcon from "../Icons/AppsIcon.svelte";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
+    import ActionBarIconButton from "./ActionBarIconButton.svelte";
     import { IconArrowDown, IconCheckList, IconCalendar, IconLogout } from "@wa-icons";
 
     // gameManager.currenwStartedRoom?.miniLogo ?? WorkAdventureImg;
@@ -1362,33 +1363,23 @@
                                     768 && $canvasWidth > 768
                                     ? 'rounded-r-lg pr-2'
                                     : ''} {$canvasWidth < 768 ? 'hidden' : ''}"
-                                on:click={() => analyticsClient.screenSharing()}
-                                on:click={screenSharingClick}
-                                on:mouseenter={() => {
-                                    !navigating ? (helpActive = "share") : "";
-                                }}
-                                on:mouseleave={() => {
-                                    !navigating ? (helpActive = undefined) : "";
-                                }}
                             >
-                                <div
-                                    class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 p-1 m-0 rounded group-[.disabled]/btn-screen-share:bg-secondary hover:bg-white/10 flex items-center justify-center transition-all {$requestedScreenSharingState &&
-                                    !$silentStore
-                                        ? 'bg-secondary hover:bg-danger'
-                                        : ''}"
+                                <ActionBarIconButton
+                                    on:click={() => {
+                                        analyticsClient.screenSharing();
+                                        screenSharingClick();
+                                    }}
+                                    tooltipTitle={$LL.actionbar.help.share.title()}
+                                    tooltipDesc={$LL.actionbar.help.share.desc()}
+                                    disabledHelp={appMenuOpened}
+                                    state={$requestedScreenSharingState && !$silentStore ? "active" : "normal"}
                                 >
                                     {#if $requestedScreenSharingState && !$silentStore}
                                         <ScreenShareOffIcon />
                                     {:else}
                                         <ScreenShareIcon />
                                     {/if}
-                                </div>
-                                {#if helpActive === "share" || !emoteMenuSubStore}
-                                    <HelpTooltip
-                                        title={$LL.actionbar.help.share.title()}
-                                        desc={$LL.actionbar.help.share.desc()}
-                                    />
-                                {/if}
+                                </ActionBarIconButton>
                             </div>
 
                             {#if camMenuIsDropped}
