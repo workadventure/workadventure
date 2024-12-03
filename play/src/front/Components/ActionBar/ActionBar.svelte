@@ -50,6 +50,7 @@
         mapEditorActivated,
         userIsConnected,
         mapManagerActivated,
+        screenSharingActivatedStore,
     } from "../../Stores/MenuStore";
     import {
         emoteDataStore,
@@ -1372,7 +1373,12 @@
                                     tooltipTitle={$LL.actionbar.help.share.title()}
                                     tooltipDesc={$LL.actionbar.help.share.desc()}
                                     disabledHelp={appMenuOpened}
-                                    state={$requestedScreenSharingState && !$silentStore ? "active" : "normal"}
+                                    state={!$screenSharingActivatedStore
+                                        ? "disabled"
+                                        : $requestedScreenSharingState && !$silentStore
+                                        ? "active"
+                                        : "normal"}
+                                    dataTestId="screenShareButton"
                                 >
                                     {#if $requestedScreenSharingState && !$silentStore}
                                         <ScreenShareOffIcon />

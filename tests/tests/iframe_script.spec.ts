@@ -235,11 +235,10 @@ test.describe("Iframe API", () => {
     await pageBob.evaluate(() => localStorage.setItem("debug", "*"));
     await login(pageBob, "Bob", 5, 'en-US', project.name === "mobilechromium");
 
-    await pageBob.pause();
     // Check if the screen sharing is disabled
-    expect(
-      await page.locator("#screenSharing").isDisabled({ timeout: 10000 })
-    ).toBeTruthy();
+    await expect(
+        page.getByTestId("screenShareButton")
+    ).toBeDisabled();
 
     // Create a script to evaluate function to enable map editor
     await evaluateScript(page, async () => {
@@ -249,9 +248,9 @@ test.describe("Iframe API", () => {
     });
 
     // Check if the screen sharing is enabled
-    expect(
-      await page.locator("#screenSharing").isDisabled({ timeout: 10000 })
-    ).toBeFalsy();
+    await expect(
+        page.getByTestId("screenShareButton")
+    ).toBeEnabled();
 
     await pageBob.close();
     await newBrowser.close();
