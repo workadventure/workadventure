@@ -11,6 +11,8 @@
     import { chatInputFocusStore } from "../../../Stores/ChatStore";
     import { searchChatMembersRule } from "./searchChatMembersRule";
     import InputTags from "../../../Components/Input/InputTags.svelte";
+    import { Deferred } from "ts-deferred";
+
 
     export let isOpen: boolean;
     export let parentID: string | undefined;
@@ -20,9 +22,13 @@
     export let moderatorTags: InputTagOption[] = [];
     export let createRoomOptions: CreateRoomOptions = { visibility: "public" , historyVisibility : "world_readable" };
 
-    //TODO : passer du create au save .... 
-    console.log({createRoomOptions});
-    
+    export let saveRoomPromise : Deferred<{
+        memberTags: string[],
+        moderatorTags: string[],
+        historyVisibility: historyVisibility,
+        name: string
+    }> | undefined;
+
     let createRoomError: string | undefined = undefined;
     
     // Store initial values to compare for changes
@@ -43,17 +49,23 @@
             createRoomError = undefined;
             loadingRoomCreation = true;
             if(!connection) return;
-             connection.emitCreateAdminManageChatRoom(
+            connection.emitCreateAdminManageChatRoom(
                 parentID,
                 createRoomOptions.name,
-                memberTags.map((tag)=>tag.value),
-                moderatorTags.map((tag)=>tag.value),
+                memberTags?.map((tag)=>tag.value) ?? [],
+                moderatorTags?.map((tag)=>tag.value) ?? [],
                 //TODO : voir pour rajouter le topic en champ ? 
                 topic ?? "",
                 createRoomOptions.historyVisibility
 
             );
             //TODO ; on n'utilise pas le roomId parce qu'on est pas sur que la personne qui crée la room est forcement le bon tag 
+            saveRoomPromise?.resolve({
+                memberTags: memberTags?.map((tag)=>tag.value) ?? [],
+                moderatorTags: moderatorTags?.map((tag)=>tag.value) ?? [],
+                historyVisibility: createRoomOptions.historyVisibility,
+                name: createRoomOptions.name
+            });
             closeModal();
             notifyUserForRoomCreation();
         } catch (error) {
@@ -76,11 +88,11 @@
 
             // Compare current values with initial values
             const updatedMemberTags = JSON.stringify(memberTags) !== JSON.stringify(initialMemberTags) 
-                ? memberTags.map((tag)=>tag.value)
+                ? ((memberTags?.length ?? 0) > 0 ? memberTags.map((tag)=>tag.value) : [])
                 : undefined;
 
             const updatedModeratorTags = JSON.stringify(moderatorTags) !== JSON.stringify(initialModeratorTags)
-                ? moderatorTags.map((tag)=>tag.value)
+                ? ((moderatorTags?.length ?? 0) > 0 ? moderatorTags.map((tag)=>tag.value) : [])
                 : undefined;
 
             const updatedHistoryVisibility = createRoomOptions.historyVisibility !== initialHistoryVisibility
@@ -97,6 +109,12 @@
 
             closeModal();
             notifyUserForRoomModification();
+            saveRoomPromise?.resolve({
+                memberTags: updatedMemberTags,
+                moderatorTags: updatedModeratorTags,
+                historyVisibility: updatedHistoryVisibility,
+                name: createRoomOptions.name
+            });
         } catch (error) {
             console.error(error);
             if (error instanceof Error) {
@@ -194,7 +212,7 @@
             <button
             data-testid="saveRoomButton"
             class="disabled:tw-text-gray-400 disabled:tw-bg-gray-500 tw-bg-secondary tw-flex-1 tw-justify-center"
-            disabled={createRoomOptions.name === undefined || createRoomOptions.name?.trim().length === 0 || memberTags.length === 0}
+            disabled={createRoomOptions.name === undefined || createRoomOptions.name?.trim().length === 0 || (memberTags?.length ?? 0) === 0}
             on:click={saveRoom}
             >save
         </button>
@@ -202,7 +220,7 @@
                 <button
                     data-testid="createRoomButton"
                     class="disabled:tw-text-gray-400 disabled:tw-bg-gray-500 tw-bg-secondary tw-flex-1 tw-justify-center"
-                    disabled={createRoomOptions.name === undefined || createRoomOptions.name?.trim().length === 0 || memberTags.length === 0}
+                    disabled={createRoomOptions.name === undefined || createRoomOptions.name?.trim().length === 0 || (memberTags?.length ?? 0) === 0}
                     on:click={createNewRoom}
                     >{$LL.chat.createRoom.buttons.create()}
                 </button>

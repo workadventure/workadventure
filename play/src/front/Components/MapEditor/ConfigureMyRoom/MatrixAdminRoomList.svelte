@@ -12,7 +12,7 @@
     import { IconInfoCircle,IconTrash,IconPencil } from "@wa-icons";
     import { openModal } from "svelte-modals";
     import CreateRoomWithAutoInviteModal from "../../../Chat/Components/Room/CreateRoomWithAutoInviteModal.svelte";
-
+    import { Deferred } from "ts-deferred";
     let dynamicStrings = {
         error: {
             name: false,
@@ -59,12 +59,24 @@
     const deleteRoom = (roomId : string) =>  {
         //TODO : open confirmation modal : 
         connection.emitDeleteAdminManageChatRoom(roomId);
+        roomDataPromise = roomDataPromise.then(roomData => {
+            return roomData.filter(room => room.roomId !== roomId);
+        });
+
     }
 
-    const modifyRoom = (roomID : string , name : string,memberTags: string[],moderatorTags: string[],historyVisibility : string) =>  {
-        //TODO : open modal to modify room
+    const modifyRoom = async (roomID : string , name : string,memberTags: string[],moderatorTags: string[],historyVisibility : string) =>  {
 
         console.log({roomID})
+
+
+        const saveRoomPromise = new Deferred<{
+            memberTags: string[],
+            moderatorTags: string[],
+            historyVisibility: historyVisibility,
+            name: string
+        }>();
+
         openModal(CreateRoomWithAutoInviteModal, {
             roomID,
             memberTags: memberTags.map((tag)=>({
@@ -79,18 +91,58 @@
             createRoomOptions : {
                 name,
                 historyVisibility
-                //TODO : a ramener de l'admin 
-            }
+            },
+            saveRoomPromise
         });
+
+        const newRoomData = await saveRoomPromise.promise;
+
+        // Update the room data in the current list
+        roomDataPromise = roomDataPromise.then(roomData => {
+            return roomData.map(room => {
+                if (room.roomId === roomID) {
+                    return {
+                        ...room,
+                        roomName: newRoomData.name,
+                        roomMemberTags: newRoomData.memberTags || room.roomMemberTags,
+                        roomModeratorTags: newRoomData.moderatorTags || room.roomModeratorTags,
+                        visibility: newRoomData.historyVisibility || room.visibility
+                    };
+                }
+                return room;
+            });
+        });
+
     }
 
     let roomDataPromise = connection.queryAllAdminManageChatRoomQuery();
 
-    const openCreateAutoInviteRoom = () => {
+    const createNewRoom = async () => {
+
+        const saveRoomPromise = new Deferred<{
+            memberTags: string[],
+            moderatorTags: string[],
+            historyVisibility: historyVisibility,
+            name: string
+        }>(); 
 
         //TODO : recuperer le parent ID 
         openModal(CreateRoomWithAutoInviteModal, {
             parentID : "",
+            saveRoomPromise
+        });
+
+        const newRoomData = await saveRoomPromise.promise;
+
+// Update the room data in the current list
+roomDataPromise = roomDataPromise.then(roomData => {
+    return [...roomData,{
+        roomId : newRoomData.roomId,
+        roomName: newRoomData.name,
+        roomMemberTags: newRoomData.memberTags || [],
+        roomModeratorTags: newRoomData.moderatorTags || [],
+            visibility: newRoomData.historyVisibility || "public"
+        }];     
         });
     } 
 
@@ -100,13 +152,12 @@
     <h3>Matrix Room List</h3>
 
     <div class="tw-flex tw-flex-row tw-justify-center">
-        <button class={`light tw-mt-5`} type="button" on:click={openCreateAutoInviteRoom}>Create New Room</button>
+        <button class={`light tw-mt-5`} type="button" on:click={createNewRoom}>Create New Room</button>
     </div>
 
     {#await roomDataPromise}
 	<p>...rolling</p>
 {:then roomData}
-{@debug roomData}
 <table class="tw-table-auto">
     <thead>
         <tr>
