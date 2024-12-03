@@ -6,6 +6,7 @@ import axios from "axios";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import { LocalUrlError } from "./LocalUrlError";
 import { WAMFileFormat } from "./types";
+import { wamFileMigration } from "./Migrations/WamFileMigration";
 
 class MapFetcher {
     async getMapUrl(
@@ -34,7 +35,7 @@ class MapFetcher {
         stripPrefix: string | undefined
     ): Promise<WAMFileFormat> {
         const result = await this.fetchFile(wamUrl, true, true, internalMapStorageUrl, stripPrefix);
-        const parseResult = WAMFileFormat.safeParse(result.data);
+        const parseResult = WAMFileFormat.safeParse(wamFileMigration.migrate(result.data));
         if (!parseResult) {
             throw new LocalUrlError(`Invalid wam file format for: ${wamUrl}`);
         } else {

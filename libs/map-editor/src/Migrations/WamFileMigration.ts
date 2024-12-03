@@ -21,11 +21,9 @@ class WamFileMigration {
     }
 
     public migrate(wamFileContent: any): WAMFileFormat {
-        console.log(">>>>> migrate", { wamFileContent });
         for (const [version, migrationFunction] of Object.entries(this.migrations)) {
             const fileVersion = wamFileContent.version ?? "1.0.0";
             if (fileVersion === version) {
-                console.log(">>>>> migrate", { version });
                 try {
                     wamFileContent = migrationFunction(wamFileContent);
                 } catch (error) {
@@ -48,7 +46,6 @@ class WamFileMigration {
     }
 
     private migrate_v1_to_v2(fileContent: any): any {
-        console.log(">>>>> migrate_v1_to_v2", { fileContent });
         return {
             ...fileContent,
             version: "2.0.0",
