@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { publicTestMapUrl } from "./utils/urls";
 import { login } from "./utils/roles";
 import Map from "./utils/map";
+import Menu from "./utils/menu";
 
 test.setTimeout(180_000);
 test.describe("Connection", () => {
@@ -31,9 +32,10 @@ test.describe("Connection", () => {
     await context.setOffline(false);
 
 
-    await expect(page.locator("button#menuIcon")).toBeVisible({
+    await Menu.waitForMenu(page, 180_000);
+    /*await expect(page.locator("button#menuIcon")).toBeVisible({
       timeout: 180_000,
-    });
+    });*/
   });
 
   test("can succeed on WAM file even if WorkAdventure starts while pusher is down @slow", async ({
@@ -61,8 +63,9 @@ test.describe("Connection", () => {
     //Reconnect
     await context.setOffline(false);
 
-    await expect(page.locator("button#menuIcon")).toBeVisible({
+    await Menu.waitForMenu(page, 180_000);
+    /*await expect(page.locator("button#menuIcon")).toBeVisible({
       timeout: 180_000,
-    });
+    });*/
   });
 });

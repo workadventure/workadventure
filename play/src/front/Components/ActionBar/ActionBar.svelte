@@ -1471,7 +1471,7 @@
                                     on:mouseleave={() => {
                                         !navigating ? (helpActive = undefined) : "";
                                     }}
-                                    class="h-12 min-w-12 @sm/actions:min-w-10 @sm/actions:h-10 @xl/actions:h-12 @xl/actions:min-w-12 p-1 m-0 rounded hover:bg-white/10 flex items-center justify-center transition-all"
+                                    class="h-12 min-w-12 @sm/actions:min-w-10 @sm/actions:h-10 @xl/actions:h-12 @xl/actions:min-w-12 p-1 m-0 rounded hover:bg-white/10 flex items-center justify-center transition-all cursor-pointer"
                                 >
                                     {#if button.toolTip}
                                         {#if helpActive === button.id}
@@ -2011,9 +2011,14 @@
                             on:click={() => {
                                 buttonActionBarTrigger(button.id);
                             }}
-                            class="flex items-center justify-center btn btn-ghost btn-sm btn-light rounded select-none"
+                            class="flex items-center justify-center btn btn-ghost btn-sm btn-light rounded select-none cursor-pointer"
                         >
-                            <img draggable="false" src={button.imageSrc} alt={button.toolTip} class="h-6 mr-2" />
+                            <img
+                                draggable="false"
+                                src={button.imageSrc}
+                                alt={button.toolTip}
+                                class="h-6 mr-2 cursor-pointer"
+                            />
                             {button.toolTip}
                             <!-- src="./static/images/Workadventure.gif"   src={button.imageSrc}   -->
                         </div>

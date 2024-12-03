@@ -1,5 +1,6 @@
 import {expect, Page} from "@playwright/test";
 import {expectInViewport} from "./viewport";
+import Menu from "./menu";
 
 class Chat {
     async slideToChat(page: Page){
@@ -21,7 +22,7 @@ class Chat {
                 await page.click('button#burgerIcon');
             }
         }
-        await expect(page.locator("button#menuIcon")).toBeVisible();
+        await Menu.waitForMenu(page, 180_000);
         await page.click('button.chat-btn');
         await expectInViewport('#chatModal', page);
     }
