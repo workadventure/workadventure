@@ -127,12 +127,12 @@
 
     import AppsIcon from "../Icons/AppsIcon.svelte";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
-    import { IconArrowDown, IconCheckList, IconCalendar } from "@wa-icons";
+    import { IconArrowDown, IconCheckList, IconCalendar, IconLogout } from "@wa-icons";
 
     // gameManager.currenwStartedRoom?.miniLogo ?? WorkAdventureImg;
     let userName = gameManager.getPlayerName() || "";
     export const className = "";
-    let microphoneActive = false;
+    //let microphoneActive = false;
     let cameraActive = false;
     let profileMenuIsDropped = false;
     let adminMenuIsDropped = false;
@@ -429,7 +429,7 @@
     function selectMicrophone(deviceId: string) {
         requestedMicrophoneDeviceIdStore.set(deviceId);
         localUserStore.setPreferredAudioInputDevice(deviceId);
-        microphoneActive = false;
+        //microphoneActive = false;
     }
 
     function selectSpeaker(deviceId: string) {
@@ -1109,184 +1109,201 @@
                         {/if}
                         {#if cameraActive}
                             <div
-                                class="absolute top-20 left-1/2 transform -translate-x-1/2 text-white rounded-lg w-64 overflow-hidden before:content-[''] before:absolute before:w-full before:h-full before:z-1 before:left-0 before:top-0 before:rounded-lg before:bg-contrast/80 before:backdrop-blur after:content-[''] after:absolute after:z-0 after:w-full after:bg-transparent after:h-full after:-top-4 after:-left-0 transition-all"
+                                class="absolute top-20 left-1/2 transform -translate-x-1/2 text-white rounded-md w-64 overflow-hidden before:content-[''] before:absolute before:w-full before:h-full before:z-1 before:left-0 before:top-0 before:rounded-lg before:bg-contrast/80 before:backdrop-blur after:content-[''] after:absolute after:z-0 after:w-full after:bg-transparent after:h-full after:-top-4 after:-left-0 transition-all"
                                 in:fly={{ y: 40, duration: 150 }}
                             >
-                                {#if $requestedCameraState && $cameraListStore && $cameraListStore.length > 1}
-                                    <div class="my-2">
-                                        <div class="flex text-xxs uppercase text-white/50 px-3 py-2 relative">
-                                            {$LL.actionbar.subtitle.camera()}
-                                        </div>
-                                        {#each $cameraListStore as camera, index (index)}
-                                            <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                <div
+                                    class="flex flex-col overflow-auto space-y-2 p-1"
+                                    style="max-height: calc(100vh - 160px);"
+                                >
+                                    {#if $requestedCameraState && $cameraListStore && $cameraListStore.length > 1}
+                                        <div class="">
                                             <div
-                                                class="group flex items-center relative z-10 py-1 px-4 overflow-hidden {$usedCameraDeviceIdStore ===
-                                                camera.deviceId
-                                                    ? 'bg-secondary'
-                                                    : 'hover:bg-white/10'}"
-                                                on:click={() => {
-                                                    analyticsClient.selectCamera();
-                                                }}
-                                                on:click|stopPropagation|preventDefault={() =>
-                                                    selectCamera(camera.deviceId)}
+                                                class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-2 relative bold"
                                             >
+                                                {$LL.actionbar.subtitle.camera()}
+                                            </div>
+                                            {#each $cameraListStore as camera, index (index)}
+                                                <!-- svelte-ignore a11y-click-events-have-key-events -->
                                                 <div
-                                                    class="grow text-sm text-ellipsis overflow-hidden whitespace-nowrap {$usedCameraDeviceIdStore ===
+                                                    class="group flex items-center relative z-10 py-1 px-2 overflow-hidden rounded {$usedCameraDeviceIdStore ===
                                                     camera.deviceId
-                                                        ? 'opacity-100'
-                                                        : 'opacity-80 group-hover:opacity-100'}"
+                                                        ? 'bg-secondary'
+                                                        : 'hover:bg-white/10'}"
+                                                    on:click={() => {
+                                                        analyticsClient.selectCamera();
+                                                    }}
+                                                    on:click|stopPropagation|preventDefault={() =>
+                                                        selectCamera(camera.deviceId)}
                                                 >
-                                                    {StringUtils.normalizeDeviceName(camera.label)}
-                                                </div>
-                                                {#if $usedCameraDeviceIdStore === camera.deviceId}
-                                                    <CheckIcon
-                                                        height="h-4"
-                                                        width="w-4"
-                                                        classList="aspect-square transition-all"
-                                                        strokeColor="stroke-white fill-transparent {$usedCameraDeviceIdStore ===
+                                                    <div
+                                                        class="grow text-sm text-ellipsis overflow-hidden whitespace-nowrap {$usedCameraDeviceIdStore ===
                                                         camera.deviceId
                                                             ? 'opacity-100'
-                                                            : 'opacity-0 group-hover:opacity-30'}"
-                                                        strokeWidth="1.5"
-                                                    />
-                                                {/if}
-                                            </div>
-                                        {/each}
-                                    </div>
-                                {:else}
-                                    <div class="my-2">
-                                        <div class="flex text-xxs uppercase text-white/50 px-3 py-2 relative">
-                                            {$LL.actionbar.subtitle.camera()}
-                                        </div>
-                                        <div class="group flex items-center relative z-10 px-4 font-sm justify-center">
-                                            <div class="text-sm italic">
-                                                {$LL.actionbar.camera.disabled()}
-                                            </div>
-                                        </div>
-                                        <div class="group flex items-center relative z-10 py-1 px-4 overflow-hidden">
-                                            <button
-                                                class="btn btn-danger btn-sm w-full justify-center"
-                                                on:click={() => analyticsClient.camera()}
-                                                on:click={cameraClick}
-                                            >
-                                                {$LL.actionbar.camera.activate()}
-                                            </button>
-                                        </div>
-                                    </div>
-                                {/if}
-                                {#if $requestedMicrophoneState && $microphoneListStore && $microphoneListStore.length > 1 && microphoneActive}
-                                    <div class="my-2">
-                                        <div class="flex text-xxs uppercase text-white/50 px-3 py-2 relative">
-                                            {$LL.actionbar.subtitle.microphone()}
-                                        </div>
-                                        {#each $microphoneListStore as microphone, index (index)}
-                                            <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                            <div
-                                                class="group flex items-center relative z-10 py-1 px-4 overflow-hidden {$usedMicrophoneDeviceIdStore ===
-                                                microphone.deviceId
-                                                    ? 'bg-secondary'
-                                                    : 'hover:bg-white/10'}"
-                                                on:click={() => {
-                                                    analyticsClient.selectMicrophone();
-                                                }}
-                                                on:click|stopPropagation|preventDefault={() =>
-                                                    selectMicrophone(microphone.deviceId)}
-                                            >
-                                                <div
-                                                    class="grow text-sm text-ellipsis overflow-hidden whitespace-nowrap {$usedMicrophoneDeviceIdStore ===
-                                                    microphone.deviceId
-                                                        ? 'opacity-100'
-                                                        : 'opacity-80 group-hover:opacity-100'}"
-                                                >
-                                                    {StringUtils.normalizeDeviceName(microphone.label)}
+                                                            : 'opacity-80 group-hover:opacity-100'}"
+                                                    >
+                                                        {StringUtils.normalizeDeviceName(camera.label)}
+                                                    </div>
+                                                    {#if $usedCameraDeviceIdStore === camera.deviceId}
+                                                        <CheckIcon
+                                                            height="h-4"
+                                                            width="w-4"
+                                                            classList="aspect-square transition-all"
+                                                            strokeColor="stroke-white fill-transparent {$usedCameraDeviceIdStore ===
+                                                            camera.deviceId
+                                                                ? 'opacity-100'
+                                                                : 'opacity-0 group-hover:opacity-30'}"
+                                                            strokeWidth="1.5"
+                                                        />
+                                                    {/if}
                                                 </div>
-                                                {#if $usedMicrophoneDeviceIdStore === microphone.deviceId}
-                                                    <CheckIcon
-                                                        height="h-4"
-                                                        width="w-4"
-                                                        classList="aspect-square transition-all"
-                                                        strokeColor="stroke-white fill-transparent {$usedMicrophoneDeviceIdStore ===
+                                            {/each}
+                                        </div>
+                                    {:else}
+                                        <div class="">
+                                            <div
+                                                class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-2 relative bold"
+                                            >
+                                                {$LL.actionbar.subtitle.camera()}
+                                            </div>
+                                            <div
+                                                class="group flex items-center relative z-10 px-2 font-sm justify-center"
+                                            >
+                                                <div class="text-sm italic">
+                                                    {$LL.actionbar.camera.disabled()}
+                                                </div>
+                                            </div>
+                                            <div
+                                                class="group flex items-center relative z-10 py-1 px-2 overflow-hidden"
+                                            >
+                                                <button
+                                                    class="btn btn-danger btn-sm w-full justify-center"
+                                                    on:click={() => analyticsClient.camera()}
+                                                    on:click={cameraClick}
+                                                >
+                                                    {$LL.actionbar.camera.activate()}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    {/if}
+                                    {#if $requestedMicrophoneState && $microphoneListStore && $microphoneListStore.length > 1}
+                                        <div class="">
+                                            <div
+                                                class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-1 relative bold"
+                                            >
+                                                {$LL.actionbar.subtitle.microphone()}
+                                            </div>
+                                            {#each $microphoneListStore as microphone, index (index)}
+                                                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                                <div
+                                                    class="group flex items-center relative z-10 py-1 px-2 overflow-hidden rounded {$usedMicrophoneDeviceIdStore ===
+                                                    microphone.deviceId
+                                                        ? 'bg-secondary'
+                                                        : 'hover:bg-white/10'}"
+                                                    on:click={() => {
+                                                        analyticsClient.selectMicrophone();
+                                                    }}
+                                                    on:click|stopPropagation|preventDefault={() =>
+                                                        selectMicrophone(microphone.deviceId)}
+                                                >
+                                                    <div
+                                                        class="grow text-sm text-ellipsis overflow-hidden whitespace-nowrap {$usedMicrophoneDeviceIdStore ===
                                                         microphone.deviceId
                                                             ? 'opacity-100'
-                                                            : 'opacity-0 group-hover:opacity-30'}"
-                                                        strokeWidth="1.5"
-                                                    />
-                                                {/if}
-                                            </div>
-                                        {/each}
-                                    </div>
-                                {:else}
-                                    <div class="my-2">
-                                        <div class="flex text-xxs uppercase text-white/50 px-3 py-2 relative">
-                                            {$LL.actionbar.subtitle.microphone()}
-                                        </div>
-                                        <div
-                                            class="group flex items-center relative z-10 py-1 px-4 font-sm justify-center"
-                                        >
-                                            <div class="text-sm italic">
-                                                {$LL.actionbar.microphone.disabled()}
-                                            </div>
-                                        </div>
-                                        <div class="group flex items-center relative z-10 px-4 overflow-hidden">
-                                            <button
-                                                class="btn btn-danger btn-sm w-full justify-center"
-                                                on:click={() => analyticsClient.microphone()}
-                                                on:click={microphoneClick}
-                                            >
-                                                {$LL.actionbar.microphone.activate()}
-                                            </button>
-                                        </div>
-                                    </div>
-                                {/if}
-                                {#if $speakerSelectedStore != undefined && $speakerListStore && $speakerListStore.length > 0}
-                                    <div class="my-2">
-                                        <div class="flex text-xxs uppercase text-white/50 px-3 py-1 relative">
-                                            {$LL.actionbar.subtitle.speaker()}
-                                        </div>
-                                        {#each $speakerListStore as speaker, index (index)}
-                                            <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                            <div
-                                                class="group flex items-center relative z-10 py-1 px-4 overflow-hidden {$speakerSelectedStore ===
-                                                speaker.deviceId
-                                                    ? 'bg-secondary'
-                                                    : 'hover:bg-white/10'}"
-                                                on:click={() => {
-                                                    analyticsClient.selectSpeaker();
-                                                }}
-                                                on:click|stopPropagation|preventDefault={() =>
-                                                    selectSpeaker(speaker.deviceId)}
-                                            >
-                                                <div
-                                                    class="grow text-sm text-ellipsis overflow-hidden whitespace-nowrap {$speakerSelectedStore ===
-                                                    speaker.deviceId
-                                                        ? 'opacity-100'
-                                                        : 'opacity-80 group-hover:opacity-100'}"
-                                                >
-                                                    {StringUtils.normalizeDeviceName(speaker.label)}
+                                                            : 'opacity-80 group-hover:opacity-100'}"
+                                                    >
+                                                        {StringUtils.normalizeDeviceName(microphone.label)}
+                                                    </div>
+                                                    {#if $usedMicrophoneDeviceIdStore === microphone.deviceId}
+                                                        <CheckIcon
+                                                            height="h-4"
+                                                            width="w-4"
+                                                            classList="aspect-square transition-all"
+                                                            strokeColor="stroke-white fill-transparent {$usedMicrophoneDeviceIdStore ===
+                                                            microphone.deviceId
+                                                                ? 'opacity-100'
+                                                                : 'opacity-0 group-hover:opacity-30'}"
+                                                            strokeWidth="1.5"
+                                                        />
+                                                    {/if}
                                                 </div>
-                                                {#if $speakerSelectedStore === speaker.deviceId}
-                                                    <CheckIcon
-                                                        height="h-4"
-                                                        width="w-4"
-                                                        classList="aspect-square transition-all"
-                                                        strokeColor="stroke-white fill-transparent {$speakerSelectedStore ===
+                                            {/each}
+                                        </div>
+                                    {:else}
+                                        <div class="">
+                                            <div
+                                                class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-2 relative bold"
+                                            >
+                                                {$LL.actionbar.subtitle.microphone()}
+                                            </div>
+                                            <div
+                                                class="group flex items-center relative z-10 py-1 px-2 font-sm justify-center"
+                                            >
+                                                <div class="text-sm italic">
+                                                    {$LL.actionbar.microphone.disabled()}
+                                                </div>
+                                            </div>
+                                            <div class="group flex items-center relative z-10 px-2 overflow-hidden">
+                                                <button
+                                                    class="btn btn-danger btn-sm w-full justify-center"
+                                                    on:click={() => analyticsClient.microphone()}
+                                                    on:click={microphoneClick}
+                                                >
+                                                    {$LL.actionbar.microphone.activate()}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    {/if}
+                                    {#if $speakerSelectedStore != undefined && $speakerListStore && $speakerListStore.length > 0}
+                                        <div class="">
+                                            <div class="flex text-xxs uppercase text-white/50 px-3 py-1 relative">
+                                                {$LL.actionbar.subtitle.speaker()}
+                                            </div>
+                                            {#each $speakerListStore as speaker, index (index)}
+                                                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                                <div
+                                                    class="group flex items-center relative z-10 py-1 px-2 overflow-hidden rounded {$speakerSelectedStore ===
+                                                    speaker.deviceId
+                                                        ? 'bg-secondary'
+                                                        : 'hover:bg-white/10'}"
+                                                    on:click={() => {
+                                                        analyticsClient.selectSpeaker();
+                                                    }}
+                                                    on:click|stopPropagation|preventDefault={() =>
+                                                        selectSpeaker(speaker.deviceId)}
+                                                >
+                                                    <div
+                                                        class="grow text-sm text-ellipsis overflow-hidden whitespace-nowrap {$speakerSelectedStore ===
                                                         speaker.deviceId
                                                             ? 'opacity-100'
-                                                            : 'opacity-0 group-hover:opacity-30'}"
-                                                        strokeWidth="1.5"
-                                                    />
-                                                {/if}
-                                            </div>
-                                        {/each}
-                                    </div>
-                                {/if}
-                                <div class="relative z-10 flex px-4 py-3 bg-contrast">
+                                                            : 'opacity-80 group-hover:opacity-100'}"
+                                                    >
+                                                        {StringUtils.normalizeDeviceName(speaker.label)}
+                                                    </div>
+                                                    {#if $speakerSelectedStore === speaker.deviceId}
+                                                        <CheckIcon
+                                                            height="h-4"
+                                                            width="w-4"
+                                                            classList="aspect-square transition-all"
+                                                            strokeColor="stroke-white fill-transparent {$speakerSelectedStore ===
+                                                            speaker.deviceId
+                                                                ? 'opacity-100'
+                                                                : 'opacity-0 group-hover:opacity-30'}"
+                                                            strokeWidth="1.5"
+                                                        />
+                                                    {/if}
+                                                </div>
+                                            {/each}
+                                        </div>
+                                    {/if}
+                                </div>
+                                <div class="relative z-10 flex p-2 bg-contrast/50">
                                     <button
-                                        class="btn btn-xs btn-ghost btn-light justify-center w-full mr-3"
+                                        class="btn btn-xs btn-ghost btn-light justify-center w-full mr-3 rounded"
                                         on:click={openEnableCameraScene}>{$LL.actionbar.test()}</button
                                     >
                                     <button
-                                        class="btn btn-xs btn-border btn-light justify-center w-full cursor-pointer"
+                                        class="btn btn-xs btn-border btn-light justify-center w-full cursor-pointer rounded"
                                         on:click|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}
                                         >{$LL.actionbar.close()}</button
                                     >
@@ -1377,9 +1394,7 @@
                                             class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
                                             on:click={lightModeOn}
                                         >
-                                            <div
-                                                class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
-                                            >
+                                            <div class="transition-all w-6 h-6 aspect-square text-center">
                                                 <ProfilIcon />
                                             </div>
                                             <div>{$LL.actionbar.lightMode()}</div>
@@ -1388,9 +1403,7 @@
                                             class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
                                             on:click={focusModeOn}
                                         >
-                                            <div
-                                                class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
-                                            >
+                                            <div class="transition-all w-6 h-6 aspect-square text-center">
                                                 <ProfilIcon />
                                             </div>
                                             <div>{$LL.actionbar.focusMode()}</div>
@@ -1399,9 +1412,7 @@
                                             class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
                                             on:click={rightModeOn}
                                         >
-                                            <div
-                                                class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
-                                            >
+                                            <div class="transition-all w-6 h-6 aspect-square text-center">
                                                 <ProfilIcon />
                                             </div>
                                             <div>{$LL.actionbar.rightMode()}</div>
@@ -1411,9 +1422,7 @@
                                                 class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
                                                 on:click={hideModeOn}
                                             >
-                                                <div
-                                                    class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
-                                                >
+                                                <div class="transition-all w-6 h-6 aspect-square text-center">
                                                     <ProfilIcon />
                                                 </div>
                                                 <div>{$LL.actionbar.hideMode()}</div>
@@ -1570,21 +1579,19 @@
                         </div>
                         {#if adminMenuIsDropped}
                             <div
-                                class="absolute mt-2 top-14 @xl/actions:top-16 right-0 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all"
+                                class="absolute mt-2 top-14 @xl/actions:top-16 right-0 bg-contrast/80 backdrop-blur rounded-md w-56 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-transparent before:border-b-contrast/80 transition-all"
                                 data-testid="admin-menu"
                                 transition:fly={{ y: 40, duration: 150 }}
                             >
-                                <ul class="p-0 m-0">
+                                <ul class="p-1 m-0">
                                     {#if $mapEditorActivated}
                                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                                         <li
-                                            class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold"
+                                            class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
                                             data-testid="map-editor"
                                             on:click={() => toggleMapEditorMode()}
                                         >
-                                            <div
-                                                class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
-                                            >
+                                            <div class="transition-all w-6 h-6 aspect-square text-center">
                                                 <svg
                                                     width="20"
                                                     height="20"
@@ -1607,35 +1614,31 @@
                                     {/if}
                                     {#if $userHasAccessToBackOfficeStore}
                                         <li
-                                            class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold"
+                                            class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
                                             on:click={() => openBo()}
                                         >
-                                            <div
-                                                class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
-                                            >
+                                            <div class="transition-all w-6 h-6 aspect-square text-center">
                                                 <AdjustmentsIcon />
                                             </div>
                                             <div>{$LL.actionbar.bo()}</div>
                                         </li>
                                     {/if}
                                     <li
-                                        class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold"
+                                        class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
                                         data-testid="global-message"
                                         on:click={toggleGlobalMessage}
                                     >
-                                        <div
-                                            class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
-                                        >
+                                        <div class="transition-all w-6 h-6 aspect-square text-center">
                                             <MessageGlobalIcon />
                                         </div>
                                         <div>{$LL.actionbar.globalMessage()}</div>
                                     </li>
                                     {#if $megaphoneCanBeUsedStore && !$silentStore && ($myMicrophoneStore || $myCameraStore)}
                                         <li
-                                            class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold"
+                                            class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
                                         >
                                             <div
-                                                class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
+                                                class="transition-all w-6 h-6 aspect-square text-center"
                                                 data-testid="megaphone"
                                             >
                                                 <MegaphoneIcon />
@@ -1673,7 +1676,7 @@
                                     {userName}
                                 </div>
                                 <div class="text-xxs bold whitespace-nowrap select-none flex items-center">
-                                    <div class="aspect-square h-2 w-2 bg-success rounded-full mr-2" />
+                                    <div class="aspect-square h-2 w-2 bg-success rounded-full mr-1.5" />
                                     <div class="text-success hidden @xl/actions:block">
                                         {$LL.actionbar.status.ONLINE()}
                                     </div>
@@ -1691,7 +1694,7 @@
                     </div>
                     {#if profileMenuIsDropped}
                         <div
-                            class="absolute mt-2 top-14 @xl/actions:top-16 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 right-0 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-transparent before:border-b-contrast/80 transition-all hidden @md/actions:block max-h-[calc(100vh-96px)] overflow-y-auto"
+                            class="absolute mt-2 top-14 @xl/actions:top-16 bg-contrast/80 backdrop-blur rounded-md p-1 w-56 right-0 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-transparent before:border-b-contrast/80 transition-all hidden @md/actions:block max-h-[calc(100vh-96px)] overflow-y-auto"
                             data-testid="profile-menu"
                             transition:fly={{ y: 40, duration: 150 }}
                         >
@@ -1699,9 +1702,9 @@
                                 <a
                                     href="https://workadventu.re/pricing/"
                                     target="_blank"
-                                    class="group flex px-2 transition-all cursor-pointer text-sm font-bold w-full text-white no-underline"
+                                    class="group flex p-1 transition-all cursor-pointer text-sm font-bold w-full text-white no-underline bg-white/10 rounded hover:bg-white/20"
                                 >
-                                    <div class="flex items-center px-3 py-3 w-full bg-white/10 rounded">
+                                    <div class="flex items-center px-3 py-3 w-full">
                                         <div class="w-full text-left leading-4">{$LL.actionbar.accountType()}</div>
                                         <div class="">
                                             <div class="btn btn-light btn-sm">
@@ -1710,55 +1713,64 @@
                                         </div>
                                     </div>
                                 </a>
-                                <div class="h-[1px] w-full bg-white/20 my-2" />
+                                <div class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-2 relative bold">
+                                    Status
+                                </div>
                                 <button
-                                    class="group flex px-4 py-1 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full text-left"
-                                    on:click={() => openEditNameScene()}
+                                    class="group flex px-4 py-1 gap-2 items-center transition-all cursor-pointer text-sm w-full pointer-events-auto text-left rounded"
                                 >
-                                    <div class="aspect-square h-2 w-2 bg-success rounded-full ml-2 mr-3" />
-                                    <div class="mr-3 grow text-left opacity-50 leading-4">En ligne</div>
-                                    <div class="">
-                                        <CheckIcon height="h-4" width="h-4" />
-                                    </div>
+                                    <div class="aspect-square h-2 w-2 bg-success rounded-full" />
+                                    <div class="grow text-left opacity-50 leading-4">En ligne</div>
+                                    <CheckIcon height="h-4" width="h-4" classList="opacity-100" />
                                 </button>
                                 <button
-                                    class="group flex px-4 py-1 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full text-left"
-                                    on:click={() => openEditNameScene()}
+                                    class="group flex px-2 py-1 gap-2 items-center transition-all cursor-pointer text-sm w-full pointer-events-auto text-left rounded"
                                 >
-                                    <div class="aspect-square h-2 w-2 bg-warning rounded-full ml-2 mr-3 leading-4" />
-                                    <div class="mr-3 grow text-left">Absent</div>
+                                    <div class="aspect-square h-2 w-2 bg-warning rounded-full leading-4" />
+                                    <div class="grow text-left leading-4">Absent</div>
+                                    <CheckIcon
+                                        height="h-4"
+                                        width="h-4"
+                                        classList="opacity-0 group-hover:opacity-100 transition-all"
+                                    />
                                 </button>
                                 <button
-                                    class="group flex px-4 py-1 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full text-left"
-                                    on:click={() => openEditNameScene()}
+                                    class="group flex px-2 py-1 gap-4 items-center transition-all cursor-pointer text-sm w-full pointer-events-auto text-left rounded"
                                 >
-                                    <div class="aspect-square h-2 w-2 bg-danger rounded-full ml-2 mr-3 leading-4" />
-                                    <div class="mr-3 grow text-left">Ne pas déranger</div>
+                                    <div class="aspect-square h-2 w-2 bg-danger-500 rounded-full leading-4" />
+                                    <div class="grow text-left leading-4">Ne pas déranger</div>
+                                    <CheckIcon
+                                        height="h-4"
+                                        width="h-4"
+                                        classList="opacity-0 group-hover:opacity-100 transition-all"
+                                    />
                                 </button>
-                                <div class="h-[1px] w-full bg-white/20 my-2" />
+                                <div class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-2 relative bold">
+                                    Profil
+                                </div>
                                 <button
-                                    class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full text-left"
+                                    class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
                                     on:click={() => openEditNameScene()}
                                 >
-                                    <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center">
+                                    <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
                                         <ProfilIcon />
                                     </div>
-                                    <div class="text-left leading-4">{$LL.actionbar.profil()}</div>
+                                    <div class="text-left leading-4 flex items-center">{$LL.actionbar.profil()}</div>
                                 </button>
                                 <button
-                                    class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full text-left"
+                                    class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
                                     on:click={() => openEditSkinScene()}
                                 >
-                                    <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center">
+                                    <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
                                         <Woka userId={-1} placeholderSrc="" customWidth="26px" customHeight="26px" />
                                     </div>
-                                    <div class="text-left leading-4">{$LL.actionbar.woka()}</div>
+                                    <div class="text-left leading-4 flex items-center">{$LL.actionbar.woka()}</div>
                                 </button>
                                 <button
-                                    class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full pointer-events-auto text-left"
+                                    class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
                                     on:click={() => openEditCompanionScene()}
                                 >
-                                    <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center">
+                                    <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
                                         <Companion
                                             userId={-1}
                                             placeholderSrc="./static/images/default-companion.png"
@@ -1766,62 +1778,48 @@
                                             height="26px"
                                         />
                                     </div>
-                                    <div class="text-left leading-4">{$LL.actionbar.companion()}</div>
+                                    <div class="text-left leading-4 flex items-center">{$LL.actionbar.companion()}</div>
                                 </button>
                                 <button
-                                    class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full pointer-events-auto text-left"
+                                    class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
                                 >
-                                    <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center">
+                                    <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
                                         <AchievementIcon />
                                     </div>
-                                    <div class="text-left">{$LL.actionbar.quest()}</div>
+                                    <div class="text-left flex items-center">{$LL.actionbar.quest()}</div>
                                 </button>
-                                <div class="h-[1px] w-full bg-white/20 my-2" />
+                                <div class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-2 relative bold">
+                                    Settings
+                                </div>
                                 <button
-                                    class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full text-left"
+                                    class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
                                     on:click={openEnableCameraScene}
                                 >
-                                    <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center">
+                                    <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
                                         <CamSettingsIcon />
                                     </div>
-                                    <div class="text-left leading-4">{$LL.actionbar.editCamMic()}</div>
+                                    <div class="text-left leading-4 flex items-center">{$LL.actionbar.editCamMic()}</div>
                                 </button>
                                 <button
-                                    class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full text-left"
+                                    class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
                                     id="settings"
                                     on:click={() => showMenuItem(SubMenusInterface.settings)}
                                 >
-                                    <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center">
+                                    <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
                                         <SettingsIcon />
                                     </div>
-                                    <div class="text-left leading-4">{$LL.actionbar.otherSettings()}</div>
+                                    <div class="text-left leading-4 flex items-center">{$LL.actionbar.otherSettings()}</div>
                                 </button>
 
                                 <button
                                     on:click={() => analyticsClient.logout()}
                                     on:click={() => connectionManager.logout()}
-                                    class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full text-left"
+                                    class="group flex p-2 gap-2 items-center hover:bg-danger-600 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
                                 >
-                                    <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center">
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            width="18"
-                                            height="18"
-                                            stroke-width="2"
-                                        >
-                                            <path
-                                                d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2"
-                                            />
-                                            <path d="M9 12h12l-3 -3" />
-                                            <path d="M18 15l3 -3" />
-                                        </svg>
+                                    <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
+                                        <IconLogout height="20" width="20" class="stroke-danger-600 group-hover:stroke-white" />
                                     </div>
-                                    <div class="text-left leading-4">
+                                    <div class="text-left leading-4 text-danger-600 group-hover:text-white flex items-center">
                                         {$LL.menu.profile.logout()}
                                     </div>
                                 </button>

@@ -5,6 +5,7 @@
     import { SelectCompanionSceneName } from "../../Phaser/Login/SelectCompanionScene";
     import { collectionsSizeStore, selectedCollection } from "../../Stores/SelectCharacterSceneStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { IconChevronLeft, IconChevronRight } from "@wa-icons";
 
     export let game: Game;
 
@@ -42,27 +43,33 @@
 </section>
 <section class="category flex flex-row justify-center">
     {#if $collectionsSizeStore > 1 && $selectedCollection}
-        <button class="light mr-2 selectCharacterButton" on:click|preventDefault={selectLeftCollection}> &lt; </button>
+        <button class="light mr-2 selectCharacterButton" on:click|preventDefault={selectLeftCollection}>
+            <IconChevronLeft />
+        </button>
         <strong class="category-text">{$selectedCollection}</strong>
         <button class="outline ml-2 selectCharacterButton" on:click|preventDefault={selectRightCollection}>
-            &gt;
+            <IconChevronRight />
         </button>
     {/if}
 </section>
-<section
-    class="action flex flex-row justify-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-[calc(50%-35vh)] h-10"
+<div
+    class="fixed bottom-0 w-full bg-contrast/80 backdrop-blur-md border border-solid border-t border-b-0 border-x-0 border-white/10"
 >
-    <button
-        class="btn btn-lg btn-light btn-border mr-4 selectCompanionSceneFormBack"
-        on:click|preventDefault={noCompanion}>{$LL.companion.select.any()}</button
+    <section
+        class="action container m-auto p-4 flex flex-col-reverse md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4 justify-between"
     >
-    <button
-        type="submit"
-        class="btn btn-lg btn-secondary selectCompanionSceneFormSubmit"
-        on:click|preventDefault={() => analyticsClient.selectCompanion()}
-        on:click|preventDefault={selectCompanion}>{$LL.companion.select.continue()}</button
-    >
-</section>
+        <button
+            class="btn btn-light btn-lg btn-ghost w-full md:w-1/2 block selectCompanionSceneFormBack"
+            on:click|preventDefault={noCompanion}>{$LL.companion.select.any()}</button
+        >
+        <button
+            type="submit"
+            class="btn btn-secondary btn-lg w-full md:w-1/2 block selectCompanionSceneFormSubmit"
+            on:click|preventDefault={() => analyticsClient.selectCompanion()}
+            on:click|preventDefault={selectCompanion}>{$LL.companion.select.continue()}</button
+        >
+    </section>
+</div>
 
 <!--<form class="selectCompanionScene">-->
 <!--    <section class="text-center">-->

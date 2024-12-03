@@ -134,7 +134,13 @@
         myCameraStore.set(true);
         myMicrophoneStore.set(true);
         requestedCameraState.enableWebcam();
+        console.log("localUserStore.getRequestedCameraState();");
+        console.log(localUserStore.getRequestedCameraState());
+
         requestedMicrophoneState.enableMicrophone();
+        console.log("localUserStore.getRequestedMicrophoneState");
+        console.log(localUserStore.getRequestedMicrophoneState());
+
         batchGetUserMediaStore.commitChanges();
         sound.load();
     });
@@ -173,7 +179,7 @@
 
 <form class="enableCameraScene pointer-events-auto relative z-30 m-0" on:submit|preventDefault={submit}>
     <section class="flex items-center justify-center min-h-screen ">
-        <div class="text-white container mx-auto flex flex-col items-center justify-center">
+        <div class="text-white container mx-auto flex flex-col items-center justify-center min-h-screen pb-24 relative">
             <section class="mb-4 text-center">
                 <h2 class="h4">{$LL.camera.enable.title()}</h2>
                 <p class="opacity-50 w-2/3 m-auto">
@@ -228,11 +234,11 @@
                                         {$LL.audio.disable()}
                                     </div>
                                     {#if selectedMicrophone == undefined}
-                                        <span class="chip chip-sm chip-neutral inline rounded-sm">
+                                        <span class="chip chip-sm chip-neutral inline rounded-sm rounded-sm">
                                             <span class="chip-label">{$LL.camera.active()}</span>
                                         </span>
                                     {:else}
-                                        <span class="chip chip-sm chip-neutral !inline-block">
+                                        <span class="chip chip-sm chip-neutral inline rounded-sm">
                                             <span class="chip-label">{$LL.camera.notRecommended()}</span>
                                         </span>
                                     {/if}
@@ -276,11 +282,11 @@
                                             {StringUtils.normalizeDeviceName(microphone.label)}
                                         </div>
                                         {#if microphone.deviceId === selectedMicrophone}
-                                            <span class="chip chip-sm chip-neutral inline rounded-sm">
+                                            <span class="chip chip-sm chip-neutral inline rounded-sm rounded-sm">
                                                 <span class="chip-label">{$LL.camera.active()}</span>
                                             </span>
                                         {:else}
-                                            <span class="chip chip-sm chip-neutral !inline-block">
+                                            <span class="chip chip-sm chip-neutral inline rounded-sm">
                                                 <span class="chip-label">{$LL.camera.disabled()}</span>
                                             </span>
                                         {/if}
@@ -341,11 +347,11 @@
                                             {$LL.camera.disable()}
                                         </div>
                                         {#if selectedCamera == undefined}
-                                            <span class="chip chip-sm chip-neutral inline rounded-sm">
+                                            <span class="chip chip-sm chip-neutral inline rounded-sm rounded-sm">
                                                 <span class="chip-label">{$LL.camera.active()}</span>
                                             </span>
                                         {:else}
-                                            <span class="chip chip-sm chip-neutral !inline-block">
+                                            <span class="chip chip-sm chip-neutral inline rounded-sm">
                                                 <span class="chip-label">{$LL.camera.notRecommended()}</span>
                                             </span>
                                         {/if}
@@ -403,11 +409,11 @@
                                                 {StringUtils.normalizeDeviceName(camera.label)}
                                             </div>
                                             {#if camera.deviceId === selectedCamera}
-                                                <span class="chip chip-sm chip-neutral inline rounded-sm">
+                                                <span class="chip chip-sm chip-neutral inline rounded-sm rounded-sm">
                                                     <span class="chip-label">{$LL.camera.active()}</span>
                                                 </span>
                                             {:else}
-                                                <span class="chip chip-sm chip-neutral !inline-block">
+                                                <span class="chip chip-sm chip-neutral inline rounded-sm">
                                                     <span class="chip-label">{$LL.camera.disabled()}</span>
                                                 </span>
                                             {/if}
@@ -468,11 +474,11 @@
                                                 {StringUtils.normalizeDeviceName(speaker.label)}
                                             </div>
                                             {#if speaker.deviceId === $speakerSelectedStore}
-                                                <span class="chip chip-sm chip-neutral inline rounded-sm">
+                                                <span class="chip chip-sm chip-neutral inline rounded-sm rounded-sm">
                                                     <span class="chip-label">{$LL.camera.active()}</span>
                                                 </span>
                                             {:else}
-                                                <span class="chip chip-sm chip-neutral !inline-block">
+                                                <span class="chip chip-sm chip-neutral inline rounded-sm">
                                                     <span class="chip-label">{$LL.camera.notRecommended()}</span>
                                                 </span>
                                             {/if}
@@ -490,17 +496,21 @@
                     </div>
                 {/if}
             </div>
-            <section
-                class="flex items-center space-x-4 justify-between border border-t border-white pt-8 min-w-[402px]"
+            <div
+                class="fixed bottom-0 w-full bg-contrast/80 backdrop-blur-md border border-solid border-t border-b-0 border-x-0 border-white/10"
             >
-                <button type="submit" class="btn btn-light btn-lg btn-ghost min-w-[175px] rounded block"
-                    >{$LL.actionbar.cancel()}</button
+                <section
+                    class="container m-auto p-4 flex flex-col-reverse md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4 justify-between"
                 >
-                <!-- TODO ACTION -->
-                <button type="submit" class="btn btn-secondary btn-lg min-w-[175px] rounded block"
-                    >{$LL.menu.settings.save()}</button
-                >
-            </section>
+                    <button type="submit" class="btn btn-light btn-lg btn-ghost w-full md:w-1/2 block"
+                        >{$LL.actionbar.cancel()}</button
+                    >
+                    <!-- TODO ACTION -->
+                    <button type="submit" class="btn btn-secondary btn-lg w-full md:w-1/2 block"
+                        >{$LL.menu.settings.save()}</button
+                    >
+                </section>
+            </div>
         </div>
     </section>
 </form>

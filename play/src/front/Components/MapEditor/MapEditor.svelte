@@ -27,11 +27,15 @@
 </script>
 
 <MapEditorSideBar />
-<div class={`map-editor bg-dark-blue/95 ${$mapEditorSelectedToolStore}`}>
+<div class={`map-editor bg-contrast/80 backdrop-blur-md h-screen ${$mapEditorSelectedToolStore}`}>
     {#if $mapEditorSelectedToolStore === EditorToolName.WAMSettingsEditor}
         <ConfigureMyRoom />
     {:else if $mapEditorVisibilityStore}
-        <div class="sidebar" in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>
+        <div
+            class="sidebar h-screen"
+            in:fly={{ x: 100, duration: 250, delay: 200 }}
+            out:fly={{ x: 100, duration: 200 }}
+        >
             <button class="absolute right-10 p-1 cursor-pointer" on:click={hideMapEditor}
                 ><IconMinus font-size="14" /></button
             >
