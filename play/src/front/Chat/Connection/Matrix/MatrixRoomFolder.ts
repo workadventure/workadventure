@@ -23,7 +23,6 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
 
     constructor(private room: Room) {
         super(room);
-        console.log(">@ constructor folder : ", get(this.name));
         this.invitations = derived(
             [
                 this.roomList,
@@ -70,14 +69,12 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
     }
 
     async init() {
-        console.log(">@ init folder : ", get(this.name));
         try {
             await this.joinRoomDeferred.promise;
             await this.refreshFolderHierarchy();
             this.loadRoomsAndFolderPromise.resolve();
         } catch (e) {
             this.loadRoomsAndFolderPromise.reject(e);
-            console.error('>@',e);
             //TODO : Sentry
         }finally{
             console.log(">@ fin folder : ", get(this.name));
@@ -221,9 +218,7 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
     }
 
     protected override onRoomMyMembership(room: Room) {
-        console.log(">>>>>>>>>override");
         if (room.getMyMembership() === KnownMembership.Join) {
-            console.log(">>>>>>>>>override onRoomMyMembership resolse  ");
             this.joinRoomDeferred.resolve();
         }
         super.onRoomMyMembership(room);
