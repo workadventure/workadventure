@@ -12,7 +12,7 @@
     import Message from "./Message.svelte";
     import MessageInputBar from "./MessageInputBar.svelte";
     import MessageSystem from "./MessageSystem.svelte";
-    import { IconChevronLeft, IconDots, IconLoader, IconMailBox } from "@wa-icons";
+    import { IconChevronLeft, IconLoader, IconMailBox } from "@wa-icons";
 
     export let room: ChatRoom;
 
@@ -188,9 +188,7 @@
                 <div class="tw-text-md tw-font-bold tw-h-5 tw-grow tw-text-center" data-testid="roomName">
                     {$roomName}
                 </div>
-                <div class="hover:tw-bg-white/10 tw-p-3 tw-rounded-2xl tw-aspect-square tw-w-12">
-                    <IconDots font-size="20" />
-                </div>
+                <div class="tw-p-3 tw-rounded-2xl tw-aspect-square tw-w-12" />
             </div>
             {#if shouldDisplayLoader}
                 <div class="tw-flex tw-justify-center tw-items-center tw-w-full tw-pb-1 tw-bg-transparent">
