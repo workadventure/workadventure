@@ -54,7 +54,7 @@
     } tw-select-text tw-group/message block-user-action messageContainer tw-items-center`}
 >
     <div
-        style={replyDepth === 0 ? "max-width: calc( 100% - 105px );" : "padding-left: 0"}
+        style={replyDepth === 0 ? "max-width: calc( 100% - 50px );" : "padding-left: 0"}
         class="container-grid tw-justify-start {replyDepth === 0 ? 'tw-max-w-[calc(100% - 100px)]' : ''} {!isDeleted
             ? 'group-hover/message:tw-pb-4'
             : ''} {isMyMessage ? 'tw-justify-end grid-container-inverted tw-pr-4' : 'tw-justify-start tw-pl-3'}"
