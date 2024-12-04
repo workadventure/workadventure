@@ -963,69 +963,45 @@
                                         ? 'rounded-l-lg'
                                         : ''}"
                                 >
-                                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                    <div
-                                        class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 rounded group-hover/btn-follow:bg-white/10 aspect-square flex items-center justify-center transition-all {$followStateStore ===
-                                        'active'
-                                            ? 'bg-secondary'
-                                            : ''}"
-                                        class:disabled={$followStateStore !== "off"}
-                                        on:click={() => analyticsClient.follow()}
-                                        on:click={followClick}
-                                        on:mouseenter={() => {
-                                            !navigating ? (helpActive = "follow") : "";
+                                    <ActionBarIconButton
+                                        on:click={() => {
+                                            analyticsClient.follow()
+                                            followClick();
                                         }}
-                                        on:mouseleave={() => {
-                                            !navigating ? (helpActive = undefined) : "";
-                                        }}
+                                        tooltipTitle={$followStateStore === "active" ? $LL.actionbar.help.unfollow.title() : $LL.actionbar.help.follow.title()}
+                                        tooltipDesc={$followStateStore === "active" ? $LL.actionbar.help.unfollow.desc() : $LL.actionbar.help.follow.desc()}
+                                        disabledHelp={appMenuOpened}
+                                        state={$followStateStore === 'active'
+                                            ? "active"
+                                            : "normal"}
                                     >
                                         <FollowIcon />
-                                    </div>
-                                    {#if helpActive === "follow" || !emoteMenuSubStore}
-                                        {#if $followStateStore === "active"}
-                                            <HelpTooltip
-                                                title={$LL.actionbar.help.unfollow.title()}
-                                                desc={$LL.actionbar.help.unfollow.desc()}
-                                            />
-                                        {:else}
-                                            <HelpTooltip
-                                                title={$LL.actionbar.help.follow.title()}
-                                                desc={$LL.actionbar.help.follow.desc()}
-                                            />
-                                        {/if}
-                                    {/if}
+                                    </ActionBarIconButton>
                                 </div>
-                                <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <div
                                     class="group/btn-lock relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 aspect-square {$hasEmbedScreen &&
                                     $canvasWidth < 768
                                         ? ''
                                         : 'rounded-r-lg'}"
-                                    class:disabled={$currentPlayerGroupLockStateStore}
-                                    on:click={() => analyticsClient.lockDiscussion()}
-                                    on:click={lockClick}
-                                    on:mouseenter={() => {
-                                        !navigating ? (helpActive = "lock") : "";
-                                    }}
-                                    on:mouseleave={() => {
-                                        !navigating ? (helpActive = undefined) : "";
-                                    }}
                                 >
-                                    <div
-                                        class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 p-1 m-0 rounded group-[.disabled]/btn-lock:bg-secondary hover:bg-white/10 flex items-center justify-center transition-all"
+                                    <ActionBarIconButton
+                                            on:click={() => {
+                                            analyticsClient.lockDiscussion()
+                                            lockClick();
+                                        }}
+                                            tooltipTitle={$LL.actionbar.help.lock.title()}
+                                            tooltipDesc={$LL.actionbar.help.lock.desc()}
+                                            disabledHelp={appMenuOpened}
+                                            state={$currentPlayerGroupLockStateStore
+                                            ? "forbidden"
+                                            : "normal"}
                                     >
                                         {#if $currentPlayerGroupLockStateStore}
                                             <LockIcon />
                                         {:else}
                                             <LockOpenIcon />
                                         {/if}
-                                    </div>
-                                    {#if helpActive === "lock" || !emoteMenuSubStore}
-                                        <HelpTooltip
-                                            title={$LL.actionbar.help.lock.title()}
-                                            desc={$LL.actionbar.help.lock.desc()}
-                                        />
-                                    {/if}
+                                    </ActionBarIconButton>
                                 </div>
                             {/if}
                         </div>
@@ -1059,7 +1035,6 @@
                         {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore}
                             <!-- NAV : MICROPHONE START -->
                             {#if $myMicrophoneStore}
-                                <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <div
                                     class="group/btn-mic peer/mic relative bg-contrast/80 backdrop-blur p-2 sm:pr-0 sm:last:pr-2 aspect-square {$peerStore.size >
                                         0 && $canvasWidth < 768
@@ -1067,29 +1042,24 @@
                                         : 'rounded-l-lg'}"
                                     class:disabled={!$requestedMicrophoneState || $silentStore}
                                 >
-                                    <div
-                                        class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 p-1 m-0 rounded group-[.disabled]/btn-mic:bg-danger hover:bg-white/10 flex items-center justify-center transition-all"
-                                        on:click={() => analyticsClient.microphone()}
-                                        on:click={microphoneClick}
-                                        on:mouseenter={() => {
-                                            !navigating ? (helpActive = "mic") : "";
+                                    <ActionBarIconButton
+                                        on:click={() => {
+                                            analyticsClient.microphone()
+                                            microphoneClick();
                                         }}
-                                        on:mouseleave={() => {
-                                            !navigating ? (helpActive = undefined) : "";
-                                        }}
+                                        tooltipTitle={$LL.actionbar.help.mic.title()}
+                                        tooltipDesc={$LL.actionbar.help.mic.desc()}
+                                        disabledHelp={appMenuOpened}
+                                        state={!$requestedMicrophoneState || $silentStore
+                                            ? "forbidden"
+                                            : "normal"}
                                     >
                                         {#if $requestedMicrophoneState && !$silentStore}
                                             <MicOnIcon />
                                         {:else}
                                             <MicOffIcon />
                                         {/if}
-                                    </div>
-                                    {#if helpActive === "mic" || !emoteMenuSubStore}
-                                        <HelpTooltip
-                                            title={$LL.actionbar.help.mic.title()}
-                                            desc={$LL.actionbar.help.mic.desc()}
-                                        />
-                                    {/if}
+                                    </ActionBarIconButton>
                                 </div>
                             {/if}
                         {/if}
@@ -1321,7 +1291,6 @@
                         {/if}
                         <!-- NAV : CAMERA START -->
                         {#if !$inExternalServiceStore && $myCameraStore && !$silentStore}
-                            <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div
                                 class="group/btn-cam relative bg-contrast/80 backdrop-blur p-2 aspect-square {$peerStore.size >
                                     0 && $canvasWidth > 768
@@ -1329,29 +1298,24 @@
                                     : 'rounded-r-lg'}"
                                 class:disabled={!$requestedCameraState || $silentStore}
                             >
-                                <div
-                                    class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 p-1 m-0 rounded group-[.disabled]/btn-cam:bg-danger hover:bg-white/10 flex items-center justify-center transition-all"
-                                    on:click={() => analyticsClient.camera()}
-                                    on:click={cameraClick}
-                                    on:mouseenter={() => {
-                                        !navigating ? (helpActive = "cam") : "";
+                                <ActionBarIconButton
+                                    on:click={() => {
+                                        analyticsClient.camera()
+                                        cameraClick();
                                     }}
-                                    on:mouseleave={() => {
-                                        !navigating ? (helpActive = undefined) : "";
-                                    }}
+                                    tooltipTitle={$LL.actionbar.help.cam.title()}
+                                    tooltipDesc={$LL.actionbar.help.cam.desc()}
+                                    disabledHelp={appMenuOpened}
+                                    state={!$requestedCameraState || $silentStore
+                                        ? "forbidden"
+                                        : "normal"}
                                 >
                                     {#if $requestedCameraState && !$silentStore}
                                         <CamOnIcon />
                                     {:else}
                                         <CamOffIcon />
                                     {/if}
-                                </div>
-                                {#if helpActive === "cam" || !emoteMenuSubStore}
-                                    <HelpTooltip
-                                        title={$LL.actionbar.help.cam.title()}
-                                        desc={$LL.actionbar.help.cam.desc()}
-                                    />
-                                {/if}
+                                </ActionBarIconButton>
                             </div>
                         {/if}
                         <!-- NAV : CAMERA END -->
