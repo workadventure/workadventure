@@ -13,7 +13,6 @@
         silentStore,
         speakerListStore,
         speakerSelectedStore,
-        streamingMegaphoneStore,
         usedCameraDeviceIdStore,
         usedMicrophoneDeviceIdStore,
         enableCameraSceneVisibilityStore,
@@ -47,9 +46,7 @@
         SubMenusInterface,
         MenuKeys,
         subMenusStore,
-        mapEditorActivated,
         userIsConnected,
-        mapManagerActivated,
         screenSharingActivatedStore,
     } from "../../Stores/MenuStore";
     import {
@@ -72,14 +69,7 @@
         roomListVisibilityStore,
         showModalGlobalComminucationVisibilityStore,
     } from "../../Stores/ModalStore";
-    import { userHasAccessToBackOfficeStore } from "../../Stores/GameStore";
-    import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
     import { Emoji } from "../../Stores/Utils/emojiSchema";
-    import {
-        liveStreamingEnabledStore,
-        megaphoneCanBeUsedStore,
-        requestedMegaphoneStore,
-    } from "../../Stores/MegaphoneStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { isActivatedStore as isCalendarActivatedStore, isCalendarVisibleStore } from "../../Stores/CalendarStore";
     import { isActivatedStore as isTodoListActivatedStore, isTodoListVisibleStore } from "../../Stores/TodoListStore";
@@ -97,7 +87,6 @@
     import MessageCircleIcon from "../Icons/MessageCircleIcon.svelte";
     import UsersIcon from "../Icons/UsersIcon.svelte";
     import EmojiIcon from "../Icons/EmojiIcon.svelte";
-    import AdminPanIcon from "../Icons/AdminPanIcon.svelte";
     import CamOffIcon from "../Icons/CamOffIcon.svelte";
     import CamOnIcon from "../Icons/CamOnIcon.svelte";
     import FollowIcon from "../Icons/FollowIcon.svelte";
@@ -107,9 +96,6 @@
     import MicOnIcon from "../Icons/MicOnIcon.svelte";
     import ScreenShareOffIcon from "../Icons/ScreenShareOffIcon.svelte";
     import ScreenShareIcon from "../Icons/ScreenShareIcon.svelte";
-    import AdjustmentsIcon from "../Icons/AdjustmentsIcon.svelte";
-    import MessageGlobalIcon from "../Icons/MessageGlobalIcon.svelte";
-    import MegaphoneIcon from "../Icons/MegaphoneIcon.svelte";
     import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
     import ProfilIcon from "../Icons/ProfilIcon.svelte";
     import AchievementIcon from "../Icons/AchievementIcon.svelte";
@@ -128,8 +114,10 @@
     import { inputFormFocusStore } from "../../Stores/UserInputStore";
 
     import AppsIcon from "../Icons/AppsIcon.svelte";
-    import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
+    import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
+    import { megaphoneCanBeUsedStore } from "../../Stores/MegaphoneStore";
     import ActionBarIconButton from "./ActionBarIconButton.svelte";
+    import MapSubMenu from "./MenuIcons/MapSubMenu.svelte";
     import { IconArrowDown, IconCheckList, IconCalendar, IconLogout } from "@wa-icons";
 
     // gameManager.currenwStartedRoom?.miniLogo ?? WorkAdventureImg;
@@ -138,7 +126,6 @@
     //let microphoneActive = false;
     let cameraActive = false;
     let profileMenuIsDropped = false;
-    let adminMenuIsDropped = false;
     let burgerOpen = false;
     let helpActive: string | undefined = undefined;
     let navigating = false;
@@ -235,34 +222,6 @@
             emoteMenuSubStore.openEmoteMenu();
             appMenuOpened = false;
         }
-    }
-
-    function toggleGlobalMessage() {
-        if ($requestedMegaphoneStore || $liveStreamingEnabledStore || $streamingMegaphoneStore) {
-            analyticsClient.stopMegaphone();
-            requestedMegaphoneStore.set(false);
-            streamingMegaphoneStore.set(false);
-            showModalGlobalComminucationVisibilityStore.set(false);
-            return;
-        }
-        if ($showModalGlobalComminucationVisibilityStore) {
-            showModalGlobalComminucationVisibilityStore.set(false);
-            return;
-        }
-
-        resetChatVisibility();
-        resetModalVisibility();
-        mapEditorModeStore.switchMode(false);
-        showModalGlobalComminucationVisibilityStore.set(true);
-    }
-
-    function toggleMapEditorMode() {
-        if (isMobile) return;
-        if ($mapEditorModeStore) gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
-        analyticsClient.toggleMapEditor(!$mapEditorModeStore);
-        mapEditorModeStore.switchMode(!$mapEditorModeStore);
-        isTodoListVisibleStore.set(false);
-        isCalendarVisibleStore.set(false);
     }
 
     function clickEmoji(selected?: number) {
@@ -965,15 +924,17 @@
                                 >
                                     <ActionBarIconButton
                                         on:click={() => {
-                                            analyticsClient.follow()
+                                            analyticsClient.follow();
                                             followClick();
                                         }}
-                                        tooltipTitle={$followStateStore === "active" ? $LL.actionbar.help.unfollow.title() : $LL.actionbar.help.follow.title()}
-                                        tooltipDesc={$followStateStore === "active" ? $LL.actionbar.help.unfollow.desc() : $LL.actionbar.help.follow.desc()}
+                                        tooltipTitle={$followStateStore === "active"
+                                            ? $LL.actionbar.help.unfollow.title()
+                                            : $LL.actionbar.help.follow.title()}
+                                        tooltipDesc={$followStateStore === "active"
+                                            ? $LL.actionbar.help.unfollow.desc()
+                                            : $LL.actionbar.help.follow.desc()}
                                         disabledHelp={appMenuOpened}
-                                        state={$followStateStore === 'active'
-                                            ? "active"
-                                            : "normal"}
+                                        state={$followStateStore === "active" ? "active" : "normal"}
                                     >
                                         <FollowIcon />
                                     </ActionBarIconButton>
@@ -985,16 +946,14 @@
                                         : 'rounded-r-lg'}"
                                 >
                                     <ActionBarIconButton
-                                            on:click={() => {
-                                            analyticsClient.lockDiscussion()
+                                        on:click={() => {
+                                            analyticsClient.lockDiscussion();
                                             lockClick();
                                         }}
-                                            tooltipTitle={$LL.actionbar.help.lock.title()}
-                                            tooltipDesc={$LL.actionbar.help.lock.desc()}
-                                            disabledHelp={appMenuOpened}
-                                            state={$currentPlayerGroupLockStateStore
-                                            ? "forbidden"
-                                            : "normal"}
+                                        tooltipTitle={$LL.actionbar.help.lock.title()}
+                                        tooltipDesc={$LL.actionbar.help.lock.desc()}
+                                        disabledHelp={appMenuOpened}
+                                        state={$currentPlayerGroupLockStateStore ? "forbidden" : "normal"}
                                     >
                                         {#if $currentPlayerGroupLockStateStore}
                                             <LockIcon />
@@ -1044,15 +1003,13 @@
                                 >
                                     <ActionBarIconButton
                                         on:click={() => {
-                                            analyticsClient.microphone()
+                                            analyticsClient.microphone();
                                             microphoneClick();
                                         }}
                                         tooltipTitle={$LL.actionbar.help.mic.title()}
                                         tooltipDesc={$LL.actionbar.help.mic.desc()}
                                         disabledHelp={appMenuOpened}
-                                        state={!$requestedMicrophoneState || $silentStore
-                                            ? "forbidden"
-                                            : "normal"}
+                                        state={!$requestedMicrophoneState || $silentStore ? "forbidden" : "normal"}
                                     >
                                         {#if $requestedMicrophoneState && !$silentStore}
                                             <MicOnIcon />
@@ -1300,15 +1257,13 @@
                             >
                                 <ActionBarIconButton
                                     on:click={() => {
-                                        analyticsClient.camera()
+                                        analyticsClient.camera();
                                         cameraClick();
                                     }}
                                     tooltipTitle={$LL.actionbar.help.cam.title()}
                                     tooltipDesc={$LL.actionbar.help.cam.desc()}
                                     disabledHelp={appMenuOpened}
-                                    state={!$requestedCameraState || $silentStore
-                                        ? "forbidden"
-                                        : "normal"}
+                                    state={!$requestedCameraState || $silentStore ? "forbidden" : "normal"}
                                 >
                                     {#if $requestedCameraState && !$silentStore}
                                         <CamOnIcon />
@@ -1512,116 +1467,8 @@
                         </div>
                     </div>
                 {/if}
-                {#if ($mapEditorActivated && $mapManagerActivated) || $userHasAccessToBackOfficeStore}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div
-                        data-testid="action-admin"
-                        class="items-center relative transition-all hidden @lg/actions:block"
-                        on:click={() => (adminMenuIsDropped = !adminMenuIsDropped)}
-                        on:click|preventDefault={close}
-                        on:blur={() => (adminMenuIsDropped = false)}
-                    >
-                        <div
-                            class="group bg-contrast/80 backdrop-blur rounded-lg h-16 @sm/actions:h-14 @xl/actions:h-16 p-2 transition-all"
-                        >
-                            <div
-                                class="flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded space-x-2 pl-4 pr-3"
-                            >
-                                <AdminPanIcon />
-                                <div class="pr-2">
-                                    <div
-                                        class="font-bold text-white leading-3 whitespace-nowrap select-none text-base @sm/actions:text-sm @xl/actions:text-base"
-                                    >
-                                        {$LL.actionbar.admin()}
-                                    </div>
-                                </div>
-                                <ChevronDownIcon
-                                    strokeWidth="2"
-                                    classList="h-4 w-4 aspect-square transition-all opacity-50 {adminMenuIsDropped
-                                        ? 'rotate-180'
-                                        : ''}"
-                                    height="16px"
-                                    width="16px"
-                                />
-                            </div>
-                        </div>
-                        {#if adminMenuIsDropped}
-                            <div
-                                class="absolute mt-2 top-14 @xl/actions:top-16 right-0 bg-contrast/80 backdrop-blur rounded-md w-56 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-transparent before:border-b-contrast/80 transition-all"
-                                data-testid="admin-menu"
-                                transition:fly={{ y: 40, duration: 150 }}
-                            >
-                                <ul class="p-1 m-0">
-                                    {#if $mapEditorActivated && $mapManagerActivated}
-                                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                        <li
-                                            class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
-                                            data-testid="map-editor"
-                                            on:click={() => toggleMapEditorMode()}
-                                        >
-                                            <div class="transition-all w-6 h-6 aspect-square text-center">
-                                                <svg
-                                                    width="20"
-                                                    height="20"
-                                                    viewBox="0 0 20 20"
-                                                    fill="none"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                >
-                                                    <path
-                                                        d="M12.5 3.5L16.5 7.5M10 6L5 1L1 5L6 10M5 6L3.5 7.5M14 10L19 15L15 19L10 14M14 15L12.5 16.5M1 19H5L18 6C18.5304 5.46957 18.8284 4.75015 18.8284 4C18.8284 3.24985 18.5304 2.53043 18 2C17.4696 1.46957 16.7501 1.17157 16 1.17157C15.2499 1.17157 14.5304 1.46957 14 2L1 15V19Z"
-                                                        stroke="white"
-                                                        stroke-width="2"
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                    />
-                                                </svg>
-                                                <!-- TODO Hugo : SVG inline -->
-                                            </div>
-                                            <div>{$LL.actionbar.mapEditor()}</div>
-                                        </li>
-                                    {/if}
-                                    {#if $userHasAccessToBackOfficeStore}
-                                        <li
-                                            class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
-                                            on:click={() => openBo()}
-                                        >
-                                            <div class="transition-all w-6 h-6 aspect-square text-center">
-                                                <AdjustmentsIcon />
-                                            </div>
-                                            <div>{$LL.actionbar.bo()}</div>
-                                        </li>
-                                    {/if}
-                                    <li
-                                        class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
-                                        data-testid="global-message"
-                                        on:click={toggleGlobalMessage}
-                                    >
-                                        <div class="transition-all w-6 h-6 aspect-square text-center">
-                                            <MessageGlobalIcon />
-                                        </div>
-                                        <div>{$LL.actionbar.globalMessage()}</div>
-                                    </li>
-                                    {#if $megaphoneCanBeUsedStore && !$silentStore && ($myMicrophoneStore || $myCameraStore)}
-                                        <li
-                                            class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
-                                        >
-                                            <div
-                                                class="transition-all w-6 h-6 aspect-square text-center"
-                                                data-testid="megaphone"
-                                            >
-                                                <MegaphoneIcon />
-                                            </div>
-                                            <div>{$LL.actionbar.megaphone()}</div>
-                                        </li>
-                                    {/if}
-                                </ul>
-                                {#if $streamingMegaphoneStore}
-                                    <MegaphoneConfirm />
-                                {/if}
-                            </div>
-                        {/if}
-                    </div>
-                {/if}
+                <MapSubMenu />
+
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     data-testid="action-user"
@@ -1923,6 +1770,7 @@
             </div>
             <div class="h-[1px] w-full bg-white/10 my-2 block @md/actions:hidden" />
             <div class="flex text-xxs uppercase text-white/50 px-4 py-2 relative justify-end">Administrator</div>
+            <!-- FIXME: we need proper "if" around the items of the burger menu. Should we centralize the notion of button? -->
             <button class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold" on:click={() => openBo()}>
                 {$LL.actionbar.bo()}
             </button>

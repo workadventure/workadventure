@@ -30,6 +30,40 @@
 </button>
 
 <style lang="scss">
+    .tooltip {
+        position: relative;
+        display: inline-block;
+    }
+
+    .tooltip .tooltiptext {
+        visibility: hidden;
+        position: absolute;
+        bottom: 100%;
+        align-items: center;
+        border-radius: 0.25rem;
+        --tw-bg-opacity: 1;
+        background-color: rgb(56 56 74 / var(--tw-bg-opacity));
+        padding: 1.25rem 0.75rem;
+        text-align: center;
+        --tw-text-opacity: 1;
+        color: rgb(255 255 255 / var(--tw-text-opacity));
+    }
+
+    .tooltip:hover .tooltiptext {
+        visibility: visible;
+    }
+
+    .tooltip .tooltiptext:after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 2.5rem;
+        border-style: solid;
+        margin-left: -5px;
+        border-width: 5px;
+        border-color: #38384a transparent transparent transparent;
+    }
+
     .add-property-button {
         --border-opacity: 1;
         border-color: rgb(77 75 103 / var(--border-opacity));
@@ -41,6 +75,7 @@
         position: relative;
         display: flex;
         flex-direction: column;
+        margin: 0.25rem 0.125rem;
 
         .tooltiptext {
             top: 100%;

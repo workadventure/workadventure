@@ -30,6 +30,7 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import {
         currentLiveStreamingSpaceStore,
+        megaphoneCanBeUsedStore,
         megaphoneSpaceStore,
         requestedMegaphoneStore,
     } from "../../Stores/MegaphoneStore";
@@ -248,17 +249,18 @@
                             />
                             {$LL.megaphone.modal.textMessage.title()}
                         </p>
-                        {#if !$userIsAdminStore}<p class="help-text">
-                            <IconInfoCircle font-size="18" />
-                            {$LL.megaphone.modal.audioMessage.noAccess()}
-                        </p>{/if}
+                        {#if !$megaphoneCanBeUsedStore}<p class="help-text">
+                                <IconInfoCircle font-size="18" />
+                                {$LL.megaphone.modal.audioMessage.noAccess()}
+                            </p>{/if}
                         <button class="light max-w-fit" on:click={activateInputText} disabled={!$userIsAdminStore}>
-                        <button class="light max-w-fit" on:click={activateInputText} disabled={!$userIsAdminStore}>
-                            {$LL.megaphone.modal.textMessage.button()}</button
-                        >
-                        <p class="text-white text-sm whitespace-pre-line">
-                            {$LL.megaphone.modal.textMessage.notice()}
-                        </p>
+                            <button class="light max-w-fit" on:click={activateInputText} disabled={!$userIsAdminStore}>
+                                {$LL.megaphone.modal.textMessage.button()}</button
+                            >
+                            <p class="text-white text-sm whitespace-pre-line">
+                                {$LL.megaphone.modal.textMessage.notice()}
+                            </p>
+                        </button>
                     </div>
                     <div id="content-soundMessage" class="flex flex-col px-5 w-1/3">
                         <p class="text-white">
@@ -270,9 +272,9 @@
                             {$LL.megaphone.modal.audioMessage.title()}
                         </p>
                         {#if !$userIsAdminStore}<p class="help-text">
-                            <IconInfoCircle font-size="18" />
-                            {$LL.megaphone.modal.audioMessage.noAccess()}
-                        </p>{/if}
+                                <IconInfoCircle font-size="18" />
+                                {$LL.megaphone.modal.audioMessage.noAccess()}
+                            </p>{/if}
                         <button class="light max-w-fit" on:click={activateUploadAudio} disabled={!$userIsAdminStore}>
                             {$LL.megaphone.modal.audioMessage.button()}</button
                         >

@@ -7,7 +7,7 @@
     export let tooltipDesc = "";
     export let disabledHelp = false;
     export let state: "normal" | "active" | "forbidden" | "disabled" = "normal";
-    export let dataTestId: string | undefined;
+    export let dataTestId: string | undefined = undefined;
 
     let helpActive = false;
 

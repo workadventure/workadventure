@@ -67,13 +67,13 @@
 </script>
 
 <div
-    class="!flex !fixed justify-center !w-full !h-fit -top-4"
+    class="!flex !fixed justify-center !w-full !h-fit bottom-0"
     in:fly={{ y: 100, duration: 250, delay: 200 }}
     out:fly={{ y: 100, duration: 200 }}
 >
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
-        class="flex items-center !h-fit !w-fit rounded-2xl bg-dark-purple/80 backdrop-blur-lg text-white p-4 pt-6 gap-2"
+        class="flex items-center !h-fit !w-fit rounded-t-2xl bg-dark-purple/80 backdrop-blur-lg text-white p-4 pt-6 gap-2"
     >
         {#each availableTools as tool (tool.toolName)}
             {#if $mapEditorSelectedToolStore === tool.toolName}
