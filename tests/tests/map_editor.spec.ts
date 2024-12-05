@@ -107,12 +107,12 @@ test.describe("Map editor @oidc", () => {
             .click({timeout: 10_000});
 
         // click on the megaphone button to start the streaming session
-        await expect(page2.locator(".cameras-container .other-cameras .jitsi-video")).toBeVisible({timeout: 15_000});
+        await expect(page2.locator(".jitsi-video")).toBeVisible({timeout: 15_000});
 
         await Menu.toggleMegaphoneButton(page);
 
         await page2.close();
-await newBrowser.close();
+        await newBrowser.close();
         // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
     });
 
@@ -425,7 +425,7 @@ await newBrowser.close();
         await oidcAdminTagLogin(page, false);
 
         // open map editor
-        await page.getByRole("button", {name: "toggle-map-editor"}).click();
+        await Menu.openMapEditor(page);
         await MapEditor.openEntityEditor(page);
 
         // Click on upload asset
@@ -455,7 +455,7 @@ await newBrowser.close();
 
         // open map editor
         await page.bringToFront();
-        await page.getByRole("button", {name: "toggle-map-editor"}).click();
+        await Menu.openMapEditor(page);
         await MapEditor.openEntityEditor(page);
 
         // Click on upload asset
@@ -481,8 +481,8 @@ await newBrowser.close();
         await EntityEditor.moveAndClick(page2, 6 * 32, 6 * 32);
 
         // check if the popup with application is opened on both pages
-        await expect(page.locator(".actions-menu .actions button").nth(0)).toContainText("Open Link");
-        await expect(page2.locator(".actions-menu .actions button").nth(0)).toContainText("Open Link");
+        await expect(page.getByRole('button', { name: 'Open Link' })).toBeVisible();
+        await expect(page2.getByRole('button', { name: 'Open Link' })).toBeVisible();
 
         await page2.close();
         await newBrowser.close();
@@ -506,8 +506,8 @@ await newBrowser.close();
         await oidcAdminTagLogin(page2, false);
 
         // open map editor on both pages
-        await page.getByRole("button", {name: "toggle-map-editor"}).click();
-        await page2.getByRole("button", {name: "toggle-map-editor"}).click();
+        await Menu.openMapEditor(page);
+        await Menu.openMapEditor(page2);
         await MapEditor.openEntityEditor(page);
         await MapEditor.openEntityEditor(page2);
 
@@ -557,8 +557,8 @@ await newBrowser.close();
         await oidcAdminTagLogin(page2, false);
 
         // open map editor on both pages
-        await page.getByRole("button", {name: "toggle-map-editor"}).click();
-        await page2.getByRole("button", {name: "toggle-map-editor"}).click();
+        await Menu.openMapEditor(page);
+        await Menu.openMapEditor(page2);
 
         await MapEditor.openEntityEditor(page);
         await MapEditor.openEntityEditor(page2);
@@ -658,7 +658,7 @@ await newBrowser.close();
         await page2.evaluate(() => localStorage.setItem("debug", "*"));
         await login(page2, "test2", 5, "en-US", false);
 
-        // Open the map editor and configure the megaphone to have accès to the global message
+        // Open the map editor and configure the megaphone to have access to the global message
         await Menu.openMapEditor(page);
         await MapEditor.openConfigureMyRoom(page);
         await ConfigureMyRoom.selectMegaphoneItemInCMR(page);
@@ -679,13 +679,16 @@ await newBrowser.close();
         await Megaphone.isCorrectlySaved(page);
         // Test if tags are working correctly, all current users doesn't have the tag "example" to use megaphone
         await Menu.isNotThereMegaphoneButton(page);
-        await Menu.isNotThereMegaphoneButton(page2);
+        await expect(page2.getByTestId('action-admin')).toBeHidden();
+        //await Menu.isNotThereMegaphoneButton(page2);
         // Remove rights
         await Megaphone.megaphoneRemoveRights(page, "example");
         await Megaphone.megaphoneSave(page);
         await Megaphone.isCorrectlySaved(page);
         // Megaphone should be displayed and usable by all the current users
         await Menu.isThereMegaphoneButton(page);
+
+        // Megaphone button is not displayed because it is hidden in the "Admin" menu. BUT! It is available to anyone!
         await Menu.isThereMegaphoneButton(page2);
         await Menu.closeMapEditorConfigureMyRoomPopUp(page);
         await Menu.closeMapEditor(page);

@@ -45,12 +45,12 @@
 </script>
 
 <div class="configure-my-room" in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>
-    <div class="hover:bg-white/10">
+    <div class="absolute top-2 right-2 hover:bg-white/10">
         <button class="close-window {isVisible ? 'visible' : ''} " on:click|preventDefault|stopPropagation={close}
             >&#215;</button
         >
     </div>
-    <div class="menu mx-auto flex">
+    <div class="menu mx-auto flex flex-col">
         <h3>{$LL.mapEditor.sideBar.configureMyRoom()}</h3>
         <ul>
             <!-- check if the user has right to update room settings -->

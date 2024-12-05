@@ -37,6 +37,11 @@ class Menu {
         await expect(await page.getByTestId('profile-menu')).toBeHidden();
     }
 
+    async closeMenuAdmin(page: Page) {
+        await page.getByTestId('action-admin').click({timeout: 30_000});
+        await expect(await page.getByTestId('admin-menu')).toBeHidden();
+    }
+
     async waitForMenu(page: Page, timeout = 30_000) {
         await expect(page.getByTestId('action-admin')).toBeVisible({
             timeout
@@ -44,22 +49,26 @@ class Menu {
     }
 
     async closeMapEditor(page: Page) {
-        await page.locator('.map-editor .configure-my-room .close-window').click()
-        await page.locator('.map-editor .sidebar .close-window').click()
-        await expect(await page.locator('.map-editor .configure-my-room .close-window')).toBeHidden();
+        //await page.locator('.map-editor .configure-my-room .close-window').click();
+        await page.locator('.map-editor .sidebar .close-window').click();
+        await expect(page.locator('.map-editor .configure-my-room .close-window')).toBeHidden();
     }
 
     async toggleMegaphoneButton(page: Page) {
-        await page.getByTestId('action-admin').click({timeout: 30_000});
+        await this.openMenuAdmin(page);
         await page.getByTestId('global-message').click({timeout: 30_000});
     }
 
     async isThereMegaphoneButton(page: Page) {
-        await page.locator('.configure-my-room .content .items-center #megaphone');
+        await this.openMenuAdmin(page);
+        await expect(page.getByText('Use megaphone')).toBeVisible();
+        await this.closeMenuAdmin(page);
     }
 
     async isNotThereMegaphoneButton(page: Page) {
-        await expect(await page.locator('.bottom-action-bar .bottom-action-button #megaphone')).toBeHidden({timeout: 30_000});
+        await this.openMenuAdmin(page);
+        await expect(page.getByText('Use megaphone')).toBeHidden();
+        await this.closeMenuAdmin(page);
     }
 
     async openStatusList(page : Page, isMobile = false){
