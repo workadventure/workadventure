@@ -23,7 +23,7 @@
     import HelpTooltip from "../Tooltip/HelpTooltip.svelte";
 
     import { LayoutMode } from "../../WebRtc/LayoutManager";
-    import { embedScreenLayoutStore, hasEmbedScreen } from "../../Stores/EmbedScreensStore";
+    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
@@ -124,13 +124,13 @@
     import { focusMode, rightMode, hideMode, highlightFullScreen } from "../../Stores/ActionsCamStore";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { connectionManager } from "../../Connection/ConnectionManager";
-    import { canvasWidth } from "../../Stores/CoWebsiteStore";
     import { inputFormFocusStore } from "../../Stores/UserInputStore";
 
     import AppsIcon from "../Icons/AppsIcon.svelte";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
     import ActionBarIconButton from "./ActionBarIconButton.svelte";
     import { IconArrowDown, IconCheckList, IconCalendar, IconLogout } from "@wa-icons";
+    import ActionBarButtonWrapper from "./ActionBarButtonWrapper.svelte";
 
     // gameManager.currenwStartedRoom?.miniLogo ?? WorkAdventureImg;
     let userName = gameManager.getPlayerName() || "";
@@ -508,37 +508,26 @@
 >
     <div class="flex w-full p-2 space-x-2 @xl/actions:p-4 @xl/actions:space-x-4">
         <div class="justify-start flex-1 pointer-events-auto w-32">
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div
                 class="flex relative transition-all duration-150 z-[2] {$chatVisibilityStore ? 'hidden' : ''}"
                 class:opacity-0={$chatVisibilityStore}
                 data-testid="chat-action"
             >
-                <div
-                    class="group/btn-message-circle relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg  p-2 aspect-square {$canvasWidth <
-                        768 && $hasEmbedScreen
-                        ? 'rounded-r-lg'
-                        : ''}"
-                    data-testid="chat-btn"
-                    on:click={() => analyticsClient.openedChat()}
-                    on:click={toggleChat}
-                    on:click={() => navChat.switchToChat()}
-                    on:mouseenter={() => {
-                        !navigating ? (helpActive = "chat") : "";
-                    }}
-                    on:mouseleave={() => {
-                        !navigating ? (helpActive = undefined) : "";
-                    }}
-                >
-                    <div
-                        class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 rounded group-hover/btn-message-circle:bg-white/10 aspect-square flex items-center justify-center transition-all"
+                <ActionBarButtonWrapper classList="group/btn-message-circle">
+                    <ActionBarIconButton
+                            on:click={() => {
+                            toggleChat();
+                            navChat.switchToChat();
+                            analyticsClient.openedChat();
+                        }}
+                            tooltipTitle={$LL.actionbar.help.chat.title()}
+                            tooltipDesc={$LL.actionbar.help.chat.desc()}
+                            dataTestId="chat-btn"
+                            state={"normal"}
+                            disabledHelp={false}
                     >
                         <MessageCircleIcon />
-                    </div>
-
-                    {#if helpActive === "chat"}
-                        <HelpTooltip title={$LL.actionbar.help.chat.title()} desc={$LL.actionbar.help.chat.desc()} />
-                    {/if}
+                    </ActionBarIconButton>
                     {#if $chatZoneLiveStore || $peerStore.size > 0}
                         <div>
                             <span class="w-4 h-4 block rounded-full absolute -top-1 -left-1 animate-ping bg-white" />
@@ -546,36 +535,27 @@
                         </div>
                     {:else if $totalMessagesToSee > 0}
                         <div
-                            class="absolute -top-2 -left-2 aspect-square flex w-5 h-5 items-center justify-center text-sm font-bold leading-none text-contrast bg-success rounded-full z-10"
+                                class="absolute -top-2 -left-2 aspect-square flex w-5 h-5 items-center justify-center text-sm font-bold leading-none text-contrast bg-success rounded-full z-10"
                         >
                             {$totalMessagesToSee}
                         </div>
                     {/if}
-                </div>
-
-                <div
-                    class="group/btn-users relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg last:rounded-r-lg p-2 aspect-square {$canvasWidth <
-                        768 && $hasEmbedScreen
-                        ? 'hidden'
-                        : 'block'}"
-                    on:click={toggleChat}
-                    on:click={() => navChat.switchToUserList()}
-                >
-                    <div
-                        class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 rounded group-hover/btn-users:bg-white/10 aspect-square flex items-center justify-center transition-all"
-                        on:mouseenter={() => {
-                            !navigating ? (helpActive = "users") : "";
+                </ActionBarButtonWrapper>
+                <ActionBarButtonWrapper buttonName="group/btn-users">
+                    <ActionBarIconButton
+                        on:click={() => {
+                            toggleChat();
+                            navChat.switchToUserList();
                         }}
-                        on:mouseleave={() => {
-                            !navigating ? (helpActive = undefined) : "";
-                        }}
+                        tooltipTitle={$LL.actionbar.help.users.title()}
+                        tooltipDesc={$LL.actionbar.help.users.desc()}
+                        state={"normal"}
+                        dataTestId={undefined}
+                        disabledHelp={false}
                     >
                         <UsersIcon />
-                    </div>
-                    {#if helpActive === "users"}
-                        <HelpTooltip title={$LL.actionbar.help.users.title()} desc={$LL.actionbar.help.users.desc()} />
-                    {/if}
-                </div>
+                    </ActionBarIconButton>
+                </ActionBarButtonWrapper>
             </div>
         </div>
         <div
@@ -585,22 +565,16 @@
                 {#if !$silentStore}
                     <div>
                         <div class="flex items-center">
-                            <!-- svelte-ignore a11y-click-events-have-key-events -->
-                            <div
-                                class="group/btn-emoji bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square"
-                                on:click={toggleEmojiPicker}
-                                on:click={(helpActive = undefined)}
-                                on:mouseenter={() => {
-                                    !navigating ? (helpActive = "emoji") : "";
-                                }}
-                                on:mouseleave={() => {
-                                    !navigating ? (helpActive = undefined) : "";
-                                }}
-                            >
-                                <div
-                                    class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 rounded aspect-square flex items-center justify-center transition-all {$emoteMenuSubStore
-                                        ? 'bg-secondary group-hover/bg-secondary-600'
-                                        : ' group-hover/btn-emoji:bg-white/10'}"
+                            <ActionBarButtonWrapper buttonName="group/btn-emoji">
+                                <ActionBarIconButton
+                                    on:click={() => {
+                                        toggleEmojiPicker();
+                                    }}
+                                    tooltipTitle={$LL.actionbar.help.emoji.title()}
+                                    tooltipDesc={$LL.actionbar.help.emoji.desc()}
+                                    disabledHelp={$emoteMenuSubStore}
+                                    state={$emoteMenuSubStore ? "active" : "normal"}
+                                    dataTestId={undefined}
                                 >
                                     <EmojiIcon
                                         strokeColor={$emoteMenuSubStore
@@ -608,13 +582,7 @@
                                             : "stroke-white fill-transparent"}
                                         hover="group-hover/btn-emoji:fill-white"
                                     />
-                                </div>
-                                {#if helpActive === "emoji" && !$emoteMenuSubStore}
-                                    <HelpTooltip
-                                        title={$LL.actionbar.help.emoji.title()}
-                                        desc={$LL.actionbar.help.emoji.desc()}
-                                    />
-                                {/if}
+                                </ActionBarIconButton>
                                 {#if $emoteMenuSubStore}
                                     <div
                                         class="flex justify-center m-auto absolute left-0 -right-2 top-[70px] w-auto z-[500]"
@@ -713,23 +681,17 @@
                                         </div>
                                     </div>
                                 {/if}
-                            </div>
-                            <!-- svelte-ignore a11y-click-events-have-key-events -->
-                            <div
-                                class="group/btn-apps bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square relative"
-                            >
-                                <button
-                                    class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 rounded aspect-square flex items-center justify-center transition-all {appMenuOpened
-                                        ? 'bg-secondary group-hover/bg-secondary-600'
-                                        : ' group-hover/btn-apps:bg-white/10'}"
-                                    on:click|preventDefault={openAppMenu}
-                                    on:click={(helpActive = undefined)}
-                                    on:mouseenter={() => {
-                                        !navigating ? (helpActive = "apps") : "";
+                            </ActionBarButtonWrapper>
+                            <ActionBarButtonWrapper buttonName="group/btn-apps">
+                                <ActionBarIconButton
+                                    on:click={() => {
+                                        openAppMenu();
                                     }}
-                                    on:mouseleave={() => {
-                                        !navigating ? (helpActive = undefined) : "";
-                                    }}
+                                    tooltipTitle={$LL.actionbar.help.apps.title()}
+                                    tooltipDesc={$LL.actionbar.help.apps.desc()}
+                                    disabledHelp={appMenuOpened}
+                                    state={appMenuOpened ? "active" : "normal"}
+                                    dataTestId={undefined}
                                 >
                                     <AppsIcon
                                         strokeColor={appMenuOpened
@@ -737,13 +699,8 @@
                                             : "stroke-white fill-transparent"}
                                         hover="group-hover/btn-apps:fill-white"
                                     />
-                                </button>
-                                {#if helpActive === "apps" && !appMenuOpened}
-                                    <HelpTooltip
-                                        title={$LL.actionbar.help.apps.title()}
-                                        desc={$LL.actionbar.help.apps.desc()}
-                                    />
-                                {/if}
+                                </ActionBarIconButton>
+
                                 {#if appMenuOpened && ($roomListActivated || $isCalendarActivatedStore || $isTodoListActivatedStore || $externalActionBarSvelteComponent.size > 0)}
                                     <div class="flex justify-center m-auto absolute -left-1.5 top-[69px]">
                                         <img
@@ -896,13 +853,10 @@
                                         </div>
                                     </div>
                                 {/if}
-                            </div>
+                            </ActionBarButtonWrapper>
 
                             {#if $bottomActionBarVisibilityStore}
                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                <div
-                                    class="group/btn-layout bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg aspect-square"
-                                >
                                     <div
                                         class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 rounded btn-layout/btn-more:bg-white/10 aspect-square flex items-center justify-center transition-all"
                                         on:click={() => analyticsClient.layoutPresentChange()}
@@ -956,45 +910,37 @@
                                             </svg>
                                         {/if}
                                     </div>
-                                </div>
-                                <div
-                                    class="group/btn-follow bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2  md:first:rounded-l-lg md:last:rounded-r-lg aspect-square {$canvasWidth <
-                                    768
-                                        ? 'rounded-l-lg'
-                                        : ''}"
-                                >
+
+                                <ActionBarButtonWrapper buttonName="group/btn-follow">
                                     <ActionBarIconButton
                                         on:click={() => {
-                                            analyticsClient.follow()
+                                            analyticsClient.follow();
                                             followClick();
                                         }}
-                                        tooltipTitle={$followStateStore === "active" ? $LL.actionbar.help.unfollow.title() : $LL.actionbar.help.follow.title()}
-                                        tooltipDesc={$followStateStore === "active" ? $LL.actionbar.help.unfollow.desc() : $LL.actionbar.help.follow.desc()}
+                                        tooltipTitle={$followStateStore === "active"
+                                            ? $LL.actionbar.help.unfollow.title()
+                                            : $LL.actionbar.help.follow.title()}
+                                        tooltipDesc={$followStateStore === "active"
+                                            ? $LL.actionbar.help.unfollow.desc()
+                                            : $LL.actionbar.help.follow.desc()}
                                         disabledHelp={appMenuOpened}
-                                        state={$followStateStore === 'active'
-                                            ? "active"
-                                            : "normal"}
+                                        state={$followStateStore === "active" ? "active" : "normal"}
+                                        dataTestId={undefined}
                                     >
                                         <FollowIcon />
                                     </ActionBarIconButton>
-                                </div>
-                                <div
-                                    class="group/btn-lock relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 aspect-square {$hasEmbedScreen &&
-                                    $canvasWidth < 768
-                                        ? ''
-                                        : 'rounded-r-lg'}"
-                                >
+                                </ActionBarButtonWrapper>
+                                <ActionBarButtonWrapper buttonName="group/btn-lock">
                                     <ActionBarIconButton
-                                            on:click={() => {
-                                            analyticsClient.lockDiscussion()
+                                        on:click={() => {
+                                            analyticsClient.lockDiscussion();
                                             lockClick();
                                         }}
-                                            tooltipTitle={$LL.actionbar.help.lock.title()}
-                                            tooltipDesc={$LL.actionbar.help.lock.desc()}
-                                            disabledHelp={appMenuOpened}
-                                            state={$currentPlayerGroupLockStateStore
-                                            ? "forbidden"
-                                            : "normal"}
+                                        tooltipTitle={$LL.actionbar.help.lock.title()}
+                                        tooltipDesc={$LL.actionbar.help.lock.desc()}
+                                        disabledHelp={appMenuOpened}
+                                        state={$currentPlayerGroupLockStateStore ? "forbidden" : "normal"}
+                                        dataTestId={undefined}
                                     >
                                         {#if $currentPlayerGroupLockStateStore}
                                             <LockIcon />
@@ -1002,7 +948,7 @@
                                             <LockOpenIcon />
                                         {/if}
                                     </ActionBarIconButton>
-                                </div>
+                                </ActionBarButtonWrapper>
                             {/if}
                         </div>
                     </div>
@@ -1035,24 +981,17 @@
                         {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore}
                             <!-- NAV : MICROPHONE START -->
                             {#if $myMicrophoneStore}
-                                <div
-                                    class="group/btn-mic peer/mic relative bg-contrast/80 backdrop-blur p-2 sm:pr-0 sm:last:pr-2 aspect-square {$peerStore.size >
-                                        0 && $canvasWidth < 768
-                                        ? 'rounded-none'
-                                        : 'rounded-l-lg'}"
-                                    class:disabled={!$requestedMicrophoneState || $silentStore}
-                                >
+                                <ActionBarButtonWrapper buttonName="group/btn-mic peer/mic">
                                     <ActionBarIconButton
                                         on:click={() => {
-                                            analyticsClient.microphone()
+                                            analyticsClient.microphone();
                                             microphoneClick();
                                         }}
                                         tooltipTitle={$LL.actionbar.help.mic.title()}
                                         tooltipDesc={$LL.actionbar.help.mic.desc()}
                                         disabledHelp={appMenuOpened}
-                                        state={!$requestedMicrophoneState || $silentStore
-                                            ? "forbidden"
-                                            : "normal"}
+                                        state={!$requestedMicrophoneState || $silentStore ? "forbidden" : "normal"}
+                                        dataTestId={undefined}
                                     >
                                         {#if $requestedMicrophoneState && !$silentStore}
                                             <MicOnIcon />
@@ -1060,7 +999,7 @@
                                             <MicOffIcon />
                                         {/if}
                                     </ActionBarIconButton>
-                                </div>
+                                </ActionBarButtonWrapper>
                             {/if}
                         {/if}
                         <!-- NAV : MICROPHONE END -->
@@ -1291,24 +1230,17 @@
                         {/if}
                         <!-- NAV : CAMERA START -->
                         {#if !$inExternalServiceStore && $myCameraStore && !$silentStore}
-                            <div
-                                class="group/btn-cam relative bg-contrast/80 backdrop-blur p-2 aspect-square {$peerStore.size >
-                                    0 && $canvasWidth > 768
-                                    ? 'rounded-none'
-                                    : 'rounded-r-lg'}"
-                                class:disabled={!$requestedCameraState || $silentStore}
-                            >
+                            <ActionBarButtonWrapper buttonName="group/btn-cam">
                                 <ActionBarIconButton
                                     on:click={() => {
-                                        analyticsClient.camera()
+                                        analyticsClient.camera();
                                         cameraClick();
                                     }}
                                     tooltipTitle={$LL.actionbar.help.cam.title()}
                                     tooltipDesc={$LL.actionbar.help.cam.desc()}
                                     disabledHelp={appMenuOpened}
-                                    state={!$requestedCameraState || $silentStore
-                                        ? "forbidden"
-                                        : "normal"}
+                                    state={!$requestedCameraState || $silentStore ? "forbidden" : "normal"}
+                                    dataTestId={undefined}
                                 >
                                     {#if $requestedCameraState && !$silentStore}
                                         <CamOnIcon />
@@ -1316,19 +1248,14 @@
                                         <CamOffIcon />
                                     {/if}
                                 </ActionBarIconButton>
-                            </div>
+                            </ActionBarButtonWrapper>
                         {/if}
                         <!-- NAV : CAMERA END -->
 
                         <!-- NAV : SCREENSHARING START -->
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         {#if $bottomActionBarVisibilityStore}
-                            <div
-                                class="group/btn-screen-share relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square {$canvasWidth <
-                                    768 && $canvasWidth > 768
-                                    ? 'rounded-r-lg pr-2'
-                                    : ''} {$canvasWidth < 768 ? 'hidden' : ''}"
-                            >
+                            <ActionBarButtonWrapper buttonName="group/btn-screen-share">
                                 <ActionBarIconButton
                                     on:click={() => {
                                         analyticsClient.screenSharing();
@@ -1350,7 +1277,7 @@
                                         <ScreenShareIcon />
                                     {/if}
                                 </ActionBarIconButton>
-                            </div>
+                            </ActionBarButtonWrapper>
 
                             {#if camMenuIsDropped}
                                 <div
