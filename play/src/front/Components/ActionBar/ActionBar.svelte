@@ -49,14 +49,7 @@
         userIsConnected,
         screenSharingActivatedStore,
     } from "../../Stores/MenuStore";
-    import {
-        emoteDataStore,
-        emoteDataStoreLoading,
-        emoteMenuStore,
-        emoteMenuSubCurrentEmojiSelectedStore,
-        emoteMenuSubStore,
-        emoteStore,
-    } from "../../Stores/EmoteStore";
+    import { emoteMenuStore, emoteMenuSubStore } from "../../Stores/EmoteStore";
     import { LL } from "../../../i18n/i18n-svelte";
     import { bottomActionBarVisibilityStore } from "../../Stores/BottomActionBarStore";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
@@ -69,7 +62,6 @@
         roomListVisibilityStore,
         showModalGlobalComminucationVisibilityStore,
     } from "../../Stores/ModalStore";
-    import { Emoji } from "../../Stores/Utils/emojiSchema";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { isActivatedStore as isCalendarActivatedStore, isCalendarVisibleStore } from "../../Stores/CalendarStore";
     import { isActivatedStore as isTodoListActivatedStore, isTodoListVisibleStore } from "../../Stores/TodoListStore";
@@ -105,20 +97,19 @@
     import CheckIcon from "../Icons/CheckIcon.svelte";
     import XIcon from "../Icons/XIcon.svelte";
     import MenuBurgerIcon from "../Icons/MenuBurgerIcon.svelte";
-    import PenIcon from "../Icons/PenIcon.svelte";
     import { StringUtils } from "../../Utils/StringUtils";
     import { focusMode, rightMode, hideMode, highlightFullScreen } from "../../Stores/ActionsCamStore";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { connectionManager } from "../../Connection/ConnectionManager";
-    import { inputFormFocusStore } from "../../Stores/UserInputStore";
 
     import AppsIcon from "../Icons/AppsIcon.svelte";
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
     import { megaphoneCanBeUsedStore } from "../../Stores/MegaphoneStore";
     import ActionBarIconButton from "./ActionBarIconButton.svelte";
     import MapSubMenu from "./MenuIcons/MapSubMenu.svelte";
-    import { IconArrowDown, IconCheckList, IconCalendar, IconLogout } from "@wa-icons";
     import ActionBarButtonWrapper from "./ActionBarButtonWrapper.svelte";
+    import EmojiSubMenu from "./EmojiSubMenu.svelte";
+    import { IconArrowDown, IconCheckList, IconCalendar, IconLogout } from "@wa-icons";
 
     // gameManager.currenwStartedRoom?.miniLogo ?? WorkAdventureImg;
     let userName = gameManager.getPlayerName() || "";
@@ -224,83 +215,9 @@
         }
     }
 
-    function clickEmoji(selected?: number) {
-        //if open, in edit mode or playing mode
-        if ($emoteMenuStore && selected != undefined) {
-            //select place to change in emoji sub menu
-            emoteMenuSubCurrentEmojiSelectedStore.set(selected);
-        } else if (selected != undefined) {
-            //get emoji and play it
-            let emoji: Emoji | null | undefined = $emoteDataStore.get(selected);
-            if (emoji == undefined) {
-                return;
-            }
-            analyticsClient.launchEmote(emoji);
-            emoteStore.set(emoji);
-
-            //play UX animation
-            focusElement(selected);
-        }
-    }
-
-    function edit(): void {
-        if ($emoteMenuStore) emoteMenuStore.closeEmoteMenu();
-        else emoteMenuStore.openEmoteMenu();
-    }
-
     function close(): void {
         emoteMenuStore.closeEmoteMenu();
         emoteMenuSubStore.closeEmoteMenu();
-    }
-
-    function focusElement(key: number) {
-        if (!$emoteMenuSubStore) {
-            return;
-        }
-        const name: string | undefined = $emoteDataStore.get(key)?.name;
-        if (name == undefined) {
-            return;
-        }
-        const element: HTMLElement | null = document.getElementById(`button-${name}`);
-        if (element == undefined) {
-            return;
-        }
-        element.focus();
-        element.classList.add("focus");
-
-        //blur element after ends of animation
-        setTimeout(() => {
-            element.blur();
-            element.classList.remove("focus");
-        }, 2000);
-    }
-
-    function onKeyDown(e: KeyboardEvent) {
-        if ($mapEditorModeStore || $inputFormFocusStore) return;
-        let key = null;
-        if (e.key === "1" || e.key === "F1") {
-            key = 1;
-        }
-        if (e.key === "2" || e.key === "F2") {
-            key = 2;
-        }
-        if (e.key === "3" || e.key === "F3") {
-            key = 3;
-        }
-        if (e.key === "4" || e.key === "F4") {
-            key = 4;
-        }
-        if (e.key === "5" || e.key === "F5") {
-            key = 5;
-        }
-        if (e.key === "6" || e.key === "F6") {
-            key = 6;
-        }
-        if (!key) {
-            return;
-        }
-        focusElement(key);
-        clickEmoji(key);
     }
 
     function showMenuItem(key: MenuKeys | string) {
@@ -457,7 +374,7 @@
     }
 </script>
 
-<svelte:window on:keydown={onKeyDown} on:click={onClickOutside} on:touchend={onClickOutside} />
+<svelte:window on:click={onClickOutside} on:touchend={onClickOutside} />
 
 <div
     class="@container/actions position-responsive w-full z-[301] transition-all pointer-events-none bp-menu {$peerStore.size >
@@ -474,16 +391,16 @@
             >
                 <ActionBarButtonWrapper classList="group/btn-message-circle">
                     <ActionBarIconButton
-                            on:click={() => {
+                        on:click={() => {
                             toggleChat();
                             navChat.switchToChat();
                             analyticsClient.openedChat();
                         }}
-                            tooltipTitle={$LL.actionbar.help.chat.title()}
-                            tooltipDesc={$LL.actionbar.help.chat.desc()}
-                            dataTestId="chat-btn"
-                            state={"normal"}
-                            disabledHelp={false}
+                        tooltipTitle={$LL.actionbar.help.chat.title()}
+                        tooltipDesc={$LL.actionbar.help.chat.desc()}
+                        dataTestId="chat-btn"
+                        state={"normal"}
+                        disabledHelp={false}
                     >
                         <MessageCircleIcon />
                     </ActionBarIconButton>
@@ -494,13 +411,13 @@
                         </div>
                     {:else if $totalMessagesToSee > 0}
                         <div
-                                class="absolute -top-2 -left-2 aspect-square flex w-5 h-5 items-center justify-center text-sm font-bold leading-none text-contrast bg-success rounded-full z-10"
+                            class="absolute -top-2 -left-2 aspect-square flex w-5 h-5 items-center justify-center text-sm font-bold leading-none text-contrast bg-success rounded-full z-10"
                         >
                             {$totalMessagesToSee}
                         </div>
                     {/if}
                 </ActionBarButtonWrapper>
-                <ActionBarButtonWrapper buttonName="group/btn-users">
+                <ActionBarButtonWrapper classList="group/btn-users">
                     <ActionBarIconButton
                         on:click={() => {
                             toggleChat();
@@ -524,7 +441,7 @@
                 {#if !$silentStore}
                     <div>
                         <div class="flex items-center">
-                            <ActionBarButtonWrapper buttonName="group/btn-emoji">
+                            <ActionBarButtonWrapper classList="group/btn-emoji">
                                 <ActionBarIconButton
                                     on:click={() => {
                                         toggleEmojiPicker();
@@ -543,105 +460,10 @@
                                     />
                                 </ActionBarIconButton>
                                 {#if $emoteMenuSubStore}
-                                    <div
-                                        class="flex justify-center m-auto absolute left-0 -right-2 top-[70px] w-auto z-[500]"
-                                        transition:fly={{ y: 20, duration: 150 }}
-                                    >
-                                        <img
-                                            loading="eager"
-                                            src={tooltipArrow}
-                                            alt="Sub menu arrow"
-                                            class="content-[''] absolute -top-1 left-0 right-0 m-auto w-2 h-1"
-                                        />
-                                        <div
-                                            class="bottom-action-bar bg-contrast/80 transition-all backdrop-blur-md rounded-md px-1 flex flex-col items-stretch items-center pointer-events-auto justify-center m-auto bottom-6 md:bottom-4 z-[251] transition-transform duration-300 md:flex-row"
-                                        >
-                                            <div class="flex animate flex-row flex items-center">
-                                                <div class="py-1 flex">
-                                                    {#each [...$emoteDataStore.keys()] as key, index (index)}
-                                                        <div class="transition-all bottom-action-button divide-x">
-                                                            <button
-                                                                on:click|stopPropagation|preventDefault={() => {
-                                                                    clickEmoji(key);
-                                                                }}
-                                                                id={`button-${$emoteDataStore.get(key)?.name}`}
-                                                                class="group emoji py-2 px-2 m-0 flex items-center transition-all rounded {$emoteMenuStore &&
-                                                                $emoteMenuSubCurrentEmojiSelectedStore === key
-                                                                    ? 'bg-secondary'
-                                                                    : 'hover:bg-white/20'}"
-                                                            >
-                                                                <div
-                                                                    class="emoji transition-all group-hover:-rotate-6 group-hover:scale-[2.5]"
-                                                                    style="margin:auto"
-                                                                    id={`icon-${$emoteDataStore.get(key)?.name}`}
-                                                                >
-                                                                    {$emoteDataStore.get(key)?.emoji}
-                                                                </div>
-                                                                {#if !isMobile}
-                                                                    <div
-                                                                        class="text-white/50 group-hover:text-white group-hover:bold font-xxs pl-1"
-                                                                    >
-                                                                        {key}
-                                                                    </div>
-                                                                {/if}
-                                                            </button>
-                                                        </div>
-                                                    {/each}
-                                                </div>
-                                                <div
-                                                    class="transition-all bottom-action-button flex items-center h-full pl-2 relative before:content-[''] before:absolute before:top-0 before:left-1 before:w-[1px] before:h-full before:bg-white/10"
-                                                >
-                                                    <button
-                                                        class="btn btn-sm btn-ghost btn-light flex"
-                                                        on:click={() => analyticsClient.editEmote()}
-                                                        on:click|stopPropagation|preventDefault={edit}
-                                                    >
-                                                        {#if $emoteDataStoreLoading}
-                                                            <svg
-                                                                class="animate-spin h-5 w-5 text-white"
-                                                                xmlns="http://www.w3.org/2000/svg"
-                                                                fill="none"
-                                                                viewBox="0 0 24 24"
-                                                            >
-                                                                <circle
-                                                                    class="opacity-25"
-                                                                    cx="12"
-                                                                    cy="12"
-                                                                    r="10"
-                                                                    stroke="currentColor"
-                                                                    stroke-width="4"
-                                                                />
-                                                                <path
-                                                                    class="opacity-75"
-                                                                    fill="currentColor"
-                                                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                                                />
-                                                            </svg>
-                                                        {:else if !$emoteMenuStore}
-                                                            <PenIcon width="w-4" height="h-4" />
-                                                            <div>{$LL.actionbar.edit()}</div>
-                                                        {:else}
-                                                            <XIcon width="w-4" height="h-4" />
-                                                            <div>{$LL.actionbar.cancel()}</div>
-                                                        {/if}
-                                                    </button>
-                                                </div>
-                                                <!--
-                                                <div class="transition-all bottom-action-button flex items-center rounded-r-lg h-full ml-2">
-                                                    <button
-                                                            class="btn btn-sm btn-danger"
-                                                            on:click|stopPropagation|preventDefault={close}
-                                                    >
-                                                        <XIcon width="w-4" height="h-4" />
-                                                    </button>
-                                                </div>
-                                                -->
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <EmojiSubMenu />
                                 {/if}
                             </ActionBarButtonWrapper>
-                            <ActionBarButtonWrapper buttonName="group/btn-apps">
+                            <ActionBarButtonWrapper classList="group/btn-apps">
                                 <ActionBarIconButton
                                     on:click={() => {
                                         openAppMenu();
@@ -816,61 +638,61 @@
 
                             {#if $bottomActionBarVisibilityStore}
                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                    <div
-                                        class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 rounded btn-layout/btn-more:bg-white/10 aspect-square flex items-center justify-center transition-all"
-                                        on:click={() => analyticsClient.layoutPresentChange()}
-                                        on:click={switchLayoutMode}
-                                    >
-                                        {#if $embedScreenLayoutStore === LayoutMode.Presentation}
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                class="icon icon-tabler icon-tabler-arrows-minimize"
-                                                width="24"
-                                                height="24"
-                                                viewBox="0 0 24 24"
-                                                stroke-width="1.5"
-                                                stroke="#ffffff"
-                                                fill="none"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                            >
-                                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                                <path d="M5 9l4 0l0 -4" />
-                                                <path d="M3 3l6 6" />
-                                                <path d="M5 15l4 0l0 4" />
-                                                <path d="M3 21l6 -6" />
-                                                <path d="M19 9l-4 0l0 -4" />
-                                                <path d="M15 9l6 -6" />
-                                                <path d="M19 15l-4 0l0 4" />
-                                                <path d="M15 15l6 6" />
-                                            </svg>
-                                        {:else}
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                class="icon icon-tabler icon-tabler-arrows-maximize"
-                                                width="24"
-                                                height="24"
-                                                viewBox="0 0 24 24"
-                                                stroke-width="1.5"
-                                                stroke="#ffffff"
-                                                fill="none"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                            >
-                                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                                <path d="M16 4l4 0l0 4" />
-                                                <path d="M14 10l6 -6" />
-                                                <path d="M8 20l-4 0l0 -4" />
-                                                <path d="M4 20l6 -6" />
-                                                <path d="M16 20l4 0l0 -4" />
-                                                <path d="M14 14l6 6" />
-                                                <path d="M8 4l-4 0l0 4" />
-                                                <path d="M4 4l6 6" />
-                                            </svg>
-                                        {/if}
-                                    </div>
+                                <div
+                                    class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 rounded btn-layout/btn-more:bg-white/10 aspect-square flex items-center justify-center transition-all"
+                                    on:click={() => analyticsClient.layoutPresentChange()}
+                                    on:click={switchLayoutMode}
+                                >
+                                    {#if $embedScreenLayoutStore === LayoutMode.Presentation}
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            class="icon icon-tabler icon-tabler-arrows-minimize"
+                                            width="24"
+                                            height="24"
+                                            viewBox="0 0 24 24"
+                                            stroke-width="1.5"
+                                            stroke="#ffffff"
+                                            fill="none"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        >
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                            <path d="M5 9l4 0l0 -4" />
+                                            <path d="M3 3l6 6" />
+                                            <path d="M5 15l4 0l0 4" />
+                                            <path d="M3 21l6 -6" />
+                                            <path d="M19 9l-4 0l0 -4" />
+                                            <path d="M15 9l6 -6" />
+                                            <path d="M19 15l-4 0l0 4" />
+                                            <path d="M15 15l6 6" />
+                                        </svg>
+                                    {:else}
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            class="icon icon-tabler icon-tabler-arrows-maximize"
+                                            width="24"
+                                            height="24"
+                                            viewBox="0 0 24 24"
+                                            stroke-width="1.5"
+                                            stroke="#ffffff"
+                                            fill="none"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        >
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                            <path d="M16 4l4 0l0 4" />
+                                            <path d="M14 10l6 -6" />
+                                            <path d="M8 20l-4 0l0 -4" />
+                                            <path d="M4 20l6 -6" />
+                                            <path d="M16 20l4 0l0 -4" />
+                                            <path d="M14 14l6 6" />
+                                            <path d="M8 4l-4 0l0 4" />
+                                            <path d="M4 4l6 6" />
+                                        </svg>
+                                    {/if}
+                                </div>
 
-                                <ActionBarButtonWrapper buttonName="group/btn-follow">
+                                <ActionBarButtonWrapper classList="group/btn-follow">
                                     <ActionBarIconButton
                                         on:click={() => {
                                             analyticsClient.follow();
@@ -889,7 +711,7 @@
                                         <FollowIcon />
                                     </ActionBarIconButton>
                                 </ActionBarButtonWrapper>
-                                <ActionBarButtonWrapper buttonName="group/btn-lock">
+                                <ActionBarButtonWrapper classList="group/btn-lock">
                                     <ActionBarIconButton
                                         on:click={() => {
                                             analyticsClient.lockDiscussion();
@@ -940,7 +762,7 @@
                         {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore}
                             <!-- NAV : MICROPHONE START -->
                             {#if $myMicrophoneStore}
-                                <ActionBarButtonWrapper buttonName="group/btn-mic peer/mic">
+                                <ActionBarButtonWrapper classList="group/btn-mic peer/mic">
                                     <ActionBarIconButton
                                         on:click={() => {
                                             analyticsClient.microphone();
@@ -1189,7 +1011,7 @@
                         {/if}
                         <!-- NAV : CAMERA START -->
                         {#if !$inExternalServiceStore && $myCameraStore && !$silentStore}
-                            <ActionBarButtonWrapper buttonName="group/btn-cam">
+                            <ActionBarButtonWrapper classList="group/btn-cam">
                                 <ActionBarIconButton
                                     on:click={() => {
                                         analyticsClient.camera();
@@ -1214,7 +1036,7 @@
                         <!-- NAV : SCREENSHARING START -->
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         {#if $bottomActionBarVisibilityStore}
-                            <ActionBarButtonWrapper buttonName="group/btn-screen-share">
+                            <ActionBarButtonWrapper classList="group/btn-screen-share">
                                 <ActionBarIconButton
                                     on:click={() => {
                                         analyticsClient.screenSharing();
