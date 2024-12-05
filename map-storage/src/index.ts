@@ -7,7 +7,6 @@ import { MapStorageService } from "@workadventure/messages/src/ts-proto-generate
 import passport from "passport";
 import bodyParser from "body-parser";
 import { setErrorHandler } from "@workadventure/shared-utils/src/ErrorHandler";
-import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
 import { mapStorageServer } from "./MapStorageServer";
 import { mapsManager } from "./MapsManager";
 import { proxyFiles } from "./FileFetcher/FileFetcher";
