@@ -49,9 +49,9 @@ class WamFileMigration {
         return {
             ...fileContent,
             version: "2.0.0",
-            areas: fileContent.areas.map((area: any) => ({
+            areas: fileContent?.areas.map((area: any) => ({
                 ...area,
-                properties: area.properties.map((property: any) => {
+                properties: area.properties?.map((property: any) => {
                     if (property.type === "jitsiRoomProperty") {
                         const jitsiRoomAdminTag = property.jitsiRoomConfig.jitsiRoomAdminTag;
 

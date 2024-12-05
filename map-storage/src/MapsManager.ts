@@ -49,7 +49,7 @@ class MapsManager {
         const wamFile = await command.execute();
 
         // Security check: Check that the map is valid after the change (it should be, but better safe than sorry)
-        const map = wamFileMigration.migrate(gameMap.getWam());
+        const map = gameMap.getWam();
         WAMFileFormat.parse(map);
 
         if (wamFile != undefined) {
