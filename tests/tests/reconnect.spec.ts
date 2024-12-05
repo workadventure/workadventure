@@ -32,7 +32,7 @@ test.describe("Connection", () => {
     await context.setOffline(false);
 
 
-    await Menu.waitForMenu(page, 180_000);
+    await Menu.waitForMapMenu(page, 180_000);
     /*await expect(page.locator("button#menuIcon")).toBeVisible({
       timeout: 180_000,
     });*/
@@ -63,7 +63,7 @@ test.describe("Connection", () => {
     //Reconnect
     await context.setOffline(false);
 
-    await Menu.waitForMenu(page, 180_000);
+    await Menu.waitForMapMenu(page, 180_000);
     /*await expect(page.locator("button#menuIcon")).toBeVisible({
       timeout: 180_000,
     });*/

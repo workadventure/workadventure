@@ -679,7 +679,7 @@ test.describe("Map editor @oidc", () => {
         await Megaphone.isCorrectlySaved(page);
         // Test if tags are working correctly, all current users doesn't have the tag "example" to use megaphone
         await Menu.isNotThereMegaphoneButton(page);
-        await expect(page2.getByTestId('action-admin')).toBeHidden();
+        await expect(page2.getByTestId('map-menu')).toBeHidden();
         //await Menu.isNotThereMegaphoneButton(page2);
         // Remove rights
         await Megaphone.megaphoneRemoveRights(page, "example");

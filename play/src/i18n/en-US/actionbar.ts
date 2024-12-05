@@ -6,7 +6,7 @@ const actionbar: BaseTranslation = {
     cancel: "Cancel",
     close: "Close",
     login: "Login",
-    admin: "Admin",
+    map: "Map",
     profil: "Edit your name",
     startScreenSharing: "Start screen sharing",
     stopScreenSharing: "Stop screen sharing",

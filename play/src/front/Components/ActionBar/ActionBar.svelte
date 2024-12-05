@@ -40,6 +40,9 @@
         subMenusStore,
         userIsConnected,
         screenSharingActivatedStore,
+        backOfficeMenuVisibleStore,
+        globalMessageVisibleStore,
+        mapMenuVisibleStore,
     } from "../../Stores/MenuStore";
     import { emoteMenuStore, emoteMenuSubStore } from "../../Stores/EmoteStore";
     import { LL } from "../../../i18n/i18n-svelte";
@@ -94,14 +97,13 @@
 
     import AppsIcon from "../Icons/AppsIcon.svelte";
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
-    import { megaphoneCanBeUsedStore } from "../../Stores/MegaphoneStore";
     import ActionBarIconButton from "./ActionBarIconButton.svelte";
     import MapSubMenu from "./MenuIcons/MapSubMenu.svelte";
     import ActionBarButtonWrapper from "./ActionBarButtonWrapper.svelte";
     import EmojiSubMenu from "./EmojiSubMenu.svelte";
     import MediaSettingsList from "./MediaSettingsList.svelte";
-    import { IconArrowDown, IconCheckList, IconCalendar, IconLogout } from "@wa-icons";
     import SilentBlock from "./SilentBlock.svelte";
+    import { IconArrowDown, IconCheckList, IconCalendar, IconLogout } from "@wa-icons";
 
     // gameManager.currenwStartedRoom?.miniLogo ?? WorkAdventureImg;
     let userName = gameManager.getPlayerName() || "";
@@ -398,7 +400,7 @@
             </div>
         </div>
         <div
-            class="@xxs/actions:justify-center justify-end main-action pointer-events-auto min-w-32 @sm/actions:min-w-[192px] max-w-[424px]"
+            class="@xxs/actions:justify-center justify-end main-action pointer-events-auto min-w-32 @sm/actions:min-w-[192px]"
         >
             <div class="flex justify-center relative space-x-0 @md/actions:space-x-2 @xl/actions:space-x-4">
                 {#if !$silentStore}
@@ -732,12 +734,15 @@
                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <div
                                     class="absolute bottom-1 left-0 right-0 m-auto hover:bg-white/10 h-5 w-5 flex items-center justify-center rounded-sm"
-                                    on:click|stopPropagation|preventDefault={() => (mediaSettingsDisplayed = !mediaSettingsDisplayed)}
+                                    on:click|stopPropagation|preventDefault={() =>
+                                        (mediaSettingsDisplayed = !mediaSettingsDisplayed)}
                                 >
                                     <ChevronUpIcon
                                         height="h-4"
                                         width="w-4"
-                                        classList="aspect-square transition-all {mediaSettingsDisplayed ? '' : 'rotate-180'}"
+                                        classList="aspect-square transition-all {mediaSettingsDisplayed
+                                            ? ''
+                                            : 'rotate-180'}"
                                         strokeWidth="2"
                                     />
                                 </div>
@@ -1258,20 +1263,31 @@
                     </button>
                 {/if}
             </div>
-            <div class="h-[1px] w-full bg-white/10 my-2 block @md/actions:hidden" />
-            <div class="flex text-xxs uppercase text-white/50 px-4 py-2 relative justify-end">Administrator</div>
+            {#if $mapMenuVisibleStore}
+                <div class="h-[1px] w-full bg-white/10 my-2 block @md/actions:hidden" />
+                <div class="flex text-xxs uppercase text-white/50 px-4 py-2 relative justify-end">
+                    {$LL.actionbar.map()}
+                </div>
+            {/if}
             <!-- FIXME: we need proper "if" around the items of the burger menu. Should we centralize the notion of button? -->
-            <button class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold" on:click={() => openBo()}>
-                {$LL.actionbar.bo()}
-            </button>
-            <button class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold">
-                {$LL.actionbar.globalMessage()}
-            </button>
-            {#if $megaphoneCanBeUsedStore && !$silentStore && ($myMicrophoneStore || $myCameraStore)}
-                <button class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold">
-                    {$LL.actionbar.megaphone()}
+            {#if $backOfficeMenuVisibleStore}
+                <button
+                    class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold"
+                    on:click={() => openBo()}
+                >
+                    {$LL.actionbar.bo()}
                 </button>
             {/if}
+            {#if $globalMessageVisibleStore}
+                <button class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold">
+                    {$LL.actionbar.globalMessage()}
+                </button>
+            {/if}
+            <!--{#if $megaphoneCanBeUsedStore && !$silentStore && ($myMicrophoneStore || $myCameraStore)}-->
+            <!--    <button class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold">-->
+            <!--        {$LL.actionbar.megaphone()}-->
+            <!--    </button>-->
+            <!--{/if}-->
             <div class="h-[1px] w-full bg-white/10 my-4" />
             {#if $inviteUserActivated}
                 <div class="px-4 space-y-2">

@@ -16,8 +16,9 @@ import {
     REPORT_ISSUES_URL,
 } from "../Enum/EnvironmentVariable";
 import { gameManager } from "../Phaser/Game/GameManager";
-import { userIsAdminStore } from "./GameStore";
+import { userHasAccessToBackOfficeStore, userIsAdminStore } from "./GameStore";
 import { emoteMenuSubStore } from "./EmoteStore";
+import { megaphoneCanBeUsedStore } from "./MegaphoneStore";
 
 export const menuIconVisiblilityStore = writable(false);
 export const menuVisiblilityStore = writable(false);
@@ -354,3 +355,23 @@ additionnalButtonsMenu.subscribe((map) => {
 export const helpTextDisabledStore = derived(emoteMenuSubStore, ($emoteMenuSubStore) => {
     return $emoteMenuSubStore !== null;
 });
+
+export const mapEditorMenuVisibleStore = derived(
+    [mapEditorActivated, mapManagerActivated],
+    ([$mapEditorActivated, $mapManagerActivated]) => {
+        return $mapEditorActivated && $mapManagerActivated;
+    }
+);
+export const backOfficeMenuVisibleStore = userHasAccessToBackOfficeStore;
+export const globalMessageVisibleStore = derived(
+    [megaphoneCanBeUsedStore, userIsAdminStore],
+    ([$megaphoneCanBeUsedStore, $userIsAdminStore]) => {
+        return $megaphoneCanBeUsedStore || $userIsAdminStore;
+    }
+);
+export const mapMenuVisibleStore = derived(
+    [mapEditorMenuVisibleStore, backOfficeMenuVisibleStore, globalMessageVisibleStore],
+    ([$mapEditorMenuVisibleStore, $backOfficeMenuVisibleStore, $globalMessageVisibleStore]) => {
+        return $mapEditorMenuVisibleStore || $backOfficeMenuVisibleStore || $globalMessageVisibleStore;
+    }
+);

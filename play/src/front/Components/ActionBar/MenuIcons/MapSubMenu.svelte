@@ -2,14 +2,14 @@
     import { clickOutside } from "svelte-outside";
     import { fly } from "svelte/transition";
     import { streamingMegaphoneStore } from "../../../Stores/MediaStore";
-    import { mapEditorActivated, mapManagerActivated } from "../../../Stores/MenuStore";
-    import { LL } from "../../../../i18n/i18n-svelte";
-    import { userHasAccessToBackOfficeStore, userIsAdminStore } from "../../../Stores/GameStore";
     import {
-        liveStreamingEnabledStore,
-        megaphoneCanBeUsedStore,
-        requestedMegaphoneStore,
-    } from "../../../Stores/MegaphoneStore";
+        backOfficeMenuVisibleStore,
+        globalMessageVisibleStore,
+        mapEditorMenuVisibleStore,
+        mapMenuVisibleStore,
+    } from "../../../Stores/MenuStore";
+    import { LL } from "../../../../i18n/i18n-svelte";
+    import { liveStreamingEnabledStore, requestedMegaphoneStore } from "../../../Stores/MegaphoneStore";
     import AdminPanIcon from "../../Icons/AdminPanIcon.svelte";
     import AdjustmentsIcon from "../../Icons/AdjustmentsIcon.svelte";
     import MessageGlobalIcon from "../../Icons/MessageGlobalIcon.svelte";
@@ -29,13 +29,7 @@
     import { ADMIN_BO_URL } from "../../../Enum/EnvironmentVariable";
     import SubMenuItem from "./SubMenuItem.svelte";
 
-    let adminMenuIsDropped = false;
-
-    let mapEditorMenuVisible = $mapEditorActivated && $mapManagerActivated;
-    let backOfficeMenuVisible = $userHasAccessToBackOfficeStore;
-    let globalMessageVisible = $megaphoneCanBeUsedStore || $userIsAdminStore;
-
-    let menuVisible = mapEditorMenuVisible || backOfficeMenuVisible || globalMessageVisible;
+    let mapMenuIsDropped = false;
 
     function resetChatVisibility() {
         chatVisibilityStore.set(false);
@@ -85,18 +79,18 @@
     }
 
     function close() {
-        adminMenuIsDropped = false;
+        mapMenuIsDropped = false;
     }
 </script>
 
-{#if menuVisible}
+{#if $mapMenuVisibleStore}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
-        data-testid="action-admin"
+        data-testid="map-menu"
         class="items-center relative transition-all hidden @lg/actions:block"
-        on:click={() => (adminMenuIsDropped = !adminMenuIsDropped)}
+        on:click={() => (mapMenuIsDropped = !mapMenuIsDropped)}
         use:clickOutside={close}
-        on:blur={() => (adminMenuIsDropped = false)}
+        on:blur={() => (mapMenuIsDropped = false)}
     >
         <div
             class="group bg-contrast/80 backdrop-blur rounded-lg h-16 @sm/actions:h-14 @xl/actions:h-16 p-2 transition-all"
@@ -109,25 +103,25 @@
                     <div
                         class="font-bold text-white leading-3 whitespace-nowrap select-none text-base @sm/actions:text-sm @xl/actions:text-base"
                     >
-                        {$LL.actionbar.admin()}
+                        {$LL.actionbar.map()}
                     </div>
                 </div>
                 <ChevronDownIcon
                     strokeWidth="2"
-                    classList="h-4 w-4 aspect-square transition-all opacity-50 {adminMenuIsDropped ? 'rotate-180' : ''}"
+                    classList="h-4 w-4 aspect-square transition-all opacity-50 {mapMenuIsDropped ? 'rotate-180' : ''}"
                     height="16px"
                     width="16px"
                 />
             </div>
         </div>
-        {#if adminMenuIsDropped}
+        {#if mapMenuIsDropped}
             <div
                 class="absolute mt-2 top-14 @xl/actions:top-16 right-0 bg-contrast/80 backdrop-blur rounded-md w-56 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-transparent before:border-b-contrast/80 transition-all"
-                data-testid="admin-menu"
+                data-testid="map-sub-menu"
                 transition:fly={{ y: 40, duration: 150 }}
             >
                 <div class="p-1 m-0">
-                    {#if mapEditorMenuVisible}
+                    {#if $mapEditorMenuVisibleStore}
                         <SubMenuItem on:click={() => toggleMapEditorMode()}>
                             <svg
                                 slot="icon"
@@ -148,13 +142,13 @@
                             <span slot="label">{$LL.actionbar.mapEditor()}</span>
                         </SubMenuItem>
                     {/if}
-                    {#if backOfficeMenuVisible}
+                    {#if $backOfficeMenuVisibleStore}
                         <SubMenuItem on:click={() => openBo()}>
                             <AdjustmentsIcon slot="icon" />
                             <span slot="label">{$LL.actionbar.bo()}</span>
                         </SubMenuItem>
                     {/if}
-                    {#if globalMessageVisible}
+                    {#if $globalMessageVisibleStore}
                         <SubMenuItem on:click={() => toggleGlobalMessage()}>
                             <MessageGlobalIcon slot="icon" />
                             <span slot="label">{$LL.actionbar.globalMessage()}</span>

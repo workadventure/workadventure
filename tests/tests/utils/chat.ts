@@ -22,7 +22,7 @@ class Chat {
                 await page.click('button#burgerIcon');
             }
         }
-        await Menu.waitForMenu(page, 180_000);
+        await Menu.waitForMapMenu(page, 180_000);
         await page.click('button.chat-btn');
         await expectInViewport('#chatModal', page);
     }

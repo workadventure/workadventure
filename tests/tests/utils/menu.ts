@@ -8,7 +8,7 @@ class Menu {
     }
 
     async openMapEditor(page: Page) {
-        await page.getByTestId('action-admin').click({timeout: 30_000});
+        await page.getByTestId('map-menu').click({timeout: 30_000});
         await page.getByTestId('map-editor').click();
         await expect(await page.getByTestId('map-editor')).toBeHidden();
         // await expect(await page.getByRole('button', {name: 'toggle-map-editor'}).first()).toHaveClass(/border-top-light/);
@@ -26,24 +26,24 @@ class Menu {
         await expect(await page.getByTestId('profile-menu')).toHaveClass(/backdrop-blur/);
     }
 
-    async openMenuAdmin(page: Page) {
+    async openMapMenu(page: Page) {
         // await page.pause();
-        await page.getByTestId('action-admin').click();
-        await expect(await page.getByTestId('admin-menu')).toHaveClass(/backdrop-blur/);
+        await page.getByTestId('map-menu').click();
+        await expect(page.getByTestId('map-sub-menu')).toHaveClass(/backdrop-blur/);
     }
 
     async closeMenu(page: Page) {
         await page.getByTestId('action-user').click({timeout: 30_000});
-        await expect(await page.getByTestId('profile-menu')).toBeHidden();
+        await expect(page.getByTestId('profile-menu')).toBeHidden();
     }
 
-    async closeMenuAdmin(page: Page) {
-        await page.getByTestId('action-admin').click({timeout: 30_000});
-        await expect(await page.getByTestId('admin-menu')).toBeHidden();
+    async closeMapMenu(page: Page) {
+        await page.getByTestId('map-menu').click({timeout: 30_000});
+        await expect(page.getByTestId('map-sub-menu')).toBeHidden();
     }
 
-    async waitForMenu(page: Page, timeout = 30_000) {
-        await expect(page.getByTestId('action-admin')).toBeVisible({
+    async waitForMapMenu(page: Page, timeout = 30_000) {
+        await expect(page.getByTestId('map-menu')).toBeVisible({
             timeout
         });
     }
@@ -55,20 +55,20 @@ class Menu {
     }
 
     async toggleMegaphoneButton(page: Page) {
-        await this.openMenuAdmin(page);
+        await this.openMapMenu(page);
         await page.getByTestId('global-message').click({timeout: 30_000});
     }
 
     async isThereMegaphoneButton(page: Page) {
-        await this.openMenuAdmin(page);
+        await this.openMapMenu(page);
         await expect(page.getByText('Use megaphone')).toBeVisible();
-        await this.closeMenuAdmin(page);
+        await this.closeMapMenu(page);
     }
 
     async isNotThereMegaphoneButton(page: Page) {
-        await this.openMenuAdmin(page);
+        await this.openMapMenu(page);
         await expect(page.getByText('Use megaphone')).toBeHidden();
-        await this.closeMenuAdmin(page);
+        await this.closeMapMenu(page);
     }
 
     async openStatusList(page : Page, isMobile = false){

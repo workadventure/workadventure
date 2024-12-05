@@ -150,7 +150,7 @@ test.describe("Iframe API", () => {
       WA.controls.disableMapEditor();
     });
 
-    await Menu.openMenuAdmin(page);
+    await Menu.openMapMenu(page);
 
     // Check if the map editor is disabled
     await expect(
