@@ -1,13 +1,15 @@
 <script lang="ts">
-
     import { fly } from "svelte/transition";
-    import { LL } from "../../../i18n/i18n-svelte";
     import { clickOutside } from "svelte-outside";
-
+    import { createEventDispatcher } from "svelte";
+    import { EnableCameraScene, EnableCameraSceneName } from "../../Phaser/Login/EnableCameraScene";
     import {
-        cameraListStore, enableCameraSceneVisibilityStore,
-        microphoneListStore, requestedCameraDeviceIdStore,
-        requestedCameraState, requestedMicrophoneDeviceIdStore,
+        cameraListStore,
+        enableCameraSceneVisibilityStore,
+        microphoneListStore,
+        requestedCameraDeviceIdStore,
+        requestedCameraState,
+        requestedMicrophoneDeviceIdStore,
         requestedMicrophoneState,
         speakerListStore,
         speakerSelectedStore,
@@ -16,13 +18,12 @@
         usedMicrophoneDeviceIdStore,
     } from "../../Stores/MediaStore";
 
-    import {analyticsClient} from "../../Administration/AnalyticsClient";
-    import {StringUtils} from "../../Utils/StringUtils";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { StringUtils } from "../../Utils/StringUtils";
     import CheckIcon from "../Icons/CheckIcon.svelte";
-    import {localUserStore} from "../../Connection/LocalUserStore";
-    import {gameManager} from "../../Phaser/Game/GameManager";
-    import {EnableCameraScene, EnableCameraSceneName} from "../../Phaser/Login/EnableCameraScene";
-    import {createEventDispatcher} from "svelte";
+    import { localUserStore } from "../../Connection/LocalUserStore";
+    import { gameManager } from "../../Phaser/Game/GameManager";
+    import { LL } from "../../../i18n/i18n-svelte";
 
     export let cameraActive = false;
 
@@ -70,52 +71,45 @@
 </script>
 
 <div
-        class="absolute top-20 left-1/2 transform -translate-x-1/2 text-white rounded-md w-64 overflow-hidden before:content-[''] before:absolute before:w-full before:h-full before:z-1 before:left-0 before:top-0 before:rounded-lg before:bg-contrast/80 before:backdrop-blur after:content-[''] after:absolute after:z-0 after:w-full after:bg-transparent after:h-full after:-top-4 after:-left-0 transition-all"
-        in:fly={{ y: 40, duration: 150 }}
-        use:clickOutside={() => dispatch("close")}
+    class="absolute top-20 left-1/2 transform -translate-x-1/2 text-white rounded-md w-64 overflow-hidden before:content-[''] before:absolute before:w-full before:h-full before:z-1 before:left-0 before:top-0 before:rounded-lg before:bg-contrast/80 before:backdrop-blur after:content-[''] after:absolute after:z-0 after:w-full after:bg-transparent after:h-full after:-top-4 after:-left-0 transition-all"
+    in:fly={{ y: 40, duration: 150 }}
+    use:clickOutside={() => dispatch("close")}
 >
-    <div
-            class="flex flex-col overflow-auto space-y-2 p-1"
-            style="max-height: calc(100vh - 160px);"
-    >
+    <div class="flex flex-col overflow-auto space-y-2 p-1" style="max-height: calc(100vh - 160px);">
         {#if $requestedCameraState && $cameraListStore && $cameraListStore.length > 1}
             <div class="">
-                <div
-                        class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-2 relative bold"
-                >
+                <div class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-2 relative bold">
                     {$LL.actionbar.subtitle.camera()}
                 </div>
                 {#each $cameraListStore as camera, index (index)}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
-                            class="group flex items-center relative z-10 py-1 px-2 overflow-hidden rounded {$usedCameraDeviceIdStore ===
-                                                    camera.deviceId
-                                                        ? 'bg-secondary'
-                                                        : 'hover:bg-white/10'}"
-                            on:click={() => {
-                                                        analyticsClient.selectCamera();
-                                                    }}
-                            on:click|stopPropagation|preventDefault={() =>
-                                                        selectCamera(camera.deviceId)}
+                        class="group flex items-center relative z-10 py-1 px-2 overflow-hidden rounded {$usedCameraDeviceIdStore ===
+                        camera.deviceId
+                            ? 'bg-secondary'
+                            : 'hover:bg-white/10'}"
+                        on:click={() => {
+                            analyticsClient.selectCamera();
+                        }}
+                        on:click|stopPropagation|preventDefault={() => selectCamera(camera.deviceId)}
                     >
                         <div
-                                class="grow text-sm text-ellipsis overflow-hidden whitespace-nowrap {$usedCameraDeviceIdStore ===
-                                                        camera.deviceId
-                                                            ? 'opacity-100'
-                                                            : 'opacity-80 group-hover:opacity-100'}"
+                            class="grow text-sm text-ellipsis overflow-hidden whitespace-nowrap {$usedCameraDeviceIdStore ===
+                            camera.deviceId
+                                ? 'opacity-100'
+                                : 'opacity-80 group-hover:opacity-100'}"
                         >
                             {StringUtils.normalizeDeviceName(camera.label)}
                         </div>
                         {#if $usedCameraDeviceIdStore === camera.deviceId}
                             <CheckIcon
-                                    height="h-4"
-                                    width="w-4"
-                                    classList="aspect-square transition-all"
-                                    strokeColor="stroke-white fill-transparent {$usedCameraDeviceIdStore ===
-                                                            camera.deviceId
-                                                                ? 'opacity-100'
-                                                                : 'opacity-0 group-hover:opacity-30'}"
-                                    strokeWidth="1.5"
+                                height="h-4"
+                                width="w-4"
+                                classList="aspect-square transition-all"
+                                strokeColor="stroke-white fill-transparent {$usedCameraDeviceIdStore === camera.deviceId
+                                    ? 'opacity-100'
+                                    : 'opacity-0 group-hover:opacity-30'}"
+                                strokeWidth="1.5"
                             />
                         {/if}
                     </div>
@@ -123,25 +117,19 @@
             </div>
         {:else}
             <div class="">
-                <div
-                        class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-2 relative bold"
-                >
+                <div class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-2 relative bold">
                     {$LL.actionbar.subtitle.camera()}
                 </div>
-                <div
-                        class="group flex items-center relative z-10 px-2 font-sm justify-center"
-                >
+                <div class="group flex items-center relative z-10 px-2 font-sm justify-center">
                     <div class="text-sm italic">
                         {$LL.actionbar.camera.disabled()}
                     </div>
                 </div>
-                <div
-                        class="group flex items-center relative z-10 py-1 px-2 overflow-hidden"
-                >
+                <div class="group flex items-center relative z-10 py-1 px-2 overflow-hidden">
                     <button
-                            class="btn btn-danger btn-sm w-full justify-center"
-                            on:click={() => analyticsClient.camera()}
-                            on:click={cameraClick}
+                        class="btn btn-danger btn-sm w-full justify-center"
+                        on:click={() => analyticsClient.camera()}
+                        on:click={cameraClick}
                     >
                         {$LL.actionbar.camera.activate()}
                     </button>
@@ -150,42 +138,39 @@
         {/if}
         {#if $requestedMicrophoneState && $microphoneListStore && $microphoneListStore.length > 1}
             <div class="">
-                <div
-                        class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-1 relative bold"
-                >
+                <div class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-1 relative bold">
                     {$LL.actionbar.subtitle.microphone()}
                 </div>
                 {#each $microphoneListStore as microphone, index (index)}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
-                            class="group flex items-center relative z-10 py-1 px-2 overflow-hidden rounded {$usedMicrophoneDeviceIdStore ===
-                                                    microphone.deviceId
-                                                        ? 'bg-secondary'
-                                                        : 'hover:bg-white/10'}"
-                            on:click={() => {
-                                                        analyticsClient.selectMicrophone();
-                                                    }}
-                            on:click|stopPropagation|preventDefault={() =>
-                                                        selectMicrophone(microphone.deviceId)}
+                        class="group flex items-center relative z-10 py-1 px-2 overflow-hidden rounded {$usedMicrophoneDeviceIdStore ===
+                        microphone.deviceId
+                            ? 'bg-secondary'
+                            : 'hover:bg-white/10'}"
+                        on:click={() => {
+                            analyticsClient.selectMicrophone();
+                        }}
+                        on:click|stopPropagation|preventDefault={() => selectMicrophone(microphone.deviceId)}
                     >
                         <div
-                                class="grow text-sm text-ellipsis overflow-hidden whitespace-nowrap {$usedMicrophoneDeviceIdStore ===
-                                                        microphone.deviceId
-                                                            ? 'opacity-100'
-                                                            : 'opacity-80 group-hover:opacity-100'}"
+                            class="grow text-sm text-ellipsis overflow-hidden whitespace-nowrap {$usedMicrophoneDeviceIdStore ===
+                            microphone.deviceId
+                                ? 'opacity-100'
+                                : 'opacity-80 group-hover:opacity-100'}"
                         >
                             {StringUtils.normalizeDeviceName(microphone.label)}
                         </div>
                         {#if $usedMicrophoneDeviceIdStore === microphone.deviceId}
                             <CheckIcon
-                                    height="h-4"
-                                    width="w-4"
-                                    classList="aspect-square transition-all"
-                                    strokeColor="stroke-white fill-transparent {$usedMicrophoneDeviceIdStore ===
-                                                            microphone.deviceId
-                                                                ? 'opacity-100'
-                                                                : 'opacity-0 group-hover:opacity-30'}"
-                                    strokeWidth="1.5"
+                                height="h-4"
+                                width="w-4"
+                                classList="aspect-square transition-all"
+                                strokeColor="stroke-white fill-transparent {$usedMicrophoneDeviceIdStore ===
+                                microphone.deviceId
+                                    ? 'opacity-100'
+                                    : 'opacity-0 group-hover:opacity-30'}"
+                                strokeWidth="1.5"
                             />
                         {/if}
                     </div>
@@ -193,23 +178,19 @@
             </div>
         {:else}
             <div class="">
-                <div
-                        class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-2 relative bold"
-                >
+                <div class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-2 relative bold">
                     {$LL.actionbar.subtitle.microphone()}
                 </div>
-                <div
-                        class="group flex items-center relative z-10 py-1 px-2 font-sm justify-center"
-                >
+                <div class="group flex items-center relative z-10 py-1 px-2 font-sm justify-center">
                     <div class="text-sm italic">
                         {$LL.actionbar.microphone.disabled()}
                     </div>
                 </div>
                 <div class="group flex items-center relative z-10 px-2 overflow-hidden">
                     <button
-                            class="btn btn-danger btn-sm w-full justify-center"
-                            on:click={() => analyticsClient.microphone()}
-                            on:click={microphoneClick}
+                        class="btn btn-danger btn-sm w-full justify-center"
+                        on:click={() => analyticsClient.microphone()}
+                        on:click={microphoneClick}
                     >
                         {$LL.actionbar.microphone.activate()}
                     </button>
@@ -224,34 +205,32 @@
                 {#each $speakerListStore as speaker, index (index)}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
-                            class="group flex items-center relative z-10 py-1 px-2 overflow-hidden rounded {$speakerSelectedStore ===
-                                                    speaker.deviceId
-                                                        ? 'bg-secondary'
-                                                        : 'hover:bg-white/10'}"
-                            on:click={() => {
-                                                        analyticsClient.selectSpeaker();
-                                                    }}
-                            on:click|stopPropagation|preventDefault={() =>
-                                                        selectSpeaker(speaker.deviceId)}
+                        class="group flex items-center relative z-10 py-1 px-2 overflow-hidden rounded {$speakerSelectedStore ===
+                        speaker.deviceId
+                            ? 'bg-secondary'
+                            : 'hover:bg-white/10'}"
+                        on:click={() => {
+                            analyticsClient.selectSpeaker();
+                        }}
+                        on:click|stopPropagation|preventDefault={() => selectSpeaker(speaker.deviceId)}
                     >
                         <div
-                                class="grow text-sm text-ellipsis overflow-hidden whitespace-nowrap {$speakerSelectedStore ===
-                                                        speaker.deviceId
-                                                            ? 'opacity-100'
-                                                            : 'opacity-80 group-hover:opacity-100'}"
+                            class="grow text-sm text-ellipsis overflow-hidden whitespace-nowrap {$speakerSelectedStore ===
+                            speaker.deviceId
+                                ? 'opacity-100'
+                                : 'opacity-80 group-hover:opacity-100'}"
                         >
                             {StringUtils.normalizeDeviceName(speaker.label)}
                         </div>
                         {#if $speakerSelectedStore === speaker.deviceId}
                             <CheckIcon
-                                    height="h-4"
-                                    width="w-4"
-                                    classList="aspect-square transition-all"
-                                    strokeColor="stroke-white fill-transparent {$speakerSelectedStore ===
-                                                            speaker.deviceId
-                                                                ? 'opacity-100'
-                                                                : 'opacity-0 group-hover:opacity-30'}"
-                                    strokeWidth="1.5"
+                                height="h-4"
+                                width="w-4"
+                                classList="aspect-square transition-all"
+                                strokeColor="stroke-white fill-transparent {$speakerSelectedStore === speaker.deviceId
+                                    ? 'opacity-100'
+                                    : 'opacity-0 group-hover:opacity-30'}"
+                                strokeWidth="1.5"
                             />
                         {/if}
                     </div>
@@ -260,13 +239,12 @@
         {/if}
     </div>
     <div class="relative z-10 flex gap-2 p-2 bg-contrast/50">
-        <button
-                class="btn btn-sm btn-ghost btn-light justify-center w-full rounded"
-                on:click={openEnableCameraScene}>{$LL.actionbar.test()}</button
+        <button class="btn btn-sm btn-ghost btn-light justify-center w-full rounded" on:click={openEnableCameraScene}
+            >{$LL.actionbar.test()}</button
         >
         <button
             class="btn btn-sm btn-border btn-light justify-center w-full cursor-pointer rounded"
-                on:click|stopPropagation|preventDefault={() => dispatch("close")}
+            on:click|stopPropagation|preventDefault={() => dispatch("close")}
         >
             {$LL.actionbar.close()}
         </button>

@@ -54,7 +54,6 @@
         roomListVisibilityStore,
         showModalGlobalComminucationVisibilityStore,
     } from "../../Stores/ModalStore";
-    import { localUserStore } from "../../Connection/LocalUserStore";
     import { isActivatedStore as isCalendarActivatedStore, isCalendarVisibleStore } from "../../Stores/CalendarStore";
     import { isActivatedStore as isTodoListActivatedStore, isTodoListVisibleStore } from "../../Stores/TodoListStore";
     import { externalActionBarSvelteComponent } from "../../Stores/Utils/externalSvelteComponentStore";
@@ -89,7 +88,6 @@
     import CheckIcon from "../Icons/CheckIcon.svelte";
     import XIcon from "../Icons/XIcon.svelte";
     import MenuBurgerIcon from "../Icons/MenuBurgerIcon.svelte";
-    import { StringUtils } from "../../Utils/StringUtils";
     import { focusMode, rightMode, hideMode, highlightFullScreen } from "../../Stores/ActionsCamStore";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { connectionManager } from "../../Connection/ConnectionManager";
@@ -101,8 +99,8 @@
     import MapSubMenu from "./MenuIcons/MapSubMenu.svelte";
     import ActionBarButtonWrapper from "./ActionBarButtonWrapper.svelte";
     import EmojiSubMenu from "./EmojiSubMenu.svelte";
-    import { IconArrowDown, IconCheckList, IconCalendar, IconLogout } from "@wa-icons";
     import MediaSettingsList from "./MediaSettingsList.svelte";
+    import { IconArrowDown, IconCheckList, IconCalendar, IconLogout } from "@wa-icons";
 
     // gameManager.currenwStartedRoom?.miniLogo ?? WorkAdventureImg;
     let userName = gameManager.getPlayerName() || "";
@@ -142,7 +140,7 @@
             requestedMicrophoneState.enableMicrophone();
         }
     }
-    
+
     function cameraClick(): void {
         if ($silentStore) return;
         if ($requestedCameraState === true) {
