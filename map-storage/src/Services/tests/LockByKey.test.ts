@@ -1,5 +1,5 @@
 import { describe, it, vi, expect } from "vitest";
-import { LockByKey } from "./LockByKey";
+import { LockByKey } from "../LockByKey";
 
 describe("LockByKeys", () => {
     it("should free the lock when promise is rejected", async () => {

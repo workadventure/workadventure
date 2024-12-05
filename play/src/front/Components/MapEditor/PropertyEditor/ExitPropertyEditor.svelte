@@ -1,6 +1,7 @@
 <script lang="ts">
     import { createEventDispatcher, onMount } from "svelte";
     import { ExitPropertyData, WAMFileFormat } from "@workadventure/map-editor";
+    import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
     import axios from "axios";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
@@ -46,7 +47,7 @@
             }
 
             const response = await axios.get(wamUrl);
-            const result = WAMFileFormat.safeParse(response.data);
+            const result = WAMFileFormat.safeParse(wamFileMigration.migrate(response.data));
             if (result.success && result.data && result.data.areas) {
                 startAreas = result.data.areas
                     .filter((area) => area.properties.find((property) => property.type === "start"))

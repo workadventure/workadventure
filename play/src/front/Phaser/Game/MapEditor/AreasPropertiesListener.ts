@@ -523,7 +523,8 @@ export class AreasPropertiesListener {
                 jwt,
                 property.jitsiRoomConfig,
                 undefined,
-                domainWithoutProtocol
+                domainWithoutProtocol,
+                property.jitsiRoomAdminTag ?? null
             );
 
             coWebsiteManager.addCoWebsiteToStore(coWebsite, 0);
