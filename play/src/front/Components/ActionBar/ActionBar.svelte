@@ -101,12 +101,13 @@
     import EmojiSubMenu from "./EmojiSubMenu.svelte";
     import MediaSettingsList from "./MediaSettingsList.svelte";
     import { IconArrowDown, IconCheckList, IconCalendar, IconLogout } from "@wa-icons";
+    import SilentBlock from "./SilentBlock.svelte";
 
     // gameManager.currenwStartedRoom?.miniLogo ?? WorkAdventureImg;
     let userName = gameManager.getPlayerName() || "";
     export const className = "";
     //let microphoneActive = false;
-    let cameraActive = false;
+    let mediaSettingsDisplayed = false;
     let profileMenuIsDropped = false;
     let burgerOpen = false;
     let helpActive: string | undefined = undefined;
@@ -326,16 +327,6 @@
         }
     });*/
 
-    // function playSoundClick() {
-    //     sound.play().catch((e) => console.error(e));
-    // }
-
-    const onClickOutside = () => {
-        //if ($emoteMenuSubStore) emoteMenuSubStore.closeEmoteMenu();
-        //if (appMenuOpened) appMenuOpened = false;
-        //console.log("Trouble on click outside : it cause open and directly close emote / Appmenu");
-    };
-
     function openAppMenu() {
         emoteMenuSubStore.closeEmoteMenu();
         appMenuOpened = !appMenuOpened;
@@ -347,8 +338,6 @@
         roomListVisibilityStore.set(true);
     }
 </script>
-
-<svelte:window on:click={onClickOutside} on:touchend={onClickOutside} />
 
 <div
     class="@container/actions position-responsive w-full z-[301] transition-all pointer-events-none bp-menu {$peerStore.size >
@@ -708,80 +697,54 @@
                         </div>
                     </div>
                 {:else}
-                    <div
-                        class="flex flex-col items-center justify-center rounded-lg bg-danger-900/50 text-white mt-12 px-6 py-4 backdrop-blur"
-                    >
-                        <picture class="h-8">
-                            <source
-                                srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f910/512.webp"
-                                type="image/webp"
-                            />
-                            <img
-                                src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f910/512.gif"
-                                alt="🤐"
-                                width="96"
-                                height="96"
-                                class="absolute left-0 right-0 m-auto -top-12"
-                            />
-                        </picture>
-                        <div class="text-lg font-bold">{$LL.actionbar.silentTitle()}</div>
-                        <p class="text-xs italic m-0 text-center opacity-80 leading-3">
-                            {$LL.actionbar.silentDesc()}
-                        </p>
-                    </div>
+                    <SilentBlock />
                 {/if}
                 <div>
                     <!-- ACTION WRAPPER : CAM & MIC -->
                     <div class="group/hardware flex items-center relative">
-                        {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore}
-                            <!-- NAV : MICROPHONE START -->
-                            {#if $myMicrophoneStore}
-                                <ActionBarButtonWrapper classList="group/btn-mic peer/mic">
-                                    <ActionBarIconButton
-                                        on:click={() => {
-                                            analyticsClient.microphone();
-                                            microphoneClick();
-                                        }}
-                                        tooltipTitle={$LL.actionbar.help.mic.title()}
-                                        tooltipDesc={$LL.actionbar.help.mic.desc()}
-                                        disabledHelp={appMenuOpened}
-                                        state={!$requestedMicrophoneState || $silentStore ? "forbidden" : "normal"}
-                                        dataTestId={undefined}
-                                    >
-                                        {#if $requestedMicrophoneState && !$silentStore}
-                                            <MicOnIcon />
-                                        {:else}
-                                            <MicOffIcon />
-                                        {/if}
-                                    </ActionBarIconButton>
-                                </ActionBarButtonWrapper>
-                            {/if}
+                        {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore && $myMicrophoneStore}
+                            <ActionBarButtonWrapper classList="group/btn-mic peer/mic">
+                                <ActionBarIconButton
+                                    on:click={() => {
+                                        analyticsClient.microphone();
+                                        microphoneClick();
+                                    }}
+                                    tooltipTitle={$LL.actionbar.help.mic.title()}
+                                    tooltipDesc={$LL.actionbar.help.mic.desc()}
+                                    disabledHelp={appMenuOpened}
+                                    state={!$requestedMicrophoneState || $silentStore ? "forbidden" : "normal"}
+                                    dataTestId={undefined}
+                                >
+                                    {#if $requestedMicrophoneState && !$silentStore}
+                                        <MicOnIcon />
+                                    {:else}
+                                        <MicOffIcon />
+                                    {/if}
+                                </ActionBarIconButton>
+                            </ActionBarButtonWrapper>
                         {/if}
-                        <!-- NAV : MICROPHONE END -->
-                        <!--{#if $microphoneListStore.length > 1 || $cameraListStore.length > 1 || $speakerListStore.length > 0}
-                        {/if}-->
                         {#if smallArrowVisible}
                             <div
-                                class="absolute h-3 w-7 rounded-b bg-contrast/80 backdrop-blur left-0 right-0 m-auto p-1 z-10 opacity-0 transition-all -bottom-3 hidden sm:block {cameraActive
+                                class="absolute h-3 w-7 rounded-b bg-contrast/80 backdrop-blur left-0 right-0 m-auto p-1 z-10 opacity-0 transition-all -bottom-3 hidden sm:block {mediaSettingsDisplayed
                                     ? 'opacity-100'
                                     : 'group-hover/hardware:opacity-100'}"
                             >
                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <div
                                     class="absolute bottom-1 left-0 right-0 m-auto hover:bg-white/10 h-5 w-5 flex items-center justify-center rounded-sm"
-                                    on:click|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}
+                                    on:click|stopPropagation|preventDefault={() => (mediaSettingsDisplayed = !mediaSettingsDisplayed)}
                                 >
                                     <ChevronUpIcon
                                         height="h-4"
                                         width="w-4"
-                                        classList="aspect-square transition-all {cameraActive ? '' : 'rotate-180'}"
+                                        classList="aspect-square transition-all {mediaSettingsDisplayed ? '' : 'rotate-180'}"
                                         strokeWidth="2"
                                     />
                                 </div>
                             </div>
                         {/if}
-                        {#if cameraActive}
-                            <MediaSettingsList on:close={() => (cameraActive = false)} />
+                        {#if mediaSettingsDisplayed}
+                            <MediaSettingsList on:close={() => (mediaSettingsDisplayed = false)} />
                         {/if}
                         <!-- NAV : CAMERA START -->
                         {#if !$inExternalServiceStore && $myCameraStore && !$silentStore}
@@ -1180,7 +1143,7 @@
                                         <IconLogout
                                             height="20"
                                             width="20"
-                                            class="stroke-danger-600 group-hover:stroke-white"
+                                            class="text-danger-600 group-hover:text-white"
                                         />
                                     </div>
                                     <div

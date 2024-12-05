@@ -25,14 +25,14 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { LL } from "../../../i18n/i18n-svelte";
 
-    export let cameraActive = false;
+    export let mediaSettingsDisplayed = false;
 
     const dispatch = createEventDispatcher();
 
     function selectCamera(deviceId: string) {
         requestedCameraDeviceIdStore.set(deviceId);
         localUserStore.setPreferredVideoInputDevice(deviceId);
-        cameraActive = false;
+        mediaSettingsDisplayed = false;
     }
 
     function selectMicrophone(deviceId: string) {

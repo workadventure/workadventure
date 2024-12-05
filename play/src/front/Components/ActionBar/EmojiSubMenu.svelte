@@ -1,5 +1,6 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
+    import { clickOutside } from "svelte-outside";
     import { LL } from "../../../i18n/i18n-svelte";
     import {
         emoteDataStore,
@@ -97,6 +98,7 @@
 <div
     class="flex justify-center m-auto absolute left-0 -right-2 top-[70px] w-auto z-[500]"
     transition:fly={{ y: 20, duration: 150 }}
+    use:clickOutside={() => emoteMenuStore.closeEmoteMenu()}
 >
     <img
         loading="eager"
