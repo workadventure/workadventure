@@ -93,7 +93,7 @@ export type ChatMessageContent = {
 export const historyVisibilityOptions = ["world_readable", "joined", "invited"] as const;
 export type historyVisibility = (typeof historyVisibilityOptions)[number];
 
-export interface RoomFolder {
+export interface RoomFolder extends ChatRoom {
     id: string;
     name: Readable<string>;
     rooms: Readable<ChatRoom[]>;

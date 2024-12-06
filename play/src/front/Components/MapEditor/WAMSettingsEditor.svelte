@@ -10,7 +10,6 @@
     import { userIsAdminStore } from "../../Stores/GameStore";
     import Megaphone from "./ConfigureMyRoom/Megaphone.svelte";
     import RoomSettings from "./ConfigureMyRoom/RoomSettings.svelte";
-    import MatrixAdminRoomList from "./ConfigureMyRoom/MatrixAdminRoomList.svelte";
     import { IconChevronRight } from "@wa-icons";
 
     function getCurrentComponent(): typeof Megaphone | typeof RoomSettings {
@@ -20,9 +19,6 @@
             }
             case WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.RoomSettings: {
                 return RoomSettings;
-            }
-            case WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.MatrixRoomList: {
-                return MatrixAdminRoomList;
             }
             default: {
                 return RoomSettings; // Default appropriate component.
@@ -55,19 +51,6 @@
                     <span>{$LL.mapEditor.settings.room.title()}</span>
                     <IconChevronRight class={`tw--mr-2`} />
                 </li>
-
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <li
-                class:selected={$mapEditorWamSettingsEditorToolCurrentMenuItemStore ===
-                    WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.MatrixRoomList}
-                on:click={() =>
-                    mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(
-                        WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.MatrixRoomList
-                    )}
-            >
-                <span>Matrix Room List</span>
-                <IconChevronRight class={`tw--mr-2`} />
-            </li>
             {/if}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <li
@@ -78,7 +61,7 @@
                         WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone
                     )}
             >
-            <!--TODO : translation -->
+                <!--TODO : translation -->
                 <span>Megaphone</span>
                 <IconChevronRight class={`tw--mr-2`} />
             </li>

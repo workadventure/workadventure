@@ -35,7 +35,6 @@ import type { AuthTokenData } from "./JWTTokenManager";
 import { jwtTokenManager } from "./JWTTokenManager";
 import { ShortMapDescriptionList } from "./ShortMapDescription";
 import { WorldChatMembersData } from "./WorldChatMembersData";
-import { HistoryVisibility, ICreateRoomOpts } from "matrix-js-sdk";
 
 export interface AdminBannedData {
     is_banned: boolean;
@@ -1169,91 +1168,6 @@ class AdminApi implements AdminInterface {
                 headers: { Authorization: `${ADMIN_API_TOKEN}` },
             }
         );
-    }
-
-    //TODO : Créer un type de retour
-    createAdminManageChatRoom(
-        roomUrl: string,
-        memberTags: string[],
-        moderatorTags: string[],
-        roomName: string,
-        folderId: string | null,
-        topic = "",
-        historyVisibility = "world_readable"
-    ): Promise<void> {
-        console.log({ historyVisibility });
-        //Retourner l'id de la room
-        return axios.post(
-            `${ADMIN_URL}/api/chat/rooms`,
-            {
-                folderId,
-                roomUrl,
-                roomName,
-                topic,
-                memberTags,
-                moderatorTags,
-                historyVisibility,
-            },
-            {
-                headers: { Authorization: `${ADMIN_API_TOKEN}` },
-            }
-        );
-    }
-
-    updateAdminManageChatRoom(
-        roomId: string,
-        memberTags: string[] | undefined,
-        moderatorTags: string[] | undefined,
-        historyVisibility: string | undefined,
-        roomName: string | undefined,
-        roomUrl: string
-    ): Promise<void> {
-        return axios.put(
-            `${ADMIN_URL}/api/chat/rooms/${roomId}`,
-            {
-                roomUrl,
-                memberTags,
-                moderatorTags,
-                historyVisibility,
-                roomName,
-            },
-            {
-                headers: { Authorization: `${ADMIN_API_TOKEN}` },
-            }
-        );
-    }
-
-    deleteAdminManageChatRoom(roomUrl: string, roomId: string): Promise<void> {
-        return axios.delete(`${ADMIN_URL}/api/chat/rooms`, {
-            headers: { Authorization: `${ADMIN_API_TOKEN}` },
-            data: {
-                roomId,
-                roomUrl,
-            },
-        });
-    }
-
-    //TODO : créer un type de retour
-
-    async getAdminManageChatRoom(roomUrl: string): Promise<
-        {
-            roomId: string;
-            roomName: string;
-            roomMemberTags: string[];
-            roomModeratorTags: string[];
-            visibility: string;
-        }[]
-    > {
-        const response = await axios.get(`${ADMIN_URL}/api/chat/rooms`, {
-            headers: { Authorization: `${ADMIN_API_TOKEN}` },
-            data: {
-                roomUrl,
-            },
-        });
-
-        //TODO : create zod type and parse
-        console.log({data : response.data});
-        return response.data;
     }
 
     /**

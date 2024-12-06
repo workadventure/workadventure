@@ -3,7 +3,6 @@ import {
     AreaDataProperties,
     AreaDataProperty,
     FocusablePropertyData,
-    JitsiRoomConfigData,
     JitsiRoomPropertyData,
     ListenerMegaphonePropertyData,
     MatrixRoomPropertyData,
@@ -514,8 +513,6 @@ export class AreasPropertiesListener {
             }
 
             inJitsiStore.set(true);
-
-            console.log({JitsiRoomConfig : property.jitsiRoomConfig});
 
             const coWebsite = new JitsiCoWebsite(
                 new URL(domain),
