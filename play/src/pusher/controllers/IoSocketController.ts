@@ -912,7 +912,6 @@ export class IoSocketController {
                                         this.sendAnswerMessage(socket, answerMessage);
                                         break;
                                     }
-
                                     default: {
                                         socketManager.forwardMessageToBack(socket, message.message);
                                     }
