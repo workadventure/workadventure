@@ -2,11 +2,13 @@ import type { Readable, Writable } from "svelte/store";
 import { derived, get, readable, writable } from "svelte/store";
 import deepEqual from "fast-deep-equal";
 import { AvailabilityStatus } from "@workadventure/messages";
+import * as Sentry from "@sentry/svelte";
 import { localUserStore } from "../Connection/LocalUserStore";
 import { isIOS } from "../WebRtc/DeviceUtils";
 import { ObtainedMediaStreamConstraints } from "../WebRtc/P2PMessages/ConstraintMessage";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { RequestedStatus } from "../Rules/StatusRules/statusRules";
+import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 import { BrowserTooOldError } from "./Errors/BrowserTooOldError";
 import { errorStore } from "./ErrorStore";
@@ -353,10 +355,22 @@ export const availabilityStatusStore = derived(
         if ($silentStore) return AvailabilityStatus.SILENT;
         if ($requestedStatusStore) return $requestedStatusStore;
         if ($privacyShutdownStore) return AvailabilityStatus.AWAY;
+
         return AvailabilityStatus.ONLINE;
     },
     AvailabilityStatus.ONLINE
 );
+
+// This is a singleton so we can safely not ever unsubscribe from it.
+// eslint-disable-next-line svelte/no-ignored-unsubscribe
+availabilityStatusStore.subscribe((newStatus: AvailabilityStatus) => {
+    try {
+        statusChanger.changeStatusTo(newStatus);
+    } catch (e) {
+        console.error("Error while changing status", e);
+        Sentry.captureException(e);
+    }
+});
 
 let previousComputedVideoConstraint: boolean | MediaTrackConstraints = false;
 let previousComputedAudioConstraint: boolean | MediaTrackConstraints = false;

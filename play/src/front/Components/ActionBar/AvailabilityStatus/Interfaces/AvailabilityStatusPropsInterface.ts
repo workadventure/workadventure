@@ -13,9 +13,3 @@ export interface AvailabilityStatusPropsInterface {
     currentPlayerName: string;
     listStatusTitle: string;
 }
-
-export interface AvailabilityStatusListPropsInterface {
-    currentStatus: AvailabilityStatus;
-    statusInformation: Array<StatusInformationInterface>;
-    listStatusTitle: string;
-}

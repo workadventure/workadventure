@@ -28,6 +28,12 @@ export const getColorHexOfStatus = (status: AvailabilityStatus): string => {
     return `#${COLORS[status].filling.toString(16)}`;
 };
 
+export const getStatusLabel = (status: AvailabilityStatus): string => {
+    //@ts-ignore
+    const fn = get(LL).actionbar.status[AvailabilityStatus[status]];
+    return fn?.() || "Unknown";
+};
+
 export const getStatusInformation = (
     statusToShow: Array<RequestedStatus | AvailabilityStatus.ONLINE>
 ): Array<StatusInformationInterface> => {

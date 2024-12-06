@@ -46,9 +46,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     status: {
         ONLINE: "En ligne",
         AWAY: "Absent",
-        BACK_IN_A_MOMENT: "De retour dans un moment",
+        BACK_IN_A_MOMENT: "De retour bientôt",
         DO_NOT_DISTURB: "Ne pas déranger",
         BUSY: "Occupé",
+        SILENT: "Silencieux",
+        JITSI: "En réunion",
+        BBB: "En réunion",
+        DENY_PROXIMITY_MEETING: "Non disponible",
+        SPEAKER: "En réunion",
     },
     subtitle: {
         camera: "Camera",
@@ -91,8 +96,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     listStatusTitle: {
         enable: "Changer de statut",
-        inMeeting: "Bonne réunion 🤓",
-        inSilentZone: "Profitez de la zone silencieuse 😁",
     },
     //roomList: "Ouvrir / Fermer la liste des salons",
     externalModule: {

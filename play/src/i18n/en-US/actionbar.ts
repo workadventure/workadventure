@@ -49,6 +49,11 @@ const actionbar: BaseTranslation = {
         DO_NOT_DISTURB: "Do not disturb",
         BUSY: "Busy",
         OFFLINE: "Offline",
+        SILENT: "Silent",
+        JITSI: "In a meeting",
+        BBB: "In a meeting",
+        DENY_PROXIMITY_MEETING: "Not available",
+        SPEAKER: "In a meeting",
     },
     subtitle: {
         camera: "Camera",
@@ -111,8 +116,6 @@ const actionbar: BaseTranslation = {
     },
     listStatusTitle: {
         enable: "Change your status",
-        inMeeting: "Have a good meeting 🤓",
-        inSilentZone: "Enjoy the silent zone 😁",
     },
     externalModule: {
         status: {

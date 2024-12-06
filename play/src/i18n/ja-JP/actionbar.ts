@@ -17,8 +17,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     app: "アプリケーションの表示／非表示",
     listStatusTitle: {
         enable: "ステータスの変更",
-        inMeeting: "よいミーティングを 🤓",
-        inSilentZone: "サイレントゾーンを楽しんで 😁",
     },
 
     status: {

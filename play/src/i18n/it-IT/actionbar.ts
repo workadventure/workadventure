@@ -19,8 +19,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     app: "Apri / Chiudi applicazioni",
     listStatusTitle: {
         enable: "Cambia il tuo stato",
-        inMeeting: "Buona riunione 🤓",
-        inSilentZone: "Goditi la zona silenziosa 😁",
     },
 
     status: {

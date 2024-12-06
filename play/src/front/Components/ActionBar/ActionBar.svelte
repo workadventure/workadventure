@@ -2,12 +2,15 @@
     import { get, writable } from "svelte/store";
     import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
+    import { clickOutside } from "svelte-outside";
+    import { AvailabilityStatus } from "@workadventure/messages";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import {
         requestedCameraState,
         requestedMicrophoneState,
         silentStore,
         enableCameraSceneVisibilityStore,
+        availabilityStatusStore,
     } from "../../Stores/MediaStore";
     import tooltipArrow from "../images/arrow-top.svg";
 
@@ -88,7 +91,6 @@
     import CamSettingsIcon from "../Icons/CamSettingsIcon.svelte";
     import SettingsIcon from "../Icons/SettingsIcon.svelte";
     import ChevronUpIcon from "../Icons/ChevronUpIcon.svelte";
-    import CheckIcon from "../Icons/CheckIcon.svelte";
     import XIcon from "../Icons/XIcon.svelte";
     import MenuBurgerIcon from "../Icons/MenuBurgerIcon.svelte";
     import { focusMode, rightMode, hideMode, highlightFullScreen } from "../../Stores/ActionsCamStore";
@@ -97,12 +99,15 @@
 
     import AppsIcon from "../Icons/AppsIcon.svelte";
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
+    import { getColorHexOfStatus, getStatusInformation, getStatusLabel } from "../../Utils/AvailabilityStatus";
+    import { RequestedStatus } from "../../Rules/StatusRules/statusRules";
     import ActionBarIconButton from "./ActionBarIconButton.svelte";
     import MapSubMenu from "./MenuIcons/MapSubMenu.svelte";
     import ActionBarButtonWrapper from "./ActionBarButtonWrapper.svelte";
     import EmojiSubMenu from "./EmojiSubMenu.svelte";
     import MediaSettingsList from "./MediaSettingsList.svelte";
     import SilentBlock from "./SilentBlock.svelte";
+    import AvailabilityStatusList from "./AvailabilityStatus/AvailabilityStatusList.svelte";
     import { IconArrowDown, IconCheckList, IconCalendar, IconLogout } from "@wa-icons";
 
     // gameManager.currenwStartedRoom?.miniLogo ?? WorkAdventureImg;
@@ -339,6 +344,13 @@
 
         roomListVisibilityStore.set(true);
     }
+
+    const statusToShow: Array<RequestedStatus | AvailabilityStatus.ONLINE> = [
+        AvailabilityStatus.ONLINE,
+        AvailabilityStatus.BUSY,
+        AvailabilityStatus.BACK_IN_A_MOMENT,
+        AvailabilityStatus.DO_NOT_DISTURB,
+    ];
 </script>
 
 <div
@@ -986,9 +998,15 @@
                                     {userName}
                                 </div>
                                 <div class="text-xxs bold whitespace-nowrap select-none flex items-center">
-                                    <div class="aspect-square h-2 w-2 bg-success rounded-full mr-1.5" />
-                                    <div class="text-success hidden @xl/actions:block">
-                                        {$LL.actionbar.status.ONLINE()}
+                                    <div
+                                        class="aspect-square h-2 w-2 rounded-full mr-1.5"
+                                        style="background-color: {getColorHexOfStatus($availabilityStatusStore)}"
+                                    />
+                                    <div
+                                        class="hidden @xl/actions:block"
+                                        style="color: {getColorHexOfStatus($availabilityStatusStore)}"
+                                    >
+                                        {getStatusLabel($availabilityStatusStore)}
                                     </div>
                                 </div>
                             </div>
@@ -1007,6 +1025,9 @@
                             class="absolute mt-2 top-14 @xl/actions:top-16 bg-contrast/80 backdrop-blur rounded-md p-1 w-56 right-0 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-transparent before:border-b-contrast/80 transition-all hidden @md/actions:block max-h-[calc(100vh-96px)] overflow-y-auto"
                             data-testid="profile-menu"
                             transition:fly={{ y: 40, duration: 150 }}
+                            use:clickOutside={() => {
+                                profileMenuIsDropped = false;
+                            }}
                         >
                             <div class="p-0 m-0 list-none">
                                 <a
@@ -1023,40 +1044,9 @@
                                         </div>
                                     </div>
                                 </a>
+                                <AvailabilityStatusList statusInformation={getStatusInformation(statusToShow)} />
                                 <div class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-2 relative bold">
-                                    Status
-                                </div>
-                                <button
-                                    class="group flex px-4 py-1 gap-2 items-center transition-all cursor-pointer text-sm w-full pointer-events-auto text-left rounded"
-                                >
-                                    <div class="aspect-square h-2 w-2 bg-success rounded-full" />
-                                    <div class="grow text-left opacity-50 leading-4">En ligne</div>
-                                    <CheckIcon height="h-4" width="h-4" classList="opacity-100" />
-                                </button>
-                                <button
-                                    class="group flex px-2 py-1 gap-2 items-center transition-all cursor-pointer text-sm w-full pointer-events-auto text-left rounded"
-                                >
-                                    <div class="aspect-square h-2 w-2 bg-warning rounded-full leading-4" />
-                                    <div class="grow text-left leading-4">Absent</div>
-                                    <CheckIcon
-                                        height="h-4"
-                                        width="h-4"
-                                        classList="opacity-0 group-hover:opacity-100 transition-all"
-                                    />
-                                </button>
-                                <button
-                                    class="group flex px-2 py-1 gap-4 items-center transition-all cursor-pointer text-sm w-full pointer-events-auto text-left rounded"
-                                >
-                                    <div class="aspect-square h-2 w-2 bg-danger-500 rounded-full leading-4" />
-                                    <div class="grow text-left leading-4">Ne pas déranger</div>
-                                    <CheckIcon
-                                        height="h-4"
-                                        width="h-4"
-                                        classList="opacity-0 group-hover:opacity-100 transition-all"
-                                    />
-                                </button>
-                                <div class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-2 relative bold">
-                                    Profil
+                                    {$LL.menu.sub.profile()}
                                 </div>
                                 <button
                                     class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
@@ -1166,8 +1156,7 @@
                 >
                     <button
                         on:click={() => (burgerOpen = !burgerOpen)}
-                        on:blur={() => (burgerOpen = false)}
-                        on:click|preventDefault={close}
+                        use:clickOutside={() => (burgerOpen = false)}
                         class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:w-12 @xl/actions:w-12 p-1 m-0 rounded hover:bg-white/10 flex items-center justify-center transition-all"
                     >
                         {#if !burgerOpen}
@@ -1186,7 +1175,10 @@
             transition:fly={{ y: 40, duration: 150 }}
         >
             <div class="block @md/actions:hidden">
-                <div class="flex text-xxs uppercase text-white/50 px-4 py-2 relative justify-end">Your profil</div>
+                <AvailabilityStatusList statusInformation={getStatusInformation(statusToShow)} align="right" />
+                <div class="flex text-xxs uppercase text-white/50 px-4 py-2 relative justify-end">
+                    {$LL.menu.sub.profile()}
+                </div>
 
                 <button
                     class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold"

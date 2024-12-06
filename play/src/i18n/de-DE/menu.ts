@@ -113,7 +113,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
     },
     sub: {
-        profile: "Profil",
         settings: "Einstellungen",
         invite: "Einladung",
         credit: "Über diese Karte",
