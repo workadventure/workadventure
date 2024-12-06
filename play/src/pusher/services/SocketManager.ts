@@ -69,7 +69,6 @@ import { apiClientRepository } from "./ApiClientRepository";
 import { adminService } from "./AdminService";
 import { ShortMapDescription } from "./ShortMapDescription";
 import { matrixProvider } from "./MatrixProvider";
-import { SocketAddress } from "net";
 
 const debug = Debug("socket");
 
@@ -1580,32 +1579,6 @@ export class SocketManager implements ZoneEventListener {
 
         socketData.currentChatRoomArea.push(roomID);
         return matrixProvider.inviteUserToRoom(socketData.chatID, roomID).catch((error) => console.error(error));
-    }
-
-    async handleCreateAdminManageChatRoom(socket: Socket,folderId: string , memberTags: string[], moderatorTags: string[], roomName : string , topic = "",historyVisibility = "world_readable"){
-        const socketData = socket.getUserData();
-        const roomUrl = socketData.roomId;
-
-        console.log({historyVisibility}); 
-        
-        return adminService.createAdminManageChatRoom( roomUrl,memberTags,moderatorTags,roomName,folderId,topic,historyVisibility);
-    }
-    async handleDeleteAdminManageChatRoom(socket : Socket , chatRoomId : string){
-        const socketData = socket.getUserData();
-        const roomUrl = socketData.roomId;
-        console.log({roomUrl,chatRoomId});
-        return adminService.deleteAdminManageChatRoom(roomUrl,chatRoomId) 
-    }
-    async handleUpdateAdminManageChatRoom(socket : Socket , roomId :string ,memberTags : string[] | undefined,moderatorTags : string[] | undefined,historyVisibility : string | undefined,roomName : string | undefined){
-        const socketData = socket.getUserData();
-        const roomUrl = socketData.roomId;
-        return adminService.updateAdminManageChatRoom(roomId,memberTags,moderatorTags,historyVisibility,roomName,roomUrl);
-    }
-
-    async handleGetAdminManageChatRoom(socket: Socket){
-        const socketData = socket.getUserData();
-        const roomUrl = socketData.roomId;
-        return await adminService.getAdminManageChatRoom(roomUrl);
     }
 }
 

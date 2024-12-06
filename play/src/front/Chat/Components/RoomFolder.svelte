@@ -7,8 +7,8 @@
     import Room from "./Room/Room.svelte";
     import CreateRoomOrFolderOption from "./Room/CreateRoomOrFolderOption.svelte";
     import ShowMore from "./ShowMore.svelte";
-    import { IconChevronDown, IconChevronUp } from "@wa-icons";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
+    import { IconChevronDown, IconChevronUp } from "@wa-icons";
 
     export let folders: Readable<RoomFolder[]>;
     export let rooms: Readable<ChatRoom[]>;
@@ -18,17 +18,14 @@
     export let isOpen: boolean;
     export let id: string;
 
-    //TODO : garder seulement le folder pour recuperer toutes les props 
-    export let folder : ChatRoom;
+    //TODO : garder seulement le folder pour recuperer toutes les props
+    export let folder: ChatRoom;
 
-    
     const isFoldersOpen: { [key: string]: boolean } = {};
-    
+
     $: filteredRoom = $rooms
-    .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
-    .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
-    
-    $: console.log('>>>>>>>',Array.from($rooms.values()),filteredRoom);
+        .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
+        .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
 
     $folders.forEach((folder) => {
         if (!(folder.id in isFoldersOpen)) {
@@ -36,7 +33,7 @@
         }
     });
 
-    let displayRoomInvitations = $invitations.length > 0
+    let displayRoomInvitations = $invitations.length > 0;
 </script>
 
 <div class="tw-mx-2 tw-p-1 tw-bg-contrast-300/10 tw-rounded-lg tw-mb-4">
@@ -64,21 +61,21 @@
     </div>
 
     {#if isOpen}
-    <div class="tw-flex tw-flex-col tw-overflow-auto">
+        <div class="tw-flex tw-flex-col tw-overflow-auto">
             {#if displayRoomInvitations}
-            <div class="tw-flex tw-flex-col tw-overflow-auto tw-pl-3 tw-pr-4 tw-pb-3">
-                <ShowMore items={$invitations} maxNumber={8} idKey="id" let:item={room}>
-                    <RoomInvitation {room} />
-                </ShowMore>
-            </div>
-        {/if}
+                <div class="tw-flex tw-flex-col tw-overflow-auto tw-pl-3 tw-pr-4 tw-pb-3">
+                    <ShowMore items={$invitations} maxNumber={8} idKey="id" let:item={room}>
+                        <RoomInvitation {room} />
+                    </ShowMore>
+                </div>
+            {/if}
 
             {#each $folders as folder (folder.id)}
                 <svelte:self
                     bind:isOpen={isFoldersOpen[folder.id]}
                     id={folder.id}
                     name={folder.name}
-                    folders={folder.folderList}
+                    folders={folder.folders}
                     rooms={folder.rooms}
                     {isGuest}
                 />

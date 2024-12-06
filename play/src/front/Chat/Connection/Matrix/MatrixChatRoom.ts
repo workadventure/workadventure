@@ -187,10 +187,9 @@ export class MatrixChatRoom implements ChatRoom {
         this.matrixRoom.on(RoomEvent.MyMembership, this.handleMyMembership);
     }
 
-    protected onRoomMyMembership(room : Room) {
-        console.log('>>> mymembership change in ' , room.getMyMembership());
+    protected onRoomMyMembership(room: Room) {
         this.myMembership.set(room.getMyMembership());
-    } 
+    }
 
     private onRoomStateEvent(event: MatrixEvent, state: RoomState, lastStateEvent: MatrixEvent | null) {
         if (get(this.isEncrypted)) return;
@@ -431,7 +430,6 @@ export class MatrixChatRoom implements ChatRoom {
     }
 
     async joinRoom(): Promise<void> {
-        console.log(">>>>> try to join room", get(this.myMembership));
         try {
             await this.matrixRoom.client.joinRoom(this.id);
             return;

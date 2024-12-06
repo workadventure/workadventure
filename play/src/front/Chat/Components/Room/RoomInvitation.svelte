@@ -10,11 +10,10 @@
 
     function joinRoom() {
         loadingInvitation = true;
-        
+
         room.joinRoom()
             .then(() => {
-                //TODO : si c'est un folder ne pas ouvrir 
-               // selectedRoomStore.set(room);
+                if (!room.isRoomFolder) selectedRoomStore.set(room);
             })
             .finally(() => {
                 loadingInvitation = false;

@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/svelte";
 import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
-import { Readable, Writable, get, writable, Unsubscriber } from "svelte/store";
+import { Readable, Writable, get, writable, Unsubscriber, readable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import { Subscription } from "rxjs";
 import { AvailabilityStatus } from "@workadventure/messages";
@@ -65,7 +65,7 @@ export class ProximityChatRoom implements ChatRoom {
     avatarUrl = undefined;
     messages: SearchableArrayStore<string, ChatMessage> = new SearchableArrayStore((item) => item.id);
     messageReactions: MapStore<string, MapStore<string, ChatMessageReaction>> = new MapStore();
-    myMembership: ChatRoomMembership = "member";
+    myMembership: Readable<ChatRoomMembership> = readable("member");
     membersId: string[] = [];
     members: ChatRoomMember[] = [];
     hasPreviousMessage = writable(false);

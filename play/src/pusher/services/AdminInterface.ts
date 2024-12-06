@@ -139,13 +139,5 @@ export interface AdminInterface {
 
     updateChatId(userIdentifier: string, chatId: string, roomUrl: string): Promise<void>;
 
-    createAdminManageChatRoom(roomUrl : string , memberTags : string[] , moderatorTags : string[] , roomName : string ,folderId : string|null , topic : string , historyVisibility : string  ): Promise<void>;
-
-    updateAdminManageChatRoom(roomId: string,  memberTags: string[] | undefined, moderatorTags: string[] | undefined, historyVisibility: string | undefined, roomName: string | undefined, roomUrl: string): Promise<void>;
-
-    deleteAdminManageChatRoom(roomUrl : string , roomId: string): Promise<void>;
-    //TODO : replace by message GetAllAdminManageChatRoomAnswer type 
-    getAdminManageChatRoom(roomUrl : string) : Promise<{roomId: string,roomName: string,roomMemberTags: string[],roomModeratorTags: string[],visibility: string}[]>
-
     refreshOauthToken(token: string): Promise<OauthRefreshToken>;
 }

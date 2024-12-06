@@ -308,7 +308,7 @@
                             </div>
                         </div>
                         {#if $isGuest === false}
-                            <CreateRoomOrFolderOption />
+                            <CreateRoomOrFolderOption parentID={undefined} parentName={""} folder={undefined} />
                         {/if}
                         <div
                             class="tw-transition-all group-hover:tw-bg-white/10 tw-p-1 tw-rounded-lg tw-aspect-square tw-flex tw-items-center tw-justify-center tw-text-white"
@@ -334,7 +334,7 @@
                                 isGuest={$isGuest}
                                 id={rootRoomFolder.id}
                                 invitations={rootRoomFolder.invitations}
-                                folder = {rootRoomFolder}
+                                folder={rootRoomFolder}
                             />
                         {/each}
                     {/if}

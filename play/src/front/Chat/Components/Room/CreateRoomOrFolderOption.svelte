@@ -1,15 +1,15 @@
 <script lang="ts">
     import { openModal } from "svelte-modals";
     import LL from "../../../../i18n/i18n-svelte";
-    import CreateRoomModal from "./CreateRoomModal.svelte";
-    import CreateRoomWithAutoInviteModal from "./CreateRoomWithAutoInviteModal.svelte";
+    import { notificationPlayingStore } from "../../../Stores/NotificationStore";
+    import { ChatRoom } from "../../Connection/ChatConnection";
     import CreateFolderModal from "./CreateFolderModal.svelte";
     import RoomOption from "./RoomMenu/RoomOption.svelte";
-    import { IconDots, IconFolder, IconMessage,IconLogout,IconMessagePlus } from "@wa-icons";
+    import { IconDots, IconFolder, IconLogout } from "@wa-icons";
 
     export let parentID: string | undefined = undefined;
     export let parentName = "";
-    export let folder : ChatRoom;
+    export let folder: ChatRoom | undefined;
     let optionButtonRef: HTMLButtonElement | undefined = undefined;
     let hideFolderOptions = true;
 
@@ -18,12 +18,6 @@
             return;
         }
         hideFolderOptions = !hideFolderOptions;
-    }
-    function closeMenuAndOpenCreateRoom() {
-        openModal(CreateRoomModal, {
-            parentID,
-        });
-        hideFolderOptions = true;
     }
     function openCreateSpace() {
         openModal(CreateFolderModal, {
@@ -34,20 +28,13 @@
 
     function closeMenuAndLeaveFolder() {
         toggleSpaceOption();
-        folder.leaveRoom()
+        folder
+            ?.leaveRoom()
             .then(() => {
                 notificationPlayingStore.playNotification($LL.chat.roomMenu.leaveRoom.notification());
             })
             .catch(() => console.error("Failed to leave room"));
     }
-
-    function openCreateAutoInviteRoom(){
-        toggleSpaceOption();
-        openModal(CreateRoomWithAutoInviteModal, {
-            parentID,
-        }); 
-    }
-
 </script>
 
 <button
@@ -66,12 +53,6 @@
     class:tw-hidden={hideFolderOptions}
 >
     <RoomOption
-        dataTestId={`openCreateRoomModalButton${parentName}`}
-        IconComponent={IconMessage}
-        title={$LL.chat.createRoom.title()}
-        on:click={closeMenuAndOpenCreateRoom}
-    />
-    <RoomOption
         dataTestId={`openCreateFolderModalButton${parentName}`}
         IconComponent={IconFolder}
         title={$LL.chat.createFolder.title()}
@@ -79,11 +60,11 @@
     />
 
     {#if folder}
-    <RoomOption
-    IconComponent={IconLogout}
-    title={$LL.chat.folderMenu.leaveFolder.label()}
-    bg="tw-bg-danger/50 hover:tw-bg-danger"
-    on:click={closeMenuAndLeaveFolder}
-/>
+        <RoomOption
+            IconComponent={IconLogout}
+            title={$LL.chat.folderMenu.leaveFolder.label()}
+            bg="tw-bg-danger/50 hover:tw-bg-danger"
+            on:click={closeMenuAndLeaveFolder}
+        />
     {/if}
 </div>
