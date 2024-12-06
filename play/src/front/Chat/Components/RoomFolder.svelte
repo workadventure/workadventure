@@ -1,7 +1,7 @@
 <script lang="ts">
     // eslint-disable-next-line import/no-unresolved
-    import { get, Readable } from "svelte/store";
-    import { ChatRoom, RoomFolder } from "../Connection/ChatConnection";
+    import { get } from "svelte/store";
+    import { ChatRoom } from "../Connection/ChatConnection";
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue } from "../Stores/ChatStore";
     import Room from "./Room/Room.svelte";
@@ -10,16 +10,14 @@
     import RoomInvitation from "./Room/RoomInvitation.svelte";
     import { IconChevronDown, IconChevronUp } from "@wa-icons";
 
-    export let folders: Readable<RoomFolder[]>;
-    export let rooms: Readable<ChatRoom[]>;
-    export let invitations: Readable<ChatRoom[]>;
-    export let name: Readable<string>;
+
     export let isGuest: boolean;
     export let isOpen: boolean;
-    export let id: string;
-
     //TODO : garder seulement le folder pour recuperer toutes les props
     export let folder: ChatRoom;
+    $: ({ name, folders, invitations, rooms ,id } = folder);
+
+
 
     const isFoldersOpen: { [key: string]: boolean } = {};
 
@@ -27,13 +25,13 @@
         .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
         .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
 
-    $folders.forEach((folder) => {
+    $folders?.forEach((folder) => {
         if (!(folder.id in isFoldersOpen)) {
             isFoldersOpen[folder.id] = false;
         }
     });
 
-    let displayRoomInvitations = $invitations.length > 0;
+    let displayRoomInvitations = ($invitations?.length ?? 0) > 0;
 </script>
 
 <div class="tw-mx-2 tw-p-1 tw-bg-contrast-300/10 tw-rounded-lg tw-mb-4">

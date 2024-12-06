@@ -328,15 +328,11 @@
                         {#each Array.from($roomFolders.values()) as rootRoomFolder (rootRoomFolder.id)}
                             <RoomFolder
                                 bind:isOpen={isFoldersOpen[rootRoomFolder.id]}
-                                name={rootRoomFolder.name}
-                                folders={rootRoomFolder.folders}
-                                rooms={rootRoomFolder.rooms}
                                 isGuest={$isGuest}
-                                id={rootRoomFolder.id}
-                                invitations={rootRoomFolder.invitations}
                                 folder={rootRoomFolder}
                             />
                         {/each}
+                        
                     {/if}
                 {/if}
             </div>
