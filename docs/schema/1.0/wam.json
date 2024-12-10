@@ -76,9 +76,6 @@
                           "maximum": 100,
                           "default": 50
                         },
-                        "jitsiRoomAdminTag": {
-                          "type": "string"
-                        },
                         "jitsiRoomConfig": {
                           "type": "object",
                           "properties": {
@@ -87,6 +84,23 @@
                             },
                             "startWithVideoMuted": {
                               "type": "boolean"
+                            },
+                            "jitsiRoomAdminTag": {
+                              "anyOf": [
+                                {
+                                  "anyOf": [
+                                    {
+                                      "not": {}
+                                    },
+                                    {
+                                      "type": "string"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
                             }
                           },
                           "additionalProperties": false
