@@ -369,4 +369,44 @@ describe("Map validator", () => {
 
         expect(mapValidator.doesStringLooksLikeMap("foobar")).toBe(false);
     });
+
+    describe("validateWAMFile", () => {
+        it("should successfully validate a valid WAM file", () => {
+            // eslint-disable-next-line @typescript-eslint/require-await
+            const validator = new MapValidator("error", { fileExists: async () => true });
+            const validWAM = {
+                version: "2.0.0",
+                mapUrl: "https://example.com/map.tmj",
+                entities: {},
+                areas: [],
+                entityCollections: [],
+            };
+
+            const result = validator.validateWAMFile(JSON.stringify(validWAM));
+
+            expect(result.ok).toBe(true);
+
+            if (result.ok) {
+                expect(result.value).toEqual(validWAM);
+            }
+        });
+
+        it("should fail validation for invalid WAM file structure", () => {
+            // eslint-disable-next-line @typescript-eslint/require-await
+            const validator = new MapValidator("error", { fileExists: async () => true });
+            const invalidWAM = {
+                version: "2.0.0",
+                mapUrl: "https://example.com/map.tmj",
+                entities: {},
+                entityCollections: [],
+            };
+
+            const result = validator.validateWAMFile(JSON.stringify(invalidWAM));
+
+            expect(result.ok).toBe(false);
+            if (!result.ok) {
+                expect(result.error).toBeDefined();
+            }
+        });
+    });
 });

@@ -72,21 +72,19 @@ export class ModeratorTagFinder {
             const property = area.properties?.find((prop) => prop.type === "jitsiRoomProperty") as
                 | JitsiRoomPropertyData
                 | undefined;
-            if (property != undefined && property.jitsiRoomConfig.jitsiRoomAdminTag != undefined)
-                jitsiRooms.push(property);
+            if (property != undefined && property.jitsiRoomAdminTag != undefined) jitsiRooms.push(property);
         }
         // Get Entity properties with type "jitsiRoomProperty"
         for (const entity of Object.values(this.wamFileProperties.entities)) {
             const property = entity.properties?.find((prop) => prop.type === "jitsiRoomProperty") as
                 | JitsiRoomPropertyData
                 | undefined;
-            if (property != undefined && property.jitsiRoomConfig.jitsiRoomAdminTag != undefined)
-                jitsiRooms.push(property);
+            if (property != undefined && property.jitsiRoomAdminTag != undefined) jitsiRooms.push(property);
         }
         // Register the properties
         for (const jitsiRoom of jitsiRooms) {
             const jitsiRoomId = slugifyJitsiRoomName(jitsiRoom.roomName, this.roomId as string, jitsiRoom.noPrefix);
-            this._roomModerators.set(jitsiRoomId, jitsiRoom.jitsiRoomConfig.jitsiRoomAdminTag as string);
+            this._roomModerators.set(jitsiRoomId, jitsiRoom.jitsiRoomAdminTag as string);
         }
     }
 }
