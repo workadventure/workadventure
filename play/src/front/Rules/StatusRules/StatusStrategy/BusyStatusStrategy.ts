@@ -2,7 +2,7 @@ import { AvailabilityStatus } from "@workadventure/messages";
 import { TimedRules } from "../statusRules";
 import { askIfUserWantToJoinBubbleOf, askToChangeStatus } from "../statusChangerFunctions";
 import { notificationPermissionModalVisibility } from "../../../Stores/AvailabilityStatusModalsStore";
-import { helpNotificationSettingsVisibleStore } from "../../../Stores/HelpSettingsStore";
+//import { helpNotificationSettingsVisibleStore } from "../../../Stores/HelpSettingsStore";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import { BasicStatusStrategy } from "./BasicStatusStrategy";
 
@@ -56,7 +56,7 @@ export class BusyStatusStrategy extends BasicStatusStrategy {
                 this.lastNotificationPermissionRequestMoreThanTwoWeeks(lastNotificationPermissionRequest)) ||
             localStoragelastNotificationPermissionRequest === null
         ) {
-            helpNotificationSettingsVisibleStore.set(true);
+            notificationPermissionModalVisibility.open();
             localUserStore.setLastNotificationPermissionRequest();
         }
     };

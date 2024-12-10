@@ -73,13 +73,14 @@ class Menu {
 
     async openStatusList(page : Page, isMobile = false){
         if(isMobile){
-            await expect(await page.locator('button#burgerIcon')).toBeVisible();
+            await page.getByTestId('burger-menu').click();
+            /*await expect(await page.locator('button#burgerIcon')).toBeVisible();
             const mobileMenuVisible = await page.locator('button#burgerIcon img.tw-rotate-0').isVisible();
             if(mobileMenuVisible){
                 await page.click('button#burgerIcon');
-            }
+            }*/
         }
-        await page.click('#AvailabilityStatus');
+        await page.getByTestId('action-user').click();
     }
 
     async clickOnStatus(page:Page,status: string){
@@ -90,9 +91,9 @@ class Menu {
     }
 
     async turnOnCamera(page:Page){
-        if(await page.getByAltText('Turn off webcam').isVisible()) return;
-        await page.getByAltText('Turn on webcam').click();
-        await expect(page.getByAltText('Turn off webcam')).toBeVisible();
+        if(page.getByTestId('camera-button').locator('.bg-danger')) return;
+        await page.getByTestId('camera-button').click();
+        await expect(page.getByTestId('camera-button').locator('.bg-danger')).toBeVisible();
     }
     async turnOffCamera(page:Page){
         if(await page.getByAltText('Turn on webcam').isVisible()) return;
@@ -100,14 +101,30 @@ class Menu {
         await expect(page.getByAltText('Turn on webcam')).toBeVisible();
     }
     async turnOnMicrophone(page:Page){
-        if(await page.getByAltText('Turn off microphone').isVisible()) return;
-        await page.getByAltText('Turn on microphone').click();
-        await expect(page.getByAltText('Turn off microphone')).toBeVisible();
+        if(page.getByTestId('microphone-button').locator('.bg-danger')) return;
+        await page.getByTestId('microphone-button').click();
+        await expect(page.getByTestId('microphone-button').locator('.bg-danger')).toBeVisible();
     }
     async turnOffMicrophone(page:Page){
-        if(await page.getByAltText('Turn on microphone').isVisible()) return;
-        await page.getByAltText('Turn off microphone').click();
-        await expect(page.getByAltText('Turn on microphone')).toBeVisible();
+        //if(page.getByTestId('microphone-button').locator('.bg-danger')) return;
+        await page.getByTestId('microphone-button').click();
+        await expect(page.getByTestId('microphone-button').locator('.bg-danger')).toBeHidden();
+    }
+
+    async expectCameraOn(page: Page) {
+        await expect(page.getByTestId('camera-button')).not.toHaveClass(/bg-danger/);
+    }
+
+    async expectCameraOff(page: Page) {
+        await expect(page.getByTestId('camera-button')).toHaveClass(/bg-danger/);
+    }
+
+    async expectMicrophoneOn(page: Page) {
+        await expect(page.getByTestId('microphone-button')).not.toHaveClass(/bg-danger/);
+    }
+
+    async expectMicrophoneOff(page: Page) {
+        await expect(page.getByTestId('microphone-button')).toHaveClass(/bg-danger/);
     }
 
     async closeNotificationPopUp(page:Page){

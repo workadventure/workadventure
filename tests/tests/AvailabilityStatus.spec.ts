@@ -29,14 +29,16 @@ test.describe('Availability Status', () => {
                 await  page.locator("section:has(#notificationPermission) + footer>button.outline").click();
             }
             await Menu.openStatusList(page, isMobileTest);
-            await expect(page.getByText(statusName)).toHaveCSS('opacity','0.5')
-        
+            //await page.pause();
+            //await expect(page.locator('.status-button').getByText(statusName)).toHaveClass('opacity-50')
+            await expect(page.getByRole('button', { name: statusName }).locator('svg')).toBeVisible();
+
         
             //move to trigger status change 
             await Map.walkTo(page,'ArrowRight',100)
+            await Menu.openStatusList(page, isMobileTest);
 
-            await expect(page.getByText("Online")).toHaveCSS('opacity','0.5')
-
+            await expect(page.getByRole('button', { name: 'Online' }).locator('svg')).toBeVisible();
         })
         test('should disable microphone and camera',async({ page, browser,browserName }, {project})=>{
             if(browserName === "webkit"){
@@ -63,10 +65,8 @@ test.describe('Availability Status', () => {
             await Menu.clickOnStatus(page,statusName); 
             //await Menu.closeNotificationPopUp(page);
 
-            await expect(page.getByAltText('Turn off webcam')).toBeHidden();
-            await expect(page.getByAltText('Turn off microphone')).toBeHidden();
-            
-
+            await expect(page.getByTestId('camera-button').locator('.bg-danger')).toBeHidden();
+            await expect(page.getByTestId('microphone-button').locator('.bg-danger')).toBeHidden();
         })
 
         test('should keep same webcam and microphone config when you go back to online status',async({ page, browser,context,browserName },{project})=>{
@@ -85,16 +85,16 @@ test.describe('Availability Status', () => {
             await Menu.turnOffMicrophone(page)
 
 
-            await expect(page.getByAltText('Turn off webcam')).toBeVisible();
-            await expect(page.getByAltText('Turn on microphone')).toBeVisible();
+            await Menu.expectCameraOn(page);
+            await Menu.expectMicrophoneOff(page);
 
             await Menu.openStatusList(page);
             await Menu.clickOnStatus(page,statusName);
             //await Menu.closeNotificationPopUp(page);
             await Map.walkTo(page,'ArrowRight',100)
 
-            await expect(page.getByAltText('Turn off webcam')).toBeVisible();
-            await expect(page.getByAltText('Turn on microphone')).toBeVisible();
+            await Menu.expectCameraOn(page);
+            await Menu.expectMicrophoneOff(page);
         })
         test('should ask to change notification permission when you pass in Busy status and your browser notification permission is denied',async({ page, browser,context,browserName}, {project})=>{
             if(browserName === "firefox" || browserName === "webkit"){

@@ -150,6 +150,9 @@
                 when={$showDesktopCapturerSourcePicker}
                 component={() => import("./Video/DesktopCapturerSourcePicker.svelte")}
             />
+            {#if $modalVisibilityStore}
+                <Modal />
+            {/if}
 
             {#if $menuVisiblilityStore}
                 <Menu />
@@ -185,10 +188,6 @@
                 <HelpNotificationSettingsPopup />
             {/if}
 
-            {#if $helpNotificationSettingsVisibleStore}
-                <HelpNotificationSettingsPopup />
-            {/if}
-
             {#if $helpWebRtcSettingsVisibleStore !== "hidden" && $proximityMeetingStore === true}
                 <HelpWebRtcSettingsPopup />
             {/if}
@@ -215,10 +214,6 @@
 
             {#if $uiWebsitesStore}
                 <UiWebsiteContainer />
-            {/if}
-
-            {#if $modalVisibilityStore}
-                <Modal />
             {/if}
 
             {#if $askDialogStore}

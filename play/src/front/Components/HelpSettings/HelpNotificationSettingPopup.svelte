@@ -4,6 +4,7 @@
     import { getNavigatorType, isAndroid as isAndroidFct, NavigatorType } from "../../WebRtc/DeviceUtils";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import Alert from "../UI/Alert.svelte";
 
     let isAndroid = isAndroidFct();
     let isFirefox = getNavigatorType() === NavigatorType.firefox;
@@ -24,37 +25,40 @@
 </script>
 
 <form
-    class="helpNotificationSettings z-[600] backdrop-blur-sm bg-dark-purple/80 rounded text-white self-center p-3 pointer-events-auto flex flex-col m-auto w-full md:w-2/3 2xl:w-1/4 text-sm md:text-base"
+    class="helpNotificationSettings z-[600] bg-contrast/80 backdrop-filter text-center rounded-lg text-white self-center pointer-events-auto flex flex-col m-auto w-full md:w-2/3 xl:w-[380px] text-sm md:text-base absolute bottom-4 left-0 right-0 m-auto overflow-hidden"
     style={getBackgroundColor() ? `background-color: ${getBackgroundColor()};` : ""}
     on:submit|preventDefault={close}
     transition:fly={{ y: -50, duration: 500 }}
 >
     <section class="mb-0">
-        <h2 class="mb-0">{$LL.notification.help.title()}</h2>
-        <p class="err blue-title">{$LL.notification.help.permissionDenied()}</p>
-        <p>{$LL.notification.help.content()}</p>
-        <p class="mb-0 flex justify-center flex-col">
+        <div class="mb-0 text-lg bold border border-solid border-transparent border-b-white/20 bg-white/10 px-4 py-3">
+            {$LL.notification.help.title()}
+        </div>
+        <div class="px-4 mt-4">
+            <Alert>
+                {$LL.notification.help.permissionDenied()}
+            </Alert>
+        </div>
+        <div class="p-4 italic opacity-50 text-sm leading-4">
+            {$LL.notification.help.content()}
+        </div>
+        <div class="h-72 overflow-hidden opacity-80 saturate-50">
             {#if isFirefox}
                 <p class="err">
                     {$LL.notification.help.firefoxContent()}
                 </p>
-                <img
-                    src={$LL.notification.help.screen.firefox()}
-                    alt="help camera setup"
-                    class="rounded-lg w-5/6 md:w-80 m-auto"
-                />
+                <img src={$LL.notification.help.screen.firefox()} alt="help camera setup" class="w-full m-auto" />
             {:else if isChrome && !isAndroid}
-                <img
-                    src={$LL.notification.help.screen.chrome()}
-                    alt="help camera setup"
-                    class="rounded-lg w-5/6 md:w-80 m-auto"
-                />
+                <img src={$LL.notification.help.screen.chrome()} alt="help camera setup" class="w-full m-auto" />
             {/if}
-        </p>
+        </div>
     </section>
-    <section class="flex row justify-center">
-        <button class="light" on:click|preventDefault={refresh}>{$LL.notification.help.refresh()}</button>
-        <button type="submit" class="outline" on:click|preventDefault={close}>{$LL.notification.help.continue()}</button
+    <section class="flex row justify-center p-4 bg-contrast">
+        <button class="btn btn-sm btn-border btn-light mr-2 w-full justify-center" on:click|preventDefault={refresh}
+            >{$LL.notification.help.refresh()}</button
+        >
+        <button type="submit" class="btn btn-danger btn-sm w-full justify-center" on:click|preventDefault={close}
+            >{$LL.notification.help.continue()}</button
         >
     </section>
 </form>

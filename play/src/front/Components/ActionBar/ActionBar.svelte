@@ -698,7 +698,7 @@
                                         tooltipDesc={$LL.actionbar.help.lock.desc()}
                                         disabledHelp={appMenuOpened}
                                         state={$currentPlayerGroupLockStateStore ? "forbidden" : "normal"}
-                                        dataTestId={undefined}
+                                        dataTestId="lock-button"
                                     >
                                         {#if $currentPlayerGroupLockStateStore}
                                             <LockIcon />
@@ -727,7 +727,7 @@
                                     tooltipDesc={$LL.actionbar.help.mic.desc()}
                                     disabledHelp={appMenuOpened}
                                     state={!$requestedMicrophoneState || $silentStore ? "forbidden" : "normal"}
-                                    dataTestId={undefined}
+                                    dataTestId="microphone-button"
                                 >
                                     {#if $requestedMicrophoneState && !$silentStore}
                                         <MicOnIcon />
@@ -775,7 +775,7 @@
                                     tooltipDesc={$LL.actionbar.help.cam.desc()}
                                     disabledHelp={appMenuOpened}
                                     state={!$requestedCameraState || $silentStore ? "forbidden" : "normal"}
-                                    dataTestId={undefined}
+                                    dataTestId="camera-button"
                                 >
                                     {#if $requestedCameraState && !$silentStore}
                                         <CamOnIcon />
@@ -1160,6 +1160,7 @@
                         on:click={() => (burgerOpen = !burgerOpen)}
                         use:clickOutside={() => (burgerOpen = false)}
                         class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:w-12 @xl/actions:w-12 p-1 m-0 rounded hover:bg-white/10 flex items-center justify-center transition-all"
+                        data-testid="burger-menu"
                     >
                         {#if !burgerOpen}
                             <MenuBurgerIcon />

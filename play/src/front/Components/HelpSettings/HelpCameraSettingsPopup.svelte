@@ -4,6 +4,7 @@
     import { getNavigatorType, isAndroid as isAndroidFct, NavigatorType } from "../../WebRtc/DeviceUtils";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import Alert from "../UI/Alert.svelte";
 
     let isAndroid = isAndroidFct();
     let isFirefox = getNavigatorType() === NavigatorType.firefox;
@@ -34,11 +35,9 @@
             {$LL.camera.help.title()}
         </div>
         <div class="px-4 mt-4">
-            <div
-                class="bg-danger-1200 border border-solid border-danger text-danger-400 rounded-sm px-4 py-1 inline-block text-sm"
-            >
+            <Alert>
                 {$LL.camera.help.permissionDenied()}
-            </div>
+            </Alert>
         </div>
         <div class="p-4 italic opacity-50 text-sm leading-4">
             {$LL.camera.help.content()}
