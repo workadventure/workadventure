@@ -68,6 +68,7 @@
                     cursorType="pointer"
                     position="relative"
                     colorHex={statusInformationValue.colorHex}
+                    isActive={$availabilityStatusStore === statusInformationValue.AvailabilityStatus}
                 />
                 <div
                     class="text-left leading-4"

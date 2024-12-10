@@ -4,6 +4,7 @@
     import ChevronRightIcon from "../Icons/ChevronRightIcon.svelte";
     import XIcon from "../Icons/XIcon.svelte";
     import { currentBannerIndex } from "../../Stores/PopupStore";
+    import PopUpContainer from "./PopUpContainer.svelte";
 
     const dispatch = createEventDispatcher();
 
@@ -22,9 +23,7 @@
     }
 </script>
 
-<div
-    class="bg-contrast/80 backdrop-blur text-white w-[500px] h-[250px] rounded-lg overflow-hidden animation responsive"
->
+<PopUpContainer>
     <div class="flex p-4 space-x-4 pointer-events-auto">
         <div class="">
             <button
@@ -197,40 +196,16 @@
             <slot />
         </div>
     </div>
-
-    <div class="flex p-4 space-x-4 bg-contrast mt-8 pointer-events-auto responsive-bar">
-        <button class="btn btn-light btn-ghost w-1/2 justify-center responsive-message">View full tutorial</button>
-        <button class="btn btn-secondary w-1/2 justify-center" on:click={closeBanner}>Close</button>
-    </div>
-</div>
+    <svelte:fragment slot="buttons">
+        <button class="btn btn-light btn-sm btn-ghost w-1/2 justify-center responsive-message"
+            >View full tutorial</button
+        >
+        <button class="btn btn-secondary btn-sm w-1/2 justify-center" on:click={closeBanner}>Close</button>
+    </svelte:fragment>
+</PopUpContainer>
 
 <style>
-    .animation {
-        animation-duration: 0.5s;
-        animation-name: slidein;
-    }
-
-    .responsive-bar {
-        position: absolute;
-        width: 100%;
-        bottom: 0;
-    }
-
-    @keyframes slidein {
-        from {
-            opacity: 0;
-        }
-
-        to {
-            opacity: 1;
-        }
-    }
-
     @media (max-width: 768px) {
-        .responsive {
-            scale: 0.6;
-        }
-
         .responsive-message {
             scale: 1.2;
         }

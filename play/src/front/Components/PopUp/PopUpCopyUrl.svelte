@@ -3,6 +3,7 @@
     import XIcon from "../Icons/XIcon.svelte";
     import { popupStore } from "../../Stores/PopupStore";
     import { coWebsites } from "../../Stores/CoWebsiteStore";
+    import PopUpContainer from "./PopUpContainer.svelte";
 
     const dispatch = createEventDispatcher();
     let isPopupVisible = false;
@@ -23,45 +24,14 @@
     });
 </script>
 
-<div
-    id="popup-copyurl"
-    class="bg-contrast/80 backdrop-blur text-white w-[300px] h-[150px] rounded-lg overflow-hidden animation responsive"
->
-    <div class="flex p-4 space-x-4 pointer-events-auto">
-        <div class="" />
-        <div class="grow" />
-        <div class="" />
-        <button class="btn btn-secondary items-center btn-sm" on:click={closeBanner}>
+<PopUpContainer>
+    Url copied to clipboard
+    <svelte:fragment slot="iconButton">
+        <button
+            class="btn btn-secondary !p-0 w-8 h-8 items-center btn-sm absolute top-2 right-2 z-50 pointer-events-auto"
+            on:click={closeBanner}
+        >
             <XIcon height="h-4" width="w-4" />
         </button>
-    </div>
-    <p class="text-center -mt-0">Url copied to clipboard</p>
-</div>
-
-<!-- <div
-    class="relative bg-contrast/80 backdrop-blur text-white w-[250px] h-[150px] rounded-lg overflow-hidden animation responsive"
->
-
-</div> -->
-<style>
-    .animation {
-        animation-duration: 0.5s;
-        animation-name: slidein;
-    }
-
-    @keyframes slidein {
-        from {
-            opacity: 0;
-        }
-
-        to {
-            opacity: 1;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .responsive {
-            scale: 0.6;
-        }
-    }
-</style>
+    </svelte:fragment>
+</PopUpContainer>

@@ -1004,7 +1004,9 @@
                                     />
                                     <div
                                         class="hidden @xl/actions:block"
-                                        style="color: {getColorHexOfStatus($availabilityStatusStore)}"
+                                        style="color: {getColorHexOfStatus(
+                                            $availabilityStatusStore
+                                        )};filter: brightness(200%);"
                                     >
                                         {getStatusLabel($availabilityStatusStore)}
                                     </div>

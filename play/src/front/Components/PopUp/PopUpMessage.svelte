@@ -2,6 +2,7 @@
     import { createEventDispatcher } from "svelte";
     import TextGlobalMessage from "../Menu/TextGlobalMessage.svelte";
     import { consoleGlobalMessageManagerVisibleStore } from "../../Stores/ConsoleGlobalMessageManagerStore";
+    import PopUpContainer from "./PopUpContainer.svelte";
 
     // export let message: string;
     // export let click: () => void;
@@ -32,48 +33,26 @@
     </div>
 </div> -->
 
-<div
-    class="bg-contrast/80 backdrop-blur text-white w-[500px] h-[250px] rounded-lg overflow-hidden animation responsive"
->
+<PopUpContainer>
     <div class="flex pointer-events-auto">
         <div class="grow">
             <p class="text-center text-sm font-semibold mt-0">New Message</p>
         </div>
     </div>
-    <div class="max-h-[140px] px-4 overflow-y-auto overflow-x-hidden pointer-events-auto">
-        <div class="break-words mb-12">
+    <div class="max-h-[140px] overflow-y-auto overflow-x-hidden pointer-events-auto">
+        <div class="break-words">
             <TextGlobalMessage />
         </div>
     </div>
-    <div class="flex p-2 space-x-4 mt-6 bg-contrast pointer-events-auto responsive-bar">
-        <button class="btn btn-light btn-ghost w-1/2 justify-center">Send Message</button>
+    <svelte:fragment slot="buttons">
+        <!-- TODO -->
+        <button class="btn btn-light btn-ghost w-1/2 justify-center"> Send Message </button>
         <!-- Mettre l'action du send message -->
-        <button class="btn btn-secondary w-1/2 justify-center" on:click={closeBanner}>Close</button>
-    </div>
-</div>
+        <button class="btn btn-secondary w-1/2 justify-center" on:click={closeBanner}> Close </button>
+    </svelte:fragment>
+</PopUpContainer>
 
 <style>
-    .animation {
-        animation-duration: 0.5s;
-        animation-name: slidein;
-    }
-
-    .responsive-bar {
-        position: absolute;
-        width: 100%;
-        bottom: 0;
-    }
-
-    @keyframes slidein {
-        from {
-            opacity: 0;
-        }
-
-        to {
-            opacity: 1;
-        }
-    }
-
     @media (max-width: 768px) {
         .responsive {
             scale: 0.7;

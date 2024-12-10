@@ -129,16 +129,21 @@
 
     <div class="flex flex-col min-h-screen sm:flex-col-reverse">
         <section id="main-layout-main" class="pb-0 flex-1 pointer-events-none h-full w-full">
-            <div class="popups ">
-                {#each $popupStore.slice().reverse() as popup (popup.uuid)}
-                    <div class="popupwrapper" transition:fly={{ delay: 50, y: 150, duration: 250 }}>
-                        <svelte:component
-                            this={popup.component}
-                            {...popup.props}
-                            on:close={() => popupStore.removePopup(popup.uuid)}
-                        />
-                    </div>
-                {/each}
+            <div class="fixed z-[1000] bottom-0 left-0 right-0 m-auto w-max max-w-[80%]">
+                <div class="popups flex items-end relative w-full justify-center mb-4 h-[calc(100%-96px)]">
+                    {#each $popupStore.slice().reverse() as popup, index (popup.uuid)}
+                        <div
+                            class="popupwrapper popupwrapper-{index} flex-1 transition-all"
+                            in:fly={{ y: 150, duration: 150 }}
+                        >
+                            <svelte:component
+                                this={popup.component}
+                                {...popup.props}
+                                on:close={() => popupStore.removePopup(popup.uuid)}
+                            />
+                        </div>
+                    {/each}
+                </div>
             </div>
 
             <Lazy
@@ -281,56 +286,42 @@
     @import "../style/breakpoints.scss";
 
     .popups {
-        position: fixed;
         z-index: 1000;
-        width: 100%;
-        height: calc(100% - 96px);
-        display: flex;
-        justify-content: center;
     }
 
     .popupwrapper {
-        position: absolute;
-        bottom: 16px;
-    }
-
-    .popupwrapper:nth-child(1) {
-        z-index: 505;
+        &:not(:first-child) {
+            @apply absolute w-full h-full overflow-hidden rounded-lg;
+        }
+        &:first-child {
+            @apply relative;
+            z-index: 505;
+        }
+        &:nth-child(n + 5) {
+            /* Hide popups after 4 popups */
+            @apply hidden;
+        }
+        // For each popups but not first
+        @for $i from 1 through 4 {
+            &:nth-child(#{$i + 1}) {
+                top: -$i * 16px;
+                filter: blur($i + 1px);
+                opacity: 1 - ($i * 0.1);
+                transform: scale(1 - ($i * 0.05));
+            }
+        }
     }
 
     .popupwrapper:nth-child(2) {
-        bottom: 24px;
-        filter: blur(2px);
-        opacity: 0.8;
+        transform: scale(0.95);
     }
 
     .popupwrapper:nth-child(3) {
-        bottom: 32px;
-        opacity: 0.6;
-        filter: blur(4px);
+        transform: scale(0.9);
     }
 
     .popupwrapper:nth-child(4) {
-        bottom: 40px;
-        opacity: 0.4;
-        filter: blur(4px);
-    }
-
-    .popupwrapper:nth-child(5) {
-        bottom: 48px;
-        opacity: 0.2;
-        filter: blur(4px);
-    }
-
-    .popupwrapper:nth-child(6),
-    .popupwrapper:nth-child(7),
-    .popupwrapper:nth-child(8),
-    .popupwrapper:nth-child(9),
-    .popupwrapper:nth-child(10),
-    .popupwrapper:nth-child(11),
-    .popupwrapper:nth-child(12),
-    .popupwrapper:nth-child(13) {
-        display: none;
+        transform: scale(0.85);
     }
 
     #main-layout {

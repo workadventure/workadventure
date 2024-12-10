@@ -2352,12 +2352,12 @@ export class GameScene extends DirtyScene {
                 let html =
                     '<div id="container" class="relative bg-contrast/50 backdrop-blur pt-4 overflow-hidden rounded-lg text-white" hidden>';
                 if (escapedMessage) {
-                    html += `<div class="text-xxs text-center px-4">
+                    html += `<div class="text-xxs text-center px-2">
 ${escapedMessage}
  </div> `;
                 }
 
-                const buttonContainer = '<div class="buttonContainer bg-contrast/50 py-4 px-4 mt-2"</div>';
+                const buttonContainer = '<div class="buttonContainer bg-contrast/50 py-2 px-2 mt-2"</div>';
                 html += buttonContainer;
                 let id = 0;
                 for (const button of openPopupEvent.buttons) {

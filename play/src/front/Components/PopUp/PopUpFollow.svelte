@@ -2,6 +2,7 @@
     import { createEventDispatcher } from "svelte";
     import XIcon from "../Icons/XIcon.svelte";
     import FollowMenu from "../FollowMenu/FollowMenu.svelte";
+    import PopUpContainer from "./PopUpContainer.svelte";
 
     const dispatch = createEventDispatcher();
 
@@ -10,35 +11,19 @@
     }
 </script>
 
-<div class="bg-contrast/80 backdrop-blur text-white rounded-lg overflow-hidden animation w-[400px] min-h-[100px]">
-    <div class="flex p-4 space-x-4 pointer-events-auto">
-        <div class="">
-            <button class="btn btn-light btn-sm -mb-8 z-[2000] responsive-close-button" on:click={closeBanner}>
-                <XIcon height="h-4" width="w-4" />
-            </button>
-            <div class="">
-                <FollowMenu />
-            </div>
-        </div>
-    </div>
-</div>
+<PopUpContainer>
+    <FollowMenu />
+    <svelte:fragment slot="iconButton">
+        <button
+            class="btn btn-secondary !p-0 w-8 h-8 items-center btn-sm absolute top-2 right-2 z-50 pointer-events-auto"
+            on:click={closeBanner}
+        >
+            <XIcon height="h-4" width="w-4" />
+        </button>
+    </svelte:fragment>
+</PopUpContainer>
 
 <style>
-    .animation {
-        animation-duration: 0.5s;
-        animation-name: slidein;
-    }
-
-    @keyframes slidein {
-        from {
-            opacity: 0;
-        }
-
-        to {
-            opacity: 1;
-        }
-    }
-
     @media screen and (max-width: 480px) {
         .responsive-close-button {
             display: none;
