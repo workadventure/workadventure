@@ -1,12 +1,9 @@
 <script lang="ts">
     import { ConfirmationModalPropsInterface } from "../Interfaces/ConfirmationModalPropsInterface";
-    import {
-        notificationPermissionModalVisibility,
-        recommendedActiveNotification,
-    } from "../../../../Stores/AvailabilityStatusModalsStore";
     import LL from "../../../../../i18n/i18n-svelte";
     import { helpNotificationSettingsVisibleStore } from "../../../../Stores/HelpSettingsStore";
     import { localUserStore } from "../../../../Connection/LocalUserStore";
+    import { popupStore } from "../../../../Stores/PopupStore";
     import ConfirmationModal from "./ConfirmationModal.svelte";
 
     let loading = false;
@@ -18,18 +15,22 @@
                 .then((response) => {
                     if (response === "granted") {
                         localUserStore.setNotification(true);
-                        recommendedActiveNotification.close();
+                        helpNotificationSettingsVisibleStore.set(false);
                     } else {
+                        console.error("Notification permission status: ", response);
                         helpNotificationSettingsVisibleStore.set(true);
                     }
                 })
+                .catch((e) => {
+                    console.error(e);
+                })
                 .finally(() => {
-                    notificationPermissionModalVisibility.close();
+                    popupStore.removePopup("notification_permission_modal");
                     loading = false;
                 });
         },
         handleClose: () => {
-            notificationPermissionModalVisibility.close();
+            popupStore.removePopup("notification_permission_modal");
         },
         acceptLabel: $LL.statusModal.accept(),
         closeLabel: $LL.statusModal.close(),

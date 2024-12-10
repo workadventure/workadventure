@@ -106,7 +106,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             sync: "Le statut est en synchronisation 🔄",
         },
     },
-    appList: "Liste des apps",
+    //appList: "Liste des apps",
     featureNotAvailable: "Fonctionnalité non disponible pour votre salon 😭",
 };
 

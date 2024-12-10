@@ -27,7 +27,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     globalMessage: "グローバルメッセージの送信",
     //roomList: "ルームリストの表示／非表示",
-    appList: "アプリリストの表示／非表示",
+    //appList: "アプリリストの表示／非表示",
     help: {
         chat: {
             title: "チャットの表示／非表示",

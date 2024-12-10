@@ -1,20 +1,20 @@
 <script lang="ts">
     import { ConfirmationModalPropsInterface } from "../Interfaces/ConfirmationModalPropsInterface";
-    import {
-        bubbleModalVisibility,
-        namePlayerInBubbleModalStore,
-    } from "../../../../Stores/AvailabilityStatusModalsStore";
+    import { namePlayerInBubbleModalStore } from "../../../../Stores/AvailabilityStatusModalsStore";
     import LL from "../../../../../i18n/i18n-svelte";
-    import { passStatusToOnline } from "../../../../Rules/StatusRules/statusChangerFunctions";
+    import {
+        closeBubbleConfirmationModal,
+        passStatusToOnline,
+    } from "../../../../Rules/StatusRules/statusChangerFunctions";
     import ConfirmationModal from "./ConfirmationModal.svelte";
 
     const confirmationModalProps: ConfirmationModalPropsInterface = {
         handleAccept: () => {
             passStatusToOnline();
-            bubbleModalVisibility.close();
+            closeBubbleConfirmationModal();
         },
         handleClose: () => {
-            bubbleModalVisibility.close();
+            closeBubbleConfirmationModal();
         },
         acceptLabel: $LL.statusModal.accept(),
         closeLabel: $LL.statusModal.close(),

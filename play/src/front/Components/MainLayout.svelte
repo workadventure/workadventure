@@ -22,11 +22,6 @@
     import { notificationPlayingStore } from "../Stores/NotificationStore";
     import { popupStore } from "../Stores/PopupStore";
     import { askDialogStore } from "../Stores/MeetingStore";
-    import {
-        bubbleModalVisibility,
-        changeStatusConfirmationModalVisibility,
-        notificationPermissionModalVisibility,
-    } from "../Stores/AvailabilityStatusModalsStore";
     import { mapEditorAskToClaimPersonalAreaStore, mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
     import { externalPopupSvelteComponent } from "../Stores/Utils/externalSvelteComponentStore";
@@ -51,9 +46,6 @@
     import HelpPopUpBlocked from "./HelpSettings/HelpPopUpBlocked.svelte";
     import Notification from "./UI/Notification.svelte";
     import MuteDialogBox from "./Video/AskedAction/MuteDialogBox.svelte";
-    import ChangeStatusConfirmationModal from "./ActionBar/AvailabilityStatus/Modals/ChangeStatusConfirmationModal.svelte";
-    import BubbleConfirmationModal from "./ActionBar/AvailabilityStatus/Modals/BubbleConfirmationModal.svelte";
-    import NotificationPermissionModal from "./ActionBar/AvailabilityStatus/Modals/NotificationPermissionModal.svelte";
     import ObjectDetails from "./Modal/ObjectDetails.svelte";
     import MapList from "./Exploration/MapList.svelte";
     import WarningToast from "./WarningContainer/WarningToast.svelte";
@@ -255,17 +247,6 @@
 
     {#if $actionsMenuStore}
         <ActionsMenu />
-    {/if}
-
-    {#if $changeStatusConfirmationModalVisibility}
-        <ChangeStatusConfirmationModal />
-    {/if}
-
-    {#if $bubbleModalVisibility}
-        <BubbleConfirmationModal />
-    {/if}
-    {#if $notificationPermissionModalVisibility}
-        <NotificationPermissionModal />
     {/if}
 
     <Lazy

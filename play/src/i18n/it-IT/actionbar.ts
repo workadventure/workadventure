@@ -29,7 +29,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     globalMessage: "Invia un messaggio globale",
     //roomList: "Apri / Chiudi lista delle stanze",
-    appList: "Apri / Chiudi lista delle applicazioni",
+    //appList: "Apri / Chiudi lista delle applicazioni",
     help: {
         mic: {
             title: "Disattiva / Attiva microfono",
