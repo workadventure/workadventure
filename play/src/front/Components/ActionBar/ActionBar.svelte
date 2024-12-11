@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { get, writable } from "svelte/store";
+    import { derived, get, Readable, writable } from "svelte/store";
     import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
     import { clickOutside } from "svelte-outside";
@@ -351,6 +351,34 @@
         AvailabilityStatus.BACK_IN_A_MOMENT,
         AvailabilityStatus.DO_NOT_DISTURB,
     ];
+
+    const cameraButtonStateStore: Readable<"active" | "disabled" | "normal" | "forbidden"> = derived(
+        [availabilityStatusStore, requestedCameraState],
+        ([$availabilityStatusStore, $requestedCameraState]) => {
+            if (
+                $availabilityStatusStore === AvailabilityStatus.AWAY ||
+                $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
+                $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB
+            ) {
+                return "disabled";
+            }
+            return $requestedCameraState ? "normal" : "forbidden";
+        }
+    );
+
+    const microphoneButtonStateStore: Readable<"active" | "disabled" | "normal" | "forbidden"> = derived(
+        [availabilityStatusStore, requestedMicrophoneState],
+        ([$availabilityStatusStore, $requestedMicrophoneState]) => {
+            if (
+                $availabilityStatusStore === AvailabilityStatus.AWAY ||
+                $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
+                $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB
+            ) {
+                return "disabled";
+            }
+            return $requestedMicrophoneState ? "normal" : "forbidden";
+        }
+    );
 </script>
 
 <div
@@ -723,10 +751,16 @@
                                         analyticsClient.microphone();
                                         microphoneClick();
                                     }}
-                                    tooltipTitle={$LL.actionbar.help.mic.title()}
-                                    tooltipDesc={$LL.actionbar.help.mic.desc()}
+                                    tooltipTitle={$microphoneButtonStateStore === "disabled"
+                                        ? $LL.actionbar.help.micDisabledByStatus.title()
+                                        : $LL.actionbar.help.mic.title()}
+                                    tooltipDesc={$microphoneButtonStateStore === "disabled"
+                                        ? $LL.actionbar.help.micDisabledByStatus.desc({
+                                              status: getStatusLabel($availabilityStatusStore),
+                                          })
+                                        : $LL.actionbar.help.mic.desc()}
                                     disabledHelp={appMenuOpened}
-                                    state={!$requestedMicrophoneState || $silentStore ? "forbidden" : "normal"}
+                                    state={$microphoneButtonStateStore}
                                     dataTestId="microphone-button"
                                 >
                                     {#if $requestedMicrophoneState && !$silentStore}
@@ -771,10 +805,16 @@
                                         analyticsClient.camera();
                                         cameraClick();
                                     }}
-                                    tooltipTitle={$LL.actionbar.help.cam.title()}
-                                    tooltipDesc={$LL.actionbar.help.cam.desc()}
+                                    tooltipTitle={$cameraButtonStateStore === "disabled"
+                                        ? $LL.actionbar.help.camDisabledByStatus.title()
+                                        : $LL.actionbar.help.cam.title()}
+                                    tooltipDesc={$cameraButtonStateStore === "disabled"
+                                        ? $LL.actionbar.help.camDisabledByStatus.desc({
+                                              status: getStatusLabel($availabilityStatusStore),
+                                          })
+                                        : $LL.actionbar.help.cam.desc()}
                                     disabledHelp={appMenuOpened}
-                                    state={!$requestedCameraState || $silentStore ? "forbidden" : "normal"}
+                                    state={$cameraButtonStateStore}
                                     dataTestId="camera-button"
                                 >
                                     {#if $requestedCameraState && !$silentStore}

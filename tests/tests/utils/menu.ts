@@ -119,12 +119,24 @@ class Menu {
         await expect(page.getByTestId('camera-button')).toHaveClass(/bg-danger/);
     }
 
+    async expectCameraDisabled(page: Page) {
+        await expect(page.getByTestId('camera-button')).toHaveClass(/opacity-50/);
+    }
+
     async expectMicrophoneOn(page: Page) {
         await expect(page.getByTestId('microphone-button')).not.toHaveClass(/bg-danger/);
     }
 
     async expectMicrophoneOff(page: Page) {
         await expect(page.getByTestId('microphone-button')).toHaveClass(/bg-danger/);
+    }
+
+    async expectMicrophoneDisabled(page: Page) {
+        await expect(page.getByTestId('microphone-button')).toHaveClass(/opacity-50/);
+    }
+
+    async expectStatus(page: Page, status: string) {
+        await expect(page.getByTestId('action-user').getByText(status).locator('visible=true')).toBeVisible();
     }
 
     async closeNotificationPopUp(page:Page){

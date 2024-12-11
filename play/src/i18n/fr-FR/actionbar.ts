@@ -85,9 +85,17 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Activer/désactiver votre micro",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
+        micDisabledByStatus: {
+            title: "Micro désactivé",
+            desc: 'Votre micro est désactivé car vous êtes en mode "{status}".',
+        },
         cam: {
             title: "Activer/désactiver votre caméra",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        },
+        camDisabledByStatus: {
+            title: "Caméra désactivée",
+            desc: 'Votre caméra est désactivée car vous êtes en mode "{status}".',
         },
         share: {
             title: "Partager votre écran",

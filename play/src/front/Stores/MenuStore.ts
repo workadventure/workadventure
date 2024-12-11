@@ -353,7 +353,7 @@ additionnalButtonsMenu.subscribe((map) => {
 });
 
 export const helpTextDisabledStore = derived(emoteMenuSubStore, ($emoteMenuSubStore) => {
-    return $emoteMenuSubStore !== null;
+    return $emoteMenuSubStore;
 });
 
 export const mapEditorMenuVisibleStore = derived(

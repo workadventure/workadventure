@@ -33,5 +33,11 @@ export const closeBubbleConfirmationModal = () => {
 };
 
 export const askIfUserWantToJoinBubbleOf = (name: string) => {
-    popupStore.addPopup(BubbleConfirmationModal, {}, "bubbleConfirmationModal");
+    popupStore.addPopup(
+        BubbleConfirmationModal,
+        {
+            name,
+        },
+        "bubbleConfirmationModal"
+    );
 };
