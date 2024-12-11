@@ -1002,7 +1002,8 @@
                                 <Tooltip text={$LL.actionbar.bo()} />
                             {/if}
 
-                            <button id="backOfficeIcon"
+                            <button
+                                id="backOfficeIcon"
                                 name="toggle-back-office"
                                 disabled={isMobile || !$mapManagerActivated}
                             >
