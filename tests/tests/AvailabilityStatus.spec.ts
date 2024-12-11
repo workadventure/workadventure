@@ -25,7 +25,7 @@ test.describe('Availability Status', () => {
 
             await Menu.openStatusList(page, isMobileTest);
             await Menu.clickOnStatus(page,statusName); 
-            if((browserName === "firefox") && await page.getByText(`Do you want to allow notification`).isVisible() ){
+            if((browserName === "firefox") && await page.getByText(`Allow notification`).isVisible() ){
                 await  page.locator("section:has(#notificationPermission) + footer>button.outline").click();
             }
             await Menu.openStatusList(page, isMobileTest);
@@ -116,15 +116,15 @@ test.describe('Availability Status', () => {
             await Menu.openStatusList(page, isMobileTest);
             await Menu.clickOnStatus(page,statusName);
 
-            await expect(page.getByRole("button",{name:'continue without notification'})).toBeVisible();
+            await expect(page.getByText('Allow notifications?')).toBeVisible();
 
-            await page.getByText('continue without notification').click();
+            await page.getByText('Accept').click();
 
-            await expect(page.locator('continue without notification')).toBeHidden();
+            await expect(page.getByText('Allow notifications?')).toBeHidden();
         })
         
         test.describe('busy interaction',async()=>{
-            test('should open a popup when a bubble is create...',async({ page, browserName,browser,context}, {project})=>{
+            test('should open a popup when a bubble is created...',async({ page, browserName,browser,context}, {project})=>{
                 if(browserName === "webkit"){
                      //eslint-disable-next-line playwright/no-skipped-test
                     test.skip();
@@ -165,7 +165,7 @@ test.describe('Availability Status', () => {
 
                 await Map.teleportToPosition(userBob, positionToDiscuss.x+10, positionToDiscuss.y);
                 
-                if((browserName === "firefox") && await page.getByText(`Do you want to allow notification`).isVisible() ){
+                if((browserName === "firefox") && await page.getByText(`Allow notification`).isVisible() ){
                     await  page.locator("section:has(#notificationPermission) + footer>button.outline").click();
                 }
 
@@ -208,7 +208,7 @@ test.describe('Availability Status', () => {
                 await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
                 
                 
-                if((browserName === "firefox" ) && await page.getByText(`Do you want to allow notification`).isVisible() ){
+                if((browserName === "firefox" ) && await page.getByText(`Allow notification`).isVisible() ){
                     await  page.locator("section:has(#notificationPermission) + footer>button.outline").click();
                 }
                 await expect(page.getByText(`${secondPageName} wants to discuss with you`)).toBeVisible();
@@ -250,7 +250,7 @@ test.describe('Availability Status', () => {
                 await login(userBob, secondPageName, 3, 'en-US', isMobileTest);
                 await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
                 
-                if((browserName === "firefox") && await page.getByText(`Do you want to allow notification`).isVisible() ){
+                if((browserName === "firefox") && await page.getByText(`Allow notification`).isVisible() ){
                     await  page.locator("section:has(#notificationPermission) + footer>button.outline").click();
                 }
 

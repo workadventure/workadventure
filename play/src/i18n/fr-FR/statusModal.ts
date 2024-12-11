@@ -6,7 +6,8 @@ const statusModal: DeepPartial<Translation["statusModal"]> = {
     close: "Fermer",
     confirm: "Confirmer",
     goBackToOnlineStatusLabel: "Veux-tu revenir en ligne ?",
-    allowNotification: "Voulez-vous autoriser les notifications ?",
+    allowNotification: "Autoriser les notifications ?",
+    allowNotificationExplanation: "Recevoir une notification de bureau lorsque quelqu'un souhaite me parler.",
 };
 
 export default statusModal;
