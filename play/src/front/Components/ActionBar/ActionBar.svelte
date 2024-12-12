@@ -46,8 +46,9 @@
         backOfficeMenuVisibleStore,
         globalMessageVisibleStore,
         mapMenuVisibleStore,
+        activeSecondaryZoneActionBarStore,
     } from "../../Stores/MenuStore";
-    import { emoteMenuStore, emoteMenuSubStore } from "../../Stores/EmoteStore";
+    import { emoteMenuStore } from "../../Stores/EmoteStore";
     import { LL } from "../../../i18n/i18n-svelte";
     import { bottomActionBarVisibilityStore } from "../../Stores/BottomActionBarStore";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
@@ -101,6 +102,12 @@
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
     import { getColorHexOfStatus, getStatusInformation, getStatusLabel } from "../../Utils/AvailabilityStatus";
     import { RequestedStatus } from "../../Rules/StatusRules/statusRules";
+    import {
+        audioManagerPlayerState,
+        audioManagerRetryPlaySubject,
+        audioManagerVisibilityStore,
+    } from "../../Stores/AudioManagerStore";
+    import AudioManager from "../AudioManager/AudioManager.svelte";
     import ActionBarIconButton from "./ActionBarIconButton.svelte";
     import MapSubMenu from "./MenuIcons/MapSubMenu.svelte";
     import ActionBarButtonWrapper from "./ActionBarButtonWrapper.svelte";
@@ -108,7 +115,7 @@
     import MediaSettingsList from "./MediaSettingsList.svelte";
     import SilentBlock from "./SilentBlock.svelte";
     import AvailabilityStatusList from "./AvailabilityStatus/AvailabilityStatusList.svelte";
-    import {IconArrowDown, IconCheckList, IconCalendar, IconLogout, IconMusic} from "@wa-icons";
+    import { IconArrowDown, IconCheckList, IconCalendar, IconLogout, IconMusic } from "@wa-icons";
 
     // gameManager.currenwStartedRoom?.miniLogo ?? WorkAdventureImg;
     let userName = gameManager.getPlayerName() || "";
@@ -206,17 +213,17 @@
     }
 
     function toggleEmojiPicker() {
-        if ($emoteMenuSubStore == true) {
-            emoteMenuSubStore.closeEmoteMenu();
+        if ($activeSecondaryZoneActionBarStore === "emote") {
+            activeSecondaryZoneActionBarStore.set(undefined);
         } else {
-            emoteMenuSubStore.openEmoteMenu();
+            activeSecondaryZoneActionBarStore.set("emote");
             appMenuOpened = false;
         }
     }
 
     function close(): void {
         emoteMenuStore.closeEmoteMenu();
-        emoteMenuSubStore.closeEmoteMenu();
+        activeSecondaryZoneActionBarStore.set(undefined);
     }
 
     function showMenuItem(key: MenuKeys | string) {
@@ -335,7 +342,7 @@
     });*/
 
     function openAppMenu() {
-        emoteMenuSubStore.closeEmoteMenu();
+        activeSecondaryZoneActionBarStore.set(undefined);
         appMenuOpened = !appMenuOpened;
     }
     function showRoomList() {
@@ -446,27 +453,51 @@
                 {#if !$silentStore}
                     <div>
                         <div class="flex items-center">
-                            <ActionBarButtonWrapper classList="group/btn-music">
-                                <ActionBarIconButton
-                                    on:click={() => {
-                                        return;
-                                    }}
-                                    tooltipTitle={$LL.actionbar.help.emoji.title()}
-                                    tooltipDesc={$LL.actionbar.help.emoji.desc()}
-                                    disabledHelp={$emoteMenuSubStore}
-                                    state={$emoteMenuSubStore ? "active" : "normal"}
-                                    dataTestId={undefined}
-                                >
-                                    <IconMusic
-                                        height="24"
-                                        width="24"
-                                        class="{$emoteMenuSubStore
-                                        ? 'stroke-white fill-white'
-                                        : 'stroke-white fill-transparent'} group-hover/btn-music:fill-white !stroke-1"
-                                    />
-
-                                </ActionBarIconButton>
-                            </ActionBarButtonWrapper>
+                            {#if $audioManagerVisibilityStore !== "hidden"}
+                                <ActionBarButtonWrapper classList="group/btn-music">
+                                    <ActionBarIconButton
+                                        on:click={() => {
+                                            if (
+                                                $audioManagerVisibilityStore === "visible" &&
+                                                $audioManagerPlayerState !== "not_allowed" &&
+                                                $activeSecondaryZoneActionBarStore !== "audio-manager"
+                                            ) {
+                                                activeSecondaryZoneActionBarStore.set("audio-manager");
+                                            } else if (
+                                                $audioManagerVisibilityStore === "visible" &&
+                                                $audioManagerPlayerState === "not_allowed"
+                                            ) {
+                                                audioManagerRetryPlaySubject.next();
+                                            } else {
+                                                activeSecondaryZoneActionBarStore.set(undefined);
+                                            }
+                                        }}
+                                        tooltipTitle={$audioManagerPlayerState !== "not_allowed"
+                                            ? $LL.actionbar.help.audioManager.title()
+                                            : $LL.actionbar.help.audioManagerNotAllowed.title()}
+                                        tooltipDesc={$audioManagerPlayerState !== "not_allowed"
+                                            ? $LL.actionbar.help.audioManager.desc()
+                                            : $LL.actionbar.help.audioManagerNotAllowed.desc()}
+                                        state={$audioManagerVisibilityStore === "visible"
+                                            ? $audioManagerPlayerState !== "not_allowed"
+                                                ? $activeSecondaryZoneActionBarStore !== "audio-manager"
+                                                    ? "normal"
+                                                    : "active"
+                                                : "forbidden"
+                                            : $audioManagerVisibilityStore === "error"
+                                            ? "forbidden"
+                                            : $audioManagerVisibilityStore === "disabledBySettings"
+                                            ? "disabled"
+                                            : undefined}
+                                        dataTestId="music-button"
+                                    >
+                                        <IconMusic height="24" width="24" />
+                                    </ActionBarIconButton>
+                                    {#if $activeSecondaryZoneActionBarStore === "audio-manager"}
+                                        <AudioManager />
+                                    {/if}
+                                </ActionBarButtonWrapper>
+                            {/if}
 
                             <ActionBarButtonWrapper classList="group/btn-emoji">
                                 <ActionBarIconButton
@@ -475,18 +506,17 @@
                                     }}
                                     tooltipTitle={$LL.actionbar.help.emoji.title()}
                                     tooltipDesc={$LL.actionbar.help.emoji.desc()}
-                                    disabledHelp={$emoteMenuSubStore}
-                                    state={$emoteMenuSubStore ? "active" : "normal"}
+                                    state={$activeSecondaryZoneActionBarStore === "emote" ? "active" : "normal"}
                                     dataTestId={undefined}
                                 >
                                     <EmojiIcon
-                                        strokeColor={$emoteMenuSubStore
+                                        strokeColor={$activeSecondaryZoneActionBarStore === "emote"
                                             ? "stroke-white fill-white"
                                             : "stroke-white fill-transparent"}
                                         hover="group-hover/btn-emoji:fill-white"
                                     />
                                 </ActionBarIconButton>
-                                {#if $emoteMenuSubStore}
+                                {#if $activeSecondaryZoneActionBarStore === "emote"}
                                     <EmojiSubMenu />
                                 {/if}
                             </ActionBarButtonWrapper>

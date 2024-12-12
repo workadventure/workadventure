@@ -124,7 +124,7 @@
     function changeBlockAudio() {
         if (blockAudio) {
             audioManagerFileStore.unloadAudio();
-            audioManagerVisibilityStore.set(false);
+            audioManagerVisibilityStore.set("disabledBySettings");
         }
         localUserStore.setBlockAudio(blockAudio);
     }

@@ -73,6 +73,14 @@ const actionbar: BaseTranslation = {
             title: "Display an emoji",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
+        audioManager: {
+            title: "Ambient sounds volume",
+            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        },
+        audioManagerNotAllowed: {
+            title: "Ambient sounds blocked",
+            desc: "Your browser prevented ambient sounds from playing. Click the icon to start playing sounds.",
+        },
         follow: {
             title: "Ask to follow",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",

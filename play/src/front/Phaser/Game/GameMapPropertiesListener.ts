@@ -386,14 +386,24 @@ export class GameMapPropertiesListener {
 
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.PLAY_AUDIO, (newValue, oldValue, allProps) => {
             if (localUserStore.getBlockAudio()) {
+                if (newValue !== undefined) {
+                    audioManagerVisibilityStore.set("disabledBySettings");
+                } else {
+                    audioManagerVisibilityStore.set("hidden");
+                }
                 return;
             }
             const volume = allProps.get(GameMapProperties.AUDIO_VOLUME) as number | undefined;
             const loop = allProps.get(GameMapProperties.AUDIO_LOOP) as boolean | undefined;
-            newValue === undefined
-                ? audioManagerFileStore.unloadAudio()
-                : audioManagerFileStore.playAudio(newValue, this.scene.getMapUrl(), volume, loop);
-            audioManagerVisibilityStore.set(!(newValue === undefined));
+
+            if (newValue !== undefined) {
+                audioManagerFileStore.playAudio(newValue, this.scene.getMapUrl(), volume, loop);
+                // FIXME: maybe we can switch to "visible" only when the sound actually starts playing?
+                audioManagerVisibilityStore.set("visible");
+            } else {
+                audioManagerFileStore.unloadAudio();
+                audioManagerVisibilityStore.set("hidden");
+            }
         });
 
         // TODO: This legacy property should be removed at some point

@@ -112,27 +112,50 @@ class Menu {
     }
 
     async expectCameraOn(page: Page) {
-        await expect(page.getByTestId('camera-button')).not.toHaveClass(/bg-danger/);
+        await this.expectButtonState(page, 'camera-button', 'normal');
     }
 
     async expectCameraOff(page: Page) {
-        await expect(page.getByTestId('camera-button')).toHaveClass(/bg-danger/);
+        await this.expectButtonState(page, 'camera-button', 'forbidden');
     }
 
     async expectCameraDisabled(page: Page) {
-        await expect(page.getByTestId('camera-button')).toHaveClass(/opacity-50/);
+        await this.expectButtonState(page, 'camera-button', 'disabled');
     }
 
     async expectMicrophoneOn(page: Page) {
-        await expect(page.getByTestId('microphone-button')).not.toHaveClass(/bg-danger/);
+        await this.expectButtonState(page, 'microphone-button', 'normal');
     }
 
     async expectMicrophoneOff(page: Page) {
-        await expect(page.getByTestId('microphone-button')).toHaveClass(/bg-danger/);
+        await this.expectButtonState(page, 'microphone-button', 'forbidden');
     }
 
     async expectMicrophoneDisabled(page: Page) {
-        await expect(page.getByTestId('microphone-button')).toHaveClass(/opacity-50/);
+        await this.expectButtonState(page, 'microphone-button', 'disabled');
+    }
+
+    async expectButtonState(page: Page, buttonTestId: string, state: "normal" | "active" | "forbidden" | "disabled") {
+        const button = page.getByTestId(buttonTestId);
+        switch (state) {
+            case "normal":
+                await expect(button).not.toHaveClass(/bg-danger/);
+                await expect(button).not.toHaveClass(/opacity-50/);
+                await expect(button).not.toHaveClass(/bg-secondary/);
+                break;
+            case "active":
+                await expect(button).toHaveClass(/bg-secondary/);
+                break;
+            case "forbidden":
+                await expect(button).toHaveClass(/bg-danger/);
+                break;
+            case "disabled":
+                await expect(button).toHaveClass(/opacity-50/);
+                break;
+            default: {
+                const _exhaustiveCheck: never = state;
+            }
+        }
     }
 
     async expectStatus(page: Page, status: string) {

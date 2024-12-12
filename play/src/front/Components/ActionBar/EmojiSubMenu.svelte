@@ -7,7 +7,6 @@
         emoteDataStoreLoading,
         emoteMenuStore,
         emoteMenuSubCurrentEmojiSelectedStore,
-        emoteMenuSubStore,
         emoteStore,
     } from "../../Stores/EmoteStore";
     import { mapEditorModeStore } from "../../Stores/MapEditorStore";
@@ -18,6 +17,7 @@
     import XIcon from "../Icons/XIcon.svelte";
     import PenIcon from "../Icons/PenIcon.svelte";
     import { Emoji } from "../../Stores/Utils/emojiSchema";
+    import { activeSecondaryZoneActionBarStore } from "../../Stores/MenuStore";
 
     function clickEmoji(selected?: number) {
         //if open, in edit mode or playing mode
@@ -44,7 +44,7 @@
     }
 
     function focusElement(key: number) {
-        if (!$emoteMenuSubStore) {
+        if ($activeSecondaryZoneActionBarStore !== "emote") {
             return;
         }
         const name: string | undefined = $emoteDataStore.get(key)?.name;

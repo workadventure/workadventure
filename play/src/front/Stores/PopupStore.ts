@@ -1,4 +1,4 @@
-import { derived, writable } from "svelte/store";
+import { derived, get, writable } from "svelte/store";
 import { SvelteComponent } from "svelte";
 import { v4 } from "uuid";
 
@@ -17,7 +17,8 @@ type Props = Record<string, unknown>;
 type SvelteComponentType = typeof SvelteComponent;
 
 function createPopupStore() {
-    const { subscribe, update } = writable<Popup[]>([]);
+    const innerStore = writable<Popup[]>([]);
+    const { subscribe, update } = innerStore;
 
     return {
         subscribe,
@@ -54,6 +55,9 @@ function createPopupStore() {
 
                 return list;
             });
+        },
+        hasPopup: (uuid: string): boolean => {
+            return !!get(innerStore).find((item) => item.uuid === uuid);
         },
         clearActions: (): void => {
             update(() => {

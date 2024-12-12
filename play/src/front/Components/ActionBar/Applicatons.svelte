@@ -14,20 +14,20 @@
     import eraserSvg from "../images/applications/icon_eraser.svg";
     import excalidrawSvg from "../images/applications/icon_excalidraw.svg";
     import cardsPng from "../images/applications/icon_cards.svg";
-    import { emoteMenuSubStore } from "../../Stores/EmoteStore";
     import { helpSettingsPopupBlockedStore } from "../../Stores/HelpSettingsPopupBlockedStore";
     import { connectionManager } from "../../Connection/ConnectionManager";
     import { LL } from "../../../i18n/i18n-svelte";
     import Tooltip from "../Util/Tooltip.svelte";
+    import { activeSecondaryZoneActionBarStore } from "../../Stores/MenuStore";
 
-    let unsubscriptionEmoteMenuStore: Unsubscriber | null = null;
+    let unsubscriptionSecondaryZoneMenuStore: Unsubscriber | null = null;
 
     // Variable to store the app menu state opened or closed
     let appMenuOpened = false;
     function toggleAppMenu() {
         appMenuOpened = !appMenuOpened;
-        if (appMenuOpened && $emoteMenuSubStore) {
-            emoteMenuSubStore.closeEmoteMenu();
+        if (appMenuOpened && $activeSecondaryZoneActionBarStore) {
+            activeSecondaryZoneActionBarStore.set(undefined);
         }
     }
 
@@ -59,8 +59,8 @@
 
     onMount(() => {
         // Subscribe to the emote menu store and close the app menu if the emote menu is opened
-        unsubscriptionEmoteMenuStore = emoteMenuSubStore.subscribe((value) => {
-            if (value === true) {
+        unsubscriptionSecondaryZoneMenuStore = activeSecondaryZoneActionBarStore.subscribe((value) => {
+            if (value !== undefined) {
                 appMenuOpened = false;
             }
         });
@@ -68,7 +68,7 @@
 
     onDestroy(() => {
         // Unsubscribe to the emote menu store
-        if (unsubscriptionEmoteMenuStore) unsubscriptionEmoteMenuStore();
+        if (unsubscriptionSecondaryZoneMenuStore) unsubscriptionSecondaryZoneMenuStore();
     });
 </script>
 

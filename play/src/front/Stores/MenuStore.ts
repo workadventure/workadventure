@@ -17,7 +17,6 @@ import {
 } from "../Enum/EnvironmentVariable";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { userHasAccessToBackOfficeStore, userIsAdminStore } from "./GameStore";
-import { emoteMenuSubStore } from "./EmoteStore";
 import { megaphoneCanBeUsedStore } from "./MegaphoneStore";
 
 export const menuIconVisiblilityStore = writable(false);
@@ -352,9 +351,15 @@ additionnalButtonsMenu.subscribe((map) => {
     );
 });
 
-export const helpTextDisabledStore = derived(emoteMenuSubStore, ($emoteMenuSubStore) => {
-    return $emoteMenuSubStore;
-});
+// The store that decides what tools to display just below the menu (typically triggered when you click on an item in the action bar)
+export const activeSecondaryZoneActionBarStore = writable<"emote" | "audio-manager" | undefined>(undefined);
+
+export const helpTextDisabledStore = derived(
+    activeSecondaryZoneActionBarStore,
+    ($activeSecondaryZoneActionBarStore) => {
+        return $activeSecondaryZoneActionBarStore !== undefined;
+    }
+);
 
 export const mapEditorMenuVisibleStore = derived(
     [mapEditorActivated, mapManagerActivated],

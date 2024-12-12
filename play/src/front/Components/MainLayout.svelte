@@ -52,6 +52,7 @@
     import ClaimPersonalAreaDialogBox from "./MapEditor/ClaimPersonalAreaDialogBox.svelte";
     import MainModal from "./Modal/MainModal.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
+    import AudioPlayer from "./AudioManager/AudioPlayer.svelte";
     //let mainLayout: HTMLDivElement;
     let keyboardEventIsDisable = false;
     /*let isMobile = isMediaBreakpointUp("md");
@@ -119,15 +120,14 @@
         <div class="bg-black/60 w-full h-full fixed left-0 right-0" />
     {/if}
 
+    <AudioPlayer />
+
     <div class="flex flex-col min-h-screen sm:flex-col-reverse">
         <section id="main-layout-main" class="pb-0 flex-1 pointer-events-none h-full w-full">
             <div class="fixed z-[1000] bottom-0 left-0 right-0 m-auto w-max max-w-[80%]">
                 <div class="popups flex items-end relative w-full justify-center mb-4 h-[calc(100%-96px)]">
                     {#each $popupStore.slice().reverse() as popup, index (popup.uuid)}
-                        <div
-                            class="popupwrapper popupwrapper-{index} flex-1"
-                            in:fly={{ y: 150, duration: 550 }}
-                        >
+                        <div class="popupwrapper popupwrapper-{index} flex-1" in:fly={{ y: 150, duration: 550 }}>
                             <svelte:component
                                 this={popup.component}
                                 {...popup.props}
@@ -262,29 +262,29 @@
     @import "../style/breakpoints.scss";
 
     .popups {
-      z-index: 1000;
-      .popupwrapper {
-        &:not(:first-child) {
-          @apply absolute w-full h-full overflow-hidden rounded-lg transition-all duration-300;
+        z-index: 1000;
+        .popupwrapper {
+            &:not(:first-child) {
+                @apply absolute w-full h-full overflow-hidden rounded-lg transition-all duration-300;
+            }
+            &:first-child {
+                @apply relative;
+                z-index: 505;
+            }
+            &:nth-child(n + 5) {
+                /* Hide popups after 4 popups */
+                @apply hidden;
+            }
+            // For each popups but not first
+            @for $i from 1 through 4 {
+                &:nth-child(#{$i + 1}) {
+                    top: -$i * 16px;
+                    filter: blur($i + 0px);
+                    opacity: 1 - ($i * 0.1);
+                    transform: scale(1 - ($i * 0.05));
+                }
+            }
         }
-        &:first-child {
-          @apply relative;
-          z-index: 505;
-        }
-        &:nth-child(n + 5) {
-          /* Hide popups after 4 popups */
-          @apply hidden;
-        }
-        // For each popups but not first
-        @for $i from 1 through 4 {
-          &:nth-child(#{$i + 1}) {
-            top: -$i * 16px;
-            filter: blur($i + 0px);
-            opacity: 1 - ($i * 0.1);
-            transform: scale(1 - ($i * 0.05));
-          }
-        }
-      }
     }
 
     #main-layout {

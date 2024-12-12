@@ -1,25 +1,16 @@
 <script lang="ts">
+    import { fly } from "svelte/transition";
+    import { clickOutside } from "svelte-outside";
     import type { Unsubscriber } from "svelte/store";
     import { get } from "svelte/store";
     import { onDestroy, onMount } from "svelte";
-    import type { audioManagerVolume } from "../../Stores/AudioManagerStore";
-    import {
-        audioManagerFileStore,
-        audioManagerVisibilityStore,
-        audioManagerVolumeStore,
-    } from "../../Stores/AudioManagerStore";
-    import { LL } from "../../../i18n/i18n-svelte";
+    import { AudioManagerVolume, audioManagerVolumeStore } from "../../Stores/AudioManagerStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
-    import { actionsMenuStore } from "../../Stores/ActionsMenuStore";
-    import { warningMessageStore } from "../../Stores/ErrorStore";
 
-    let HTMLAudioPlayer: HTMLAudioElement;
     let audioPlayerVolumeIcon: HTMLElement;
     let audioPlayerVol: HTMLInputElement;
     let unsubscriberFileStore: Unsubscriber | null = null;
     let unsubscriberVolumeStore: Unsubscriber | null = null;
-
-    let state: "loading" | "playing" | "not_allowed" | "error" = "loading";
 
     let currentVolume: number = localUserStore.getAudioPlayerVolume();
 
@@ -28,19 +19,7 @@
         audioManagerVolumeStore.setVolume(volume);
         audioManagerVolumeStore.setMuted(localUserStore.getAudioPlayerMuted());
 
-        unsubscriberFileStore = audioManagerFileStore.subscribe((src: string) => {
-            if (src == "") {
-                if (HTMLAudioPlayer) HTMLAudioPlayer.pause();
-                return;
-            }
-            HTMLAudioPlayer.pause();
-            HTMLAudioPlayer.src = src;
-            HTMLAudioPlayer.loop = get(audioManagerVolumeStore).loop;
-            HTMLAudioPlayer.volume = get(audioManagerVolumeStore).volume;
-            HTMLAudioPlayer.muted = get(audioManagerVolumeStore).muted;
-            tryPlay();
-        });
-        unsubscriberVolumeStore = audioManagerVolumeStore.subscribe((audioManager: audioManagerVolume) => {
+        unsubscriberVolumeStore = audioManagerVolumeStore.subscribe((audioManager: AudioManagerVolume) => {
             const reduceVolume = audioManager.talking && audioManager.decreaseWhileTalking;
             if (reduceVolume && !audioManager.volumeReduced) {
                 audioManager.volume *= 0.5;
@@ -48,11 +27,9 @@
                 audioManager.volume *= 2.0;
             }
             audioManager.volumeReduced = reduceVolume;
-            HTMLAudioPlayer.volume = audioManager.volume;
-            HTMLAudioPlayer.muted = audioManager.muted;
-            HTMLAudioPlayer.loop = audioManager.loop;
             updateVolumeUI();
         });
+        console.log("MOUNTED");
     });
 
     onDestroy(() => {
@@ -62,32 +39,8 @@
         if (unsubscriberVolumeStore) {
             unsubscriberVolumeStore();
         }
+        console.log("UNMOUNTED");
     });
-
-    function tryPlay() {
-        HTMLAudioPlayer.onended = () => {
-            // Fixme: this is a hack to close menu when audio is ends without cut the sound
-            actionsMenuStore.clear();
-            // Audiovisilibily is set to false when audio is ended
-            audioManagerVisibilityStore.set(false);
-        };
-
-        HTMLAudioPlayer.play()
-            .then(() => {
-                state = "playing";
-            })
-            .catch((e) => {
-                if (e instanceof DOMException && e.name === "NotAllowedError") {
-                    // The browser does not allow audio to be played, possibly because the user has not interacted with the page yet.
-                    // Let's ask the user to interact with the page first.
-                    state = "not_allowed";
-                } else {
-                    state = "error";
-                    warningMessageStore.addWarningMessage($LL.audio.manager.error());
-                    console.error("The audio could not be played: ", e.name, e);
-                }
-            });
-    }
 
     function updateVolumeUI() {
         if (get(audioManagerVolumeStore).muted) {
@@ -95,7 +48,7 @@
             audioPlayerVol.value = "0";
             currentVolume = 0;
         } else {
-            let volume = HTMLAudioPlayer.volume;
+            let volume = get(audioManagerVolumeStore).volume;
             currentVolume = volume;
             audioPlayerVol.value = "" + volume;
             audioPlayerVolumeIcon.classList.remove("muted");
@@ -134,13 +87,18 @@
 </script>
 
 <div
-    class="main-audio-manager w-[500px] m-auto"
-    class:hidden={state !== "playing" && state !== "not_allowed"}
+    class="main-audio-manager flex justify-center m-auto absolute left-0 -right-2 top-[70px] w-96 z-[500]"
+    transition:fly={{ y: 20, duration: 150 }}
+    use:clickOutside={() => {
+        /*activeSecondaryZoneActionBarStore.set(undefined)*/
+    }}
 >
-    <div class:hidden={state !== "playing"} class="">
-        <div class="font-lg text-center text-white mb-4 opacity-50">
-            {$LL.audio.volumeCtrl()}
-        </div>
+    <div
+        class="bottom-action-bar bg-contrast/80 transition-all backdrop-blur-md rounded-md p-4 flex flex-col items-stretch pointer-events-auto justify-center m-auto bottom-6 md:bottom-4 z-[251] duration-300 md:flex-row"
+    >
+        <!--        <div class="font-lg text-center text-white mb-4 opacity-50">-->
+        <!--            {$LL.audio.volumeCtrl()}-->
+        <!--        </div>-->
         <div class="audio-manager-player-volume flex items-center justify-center">
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div
@@ -195,14 +153,6 @@
                 {Math.round(currentVolume * 100)}<span class="opacity-50">%</span>
             </div>
         </div>
-        <section class="audio-manager-file">
-            <audio class="audio-manager-audioplayer" bind:this={HTMLAudioPlayer} />
-        </section>
-    </div>
-    <div class:hidden={state !== "not_allowed"} class="text-center flex justify-center">
-        <button type="button" class="btn light justify-center font-bold text-xs sm:text-base w-fit" on:click={tryPlay}
-            >{$LL.audio.manager.allow()}</button
-        >
     </div>
 </div>
 

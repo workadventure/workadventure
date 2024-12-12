@@ -37,7 +37,7 @@ import { notificationPlayingStore } from "../../../Stores/NotificationStore";
 import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
 import { JitsiCoWebsite } from "../../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { SimpleCoWebsite } from "../../../WebRtc/CoWebsite/SimpleCoWebsite";
-import { coWebsiteManager} from "../../../Stores/CoWebsiteStore";
+import { coWebsiteManager } from "../../../Stores/CoWebsiteStore";
 import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../../WebRtc/LayoutManager";
 import { gameManager } from "../GameManager";
 import { OpenCoWebsite } from "../GameMapPropertiesListener";
@@ -55,7 +55,7 @@ import { Area } from "../../Entity/Area";
 import { extensionModuleStore } from "../../../Stores/GameSceneStore";
 import { ChatRoom } from "../../../Chat/Connection/ChatConnection";
 import { userIsConnected } from "../../../Stores/MenuStore";
-import {popupStore} from "../../../Stores/PopupStore";
+import { popupStore } from "../../../Stores/PopupStore";
 import PopupCowebsite from "../../../Components/PopUp/PopupCowebsite.svelte";
 import JitsiPopup from "../../../Components/PopUp/PopUpJitsi.svelte";
 import PopUpTab from "../../../Components/PopUp/PopUpTab.svelte"; // Replace 'path/to/PopUpTab' with the actual path to the PopUpTab class
@@ -352,7 +352,7 @@ export class AreasPropertiesListener {
     private handlePlayAudioPropertyOnEnter(property: PlayAudioPropertyData): void {
         // playAudioLoop is supposedly deprecated. Should we ignore it?
         audioManagerFileStore.playAudio(property.audioLink, this.scene.getMapUrl(), property.volume);
-        audioManagerVisibilityStore.set(true);
+        audioManagerVisibilityStore.set("visible");
     }
 
     private handleOpenWebsitePropertyOnEnter(property: OpenWebsitePropertyData): void {
@@ -431,7 +431,6 @@ export class AreasPropertiesListener {
             }
 
             this.coWebsitesActionTriggers.set(property.id, actionId);
-
 
             popupStore.addPopup(
                 PopupCowebsite,
@@ -571,7 +570,6 @@ export class AreasPropertiesListener {
             }
 
             analyticsClient.enteredJitsi(roomName, this.scene.roomUrl);
-
 
             popupStore.removePopup("jitsi");
             // TODO: this is the code to remove the new design popup before the "new design"
@@ -819,7 +817,7 @@ export class AreasPropertiesListener {
 
     private handlePlayAudioPropertyOnLeave(): void {
         audioManagerFileStore.unloadAudio();
-        audioManagerVisibilityStore.set(false);
+        audioManagerVisibilityStore.set("hidden");
     }
 
     private handlePlayAudioPropertyOnUpdate(newProperty: PlayAudioPropertyData): void {

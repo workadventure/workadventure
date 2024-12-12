@@ -73,6 +73,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Réagir avec un emoji",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
+        audioManager: {
+            title: "Volume des sons ambiants",
+            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        },
+        audioManagerNotAllowed: {
+            title: "Sons ambiants bloqués",
+            desc: "Votre navigateur a empêché les sons ambiants de jouer. Cliquez sur l'icône pour commencer à jouer des sons.",
+        },
         follow: {
             title: "Demander à vous suivre",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
