@@ -19,8 +19,6 @@
         }
         dispatch("click");
     }
-
-    $: console.log("state", state);
 </script>
 
 <button
@@ -43,6 +41,6 @@
 >
     <slot />
 </button>
-{#if helpActive && !helpTextDisabledStore && !disabledHelp}
+{#if helpActive && !$helpTextDisabledStore && !disabledHelp}
     <HelpTooltip title={tooltipTitle} desc={tooltipDesc} />
 {/if}

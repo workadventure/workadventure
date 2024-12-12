@@ -89,9 +89,17 @@ const actionbar: BaseTranslation = {
             title: "Enable/disable your microphone",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
+        micDisabledByStatus: {
+            title: "Microphone disabled",
+            desc: 'Your microphone is disabled because you are in "{status}" status.',
+        },
         cam: {
             title: "Enable/disable your camera",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        },
+        camDisabledByStatus: {
+            title: "Camera disabled",
+            desc: 'Your camera is disabled because you are in "{status}" status.',
         },
         share: {
             title: "Share your screen",

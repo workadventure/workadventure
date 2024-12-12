@@ -1,16 +1,20 @@
-import {
-    bubbleModalVisibility,
-    changeStatusConfirmationModalVisibility,
-} from "../../Stores/AvailabilityStatusModalsStore";
 import { requestedStatusStore } from "../../Stores/MediaStore";
 import { localUserStore } from "../../Connection/LocalUserStore";
+import { popupStore } from "../../Stores/PopupStore";
+import BubbleConfirmationModal from "../../Components/ActionBar/AvailabilityStatus/Modals/BubbleConfirmationModal.svelte";
+import ChangeStatusConfirmationModal from "../../Components/ActionBar/AvailabilityStatus/Modals/ChangeStatusConfirmationModal.svelte";
 import { RequestedStatus } from "./statusRules";
 
 export const askToChangeStatus = () => {
-    changeStatusConfirmationModalVisibility.open();
+    popupStore.addPopup(ChangeStatusConfirmationModal, {}, "changeStatusConfirmationModal");
 };
+
+export const closeChangeStatusConfirmationModal = () => {
+    popupStore.removePopup("changeStatusConfirmationModal");
+};
+
 export const hideBubbleConfirmationModal = () => {
-    bubbleModalVisibility.close();
+    closeBubbleConfirmationModal();
 };
 
 export const resetAllStatusStoreExcept = (status: RequestedStatus | null = null) => {
@@ -20,10 +24,20 @@ export const resetAllStatusStoreExcept = (status: RequestedStatus | null = null)
 
 export const passStatusToOnline = () => {
     resetAllStatusStoreExcept();
-    changeStatusConfirmationModalVisibility.close();
-    bubbleModalVisibility.close();
+    closeChangeStatusConfirmationModal();
+    closeBubbleConfirmationModal();
+};
+
+export const closeBubbleConfirmationModal = () => {
+    popupStore.removePopup("bubbleConfirmationModal");
 };
 
 export const askIfUserWantToJoinBubbleOf = (name: string) => {
-    bubbleModalVisibility.open(name);
+    popupStore.addPopup(
+        BubbleConfirmationModal,
+        {
+            name,
+        },
+        "bubbleConfirmationModal"
+    );
 };
