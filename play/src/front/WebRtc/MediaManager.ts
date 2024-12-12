@@ -148,7 +148,7 @@ export class MediaManager {
             };
             switch (notificationType) {
                 case NotificationType.discussion:
-                    new Notification(`${userName} ${get(LL).notification.discussion()}`, options);
+                    new Notification(`${get(LL).notification.discussion({ name: userName })}`, options);
                     break;
                 case NotificationType.message:
                     new Notification(
