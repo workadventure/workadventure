@@ -32,12 +32,7 @@
         <div class="mapexplorer flex flex-col overflow-auto">
             <div class="header-container">
                 <h3 class="text-l text-left">
-                    <img
-                        draggable="false"
-                        src={todoListPng}
-                        class="w-8 mx-2"
-                        alt={$LL.menu.icon.open.todoList()}
-                    />
+                    <img draggable="false" src={todoListPng} class="w-8 mx-2" alt={$LL.menu.icon.open.todoList()} />
                     To Do 📋 (beta)
                 </h3>
             </div>
@@ -60,10 +55,7 @@
                                 <IconArrowDown class="transform rotate-180" />
                             {/if}
                         </div>
-                        <div
-                            class="flex flex-col gap-4 p-2"
-                            class:hidden={!$totoListOpenedId.has(todoList.id)}
-                        >
+                        <div class="flex flex-col gap-4 p-2" class:hidden={!$totoListOpenedId.has(todoList.id)}>
                             {#each todoList.tasks.filter((task) => task.status === "notStarted") as item (item.id)}
                                 <TodoTask task={item} />
                             {/each}

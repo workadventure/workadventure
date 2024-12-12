@@ -69,14 +69,18 @@
                     </div>
                 </div>
                 {#if actionsMenuData.menuDescription}
-                <p class="text-sm opacity-50 text-white px-4">
-                    {actionsMenuData.menuDescription}
-                </p>
+                    <p class="text-sm opacity-50 text-white px-4">
+                        {actionsMenuData.menuDescription}
+                    </p>
                 {/if}
             </div>
         {/if}
         <div class="flex items-center bg-contrast" class:margin-close={!actionsMenuData.menuName}>
-            <button type="button" class="btn btn-ghost justify-center basis-1/2 m-2 w-full" on:click|preventDefault|stopPropagation={closeActionsMenu}>
+            <button
+                type="button"
+                class="btn btn-ghost justify-center basis-1/2 m-2 w-full"
+                on:click|preventDefault|stopPropagation={closeActionsMenu}
+            >
                 {$LL.actionbar.close()}
             </button>
             {#if sortedActions}

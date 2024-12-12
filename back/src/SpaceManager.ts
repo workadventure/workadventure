@@ -69,13 +69,6 @@ const spaceManager = {
                         socketManager.handlePrivateEvent(pusher, message.message.privateEvent);
                         break;
                     }
-                    case "publicEvent": {
-                        socketManager.handlePublicEvent(pusher, message.message.publicEvent);
-                        break;
-                    }
-                    case "privateEvent": {
-                        break;
-                    }
                     default: {
                         const _exhaustiveCheck: never = message.message;
                     }

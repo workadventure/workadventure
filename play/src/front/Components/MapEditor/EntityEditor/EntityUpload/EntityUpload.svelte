@@ -108,9 +108,7 @@
 </script>
 
 {#if customEntityToUpload}
-    <div
-        class="absolute top-0 left-0 w-full bg-dark-blue/95 backdrop-blur-md p-8 h-full overflow-auto"
-    >
+    <div class="absolute top-0 left-0 w-full bg-dark-blue/95 backdrop-blur-md p-8 h-full overflow-auto">
         <CustomEntityEditionForm
             isUploadForm
             customEntity={customEntityToUpload}
@@ -139,10 +137,7 @@
                 data-testid="uploadCustomAsset"
             />
 
-            <label
-                class="flex flex-row gap-2 min-w-full p-2 m-0 items-center justify-center"
-                for="upload"
-            >
+            <label class="flex flex-row gap-2 min-w-full p-2 m-0 items-center justify-center" for="upload">
                 <IconCloudUpload font-size={32} />
                 <span class="flex flex-col">
                     <span class="hover:cursor-pointer">

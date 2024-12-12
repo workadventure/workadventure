@@ -318,11 +318,7 @@
                             on:click={() => mapExplorationObjectSelectedStore.set(area)}
                             class="item p-4 rounded-2xl flex flex-row justify-around items-center cursor-pointer"
                         >
-                            <img
-                                class="w-10 h-auto mr-2 pointer-events-none"
-                                src={AreaToolImg}
-                                alt="link icon"
-                            />
+                            <img class="w-10 h-auto mr-2 pointer-events-none" src={AreaToolImg} alt="link icon" />
                             <span
                                 class="pointer-events-none w-32"
                                 class:italic={!area.getAreaData().name || area.getAreaData().name == ""}

@@ -98,10 +98,7 @@
             {#await donePromise}
                 {$LL.chat.verificationEmojiDialog.waitOtherDeviceConfirmation()}
             {:then}
-                <button
-                    data-testid="understoodButton"
-                    class="flex-1 justify-center bg-secondary "
-                    on:click={closeModal}
+                <button data-testid="understoodButton" class="flex-1 justify-center bg-secondary " on:click={closeModal}
                     >{$LL.chat.verificationEmojiDialog.understood()}
                 </button>
             {:catch}

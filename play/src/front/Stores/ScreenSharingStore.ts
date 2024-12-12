@@ -15,7 +15,6 @@ declare const navigator: any; // eslint-disable-line @typescript-eslint/no-expli
 function createRequestedScreenSharingState() {
     const { subscribe, set } = writable(false);
 
-
     return {
         subscribe,
         enableScreenSharing: () => set(true),
@@ -24,7 +23,6 @@ function createRequestedScreenSharingState() {
 }
 
 export const requestedScreenSharingState = createRequestedScreenSharingState();
-
 
 let currentStream: MediaStream | null = null;
 

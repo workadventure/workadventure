@@ -6,7 +6,7 @@ import { iframeListener } from "../Api/IframeListener";
 import { connectionManager } from "../Connection/ConnectionManager";
 import { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 import { SimpleCoWebsite } from "../WebRtc/CoWebsite/SimpleCoWebsite";
-import { coWebsiteManager} from "../Stores/CoWebsiteStore";
+import { coWebsiteManager } from "../Stores/CoWebsiteStore";
 import { scriptUtils } from "../Api/ScriptUtils";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { userIsConnected } from "../Stores/MenuStore";

@@ -47,10 +47,8 @@
     {/if}
     {#if !hidden}
         <div class="buttonContainer flex flex-row-reverse gap-2">
-            <button
-                class="light cursor-pointer px-3 mb-2 mr-0"
-                data-testid="closeVisitCard"
-                on:click={closeCard}>{$LL.menu.visitCard.close()}</button
+            <button class="light cursor-pointer px-3 mb-2 mr-0" data-testid="closeVisitCard" on:click={closeCard}
+                >{$LL.menu.visitCard.close()}</button
             >
             {#if selectPlayerChatID}
                 {#if !$roomCreationInProgress}
@@ -60,10 +58,7 @@
                         on:click={openChat}>{$LL.menu.visitCard.sendMessage()}</button
                     >
                 {:else}
-                    <button
-                        class="light cursor-pointer px-3 mb-2 mr-0"
-                        data-testid="sendMessagefromVisitCardButton"
-                    >
+                    <button class="light cursor-pointer px-3 mb-2 mr-0" data-testid="sendMessagefromVisitCardButton">
                         <IconLoader class="animate-spin" />
                     </button>
                 {/if}

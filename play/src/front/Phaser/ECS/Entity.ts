@@ -15,7 +15,7 @@ import { ActionsMenuAction, actionsMenuStore } from "../../Stores/ActionsMenuSto
 import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { createColorStore } from "../../Stores/OutlineColorStore";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
-import { coWebsiteManager} from "../../Stores/CoWebsiteStore";
+import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
 import { ActivatableInterface } from "../Game/ActivatableInterface";
 import { GameScene } from "../Game/GameScene";
 import { OutlineableInterface } from "../Game/OutlineableInterface";

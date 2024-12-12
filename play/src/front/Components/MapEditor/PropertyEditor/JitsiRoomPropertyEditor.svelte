@@ -116,8 +116,13 @@
             {/if}
             {#if triggerOptionActivated}
                 <div>
-                <label class="m-0" for="trigger">{$LL.mapEditor.properties.jitsiProperties.trigger()}</label>
-                <select id="trigger" class=" m-0 w-full" bind:value={property.trigger} on:change={onTriggerValueChange}>
+                    <label class="m-0" for="trigger">{$LL.mapEditor.properties.jitsiProperties.trigger()}</label>
+                    <select
+                        id="trigger"
+                        class=" m-0 w-full"
+                        bind:value={property.trigger}
+                        on:change={onTriggerValueChange}
+                    >
                         <option value={undefined}
                             >{$LL.mapEditor.properties.jitsiProperties.triggerShowImmediately()}</option
                         >

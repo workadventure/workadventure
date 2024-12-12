@@ -16,16 +16,16 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Chat wótcyniś / zacyniś",
         },
         follow: {
-            title: "Folgen"
+            title: "Folgen",
         },
         unfollow: {
-            title: "Entfolgen"
+            title: "Entfolgen",
         },
         lock: {
-            title: "Diskusiju blokěrowaś / naspjet aktiwěrowaś"
+            title: "Diskusiju blokěrowaś / naspjet aktiwěrowaś",
         },
         share: {
-            title: "Pśenosowanje wobrazowki aktiwěrowaś/deaktiwěrowaś"
+            title: "Pśenosowanje wobrazowki aktiwěrowaś/deaktiwěrowaś",
         },
         mic: {
             title: "Mikrofon aktiwěrowaś/deaktiwěrowaś",
@@ -35,8 +35,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         emoji: {
             title: "Emojije wótcyniś / zacyniś",
-        }
-    }
+        },
+    },
 };
 
 export default actionbar;

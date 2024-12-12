@@ -54,17 +54,12 @@
         on:focusin={focusChatInput}
         on:focusout={unfocusChatInput}
     />
-    <label
-        for="upload"
-        class="p-0 m-0 h-11 w-11 flex items-center justify-center hover:bg-white/10 rounded-none"
-    >
+    <label for="upload" class="p-0 m-0 h-11 w-11 flex items-center justify-center hover:bg-white/10 rounded-none">
         {#if files !== undefined}
             <IconLoader class="animate-spin" font-size={18} />
         {:else}
             <IconPaperclip
-                class="hover:!cursor-pointer {room instanceof ProximityChatRoom
-                    ? 'opacity-30 !cursor-none'
-                    : ''}"
+                class="hover:!cursor-pointer {room instanceof ProximityChatRoom ? 'opacity-30 !cursor-none' : ''}"
                 font-size={18}
             />
         {/if}

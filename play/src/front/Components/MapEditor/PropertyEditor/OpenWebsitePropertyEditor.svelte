@@ -619,18 +619,10 @@
 >
     <span slot="header" class="flex justify-center items-center">
         {#if property.application === "youtube"}
-            <img
-                class="w-6 mr-1"
-                src={youtubeSvg}
-                alt={$LL.mapEditor.properties.youtubeProperties.description()}
-            />
+            <img class="w-6 mr-1" src={youtubeSvg} alt={$LL.mapEditor.properties.youtubeProperties.description()} />
             {$LL.mapEditor.properties.youtubeProperties.label()}
         {:else if property.application === "klaxoon"}
-            <img
-                class="w-6 mr-1"
-                src={klaxoonSvg}
-                alt={$LL.mapEditor.properties.klaxoonProperties.description()}
-            />
+            <img class="w-6 mr-1" src={klaxoonSvg} alt={$LL.mapEditor.properties.klaxoonProperties.description()} />
             {$LL.mapEditor.properties.klaxoonProperties.label()}
         {:else if property.application === "googleDocs"}
             <img
@@ -690,12 +682,7 @@
         {#if isArea}
             <div>
                 <label class="m-0" for="trigger">{$LL.mapEditor.properties.linkProperties.trigger()}</label>
-                <select
-                    id="trigger"
-                    class="w-full m-0"
-                    bind:value={property.trigger}
-                    on:change={onTriggerValueChange}
-                >
+                <select id="trigger" class="w-full m-0" bind:value={property.trigger} on:change={onTriggerValueChange}>
                     <option value={undefined}>{$LL.mapEditor.properties.linkProperties.triggerShowImmediately()}</option
                     >
                     {#if !property.newTab}

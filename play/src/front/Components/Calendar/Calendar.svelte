@@ -45,12 +45,7 @@
         <div class="mapexplorer flex flex-col overflow-auto">
             <div class="header-container">
                 <h3 class="text-l text-left">
-                    <img
-                        draggable="false"
-                        src={calendarSvg}
-                        class="w-8 mx-2"
-                        alt={$LL.menu.icon.open.calendar()}
-                    />
+                    <img draggable="false" src={calendarSvg} class="w-8 mx-2" alt={$LL.menu.icon.open.calendar()} />
                     {new Date().toLocaleString("en-EN", {
                         month: "long",
                         day: "2-digit",

@@ -149,9 +149,7 @@
                 class="flex flex-col justify-center items-center content-center !h-full w-full gap-2"
             >
                 <Woka src={spaceUser.getWokaBase64} customHeight={`100px`} customWidth={`100px`} />
-                <span
-                    class="font-semibold text-sm not-italic break-words px-2 overflow-y-auto max-h-10"
-                >
+                <span class="font-semibold text-sm not-italic break-words px-2 overflow-y-auto max-h-10">
                     {peer.jitsiTrackWrapper.isLocal ? $LL.camera.my.nameTag() : spaceUser.name}
                 </span>
             </div>

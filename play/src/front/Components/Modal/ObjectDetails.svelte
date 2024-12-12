@@ -147,7 +147,11 @@
                     {$mapExplorationObjectSelectedStore?.getPrefab().name.toUpperCase()}
                 </h1>
             {/if}
-            <img src={$mapExplorationObjectSelectedStore?.getPrefab().imagePath} alt="Object" class="w-32 h-32 mb-4 object-contain" />
+            <img
+                src={$mapExplorationObjectSelectedStore?.getPrefab().imagePath}
+                alt="Object"
+                class="w-32 h-32 mb-4 object-contain"
+            />
             <p class="p-0 m-0">
                 {description ?? $LL.mapEditor.explorer.noDescriptionFound()}
             </p>
