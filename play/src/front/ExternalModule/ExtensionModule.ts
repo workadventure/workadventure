@@ -1,5 +1,5 @@
 import { AvailabilityStatus, ExternalModuleMessage, OauthRefreshToken } from "@workadventure/messages";
-import { Readable, Updater } from "svelte/store";
+import { Readable, Updater, Writable } from "svelte/store";
 import { CalendarEventInterface, TodoListInterface } from "@workadventure/shared-utils";
 import { ComponentType } from "svelte";
 import { AreaData, AreaDataProperties } from "@workadventure/map-editor";
@@ -26,11 +26,9 @@ export interface ExtensionModuleOptions {
     roomId: string;
     externalModuleMessage: Observable<ExternalModuleMessage>;
     externalSvelteComponent: Readable<ExternalSvelteComponentStore>;
+    externalRestrictedMapEditorProperties?: Writable<string[]>;
     onExtensionModuleStatusChange: (workAdventureNewStatus: AvailabilityStatus) => void;
-    openCoWebSite: (
-        openCoWebsiteObject: OpenCoWebsiteObject,
-        source: MessageEventSource | null
-    ) => { id: string };
+    openCoWebSite: (openCoWebsiteObject: OpenCoWebsiteObject, source: MessageEventSource | null) => { id: string };
     closeCoWebsite: (id: string) => unknown;
     adminUrl?: string;
     getOauthRefreshToken?: (tokenToRefresh: string) => Promise<OauthRefreshToken>;

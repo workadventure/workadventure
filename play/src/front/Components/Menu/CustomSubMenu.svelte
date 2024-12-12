@@ -5,6 +5,8 @@
     export let url: string;
     export let allowApi: boolean;
 
+    export let allow: string | undefined;
+
     let HTMLIframe: HTMLIFrameElement;
 
     onMount(() => {
@@ -20,7 +22,7 @@
     });
 </script>
 
-<iframe title="customSubMenu" src={url} bind:this={HTMLIframe} />
+<iframe title="customSubMenu" src={url} bind:this={HTMLIframe} {allow} />
 
 <style lang="scss">
     iframe {

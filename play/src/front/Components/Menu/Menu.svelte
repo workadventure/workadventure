@@ -27,7 +27,7 @@
 
     let activeSubMenu: MenuItem = $subMenusStore[$activeSubMenuStore];
     let activeComponent: typeof ProfileSubMenu | typeof CustomSubMenu = ProfileSubMenu;
-    let props: { url: string; allowApi: boolean };
+    let props: { url: string; allowApi: boolean; allow: string | undefined };
     let unsubscriberSubMenuStore: Unsubscriber;
     let unsubscriberActiveSubMenuStore: Unsubscriber;
 
@@ -100,7 +100,7 @@
             const customMenu = customMenuIframe.get(menu.key);
             if (customMenu !== undefined) {
                 activeSubMenu = menu;
-                props = { url: customMenu.url, allowApi: customMenu.allowApi };
+                props = { url: customMenu.url, allowApi: customMenu.allowApi, allow: customMenu.allow };
                 activeComponent = CustomSubMenu;
             } else {
                 sendMenuClickedEvent(menu.key);

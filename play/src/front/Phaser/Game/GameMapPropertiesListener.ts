@@ -408,10 +408,14 @@ export class GameMapPropertiesListener {
 
         // TODO: This legacy property should be removed at some point
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.PLAY_AUDIO_LOOP, (newValue) => {
-            newValue === undefined
-                ? audioManagerFileStore.unloadAudio()
-                : audioManagerFileStore.playAudio(newValue, this.scene.getMapUrl(), undefined, true);
-            audioManagerVisibilityStore.set(!(newValue === undefined));
+            if (newValue !== undefined) {
+                audioManagerFileStore.playAudio(newValue, this.scene.getMapUrl(), undefined, true);
+                // FIXME: maybe we can switch to "visible" only when the sound actually starts playing?
+                audioManagerVisibilityStore.set("visible");
+            } else {
+                audioManagerFileStore.unloadAudio();
+                audioManagerVisibilityStore.set("hidden");
+            }
         });
 
         // TODO: Legacy functionnality replace by layer change

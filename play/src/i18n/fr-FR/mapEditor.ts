@@ -62,6 +62,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "Annuler",
                 validate: "Valider",
             },
+            disabled: "L'intégration Jitsi est désactivée sur ce salon ❌",
         },
         audioProperties: {
             label: "Jouer un fichier audio",
@@ -105,12 +106,14 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "",
             nameLabel: "Nom de la zone de diffusion",
             namePlaceholder: "MaZoneDeDiffusion",
+            disabled: "La zone de diffusion est désactivée sur ce salon ❌",
         },
         listenerMegaphoneProperties: {
             label: "Zone participant",
             description: "",
             nameLabel: "Nom de la zone de diffusion",
             namePlaceholder: "MaZoneDeDiffusion",
+            disabled: "La zone participant est désactivée sur ce salon ❌",
         },
         chatEnabled: "Chat activé",
         startProperties: {

@@ -100,39 +100,37 @@
     <!-- on:mouseleave={closeChatUserMenu} -->
     {#if chatMenuActive}
         <div bind:this={popoversElement} class={`wa-dropdown-menu mr-1 absolute`}>
-            {#if user.roomName}
-                {#if isInTheSameMap}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <span
-                        class="walk-to wa-dropdown-item flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
-                        on:click|stopPropagation={() => {
-                            goTo("user", user.playUri ?? "", user.uuid ?? "");
-                            closeChatUserMenu();
-                        }}
-                        ><img class="noselect" src={walk} alt="Walk to logo" height="13" width="13" />
-                        {$LL.chat.userList.walkTo()}</span
-                    >
-                {:else}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <span
-                        class="teleport wa-dropdown-item flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
-                        on:click|stopPropagation={() => {
-                            goTo("room", user.playUri ?? "", user.uuid ?? "");
-                            closeChatUserMenu();
-                        }}
-                        ><img class="noselect" src={teleport} alt="Teleport to logo" height="13" width="13" />
-                        {$LL.chat.userList.teleport()}</span
-                    >
-                {/if}
+            {#if isInTheSameMap}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
-                {#if user.visitCardUrl}
-                    <span
-                        class="businessCard wa-dropdown-item flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
-                        on:click|stopPropagation={() => showBusinessCard(user.visitCardUrl)}
-                        ><img class="noselect" src={businessCard} alt="Business card" height="13" width="13" />
-                        {$LL.chat.userList.businessCard()}</span
-                    >
-                {/if}
+                <span
+                    class="walk-to wa-dropdown-item flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
+                    on:click|stopPropagation={() => {
+                        goTo("user", user.playUri ?? "", user.uuid ?? "");
+                        closeChatUserMenu();
+                    }}
+                    ><img class="noselect" src={walk} alt="Walk to logo" height="13" width="13" />
+                    {$LL.chat.userList.walkTo()}</span
+                >
+            {:else if user.playUri}
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <span
+                    class="teleport wa-dropdown-item flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
+                    on:click|stopPropagation={() => {
+                        goTo("room", user.playUri ?? "", user.uuid ?? "");
+                        closeChatUserMenu();
+                    }}
+                    ><img class="noselect" src={teleport} alt="Teleport to logo" height="13" width="13" />
+                    {$LL.chat.userList.teleport()}</span
+                >
+            {/if}
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            {#if user.visitCardUrl}
+                <span
+                    class="businessCard wa-dropdown-item flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
+                    on:click|stopPropagation={() => showBusinessCard(user.visitCardUrl)}
+                    ><img class="noselect" src={businessCard} alt="Business card" height="13" width="13" />
+                    {$LL.chat.userList.businessCard()}</span
+                >
             {/if}
 
             {#if user.chatId && user.chatId !== user.uuid && !$roomCreationInProgress}

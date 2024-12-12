@@ -268,14 +268,14 @@ export function checkSubMenuToShow() {
     }
 }
 
-export const customMenuIframe = new Map<string, { url: string; allowApi: boolean }>();
+export const customMenuIframe = new Map<string, { url: string; allowApi: boolean; allow?: string | undefined }>();
 
 export function handleMenuRegistrationEvent(
     menuName: string,
     iframeUrl: string | undefined = undefined,
     key: string,
     source: string | undefined = undefined,
-    options: { allowApi: boolean }
+    options: { allowApi: boolean; allow?: string | undefined }
 ) {
     if (get(subMenusStore).find((item) => item.type === "scripting" && item.label === menuName)) {
         console.warn("The menu " + menuName + " already exist.");
@@ -286,7 +286,7 @@ export function handleMenuRegistrationEvent(
 
     if (iframeUrl !== undefined) {
         const url = new URL(iframeUrl, source);
-        customMenuIframe.set(key, { url: url.toString(), allowApi: options.allowApi });
+        customMenuIframe.set(key, { url: url.toString(), allowApi: options.allowApi, allow: options.allow });
     }
 }
 
