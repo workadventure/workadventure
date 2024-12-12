@@ -133,8 +133,8 @@
                 <div class="popups flex items-end relative w-full justify-center mb-4 h-[calc(100%-96px)]">
                     {#each $popupStore.slice().reverse() as popup, index (popup.uuid)}
                         <div
-                            class="popupwrapper popupwrapper-{index} flex-1 transition-all"
-                            in:fly={{ y: 150, duration: 150 }}
+                            class="popupwrapper popupwrapper-{index} flex-1"
+                            in:fly={{ y: 150, duration: 550 }}
                         >
                             <svelte:component
                                 this={popup.component}
@@ -286,42 +286,29 @@
     @import "../style/breakpoints.scss";
 
     .popups {
-        z-index: 1000;
-    }
-
-    .popupwrapper {
+      z-index: 1000;
+      .popupwrapper {
         &:not(:first-child) {
-            @apply absolute w-full h-full overflow-hidden rounded-lg;
+          @apply absolute w-full h-full overflow-hidden rounded-lg transition-all duration-300;
         }
         &:first-child {
-            @apply relative;
-            z-index: 505;
+          @apply relative;
+          z-index: 505;
         }
         &:nth-child(n + 5) {
-            /* Hide popups after 4 popups */
-            @apply hidden;
+          /* Hide popups after 4 popups */
+          @apply hidden;
         }
         // For each popups but not first
         @for $i from 1 through 4 {
-            &:nth-child(#{$i + 1}) {
-                top: -$i * 16px;
-                filter: blur($i + 1px);
-                opacity: 1 - ($i * 0.1);
-                transform: scale(1 - ($i * 0.05));
-            }
+          &:nth-child(#{$i + 1}) {
+            top: -$i * 16px;
+            filter: blur($i + 0px);
+            opacity: 1 - ($i * 0.1);
+            transform: scale(1 - ($i * 0.05));
+          }
         }
-    }
-
-    .popupwrapper:nth-child(2) {
-        transform: scale(0.95);
-    }
-
-    .popupwrapper:nth-child(3) {
-        transform: scale(0.9);
-    }
-
-    .popupwrapper:nth-child(4) {
-        transform: scale(0.85);
+      }
     }
 
     #main-layout {

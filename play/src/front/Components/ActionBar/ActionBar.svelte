@@ -108,7 +108,7 @@
     import MediaSettingsList from "./MediaSettingsList.svelte";
     import SilentBlock from "./SilentBlock.svelte";
     import AvailabilityStatusList from "./AvailabilityStatus/AvailabilityStatusList.svelte";
-    import { IconArrowDown, IconCheckList, IconCalendar, IconLogout } from "@wa-icons";
+    import {IconArrowDown, IconCheckList, IconCalendar, IconLogout, IconMusic} from "@wa-icons";
 
     // gameManager.currenwStartedRoom?.miniLogo ?? WorkAdventureImg;
     let userName = gameManager.getPlayerName() || "";
@@ -418,6 +418,28 @@
                 {#if !$silentStore}
                     <div>
                         <div class="flex items-center">
+                            <ActionBarButtonWrapper classList="group/btn-music">
+                                <ActionBarIconButton
+                                    on:click={() => {
+                                        return;
+                                    }}
+                                    tooltipTitle={$LL.actionbar.help.emoji.title()}
+                                    tooltipDesc={$LL.actionbar.help.emoji.desc()}
+                                    disabledHelp={$emoteMenuSubStore}
+                                    state={$emoteMenuSubStore ? "active" : "normal"}
+                                    dataTestId={undefined}
+                                >
+                                    <IconMusic
+                                        height="24"
+                                        width="24"
+                                        class="{$emoteMenuSubStore
+                                        ? 'stroke-white fill-white'
+                                        : 'stroke-white fill-transparent'} group-hover/btn-music:fill-white !stroke-1"
+                                    />
+
+                                </ActionBarIconButton>
+                            </ActionBarButtonWrapper>
+
                             <ActionBarButtonWrapper classList="group/btn-emoji">
                                 <ActionBarIconButton
                                     on:click={() => {

@@ -55,3 +55,4 @@ export { default as IconVerify } from "~icons/tabler/rosetteDiscountCheck";
 export { default as IconInbox } from "~icons/tabler/mailbox";
 export { default as IconCalendar } from "~icons/tabler/calendar";
 export { default as IconTeams } from "~icons/tabler/brand-teams";
+export { default as IconMusic } from "~icons/tabler/music";

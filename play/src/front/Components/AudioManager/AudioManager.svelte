@@ -2,7 +2,6 @@
     import type { Unsubscriber } from "svelte/store";
     import { get } from "svelte/store";
     import { onDestroy, onMount } from "svelte";
-    import { fly } from "svelte/transition";
     import type { audioManagerVolume } from "../../Stores/AudioManagerStore";
     import {
         audioManagerFileStore,
@@ -135,8 +134,7 @@
 </script>
 
 <div
-    class="main-audio-manager absolute bottom-4 w-[500px] left-0 right-0 m-auto rounded-lg p-4 mb-7"
-    transition:fly={{ y: -200, duration: 500 }}
+    class="main-audio-manager w-[500px] m-auto"
     class:hidden={state !== "playing" && state !== "not_allowed"}
 >
     <div class:hidden={state !== "playing"} class="">
