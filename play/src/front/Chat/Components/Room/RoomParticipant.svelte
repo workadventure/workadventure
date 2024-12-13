@@ -134,7 +134,7 @@
     $: console.log("availableRoles : ", availableRoles);
 </script>
 
-<li class="tw-flex tw-my-1 tw-justify-between tw-items-center">
+<li class="tw-flex tw-my-1 tw-justify-between tw-items-center" data-testid={`${id}-participant`}>
     <p class="tw-m-0 tw-p-0">{$name}</p>
     <div class="tw-flex tw-gap-2 tw-content-center">
         {#if $hasPermissionToInvite && $membership === "leave"}
@@ -194,6 +194,7 @@
             class="tw-max-h-min tw-m-0 tw-ml-4 tw-px-2 tw-py-1 tw-bg-green-500 tw-rounded-3xl tw-min-w-[6rem] tw-text-center tw-content-center"
             class:tw-bg-orange-500={$membership === "invite"}
             class:tw-bg-red-500={$membership === "ban" || $membership === "leave"}
+            data-testid={`${id}-membership`}
         >
             <svelte:component this={getIconForMembership($membership)} />
             {getTranslatedMembership($membership)}
@@ -212,6 +213,7 @@
         {:else}
             <!-- TODO : design info membership -->
             <p
+                data-testid={`${id}-permissionLevel`}
                 class="tw-max-h-min tw-m-0 tw-ml-4 tw-px-2 tw-py-1 tw-bg-gray-500 tw-rounded-3xl tw-min-w-[6rem] tw-text-center tw-content-center"
             >
                 {getTranslatedPermissionLevel($permissionLevel)}
