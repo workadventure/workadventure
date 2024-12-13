@@ -662,16 +662,15 @@ export class MatrixChatRoom
             .getState(Direction.Backward)
             ?.getStateEvents(EventType.RoomPowerLevels);
 
-        if (!roomPowerLevelsState) {
+        if (!roomPowerLevelsState || roomPowerLevelsState.length === 0) {
             return;
         }
 
-        console.log("roomPowerLevelsState : ", roomPowerLevelsState[0]?.getContent());
-
+        const currentContent = roomPowerLevelsState[0].getContent();
         const newRoomPowerLevelsState = {
-            ...roomPowerLevelsState[0]?.getContent() ?? {},
+            ...currentContent,
             users: {
-                ...roomPowerLevelsState[0]?.getContent()?.users ?? {},
+                ...currentContent.users,
                 [member.id]: MatrixChatRoomMember.getPowerLevel(permissionLevel),
             },
         };

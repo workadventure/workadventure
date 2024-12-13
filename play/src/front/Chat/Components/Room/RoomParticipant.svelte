@@ -200,7 +200,7 @@
             <svelte:component this={getIconForMembership($membership)} />
             {getTranslatedMembership($membership)}
         </p>
-        {#if availableRoles.length > 0}
+        {#if availableRoles.length > 0 && $membership === "join"}
             <select
                 value={$permissionLevel}
                 on:change={onPermissionLevelChange}
