@@ -126,7 +126,7 @@
             bind:this={highlightScreen}
         >
             {#key $highlightedEmbedScreen.uniqueId}
-                <MediaBox isHightlighted={true} isClickable={true} streamable={$highlightedEmbedScreen} />
+                <MediaBox isHighlighted={true} isClickable={true} streamable={$highlightedEmbedScreen} />
             {/key}
         </div>
     {/if}

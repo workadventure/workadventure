@@ -18,7 +18,7 @@
     let backGroundColor = Color.getColorByString(peer.player.name);
     let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
     let statusStore = peer.statusStore;
-    let isHighlighted = true;
+    export let isHighlighted = true;
     let embedScreen: Streamable;
     let menuDrop = false;
     let videoContainer: HTMLDivElement;
@@ -42,7 +42,7 @@
         embedScreen = peer as unknown as Streamable;
     }
 
-    $: isHighlighted = $highlightedEmbedScreen === embedScreen;
+    //$: isHighlighted = $highlightedEmbedScreen === embedScreen;
 
     function toggleFullScreen() {
         highlightFullScreen.update((current) => !current);

@@ -6,6 +6,7 @@
     export let hover = "group-hover/btn-mic:fill-white";
     export let strokeWidth = "1.5";
     export let classList = "aspect-ratio transition-all";
+    export let ariaLabel: string | undefined = undefined;
 </script>
 
 <svg
@@ -15,6 +16,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     viewBox="0 0 24 24"
+    aria-label={ariaLabel}
 >
     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
     <path d="M3 3l18 18" />

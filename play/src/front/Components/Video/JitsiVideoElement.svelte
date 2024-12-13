@@ -4,7 +4,7 @@
 
     export let jitsiTrack: JitsiTrack;
     export let isLocal: boolean;
-    export let isHightlighted: boolean;
+    export let isHighlighted: boolean;
     export let isMobileFormat: boolean;
 
     let videoElement: HTMLVideoElement;
@@ -34,8 +34,8 @@
     class="h-full max-w-full rounded-sm"
     class:object-contain={isMobileFormat || aspectRatio < 1}
     class:scale-x-[-1]={isLocal && jitsiTrack.getVideoType() === "camera"}
-    class:max-h-[40vh]={!isHightlighted}
-    class:max-h-[80vh]={isHightlighted}
+    class:max-h-[40vh]={!isHighlighted}
+    class:max-h-[80vh]={isHighlighted}
     autoplay
     playsinline
 />

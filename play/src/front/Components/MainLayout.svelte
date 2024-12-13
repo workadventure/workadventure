@@ -21,7 +21,6 @@
     import { proximityMeetingStore } from "../Stores/MyMediaStore";
     import { notificationPlayingStore } from "../Stores/NotificationStore";
     import { popupStore } from "../Stores/PopupStore";
-    import { askDialogStore } from "../Stores/MeetingStore";
     import { mapEditorAskToClaimPersonalAreaStore, mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
     import { externalPopupSvelteComponent } from "../Stores/Utils/externalSvelteComponentStore";
@@ -45,7 +44,6 @@
     import Modal from "./Modal/Modal.svelte";
     import HelpPopUpBlocked from "./HelpSettings/HelpPopUpBlocked.svelte";
     import Notification from "./UI/Notification.svelte";
-    import MuteDialogBox from "./Video/AskedAction/MuteDialogBox.svelte";
     import ObjectDetails from "./Modal/ObjectDetails.svelte";
     import MapList from "./Exploration/MapList.svelte";
     import WarningToast from "./WarningContainer/WarningToast.svelte";
@@ -206,10 +204,6 @@
 
             {#if $uiWebsitesStore}
                 <UiWebsiteContainer />
-            {/if}
-
-            {#if $askDialogStore}
-                <MuteDialogBox />
             {/if}
 
             {#if $mapEditorAskToClaimPersonalAreaStore}

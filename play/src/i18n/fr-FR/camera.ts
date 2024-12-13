@@ -59,7 +59,7 @@ const camera: DeepPartial<Translation["camera"]> = {
         muteVideoUser: "Couper la vidéo",
         muteVideoEveryBody: "Couper la vidéo pour tout le monde",
         pin: "Épingler",
-        blockOrReportUser: "Bloquer ou signaler l'utilisateur",
+        blockOrReportUser: "Modération",
     },
 };
 

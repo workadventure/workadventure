@@ -16,7 +16,7 @@
     import JitsiMediaBox from "./JitsiMediaBox.svelte";
 
     export let streamable: Streamable;
-    export let isHightlighted = false;
+    export let isHighlighted = false;
     export let isClickable = false;
 
     let constraintStore: Readable<ObtainedMediaStreamConstraints | null>;
@@ -39,7 +39,7 @@
     });
 
     $: videoEnabled = $constraintStore ? $constraintStore.video : false;
-    $: isHightlighted = $highlightedEmbedScreen === streamable;
+    $: isHighlighted = $highlightedEmbedScreen === streamable;
 </script>
 
 <!-- svelte-ignore missing-declaration -->
@@ -48,16 +48,15 @@
 {#if streamable instanceof VideoPeer}
     {#if $constraintStore || $statusStore === "error" || $statusStore === "connecting"}
         <div
-            class="pointer-events-auto media-container transition-all justify-center relative h-full w-full"
-            class:hightlighted={isHightlighted}
-            class:mx-auto={isHightlighted && !videoEnabled}
-            class:m-auto={!isHightlighted && !videoEnabled}
-            class:aspect-video={!isHightlighted && !videoEnabled}
+            class="video-media-box pointer-events-auto media-container transition-all justify-center relative h-full w-full"
+            class:hightlighted={isHighlighted}
+            class:mx-auto={isHighlighted && !videoEnabled}
+            class:m-auto={!isHighlighted && !videoEnabled}
+            class:aspect-video={!isHighlighted && !videoEnabled}
             class:clickable={isClickable}
-            id="video-media-box"
             in:fly={{ y: 50, duration: 150 }}
         >
-            <VideoMediaBox peer={streamable} />
+            <VideoMediaBox peer={streamable} {isHighlighted} />
         </div>
     {/if}
 {:else if streamable instanceof ScreenSharingPeer}
@@ -66,36 +65,36 @@
             media-box-shape-color"
         class:clickable={isClickable}
     >
-        <ScreenSharingMediaBox peer={streamable} />
+        <ScreenSharingMediaBox peer={streamable} {isHighlighted} />
     </div>
 {:else if streamable instanceof JitsiTrackStreamWrapper}
     <div
         class="media-container media-box-shape-color pointer-events-auto screen-blocker pointer-event-auto"
-        class:hightlighted={isHightlighted}
-        class:mr-6={isHightlighted && streamable.getVideoTrack()}
-        class:flex={!isHightlighted}
-        class:media-box-camera-on-size={!isHightlighted && streamable.getVideoTrack()}
-        class:media-box-camera-off-size={!isHightlighted && !streamable.getVideoTrack()}
+        class:hightlighted={isHighlighted}
+        class:mr-6={isHighlighted && streamable.getVideoTrack()}
+        class:flex={!isHighlighted}
+        class:media-box-camera-on-size={!isHighlighted && streamable.getVideoTrack()}
+        class:media-box-camera-off-size={!isHighlighted && !streamable.getVideoTrack()}
         class:media-box-micropohone-off={!$mediaStreamConstraintsStore.audio}
-        class:max-w-sm={isHightlighted && !streamable.getVideoTrack()}
-        class:mx-auto={isHightlighted && !streamable.getVideoTrack()}
-        class:m-auto={!isHightlighted && !streamable.getVideoTrack()}
-        class:h-12={!isHightlighted && !streamable.getVideoTrack()}
+        class:max-w-sm={isHighlighted && !streamable.getVideoTrack()}
+        class:mx-auto={isHighlighted && !streamable.getVideoTrack()}
+        class:m-auto={!isHighlighted && !streamable.getVideoTrack()}
+        class:h-12={!isHighlighted && !streamable.getVideoTrack()}
         class:clickable={isClickable}
     >
         <div
             class="w-full flex screen-blocker"
-            class:mr-6={isHightlighted}
-            class:mx-auto={!isHightlighted}
-            class:h-[32vw]={isHightlighted && videoEnabled}
+            class:mr-6={isHighlighted}
+            class:mx-auto={!isHighlighted}
+            class:h-[32vw]={isHighlighted && videoEnabled}
         >
-            <JitsiMediaBox peer={streamable} clickable={isClickable} />
+            <JitsiMediaBox peer={streamable} clickable={isClickable} {isHighlighted} />
         </div>
     </div>
 {:else}
-    <div class="media-container {isHightlighted ? 'hightlighted' : 'flex h-full'}" class:clickable={isClickable}>
+    <div class="media-container {isHighlighted ? 'hightlighted' : 'flex h-full'}" class:clickable={isClickable}>
         <!-- Here for the resize o-->
-        <div class="{isHightlighted ? 'cam-share-receive' : 'mx-auto'} flex justify-center screen-blocker">
+        <div class="{isHighlighted ? 'cam-share-receive' : 'mx-auto'} flex justify-center screen-blocker">
             <LocalStreamMediaBox peer={streamable} cssClass="" />
         </div>
     </div>

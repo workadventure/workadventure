@@ -31,9 +31,7 @@ test.describe("Walk to", () => {
     // Login user "Bob"
     await login(userBob, "Bob", 3, "en-US", isMobileTest);
     //await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
-
-    await chatUtils.open(userBob, false);
-    await chatUtils.slideToUsers(userBob);
+    await chatUtils.openUserList(userBob, false);
     await chatUtils.UL_walkTo(userBob, "Alice");
 
     await chatUtils.open(page, false);

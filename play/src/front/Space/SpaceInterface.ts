@@ -13,6 +13,13 @@ export type PublicEventsObservables = {
 
 export type InnerPrivateSpaceEvent = NonNullable<PrivateSpaceEvent["event"]>;
 
+export type PrivateEvents = {
+    [K in InnerPrivateSpaceEvent["$case"]]: Extract<InnerPrivateSpaceEvent, { $case: K }> & {
+        spaceName: string;
+        sender: number;
+    };
+};
+
 export type PrivateEventsObservables = {
     [K in InnerPrivateSpaceEvent["$case"]]?: Subject<
         Extract<InnerPrivateSpaceEvent, { $case: K }> & { spaceName: string; sender: number }
@@ -34,4 +41,5 @@ export interface SpaceInterface {
     emitUpdateUser(spaceUser: SpaceUserUpdate): void;
     emitUpdateSpaceMetadata(metadata: Map<string, unknown>): void;
     watchSpaceMetadata(): Observable<UpdateSpaceMetadataMessage>;
+    readonly onLeaveSpace: Observable<void>;
 }

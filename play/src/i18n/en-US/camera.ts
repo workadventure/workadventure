@@ -57,7 +57,7 @@ const camera: BaseTranslation = {
         muteVideoUser: "Mute video",
         muteVideoEveryBody: "Mute video for everybody",
         pin: "Pin",
-        blockOrReportUser: "Block or report user",
+        blockOrReportUser: "Moderation",
     },
 };
 

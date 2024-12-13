@@ -12,7 +12,7 @@
     import { LL } from "../../../i18n/i18n-svelte";
 
     import Woka from "../Woka/WokaFromUserId.svelte";
-    import { mediaStreamConstraintsStore, selectDefaultSpeaker, speakerSelectedStore } from "../../Stores/MediaStore";
+    import { selectDefaultSpeaker, speakerSelectedStore } from "../../Stores/MediaStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import loaderImg from "../images/loader.svg";
     import MicOffIcon from "../Icons/MicOffIcon.svelte";
@@ -31,7 +31,7 @@
         requestVideoFrameCallback(callback: VideoFrameRequestCallback, options?: IdleRequestOptions): number;
     }
 
-    export let isHightlighted = false;
+    export let isHighlighted = false;
     export let peer: VideoPeer;
 
     let streamStore = peer.streamStore;
@@ -53,7 +53,6 @@
     let displayNoVideoWarning = false;
     let showUserSubMenu = false;
     let aspectRatio = 1;
-    let isHighlighted = false;
     let menuDrop = false;
     let unsubscribeHighlightEmbedScreen: Unsubscriber;
     let isMobile: boolean;
@@ -75,7 +74,6 @@
 
     $: isMobile, calcHeightVideo();
     $: videoEnabled = $constraintStore ? $constraintStore.video : false;
-    $: isHighlighted = $highlightedEmbedScreen === peer;
 
     function calcHeightVideo() {
         if (!cameraContainer) {
@@ -98,11 +96,12 @@
         }
     }
 
+    // FIXME: does not make any sense. Highlighted video comes from another component!!!
     unsubscribeHighlightEmbedScreen = highlightedEmbedScreen.subscribe((value) => {
         if (value) {
-            isHightlighted = true;
+            isHighlighted = true;
         } else {
-            isHightlighted = false;
+            isHighlighted = false;
         }
     });
 
@@ -195,7 +194,7 @@
             }
 
             wasVideoEnabled = constraints?.video ?? false;
-            if (!wasVideoEnabled && isHightlighted) highlightedEmbedScreen.removeHighlight();
+            if (!wasVideoEnabled && isHighlighted) highlightedEmbedScreen.removeHighlight();
             updateRatio();
         });
 
@@ -291,19 +290,19 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
-    class="group/screenshare flex justify-center mx-auto aspect-video {$highlightFullScreen
+    class="group/screenshare flex justify-center mx-auto aspect-video {isHighlighted
         ? 'h-[100%] w-[100%] fixed top-0 left-0'
         : 'h-full relative w-full'}"
-    class:test-class-deux={!$mediaStreamConstraintsStore.audio}
     on:click={() => analyticsClient.pinMeetingAction()}
     bind:this={cameraContainer}
-    data-testid={!$mediaStreamConstraintsStore.audio && "test-class"}
 >
+    <!-- FIXME: not sure when to round in blue the box -->
     <div
-        class="z-20 rounded-lg transition-all bg-no-repeat bg-center bg-contrast/80 backdrop-blur{$mediaStreamConstraintsStore.audio
-            ? 'border-8 border-solid border-color rounded-lg'
-            : ''}"
+        class="z-20 rounded-lg transition-all bg-no-repeat bg-center bg-contrast/80 backdrop-blur rounded-lg"
         style={videoEnabled ? "background-image: url(" + loaderImg + ")" : ""}
+        class:border-4={false}
+        class:border-solid={false}
+        class:border-color={false}
         class:aspect-video={videoEnabled}
         class:h-full={videoEnabled}
         class:h-11={!videoEnabled}
@@ -313,7 +312,7 @@
         class:flex-row={!videoEnabled}
         class:relative={!videoEnabled}
         class:justify-center={$statusStore === "connecting" || $statusStore === "error"}
-        class:object-contain={isHightlighted || aspectRatio < 1}
+        class:object-contain={isHighlighted || aspectRatio < 1}
     >
         {#if $statusStore === "connecting"}
             <div class="connecting-spinner" />
@@ -323,14 +322,14 @@
 
         {#if $statusStore === "connected"}
             <div class="z-[251] absolute right-0 bottom-0 sm:right-auto sm:bottom-auto aspect-ratio p-4">
-                {#if $mediaStreamConstraintsStore.audio}
+                {#if $constraintStore?.audio}
                     <SoundMeterWidget
                         volume={$volumeStore}
                         classcss="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
                         barColor="white"
                     />
                 {:else}
-                    <MicOffIcon />
+                    <MicOffIcon ariaLabel={$LL.video.user_is_muted({ name })} />
                 {/if}
             </div>
         {/if}
@@ -339,9 +338,7 @@
             class="absolute w-fit h-fit bottom-0 left-0 sm:left-4 sm:bottom-4 z-30 responsive-dimension bg-contrast/90 rounded"
         >
             <div
-                class="flex justify-between {$mediaStreamConstraintsStore.audio
-                    ? 'background-color bg-contrast/90 rounded'
-                    : ''} "
+                class="flex justify-between {$constraintStore?.audio ? 'background-color bg-contrast/90 rounded' : ''} "
             >
                 <div class="relative rounded backdrop-blur px-2 py-1 text-white text-sm pl-12 bold ">
                     <div class="absolute left-1 -top-1 z-30" style="image-rendering:pixelated">
@@ -359,10 +356,9 @@
                     {/if}
                 </div>
                 <div
-                    class="pt-1 h-5 w-5 flex items-center justify-center mr-1 rounded-sm hover:bg-white/20 right-0 top-0 bottom-0 m-auto transition-all pointer-events-auto {showUserSubMenu
+                    class="user-menu-btn pt-1 h-5 w-5 flex items-center justify-center mr-1 rounded-sm hover:bg-white/20 right-0 top-0 bottom-0 m-auto transition-all pointer-events-auto {showUserSubMenu
                         ? 'bg-white/20 hover:bg-white/30'
                         : ''}"
-                    id="user-menu-btn"
                     on:click={() => (showUserSubMenu = !showUserSubMenu)}
                 >
                     <ChevronDownIcon
@@ -374,7 +370,12 @@
                 </div>
 
                 {#if showUserSubMenu}
-                    <ActionMediaBox {embedScreen} trackStreamWrapper={peer} {videoEnabled} />
+                    <ActionMediaBox
+                        {embedScreen}
+                        trackStreamWrapper={peer}
+                        {videoEnabled}
+                        on:close={() => (showUserSubMenu = false)}
+                    />
                 {/if}
             </div>
         </div>
@@ -386,7 +387,7 @@
             class="h-full flex w-full justify-center aspect-video"
             class:h-0={!videoEnabled}
             class:w-0={!videoEnabled}
-            class:object-contain={isHightlighted || aspectRatio < 1}
+            class:object-contain={isHighlighted || aspectRatio < 1}
             class:rounded-lg={videoEnabled}
             autoplay
             playsinline

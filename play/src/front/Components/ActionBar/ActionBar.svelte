@@ -438,7 +438,7 @@
                         tooltipTitle={$LL.actionbar.help.users.title()}
                         tooltipDesc={$LL.actionbar.help.users.desc()}
                         state={"normal"}
-                        dataTestId={undefined}
+                        dataTestId="user-list-button"
                         disabledHelp={false}
                     >
                         <UsersIcon />

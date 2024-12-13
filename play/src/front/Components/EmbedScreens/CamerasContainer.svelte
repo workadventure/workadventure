@@ -80,9 +80,8 @@
             {#key uniqueId}
                 <div
                     class={isHightlighted
-                        ? " pointer-events-auto w-[230px] all-cameras-highlighted"
-                        : "w-full all-cameras m-auto"}
-                    id="camera-box"
+                        ? " pointer-events-auto w-[230px] all-cameras-highlighted camera-box"
+                        : "w-full all-cameras m-auto camera-box"}
                 >
                     <MediaBox streamable={peer} />
                 </div>

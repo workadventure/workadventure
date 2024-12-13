@@ -14,7 +14,6 @@ import { batchGetUserMediaStore } from "../Stores/MediaStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { nbSoundPlayedInBubbleStore } from "../Stores/ApparentMediaContraintStore";
 import { SpaceFilterInterface } from "../Space/SpaceFilter/SpaceFilter";
-import { askDialogStore } from "../Stores/MeetingStore";
 import { RemotePlayersRepository } from "../Phaser/Game/RemotePlayersRepository";
 import { mediaManager, NotificationType } from "./MediaManager";
 import { ScreenSharingPeer } from "./ScreenSharingPeer";
@@ -299,9 +298,6 @@ export class SimplePeer {
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
 
             this.closeScreenSharingConnection(userId);
-
-            // Close the ask dialog by user ID
-            askDialogStore.closeDialogByUserId(peer.userId);
         } catch (err) {
             console.error("An error occurred in closeConnection", err);
         }
@@ -314,11 +310,6 @@ export class SimplePeer {
         }
 
         peerStore.removePeer(userId);
-
-        // Close the ask dialog if no more users are in the discussion
-        if (peerStore.getSize() === 0) {
-            askDialogStore.closeAllDialog();
-        }
     }
 
     /**

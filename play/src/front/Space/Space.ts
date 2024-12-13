@@ -13,6 +13,8 @@ export class Space implements SpaceInterface {
     private readonly publicEventsObservables: PublicEventsObservables = {};
     private readonly privateEventsObservables: PrivateEventsObservables = {};
     private filterNumber = 0;
+    private _onLeaveSpace = new Subject<void>();
+    public readonly onLeaveSpace = this._onLeaveSpace.asObservable();
 
     /**
      * IMPORTANT: The only valid way to create a space is to use the SpaceRegistry.
@@ -189,6 +191,8 @@ export class Space implements SpaceInterface {
         for (const subscription of Object.values(this.privateEventsObservables)) {
             subscription.complete();
         }
+        this._onLeaveSpace.next();
+        this._onLeaveSpace.complete();
     }
 
     /**

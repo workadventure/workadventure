@@ -20,7 +20,7 @@
     import ActionMediaBox from "./ActionMediaBox.svelte";
 
     export let clickable = true;
-    export let isHightlighted = false;
+    export let isHighlighted = false;
     export let peer: JitsiTrackStreamWrapper;
 
     const videoTrackStore: Readable<JitsiTrack | undefined> = peer.videoTrackStore;
@@ -51,7 +51,7 @@
     onMount(() => {
         resizeObserver.observe(jitsiMediaBoxHtml);
         videoTrackUnSuscriber = videoTrackStore.subscribe((videoTrack) => {
-            if (videoTrack == undefined && isHightlighted) highlightedEmbedScreen.toggleHighlight(embedScreen);
+            if (videoTrack == undefined && isHighlighted) highlightedEmbedScreen.toggleHighlight(embedScreen);
         });
     });
 
@@ -73,10 +73,14 @@
             : null}
 >
     {#if $myJitsiCameraStore?.uniqueId != peer.uniqueId}
+        <!-- TODO: implement on:close -->
         <ActionMediaBox
             {embedScreen}
             trackStreamWrapper={peer}
             videoEnabled={$videoTrackStore ? $videoTrackStore?.isActive() : false}
+            on:close={() => {
+                /* TODO */
+            }}
         />
     {/if}
     {#if $videoTrackStore}
@@ -84,7 +88,7 @@
             <JitsiVideoElement
                 jitsiTrack={$videoTrackStore}
                 isLocal={$videoTrackStore?.isLocal()}
-                {isHightlighted}
+                {isHighlighted}
                 {isMobileFormat}
             />
         </div>
