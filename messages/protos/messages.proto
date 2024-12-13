@@ -92,7 +92,7 @@ message SetPlayerDetailsMessage {
   AvailabilityStatus availabilityStatus = 6;
   SetPlayerVariableMessage setVariable = 7;
   string chatID = 8;
-  
+
 }
 
 message UserMovesMessage {
@@ -211,8 +211,8 @@ message EditMapCommandWithKeyMessage {
 message ModifyAreaMessage {
   string id = 1;
   optional string name = 2;
-  optional uint32 x = 3;
-  optional uint32 y = 4;
+  optional int32 x = 3;
+  optional int32 y = 4;
   optional uint32 width = 5;
   optional uint32 height = 6;
   repeated google.protobuf.Value properties = 7;
@@ -226,8 +226,8 @@ message DeleteAreaMessage {
 
 message CreateAreaMessage {
   string id = 1;
-  uint32 x = 2;
-  uint32 y = 3;
+  int32 x = 2;
+  int32 y = 3;
   uint32 width = 4;
   uint32 height = 5;
   string name = 6;
@@ -236,8 +236,8 @@ message CreateAreaMessage {
 
 message CreateEntityMessage {
   string id = 1;
-  uint32 x = 2;
-  uint32 y = 3;
+  int32 x = 2;
+  int32 y = 3;
   string collectionName = 4;
   string prefabId = 5;
   repeated google.protobuf.Value properties = 6;
@@ -287,8 +287,8 @@ message DeleteCustomEntityMessage {
 
 message ModifyEntityMessage {
   string id = 1;
-  uint32 x = 2;
-  uint32 y = 3;
+  int32 x = 2;
+  int32 y = 3;
   repeated google.protobuf.Value properties = 4;
   optional bool modifyProperties = 5;
   optional string name = 6;
@@ -412,7 +412,8 @@ message QueryMessage {
     TurnCredentialsQuery turnCredentialsQuery = 9;
     ChatMembersQuery chatMembersQuery = 10;
     SearchTagsQuery searchTagsQuery = 11;
-    EnterChatRoomAreaQuery enterChatRoomAreaQuery = 12;
+    OauthRefreshTokenQuery oauthRefreshTokenQuery = 12;
+    EnterChatRoomAreaQuery enterChatRoomAreaQuery = 13;
   }
 }
 
@@ -459,6 +460,10 @@ message ChatMembersQuery {
   string searchText = 1;
 }
 
+message OauthRefreshTokenQuery {
+  string tokenToRefresh = 1;
+}
+
 message  SearchTagsQuery{
   string searchText = 1;
 }
@@ -482,7 +487,8 @@ message AnswerMessage {
     TurnCredentialsAnswer turnCredentialsAnswer = 11;
     ChatMembersAnswer chatMembersAnswer = 12;
     SearchTagsAnswer searchTagsAnswer = 13;
-    EnterChatRoomAreaAnswer enterChatRoomAreaAnswer = 14;
+    OauthRefreshTokenAnswer oauthRefreshTokenAnswer = 14;
+    EnterChatRoomAreaAnswer enterChatRoomAreaAnswer = 15;
   }
 }
 
@@ -538,8 +544,11 @@ message ChatMembersAnswer {
   repeated ChatMember members = 2;
 }
 
+message OauthRefreshTokenAnswer {
+  string message = 1;
+  string token = 2;
+}
 message EnterChatRoomAreaAnswer{
-
 }
 
 message Member {
@@ -564,7 +573,7 @@ message ChatMember {
 }
 
 message SearchTagsAnswer{
-  repeated string tags = 1; 
+  repeated string tags = 1;
 }
 
 /*********** SERVER TO CLIENT MESSAGES *************/
@@ -887,8 +896,9 @@ message ServerToClientMessage {
     AnswerMessage answerMessage = 28;
     MoveToPositionMessage moveToPositionMessage = 31;
     InvalidCompanionTextureMessage invalidCompanionTextureMessage = 32;
-    JoinSpaceRequestMessage joinSpaceRequestMessage = 39;
-    LeaveSpaceRequestMessage leaveSpaceRequestMessage = 40;
+    JoinSpaceRequestMessage joinSpaceRequestMessage = 33;
+    LeaveSpaceRequestMessage leaveSpaceRequestMessage = 34;
+    ExternalModuleMessage externalModuleMessage = 35;
   }
 }
 
@@ -928,7 +938,7 @@ message UserJoinedZoneMessage {
   bool hasOutline = 11;
   AvailabilityStatus availabilityStatus = 12;
   map<string, string> variables = 13;
-  optional string chatID=14;
+  optional string chatID = 14;
 }
 
 message UserLeftZoneMessage {
@@ -1130,6 +1140,12 @@ message DispatchGlobalEventRequest {
   google.protobuf.Value value = 2;
 }
 
+message ExternalModuleMessage {
+  string moduleId = 1;
+  optional string recipientUuid = 2;
+  optional string roomId = 3;
+  google.protobuf.Value message = 4;
+}
 
 /********************************************************************************
  * Start Chat Messages

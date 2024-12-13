@@ -44,8 +44,8 @@
                     (property) => property.name === "tilesetCopyright"
                 );
                 if (propertyTilesetCopyright !== undefined && typeof propertyTilesetCopyright.value === "string") {
-                    // Assignment needed to trigger Svelte's reactivity
-                    tilesetCopyright = [...tilesetCopyright, propertyTilesetCopyright.value];
+                    // Assignment needed to trigger Svelte's reactivity (remove duplicates)
+                    tilesetCopyright = Array.from(new Set([...tilesetCopyright, propertyTilesetCopyright.value]));
                 }
             }
         }
@@ -54,8 +54,8 @@
             if (layer.type && layer.type === "tilelayer" && layer.properties) {
                 const propertyAudioCopyright = layer.properties.find((property) => property.name === "audioCopyright");
                 if (propertyAudioCopyright !== undefined && typeof propertyAudioCopyright.value === "string") {
-                    // Assignment needed to trigger Svelte's reactivity
-                    audioCopyright = [...audioCopyright, propertyAudioCopyright.value];
+                    // Assignment needed to trigger Svelte's reactivity (remove duplicates)
+                    audioCopyright = Array.from(new Set([...audioCopyright, propertyAudioCopyright.value]));
                 }
             }
         }

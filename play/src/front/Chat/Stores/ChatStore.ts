@@ -2,18 +2,15 @@ import { get, writable } from "svelte/store";
 import { ChatMessage as NewChatMessage, ChatRoom } from "../Connection/ChatConnection";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
 import { matrixSecurity } from "../Connection/Matrix/MatrixSecurity";
-import { ENABLE_CHAT, ENABLE_CHAT_DISCONNECTED_LIST, ENABLE_CHAT_ONLINE_LIST } from "../../Enum/EnvironmentVariable";
+import { ENABLE_CHAT_DISCONNECTED_LIST, ENABLE_CHAT_ONLINE_LIST } from "../../Enum/EnvironmentVariable";
 
 function createNavChatStore() {
-    const defaultValue = ENABLE_CHAT ? "chat" : "users";
-    const { subscribe, set } = writable<"chat" | "users">(defaultValue);
+    const { subscribe, set } = writable<"chat" | "users">("chat");
 
     return {
         subscribe,
         switchToChat() {
-            if (ENABLE_CHAT) {
-                set("chat");
-            }
+            set("chat");
         },
         switchToUserList() {
             if (ENABLE_CHAT_ONLINE_LIST || ENABLE_CHAT_DISCONNECTED_LIST) {
@@ -30,15 +27,23 @@ export const shownRoomListStore = writable<string>("");
 export const chatSearchBarValue = writable<string>("");
 
 const createSelectedRoomStore = () => {
-    const { subscribe, set } = writable<ChatRoom | undefined>(undefined);
+    const { subscribe, update } = writable<ChatRoom | undefined>(undefined);
 
     const customSet = (value: ChatRoom | undefined) => {
-        set(value);
-        if (value && get(value.isEncrypted) && !get(alreadyAskForInitCryptoConfiguration)) {
-            matrixSecurity.openChooseDeviceVerificationMethodModal().catch((error) => {
-                console.error(error);
-            });
-        }
+        update((currentValue) => {
+            if (
+                currentValue !== value &&
+                value &&
+                get(value.isEncrypted) &&
+                !get(alreadyAskForInitCryptoConfiguration)
+            ) {
+                matrixSecurity.openChooseDeviceVerificationMethodModal().catch((error) => {
+                    console.error(error);
+                });
+            }
+
+            return value;
+        });
     };
 
     return {

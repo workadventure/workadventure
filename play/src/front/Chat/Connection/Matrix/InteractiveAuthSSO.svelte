@@ -54,7 +54,7 @@
     <div class="tw-text-red-500" role="alert">{errorText}</div>
 {/if}
 
-<button class="tw-flex-1 tw-justify-center" on:click={onCancel}>
+<button class="tw-flex-1 tw-justify-center" on:click={onCancel} data-testid="cancelSSO">
     {$LL.chat.e2ee.interactiveAuth.buttons.cancel()}
 </button>
 {#if phase === INTERACTIVE_AUTH_PHASE.PRE_AUTH}

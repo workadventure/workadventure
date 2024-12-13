@@ -4,8 +4,9 @@
     import { selectedChatMessageToReply } from "../../Stores/ChatStore";
     import { getChatEmojiPicker } from "../../EmojiPicker";
     import LL from "../../../../i18n/i18n-svelte";
-    import { ENABLE_CHAT_UPLOAD } from "../../../Enum/EnvironmentVariable";
     import { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
+    import { chatInputFocusStore } from "../../../Stores/ChatStore";
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import MessageInput from "./MessageInput.svelte";
     import { IconCircleX, IconMoodSmile, IconSend } from "@wa-icons";
@@ -141,12 +142,26 @@
         return (bytes / Math.pow(1024, i)).toFixed(2) + " " + sizes[i];
     }
 
+    function focusin(event: FocusEvent) {
+        event.stopImmediatePropagation();
+        event.preventDefault();
+        chatInputFocusStore.set(true);
+    }
+    function focusout(event: FocusEvent) {
+        event.stopImmediatePropagation();
+        event.preventDefault();
+        chatInputFocusStore.set(false);
+    }
+
     $: quotedMessageContent = $selectedChatMessageToReply?.content;
 </script>
 
 {#if $selectedChatMessageToReply !== null}
-    <div class="tw-flex tw-p-2 tw-items-center tw-gap-1">
-        <p class="tw-bg-brand-blue tw-rounded-md tw-p-2 tw-text-xs tw-m-0" style:overflow-wrap="anywhere">
+    <div class="tw-flex tw-py-2 tw-px-3 tw-items-center tw-gap-2 tw-relative tw-bg-contrast/50 tw-absolute">
+        <p
+            class="tw-bg-contrast-800 tw-rounded-md tw-p-2 tw-text-sm tw-m-0 tw-truncate tw-w-full "
+            style:overflow-wrap="anywhere"
+        >
             {$quotedMessageContent?.body}
         </p>
         <button class="tw-p-0 tw-m-0" on:click={unselectChatMessageToReply}>
@@ -181,36 +196,40 @@
     </div>
 {/if}
 <div
-    class="tw-flex tw-w-full tw-flex-none tw-items-center tw-py-1 tw-gap-1 tw-border tw-border-solid tw-rounded-xl tw-pr-1 tw-border-light-purple"
+    class="tw-flex tw-w-full tw-flex-none tw-items-center tw-border tw-border-solid tw-border-b-0 tw-border-x-0 tw-border-t-1 tw-border-white/10 tw-bg-contrast/50"
 >
     <MessageInput
         onKeyDown={sendMessageOrEscapeLine}
         onInput={onInputHandler}
         on:pasteFiles={onPasteFiles}
+        {focusin}
+        {focusout}
         bind:message
         bind:messageInput
-        inputClass="message-input tw-flex-grow !tw-m-0 tw-px-2 tw-max-h-36 tw-overflow-auto  tw-h-full tw-rounded-xl wa-searchbar tw-block tw-text-white placeholder:tw-text-sm  tw-border-light-purple tw-border !tw-bg-transparent tw-resize-none tw-border-none tw-outline-none tw-shadow-none focus:tw-ring-0"
+        inputClass="message-input tw-flex-grow !tw-m-0 tw-px-5 tw-py-2.5 tw-max-h-36 tw-overflow-auto  tw-h-full tw-rounded-xl wa-searchbar tw-block tw-text-white placeholder:tw-text-base tw-border-light-purple tw-border !tw-bg-transparent tw-resize-none tw-border-none tw-outline-none tw-shadow-none focus:tw-ring-0"
         dataText={$LL.chat.enter()}
         dataTestid="messageInput"
     />
-    <button
-        class="disabled:tw-opacity-30 disabled:!tw-cursor-none tw-p-0 tw-m-0"
-        bind:this={emojiButtonRef}
-        on:click={openCloseEmojiPicker}
-    >
-        <IconMoodSmile font-size={18} />
-    </button>
+    {#if message.trim().length === 0}
+        <button
+            class="disabled:tw-opacity-30 disabled:!tw-cursor-none tw-p-0 tw-m-0 tw-h-11 tw-w-11 tw-flex tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-none"
+            bind:this={emojiButtonRef}
+            on:click={openCloseEmojiPicker}
+        >
+            <IconMoodSmile font-size={18} />
+        </button>
 
-    {#if ENABLE_CHAT_UPLOAD}
-        <MessageFileInput {room} />
+        {#if gameManager.getCurrentGameScene().room.isChatUploadEnabled}
+            <MessageFileInput {room} />
+        {/if}
+    {:else}
+        <button
+            data-testid="sendMessageButton"
+            class="disabled:tw-opacity-30 disabled:!tw-cursor-none disabled:tw-text-white tw-py-0 tw-px-3 tw-m-0 tw-bg-secondary tw-h-full tw-rounded-none"
+            disabled={message.trim().length === 0 && files.length === 0}
+            on:click={() => sendMessage(message)}
+        >
+            <IconSend />
+        </button>
     {/if}
-
-    <button
-        data-testid="sendMessageButton"
-        class="disabled:tw-opacity-30 disabled:!tw-cursor-none disabled:tw-text-white tw-p-0 tw-m-0 tw-text-secondary"
-        disabled={message.trim().length === 0 && files.length === 0}
-        on:click={() => sendMessage(message)}
-    >
-        <IconSend font-size={20} />
-    </button>
 </div>

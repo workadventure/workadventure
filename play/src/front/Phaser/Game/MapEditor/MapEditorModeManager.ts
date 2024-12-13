@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/svelte";
 import { Command, PersonalAreaPropertyData, UpdateWAMSettingCommand } from "@workadventure/map-editor";
 import { get, Unsubscriber } from "svelte/store";
 import { EditMapCommandMessage } from "@workadventure/messages";
@@ -144,7 +145,8 @@ export class MapEditorModeManager {
                 this.scene.getGameMap().updateLastCommandIdProperty(command.commandId);
                 return;
             } catch (error) {
-                logger(error);
+                console.error(error);
+                Sentry.captureException(error);
                 return;
             }
         }));
@@ -159,7 +161,8 @@ export class MapEditorModeManager {
                 this.scene.getGameMap().updateLastCommandIdProperty(command.commandId);
                 return;
             } catch (error) {
-                logger(error);
+                console.error(error);
+                Sentry.captureException(error);
                 return;
             }
         }));
@@ -185,7 +188,8 @@ export class MapEditorModeManager {
         } catch (e) {
             this.localCommandsHistory.splice(this.currentCommandIndex, 1);
             this.currentCommandIndex -= 1;
-            logger(e);
+            console.error(e);
+            Sentry.captureException(e);
         }
     }
 
@@ -211,7 +215,8 @@ export class MapEditorModeManager {
         } catch (e) {
             this.localCommandsHistory.splice(this.currentCommandIndex, 1);
             this.currentCommandIndex -= 1;
-            logger(e);
+            console.error(e);
+            Sentry.captureException(e);
         }
     }
 

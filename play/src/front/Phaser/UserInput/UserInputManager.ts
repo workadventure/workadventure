@@ -245,7 +245,8 @@ export class UserInputManager {
                 // Prevents the input from being triggered when the focus is on an input field
                 if (
                     d.keyInstance.originalEvent.target instanceof HTMLInputElement ||
-                    d.keyInstance.originalEvent.target instanceof HTMLTextAreaElement
+                    d.keyInstance.originalEvent.target instanceof HTMLTextAreaElement ||
+                    d.keyInstance.originalEvent.target instanceof HTMLSelectElement
                 ) {
                     d.keyInstance.reset();
                     return;

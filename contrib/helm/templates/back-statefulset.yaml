@@ -34,9 +34,14 @@ spec:
         {{- include "workadventure.selectorLabels" . | nindent 8 }}
         role: back
     spec:
-      {{- with .Values.imagePullSecrets }}
+      {{- if or .Values.imageCredentials.enabled .Values.imagePullSecrets }}
       imagePullSecrets:
+        {{- if .Values.imageCredentials.enabled }}
+        - name: {{ include "workadventure.fullname" . }}-pull-secret
+        {{- end }}
+      {{- with .Values.imagePullSecrets }}
         {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- end }}
       serviceAccountName: {{ include "workadventure.serviceAccountName" . }}
       securityContext:

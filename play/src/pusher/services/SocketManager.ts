@@ -43,6 +43,9 @@ import {
     PublicEventFrontToPusher,
     PrivateEventFrontToPusher,
     UpdateSpaceUserMessage,
+    OauthRefreshTokenQuery,
+    OauthRefreshTokenAnswer,
+    SubMessage,
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import axios, { AxiosResponse, isAxiosError } from "axios";
@@ -344,6 +347,12 @@ export class SocketManager implements ZoneEventListener {
             if (!spaceStreamToBackPromise) {
                 throw new Error("Space stream to pusher not found");
             }
+
+            const space = this.spaces.get(spaceName);
+            if (space) {
+                space.localUpdateMetadata(metadata, false);
+            }
+
             await spaceStreamToBackPromise.then((spaceStreamToBack) => {
                 spaceStreamToBack.write({
                     message: {
@@ -438,7 +447,6 @@ export class SocketManager implements ZoneEventListener {
                                     break;
                                 }
                                 case "pingMessage": {
-                                    console.log("SocketManager => handleJoinSpace => pingMessage");
                                     if (spaceStreamToBack.pingTimeout) {
                                         clearTimeout(spaceStreamToBack.pingTimeout);
                                         spaceStreamToBack.pingTimeout = undefined;
@@ -553,6 +561,19 @@ export class SocketManager implements ZoneEventListener {
                 );
             }
             socketData.spaces.add(space.name);
+
+            // Notify the client of the space metadata
+            const subMessage: SubMessage = {
+                message: {
+                    $case: "updateSpaceMetadataMessage",
+                    updateSpaceMetadataMessage: {
+                        spaceName: space.name,
+                        metadata: JSON.stringify(Object.fromEntries(space.metadata.entries())),
+                        filterName: undefined,
+                    },
+                },
+            };
+            space.notifyMe(client, subMessage);
 
             // client.spacesFilters = [
             //     new SpaceFilterMessage()
@@ -1452,6 +1473,13 @@ export class SocketManager implements ZoneEventListener {
         const userData = client.getUserData();
         userData.chatID = chatId;
         return adminService.updateChatId(email, chatId, client.getUserData().roomId);
+    }
+
+    async handleOauthRefreshTokenQuery(
+        oauthRefreshTokenQuery: OauthRefreshTokenQuery
+    ): Promise<OauthRefreshTokenAnswer> {
+        const { token, message } = await adminService.refreshOauthToken(oauthRefreshTokenQuery.tokenToRefresh);
+        return { message, token };
     }
 
     // handle the public event for proximity message

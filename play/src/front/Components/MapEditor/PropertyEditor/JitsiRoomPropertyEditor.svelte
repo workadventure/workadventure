@@ -1,6 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
-    import { JitsiRoomConfigData, JitsiRoomPropertyData } from "@workadventure/map-editor";
+    import { JitsiRoomPropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
     import JitsiRoomConfigEditor from "./JitsiRoomConfigEditor.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
@@ -24,8 +24,7 @@
 
     let jitsiConfigModalOpened = false;
 
-    function onConfigChange(event: { detail: JitsiRoomConfigData }) {
-        property.jitsiRoomConfig = event.detail;
+    function onConfigChange() {
         dispatch("change");
     }
 </script>
@@ -153,6 +152,7 @@
                     bind:visibilityValue={jitsiConfigModalOpened}
                     on:change={onConfigChange}
                     bind:config={property.jitsiRoomConfig}
+                    bind:jitsiRoomAdminTag={property.jitsiRoomAdminTag}
                 />
             {/if}
         </div>

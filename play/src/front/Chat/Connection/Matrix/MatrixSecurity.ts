@@ -361,6 +361,8 @@ export class MatrixSecurity {
 
     public async openChooseDeviceVerificationMethodModal() {
         try {
+            this.isVerifyingDevice = true;
+
             const client = this.matrixClientStore;
 
             if (!client) return;
@@ -402,6 +404,8 @@ export class MatrixSecurity {
         } catch (error) {
             console.error(error);
             Sentry.captureMessage(`Failed to open modal to choose Verification modal method : ${error}`);
+        } finally {
+            this.isVerifyingDevice = false;
         }
     }
 }

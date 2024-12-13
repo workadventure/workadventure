@@ -42,7 +42,7 @@ test.describe("Walk to", () => {
       "Proximity Chat"
     );
 
-    await expect(page.locator(".message>p")).toContainText(
+    await expect(page.locator(".messageTextBody")).toContainText(
       "Bob joined the discussion"
     );
 

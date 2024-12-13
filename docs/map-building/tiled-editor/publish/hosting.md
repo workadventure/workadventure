@@ -9,7 +9,7 @@ There are several ways to host your map. The recommended way is to [host your ma
 You can also host your map on [GitHub Pages](./github-pages). Self-hosting is the most complex option and is only recommended if you have special privacy needs or if you want maximum freedom.
 :::
 
-The ["Host your Map with Github Pages" documentation](./github-pages.md) page proposes to use the "starter kit" that is relying on GitHub pages for hosting the map. This is a fairly good solution as GitHub pages offers a free and performant hosting.
+The ["Host your Map with GitHub Pages" documentation](./github-pages.md) page proposes to use the "starter kit" that is relying on GitHub pages for hosting the map. This is a fairly good solution as GitHub pages offers a free and performant hosting.
 
 But using GitHub pages is not necessary. You can host your maps on any web server.
 

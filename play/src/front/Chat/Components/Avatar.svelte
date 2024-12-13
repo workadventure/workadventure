@@ -28,13 +28,13 @@
     <img
         src={avatarUrl}
         alt={"User avatar"}
-        class="tw-rounded-full tw-h-6 tw-w-6 tw-object-contain tw-bg-white"
+        class="tw-rounded-sm tw-h-6 tw-w-6 tw-object-contain tw-bg-white"
         style:background-color={`${color ? color : `${getColorByString(fallbackName)}`}`}
     />
 {:else}
     <div
         class:chatAvatar={isChatAvatar}
-        class={`tw-rounded-full tw-bg-amber-600 tw-h-6 tw-w-6 tw-text-center tw-uppercase tw-text-white`}
+        class="tw-rounded tw-bg-amber-600 tw-h-7 tw-w-7 tw-text-center tw-uppercase tw-text-white tw-flex tw-items-center tw-justify-center tw-font-bold"
         style:background-color={`${color ? color : getColorByString(fallbackName)}`}
     >
         {fallbackName.charAt(0)}

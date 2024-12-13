@@ -12,7 +12,7 @@ import { OpenIdProfileController } from "./controllers/OpenIdProfileController";
 import { WokaListController } from "./controllers/WokaListController";
 import { SwaggerController } from "./controllers/SwaggerController";
 import { cors } from "./middlewares/Cors";
-import { ENABLE_OPENAPI_ENDPOINT } from "./enums/EnvironmentVariable";
+import { ENABLE_OPENAPI_ENDPOINT, PROMETHEUS_PORT } from "./enums/EnvironmentVariable";
 import { PingController } from "./controllers/PingController";
 import { CompanionListController } from "./controllers/CompanionListController";
 import { FrontController } from "./controllers/FrontController";
@@ -29,6 +29,7 @@ const LiveDirectory = require("live-directory");
 class App {
     private app: HyperExpress.compressors.TemplatedApp;
     private webserver: Server;
+    private prometheusWebserver: Server | undefined;
 
     constructor() {
         this.webserver = new HyperExpress.Server();
@@ -86,7 +87,12 @@ class App {
         // Http controllers
         new AuthenticateController(this.webserver);
         new MapController(this.webserver);
-        new PrometheusController(this.webserver);
+        if (PROMETHEUS_PORT) {
+            this.prometheusWebserver = new HyperExpress.Server();
+            new PrometheusController(this.prometheusWebserver);
+        } else {
+            new PrometheusController(this.webserver);
+        }
         new DebugController(this.webserver);
         new AdminController(this.webserver);
         new OpenIdProfileController(this.webserver);
@@ -116,6 +122,13 @@ class App {
 
     public listen(port: number, host?: string): Promise<HyperExpress.compressors.us_listen_socket | string> {
         return this.webserver.listen(port, host);
+    }
+
+    public listenPrometheusPort(): Promise<HyperExpress.compressors.us_listen_socket | string> | undefined {
+        if (PROMETHEUS_PORT && this.prometheusWebserver) {
+            return this.prometheusWebserver.listen(PROMETHEUS_PORT);
+        }
+        return;
     }
 }
 

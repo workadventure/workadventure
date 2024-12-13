@@ -31,7 +31,6 @@ export const FocusablePropertyData = PropertyBase.extend({
 export const JitsiRoomConfigData = z.object({
     startWithAudioMuted: z.boolean().optional(),
     startWithVideoMuted: z.boolean().optional(),
-    jitsiRoomAdminTag: z.string().optional().nullable(),
 });
 
 export const SilentPropertyData = PropertyBase.extend({
@@ -58,6 +57,7 @@ export const JitsiRoomPropertyData = PropertyBase.extend({
     triggerMessage: z.string().optional(),
     noPrefix: z.boolean().optional(),
     width: z.number().min(1).max(100).default(50).optional(),
+    jitsiRoomAdminTag: z.string().optional(),
     jitsiRoomConfig: JitsiRoomConfigData,
 });
 
@@ -90,6 +90,12 @@ export const OpenWebsitePropertyData = PropertyBase.extend({
     regexUrl: z.string().optional(),
     targetEmbedableUrl: z.string().optional(),
     forceNewTab: z.boolean().optional().default(false),
+});
+
+export const ExtensionModuleAreaProperty = PropertyBase.extend({
+    type: z.literal("extensionModule"),
+    subtype: z.string(),
+    data: z.unknown(),
 });
 
 export const SpeakerMegaphonePropertyData = PropertyBase.extend({
@@ -154,6 +160,7 @@ export const AreaDataProperty = z.discriminatedUnion("type", [
     AreaDescriptionPropertyData,
     RestrictedRightsPropertyData,
     PersonalAreaPropertyData,
+    ExtensionModuleAreaProperty,
     MatrixRoomPropertyData,
 ]);
 
@@ -365,6 +372,7 @@ export type RestrictedRightsPropertyData = z.infer<typeof RestrictedRightsProper
 export type PersonalAreaPropertyData = z.infer<typeof PersonalAreaPropertyData>;
 export type MatrixRoomPropertyData = z.infer<typeof MatrixRoomPropertyData>;
 export type PersonalAreaAccessClaimMode = z.infer<typeof PersonalAreaAccessClaimMode>;
+export type ExtensionModuleAreaPropertyData = z.infer<typeof ExtensionModuleAreaProperty>;
 
 export enum GameMapProperties {
     ALLOW_API = "allowApi",

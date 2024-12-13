@@ -1,4 +1,5 @@
 import axios from "axios";
+import Debug from "debug";
 
 import type { AreaData, AtLeast, EntityDimensions, WAMEntityData } from "@workadventure/map-editor";
 import {
@@ -65,6 +66,8 @@ import {
     PublicEventFrontToPusher,
     PrivateEventFrontToPusher,
     SpaceUser,
+    OauthRefreshToken,
+    ExternalModuleMessage,
     LeaveChatRoomAreaMessage,
     SpaceDestroyedMessage,
 } from "@workadventure/messages";
@@ -221,6 +224,8 @@ export class RoomConnection implements RoomConnection {
     public readonly joinSpaceRequestMessage = this._joinSpaceRequestMessage.asObservable();
     private readonly _leaveSpaceRequestMessage = new Subject<LeaveSpaceRequestMessage>();
     public readonly leaveSpaceRequestMessage = this._leaveSpaceRequestMessage.asObservable();
+    private readonly _externalModuleMessage = new Subject<ExternalModuleMessage>();
+    public readonly externalModuleMessage = this._externalModuleMessage.asObservable();
     private readonly _spaceDestroyedMessage = new Subject<SpaceDestroyedMessage>();
     public readonly spaceDestroyedMessage = this._spaceDestroyedMessage.asObservable();
 
@@ -286,7 +291,7 @@ export class RoomConnection implements RoomConnection {
         }
         url += "&version=" + apiVersionHash;
         url += "&chatID=" + (localUserStore.getChatId() ?? "");
-        url += "&roomName=" + gameManager.currentStartedRoom.roomName ?? "";
+        url += "&roomName=" + (gameManager.currentStartedRoom.roomName ?? "");
 
         if (RoomConnection.websocketFactory) {
             this.socket = RoomConnection.websocketFactory(url);
@@ -711,6 +716,10 @@ export class RoomConnection implements RoomConnection {
                     this._leaveSpaceRequestMessage.next(message.leaveSpaceRequestMessage);
                     break;
                 }
+                case "externalModuleMessage": {
+                    this._externalModuleMessage.next(message.externalModuleMessage);
+                    break;
+                }
                 default: {
                     // Security check: if we forget a "case", the line below will catch the error at compile-time.
                     //@ts-ignore
@@ -1077,6 +1086,19 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitMapEditorModifyArea(commandId: string, config: AtLeast<AreaData, "id">): void {
+        // We need to round the values because previous versions of WorkAdventure saved them as floats
+        if (config.x !== undefined) {
+            config.x = Math.round(config.x);
+        }
+        if (config.y !== undefined) {
+            config.y = Math.round(config.y);
+        }
+        if (config.width !== undefined) {
+            config.width = Math.round(config.width);
+        }
+        if (config.height !== undefined) {
+            config.height = Math.round(config.height);
+        }
         this.send({
             message: {
                 $case: "editMapCommandMessage",
@@ -1134,6 +1156,18 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitMapEditorCreateArea(commandId: string, config: AreaData): void {
+        if (config.x !== undefined) {
+            config.x = Math.round(config.x);
+        }
+        if (config.y !== undefined) {
+            config.y = Math.round(config.y);
+        }
+        if (config.width !== undefined) {
+            config.width = Math.round(config.width);
+        }
+        if (config.height !== undefined) {
+            config.height = Math.round(config.height);
+        }
         this.send({
             message: {
                 $case: "editMapCommandMessage",
@@ -1572,6 +1606,29 @@ export class RoomConnection implements RoomConnection {
         return answer.chatMembersAnswer;
     }
 
+    public async getOauthRefreshToken(tokenToRefresh: string): Promise<OauthRefreshToken> {
+        try {
+            const answer = await this.query({
+                $case: "oauthRefreshTokenQuery",
+                oauthRefreshTokenQuery: {
+                    tokenToRefresh,
+                },
+            });
+            if (answer.$case !== "oauthRefreshTokenAnswer") {
+                throw new Error("Unexpected answer");
+            }
+            return answer.oauthRefreshTokenAnswer;
+        } catch (error) {
+            // FIWME: delete me when the fresh token query and answer are stable
+            Debug(
+                `RoomConnection => getOauthRefreshToken => Error getting oauth refresh token: ${
+                    (error as Error).message
+                }`
+            );
+            throw error;
+        }
+    }
+
     public emitUpdateChatId(email: string, chatId: string) {
         if (chatId && email) {
             this.send({
@@ -1797,6 +1854,7 @@ export class RoomConnection implements RoomConnection {
         this._spacePublicMessageEvent.complete();
         this._joinSpaceRequestMessage.complete();
         this._leaveSpaceRequestMessage.complete();
+        this._externalModuleMessage.complete();
         this._spaceDestroyedMessage.complete();
     }
 

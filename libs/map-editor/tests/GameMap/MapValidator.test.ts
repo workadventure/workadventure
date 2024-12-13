@@ -225,7 +225,7 @@ describe("Map validator", () => {
             throw new Error("Not existing tilesets on errors");
         }
 
-        expect(errors.layers.length).toBe(5);
+        expect(errors.layers.length).toBe(6);
         expect(errors.tilesets.length).toBe(1);
 
         expect(errors.layers[0].message).toBe('Property "openWebsite" of layer "Website" is empty.');
@@ -245,9 +245,14 @@ describe("Map validator", () => {
         expect(errors.layers[3].type).toBe("warning");
 
         expect(errors.layers[4].message).toBe(
-            'The layer named "update" has a property named "playAudioLoop". That property is no longer supported. The property named that you need to use is : "audioLoop".'
+            'The layer named "update" has a property named "exitSceneUrl". That property is no longer supported. The property named that you need to use is : "exitUrl".'
         );
         expect(errors.layers[4].type).toBe("warning");
+
+        expect(errors.layers[5].message).toBe(
+            'The layer named "update" has a property named "playAudioLoop". That property is no longer supported. The property named that you need to use is : "audioLoop".'
+        );
+        expect(errors.layers[5].type).toBe("warning");
 
         expect(errors.tilesets[0].message).toBe(
             'The tileset named Dungeon has tiles that have property "collides" set to false. This property will have no effect in the room.'
@@ -363,5 +368,45 @@ describe("Map validator", () => {
         expect(mapValidator.doesStringLooksLikeMap(file.toString())).toBe(true);
 
         expect(mapValidator.doesStringLooksLikeMap("foobar")).toBe(false);
+    });
+
+    describe("validateWAMFile", () => {
+        it("should successfully validate a valid WAM file", () => {
+            // eslint-disable-next-line @typescript-eslint/require-await
+            const validator = new MapValidator("error", { fileExists: async () => true });
+            const validWAM = {
+                version: "2.0.0",
+                mapUrl: "https://example.com/map.tmj",
+                entities: {},
+                areas: [],
+                entityCollections: [],
+            };
+
+            const result = validator.validateWAMFile(JSON.stringify(validWAM));
+
+            expect(result.ok).toBe(true);
+
+            if (result.ok) {
+                expect(result.value).toEqual(validWAM);
+            }
+        });
+
+        it("should fail validation for invalid WAM file structure", () => {
+            // eslint-disable-next-line @typescript-eslint/require-await
+            const validator = new MapValidator("error", { fileExists: async () => true });
+            const invalidWAM = {
+                version: "2.0.0",
+                mapUrl: "https://example.com/map.tmj",
+                entities: {},
+                entityCollections: [],
+            };
+
+            const result = validator.validateWAMFile(JSON.stringify(invalidWAM));
+
+            expect(result.ok).toBe(false);
+            if (!result.ok) {
+                expect(result.error).toBeDefined();
+            }
+        });
     });
 });

@@ -16,6 +16,9 @@
     import messageSvg from "../../images/applications/icon_message.svg";
     import LL from "../../../../i18n/i18n-svelte";
     import { connectionManager } from "../../../Connection/ConnectionManager";
+    import { extensionModuleStore } from "../../../Stores/GameSceneStore";
+    import { ExtensionModule, ExtensionModuleAreaProperty } from "../../../ExternalModule/ExtensionModule";
+    import { mapEditorRestrictedPropertiesStore } from "../../../Stores/MapEditorStore";
     import AddPropertyButton from "./AddPropertyButton.svelte";
 
     export let property: AreaDataPropertiesKeys | EntityDataPropertiesKeys;
@@ -23,6 +26,17 @@
     export let isActive = false;
 
     const dispatch = createEventDispatcher();
+
+    let modulesExtensionMapEditor = $extensionModuleStore.reduce(
+        (acc: { [key: string]: ExtensionModuleAreaProperty }[], module: ExtensionModule) => {
+            const areaProperty = module.areaMapEditor?.();
+            if (areaProperty != undefined) {
+                acc.push(areaProperty);
+            }
+            return acc;
+        },
+        []
+    );
 </script>
 
 {#if property === "personalAreaPropertyData"}
@@ -72,37 +86,76 @@
     />
 {/if}
 {#if property === "jitsiRoomProperty"}
-    <AddPropertyButton
-        headerText={$LL.mapEditor.properties.jitsiProperties.label()}
-        descriptionText={$LL.mapEditor.properties.jitsiProperties.description()}
-        img={"resources/icons/icon_meeting.png"}
-        style={`z-index: 260;${isActive ? "background-color: #4156f6;" : ""}`}
-        on:click={(event) => {
-            dispatch("click", event);
-        }}
-    />
+    {#if $mapEditorRestrictedPropertiesStore.includes("jitsiRoomProperty")}
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.jitsiProperties.label()}
+            descriptionText={$LL.mapEditor.properties.jitsiProperties.disabled()}
+            img={"resources/icons/icon_meeting.png"}
+            style={`z-index: 260;${isActive ? "background-color: #4156f6;cursor:not-allowed;" : ""}`}
+            on:click={(event) => {
+                dispatch("click", event);
+            }}
+            disabled={true}
+        />
+    {:else}
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.jitsiProperties.label()}
+            descriptionText={$LL.mapEditor.properties.jitsiProperties.description()}
+            img={"resources/icons/icon_meeting.png"}
+            style={`z-index: 260;${isActive ? "background-color: #4156f6;" : ""}`}
+            on:click={(event) => {
+                dispatch("click", event);
+            }}
+        />
+    {/if}
 {/if}
 {#if property === "speakerMegaphone"}
-    <AddPropertyButton
-        headerText={$LL.mapEditor.properties.speakerMegaphoneProperties.label()}
-        descriptionText={$LL.mapEditor.properties.speakerMegaphoneProperties.description()}
-        img={"resources/icons/icon_speaker.png"}
-        style={`z-index: 250;${isActive ? "background-color: #4156f6;" : ""}`}
-        on:click={(event) => {
-            dispatch("click", event);
-        }}
-    />
+    {#if $mapEditorRestrictedPropertiesStore.includes("speakerMegaphone")}
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.speakerMegaphoneProperties.label()}
+            descriptionText={$LL.mapEditor.properties.speakerMegaphoneProperties.disabled()}
+            img={"resources/icons/icon_speaker.png"}
+            style={`z-index: 260;${isActive ? "background-color: #4156f6;cursor:not-allowed;" : ""}`}
+            on:click={(event) => {
+                dispatch("click", event);
+            }}
+            disabled={true}
+        />
+    {:else}
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.speakerMegaphoneProperties.label()}
+            descriptionText={$LL.mapEditor.properties.speakerMegaphoneProperties.description()}
+            img={"resources/icons/icon_speaker.png"}
+            style={`z-index: 250;${isActive ? "background-color: #4156f6;" : ""}`}
+            on:click={(event) => {
+                dispatch("click", event);
+            }}
+        />
+    {/if}
 {/if}
 {#if property === "listenerMegaphone"}
-    <AddPropertyButton
-        headerText={$LL.mapEditor.properties.listenerMegaphoneProperties.label()}
-        descriptionText={$LL.mapEditor.properties.listenerMegaphoneProperties.description()}
-        img={"resources/icons/icon_listener.png"}
-        style={`z-index: 240;${isActive ? "background-color: #4156f6;" : ""}`}
-        on:click={(event) => {
-            dispatch("click", event);
-        }}
-    />
+    {#if $mapEditorRestrictedPropertiesStore.includes("speakerMegaphone")}
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.listenerMegaphoneProperties.label()}
+            descriptionText={$LL.mapEditor.properties.listenerMegaphoneProperties.disabled()}
+            img={"resources/icons/icon_listener.png"}
+            style={`z-index: 260;${isActive ? "background-color: #4156f6;cursor:not-allowed;" : ""}`}
+            on:click={(event) => {
+                dispatch("click", event);
+            }}
+            disabled={true}
+        />
+    {:else}
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.listenerMegaphoneProperties.label()}
+            descriptionText={$LL.mapEditor.properties.listenerMegaphoneProperties.description()}
+            img={"resources/icons/icon_listener.png"}
+            style={`z-index: 240;${isActive ? "background-color: #4156f6;" : ""}`}
+            on:click={(event) => {
+                dispatch("click", event);
+            }}
+        />
+    {/if}
 {/if}
 {#if property === "start"}
     <AddPropertyButton
@@ -275,6 +328,17 @@
             dispatch("click", event);
         }}
     />
+{/if}
+
+{#if property === "extensionModule" && modulesExtensionMapEditor.length > 0 && subProperty !== undefined}
+    {#each modulesExtensionMapEditor as moduleExtension, index (`modulesExtensionMapEditor-${index}`)}
+        <svelte:component
+            this={moduleExtension[subProperty].AddAreaPropertyButton}
+            on:click={(event) => {
+                dispatch("click", event);
+            }}
+        />
+    {/each}
 {/if}
 
 {#if property === "matrixRoomPropertyData"}

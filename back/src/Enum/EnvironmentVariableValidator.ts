@@ -31,7 +31,12 @@ export const EnvironmentVariables = z.object({
     REDIS_PORT: PositiveIntAsString.optional().transform((val) => toNumber(val, 6379)),
     REDIS_PASSWORD: z.string().optional().transform(emptyStringToUndefined),
     STORE_VARIABLES_FOR_LOCAL_MAPS: BoolAsString.optional().transform((val) => toBool(val, false)),
-    PROMETHEUS_AUTHORIZATION_TOKEN: z.string().optional().transform(emptyStringToUndefined),
+    PROMETHEUS_AUTHORIZATION_TOKEN: z.string().optional().describe("The token to access the Prometheus metrics."),
+    PROMETHEUS_PORT: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 0))
+        .describe(
+            "The port to access the Prometheus metrics. If not set, the default port is used AND an authorization token is required."
+        ),
     MAP_STORAGE_URL: z
         .string()
         .optional()

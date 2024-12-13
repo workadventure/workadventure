@@ -7,7 +7,7 @@ title: Using Typescript
 
 :::info
 The easiest way to get started with writing scripts in Typescript is to use the
-[Github map starter kit repository](https://github.com/workadventure/map-starter-kit). It comes with
+[GitHub map starter kit repository](https://github.com/workadventure/map-starter-kit). It comes with
 Typescript enabled. If you are **not** using the "map starter kit", this page explains how to add Typescript to your
 own scripts.
 :::

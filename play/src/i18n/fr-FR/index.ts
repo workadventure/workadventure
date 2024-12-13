@@ -13,7 +13,6 @@ import report from "./report";
 import warning from "./warning";
 import woka from "./woka";
 import trigger from "./trigger";
-import muc from "./muc";
 import notification from "./notification";
 import cowebsite from "./cowebsite";
 import actionbar from "./actionbar";
@@ -22,6 +21,7 @@ import megaphone from "./megaphone";
 import video from "./video";
 import statusModal from "./statusModal";
 import area from "./area";
+import externalModule from "./externalModule";
 
 const fr_FR = merge(en_US, {
     area,
@@ -38,7 +38,6 @@ const fr_FR = merge(en_US, {
     warning,
     emoji,
     trigger,
-    muc,
     notification,
     cowebsite,
     actionbar,
@@ -46,6 +45,7 @@ const fr_FR = merge(en_US, {
     megaphone,
     video,
     statusModal,
+    externalModule,
 });
 
 export default fr_FR;

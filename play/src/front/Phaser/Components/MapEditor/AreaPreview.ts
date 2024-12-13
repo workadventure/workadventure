@@ -267,10 +267,10 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                 counter++;
             }
         }
-        this.x = this.areaData.x + this.areaData.width * 0.5;
-        this.y = this.areaData.y + this.areaData.height * 0.5;
-        this.displayWidth = this.areaData.width;
-        this.displayHeight = this.areaData.height;
+        this.x = Math.floor(this.areaData.x + this.areaData.width * 0.5);
+        this.y = Math.floor(this.areaData.y + this.areaData.height * 0.5);
+        this.displayWidth = Math.floor(this.areaData.width);
+        this.displayHeight = Math.floor(this.areaData.height);
         this.updateSquaresPositions();
     }
 
@@ -309,11 +309,11 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                 if (this.shiftKey?.isDown) {
                     const topLeftX = Math.floor((dragX - this.displayWidth * 0.5) / 32) * 32;
                     const topLeftY = Math.floor((dragY - this.displayHeight * 0.5) / 32) * 32;
-                    this.x = topLeftX + this.displayWidth * 0.5;
-                    this.y = topLeftY + this.displayHeight * 0.5;
+                    this.x = Math.round(topLeftX + this.displayWidth * 0.5);
+                    this.y = Math.round(topLeftY + this.displayHeight * 0.5);
                 } else {
-                    this.x = dragX;
-                    this.y = dragY;
+                    this.x = Math.round(dragX);
+                    this.y = Math.round(dragY);
                 }
                 this.updateSquaresPositions();
                 this.moved = true;
@@ -342,8 +342,8 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                 this.updateAreaDataWithSquaresAdjustments();
                 const data: AtLeast<AreaData, "id"> = {
                     id: this.getAreaData().id,
-                    x: this.x - this.displayWidth * 0.5,
-                    y: this.y - this.displayHeight * 0.5,
+                    x: Math.floor(this.x - this.displayWidth * 0.5),
+                    y: Math.floor(this.y - this.displayHeight * 0.5),
                     width: this.displayWidth,
                     height: this.displayHeight,
                 };
@@ -379,13 +379,13 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
 
                     if (newWidth >= 10) {
                         this.displayWidth = newWidth;
-                        this.x = this.squares[Edge.LeftCenter].x + this.displayWidth * 0.5;
+                        this.x = Math.floor(this.squares[Edge.LeftCenter].x + this.displayWidth * 0.5);
                     } else {
                         square.x = oldX;
                     }
                     if (newHeight >= 10) {
                         this.displayHeight = newHeight;
-                        this.y = this.squares[Edge.TopCenter].y + this.displayHeight * 0.5;
+                        this.y = Math.floor(this.squares[Edge.TopCenter].y + this.displayHeight * 0.5);
                     } else {
                         square.y = oldY;
                     }
@@ -424,13 +424,13 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
 
                 if (newWidth >= 10) {
                     this.displayWidth = newWidth;
-                    this.x = newCenterX;
+                    this.x = Math.floor(newCenterX);
                 } else {
                     square.x = oldX;
                 }
                 if (newHeight >= 10) {
                     this.displayHeight = newHeight;
-                    this.y = newCenterY;
+                    this.y = Math.floor(newCenterY);
                 } else {
                     square.y = oldY;
                 }
@@ -447,8 +447,8 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                 this.updateAreaDataWithSquaresAdjustments();
                 const data: AtLeast<AreaData, "id"> = {
                     id: this.getAreaData().id,
-                    x: this.x - this.displayWidth * 0.5,
-                    y: this.y - this.displayHeight * 0.5,
+                    x: Math.floor(this.x - this.displayWidth * 0.5),
+                    y: Math.floor(this.y - this.displayHeight * 0.5),
                     width: this.displayWidth,
                     height: this.displayHeight,
                 };
@@ -471,10 +471,10 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     private updateAreaDataWithSquaresAdjustments(): void {
         this.areaData = {
             ...this.areaData,
-            x: this.x - this.displayWidth * 0.5,
-            y: this.y - this.displayHeight * 0.5,
-            width: this.displayWidth,
-            height: this.displayHeight,
+            x: Math.floor(this.x - this.displayWidth * 0.5),
+            y: Math.floor(this.y - this.displayHeight * 0.5),
+            width: Math.floor(this.displayWidth),
+            height: Math.floor(this.displayHeight),
         };
     }
 
@@ -515,6 +515,12 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                     name: "Silent",
                     color: "FF5A5F",
                 };
+            case "extensionModule": {
+                return {
+                    name: "Extension",
+                    color: "464EB8",
+                };
+            }
             default:
                 return {
                     name: "",

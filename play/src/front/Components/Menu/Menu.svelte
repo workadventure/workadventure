@@ -27,7 +27,7 @@
 
     let activeSubMenu: MenuItem = $subMenusStore[$activeSubMenuStore];
     let activeComponent: typeof ProfileSubMenu | typeof CustomSubMenu = ProfileSubMenu;
-    let props: { url: string; allowApi: boolean };
+    let props: { url: string; allowApi: boolean; allow: string | undefined };
     let unsubscriberSubMenuStore: Unsubscriber;
     let unsubscriberActiveSubMenuStore: Unsubscriber;
 
@@ -100,7 +100,7 @@
             const customMenu = customMenuIframe.get(menu.key);
             if (customMenu !== undefined) {
                 activeSubMenu = menu;
-                props = { url: customMenu.url, allowApi: customMenu.allowApi };
+                props = { url: customMenu.url, allowApi: customMenu.allowApi, allow: customMenu.allow };
                 activeComponent = CustomSubMenu;
             } else {
                 sendMenuClickedEvent(menu.key);
@@ -133,7 +133,7 @@
     <div class="menu-nav-sidebar tw-min-w-[160px]" transition:fly={{ x: -1000, duration: 500 }}>
         <h2 class="tw-p-5 blue-title">{$LL.menu.title()}</h2>
         <nav>
-            {#each $subMenusStore as submenu, i (submenu.key + "_" + submenu.type)}
+            {#each $subMenusStore as submenu, i (`${submenu.key}_${submenu.type}`)}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class="menu-item-container {activeSubMenu === submenu ? 'active' : ''}"

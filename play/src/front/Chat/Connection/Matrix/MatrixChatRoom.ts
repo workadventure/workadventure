@@ -665,10 +665,13 @@ export class MatrixChatRoom
         if (!roomPowerLevelsState) {
             return;
         }
+
+        console.log("roomPowerLevelsState : ", roomPowerLevelsState[0]?.getContent());
+
         const newRoomPowerLevelsState = {
-            ...roomPowerLevelsState[0].getContent(),
+            ...roomPowerLevelsState[0]?.getContent() ?? {},
             users: {
-                ...roomPowerLevelsState[0].getContent().users,
+                ...roomPowerLevelsState[0]?.getContent()?.users ?? {},
                 [member.id]: MatrixChatRoomMember.getPowerLevel(permissionLevel),
             },
         };
@@ -699,8 +702,20 @@ export class MatrixChatRoom
         return allowedRolesToAssign;
     }
 
-    public canModifyRoleOf(): boolean {
-        return get(get(this.currentRoomMember).permissionLevel) === ChatPermissionLevel.ADMIN;
+    public canModifyRoleOf(permissionLevel?: ChatPermissionLevel): boolean {
+        const currentRoomMemberPermissionLevel = get(get(this.currentRoomMember).permissionLevel);
+        const currentRoomMemberPowerLevel = MatrixChatRoomMember.getPowerLevel(currentRoomMemberPermissionLevel);
+        const memberPowerLevel = (permissionLevel) ? MatrixChatRoomMember.getPowerLevel(permissionLevel) : 0;
+
+        const canModifyRoleOfThisMember = currentRoomMemberPowerLevel > memberPowerLevel;
+
+        console.log("currentRoomMemberPermissionLevel : ", currentRoomMemberPermissionLevel);
+        console.log("currentRoomMemberPowerLevel : ", currentRoomMemberPowerLevel);
+        console.log("memberPowerLevel : ", memberPowerLevel);
+        console.log("canModifyRoleOfThisMember : ", canModifyRoleOfThisMember);
+
+
+        return canModifyRoleOfThisMember && currentRoomMemberPermissionLevel === ChatPermissionLevel.ADMIN;
     }
 
     public async kick(userID: string, reason?: string): Promise<void> {

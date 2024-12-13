@@ -19,6 +19,8 @@
 
     $: ({ name, membership, id, permissionLevel } = member);
 
+    $: console.log("name : ", $name);
+
     function getTranslatedMembership(membership: ChatRoomMembership) {
         switch (membership) {
             case "join":
@@ -84,6 +86,7 @@
     };
 
     const getIconForMembership = (membership: ChatRoomMembership) => {
+        console.log("membership : ", membership);
         switch (membership) {
             case "ban":
                 return IconForbid;
@@ -103,13 +106,14 @@
     };
 
     function getTranslatedPermissionLevel(permission: ChatPermissionLevel) {
+        console.log("permission : ", permission , $LL.chat.manageRoomUsers.roles.USER());
         switch (permission) {
             case ChatPermissionLevel.USER:
-                return $LL.chat.manageRoomUsers.roles.USER;
+                return $LL.chat.manageRoomUsers.roles.USER();
             case ChatPermissionLevel.MODERATOR:
-                return $LL.chat.manageRoomUsers.roles.MODERATOR;
+                return $LL.chat.manageRoomUsers.roles.MODERATOR();
             case ChatPermissionLevel.ADMIN:
-                return $LL.chat.manageRoomUsers.roles.ADMIN;
+                return $LL.chat.manageRoomUsers.roles.ADMIN();
         }
     }
 
@@ -125,8 +129,11 @@
     const hasPermissionToKick = room.hasPermissionTo("kick", member);
     const hasPermissionToBan = room.hasPermissionTo("ban", member);
 
-    $: availableRoles =
-        $permissionLevel === ChatPermissionLevel.ADMIN && room.canModifyRoleOf() ? [] : room.getAllowedRolesToAssign();
+    $: availableRoles = room.canModifyRoleOf($permissionLevel) ? room.getAllowedRolesToAssign() : [];
+
+    $: console.log("availableRoles : ", availableRoles);
+
+
 </script>
 
 <li class="tw-flex tw-my-1 tw-justify-between tw-items-center">
@@ -204,6 +211,9 @@
                     <option value={permissionLevelOption}>{getTranslatedPermissionLevel(permissionLevelOption)}</option>
                 {/each}
             </select>
+        {:else}
+            <!-- TODO : design info membership -->
+            <p class="tw-max-h-min tw-m-0 tw-ml-4 tw-px-2 tw-py-1 tw-bg-gray-500 tw-rounded-3xl tw-min-w-[6rem] tw-text-center tw-content-center">{getTranslatedPermissionLevel($permissionLevel)}</p>
         {/if}
     </div>
 </li>

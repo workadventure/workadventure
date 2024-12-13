@@ -80,7 +80,7 @@ export interface ChatRoomModeration {
     readonly unban: (userID: string) => Promise<void>;
     readonly changePermissionLevelFor: (member: ChatRoomMember, permissionLevel: ChatPermissionLevel) => Promise<void>;
     readonly getAllowedRolesToAssign: () => ChatPermissionLevel[];
-    readonly canModifyRoleOf: () => boolean;
+    readonly canModifyRoleOf: (permissionLevel?: ChatPermissionLevel) => boolean;
 }
 
 //Readonly attributes

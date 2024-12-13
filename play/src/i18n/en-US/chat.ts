@@ -2,6 +2,13 @@ import type { BaseTranslation } from "../i18n-types";
 
 const chat: BaseTranslation = {
     intro: "Here is your chat history:",
+    adventurers: "Users",
+    onlineUsers: "Online user",
+    getCloserTitle: "Get closer to someone",
+    getCloserDesc:
+        "When you approach someone in the virtual space, a conversation bubble automatically opens, allowing you to talk directly as if you were face-to-face.",
+    noMessage: "No message sent yet!",
+    beFirst: "Be the first and send a message",
     enter: "Enter your message...",
     menu: {
         visitCard: "Visit card",
@@ -37,6 +44,7 @@ const chat: BaseTranslation = {
     availableRooms: "Available rooms",
     proximity: "Proximity Chat",
     role: {
+        adminShort: "Admin",
         admin: "Administrator",
         member: "Member",
         visitor: "Visitor",
@@ -201,6 +209,7 @@ const chat: BaseTranslation = {
             invited: "Members only (since they were invited)",
         },
         buttons: {
+            edit: "Edit",
             create: "Create",
             cancel: "Cancel",
         },
@@ -278,6 +287,7 @@ const chat: BaseTranslation = {
         unmuteRoom: "Unmute Room",
     },
     e2ee: {
+        configure: "Configure",
         encryptionNotConfigured: "Encryption not configured",
         createRecoveryKey: {
             title: "Chat recovery key creation",

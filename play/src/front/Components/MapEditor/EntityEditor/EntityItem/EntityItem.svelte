@@ -9,9 +9,10 @@
     const dispatch = createEventDispatcher();
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
     data-testid="entity-item"
-    class={`tw-flex tw-cursor-pointer tw-border-solid tw-border-transparent tw-h-full tw-w-full hover:tw-rounded-2xl hover:tw-border-white  ${
+    class={`tw-flex tw-cursor-pointer tw-border-solid tw-border-transparent tw-h-full tw-w-full tw-bg-white/10 tw-rounded-2xl hover:tw-bg-white/20 hover:tw-border-white hover:tw-animate-pulse ${
         isActive ? "tw-border-solid tw-border-yellow-400 tw-rounded-2xl" : ""
     }`}
     on:click={() => dispatch("selectEntity", entityVariant)}

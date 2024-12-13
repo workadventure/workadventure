@@ -57,6 +57,10 @@ class EntitiesFileMigration {
             })),
         };
     }
+
+    public getLatestVersion(): string {
+        return Object.keys(this.migrations)[Object.keys(this.migrations).length - 1];
+    }
 }
 
 export const entitiesFileMigration = new EntitiesFileMigration();
