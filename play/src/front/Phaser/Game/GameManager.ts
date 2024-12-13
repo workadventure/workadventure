@@ -11,7 +11,7 @@ import {
     requestedMicrophoneDeviceIdStore,
     requestedMicrophoneState,
 } from "../../Stores/MediaStore";
-import { menuIconVisiblilityStore } from "../../Stores/MenuStore";
+import { menuIconVisiblilityStore, userIsConnected } from "../../Stores/MenuStore";
 import { EnableCameraSceneName } from "../Login/EnableCameraScene";
 import { LoginSceneName } from "../Login/LoginScene";
 import { SelectCharacterSceneName } from "../Login/SelectCharacterScene";
@@ -245,14 +245,9 @@ export class GameManager {
         }
 
         const matrixServerUrl = this.getMatrixServerUrl() ?? MATRIX_PUBLIC_URI;
-        if (matrixServerUrl && ENABLE_CHAT && this.getCurrentGameScene().room.isChatEnabled) {
+        if (matrixServerUrl && ENABLE_CHAT && this.getCurrentGameScene().room.isChatEnabled && get(userIsConnected)) {
             this.matrixClientWrapper = new MatrixClientWrapper(matrixServerUrl, localUserStore);
             const matrixClientPromise = this.matrixClientWrapper.initMatrixClient();
-
-            matrixClientPromise.catch((error) => {
-                console.error(`Failed to create matrix client : ${error}`);
-                Sentry.captureMessage(`Failed to create matrix client : ${error}`);
-            });
 
             const matrixChatConnection = new MatrixChatConnection(matrixClientPromise, availabilityStatusStore);
             this._chatConnection = matrixChatConnection;
