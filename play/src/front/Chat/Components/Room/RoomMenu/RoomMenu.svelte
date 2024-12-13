@@ -96,7 +96,7 @@
             on:click={openInviteParticipantsModal}
         />
     {/if}
-    
+
     <RoomOption
         IconComponent={$areNotificationsMuted ? IconUnMute : IconMute}
         title={$areNotificationsMuted ? $LL.chat.roomMenu.unmuteRoom() : $LL.chat.roomMenu.muteRoom()}

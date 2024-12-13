@@ -54,11 +54,11 @@
         </button>
     {/if}
     {#if $canDelete}
-    <button
-        class="tw-p-0 tw-m-0 tw-text-white/50 hover:tw-text-white tw-transition-all hover:tw-cursor-pointer"
-        data-testid="removeMessageButton"
-        on:click={removeMessage}
-    >
+        <button
+            class="tw-p-0 tw-m-0 tw-text-white/50 hover:tw-text-white tw-transition-all hover:tw-cursor-pointer"
+            data-testid="removeMessageButton"
+            on:click={removeMessage}
+        >
             <IconTrash font-size={16} />
         </button>
     {/if}

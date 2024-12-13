@@ -106,7 +106,7 @@
     };
 
     function getTranslatedPermissionLevel(permission: ChatPermissionLevel) {
-        console.log("permission : ", permission , $LL.chat.manageRoomUsers.roles.USER());
+        console.log("permission : ", permission, $LL.chat.manageRoomUsers.roles.USER());
         switch (permission) {
             case ChatPermissionLevel.USER:
                 return $LL.chat.manageRoomUsers.roles.USER();
@@ -132,8 +132,6 @@
     $: availableRoles = room.canModifyRoleOf($permissionLevel) ? room.getAllowedRolesToAssign() : [];
 
     $: console.log("availableRoles : ", availableRoles);
-
-
 </script>
 
 <li class="tw-flex tw-my-1 tw-justify-between tw-items-center">
@@ -213,7 +211,11 @@
             </select>
         {:else}
             <!-- TODO : design info membership -->
-            <p class="tw-max-h-min tw-m-0 tw-ml-4 tw-px-2 tw-py-1 tw-bg-gray-500 tw-rounded-3xl tw-min-w-[6rem] tw-text-center tw-content-center">{getTranslatedPermissionLevel($permissionLevel)}</p>
+            <p
+                class="tw-max-h-min tw-m-0 tw-ml-4 tw-px-2 tw-py-1 tw-bg-gray-500 tw-rounded-3xl tw-min-w-[6rem] tw-text-center tw-content-center"
+            >
+                {getTranslatedPermissionLevel($permissionLevel)}
+            </p>
         {/if}
     </div>
 </li>
