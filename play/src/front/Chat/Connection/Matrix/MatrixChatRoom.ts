@@ -704,15 +704,9 @@ export class MatrixChatRoom
     public canModifyRoleOf(permissionLevel?: ChatPermissionLevel): boolean {
         const currentRoomMemberPermissionLevel = get(get(this.currentRoomMember).permissionLevel);
         const currentRoomMemberPowerLevel = MatrixChatRoomMember.getPowerLevel(currentRoomMemberPermissionLevel);
-        const memberPowerLevel = (permissionLevel) ? MatrixChatRoomMember.getPowerLevel(permissionLevel) : 0;
+        const memberPowerLevel = permissionLevel ? MatrixChatRoomMember.getPowerLevel(permissionLevel) : 0;
 
         const canModifyRoleOfThisMember = currentRoomMemberPowerLevel > memberPowerLevel;
-
-        console.log("currentRoomMemberPermissionLevel : ", currentRoomMemberPermissionLevel);
-        console.log("currentRoomMemberPowerLevel : ", currentRoomMemberPowerLevel);
-        console.log("memberPowerLevel : ", memberPowerLevel);
-        console.log("canModifyRoleOfThisMember : ", canModifyRoleOfThisMember);
-
 
         return canModifyRoleOfThisMember && currentRoomMemberPermissionLevel === ChatPermissionLevel.ADMIN;
     }
