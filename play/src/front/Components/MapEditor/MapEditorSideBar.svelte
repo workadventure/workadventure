@@ -60,7 +60,7 @@
     });
 
     function switchTool(newTool: EditorToolName) {
-        mapEditorVisibilityStore.set(true);
+        mapEditorVisibilityStore.set(!$mapEditorVisibilityStore);
         analyticsClient.openMapEditorTool(newTool);
         gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(newTool);
     }
