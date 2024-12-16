@@ -28,7 +28,7 @@
     <img
         src={avatarUrl}
         alt={"User avatar"}
-        class="tw-rounded-full tw-h-6 tw-w-6 tw-object-contain tw-bg-white"
+        class="tw-rounded-sm tw-h-6 tw-w-6 tw-object-contain tw-bg-white"
         style:background-color={`${color ? color : `${getColorByString(fallbackName)}`}`}
     />
 {:else}

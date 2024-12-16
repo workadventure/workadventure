@@ -149,7 +149,8 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
         private jwt: string | undefined,
         private jitsiConfig: JitsiRoomConfigData | undefined,
         private jitsiInterfaceConfig: object | undefined,
-        private domain: string
+        private domain: string,
+        private jitsiRoomAdminTag: string | null
     ) {
         super(url, false, undefined, widthPercent, closable);
     }
@@ -173,8 +174,7 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
 
                     if (
                         !userConnectedTags.includes("admin") &&
-                        (!this.jitsiConfig?.jitsiRoomAdminTag ||
-                            !userConnectedTags.includes(this.jitsiConfig?.jitsiRoomAdminTag))
+                        (!this.jitsiRoomAdminTag || !userConnectedTags.includes(this.jitsiRoomAdminTag))
                     ) {
                         mergedConfig.localRecording = {
                             disable: true,
