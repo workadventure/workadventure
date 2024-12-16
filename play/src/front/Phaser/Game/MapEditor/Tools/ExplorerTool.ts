@@ -372,9 +372,9 @@ export class ExplorerTool implements MapEditorTool {
 
     private definePointerOutForEntity(entity: Entity) {
         // If the entity is selected, keep the active yellow color
-        if(get(mapExplorationObjectSelectedStore) == entity) {
+        if (get(mapExplorationObjectSelectedStore) == entity) {
             entity.setPointedToEditColor(0xf9e82d);
-        }else{
+        } else {
             entity.setPointedToEditColor(0x00000);
         }
         this.scene.markDirty();
@@ -383,7 +383,7 @@ export class ExplorerTool implements MapEditorTool {
     private setAllEntitiesInteractive() {
         this.entitiesManager.makeAllEntitiesInteractive();
         this.entitiesManager.getEntities().forEach((entity) => {
-            if(entity.searchable) {
+            if (entity.searchable) {
                 entity.setPointedToEditColor(0x00000);
                 entity.on(Phaser.Input.Events.POINTER_OUT, () => this.definePointerOutForEntity(entity));
             }
@@ -392,7 +392,7 @@ export class ExplorerTool implements MapEditorTool {
 
     private setAllEntitiesNotInteractive() {
         this.entitiesManager.getEntities().forEach((entity) => {
-            if(entity.searchable) {
+            if (entity.searchable) {
                 entity.removePointedToEditColor();
                 entity.off(Phaser.Input.Events.POINTER_OUT, () => this.definePointerOutForEntity(entity));
             }
