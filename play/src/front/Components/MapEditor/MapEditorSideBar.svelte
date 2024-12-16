@@ -63,7 +63,7 @@
         // The map sidebar is opened when the user clicks on the explorer for the first time.
         // If the user clicks on the Explorer again, we need to show the map sidebar.
         if (newTool === EditorToolName.ExploreTheRoom) {
-            mapEditorVisibilityStore.set(!mapEditorVisibilityStore);
+            mapEditorVisibilityStore.set(!$mapEditorVisibilityStore);
         } else {
             mapEditorVisibilityStore.set(true);
         }
