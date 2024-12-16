@@ -72,7 +72,11 @@
     }
 
     function sendMessage(messageToSend: string) {
-        room?.sendMessage(messageToSend);
+        const decoder = document.createElement("div");
+        decoder.innerHTML = messageToSend;
+        const decodedMessage = decoder.textContent || decoder.innerText;
+
+        room?.sendMessage(decodedMessage);
         messageInput.innerText = "";
         message = "";
         if (stopTypingTimeOutID) {
