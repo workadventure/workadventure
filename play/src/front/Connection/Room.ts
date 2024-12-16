@@ -14,6 +14,7 @@ import { ApiError } from "../Stores/Errors/ApiError";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 import { axiosWithRetry } from "./AxiosUtils";
 import { localUserStore } from "./LocalUserStore";
+import { allowedDiscordBridgeStore } from "../Stores/ChatStore";
 export class MapDetail {
     constructor(public readonly mapUrl?: string, public readonly wamUrl?: string) {}
 }
@@ -25,6 +26,7 @@ export interface RoomRedirect {
 export interface DiscordSettings {
     enableDiscordMandatory: number;
     discordAllowedGuilds: string;
+    enableDiscordBridge: boolean;
 }
 
 export class Room {
@@ -208,6 +210,12 @@ export class Room {
 
                 this._errorSceneLogo = data.errorSceneLogo ?? undefined;
                 this._modules = data.modules ?? [];
+
+                // this._discordSettings = data.metadate.discordSettings ?? undefined;
+
+                //add discord allowed settings into a store
+                // @ts-ignore
+                allowedDiscordBridgeStore.set(this._metadata.discordSettings?.enableDiscordBridge ?? false);
 
                 return new MapDetail(data.mapUrl, data.wamUrl);
             } else if (errorApiDataChecking.success) {

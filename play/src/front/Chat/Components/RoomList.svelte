@@ -153,6 +153,7 @@
             style={displayTwoColumnLayout ? `width:335px ;flex : 0 0 auto` : ``}
         >
             <ChatHeader />
+
             <div
                 class="tw-relative tw-pt-[72px] {$isEncryptionRequiredAndNotSet === true && $isGuest === false
                     ? ' tw-h-[calc(100%-2rem)]'

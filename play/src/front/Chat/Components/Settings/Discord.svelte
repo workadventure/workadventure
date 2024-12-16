@@ -3,7 +3,7 @@
     import { get } from "svelte/store";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
-    import { navChat, selectedRoom } from "../../Stores/ChatStore";
+    import { navChat, selectedRoomStore } from "../../Stores/ChatStore";
 
     import { DiscordUser, DiscordBotManager } from "../../DiscordBotManager";
     import { DiscordServer } from "../../../Interfaces/DiscordServerInterface";
@@ -75,7 +75,7 @@
         await DiscordBot.unBridgesGuilds(serversToUnBridge);
         await DiscordBot.bridgesGuilds(serversToBridge);
         navChat.switchToChat();
-        $selectedRoom = undefined;
+        $selectedRoomStore = undefined;
         await fetchUserGuilds();
     }
 
@@ -184,6 +184,7 @@
         imgElement.parentNode?.insertBefore(initialsElement, imgElement);
     }
 </script>
+
 
 {#if !$userIsConnected}
     <p class="tw-text-gray-400 tw-w-full tw-text-center tw-pt-2">
