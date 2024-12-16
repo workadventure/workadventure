@@ -11,6 +11,7 @@ import { MapValidator, OrganizedErrors } from "@workadventure/map-editor/src/Gam
 import { WAMFileFormat } from "@workadventure/map-editor";
 import { ZipFileFetcher } from "@workadventure/map-editor/src/GameMap/Validator/ZipFileFetcher";
 import { HttpFileFetcher } from "@workadventure/map-editor/src/GameMap/Validator/HttpFileFetcher";
+import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
 import { Operation } from "fast-json-patch";
 import { generateErrorMessage } from "zod-error";
 import * as Sentry from "@sentry/node";
@@ -416,7 +417,7 @@ export class UploadController {
                     let errors: Partial<OrganizedErrors> = {};
 
                     const content = WAMFileFormat.parse(
-                        JSON.parse(await this.fileSystem.readFileAsString(virtualPath))
+                        wamFileMigration.migrate(JSON.parse(await this.fileSystem.readFileAsString(virtualPath)))
                     );
 
                     // Let's make things easy: if "vendor" or "metadata" is not defined, let's add an empty object.
@@ -520,7 +521,7 @@ export class UploadController {
 
         if (WAM_TEMPLATE_URL) {
             const response = await axios.get(WAM_TEMPLATE_URL);
-            wamFile = WAMFileFormat.parse(response.data);
+            wamFile = WAMFileFormat.parse(wamFileMigration.migrate(response.data));
             wamFile.mapUrl = tmjFilePath;
             wamFile.metadata = {
                 ...wamFile.metadata,
@@ -532,7 +533,7 @@ export class UploadController {
         } else {
             const urls = ENTITY_COLLECTION_URLS?.split(",").filter((url) => url != "") ?? [];
             wamFile = {
-                version: "1.0.0",
+                version: wamFileMigration.getLatestVersion(),
                 mapUrl: tmjFilePath,
                 areas: [],
                 entities: {},

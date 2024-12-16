@@ -61,37 +61,43 @@
 
 <div class="tw-flex tw-flex-col tw-overflow-auto tw-h-full">
     <ChatHeader />
-    {#each roomsWithUsers as [roomName, userInRoom] (roomName)}
-        <div class=" users tw-flex tw-flex-col tw-shrink-0 tw-relative tw-pt-[72px] tw-h-full">
-            <button
-                class="tw-group tw-relative tw-px-3 tw-rounded-none tw-text-white/75 hover:tw-text-white tw-h-11 hover:tw-bg-contrast-200/10 tw-w-full tw-flex tw-space-x-2 tw-items-center tw-border tw-border-solid tw-border-x-0 tw-border-t tw-border-b-0 tw-border-white/10 tw-text-white tw-outline-none tw-border-y-0 tw-appearance-none tw-m-0"
-                on:click={() => shownRoomListStore.set($shownRoomListStore === roomName ? "" : roomName)}
-            >
-                {#if roomName !== $LL.chat.userList.disconnected()}
+    <div>
+        {#each roomsWithUsers as [roomName, userInRoom] (roomName)}
+            <div class=" users tw-flex tw-flex-col tw-shrink-0 tw-relative first:tw-pt-[72px]">
+                <button
+                    class="tw-group tw-relative tw-px-3 tw-rounded-none tw-text-white/75 hover:tw-text-white tw-h-11 hover:tw-bg-contrast-200/10 tw-w-full tw-flex tw-space-x-2 tw-items-center tw-border tw-border-solid tw-border-x-0 tw-border-t tw-border-b-0 tw-border-white/10 tw-text-white tw-outline-none tw-border-y-0 tw-appearance-none tw-m-0"
+                    on:click={() => shownRoomListStore.set($shownRoomListStore === roomName ? "" : roomName)}
+                >
+                    {#if roomName !== $LL.chat.userList.disconnected()}
+                        <div
+                            class="{roomName !== $LL.chat.userList.disconnected()
+                                ? 'tw-bg-white/10'
+                                : 'tw-bg-gray'} tw-text-white tw-min-w-[20px] tw-h-5 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
+                        >
+                            {userInRoom.length}
+                        </div>
+                    {/if}
                     <div
-                        class="{roomName !== $LL.chat.userList.disconnected()
-                            ? 'tw-bg-white/10'
-                            : 'tw-bg-gray'} tw-text-white tw-min-w-[20px] tw-h-5 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
+                        class="tw-text-white tw-text-sm tw-font-bold tw-tracking-widest tw-uppercase tw-grow tw-text-left"
                     >
-                        {userInRoom.length}
+                        {roomName}
+                    </div>
+                    <div
+                        class="tw-transition-all group-hover:tw-bg-white/10 tw-p-1 tw-rounded-lg tw-aspect-square tw-flex tw-items-center tw-justify-center tw-text-white"
+                    >
+                        <IconChevronUp
+                            class={`tw-transform tw-transition ${
+                                $shownRoomListStore === roomName ? "" : "tw-rotate-180"
+                            }`}
+                        />
+                    </div>
+                </button>
+                {#if $shownRoomListStore === roomName}
+                    <div class="tw-flex tw-flex-col tw-flex-1 tw-overflow-auto">
+                        <UserList userList={userInRoom} />
                     </div>
                 {/if}
-                <div class="tw-text-white tw-text-sm tw-font-bold tw-tracking-widest tw-uppercase tw-grow tw-text-left">
-                    {roomName}
-                </div>
-                <div
-                    class="tw-transition-all group-hover:tw-bg-white/10 tw-p-1 tw-rounded-lg tw-aspect-square tw-flex tw-items-center tw-justify-center tw-text-white"
-                >
-                    <IconChevronUp
-                        class={`tw-transform tw-transition ${$shownRoomListStore === roomName ? "" : "tw-rotate-180"}`}
-                    />
-                </div>
-            </button>
-            {#if $shownRoomListStore === roomName}
-                <div class="tw-flex tw-flex-col tw-flex-1 tw-overflow-auto">
-                    <UserList userList={userInRoom} />
-                </div>
-            {/if}
-        </div>
-    {/each}
+            </div>
+        {/each}
+    </div>
 </div>

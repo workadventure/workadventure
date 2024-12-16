@@ -27,6 +27,7 @@ import {
     GameMapProperties,
     WAMFileFormat,
 } from "@workadventure/map-editor";
+import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
 import { userMessageManager } from "../../Administration/UserMessageManager";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
@@ -199,6 +200,7 @@ import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManag
 import { DEPTH_BUBBLE_CHAT_SPRITE, DEPTH_WHITE_MASK } from "./DepthIndexes";
 import { ScriptingEventsManager } from "./ScriptingEventsManager";
 import { FollowManager } from "./FollowManager";
+
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
@@ -471,53 +473,45 @@ export class GameScene extends DirtyScene {
             //if SpriteSheetFile (WOKA file) don't display error and give an access for user
             if (this.preloading && !(file instanceof SpriteSheetFile)) {
                 //remove loader in progress
-                this.loader.removeLoader();
-
-                errorScreenStore.setError(
-                    ErrorScreenMessage.fromPartial({
-                        type: "error",
-                        code: "NETWORK_ERROR",
-                        title: "Network error",
-                        subtitle: "An error occurred while loading a resource",
-                        details: 'Cannot load "' + (file?.src ?? this.originalMapUrl) + '"',
-                    })
+                this.handleErrorAndCleanup(
+                    new Error('Cannot load "' + (file?.src ?? this.originalMapUrl) + '"'),
+                    "NETWORK_ERROR",
+                    "Network error",
+                    "An error occurred while loading a resource"
                 );
-                this.cleanupClosingScene();
-
-                this.scene.stop(this.scene.key);
-                this.scene.remove(this.scene.key);
             }
         });
 
         this.load.scenePlugin("AnimatedTiles", AnimatedTiles, "animatedTiles", "animatedTiles");
-
         if (this.wamUrlFile) {
             const absoluteWamFileUrl = new URL(this.wamUrlFile, window.location.href).toString();
 
             this.superLoad.loadPromise(
                 axiosWithRetry.get(absoluteWamFileUrl).then((response) => {
-                    const wamFileResult = WAMFileFormat.safeParse(response.data);
-                    if (!wamFileResult.success) {
-                        this.loader.removeLoader();
-                        errorScreenStore.setError(
-                            ErrorScreenMessage.fromPartial({
-                                type: "error",
-                                code: "WAM_FORMAT_ERROR",
-                                title: "Format error",
-                                subtitle: "Invalid format while loading a WAM file",
-                                details: wamFileResult.error.toString(),
-                            })
+                    try {
+                        const wamFileResult = WAMFileFormat.safeParse(wamFileMigration.migrate(response.data));
+                        if (!wamFileResult.success) {
+                            this.handleErrorAndCleanup(
+                                wamFileResult.error,
+                                "WAM_FORMAT_ERROR",
+                                "Format error",
+                                "Invalid format while loading a WAM file"
+                            );
+                            return;
+                        }
+                        this.wamFile = wamFileResult.data;
+                        this.mapUrlFile = new URL(this.wamFile.mapUrl, absoluteWamFileUrl).toString();
+                        this.doLoadTMJFile(this.mapUrlFile);
+                        this.loadEntityCollections();
+                    } catch (error) {
+                        this.handleErrorAndCleanup(
+                            error,
+                            "WAM_FORMAT_ERROR",
+                            "Format error",
+                            "Invalid format while loading a WAM file"
                         );
-                        this.cleanupClosingScene();
-
-                        this.scene.stop(this.scene.key);
-                        this.scene.remove(this.scene.key);
                         return;
                     }
-                    this.wamFile = wamFileResult.data;
-                    this.mapUrlFile = new URL(this.wamFile.mapUrl, absoluteWamFileUrl).toString();
-                    this.doLoadTMJFile(this.mapUrlFile);
-                    this.loadEntityCollections();
                 })
             );
         } else {
@@ -534,6 +528,27 @@ export class GameScene extends DirtyScene {
 
         //this function must stay at the end of preload function
         this.loader.addLoader();
+    }
+
+    private handleErrorAndCleanup(
+        error: Error | unknown,
+        errorCode: string,
+        errorTitle: string,
+        errorSubtitle: string
+    ) {
+        this.loader.removeLoader();
+        errorScreenStore.setError(
+            ErrorScreenMessage.fromPartial({
+                type: "error",
+                code: errorCode,
+                title: errorTitle,
+                subtitle: errorSubtitle,
+                details: error instanceof Error ? error.message : "Unknown error",
+            })
+        );
+        this.cleanupClosingScene();
+        this.scene.stop(this.scene.key);
+        this.scene.remove(this.scene.key);
     }
 
     public getCustomEntityCollectionUrl() {
