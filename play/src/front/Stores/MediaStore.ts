@@ -182,30 +182,7 @@ const deviceChanged10SecondsAgoStore = readable(false, function start(set) {
 /**
  * A store containing whether the mouse is getting close the bottom right corner.
  */
-const mouseInCameraTriggerArea = readable(false, function start(set) {
-    // console.info("JE VIENS DE PASSER SUR LA PARTIE DROITE");
-    /*let lastInTriggerArea = false;
-    const gameDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>("game");
-
-    const detectInTopCenter = (event: MouseEvent) => {
-        const rect = gameDiv.getBoundingClientRect();
-        const inTopCenter =
-            event.x - rect.left > rect.width / 4 &&
-            event.x + rect.left < (rect.width * 3) / 4 &&
-            event.y - rect.top < rect.height / 3;
-        if (inTopCenter !== lastInTriggerArea) {
-            lastInTriggerArea = inTopCenter;
-            set(inTopCenter);
-        }
-
-    };*/
-
-    //document.addEventListener("mousemove", detectInTopCenter);
-
-    return function stop() {
-        //document.removeEventListener("mousemove", detectInTopCenter);
-    };
-});
+export const mouseInCameraTriggerArea = writable(false);
 
 export const cameraNoEnergySavingStore = writable<boolean>(false);
 

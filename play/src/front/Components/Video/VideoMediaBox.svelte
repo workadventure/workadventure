@@ -2,7 +2,7 @@
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
     import { onDestroy, onMount } from "svelte";
-    import { Unsubscriber } from "svelte/store";
+    import { Unsubscriber, writable } from "svelte/store";
     import CancelablePromise from "cancelable-promise";
     import Debug from "debug";
     import { VideoPeer } from "../../WebRtc/VideoPeer";
@@ -11,17 +11,15 @@
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import { LL } from "../../../i18n/i18n-svelte";
 
-    import Woka from "../Woka/WokaFromUserId.svelte";
     import { selectDefaultSpeaker, speakerSelectedStore } from "../../Stores/MediaStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import loaderImg from "../images/loader.svg";
     import MicOffIcon from "../Icons/MicOffIcon.svelte";
-    import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
-    import ScreenShareIcon from "../Icons/ScreenShareIcon.svelte";
     import { highlightFullScreen, setHeightScreenShare } from "../../Stores/ActionsCamStore";
-    import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
     import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
     import ActionMediaBox from "./ActionMediaBox.svelte";
+    import UserName from "./UserName.svelte";
+    import UpDownChevron from "./UpDownChevron.svelte";
     import { IconArrowDown, IconArrowUp } from "@wa-icons";
 
     // Extend the HTMLVideoElement interface to add the setSinkId method.
@@ -34,6 +32,15 @@
     export let isHighlighted = false;
     export let peer: VideoPeer;
 
+    const pictureStore = writable<string | undefined>(undefined);
+    let extendedSpaceUser = peer.getExtendedSpaceUser();
+    extendedSpaceUser
+        .then((user) => {
+            pictureStore.set(user.getWokaBase64);
+        })
+        .catch((e) => {
+            console.error("Error getting the user picture: ", e);
+        });
     let streamStore = peer.streamStore;
     let volumeStore = peer.volumeStore;
     let name = peer.player.name;
@@ -298,7 +305,7 @@
 >
     <!-- FIXME: not sure when to round in blue the box -->
     <div
-        class="z-20 rounded-lg transition-all bg-no-repeat bg-center bg-contrast/80 backdrop-blur rounded-lg"
+        class="z-20 w-full rounded-lg transition-all bg-no-repeat bg-center bg-contrast/80 backdrop-blur rounded-lg"
         style={videoEnabled ? "background-image: url(" + loaderImg + ")" : ""}
         class:border-4={false}
         class:border-solid={false}
@@ -321,11 +328,11 @@
         {/if}
 
         {#if $statusStore === "connected"}
-            <div class="z-[251] absolute right-0 bottom-0 sm:right-auto sm:bottom-auto aspect-ratio p-4">
+            <div class="z-[251] absolute right-3 top-1 aspect-ratio p-2">
                 {#if $constraintStore?.audio}
                     <SoundMeterWidget
                         volume={$volumeStore}
-                        classcss="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
+                        cssClass="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
                         barColor="white"
                     />
                 {:else}
@@ -334,59 +341,32 @@
             </div>
         {/if}
 
-        <div
-            class="absolute w-fit h-fit bottom-0 left-0 sm:left-4 sm:bottom-4 z-30 responsive-dimension bg-contrast/90 rounded"
+        <UserName
+            {name}
+            picture={pictureStore}
+            isPlayingAudio={$constraintStore?.audio}
+            position={videoEnabled ? "absolute bottom-4 left-4" : "absolute bottom-1.5 left-4"}
         >
-            <div
-                class="flex justify-between {$constraintStore?.audio ? 'background-color bg-contrast/90 rounded' : ''} "
-            >
-                <div class="relative rounded backdrop-blur px-2 py-1 text-white text-sm pl-12 bold ">
-                    <div class="absolute left-1 -top-1 z-30" style="image-rendering:pixelated">
-                        <Woka
-                            userId={peer.userId}
-                            placeholderSrc={""}
-                            customHeight="42&& !$cameraEnergySavingStorepx"
-                            customWidth="42px"
-                        />
-                    </div>
-                    {name}
-
-                    {#if $requestedScreenSharingState === true}
-                        <ScreenShareIcon />
-                    {/if}
-                </div>
-                <div
-                    class="user-menu-btn pt-1 h-5 w-5 flex items-center justify-center mr-1 rounded-sm hover:bg-white/20 right-0 top-0 bottom-0 m-auto transition-all pointer-events-auto {showUserSubMenu
-                        ? 'bg-white/20 hover:bg-white/30'
-                        : ''}"
-                    on:click={() => (showUserSubMenu = !showUserSubMenu)}
-                >
-                    <ChevronDownIcon
-                        strokeWidth="2.5"
-                        height="h-4"
-                        width="w-4"
-                        classList="aspect-ratio transition-all {showUserSubMenu ? 'rotate-180' : ''}"
-                    />
-                </div>
-
-                {#if showUserSubMenu}
-                    <ActionMediaBox
-                        {embedScreen}
-                        trackStreamWrapper={peer}
-                        {videoEnabled}
-                        on:close={() => (showUserSubMenu = false)}
-                    />
-                {/if}
-            </div>
-        </div>
+            <UpDownChevron enabled={showUserSubMenu} on:click={() => (showUserSubMenu = !showUserSubMenu)} />
+            {#if showUserSubMenu}
+                <ActionMediaBox
+                    {embedScreen}
+                    trackStreamWrapper={peer}
+                    {videoEnabled}
+                    on:close={() => (showUserSubMenu = false)}
+                />
+            {/if}
+        </UserName>
 
         <!-- svelte-ignore a11y-media-has-caption -->
         <video
             bind:this={videoElement}
             on:loadedmetadata={onLoadVideoElement}
-            class="h-full flex w-full justify-center aspect-video"
+            class="flex justify-center aspect-video"
             class:h-0={!videoEnabled}
             class:w-0={!videoEnabled}
+            class:h-full={videoEnabled}
+            class:w-full={videoEnabled}
             class:object-contain={isHighlighted || aspectRatio < 1}
             class:rounded-lg={videoEnabled}
             autoplay
@@ -442,7 +422,7 @@
         {/if}
     </div>
     <div
-        class={isHighlighted
+        class={isHighlighted || !videoEnabled
             ? "hidden"
             : "absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-full aspect-ratio bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 cursor-pointer"}
         on:click={() => highlightedEmbedScreen.highlight(peer)}
@@ -572,10 +552,6 @@
 <style>
     .border-color {
         border-color: #4156f6;
-    }
-
-    .background-color {
-        background-color: #4156f6;
     }
 
     @container (max-width: 767px) {

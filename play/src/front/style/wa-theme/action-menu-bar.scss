@@ -1,9 +1,4 @@
 @layer components {
-    .emote-menu {
-        @apply flex flex-col items-center pointer-events-auto justify-center m-auto bottom-1 z-[251] transition-transform duration-300;
-        @apply sm:flex-row;
-    }
-
     .bottom-action-bar {
 
         .bottom-action-section {

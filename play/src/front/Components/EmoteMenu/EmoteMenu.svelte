@@ -57,52 +57,22 @@
         });
     });
 
-    function onKeyDown(e: KeyboardEvent) {
+    /*function onKeyDown(e: KeyboardEvent) {
         if (e.key === "Escape") {
             emoteMenuStore.closeEmoteMenu();
         }
-    }
+    }*/
 
     onDestroy(() => {
-        document.body.removeEventListener("click", checkClickOutSide);
         picker.destroyPicker();
     });
-
-    function checkClickOutSide(event: unknown) {
-        if (
-            ((event as PointerEvent).target as Element)?.id.indexOf("button-") != -1 ||
-            ((event as PointerEvent).target as Element)?.id.indexOf("icon-") != -1
-        ) {
-            (event as PointerEvent).preventDefault();
-            (event as PointerEvent).stopImmediatePropagation();
-            (event as PointerEvent).stopPropagation();
-        }
-    }
-
-    function clickOutside(element: unknown) {
-        console.info("clickOutside event listener attached to element: ", element);
-        document.body.addEventListener("click", checkClickOutSide);
-    }
 </script>
 
-<svelte:window on:keydown={onKeyDown} use:clickOutside />
-
-<div class="emote-menu-container">
-    <div class="emote-menu {$bottomActionBarVisibilityStore ? 'active-discussion' : ''}" bind:this={emojiContainer} />
+<div class="flex w-full h-full justify-center items-center absolute z-[300]">
+    <div
+        class="flex flex-col items-center pointer-events-auto justify-center m-auto bottom-1 z-[251] transition-transform duration-300 sm:flex-row {$bottomActionBarVisibilityStore
+            ? 'active-discussion'
+            : ''}"
+        bind:this={emojiContainer}
+    />
 </div>
-
-<style lang="scss">
-    .emote-menu-container {
-        display: flex;
-        width: 100%;
-        height: 100%;
-        justify-content: center;
-        align-items: center;
-        position: absolute;
-        z-index: 300;
-    }
-
-    .emote-menu {
-        pointer-events: all;
-    }
-</style>

@@ -390,7 +390,7 @@
                             <div class="z-[251] w-full p-4 flex items-center justify-center scale-150">
                                 <SoundMeterWidget
                                     volume={$localVolumeStore}
-                                    classcss="!bg-none !bg-transparent scale-150"
+                                    cssClass="!bg-none !bg-transparent scale-150"
                                     barColor="blue"
                                 />
                             </div>

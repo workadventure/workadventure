@@ -105,12 +105,12 @@
 </script>
 
 <div class="presentation-layout flex flex-col-reverse md:flex-col pointer-events-none">
-    {#if $streamableCollectionStore.size > 0 || $myCameraStore}
+    {#if $streamableCollectionStore.size > 0 || $myCameraStore || $myJitsiCameraStore}
         <div class="justify-end md:justify-center" bind:this={camContainer}>
             {#if $jitsiLoadingStore}
                 <Loading />
             {/if}
-            {#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true && $myCameraStore}
+            {#if ($streamableCollectionStore.size > 0 && $proximityMeetingStore === true) || $myCameraStore}
                 <CamerasContainer />
             {/if}
             {#if $myJitsiCameraStore}

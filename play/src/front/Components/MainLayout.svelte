@@ -25,7 +25,6 @@
     import { warningMessageStore } from "../Stores/ErrorStore";
     import { externalPopupSvelteComponent } from "../Stores/Utils/externalSvelteComponentStore";
     import { gameManager, GameSceneNotFoundError } from "../Phaser/Game/GameManager";
-    import { hasEmbedScreen } from "../Stores/EmbedScreensStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import HelpCameraSettingsPopup from "./HelpSettings/HelpCameraSettingsPopup.svelte";
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
@@ -51,6 +50,7 @@
     import MainModal from "./Modal/MainModal.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
     import AudioPlayer from "./AudioManager/AudioPlayer.svelte";
+    import MyCameraHoverZone from "./EmbedScreens/MyCameraHoverZone.svelte";
     //let mainLayout: HTMLDivElement;
     let keyboardEventIsDisable = false;
     /*let isMobile = isMediaBreakpointUp("md");
@@ -117,6 +117,8 @@
     {#if $modalVisibilityStore}
         <div class="bg-black/60 w-full h-full fixed left-0 right-0" />
     {/if}
+
+    <MyCameraHoverZone />
 
     <AudioPlayer />
 
@@ -198,9 +200,7 @@
                 <VisitCard visitCardUrl={$requestVisitCardsStore} />
             {/if}
 
-            {#if $hasEmbedScreen}
-                <EmbedScreensContainer />
-            {/if}
+            <EmbedScreensContainer />
 
             {#if $uiWebsitesStore}
                 <UiWebsiteContainer />
