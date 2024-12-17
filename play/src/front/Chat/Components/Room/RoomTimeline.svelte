@@ -30,7 +30,7 @@
     let scrollTimer: ReturnType<typeof setTimeout>;
     let shouldDisplayLoader = false;
 
-    let messageInputBarRef: HTMLDivElement;
+    let messageInputBarRef: MessageInputBar;
 
     $: messages = room?.messages;
     $: messageReaction = room?.messageReactions;
@@ -176,10 +176,9 @@
         if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
             messageInputBarRef.handleFiles({
                 detail: event.dataTransfer.files,
-            });
+            } as CustomEvent<FileList>);
         }
     }
-
 </script>
 
 <div
