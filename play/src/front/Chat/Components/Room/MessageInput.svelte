@@ -68,11 +68,9 @@
         lastBrNode?.scrollIntoView();
         lastBrNode?.remove();
     }
-
 </script>
 
 <div
-
     data-testid={dataTestid}
     bind:innerHTML={message}
     contenteditable="true"
