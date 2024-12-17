@@ -263,6 +263,9 @@ const chat: BaseTranslation = {
         ban: "Banned",
         kick: "Kicked",
         leave: "Leaved",
+        membership: "Membership",
+        permissionLevel: "Roles",
+        actions: "Actions",
         buttons: {
             sendInvitations: "Send invitations",
             cancel: "Cancel",

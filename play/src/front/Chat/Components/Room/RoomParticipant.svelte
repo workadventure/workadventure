@@ -132,90 +132,98 @@
     $: console.log("availableRoles : ", availableRoles);
 </script>
 
-<li class="tw-flex tw-my-1 tw-justify-between tw-items-center" data-testid={`${id}-participant`}>
-    <p class="tw-m-0 tw-p-0">{$name}</p>
-    <div class="tw-flex tw-gap-2 tw-content-center">
-        <p
-            class="tw-max-h-min tw-m-0 tw-ml-1 tw-px-2 tw-py-1 tw-bg-green-500 tw-rounded-3xl tw-min-w-[6rem] tw-text-center tw-content-center"
-            class:tw-bg-orange-500={$membership === "invite"}
-            class:tw-bg-red-500={$membership === "ban" || $membership === "leave"}
-            data-testid={`${id}-membership`}
-        >
-            <svelte:component this={getIconForMembership($membership)} />
-            {getTranslatedMembership($membership)}
-        </p>
-        {#if availableRoles.length > 0 && $membership === "join"}
+<tr data-testid={`${id}-participant`}>
+    <td><p class="tw-m-0 tw-p-0 tw-text-center">{$name}</p></td>
+    <td>
+        <div class="tw-flex tw-gap-2 tw-content-center tw-justify-center">
+            <p
+                class="tw-max-h-min tw-m-0 tw-ml-1 tw-px-2 tw-py-1 tw-bg-green-500 tw-rounded-3xl tw-min-w-[6rem] tw-text-center tw-content-center"
+                class:tw-bg-orange-500={$membership === "invite"}
+                class:tw-bg-red-500={$membership === "ban" || $membership === "leave"}
+                data-testid={`${id}-membership`}
+            >
+                <svelte:component this={getIconForMembership($membership)} />
+                {getTranslatedMembership($membership)}
+            </p>
+        </div></td
+    >
+    <td>
+        <div class="tw-flex tw-items-center tw-justify-center tw-h-full tw-w-full">
             <select
                 value={$permissionLevel}
                 on:change={onPermissionLevelChange}
                 name="permissionLevel"
                 id="permissionLevel"
+                disabled={availableRoles.length === 0 || $membership !== "join"}
+                class="!tw-border-light-purple !tw-border !tw-border-solid !tw-rounded-xl !tw-mb-0"
             >
-                {#each availableRoles as permissionLevelOption (permissionLevelOption)}
-                    <option value={permissionLevelOption}>{getTranslatedPermissionLevel(permissionLevelOption)}</option>
-                {/each}
+                {#if availableRoles.length > 0}
+                    {#each availableRoles as permissionLevelOption (permissionLevelOption)}
+                        <option value={permissionLevelOption}
+                            >{getTranslatedPermissionLevel(permissionLevelOption)}</option
+                        >
+                    {/each}
+                {:else}
+                    <option value={$permissionLevel}>{getTranslatedPermissionLevel($permissionLevel)}</option>
+                {/if}
             </select>
-        {:else}
-            <!-- TODO : design info membership -->
-            <p
-                data-testid={`${id}-permissionLevel`}
-                class="tw-max-h-min tw-m-0 tw-ml-1 tw-px-2 tw-py-1 tw-bg-gray-500 tw-rounded-3xl tw-min-w-[6rem] tw-text-center tw-content-center"
-            >
-                {getTranslatedPermissionLevel($permissionLevel)}
-            </p>
-        {/if}
-        {#if $hasPermissionToInvite && $membership === "leave"}
-            <button
-                class="tw-max-h-min tw-m-0 tw-px-2 tw-py-1 tw-bg-green-500 tw-rounded-md"
-                disabled={disableModerationButton}
-                on:click={inviteUser}
-            >
-                {#if inviteInProgress}
-                    <IconLoader class="tw-animate-spin" />
-                {:else}
-                    {$LL.chat.manageRoomUsers.buttons.invite()}
-                {/if}
-            </button>
-        {/if}
-        {#if $hasPermissionToKick && $membership !== "leave" && $membership !== "ban"}
-            <button
-                class="tw-max-h-min tw-m-0 tw-px-1 tw-py-1 tw-bg-orange-500 tw-rounded-md"
-                disabled={disableModerationButton}
-                on:click={kickUser}
-            >
-                {#if kickInProgress}
-                    <IconLoader class="tw-animate-spin" />
-                {:else}
-                    {$LL.chat.manageRoomUsers.buttons.kick()}
-                {/if}
-            </button>
-        {/if}
-        {#if $hasPermissionToBan}
-            {#if $membership === "ban"}
+        </div>
+    </td>
+    <td>
+        <div class="tw-flex tw-gap-2 tw-content-center tw-justify-center">
+            {#if $hasPermissionToInvite && $membership === "leave"}
                 <button
+                    class="tw-max-h-min tw-m-0 tw-px-2 tw-py-1 tw-bg-green-500 tw-rounded-md"
                     disabled={disableModerationButton}
-                    class="tw-max-h-min tw-m-0 tw-px-1 tw-py-1 tw-bg-green-500 tw-rounded-md"
-                    on:click={unbanUser}
+                    on:click={inviteUser}
                 >
-                    {#if unbanInProgress}
+                    {#if inviteInProgress}
                         <IconLoader class="tw-animate-spin" />
                     {:else}
-                        {$LL.chat.manageRoomUsers.buttons.unban()}
-                    {/if}
-                </button>
-            {:else}
-                <button
-                    class="tw-max-h-min tw-m-0 tw-px-1 tw-py-1 tw-bg-red-500 tw-rounded-md"
-                    disabled={disableModerationButton}
-                    on:click={banUser}
-                >
-                    {#if banInProgress}
-                        <IconLoader class="tw-animate-spin" />
-                    {:else}
-                        {$LL.chat.manageRoomUsers.buttons.ban()}
+                        {$LL.chat.manageRoomUsers.buttons.invite()}
                     {/if}
                 </button>
             {/if}
-        {/if}
-    </div>
-</li>
+            {#if $hasPermissionToKick && $membership !== "leave" && $membership !== "ban"}
+                <button
+                    class="tw-max-h-min tw-m-0 tw-px-2 tw-py-1 tw-bg-orange-500 tw-rounded-md"
+                    disabled={disableModerationButton}
+                    on:click={kickUser}
+                >
+                    {#if kickInProgress}
+                        <IconLoader class="tw-animate-spin" />
+                    {:else}
+                        {$LL.chat.manageRoomUsers.buttons.kick()}
+                    {/if}
+                </button>
+            {/if}
+            {#if $hasPermissionToBan}
+                {#if $membership === "ban"}
+                    <button
+                        disabled={disableModerationButton}
+                        class="tw-max-h-min tw-m-0 tw-px-2 tw-py-1 tw-bg-green-500 tw-rounded-md"
+                        on:click={unbanUser}
+                    >
+                        {#if unbanInProgress}
+                            <IconLoader class="tw-animate-spin" />
+                        {:else}
+                            {$LL.chat.manageRoomUsers.buttons.unban()}
+                        {/if}
+                    </button>
+                {:else}
+                    <button
+                        class="tw-max-h-min tw-m-0 tw-px-2 tw-py-1 tw-bg-red-500 tw-rounded-md"
+                        disabled={disableModerationButton}
+                        on:click={banUser}
+                    >
+                        {#if banInProgress}
+                            <IconLoader class="tw-animate-spin" />
+                        {:else}
+                            {$LL.chat.manageRoomUsers.buttons.ban()}
+                        {/if}
+                    </button>
+                {/if}
+            {/if}
+        </div>
+    </td>
+</tr>

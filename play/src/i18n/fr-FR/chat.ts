@@ -264,6 +264,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         ban: "Banni",
         kick: "Expulsé",
         leave: "Parti",
+        membership: "Statut",
+        permissionLevel: "Rôles",
+        actions: "Actions",
         buttons: {
             sendInvitations: "Envoyer les invitations",
             cancel: "Annuler",

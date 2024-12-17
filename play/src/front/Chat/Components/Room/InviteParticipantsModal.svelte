@@ -56,7 +56,7 @@
             <Select
                 bind:value={invitations}
                 multiple
-                class="!tw-border-light-purple tw-border tw-border-solid !tw-bg-contrast !tw-rounded-xl !tw-mb-3"
+                class="!tw-border-light-purple tw-border tw-border-solid !tw-bg-contrast !tw-rounded-xl"
                 inputStyles="box-shadow:none !important"
                 --border-focused="2px solid rgb(146 142 187)"
                 --input-color="white"
@@ -71,18 +71,29 @@
                     {`${item.label} (${item.value})`}
                 </div>
             </Select>
-            <p class="tw-p-0 tw-m-0 tw-pl-1 tw-font-bold">{$LL.chat.manageRoomUsers.participants()}</p>
-            <ul class="tw-list-none !tw-p-0 tw-max-h-96 tw-overflow-auto">
-                {#each $members
-                    .filter((participant) => {
-                        return (invitations || []).length > 0 ? invitations.some( (invitation) => get(participant.name).includes(invitation.label) ) : true;
-                    })
-                    .sort((participantA, participantB) => {
-                        return get(participantA.name).localeCompare(get(participantB.name));
-                    }) as member (member.id)}
-                    <RoomParticipant {member} {room} />
-                {/each}
-            </ul>
+            <div class="tw-max-h-96 tw-overflow-auto">
+                <table class="tw-w-full tw-border-separate tw-border-spacing-y-2">
+                    <thead>
+                        <tr>
+                            <th class="tw-text-center">{$LL.chat.manageRoomUsers.participants() || "Participants"}</th>
+                            <th class="tw-text-center">{$LL.chat.manageRoomUsers.membership() || "Membership"}</th>
+                            <th class="tw-text-center">{$LL.chat.manageRoomUsers.permissionLevel() || "Roles"}</th>
+                            <th class="tw-text-center">{$LL.chat.manageRoomUsers.actions() || "Actions"}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {#each $members
+                            .filter((participant) => {
+                                return (invitations || []).length > 0 ? invitations.some( (invitation) => get(participant.name).includes(invitation.label) ) : true;
+                            })
+                            .sort((participantA, participantB) => {
+                                return get(participantA.name).localeCompare(get(participantB.name));
+                            }) as member (member.id)}
+                            <RoomParticipant {member} {room} />
+                        {/each}
+                    </tbody>
+                </table>
+            </div>
         {/if}
     </div>
     <svelte:fragment slot="action">
