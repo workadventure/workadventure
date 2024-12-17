@@ -113,7 +113,7 @@
         // Don't unhighlight if the entity is selected
         if ($mapExplorationObjectSelectedStore == entity) return;
 
-        entity.removePointedToEditColor();
+        entity.setPointedToEditColor(0x00000);
         gameManager.getCurrentGameScene().markDirty();
     }
     function highlightArea(area: AreaPreview) {

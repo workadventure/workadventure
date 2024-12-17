@@ -147,6 +147,13 @@ export const MatrixRoomPropertyData = PropertyBase.extend({
         })
         .optional(),
 });
+
+export const TooltipPropertyData = PropertyBase.extend({
+    type: z.literal("tooltipPropertyData"),
+    id: z.string(),
+    content: z.string(),
+    duration: z.number().optional().default(5000),
+});
 export const AreaDataProperty = z.discriminatedUnion("type", [
     StartPropertyData,
     ExitPropertyData,
@@ -162,6 +169,7 @@ export const AreaDataProperty = z.discriminatedUnion("type", [
     PersonalAreaPropertyData,
     ExtensionModuleAreaProperty,
     MatrixRoomPropertyData,
+    TooltipPropertyData,
 ]);
 
 export const AreaDataProperties = z.array(AreaDataProperty);
@@ -373,6 +381,7 @@ export type PersonalAreaPropertyData = z.infer<typeof PersonalAreaPropertyData>;
 export type MatrixRoomPropertyData = z.infer<typeof MatrixRoomPropertyData>;
 export type PersonalAreaAccessClaimMode = z.infer<typeof PersonalAreaAccessClaimMode>;
 export type ExtensionModuleAreaPropertyData = z.infer<typeof ExtensionModuleAreaProperty>;
+export type TooltipPropertyData = z.infer<typeof TooltipPropertyData>;
 
 export enum GameMapProperties {
     ALLOW_API = "allowApi",
