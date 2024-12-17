@@ -65,7 +65,6 @@ export class Room {
     private _reportIssuesUrl: string | undefined;
     private _entityCollectionsUrls: string[] | undefined;
     private _errorSceneLogo: string | undefined;
-    private _discordSettings: DiscordSettings | undefined;
     private _modules: string[] = [];
 
     private constructor(private roomUrl: URL) {
@@ -210,8 +209,6 @@ export class Room {
 
                 this._errorSceneLogo = data.errorSceneLogo ?? undefined;
                 this._modules = data.modules ?? [];
-
-                // this._discordSettings = data.metadate.discordSettings ?? undefined;
 
                 //add discord allowed settings into a store
                 // @ts-ignore
@@ -417,10 +414,6 @@ export class Room {
 
     get errorSceneLogo(): string | undefined {
         return this._errorSceneLogo;
-    }
-
-    get discordSettings(): DiscordSettings | undefined {
-        return this._discordSettings;
     }
 
     get modules(): string[] {
