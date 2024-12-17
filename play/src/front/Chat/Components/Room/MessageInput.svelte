@@ -6,7 +6,6 @@
     export let dataText = "";
     export let dataTestid = "";
     export let messageInput: HTMLDivElement;
-
     export let onKeyDown: ((event: KeyboardEvent) => void) | undefined = undefined;
     export let onInput = () => {};
     export let focusin = (event: FocusEvent) => {
@@ -69,9 +68,11 @@
         lastBrNode?.scrollIntoView();
         lastBrNode?.remove();
     }
+
 </script>
 
 <div
+
     data-testid={dataTestid}
     bind:innerHTML={message}
     contenteditable="true"
