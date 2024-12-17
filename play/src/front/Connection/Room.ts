@@ -212,7 +212,10 @@ export class Room {
 
                 //add discord allowed settings into a store
                 // @ts-ignore
-                allowedDiscordBridgeStore.set(this._metadata.discordSettings?.enableDiscordBridge ?? false);
+                if (this._metadata) {
+                    // @ts-ignore
+                    allowedDiscordBridgeStore.set(this._metadata.discordSettings?.enableDiscordBridge ?? false);
+                }
 
                 return new MapDetail(data.mapUrl, data.wamUrl);
             } else if (errorApiDataChecking.success) {
