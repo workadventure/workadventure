@@ -60,7 +60,7 @@ export const OPID_CLIENT_REDIRECT_LOGOUT_URL = PUSHER_URL + "/logout-callback";
 export const OPID_PROFILE_SCREEN_PROVIDER =
     env.OPID_PROFILE_SCREEN_PROVIDER || (ADMIN_URL ? ADMIN_URL + "/profile" : undefined);
 export const OPID_SCOPE = env.OPID_SCOPE || "openid email profile ";
-export const OPID_PROMPT = env.OPID_PROMPT || "login";
+export const OPID_PROMPT = env.OPID_PROMPT || undefined;
 export const OPID_USERNAME_CLAIM = env.OPID_USERNAME_CLAIM || "username";
 export const OPID_LOCALE_CLAIM = env.OPID_LOCALE_CLAIM || "locale";
 export const OPID_WOKA_NAME_POLICY = env.OPID_WOKA_NAME_POLICY || "user_input";
