@@ -67,6 +67,7 @@ export class UpdateAreaCommand extends Command {
             "personalAreaPropertyData",
             "restrictedRightsPropertyData",
             "matrixRoomPropertyData",
+            "tooltipPropertyData",
         ];
         const foundKeys: AreaDataPropertiesKeys[] = [];
         const propertiesToRemove: string[] = [];

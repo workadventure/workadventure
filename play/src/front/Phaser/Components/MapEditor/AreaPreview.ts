@@ -521,6 +521,18 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                     color: "464EB8",
                 };
             }
+            case "matrixRoomPropertyData": {
+                return {
+                    name: "MatrixRoom",
+                    color: "0cbd8b",
+                };
+            }
+            case "tooltipPropertyData": {
+                return {
+                    name: "Tooltip",
+                    color: "0b66c2",
+                };
+            }
             default:
                 return {
                     name: "",

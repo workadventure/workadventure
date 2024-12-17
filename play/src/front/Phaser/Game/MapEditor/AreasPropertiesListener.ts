@@ -3,6 +3,7 @@ import {
     AreaDataProperties,
     AreaDataProperty,
     FocusablePropertyData,
+    TooltipPropertyData,
     JitsiRoomPropertyData,
     ListenerMegaphonePropertyData,
     MatrixRoomPropertyData,
@@ -222,7 +223,10 @@ export class AreasPropertiesListener {
                 this.handleMatrixRoomAreaOnEnter(property);
                 break;
             }
-
+            case "tooltipPropertyData": {
+                this.handleTooltipPropertyOnEnter(property);
+                break;
+            }
             default: {
                 break;
             }
@@ -290,6 +294,12 @@ export class AreasPropertiesListener {
                 this.handleMatrixRoomAreaOnEnter(newProperty);
                 break;
             }
+            case "tooltipPropertyData": {
+                newProperty = newProperty as typeof oldProperty;
+                this.handleTooltipPropertyOnLeave(oldProperty);
+                this.handleTooltipPropertyOnEnter(newProperty);
+                break;
+            }
             case "silent":
             default: {
                 break;
@@ -337,6 +347,10 @@ export class AreasPropertiesListener {
             }
             case "matrixRoomPropertyData": {
                 this.handleMatrixRoomAreaOnLeave(property);
+                break;
+            }
+            case "tooltipPropertyData": {
+                this.handleTooltipPropertyOnLeave(property);
                 break;
             }
             default: {
@@ -975,5 +989,19 @@ export class AreasPropertiesListener {
         this.scene
             .onMapExit(Room.getRoomPathFromExitUrl(url, window.location.toString()))
             .catch((e) => console.error(e));
+    }
+
+    private handleTooltipPropertyOnEnter(property: TooltipPropertyData): void {
+        // Calculate the duration. If the value is 0 or -1, the duration is infinite and we set it to -1
+        // If the duration is more than 0, we convert second (value used in the map editor) to milliseconds
+        const duration = property.duration < 1 ? -1 : property.duration * 1000;
+
+        // Implement the logic to show the info bulle
+        this.scene.CurrentPlayer.playText(property.id, property.content, duration);
+    }
+
+    private handleTooltipPropertyOnLeave(property: TooltipPropertyData): void {
+        // Implement the logic to hide the info bulle
+        this.scene.CurrentPlayer.destroyText(property.id);
     }
 }

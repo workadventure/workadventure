@@ -710,3 +710,16 @@ div.emoji-picker {
 .emoji-picker__overlay {
     z-index: 200 !important;
 }
+
+/* Style for the action or bulle info displayed a side of the user */
+.characterTriggerAction{
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    &::-webkit-scrollbar {
+        display: none;
+    }
+    p{
+        @apply tw-m-0 tw-p-0;
+    }
+}
