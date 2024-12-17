@@ -61,37 +61,39 @@
 
 <div class="flex flex-col overflow-auto h-full">
     <ChatHeader />
-    {#each roomsWithUsers as [roomName, userInRoom] (roomName)}
-        <div class=" users flex flex-col shrink-0 relative pt-[72px] h-full">
-            <button
-                class="group relative px-3 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center border border-solid border-x-0 border-t border-b-0 border-white/10 text-white outline-none border-y-0 appearance-none m-0"
-                on:click={() => shownRoomListStore.set($shownRoomListStore === roomName ? "" : roomName)}
-            >
-                {#if roomName !== $LL.chat.userList.disconnected()}
+    <div>
+        {#each roomsWithUsers as [roomName, userInRoom] (roomName)}
+            <div class=" users flex flex-col shrink-0 relative first:pt-[72px]">
+                <button
+                    class="group relative px-3 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center border border-solid border-x-0 border-t border-b-0 border-white/10 text-white outline-none border-y-0 appearance-none m-0"
+                    on:click={() => shownRoomListStore.set($shownRoomListStore === roomName ? "" : roomName)}
+                >
+                    {#if roomName !== $LL.chat.userList.disconnected()}
+                        <div
+                            class="{roomName !== $LL.chat.userList.disconnected()
+                                ? 'bg-white/10'
+                                : 'bg-gray'} text-white min-w-[20px] h-5 text-sm font-semibold flex items-center justify-center rounded-sm"
+                        >
+                            {userInRoom.length}
+                        </div>
+                    {/if}
+                    <div class="text-white text-sm font-bold tracking-widest uppercase grow text-left">
+                        {roomName}
+                    </div>
                     <div
-                        class="{roomName !== $LL.chat.userList.disconnected()
-                            ? 'bg-white/10'
-                            : 'bg-gray'} text-white min-w-[20px] h-5 text-sm font-semibold flex items-center justify-center rounded-sm"
+                        class="transition-all group-hover:bg-white/10 p-1 rounded aspect-square flex items-center justify-center text-white"
                     >
-                        {userInRoom.length}
+                        <IconChevronUp
+                            class={`transform transition ${$shownRoomListStore === roomName ? "" : "rotate-180"}`}
+                        />
+                    </div>
+                </button>
+                {#if $shownRoomListStore === roomName}
+                    <div class="flex flex-col flex-1 overflow-auto">
+                        <UserList userList={userInRoom} />
                     </div>
                 {/if}
-                <div class="text-white text-sm font-bold tracking-widest uppercase grow text-left">
-                    {roomName}
-                </div>
-                <div
-                    class="transition-all group-hover:bg-white/10 p-1 rounded aspect-square flex items-center justify-center text-white"
-                >
-                    <IconChevronUp
-                        class={`transform transition ${$shownRoomListStore === roomName ? "" : "rotate-180"}`}
-                    />
-                </div>
-            </button>
-            {#if $shownRoomListStore === roomName}
-                <div class="flex flex-col flex-1 overflow-auto">
-                    <UserList userList={userInRoom} />
-                </div>
-            {/if}
-        </div>
-    {/each}
+            </div>
+        {/each}
+    </div>
 </div>

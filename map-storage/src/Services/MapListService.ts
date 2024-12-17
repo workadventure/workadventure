@@ -7,6 +7,7 @@ import {
 import { WAMVersionHash } from "@workadventure/map-editor/src/WAMVersionHash";
 import pLimit from "p-limit";
 import * as Sentry from "@sentry/node";
+import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
 import { fileSystem } from "../fileSystem";
 import { FileSystemInterface } from "../Upload/FileSystemInterface";
 import { ENABLE_WEB_HOOK, MAX_SIMULTANEOUS_FS_READS } from "../Enum/EnvironmentVariable";
@@ -85,7 +86,10 @@ export class MapListService {
         try {
             const virtualPath = mapPathUsingDomain(wamFilePath, domain);
             const wamFileString = await this.fileSystem.readFileAsString(virtualPath);
-            return { wamFilePath: wamFilePath, wam: WAMFileFormat.parse(JSON.parse(wamFileString)) };
+            return {
+                wamFilePath: wamFilePath,
+                wam: WAMFileFormat.parse(wamFileMigration.migrate(JSON.parse(wamFileString))),
+            };
         } catch (e) {
             throw new Error(
                 `Error while trying to read WAM file "${wamFilePath}" to generate cache: ${JSON.stringify(

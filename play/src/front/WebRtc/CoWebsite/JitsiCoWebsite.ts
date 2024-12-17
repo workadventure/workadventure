@@ -133,7 +133,8 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
         private jwt: string | undefined,
         public readonly jitsiConfig: JitsiRoomConfigData | undefined,
         public readonly jitsiInterfaceConfig: object | undefined,
-        private domain: string
+        private domain: string,
+        public readonly jitsiRoomAdminTag: string | null
     ) {
         super(url, false, undefined, widthPercent, closable);
     }

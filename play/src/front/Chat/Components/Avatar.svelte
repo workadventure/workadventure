@@ -28,7 +28,7 @@
     <img
         src={avatarUrl}
         alt={"User avatar"}
-        class="rounded-full h-6 w-6 object-contain bg-white"
+        class="rounded-sm h-6 w-6 object-contain bg-white"
         style:background-color={`${color ? color : `${getColorByString(fallbackName)}`}`}
     />
 {:else}

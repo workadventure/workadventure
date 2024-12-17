@@ -83,8 +83,8 @@
 
                 if (
                     !userConnectedTags.includes("admin") &&
-                    (!actualCowebsite.jitsiConfig?.jitsiRoomAdminTag ||
-                        !userConnectedTags.includes(actualCowebsite.jitsiConfig?.jitsiRoomAdminTag))
+                    (!actualCowebsite.jitsiRoomAdminTag ||
+                        !userConnectedTags.includes(actualCowebsite.jitsiRoomAdminTag))
                 ) {
                     mergedConfig.localRecording = {
                         disable: true,

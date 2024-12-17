@@ -560,7 +560,8 @@ export class AreasPropertiesListener {
                 jwt,
                 property.jitsiRoomConfig,
                 undefined,
-                domainWithoutProtocol
+                domainWithoutProtocol,
+                property.jitsiRoomAdminTag ?? null
             );
 
             try {
