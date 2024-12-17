@@ -12,8 +12,8 @@
     import LL from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { UserProviderMerger } from "../UserProviderMerger/UserProviderMerger";
-    import { IconMessageCircle2, IconSearch, IconUsers, IconX } from "@wa-icons";
     import discordLogo from "../../Components/images/discord-logo.svg";
+    import { IconMessageCircle2, IconSearch, IconUsers, IconX } from "@wa-icons";
 
     const gameScene = gameManager.getCurrentGameScene();
     const chat = gameManager.chatConnection;
@@ -72,11 +72,11 @@
         {#if showNavBar}
             {#if $allowedDiscordBridgeStore}
                 <button
-                        class="tw-flex tw-justify-center tw-items-center tw-p-2 tw-rounded-md tw-cursor-pointer {$navChat ===
-                                    'settings'
-                                        ? 'tw-bg-secondary-800 tw-text-black'
-                                        : 'hover:tw-bg-white hover:tw-bg-opacity-10'}"
-                        on:click={() => navChat.switchToSettings()}
+                    class="tw-flex tw-justify-center tw-items-center tw-p-2 tw-rounded-md tw-cursor-pointer {$navChat ===
+                    'settings'
+                        ? 'tw-bg-secondary-800 tw-text-black'
+                        : 'hover:tw-bg-white hover:tw-bg-opacity-10'}"
+                    on:click={() => navChat.switchToSettings()}
                 >
                     <img src={discordLogo} alt="Discord logo" class="tw-w-6" />
                 </button>

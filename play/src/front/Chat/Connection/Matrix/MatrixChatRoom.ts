@@ -28,10 +28,10 @@ import { ChatRoom, ChatRoomMember, ChatRoomMembership } from "../ChatConnection"
 import { isAChatRoomIsVisible, navChat, selectedChatMessageToReply, selectedRoomStore } from "../../Stores/ChatStore";
 import { gameManager } from "../../../Phaser/Game/GameManager";
 import { localUserStore } from "../../../Connection/LocalUserStore";
+import { DISCORD_BOT_ID } from "../../../Enum/EnvironmentVariable";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { matrixSecurity } from "./MatrixSecurity";
-import { DISCORD_BOT_ID} from "../../../Enum/EnvironmentVariable";
 
 type EventId = string;
 
@@ -218,7 +218,7 @@ export class MatrixChatRoom implements ChatRoom {
                     } else {
                         this.handleNewMessage(event);
                         const senderID = event.getSender();
-                        if(senderID === DISCORD_BOT_ID) {
+                        if (senderID === DISCORD_BOT_ID) {
                             return;
                         }
                         if (senderID !== this.matrixRoom.client.getSafeUserId() && !get(this.areNotificationsMuted)) {

@@ -12,9 +12,9 @@ import {
 } from "../Enum/EnvironmentVariable";
 import { ApiError } from "../Stores/Errors/ApiError";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
+import { allowedDiscordBridgeStore } from "../Stores/ChatStore";
 import { axiosWithRetry } from "./AxiosUtils";
 import { localUserStore } from "./LocalUserStore";
-import { allowedDiscordBridgeStore } from "../Stores/ChatStore";
 export class MapDetail {
     constructor(public readonly mapUrl?: string, public readonly wamUrl?: string) {}
 }
@@ -422,7 +422,7 @@ export class Room {
     get discordSettings(): DiscordSettings | undefined {
         return this._discordSettings;
     }
-    
+
     get modules(): string[] {
         return this._modules;
     }

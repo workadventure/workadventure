@@ -4,9 +4,9 @@ import { CalendarEventInterface, TodoListInterface } from "@workadventure/shared
 import { ComponentType } from "svelte";
 import { AreaData, AreaDataProperties } from "@workadventure/map-editor";
 import { Observable } from "rxjs";
+import { z } from "zod";
 import { OpenCoWebsiteObject } from "../Chat/Utils";
 import { SpaceRegistryInterface } from "../Space/SpaceRegistry/SpaceRegistryInterface";
-import { z } from "zod";
 
 export interface ExternalSvelteComponentStore {
     addActionBarComponent: (key: string, externsionModule: ExtensionModule, componentType: ComponentType) => void;
@@ -86,7 +86,7 @@ export const RoomMetadataType = z.object({
     discordSettings: z.object({
         enableDiscordBridge: z.boolean().default(true),
         enableDiscordMandatory: z.boolean().default(false),
-        discordAllowedGuilds: z.string().default("")
+        discordAllowedGuilds: z.string().default(""),
     }),
 });
 

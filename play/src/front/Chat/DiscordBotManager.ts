@@ -2,12 +2,12 @@ import { get } from "svelte/store";
 import { Subscription } from "rxjs";
 import { notificationPlayingStore } from "../Stores/NotificationStore";
 import { DiscordServer } from "../Interfaces/DiscordServerInterface";
+import { DISCORD_BOT_ID } from "../Enum/EnvironmentVariable";
 import { ChatMessage } from "./Connection/ChatConnection";
 import { MatrixChatConnection } from "./Connection/Matrix/MatrixChatConnection";
 import { MatrixChatRoom } from "./Connection/Matrix/MatrixChatRoom";
 import { storedQrCodeUrl } from "./Stores/DiscordConnectionStore";
 import { MatrixChatMessage } from "./Connection/Matrix/MatrixChatMessage";
-import { DISCORD_BOT_ID } from "../Enum/EnvironmentVariable";
 
 export interface DiscordUser {
     id: string;
@@ -23,9 +23,9 @@ export class DiscordBotManager {
 
     //init the direct room with the discord bot
     public async initDiscordBotRoom() {
-        if (!DISCORD_BOT_ID){
+        if (!DISCORD_BOT_ID) {
             console.error("Discord bot id is not defined");
-            return
+            return;
         }
         try {
             const discordChatRoom = await this.chatConnection.createDirectRoom(DISCORD_BOT_ID);
@@ -40,7 +40,7 @@ export class DiscordBotManager {
     }
 
     public async sendMessage(message: string): Promise<ChatMessage> {
-        let welcomeMessageNumber = 0
+        let welcomeMessageNumber = 0;
         return new Promise((resolve, reject) => {
             if (this.botMessageSubscription) this.botMessageSubscription.unsubscribe();
             if (!this.discordBotRoom) {
@@ -54,7 +54,7 @@ export class DiscordBotManager {
             }
             this.botMessageSubscription = this.discordBotRoom.messages.onPush.subscribe((lastMessage) => {
                 console.log("lastMessage", get(lastMessage.content).body);
-                console.log(">>>>>>", this.discordBotRoom?.messages.length)
+                console.log(">>>>>>", this.discordBotRoom?.messages.length);
                 if (!this.discordBotRoom) {
                     return reject(new Error("Discord bot room is not initialized"));
                 }
@@ -64,9 +64,9 @@ export class DiscordBotManager {
                     return;
                 } else if (get(lastMessage.content).body.includes("welcome from bridge bot")) {
                     //ignoring the welcome message
-                    welcomeMessageNumber ++;
-                    console.log("welcomeMessageNumber", welcomeMessageNumber)
-                    if(welcomeMessageNumber >= 3){
+                    welcomeMessageNumber++;
+                    console.log("welcomeMessageNumber", welcomeMessageNumber);
+                    if (welcomeMessageNumber >= 3) {
                         return resolve(this.sendMessage(message));
                     }
                     return;
