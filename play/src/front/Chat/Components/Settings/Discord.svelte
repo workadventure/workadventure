@@ -88,14 +88,15 @@
         ) {
             bridgeConnected = true;
             await fetchUserGuilds();
-        }
-        else if(response.includes("captchat")) {
+        } else if (response.includes("captchat")) {
             notificationPlayingStore.playNotification("Error your account is protected by captcha", "discord-logo.svg");
             needManualToken = true;
             qrCodeUrl = "";
-        }
-        else {
-            notificationPlayingStore.playNotification("Error while connecting with qr code try with your token", "discord-logo.svg");
+        } else {
+            notificationPlayingStore.playNotification(
+                "Error while connecting with qr code try with your token",
+                "discord-logo.svg"
+            );
             needManualToken = true;
             qrCodeUrl = "";
         }
@@ -127,10 +128,10 @@
         try {
             bridgeConnectionStatusMessage = await DiscordBot.sendMessage("ping");
         } catch (e) {
-                console.error("Discord bot not connected", e);
-                bridgeConnected = false;
-                bridgeError = true;
-                return;
+            console.error("Discord bot not connected", e);
+            bridgeConnected = false;
+            bridgeError = true;
+            return;
         }
         const bridgeConnectionStatus = get(bridgeConnectionStatusMessage.content).body;
         discordUser = await DiscordBot.getCurrentDiscordUser();
@@ -185,7 +186,6 @@
     }
 </script>
 
-
 {#if !$userIsConnected}
     <p class="tw-text-gray-400 tw-w-full tw-text-center tw-pt-2">
         {$LL.chat.requiresLoginForChat()}
@@ -210,7 +210,7 @@
         <p class="tw-text-white tw-mb-0">Error while starting the bridge</p>
     </div>
 {:else}
-    <div class="tw-flex tw-flex-col tw-w-full tw-gap-5">
+    <div class="tw-flex tw-flex-col tw-w-full tw-gap-5 tw-p-5">
         <!--{#if !bridgeConnected && qrCodeUrl === undefined && !needManualToken }-->
         {#if !bridgeConnected && qrCodeUrl.length <= 0 && !needManualToken}
             <div class="tw-py-3 tw-px-3">
@@ -358,11 +358,11 @@
         {/if}
         {#if loadingFetchServer}
             <div
-                    class="tw-flex tw-flex-col tw-gap-2 tw-p-6 tw-rounded-xl tw-z-50 tw-w-full tw-justify-center tw-items-center"
+                class="tw-flex tw-flex-col tw-gap-2 tw-p-6 tw-rounded-xl tw-z-50 tw-w-full tw-justify-center tw-items-center"
             >
                 <div
-                        class="tw-loader tw-w-6 tw-h-6 tw-border-2 tw-border-t-[2px] tw-border-primary tw-rounded-full tw-animate-spin"
-                        style="border-top-style: solid;"
+                    class="tw-loader tw-w-6 tw-h-6 tw-border-2 tw-border-t-[2px] tw-border-primary tw-rounded-full tw-animate-spin"
+                    style="border-top-style: solid;"
                 />
                 <span class="tw-ml-2 tw-text-white">{$LL.externalModule.discord.fetchingServer()}</span>
             </div>

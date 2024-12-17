@@ -130,7 +130,6 @@
     $: filteredRoomInvitations = $roomInvitations
         .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
         .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
-    $: isGuest = chat.isGuest;
 
     $: displayTwoColumnLayout = sideBarWidth >= CHAT_LAYOUT_LIMIT;
 
@@ -153,7 +152,6 @@
             style={displayTwoColumnLayout ? `width:335px ;flex : 0 0 auto` : ``}
         >
             <ChatHeader />
-
             <div
                 class="tw-relative tw-pt-[72px] {$isEncryptionRequiredAndNotSet === true && $isGuest === false
                     ? ' tw-h-[calc(100%-2rem)]'
