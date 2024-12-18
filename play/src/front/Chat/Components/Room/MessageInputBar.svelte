@@ -104,7 +104,7 @@
         emojiPicker.isPickerVisible() ? emojiPicker.hidePicker() : emojiPicker.showPicker(emojiButtonRef);
     }
 
-    function onPasteFiles(event: CustomEvent<FileList>) {
+    export function handleFiles(event: CustomEvent<FileList>) {
         const newFiles = [...event.detail].map((file) => ({ id: window.crypto.randomUUID(), file }));
         files = [...files, ...newFiles];
         addToPreviews(newFiles);
@@ -201,7 +201,7 @@
     <MessageInput
         onKeyDown={sendMessageOrEscapeLine}
         onInput={onInputHandler}
-        on:pasteFiles={onPasteFiles}
+        on:pasteFiles={handleFiles}
         {focusin}
         {focusout}
         bind:message

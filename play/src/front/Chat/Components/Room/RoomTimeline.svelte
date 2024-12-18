@@ -15,7 +15,6 @@
     import { IconChevronLeft, IconLoader, IconMailBox } from "@wa-icons";
 
     export let room: ChatRoom;
-
     let myChatID = localUserStore.getChatId();
 
     const NUMBER_OF_TYPING_MEMBER_TO_DISPLAY = 3;
@@ -30,6 +29,8 @@
 
     let scrollTimer: ReturnType<typeof setTimeout>;
     let shouldDisplayLoader = false;
+
+    let messageInputBarRef: MessageInputBar;
 
     $: messages = room?.messages;
     $: messageReaction = room?.messageReactions;
@@ -170,9 +171,21 @@
             scrollToMessageListBottom();
         }
     }
+
+    function onDropFiles(event: DragEvent) {
+        if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
+            messageInputBarRef.handleFiles({
+                detail: event.dataTransfer.files,
+            } as CustomEvent<FileList>);
+        }
+    }
 </script>
 
-<div class="tw-flex tw-flex-col tw-flex-auto tw-h-full tw-w-full tw-max-w-full">
+<div
+    class="tw-flex tw-flex-col tw-flex-auto tw-h-full tw-w-full tw-max-w-full"
+    on:dragover|preventDefault
+    on:drop|preventDefault|stopPropagation={onDropFiles}
+>
     {#if room !== undefined}
         <div class="tw-flex tw-flex-col tw-gap-2">
             <div
@@ -264,7 +277,6 @@
 
         {#if $typingMembers.length > 0}
             <div class="tw-flex tw-row tw-w-full tw-text-gray-300 tw-text-sm  tw-m-0 tw-px-2 tw-mb-2">
-                <!-- {$typingMembers.map(typingMember => typingMember.name).slice(0, NUMBER_OF_TYPING_MEMBER_TO_DISPLAY)} -->
                 {#each $typingMembers
                     .map((typingMember, index) => ({ ...typingMember, index }))
                     .slice(0, NUMBER_OF_TYPING_MEMBER_TO_DISPLAY) as typingMember (typingMember.id)}
@@ -295,7 +307,7 @@
                 </div>
             </div>
         {/if}
-        <MessageInputBar {room} />
+        <MessageInputBar {room} bind:this={messageInputBarRef} />
     {/if}
 </div>
 
