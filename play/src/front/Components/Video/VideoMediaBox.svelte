@@ -2,6 +2,7 @@
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
     import { writable } from "svelte/store";
+    import { createPopperActions } from "svelte-popperjs";
     import { VideoPeer } from "../../WebRtc/VideoPeer";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
@@ -60,6 +61,22 @@
         highlightedEmbedScreen.removeHighlight();
         highlightFullScreen.set(false);
     }
+
+    const [popperRef, popperContent] = createPopperActions({
+        placement: "bottom",
+        //strategy: 'fixed',
+    });
+    const extraOpts = {
+        modifiers: [
+            { name: "offset", options: { offset: [0, 8] } },
+            {
+                name: "flip",
+                options: {
+                    fallbackPlacements: ["top", "right", "left"],
+                },
+            },
+        ],
+    };
 </script>
 
 <div class="group/screenshare flex justify-center mx-auto h-full w-full">
@@ -100,14 +117,20 @@
                 isPlayingAudio={$constraintStore?.audio}
                 position={videoEnabled ? "absolute bottom-4 left-4" : "absolute bottom-1.5 left-4"}
             >
-                <UpDownChevron enabled={showUserSubMenu} on:click={() => (showUserSubMenu = !showUserSubMenu)} />
+                <div use:popperRef class="self-center">
+                    <UpDownChevron enabled={showUserSubMenu} on:click={() => (showUserSubMenu = !showUserSubMenu)} />
+                </div>
                 {#if showUserSubMenu}
-                    <ActionMediaBox
-                        {embedScreen}
-                        trackStreamWrapper={peer}
-                        {videoEnabled}
-                        on:close={() => (showUserSubMenu = false)}
-                    />
+                    <!-- FIXME: migrate from popover to https://floating-ui-svelte.vercel.app/examples/popovers when we migrate to Svelte 5 -->
+                    <!-- This way, we can remove the "h-24" class from the div that is a lie -->
+                    <div use:popperContent={extraOpts} class="h-24">
+                        <ActionMediaBox
+                            {embedScreen}
+                            trackStreamWrapper={peer}
+                            {videoEnabled}
+                            on:close={() => (showUserSubMenu = false)}
+                        />
+                    </div>
                 {/if}
             </UserName>
 

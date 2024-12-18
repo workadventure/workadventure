@@ -38,6 +38,13 @@
         gameScene.reposition();
     });
 
+    // Remove the highlight if the video is disabled
+    $: {
+        if (isHighlighted && $constraintStore && $constraintStore?.video === false) {
+            highlightedEmbedScreen.removeHighlight();
+        }
+    }
+
     $: videoEnabled = $constraintStore ? $constraintStore.video : false;
     $: isHighlighted = $highlightedEmbedScreen === streamable;
 </script>
@@ -49,11 +56,6 @@
     {#if $constraintStore || $statusStore === "error" || $statusStore === "connecting"}
         <div
             class="video-media-box pointer-events-auto media-container transition-all justify-center relative h-full w-full"
-            class:hightlighted={isHighlighted}
-            class:mx-auto={isHighlighted && !videoEnabled}
-            class:m-auto={!isHighlighted && !videoEnabled}
-            class:aspect-video={!isHighlighted && !videoEnabled}
-            class:clickable={isClickable}
             in:fly={{ y: 50, duration: 150 }}
         >
             <VideoMediaBox peer={streamable} {isHighlighted} />

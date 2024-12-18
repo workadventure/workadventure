@@ -76,7 +76,7 @@
     id="cameras-container"
 >
     {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
-        {#if !highlightedEmbedScreen || $highlightedEmbedScreen !== peer}
+        {#if $highlightedEmbedScreen !== peer}
             {#key uniqueId}
                 <div
                     class={isHightlighted

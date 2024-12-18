@@ -88,6 +88,17 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
 
 export const streamableCollectionStore = createStreamableCollectionStore();
 
+// No need to unsubscribe, the store is global
+// eslint-disable-next-line svelte/no-ignored-unsubscribe
+streamableCollectionStore.subscribe((streamableCollection) => {
+    // If the highlightedEmbedScreen is not in the streamableCollection, we remove the highlight
+    const $highlightedEmbedScreen = get(highlightedEmbedScreen);
+    if ($highlightedEmbedScreen && !streamableCollection.has($highlightedEmbedScreen.uniqueId)) {
+        highlightedEmbedScreen.removeHighlight();
+        highlightFullScreen.set(false);
+    }
+});
+
 export const myJitsiCameraStore = derived([jitsiTracksStore], ([$jitsiTracksStore]) => {
     for (const jitsiTrackWrapper of $jitsiTracksStore.values()) {
         if (jitsiTrackWrapper.isLocal) {

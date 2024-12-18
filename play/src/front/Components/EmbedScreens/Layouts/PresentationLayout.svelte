@@ -120,11 +120,7 @@
     {/if}
 
     {#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true && $highlightedEmbedScreen}
-        <div
-            id="video-container-receive"
-            class="mb-8 md:mb-0 flex-1 {$highlightedEmbedScreen ? 'block' : 'hidden'}"
-            bind:this={highlightScreen}
-        >
+        <div id="video-container-receive" class="mb-8 md:mb-0 flex-1" bind:this={highlightScreen}>
             {#key $highlightedEmbedScreen.uniqueId}
                 <MediaBox isHighlighted={true} isClickable={true} streamable={$highlightedEmbedScreen} />
             {/key}
