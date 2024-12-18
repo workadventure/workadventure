@@ -42,7 +42,7 @@
 
 <Popup {isOpen}>
     <h1 slot="title">{$LL.chat.manageRoomUsers.title()}</h1>
-    <div slot="content" class="tw-w-full tw-flex tw-flex-col tw-gap-2">
+    <div slot="content" class="tw-w-full tw-flex tw-flex-col tw-gap-2" data-testid="inviteParticipantsModalContent">
         {#if sendingInvitationsToRoom}
             <div class="tw-animate-[spin_2s_linear_infinite] tw-self-center">
                 <IconLoader font-size="2em" />

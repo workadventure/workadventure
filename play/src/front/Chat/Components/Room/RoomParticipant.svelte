@@ -155,13 +155,14 @@
                 name="permissionLevel"
                 id="permissionLevel"
                 disabled={availableRoles.length === 0 || $membership !== "join"}
+                data-testid={`${id}-permissionLevel`}
                 class="!tw-border-light-purple !tw-border !tw-border-solid !tw-rounded-xl !tw-mb-0"
             >
                 {#if availableRoles.length > 0}
                     {#each availableRoles as permissionLevelOption (permissionLevelOption)}
                         <option value={permissionLevelOption}
-                            >{getTranslatedPermissionLevel(permissionLevelOption)}</option
-                        >
+                            >{getTranslatedPermissionLevel(permissionLevelOption)}
+                        </option>
                     {/each}
                 {:else}
                     <option value={$permissionLevel}>{getTranslatedPermissionLevel($permissionLevel)}</option>
@@ -176,6 +177,7 @@
                     class="tw-max-h-min tw-m-0 tw-px-2 tw-py-1 tw-bg-green-500 tw-rounded-md"
                     disabled={disableModerationButton}
                     on:click={inviteUser}
+                    data-testid={`${id}-inviteButton`}
                 >
                     {#if inviteInProgress}
                         <IconLoader class="tw-animate-spin" />
@@ -188,6 +190,7 @@
                 <button
                     class="tw-max-h-min tw-m-0 tw-px-2 tw-py-1 tw-bg-orange-500 tw-rounded-md"
                     disabled={disableModerationButton}
+                    data-testid={`${id}-kickButton`}
                     on:click={kickUser}
                 >
                     {#if kickInProgress}
@@ -202,6 +205,7 @@
                     <button
                         disabled={disableModerationButton}
                         class="tw-max-h-min tw-m-0 tw-px-2 tw-py-1 tw-bg-green-500 tw-rounded-md"
+                        data-testid={`${id}-unbanButton`}
                         on:click={unbanUser}
                     >
                         {#if unbanInProgress}
@@ -215,6 +219,7 @@
                         class="tw-max-h-min tw-m-0 tw-px-2 tw-py-1 tw-bg-red-500 tw-rounded-md"
                         disabled={disableModerationButton}
                         on:click={banUser}
+                        data-testid={`${id}-banButton`}
                     >
                         {#if banInProgress}
                             <IconLoader class="tw-animate-spin" />

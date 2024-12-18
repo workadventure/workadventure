@@ -140,6 +140,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
                 //VerificationMethod.ShowQrCode,
                 //VerificationMethod.Reciprocate,
             ],
+            timelineSupport: true,
         };
 
         if (this.clientClosed) {

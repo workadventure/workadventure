@@ -657,25 +657,28 @@ export class MatrixChatRoom
     }
 
     public async changePermissionLevelFor(member: ChatRoomMember, permissionLevel: ChatPermissionLevel): Promise<void> {
-        const roomPowerLevelsState = this.matrixRoom
-            .getLiveTimeline()
-            .getState(Direction.Backward)
-            ?.getStateEvents(EventType.RoomPowerLevels);
-
-        if (!roomPowerLevelsState || roomPowerLevelsState.length === 0) {
-            return;
-        }
-
-        const currentContent = roomPowerLevelsState[0].getContent();
-        const newRoomPowerLevelsState = {
-            ...currentContent,
-            users: {
-                ...currentContent.users,
-                [member.id]: MatrixChatRoomMember.getPowerLevel(permissionLevel),
-            },
-        };
-
         try {
+            await this.matrixRoom.refreshLiveTimeline();
+
+            const roomPowerLevelsState = this.matrixRoom
+                .getLiveTimeline()
+                .getState(Direction.Backward)
+                ?.getStateEvents(EventType.RoomPowerLevels);
+
+            if (!roomPowerLevelsState || roomPowerLevelsState.length === 0) {
+                console.error("No room power levels state found");
+                return;
+            }
+
+            const currentContent = roomPowerLevelsState[0].getContent();
+            const newRoomPowerLevelsState = {
+                ...currentContent,
+                users: {
+                    ...currentContent.users,
+                    [member.id]: MatrixChatRoomMember.getPowerLevel(permissionLevel),
+                },
+            };
+
             await this.matrixRoom.client.sendStateEvent(this.id, EventType.RoomPowerLevels, newRoomPowerLevelsState);
         } catch (e) {
             console.error("Failed to change permission level : " + e);
