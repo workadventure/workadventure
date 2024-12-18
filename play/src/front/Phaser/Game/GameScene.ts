@@ -172,6 +172,7 @@ import { UserProviderInterface } from "../../Chat/UserProvider/UserProviderInter
 import { faviconManager } from "../../WebRtc/FaviconManager";
 import { ScriptingOutputAudioStreamManager } from "../../WebRtc/AudioStream/ScriptingOutputAudioStreamManager";
 import { ScriptingInputAudioStreamManager } from "../../WebRtc/AudioStream/ScriptingInputAudioStreamManager";
+import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -348,6 +349,9 @@ export class GameScene extends DirtyScene {
     private worldUserProvider: WorldUserProvider | undefined;
     public extensionModule: ExtensionModule | undefined = undefined;
     public landingAreas: AreaData[] = [];
+
+    // Add new attribut chat connection used for discord
+    public _chatConnection: ChatConnectionInterface | undefined;
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
@@ -1569,6 +1573,7 @@ export class GameScene extends DirtyScene {
                 gameManager
                     .getChatConnection()
                     .then((chatConnection) => {
+                        this._chatConnection = chatConnection;
                         const connection = this.connection;
                         const allUserSpace = this.allUserSpace;
 
