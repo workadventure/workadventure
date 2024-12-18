@@ -13,9 +13,6 @@ test.describe('Swagger documentation', () => {
             `/swagger-ui/?urls.primaryName=Pusher%20->%20Admin`
         );
 
-        //click on models-control button to show all models
-        await page.click('text=Models');
-
         // Test if the component "model-AdminApiData" is visible
         await expect(page.locator('#model-AdminApiData')).toBeVisible();
 
