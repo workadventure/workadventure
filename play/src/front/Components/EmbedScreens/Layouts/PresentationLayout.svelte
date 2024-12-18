@@ -104,7 +104,7 @@
     // }
 </script>
 
-<div class="presentation-layout flex flex-col-reverse md:flex-col pointer-events-none">
+<div class="presentation-layout flex flex-col-reverse md:flex-col pointer-events-none h-full w-full absolute">
     {#if $streamableCollectionStore.size > 0 || $myCameraStore || $myJitsiCameraStore}
         <div class="justify-end md:justify-center" bind:this={camContainer}>
             {#if $jitsiLoadingStore}
@@ -122,7 +122,7 @@
     {#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true && $highlightedEmbedScreen}
         <div
             id="video-container-receive"
-            class="mb-8 md:mb-0{$highlightedEmbedScreen ? 'block' : 'hidden'}"
+            class="mb-8 md:mb-0 flex-1 {$highlightedEmbedScreen ? 'block' : 'hidden'}"
             bind:this={highlightScreen}
         >
             {#key $highlightedEmbedScreen.uniqueId}
@@ -133,22 +133,22 @@
 </div>
 
 <style>
-    @container (min-width: 576px) {
-        .presentation-layout {
-            position: fixed;
-            left: 0;
-            width: 100%;
-            z-index: 9999;
-        }
-    }
+    /*@container (min-width: 576px) {*/
+    /*    .presentation-layout {*/
+    /*        position: fixed;*/
+    /*        left: 0;*/
+    /*        width: 100%;*/
+    /*        z-index: 9999;*/
+    /*    }*/
+    /*}*/
 
-    @container (max-width: 767px) {
-        .video-container-receive {
-            margin-top: 0;
-        }
+    /*@container (max-width: 767px) {*/
+    /*    .video-container-receive {*/
+    /*        margin-top: 0;*/
+    /*    }*/
 
-        .container-media {
-            margin-top: -70px;
-        }
-    }
+    /*    .container-media {*/
+    /*        margin-top: -70px;*/
+    /*    }*/
+    /*}*/
 </style>

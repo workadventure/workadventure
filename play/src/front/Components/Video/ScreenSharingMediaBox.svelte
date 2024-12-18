@@ -3,7 +3,7 @@
 
     import { Color } from "@workadventure/shared-utils";
     import { onDestroy, onMount } from "svelte";
-    import { Unsubscriber } from "svelte/store";
+    import { Unsubscriber, writable } from "svelte/store";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import type { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
@@ -91,6 +91,16 @@
         window.removeEventListener("resize", updateScreenSize);
         window.removeEventListener("resize", calcHeightVideo);
     });
+
+    const pictureStore = writable<string | undefined>(undefined);
+    let extendedSpaceUser = peer.getExtendedSpaceUser();
+    extendedSpaceUser
+        .then((user) => {
+            pictureStore.set(user.getWokaBase64);
+        })
+        .catch((e) => {
+            console.error("Error getting the user picture: ", e);
+        });
 </script>
 
 <!-- <svelte:window bind:this={windowVar}> -->

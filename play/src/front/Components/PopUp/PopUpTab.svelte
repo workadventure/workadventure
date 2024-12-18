@@ -32,9 +32,5 @@
             line-height: 32px;
             padding-bottom: 14px;
         }
-
-        .responsive-div-message {
-            margin-top: 24px;
-        }
     }
 </style>

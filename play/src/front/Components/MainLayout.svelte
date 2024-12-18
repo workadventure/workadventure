@@ -25,6 +25,8 @@
     import { warningMessageStore } from "../Stores/ErrorStore";
     import { externalPopupSvelteComponent } from "../Stores/Utils/externalSvelteComponentStore";
     import { gameManager, GameSceneNotFoundError } from "../Phaser/Game/GameManager";
+    import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
+    import { highlightFullScreen } from "../Stores/ActionsCamStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import HelpCameraSettingsPopup from "./HelpSettings/HelpCameraSettingsPopup.svelte";
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
@@ -48,9 +50,10 @@
     import WarningToast from "./WarningContainer/WarningToast.svelte";
     import ClaimPersonalAreaDialogBox from "./MapEditor/ClaimPersonalAreaDialogBox.svelte";
     import MainModal from "./Modal/MainModal.svelte";
-    import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
     import AudioPlayer from "./AudioManager/AudioPlayer.svelte";
     import MyCameraHoverZone from "./EmbedScreens/MyCameraHoverZone.svelte";
+    import MediaBox from "./Video/MediaBox.svelte";
+    import PresentationLayout from "./EmbedScreens/Layouts/PresentationLayout.svelte";
     //let mainLayout: HTMLDivElement;
     let keyboardEventIsDisable = false;
     /*let isMobile = isMediaBreakpointUp("md");
@@ -118,12 +121,18 @@
         <div class="bg-black/60 w-full h-full fixed left-0 right-0" />
     {/if}
 
+    {#if $highlightedEmbedScreen && $highlightFullScreen}
+        <div class="w-full h-full fixed left-0 right-0">
+            <MediaBox streamable={$highlightedEmbedScreen} isHighlighted={true} isClickable={true} />
+        </div>
+    {/if}
+
     <MyCameraHoverZone />
 
     <AudioPlayer />
 
     <div class="flex flex-col min-h-screen sm:flex-col-reverse">
-        <section id="main-layout-main" class="pb-0 flex-1 pointer-events-none h-full w-full">
+        <section id="main-layout-main" class="pb-0 flex-1 pointer-events-none h-full w-full relative">
             <div class="fixed z-[1000] bottom-0 left-0 right-0 m-auto w-max max-w-[80%]">
                 <div class="popups flex items-end relative w-full justify-center mb-4 h-[calc(100%-96px)]">
                     {#each $popupStore.slice().reverse() as popup, index (popup.uuid)}
@@ -200,7 +209,9 @@
                 <VisitCard visitCardUrl={$requestVisitCardsStore} />
             {/if}
 
-            <EmbedScreensContainer />
+            {#if !$highlightFullScreen}
+                <PresentationLayout />
+            {/if}
 
             {#if $uiWebsitesStore}
                 <UiWebsiteContainer />

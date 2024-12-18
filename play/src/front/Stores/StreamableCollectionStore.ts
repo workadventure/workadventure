@@ -14,6 +14,7 @@ import { peerStore, screenSharingStreamStore } from "./PeerStore";
 import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore";
 import { gameSceneStore } from "./GameSceneStore";
 import { embedScreenLayoutStore } from "./EmbedScreensStore";
+import { highlightFullScreen } from "./ActionsCamStore";
 
 export type Streamable = RemotePeer | ScreenSharingLocalMedia | JitsiTrackStreamWrapper;
 
@@ -77,6 +78,7 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
 
             if ($highlightedEmbedScreen && !peers.has($highlightedEmbedScreen.uniqueId)) {
                 highlightedEmbedScreen.removeHighlight();
+                highlightFullScreen.set(false);
             }
 
             return peers;

@@ -81,7 +81,7 @@
                 <div
                     class={isHightlighted
                         ? " pointer-events-auto w-[230px] all-cameras-highlighted camera-box"
-                        : "w-full all-cameras m-auto camera-box"}
+                        : "w-full h-full all-cameras m-auto camera-box"}
                 >
                     <MediaBox streamable={peer} />
                 </div>
@@ -94,7 +94,7 @@
             id="unique-mycam"
             class={isHightlighted
                 ? "w-[230px] all-cameras-highlighted pointer-events-auto"
-                : "w-full all-cameras m-auto pointer-event-auto"}
+                : "w-full h-full all-cameras m-auto pointer-event-auto"}
         >
             <MyCamera />
         </div>
