@@ -10,9 +10,10 @@ document.addEventListener("focusin", (event) => {
         event.target instanceof HTMLInputElement ||
         event.target instanceof HTMLTextAreaElement ||
         event.target instanceof HTMLSelectElement ||
-        (event.target instanceof HTMLDivElement && event.target.getAttribute("role") === "textbox") ||
-        (event.target instanceof HTMLDivElement && event.target.getAttribute("contenteditable") === "true") ||
-        (event.target instanceof HTMLDivElement && event.target.classList.contains("block-user-action"))
+        (event.target instanceof HTMLDivElement &&
+            (event.target.getAttribute("role") === "textbox" ||
+                event.target.classList.contains("block-user-action") ||
+                event.target.getAttribute("contenteditable") === "true"))
     ) {
         inputFormFocusStore.set(true);
     }
@@ -23,9 +24,10 @@ document.addEventListener("focusout", (event) => {
         event.target instanceof HTMLInputElement ||
         event.target instanceof HTMLTextAreaElement ||
         event.target instanceof HTMLSelectElement ||
-        (event.target instanceof HTMLDivElement && event.target.getAttribute("role") === "textbox") ||
-        (event.target instanceof HTMLDivElement && event.target.getAttribute("contenteditable") === "true") ||
-        (event.target instanceof HTMLDivElement && event.target.classList.contains("block-user-action"))
+        (event.target instanceof HTMLDivElement &&
+            (event.target.getAttribute("role") === "textbox" ||
+                event.target.classList.contains("block-user-action") ||
+                event.target.getAttribute("contenteditable") === "true"))
     ) {
         inputFormFocusStore.set(false);
     }
