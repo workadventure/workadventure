@@ -75,10 +75,10 @@
                 <table class="tw-w-full tw-border-separate tw-border-spacing-y-2">
                     <thead>
                         <tr>
-                            <th class="tw-text-center">{$LL.chat.manageRoomUsers.participants() || "Participants"}</th>
-                            <th class="tw-text-center">{$LL.chat.manageRoomUsers.membership() || "Membership"}</th>
-                            <th class="tw-text-center">{$LL.chat.manageRoomUsers.permissionLevel() || "Roles"}</th>
-                            <th class="tw-text-center">{$LL.chat.manageRoomUsers.actions() || "Actions"}</th>
+                            <th class="tw-text-center">{$LL.chat.manageRoomUsers.participants()}</th>
+                            <th class="tw-text-center">{$LL.chat.manageRoomUsers.membership()}</th>
+                            <th class="tw-text-center">{$LL.chat.manageRoomUsers.permissionLevel()}</th>
+                            <th class="tw-text-center">{$LL.chat.manageRoomUsers.actions()}</th>
                         </tr>
                     </thead>
                     <tbody>
