@@ -4,6 +4,9 @@ import { chatVisibilityStore } from "../../Stores/ChatStore";
 import { matrixSecurity } from "../Connection/Matrix/MatrixSecurity";
 import { ENABLE_CHAT_DISCONNECTED_LIST, ENABLE_CHAT_ONLINE_LIST } from "../../Enum/EnvironmentVariable";
 
+
+export const OTHER_ROOMS_ID = "other_rooms";
+
 function createNavChatStore() {
     const { subscribe, set } = writable<"chat" | "users">("chat");
 
