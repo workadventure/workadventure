@@ -337,6 +337,7 @@ class ConnectionManager {
                         const parsedRoomMetadata = RoomMetadataType.safeParse(this._currentRoom.metadata).data;
                         if (parsedRoomMetadata) {
                             enableDiscordBridge.set(parsedRoomMetadata.discordSettings.enableDiscordBridge);
+                            parsedRoomMetadata;
                             //Let's check if the discord mandatory is activated
                             if (parsedRoomMetadata.discordSettings.enableDiscordMandatory) {
                                 const discordToken = parsedRoomMetadata.player?.accessTokens?.find(
