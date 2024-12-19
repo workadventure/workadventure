@@ -8,7 +8,7 @@ import matrixApi from "./matrixApi";
 
 test.setTimeout(120000);
 
-test.describe("Matrix chat tests @oidc @matrix", () => {
+test.describe("chat moderation", () => {
   test.beforeEach(
     "Ignore tests on webkit because of issue with camera and microphone",
 
@@ -29,9 +29,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await ChatUtils.resetMatrixDatabase();
   });
 
-
-  //TODO : rename
-  test("Create a public chat room", async ({ page }, { project }) => {
+  test("should create a public chat room and verify admin permissions", async ({ page }, { project }) => {
     const isMobile = project.name === "mobilechromium";
     await login(page, "test", 3, "us-US", isMobile);
     await oidcMatrixUserLogin(page, isMobile);
@@ -57,8 +55,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
 
   });
 
-  //TODO : rename
-  test("Send messages in public chat room", async ({ page }, { project }) => {
+  test("should manage participants and permissions in public chat room", async ({ page }, { project }) => {
     const isMobile = project.name === "mobilechromium";
     await login(page, "test", 3, "us-US", isMobile);
     await oidcMatrixUserLogin(page, isMobile);
@@ -111,12 +108,12 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await expect(page.getByTestId("@admin:matrix.workadventure.localhost-kickButton")).toBeAttached();
     await expect(page.getByTestId("@admin:matrix.workadventure.localhost-banButton")).toBeAttached();
 
-
     await expect(page.getByTestId("@admin:matrix.workadventure.localhost-permissionLevel")).toBeEnabled();
     
     await page.getByTestId("@admin:matrix.workadventure.localhost-permissionLevel").selectOption("MODERATOR");
 
-    //TODO : try to delete this timeout or try a method to wait for the power level to be updated
+    // Wait for power level update to be reflected in the Matrix API
+    // eslint-disable-next-line playwright/no-wait-for-timeout
     await page.waitForTimeout(1000);
 
     const powerLevel = await matrixApi.getMemberPowerLevel(publicChatRoomName);

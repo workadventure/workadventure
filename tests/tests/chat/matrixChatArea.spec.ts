@@ -130,7 +130,6 @@ test.describe("matrix chat area property @matrix", () => {
 
     expect(await page.getByText("name of new room").isVisible()).toBeFalsy();
   });
-
   test("it should be moderator in room when he have a admin tag (access to manage participants / can delete other message)", async ({
     page,
     browserName,
@@ -156,15 +155,20 @@ test.describe("matrix chat area property @matrix", () => {
     await AreaEditor.setMatrixChatRoomProperty(page, true, "name of new room");
 
     await Menu.closeMapEditor(page);
+
+    
+    //TODO : find a better way to wait for the room to be created
+    await page.waitForTimeout(4000);
+
     await Map.walkToPosition(page, 4 * 32, 2 * 32);
 
     await expect(page.getByTestId("closeChatButton")).toBeVisible();
 
-
-    await page.getByTestId("goBackToRoomListButton").click();
+    await page.getByTestId("chatBackward").click();
+    await page.getByTestId("name of new room").hover() ;
     await page.getByTestId("name of new room").getByTestId("toggleRoomMenu").click();
     await page.getByTestId("manageParticipantOption").click()
-    await expect(page.getByText("manage participants")).toBeVisible();
+    await expect(page.getByText("Manage participants")).toBeVisible();
 
   });
 
@@ -215,7 +219,8 @@ test.describe("matrix chat area property @matrix", () => {
     
     await expect(page2.getByTestId("closeChatButton")).toBeVisible();
 
-    await page2.getByTestId("goBackToRoomListButton").click();
+    await page2.getByTestId("chatBackward").click();
+    await page2.getByTestId("name of new room").hover() ; 
     await page2.getByTestId("name of new room").getByTestId("toggleRoomMenu").click();
     await expect(page2.getByTestId("manageParticipantOption")).not.toBeAttached();
 
