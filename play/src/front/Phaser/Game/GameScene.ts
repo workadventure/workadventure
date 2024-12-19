@@ -172,6 +172,7 @@ import { UserProviderInterface } from "../../Chat/UserProvider/UserProviderInter
 import { faviconManager } from "../../WebRtc/FaviconManager";
 import { ScriptingOutputAudioStreamManager } from "../../WebRtc/AudioStream/ScriptingOutputAudioStreamManager";
 import { ScriptingInputAudioStreamManager } from "../../WebRtc/AudioStream/ScriptingInputAudioStreamManager";
+import { enableUserInputsStore } from "../../Stores/UserInputStore";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -209,7 +210,6 @@ import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import Clamp = Phaser.Math.Clamp;
-import { enableUserInputsStore } from "../../Stores/UserInputStore";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;

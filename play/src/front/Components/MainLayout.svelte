@@ -39,7 +39,6 @@
     import { mapEditorAskToClaimPersonalAreaStore, mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
     import { externalPopupSvelteComponent } from "../Stores/Utils/externalSvelteComponentStore";
-    import { gameManager, GameSceneNotFoundError } from "../Phaser/Game/GameManager";
     import AudioManager from "./AudioManager/AudioManager.svelte";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
@@ -73,7 +72,6 @@
     import ClaimPersonalAreaDialogBox from "./MapEditor/ClaimPersonalAreaDialogBox.svelte";
     import MainModal from "./Modal/MainModal.svelte";
     let mainLayout: HTMLDivElement;
-    let keyboardEventIsDisable = false;
     let isMobile = isMediaBreakpointUp("md");
     const resizeObserver = new ResizeObserver(() => {
         isMobile = isMediaBreakpointUp("md");
