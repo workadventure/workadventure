@@ -72,7 +72,7 @@
                 </div>
             </Select>
             <div class="tw-max-h-96 tw-overflow-auto">
-                <table class="tw-w-full tw-border-separate tw-border-spacing-y-2">
+                <table class="tw-w-full tw-border-separate tw-border-spacing-2">
                     <thead>
                         <tr>
                             <th class="tw-text-center">{$LL.chat.manageRoomUsers.participants()}</th>

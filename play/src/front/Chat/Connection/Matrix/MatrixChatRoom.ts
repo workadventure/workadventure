@@ -40,7 +40,7 @@ import { localUserStore } from "../../../Connection/LocalUserStore";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { matrixSecurity } from "./MatrixSecurity";
-import { MatrixChatRoomMember } from "./MatrixRoomMember";
+import { MatrixChatRoomMember } from "./MatrixChatRoomMember";
 
 type EventId = string;
 

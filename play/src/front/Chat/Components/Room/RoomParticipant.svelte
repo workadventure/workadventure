@@ -133,13 +133,14 @@
 </script>
 
 <tr data-testid={`${id}-participant`}>
-    <td><p class="tw-m-0 tw-p-0 tw-text-center">{$name}</p></td>
+    <td><p class="tw-m-0 tw-p-0 tw-text-center tw-text-ellipsis tw-overflow-hidden tw-max-w-[10rem]">{$name}</p></td>
     <td>
         <div class="tw-flex tw-gap-2 tw-content-center tw-justify-center">
             <p
-                class="tw-max-h-min tw-m-0 tw-ml-1 tw-px-2 tw-py-1 tw-bg-green-500 tw-rounded-3xl tw-min-w-[6rem] tw-text-center tw-content-center"
-                class:tw-bg-orange-500={$membership === "invite"}
-                class:tw-bg-red-500={$membership === "ban" || $membership === "leave"}
+                class="tw-max-h-min tw-m-0 tw-ml-1 tw-px-2 tw-py-1 tw-rounded-3xl tw-min-w-[6rem] tw-text-center tw-content-center"
+                class:tw-bg-success-900={$membership === "join"}
+                class:tw-bg-warning-900={$membership === "invite"}
+                class:tw-bg-danger-900={$membership === "ban" || $membership === "leave"}
                 data-testid={`${id}-membership`}
             >
                 <svelte:component this={getIconForMembership($membership)} />
@@ -156,7 +157,7 @@
                 id="permissionLevel"
                 disabled={availableRoles.length === 0 || $membership !== "join"}
                 data-testid={`${id}-permissionLevel`}
-                class="!tw-border-light-purple !tw-border !tw-border-solid !tw-rounded-xl !tw-mb-0"
+                class="tw-border-light-purple tw-border tw-border-solid tw-rounded-xl tw-mb-0 tw-w-full"
             >
                 {#if availableRoles.length > 0}
                     {#each availableRoles as permissionLevelOption (permissionLevelOption)}
@@ -174,7 +175,7 @@
         <div class="tw-flex tw-gap-2 tw-content-center tw-justify-center">
             {#if $hasPermissionToInvite && $membership === "leave"}
                 <button
-                    class="tw-max-h-min tw-m-0 tw-px-2 tw-py-1 tw-bg-green-500 tw-rounded-md"
+                    class="tw-max-h-min tw-m-0 tw-px-2 tw-py-1 tw-bg-success-900 tw-rounded-md"
                     disabled={disableModerationButton}
                     on:click={inviteUser}
                     data-testid={`${id}-inviteButton`}
@@ -188,7 +189,7 @@
             {/if}
             {#if $hasPermissionToKick && $membership !== "leave" && $membership !== "ban"}
                 <button
-                    class="tw-max-h-min tw-m-0 tw-px-2 tw-py-1 tw-bg-orange-500 tw-rounded-md"
+                    class="tw-max-h-min tw-m-0 tw-px-2 tw-py-1 tw-bg-warning-900 tw-rounded-md"
                     disabled={disableModerationButton}
                     data-testid={`${id}-kickButton`}
                     on:click={kickUser}
@@ -204,7 +205,7 @@
                 {#if $membership === "ban"}
                     <button
                         disabled={disableModerationButton}
-                        class="tw-max-h-min tw-m-0 tw-px-2 tw-py-1 tw-bg-green-500 tw-rounded-md"
+                        class="tw-max-h-min tw-m-0 tw-px-2 tw-py-1 tw-bg-success-900 tw-rounded-md"
                         data-testid={`${id}-unbanButton`}
                         on:click={unbanUser}
                     >
