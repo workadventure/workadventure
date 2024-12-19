@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { get } from "svelte/store";
+    import { get,derived,readable } from "svelte/store";
     // eslint-disable-next-line import/no-unresolved
     import { onDestroy, onMount } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
@@ -23,7 +23,7 @@
     import ShowMore from "./ShowMore.svelte";
     import ChatHeader from "./ChatHeader.svelte";
     import { IconChevronUp, IconCloudLock } from "@wa-icons";
-
+    import { OTHER_ROOMS_ID } from "../Stores/ChatStore";
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
 
     const proximityChatRoom = gameManager.getCurrentGameScene().proximityChatRoom;
@@ -42,7 +42,6 @@
     let displayDirectRooms = false;
     let displayRooms = false;
     let displayRoomInvitations = false;
-
     //let proximityChatRoomHasUserInProximityChatSubscribtion: Unsubscriber | undefined;
     //let _hasUserInProximityChat = false;
     //let proximityChatRoomHasUnreadMessagesSubscribtion: Unsubscriber | undefined;
@@ -124,9 +123,12 @@
         .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
         .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
 
-    $: filteredRooms = $rooms
-        .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
-        .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
+    const filteredRooms = derived([rooms, chatSearchBarValue], ([$rooms, $chatSearchBarValue]) => 
+        $rooms
+            .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
+            .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1))
+    );
+
     $: filteredRoomInvitations = $roomInvitations
         .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
         .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
@@ -298,16 +300,16 @@
 
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
-                        class="tw-group tw-relative tw-px-3 tw-m-0 tw-rounded-none tw-text-white/75 hover:tw-text-white tw-h-11 hover:tw-bg-contrast-200/10 tw-w-full tw-flex tw-space-x-2 tw-items-center tw-border tw-border-solid tw-border-x-0 tw-border-t tw-border-b-0 tw-border-white/10"
+                        class="tw-group tw-relative tw-px-3 tw-m-0 tw-mb-2 tw-rounded-none tw-text-white/75 hover:tw-text-white tw-h-11 hover:tw-bg-contrast-200/10 tw-w-full tw-flex tw-space-x-2 tw-items-center tw-border tw-border-solid tw-border-x-0 tw-border-t tw-border-b-0 tw-border-white/10"
                         on:click={toggleDisplayRooms}
                         data-testid="roomAccordeon"
                     >
                         <div class="tw-flex tw-items-center tw-space-x-2 tw-grow tw-m-0 tw-p-0">
                             <div class="tw-text-sm tw-font-bold tw-tracking-widest tw-uppercase tw-grow tw-text-left">
-                                {$LL.chat.rooms()}
+                                    {$LL.chat.rooms()}
                             </div>
                         </div>
-                        {#if $isGuest === false}
+                        {#if $isGuest === false && (!displayRooms || $filteredRooms.length === 0)}
                             <CreateRoomOrFolderOption />
                         {/if}
                         <div
@@ -319,22 +321,25 @@
                         </div>
                     </div>
                     {#if displayRooms}
-                        <div class="tw-px-2 tw-pb-2">
-                            <ShowMore items={filteredRooms} maxNumber={8} idKey="id" let:item={room}>
-                                <Room {room} />
-                            </ShowMore>
-                        </div>
-                        <!--roomBySpace-->
-                        {#each Array.from($roomFolders.values()) as rootRoomFolder (rootRoomFolder.id)}
-                            <RoomFolder
-                                bind:isOpen={isFoldersOpen[rootRoomFolder.id]}
-                                name={rootRoomFolder.name}
-                                folders={rootRoomFolder.folders}
-                                rooms={rootRoomFolder.rooms}
-                                isGuest={$isGuest}
-                                id={rootRoomFolder.id}
-                            />
-                        {/each}
+                    <!--roomBySpace-->
+                    {#each Array.from($roomFolders.values()) as rootRoomFolder (rootRoomFolder.id)}
+                    <RoomFolder
+                    bind:isOpen={isFoldersOpen[rootRoomFolder.id]}
+                    name={rootRoomFolder.name}
+                    folders={rootRoomFolder.folders}
+                    rooms={rootRoomFolder.rooms}
+                    isGuest={$isGuest}
+                    id={rootRoomFolder.id}
+                    />
+                    {/each}
+                    {#if $filteredRooms.length > 0}
+                    <RoomFolder
+                            name={readable("Autres salons")}
+                            rooms={filteredRooms}
+                            isGuest={$isGuest}
+                            id={OTHER_ROOMS_ID}
+                    />
+                    {/if}
                     {/if}
                 {/if}
             </div>

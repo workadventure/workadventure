@@ -1,6 +1,6 @@
 <script lang="ts">
     // eslint-disable-next-line import/no-unresolved
-    import { get, Readable } from "svelte/store";
+    import { get, Readable,readable } from "svelte/store";
     import { ChatRoom, RoomFolder } from "../Connection/ChatConnection";
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue } from "../Stores/ChatStore";
@@ -9,7 +9,7 @@
     import ShowMore from "./ShowMore.svelte";
     import { IconChevronDown, IconChevronUp } from "@wa-icons";
 
-    export let folders: Readable<Map<string, RoomFolder>>;
+    export let folders: Readable<Map<string, RoomFolder>> = readable(new Map());
     export let rooms: Readable<Map<string, ChatRoom>>;
     export let name: Readable<string>;
     export let isGuest: boolean;
