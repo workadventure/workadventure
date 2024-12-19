@@ -39,13 +39,9 @@
                 isOpen = !isOpen;
 
                 if (isOpen) {
-                    const foldersOpened = localUserStore.getFoldersOpened();
-                    foldersOpened.add(id);
-                    localUserStore.setFoldersOpened(foldersOpened);
+                    localUserStore.addFolderOpened(id);
                 } else {
-                    const foldersOpened = localUserStore.getFoldersOpened();
-                    foldersOpened.delete(id);
-                    localUserStore.setFoldersOpened(foldersOpened);
+                    localUserStore.removeFolderOpened(id);
                 }
             }}
         >
