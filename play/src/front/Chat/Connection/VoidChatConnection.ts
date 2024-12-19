@@ -7,13 +7,14 @@ import {
     RoomFolder,
     ConnectionStatus,
     ChatUser,
+    ChatRoomMembershipManagement,
 } from "./ChatConnection";
 
 export class VoidChatConnection implements ChatConnectionInterface {
     directRoomsUsers: Readable<ChatUser[]> = readable([]);
     connectionStatus: Readable<ConnectionStatus> = writable("OFFLINE");
     directRooms: Readable<ChatRoom[]> = writable([]);
-    rooms: Readable<ChatRoom[]> = writable([]);
+    rooms: Readable<(ChatRoom & ChatRoomMembershipManagement)[]> = writable([]);
     invitations: Readable<ChatRoom[]> = writable([]);
     roomFolders: MapStore<RoomFolder["id"], RoomFolder> = new MapStore();
     roomCreationInProgress: Readable<boolean> = writable(false);
@@ -29,11 +30,11 @@ export class VoidChatConnection implements ChatConnectionInterface {
         throw new Error("VoidChatConnection: createFolder is not implemented.");
     }
 
-    createDirectRoom(userChatId: string): Promise<ChatRoom | undefined> {
+    createDirectRoom(userChatId: string): Promise<(ChatRoom & ChatRoomMembershipManagement) | undefined> {
         throw new Error("VoidChatConnection: createDirectRoom is not implemented.");
     }
 
-    getDirectRoomFor(userChatId: string): ChatRoom | undefined {
+    getDirectRoomFor(userChatId: string): (ChatRoom & ChatRoomMembershipManagement) | undefined {
         return undefined;
     }
 
