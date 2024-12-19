@@ -35,6 +35,8 @@ import { locales } from "../../i18n/i18n-util";
 import type { Locales } from "../../i18n/i18n-types";
 import { setCurrentLocale } from "../../i18n/locales";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
+import { RoomMetadataType } from "../ExternalModule/ExtensionModule";
+import { enableDiscordBridge } from "../Chat/Stores/DiscordConnectionStore";
 import { axiosToPusher, axiosWithRetry } from "./AxiosUtils";
 import { Room } from "./Room";
 import { LocalUser } from "./LocalUser";
@@ -44,6 +46,9 @@ import { RoomConnection } from "./RoomConnection";
 import { HtmlUtils } from "./../WebRtc/HtmlUtils";
 import { hasCapability } from "./Capabilities";
 
+interface Guild {
+    id: string;
+}
 const enum defautlNativeIntegrationAppName {
     KLAXOON = "Klaxoon",
     YOUTUBE = "Youtube",
@@ -329,6 +334,57 @@ class ConnectionManager {
                         };
                     }
                     if (response.status === "ok") {
+                        const parsedRoomMetadata = RoomMetadataType.safeParse(this._currentRoom.metadata).data;
+                        if (parsedRoomMetadata) {
+                            enableDiscordBridge.set(parsedRoomMetadata.discordSettings.enableDiscordBridge);
+                            parsedRoomMetadata;
+                            //Let's check if the discord mandatory is activated
+                            if (parsedRoomMetadata.discordSettings.enableDiscordMandatory) {
+                                const discordToken = parsedRoomMetadata.player?.accessTokens?.find(
+                                    (token) => token.provider === "discord"
+                                );
+                                if (!discordToken) {
+                                    return {
+                                        nextScene: "errorScene",
+                                        error: new Error("You don't have access to this room"),
+                                    };
+                                }
+                                if (parsedRoomMetadata.discordSettings.discordAllowedGuilds.length > 0) {
+                                    const allowedDiscordGuildsId =
+                                        parsedRoomMetadata.discordSettings.discordAllowedGuilds.split(";");
+                                    if (allowedDiscordGuildsId.length > 0) {
+                                        try {
+                                            const userGuilds = await axiosWithRetry
+                                                .get("https://discord.com/api/v10/users/@me/guilds", {
+                                                    headers: {
+                                                        Authorization: "Bearer " + discordToken.token,
+                                                    },
+                                                })
+                                                .then((res) => res.data);
+                                            //@ts-ignore
+                                            const userGuildsId: string[] = userGuilds.map((guild: Guild) => guild.id);
+                                            const isUserInGuild = allowedDiscordGuildsId.some((guild) =>
+                                                userGuildsId.includes(guild)
+                                            );
+                                            if (!isUserInGuild) {
+                                                return {
+                                                    nextScene: "errorScene",
+                                                    error: new Error("You are not in the requested Discord server"),
+                                                };
+                                            }
+                                        } catch (err) {
+                                            return {
+                                                nextScene: "errorScene",
+                                                error: new Error(
+                                                    `An error occurred while fatching our discord guilds: \n ${err}`
+                                                ),
+                                            };
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                         if (response.isCharacterTexturesValid === false) {
                             nextScene = "selectCharacterScene";
                         } else if (response.isCompanionTextureValid === false) {
