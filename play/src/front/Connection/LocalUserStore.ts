@@ -53,10 +53,7 @@ const JwtAuthToken = z
 
 type JwtAuthToken = z.infer<typeof JwtAuthToken>;
 
-const FoldersOpenedSchema = z.union([
-    z.null(),
-    z.array(z.string()).transform(arr => new Set(arr))
-]);
+const FoldersOpenedSchema = z.union([z.null(), z.array(z.string()).transform((arr) => new Set(arr))]);
 
 interface PlayerVariable {
     value: undefined;
@@ -295,7 +292,6 @@ class LocalUserStore {
         return localStorage.getItem(chatSounds) !== "false";
     }
 
-
     private getFoldersOpened(): Set<string> {
         const foldersStr = localStorage.getItem(foldersOpened);
         if (!foldersStr) {
@@ -305,7 +301,7 @@ class LocalUserStore {
             const parsed = FoldersOpenedSchema.parse(JSON.parse(foldersStr));
             return parsed ?? new Set<string>();
         } catch (e) {
-            console.error('Error parsing folders opened from localStorage:', e);
+            console.error("Error parsing folders opened from localStorage:", e);
             localStorage.removeItem(foldersOpened);
             return new Set<string>();
         }
@@ -314,7 +310,6 @@ class LocalUserStore {
     private setFoldersOpened(folders: Set<string>) {
         localStorage.setItem(foldersOpened, JSON.stringify(Array.from(folders)));
     }
-
 
     hasFolderOpened(folderId: string): boolean {
         return this.getFoldersOpened().has(folderId);
