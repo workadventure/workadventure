@@ -334,7 +334,7 @@
                     {/each}
                     {#if $filteredRooms.length > 0}
                     <RoomFolder
-                            name={readable("Autres salons")}
+                            name={readable($LL.chat.otherRooms())}
                             rooms={filteredRooms}
                             isGuest={$isGuest}
                             id={OTHER_ROOMS_ID}
