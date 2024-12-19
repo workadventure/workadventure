@@ -43,6 +43,7 @@ const matrixLoginToken = "matrixLoginToken";
 const requestedStatus = "RequestedStatus";
 const matrixGuest = "matrixGuest";
 const volumeProximityDiscussion = "volumeProximityDiscussion";
+const foldersOpened = "foldersOpened";
 
 const JwtAuthToken = z
     .object({
@@ -287,6 +288,16 @@ class LocalUserStore {
 
     getChatSounds(): boolean {
         return localStorage.getItem(chatSounds) !== "false";
+    }
+
+    getFoldersOpened(): Set<string> {
+        const value = localStorage.getItem(foldersOpened);
+        if (value === null) return new Set();
+        return new Set(JSON.parse(value));
+    }
+
+    setFoldersOpened(value: Set<string>) {
+        localStorage.setItem(foldersOpened, JSON.stringify(Array.from(value)));
     }
 
     setPreferredVideoInputDevice(deviceId?: string) {

@@ -4,17 +4,17 @@
     import { ChatRoom, RoomFolder } from "../Connection/ChatConnection";
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue } from "../Stores/ChatStore";
+    import { localUserStore } from "../../Connection/LocalUserStore";
     import Room from "./Room/Room.svelte";
     import CreateRoomOrFolderOption from "./Room/CreateRoomOrFolderOption.svelte";
     import ShowMore from "./ShowMore.svelte";
     import { IconChevronDown, IconChevronUp } from "@wa-icons";
-
     export let folders: Readable<Map<string, RoomFolder>>;
     export let rooms: Readable<Map<string, ChatRoom>>;
     export let name: Readable<string>;
     export let isGuest: boolean;
-    export let isOpen: boolean;
     export let id: string;
+    let isOpen: boolean = localUserStore.getFoldersOpened().has(id);
 
     const isFoldersOpen: { [key: string]: boolean } = {};
 
@@ -37,6 +37,16 @@
             class="tw-flex tw-items-center tw-space-x-2 tw-grow tw-m-0 tw-p-0"
             on:click={() => {
                 isOpen = !isOpen;
+
+                if (isOpen) {
+                    const foldersOpened = localUserStore.getFoldersOpened();
+                    foldersOpened.add(id);
+                    localUserStore.setFoldersOpened(foldersOpened);
+                } else {
+                    const foldersOpened = localUserStore.getFoldersOpened();
+                    foldersOpened.delete(id);
+                    localUserStore.setFoldersOpened(foldersOpened);
+                }
             }}
         >
             <div class="tw-text-sm tw-font-bold tw-tracking-widest tw-uppercase tw-grow tw-text-left">
@@ -57,7 +67,6 @@
         <div class="tw-flex tw-flex-col tw-overflow-auto">
             {#each Array.from($folders.values()) as folder (folder.id)}
                 <svelte:self
-                    bind:isOpen={isFoldersOpen[folder.id]}
                     id={folder.id}
                     name={folder.name}
                     folders={folder.folders}
