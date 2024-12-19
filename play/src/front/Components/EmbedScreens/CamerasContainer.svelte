@@ -121,6 +121,7 @@
         align-items: center;
         gap: 1rem;
         grid-template-columns: repeat(auto-fit, minmax(120px, 280px));
+        grid-template-rows: repeat(auto-fit, 158px);
     }
 
     @container (min-width: 1024) and (max-width: 1279px) {
@@ -133,12 +134,14 @@
         }
         .not-highlighted {
             grid-template-columns: repeat(auto-fit, minmax(90px, 220px));
+            grid-template-rows: repeat(auto-fit, 124px);
         }
     }
 
     @container (min-width: 640px) and (max-width: 1024px) {
         .not-highlighted {
             grid-template-columns: repeat(auto-fit, minmax(80px, 180px));
+            grid-template-rows: repeat(auto-fit, 101px);
         }
 
         .all-cameras-highlighted {
@@ -152,6 +155,7 @@
     @container (max-width: 640px) {
         .not-highlighted {
             grid-template-columns: repeat(auto-fit, minmax(70px, 140px));
+            grid-template-rows: repeat(auto-fit, 79px);
         }
 
         .highlight {

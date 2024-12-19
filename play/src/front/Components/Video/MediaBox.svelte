@@ -11,7 +11,6 @@
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { mediaStreamConstraintsStore } from "../../Stores/MediaStore";
     import VideoMediaBox from "./VideoMediaBox.svelte";
-    import ScreenSharingMediaBox from "./ScreenSharingMediaBox.svelte";
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
     import JitsiMediaBox from "./JitsiMediaBox.svelte";
 
@@ -63,11 +62,10 @@
     {/if}
 {:else if streamable instanceof ScreenSharingPeer}
     <div
-        class="media-container justify-center w-full
-            media-box-shape-color"
-        class:clickable={isClickable}
+        class="video-media-box pointer-events-auto media-container transition-all justify-center relative h-full w-full"
+        in:fly={{ y: 50, duration: 150 }}
     >
-        <ScreenSharingMediaBox peer={streamable} {isHighlighted} />
+        <VideoMediaBox peer={streamable} {isHighlighted} />
     </div>
 {:else if streamable instanceof JitsiTrackStreamWrapper}
     <div

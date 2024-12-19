@@ -9,9 +9,6 @@ import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils"
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintStore";
-import { TrackStreamWrapperInterface } from "../Streaming/Contract/TrackStreamWrapperInterface";
-import { TrackInterface } from "../Streaming/Contract/TrackInterface";
-import { showReportScreenStore } from "../Stores/ShowReportScreenStore";
 import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
 import { SpaceFilterInterface, SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
 import { lookupUserById } from "../Space/Utils/UserLookup";
@@ -27,7 +24,7 @@ export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 /**
  * A peer connection used to transmit video / audio signals between 2 peers.
  */
-export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
+export class VideoPeer extends Peer {
     public toClose = false;
     public _connected = false;
     public remoteStream!: MediaStream;
@@ -310,34 +307,6 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
 
     get statusStore(): Readable<PeerStatus> {
         return this._statusStore;
-    }
-
-    get videoTrackStore(): Readable<TrackInterface | undefined> {
-        throw new Error("Method not implemented.");
-    }
-    get audioTrackStore(): Readable<TrackInterface | undefined> {
-        throw new Error("Method not implemented.");
-    }
-    getVideoTrack(): TrackInterface | undefined {
-        throw new Error("Method not implemented.");
-    }
-    getAudioTrack(): TrackInterface | undefined {
-        throw new Error("Method not implemented.");
-    }
-    setAudioTrack(jitsiTrack: TrackInterface | undefined): void {
-        throw new Error("Method not implemented.");
-    }
-    setVideoTrack(jitsiTrack: TrackInterface | undefined): void {
-        throw new Error("Method not implemented.");
-    }
-    isEmpty(): boolean {
-        throw new Error("Method not implemented.");
-    }
-    isLocal(): boolean {
-        throw new Error("Method not implemented.");
-    }
-    blockOrReportUser(): void {
-        showReportScreenStore.set({ userId: this.userId, userName: this.player.name });
     }
 
     public async getExtendedSpaceUser(): Promise<SpaceUserExtended> {

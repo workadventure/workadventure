@@ -51,7 +51,6 @@
     import ClaimPersonalAreaDialogBox from "./MapEditor/ClaimPersonalAreaDialogBox.svelte";
     import MainModal from "./Modal/MainModal.svelte";
     import AudioPlayer from "./AudioManager/AudioPlayer.svelte";
-    import MyCameraHoverZone from "./EmbedScreens/MyCameraHoverZone.svelte";
     import MediaBox from "./Video/MediaBox.svelte";
     import PresentationLayout from "./EmbedScreens/Layouts/PresentationLayout.svelte";
     //let mainLayout: HTMLDivElement;
@@ -126,8 +125,6 @@
             <MediaBox streamable={$highlightedEmbedScreen} isHighlighted={true} isClickable={true} />
         </div>
     {/if}
-
-    <MyCameraHoverZone />
 
     <AudioPlayer />
 

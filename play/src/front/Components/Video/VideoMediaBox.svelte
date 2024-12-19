@@ -17,6 +17,7 @@
     import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
     import ArrowsMaximizeIcon from "../Icons/ArrowsMaximizeIcon.svelte";
     import ArrowsMinimizeIcon from "../Icons/ArrowsMinimizeIcon.svelte";
+    import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
     import ActionMediaBox from "./ActionMediaBox.svelte";
     import UserName from "./UserName.svelte";
     import UpDownChevron from "./UpDownChevron.svelte";
@@ -24,7 +25,7 @@
     import { IconArrowDown, IconArrowUp } from "@wa-icons";
 
     export let isHighlighted = false;
-    export let peer: VideoPeer;
+    export let peer: VideoPeer | ScreenSharingPeer;
 
     const pictureStore = writable<string | undefined>(undefined);
     let extendedSpaceUser = peer.getExtendedSpaceUser();
@@ -36,10 +37,10 @@
             console.error("Error getting the user picture: ", e);
         });
     let streamStore = peer.streamStore;
-    let volumeStore = peer.volumeStore;
+    let volumeStore = peer instanceof VideoPeer ? peer.volumeStore : undefined;
     let name = peer.player.name;
     let statusStore = peer.statusStore;
-    let constraintStore = peer.constraintsStore;
+    let constraintStore = peer instanceof VideoPeer ? peer.constraintsStore : undefined;
 
     let embedScreen: Streamable;
 
@@ -51,7 +52,8 @@
         embedScreen = peer as unknown as Streamable;
     }
 
-    $: videoEnabled = $constraintStore ? $constraintStore.video : false;
+    // If there is no constraintStore, we are in a screen sharing (so video is enabled)
+    $: videoEnabled = constraintStore ? ($constraintStore ? $constraintStore.video : false) : true;
 
     function toggleFullScreen() {
         highlightFullScreen.update((current) => !current);
@@ -83,7 +85,9 @@
     <!-- FIXME: not sure when to round in blue the box -->
     <div
         class={"z-20 w-full rounded-lg transition-all bg-center bg-no-repeat " +
-            (isHighlighted && $statusStore === "connected" ? "" : " bg-contrast/80 backdrop-blur")}
+            (isHighlighted && !$highlightFullScreen && $statusStore === "connected"
+                ? ""
+                : " bg-contrast/80 backdrop-blur")}
         style={videoEnabled && $statusStore === "connecting" ? "background-image: url(" + loaderImg + ")" : ""}
         class:border-4={false}
         class:border-solid={false}
@@ -94,6 +98,7 @@
         class:items-center={!videoEnabled || $statusStore === "connecting" || $statusStore === "error"}
         class:flex-row={!videoEnabled}
         class:relative={!videoEnabled}
+        class:rounded-lg={!$highlightFullScreen}
         class:justify-center={$statusStore === "connecting" || $statusStore === "error"}
     >
         {#if $statusStore === "connecting"}
@@ -102,36 +107,41 @@
             <div class="rtc-error" />
         {/if}
 
+        <!-- FIXME: expectVideoOutput and videoEnabled are always equal -->
         <CenteredVideo
             mediaStream={$streamStore ?? undefined}
             {videoEnabled}
-            expectVideoOutput={$constraintStore?.video}
+            expectVideoOutput={videoEnabled}
             outputDeviceId={$speakerSelectedStore}
             volume={$volumeProximityDiscussionStore}
             on:selectOutputAudioDeviceError={() => selectDefaultSpeaker()}
-            verticalAlign={isHighlighted ? "top" : "center"}
+            verticalAlign={isHighlighted && !$highlightFullScreen ? "top" : "center"}
         >
             <UserName
                 {name}
                 picture={pictureStore}
-                isPlayingAudio={$constraintStore?.audio}
+                isPlayingAudio={constraintStore ? $constraintStore?.audio : false}
                 position={videoEnabled ? "absolute bottom-4 left-4" : "absolute bottom-1.5 left-4"}
             >
                 <div use:popperRef class="self-center">
                     <UpDownChevron enabled={showUserSubMenu} on:click={() => (showUserSubMenu = !showUserSubMenu)} />
                 </div>
-                {#if showUserSubMenu}
-                    <!-- FIXME: migrate from popover to https://floating-ui-svelte.vercel.app/examples/popovers when we migrate to Svelte 5 -->
-                    <!-- This way, we can remove the "h-24" class from the div that is a lie -->
-                    <div use:popperContent={extraOpts} class="h-24">
-                        <ActionMediaBox
-                            {embedScreen}
-                            trackStreamWrapper={peer}
-                            {videoEnabled}
-                            on:close={() => (showUserSubMenu = false)}
-                        />
-                    </div>
-                {/if}
+                {#await peer.getExtendedSpaceUser()}
+                    <div />
+                {:then spaceUser}
+                    {#if showUserSubMenu}
+                        <div use:popperContent={extraOpts}>
+                            <ActionMediaBox
+                                {embedScreen}
+                                {spaceUser}
+                                {videoEnabled}
+                                on:close={() => (showUserSubMenu = false)}
+                            />
+                        </div>
+                    {/if}
+                {:catch error}
+                    <div class="bg-danger">{error}</div>
+                {/await}
             </UserName>
 
             <!-- The button at the top of the video that opens the menu to go fullscreen -->
@@ -181,9 +191,9 @@
                 </div>
             </div>
 
-            {#if $statusStore === "connected"}
+            {#if $statusStore === "connected" && volumeStore}
                 <div class="z-[251] absolute right-3 top-1 aspect-ratio p-2">
-                    {#if $constraintStore?.audio}
+                    {#if constraintStore && $constraintStore?.audio}
                         <SoundMeterWidget
                             volume={$volumeStore}
                             cssClass="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"

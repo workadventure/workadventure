@@ -7,10 +7,9 @@
 </script>
 
 <div
-    class="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/4 h-1/6 pointer-events-auto"
+    class="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/4 h-1/6 pointer-events-none"
     on:mouseenter={() => {
         mouseInCameraTriggerArea.set(true);
-        console.log("coucou");
     }}
     on:mouseleave={() => mouseInCameraTriggerArea.set(false)}
 />

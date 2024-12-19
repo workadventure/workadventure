@@ -1,6 +1,6 @@
 <script lang="ts">
     /* eslint no-undef: 0 */
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import { fly } from "svelte/transition";
     import * as Sentry from "@sentry/svelte";
     import WebFontLoaderPlugin from "phaser3-rex-plugins/plugins/webfontloader-plugin.js";
@@ -28,6 +28,8 @@
         isResized,
         isVerticalMode,
     } from "../Stores/CoWebsiteStore";
+    import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
+    import { mouseInCameraTriggerArea } from "../Stores/MediaStore";
     import GameOverlay from "./GameOverlay.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
 
@@ -270,6 +272,41 @@
 
     $: $coWebsites.length < 1 ? (flexBasis = undefined) : null;
     $: $isResized ? updateDynamicStyles() : null;
+
+    onMount(() => {
+        document.addEventListener("mousemove", detectInCameraArea);
+    });
+
+    onDestroy(() => {
+        document.removeEventListener("mousemove", detectInCameraArea);
+    });
+
+    let lastInTriggerArea = false;
+    // We are tracking if the mouse cursor gets near the camera trigger area
+    const detectInCameraArea = (event: MouseEvent) => {
+        const isSmallScreen = isMediaBreakpointUp("md");
+        const rect = gameDiv.getBoundingClientRect();
+
+        if (!isSmallScreen) {
+            const inTopCenter =
+                event.x - rect.left > rect.width / 4 &&
+                event.x + rect.left < (rect.width * 3) / 4 &&
+                event.y - rect.top < rect.height / 4;
+            if (inTopCenter !== lastInTriggerArea) {
+                lastInTriggerArea = inTopCenter;
+                mouseInCameraTriggerArea.set(inTopCenter);
+            }
+        } else {
+            const inBottomCenter =
+                event.x - rect.left > rect.width / 4 &&
+                event.x + rect.left < (rect.width * 3) / 4 &&
+                rect.bottom - event.y < rect.height / 4;
+            if (inBottomCenter !== lastInTriggerArea) {
+                lastInTriggerArea = inBottomCenter;
+                mouseInCameraTriggerArea.set(inBottomCenter);
+            }
+        }
+    };
 </script>
 
 <div class="h-screen w-screen responsive-position" id="main-container" bind:this={gameContainer}>

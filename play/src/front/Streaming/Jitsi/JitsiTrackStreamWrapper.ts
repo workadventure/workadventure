@@ -1,6 +1,5 @@
 import { get, Readable, writable, Writable } from "svelte/store";
 import type JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
-import { TrackStreamWrapperInterface } from "../Contract/TrackStreamWrapperInterface";
 import { SpaceUserExtended } from "../../Space/SpaceFilter/SpaceFilter";
 import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
 
@@ -12,7 +11,7 @@ export interface JitsiTrackExt extends JitsiTrack {
 /**
  * An object that wraps a JitsiTrackWrapper and points only to "video/audio" or "desktop" track
  */
-export class JitsiTrackStreamWrapper implements TrackStreamWrapperInterface {
+export class JitsiTrackStreamWrapper {
     //public readonly uniqueId: string;
     private readonly _audioTrackStore: Writable<JitsiTrack | JitsiTrackExt | undefined> = writable<
         JitsiTrack | JitsiTrackExt | undefined
@@ -62,30 +61,6 @@ export class JitsiTrackStreamWrapper implements TrackStreamWrapperInterface {
 
     public isLocal(): boolean {
         return this.jitsiTrackWrapper.isLocal;
-    }
-
-    /*public muteAudioParticipant(): void {
-        this.jitsiTrackWrapper.muteMicrophoneParticipant();
-    }
-
-    public muteAudioEveryBody(): void {
-        this.jitsiTrackWrapper.muteMicrophoneEverybody();
-    }
-
-    public muteVideoParticipant(): void {
-        this.jitsiTrackWrapper.muteVideoParticipant();
-    }
-
-    public muteVideoEverybody(): void {
-        this.jitsiTrackWrapper.muteVideoEverybody();
-    }
-
-    public kickoff(): void {
-        this.jitsiTrackWrapper.kickoff();
-    }*/
-
-    public blockOrReportUser(): void {
-        console.info("Not implemented yet!");
     }
 
     public getExtendedSpaceUser(): Promise<SpaceUserExtended> {

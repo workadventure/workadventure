@@ -73,15 +73,19 @@
             : null}
 >
     {#if $myJitsiCameraStore?.uniqueId != peer.uniqueId}
-        <!-- TODO: implement on:close -->
-        <ActionMediaBox
-            {embedScreen}
-            trackStreamWrapper={peer}
-            videoEnabled={$videoTrackStore ? $videoTrackStore?.isActive() : false}
-            on:close={() => {
-                /* TODO */
-            }}
-        />
+        {#await peer.getExtendedSpaceUser()}
+            <div />
+        {:then spaceUser}
+            <!-- TODO: implement on:close -->
+            <ActionMediaBox
+                {embedScreen}
+                {spaceUser}
+                videoEnabled={$videoTrackStore ? $videoTrackStore?.isActive() : false}
+                on:close={() => {
+                    /* TODO */
+                }}
+            />
+        {/await}
     {/if}
     {#if $videoTrackStore}
         <div class="rounded-sm overflow-hidden flex justify-center flex-col w-full h-full">
