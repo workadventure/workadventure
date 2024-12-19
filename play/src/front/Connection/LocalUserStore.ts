@@ -43,6 +43,7 @@ const matrixLoginToken = "matrixLoginToken";
 const requestedStatus = "RequestedStatus";
 const matrixGuest = "matrixGuest";
 const volumeProximityDiscussion = "volumeProximityDiscussion";
+const foldersOpened = "foldersOpened";
 
 const JwtAuthToken = z
     .object({
@@ -51,6 +52,8 @@ const JwtAuthToken = z
     .partial();
 
 type JwtAuthToken = z.infer<typeof JwtAuthToken>;
+
+const FoldersOpenedSchema = z.union([z.null(), z.array(z.string()).transform((arr) => new Set(arr))]);
 
 interface PlayerVariable {
     value: undefined;
@@ -287,6 +290,41 @@ class LocalUserStore {
 
     getChatSounds(): boolean {
         return localStorage.getItem(chatSounds) !== "false";
+    }
+
+    private getFoldersOpened(): Set<string> {
+        const foldersStr = localStorage.getItem(foldersOpened);
+        if (!foldersStr) {
+            return new Set<string>();
+        }
+        try {
+            const parsed = FoldersOpenedSchema.parse(JSON.parse(foldersStr));
+            return parsed ?? new Set<string>();
+        } catch (e) {
+            console.warn("Error parsing folders opened from localStorage:", e);
+            localStorage.removeItem(foldersOpened);
+            return new Set<string>();
+        }
+    }
+
+    private setFoldersOpened(folders: Set<string>) {
+        localStorage.setItem(foldersOpened, JSON.stringify(Array.from(folders)));
+    }
+
+    hasFolderOpened(folderId: string): boolean {
+        return this.getFoldersOpened().has(folderId);
+    }
+
+    addFolderOpened(folderId: string) {
+        const folders = this.getFoldersOpened();
+        folders.add(folderId);
+        this.setFoldersOpened(folders);
+    }
+
+    removeFolderOpened(folderId: string) {
+        const folders = this.getFoldersOpened();
+        folders.delete(folderId);
+        this.setFoldersOpened(folders);
     }
 
     setPreferredVideoInputDevice(deviceId?: string) {
