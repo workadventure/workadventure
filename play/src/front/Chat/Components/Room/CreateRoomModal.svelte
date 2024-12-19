@@ -2,6 +2,7 @@
     import { closeModal } from "svelte-modals";
     import { get } from "svelte/store";
     import Select from "svelte-select";
+    import { OTHER_ROOMS_ID } from "../../Stores/ChatStore";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import { CreateRoomOptions, historyVisibility, historyVisibilityOptions } from "../../Connection/ChatConnection";
     import { gameManager } from "../../../Phaser/Game/GameManager";
@@ -97,7 +98,7 @@
             >
                 <option value="private">{$LL.chat.createRoom.visibility.private()}</option>
                 <option value="public">{$LL.chat.createRoom.visibility.public()}</option>
-                {#if parentID}
+                {#if parentID && parentID !== OTHER_ROOMS_ID}
                     <option value="restricted">{$LL.chat.createRoom.visibility.restricted()}</option>
                 {/if}
             </select>
