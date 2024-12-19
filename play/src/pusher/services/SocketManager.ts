@@ -680,11 +680,18 @@ export class SocketManager implements ZoneEventListener {
         if (socketData.spaceUser.chatID !== playerDetailsMessage.chatID && playerDetailsMessage.chatID !== "") {
             fieldMask.push("chatID");
         }
+        if (
+            playerDetailsMessage.showVoiceIndicator !== undefined &&
+            socketData.spaceUser.showVoiceIndicator !== playerDetailsMessage.showVoiceIndicator
+        ) {
+            fieldMask.push("showVoiceIndicator");
+        }
         if (fieldMask.length > 0) {
             const partialSpaceUser: SpaceUser = SpaceUser.fromPartial({
                 availabilityStatus: playerDetailsMessage.availabilityStatus,
                 id: socketData.userId,
                 chatID: playerDetailsMessage.chatID,
+                showVoiceIndicator: playerDetailsMessage.showVoiceIndicator,
             });
             socketData.spaces.forEach((spaceName) => {
                 const space = this.spaces.get(spaceName);

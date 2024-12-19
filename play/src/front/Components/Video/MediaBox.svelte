@@ -10,6 +10,7 @@
     import { JitsiTrackStreamWrapper } from "../../Streaming/Jitsi/JitsiTrackStreamWrapper";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { mediaStreamConstraintsStore } from "../../Stores/MediaStore";
+    import { highlightFullScreen } from "../../Stores/ActionsCamStore";
     import VideoMediaBox from "./VideoMediaBox.svelte";
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
     import JitsiMediaBox from "./JitsiMediaBox.svelte";
@@ -46,6 +47,7 @@
 
     $: videoEnabled = $constraintStore ? $constraintStore.video : false;
     $: isHighlighted = $highlightedEmbedScreen === streamable;
+    $: fullScreen = $highlightedEmbedScreen === streamable && $highlightFullScreen;
 </script>
 
 <!-- svelte-ignore missing-declaration -->
@@ -57,7 +59,7 @@
             class="video-media-box pointer-events-auto media-container transition-all justify-center relative h-full w-full"
             in:fly={{ y: 50, duration: 150 }}
         >
-            <VideoMediaBox peer={streamable} {isHighlighted} />
+            <VideoMediaBox peer={streamable} {isHighlighted} {fullScreen} />
         </div>
     {/if}
 {:else if streamable instanceof ScreenSharingPeer}
@@ -65,7 +67,7 @@
         class="video-media-box pointer-events-auto media-container transition-all justify-center relative h-full w-full"
         in:fly={{ y: 50, duration: 150 }}
     >
-        <VideoMediaBox peer={streamable} {isHighlighted} />
+        <VideoMediaBox peer={streamable} {isHighlighted} {fullScreen} />
     </div>
 {:else if streamable instanceof JitsiTrackStreamWrapper}
     <div

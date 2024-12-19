@@ -34,6 +34,7 @@
     // This impacts the video position in the container when the video uses the full width of the container.
     // If set to "top", the video will be at the top of the container. If set to "center", the video will be centered.
     export let verticalAlign: "center" | "top" = "center";
+    export let isTalking = false;
 
     let destroyed = false;
 
@@ -200,11 +201,11 @@
     <video
         style={videoEnabled
             ? "width: " +
-              videoWidth +
+              Math.ceil(videoWidth) +
               "px; height: " +
-              videoHeight +
+              Math.ceil(videoHeight) +
               "px; left: " +
-              (containerWidth - videoWidth) / 2 +
+              Math.ceil((containerWidth - videoWidth) / 2) +
               "px;" +
               (verticalAlign === "center" ? " top: " + (containerHeight - videoHeight) / 2 + "px;" : "")
             : ""}
@@ -212,10 +213,12 @@
         bind:videoHeight={videoStreamHeight}
         bind:this={videoElement}
         on:loadedmetadata={onLoadVideoElement}
-        class="absolute block"
+        class="absolute block border-solid object-fill"
         class:h-0={!videoEnabled}
         class:w-0={!videoEnabled}
         class:rounded-lg={videoEnabled}
+        class:border-transparent={!isTalking}
+        class:border-secondary={isTalking}
         autoplay
         playsinline
     />

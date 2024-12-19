@@ -1,7 +1,7 @@
 <script lang="ts">
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
-    import { writable } from "svelte/store";
+    import { Readable, writable } from "svelte/store";
     import { createPopperActions } from "svelte-popperjs";
     import { VideoPeer } from "../../WebRtc/VideoPeer";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
@@ -25,13 +25,16 @@
     import { IconArrowDown, IconArrowUp } from "@wa-icons";
 
     export let isHighlighted = false;
+    export let fullScreen = false;
     export let peer: VideoPeer | ScreenSharingPeer;
 
     const pictureStore = writable<string | undefined>(undefined);
-    let extendedSpaceUser = peer.getExtendedSpaceUser();
-    extendedSpaceUser
+    let extendedSpaceUserPromise = peer.getExtendedSpaceUser();
+    let showVoiceIndicatorStore: Readonly<Readable<boolean>> | undefined = undefined;
+    extendedSpaceUserPromise
         .then((user) => {
             pictureStore.set(user.getWokaBase64);
+            showVoiceIndicatorStore = user.reactiveUser.showVoiceIndicator;
         })
         .catch((e) => {
             console.error("Error getting the user picture: ", e);
@@ -46,14 +49,13 @@
 
     let showUserSubMenu = false;
     let menuDrop = false;
-    let fullScreen = false;
 
     if (peer) {
         embedScreen = peer as unknown as Streamable;
     }
-
     // If there is no constraintStore, we are in a screen sharing (so video is enabled)
     $: videoEnabled = constraintStore ? ($constraintStore ? $constraintStore.video : false) : true;
+    $: showVoiceIndicator = showVoiceIndicatorStore ? $showVoiceIndicatorStore : false;
 
     function toggleFullScreen() {
         highlightFullScreen.update((current) => !current);
@@ -85,20 +87,15 @@
     <!-- FIXME: not sure when to round in blue the box -->
     <div
         class={"z-20 w-full rounded-lg transition-all bg-center bg-no-repeat " +
-            (isHighlighted && !$highlightFullScreen && $statusStore === "connected"
-                ? ""
-                : " bg-contrast/80 backdrop-blur")}
+            (fullScreen || $statusStore !== "connected" ? "bg-contrast/80 backdrop-blur" : "")}
         style={videoEnabled && $statusStore === "connecting" ? "background-image: url(" + loaderImg + ")" : ""}
-        class:border-4={false}
-        class:border-solid={false}
-        class:border-color={false}
         class:h-full={videoEnabled}
         class:h-11={!videoEnabled}
         class:flex-col={videoEnabled}
         class:items-center={!videoEnabled || $statusStore === "connecting" || $statusStore === "error"}
         class:flex-row={!videoEnabled}
         class:relative={!videoEnabled}
-        class:rounded-lg={!$highlightFullScreen}
+        class:rounded-lg={!fullScreen}
         class:justify-center={$statusStore === "connecting" || $statusStore === "error"}
     >
         {#if $statusStore === "connecting"}
@@ -115,18 +112,19 @@
             outputDeviceId={$speakerSelectedStore}
             volume={$volumeProximityDiscussionStore}
             on:selectOutputAudioDeviceError={() => selectDefaultSpeaker()}
-            verticalAlign={isHighlighted && !$highlightFullScreen ? "top" : "center"}
+            verticalAlign={isHighlighted && !fullScreen ? "top" : "center"}
+            isTalking={showVoiceIndicator}
         >
             <UserName
                 {name}
                 picture={pictureStore}
-                isPlayingAudio={constraintStore ? $constraintStore?.audio : false}
+                isPlayingAudio={showVoiceIndicator}
                 position={videoEnabled ? "absolute bottom-4 left-4" : "absolute bottom-1.5 left-4"}
             >
                 <div use:popperRef class="self-center">
                     <UpDownChevron enabled={showUserSubMenu} on:click={() => (showUserSubMenu = !showUserSubMenu)} />
                 </div>
-                {#await peer.getExtendedSpaceUser()}
+                {#await extendedSpaceUserPromise}
                     <div />
                 {:then spaceUser}
                     {#if showUserSubMenu}
@@ -178,9 +176,8 @@
                         class="muted-video w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
                         on:click={toggleFullScreen}
                         on:click={() => (menuDrop = !menuDrop)}
-                        on:click={() => (fullScreen = !fullScreen)}
                     >
-                        {#if $highlightFullScreen}
+                        {#if fullScreen}
                             <ArrowsMinimizeIcon classList="mx-4" />
                             <span class="font-bold cursor-pointer text-white">{$LL.video.exit_fullscreen()}</span>
                         {:else}
@@ -217,9 +214,3 @@
         <ArrowsMaximizeIcon />
     </button>
 </div>
-
-<style>
-    .border-color {
-        border-color: #4156f6;
-    }
-</style>
