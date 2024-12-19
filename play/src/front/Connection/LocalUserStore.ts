@@ -301,7 +301,7 @@ class LocalUserStore {
             const parsed = FoldersOpenedSchema.parse(JSON.parse(foldersStr));
             return parsed ?? new Set<string>();
         } catch (e) {
-            console.error("Error parsing folders opened from localStorage:", e);
+            console.warn("Error parsing folders opened from localStorage:", e);
             localStorage.removeItem(foldersOpened);
             return new Set<string>();
         }
