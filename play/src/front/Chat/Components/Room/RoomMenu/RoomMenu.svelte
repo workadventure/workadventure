@@ -8,7 +8,7 @@
     } from "../../../Connection/ChatConnection";
     import { notificationPlayingStore } from "../../../../Stores/NotificationStore";
     import LL from "../../../../../i18n/i18n-svelte";
-    import InviteParticipantsModal from "../InviteParticipantsModal.svelte";
+    import ManageParticipantsModal from "../ManageParticipantsModal.svelte";
     import RoomOption from "./RoomOption.svelte";
     import { IconDots, IconLogout, IconUserEdit, IconMute, IconUnMute } from "@wa-icons";
 
@@ -56,8 +56,8 @@
             .catch(() => console.error("Failed to leave room"));
     }
 
-    function openInviteParticipantsModal() {
-        openModal(InviteParticipantsModal, { room });
+    function openManageParticipantsModal() {
+        openModal(ManageParticipantsModal, { room });
     }
 
     function closeMenuAndSetMuteStatus() {
@@ -93,7 +93,7 @@
             dataTestId="manageParticipantOption"
             IconComponent={IconUserEdit}
             title={$LL.chat.manageRoomUsers.roomOption()}
-            on:click={openInviteParticipantsModal}
+            on:click={openManageParticipantsModal}
         />
     {/if}
 
