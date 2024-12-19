@@ -1,18 +1,77 @@
 import { get } from "svelte/store";
-import { SpaceInterface } from "../SpaceInterface";
+import { Subscription } from "rxjs";
+import { PrivateEvents, SpaceInterface } from "../SpaceInterface";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { isSpeakerStore, requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import LL from "../../../i18n/i18n-svelte";
-import { askDialogStore } from "../../Stores/MeetingStore";
 import { currentLiveStreamingSpaceStore } from "../../Stores/MegaphoneStore";
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { peerStore } from "../../Stores/PeerStore";
+import { SpaceFilterInterface } from "../SpaceFilter/SpaceFilter";
+import { popupStore } from "../../Stores/PopupStore";
+import MuteDialogPopup from "../../Components/PopUp/MuteDialogPopup.svelte";
+
+function displayMuteDialog(
+    event: PrivateEvents["muteAudio"] | PrivateEvents["muteVideo"],
+    space: SpaceInterface,
+    spaceFilter: SpaceFilterInterface
+) {
+    const message =
+        event.$case === "muteAudio"
+            ? get(LL).notification.askToMuteMicrophone()
+            : get(LL).notification.askToMuteCamera();
+
+    const popupName = event.$case + "-dialog-popup-" + event.sender;
+
+    const senderUser = get(spaceFilter.usersStore).get(event.sender);
+
+    let subscription: Subscription | undefined;
+
+    const cleanup = () => {
+        popupStore.removePopup(popupName);
+        subscription?.unsubscribe();
+        currentUserLeaveSpaceSubscription.unsubscribe();
+    };
+
+    // In case the sender leaves the space, we remove the popup
+    if (senderUser) {
+        subscription = spaceFilter.observeUserLeft.subscribe((user) => {
+            if (user.id === event.sender) {
+                cleanup();
+            }
+        });
+    }
+
+    const currentUserLeaveSpaceSubscription = space.onLeaveSpace.subscribe(() => {
+        cleanup();
+    });
+
+    popupStore.addPopup(
+        MuteDialogPopup,
+        {
+            message,
+            sender: senderUser,
+            acceptRequest: () => {
+                if (event.$case === "muteAudio") {
+                    requestedMicrophoneState.disableMicrophone();
+                } else {
+                    requestedCameraState.disableWebcam();
+                }
+                cleanup();
+            },
+            refuseRequest: () => {
+                cleanup();
+            },
+        },
+        popupName
+    );
+}
 
 /**
  * This function listens to the space events and mutes the user when a mute request is received.
  */
-export function bindMuteEventsToSpace(space: SpaceInterface) {
+export function bindMuteEventsToSpace(space: SpaceInterface, spaceFilter: SpaceFilterInterface): void {
     // We can safely ignore the subscription because it will be automatically completed when the space is destroyed.
     // eslint-disable-next-line rxjs/no-ignored-subscription,svelte/no-ignored-unsubscribe
     space.observePrivateEvent("muteAudio").subscribe((event) => {
@@ -20,9 +79,7 @@ export function bindMuteEventsToSpace(space: SpaceInterface) {
         if (event.muteAudio.force) {
             requestedMicrophoneState.disableMicrophone();
         } else {
-            askDialogStore.addAskDialog(event.sender, get(LL).notification.askToMuteMicrophone(), () => {
-                requestedMicrophoneState.disableMicrophone();
-            });
+            displayMuteDialog(event, space, spaceFilter);
         }
     });
 
@@ -33,9 +90,7 @@ export function bindMuteEventsToSpace(space: SpaceInterface) {
         if (event.muteVideo.force) {
             requestedCameraState.disableWebcam();
         } else {
-            askDialogStore.addAskDialog(event.sender, get(LL).notification.askToMuteCamera(), () => {
-                requestedCameraState.disableWebcam();
-            });
+            displayMuteDialog(event, space, spaceFilter);
         }
     });
 

@@ -96,8 +96,10 @@ export class Space {
     }
 
     public localAddUser(spaceUser: SpaceUser, client: Socket | undefined) {
-        const user = { ...spaceUser, lowercaseName: spaceUser.name.toLowerCase(), client };
-        this.users.set(spaceUser.id, user);
+        const user: Partial<SpaceUserExtended> = spaceUser;
+        user.lowercaseName = spaceUser.name.toLowerCase();
+        user.client = client;
+        this.users.set(spaceUser.id, user as SpaceUserExtended);
         debug(`${this.name} : user added ${spaceUser.id}. User count ${this.users.size}`);
 
         const subMessage: SubMessage = {
@@ -110,7 +112,7 @@ export class Space {
                 },
             },
         };
-        this.notifyAll(subMessage, user);
+        this.notifyAll(subMessage, user as SpaceUserExtended);
     }
 
     public updateUser(spaceUser: PartialSpaceUser, updateMask: string[]) {
@@ -134,13 +136,11 @@ export class Space {
             return;
         }
         const oldUser: SpaceUserExtended | undefined = { ...user };
-
         const updateValues = applyFieldMask(spaceUser, updateMask);
 
         merge(user, updateValues);
 
         if (spaceUser.name) user.lowercaseName = spaceUser.name.toLowerCase();
-
         debug(`${this.name} : user updated ${spaceUser.id}`);
         const subMessage: SubMessage = {
             message: {

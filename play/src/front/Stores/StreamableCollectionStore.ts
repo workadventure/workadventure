@@ -14,6 +14,7 @@ import { peerStore, screenSharingStreamStore } from "./PeerStore";
 import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore";
 import { gameSceneStore } from "./GameSceneStore";
 import { embedScreenLayoutStore } from "./EmbedScreensStore";
+import { highlightFullScreen } from "./ActionsCamStore";
 
 export type Streamable = RemotePeer | ScreenSharingLocalMedia | JitsiTrackStreamWrapper;
 
@@ -43,7 +44,7 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
 
             const addPeer = (peer: Streamable) => {
                 peers.set(peer.uniqueId, peer);
-                // if peer is SreenHaring, change for presentation Layout mode
+                // if peer is SreenSharing, change for presentation Layout mode
                 if (peer instanceof ScreenSharingPeer) {
                     embedScreenLayoutStore.set(LayoutMode.Presentation);
                 }
@@ -75,8 +76,9 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
 
             const $highlightedEmbedScreen = get(highlightedEmbedScreen);
 
-            if ($highlightedEmbedScreen?.type === "streamable" && !peers.has($highlightedEmbedScreen.embed.uniqueId)) {
+            if ($highlightedEmbedScreen && !peers.has($highlightedEmbedScreen.uniqueId)) {
                 highlightedEmbedScreen.removeHighlight();
+                highlightFullScreen.set(false);
             }
 
             return peers;
@@ -85,6 +87,17 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
 }
 
 export const streamableCollectionStore = createStreamableCollectionStore();
+
+// No need to unsubscribe, the store is global
+// eslint-disable-next-line svelte/no-ignored-unsubscribe
+streamableCollectionStore.subscribe((streamableCollection) => {
+    // If the highlightedEmbedScreen is not in the streamableCollection, we remove the highlight
+    const $highlightedEmbedScreen = get(highlightedEmbedScreen);
+    if ($highlightedEmbedScreen && !streamableCollection.has($highlightedEmbedScreen.uniqueId)) {
+        highlightedEmbedScreen.removeHighlight();
+        highlightFullScreen.set(false);
+    }
+});
 
 export const myJitsiCameraStore = derived([jitsiTracksStore], ([$jitsiTracksStore]) => {
     for (const jitsiTrackWrapper of $jitsiTracksStore.values()) {

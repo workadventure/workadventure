@@ -1,4 +1,5 @@
 import { expect, Page } from "@playwright/test";
+import Menu from "./menu";
 
 export async function oidcLogin(
   page: Page,
@@ -7,16 +8,16 @@ export async function oidcLogin(
   isMobile = false
 ) {
   if (isMobile) {
-    await expect(page.locator("button#burgerIcon")).toBeVisible();
+    /*await expect(page.locator("button#burgerIcon")).toBeVisible();
     const mobileMenuVisible = await page
       .locator("button#burgerIcon img.tw-rotate-0")
       .isVisible();
     if (mobileMenuVisible) {
       await page.click("button#burgerIcon");
-    }
+    }*/
   }
-  await page.click("#menuIcon img:first-child");
-  await page.click('a:has-text("Sign in")');
+  //await page.click("#menuIcon img:first-child");
+  await page.click('a:has-text("Login")');
 
   await page.fill("#Input_Username", userName, {
     timeout: 40_000,
@@ -28,15 +29,9 @@ export async function oidcLogin(
     timeout: 50000
   });
 
-  if (!isMobile) {
-    await expect(page.locator("button#menuIcon").first()).toBeVisible({
-      timeout: 50_000,
-    });
-  } else {
-    await expect(page.locator("button#burgerIcon")).toBeVisible({
-      timeout: 50_000,
-    });
-  }
+  await expect(page.locator('#main-layout')).toBeVisible({
+    timeout: 50_000,
+  });
 }
 
 export async function oidcLogout(page: Page, isMobile = false) {
@@ -49,9 +44,9 @@ export async function oidcLogout(page: Page, isMobile = false) {
       await page.click("button#burgerIcon");
     }
   }
-  await page.click("#menuIcon img:first-child");
-  await page.click('button:has-text("Log out")');
-  await expect(page.getByRole('heading', { name: 'Profile' })).toBeHidden();
+  await Menu.openMenu(page, isMobile);
+  await page.getByRole('button', { name: 'Log out' }).click();
+  await expect(page.locator('a:has-text("Login")')).toBeVisible();
 }
 
 export async function oidcAdminTagLogin(page, isMobile = false) {

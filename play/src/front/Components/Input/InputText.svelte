@@ -9,7 +9,7 @@
     export let error = false;
 </script>
 
-<div class="tw-flex tw-flex-col">
+<div class="flex flex-col">
     <label for="input">
         {label}
     </label>
@@ -22,7 +22,7 @@
         on:blur={onBlur}
         on:keypress={onKeyPress}
         class:error={errorHelperText || error}
-        class:!tw-border-red-500={errorHelperText || error}
+        class:!border-red-500={errorHelperText || error}
     />
     {#if errorHelperText}
         <span class="error">

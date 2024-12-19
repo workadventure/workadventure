@@ -2,9 +2,15 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const camera: DeepPartial<Translation["camera"]> = {
+    editCam: "Modifier la caméra",
+    editMic: "Modifier le micro",
+    editSpeaker: "Modifier la sortie audio",
+    active: "Actif",
+    disabled: "Desactivé",
+    notRecommended: "Non recommandé",
     enable: {
         title: "Allumez votre caméra et votre microphone",
-        start: "C'est parti!",
+        start: "Bienvenue sur notre page de configuration des périphériques audio et vidéo ! Trouvez ici les outils pour optimiser votre expérience en ligne. Ajustez les paramètres selon vos préférences pour résoudre les problèmes éventuels. Assurez-vous que votre matériel est bien connecté et à jour. Explorez et testez différentes configurations pour trouver celle qui convient le mieux.",
     },
     help: {
         title: "Accès à la caméra / au microphone nécessaire",
@@ -37,7 +43,10 @@ const camera: DeepPartial<Translation["camera"]> = {
     },
     my: {
         silentZone: "Zone silencieuse",
+        silentZoneDesc:
+            "Vous êtes dans une zone silencieuse, les autres utilisateurs ne peuvent pas vous parler, votre micro et caméra est désactivé. Bonne pause !",
         nameTag: "Vous",
+        loading: "Chargement de votre webcam...",
     },
     disable: "Couper la caméra",
     menu: {
@@ -50,7 +59,7 @@ const camera: DeepPartial<Translation["camera"]> = {
         muteVideoUser: "Couper la vidéo",
         muteVideoEveryBody: "Couper la vidéo pour tout le monde",
         pin: "Épingler",
-        blockOrReportUser: "Bloquer ou signaler l'utilisateur",
+        blockOrReportUser: "Modération",
     },
 };
 

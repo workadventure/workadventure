@@ -163,15 +163,15 @@
     });
 </script>
 
-<div class="tw-flex tw-flex-col tw-flex-1 tw-overflow-auto tw-gap-2">
-    <div class="tw-flex tw-flex-col tw-gap-2">
+<div class="flex flex-col flex-1 overflow-auto gap-2">
+    <div class="flex flex-col gap-2">
         <div>
             {#if $selectCategoryStore === undefined}
-                <p class="tw-text-[22px] tw-m-0">{$LL.mapEditor.entityEditor.header.title()}</p>
-                <p class="tw-m-0 tw-opacity-50">{$LL.mapEditor.entityEditor.header.description()}</p>
+                <p class="text-[22px] m-0">{$LL.mapEditor.entityEditor.header.title()}</p>
+                <p class="m-0 opacity-50">{$LL.mapEditor.entityEditor.header.description()}</p>
             {:else}
                 <button
-                    class="tw-p-0"
+                    class="p-0"
                     data-testid="clearCurrentSelection"
                     on:click={displayTagListAndClearCurrentSelection}
                     ><IconChevronLeft />{$LL.mapEditor.entityEditor.buttons.back()} - {$selectCategoryStore
@@ -180,18 +180,18 @@
                 >
             {/if}
         </div>
-        <div class="tw-flex">
+        <div class="flex">
             <input
-                class="tw-flex-1 tw-h-8 !tw-border-solid !tw-rounded-2xl !tw-border-gray-400 !tw-placeholder-gray-400"
+                class="flex-1 h-8 !border-solid !rounded-2xl !border-gray-400 !placeholder-gray-400"
                 type="search"
                 bind:value={searchTerm}
                 placeholder={$LL.mapEditor.entityEditor.itemPicker.searchPlaceholder()}
             />
         </div>
     </div>
-    <div class={`tw-flex-1 tw-overflow-auto ${pickedEntity ? "tw-pt-44" : ""}`}>
+    <div class={`flex-1 overflow-auto ${pickedEntity ? "pt-44" : ""}`}>
         {#if $selectCategoryStore === undefined && searchTerm === ""}
-            <ul class="tw-list-none !tw-p-0 tw-min-w-full">
+            <ul class="list-none !p-0 min-w-full">
                 {#each Object.entries(getEntitiesPrefabsVariantsGroupedByTagWithCustomFirst($entitiesPrefabsVariants)) as [tag, entitiesPrefabsVariants] (tag)}
                     <TagListItem
                         on:onSelectedTag={(event) => {
@@ -205,7 +205,7 @@
         {:else}
             {#if pickedEntityVariant && pickedEntity}
                 <div
-                    class="tw-flex tw-flex-row tw-gap-2 tw-items-center tw-justify-center tw-border-b-blue-50 tw-mb-2 tw-min-h-[200px] tw-absolute tw-bg-dark-purple/90 tw-rounded-2xl tw-w-full tw-left-0 tw-top-24"
+                    class="flex flex-row gap-2 items-center justify-center border-b-blue-50 mb-2 min-h-[200px] absolute bg-dark-purple/90 rounded-2xl w-full left-0 top-24"
                 >
                     {#if isEditingCustomEntity}
                         <CustomEntityEditionForm
@@ -221,12 +221,12 @@
                         />
                     {:else}
                         <EntityImage
-                            classNames="tw-h-16 tw-w-[64px] tw-object-contain"
+                            classNames="h-16 w-[64px] object-contain"
                             imageSource={pickedEntity.imagePath}
                             imageAlt={pickedEntity.name}
                         />
                         <div>
-                            <p class="tw-m-0"><b>{pickedEntityVariant.defaultPrefab.name}</b></p>
+                            <p class="m-0"><b>{pickedEntityVariant.defaultPrefab.name}</b></p>
                             <EntityVariantColorPicker
                                 colors={pickedEntityVariant.colors}
                                 {selectedColor}
@@ -240,14 +240,14 @@
                         </div>
                         {#if pickedEntity.type === "Custom"}
                             <button
-                                class="tw-bg-blue-500 tw-rounded"
+                                class="bg-blue-500 rounded"
                                 data-testid="editEntity"
                                 on:click={() => setIsEditingCustomEntity(true)}
                                 ><IconPencil font-size={16} />{$LL.mapEditor.entityEditor.buttons.editEntity()}</button
                             >
                         {/if}
                         <button
-                            class="tw-self-start tw-absolute tw-right-0"
+                            class="self-start absolute right-0"
                             data-testid="clearEntitySelection"
                             on:click={clearEntitySelection}><IconDeselect font-size={20} /></button
                         >

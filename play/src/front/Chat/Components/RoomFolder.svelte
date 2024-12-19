@@ -29,17 +29,17 @@
     });
 </script>
 
-<div class="tw-mx-2 tw-p-1 tw-bg-contrast-300/10 tw-rounded-lg tw-mb-4">
+<div class="mx-2 p-1 bg-contrast-300/10 rounded-md mb-4">
     <div
-        class="tw-group tw-relative tw-px-3 tw-text-white/75 hover:tw-text-white tw-h-11 hover:tw-bg-contrast-200/10 tw-w-full tw-flex tw-space-x-2 tw-items-center tw-rounded-md"
+        class="group relative px-3 text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center rounded"
     >
         <button
-            class="tw-flex tw-items-center tw-space-x-2 tw-grow tw-m-0 tw-p-0"
+            class="flex items-center space-x-2 grow m-0 p-0"
             on:click={() => {
                 isOpen = !isOpen;
             }}
         >
-            <div class="tw-text-sm tw-font-bold tw-tracking-widest tw-uppercase tw-grow tw-text-left">
+            <div class="text-sm font-bold tracking-widest uppercase grow text-left">
                 {$name}
             </div>
         </button>
@@ -54,7 +54,7 @@
     </div>
 
     {#if isOpen}
-        <div class="tw-flex tw-flex-col tw-overflow-auto">
+        <div class="flex flex-col overflow-auto">
             {#each Array.from($folders.values()) as folder (folder.id)}
                 <svelte:self
                     bind:isOpen={isFoldersOpen[folder.id]}
@@ -69,7 +69,7 @@
                 <Room {room} />
             </ShowMore>
             {#if $rooms.size === 0 && $folders.size === 0}
-                <p class="tw-py-2 tw-px-3 tw-m-0 tw-text-white/50 tw-italic tw-text-sm">
+                <p class="py-2 px-3 m-0 text-white/50 italic text-sm">
                     {$LL.chat.nothingToDisplay()}
                 </p>
             {/if}

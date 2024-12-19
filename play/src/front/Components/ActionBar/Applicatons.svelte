@@ -14,20 +14,20 @@
     import eraserSvg from "../images/applications/icon_eraser.svg";
     import excalidrawSvg from "../images/applications/icon_excalidraw.svg";
     import cardsPng from "../images/applications/icon_cards.svg";
-    import { emoteMenuSubStore } from "../../Stores/EmoteStore";
     import { helpSettingsPopupBlockedStore } from "../../Stores/HelpSettingsPopupBlockedStore";
     import { connectionManager } from "../../Connection/ConnectionManager";
     import { LL } from "../../../i18n/i18n-svelte";
     import Tooltip from "../Util/Tooltip.svelte";
+    import { activeSecondaryZoneActionBarStore } from "../../Stores/MenuStore";
 
-    let unsubscriptionEmoteMenuStore: Unsubscriber | null = null;
+    let unsubscriptionSecondaryZoneMenuStore: Unsubscriber | null = null;
 
     // Variable to store the app menu state opened or closed
     let appMenuOpened = false;
     function toggleAppMenu() {
         appMenuOpened = !appMenuOpened;
-        if (appMenuOpened && $emoteMenuSubStore) {
-            emoteMenuSubStore.closeEmoteMenu();
+        if (appMenuOpened && $activeSecondaryZoneActionBarStore) {
+            activeSecondaryZoneActionBarStore.set(undefined);
         }
     }
 
@@ -59,8 +59,8 @@
 
     onMount(() => {
         // Subscribe to the emote menu store and close the app menu if the emote menu is opened
-        unsubscriptionEmoteMenuStore = emoteMenuSubStore.subscribe((value) => {
-            if (value === true) {
+        unsubscriptionSecondaryZoneMenuStore = activeSecondaryZoneActionBarStore.subscribe((value) => {
+            if (value !== undefined) {
                 appMenuOpened = false;
             }
         });
@@ -68,7 +68,7 @@
 
     onDestroy(() => {
         // Unsubscribe to the emote menu store
-        if (unsubscriptionEmoteMenuStore) unsubscriptionEmoteMenuStore();
+        if (unsubscriptionSecondaryZoneMenuStore) unsubscriptionSecondaryZoneMenuStore();
     });
 </script>
 
@@ -99,13 +99,13 @@
 
 {#if appMenuOpened}
     <div
-        class="tw-flex tw-justify-center tw-m-auto tw-absolute tw-left-0 tw-right-0 tw-bottom-0"
+        class="flex justify-center m-auto absolute left-0 right-0 bottom-0"
         style="margin-bottom: 4.5rem; height: auto;"
     >
         <div class="bottom-action-bar">
             {#if connectionManager.klaxoonToolActivated}
-                <div class="bottom-action-section tw-flex animate">
-                    <div class="tw-transition-all bottom-action-button">
+                <div class="bottom-action-section flex animate">
+                    <div class="transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.klaxoonProperties.label()} />
                         <button
                             on:click={() => {
@@ -120,9 +120,9 @@
                     </div>
                 </div>
             {/if}
-            <div class="bottom-action-section tw-flex animate">
+            <div class="bottom-action-section flex animate">
                 {#if connectionManager.googleDriveToolActivated}
-                    <div class="tw-transition-all bottom-action-button">
+                    <div class="transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.googleDriveProperties.label()} />
                         <button
                             on:click={() => {
@@ -137,7 +137,7 @@
                     </div>
                 {/if}
                 {#if connectionManager.googleDocsToolActivated}
-                    <div class="tw-transition-all bottom-action-button">
+                    <div class="transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.googleDocsProperties.label()} />
                         <button
                             on:click={() => {
@@ -152,7 +152,7 @@
                     </div>
                 {/if}
                 {#if connectionManager.googleSheetsToolActivated}
-                    <div class="tw-transition-all bottom-action-button">
+                    <div class="transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.googleSheetsProperties.label()} />
                         <button
                             on:click={() => {
@@ -167,7 +167,7 @@
                     </div>
                 {/if}
                 {#if connectionManager.googleSlidesToolActivated}
-                    <div class="tw-transition-all bottom-action-button">
+                    <div class="transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.googleSlidesProperties.label()} />
                         <button
                             on:click={() => {
@@ -182,7 +182,7 @@
                     </div>
                 {/if}
                 {#if connectionManager.eraserToolActivated}
-                    <div class="tw-transition-all bottom-action-button">
+                    <div class="transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.eraserProperties.label()} />
                         <button
                             on:click={() => {
@@ -197,7 +197,7 @@
                     </div>
                 {/if}
                 {#if connectionManager.excalidrawToolActivated}
-                    <div class="tw-transition-all bottom-action-button">
+                    <div class="transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.excalidrawProperties.label()} />
                         <button
                             on:click={() => {
@@ -212,7 +212,7 @@
                     </div>
                 {/if}
                 {#if connectionManager.cardsToolActivated}
-                    <div class="tw-transition-all bottom-action-button">
+                    <div class="transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.cardsProperties.label()} />
                         <button
                             on:click={() => {

@@ -407,7 +407,7 @@ WA.ui.actionBar.addButton(descriptor: {
 - id: the id of the button action bar defined.
 - label: the label to display in the button.
 - type: the type of button ('button' / 'action'). By default is 'button'.
-- imageSrc: image of button associated.
+- imageSrc: URL of the button's image (relative to the map file).
 - toolTip: label displayed above the action button.
 - clickCallback: function called when the user clicks on the button. The callback is passed a `AddButtonActionBar` instance in parameter.
 

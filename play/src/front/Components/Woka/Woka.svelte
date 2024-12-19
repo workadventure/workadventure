@@ -1,9 +1,9 @@
 <script lang="ts">
     export let src: string;
-    export let customWidth: string;
-    export let customHeight: string;
-    let width = "62px";
-    let height = "62px";
+    export let customWidth: string | undefined = undefined;
+    export let customHeight: string | undefined = undefined;
+    let width = "64px";
+    let height = "64px";
 
     function noDrag() {
         return false;
@@ -13,7 +13,7 @@
 <img
     {src}
     alt=""
-    class="nes-pointer noselect"
+    class="noselect"
     style="--theme-width: {customWidth ?? width}; --theme-height: {customHeight ?? height} image-rendering: pixalated"
     draggable="false"
     on:dragstart|preventDefault={noDrag}

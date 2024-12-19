@@ -45,27 +45,27 @@
 </script>
 
 <div
-    class="tw-text-md tw-flex tw-gap-2 tw-flex-row tw-items-center hover:tw-bg-white hover:tw-bg-opacity-10 hover:tw-rounded-md hover:!tw-cursor-pointer tw-p-1"
+    class="text-md flex gap-2 flex-row items-center hover:bg-white hover:bg-opacity-10 hover:rounded hover:!cursor-pointer p-1"
 >
-    <div class="tw-relative">
+    <div class="relative">
         <Avatar avatarUrl={null} fallbackName={room.name} />
     </div>
     <div>
         {#each chunks as chunk (chunk.key)}
-            <span class:tw-text-light-blue={chunk.match} class="tw-cursor-default">{chunk.text}</span>
+            <span class:text-light-blue={chunk.match} class="cursor-default">{chunk.text}</span>
         {/each}
     </div>
 </div>
 {#if !isJoiningRoom}
-    <div class="tw-flex">
-        <button class="tw-text-blue-300" on:click={() => joinRoom()}>{$LL.chat.join()}</button>
+    <div class="flex">
+        <button class="text-blue-300" on:click={() => joinRoom()}>{$LL.chat.join()}</button>
     </div>
 {:else}
-    <div class="tw-min-h-[30px] tw-text-md tw-flex tw-gap-2 tw-justify-center tw-flex-row tw-items-center tw-p-1">
-        <IconLoader class="tw-animate-spin" />
+    <div class="min-h-[30px] text-md flex gap-2 justify-center flex-row items-center p-1">
+        <IconLoader class="animate-spin" />
     </div>
 {/if}
 
 {#if joinRoomError}
-    <div transition:fade class="tw-flex tw-bg-red-500 tw-rounded-md tw-p-2">{joinRoomError}</div>
+    <div transition:fade class="flex bg-red-500 rounded p-2">{joinRoomError}</div>
 {/if}

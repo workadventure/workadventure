@@ -25,18 +25,20 @@ test.describe('Availability Status', () => {
 
             await Menu.openStatusList(page, isMobileTest);
             await Menu.clickOnStatus(page,statusName); 
-            if((browserName === "firefox") && await page.getByText(`Do you want to allow notification`).isVisible() ){
+            /*if((browserName === "firefox") && await page.getByText(`Allow notification`).isVisible() ){
                 await  page.locator("section:has(#notificationPermission) + footer>button.outline").click();
-            }
+            }*/
             await Menu.openStatusList(page, isMobileTest);
-            await expect(page.getByText(statusName)).toHaveCSS('opacity','0.5')
-        
+            //await page.pause();
+            //await expect(page.locator('.status-button').getByText(statusName)).toHaveClass('opacity-50')
+            await expect(page.getByRole('button', { name: statusName }).locator('svg')).toBeVisible();
+
         
             //move to trigger status change 
             await Map.walkTo(page,'ArrowRight',100)
+            await Menu.openStatusList(page, isMobileTest);
 
-            await expect(page.getByText("Online")).toHaveCSS('opacity','0.5')
-
+            await expect(page.getByRole('button', { name: 'Online' }).locator('svg')).toBeVisible();
         })
         test('should disable microphone and camera',async({ page, browser,browserName }, {project})=>{
             if(browserName === "webkit"){
@@ -63,10 +65,8 @@ test.describe('Availability Status', () => {
             await Menu.clickOnStatus(page,statusName); 
             //await Menu.closeNotificationPopUp(page);
 
-            await expect(page.getByAltText('Turn off webcam')).toBeHidden();
-            await expect(page.getByAltText('Turn off microphone')).toBeHidden();
-            
-
+            await expect(page.getByTestId('camera-button').locator('.bg-danger')).toBeHidden();
+            await expect(page.getByTestId('microphone-button').locator('.bg-danger')).toBeHidden();
         })
 
         test('should keep same webcam and microphone config when you go back to online status',async({ page, browser,context,browserName },{project})=>{
@@ -85,16 +85,16 @@ test.describe('Availability Status', () => {
             await Menu.turnOffMicrophone(page)
 
 
-            await expect(page.getByAltText('Turn off webcam')).toBeVisible();
-            await expect(page.getByAltText('Turn on microphone')).toBeVisible();
+            await Menu.expectCameraOn(page);
+            await Menu.expectMicrophoneOff(page);
 
             await Menu.openStatusList(page);
             await Menu.clickOnStatus(page,statusName);
             //await Menu.closeNotificationPopUp(page);
             await Map.walkTo(page,'ArrowRight',100)
 
-            await expect(page.getByAltText('Turn off webcam')).toBeVisible();
-            await expect(page.getByAltText('Turn on microphone')).toBeVisible();
+            await Menu.expectCameraOn(page);
+            await Menu.expectMicrophoneOff(page);
         })
         test('should ask to change notification permission when you pass in Busy status and your browser notification permission is denied',async({ page, browser,context,browserName}, {project})=>{
             if(browserName === "firefox" || browserName === "webkit"){
@@ -116,15 +116,15 @@ test.describe('Availability Status', () => {
             await Menu.openStatusList(page, isMobileTest);
             await Menu.clickOnStatus(page,statusName);
 
-            await expect(page.getByRole("button",{name:'continue without notification'})).toBeVisible();
+            await expect(page.getByText('Allow notifications?')).toBeVisible();
 
-            await page.getByText('continue without notification').click();
+            await page.getByText('Accept').click();
 
-            await expect(page.locator('continue without notification')).toBeHidden();
+            await expect(page.getByText('Allow notifications?')).toBeHidden();
         })
         
         test.describe('busy interaction',async()=>{
-            test('should open a popup when a bubble is create...',async({ page, browserName,browser,context}, {project})=>{
+            test('should open a popup when a bubble is created...',async({ page, browserName,browser,context}, {project})=>{
                 if(browserName === "webkit"){
                      //eslint-disable-next-line playwright/no-skipped-test
                     test.skip();
@@ -165,9 +165,9 @@ test.describe('Availability Status', () => {
 
                 await Map.teleportToPosition(userBob, positionToDiscuss.x+10, positionToDiscuss.y);
                 
-                if((browserName === "firefox") && await page.getByText(`Do you want to allow notification`).isVisible() ){
+                /*if((browserName === "firefox") && await page.getByText(`Allow notification`).isVisible() ){
                     await  page.locator("section:has(#notificationPermission) + footer>button.outline").click();
-                }
+                }*/
 
                 await expect(page.getByText(`${secondPageName} wants to discuss with you`)).toBeVisible();
                 await expect(await isInBubble).toBeTruthy();
@@ -208,14 +208,14 @@ test.describe('Availability Status', () => {
                 await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
                 
                 
-                if((browserName === "firefox" ) && await page.getByText(`Do you want to allow notification`).isVisible() ){
+                /*if((browserName === "firefox" ) && await page.getByText(`Allow notification`).isVisible() ){
                     await  page.locator("section:has(#notificationPermission) + footer>button.outline").click();
-                }
+                }*/
                 await expect(page.getByText(`${secondPageName} wants to discuss with you`)).toBeVisible();
-                
-                await page.locator('section:has(#acceptDiscussion) + footer>button.light').click();
+
+                await page.getByText('Accept').first().click();
                 await Menu.openStatusList(page, isMobileTest);
-                await expect(page.getByText("Online")).toHaveCSS('opacity','0.5')
+                await expect(page.getByRole('button', { name: 'Online' }).locator('svg')).toBeVisible();
                 await newBrowser.close();
             })
             test('should keep busy status  after refuse conversation',async({ page, browser,browserName}, {project})=>{
@@ -250,16 +250,16 @@ test.describe('Availability Status', () => {
                 await login(userBob, secondPageName, 3, 'en-US', isMobileTest);
                 await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
                 
-                if((browserName === "firefox") && await page.getByText(`Do you want to allow notification`).isVisible() ){
+                /*if((browserName === "firefox") && await page.getByText(`Allow notification`).isVisible() ){
                     await  page.locator("section:has(#notificationPermission) + footer>button.outline").click();
-                }
+                }*/
 
                 await expect(page.getByText(`${secondPageName} wants to discuss with you`)).toBeVisible();
 
                 //click on close button
-                await  page.locator("section:has(#acceptDiscussion) + footer>button.outline").click();
+                await page.getByText('Accept').first().click();
                 await Menu.openStatusList(page, isMobileTest);
-                await expect(page.getByText(statusName)).toHaveCSS('opacity','0.5')  
+                await expect(page.getByRole('button', { name: statusName }).locator('svg')).toBeVisible();
 
                 await userBob.close();
                 await newBrowser.close();
@@ -287,12 +287,11 @@ test.describe('Availability Status', () => {
 
             await Menu.openStatusList(page, isMobileTest);
             
-            await expect(page.getByText(statusName)).toHaveCSS('opacity','0.5')
+            await expect(page.getByRole('button', { name: statusName }).locator('svg')).toBeVisible();
 
             await Map.walkTo(page,'ArrowRight',100)
 
-            await expect(page.getByText("Online")).toHaveCSS('opacity','0.5')
-
+            await Menu.expectStatus(page, 'Online');
         })
         test('should disable microphone and camera',async({ page, browser,browserName }, {project})=>{
             const statusName = "Back in a moment";
@@ -315,8 +314,8 @@ test.describe('Availability Status', () => {
             await Menu.clickOnStatus(page,statusName); 
             //await Menu.closeNotificationPopUp(page);
 
-            await expect(page.getByAltText('Turn off webcam')).toBeHidden();
-            await expect(page.getByAltText('Turn off microphone')).toBeHidden();
+            await Menu.expectCameraDisabled(page);
+            await Menu.expectMicrophoneDisabled(page);
         })
 
         test('should keep same webcam and microphone config when you go back to online status',async({ page, browser,context,browserName },{project})=>{
@@ -334,8 +333,8 @@ test.describe('Availability Status', () => {
             await Menu.turnOnCamera(page);
             await Menu.turnOffMicrophone(page)
 
-            await expect(page.getByAltText('Turn off webcam')).toBeVisible();
-            await expect(page.getByAltText('Turn on microphone')).toBeVisible();
+            await Menu.expectCameraOn(page);
+            await Menu.expectMicrophoneOff(page);
 
             await Menu.openStatusList(page);
             await Menu.clickOnStatus(page,statusName); 
@@ -343,8 +342,8 @@ test.describe('Availability Status', () => {
             //move to trigger status change 
             await Map.walkTo(page,'ArrowRight',100)
 
-            await expect(page.getByAltText('Turn off webcam')).toBeVisible();
-            await expect(page.getByAltText('Turn on microphone')).toBeVisible();
+            await Menu.expectCameraOn(page);
+            await Menu.expectMicrophoneOff(page);
         })
         test.describe('Back in a moment interaction',async()=>{
             test('should not create a bubble',async({ page, browser,context}, {project})=>{
@@ -397,13 +396,13 @@ test.describe('Availability Status', () => {
             await page.waitForTimeout(500);
 
             await Menu.openStatusList(page, isMobileTest);
-            await expect(page.getByText(statusName)).toHaveCSS('opacity','0.5')
-        
+            await expect(page.getByRole('button', { name: statusName }).locator('svg')).toBeVisible();
+
+
             //move to trigger status change 
             await Map.walkTo(page,'ArrowRight',100)
 
-            await expect(page.getByText("Online")).toHaveCSS('opacity','0.5')
-
+            await Menu.expectStatus(page, 'Online');
         })
         test('should disable microphone and camera',async({ page, browser,browserName }, {project})=>{
             if(browserName === "webkit"){
@@ -427,12 +426,8 @@ test.describe('Availability Status', () => {
             await Menu.clickOnStatus(page,statusName); 
             //await Menu.closeNotificationPopUp(page);
 
-            await expect(page.getByAltText('Turn off webcam')).toBeHidden();
-            await expect(page.getByAltText('Turn off microphone')).toBeHidden();
-            
-
-            
-
+            await Menu.expectCameraDisabled(page);
+            await Menu.expectMicrophoneDisabled(page);
         })
 
         test('should keep same webcam and microphone config when you go back to online status',async({ page, browser,context,browserName },{project})=>{
@@ -451,9 +446,8 @@ test.describe('Availability Status', () => {
             await Menu.turnOnCamera(page);
             await Menu.turnOffMicrophone(page)
 
-
-            await expect(page.getByAltText('Turn off webcam')).toBeVisible();
-            await expect(page.getByAltText('Turn on microphone')).toBeVisible();
+            await Menu.expectCameraOn(page);
+            await Menu.expectMicrophoneOff(page);
 
             await Menu.openStatusList(page);
             await Menu.clickOnStatus(page,statusName); 
@@ -461,34 +455,32 @@ test.describe('Availability Status', () => {
             //move to trigger status change 
             await Map.walkTo(page,'ArrowRight',100)
 
-            await expect(page.getByAltText('Turn off webcam')).toBeVisible();
-            await expect(page.getByAltText('Turn on microphone')).toBeVisible();
+            await Menu.expectCameraOn(page);
+            await Menu.expectMicrophoneOff(page);
         })
         test.describe('Do not disturb interaction',async()=>{
             test('should not create a bubble ',async({ page, browser,context}, {project})=>{
                 const statusName = "Do not disturb";
                 const isMobileTest = project.name === "mobilechromium";
                 await page.goto(publicTestMapUrl("tests/E2E/empty.json", "availability-status"));
-        
+
                 await login(page, 'Alice', 2, 'en-US', isMobileTest);
                 const positionToDiscuss = {
                     x: 3 * 32,
                     y: 4 * 32
                 };
                 await Map.teleportToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
-            
+
                 await Menu.openStatusList(page, isMobileTest);
-                await Menu.clickOnStatus(page,statusName); 
+                await Menu.clickOnStatus(page,statusName);
 
                 const newBrowser = await browser.newContext();
                 const userBob = await newBrowser.newPage();
 
-
                 await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", "availability-status"));
-               // Login user "Bob"
+                // Login user "Bob"
                 const secondPageName = 'Bob'
                 await login(userBob, secondPageName, 3, 'en-US', isMobileTest);
-
                 await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
                 await expect( page.locator('button.chat-btn + div>span.tw-animate-ping')).toBeHidden();
                 await newBrowser.close();

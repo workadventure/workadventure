@@ -28,10 +28,7 @@ export interface ExtensionModuleOptions {
     externalSvelteComponent: Readable<ExternalSvelteComponentStore>;
     externalRestrictedMapEditorProperties?: Writable<string[]>;
     onExtensionModuleStatusChange: (workAdventureNewStatus: AvailabilityStatus) => void;
-    openCoWebSite: (
-        openCoWebsiteObject: OpenCoWebsiteObject,
-        source: MessageEventSource | null
-    ) => Promise<{ id: string }>;
+    openCoWebSite: (openCoWebsiteObject: OpenCoWebsiteObject, source: MessageEventSource | null) => { id: string };
     closeCoWebsite: (id: string) => unknown;
     adminUrl?: string;
     getOauthRefreshToken?: (tokenToRefresh: string) => Promise<OauthRefreshToken>;

@@ -32,8 +32,9 @@ test.describe("API WA.players", () => {
     await login(page2, "Bob", 3, "en-US", project.name === "mobilechromium");
 
     const events = getCoWebsiteIframe(page).locator("#events");
+
     await expect(events).toContainText("New user: Bob", {
-      timeout: 10000,
+        timeout: 10000,
     });
 
     await getCoWebsiteIframe(page).locator("#listCurrentPlayers").click();
@@ -650,4 +651,44 @@ test.describe("API WA.players", () => {
 
     await expect.poll(() => gotExpectedNotification).toBe(true);
   });
+
+  test('cowebsites tab system', async ({ page }, { project }) => {
+
+    if(project.name === "mobilechromium") {
+        //eslint-disable-next-line playwright/no-skipped-test
+        test.skip();
+        return;
+    }
+
+    // Open the main page with the cowebsite container
+    await page.goto(
+        publicTestMapUrl(`tests/RemotePlayers/remote_players_cowebsite.json`, "api_players")
+    );
+
+    await login(page, 'Alice');
+    // Ouvrir le Site A dans le premier onglet
+    await page.locator('.siteA-page1');
+
+    // Ouvrir le Site B dans le deuxième onglet
+    await page.locator('.siteB-page1');
+    // await page.frameLocator('iframe[name="cowebsite-frame"]').locator('text=Site B Page 1').waitFor();
+
+    //Swiching tabs and pages
+    await page.getByTestId('tab1').click();
+    const event = getCoWebsiteIframe(page).locator('.siteA-page1')
+    await expect(event).toContainText('Site A Page 1');
+
+    await getCoWebsiteIframe(page).locator('.link-to-siteA-page2').click();
+    const eventpage = await getCoWebsiteIframe(page).locator('.siteA-page2');
+    await expect(eventpage).toContainText('Site A Page 2');
+
+    await page.getByTestId('tab2').click();
+    const event2 = getCoWebsiteIframe(page).locator('.siteB-page1')
+    await expect(event2).toContainText('Site B Page 1');
+
+    await getCoWebsiteIframe(page).locator('.link-to-siteB-page2').click();
+    const eventpage2 = await getCoWebsiteIframe(page).locator('.siteB-page2');
+    await expect(eventpage2).toContainText('Site B Page 2');
+  });
+
 });

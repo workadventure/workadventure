@@ -17,9 +17,9 @@
     <slot {item} />
 {/each}
 {#if items.length > 8}
-    <div class="tw-flex tw-justify-center">
+    <div class="flex justify-center">
         <button
-            class="tw-flex-col tw-p-0 tw-m-0 tw-text-gray-400 tw-text-center tw-w-full tw-text-sm"
+            class="flex-col p-0 m-0 text-gray-400 text-center w-full text-sm"
             on:click={() => (showMore = !showMore)}
         >
             {showMore ? $LL.chat.showLess() : $LL.chat.showMore({ number: items.length - 8 })}
@@ -27,5 +27,5 @@
     </div>
 {/if}
 {#if showNothingToDisplayMessage && items.length === 0}
-    <p class="tw-pt-1.5 tw-pb-3 tw-px-3 tw-m-0 tw-text-white/50 tw-italic">{$LL.chat.nothingToDisplay()}</p>
+    <p class="pt-1.5 pb-3 px-3 m-0 text-white/50 italic">{$LL.chat.nothingToDisplay()}</p>
 {/if}

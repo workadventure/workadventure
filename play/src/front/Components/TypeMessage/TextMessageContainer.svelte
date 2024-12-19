@@ -5,9 +5,9 @@
     const MAX_MESSAGES = 3;
 </script>
 
-<div class="main-text-message-container tw-flex">
+<div class="main-text-message-container flex">
     {#each $textMessageStore.slice(0, MAX_MESSAGES) as message (message.id)}
-        <div class="tw-flex">
+        <div class="flex">
             <TextMessage {message} />
         </div>
     {/each}

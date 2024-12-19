@@ -1,5 +1,4 @@
 import {expect, Page} from "@playwright/test";
-import {expectInViewport} from "./viewport";
 
 class Chat {
     async slideToChat(page: Page){
@@ -21,9 +20,20 @@ class Chat {
                 await page.click('button#burgerIcon');
             }
         }
-        await expect(page.locator("button#menuIcon")).toBeVisible();
-        await page.click('button.chat-btn');
-        await expectInViewport('#chatModal', page);
+        await page.getByTestId('chat-btn').click();
+        await expect(page.getByTestId('chat')).toBeVisible();
+    }
+
+    async openUserList(page: Page, isMobile: boolean){
+        if(isMobile){
+            /*await expect(page.locator('button#burgerIcon')).toBeVisible();
+            const mobileMenuVisible = await page.locator('button#burgerIcon img.tw-rotate-0').isVisible();
+            if(mobileMenuVisible){
+                await page.click('button#burgerIcon');
+            }*/
+        }
+        await page.getByTestId('user-list-button').click();
+        await expect(page.getByText('Users')).toBeVisible();
     }
 
     get(page: Page){

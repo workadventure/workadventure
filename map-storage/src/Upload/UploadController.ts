@@ -83,7 +83,7 @@ export class UploadController {
                 const directory = Body.parse(req.body).directory || "";
 
                 if (directory.includes("..")) {
-                    // Attempt to override filesystem. That' a hack!
+                    // Attempt to override filesystem. That's a hack!
                     res.status(400).send("Invalid directory");
                     return;
                 }

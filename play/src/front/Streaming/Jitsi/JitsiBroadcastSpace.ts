@@ -50,7 +50,6 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
         super();
 
         this.space = this.spaceRegistry.joinSpace(spaceName);
-        bindMuteEventsToSpace(this.space);
 
         this.unsubscribes.push(
             requestedCameraState.subscribe((state) => {
@@ -86,6 +85,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
         );
 
         this.spaceFilter = this.space.watchLiveStreamingUsers();
+        bindMuteEventsToSpace(this.space, this.spaceFilter);
 
         this.space.setMetadata(new Map([["test", "test"]]));
 

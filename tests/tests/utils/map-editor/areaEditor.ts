@@ -17,9 +17,12 @@ class AreaEditor {
   }
 
   async addProperty(page: Page, property: string) {
-    await page
-      .locator(
-        ".map-editor .sidebar .properties-buttons .add-property-button",
+    await page.locator('.map-editor');
+        await page.locator('.map-editor .sidebar');
+        await page.locator('.map-editor .sidebar .item-picker-container');
+        await page.locator('select#speakerZoneSelector');
+
+        await page.locator(".map-editor .sidebar .properties-buttons .add-property-button",
         { hasText: property }
       )
       .click();

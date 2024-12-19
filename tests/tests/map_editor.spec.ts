@@ -59,6 +59,8 @@ test.describe("Map editor @oidc", () => {
         await login(page2, "test2", 5, "en-US", false);
         await oidcAdminTagLogin(page2, false);
 
+    // await page.pause();
+    // await Menu.openMenuAdmin(page);
         await Menu.openMapEditor(page);
         await MapEditor.openConfigureMyRoom(page);
         await ConfigureMyRoom.selectMegaphoneItemInCMR(page);
@@ -105,13 +107,12 @@ test.describe("Map editor @oidc", () => {
             .click({timeout: 10_000});
 
         // click on the megaphone button to start the streaming session
-        await expect(page2.locator(".cameras-container .other-cameras .jitsi-video")).toBeVisible({timeout: 15_000});
+        await expect(page2.locator(".jitsi-video")).toBeVisible({timeout: 15_000});
 
         await Menu.toggleMegaphoneButton(page);
 
         await page2.close();
         await newBrowser.close();
-
         // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
     });
 
@@ -127,6 +128,7 @@ test.describe("Map editor @oidc", () => {
 
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
+    // await expect(page.locator('canvas')).toBeVisible();
         await AreaEditor.drawArea(page, {x: 1 * 32 * 1.5, y: 5}, {x: 9 * 32 * 1.5, y: 4 * 32 * 1.5});
         await AreaEditor.addProperty(page, "Speaker zone");
         await AreaEditor.setSpeakerMegaphoneProperty(page, `${browser.browserType().name()}SpeakerZone`);
@@ -226,7 +228,7 @@ test.describe("Map editor @oidc", () => {
         await oidcAdminTagLogin(page, false);
 
         //await Menu.openMapEditor(page);
-        await page.getByRole("button", {name: "toggle-map-editor"}).click();
+        await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
         await AreaEditor.drawArea(page, {x: 13 * 32, y: 13 * 32}, {x: 15 * 32, y: 15 * 32});
         await AreaEditor.setAreaName(page, "My app zone");
@@ -261,7 +263,7 @@ test.describe("Map editor @oidc", () => {
         await oidcAdminTagLogin(page, false);
 
         //await Menu.openMapEditor(page);
-        await page.getByRole("button", {name: "toggle-map-editor"}).click();
+        await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
         await AreaEditor.drawArea(page, {x: 13 * 32, y: 13 * 32}, {x: 15 * 32, y: 15 * 32});
 
@@ -273,7 +275,7 @@ test.describe("Map editor @oidc", () => {
         await page
             .getByPlaceholder("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit")
             .first()
-            .fill("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit",{timeout: 20_000});
+            .fill("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit");
 
         // add property Google Sheets
         await AreaEditor.addProperty(page, "Open Google Sheets");
@@ -281,7 +283,7 @@ test.describe("Map editor @oidc", () => {
         await page
             .getByPlaceholder("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit")
             .first()
-            .fill("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit",{timeout: 20_000});
+            .fill("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit");
 
         // add property Google Slides
         await AreaEditor.addProperty(page, "Open Google Slides");
@@ -289,7 +291,7 @@ test.describe("Map editor @oidc", () => {
         await page
             .getByPlaceholder("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit")
             .first()
-            .fill("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit",{timeout: 20_000});
+            .fill("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit");
 
         // add property Google Slides
         await AreaEditor.addProperty(page, "Open Google Drive");
@@ -297,7 +299,7 @@ test.describe("Map editor @oidc", () => {
         await page
             .getByPlaceholder("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview")
             .first()
-            .fill("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview",{timeout: 20_000});
+            .fill("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview");
 
         await Menu.closeMapEditor(page);
 
@@ -318,7 +320,7 @@ test.describe("Map editor @oidc", () => {
         await oidcAdminTagLogin(page, false);
 
         // open map editor
-        await page.getByRole("button", {name: "toggle-map-editor"}).click();
+        await Menu.openMapEditor(page);
         await MapEditor.openEntityEditor(page);
 
         // select entity and push it into the map
@@ -382,7 +384,7 @@ test.describe("Map editor @oidc", () => {
         await oidcAdminTagLogin(page, false);
 
         // open map editor
-        await page.getByRole("button", {name: "toggle-map-editor"}).click();
+        await Menu.openMapEditor(page);
         await MapEditor.openEntityEditor(page);
 
         // select entity and push it into the map
@@ -423,7 +425,7 @@ test.describe("Map editor @oidc", () => {
         await oidcAdminTagLogin(page, false);
 
         // open map editor
-        await page.getByRole("button", {name: "toggle-map-editor"}).click();
+        await Menu.openMapEditor(page);
         await MapEditor.openEntityEditor(page);
 
         // Click on upload asset
@@ -453,7 +455,7 @@ test.describe("Map editor @oidc", () => {
 
         // open map editor
         await page.bringToFront();
-        await page.getByRole("button", {name: "toggle-map-editor"}).click();
+        await Menu.openMapEditor(page);
         await MapEditor.openEntityEditor(page);
 
         // Click on upload asset
@@ -479,8 +481,8 @@ test.describe("Map editor @oidc", () => {
         await EntityEditor.moveAndClick(page2, 6 * 32, 6 * 32);
 
         // check if the popup with application is opened on both pages
-        await expect(page.locator(".actions-menu .actions button").nth(0)).toContainText("Open Link");
-        await expect(page2.locator(".actions-menu .actions button").nth(0)).toContainText("Open Link");
+        await expect(page.getByRole('button', { name: 'Open Link' })).toBeVisible();
+        await expect(page2.getByRole('button', { name: 'Open Link' })).toBeVisible();
 
         await page2.close();
         await newBrowser.close();
@@ -504,8 +506,8 @@ test.describe("Map editor @oidc", () => {
         await oidcAdminTagLogin(page2, false);
 
         // open map editor on both pages
-        await page.getByRole("button", {name: "toggle-map-editor"}).click();
-        await page2.getByRole("button", {name: "toggle-map-editor"}).click();
+        await Menu.openMapEditor(page);
+        await Menu.openMapEditor(page2);
         await MapEditor.openEntityEditor(page);
         await MapEditor.openEntityEditor(page2);
 
@@ -555,8 +557,8 @@ test.describe("Map editor @oidc", () => {
         await oidcAdminTagLogin(page2, false);
 
         // open map editor on both pages
-        await page.getByRole("button", {name: "toggle-map-editor"}).click();
-        await page2.getByRole("button", {name: "toggle-map-editor"}).click();
+        await Menu.openMapEditor(page);
+        await Menu.openMapEditor(page2);
 
         await MapEditor.openEntityEditor(page);
         await MapEditor.openEntityEditor(page2);
@@ -656,7 +658,7 @@ test.describe("Map editor @oidc", () => {
         await page2.evaluate(() => localStorage.setItem("debug", "*"));
         await login(page2, "test2", 5, "en-US", false);
 
-        // Open the map editor and configure the megaphone to have accès to the global message
+        // Open the map editor and configure the megaphone to have access to the global message
         await Menu.openMapEditor(page);
         await MapEditor.openConfigureMyRoom(page);
         await ConfigureMyRoom.selectMegaphoneItemInCMR(page);
@@ -677,13 +679,16 @@ test.describe("Map editor @oidc", () => {
         await Megaphone.isCorrectlySaved(page);
         // Test if tags are working correctly, all current users doesn't have the tag "example" to use megaphone
         await Menu.isNotThereMegaphoneButton(page);
-        await Menu.isNotThereMegaphoneButton(page2);
+        await expect(page2.getByTestId('map-menu')).toBeHidden();
+        //await Menu.isNotThereMegaphoneButton(page2);
         // Remove rights
         await Megaphone.megaphoneRemoveRights(page, "example");
         await Megaphone.megaphoneSave(page);
         await Megaphone.isCorrectlySaved(page);
         // Megaphone should be displayed and usable by all the current users
         await Menu.isThereMegaphoneButton(page);
+
+        // Megaphone button is not displayed because it is hidden in the "Admin" menu. BUT! It is available to anyone!
         await Menu.isThereMegaphoneButton(page2);
         await Menu.closeMapEditorConfigureMyRoomPopUp(page);
         await Menu.closeMapEditor(page);

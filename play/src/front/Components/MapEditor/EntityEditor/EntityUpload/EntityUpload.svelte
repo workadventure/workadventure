@@ -99,7 +99,7 @@
                 }
             }
         }
-        dropZoneRef.classList.remove("tw-border-cyan-400");
+        dropZoneRef.classList.remove("border-cyan-400");
     }
 
     onDestroy(() => {
@@ -108,9 +108,7 @@
 </script>
 
 {#if customEntityToUpload}
-    <div
-        class="tw-absolute tw-top-0 tw-left-0 tw-w-full tw-bg-dark-blue/95 tw-backdrop-blur-md tw-p-8 tw-h-full tw-overflow-auto"
-    >
+    <div class="absolute top-0 left-0 w-full bg-dark-blue/95 backdrop-blur-md p-8 h-full overflow-auto">
         <CustomEntityEditionForm
             isUploadForm
             customEntity={customEntityToUpload}
@@ -121,39 +119,36 @@
     </div>
 {:else}
     <div>
-        <p class="tw-m-0">{$LL.mapEditor.entityEditor.uploadEntity.title()}</p>
-        <p class="tw-opacity-50">{$LL.mapEditor.entityEditor.uploadEntity.description()}</p>
+        <p class="m-0">{$LL.mapEditor.entityEditor.uploadEntity.title()}</p>
+        <p class="opacity-50">{$LL.mapEditor.entityEditor.uploadEntity.description()}</p>
         <div
             on:drop|preventDefault|stopPropagation={dropHandler}
-            on:dragover|preventDefault={() => dropZoneRef.classList.add("tw-border-cyan-400")}
-            on:dragleave|preventDefault={() => dropZoneRef.classList.remove("tw-border-cyan-400")}
+            on:dragover|preventDefault={() => dropZoneRef.classList.add("border-cyan-400")}
+            on:dragleave|preventDefault={() => dropZoneRef.classList.remove("border-cyan-400")}
             bind:this={dropZoneRef}
-            class="hover:tw-cursor-pointer tw-h-32 tw-flex tw-flex-col tw-border tw-border-dashed tw-rounded-md tw-items-center tw-justify-center tw-bg-white tw-bg-opacity-10"
+            class="hover:cursor-pointer h-32 flex flex-col border border-dashed rounded-md items-center justify-center bg-white bg-opacity-10"
         >
             <input
                 id="upload"
-                class="tw-hidden"
+                class="hidden"
                 type="file"
                 accept={ENTITY_UPLOAD_SUPPORTED_FORMATS_FRONT}
                 bind:files
                 data-testid="uploadCustomAsset"
             />
 
-            <label
-                class="tw-flex tw-flex-row tw-gap-2 tw-min-w-full tw-p-2 tw-m-0 tw-items-center tw-justify-center"
-                for="upload"
-            >
+            <label class="flex flex-row gap-2 min-w-full p-2 m-0 items-center justify-center" for="upload">
                 <IconCloudUpload font-size={32} />
-                <span class="tw-flex tw-flex-col">
-                    <span class="hover:tw-cursor-pointer">
+                <span class="flex flex-col">
+                    <span class="hover:cursor-pointer">
                         {$LL.mapEditor.entityEditor.uploadEntity.dragDrop()}
-                        <span class="hover:tw-cursor-pointer tw-underline tw-text-contrast-300"
+                        <span class="hover:cursor-pointer underline text-contrast-300"
                             >{$LL.mapEditor.entityEditor.uploadEntity.chooseFile()}</span
                         >
                     </span>
-                    <span class="tw-text-xs tw-m-0 tw-opacity-50">PNG, JPG, WebP</span>
+                    <span class="text-xs m-0 opacity-50">PNG, JPG, WebP</span>
                     {#if errorOnFile}
-                        <span class="tw-text-xx tw-text-red-500">{errorOnFile}</span>
+                        <span class="text-xx text-red-500">{errorOnFile}</span>
                     {/if}
                 </span></label
             >

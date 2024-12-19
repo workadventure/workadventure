@@ -4,9 +4,10 @@ import {expect, test} from '@playwright/test';
 import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
 import {publicTestMapUrl} from "./utils/urls";
+import Menu from "./utils/menu";
 
 test.describe('Areas', () => {
-    test('can edit Tiled area from scripting API', async ({ page, browser }, { project }) => {
+    test('can edit Tiled area from scripting API', async ({ page }, { project }) => {
         // Skip test for mobile device
         if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
@@ -24,10 +25,8 @@ test.describe('Areas', () => {
         await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
 
         await evaluateScript(page, async () => {
-            console.log('Waiting for WA.onInit()');
             await WA.onInit();
 
-            console.log('Getting the area');
             const silentArea = await WA.room.area.get('silent');
             // Let's move the silent area to cover the map
             silentArea.x = 0;
@@ -36,8 +35,7 @@ test.describe('Areas', () => {
             silentArea.height = 600;
             return;
         });
-
-        await expect(page.getByText('Silent zone',{exact:true})).toBeVisible();
+        await expect(page.getByText('You\'re in a silent zone')).toBeVisible();
     });
 
     test('blocking audio areas', async ({ page, browser }, { project }) => {
@@ -56,24 +54,55 @@ test.describe('Areas', () => {
             console.log('Waiting for WA.onInit()');
             await WA.onInit();
             console.log('Moving player to audio area');
-            await WA.player.moveTo(240, 144);
+            await WA.player.teleport(240, 144);
             return;
         });
-        await expect(page.locator('div.main-audio-manager')).toBeVisible();
+        await Menu.expectButtonState(page, "music-button", "normal");
+        await page.getByTestId('music-button').click();
+        await expect(page.getByText('Change audio volume')).toBeVisible();
+        await page.getByTestId('music-button').click();
+        await expect(page.getByText('Change audio volume')).toBeHidden();
 
         // Enable audio area blocking
-        await page.click('button#menuIcon');
-        await page.click('text=Settings');
-        await page.click('text=Block ambient sounds and music');
+        await Menu.openMenu(page, false);
+        await page.getByRole('button', { name: 'Other settings' }).click();
+        await page.getByText('Block ambient sounds and music').click();
+        await page.locator('#closeMenu').click();
 
         // Verify audio area is working
         await evaluateScript(page, async () => {
             console.log('Waiting for WA.onInit()');
             await WA.onInit();
             console.log('Moving player to audio area');
-            await WA.player.moveTo(176, 144);
+            await WA.player.teleport(176, 144);
+            await WA.player.teleport(240, 144);
             return;
         });
-        await expect(page.locator('div.main-audio-manager')).toBeHidden();
+        await Menu.expectButtonState(page, "music-button", "disabled");
+    });
+
+    test('display warning on fail to load audio', async ({ page, browser }, { project }) => {
+        if(project.name === "mobilechromium") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+
+        // Open audio test map
+        await page.goto(publicTestMapUrl("tests/E2E/audio.json", "areas"));
+        await login(page);
+
+        // Verify audio area is working
+        await evaluateScript(page, async () => {
+            console.log('Waiting for WA.onInit()');
+            await WA.onInit();
+            const silentArea = await WA.room.area.get('audioArea');
+            silentArea.setProperty('playAudio', 'invalid.mp3');
+            console.log('Moving player to audio area');
+            await WA.player.teleport(240, 144);
+            return;
+        });
+        await Menu.expectButtonState(page, "music-button", "forbidden");
+        await expect(page.getByText('Could not load sound')).toBeVisible();
     });
 });
