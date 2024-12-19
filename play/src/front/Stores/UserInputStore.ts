@@ -9,7 +9,10 @@ document.addEventListener("focusin", (event) => {
     if (
         event.target instanceof HTMLInputElement ||
         event.target instanceof HTMLTextAreaElement ||
-        event.target instanceof HTMLSelectElement
+        event.target instanceof HTMLSelectElement ||
+        (event.target instanceof HTMLDivElement && event.target.getAttribute("role") === "textbox") ||
+        (event.target instanceof HTMLDivElement && event.target.getAttribute("contenteditable") === "true") ||
+        (event.target instanceof HTMLDivElement && event.target.classList.contains("block-user-action"))
     ) {
         inputFormFocusStore.set(true);
     }
@@ -19,7 +22,10 @@ document.addEventListener("focusout", (event) => {
     if (
         event.target instanceof HTMLInputElement ||
         event.target instanceof HTMLTextAreaElement ||
-        event.target instanceof HTMLSelectElement
+        event.target instanceof HTMLSelectElement ||
+        (event.target instanceof HTMLDivElement && event.target.getAttribute("role") === "textbox") ||
+        (event.target instanceof HTMLDivElement && event.target.getAttribute("contenteditable") === "true") ||
+        (event.target instanceof HTMLDivElement && event.target.classList.contains("block-user-action"))
     ) {
         inputFormFocusStore.set(false);
     }

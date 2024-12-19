@@ -209,6 +209,7 @@ import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import Clamp = Phaser.Math.Clamp;
+import { enableUserInputsStore } from "../../Stores/UserInputStore";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -2080,7 +2081,7 @@ export class GameScene extends DirtyScene {
         });
 
         this.emoteUnsubscriber = emoteStore.subscribe((emote) => {
-            if (emote) {
+            if (emote && get(enableUserInputsStore)) {
                 this.CurrentPlayer?.playEmote(emote.emoji);
                 this.connection?.emitEmoteEvent(emote.emoji);
                 emoteStore.set(null);

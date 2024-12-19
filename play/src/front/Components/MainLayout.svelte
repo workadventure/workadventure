@@ -82,45 +82,6 @@
     onMount(() => {
         resizeObserver.observe(mainLayout);
     });
-
-    const handleFocusInEvent = (event: FocusEvent) => {
-        const target = event.target as HTMLElement | null;
-        if (
-            target &&
-            (["INPUT", "TEXTAREA"].includes(target.tagName) ||
-                (target.tagName === "DIV" && target.getAttribute("role") === "textbox") ||
-                target.getAttribute("contenteditable") === "true" ||
-                target.classList.contains("block-user-action"))
-        ) {
-            try {
-                gameManager.getCurrentGameScene().userInputManager.disableControls();
-                keyboardEventIsDisable = true;
-            } catch (error) {
-                if (error instanceof GameSceneNotFoundError) {
-                    keyboardEventIsDisable = false;
-                    return;
-                }
-                throw error;
-            }
-        }
-    };
-
-    const handleFocusOutEvent = () => {
-        if (!keyboardEventIsDisable) return;
-        try {
-            gameManager.getCurrentGameScene().userInputManager.restoreControls();
-            keyboardEventIsDisable = false;
-        } catch (error) {
-            if (error instanceof GameSceneNotFoundError) {
-                keyboardEventIsDisable = false;
-                return;
-            }
-            throw error;
-        }
-    };
-
-    document.addEventListener("focusin", handleFocusInEvent);
-    document.addEventListener("focusout", handleFocusOutEvent);
 </script>
 
 <!-- Components ordered by z-index -->
