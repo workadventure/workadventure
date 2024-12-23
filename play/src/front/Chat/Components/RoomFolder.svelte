@@ -32,6 +32,7 @@
 <div class="tw-mx-2 tw-p-1 tw-bg-contrast-300/10 tw-rounded-lg tw-mb-4">
     <div
         class="tw-group tw-relative tw-px-3 tw-text-white/75 hover:tw-text-white tw-h-11 hover:tw-bg-contrast-200/10 tw-w-full tw-flex tw-space-x-2 tw-items-center tw-rounded-md"
+        class:tw-mb-2={isOpen}
     >
         <button
             class="tw-flex tw-items-center tw-space-x-2 tw-grow tw-m-0 tw-p-0"
