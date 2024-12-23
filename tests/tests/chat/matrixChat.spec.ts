@@ -402,12 +402,14 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.getByTestId("createFolderName").fill(privateFolder2);
     await page.getByTestId("createFolderVisibility").selectOption("private");
     await page.getByTestId("createFolderButton").click();
+    await page.waitForTimeout(1000);
     await page.getByTestId("roomAccordeon").click();
     await expect(page.getByText(privateFolder2)).not.toBeAttached();
     await page.getByTestId("roomAccordeon").click();
     await page.getByText(privateFolder1).click();
     await expect(page.getByText(privateFolder2)).toBeAttached();
   });
+
   test("Create a room in a folder", async ({ page }, { project }) => {
     const isMobile = project.name === "mobilechromium";
     await login(page, "test", 3, "us-US", isMobile);
