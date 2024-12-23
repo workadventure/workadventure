@@ -28,6 +28,8 @@ import { bindMuteEventsToSpace } from "../../../Space/Utils/BindMuteEvents";
 import { gameManager } from "../../../Phaser/Game/GameManager";
 import { availabilityStatusStore, requestedCameraState, requestedMicrophoneState } from "../../../Stores/MediaStore";
 import { localUserStore } from "../../../Connection/LocalUserStore";
+import { mediaManager } from "../../../WebRtc/MediaManager";
+import { NotificationType } from "../../../WebRtc/MediaManager";
 
 export class ProximityChatMessage implements ChatMessage {
     isQuotedMessage = undefined;
@@ -240,6 +242,8 @@ export class ProximityChatRoom implements ChatRoom {
         this.lastMessageTimestamp = newMessage.date.getTime();
 
         this.playNewMessageSound();
+
+        mediaManager.createNotification(chatUser.username ?? "unknown", NotificationType.message, this.id);
 
         if (get(selectedRoomStore) !== this) {
             this.hasUnreadMessages.set(true);

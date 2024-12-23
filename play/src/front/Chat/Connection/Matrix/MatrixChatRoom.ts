@@ -31,6 +31,8 @@ import { localUserStore } from "../../../Connection/LocalUserStore";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { matrixSecurity } from "./MatrixSecurity";
+import { NotificationType } from "../../../WebRtc/MediaManager";
+import { mediaManager } from "../../../WebRtc/MediaManager";
 
 type EventId = string;
 
@@ -219,6 +221,8 @@ export class MatrixChatRoom implements ChatRoom {
                         const senderID = event.getSender();
                         if (senderID !== this.matrixRoom.client.getSafeUserId() && !get(this.areNotificationsMuted)) {
                             this.playNewMessageSound();
+                            console.log("createNotification", senderID, NotificationType.message, this.id);
+                            mediaManager.createNotification(senderID ?? "unknown", NotificationType.message, this.id);
                             if (!isAChatRoomIsVisible() && get(selectedRoomStore)?.id !== "proximity") {
                                 selectedRoomStore.set(this);
                                 navChat.switchToChat();

@@ -128,6 +128,9 @@ export class MediaManager {
     }
 
     public createNotification(userName: string, notificationType: NotificationType, chatRoom: string | null = null) {
+        
+        console.log("createNotification", userName, notificationType, chatRoom);
+
         if (document.hasFocus()) {
             return;
         }
@@ -143,16 +146,41 @@ export class MediaManager {
                     new Notification(`${userName} ${get(LL).notification.discussion()}`, options);
                     break;
                 case NotificationType.message:
-                    new Notification(
+                    if (!chatRoom) {
+                        break;
+                    }
+                    const notification = new Notification(
                         `${userName} ${get(LL).notification.message()} ${
                             chatRoom !== null && get(LL).notification.chatRoom() + " " + chatRoom
                         }`,
-                        options
+                        {
+                            ...options,
+                            data: {
+                                chatRoomId: chatRoom,
+                            },
+                            actions: [
+                                {
+                                    action: "open",
+                                    title: get(LL).notification.open(),
+                                },
+                            ],
+                        }
                     );
+                    // Add click handler
+                    notification.addEventListener('notificationclick', (event) => {
+                        const roomId = (event.notification.data as { chatRoomId: string | null }).chatRoomId;
+                        window.focus();
+                        if (event.action === 'open' && roomId) {
+                            // Handle opening specific room
+                            console.log('Opening room:', roomId);
+                            // Add your room opening logic here
+                        }
+                    });
                     break;
             }
             this.canSendNotification = false;
             setTimeout(() => (this.canSendNotification = true), TIME_NOTIFYING_MILLISECOND);
+
         }
     }
 

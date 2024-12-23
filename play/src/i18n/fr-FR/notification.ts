@@ -5,6 +5,7 @@ const notification: DeepPartial<Translation["notification"]> = {
     discussion: "veut discuter avec toi",
     message: "a envoyé un message",
     chatRoom: "sur le salon",
+    open: "Ouvrir",
     help: {
         title: "Accès aux notifications refusé",
         permissionDenied: "Permission refusée",
