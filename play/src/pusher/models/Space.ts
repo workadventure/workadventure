@@ -31,9 +31,11 @@ type PartialSpaceUser = Partial<Omit<SpaceUser, "id">> & Pick<SpaceUser, "id">;
 const debug = Debug("space");
 
 export class Space {
+    // The list of all users connected to this space (that we received either by a direct connection OR from the back)
     private readonly users: Map<number, SpaceUserExtended>;
     private readonly _metadata: Map<string, unknown>;
 
+    // The list of users connected to THIS pusher specifically
     private clientWatchers: Map<number, Socket>;
 
     constructor(
@@ -55,6 +57,9 @@ export class Space {
         if (!socketData.userId) {
             throw new Error("User id not found");
         }
+        if (this.clientWatchers.has(socketData.userId)) {
+            throw new Error("Watcher already added");
+        }
         this.clientWatchers.set(socketData.userId, watcher);
         this.users.forEach((user) => {
             if (this.isWatcherTargeted(watcher, user)) {
@@ -69,15 +74,6 @@ export class Space {
             }
         });
         debug(`${this.name} : watcher added ${socketData.name}. Watcher count ${this.clientWatchers.size}`);
-    }
-
-    public removeClientWatcher(watcher: Socket) {
-        const socketData = watcher.getUserData();
-        if (!socketData.userId) {
-            throw new Error("User id not found");
-        }
-        this.clientWatchers.delete(socketData.userId);
-        debug(`${this.name} : watcher removed ${socketData.name}. Watcher count ${this.clientWatchers.size}`);
     }
 
     public addUser(spaceUser: SpaceUser, client: Socket) {
@@ -156,7 +152,19 @@ export class Space {
         this.notifyAll(subMessage, user, oldUser);
     }
 
-    public removeUser(userId: number) {
+    public removeUser(watcher: Socket) {
+        const userData = watcher.getUserData();
+
+        // Let's remove filters associated with this space if any left
+        userData.spacesFilters.delete(this.name);
+
+        const userId = userData.userId;
+        if (!userId) {
+            throw new Error("User id not found");
+        }
+        this.clientWatchers.delete(userId);
+        debug(`${this.name} : watcher removed ${userData.name}. Watcher count ${this.clientWatchers.size}`);
+
         const pusherToBackSpaceMessage: PusherToBackSpaceMessage = {
             message: {
                 $case: "removeSpaceUserMessage",
@@ -370,7 +378,21 @@ export class Space {
     public handleRemoveFilter(watcher: Socket, removeSpaceFilterMessage: RemoveSpaceFilterMessage) {
         const oldFilter = removeSpaceFilterMessage.spaceFilterMessage;
         if (!oldFilter) return;
+
+        const socketData = watcher.getUserData();
+        const spaceFilters = socketData.spacesFilters.get(this.name);
+        if (spaceFilters) {
+            socketData.spacesFilters.set(
+                this.name,
+                spaceFilters.filter((filter) => filter.filterName !== oldFilter.filterName)
+            );
+        } else {
+            console.warn(
+                `SocketManager => handleRemoveSpaceFilterMessage => spacesFilter ${removeSpaceFilterMessage.spaceFilterMessage?.filterName} is undefined`
+            );
+        }
         debug(`${this.name} : filter removed (${oldFilter.filterName}) for ${watcher.getUserData().userId}`);
+
         //const oldUsers = this.filter(oldFilter);
         //this.delta(watcher, oldUsers, new Map(), undefined);
     }

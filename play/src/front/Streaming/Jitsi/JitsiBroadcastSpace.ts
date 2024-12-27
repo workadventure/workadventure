@@ -40,6 +40,8 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
     private associatedStreamStoreTimeOut: NodeJS.Timeout | undefined;
     private spaceFilter: SpaceFilterInterface;
 
+    private static numInstances = 0;
+
     constructor(
         private roomConnection: RoomConnection,
         spaceName: string,
@@ -48,6 +50,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
         private spaceRegistry: SpaceRegistryInterface
     ) {
         super();
+        JitsiBroadcastSpace.numInstances++;
 
         this.space = this.spaceRegistry.joinSpace(spaceName);
 
@@ -92,8 +95,10 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
         this.jitsiTracks = new ForwardableStore<Map<string, JitsiTrackWrapper>>(new Map());
 
         // When the user leaves the space, we leave the Jitsi conference
+        console.warn("JitsiBroadcastSpace => Subscribing to this.spaceFilter.usersStore");
         this.unsubscribes.push(
             this.spaceFilter.usersStore.subscribe((users) => {
+                console.log("JitsiBroadcastSpace => Spacefilter usersStore", JitsiBroadcastSpace.numInstances, users);
                 if (users.size === 0) {
                     if (this.conference !== undefined) {
                         limit(() => this.conference?.leave("Nobody is streaming anymore ..."))
@@ -176,7 +181,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
         // TODO: change me
         // We need to wait a bit before associating the JitsiTrack with the SpaceUser
         // Because the spaceUser was not updated with new users yet
-        // This is a workaround to avoid having to wait for the spaceUser to be updated implmented when we correct the Megaphone feature
+        // This is a workaround to avoid having to wait for the spaceUser to be updated implemented when we correct the Megaphone feature
         if (this.associatedStreamStoreTimeOut) clearTimeout(this.associatedStreamStoreTimeOut);
         this.associatedStreamStoreTimeOut = setTimeout(() => {
             const associatedStreamStore: Readable<Map<string, JitsiTrackWrapper>> = derived(
@@ -238,8 +243,9 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
                 jitsiLoadingStore.set(false);
             });
         jitsiConferencesStore.delete(this.space.getName());
-        this.space.stopWatching(this.spaceFilter);
-        this.spaceRegistry.leaveSpace(this.space);
+        //this.space.stopWatching(this.spaceFilter);
         this.unsubscribes.forEach((unsubscribe) => unsubscribe());
+        this.spaceRegistry.leaveSpace(this.space);
+        console.warn("JitsiBroadcastSpace => Unsubscribing from this.spaceFilter.usersStore");
     }
 }

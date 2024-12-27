@@ -10,7 +10,7 @@
     } from "../Stores/MediaStore";
     import { LL } from "../../i18n/i18n-svelte";
     import { inExternalServiceStore } from "../Stores/MyMediaStore";
-    import { gameManager } from "../Phaser/Game/GameManager";
+    import { currentPlayerWokaStore } from "../Stores/CurrentPlayerWokaStore";
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
     import { srcObject } from "./Video/utils";
     import loaderImg from "./images/loader.svg";
@@ -19,7 +19,7 @@
     import MicOffIcon from "./Icons/MicOffIcon.svelte";
     import UserName from "./Video/UserName.svelte";
 
-    let stream: MediaStream | null;
+    let stream: MediaStream | undefined;
     // let userName = gameManager.getPlayerName();
     // let backgroundColor = Color.getColorByString(userName ?? "default");
     // let textColor = Color.getTextColorByBackgroundColor(backgroundColor);
@@ -59,7 +59,7 @@
         if (value.type === "success") {
             stream = value.stream;
         } else {
-            stream = null;
+            stream = undefined;
         }
     });
 
@@ -83,9 +83,6 @@
             }
         });
     });
-
-    const gameScene = gameManager.getCurrentGameScene();
-    const pictureStore = gameScene.CurrentPlayer.pictureStore;
 </script>
 
 <div class="transition-all relative h-full w-full flex justify-start aspect-video m-auto" bind:this={cameraContainer}>
@@ -104,7 +101,7 @@
             class="z-[250] py-4 px-3 text-white border-[1px] border-solid border-danger flex flex-col items-center content-center justify-between bg-no-repeat bg-center bg-danger-1000/70 backdrop-blur rounded-xl text-center -translate-y-8"
         >
             <div class="flex flex-col -mt-20 leading-3">
-                <img src={silentImg} alt="Silent emoji" class="h-40 w-40" />
+                <img src={silentImg} alt="" class="h-40 w-40" />
             </div>
             <div class="m-0 text-center -mt-4 text-lg bold">
                 {$LL.camera.my.silentZone()}
@@ -118,7 +115,7 @@
     {:else if $localStreamStore.type === "success" && !$inExternalServiceStore}
         {#if $requestedCameraState && $mediaStreamConstraintsStore.video}
             <UserName
-                picture={pictureStore}
+                picture={currentPlayerWokaStore}
                 name={$LL.camera.my.nameTag()}
                 isPlayingAudio={$mediaStreamConstraintsStore.audio !== false}
                 position="absolute bottom-4 left-4"
@@ -148,7 +145,7 @@
             <div class="w-full rounded-lg px-3 flex flex-row items-center bg-contrast/80 backdrop-blur h-12">
                 <div class="grow">
                     <UserName
-                        picture={pictureStore}
+                        picture={currentPlayerWokaStore}
                         name={$LL.camera.my.nameTag()}
                         isPlayingAudio={$mediaStreamConstraintsStore.audio !== false}
                         position="absolute bottom-1.5 left-4"

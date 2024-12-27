@@ -17,7 +17,7 @@ export class JitsiTrackWrapper implements TrackWrapper {
     private _spaceUserDeferred = new Deferred<SpaceUserExtended>();
     public readonly cameraTrackWrapper: JitsiTrackStreamWrapper = new JitsiTrackStreamWrapper(this, "video/audio");
     public readonly screenSharingTrackWrapper: JitsiTrackStreamWrapper = new JitsiTrackStreamWrapper(this, "desktop");
-    private _audioStreamStore: Writable<MediaStream | null> = writable<MediaStream | null>(null);
+    private _audioStreamStore: Writable<MediaStream | undefined> = writable<MediaStream | undefined>(undefined);
     private readonly _volumeStore: Readable<number[] | undefined> | undefined;
     private volumeStoreSubscribe: Unsubscriber | undefined;
     private spaceUserUpdateSubscribe: Subscription | undefined;
@@ -46,7 +46,7 @@ export class JitsiTrackWrapper implements TrackWrapper {
                 if (timeout) {
                     clearTimeout(timeout);
                 }
-                if (mediaStream === null || mediaStream.getAudioTracks().length <= 0) {
+                if (mediaStream === undefined || mediaStream.getAudioTracks().length <= 0) {
                     set(undefined);
                     return;
                 }
@@ -183,7 +183,7 @@ export class JitsiTrackWrapper implements TrackWrapper {
 
     muteAudio() {
         this.cameraTrackWrapper.setAudioTrack(undefined);
-        this._audioStreamStore.set(null);
+        this._audioStreamStore.set(undefined);
     }
 
     muteVideo() {
@@ -241,7 +241,7 @@ export class JitsiTrackWrapper implements TrackWrapper {
         this.cameraTrackWrapper.setAudioTrack(undefined);
         this.screenSharingTrackWrapper.setVideoTrack(undefined);
         this.screenSharingTrackWrapper.setAudioTrack(undefined);
-        this._audioStreamStore.set(null);
+        this._audioStreamStore.set(undefined);
         this.spaceUserUpdateSubscribe?.unsubscribe();
         this._spaceUser = undefined;
     }

@@ -114,7 +114,7 @@
                 <CamerasContainer />
             {/if}
             {#if $myJitsiCameraStore}
-                <MediaBox streamable={$myJitsiCameraStore} isClickable={false} />
+                <MediaBox streamable={$myJitsiCameraStore} />
             {/if}
         </div>
     {/if}
@@ -122,7 +122,7 @@
     {#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true && $highlightedEmbedScreen}
         <div id="video-container-receive" class="mb-8 md:mb-0 flex-1" bind:this={highlightScreen}>
             {#key $highlightedEmbedScreen.uniqueId}
-                <MediaBox isHighlighted={true} isClickable={true} streamable={$highlightedEmbedScreen} />
+                <MediaBox isHighlighted={true} streamable={$highlightedEmbedScreen} />
             {/key}
         </div>
     {/if}

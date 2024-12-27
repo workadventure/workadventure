@@ -101,13 +101,13 @@
         };
     }
 
-    let stream: MediaStream | null;
+    let stream: MediaStream | undefined;
 
     const unsubscribeLocalStreamStore = localStreamStore.subscribe((value) => {
         if (value.type === "success") {
             stream = value.stream;
 
-            if (stream !== null) {
+            if (stream !== undefined) {
                 const videoTracks = stream.getVideoTracks();
                 if (videoTracks.length > 0) {
                     selectedCamera = videoTracks[0].getSettings().deviceId;
@@ -118,7 +118,7 @@
                 }
             }
         } else {
-            stream = null;
+            stream = undefined;
             selectedCamera = undefined;
             selectedMicrophone = undefined;
         }

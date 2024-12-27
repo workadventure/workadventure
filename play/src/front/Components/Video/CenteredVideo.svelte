@@ -90,6 +90,10 @@
         if (expectVideoOutput && videoElement) {
             expectVideoWithin3Seconds();
         }
+        if (!expectVideoOutput && noVideoTimeout) {
+            clearTimeout(noVideoTimeout);
+            noVideoTimeout = undefined;
+        }
     }
 
     function expectVideoWithin3Seconds() {
@@ -238,9 +242,12 @@
 
     <!-- This div represents an overlay on top of the video -->
     <div
-        class="absolute"
+        class={"absolute border-solid " + (videoEnabled ? "" : "bg-contrast/80")}
         class:w-full={!videoEnabled}
         class:h-full={!videoEnabled}
+        class:rounded-lg={!videoEnabled}
+        class:border-transparent={(!videoEnabled && !isTalking) || videoEnabled}
+        class:border-secondary={!videoEnabled && isTalking}
         style={videoEnabled
             ? "width: " +
               videoWidth +

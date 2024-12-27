@@ -48,7 +48,7 @@
     let handleSendAudio: { sendAudioMessage(broadcast: boolean): Promise<void> };
 
     let videoElement: HTMLVideoElement;
-    let stream: MediaStream | null;
+    let stream: MediaStream | undefined;
     let aspectRatio = 1;
 
     let isMobile = isMediaBreakpointUp("md");
@@ -64,7 +64,7 @@
                 aspectRatio = videoElement != undefined ? videoElement.videoWidth / videoElement.videoHeight : 1;
             }, 100);
         } else {
-            stream = null;
+            stream = undefined;
         }
     });
 

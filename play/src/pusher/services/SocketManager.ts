@@ -789,8 +789,7 @@ export class SocketManager implements ZoneEventListener {
         socketData.spaces.forEach((spaceName) => {
             const space = this.spaces.get(spaceName);
             if (space) {
-                space.removeClientWatcher(socket);
-                space.removeUser(socketData.spaceUser.id);
+                space.removeUser(socket);
                 this.deleteSpaceIfEmpty(space);
             } else {
                 console.error(
@@ -1201,28 +1200,19 @@ export class SocketManager implements ZoneEventListener {
         removeSpaceFilterMessage: NonUndefinedFields<RemoveSpaceFilterMessage>
     ) {
         const oldFilter = removeSpaceFilterMessage.spaceFilterMessage;
-        const socketData = client.getUserData();
         this.checkClientIsPartOfSpace(client, oldFilter.spaceName);
         const space = this.spaces.get(oldFilter.spaceName);
         if (space) {
             space.handleRemoveFilter(client, removeSpaceFilterMessage);
-            const spacesFilter = socketData.spacesFilters.get(space.name);
-            if (spacesFilter) {
-                socketData.spacesFilters.set(
-                    space.name,
-                    spacesFilter.filter((filter) => filter.filterName !== oldFilter.filterName)
-                );
-            } else {
-                console.trace(
-                    `SocketManager => handleRemoveSpaceFilterMessage => spacesFilter ${removeSpaceFilterMessage.spaceFilterMessage?.filterName} is undefined`
-                );
-            }
             this.deleteSpaceIfEmpty(space);
         } else {
-            console.error(`Remove space filter called on a space (${oldFilter.spaceName}) that does not exist`);
+            // This function is called when the userStore of a space in front is unsubscribed.
+            // This could happen after we leave the space. Therefore, we don't display an error here.
+            // When leaving the space, we take care of removing the filters anyway.
+            /*console.error(`Remove space filter called on a space (${oldFilter.spaceName}) that does not exist`);
             Sentry.captureException(
                 new Error(`Remove space filter called on a space (${oldFilter.spaceName}) that does not exist`)
-            );
+            );*/
         }
     }
 
@@ -1338,8 +1328,7 @@ export class SocketManager implements ZoneEventListener {
         const socketData = client.getUserData();
         const space = this.spaces.get(spaceName);
         if (space) {
-            space.removeClientWatcher(client);
-            space.removeUser(socketData.spaceUser.id);
+            space.removeUser(client);
             const success = socketData.spaces.delete(space.name);
             if (!success) {
                 console.error("Could not find space", spaceName, "to leave");

@@ -167,9 +167,9 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
             }
         }
 
-        if (this._setUsers) {
+        /*if (this._setUsers) {
             this._setUsers(this._users);
-        }
+        }*/
     }
 
     protected setFilter(newFilter: Filter) {

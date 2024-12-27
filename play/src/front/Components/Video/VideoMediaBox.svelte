@@ -1,9 +1,8 @@
 <script lang="ts">
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
-    import { Readable, writable } from "svelte/store";
+    import { Readable } from "svelte/store";
     import { createPopperActions } from "svelte-popperjs";
-    import { VideoPeer } from "../../WebRtc/VideoPeer";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
@@ -17,7 +16,6 @@
     import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
     import ArrowsMaximizeIcon from "../Icons/ArrowsMaximizeIcon.svelte";
     import ArrowsMinimizeIcon from "../Icons/ArrowsMinimizeIcon.svelte";
-    import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
     import ActionMediaBox from "./ActionMediaBox.svelte";
     import UserName from "./UserName.svelte";
     import UpDownChevron from "./UpDownChevron.svelte";
@@ -26,35 +24,34 @@
 
     export let isHighlighted = false;
     export let fullScreen = false;
-    export let peer: VideoPeer | ScreenSharingPeer;
+    export let peer: Streamable;
 
-    const pictureStore = writable<string | undefined>(undefined);
+    const pictureStore = peer.pictureStore;
     let extendedSpaceUserPromise = peer.getExtendedSpaceUser();
-    let showVoiceIndicatorStore: Readonly<Readable<boolean>> | undefined = undefined;
-    extendedSpaceUserPromise
-        .then((user) => {
-            pictureStore.set(user.getWokaBase64);
-            showVoiceIndicatorStore = user.reactiveUser.showVoiceIndicator;
-        })
-        .catch((e) => {
-            console.error("Error getting the user picture: ", e);
-        });
-    let streamStore = peer.streamStore;
-    let volumeStore = peer instanceof VideoPeer ? peer.volumeStore : undefined;
-    let name = peer.player.name;
+    let showVoiceIndicatorStore = peer.showVoiceIndicator;
+
+    let streamStore: Readable<MediaStream | undefined> | undefined = undefined;
+    if (peer.media.type === "mediaStore") {
+        streamStore = peer.media.streamStore;
+    }
+
+    let volumeStore = peer.volumeStore;
+    let name = peer.name;
     let statusStore = peer.statusStore;
-    let constraintStore = peer instanceof VideoPeer ? peer.constraintsStore : undefined;
 
     let embedScreen: Streamable;
 
     let showUserSubMenu = false;
     let menuDrop = false;
+    let hasVideoStore = peer.hasVideo;
+    let hasAudioStore = peer.hasAudio;
+    let isMutedStore = peer.isMuted;
 
     if (peer) {
         embedScreen = peer as unknown as Streamable;
     }
     // If there is no constraintStore, we are in a screen sharing (so video is enabled)
-    $: videoEnabled = constraintStore ? ($constraintStore ? $constraintStore.video : false) : true;
+    $: videoEnabled = $hasVideoStore;
     $: showVoiceIndicator = showVoiceIndicatorStore ? $showVoiceIndicatorStore : false;
 
     function toggleFullScreen() {
@@ -84,7 +81,6 @@
 </script>
 
 <div class="group/screenshare flex justify-center mx-auto h-full w-full">
-    <!-- FIXME: not sure when to round in blue the box -->
     <div
         class={"z-20 w-full rounded-lg transition-all bg-center bg-no-repeat " +
             (fullScreen || $statusStore !== "connected" ? "bg-contrast/80 backdrop-blur" : "")}
@@ -106,7 +102,7 @@
 
         <!-- FIXME: expectVideoOutput and videoEnabled are always equal -->
         <CenteredVideo
-            mediaStream={$streamStore ?? undefined}
+            mediaStream={$streamStore}
             {videoEnabled}
             expectVideoOutput={videoEnabled}
             outputDeviceId={$speakerSelectedStore}
@@ -119,7 +115,7 @@
                 {name}
                 picture={pictureStore}
                 isPlayingAudio={showVoiceIndicator}
-                position={videoEnabled ? "absolute bottom-4 left-4" : "absolute bottom-1.5 left-4"}
+                position={videoEnabled ? "absolute bottom-4 left-4" : "absolute bottom-0.5 left-3"}
             >
                 <div use:popperRef class="self-center">
                     <UpDownChevron enabled={showUserSubMenu} on:click={() => (showUserSubMenu = !showUserSubMenu)} />
@@ -127,7 +123,7 @@
                 {#await extendedSpaceUserPromise}
                     <div />
                 {:then spaceUser}
-                    {#if showUserSubMenu}
+                    {#if spaceUser && showUserSubMenu}
                         <div use:popperContent={extraOpts}>
                             <ActionMediaBox
                                 {embedScreen}
@@ -188,9 +184,13 @@
                 </div>
             </div>
 
-            {#if $statusStore === "connected" && volumeStore}
-                <div class="z-[251] absolute right-3 top-1 aspect-ratio p-2">
-                    {#if constraintStore && $constraintStore?.audio}
+            {#if $statusStore === "connected" && $hasAudioStore}
+                <div
+                    class="z-[251] absolute aspect-ratio p-2 right-1"
+                    class:top-1={videoEnabled}
+                    class:top-0={!videoEnabled}
+                >
+                    {#if !$isMutedStore}
                         <SoundMeterWidget
                             volume={$volumeStore}
                             cssClass="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"

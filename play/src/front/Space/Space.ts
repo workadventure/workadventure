@@ -1,7 +1,7 @@
 import { Observable, Subject } from "rxjs";
 import { PrivateEvent, PublicEvent, SpaceEvent, UpdateSpaceMetadataMessage } from "@workadventure/messages";
 import { PrivateEventsObservables, PublicEventsObservables, SpaceInterface, SpaceUserUpdate } from "./SpaceInterface";
-import { SpaceFilterDoesNotExistError, SpaceNameIsEmptyError } from "./Errors/SpaceError";
+import { SpaceNameIsEmptyError } from "./Errors/SpaceError";
 import { SpaceFilter, SpaceFilterInterface } from "./SpaceFilter/SpaceFilter";
 import { AllUsersSpaceFilter, AllUsersSpaceFilterInterface } from "./SpaceFilter/AllUsersSpaceFilter";
 import { LiveStreamingUsersSpaceFilter } from "./SpaceFilter/LiveStreamingUsersSpaceFilter";
@@ -72,12 +72,14 @@ export class Space implements SpaceInterface {
         return spaceFilter;
     }
 
-    stopWatching(spaceFilter: SpaceFilterInterface): void {
+    // TODO: there is no way to cleanup a space filter (this.filters.delete is never called).
+    // This is mildly an issue because it is unlikely we will need to create many filters (we have only 2 so far)
+    /*stopWatching(spaceFilter: SpaceFilterInterface): void {
         const filterName = spaceFilter.getName();
         const filter = this.filters.get(filterName);
         if (!filter) throw new SpaceFilterDoesNotExistError(this.name, filterName);
         this.filters.delete(filterName);
-    }
+    }*/
 
     private userLeaveSpace() {
         this._connection.emitLeaveSpace(this.name);

@@ -1,7 +1,9 @@
 import { Buffer } from "buffer";
 import type { Subscription } from "rxjs";
-import { get, Readable, readable, Unsubscriber, Writable, writable } from "svelte/store";
+import { derived, get, Readable, readable, Unsubscriber, Writable, writable } from "svelte/store";
 import Peer from "simple-peer/simplepeer.min.js";
+import { ForwardableStore } from "@workadventure/store-utils";
+import * as Sentry from "@sentry/svelte";
 import type { RoomConnection } from "../Connection/RoomConnection";
 import { localStreamStore, videoBandwidthStore } from "../Stores/MediaStore";
 import { playersStore } from "../Stores/PlayersStore";
@@ -12,6 +14,7 @@ import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintSto
 import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
 import { SpaceFilterInterface, SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
 import { lookupUserById } from "../Space/Utils/UserLookup";
+import { MediaStoreStreamable, Streamable } from "../Stores/StreamableCollectionStore";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { blackListManager } from "./BlackListManager";
@@ -24,7 +27,7 @@ export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 /**
  * A peer connection used to transmit video / audio signals between 2 peers.
  */
-export class VideoPeer extends Peer {
+export class VideoPeer extends Peer implements Streamable {
     public toClose = false;
     public _connected = false;
     public remoteStream!: MediaStream;
@@ -34,7 +37,7 @@ export class VideoPeer extends Peer {
     public readonly uniqueId: string;
     private onBlockSubscribe: Subscription;
     private onUnBlockSubscribe: Subscription;
-    public readonly streamStore: Writable<MediaStream | null> = writable<MediaStream | null>(null);
+    private readonly _streamStore: Writable<MediaStream | undefined> = writable<MediaStream | undefined>(undefined);
     public readonly volumeStore: Readable<number[] | undefined>;
     private readonly _statusStore: Writable<PeerStatus> = writable<PeerStatus>("closed");
     private readonly _constraintsStore: Writable<ObtainedMediaStreamConstraints | null>;
@@ -43,6 +46,11 @@ export class VideoPeer extends Peer {
     private volumeStoreSubscribe?: Unsubscriber;
     private readonly localStreamStoreSubscribe: Unsubscriber;
     private readonly apparentMediaConstraintStoreSubscribe: Unsubscriber;
+    private readonly _hasAudio = writable<boolean>(true);
+    private readonly _hasVideo: Readable<boolean>;
+    private readonly _isMuted: Readable<boolean>;
+    private readonly showVoiceIndicatorStore: ForwardableStore<boolean> = new ForwardableStore(false);
+    private readonly _pictureStore: Writable<string | undefined> = writable<string | undefined>(undefined);
 
     constructor(
         public user: UserSimplePeerInterface,
@@ -71,11 +79,11 @@ export class VideoPeer extends Peer {
             let soundMeter: SoundMeter;
             let timeout: NodeJS.Timeout;
 
-            this.volumeStoreSubscribe = this.streamStore.subscribe((mediaStream) => {
+            this.volumeStoreSubscribe = this._streamStore.subscribe((mediaStream) => {
                 if (soundMeter) {
                     soundMeter.stop();
                 }
-                if (mediaStream === null || mediaStream.getAudioTracks().length <= 0) {
+                if (mediaStream === undefined || mediaStream.getAudioTracks().length <= 0) {
                     set(undefined);
                     return;
                 }
@@ -109,6 +117,13 @@ export class VideoPeer extends Peer {
         });
 
         this._constraintsStore = writable<ObtainedMediaStreamConstraints | null>(null);
+
+        this._hasVideo = derived(this._constraintsStore, ($constraintStore) => {
+            return $constraintStore?.video ?? false;
+        });
+        this._isMuted = derived(this._constraintsStore, ($constraintStore) => {
+            return !$constraintStore?.audio;
+        });
 
         //start listen signal for the peer connection
         this.on("signal", (data: unknown) => {
@@ -226,6 +241,16 @@ export class VideoPeer extends Peer {
                 )
             );
         });
+
+        this.getExtendedSpaceUser()
+            .then((spaceUser) => {
+                this.showVoiceIndicatorStore.forward(spaceUser.reactiveUser.showVoiceIndicator);
+                this._pictureStore.set(spaceUser.getWokaBase64);
+            })
+            .catch((e) => {
+                console.error("Error while getting extended space user", e);
+                Sentry.captureException(e);
+            });
     }
 
     private sendBlockMessage(blocking: boolean) {
@@ -254,7 +279,7 @@ export class VideoPeer extends Peer {
      * Sends received stream to screen.
      */
     private stream(stream: MediaStream) {
-        this.streamStore.set(stream);
+        this._streamStore.set(stream);
 
         try {
             this.remoteStream = stream;
@@ -312,5 +337,40 @@ export class VideoPeer extends Peer {
     public async getExtendedSpaceUser(): Promise<SpaceUserExtended> {
         const spaceFilter = await this.spaceFilter;
         return lookupUserById(this.userId, spaceFilter, 30_000);
+    }
+
+    get streamStore(): Readable<MediaStream | undefined> {
+        return this._streamStore;
+    }
+
+    get media(): MediaStoreStreamable {
+        return {
+            type: "mediaStore",
+            streamStore: this._streamStore,
+        };
+    }
+
+    get hasVideo(): Readable<boolean> {
+        return this._hasVideo;
+    }
+
+    get hasAudio(): Readable<boolean> {
+        return this._hasAudio;
+    }
+
+    get isMuted(): Readable<boolean> {
+        return this._isMuted;
+    }
+
+    get name(): string {
+        return this.player.name;
+    }
+
+    get showVoiceIndicator(): Readable<boolean> {
+        return this.showVoiceIndicatorStore;
+    }
+
+    get pictureStore(): Readable<string | undefined> {
+        return this._pictureStore;
     }
 }

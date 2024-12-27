@@ -9,15 +9,11 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { JitsiTrackStreamWrapper } from "../../Streaming/Jitsi/JitsiTrackStreamWrapper";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
-    import { mediaStreamConstraintsStore } from "../../Stores/MediaStore";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
     import VideoMediaBox from "./VideoMediaBox.svelte";
-    import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
-    import JitsiMediaBox from "./JitsiMediaBox.svelte";
 
     export let streamable: Streamable;
     export let isHighlighted = false;
-    export let isClickable = false;
 
     let constraintStore: Readable<ObtainedMediaStreamConstraints | null>;
     if (streamable instanceof VideoPeer) {
@@ -45,7 +41,6 @@
         }
     }
 
-    $: videoEnabled = $constraintStore ? $constraintStore.video : false;
     $: isHighlighted = $highlightedEmbedScreen === streamable;
     $: fullScreen = $highlightedEmbedScreen === streamable && $highlightFullScreen;
 </script>
@@ -71,33 +66,16 @@
     </div>
 {:else if streamable instanceof JitsiTrackStreamWrapper}
     <div
-        class="media-container media-box-shape-color pointer-events-auto screen-blocker pointer-event-auto"
-        class:hightlighted={isHighlighted}
-        class:mr-6={isHighlighted && streamable.getVideoTrack()}
-        class:flex={!isHighlighted}
-        class:media-box-camera-on-size={!isHighlighted && streamable.getVideoTrack()}
-        class:media-box-camera-off-size={!isHighlighted && !streamable.getVideoTrack()}
-        class:media-box-micropohone-off={!$mediaStreamConstraintsStore.audio}
-        class:max-w-sm={isHighlighted && !streamable.getVideoTrack()}
-        class:mx-auto={isHighlighted && !streamable.getVideoTrack()}
-        class:m-auto={!isHighlighted && !streamable.getVideoTrack()}
-        class:h-12={!isHighlighted && !streamable.getVideoTrack()}
-        class:clickable={isClickable}
+        class="video-media-box pointer-events-auto media-container transition-all justify-center relative h-full w-full"
+        in:fly={{ y: 50, duration: 150 }}
     >
-        <div
-            class="w-full flex screen-blocker"
-            class:mr-6={isHighlighted}
-            class:mx-auto={!isHighlighted}
-            class:h-[32vw]={isHighlighted && videoEnabled}
-        >
-            <JitsiMediaBox peer={streamable} clickable={isClickable} {isHighlighted} />
-        </div>
+        <VideoMediaBox peer={streamable} {isHighlighted} {fullScreen} />
     </div>
 {:else}
-    <div class="media-container {isHighlighted ? 'hightlighted' : 'flex h-full'}" class:clickable={isClickable}>
-        <!-- Here for the resize o-->
-        <div class="{isHighlighted ? 'cam-share-receive' : 'mx-auto'} flex justify-center screen-blocker">
-            <LocalStreamMediaBox peer={streamable} cssClass="" />
-        </div>
+    <div
+        class="video-media-box pointer-events-auto media-container transition-all justify-center relative h-full w-full"
+        in:fly={{ y: 50, duration: 150 }}
+    >
+        <VideoMediaBox peer={streamable} {isHighlighted} {fullScreen} />
     </div>
 {/if}

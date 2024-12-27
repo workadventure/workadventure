@@ -122,7 +122,7 @@
 
     {#if $highlightedEmbedScreen && $highlightFullScreen}
         <div class="w-full h-full fixed left-0 right-0">
-            <MediaBox streamable={$highlightedEmbedScreen} isHighlighted={true} isClickable={true} />
+            <MediaBox streamable={$highlightedEmbedScreen} isHighlighted={true} />
         </div>
     {/if}
 

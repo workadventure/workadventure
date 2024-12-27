@@ -482,7 +482,7 @@ export type LocalStreamStoreValue = StreamSuccessValue | StreamErrorValue;
 
 interface StreamSuccessValue {
     type: "success";
-    stream: MediaStream | null;
+    stream: MediaStream | undefined;
 }
 
 interface StreamErrorValue {
@@ -490,7 +490,7 @@ interface StreamErrorValue {
     error: Error;
 }
 
-let currentStream: MediaStream | null = null;
+let currentStream: MediaStream | undefined = undefined;
 let oldConstraints = { video: false, audio: false };
 
 // This promise is important to queue the calls to "getUserMedia"
@@ -501,7 +501,7 @@ let oldConstraints = { video: false, audio: false };
 let currentGetUserMediaPromise: Promise<MediaStream | undefined> = Promise.resolve(undefined);
 
 /**
- * A store containing the MediaStream object (or null if nothing requested, or Error if an error occurred)
+ * A store containing the MediaStream object (or undefined if nothing requested, or Error if an error occurred)
  */
 export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalStreamStoreValue>(
     mediaStreamConstraintsStore,
@@ -601,11 +601,11 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
             }
         }
 
-        if (currentStream === null) {
+        if (currentStream === undefined) {
             // we need to assign a first value to the stream because getUserMedia is async
             set({
                 type: "success",
-                stream: null,
+                stream: undefined,
             });
         }
 
@@ -617,10 +617,10 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                     currentStream.getTracks().forEach((t) => t.stop());
                 }
 
-                currentStream = null;
+                currentStream = undefined;
                 set({
                     type: "success",
-                    stream: null,
+                    stream: undefined,
                 });
                 return undefined;
             });
@@ -691,7 +691,7 @@ export const localVolumeStore = readable<number[] | undefined>(undefined, (set) 
         }
         const mediaStream = localStreamStoreValue.stream;
 
-        if (mediaStream === null || mediaStream.getAudioTracks().length <= 0) {
+        if (mediaStream === undefined || mediaStream.getAudioTracks().length <= 0) {
             set(undefined);
             return;
         }
@@ -741,7 +741,7 @@ export const deviceListStore = readable<MediaDeviceInfo[] | undefined>(undefined
     };
 
     const unsubscribe = localStreamStore.subscribe((streamResult) => {
-        if (streamResult.type === "success" && streamResult.stream !== null) {
+        if (streamResult.type === "success" && streamResult.stream !== undefined) {
             if (deviceListCanBeQueried === false) {
                 queryDeviceList();
                 deviceListCanBeQueried = true;

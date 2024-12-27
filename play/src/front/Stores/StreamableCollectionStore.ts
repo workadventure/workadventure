@@ -1,14 +1,13 @@
-import type { Readable } from "svelte/store";
-import { derived, get, writable } from "svelte/store";
+import { Readable, derived, get, writable } from "svelte/store";
 import { createNestedStore } from "@workadventure/store-utils";
-import type { RemotePeer } from "../WebRtc/SimplePeer";
 import { GameScene } from "../Phaser/Game/GameScene";
 import { JitsiTrackWrapper } from "../Streaming/Jitsi/JitsiTrackWrapper";
 import { JitsiTrackStreamWrapper } from "../Streaming/Jitsi/JitsiTrackStreamWrapper";
 import { TrackWrapper } from "../Streaming/Common/TrackWrapper";
 import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
 import { LayoutMode } from "../WebRtc/LayoutManager";
-import type { ScreenSharingLocalMedia } from "./ScreenSharingStore";
+import { PeerStatus } from "../WebRtc/VideoPeer";
+import { SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
 import { screenSharingLocalMedia } from "./ScreenSharingStore";
 import { peerStore, screenSharingStreamStore } from "./PeerStore";
 import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore";
@@ -16,7 +15,35 @@ import { gameSceneStore } from "./GameSceneStore";
 import { embedScreenLayoutStore } from "./EmbedScreensStore";
 import { highlightFullScreen } from "./ActionsCamStore";
 
-export type Streamable = RemotePeer | ScreenSharingLocalMedia | JitsiTrackStreamWrapper;
+//export type Streamable = RemotePeer | ScreenSharingLocalMedia | JitsiTrackStreamWrapper;
+
+export interface MediaStoreStreamable {
+    type: "mediaStore";
+    readonly streamStore: Readable<MediaStream | undefined>;
+}
+
+export interface JitsiTrackStreamable {
+    type: "jitsiTrack";
+    jitsiTrackStreamWrapper: JitsiTrackStreamWrapper;
+}
+
+export interface AttachableVideo {
+    attach: (container: HTMLElement) => void;
+}
+
+export interface Streamable {
+    readonly uniqueId: string;
+    readonly media: MediaStoreStreamable | JitsiTrackStreamable;
+    readonly volumeStore: Readable<number[] | undefined> | undefined;
+    readonly hasVideo: Readable<boolean>;
+    readonly hasAudio: Readable<boolean>;
+    readonly isMuted: Readable<boolean>;
+    readonly statusStore: Readable<PeerStatus>;
+    readonly getExtendedSpaceUser: () => Promise<SpaceUserExtended> | undefined;
+    readonly name: string;
+    readonly showVoiceIndicator: Readable<boolean>;
+    readonly pictureStore: Readable<string | undefined>;
+}
 
 const broadcastTracksStore = createNestedStore<GameScene | undefined, Map<string, TrackWrapper>>(
     gameSceneStore,
@@ -70,7 +97,11 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
                 }
             });
 
-            if ($screenSharingLocalMedia?.stream) {
+            if (
+                $screenSharingLocalMedia &&
+                $screenSharingLocalMedia.media.type === "mediaStore" &&
+                get($screenSharingLocalMedia.media.streamStore)
+            ) {
                 addPeer($screenSharingLocalMedia);
             }
 

@@ -7,8 +7,8 @@ import { analyticsClient } from "../../Administration/AnalyticsClient";
 
 export const debug = Debug("CheckTurn");
 
-export function srcObject(node: HTMLVideoElement, stream: MediaStream | null) {
-    node.srcObject = stream;
+export function srcObject(node: HTMLVideoElement, stream: MediaStream | null | undefined) {
+    node.srcObject = stream ?? null;
     return {
         update(newStream: MediaStream) {
             if (node.srcObject != newStream) {

@@ -34,7 +34,7 @@ export interface SpaceInterface {
     getMetadata(): Map<string, unknown>;
     watchAllUsers(): AllUsersSpaceFilterInterface;
     watchLiveStreamingUsers(): SpaceFilterInterface;
-    stopWatching(spaceFilter: SpaceFilterInterface): void;
+    //stopWatching(spaceFilter: SpaceFilterInterface): void;
     observePublicEvent<K extends keyof PublicEventsObservables>(key: K): NonNullable<PublicEventsObservables[K]>;
     observePrivateEvent<K extends keyof PrivateEventsObservables>(key: K): NonNullable<PrivateEventsObservables[K]>;
     emitPublicMessage(message: NonNullable<SpaceEvent["event"]>): void;

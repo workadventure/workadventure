@@ -55,7 +55,7 @@ export class SimplePeer {
         //we make sure we don't get any old peer.
         peerStore.cleanupStore();
         screenSharingPeerStore.cleanupStore();
-        let localScreenCapture: MediaStream | null = null;
+        let localScreenCapture: MediaStream | undefined = undefined;
 
         //todo
         this.unsubscribers.push(
@@ -65,7 +65,7 @@ export class SimplePeer {
                     return;
                 }
 
-                if (streamResult.stream !== null) {
+                if (streamResult.stream !== undefined) {
                     localScreenCapture = streamResult.stream;
                     this.sendLocalScreenSharingStream(localScreenCapture).catch((e) => {
                         console.error("Error while sending local screen sharing stream to user", e);
@@ -74,7 +74,7 @@ export class SimplePeer {
                 } else {
                     if (localScreenCapture) {
                         this.stopLocalScreenSharingStream(localScreenCapture);
-                        localScreenCapture = null;
+                        localScreenCapture = undefined;
                     }
                 }
             })
@@ -196,7 +196,7 @@ export class SimplePeer {
         // the user sharing screen should also initiate a connection to the remote user!
         peer.on("connect", () => {
             const streamResult = get(screenSharingLocalStreamStore);
-            if (streamResult.type === "success" && streamResult.stream !== null) {
+            if (streamResult.type === "success" && streamResult.stream !== undefined) {
                 this.sendLocalScreenSharingStreamToUser(user.userId, streamResult.stream).catch((e) => {
                     console.error("Error while sending local screen sharing stream to user", e);
                     Sentry.captureException(e);
@@ -225,7 +225,7 @@ export class SimplePeer {
      */
     private async createPeerScreenSharingConnection(
         user: UserSimplePeerInterface,
-        stream: MediaStream | null
+        stream: MediaStream | undefined
     ): Promise<ScreenSharingPeer | null> {
         const peerScreenSharingConnection = screenSharingPeerStore.getPeer(user.userId);
         if (peerScreenSharingConnection) {
@@ -378,8 +378,8 @@ export class SimplePeer {
         const uuid = (await this.remotePlayersRepository.getPlayer(data.userId)).userUuid;
         if (blackListManager.isBlackListed(uuid)) return;
         const streamResult = get(screenSharingLocalStreamStore);
-        let stream: MediaStream | null = null;
-        if (streamResult.type === "success" && streamResult.stream !== null) {
+        let stream: MediaStream | undefined = undefined;
+        if (streamResult.type === "success" && streamResult.stream !== undefined) {
             stream = streamResult.stream;
         }
 
