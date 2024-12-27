@@ -8,7 +8,7 @@ import matrixApi from "./matrixApi";
 
 test.setTimeout(120000);
 
-test.describe("chat moderation", () => {
+test.describe("chat moderation @matrix", () => {
   test.beforeEach(
     "Ignore tests on webkit because of issue with camera and microphone",
 
