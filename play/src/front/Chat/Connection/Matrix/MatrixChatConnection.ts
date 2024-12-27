@@ -477,7 +477,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             this.createAndAddNewRootRoom(room);
         }
     }
-    private findRoomOrFolder(roomId: string): MatrixRoomFolder | MatrixChatRoom | undefined {
+     findRoomOrFolder(roomId: string): MatrixRoomFolder | MatrixChatRoom | undefined {
         const roomInRoomList = this.roomList.get(roomId);
         if (roomInRoomList) {
             return roomInRoomList;

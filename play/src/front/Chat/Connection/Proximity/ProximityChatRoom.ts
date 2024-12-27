@@ -243,7 +243,7 @@ export class ProximityChatRoom implements ChatRoom {
 
         this.playNewMessageSound();
 
-        mediaManager.createNotification(chatUser.username ?? "unknown", NotificationType.message, this.id);
+        mediaManager.createNotificationWithActions(chatUser.username ?? "unknown", NotificationType.message, this.id);
 
         if (get(selectedRoomStore) !== this) {
             this.hasUnreadMessages.set(true);

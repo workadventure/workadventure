@@ -44,5 +44,6 @@ export class _ServiceWorker {
             .catch((error) => {
                 console.error("Error registering the Service Worker: ", error);
             });
+
     }
 }

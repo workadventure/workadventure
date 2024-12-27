@@ -222,7 +222,7 @@ export class MatrixChatRoom implements ChatRoom {
                         if (senderID !== this.matrixRoom.client.getSafeUserId() && !get(this.areNotificationsMuted)) {
                             this.playNewMessageSound();
                             console.log("createNotification", senderID, NotificationType.message, this.id);
-                            mediaManager.createNotification(senderID ?? "unknown", NotificationType.message, this.id);
+                            await mediaManager.createNotificationWithActions(senderID ?? "unknown", NotificationType.message, this.id);
                             if (!isAChatRoomIsVisible() && get(selectedRoomStore)?.id !== "proximity") {
                                 selectedRoomStore.set(this);
                                 navChat.switchToChat();
