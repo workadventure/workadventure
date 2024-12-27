@@ -52,7 +52,7 @@ export class Space {
         debug(`created : ${name}`);
     }
 
-    public addClientWatcher(watcher: Socket) {
+    private addClientWatcher(watcher: Socket) {
         const socketData = watcher.getUserData();
         if (!socketData.userId) {
             throw new Error("User id not found");
@@ -77,6 +77,8 @@ export class Space {
     }
 
     public addUser(spaceUser: SpaceUser, client: Socket) {
+        this.addClientWatcher(client);
+
         const pusherToBackSpaceMessage: PusherToBackSpaceMessage = {
             message: {
                 $case: "addSpaceUserMessage",
@@ -95,6 +97,10 @@ export class Space {
         const user: Partial<SpaceUserExtended> = spaceUser;
         user.lowercaseName = spaceUser.name.toLowerCase();
         user.client = client;
+
+        if (this.users.has(spaceUser.id)) {
+            throw new Error(`User ${spaceUser.id} already exists in space ${this.name}`);
+        }
         this.users.set(spaceUser.id, user as SpaceUserExtended);
         debug(`${this.name} : user added ${spaceUser.id}. User count ${this.users.size}`);
 

@@ -518,14 +518,7 @@ export class SocketManager implements ZoneEventListener {
                                     "':",
                                 err
                             );
-                            Sentry.captureException(
-                                "Error in connection to back server '" +
-                                    apiSpaceClient.getChannel().getTarget() +
-                                    "' for space '" +
-                                    spaceName +
-                                    "':" +
-                                    err
-                            );
+                            Sentry.captureException(err);
                         });
                     return spaceStreamToBack;
                 })();
@@ -549,7 +542,6 @@ export class SocketManager implements ZoneEventListener {
                     },
                 });
             }
-            space.addClientWatcher(client);
 
             space.addUser(socketData.spaceUser, client);
             if (socketData.spaces.has(spaceName)) {
