@@ -298,7 +298,7 @@
 
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
-                        class="tw-group tw-relative tw-px-3 tw-m-0 tw-rounded-none tw-text-white/75 hover:tw-text-white tw-h-11 hover:tw-bg-contrast-200/10 tw-w-full tw-flex tw-space-x-2 tw-items-center tw-border tw-border-solid tw-border-x-0 tw-border-t tw-border-b-0 tw-border-white/10"
+                        class="tw-group tw-relative tw-px-3 tw-m-0 tw-mb-2 tw-rounded-none tw-text-white/75 hover:tw-text-white tw-h-11 hover:tw-bg-contrast-200/10 tw-w-full tw-flex tw-space-x-2 tw-items-center tw-border tw-border-solid tw-border-x-0 tw-border-t tw-border-b-0 tw-border-white/10"
                         on:click={toggleDisplayRooms}
                         data-testid="roomAccordeon"
                     >
@@ -325,16 +325,17 @@
                             </ShowMore>
                         </div>
                         <!--roomBySpace-->
-                        {#each Array.from($roomFolders.values()) as rootRoomFolder (rootRoomFolder.id)}
-                            <RoomFolder
-                                name={rootRoomFolder.name}
-                                folders={rootRoomFolder.folders}
-                                rooms={rootRoomFolder.rooms}
-                                isGuest={$isGuest}
-                                id={rootRoomFolder.id}
-                            />
-                        {/each}
                     {/if}
+                    {#each Array.from($roomFolders.values()) as rootRoomFolder (rootRoomFolder.id)}
+                        <RoomFolder
+                            bind:isOpen={isFoldersOpen[rootRoomFolder.id]}
+                            name={rootRoomFolder.name}
+                            folders={rootRoomFolder.folders}
+                            rooms={rootRoomFolder.rooms}
+                            isGuest={$isGuest}
+                            id={rootRoomFolder.id}
+                        />
+                    {/each}
                 {/if}
             </div>
             {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}
