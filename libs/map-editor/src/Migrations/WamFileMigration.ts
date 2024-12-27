@@ -53,7 +53,7 @@ class WamFileMigration {
                 ...area,
                 properties: area.properties?.map((property: any) => {
                     if (property.type === "jitsiRoomProperty") {
-                        const jitsiRoomAdminTag = property.jitsiRoomConfig.jitsiRoomAdminTag;
+                        const jitsiRoomAdminTag = property.jitsiRoomConfig.jitsiRoomAdminTag ?? undefined;
 
                         delete property.jitsiRoomConfig.jitsiRoomAdminTag;
 
