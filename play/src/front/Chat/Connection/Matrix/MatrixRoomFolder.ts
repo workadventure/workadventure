@@ -73,7 +73,6 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
             this.loadRoomsAndFolderPromise.resolve();
         } catch (e) {
             this.loadRoomsAndFolderPromise.reject(e);
-            //TODO : Sentry
             Sentry.captureMessage(`Failed to get room folder hierarchy :  ${e}`);
         }
     }

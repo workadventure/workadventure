@@ -1,7 +1,7 @@
 <script lang="ts">
     // eslint-disable-next-line import/no-unresolved
     import { get } from "svelte/store";
-    import { ChatRoom } from "../Connection/ChatConnection";
+    import { ChatRoom, RoomFolder } from "../Connection/ChatConnection";
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue } from "../Stores/ChatStore";
     import Room from "./Room/Room.svelte";
@@ -10,14 +10,10 @@
     import RoomInvitation from "./Room/RoomInvitation.svelte";
     import { IconChevronDown, IconChevronUp } from "@wa-icons";
 
-
     export let isGuest: boolean;
     export let isOpen: boolean;
-    //TODO : garder seulement le folder pour recuperer toutes les props
-    export let folder: ChatRoom;
-    $: ({ name, folders, invitations, rooms ,id } = folder);
-
-
+    export let folder: RoomFolder;
+    $: ({ name, folders, invitations, rooms, id } = folder);
 
     const isFoldersOpen: { [key: string]: boolean } = {};
 
@@ -69,14 +65,7 @@
             {/if}
 
             {#each $folders as folder (folder.id)}
-                <svelte:self
-                    bind:isOpen={isFoldersOpen[folder.id]}
-                    id={folder.id}
-                    name={folder.name}
-                    folders={folder.folders}
-                    rooms={folder.rooms}
-                    {isGuest}
-                />
+                <svelte:self bind:isOpen={isFoldersOpen[folder.id]} {folder} {isGuest} />
             {/each}
             <ShowMore items={filteredRoom} maxNumber={8} idKey="id" let:item={room} showNothingToDisplayMessage={false}>
                 <Room {room} />
