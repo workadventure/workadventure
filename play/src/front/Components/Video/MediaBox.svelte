@@ -14,6 +14,9 @@
 
     export let streamable: Streamable;
     export let isHighlighted = false;
+    export let flipX = false;
+    // If set to true, the video will be muted (no sound will come out). This does not prevent the volume bar from being displayed.
+    export let muted = false;
 
     let constraintStore: Readable<ObtainedMediaStreamConstraints | null>;
     if (streamable instanceof VideoPeer) {
@@ -54,7 +57,7 @@
             class="video-media-box pointer-events-auto media-container transition-all justify-center relative h-full w-full"
             in:fly={{ y: 50, duration: 150 }}
         >
-            <VideoMediaBox peer={streamable} {isHighlighted} {fullScreen} />
+            <VideoMediaBox peer={streamable} {isHighlighted} {fullScreen} {flipX} {muted} />
         </div>
     {/if}
 {:else if streamable instanceof ScreenSharingPeer}
@@ -62,20 +65,20 @@
         class="video-media-box pointer-events-auto media-container transition-all justify-center relative h-full w-full"
         in:fly={{ y: 50, duration: 150 }}
     >
-        <VideoMediaBox peer={streamable} {isHighlighted} {fullScreen} />
+        <VideoMediaBox peer={streamable} {isHighlighted} {fullScreen} {flipX} {muted} />
     </div>
 {:else if streamable instanceof JitsiTrackStreamWrapper}
     <div
         class="video-media-box pointer-events-auto media-container transition-all justify-center relative h-full w-full"
         in:fly={{ y: 50, duration: 150 }}
     >
-        <VideoMediaBox peer={streamable} {isHighlighted} {fullScreen} />
+        <VideoMediaBox peer={streamable} {isHighlighted} {fullScreen} {flipX} {muted} />
     </div>
 {:else}
     <div
         class="video-media-box pointer-events-auto media-container transition-all justify-center relative h-full w-full"
         in:fly={{ y: 50, duration: 150 }}
     >
-        <VideoMediaBox peer={streamable} {isHighlighted} {fullScreen} />
+        <VideoMediaBox peer={streamable} {isHighlighted} {fullScreen} {flipX} {muted} />
     </div>
 {/if}

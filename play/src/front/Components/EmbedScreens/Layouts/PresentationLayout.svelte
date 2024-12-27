@@ -110,11 +110,8 @@
             {#if $jitsiLoadingStore}
                 <Loading />
             {/if}
-            {#if ($streamableCollectionStore.size > 0 && $proximityMeetingStore === true) || $myCameraStore}
+            {#if ($streamableCollectionStore.size > 0 && $proximityMeetingStore === true) || $myCameraStore || $myJitsiCameraStore}
                 <CamerasContainer />
-            {/if}
-            {#if $myJitsiCameraStore}
-                <MediaBox streamable={$myJitsiCameraStore} />
             {/if}
         </div>
     {/if}

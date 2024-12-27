@@ -129,6 +129,7 @@ export class Space {
         const user = this.users.get(spaceUser.id);
         if (!user) {
             console.error("User not found in this space", spaceUser);
+            Sentry.captureException(new Error(`User not found in this space ${spaceUser.id}`));
             return;
         }
         const oldUser: SpaceUserExtended | undefined = { ...user };
@@ -282,11 +283,17 @@ export class Space {
 
                         if (shouldAddUser) {
                             this.notifyMeAddUser(watcher, youngUser, spaceFilter.filterName);
+                            debug(
+                                `${this.name} : user ${youngUser.lowercaseName} update caused add user sent to ${socketData.name}`
+                            );
                             return;
                         }
 
                         if (shouldRemoveUser) {
                             this.notifyMeRemoveUser(watcher, youngUser, spaceFilter.filterName);
+                            debug(
+                                `${this.name} : user ${youngUser.lowercaseName} update caused remove user sent to ${socketData.name}`
+                            );
                             return;
                         }
                         break;

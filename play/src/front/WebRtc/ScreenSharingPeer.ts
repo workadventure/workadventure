@@ -257,8 +257,8 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         return this._isMuted;
     }
 
-    get name(): string {
-        return this.player.name;
+    get name(): Readable<string> {
+        return writable(this.player.name);
     }
 
     get showVoiceIndicator(): Readable<boolean> {

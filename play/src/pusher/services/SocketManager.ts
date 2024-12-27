@@ -50,8 +50,6 @@ import {
 import * as Sentry from "@sentry/node";
 import axios, { AxiosResponse, isAxiosError } from "axios";
 import { z } from "zod";
-import { applyFieldMask } from "protobuf-fieldmask";
-import merge from "lodash/merge";
 import { PusherRoom } from "../models/PusherRoom";
 import type { BackSpaceConnection, SocketData } from "../models/Websocket/SocketData";
 
@@ -1218,9 +1216,9 @@ export class SocketManager implements ZoneEventListener {
 
     handleUpdateSpaceUser(client: Socket, updateSpaceUserMessage: UpdateSpaceUserMessage) {
         const message = noUndefined(updateSpaceUserMessage);
-        const socketData = client.getUserData();
-        const toUpdateValues = applyFieldMask(message.user, message.updateMask);
-        merge(socketData.spaceUser, toUpdateValues);
+        //const socketData = client.getUserData();
+        //const toUpdateValues = applyFieldMask(message.user, message.updateMask);
+        //merge(socketData.spaceUser, toUpdateValues);
         this.checkClientIsPartOfSpace(client, message.spaceName);
         const space = this.spaces.get(message.spaceName);
         if (!space) {

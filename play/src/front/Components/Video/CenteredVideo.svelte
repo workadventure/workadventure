@@ -35,6 +35,9 @@
     // If set to "top", the video will be at the top of the container. If set to "center", the video will be centered.
     export let verticalAlign: "center" | "top" = "center";
     export let isTalking = false;
+    export let flipX = false;
+    // If set to true, the video will be muted (no sound will come out). This does not prevent the volume bar from being displayed.
+    export let muted = false;
 
     let destroyed = false;
 
@@ -201,7 +204,6 @@
 </script>
 
 <div class="h-full w-full relative" bind:clientWidth={containerWidth} bind:clientHeight={containerHeight}>
-    <!-- svelte-ignore a11y-media-has-caption -->
     <video
         style={videoEnabled
             ? "width: " +
@@ -211,20 +213,23 @@
               "px; left: " +
               Math.ceil((containerWidth - videoWidth) / 2) +
               "px;" +
-              (verticalAlign === "center" ? " top: " + (containerHeight - videoHeight) / 2 + "px;" : "")
+              (verticalAlign === "center" ? " top: " + (containerHeight - videoHeight) / 2 + "px;" : "") +
+              (flipX ? "-webkit-transform: scaleX(-1);transform: scaleX(-1);" : "")
             : ""}
         bind:videoWidth={videoStreamWidth}
         bind:videoHeight={videoStreamHeight}
         bind:this={videoElement}
         on:loadedmetadata={onLoadVideoElement}
-        class="absolute block border-solid object-fill"
+        class="absolute block object-fill"
         class:h-0={!videoEnabled}
         class:w-0={!videoEnabled}
+        class:border-solid={videoEnabled}
         class:rounded-lg={videoEnabled}
         class:border-transparent={!isTalking}
         class:border-secondary={isTalking}
         autoplay
         playsinline
+        {muted}
     />
     {#if displayNoVideoWarning}
         <div

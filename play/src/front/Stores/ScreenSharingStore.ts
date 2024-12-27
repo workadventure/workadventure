@@ -237,7 +237,7 @@ export const screenSharingLocalMedia = readable<Streamable | undefined>(undefine
         hasAudio: writable(false),
         hasVideo: writable(true),
         isMuted: writable(true),
-        name: "",
+        name: writable(""),
         pictureStore: currentPlayerWokaStore,
         showVoiceIndicator: writable(false),
         statusStore: writable("connected"),
@@ -245,7 +245,7 @@ export const screenSharingLocalMedia = readable<Streamable | undefined>(undefine
     } satisfies Streamable;
 
     const unsubscribe = screenSharingLocalStreamStore.subscribe((screenSharingLocalStream) => {
-        localMedia.name = get(LL).camera.my.nameTag();
+        localMedia.name = writable(get(LL).camera.my.nameTag());
         if (screenSharingLocalStream.type === "success") {
             localMediaStreamStore.set(screenSharingLocalStream.stream);
         } else {

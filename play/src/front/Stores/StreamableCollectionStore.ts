@@ -40,7 +40,7 @@ export interface Streamable {
     readonly isMuted: Readable<boolean>;
     readonly statusStore: Readable<PeerStatus>;
     readonly getExtendedSpaceUser: () => Promise<SpaceUserExtended> | undefined;
-    readonly name: string;
+    readonly name: Readable<string>;
     readonly showVoiceIndicator: Readable<boolean>;
     readonly pictureStore: Readable<string | undefined>;
 }

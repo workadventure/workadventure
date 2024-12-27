@@ -175,6 +175,11 @@ export class JitsiTrackWrapper implements TrackWrapper {
                 }
 
                 this.cameraTrackWrapper.setVideoTrack(jitsiTrack);
+
+                // If we don't have an audio track, let's try to get it from the video track
+                if (this.cameraTrackWrapper.getAudioTrack() === undefined) {
+                    this._audioStreamStore.set(jitsiTrack.getOriginalStream());
+                }
             }
         } else {
             throw new Error("Jitsi Track is neither audio nor video");

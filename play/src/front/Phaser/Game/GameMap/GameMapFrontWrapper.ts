@@ -1160,7 +1160,6 @@ export class GameMapFrontWrapper {
         for (const property of layer.layer.properties as { [key: string]: string | number | boolean }[]) {
             if (property.name && property.name === "exitUrl") {
                 isExitLayer = true;
-                console.info("R1");
             }
         }
 

@@ -25,6 +25,9 @@
     export let isHighlighted = false;
     export let fullScreen = false;
     export let peer: Streamable;
+    export let flipX = false;
+    // If set to true, the video will be muted (no sound will come out). This does not prevent the volume bar from being displayed.
+    export let muted = false;
 
     const pictureStore = peer.pictureStore;
     let extendedSpaceUserPromise = peer.getExtendedSpaceUser();
@@ -110,9 +113,11 @@
             on:selectOutputAudioDeviceError={() => selectDefaultSpeaker()}
             verticalAlign={isHighlighted && !fullScreen ? "top" : "center"}
             isTalking={showVoiceIndicator}
+            {flipX}
+            {muted}
         >
             <UserName
-                {name}
+                name={$name}
                 picture={pictureStore}
                 isPlayingAudio={showVoiceIndicator}
                 position={videoEnabled ? "absolute bottom-4 left-4" : "absolute bottom-0.5 left-3"}
@@ -197,7 +202,7 @@
                             barColor="white"
                         />
                     {:else}
-                        <MicOffIcon ariaLabel={$LL.video.user_is_muted({ name })} />
+                        <MicOffIcon ariaLabel={$LL.video.user_is_muted({ name: $name })} />
                     {/if}
                 </div>
             {/if}

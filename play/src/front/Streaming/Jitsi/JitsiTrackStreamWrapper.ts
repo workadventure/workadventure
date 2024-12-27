@@ -25,6 +25,7 @@ export class JitsiTrackStreamWrapper implements Streamable {
         JitsiTrack | JitsiTrackExt | undefined
     >(undefined);
     private readonly showVoiceIndicatorStore: ForwardableStore<boolean> = new ForwardableStore<boolean>(false);
+    private readonly nameStore: ForwardableStore<string> = new ForwardableStore<string>("");
     private readonly _pictureStore: Writable<string | undefined> = writable<string | undefined>(undefined);
 
     constructor(
@@ -35,6 +36,7 @@ export class JitsiTrackStreamWrapper implements Streamable {
         this.getExtendedSpaceUser()
             .then((spaceUser) => {
                 this.showVoiceIndicatorStore.forward(spaceUser.reactiveUser.showVoiceIndicator);
+                this.nameStore.forward(spaceUser.reactiveUser.name);
                 this._pictureStore.set(spaceUser.getWokaBase64);
             })
             .catch((e) => {
@@ -93,21 +95,20 @@ export class JitsiTrackStreamWrapper implements Streamable {
             streamStore: derived(
                 [this._videoTrackStore, this._audioTrackStore],
                 ([$videoTrackStore, $audioTrackStore]) => {
-                    if ($videoTrackStore && $audioTrackStore) {
-                        console.warn("JitsiTrackStreamWrapper => WARNING BOTH VIDEO AND AUDIO TRACKS ARE SET");
-                    } else if ($videoTrackStore) {
-                        console.log("JitsiTrackStreamWrapper => VIDEO TRACK IS SET");
-                    } else if ($audioTrackStore) {
-                        console.log("JitsiTrackStreamWrapper => AUDIO TRACK IS SET");
-                    } else {
-                        console.log("JitsiTrackStreamWrapper => NO TRACK IS SET");
+                    // We are recreating a MediaStream from the 2 separate tracks received.
+                    const tracks = [];
+                    if ($videoTrackStore) {
+                        tracks.push($videoTrackStore.getTrack());
+                    }
+                    if ($audioTrackStore) {
+                        tracks.push($audioTrackStore.getTrack());
                     }
 
-                    return $videoTrackStore
-                        ? $videoTrackStore.getOriginalStream()
-                        : $audioTrackStore
-                        ? $audioTrackStore.getOriginalStream()
-                        : undefined;
+                    if (tracks.length === 0) {
+                        return undefined;
+                    }
+
+                    return new MediaStream(tracks);
                 }
             ),
         };
@@ -141,8 +142,8 @@ export class JitsiTrackStreamWrapper implements Streamable {
         return writable("connected");
     }
 
-    get name(): string {
-        return "FooChangeMe";
+    get name(): Readable<string> {
+        return this.nameStore;
     }
 
     get showVoiceIndicator(): Readable<boolean> {

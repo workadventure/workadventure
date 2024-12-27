@@ -1,7 +1,7 @@
 <script lang="ts">
     import { afterUpdate, onDestroy, onMount } from "svelte";
     import { Unsubscriber } from "svelte/store";
-    import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
+    import { myJitsiCameraStore, streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
     import MediaBox from "../Video/MediaBox.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import MyCamera from "../MyCamera.svelte";
@@ -89,7 +89,7 @@
         {/if}
     {/each}
 
-    {#if $myCameraStore}
+    {#if $myCameraStore && !$myJitsiCameraStore}
         <div
             id="unique-mycam"
             class={isHightlighted
@@ -98,6 +98,10 @@
         >
             <MyCamera />
         </div>
+    {/if}
+
+    {#if $myJitsiCameraStore}
+        <MediaBox streamable={$myJitsiCameraStore} flipX={true} muted={true} />
     {/if}
 </div>
 
