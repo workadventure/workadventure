@@ -31,3 +31,5 @@ export function publicTestMapUrl(
 }
 
 export const matrix_server_url = process.env.MATRIX_PUBLIC_URI ?? "http://matrix.workadventure.localhost";
+
+export const matrix_domain = process.env.MATRIX_DOMAIN ?? "matrix.workadventure.localhost";

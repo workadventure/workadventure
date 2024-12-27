@@ -60,9 +60,13 @@
             }
         };
 
-        await loadMessages();
-        scrollToMessageListBottom();
-        setFirstListItem();
+        try {
+            await loadMessages();
+            scrollToMessageListBottom();
+            setFirstListItem();
+        } catch (error) {
+            console.error(`Failed to load messages: ${error}`);
+        }
     }
 
     beforeUpdate(() => {
@@ -111,28 +115,28 @@
         loadingMessagePromise = new Promise<void>((resolve) => {
             (async () => {
                 const loadMessages = async () => {
-                    try {
-                        if (messageListRef.scrollTop === 0) {
-                            shouldDisplayLoader = true;
-                        }
-                        await room.loadMorePreviousMessages();
+                    if (messageListRef.scrollTop === 0) {
+                        shouldDisplayLoader = true;
+                    }
+                    await room.loadMorePreviousMessages();
 
-                        if (shouldLoadMoreMessages()) {
-                            loadMorePreviousMessages();
-                        }
-                    } catch {
-                        throw new Error("Failed to load messages");
-                    } finally {
-                        if (shouldDisplayLoader) {
-                            shouldDisplayLoader = false;
-                        }
+                    if (shouldLoadMoreMessages()) {
+                        loadMorePreviousMessages();
                     }
                 };
 
                 await loadMessages();
-            })().finally(() => {
-                resolve();
-            });
+            })()
+                .catch((error) => {
+                    console.error(`Failed to load messages: ${error}`);
+                    throw new Error(`Failed to load messages: ${error}`);
+                })
+                .finally(() => {
+                    if (shouldDisplayLoader) {
+                        shouldDisplayLoader = false;
+                    }
+                    resolve();
+                });
         }).finally(() => {
             loadingMessagePromise = undefined;
         });

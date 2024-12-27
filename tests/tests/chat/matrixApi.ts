@@ -1,5 +1,5 @@
 import axios from "axios";
-import { matrix_server_url } from "../utils/urls";
+import { matrix_domain, matrix_server_url } from "../utils/urls";
 
 const LOGIN_ENDPOINT = `${matrix_server_url}/_matrix/client/v3/login`;
 
@@ -7,7 +7,7 @@ const USERS_ENDPOINT = `${matrix_server_url}/_synapse/admin/v2/users`;
 
 const DEACTIVATE_USER_ENDPOINT = `${matrix_server_url}/_synapse/admin/v1/deactivate`;
 
-const MATRIX_ADMIN_USER = "@admin:matrix.workadventure.localhost";
+const MATRIX_ADMIN_USER = `@admin:${matrix_domain}`;
 
 interface MatrixLoginBody {
   type: "m.login.password" | string;
@@ -56,7 +56,7 @@ class MatrixApi {
     } catch (error) {
       console.error(error);
       throw new Error(error)
-    }
+    } 
   }
 
   private async getUsers() {
