@@ -1,7 +1,7 @@
 <script lang="ts">
     // eslint-disable-next-line import/no-unresolved
     import { get } from "svelte/store";
-    import { ChatRoom, RoomFolder } from "../Connection/ChatConnection";
+    import { RoomFolder, ChatRoom } from "../Connection/ChatConnection";
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue } from "../Stores/ChatStore";
     import Room from "./Room/Room.svelte";
@@ -70,6 +70,7 @@
             <ShowMore items={filteredRoom} maxNumber={8} idKey="id" let:item={room} showNothingToDisplayMessage={false}>
                 <Room {room} />
             </ShowMore>
+
             {#if $rooms.length === 0 && $folders.length === 0 && $invitations.length === 0}
                 <p class="tw-py-2 tw-px-3 tw-m-0 tw-text-white/50 tw-italic tw-text-sm">
                     {$LL.chat.nothingToDisplay()}

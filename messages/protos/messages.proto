@@ -472,6 +472,7 @@ message EnterChatRoomAreaQuery{
   string roomID = 1;
 }
 
+
 message AnswerMessage {
   int32 id = 1;
   oneof answer {
@@ -551,6 +552,8 @@ message OauthRefreshTokenAnswer {
 message EnterChatRoomAreaAnswer{
 }
 
+
+
 message Member {
   string id = 1;
   optional string name = 2;
@@ -575,6 +578,8 @@ message ChatMember {
 message SearchTagsAnswer{
   repeated string tags = 1;
 }
+
+
 
 /*********** SERVER TO CLIENT MESSAGES *************/
 
