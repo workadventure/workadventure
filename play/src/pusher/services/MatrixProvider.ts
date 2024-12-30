@@ -201,10 +201,15 @@ class MatrixProvider {
     }
 
     private async createChatFolderAreaAndSetID(): Promise<string> {
-        const folderAreaID = await this.getChatFolderAreaID();
-        if (folderAreaID) {
-            return Promise.resolve(folderAreaID);
+        try {
+            const folderAreaID = await this.getChatFolderAreaID();
+            if (folderAreaID) {
+                return Promise.resolve(folderAreaID);
+            }
+        } catch (error) {
+            console.info(`Failed to get chat folder area ID, creating one ${error}`);
         }
+
         const axiosInstance = await this.getAxios();
         const response = await axiosInstance.post(`_matrix/client/r0/createRoom`, {
             visibility: "public",
