@@ -15,10 +15,9 @@
     export let room: ChatRoomMembershipManagement & ChatRoomModeration;
     const members = room.members;
 
-    const { searchMembers } = searchChatMembersRule();
+    const { searchWorldMembers } = searchChatMembersRule();
 
     let invitations: { value: string; label: string }[] = [];
-    let filterText = "";
     let sendingInvitationsToRoom = false;
     let invitationToRoomError: string | undefined = undefined;
 
@@ -63,8 +62,7 @@
                 --item-color="black"
                 --item-hover-color="black"
                 --clear-select-color="red"
-                loadOptions={searchMembers}
-                bind:filterText
+                loadOptions={searchWorldMembers}
                 placeholder={$LL.chat.createRoom.users()}
             >
                 <div slot="item" let:item>

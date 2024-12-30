@@ -8,7 +8,9 @@
     import { IconHelpCircle, IconLoader } from "../../../Components/Icons";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
     import { chatInputFocusStore } from "../../../Stores/ChatStore";
+    import { searchChatMembersRule } from "./searchChatMembersRule";
 
+    const { searchWorldMembers } = searchChatMembersRule();
     export let isOpen: boolean;
     export let parentID: string | undefined;
     let createFolderOptions: CreateRoomOptions = { visibility: "public", description: "" };
@@ -40,19 +42,6 @@
 
     function notifyUserForFolderCreation() {
         notificationPlayingStore.playNotification($LL.chat.createFolder.creationSuccessNotification());
-    }
-    async function searchMembers(filterText: string) {
-        try {
-            const chatUsers = await chat.searchChatUsers(filterText);
-            if (chatUsers === undefined) {
-                return [];
-            }
-            return chatUsers.map((user) => ({ value: user.id, label: user.name ?? user.id }));
-        } catch (error) {
-            console.error(error);
-        }
-
-        return [];
     }
 
     function focusChatInput() {
@@ -128,7 +117,7 @@
                 --item-color="black"
                 --item-hover-color="black"
                 --clear-select-color="red"
-                loadOptions={searchMembers}
+                loadOptions={searchWorldMembers}
                 placeholder={$LL.chat.createFolder.users()}
             >
                 <div slot="item" let:item>
