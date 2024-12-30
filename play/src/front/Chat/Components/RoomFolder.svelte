@@ -14,7 +14,7 @@
     export let name: Readable<string>;
     export let isGuest: boolean;
     export let id: string;
-    export let isOpen: boolean = localUserStore.hasFolderOpened(id);
+    let isOpen: boolean = localUserStore.hasFolderOpened(id) ?? false;
 
     const isFoldersOpen: { [key: string]: boolean } = {};
 

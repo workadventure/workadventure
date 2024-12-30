@@ -132,14 +132,6 @@
         .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
 
     $: displayTwoColumnLayout = sideBarWidth >= CHAT_LAYOUT_LIMIT;
-
-    const isFoldersOpen: { [key: string]: boolean } = {};
-
-    $roomFolders.forEach((folder) => {
-        if (!(folder.id in isFoldersOpen)) {
-            isFoldersOpen[folder.id] = false;
-        }
-    });
 </script>
 
 <div
@@ -328,7 +320,6 @@
                     {/if}
                     {#each Array.from($roomFolders.values()) as rootRoomFolder (rootRoomFolder.id)}
                         <RoomFolder
-                            bind:isOpen={isFoldersOpen[rootRoomFolder.id]}
                             name={rootRoomFolder.name}
                             folders={rootRoomFolder.folders}
                             rooms={rootRoomFolder.rooms}
