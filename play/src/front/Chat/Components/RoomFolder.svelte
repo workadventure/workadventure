@@ -8,7 +8,7 @@
     import Room from "./Room/Room.svelte";
     import CreateRoomOrFolderOption from "./Room/CreateRoomOrFolderOption.svelte";
     import ShowMore from "./ShowMore.svelte";
-    import { IconChevronDown, IconChevronUp } from "@wa-icons";
+    import { IconChevronUp } from "@wa-icons";
     export let folders: Readable<Map<string, RoomFolder>>;
     export let rooms: Readable<Map<string, ChatRoom>>;
     export let name: Readable<string>;
@@ -53,11 +53,15 @@
         {#if isGuest === false}
             <CreateRoomOrFolderOption parentID={id} parentName={$name} />
         {/if}
-        {#if isOpen}
-            <IconChevronUp />
-        {:else}
-            <IconChevronDown />
-        {/if}
+
+        <button
+            class="tw-transition-all group-hover:tw-bg-white/10 tw-p-0 tw-m-0 tw-rounded-lg tw-aspect-square tw-flex tw-items-center tw-justify-center tw-text-white"
+            on:click={() => {
+                isOpen = !isOpen;
+            }}
+        >
+            <IconChevronUp class={`tw-transform tw-transition ${!isOpen ? "" : "tw-rotate-180"}`} />
+        </button>
     </div>
 
     {#if isOpen}
