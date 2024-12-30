@@ -349,7 +349,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
         const game = HtmlUtils.querySelectorOrFail<HTMLCanvasElement>("#game canvas");
 
-        // Calculate offset in screen coordinates, then convert to game coordinates
+        // Let's put this in Game coordinates by applying the zoom level:
         const followOffsetX = (xCenter - game.offsetWidth / 2) / this.scene.scale.zoom;
         const followOffsetY = (yCenter - game.offsetHeight / 2) / this.scene.scale.zoom;
 

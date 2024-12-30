@@ -28,6 +28,15 @@
             isFoldersOpen[folder.id] = false;
         }
     });
+
+    function toggleFolder() {
+        isOpen = !isOpen;
+        if (isOpen) {
+            localUserStore.addFolderOpened(id);
+        } else {
+            localUserStore.removeFolderOpened(id);
+        }
+    }
 </script>
 
 <div class={`${!rootFolder ? "tw-mx-2 tw-p-1 tw-bg-contrast-300/10 tw-rounded-lg tw-mb-4" : ""}`}>
@@ -38,18 +47,7 @@
         class:tw-mb-2={isOpen || rootFolder}
     >
         <div class="tw-flex tw-items-center tw-space-x-2 tw-grow tw-m-0 tw-p-0">
-            <button
-                class="tw-flex tw-items-center tw-space-x-2 tw-grow tw-m-0 tw-p-0"
-                on:click={() => {
-                    isOpen = !isOpen;
-
-                    if (isOpen) {
-                        localUserStore.addFolderOpened(id);
-                    } else {
-                        localUserStore.removeFolderOpened(id);
-                    }
-                }}
-            >
+            <button class="tw-flex tw-items-center tw-space-x-2 tw-grow tw-m-0 tw-p-0" on:click={toggleFolder}>
                 <div
                     class={`${
                         rootFolder
@@ -67,9 +65,7 @@
 
         <button
             class="tw-transition-all group-hover:tw-bg-white/10 tw-p-1 tw-rounded-lg tw-aspect-square tw-flex tw-items-center tw-justify-center tw-text-white"
-            on:click={() => {
-                isOpen = !isOpen;
-            }}
+            on:click={toggleFolder}
         >
             <IconChevronUp class={`tw-transform tw-transition ${!isOpen ? "" : "tw-rotate-180"}`} />
         </button>
