@@ -82,10 +82,10 @@ test.describe("chat moderation @matrix", () => {
 
     await page.getByTestId("inviteParticipantsModalContent").getByPlaceholder("Users").fill("@admin:matrix.workadventure.localhost");
 
-    await page.getByTestId("inviteParticipantsModalContent").getByText("@admin:matrix.workadventure.localhost").click();
+    await page.getByTestId("inviteParticipantsModalContent").getByText("@admin:matrix.workadventure.localhost (@admin:matrix.workadventure.localhost)").click();
 
     await page.getByTestId("createRoomButton").click();
-
+    await page.getByTestId("inviteParticipantsModalContent").locator(".clear-select" ).click();
     await expect(page.getByTestId("@admin:matrix.workadventure.localhost-kickButton")).toBeAttached();
     await expect(page.getByTestId("@admin:matrix.workadventure.localhost-banButton")).toBeAttached();
     await expect(page.getByTestId("@admin:matrix.workadventure.localhost-membership")).toHaveText("Invited");
