@@ -21,7 +21,7 @@ export const searchChatMembersRule = () => {
 
     async function searchWorldMembers(
         filterText: string
-    ): Promise<{ value: string; label: string; verified: boolean }[]> {
+    ): Promise<{ value: string; label: string | number | undefined; verified: boolean }[]> {
         try {
             const userProviderMerger = await userProviderMergerPromise;
             const chatUsersMap = get(userProviderMerger.usersByRoomStore);

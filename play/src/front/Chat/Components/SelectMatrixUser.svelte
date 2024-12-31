@@ -8,7 +8,7 @@
     export let value: { value: string; label: string; verified?: boolean }[] = [];
     export let placeholder = "";
     export let filterText = "";
-    let items: { value: string; label: string; created?: boolean; verified?: boolean }[] = [];
+    let items: { value: string; label: string | number | undefined; created?: boolean; verified?: boolean }[] = [];
     const chat = gameManager.chatConnection;
 
     const dispatch = createEventDispatcher();
@@ -22,7 +22,7 @@
         }
     }
 
-    async function handleChange(e: CustomEvent) {
+    async function handleChange() {
         const verificationResults = await Promise.all(
             value.map(async (item) => {
                 if (item.verified !== undefined) {
@@ -83,8 +83,8 @@
     --item-hover-color="black"
     --clear-select-color="red"
     {placeholder}
-    on:change={async (e) => {
-        const validItems = await handleChange(e);
+    on:change={async () => {
+        const validItems = await handleChange();
         value = validItems;
     }}
     on:filter={handleFilter}

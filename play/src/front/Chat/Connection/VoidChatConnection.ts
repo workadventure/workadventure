@@ -58,5 +58,9 @@ export class VoidChatConnection implements ChatConnectionInterface {
         return Promise.resolve();
     }
 
+    isUserExist(userId: string): Promise<boolean> {
+        return Promise.resolve(false);
+    }
+
     clearListener(): void {}
 }
