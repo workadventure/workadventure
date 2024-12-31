@@ -69,6 +69,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     open: "Ouvrir",
     me: "Moi",
     you: "Vous",
+    addNew: "Ajouter un nouveau : ",
     ban: {
         title: "Bannir",
         content: "Bannir l'utilisateur {userName} du monde courant. Cela peut être annulé depuis l'administration.",

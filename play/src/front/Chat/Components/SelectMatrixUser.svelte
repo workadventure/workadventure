@@ -2,6 +2,7 @@
     import { onMount, createEventDispatcher } from "svelte";
     import * as Sentry from "@sentry/svelte";
     import Select from "svelte-select";
+    import LL from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { searchChatMembersRule } from "./Room/searchChatMembersRule";
 
@@ -92,7 +93,7 @@
     {items}
 >
     <div slot="item" let:item>
-        {item.created ? "Add new: " : ""}
+        {item.created ? $LL.chat.addNew : ""}
         {`${item.label} (${item.value})`}
     </div>
 </Select>
