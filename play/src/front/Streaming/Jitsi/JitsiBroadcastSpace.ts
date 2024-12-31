@@ -1,12 +1,13 @@
 import debug from "debug";
 import pLimit from "p-limit";
+import * as Sentry from "@sentry/svelte";
 import { derived, get, Readable, Unsubscriber } from "svelte/store";
 import type JitsiConnection from "lib-jitsi-meet/types/hand-crafted/JitsiConnection";
 import { ForwardableStore } from "@workadventure/store-utils";
 import { RoomConnection } from "../../Connection/RoomConnection";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { liveStreamingEnabledStore } from "../../Stores/MegaphoneStore";
-import { BroadcastService, jitsiLoadingStore } from "../BroadcastService";
+import { BroadcastService } from "../BroadcastService";
 import { BroadcastSpace } from "../Common/BroadcastSpace";
 import { JITSI_DOMAIN, JITSI_MUC_DOMAIN, JITSI_XMPP_DOMAIN } from "../../Enum/EnvironmentVariable";
 import { SpaceInterface } from "../../Space/SpaceInterface";
@@ -112,7 +113,6 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
                                 console.error(e);
                             })
                             .finally(() => {
-                                jitsiLoadingStore.set(false);
                                 broadcastService.disconnectProvider(this.provider);
                             });
                     }
@@ -122,19 +122,14 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
                             // TODO: this notification is wrong. It should only be displayed on MEGAPHONE (and not
                             // on speaker zones)
                             notificationPlayingStore.playNotification(get(LL).notification.announcement(), "megaphone");
-                            // jitsiLoadingStore triggers the loading spinner
-                            // TODO: kill jitsiLoadingStore: it can be replaced with a notification from notificationPlayingStore
-                            jitsiLoadingStore.set(true);
                             this.conference = await this.joinJitsiConference(spaceName);
                             this.space.emitUpdateUser({
                                 jitsiParticipantId: this.conference.participantId,
                             });
-                            jitsiLoadingStore.set(false);
                         }
                     }).catch((e) => {
-                        // TODO : Handle the error and retry to join the conference
-                        jitsiLoadingStore.set(false);
                         console.error("Error while joining the conference", e);
+                        Sentry.captureException(e);
                     });
                 }
             })
@@ -160,7 +155,6 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
             }
 
             if (!jitsiConnection) {
-                jitsiLoadingStore.set(false);
                 throw new Error("Could not connect to Jitsi");
             }
 
@@ -247,7 +241,6 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
             })
             .finally(() => {
                 this.broadcastService.disconnectProvider(this.provider);
-                jitsiLoadingStore.set(false);
             });
         jitsiConferencesStore.delete(this.space.getName());
         //this.space.stopWatching(this.spaceFilter);

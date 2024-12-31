@@ -1,4 +1,3 @@
-import { writable } from "svelte/store";
 import debug from "debug";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { ConcatenateMapStore } from "@workadventure/store-utils";
@@ -6,8 +5,6 @@ import { RoomConnection } from "../Connection/RoomConnection";
 import { BroadcastSpace } from "./Common/BroadcastSpace";
 import { BroadcastConnection } from "./Common/BroadcastConnection";
 import { TrackWrapper } from "./Common/TrackWrapper";
-
-export const jitsiLoadingStore = writable<boolean>(false);
 
 const broadcastServiceLogger = debug("BroadcastService");
 
@@ -63,8 +60,6 @@ export class BroadcastService {
             this.broadcastSpaces = this.broadcastSpaces.filter((space) => space.space.getName() !== spaceNameSlugify);
             broadcastServiceLogger("leaveSpace", spaceNameSlugify);
         }
-
-        jitsiLoadingStore.set(false);
     }
 
     /**
