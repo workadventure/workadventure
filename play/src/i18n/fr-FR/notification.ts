@@ -7,6 +7,9 @@ const notification: DeepPartial<Translation["notification"]> = {
     chatRoom: "sur le salon",
     askToMuteMicrophone: "Puis-je couper votre micro?",
     askToMuteCamera: "Puis-je couper votre caméra?",
+    microphoneMuted: "Votre micro a été coupé par un modérateur",
+    cameraMuted: "Votre caméra a été coupée par un modérateur",
+    announcement: "Annonce",
     help: {
         title: "Accès aux notifications refusé",
         permissionDenied: "Permission refusée",

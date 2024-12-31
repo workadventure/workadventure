@@ -15,6 +15,8 @@ import { SpaceFilterInterface } from "../../Space/SpaceFilter/SpaceFilter";
 import { bindMuteEventsToSpace } from "../../Space/Utils/BindMuteEvents";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
+import { notificationPlayingStore } from "../../Stores/NotificationStore";
+import LL from "../../../i18n/i18n-svelte";
 import { jitsiConferencesStore } from "./JitsiConferencesStore";
 import { JitsiConferenceWrapper } from "./JitsiConferenceWrapper";
 import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
@@ -117,6 +119,11 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
                 } else {
                     limit(async () => {
                         if (this.conference === undefined) {
+                            // TODO: this notification is wrong. It should only be displayed on MEGAPHONE (and not
+                            // on speaker zones)
+                            notificationPlayingStore.playNotification(get(LL).notification.announcement(), "megaphone");
+                            // jitsiLoadingStore triggers the loading spinner
+                            // TODO: kill jitsiLoadingStore: it can be replaced with a notification from notificationPlayingStore
                             jitsiLoadingStore.set(true);
                             this.conference = await this.joinJitsiConference(spaceName);
                             this.space.emitUpdateUser({

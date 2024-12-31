@@ -6,8 +6,6 @@
     import MediaBox from "../../Video/MediaBox.svelte";
     import { myCameraStore, proximityMeetingStore } from "../../../Stores/MyMediaStore";
     import { myJitsiCameraStore, streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
-    import Loading from "../../Video/Loading.svelte";
-    import { jitsiLoadingStore } from "../../../Streaming/BroadcastService";
     import { highlightFullScreen, setHeightScreenShare } from "../../../Stores/ActionsCamStore";
 
     let camContainer: HTMLDivElement;
@@ -107,9 +105,6 @@
 <div class="presentation-layout flex flex-col-reverse md:flex-col pointer-events-none h-full w-full absolute">
     {#if $streamableCollectionStore.size > 0 || $myCameraStore || $myJitsiCameraStore}
         <div class="justify-end md:justify-center" bind:this={camContainer}>
-            {#if $jitsiLoadingStore}
-                <Loading />
-            {/if}
             {#if ($streamableCollectionStore.size > 0 && $proximityMeetingStore === true) || $myCameraStore || $myJitsiCameraStore}
                 <CamerasContainer />
             {/if}

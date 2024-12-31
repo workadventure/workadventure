@@ -9,8 +9,8 @@ class Menu {
 
     async openMapEditor(page: Page) {
         await page.getByTestId('map-menu').click({timeout: 30_000});
-        await page.getByTestId('map-editor').click();
-        await expect(await page.getByTestId('map-editor')).toBeHidden();
+        await page.getByRole('button', { name: 'Map editor' }).click();
+        await expect(page.getByRole('button', { name: 'Map editor' })).toBeHidden();
         // await expect(await page.getByRole('button', {name: 'toggle-map-editor'}).first()).toHaveClass(/border-top-light/);
     }
 

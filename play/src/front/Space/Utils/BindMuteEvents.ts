@@ -75,10 +75,11 @@ export function bindMuteEventsToSpace(space: SpaceInterface, spaceFilter: SpaceF
     // We can safely ignore the subscription because it will be automatically completed when the space is destroyed.
     // eslint-disable-next-line rxjs/no-ignored-subscription,svelte/no-ignored-unsubscribe
     space.observePrivateEvent("muteAudio").subscribe((event) => {
-        notificationPlayingStore.playNotification(get(LL).notification.askToMuteMicrophone(), "microphone-off.png");
         if (event.muteAudio.force) {
+            notificationPlayingStore.playNotification(get(LL).notification.microphoneMuted(), "microphone-off.png");
             requestedMicrophoneState.disableMicrophone();
         } else {
+            notificationPlayingStore.playNotification(get(LL).notification.askToMuteMicrophone(), "microphone-off.png");
             displayMuteDialog(event, space, spaceFilter);
         }
     });
@@ -86,10 +87,11 @@ export function bindMuteEventsToSpace(space: SpaceInterface, spaceFilter: SpaceF
     // We can safely ignore the subscription because it will be automatically completed when the space is destroyed.
     // eslint-disable-next-line rxjs/no-ignored-subscription,svelte/no-ignored-unsubscribe
     space.observePrivateEvent("muteVideo").subscribe((event) => {
-        notificationPlayingStore.playNotification(get(LL).notification.askToMuteCamera(), "camera-off.png");
         if (event.muteVideo.force) {
+            notificationPlayingStore.playNotification(get(LL).notification.cameraMuted(), "camera-off.png");
             requestedCameraState.disableWebcam();
         } else {
+            notificationPlayingStore.playNotification(get(LL).notification.askToMuteCamera(), "camera-off.png");
             displayMuteDialog(event, space, spaceFilter);
         }
     });

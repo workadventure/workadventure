@@ -8,6 +8,8 @@
     import { myCameraStore } from "../../Stores/MyMediaStore";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
     import { canvasWidth } from "../../Stores/CoWebsiteStore";
+    import { jitsiLoadingStore } from "../../Streaming/BroadcastService";
+    import Loading from "../Video/Loading.svelte";
 
     let isHightlighted = false;
     let isMobile: boolean;
@@ -88,6 +90,11 @@
             {/key}
         {/if}
     {/each}
+
+    {#if $jitsiLoadingStore}
+        <!-- TODO: move this to the notification area when we have a notification area -->
+        <Loading />
+    {/if}
 
     {#if $myCameraStore && !$myJitsiCameraStore}
         <div

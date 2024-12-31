@@ -1,4 +1,4 @@
-import {expect, test} from '@playwright/test';
+import {expect, test, webkit} from '@playwright/test';
 import {login} from './utils/roles';
 import Map from "./utils/map";
 // import { resetWamMaps } from './utils/map-editor/uploader';
@@ -6,6 +6,12 @@ import Map from "./utils/map";
 // import MapEditor from "./utils/mapeditor";
 // import AreaEditor from "./utils/map-editor/areaEditor";
 import {publicTestMapUrl} from "./utils/urls";
+import {resetWamMaps} from "./utils/map-editor/uploader";
+import menu from "./utils/menu";
+import Mapeditor from "./utils/mapeditor";
+import AreaEditor from "./utils/map-editor/areaEditor";
+import Menu from "./utils/menu";
+import {oidcAdminTagLogin} from "./utils/oidc";
 
 test.describe('Meeting actions test', () => {
 
@@ -109,13 +115,12 @@ test.describe('Meeting actions test', () => {
     //await page.evaluate(() => { localStorage.setItem('debug', '*'); });
     //await page.reload();
     await login(page, "Alice", 3);
-
-    // For the moment skip the map editor part because it's broken so we can't create the speaker zone
+    await oidcAdminTagLogin(page, false);
 
     // Open the map editor
     await menu.openMapEditor(page);
     // Create a new area
-    await MapEditor.openAreaEditor(page);
+    await Mapeditor.openAreaEditor(page);
     // Draw the area
     await AreaEditor.drawArea(page, {x: 0*32*1.5, y: 5}, {x: 9*32*1.5, y: 4*32*1.5});
     // Add a property Speaker zone to create new Jitsi meeting zone
@@ -126,7 +131,8 @@ test.describe('Meeting actions test', () => {
     await Menu.closeMapEditor(page);
 
     // Move user "Alice" to the new area
-    await Map.walkTo(page, 'ArrowRight', 2000);
+    await Map.walkTo(page, 'ArrowRight', 1000);
+    await Map.walkTo(page, 'ArrowUp', 2000);
 
     // Add a second user "Bob"
     const newBrowser = await browser.browserType().launch();
@@ -139,32 +145,28 @@ test.describe('Meeting actions test', () => {
     await Map.walkTo(userBob, 'ArrowUp', 2000);
 
     // The user in the bubble meeting should be visible
-    await expect(page.locator('#cameras-container .camera-box .jitsi-video')).toBeVisible({timeout: 10_000});
-    // The user in the bubble meeting should have action button
-    await expect(page.locator('#cameras-container .camera-box .jitsi-video .action-button')).toBeVisible({timeout: 10_000});
+    await page.locator('.video-media-box:has-text("Bob")').getByRole('button').first().click();
+    await page.getByRole('button', { name: 'Mute audio', exact: true }).click();
 
-    // Click on the action button of "Alice"
-    await page.click('#cameras-container .camera-box .jitsi-video .action-button#more-action');
-    // Click on the mute button
-    await page.click('#cameras-container .camera-box .jitsi-video .action-button.mute-audio-user');
 
-    // Check if "Bob" user receive the request to be metued
-    await expect(userBob.locator('.interact-menu')).toBeVisible({timeout: 10_000});
-    // Click on the accept button
-    await userBob.click('.interact-menu .accept-request');
-
+    // Check if "Bob" user receive the request to be muted
+    // Because Alice is admin, Bob is directly muted.
+    await expect(userBob.getByText("Your microphone was muted by a moderator")).toBeVisible();
+    await menu.expectMicrophoneOff(userBob);
+    
     // Check if the user has been muted
-    await expect(page.locator('#cameras-container .camera-box .jitsi-video .voice-meter-cam-off')).toBeVisible({timeout: 10_000});
+    await expect(page.getByLabel('Bob is muted.')).toBeVisible();
+
     // Click on the mute video button
-    await page.click('#cameras-container .camera-box .jitsi-video .action-button#mute-video-user');
+    await page.locator('.video-media-box:has-text("Bob")').getByRole('button').first().click();
+    await page.getByRole('button', { name: 'Mute video', exact: true }).click();
 
-    // Check if "Bob" user receive the request to be metued
-    await expect(userBob.locator('.interact-menu')).toBeVisible({timeout: 10_000});
-    // Click on the accept button
-    await userBob.click('.interact-menu .accept-request');
+    // Check if "Bob" user receive the request to be muted
+    // Because Alice is admin, Bob is directly muted.
+    await expect(userBob.getByText("Your camera was muted by a moderator")).toBeVisible();
 
     // Check if the user has been muted
-    await expect(page.locator('#cameras-container .camera-box .jitsi-video video')).toBeHidden({timeout: 10_000});
+    await expect(page.locator('.video-media-box:has-text("Bob") video')).toHaveClass(/w-0/);
 
     await page.close();
     await userBob.close();

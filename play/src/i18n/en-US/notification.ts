@@ -6,6 +6,9 @@ const notification: BaseTranslation = {
     chatRoom: "in the chat room",
     askToMuteMicrophone: "Can I mute your microphone?",
     askToMuteCamera: "Can I mute your camera?",
+    microphoneMuted: "Your microphone was muted by a moderator",
+    cameraMuted: "Your camera was muted by a moderator",
+    announcement: "Announcement",
     help: {
         title: "Notifications access denied",
         permissionDenied: "Permission denied",
