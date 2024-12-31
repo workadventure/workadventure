@@ -481,7 +481,7 @@
     class:animated={$bottomActionBarVisibilityStore}
     bind:this={mainHtmlDiv}
 >
-    <div class="bottom-action-bar tw-absolute">
+    <div class="bottom-action-bar tw-absolute screen-blocker">
         {#if $bottomActionBarVisibilityStore}
             <div
                 class="bottom-action-section tw-flex animate"

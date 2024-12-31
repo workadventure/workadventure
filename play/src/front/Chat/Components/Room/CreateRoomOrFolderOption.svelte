@@ -2,15 +2,16 @@
     import { openModal } from "svelte-modals";
     import LL from "../../../../i18n/i18n-svelte";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
-    import { ChatRoom } from "../../Connection/ChatConnection";
+    import { RoomFolder } from "../../Connection/ChatConnection";
+
     import CreateFolderModal from "./CreateFolderModal.svelte";
-    import CreateRoomModal from "./CreateRoomModal.svelte";
+    import CreateRoomModal from "./CreateRoomModal.svelte"; 
     import RoomOption from "./RoomMenu/RoomOption.svelte";
     import { IconDots, IconFolder, IconLogout,IconMessage } from "@wa-icons";
 
     export let parentID: string | undefined = undefined;
     export let parentName = "";
-    export let folder: ChatRoom | undefined;
+    export let folder: RoomFolder | undefined;
     let optionButtonRef: HTMLButtonElement | undefined = undefined;
     let hideFolderOptions = true;
 

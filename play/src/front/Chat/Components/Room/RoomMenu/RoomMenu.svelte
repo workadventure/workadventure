@@ -1,17 +1,27 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
     import { openModal } from "svelte-modals";
-    import { ChatRoom } from "../../../Connection/ChatConnection";
+    import {
+        ChatRoomMembershipManagement,
+        ChatRoomNotificationControl,
+        ChatRoomModeration,
+    } from "../../../Connection/ChatConnection";
     import { notificationPlayingStore } from "../../../../Stores/NotificationStore";
     import LL from "../../../../../i18n/i18n-svelte";
-    import InviteParticipantsModal from "../InviteParticipantsModal.svelte";
+    import ManageParticipantsModal from "../ManageParticipantsModal.svelte";
     import RoomOption from "./RoomOption.svelte";
-    import { IconLogout, IconUserPlus, IconMute, IconUnMute, IconDots } from "@wa-icons";
+    import { IconDots, IconLogout, IconUserEdit, IconMute, IconUnMute } from "@wa-icons";
 
-    export let room: ChatRoom;
+    export let room: ChatRoomMembershipManagement & ChatRoomNotificationControl & ChatRoomModeration;
     const areNotificationsMuted = room.areNotificationsMuted;
     let optionButtonRef: HTMLButtonElement | undefined = undefined;
     let hideOptions = true;
+
+    const hasPermissionToInvite = room.hasPermissionTo("invite");
+    const hasPermissionToKick = room.hasPermissionTo("kick");
+    const hasPermissionToBan = room.hasPermissionTo("ban");
+
+    $: shouldDisplayManageParticipantButton = $hasPermissionToInvite || $hasPermissionToKick || $hasPermissionToBan;
 
     onMount(() => {
         document.addEventListener("click", closeRoomOptionsOnClickOutside);
@@ -46,8 +56,8 @@
             .catch(() => console.error("Failed to leave room"));
     }
 
-    function openInviteParticipantsModal() {
-        openModal(InviteParticipantsModal, { room });
+    function openManageParticipantsModal() {
+        openModal(ManageParticipantsModal, { room });
     }
 
     function closeMenuAndSetMuteStatus() {
@@ -65,6 +75,7 @@
 </script>
 
 <button
+    data-testid="toggleRoomMenu"
     bind:this={optionButtonRef}
     on:click|preventDefault|stopPropagation={toggleRoomOptions}
     class="tw-m-0 tw-p-0 tw-flex tw-items-center tw-justify-center tw-h-7 tw-w-7 tw-invisible group-hover/chatItem:tw-visible hover:tw-bg-white/10 tw-rounded-lg"
@@ -77,11 +88,15 @@
     class:tw-absolute={optionButtonRef !== undefined}
     class:tw-hidden={hideOptions}
 >
-    <RoomOption
-        IconComponent={IconUserPlus}
-        title={$LL.chat.manageRoomUsers.roomOption()}
-        on:click={openInviteParticipantsModal}
-    />
+    {#if shouldDisplayManageParticipantButton}
+        <RoomOption
+            dataTestId="manageParticipantOption"
+            IconComponent={IconUserEdit}
+            title={$LL.chat.manageRoomUsers.roomOption()}
+            on:click={openManageParticipantsModal}
+        />
+    {/if}
+
     <RoomOption
         IconComponent={$areNotificationsMuted ? IconUnMute : IconMute}
         title={$areNotificationsMuted ? $LL.chat.roomMenu.unmuteRoom() : $LL.chat.roomMenu.muteRoom()}

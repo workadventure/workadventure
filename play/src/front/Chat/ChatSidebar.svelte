@@ -4,11 +4,18 @@
     import { enableUserInputsStore } from "../Stores/UserInputStore";
     import { mapEditorModeStore } from "../Stores/MapEditorStore";
     import { chatVisibilityStore, INITIAL_SIDEBAR_WIDTH } from "../Stores/ChatStore";
+    import { gameManager } from "../Phaser/Game/GameManager";
     import Chat from "./Components/Chat.svelte";
     import { IconX } from "@wa-icons";
 
     export const chatSidebarWidthStore = writable(INITIAL_SIDEBAR_WIDTH);
     let container: HTMLElement;
+
+    const gameScene = gameManager.getCurrentGameScene();
+
+    function reposition() {
+        gameScene.reposition();
+    }
 
     function closeChat() {
         chatVisibilityStore.set(false);
@@ -36,6 +43,7 @@
         document.onmouseup = () => {
             document.onmousemove = null;
             chatSidebarWidthStore.set(sideBarWidth);
+            reposition();
         };
     };
 
@@ -56,6 +64,7 @@
         document.addEventListener("touchend", () => {
             document.removeEventListener("touchmove", onTouchMove);
             chatSidebarWidthStore.set(sideBarWidth);
+            reposition();
         });
     };
 
@@ -95,8 +104,10 @@
         id="chat"
         data-testid="chat"
         transition:fly={{ duration: 200, x: -sideBarWidth }}
+        on:introend={reposition}
+        on:outroend={reposition}
         style="width: {sideBarWidth}px; max-width: {Math.min(sideBarWidth, document.documentElement.clientWidth)}px;"
-        class="chatWindow !tw-min-w-full sm:!tw-min-w-[360px] tw-bg-contrast/80 tw-backdrop-blur-md tw-p-0"
+        class="chatWindow !tw-min-w-full sm:!tw-min-w-[360px] tw-bg-contrast/80 tw-backdrop-blur-md tw-p-0 screen-blocker"
     >
         <div class="close-window tw-absolute -tw-right-[4.5rem] tw-top-2 tw-p-2 tw-bg-contrast/80 tw-rounded-2xl">
             <button
