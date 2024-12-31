@@ -19,7 +19,9 @@ export const searchChatMembersRule = () => {
         return [];
     }
 
-    async function searchWorldMembers(filterText: string) {
+    async function searchWorldMembers(
+        filterText: string
+    ): Promise<{ value: string; label: string; verified: boolean }[]> {
         try {
             const userProviderMerger = await userProviderMergerPromise;
             const chatUsersMap = get(userProviderMerger.usersByRoomStore);
@@ -29,7 +31,7 @@ export const searchChatMembersRule = () => {
             if (chatUsers === undefined) {
                 return [];
             }
-            return chatUsers.map((user) => ({ value: user.chatId, label: user.username ?? user.id }));
+            return chatUsers.map((user) => ({ value: user.chatId, label: user.username ?? user.id, verified: true }));
         } catch (error) {
             console.error(error);
         }
