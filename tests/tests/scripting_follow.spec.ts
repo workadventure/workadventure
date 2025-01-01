@@ -29,9 +29,7 @@ test.describe('Scripting follow functions', () => {
 
         await Map.teleportToPosition(page2, 32, 32);
 
-        await expect(page.locator(`.cameras-container .other-cameras .media-container`).nth(0)).toBeVisible({
-            timeout: 10000
-        });
+        await expect(page.getByText('Bob')).toBeVisible();
 
         const waitForFollowPromise = evaluateScript(page, async () => {
             return new Promise<void>((resolve) => {
@@ -92,7 +90,7 @@ test.describe('Scripting follow functions', () => {
             });
         });
 
-        await page2.getByRole('button', { name: 'Unfollow' }).click();
+        await page2.getByRole('button', { name: 'Stop following' }).click();
 
         await waitForUnfollowPromise;
         await page2.close();

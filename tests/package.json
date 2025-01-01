@@ -5,7 +5,7 @@
     "@types/dockerode": "^3.3.11",
     "@typescript-eslint/eslint-plugin": "^5.40.1",
     "@typescript-eslint/parser": "^5.40.1",
-    "@workadventure/iframe-api-typings": "^1.23.4",
+    "@workadventure/iframe-api-typings": "^1.25.6",
     "adm-zip": "^0.5.10",
     "axios": "^1.7.4",
     "dockerode": "^3.3.4",
