@@ -41,11 +41,11 @@ import {
 import { selectedRoomStore } from "../../Stores/ChatStore";
 import LL from "../../../../i18n/i18n-svelte";
 import { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
+import { MATRIX_ADMIN_USER, MATRIX_DOMAIN } from "../../../Enum/EnvironmentVariable";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 import { MatrixSecurity, matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity";
 import { MatrixRoomFolder } from "./MatrixRoomFolder";
 import { chatUserFactory, mapMatrixPresenceToAvailabilityStatus } from "./MatrixChatUser";
-import { MATRIX_ADMIN_USER, MATRIX_DOMAIN } from "../../../Enum/EnvironmentVariable";
 
 const CLIENT_NOT_INITIALIZED_ERROR_MSG = "MatrixClient not yet initialized";
 export const defaultWoka =
@@ -393,19 +393,20 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         }
     }
 
-    private async onRoomNameEvent(room: Room): Promise<void> {
+    private onRoomNameEvent(room: Room): void {
         const { roomId, name } = room;
-        const roomInConnection = await this.findRoomOrFolder(roomId);
 
-        if (roomInConnection) {
-            roomInConnection.name.set(name);
-            return;
-        }
-        try {
-            await this.manageRoomOrFolder(room);
-        } catch (e) {
-            console.error("Failed to manage : ", e);
-        }
+        this.findRoomOrFolder(roomId)
+        .then((roomInConnection) => {
+            if (roomInConnection) {
+                roomInConnection.name.set(name);
+                return;
+            }
+            
+            return this.manageRoomOrFolder(room);
+        }).catch((e) => {
+            console.error("Failed to manage room or folder : ", e);
+        });
     }
     private onRoomStateEvent(event: MatrixEvent): void {
         if (!this.client) {
@@ -439,14 +440,15 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             return;
         }
 
-        this.moveRoomToParentFolder(room, parentID);
+        this.moveRoomToParentFolder(room, parentID).catch((e) => {
+            console.error("Failed to move room to parent folder : ", e);
+        });
     }
-    private async onClientEventRoom(room: Room) {
-        try {
-            await this.manageRoomOrFolder(room);
-        } catch (e) {
-            console.error("Failed to manage : ", e);
-        }
+    private  onClientEventRoom(room: Room) {
+            this.manageRoomOrFolder(room).catch((e) => {
+                console.error("Failed to manage : ", e);
+            });
+
     }
 
 
@@ -485,13 +487,13 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         const parentRoomID = this.getFirstParentRoomID(room);
 
         if (parentRoomID) {
-            const isAdded = this.tryAddRoomToParentFolder(room, parentRoomID);
+            const isAdded = await this.tryAddRoomToParentFolder(room, parentRoomID);
 
             if (!isAdded && !room.isSpaceRoom()) {
                 this.createAndAddNewRootRoom(room);
             }
         } else {
-            await this.handleOrphanRoom(room);
+            this.handleOrphanRoom(room);
         }
     }
     private isUserMemberOrInvited(room: Room): boolean {
@@ -535,14 +537,14 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         return null;
     }
 
-    private async addRoomToParentFolder(room: Room, parentFolder: MatrixRoomFolder, isSpaceRoom: boolean): Promise<void> {
+    private addRoomToParentFolder(room: Room, parentFolder: MatrixRoomFolder, isSpaceRoom: boolean): Promise<void> {
         if (isSpaceRoom) {
             this.roomFolders.delete(room.roomId);
         } else {
             parentFolder.roomList.set(room.roomId, new MatrixChatRoom(room));
         }
     }
-    private async handleOrphanRoom(room: Room): Promise<void> {
+    private async handleOrphanRoom(room: Room): void {
         if (room.isSpaceRoom()) {
             await this.createAndAddNewRootFolder(room);
         } else {
@@ -572,7 +574,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
     private async createAndAddNewRootFolder(room: Room): Promise<void> {
         const newFolder = new MatrixRoomFolder(room);
-        this.addRoomToFolder(room, newFolder, true);
+        await this.addRoomToFolder(room, newFolder, true);
 
         newFolder
             .getRoomsIdInNode()
@@ -594,8 +596,10 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         }
         return newRoom;
     }
-    private async onClientEventDeleteRoom(roomId: string) {
-        await this.deleteRoom(roomId);
+    private onClientEventDeleteRoom(roomId: string) {
+        this.deleteRoom(roomId).catch((e) => {
+            console.error("Failed to delete room : ", e);
+        });
     }
     private async deleteRoom(roomId: string) {
         const isRootRoom = this.roomList.delete(roomId);

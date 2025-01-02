@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/svelte";
 import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
-import { Readable, Writable, get, writable, Unsubscriber, readable } from "svelte/store";
+import { Readable, Writable, get, writable, Unsubscriber } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import { Subscription } from "rxjs";
 import { AvailabilityStatus } from "@workadventure/messages";

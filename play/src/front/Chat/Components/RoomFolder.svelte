@@ -9,9 +9,8 @@
     import CreateRoomOrFolderOption from "./Room/CreateRoomOrFolderOption.svelte";
     import ShowMore from "./ShowMore.svelte";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
-    import { IconChevronDown, IconChevronUp } from "@wa-icons";
+    import { IconChevronUp } from "@wa-icons";
 
-    //TODO : revoir ce composant comparer avec master ...
     export let rootFolder: boolean;
     export let folder: RoomFolder;
     $: ({ name, folders, invitations, rooms, id } = folder);
