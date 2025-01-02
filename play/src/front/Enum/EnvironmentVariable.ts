@@ -77,6 +77,8 @@ export const PUBLIC_MAP_STORAGE_PREFIX = env.PUBLIC_MAP_STORAGE_PREFIX;
 //Chat ENV
 export const EMBEDLY_KEY = env.EMBEDLY_KEY;
 export const MATRIX_PUBLIC_URI = env.MATRIX_PUBLIC_URI;
+export const MATRIX_ADMIN_USER = env.MATRIX_ADMIN_USER;
+export const MATRIX_DOMAIN = env.MATRIX_DOMAIN;
 
 export const ENABLE_CHAT = env.ENABLE_CHAT;
 

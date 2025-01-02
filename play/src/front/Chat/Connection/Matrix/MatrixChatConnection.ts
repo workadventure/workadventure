@@ -45,6 +45,7 @@ import { MatrixChatRoom } from "./MatrixChatRoom";
 import { MatrixSecurity, matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity";
 import { MatrixRoomFolder } from "./MatrixRoomFolder";
 import { chatUserFactory, mapMatrixPresenceToAvailabilityStatus } from "./MatrixChatUser";
+import { MATRIX_ADMIN_USER, MATRIX_DOMAIN } from "../../../Enum/EnvironmentVariable";
 
 const CLIENT_NOT_INITIALIZED_ERROR_MSG = "MatrixClient not yet initialized";
 export const defaultWoka =
@@ -210,7 +211,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         } catch (error) {
             this.connectionStatus.set("OFFLINE");
             console.error(error);
-            Sentry.captureMessage("Failed to init Matrix client");
+            Sentry.captureMessage(`Failed to init Matrix client : ${error}`);
         }
     }
 
@@ -408,25 +409,20 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     }
     private onRoomStateEvent(event: MatrixEvent): void {
         if (!this.client) {
-            console.log(">>>>>@ Client is not initialized. Returning...");
             return;
         }
 
         const eventType = event.getType();
         if (eventType !== "m.space.child") {
-            //console.log(`>>>>>Event type is not 'm.space.child'. Event type: ${eventType}. Returning...`);
             return;
         }
-        console.log(">>>>@ debut ");
         const roomID = event.getStateKey();
         if (!roomID) {
-            console.log(">>>>>@Room ID is missing in the event. Returning...");
             return;
         }
 
         const room = this.client.getRoom(roomID);
         if (!room) {
-            console.log(`>>>>>@ Room with ID ${roomID} not found. Returning...`);
             return;
         }
 
@@ -435,17 +431,14 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
         const parentID = event.getRoomId();
         if (!parentID) {
-            console.log(">>>>>@ Parent ID is missing in the event. Returning...");
             return;
         }
 
         const parentRoom = this.client.getRoom(parentID);
         if (!parentRoom) {
-            console.log(`>>>>>@ Parent room with ID ${parentID} not found. Returning...`);
             return;
         }
 
-        console.log(`>>>>>@ Moving room with ID ${roomID} to parent folder with ID ${parentID}.`);
         this.moveRoomToParentFolder(room, parentID);
     }
     private async onClientEventRoom(room: Room) {
@@ -457,72 +450,39 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     }
 
 
-    //TODO : voir ce que donne le get room apres le 1er async et prendre en compte les events : seulement apres le 1er sync 
     private async moveRoomToParentFolder(room: Room, parentID: string): Promise<void> {
         const isSpaceRoom = room.isSpaceRoom();
-        console.log(
-            ">@1",
-            Array.from(this.roomFolders.values()).map((folder) => ({
-                name: get(folder.name),
-                id: folder.id,
-            }))
-        );
+        const parentFolder = await this.findParentFolder(parentID);
 
-        for (const [, folder] of this.roomFolders) {
-            if (folder.id === parentID) {
-                if (isSpaceRoom) {
-                    const newFolder = new MatrixRoomFolder(room);
-                    folder.folderList.set(room.roomId, newFolder);
-                    //TODO : try/catch
-                    await newFolder.init();
-                } else {
-                    folder.roomList.set(room.roomId, new MatrixChatRoom(room));
-                }
-                break;
-            }
+        if (!parentFolder) {
+            return;
+        }
 
+        await this.addRoomToFolder(room, parentFolder, isSpaceRoom);
+    }
+    private async addRoomToFolder(room: Room, targetFolder: MatrixRoomFolder, isSpaceRoom: boolean): Promise<void> {
+        if (isSpaceRoom) {
+            const newFolder = new MatrixRoomFolder(room);
+            targetFolder.folderList.set(room.roomId, newFolder);
             try {
-                const node = await folder.getNode(parentID);
-                console.log(
-                    ">@2",
-                    Array.from(folder.folderList.values()).map((folder) => ({
-                        name: get(folder.name),
-                        id: folder.id,
-                    }))
-                );
-
-                if (node && node instanceof MatrixRoomFolder) {
-                    console.log(">@ on a retrouvé le bon node ...");
-                    if (isSpaceRoom) {
-                        //Creer les folders en 2 temps 1) new 2init
-                        const newFolder = new MatrixRoomFolder(room);
-                        node.folderList.set(room.roomId, newFolder);
-                        await newFolder.init();
-                    } else {
-                        node.roomList.set(room.roomId, new MatrixChatRoom(room));
-                    }
-                    break;
-                } else {
-                    console.log(">@ pas de parent trouvé  :");
-                    //Récuperer le parent avec un get room
-                }
+                await newFolder.init();
             } catch (e) {
-                console.log(">@ error dans getNode  :", e);
+                console.error("Failed to init new folder : ", e);
+                Sentry.captureMessage(`Failed to init new folder : ${e}`);
             }
+        } else {
+            targetFolder.roomList.set(room.roomId, new MatrixChatRoom(room));
         }
     }
     private async manageRoomOrFolder(room: Room): Promise<void> {
+
         const { roomId } = room;
-        //TODO: si on trouve la room juste mettre a jour les infos
         if (await this.findRoomOrFolder(roomId)) {
-            // return;
+            return;
         }
-
+        
         if (!this.isUserMemberOrInvited(room)) return;
-
         const parentRoomID = this.getFirstParentRoomID(room);
-
-        console.log(`roomParentID ${parentRoomID} for room ${room.name}`);
 
         if (parentRoomID) {
             const isAdded = this.tryAddRoomToParentFolder(room, parentRoomID);
@@ -547,23 +507,40 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         const parentRoomsIDs = this.getParentRoomID(room);
         return parentRoomsIDs.length > 0 ? parentRoomsIDs[0] : undefined;
     }
-
     private async tryAddRoomToParentFolder(room: Room, parentRoomID: string): Promise<boolean> {
-        //TODO : try /catch
-        const isSpaceRoom = room.isSpaceRoom();
+        try {
+            const isSpaceRoom = room.isSpaceRoom();
+            const parentFolder = await this.findParentFolder(parentRoomID);
+
+            if (!parentFolder) {
+                return false;
+            }
+
+            await this.addRoomToParentFolder(room, parentFolder, isSpaceRoom);
+            return true;
+
+        } catch (e) {
+            console.error("Error in tryAddRoomToParentFolder:", e);
+            return false;
+        }
+    }
+
+    private async findParentFolder(parentRoomID: string): Promise<MatrixRoomFolder | null> {
         for (const [, folder] of this.roomFolders) {
             const parentFolder = folder.id === parentRoomID ? folder : await folder.getNode(parentRoomID);
             if (parentFolder && parentFolder instanceof MatrixRoomFolder) {
-                if (isSpaceRoom) {
-                    this.roomFolders.delete(room.roomId);
-                } else {
-                    parentFolder.roomList.set(room.roomId, new MatrixChatRoom(room));
-                }
-                return true;
+                return parentFolder;
             }
         }
+        return null;
+    }
 
-        return false;
+    private async addRoomToParentFolder(room: Room, parentFolder: MatrixRoomFolder, isSpaceRoom: boolean): Promise<void> {
+        if (isSpaceRoom) {
+            this.roomFolders.delete(room.roomId);
+        } else {
+            parentFolder.roomList.set(room.roomId, new MatrixChatRoom(room));
+        }
     }
     private async handleOrphanRoom(room: Room): Promise<void> {
         if (room.isSpaceRoom()) {
@@ -595,8 +572,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
     private async createAndAddNewRootFolder(room: Room): Promise<void> {
         const newFolder = new MatrixRoomFolder(room);
-        await newFolder.init();
-        this.roomFolders.set(room.roomId, newFolder);
+        this.addRoomToFolder(room, newFolder, true);
 
         newFolder
             .getRoomsIdInNode()
@@ -643,10 +619,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     }
 
     private async onRoomEventMembership(room: Room, membership: string, prevMembership: string | undefined) {
-        //TODO : voir si on peut gérer coté room
-        console.log(">>>>>>", room.name, room.getMyMembership(), room.isSpaceRoom(), room.roomId);
         const { roomId } = room;
-        // const existingMatrixChatRoom = this.roomList.has(roomId) || this.roomFolders.has(roomId);
 
         if (membership !== prevMembership) {
             if (membership === KnownMembership.Join) {
@@ -672,17 +645,16 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                     .getLiveTimeline()
                     .getState(EventTimeline.FORWARDS)
                     ?.getStateEvents("m.room.member", userId);
-                //TODO : remplacer par var env
-                const ADMIN_CHAT_ID = "@admin:matrix.workadventure.localhost"; //`@${MATRIX_ADMIN_USER}:${MATRIX_DOMAIN}`;
 
-                console.log(">>>>> room invitation : ", inviteEvent?.getSender());
+                const ADMIN_CHAT_ID = `@${MATRIX_ADMIN_USER}:${MATRIX_DOMAIN}`;
+
                 if (inviteEvent?.getSender() === ADMIN_CHAT_ID) {
                     await client.joinRoom(room.roomId);
                 }
 
                 return;
             } catch (e) {
-                console.error("Failed to joinRoom ...");
+                console.error("Failed to joinRoom : ", e);
                 this.createAndAddNewRootRoom(room);
                 return;
             }

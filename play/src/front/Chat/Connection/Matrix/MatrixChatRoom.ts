@@ -142,7 +142,7 @@ export class MatrixChatRoom
             })
             .catch((error) => {
                 console.error(error);
-                Sentry.captureMessage("Failed to init Matrix room messages");
+                Sentry.captureMessage(`Failed to init Matrix room messages : ${error}`);
             });
 
         //Necessary to keep matrix event content for local event deletions after initialization

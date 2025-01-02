@@ -68,8 +68,9 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
 
     async init() {
         try {
-            await this.joinRoomDeferred.promise;
-            await this.refreshFolderHierarchy();
+            if(get(this.myMembership) === KnownMembership.Join){
+                await this.refreshFolderHierarchy();
+            }
             this.loadRoomsAndFolderPromise.resolve();
         } catch (e) {
             this.loadRoomsAndFolderPromise.reject(e);
@@ -212,9 +213,11 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
         });
     }
 
-    protected override onRoomMyMembership(room: Room) {
+    protected override async onRoomMyMembership(room: Room) {
         if (room.getMyMembership() === KnownMembership.Join) {
             this.joinRoomDeferred.resolve();
+            await this.refreshFolderHierarchy();
+
         }
         super.onRoomMyMembership(room);
     }
