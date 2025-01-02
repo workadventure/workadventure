@@ -153,6 +153,7 @@
                 {:else}
                     <a
                         type="button"
+                        id="submenu-login-btn"
                         class="btn light tw-min-w-[220px] tw-flex tw-justify-center tw-items-center"
                         href="/login"
                         on:click={() => analyticsClient.login()}

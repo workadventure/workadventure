@@ -218,6 +218,7 @@
                     {$LL.externalModule.discord.explainText()}
                 </p>
                 <button
+                    id="discordBridgeLoginBtn"
                     on:click={getQrCodeUrl}
                     class="tw-w-full tw-p-2 tw-bg-secondary-800  tw-text-white tw-no-underline tw-rounded-md tw-flex tw-flex-row tw-items-center tw-gap-3 tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white"
                 >
@@ -246,6 +247,7 @@
                 {$LL.externalModule.discord.qrCodeRegenerate()}
             </button>
             <button
+                id="logWithToken"
                 on:click={() => (needManualToken = true)}
                 class="tw-w-full tw-p-2 tw-bg-secondary-800 tw-text-white tw-no-underline tw-rounded-md tw-text-center tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white tw-flex tw-flex-row tw-items-center"
             >
@@ -263,6 +265,7 @@
                     <label for="discordToken" class="tw-text-white tw-mb-2">Discord Token</label>
                     <input type="text" class="tw-w-full tw-mb-0" bind:value={manualDiscordToken} id="discordToken" />
                     <button
+                        id="sendToken"
                         on:click={sendDiscordToken}
                         class="tw-w-full tw-p-2 tw-bg-secondary-800  tw-text-white tw-no-underline tw-rounded-md tw-text-center tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white tw-flex tw-flex-row tw-items-center"
                     >
@@ -349,6 +352,7 @@
         {#if bridgeConnected && guilds.length > 0}
             <div class="tw-sticky tw-bottom-0 flex items-center justify-center">
                 <button
+                    id="saveSync"
                     class="tw-w-full tw-p-2 tw-bg-secondary-800  tw-text-white tw-no-underline tw-rounded-md tw-text-center tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white tw-flex tw-flex-row tw-items-center"
                     on:click={bridgeServers}
                 >

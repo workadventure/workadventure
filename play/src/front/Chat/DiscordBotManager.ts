@@ -28,6 +28,9 @@ export class DiscordBotManager {
             return;
         }
         try {
+            //try to get existing direct room with the bot
+            // const existingDirectRoom = this.chatConnection.getDirectRoom(DISCORD_BOT_ID);
+
             const discordChatRoom = await this.chatConnection.createDirectRoom(DISCORD_BOT_ID);
             if (discordChatRoom instanceof MatrixChatRoom) {
                 this.discordBotRoom = discordChatRoom;
