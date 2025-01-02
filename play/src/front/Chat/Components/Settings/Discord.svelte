@@ -294,6 +294,7 @@
 
                     <button
                         class="tw-text-gray-400 hover:tw-text-white tx-relative"
+                        data-testid="discord-settings-button"
                         bind:this={buttonRef}
                         on:click|preventDefault|stopPropagation={toggleDropdown}
                     >
