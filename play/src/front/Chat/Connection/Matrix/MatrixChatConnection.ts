@@ -397,16 +397,17 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         const { roomId, name } = room;
 
         this.findRoomOrFolder(roomId)
-        .then((roomInConnection) => {
-            if (roomInConnection) {
-                roomInConnection.name.set(name);
-                return;
-            }
-            
-            return this.manageRoomOrFolder(room);
-        }).catch((e) => {
-            console.error("Failed to manage room or folder : ", e);
-        });
+            .then((roomInConnection) => {
+                if (roomInConnection) {
+                    roomInConnection.name.set(name);
+                    return;
+                }
+
+                return this.manageRoomOrFolder(room);
+            })
+            .catch((e) => {
+                console.error("Failed to manage room or folder : ", e);
+            });
     }
     private onRoomStateEvent(event: MatrixEvent): void {
         if (!this.client) {
@@ -444,13 +445,11 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             console.error("Failed to move room to parent folder : ", e);
         });
     }
-    private  onClientEventRoom(room: Room) {
-            this.manageRoomOrFolder(room).catch((e) => {
-                console.error("Failed to manage : ", e);
-            });
-
+    private onClientEventRoom(room: Room) {
+        this.manageRoomOrFolder(room).catch((e) => {
+            console.error("Failed to manage : ", e);
+        });
     }
-
 
     private async moveRoomToParentFolder(room: Room, parentID: string): Promise<void> {
         const isSpaceRoom = room.isSpaceRoom();
@@ -477,12 +476,11 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         }
     }
     private async manageRoomOrFolder(room: Room): Promise<void> {
-
         const { roomId } = room;
         if (await this.findRoomOrFolder(roomId)) {
             return;
         }
-        
+
         if (!this.isUserMemberOrInvited(room)) return;
         const parentRoomID = this.getFirstParentRoomID(room);
 
@@ -493,7 +491,11 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 this.createAndAddNewRootRoom(room);
             }
         } else {
-            this.handleOrphanRoom(room);
+            try {
+                await this.handleOrphanRoom(room);
+            } catch (e) {
+                console.error("Failed to handle orphan room : ", e);
+            }
         }
     }
     private isUserMemberOrInvited(room: Room): boolean {
@@ -518,9 +520,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 return false;
             }
 
-            await this.addRoomToParentFolder(room, parentFolder, isSpaceRoom);
+            this.addRoomToParentFolder(room, parentFolder, isSpaceRoom);
             return true;
-
         } catch (e) {
             console.error("Error in tryAddRoomToParentFolder:", e);
             return false;
@@ -528,23 +529,27 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     }
 
     private async findParentFolder(parentRoomID: string): Promise<MatrixRoomFolder | null> {
-        for (const [, folder] of this.roomFolders) {
-            const parentFolder = folder.id === parentRoomID ? folder : await folder.getNode(parentRoomID);
-            if (parentFolder && parentFolder instanceof MatrixRoomFolder) {
-                return parentFolder;
-            }
+        const folderPromises = Array.from(this.roomFolders.values()).map((folder) =>
+            folder.id === parentRoomID ? folder : folder.getNode(parentRoomID)
+        );
+
+        const folders = await Promise.all(folderPromises);
+        const parentFolder = folders.find((folder) => folder && folder instanceof MatrixRoomFolder);
+
+        if (parentFolder && parentFolder instanceof MatrixRoomFolder) {
+            return parentFolder;
         }
         return null;
     }
 
-    private addRoomToParentFolder(room: Room, parentFolder: MatrixRoomFolder, isSpaceRoom: boolean): Promise<void> {
+    private addRoomToParentFolder(room: Room, parentFolder: MatrixRoomFolder, isSpaceRoom: boolean): void {
         if (isSpaceRoom) {
             this.roomFolders.delete(room.roomId);
         } else {
             parentFolder.roomList.set(room.roomId, new MatrixChatRoom(room));
         }
     }
-    private async handleOrphanRoom(room: Room): void {
+    private async handleOrphanRoom(room: Room): Promise<void> {
         if (room.isSpaceRoom()) {
             await this.createAndAddNewRootFolder(room);
         } else {
@@ -574,7 +579,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
     private async createAndAddNewRootFolder(room: Room): Promise<void> {
         const newFolder = new MatrixRoomFolder(room);
-        await this.addRoomToFolder(room, newFolder, true);
+        this.roomFolders.set(newFolder.id, newFolder);
+        await newFolder.init();
 
         newFolder
             .getRoomsIdInNode()
@@ -622,50 +628,49 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         if (currentRoom && currentRoom === roomId) selectedRoomStore.set(undefined);
     }
 
-    private async onRoomEventMembership(room: Room, membership: string, prevMembership: string | undefined) {
+    private onRoomEventMembership(room: Room, membership: string, prevMembership: string | undefined) {
         const { roomId } = room;
 
         if (membership !== prevMembership) {
             if (membership === KnownMembership.Join) {
                 this.roomList.delete(roomId);
                 this.roomFolders.delete(roomId);
-                try {
-                    await this.manageRoomOrFolder(room);
-                } catch (e) {
+                this.manageRoomOrFolder(room).catch((e) => {
                     console.error("Failed to manageRoomOrFolder :", e);
-                }
+                });
                 return;
             }
         }
 
         if (membership === KnownMembership.Invite) {
-            try {
-                const client = await this.clientPromise;
-                if (!client) throw new Error("1");
-                const userId = client.getSafeUserId();
-                if (!userId) throw new Error(" ");
+            this.clientPromise
+                .then((client) => {
+                    const userId = client.getSafeUserId();
+                    if (!userId) throw new Error("userId not found");
 
-                const inviteEvent = room
-                    .getLiveTimeline()
-                    .getState(EventTimeline.FORWARDS)
-                    ?.getStateEvents("m.room.member", userId);
+                    const inviteEvent = room
+                        .getLiveTimeline()
+                        .getState(EventTimeline.FORWARDS)
+                        ?.getStateEvents("m.room.member", userId);
 
-                const ADMIN_CHAT_ID = `@${MATRIX_ADMIN_USER}:${MATRIX_DOMAIN}`;
+                    const ADMIN_CHAT_ID = `@${MATRIX_ADMIN_USER}:${MATRIX_DOMAIN}`;
 
-                if (inviteEvent?.getSender() === ADMIN_CHAT_ID) {
-                    await client.joinRoom(room.roomId);
-                }
-
-                return;
-            } catch (e) {
-                console.error("Failed to joinRoom : ", e);
-                this.createAndAddNewRootRoom(room);
-                return;
-            }
+                    if (inviteEvent?.getSender() === ADMIN_CHAT_ID) {
+                        client.joinRoom(room.roomId).catch((e) => {
+                            console.error("Failed to joinRoom : ", e);
+                            this.createAndAddNewRootRoom(room);
+                        });
+                    }
+                })
+                .catch((e) => {
+                    console.error("Failed to get client : ", e);
+                });
         }
 
         if (membership === KnownMembership.Leave || membership === KnownMembership.Ban) {
-            await this.deleteRoom(roomId);
+            this.deleteRoom(roomId).catch((e) => {
+                console.error("Failed to delete room : ", e);
+            });
             return;
         }
     }
