@@ -292,8 +292,8 @@ const chat: BaseTranslation = {
     folderMenu: {
         leaveFolder: {
             label: "Leave Folder",
-            notification: "You have left the folder"
-        }
+            notification: "You have left the folder",
+        },
     },
     e2ee: {
         configure: "Configure",

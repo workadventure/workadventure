@@ -486,7 +486,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
         if (parentRoomID) {
             const isAdded = await this.tryAddRoomToParentFolder(room, parentRoomID);
-
             if (!isAdded && !room.isSpaceRoom()) {
                 this.createAndAddNewRootRoom(room);
             }
@@ -504,11 +503,11 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         if (membershipStatus === KnownMembership.Invite || membershipStatus === KnownMembership.Join) {
             return true;
         }
-
         return false;
     }
     private getFirstParentRoomID(room: Room): string | undefined {
         const parentRoomsIDs = this.getParentRoomID(room);
+
         return parentRoomsIDs.length > 0 ? parentRoomsIDs[0] : undefined;
     }
     private async tryAddRoomToParentFolder(room: Room, parentRoomID: string): Promise<boolean> {
@@ -732,7 +731,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             const result = await this.client?.createRoom(
                 this.mapCreateRoomOptionsToMatrixCreateFolderOptions(roomOptions)
             );
-
             await this.waitForNextSync();
 
             if (roomOptions.parentSpaceID && result) {
@@ -740,7 +738,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                     await this.addRoomToSpace(roomOptions.parentSpaceID, result.room_id);
 
                     await this.waitForNextSync();
-
                     return result;
                 } catch {
                     this.roomFolders.delete(result.room_id);
@@ -757,7 +754,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             throw this.handleMatrixError(error);
         }
     }
-
     private handleMatrixError(error: unknown) {
         if (error instanceof MatrixError) {
             error.data.error;

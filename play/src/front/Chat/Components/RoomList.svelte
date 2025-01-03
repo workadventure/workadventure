@@ -314,14 +314,11 @@
                                 <Room {room} />
                             </ShowMore>
                         </div>
-                        {/if}
-                        <!--roomBySpace-->
-                        {#each Array.from($roomFolders.values()) as rootRoomFolder (rootRoomFolder.id)}
-                            <RoomFolder
-                                folder={rootRoomFolder}
-                                rootFolder={true}
-                            />
-                        {/each}
+                    {/if}
+                    <!--roomBySpace-->
+                    {#each Array.from($roomFolders.values()) as rootRoomFolder (rootRoomFolder.id)}
+                        <RoomFolder folder={rootRoomFolder} rootFolder={true} />
+                    {/each}
                 {/if}
             </div>
             {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}

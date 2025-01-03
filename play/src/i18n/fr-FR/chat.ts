@@ -293,8 +293,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     folderMenu: {
         leaveFolder: {
             label: "Quitter le dossier",
-            notification: "Vous avez quitté le dossier"
-        }
+            notification: "Vous avez quitté le dossier",
+        },
     },
     e2ee: {
         configure: "Configuré",

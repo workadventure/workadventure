@@ -73,17 +73,14 @@
     {#if isOpen}
         <div class="tw-flex tw-flex-col tw-overflow-auto">
             {#if displayRoomInvitations}
-            <div class="tw-flex tw-flex-col tw-overflow-auto tw-pl-3 tw-pr-4 tw-pb-3">
-                <ShowMore items={$invitations} maxNumber={8} idKey="id" let:item={room}>
-                    <RoomInvitation {room} />
-                </ShowMore>
-            </div>
+                <div class="tw-flex tw-flex-col tw-overflow-auto tw-pl-3 tw-pr-4 tw-pb-3">
+                    <ShowMore items={$invitations} maxNumber={8} idKey="id" let:item={room}>
+                        <RoomInvitation {room} />
+                    </ShowMore>
+                </div>
             {/if}
             {#each Array.from($folders.values()) as folder (folder.id)}
-                <svelte:self
-                    {folder}
-                    rootFolder={false}
-                />
+                <svelte:self {folder} rootFolder={false} />
             {/each}
             <ShowMore items={filteredRoom} maxNumber={8} idKey="id" let:item={room} showNothingToDisplayMessage={false}>
                 <Room {room} />

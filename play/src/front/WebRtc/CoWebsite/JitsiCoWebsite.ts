@@ -172,7 +172,6 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
 
                     const mergedConfig = mergeConfig(this.jitsiConfig);
 
-
                     if (
                         !userConnectedTags.includes("admin") &&
                         (!this.jitsiRoomAdminTag || !userConnectedTags.includes(this.jitsiRoomAdminTag))

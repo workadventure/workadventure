@@ -214,7 +214,6 @@ export class MatrixChatRoom
         this.myMembership.set(room.getMyMembership());
     }
 
-
     private onRoomNewMember(event: MatrixEvent, state: RoomState, member: RoomMember) {
         this.members.update((members) => [
             ...members,

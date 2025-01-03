@@ -5,9 +5,9 @@
     import { RoomFolder } from "../../Connection/ChatConnection";
 
     import CreateFolderModal from "./CreateFolderModal.svelte";
-    import CreateRoomModal from "./CreateRoomModal.svelte"; 
+    import CreateRoomModal from "./CreateRoomModal.svelte";
     import RoomOption from "./RoomMenu/RoomOption.svelte";
-    import { IconDots, IconFolder, IconLogout,IconMessage } from "@wa-icons";
+    import { IconDots, IconFolder, IconLogout, IconMessage } from "@wa-icons";
 
     export let parentID: string | undefined = undefined;
     export let parentName = "";
@@ -59,12 +59,12 @@
     class:tw-absolute={optionButtonRef !== undefined}
     class:tw-hidden={hideFolderOptions}
 >
-<RoomOption
-dataTestId={`openCreateRoomModalButton${parentName}`}
-IconComponent={IconMessage}
-title={$LL.chat.createRoom.title()}
-on:click={closeMenuAndOpenCreateRoom}
-/>
+    <RoomOption
+        dataTestId={`openCreateRoomModalButton${parentName}`}
+        IconComponent={IconMessage}
+        title={$LL.chat.createRoom.title()}
+        on:click={closeMenuAndOpenCreateRoom}
+    />
     <RoomOption
         dataTestId={`openCreateFolderModalButton${parentName}`}
         IconComponent={IconFolder}

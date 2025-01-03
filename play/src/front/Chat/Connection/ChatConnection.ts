@@ -64,7 +64,6 @@ export interface ChatRoomMembershipManagement {
     readonly members: Readable<ChatRoomMember[]>;
     readonly joinRoom: () => Promise<void>;
     readonly leaveRoom: () => Promise<void>;
-    
 }
 
 export interface ChatRoomNotificationControl {
@@ -120,7 +119,7 @@ export type ChatMessageContent = {
 export const historyVisibilityOptions = ["world_readable", "joined", "invited"] as const;
 export type historyVisibility = (typeof historyVisibilityOptions)[number];
 
-export interface RoomFolder extends ChatRoom , ChatRoomMembershipManagement {
+export interface RoomFolder extends ChatRoom, ChatRoomMembershipManagement {
     id: string;
     name: Readable<string>;
     rooms: Readable<ChatRoom[]>;
