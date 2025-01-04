@@ -5,7 +5,7 @@ const DEFAULT_PASSPHRASE = "defaultPassphrase";
 
 class ChatUtils {
   public async openChat(page: Page) {
-    await page.click("button.chat-btn");
+    await page.getByTestId('chat-btn').click();
   }
 
   public async openCreateRoomDialog(page: Page, folderName = "") {
