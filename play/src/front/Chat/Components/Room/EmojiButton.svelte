@@ -12,7 +12,14 @@
     function togglePicker() {
         // Lazy instantiation of the emoji picker. It takes ~250ms to load so we don't want to load it if we don't need it.
         if (!picker) {
-            picker = getChatEmojiPicker();
+            picker = getChatEmojiPicker(
+                // FIXME: The position is not working as expected after migration to the new design.
+                // We should probably migrate to a supported Emoji picker once we migrate to Svelte 5
+                {
+                    bottom: "0",
+                    right: "0",
+                }
+            );
             picker.on("emoji", (selection: { emoji: string; name: string }) => {
                 dispatch("change", selection.emoji);
             });
