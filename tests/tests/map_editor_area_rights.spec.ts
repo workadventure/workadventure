@@ -134,12 +134,15 @@ test.describe("Map editor area with rights @oidc", () => {
     await page.goto(Map.url("empty"));
     await login(page, "test", 2, "en-US", project.name === "mobilechromium");
 
-    await Menu.openMapEditor(page);
+    // In the new design, you cannot access the map menu if the user is a basic user
+    await expect(page.getByTestId('map-menu')).toBeHidden();
+    /*await Menu.openMapEditor(page);
 
+    await page.pause();
     const entityEditorButton = await page.locator(
       "section.side-bar-container .side-bar .tool-button button#EntityEditor"
     );
-    await expect(entityEditorButton).not.toBeAttached();
+    await expect(entityEditorButton).not.toBeAttached();*/
   });
 
   test("Area with restricted write access : Trying to read an object", async ({
@@ -153,13 +156,6 @@ test.describe("Map editor area with rights @oidc", () => {
     await login(page, "test", 2, "en-US", project.name === "mobilechromium");
     await oidcAdminTagLogin(page, false);
 
-    // Second browser with member user trying to read the object
-    const newBrowser = await browser.browserType().launch({});
-    const page2 = await newBrowser.newPage();
-    await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
-    await oidcMemberTagLogin(page2);
-
     // Add area with admin rights
     await Menu.openMapEditor(page);
     await AreaAccessRights.openAreaEditorAndAddAreaWithRights(
@@ -172,6 +168,14 @@ test.describe("Map editor area with rights @oidc", () => {
     );
     await oidcLogout(page, false);
 
+    // Second browser with member user trying to read the object
+    const newBrowser = await browser.newContext();
+    const page2 = await newBrowser.newPage();
+    await page2.goto(Map.url("empty"));
+    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
+    await oidcMemberTagLogin(page2);
+
+
     // Expect user in other page to not have the right
     // to read the object
     await EntityEditor.moveAndClick(
@@ -179,9 +183,8 @@ test.describe("Map editor area with rights @oidc", () => {
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
-    await expect(
-      page2.locator(".actions-menu .actions button").nth(0)
-    ).not.toBeAttached();
+    await expect(page2.getByRole('button', { name: 'Open Link' })).toBeHidden();
+
     await page2.close();
     await newBrowser.close();
   });
@@ -197,13 +200,6 @@ test.describe("Map editor area with rights @oidc", () => {
     await login(page, "test", 3, "en-US", project.name === "mobilechromium");
     await oidcAdminTagLogin(page, false);
 
-    // Second browser with member user trying to read the object
-    const newBrowser = await browser.browserType().launch({});
-    const page2 = await newBrowser.newPage();
-    await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
-    await oidcMemberTagLogin(page2);
-
     // Add area with admin rights
     await Menu.openMapEditor(page);
     await AreaAccessRights.openAreaEditorAndAddAreaWithRights(
@@ -216,6 +212,13 @@ test.describe("Map editor area with rights @oidc", () => {
     );
     await oidcLogout(page, false);
 
+    // Second browser with member user trying to read the object
+    const newBrowser = await browser.newContext();
+    const page2 = await newBrowser.newPage();
+    await page2.goto(Map.url("empty"));
+    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
+    await oidcMemberTagLogin(page2);
+
     // Expect user in other page to not have the right
     // to read the object
     await EntityEditor.moveAndClick(
@@ -223,9 +226,8 @@ test.describe("Map editor area with rights @oidc", () => {
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
-    await expect(
-      page2.locator(".actions-menu .actions button").nth(0)
-    ).toContainText("Open Link");
+    await expect(page2.getByRole('button', { name: 'Open Link' })).toBeVisible();
+
     await page2.close();
     await newBrowser.close();
   });
@@ -241,13 +243,6 @@ test.describe("Map editor area with rights @oidc", () => {
     await login(page, "test", 3, "en-US", project.name === "mobilechromium");
     await oidcAdminTagLogin(page, false);
 
-    // Second browser with member user trying to read the object
-    const newBrowser = await browser.browserType().launch({});
-    const page2 = await newBrowser.newPage();
-    await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
-    await oidcMemberTagLogin(page2);
-
     // Add area with admin rights
     await Menu.openMapEditor(page);
     await AreaAccessRights.openAreaEditorAndAddAreaWithRights(
@@ -255,7 +250,15 @@ test.describe("Map editor area with rights @oidc", () => {
       ["admin"],
       ["admin"]
     );
+    await Menu.closeMapEditor(page);
     await oidcLogout(page, false);
+
+    // Second browser with member user trying to read the object
+    const newBrowser = await browser.newContext();
+    const page2 = await newBrowser.newPage();
+    await page2.goto(Map.url("empty"));
+    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
+    await oidcMemberTagLogin(page2);
 
     // From browser 2
     // Select entity and push it into the map
@@ -296,13 +299,6 @@ test.describe("Map editor area with rights @oidc", () => {
     await login(page, "test", 3, "en-US", project.name === "mobilechromium");
     await oidcAdminTagLogin(page, false);
 
-    // Second browser with member user trying to read the object
-    const newBrowser = await browser.browserType().launch({});
-    const page2 = await newBrowser.newPage();
-    await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
-    await oidcMemberTagLogin(page2);
-
     // Add area with admin rights
     await Menu.openMapEditor(page);
     await AreaAccessRights.openAreaEditorAndAddAreaWithRights(
@@ -310,7 +306,15 @@ test.describe("Map editor area with rights @oidc", () => {
       ["member"],
       []
     );
+    await Menu.closeMapEditor(page);
     await oidcLogout(page, false);
+
+    // Second browser with member user trying to read the object
+    const newBrowser = await browser.newContext();
+    const page2 = await newBrowser.newPage();
+    await page2.goto(Map.url("empty"));
+    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
+    await oidcMemberTagLogin(page2);
 
     // From browser 2
     // Select entity and push it into the map
@@ -351,13 +355,6 @@ test.describe("Map editor area with rights @oidc", () => {
     await login(page, "test", 3, "en-US", project.name === "mobilechromium");
     await oidcAdminTagLogin(page, false);
 
-    // Second browser with member user trying to read the object
-    const newBrowser = await browser.browserType().launch({});
-    const page2 = await newBrowser.newPage();
-    await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
-    await oidcMemberTagLogin(page2);
-
     // Add area with admin rights
     await Menu.openMapEditor(page);
     await AreaAccessRights.openAreaEditorAndAddAreaWithRights(
@@ -370,6 +367,13 @@ test.describe("Map editor area with rights @oidc", () => {
     );
     await oidcLogout(page, false);
 
+    // Second browser with member user trying to read the object
+    const newBrowser = await browser.newContext();
+    const page2 = await newBrowser.newPage();
+    await page2.goto(Map.url("empty"));
+    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
+    await oidcMemberTagLogin(page2);
+
     // From browser 2
     // Try to remove entity and click on it to
     // check if removed or not
@@ -381,15 +385,15 @@ test.describe("Map editor area with rights @oidc", () => {
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
-    await Menu.closeMapEditor(page2);
+    // Note: we need to use the "close button" in the tools bar because the other close button is minified.
+    await page2.getByRole('button', { name: 'open tool CloseMapEditor' }).click();
+    //await Menu.closeMapEditor(page2);
     await EntityEditor.moveAndClick(
       page2,
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
-    await expect(
-      page2.locator(".actions-menu .actions button").nth(0)
-    ).toContainText("Open Link");
+    await expect(page2.getByRole('button', { name: 'Open Link' })).toBeVisible();
     await page2.close();
     await newBrowser.close();
   });
@@ -405,13 +409,6 @@ test.describe("Map editor area with rights @oidc", () => {
     await login(page, "test", 3, "en-US", project.name === "mobilechromium");
     await oidcAdminTagLogin(page, false);
 
-    // Second browser with member user trying to read the object
-    const newBrowser = await browser.browserType().launch({});
-    const page2 = await newBrowser.newPage();
-    await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
-    await oidcMemberTagLogin(page2);
-
     // Add area with admin rights
     await Menu.openMapEditor(page);
     await AreaAccessRights.openAreaEditorAndAddAreaWithRights(
@@ -424,6 +421,13 @@ test.describe("Map editor area with rights @oidc", () => {
     );
     await oidcLogout(page, false);
 
+    // Second browser with member user trying to read the object
+    const newBrowser = await browser.newContext();
+    const page2 = await newBrowser.newPage();
+    await page2.goto(Map.url("empty"));
+    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
+    await oidcMemberTagLogin(page2);
+
     // From browser 2
     // Try to remove entity and click on it to
     // check if removed or not
@@ -435,16 +439,16 @@ test.describe("Map editor area with rights @oidc", () => {
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
-    await Menu.closeMapEditor(page2);
+    // Note: we need to use the "close button" in the tools bar because the other close button is minified.
+    await page2.getByRole('button', { name: 'open tool CloseMapEditor' }).click();
+    //await Menu.closeMapEditor(page2);
     await EntityEditor.moveAndClick(
       page2,
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
 
-    await expect(
-      page2.locator(".actions-menu .actions button").nth(0)
-    ).not.toBeAttached();
+    await expect(page2.getByRole('button', { name: 'Open Link' })).toBeHidden();
     await page2.close();
     await newBrowser.close();
   });
@@ -460,13 +464,6 @@ test.describe("Map editor area with rights @oidc", () => {
     await login(page, "test", 3, "en-US", project.name === "mobilechromium");
     await oidcAdminTagLogin(page, false);
 
-    // Second browser with member user trying to read the object
-    const newBrowser = await browser.browserType().launch({});
-    const page2 = await newBrowser.newPage();
-    await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
-    await oidcMemberTagLogin(page2);
-
     // Add area with admin rights
     await Menu.openMapEditor(page);
     await AreaAccessRights.openAreaEditorAndAddAreaWithRights(
@@ -479,6 +476,13 @@ test.describe("Map editor area with rights @oidc", () => {
     );
     await oidcLogout(page, false);
 
+    // Second browser with member user trying to read the object
+    const newBrowser = await browser.newContext();
+    const page2 = await newBrowser.newPage();
+    await page2.goto(Map.url("empty"));
+    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
+    await oidcMemberTagLogin(page2);
+
     // From browser 2
     // Try to remove entity and click on it to
     // check if removed or not
@@ -490,16 +494,16 @@ test.describe("Map editor area with rights @oidc", () => {
       AreaAccessRights.mouseCoordinatesToClickOnEntityOutsideArea.x,
       AreaAccessRights.mouseCoordinatesToClickOnEntityOutsideArea.y
     );
-    await Menu.closeMapEditor(page2);
+    // Note: we need to use the "close button" in the tools bar because the other close button is minified.
+    await page2.getByRole('button', { name: 'open tool CloseMapEditor' }).click();
+    //await Menu.closeMapEditor(page2);
     await EntityEditor.moveAndClick(
       page2,
       AreaAccessRights.mouseCoordinatesToClickOnEntityOutsideArea.x,
       AreaAccessRights.mouseCoordinatesToClickOnEntityOutsideArea.y
     );
 
-    await expect(
-      page2.locator(".actions-menu .actions button").nth(0)
-    ).toContainText("Open Link");
+    await expect(page2.getByRole('button', { name: 'Open Link' })).toBeVisible();
     await page2.close();
     await newBrowser.close();
   });
@@ -520,12 +524,13 @@ test.describe("Map editor area with rights @oidc", () => {
     await page.getByTestId("personalAreaPropertyData").click();
     await page.getByTestId("allowedTags").fill("member");
     await page.press("body", "Enter");
+    await Menu.closeMapEditor(page);
     await oidcLogout(page, false);
 
     await page.close();
 
     // Second browser with member user trying to read the object
-    const newBrowser = await browser.browserType().launch({});
+    const newBrowser = await browser.newContext();
     const page2 = await newBrowser.newPage();
     await page2.goto(Map.url("empty"));
     await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
@@ -578,12 +583,13 @@ test.describe("Map editor area with rights @oidc", () => {
     await page.getByTestId("personalAreaPropertyData").click();
     await page.getByTestId("allowedTags").fill("member");
     await page.press("body", "Enter");
+    await Menu.closeMapEditor(page);
     await oidcLogout(page, false);
 
     await page.close();
 
     // Second browser with member user trying to read the object
-    const newBrowser = await browser.browserType().launch({});
+    const newBrowser = await browser.newContext();
     const page2 = await newBrowser.newPage();
     await page2.goto(Map.url("empty"));
     await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");

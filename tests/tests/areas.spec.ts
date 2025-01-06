@@ -59,9 +59,9 @@ test.describe('Areas', () => {
         });
         await Menu.expectButtonState(page, "music-button", "normal");
         await page.getByTestId('music-button').click();
-        await expect(page.getByText('Change audio volume')).toBeVisible();
+        await expect(page.getByRole('slider')).toBeVisible();
         await page.getByTestId('music-button').click();
-        await expect(page.getByText('Change audio volume')).toBeHidden();
+        await expect(page.getByRole('slider')).toBeHidden();
 
         // Enable audio area blocking
         await Menu.openMenu(page, false);

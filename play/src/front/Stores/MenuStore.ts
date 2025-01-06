@@ -362,9 +362,9 @@ export const helpTextDisabledStore = derived(
 );
 
 export const mapEditorMenuVisibleStore = derived(
-    [mapEditorActivated, mapManagerActivated],
-    ([$mapEditorActivated, $mapManagerActivated]) => {
-        return $mapEditorActivated && $mapManagerActivated;
+    [mapEditorActivated, mapManagerActivated, mapEditorActivatedForThematics],
+    ([$mapEditorActivated, $mapManagerActivated, $mapEditorActivatedForThematics]) => {
+        return ($mapEditorActivated || $mapEditorActivatedForThematics) && $mapManagerActivated;
     }
 );
 export const backOfficeMenuVisibleStore = userHasAccessToBackOfficeStore;

@@ -218,10 +218,6 @@
                 <ClaimPersonalAreaDialogBox />
             {/if}
 
-            {#if $mapEditorAskToClaimPersonalAreaStore}
-                <ClaimPersonalAreaDialogBox />
-            {/if}
-
             {#if $mapExplorationObjectSelectedStore}
                 <ObjectDetails />
             {/if}
