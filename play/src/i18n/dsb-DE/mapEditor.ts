@@ -115,10 +115,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             exitMapStartAreaName: "Startowy wobceŕk",
         },
         youtubeProperties: {
-            label: "Youtube-wideo wótcyniś",
-            description: "Youtube-wideo wótcyniś, gaž stupijośo nutś.",
-            error: "Prošu zapodaś płaćiwy Youtube-URL",
-            disabled: "Youtube-wótcynjenje je deaktiwěrowane.",
+            label: "YouTube-wideo wótcyniś",
+            description: "YouTube-wideo wótcyniś, gaž stupijośo nutś.",
+            error: "Prošu zapodaś płaćiwy YouTube-URL",
+            disabled: "YouTube-wótcynjenje je deaktiwěrowane.",
         },
         googleDocsProperties: {
             label: "Google Docs wótcyniś",

@@ -71,32 +71,38 @@ const chat: DeepPartial<Translation["chat"]> = {
             klaxoon: {
                 title: "Klaxoon",
                 description: "Pósćel Klaxoon-naprašowanje do chata!",
-                error: "Prošu zapodaj płaćiwu Klaxoon URL",
             },
             youtube: {
-                title: "Youtube",
-                description: "Pósćel Youtube video do chata!",
-                error: "Prošu zapodaj płaćiwu Youtube URL",
+                title: "YouTube",
+                description: "Pósćel YouTube video do chata!",
             },
             googleDocs: {
                 title: "Google Docs",
                 description: "Pósćel Google dokument do chata!",
-                error: "Prošu zapodaj płaćiwu Google Docs URL",
             },
             googleSlides: {
                 title: "Google Slides",
                 description: "Pósćel Google slide do chata!",
-                error: "Prošu zapodaj płaćiwu Google Slides URL",
             },
             googleSheets: {
                 title: "Google Sheets",
                 description: "Pósćel Google sheet do chata!",
-                error: "Prošu zapodaj płaćiwu Google Sheets URL",
             },
             eraser: {
                 title: "Eraser",
                 description: "Pósćel Eraser-taflu do chata!",
-                error: "Prošu zapodaj płaćiwu Eraser-URL",
+            },
+            googleDrive: {
+                title: "Google Drive",
+                description: "Pósćel Google Drive dokument do chata!",
+            },
+            excalidraw: {
+                title: "Excalidraw",
+                description: "Pósćel Excalidraw-taflu do chata!",
+            },
+            cards: {
+                title: "Karty",
+                description: "Pósćel kartu do chata!",
             },
             weblink: {
                 error: "Prošu zapodaj płaćiwu URL",

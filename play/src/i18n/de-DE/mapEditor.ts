@@ -128,7 +128,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultStartArea: "Standard-Startbereich",
         },
         youtubeProperties: {
-            label: "Youtube-Video öffnen",
+            label: "YouTube-Video öffnen",
             description: "YouTube-Video innerhalb von WorkAdventure oder in einem neuen Tab öffnen.",
             error: "Bitte geben Sie eine gültige YouTube-URL ein",
             disabled: "YouTube-Integration ist deaktiviert.",

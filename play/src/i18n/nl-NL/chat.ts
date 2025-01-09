@@ -80,32 +80,38 @@ const chat: DeepPartial<Translation["chat"]> = {
             klaxoon: {
                 title: "Klaxoon",
                 description: "Stuur ingebedde klaxoon in de chat!",
-                error: "Voer een geldige Klaxoon-URL in",
             },
             youtube: {
                 title: "YouTube",
                 description: "Stuur een ingebedde YouTube-video in de chat!",
-                error: "Voer een geldige YouTube-URL in",
             },
             googleDocs: {
                 title: "Google Docs",
                 description: "Stuur ingebedde Google Docs in de chat!",
-                error: "Voer een geldige Google Docs-URL in",
             },
             googleSlides: {
                 title: "Google Slides",
                 description: "Stuur ingebedde Google Slides in de chat!",
-                error: "Voer een geldige Google Slides-URL in",
             },
             googleSheets: {
                 title: "Google Sheets",
                 description: "Stuur ingebedde Google Sheets in de chat!",
-                error: "Voer een geldige Google Sheets-URL in",
             },
             eraser: {
                 title: "Eraser",
                 description: "Stuur ingebedde Eraser in de chat!",
-                error: "Voer een geldige Eraser-URL in",
+            },
+            googleDrive: {
+                title: "Google Drive",
+                description: "Stuur ingebedde Google Drive in de chat!",
+            },
+            excalidraw: {
+                title: "Excalidraw",
+                description: "Stuur ingebedde Excalidraw in de chat!",
+            },
+            cards: {
+                title: "Kaarten",
+                description: "Stuur ingebedde kaarten in de chat!",
             },
             weblink: {
                 error: "Voer een geldige URL in",

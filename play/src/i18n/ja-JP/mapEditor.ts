@@ -129,10 +129,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultStartArea: "デフォルトの入口エリア",
         },
         youtubeProperties: {
-            label: "Youtube ビデオを開く",
-            description: "WorkAdventure 内で Youtube ビデオを開くか、新しいタブとして開きます。",
-            error: "有効な Youtube の URL を入力してください。",
-            disabled: "Youtube との統合は無効です。",
+            label: "YouTube ビデオを開く",
+            description: "WorkAdventure 内で YouTube ビデオを開くか、新しいタブとして開きます。",
+            error: "有効な YouTube の URL を入力してください。",
+            disabled: "YouTube との統合は無効です。",
         },
         googleDocsProperties: {
             label: "Google ドキュメントを開く",

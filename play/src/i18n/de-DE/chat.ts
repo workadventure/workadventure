@@ -72,32 +72,38 @@ const chat: DeepPartial<Translation["chat"]> = {
             klaxoon: {
                 title: "Klaxoon",
                 description: "Senden Sie eine Klaxoon-Umfrage in den Chat!",
-                error: "Die Klaxoon-Umfrage ist nicht gültig",
             },
             youtube: {
                 title: "Youtube",
                 description: "Senden Sie ein Youtube-Video in den Chat!",
-                error: "Die Youtube-URL ist nicht gültig",
             },
             googleDocs: {
                 title: "Google Docs",
                 description: "Senden Sie ein Google Docs-Dokument in den Chat!",
-                error: "Die Google Docs-URL ist nicht gültig",
             },
             googleSlides: {
                 title: "Google Slides",
                 description: "Senden Sie eine Google Slides-Präsentation in den Chat!",
-                error: "Die Google Slides-URL ist nicht gültig",
             },
             googleSheets: {
                 title: "Google Sheets",
                 description: "Senden Sie ein Google Sheets-Dokument in den Chat!",
-                error: "Die Google Sheets-URL ist nicht gültig",
             },
             eraser: {
                 title: "Eraser",
                 description: "Senden Sie ein Eraser-Board in den Chat!",
-                error: "Die Eraser-URL ist nicht gültig",
+            },
+            googleDrive: {
+                title: "Google Drive",
+                description: "Senden Sie eine Datei aus Google Drive in den Chat!",
+            },
+            excalidraw: {
+                title: "Excalidraw",
+                description: "Senden Sie ein Excalidraw in den Chat!",
+            },
+            cards: {
+                title: "Karten",
+                description: "Senden Sie Karten in den Chat!",
             },
             weblink: {
                 error: "Die URL ist nicht gültig",
