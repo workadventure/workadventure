@@ -1,3 +1,17 @@
+<script context="module" lang="ts">
+    // Create interface for the property
+    export interface ApplicationProperty {
+        name: string;
+        img: string;
+        title: string;
+        description: string;
+        link: string;
+        placeholder: string;
+        regexUrl: string | undefined;
+        targetEmbedableUrl: string | undefined;
+    }
+</script>
+
 <script lang="ts">
     import { onDestroy } from "svelte";
     import { writable } from "svelte/store";
@@ -23,16 +37,6 @@
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import ApplicationFormWraper from "./Application/ApplicationFormWraper.svelte";
     import { IconCircleX, IconMoodSmile, IconSend, IconSquarePlus } from "@wa-icons";
-
-    // Create interface for the property
-    interface ApplicationProperty {
-        name: string;
-        img: string;
-        title: string;
-        description: string;
-        link: string;
-        placeholder: string;
-    }
 
     export let room: ChatRoom;
 
@@ -212,36 +216,42 @@
         let description: string;
         let img: string;
         let name: string;
+        let regexUrl: string | undefined;
+        let targetEmbedableUrl: string | undefined;
         switch (subtype) {
-            case "youtube":
+            case "youtube": {
                 name = defautlNativeIntegrationAppName.YOUTUBE;
                 placeholder = "https://www.youtube.com/watch?v=Y9ubBWf5w20";
                 title = $LL.chat.form.application.youtube.title();
                 description = $LL.chat.form.application.youtube.description();
                 img = youtubeSvg;
                 break;
-            case "klaxoon":
+            }
+            case "klaxoon": {
                 name = defautlNativeIntegrationAppName.KLAXOON;
                 placeholder = "https://app.klaxoon.com/";
                 title = $LL.chat.form.application.klaxoon.title();
                 description = $LL.chat.form.application.klaxoon.description();
                 img = klaxoonSvg;
                 break;
-            case "googleDrive":
+            }
+            case "googleDrive": {
                 name = defautlNativeIntegrationAppName.GOOGLE_DRIVE;
                 placeholder = "https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview";
                 title = $LL.chat.form.application.googleDrive.title();
                 description = $LL.chat.form.application.googleDrive.description();
                 img = googleDriveSvg;
                 break;
-            case "googleDocs":
+            }
+            case "googleDocs": {
                 name = defautlNativeIntegrationAppName.GOOGLE_DOCS;
                 placeholder = "https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit";
                 title = $LL.chat.form.application.googleDocs.title();
                 description = $LL.chat.form.application.googleDocs.description();
                 img = googleDocsSvg;
                 break;
-            case "googleSheets":
+            }
+            case "googleSheets": {
                 name = defautlNativeIntegrationAppName.GOOGLE_SHEETS;
                 placeholder =
                     "https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit";
@@ -249,7 +259,8 @@
                 description = $LL.chat.form.application.googleSheets.description();
                 img = googleSheetsSvg;
                 break;
-            case "googleSlides":
+            }
+            case "googleSlides": {
                 name = defautlNativeIntegrationAppName.GOOGLE_SLIDES;
                 placeholder =
                     "https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit";
@@ -257,29 +268,44 @@
                 description = $LL.chat.form.application.googleSlides.description();
                 img = googleSlidesSvg;
                 break;
-            case "eraser":
+            }
+            case "eraser": {
                 name = defautlNativeIntegrationAppName.ERASER;
                 placeholder = "https://app.eraser.io/workspace/ExSd8Z4wPsaqMMgTN4VU";
                 title = $LL.chat.form.application.eraser.title();
                 description = $LL.chat.form.application.eraser.description();
                 img = eraserSvg;
                 break;
-            case "excalidraw":
+            }
+            case "excalidraw": {
                 name = defautlNativeIntegrationAppName.EXCALIDRAW;
                 placeholder = "https://excalidraw.workadventu.re/";
                 title = $LL.chat.form.application.excalidraw.title();
                 description = $LL.chat.form.application.excalidraw.description();
                 img = excalidrawSvg;
                 break;
-            case "cards":
+            }
+            case "cards": {
                 name = defautlNativeIntegrationAppName.CARDS;
                 placeholder = "https://member.workadventu.re?tenant=<your cards tenant>&learning=<Your cards learning>";
                 title = $LL.chat.form.application.cards.title();
                 description = $LL.chat.form.application.cards.description();
                 img = cardsPng;
                 break;
-            default:
-                throw new Error(`Unknown application type: ${subtype}`);
+            }
+            default: {
+                const app = connectionManager.applications.find((app) => app.name === subtype);
+                if (app == undefined) throw new Error(`Application ${subtype} not found`);
+
+                name = app.name;
+                placeholder = app.description ?? "";
+                title = app.name;
+                description = app.description ?? "";
+                img = app.image ?? "";
+                regexUrl = app.regexUrl;
+                targetEmbedableUrl = app.targetUrl;
+                break;
+            }
         }
         return {
             name,
@@ -288,6 +314,8 @@
             description,
             img,
             link: "",
+            regexUrl,
+            targetEmbedableUrl,
         };
     }
 
@@ -341,13 +369,14 @@
     <div class="tw-flex tw-w-full tw-flex-none tw-items-center tw-bg-contrast/50 tw-rounded-t-2xl">
         <div class="tw-flex tw-flex-wrap tw-w-full tw-justify-center tw-items-center tw-p-2 tw-gap-2">
             <button
-                class="tw-p-2 tw-m-0 tw-flex tw-flex-col tw-w-36 tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-2xl tw-gap-2"
+                class="tw-p-2 tw-m-0 tw-flex tw-flex-col tw-w-36 tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-2xl tw-gap-2 disabled:tw-opacity-50"
                 on:click={() => openLinkForm("youtube")}
+                disabled={!connectionManager.youtubeToolActivated}
             >
                 <img draggable="false" class="tw-w-8" src={youtubeSvg} alt="info icon" />
                 <h2 class="tw-text-sm tw-p-0 tw-m-0">{$LL.chat.form.application.youtube.title()}</h2>
                 <p
-                    class="tw-text-xs tw-p-0 tw-m-0 tw-h-8 tw-w-full tw-whitespace-nowrap tw-overflow-hidden tw-overflow-ellipsis tw-text-gray-400"
+                    class="tw-text-xs tw-p-0 tw-m-0 tw-h-12 tw-w-full tw-overflow-hidden tw-overflow-ellipsis tw-text-gray-400"
                 >
                     {connectionManager.youtubeToolActivated
                         ? $LL.chat.form.application.youtube.description()
@@ -356,13 +385,14 @@
             </button>
 
             <button
-                class="tw-p-2 tw-m-0 tw-flex tw-flex-col tw-w-36 tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-2xl tw-gap-2"
+                class="tw-p-2 tw-m-0 tw-flex tw-flex-col tw-w-36 tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-2xl tw-gap-2 disabled:tw-opacity-50"
                 on:click={() => openLinkForm("klaxoon")}
+                disabled={!connectionManager.klaxoonToolActivated}
             >
                 <img draggable="false" class="tw-w-8" src={klaxoonSvg} alt="info icon" />
                 <h2 class="tw-text-sm tw-p-0 tw-m-0">{$LL.chat.form.application.klaxoon.title()}</h2>
                 <p
-                    class="tw-text-xs tw-p-0 tw-m-0 tw-h-8 tw-w-full tw-whitespace-nowrap tw-overflow-hidden tw-overflow-ellipsis tw-text-gray-400"
+                    class="tw-text-xs tw-p-0 tw-m-0 tw-h-12 tw-w-full tw-overflow-hidden tw-overflow-ellipsis tw-text-gray-400"
                 >
                     {connectionManager.klaxoonToolActivated
                         ? $LL.chat.form.application.klaxoon.description()
@@ -371,13 +401,14 @@
             </button>
 
             <button
-                class="tw-p-2 tw-m-0 tw-flex tw-flex-col tw-w-36 tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-2xl tw-gap-2"
+                class="tw-p-2 tw-m-0 tw-flex tw-flex-col tw-w-36 tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-2xl tw-gap-2 disabled:tw-opacity-50"
                 on:click={() => openLinkForm("googleSheets")}
+                disabled={!connectionManager.googleSheetsToolActivated}
             >
                 <img draggable="false" class="tw-w-8" src={googleSheetsSvg} alt="info icon" />
                 <h2 class="tw-text-sm tw-p-0 tw-m-0">{$LL.chat.form.application.googleSheets.title()}</h2>
                 <p
-                    class="tw-text-xs tw-p-0 tw-m-0 tw-h-8 tw-w-full tw-whitespace-nowrap tw-overflow-hidden tw-overflow-ellipsis tw-text-gray-400"
+                    class="tw-text-xs tw-p-0 tw-m-0 tw-h-12 tw-w-full tw-overflow-hidden tw-overflow-ellipsis tw-text-gray-400"
                 >
                     {connectionManager.googleSheetsToolActivated
                         ? $LL.chat.form.application.googleSheets.description()
@@ -386,13 +417,14 @@
             </button>
 
             <button
-                class="tw-p-2 tw-m-0 tw-flex tw-flex-col tw-w-36 tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-2xl tw-gap-2"
+                class="tw-p-2 tw-m-0 tw-flex tw-flex-col tw-w-36 tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-2xl tw-gap-2 disabled:tw-opacity-50"
                 on:click={() => openLinkForm("googleDocs")}
+                disabled={!connectionManager.googleDocsToolActivated}
             >
                 <img draggable="false" class="tw-w-8" src={googleDocsSvg} alt="info icon" />
                 <h2 class="tw-text-sm tw-p-0 tw-m-0">{$LL.chat.form.application.googleDocs.title()}</h2>
                 <p
-                    class="tw-text-xs tw-p-0 tw-m-0 tw-h-8 tw-w-full tw-whitespace-nowrap tw-overflow-hidden tw-overflow-ellipsis tw-text-gray-400"
+                    class="tw-text-xs tw-p-0 tw-m-0 tw-h-12 tw-w-full tw-overflow-hidden tw-overflow-ellipsis tw-text-gray-400"
                 >
                     {connectionManager.googleDocsToolActivated
                         ? $LL.chat.form.application.googleDocs.description()
@@ -401,13 +433,14 @@
             </button>
 
             <button
-                class="tw-p-2 tw-m-0 tw-flex tw-flex-col tw-w-36 tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-2xl tw-gap-2"
+                class="tw-p-2 tw-m-0 tw-flex tw-flex-col tw-w-36 tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-2xl tw-gap-2 disabled:tw-opacity-50"
                 on:click={() => openLinkForm("googleSlides")}
+                disabled={!connectionManager.googleSlidesToolActivated}
             >
                 <img draggable="false" class="tw-w-8" src={googleSlidesSvg} alt="info icon" />
                 <h2 class="tw-text-sm tw-p-0 tw-m-0">{$LL.chat.form.application.googleSlides.title()}</h2>
                 <p
-                    class="tw-text-xs tw-p-0 tw-m-0 tw-h-8 tw-w-full tw-whitespace-nowrap tw-overflow-hidden tw-overflow-ellipsis tw-text-gray-400"
+                    class="tw-text-xs tw-p-0 tw-m-0 tw-h-12 tw-w-full tw-overflow-hidden tw-overflow-ellipsis tw-text-gray-400"
                 >
                     {connectionManager.googleSheetsToolActivated
                         ? $LL.chat.form.application.googleSlides.description()
@@ -416,13 +449,14 @@
             </button>
 
             <button
-                class="tw-p-2 tw-m-0 tw-flex tw-flex-col tw-w-36 tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-2xl tw-gap-2"
+                class="tw-p-2 tw-m-0 tw-flex tw-flex-col tw-w-36 tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-2xl tw-gap-2 disabled:tw-opacity-50"
                 on:click={() => openLinkForm("googleSlides")}
+                disabled={!connectionManager.googleSheetsToolActivated}
             >
                 <img draggable="false" class="tw-w-8" src={googleDriveSvg} alt="info icon" />
                 <h2 class="tw-text-sm tw-p-0 tw-m-0">{$LL.chat.form.application.googleDrive.title()}</h2>
                 <p
-                    class="tw-text-xs tw-p-0 tw-m-0 tw-h-8 tw-w-full tw-whitespace-nowrap tw-overflow-hidden tw-overflow-ellipsis tw-text-gray-400"
+                    class="tw-text-xs tw-p-0 tw-m-0 tw-h-12 tw-w-full tw-overflow-hidden tw-overflow-ellipsis tw-text-gray-400"
                 >
                     {connectionManager.googleSheetsToolActivated
                         ? $LL.chat.form.application.googleDrive.description()
@@ -431,13 +465,14 @@
             </button>
 
             <button
-                class="tw-p-2 tw-m-0 tw-flex tw-flex-col tw-w-36 tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-2xl tw-gap-2"
+                class="tw-p-2 tw-m-0 tw-flex tw-flex-col tw-w-36 tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-2xl tw-gap-2 disabled:tw-opacity-50"
                 on:click={() => openLinkForm("eraser")}
+                disabled={!connectionManager.eraserToolActivated}
             >
                 <img draggable="false" class="tw-w-8" src={eraserSvg} alt="info icon" />
                 <h2 class="tw-text-sm tw-p-0 tw-m-0">{$LL.chat.form.application.eraser.title()}</h2>
                 <p
-                    class="tw-text-xs tw-p-0 tw-m-0 tw-h-8 tw-w-full tw-whitespace-nowrap tw-overflow-hidden tw-overflow-ellipsis tw-text-gray-400"
+                    class="tw-text-xs tw-p-0 tw-m-0 tw-h-12 tw-w-full tw-overflow-hidden tw-overflow-ellipsis tw-text-gray-400"
                 >
                     {connectionManager.eraserToolActivated
                         ? $LL.chat.form.application.eraser.description()
@@ -446,13 +481,14 @@
             </button>
 
             <button
-                class="tw-p-2 tw-m-0 tw-flex tw-flex-col tw-w-36 tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-2xl tw-gap-2"
+                class="tw-p-2 tw-m-0 tw-flex tw-flex-col tw-w-36 tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-2xl tw-gap-2 disabled:tw-opacity-50"
                 on:click={() => openLinkForm("excalidraw")}
+                disabled={!connectionManager.excalidrawToolActivated}
             >
                 <img draggable="false" class="tw-w-8" src={excalidrawSvg} alt="info icon" />
                 <h2 class="tw-text-sm tw-p-0 tw-m-0">{$LL.chat.form.application.excalidraw.title()}</h2>
                 <p
-                    class="tw-text-xs tw-p-0 tw-m-0 tw-h-8 tw-w-full tw-whitespace-nowrap tw-overflow-hidden tw-overflow-ellipsis tw-text-gray-400"
+                    class="tw-text-xs tw-p-0 tw-m-0 tw-h-12 tw-w-full tw-overflow-hidden tw-overflow-ellipsis tw-text-gray-400"
                 >
                     {connectionManager.excalidrawToolActivated
                         ? $LL.chat.form.application.excalidraw.description()
@@ -461,13 +497,14 @@
             </button>
 
             <button
-                class="tw-p-2 tw-m-0 tw-flex tw-flex-col tw-w-36 tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-2xl tw-gap-2"
+                class="tw-p-2 tw-m-0 tw-flex tw-flex-col tw-w-36 tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-2xl tw-gap-2 disabled:tw-opacity-50"
                 on:click={() => openLinkForm("cards")}
+                disabled={!connectionManager.cardsToolActivated}
             >
                 <img draggable="false" class="tw-w-8" src={cardsPng} alt="info icon" />
                 <h2 class="tw-text-sm tw-p-0 tw-m-0">{$LL.chat.form.application.cards.title()}</h2>
                 <p
-                    class="tw-text-xs tw-p-0 tw-m-0 tw-h-8 tw-w-full tw-whitespace-nowrap tw-overflow-hidden tw-overflow-ellipsis tw-text-gray-400"
+                    class="tw-text-xs tw-p-0 tw-m-0 tw-h-12 tw-w-full tw-overflow-hidden tw-overflow-ellipsis tw-text-gray-400"
                 >
                     {connectionManager.cardsToolActivated
                         ? $LL.chat.form.application.cards.description()
@@ -477,13 +514,13 @@
 
             {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
                 <button
-                    class="tw-p-2 tw-m-0 tw-flex tw-flex-col tw-w-36 tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-2xl tw-gap-2"
+                    class="tw-p-2 tw-m-0 tw-flex tw-flex-col tw-w-36 tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-2xl tw-gap-2 disabled:tw-opacity-50"
                     on:click={() => openLinkForm(app.name)}
                 >
                     <img draggable="false" class="tw-w-8" src={app.image} alt="info icon" />
                     <h2 class="tw-text-sm tw-p-0 tw-m-0">{app.name}</h2>
                     <p
-                        class="tw-text-xs tw-p-0 tw-m-0 tw-h-8 tw-w-full tw-whitespace-nowrap tw-overflow-hidden tw-overflow-ellipsis tw-text-gray-400"
+                        class="tw-text-xs tw-p-0 tw-m-0 tw-h-12 tw-w-full tw-overflow-hidden tw-overflow-ellipsis tw-text-gray-400"
                     >
                         {app.description}
                     </p>

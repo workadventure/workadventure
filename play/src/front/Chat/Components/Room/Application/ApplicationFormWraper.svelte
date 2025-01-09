@@ -1,6 +1,7 @@
 <script lang="ts">
     import { createEventDispatcher, onDestroy, onMount } from "svelte";
     import {
+        ApplicationService,
         CardsService,
         EraserService,
         ExcalidrawService,
@@ -13,17 +14,11 @@
     import { connectionManager, defautlNativeIntegrationAppName } from "../../../../Connection/ConnectionManager";
     import { GOOGLE_DRIVE_PICKER_APP_ID, GOOGLE_DRIVE_PICKER_CLIENT_ID } from "../../../../Enum/EnvironmentVariable";
     import LL from "../../../../../i18n/i18n-svelte";
+    import { ApplicationProperty } from "../MessageInputBar.svelte";
 
     const dispatch = createEventDispatcher();
 
-    export let property: {
-        name: string;
-        img: string;
-        title: string;
-        description: string;
-        link: string;
-        placeholder: string;
-    };
+    export let property: ApplicationProperty;
 
     let errorLink: string | undefined;
     let htmlElementInput: HTMLInputElement;
@@ -95,40 +90,46 @@
         try {
             switch (property.name) {
                 case defautlNativeIntegrationAppName.YOUTUBE:
-                    link = await YoutubeService.getYoutubeEmbedUrl(new URL(property.link));
+                    link = await YoutubeService.getYoutubeEmbedUrl(new URL(link));
                     break;
                 case defautlNativeIntegrationAppName.KLAXOON:
-                    link = KlaxoonService.getKlaxoonEmbedUrl(
-                        new URL(property.link),
-                        connectionManager.klaxoonToolClientId
-                    );
+                    link = KlaxoonService.getKlaxoonEmbedUrl(new URL(link), connectionManager.klaxoonToolClientId);
                     break;
                 case defautlNativeIntegrationAppName.GOOGLE_DRIVE:
-                    link = GoogleWorkSpaceService.getGoogleWorkSpaceEmbedUrl(new URL(property.link));
+                    link = GoogleWorkSpaceService.getGoogleWorkSpaceEmbedUrl(new URL(link));
                     break;
                 case defautlNativeIntegrationAppName.GOOGLE_DOCS:
-                    link = GoogleWorkSpaceService.getGoogleDocsEmbedUrl(new URL(property.link));
+                    link = GoogleWorkSpaceService.getGoogleDocsEmbedUrl(new URL(link));
                     break;
                 case defautlNativeIntegrationAppName.GOOGLE_SHEETS:
-                    link = GoogleWorkSpaceService.getGoogleSheetsEmbedUrl(new URL(property.link));
+                    link = GoogleWorkSpaceService.getGoogleSheetsEmbedUrl(new URL(link));
                     break;
                 case defautlNativeIntegrationAppName.GOOGLE_SLIDES:
-                    link = GoogleWorkSpaceService.getGoogleSlidesEmbedUrl(new URL(property.link));
+                    link = GoogleWorkSpaceService.getGoogleSlidesEmbedUrl(new URL(link));
                     break;
                 case defautlNativeIntegrationAppName.ERASER:
-                    EraserService.validateLink(new URL(property.link));
+                    EraserService.validateLink(new URL(link));
                     break;
                 case defautlNativeIntegrationAppName.EXCALIDRAW:
-                    ExcalidrawService.validateLink(new URL(property.link));
+                    ExcalidrawService.validateLink(new URL(link));
                     break;
                 case defautlNativeIntegrationAppName.CARDS:
-                    CardsService.validateLink(new URL(property.link));
+                    CardsService.validateLink(new URL(link));
                     break;
+            }
+
+            if (property.regexUrl) {
+                link = ApplicationService.validateLink(
+                    new URL(link),
+                    property.regexUrl,
+                    $LL.mapEditor.properties.linkProperties.errorEmbeddableLink(),
+                    property.targetEmbedableUrl
+                );
             }
         } catch (error) {
             console.error(error);
             link = "";
-            errorLink = getErrorFromPropertyName();
+            errorLink = getErrorFromPropertyName() ?? errorLink ?? (error as Error).message;
         } finally {
             dispatch("update", { ...property, link });
         }
@@ -155,7 +156,7 @@
             case defautlNativeIntegrationAppName.CARDS:
                 return $LL.mapEditor.properties.cardsProperties.error();
             default:
-                throw new Error("Property name not found");
+                return null;
         }
     }
 
