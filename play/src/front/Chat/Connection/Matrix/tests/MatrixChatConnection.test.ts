@@ -27,6 +27,13 @@ vi.mock("../../../../Phaser/Entity/CharacterLayerManager", () => {
     };
 });
 
+vi.mock("../../../../Enum/EnvironmentVariable.ts", () => {
+    return {
+        MATRIX_ADMIN_USER: "admin",
+        MATRIX_DOMAIN: "domain",
+    };
+});
+
 vi.mock("../../../Stores/ChatStore.ts", () => {
     return {
         selectedRoomStore: writable(undefined),
