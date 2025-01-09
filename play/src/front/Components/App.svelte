@@ -263,7 +263,7 @@
 
     function closeCoWebsiteFullScreen() {
         gameContainer.classList.remove("hidden");
-        coWebsiteManager.closeCoWebsite(activeCowebsite);
+        coWebsites.remove(activeCowebsite);
     }
 
     $: if ($fullScreenCowebsite && $coWebsites.length < 1) {

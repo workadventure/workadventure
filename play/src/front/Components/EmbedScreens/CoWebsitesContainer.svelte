@@ -83,7 +83,7 @@
         }
         waScaleManager.applyNewSize();
         numberMaxCowebsite();
-        showArrow = $totalTabWidth > $widthContainerForWindow ? true : false;
+        showArrow = $totalTabWidth > $widthContainerForWindow;
     });
 
     function getSizeOfCowebsiteWhenResizeWindow() {
@@ -206,7 +206,7 @@
     }
 
     function numberMaxCowebsite() {
-        showArrow = $totalTabWidth > $widthContainerForWindow ? true : false;
+        showArrow = $totalTabWidth > $widthContainerForWindow;
         if (!vertical) {
             numberMaxOfCowebsite = Math.floor($widthContainerForWindow / 300);
             if (numberMaxOfCowebsite < 1) {

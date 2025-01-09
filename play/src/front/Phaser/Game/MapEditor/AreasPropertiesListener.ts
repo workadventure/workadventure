@@ -37,7 +37,7 @@ import { notificationPlayingStore } from "../../../Stores/NotificationStore";
 import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
 import { JitsiCoWebsite } from "../../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { SimpleCoWebsite } from "../../../WebRtc/CoWebsite/SimpleCoWebsite";
-import { coWebsiteManager } from "../../../Stores/CoWebsiteStore";
+import { coWebsites } from "../../../Stores/CoWebsiteStore";
 import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../../WebRtc/LayoutManager";
 import { gameManager } from "../GameManager";
 import { OpenCoWebsite } from "../GameMapPropertiesListener";
@@ -486,7 +486,7 @@ export class AreasPropertiesListener {
 
             coWebsiteOpen.coWebsite = coWebsite;
 
-            coWebsiteManager.addCoWebsiteToStore(coWebsite);
+            coWebsites.add(coWebsite);
 
             //user in zone to open cowesite with only icon
             inOpenWebsite.set(true);
@@ -564,11 +564,7 @@ export class AreasPropertiesListener {
                 property.jitsiRoomAdminTag ?? null
             );
 
-            try {
-                coWebsiteManager.addCoWebsiteToStore(coWebsite);
-            } catch (err) {
-                console.error(err);
-            }
+            coWebsites.add(coWebsite);
 
             analyticsClient.enteredJitsi(roomName, this.scene.roomUrl);
 
@@ -755,7 +751,7 @@ export class AreasPropertiesListener {
             const coWebsite = coWebsiteOpen.coWebsite;
 
             if (coWebsite) {
-                coWebsiteManager.closeCoWebsite(coWebsite);
+                coWebsites.remove(coWebsite);
             }
         }
 
@@ -839,11 +835,7 @@ export class AreasPropertiesListener {
          * @DEPRECATED - This is the old way to show trigger message
          layoutManagerActionStore.removeAction("jitsi");
          */
-        coWebsiteManager.getCoWebsites().forEach((coWebsite) => {
-            if (coWebsite instanceof JitsiCoWebsite) {
-                coWebsiteManager.closeCoWebsite(coWebsite);
-            }
-        });
+        coWebsites.keepOnly((coWebsite) => !(coWebsite instanceof JitsiCoWebsite));
         inJitsiStore.set(false);
     }
 
@@ -933,7 +925,7 @@ export class AreasPropertiesListener {
 
         coWebsiteOpen.coWebsite = coWebsite;
 
-        coWebsiteManager.addCoWebsiteToStore(coWebsite);
+        coWebsites.add(coWebsite);
 
         this.loadCoWebsiteFunction(coWebsite, actionId);
 

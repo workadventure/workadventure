@@ -39,7 +39,7 @@ import { waScaleManager } from "../Services/WaScaleManager";
 import { lazyLoadPlayerCharacterTextures } from "../Entity/PlayerTexturesLoadingManager";
 import { lazyLoadPlayerCompanionTexture } from "../Companion/CompanionTexturesLoadingManager";
 import { iframeListener } from "../../Api/IframeListener";
-import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
+import { coWebsiteManager, coWebsites } from "../../Stores/CoWebsiteStore";
 import {
     ADMIN_URL,
     DEBUG_MODE,
@@ -2802,7 +2802,7 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("closeCoWebsites", () => {
-            return coWebsiteManager.closeCoWebsites();
+            return coWebsites.removeAll();
         });
 
         iframeListener.registerAnswerer("openUIWebsite", (websiteConfig) => {

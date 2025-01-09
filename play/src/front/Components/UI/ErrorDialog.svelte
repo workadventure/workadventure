@@ -3,7 +3,7 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { connectionManager } from "../../Connection/ConnectionManager";
     import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
-    import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
+    import { coWebsites } from "../../Stores/CoWebsiteStore";
 
     function close(): void {
         errorStore.clearClosableMessages();
@@ -20,7 +20,7 @@
         if ((link = (event.target as HTMLAnchorElement).href) == undefined) return;
 
         const coWebsite = new SimpleCoWebsite(new URL(link), undefined, undefined, 75, true);
-        coWebsiteManager.addCoWebsiteToStore(coWebsite);
+        coWebsites.add(coWebsite);
         // try {
         //     coWebsiteManager.loadCoWebsite(coWebsite);
         // } catch (e) {

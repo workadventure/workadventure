@@ -16,7 +16,7 @@
     import { jitsiParticipantsCountStore, userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
     import { inExternalServiceStore } from "../../Stores/MyMediaStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
+    import { coWebsites } from "../../Stores/CoWebsiteStore";
 
     export let actualCowebsite: JitsiCoWebsite;
     let domain = actualCowebsite.getDomain();
@@ -144,11 +144,11 @@
 
                         if (jitsiApi) {
                             jitsiApi.addListener("videoConferenceLeft", () => {
-                                coWebsiteManager.removeCoWebsiteToStore(actualCowebsite);
+                                coWebsites.remove(actualCowebsite);
                             });
 
                             jitsiApi.addListener("readyToClose", () => {
-                                coWebsiteManager.removeCoWebsiteToStore(actualCowebsite);
+                                coWebsites.remove(actualCowebsite);
                             });
                         } else {
                             console.error("No iframe or no jitsiApi. We may have a problem.");
@@ -174,10 +174,10 @@
             jitsiApi.removeListener("participantLeft", onParticipantsCountChange);
             jitsiApi.removeListener("participantKickedOut", onParticipantsCountChange);
             jitsiApi.removeListener("videoConferenceLeft", () => {
-                coWebsiteManager.removeCoWebsiteToStore(actualCowebsite);
+                coWebsites.remove(actualCowebsite);
             });
             jitsiApi.removeListener("readyToClose", () => {
-                coWebsiteManager.removeCoWebsiteToStore(actualCowebsite);
+                coWebsites.remove(actualCowebsite);
             });
             jitsiApi.dispose();
         }

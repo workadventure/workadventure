@@ -28,13 +28,31 @@ export function createCoWebsiteStore() {
         );
     };
 
+    const removeAll = () => {
+        set([]);
+    };
+
+    /**
+     * Only keep the cowebsites matching the predicate.
+     */
+    const keepOnly = (predicate: (coWebsite: CoWebsite) => boolean) => {
+        update((currentArray) => currentArray.filter(predicate));
+    };
+
+    const findById = (id: string) => {
+        return get({ subscribe }).find((coWebsite) => coWebsite.getId() === id);
+    };
+
     const empty = () => set([]);
 
     return {
         subscribe,
         add,
         remove,
+        removeAll,
         empty,
+        keepOnly,
+        findById,
     };
 }
 
@@ -109,49 +127,17 @@ export class CoWebsiteManager {
         };
     }
 
-    public addCoWebsiteToStore(coWebsite: CoWebsite) {
-        coWebsite?.getWidthPercent();
-        coWebsites.add(coWebsite);
-    }
-    public removeCoWebsiteToStore(coWebsite: CoWebsite) {
-        coWebsites.remove(coWebsite);
-    }
-
     public generateUniqueId() {
         let id = undefined;
         do {
             id = "cowebsite-iframe-" + (Math.random() + 1).toString(36).substring(7);
-        } while (this.getCoWebsiteById(id));
+        } while (coWebsites.findById(id));
 
         return id;
     }
 
-    public getCoWebsiteById(coWebsiteId: string): CoWebsite | undefined {
-        return get(coWebsites).find((coWebsite: CoWebsite) => {
-            return coWebsite.getId() === coWebsiteId;
-        });
-    }
-
-    public getCoWebsites() {
-        return get(coWebsites);
-    }
-
-    public closeCoWebsites(): void {
-        get(coWebsites).forEach((coWebsite: CoWebsite) => {
-            this.closeCoWebsite(coWebsite);
-        });
-    }
-
-    public closeCoWebsite(coWebsite: CoWebsite): void {
-        this.removeCoWebsiteToStore(coWebsite);
-    }
-
-    public unloadCoWebsite(coWebsite: CoWebsite): Promise<void> {
-        return new Promise<void>((resolve, reject) => {});
-    }
-
     public cleanup(): void {
-        this.closeCoWebsites();
+        coWebsites.removeAll();
     }
 }
 

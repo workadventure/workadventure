@@ -6,7 +6,7 @@ import { iframeListener } from "../Api/IframeListener";
 import { connectionManager } from "../Connection/ConnectionManager";
 import { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 import { SimpleCoWebsite } from "../WebRtc/CoWebsite/SimpleCoWebsite";
-import { coWebsiteManager } from "../Stores/CoWebsiteStore";
+import { coWebsites } from "../Stores/CoWebsiteStore";
 import { scriptUtils } from "../Api/ScriptUtils";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { userIsConnected } from "../Stores/MenuStore";
@@ -44,9 +44,7 @@ export const openCoWebSite = (
 };
 
 export const getCoWebSite = () => {
-    const coWebsites = coWebsiteManager.getCoWebsites();
-
-    return coWebsites.map((coWebsite: CoWebsite) => {
+    return get(coWebsites).map((coWebsite: CoWebsite) => {
         return {
             id: coWebsite.getId(),
         };
@@ -109,7 +107,7 @@ export const openCoWebSiteWithoutSource = ({
 };
 
 const openSimpleCowebsite = (coWebsite: SimpleCoWebsite) => {
-    coWebsiteManager.addCoWebsiteToStore(coWebsite);
+    coWebsites.add(coWebsite);
 
     return {
         id: coWebsite.getId(),
@@ -117,12 +115,12 @@ const openSimpleCowebsite = (coWebsite: SimpleCoWebsite) => {
 };
 
 export const closeCoWebsite = (coWebsiteId: string) => {
-    const coWebsite = coWebsiteManager.getCoWebsiteById(coWebsiteId);
+    const coWebsite = coWebsites.findById(coWebsiteId);
 
     if (!coWebsite) {
         console.warn("Unknown co-website, probably already closed", coWebsiteId);
         return;
     }
 
-    return coWebsiteManager.closeCoWebsite(coWebsite);
+    coWebsites.remove(coWebsite);
 };

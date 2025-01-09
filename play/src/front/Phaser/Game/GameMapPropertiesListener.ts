@@ -5,7 +5,7 @@ import { Jitsi } from "@workadventure/shared-utils";
 import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
 import { z } from "zod";
 import { scriptUtils } from "../../Api/ScriptUtils";
-import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
+import { coWebsites } from "../../Stores/CoWebsiteStore";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
 import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
@@ -140,11 +140,7 @@ export class GameMapPropertiesListener {
                  * @DEPRECATED - This is the old way to show trigger message
                 layoutManagerActionStore.removeAction("jitsi");
                 */
-                coWebsiteManager.getCoWebsites().forEach((coWebsite) => {
-                    if (coWebsite instanceof JitsiCoWebsite) {
-                        coWebsiteManager.closeCoWebsite(coWebsite);
-                    }
-                });
+                coWebsites.keepOnly((coWebsite) => !(coWebsite instanceof JitsiCoWebsite));
                 inJitsiStore.set(false);
                 if (newValue === undefined) {
                     return;
@@ -237,7 +233,7 @@ export class GameMapPropertiesListener {
                     jitsiRoomAdminTag
                 );
 
-                coWebsiteManager.addCoWebsiteToStore(coWebsite);
+                coWebsites.add(coWebsite);
 
                 // coWebsiteManager.loadCoWebsite(coWebsite);
 
@@ -646,7 +642,7 @@ export class GameMapPropertiesListener {
 
             coWebsiteOpen.coWebsite = coWebsite;
 
-            coWebsiteManager.addCoWebsiteToStore(coWebsite);
+            coWebsites.add(coWebsite);
 
             loadCoWebsiteFunction();
 
@@ -720,7 +716,7 @@ export class GameMapPropertiesListener {
 
             coWebsiteOpen.coWebsite = coWebsite;
 
-            coWebsiteManager.addCoWebsiteToStore(coWebsite);
+            coWebsites.add(coWebsite);
 
             //user in zone to open cowesite with only icone
             inOpenWebsite.set(true);
@@ -862,7 +858,7 @@ export class GameMapPropertiesListener {
         const coWebsite = coWebsiteOpen.coWebsite;
 
         if (coWebsite) {
-            coWebsiteManager.closeCoWebsite(coWebsite);
+            coWebsites.remove(coWebsite);
         }
 
         this.coWebsitesOpenByPlace.delete(this.getIdFromPlace(place));

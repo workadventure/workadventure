@@ -1,4 +1,4 @@
-import { coWebsiteManager } from "../Stores/CoWebsiteStore";
+import { coWebsites } from "../Stores/CoWebsiteStore";
 import { BBBCoWebsite } from "./CoWebsite/BBBCoWebsite";
 
 class BBBFactory {
@@ -11,19 +11,11 @@ class BBBFactory {
         }
 
         const coWebsite = new BBBCoWebsite(new URL(clientURL), false, undefined);
-        try {
-            coWebsiteManager.addCoWebsiteToStore(coWebsite);
-        } catch (e) {
-            console.error(`Error on opening co-website: ${e}`);
-        }
+        coWebsites.add(coWebsite);
     }
 
     public stop() {
-        coWebsiteManager.getCoWebsites().forEach((coWebsite) => {
-            if (coWebsite instanceof BBBCoWebsite) {
-                coWebsiteManager.closeCoWebsite(coWebsite);
-            }
-        });
+        coWebsites.keepOnly((coWebsite) => !(coWebsite instanceof BBBCoWebsite));
     }
 
     public isStopped(): boolean {
