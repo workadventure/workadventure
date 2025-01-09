@@ -366,8 +366,8 @@
     </div>
 {/if}
 {#if applicationComponentOpened}
-    <div class="tw-flex tw-w-full tw-flex-none tw-items-center tw-bg-contrast/50 tw-rounded-t-2xl">
-        <div class="tw-flex tw-flex-wrap tw-w-full tw-justify-center tw-items-center tw-p-2 tw-gap-2">
+    <div class="tw-w-full tw-bg-contrast/50 tw-rounded-t-2xl">
+        <div class="tw-flex tw-flex-wrap tw-w-full tw-justify-between tw-items-center tw-p-2 tw-gap-2">
             <button
                 class="tw-p-2 tw-m-0 tw-flex tw-flex-col tw-w-36 tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-2xl tw-gap-2 disabled:tw-opacity-50"
                 on:click={() => openLinkForm("youtube")}
@@ -511,7 +511,9 @@
                         : $LL.mapEditor.properties.cardsProperties.disabled()}
                 </p>
             </button>
+        </div>
 
+        <div class="tw-flex tw-flex-wrap tw-w-full tw-justify-between tw-items-center tw-p-2 tw-gap-2">
             {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
                 <button
                     class="tw-p-2 tw-m-0 tw-flex tw-flex-col tw-w-36 tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-2xl tw-gap-2 disabled:tw-opacity-50"
