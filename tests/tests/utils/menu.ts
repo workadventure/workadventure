@@ -56,19 +56,24 @@ class Menu {
 
     async toggleMegaphoneButton(page: Page) {
         await this.openMapMenu(page);
-        await page.getByTestId('global-message').click({timeout: 30_000});
+        await page.getByRole('button', { name: 'Send global message' }).click();
+        //await page.getByTestId('global-message').click({timeout: 30_000});
     }
 
     async isThereMegaphoneButton(page: Page) {
         await this.openMapMenu(page);
-        await expect(page.getByText('Use megaphone')).toBeVisible();
-        await this.closeMapMenu(page);
+        await page.getByRole('button', { name: 'Send global message' }).click();
+        await expect(page.getByRole('button', { name: 'Start live message' })).toBeEnabled();
+        await page.getByRole('button', { name: '×' }).first().click();
+        //await this.closeMapMenu(page);
     }
 
     async isNotThereMegaphoneButton(page: Page) {
         await this.openMapMenu(page);
-        await expect(page.getByText('Use megaphone')).toBeHidden();
-        await this.closeMapMenu(page);
+        await page.getByRole('button', { name: 'Send global message' }).click();
+        await expect(page.getByRole('button', { name: 'Start live message' })).toBeDisabled();
+        await page.getByRole('button', { name: '×' }).first().click();
+        //await this.closeMapMenu(page);
     }
 
     async openStatusList(page : Page, isMobile = false){

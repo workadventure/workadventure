@@ -20,7 +20,7 @@ const actionbar: BaseTranslation = {
     woka: "Customize your avatar",
     companion: "Add companion",
     quest: "Achievements",
-    megaphone: "Use megaphone",
+    //megaphone: "Use megaphone",
     test: "Test my settings",
     editCamMic: "Edit cam / mic",
     accountType: "Basic account",

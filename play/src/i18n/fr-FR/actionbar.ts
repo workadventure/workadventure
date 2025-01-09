@@ -20,7 +20,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     woka: "Mon avatar",
     companion: "Mon compagnon",
     quest: "Mes badges",
-    megaphone: "Utiliser le mégaphone",
+    //megaphone: "Utiliser le mégaphone",
     calendar: "Calendrier",
     todoList: "Liste de tâches",
     test: "Tester",

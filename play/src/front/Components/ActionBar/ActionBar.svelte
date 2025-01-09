@@ -395,7 +395,7 @@
         : ''}"
 >
     <div class="flex w-full p-2 space-x-2 @xl/actions:p-4 @xl/actions:space-x-4">
-        <div class="justify-start flex-1 pointer-events-auto w-32">
+        <div class="justify-start flex-1 w-32">
             <div
                 class="flex relative transition-all duration-150 z-[2] {$chatVisibilityStore ? 'hidden' : ''}"
                 class:opacity-0={$chatVisibilityStore}
@@ -966,7 +966,7 @@
                 </div>
             </div>
         </div>
-        <div id="action-wrapper" class="flex-1 justify-end pointer-events-auto">
+        <div id="action-wrapper" class="flex-1 justify-end">
             <div class="flex justify-end space-x-0 md:space-x-2 xl:space-x-4">
                 {#if $addActionButtonActionBarEvent.length > 0}
                     <div class="items-center relative hidden @lg/actions:flex">
@@ -993,7 +993,7 @@
                                     on:mouseleave={() => {
                                         !navigating ? (helpActive = undefined) : "";
                                     }}
-                                    class="h-12 min-w-12 @sm/actions:min-w-10 @sm/actions:h-10 @xl/actions:h-12 @xl/actions:min-w-12 p-1 m-0 rounded hover:bg-white/10 flex items-center justify-center transition-all cursor-pointer"
+                                    class="h-12 min-w-12 @sm/actions:min-w-10 @sm/actions:h-10 @xl/actions:h-12 @xl/actions:min-w-12 p-1 m-0 rounded hover:bg-white/10 flex items-center justify-center transition-all cursor-pointer pointer-events-auto"
                                 >
                                     {#if button.toolTip}
                                         {#if helpActive === button.id}
@@ -1019,7 +1019,7 @@
                     <div id="action-invite" class="transition-all hidden @lg/actions:block">
                         <div class="flex items-center">
                             <div
-                                class="flex items-center bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg"
+                                class="flex items-center bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg pointer-events-auto"
                             >
                                 {#each $addClassicButtonActionBarEvent as button, index (index)}
                                     <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -1071,7 +1071,7 @@
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     data-testid="action-user"
-                    class="flex items-center relative transition-all hidden @md/actions:flex"
+                    class="flex items-center relative transition-all hidden @md/actions:flex cursor-pointer pointer-events-auto"
                     on:click={() => (profileMenuIsDropped = !profileMenuIsDropped)}
                     on:click|preventDefault={close}
                     on:blur={() => (profileMenuIsDropped = false)}

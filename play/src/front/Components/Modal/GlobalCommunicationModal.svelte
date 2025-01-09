@@ -233,8 +233,15 @@
                             />
                             {$LL.megaphone.modal.liveMessage.title()}
                         </p>
-                        <button class="light max-w-fit text-black bg-white h-full" on:click={activateLiveMessage}
-                            >{$LL.megaphone.modal.liveMessage.button()}</button
+                        {#if !$megaphoneCanBeUsedStore}<p class="help-text">
+                                <IconInfoCircle font-size="18" />
+                                {$LL.megaphone.modal.audioMessage.noAccess()}
+                            </p>{/if}
+
+                        <button
+                            class="light max-w-fit text-black bg-white h-full"
+                            on:click={activateLiveMessage}
+                            disabled={!$megaphoneCanBeUsedStore}>{$LL.megaphone.modal.liveMessage.button()}</button
                         >
                         <p class="text-white text-sm whitespace-pre-line">
                             {$LL.megaphone.modal.liveMessage.notice()}
@@ -249,18 +256,16 @@
                             />
                             {$LL.megaphone.modal.textMessage.title()}
                         </p>
-                        {#if !$megaphoneCanBeUsedStore}<p class="help-text">
+                        {#if !$userIsAdminStore}<p class="help-text">
                                 <IconInfoCircle font-size="18" />
-                                {$LL.megaphone.modal.audioMessage.noAccess()}
+                                {$LL.megaphone.modal.textMessage.noAccess()}
                             </p>{/if}
                         <button class="light max-w-fit" on:click={activateInputText} disabled={!$userIsAdminStore}>
-                            <button class="light max-w-fit" on:click={activateInputText} disabled={!$userIsAdminStore}>
-                                {$LL.megaphone.modal.textMessage.button()}</button
-                            >
-                            <p class="text-white text-sm whitespace-pre-line">
-                                {$LL.megaphone.modal.textMessage.notice()}
-                            </p>
-                        </button>
+                            {$LL.megaphone.modal.textMessage.button()}</button
+                        >
+                        <p class="text-white text-sm whitespace-pre-line">
+                            {$LL.megaphone.modal.textMessage.notice()}
+                        </p>
                     </div>
                     <div id="content-soundMessage" class="flex flex-col px-5 w-1/3">
                         <p class="text-white">

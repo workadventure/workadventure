@@ -87,7 +87,7 @@
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
         data-testid="map-menu"
-        class="items-center relative transition-all hidden @lg/actions:block"
+        class="items-center relative transition-all hidden @lg/actions:block cursor-pointer pointer-events-auto"
         on:click={() => (mapMenuIsDropped = !mapMenuIsDropped)}
         use:clickOutside={close}
         on:blur={() => (mapMenuIsDropped = false)}

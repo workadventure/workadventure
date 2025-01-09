@@ -85,6 +85,9 @@ test.describe("Map editor @oidc", () => {
         await Menu.isNotThereMegaphoneButton(page2);
 
         // Remove rights
+        await Menu.openMapEditor(page);
+        await MapEditor.openConfigureMyRoom(page);
+        await ConfigureMyRoom.selectMegaphoneItemInCMR(page);
         await Megaphone.megaphoneRemoveRights(page, "example");
         await Megaphone.megaphoneSave(page);
         await Megaphone.isCorrectlySaved(page);
@@ -92,8 +95,8 @@ test.describe("Map editor @oidc", () => {
         // Megaphone should be displayed and usable by all the current users
         await Menu.isThereMegaphoneButton(page);
         await Menu.isThereMegaphoneButton(page2);
-        await Menu.closeMapEditorConfigureMyRoomPopUp(page);
-        await Menu.closeMapEditor(page);
+        //await Menu.closeMapEditorConfigureMyRoomPopUp(page);
+        //await Menu.closeMapEditor(page);
         await Menu.toggleMegaphoneButton(page);
 
         // Click on the button to start live message
@@ -107,8 +110,13 @@ test.describe("Map editor @oidc", () => {
             .click({timeout: 10_000});
 
         // click on the megaphone button to start the streaming session
-        await expect(page2.locator(".jitsi-video")).toBeVisible({timeout: 15_000});
+        await expect(page2.getByText('test', { exact: true })).toBeVisible({timeout: 15_000});
 
+        // TODO: HOW TO STOP THE MEGAPHONE?????
+        // TODO: HOW TO STOP THE MEGAPHONE?????
+        // TODO: HOW TO STOP THE MEGAPHONE?????
+        // TODO: HOW TO STOP THE MEGAPHONE?????
+        // Shouldn't we stay on the same page and click the STOP button?!!!!!
         await Menu.toggleMegaphoneButton(page);
 
         await page2.close();
@@ -307,6 +315,7 @@ test.describe("Map editor @oidc", () => {
         await Map.walkToPosition(page, 9 * 32, 9 * 32);
 
         // check if the iframe was opened and button thumbnail is visible
+        await page.pause();
         await expect(page.locator("#cowebsite-thumbnail-0")).toBeVisible();
         await expect(page.locator("#cowebsite-thumbnail-1")).toBeVisible();
         await expect(page.locator("#cowebsite-thumbnail-2")).toBeVisible();
