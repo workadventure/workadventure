@@ -74,7 +74,7 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
             this.loadRoomsAndFolderPromise.resolve();
         } catch (e) {
             this.loadRoomsAndFolderPromise.reject(e);
-            Sentry.captureMessage(`Failed to get room folder hierarchy :  ${e}`);
+            Sentry.captureException(e);
         }
     }
     async getNode(id: string): Promise<MatrixRoomFolder | MatrixChatRoom | undefined> {
@@ -100,13 +100,13 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
             const node = nodes.filter((value) => value)[0];
 
             if (!node) {
-                throw new Error("Node not found");
+                return undefined;
             }
 
             return node;
         } catch (e) {
             console.error("Failed to get node:", e);
-            Sentry.captureMessage(`Failed to get node: ${e instanceof Error ? e.message : String(e)}`);
+            Sentry.captureException(e);
             return undefined;
         }
     }
@@ -133,7 +133,7 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
             return responses.some((response) => response);
         } catch (e) {
             console.error("Failed to delete node:", e);
-            Sentry.captureMessage(`Failed to delete node: ${e instanceof Error ? e.message : String(e)}`);
+            Sentry.captureException(e);
         }
 
         return false;
@@ -165,7 +165,7 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
             return parentFolder;
         } catch (e) {
             console.error("Failed to get parent folder:", e);
-            Sentry.captureMessage(`Failed to get parent folder: ${e instanceof Error ? e.message : String(e)}`);
+            Sentry.captureException(e);
         }
 
         return undefined;

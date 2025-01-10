@@ -211,7 +211,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         } catch (error) {
             this.connectionStatus.set("OFFLINE");
             console.error(error);
-            Sentry.captureMessage(`Failed to init Matrix client : ${error}`);
+            Sentry.captureException(error);
         }
     }
 
@@ -224,7 +224,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         }
         this.client?.setSyncPresence(matrixStatus).catch((error) => {
             console.error("Failed to send presence", error);
-            Sentry.captureMessage(`Failed to send presence to synapse server : ${error}`);
+            Sentry.captureException(error);
         });
     }
 
@@ -302,7 +302,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 })
                 .catch((error) => {
                     console.error("Failed to get information from other device : ", error);
-                    Sentry.captureMessage(`Failed to get information from other device : ${error}`);
+                    Sentry.captureException(error);
                 });
         }
     }
@@ -469,7 +469,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 await newFolder.init();
             } catch (e) {
                 console.error("Failed to init new folder : ", e);
-                Sentry.captureMessage(`Failed to init new folder : ${e}`);
+                Sentry.captureException(e);
             }
         } else {
             targetFolder.roomList.set(room.roomId, new MatrixChatRoom(room));
@@ -477,8 +477,13 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     }
     private async manageRoomOrFolder(room: Room): Promise<void> {
         const { roomId } = room;
-        if (await this.findRoomOrFolder(roomId)) {
-            return;
+
+        try {
+            if (await this.findRoomOrFolder(roomId)) {
+                return;
+            }
+        } catch (e) {
+            console.error("Failed to find room or folder:", e);
         }
 
         if (!this.isUserMemberOrInvited(room)) return;
@@ -588,9 +593,9 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                     this.roomList.delete(roomID);
                 });
             })
-            .catch(() => {
+            .catch((e) => {
                 console.error("Failed to get child room IDs");
-                Sentry.captureMessage("Failed to get child room IDs");
+                Sentry.captureException(e);
             });
     }
     private createAndAddNewRootRoom(room: Room): MatrixChatRoom {
@@ -642,6 +647,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         }
 
         if (membership === KnownMembership.Invite) {
+            // This is used to automatically join rooms that are created by the admin, like tag-based rooms invitation
             this.clientPromise
                 .then((client) => {
                     const userId = client.getSafeUserId();
@@ -887,9 +893,9 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     getDirectRoomFor(userID: string): (ChatRoom & ChatRoomMembershipManagement) | undefined {
         const directRooms = Array.from(this.roomList.values())
             .filter((room) => {
-                const memberIDs = get(room.members).map(
-                    (member) => member.id && ["join", "invite"].includes(get(member.membership))
-                );
+                const memberIDs = get(room.members)
+                    .filter((member) => member.id && ["join", "invite"].includes(get(member.membership)))
+                    .map((member) => member.id);
 
                 return (
                     room.type === "direct" &&
@@ -912,7 +918,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             return searchUserResponse.results.map((user) => ({ id: user.user_id, name: user.display_name }));
         } catch (error) {
             console.error("Unable to search matrix chat user with searchText: ", searchText, error);
-            Sentry.captureMessage(`Unable to search matrix chat user with searchText: ${error} `);
+            Sentry.captureException(error);
         }
         return;
     }
@@ -1002,7 +1008,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 })
                 .catch((error) => {
                     console.error("Unable to join", error);
-                    Sentry.captureMessage(`Unable to join room : ${error}`);
+                    Sentry.captureException(error);
                     rej(this.handleMatrixError(error));
                 });
         });
@@ -1029,7 +1035,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             return;
         } catch (error) {
             console.error("Error adding room to space: ", error);
-            Sentry.captureMessage(`Error adding room to space:${error}`);
+            Sentry.captureException(error);
             throw new Error(get(LL).chat.addRoomToFolderError());
         }
     }
