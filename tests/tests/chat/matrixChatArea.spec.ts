@@ -154,13 +154,7 @@ test.describe("matrix chat area property @matrix", () => {
     await AreaEditor.addProperty(page, "Link Matrix room");
     
     //TODO : find a better way to wait for the room to be created
-    /**
-     * Need to wait for the room to be created because the room is created asynchronously
-     * and the test will fail if the room is not created before the next step
-     * due to synapse server delay
-     */
-
-   // await page.waitForTimeout(4000);
+    await page.waitForTimeout(4000);
 
     await AreaEditor.setMatrixChatRoomProperty(page, true, "name of new room");
 
@@ -168,7 +162,7 @@ test.describe("matrix chat area property @matrix", () => {
 
     
     //TODO : find a better way to wait for the room to be created
-    //await page.waitForTimeout(4000);
+    await page.waitForTimeout(4000);
 
     await Map.walkToPosition(page, 4 * 32, 2 * 32);
 
@@ -235,4 +229,5 @@ test.describe("matrix chat area property @matrix", () => {
     await expect(page2.getByTestId("manageParticipantOption")).not.toBeAttached();
 
   });
+  
 });
