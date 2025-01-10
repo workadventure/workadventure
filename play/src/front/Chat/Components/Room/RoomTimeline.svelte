@@ -37,8 +37,11 @@
     $: roomName = room?.name;
 
     onMount(() => {
-        scrollToMessageListBottom();
-        initMessages().catch((error) => console.error(error));
+        initMessages()
+            .catch((error) => console.error(error))
+            .finally(() => {
+                scrollToMessageListBottom();
+            });
     });
 
     async function initMessages() {
