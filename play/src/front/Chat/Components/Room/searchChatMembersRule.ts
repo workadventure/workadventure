@@ -1,6 +1,13 @@
 import { get } from "svelte/store";
 import { gameManager } from "../../../Phaser/Game/GameManager";
 
+export interface SelectItem {
+    value: string;
+    label: string | undefined;
+    verified?: boolean;
+    created?: boolean;
+}
+
 export const searchChatMembersRule = () => {
     const chat = gameManager.chatConnection;
     const userProviderMergerPromise = gameManager.getCurrentGameScene().userProviderMerger;
@@ -19,9 +26,7 @@ export const searchChatMembersRule = () => {
         return [];
     }
 
-    async function searchWorldMembers(
-        filterText: string
-    ): Promise<{ value: string; label: string | number | undefined; verified: boolean }[]> {
+    async function searchWorldMembers(filterText: string): Promise<SelectItem[]> {
         try {
             const userProviderMerger = await userProviderMergerPromise;
             const chatUsersMap = get(userProviderMerger.usersByRoomStore);
@@ -31,7 +36,12 @@ export const searchChatMembersRule = () => {
             if (chatUsers === undefined) {
                 return [];
             }
-            return chatUsers.map((user) => ({ value: user.chatId, label: user.username ?? user.id, verified: true }));
+            return chatUsers.map((user) => ({
+                value: user.chatId,
+                label: user.username ?? user.id?.toString(),
+                verified: true,
+                created: false,
+            }));
         } catch (error) {
             console.error(error);
         }

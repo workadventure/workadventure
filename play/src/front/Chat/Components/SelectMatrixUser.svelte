@@ -4,12 +4,12 @@
     import Select from "svelte-select";
     import LL from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { searchChatMembersRule } from "./Room/searchChatMembersRule";
-
-    export let value: { value: string; label: string; verified?: boolean }[] = [];
+    import { searchChatMembersRule, SelectItem } from "./Room/searchChatMembersRule";
+    export let value: SelectItem[] = [];
     export let placeholder = "";
     export let filterText = "";
-    let items: { value: string; label: string | number | undefined; created?: boolean; verified?: boolean }[] = [];
+
+    let items: SelectItem[] = [];
     const chat = gameManager.chatConnection;
 
     const dispatch = createEventDispatcher();
@@ -51,22 +51,13 @@
         return validItems;
     }
 
-    async function loadItems() {
-        try {
-            return await searchWorldMembers(filterText);
-        } catch (error) {
-            console.error(error);
-            Sentry.captureException(error);
-            return [];
-        }
-    }
-
     onMount(() => {
-        loadItems()
+        searchWorldMembers(filterText)
             .then((newItems) => {
                 items = newItems;
             })
             .catch((error) => {
+                dispatch("error", { error: "Failed to load users" });
                 console.error(error);
                 Sentry.captureException(error);
             });
