@@ -11,8 +11,6 @@ import {
     ChatMessageReaction,
     ChatMessageType,
     ChatRoom,
-    ChatRoomMember,
-    ChatRoomMembership,
     ChatUser,
 } from "../ChatConnection";
 import LL from "../../../../i18n/i18n-svelte";
@@ -34,6 +32,7 @@ export class ProximityChatMessage implements ChatMessage {
     quotedMessage = undefined;
     isDeleted = writable(false);
     isModified = writable(false);
+    canDelete = writable(false);
 
     constructor(
         public id: string,
@@ -65,9 +64,6 @@ export class ProximityChatRoom implements ChatRoom {
     avatarUrl = undefined;
     messages: SearchableArrayStore<string, ChatMessage> = new SearchableArrayStore((item) => item.id);
     messageReactions: MapStore<string, MapStore<string, ChatMessageReaction>> = new MapStore();
-    myMembership: ChatRoomMembership = "member";
-    membersId: string[] = [];
-    members: ChatRoomMember[] = [];
     hasPreviousMessage = writable(false);
     isEncrypted = writable(false);
     typingMembers: Writable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
@@ -121,15 +117,6 @@ export class ProximityChatRoom implements ChatRoom {
                     });
                 }
             });
-    }
-
-    muteNotification(): Promise<void> {
-        this.areNotificationsMuted.set(true);
-        return Promise.resolve();
-    }
-    unmuteNotification(): Promise<void> {
-        this.areNotificationsMuted.set(false);
-        return Promise.resolve();
     }
 
     sendMessage(message: string, action: ChatMessageType = "proximity", broadcast = true): void {
@@ -258,12 +245,7 @@ export class ProximityChatRoom implements ChatRoom {
     setTimelineAsRead(): void {
         console.info("setTimelineAsRead => Method not implemented yet!");
     }
-    leaveRoom(): Promise<void> {
-        throw new Error("leaveRoom => Method not implemented.");
-    }
-    joinRoom(): Promise<void> {
-        throw new Error("joinRoom => Method not implemented.");
-    }
+
     loadMorePreviousMessages(): Promise<void> {
         return Promise.resolve();
     }
@@ -427,10 +409,6 @@ export class ProximityChatRoom implements ChatRoom {
                 chatVisibilityStore.set(true);
             }
         }
-    }
-
-    inviteUsers(userIds: string[]): Promise<void> {
-        return Promise.reject(new Error("Method not implemented"));
     }
 
     public leaveSpace(spaceName: string): void {

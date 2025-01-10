@@ -246,7 +246,9 @@ export class UserInputManager {
                 if (
                     d.keyInstance.originalEvent.target instanceof HTMLInputElement ||
                     d.keyInstance.originalEvent.target instanceof HTMLTextAreaElement ||
-                    d.keyInstance.originalEvent.target instanceof HTMLSelectElement
+                    d.keyInstance.originalEvent.target instanceof HTMLSelectElement ||
+                    d.keyInstance.originalEvent.metaKey ||
+                    d.keyInstance.originalEvent.ctrlKey
                 ) {
                     d.keyInstance.reset();
                     return;

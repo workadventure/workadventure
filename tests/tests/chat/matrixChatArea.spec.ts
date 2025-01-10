@@ -4,7 +4,7 @@ import Menu from "../utils/menu";
 import AreaEditor from "../utils/map-editor/areaEditor";
 import Map from "../utils/map";
 import { hideNoCamera, login } from "../utils/roles";
-import { oidcMatrixUserLogin } from "../utils/oidc";
+import { oidcMatrixUserLogin, oidcMemberTagLogin } from "../utils/oidc";
 import { resetWamMaps } from "../utils/map-editor/uploader";
 import chatUtils from "./chatUtils";
 
@@ -130,4 +130,104 @@ test.describe("matrix chat area property @matrix", () => {
 
     expect(await page.getByText("name of new room").isVisible()).toBeFalsy();
   });
+  test("it should be moderator in room when he have a admin tag (access to manage participants / can delete other message)", async ({
+    page,
+    browserName,
+  }) => {
+    await login(page, "test", 3, "en-US", false);
+    await oidcMatrixUserLogin(page, false);
+
+    if (browserName === "webkit") {
+      await hideNoCamera(page);
+    }
+
+    await Map.teleportToPosition(page, 5 * 32, 5 * 32);
+
+    await Menu.openMapEditor(page);
+
+    await MapEditor.openAreaEditor(page);
+    await AreaEditor.drawArea(
+      page,
+      { x: 1 * 32 * 1.5, y: 5 },
+      { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 }
+    );
+    await AreaEditor.addProperty(page, "Link Matrix room");
+    
+    //TODO : find a better way to wait for the room to be created
+    await page.waitForTimeout(4000);
+
+    await AreaEditor.setMatrixChatRoomProperty(page, true, "name of new room");
+
+    await Menu.closeMapEditor(page);
+
+    
+    //TODO : find a better way to wait for the room to be created
+    await page.waitForTimeout(4000);
+
+    await Map.walkToPosition(page, 4 * 32, 2 * 32);
+
+    await expect(page.getByTestId("closeChatButton")).toBeVisible();
+
+    await page.getByTestId("chatBackward").click();
+    await page.getByTestId("name of new room").hover() ;
+    await page.getByTestId("name of new room").getByTestId("toggleRoomMenu").click();
+    await page.getByTestId("manageParticipantOption").click()
+    await expect(page.getByText("Manage participants")).toBeVisible();
+
+  });
+
+  test("it shouldn't be moderator in room when he don't have a admin tag ", async ({
+    page,
+    browserName,
+    browser
+  }) => {
+    await login(page, "test", 3, "en-US", false);
+    await oidcMatrixUserLogin(page, false);
+
+    if (browserName === "webkit") {
+      await hideNoCamera(page);
+    }
+
+    await Map.teleportToPosition(page, 5 * 32, 5 * 32);
+
+    await Menu.openMapEditor(page);
+
+    await MapEditor.openAreaEditor(page);
+    await AreaEditor.drawArea(
+      page,
+      { x: 1 * 32 * 1.5, y: 5 },
+      { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 }
+    );
+    await AreaEditor.addProperty(page, "Link Matrix room");
+    await AreaEditor.setMatrixChatRoomProperty(page, true, "name of new room");
+
+    await Menu.closeMapEditor(page);
+    //await page.close()
+
+    const newBrowser = await browser.newContext();
+    const page2 = await newBrowser.newPage();
+    await page2.goto(Map.url("empty"));
+
+
+
+    
+    
+    await login(page2, "test2", 3, "en-US", false);
+    await oidcMemberTagLogin(page2, false);
+    
+    if (browserName === "webkit") {
+      await hideNoCamera(page2);
+    }
+    
+    await Map.walkToPosition(page2, 4 * 32, 2 * 32);
+    
+    await expect(page2.getByTestId("closeChatButton")).toBeVisible();
+
+    await page2.getByTestId("chatBackward").click();
+    await page2.getByTestId("name of new room").hover() ; 
+    await page2.getByTestId("name of new room").getByTestId("toggleRoomMenu").click();
+    await expect(page2.getByTestId("manageParticipantOption")).not.toBeAttached();
+
+  });
+  
 });
