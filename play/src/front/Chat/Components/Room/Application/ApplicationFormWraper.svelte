@@ -203,6 +203,7 @@
     </p>
 
     <input
+        data-testid="applicationInputLink"
         type="text"
         class="tw-border tw-rounded tw-w-full !tw-m-0"
         value={property.link}
@@ -223,7 +224,7 @@
     />
 
     {#if errorLink != undefined && errorLink != ""}
-        <p class="tw-text-xs tw-text-red-500 tw-p-0 tw-m-0 tw-h-fit tw-w-full">
+        <p data-testid="applicationLinkError" class="tw-text-xs tw-text-red-500 tw-p-0 tw-m-0 tw-h-fit tw-w-full">
             {errorLink}
         </p>
     {/if}

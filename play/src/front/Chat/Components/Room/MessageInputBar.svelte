@@ -369,6 +369,7 @@
     <div class="tw-w-full tw-bg-contrast/50 tw-rounded-t-2xl">
         <div class="tw-flex tw-flex-wrap tw-w-full tw-justify-between tw-items-center tw-p-2 tw-gap-2">
             <button
+                data-testid="youtubeApplicationButton"
                 class="tw-p-2 tw-m-0 tw-flex tw-flex-col tw-w-36 tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-2xl tw-gap-2 disabled:tw-opacity-50"
                 on:click={() => openLinkForm("youtube")}
                 disabled={!connectionManager.youtubeToolActivated}
@@ -385,6 +386,7 @@
             </button>
 
             <button
+                data-testid="klaxoonApplicationButton"
                 class="tw-p-2 tw-m-0 tw-flex tw-flex-col tw-w-36 tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-2xl tw-gap-2 disabled:tw-opacity-50"
                 on:click={() => openLinkForm("klaxoon")}
                 disabled={!connectionManager.klaxoonToolActivated}
@@ -401,6 +403,7 @@
             </button>
 
             <button
+                data-testid="googleSheetsApplicationButton"
                 class="tw-p-2 tw-m-0 tw-flex tw-flex-col tw-w-36 tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-2xl tw-gap-2 disabled:tw-opacity-50"
                 on:click={() => openLinkForm("googleSheets")}
                 disabled={!connectionManager.googleSheetsToolActivated}
@@ -417,6 +420,7 @@
             </button>
 
             <button
+                data-testid="googleDocsApplicationButton"
                 class="tw-p-2 tw-m-0 tw-flex tw-flex-col tw-w-36 tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-2xl tw-gap-2 disabled:tw-opacity-50"
                 on:click={() => openLinkForm("googleDocs")}
                 disabled={!connectionManager.googleDocsToolActivated}
@@ -433,6 +437,7 @@
             </button>
 
             <button
+                data-testid="googleSlidesApplicationButton"
                 class="tw-p-2 tw-m-0 tw-flex tw-flex-col tw-w-36 tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-2xl tw-gap-2 disabled:tw-opacity-50"
                 on:click={() => openLinkForm("googleSlides")}
                 disabled={!connectionManager.googleSlidesToolActivated}
@@ -449,8 +454,9 @@
             </button>
 
             <button
+                data-testid="googleDriveApplicationButton"
                 class="tw-p-2 tw-m-0 tw-flex tw-flex-col tw-w-36 tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-2xl tw-gap-2 disabled:tw-opacity-50"
-                on:click={() => openLinkForm("googleSlides")}
+                on:click={() => openLinkForm("googleDrive")}
                 disabled={!connectionManager.googleSheetsToolActivated}
             >
                 <img draggable="false" class="tw-w-8" src={googleDriveSvg} alt="info icon" />
@@ -458,13 +464,14 @@
                 <p
                     class="tw-text-xs tw-p-0 tw-m-0 tw-h-12 tw-w-full tw-overflow-hidden tw-overflow-ellipsis tw-text-gray-400"
                 >
-                    {connectionManager.googleSheetsToolActivated
+                    {connectionManager.googleDriveToolActivated
                         ? $LL.chat.form.application.googleDrive.description()
                         : $LL.mapEditor.properties.googleDriveProperties.disabled()}
                 </p>
             </button>
 
             <button
+                data-testid="eraserApplicationButton"
                 class="tw-p-2 tw-m-0 tw-flex tw-flex-col tw-w-36 tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-2xl tw-gap-2 disabled:tw-opacity-50"
                 on:click={() => openLinkForm("eraser")}
                 disabled={!connectionManager.eraserToolActivated}
@@ -481,6 +488,7 @@
             </button>
 
             <button
+                data-testid="excalidrawApplicationButton"
                 class="tw-p-2 tw-m-0 tw-flex tw-flex-col tw-w-36 tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-2xl tw-gap-2 disabled:tw-opacity-50"
                 on:click={() => openLinkForm("excalidraw")}
                 disabled={!connectionManager.excalidrawToolActivated}
@@ -497,6 +505,7 @@
             </button>
 
             <button
+                data-testid="cardsApplicationButton"
                 class="tw-p-2 tw-m-0 tw-flex tw-flex-col tw-w-36 tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-2xl tw-gap-2 disabled:tw-opacity-50"
                 on:click={() => openLinkForm("cards")}
                 disabled={!connectionManager.cardsToolActivated}
@@ -558,6 +567,7 @@
         dataTestid="messageInput"
     />
     <button
+        data-testid="addApplicationButton"
         class="tw-p-0 tw-m-0 tw-h-11 tw-w-11 tw-flex tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-none"
         class:tw-bg-secondary-800={applicationComponentOpened}
         on:click={toggleApplicationComponent}
