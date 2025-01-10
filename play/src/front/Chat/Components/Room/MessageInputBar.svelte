@@ -525,6 +525,7 @@
         <div class="tw-flex tw-flex-wrap tw-w-full tw-justify-between tw-items-center tw-p-2 tw-gap-2">
             {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
                 <button
+                    data-testid="{app.name}ApplicationButton"
                     class="tw-p-2 tw-m-0 tw-flex tw-flex-col tw-w-36 tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-2xl tw-gap-2 disabled:tw-opacity-50"
                     on:click={() => openLinkForm(app.name)}
                 >
