@@ -154,7 +154,6 @@ test.describe("matrix chat area property @matrix", () => {
     await AreaEditor.addProperty(page, "Link Matrix room");
     
     //TODO : find a better way to wait for the room to be created
-    await page.waitForTimeout(4000);
 
     await AreaEditor.setMatrixChatRoomProperty(page, true, "name of new room");
 
@@ -162,7 +161,6 @@ test.describe("matrix chat area property @matrix", () => {
 
     
     //TODO : find a better way to wait for the room to be created
-    await page.waitForTimeout(4000);
 
     await Map.walkToPosition(page, 4 * 32, 2 * 32);
 
