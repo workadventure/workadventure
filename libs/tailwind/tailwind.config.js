@@ -1,3 +1,4 @@
+const plugin = require("tailwindcss/plugin");
 module.exports = {
   content: [
     "./src/**/*.{html,js,svelte,ts}"
@@ -67,7 +68,12 @@ module.exports = {
   plugins: [
     require('@tailwindcss/container-queries'),
     require("@tailwindcss/forms"),
-    require("@workadventure/design-system")
+    require("@workadventure/design-system"),
+    plugin(function({ addVariant }) {
+      // Mobile screens are typically small AND have a touch screen (coarse pointer)
+      // See https://github.com/tailwindlabs/tailwindcss/discussions/2397
+      addVariant('mobile', '@media (((max-height: 960px) and (max-width: 480px)) or ((max-height: 480px) and (max-width: 960px))) and (pointer: coarse)')
+    })
   ],
   workadventureUi: {
     oswaldFontUrl: './fonts/Oswald.ttf',

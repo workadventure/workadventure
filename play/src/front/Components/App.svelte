@@ -314,7 +314,10 @@
         <GameOverlay {game} />
     </div>
     {#if $coWebsites.length > 0}
-        <div transition:fly={{ duration: 200, x: widthPercent }} bind:this={cowebsiteContainer}>
+        <div
+            transition:fly={{ duration: 200, x: (widthPercent / 100) * window.innerWidth }}
+            bind:this={cowebsiteContainer}
+        >
             {#if flexBasis !== undefined}
                 <CoWebsitesContainer />
             {/if}

@@ -1246,7 +1246,7 @@
                     {/if}
                 </div>
                 <div use:clickOutside={() => (burgerOpen = false)}>
-                    <ActionBarButtonWrapper classList="group/btn-burger @lg:hidden">
+                    <ActionBarButtonWrapper classList="group/btn-burger @lg:hidden rounded-r-lg pr-2">
                         <ActionBarIconButton
                             dataTestId="burger-menu"
                             on:click={() => {
