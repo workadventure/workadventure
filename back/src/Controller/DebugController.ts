@@ -69,7 +69,7 @@ export class DebugController {
             let namespaces = "*";
 
             if (query.namespaces) {
-                namespaces = query.namespaces;
+                namespaces = Array.isArray(query.namespaces) ? query.namespaces.join(",") : query.namespaces;
             }
 
             debug.enable(namespaces);
