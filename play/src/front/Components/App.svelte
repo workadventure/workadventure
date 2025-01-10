@@ -28,7 +28,6 @@
         isResized,
         isVerticalMode,
     } from "../Stores/CoWebsiteStore";
-    import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
     import { mouseInCameraTriggerArea } from "../Stores/MediaStore";
     import GameOverlay from "./GameOverlay.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
@@ -284,27 +283,17 @@
     let lastInTriggerArea = false;
     // We are tracking if the mouse cursor gets near the camera trigger area
     const detectInCameraArea = (event: MouseEvent) => {
-        const isSmallScreen = isMediaBreakpointUp("md");
+        // Note: in phone mode, the camera is at the bottom. But we don't need to track that because in phone mode,
+        // you cannot "hover" over the area where the camera is.
         const rect = gameDiv.getBoundingClientRect();
 
-        if (!isSmallScreen) {
-            const inTopCenter =
-                event.x - rect.left > rect.width / 4 &&
-                event.x + rect.left < (rect.width * 3) / 4 &&
-                event.y - rect.top < rect.height / 4;
-            if (inTopCenter !== lastInTriggerArea) {
-                lastInTriggerArea = inTopCenter;
-                mouseInCameraTriggerArea.set(inTopCenter);
-            }
-        } else {
-            const inBottomCenter =
-                event.x - rect.left > rect.width / 4 &&
-                event.x + rect.left < (rect.width * 3) / 4 &&
-                rect.bottom - event.y < rect.height / 4;
-            if (inBottomCenter !== lastInTriggerArea) {
-                lastInTriggerArea = inBottomCenter;
-                mouseInCameraTriggerArea.set(inBottomCenter);
-            }
+        const inTopCenter =
+            event.x - rect.left > rect.width / 4 &&
+            event.x + rect.left < (rect.width * 3) / 4 &&
+            event.y - rect.top < rect.height / 4;
+        if (inTopCenter !== lastInTriggerArea) {
+            lastInTriggerArea = inTopCenter;
+            mouseInCameraTriggerArea.set(inTopCenter);
         }
     };
 </script>

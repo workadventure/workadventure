@@ -7,7 +7,6 @@
     import MyCamera from "../MyCamera.svelte";
     import { myCameraStore } from "../../Stores/MyMediaStore";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
-    import { canvasWidth } from "../../Stores/CoWebsiteStore";
 
     let isHightlighted = false;
     let isMobile: boolean;
@@ -70,9 +69,7 @@
 <div
     class="{isHightlighted
         ? 'flex justify-center gap-4 whitespace-nowrap relative overflow-x-auto overflow-y-hidden m-0 mx-auto my-0 w-full max-w-full'
-        : 'not-highlighted mt-0'} {$highlightFullScreen && $highlightedEmbedScreen ? 'hidden' : ''} {$canvasWidth < 768
-        ? 'mt-12'
-        : ''} pointer-events-none"
+        : 'not-highlighted mt-0'} {$highlightFullScreen && $highlightedEmbedScreen ? 'hidden' : ''} pointer-events-none"
     id="cameras-container"
 >
     {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}

@@ -72,6 +72,7 @@ module.exports = {
     plugin(function({ addVariant }) {
       // Mobile screens are typically small AND have a touch screen (coarse pointer)
       // See https://github.com/tailwindlabs/tailwindcss/discussions/2397
+      // Note: if this is modified, don't forget to update the corresponding media query in the BreakpointUtils.ts file
       addVariant('mobile', '@media (((max-height: 960px) and (max-width: 480px)) or ((max-height: 480px) and (max-width: 960px))) and (pointer: coarse)')
     })
   ],
