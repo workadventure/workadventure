@@ -55,6 +55,7 @@ import { Area } from "../../Entity/Area";
 import { extensionModuleStore } from "../../../Stores/GameSceneStore";
 import { ChatRoom } from "../../../Chat/Connection/ChatConnection";
 import { userIsConnected } from "../../../Stores/MenuStore";
+import { MatrixChatConnection } from "../../../Chat/Connection/Matrix/MatrixChatConnection";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -586,13 +587,28 @@ export class AreasPropertiesListener {
     private handleMatrixRoomAreaOnEnter(property: MatrixRoomPropertyData) {
         const isConnected = get(userIsConnected);
         if (this.scene.connection && property.serverData?.matrixRoomId && isConnected) {
+            const matrixRoomId = property.serverData.matrixRoomId;
+            const gameManagerChatConnection = gameManager.chatConnection;
+
             this.scene.connection
-                .queryEnterChatRoomArea(property.serverData.matrixRoomId)
+                .queryEnterChatRoomArea(matrixRoomId)
                 .then(() => {
-                    if (!property.serverData?.matrixRoomId) {
+                    if (!matrixRoomId) {
                         throw new Error("Failed to join room : roomId is undefined");
                     }
-                    return gameManager.chatConnection.joinRoom(property.serverData.matrixRoomId);
+
+                    if(gameManagerChatConnection instanceof MatrixChatConnection){
+                        return gameManagerChatConnection.waitForRoom(matrixRoomId);
+                    }
+
+                    return Promise.resolve();
+                })
+                .then(()=>{
+                    if (!property.serverData?.matrixRoomId) {
+                        throw new Error("Failed to join room : roomId is undefined");
+                    } 
+
+                    return gameManagerChatConnection.joinRoom(property.serverData.matrixRoomId);
                 })
                 .then((room: ChatRoom | undefined) => {
                     if (!room) return;

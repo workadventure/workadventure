@@ -64,6 +64,7 @@ export interface ChatRoomMembershipManagement {
     readonly members: Readable<ChatRoomMember[]>;
     readonly joinRoom: () => Promise<void>;
     readonly leaveRoom: () => Promise<void>;
+    readonly waitForRoom: (roomId: string) => Promise<void>;
 }
 
 export interface ChatRoomNotificationControl {

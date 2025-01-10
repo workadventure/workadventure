@@ -866,8 +866,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 rej(new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG));
                 return;
             }
-
-            this.client
+            const client = this.client;
+            client
                 .joinRoom(roomId)
                 .then(async (_) => {
                     //Wait Sync Event before use/update roomList otherwise room not exist in the client
@@ -936,6 +936,36 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         const directMap: Record<string, string[]> = this.client.getAccountData("m.direct")?.getContent() || {};
         directMap[userId] = [...(directMap[userId] || []), roomId];
         await this.client.setAccountData("m.direct", directMap);
+    }
+
+    async waitForRoom(roomId: string): Promise<unknown> {
+        const timeoutPromise = new Promise((resolve, reject) => {
+            setTimeout(() => {
+                reject(new Error("Room not found"));
+            }, 10000);
+        });
+
+        const waitForRoomPromise = new Promise<void>((resolve, reject) => {
+            const checkRoom = async () => {
+                const room = this.client?.getRoom(roomId);
+                if (room) {
+                    resolve();
+                } else {
+                    try {
+                        await this.waitForNextSync();
+                        //const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
+                        //await delay(2000);
+                        await checkRoom();
+                    } catch (error) {
+                        reject(error);
+                    }
+                }
+            };
+
+            checkRoom().catch(reject);
+        });
+
+        return Promise.race([waitForRoomPromise, timeoutPromise]);
     }
 
     clearListener() {
