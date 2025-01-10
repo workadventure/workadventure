@@ -389,8 +389,8 @@
 </script>
 
 <div
-    class="@container/actions position-responsive w-full z-[301] transition-all pointer-events-none bp-menu {$peerStore.size >
-        0 && $highlightFullScreen
+    class="@container/actions w-full z-[301] transition-all pointer-events-none bp-menu {$peerStore.size > 0 &&
+    $highlightFullScreen
         ? 'hidden'
         : ''}"
 >
@@ -1245,221 +1245,231 @@
                         </div>
                     {/if}
                 </div>
-                <div
-                    class="group/btn-burger relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 rounded-l-lg rounded-r-lg aspect-square block @lg:hidden"
-                >
-                    <button
-                        on:click={() => (burgerOpen = !burgerOpen)}
-                        use:clickOutside={() => (burgerOpen = false)}
-                        class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:w-12 @xl/actions:w-12 p-1 m-0 rounded hover:bg-white/10 flex items-center justify-center transition-all"
-                        data-testid="burger-menu"
-                    >
-                        {#if !burgerOpen}
-                            <MenuBurgerIcon />
-                        {:else}
-                            <XIcon />
-                        {/if}
-                    </button>
+                <div use:clickOutside={() => (burgerOpen = false)}>
+                    <ActionBarButtonWrapper classList="group/btn-burger @lg:hidden">
+                        <ActionBarIconButton
+                            dataTestId="burger-menu"
+                            on:click={() => {
+                                burgerOpen = !burgerOpen;
+                            }}
+                            on:blur={() => (burgerOpen = false)}
+                        >
+                            {#if !burgerOpen}
+                                <!-- pointer-events-none is important for clickOutside to work. Otherwise, the
+                                     SVG is the target of the click, is removed from the DOM on click and considered to be
+                                     outside the main div -->
+                                <MenuBurgerIcon classList="pointer-events-none" />
+                            {:else}
+                                <XIcon classList="pointer-events-none" />
+                            {/if}
+                        </ActionBarIconButton>
+                    </ActionBarButtonWrapper>
+                    {#if burgerOpen}
+                        <div
+                            class="w-48 bg-contrast/80 absolute right-2 top-auto z-[1000] py-4 rounded-lg text-right text-white no-underline pointer-events-auto block @lg:hidden before:content-[''] before:absolute before:w-0 before:h-0 sm:before:-top-[14px] sm:before:bottom-auto before:-bottom-4 before:top-auto before:rotate-180 sm:before:rotate-0 before:right-5 before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all"
+                            transition:fly={{ y: 40, duration: 150 }}
+                        >
+                            <div class="block @md/actions:hidden">
+                                <AvailabilityStatusList
+                                    statusInformation={getStatusInformation(statusToShow)}
+                                    align="right"
+                                />
+                                <div class="flex text-xxs uppercase text-white/50 px-4 py-2 relative justify-end">
+                                    {$LL.menu.sub.profile()}
+                                </div>
+
+                                <button
+                                    class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold"
+                                    on:click={() => openEditNameScene()}
+                                >
+                                    {$LL.actionbar.profil()}
+                                </button>
+                                <button
+                                    class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold"
+                                    on:click={() => openEditSkinScene()}
+                                >
+                                    <div>{$LL.actionbar.woka()}</div>
+                                </button>
+                                <button
+                                    class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold"
+                                    on:click={() => openEditCompanionScene()}
+                                >
+                                    {$LL.actionbar.companion()}
+                                </button>
+                                <button class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold">
+                                    {$LL.actionbar.quest()}
+                                </button>
+                                <button
+                                    class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold"
+                                    on:click={openEnableCameraScene}
+                                >
+                                    {$LL.actionbar.editCamMic()}
+                                </button>
+                                <button
+                                    class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold"
+                                    on:click={() => showMenuItem(SubMenusInterface.settings)}
+                                >
+                                    {$LL.actionbar.otherSettings()}
+                                </button>
+
+                                {#if $peerStore.size > 0}
+                                    <div class="h-[1px] w-full bg-white/10 my-2 block @md/actions:hidden" />
+                                    <div class="flex text-xxs uppercase text-white/50 px-4 py-2 relative justify-end">
+                                        Camera
+                                    </div>
+
+                                    <button
+                                        class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold"
+                                        on:click={() => analyticsClient.screenSharing()}
+                                        on:click={screenSharingClick}
+                                        on:click={() => (burgerOpen = !burgerOpen)}
+                                        on:mouseenter={() => {
+                                            !navigating ? (helpActive = "share") : "";
+                                        }}
+                                        on:mouseleave={() => {
+                                            !navigating ? (helpActive = undefined) : "";
+                                        }}
+                                    >
+                                        {#if $requestedScreenSharingState}
+                                            {$LL.actionbar.stopScreenSharing()}
+                                        {:else}
+                                            {$LL.actionbar.startScreenSharing()}
+                                        {/if}
+                                    </button>
+
+                                    <button
+                                        class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold"
+                                        on:click={() => analyticsClient.screenSharing()}
+                                        on:click={() => (camMenuIsDropped = !camMenuIsDropped)}
+                                        on:click={() => (burgerOpen = !burgerOpen)}
+                                        on:click={() => (smallArrowVisible = !smallArrowVisible)}
+                                        on:mouseenter={() => {
+                                            !navigating ? (helpActive = "share") : "";
+                                        }}
+                                        on:mouseleave={() => {
+                                            !navigating ? (helpActive = undefined) : "";
+                                        }}
+                                    >
+                                        <!-- <p>Screen Sharing Mode</p> -->
+                                        {$LL.actionbar.screenSharingMode()}
+                                    </button>
+                                {/if}
+                            </div>
+                            {#if $mapMenuVisibleStore}
+                                <div class="h-[1px] w-full bg-white/10 my-2 block @md/actions:hidden" />
+                                <div class="flex text-xxs uppercase text-white/50 px-4 py-2 relative justify-end">
+                                    {$LL.actionbar.map()}
+                                </div>
+                            {/if}
+                            <!-- FIXME: we need proper "if" around the items of the burger menu. Should we centralize the notion of button? -->
+                            {#if $backOfficeMenuVisibleStore}
+                                <button
+                                    class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold"
+                                    on:click={() => openBo()}
+                                >
+                                    {$LL.actionbar.bo()}
+                                </button>
+                            {/if}
+                            {#if $globalMessageVisibleStore}
+                                <button class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold">
+                                    {$LL.actionbar.globalMessage()}
+                                </button>
+                            {/if}
+                            <!--{#if $megaphoneCanBeUsedStore && !$silentStore && ($myMicrophoneStore || $myCameraStore)}-->
+                            <!--    <button class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold">-->
+                            <!--        {$LL.actionbar.megaphone()}-->
+                            <!--    </button>-->
+                            <!--{/if}-->
+                            <div class="h-[1px] w-full bg-white/10 my-4" />
+                            {#if $inviteUserActivated}
+                                <div class="px-4 space-y-2">
+                                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                    {#each $addClassicButtonActionBarEvent as button, index (index)}
+                                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                        <div
+                                            class="flex flex-initial"
+                                            in:fly={{}}
+                                            on:dragstart|preventDefault={noDrag}
+                                            on:click={() =>
+                                                analyticsClient.clickOnCustomButton(button.id, button.label)}
+                                            on:click={() => {
+                                                buttonActionBarTrigger(button.id);
+                                            }}
+                                        >
+                                            <button class="btn btn-light btn-sm w-full justify-center" id={button.id}>
+                                                {button.label}
+                                            </button>
+                                        </div>
+                                    {/each}
+                                    {#if $inviteUserActivated}
+                                        <button
+                                            in:fly={{}}
+                                            on:dragstart|preventDefault={noDrag}
+                                            on:click={() => analyticsClient.openInvite()}
+                                            on:click={() => showMenuItem(SubMenusInterface.invite)}
+                                            class="btn btn-sm w-full justify-center {!$userIsConnected && ENABLE_OPENID
+                                                ? 'btn-ghost btn-light'
+                                                : 'btn-secondary'}"
+                                        >
+                                            {$LL.menu.sub.invite()}
+                                        </button>
+                                    {/if}
+                                    {#if !$userIsConnected && ENABLE_OPENID}
+                                        <a
+                                            href="/login"
+                                            on:click={() => analyticsClient.login()}
+                                            class="btn btn-secondary btn-sm w-full justify-center"
+                                        >
+                                            {$LL.actionbar.login()}
+                                        </a>
+                                    {:else}
+                                        <button
+                                            on:click={() => analyticsClient.logout()}
+                                            on:click={() => connectionManager.logout()}
+                                            class="btn btn-secondary btn-sm w-full justify-center"
+                                        >
+                                            {$LL.menu.profile.logout()}
+                                        </button>
+                                    {/if}
+                                </div>
+                            {/if}
+                            {#if $addActionButtonActionBarEvent.length > 0}
+                                {#each $addActionButtonActionBarEvent as button, index (index)}
+                                    <div class="px-4">
+                                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                        <div
+                                            in:fly={{}}
+                                            on:dragstart|preventDefault={noDrag}
+                                            on:click={() =>
+                                                analyticsClient.clickOnCustomButton(
+                                                    button.id,
+                                                    undefined,
+                                                    button.toolTip,
+                                                    button.imageSrc
+                                                )}
+                                            on:click={() => {
+                                                buttonActionBarTrigger(button.id);
+                                            }}
+                                            class="flex items-center justify-center btn btn-ghost btn-sm btn-light rounded select-none cursor-pointer"
+                                        >
+                                            <img
+                                                draggable="false"
+                                                src={button.imageSrc}
+                                                alt={button.toolTip}
+                                                class="h-6 mr-2 cursor-pointer"
+                                            />
+                                            {button.toolTip}
+                                            <!-- src="./static/images/Workadventure.gif"   src={button.imageSrc}   -->
+                                        </div>
+                                    </div>
+                                {/each}
+                            {/if}
+                        </div>
+                    {/if}
                 </div>
             </div>
         </div>
     </div>
-    {#if burgerOpen}
-        <div
-            class="w-48 bg-contrast/80 absolute right-2 top-auto z-[1000] py-4 rounded-lg text-right text-white no-underline pointer-events-auto block @lg:hidden before:content-[''] before:absolute before:w-0 before:h-0 sm:before:-top-[14px] sm:before:bottom-auto before:-bottom-4 before:top-auto before:rotate-180 sm:before:rotate-0 before:right-5 before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all"
-            transition:fly={{ y: 40, duration: 150 }}
-        >
-            <div class="block @md/actions:hidden">
-                <AvailabilityStatusList statusInformation={getStatusInformation(statusToShow)} align="right" />
-                <div class="flex text-xxs uppercase text-white/50 px-4 py-2 relative justify-end">
-                    {$LL.menu.sub.profile()}
-                </div>
-
-                <button
-                    class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold"
-                    on:click={() => openEditNameScene()}
-                >
-                    {$LL.actionbar.profil()}
-                </button>
-                <button
-                    class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold"
-                    on:click={() => openEditSkinScene()}
-                >
-                    <div>{$LL.actionbar.woka()}</div>
-                </button>
-                <button
-                    class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold"
-                    on:click={() => openEditCompanionScene()}
-                >
-                    {$LL.actionbar.companion()}
-                </button>
-                <button class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold">
-                    {$LL.actionbar.quest()}
-                </button>
-                <button
-                    class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold"
-                    on:click={openEnableCameraScene}
-                >
-                    {$LL.actionbar.editCamMic()}
-                </button>
-                <button
-                    class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold"
-                    on:click={() => showMenuItem(SubMenusInterface.settings)}
-                >
-                    {$LL.actionbar.otherSettings()}
-                </button>
-
-                {#if $peerStore.size > 0}
-                    <div class="h-[1px] w-full bg-white/10 my-2 block @md/actions:hidden" />
-                    <div class="flex text-xxs uppercase text-white/50 px-4 py-2 relative justify-end">Camera</div>
-
-                    <button
-                        class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold"
-                        on:click={() => analyticsClient.screenSharing()}
-                        on:click={screenSharingClick}
-                        on:click={() => (burgerOpen = !burgerOpen)}
-                        on:mouseenter={() => {
-                            !navigating ? (helpActive = "share") : "";
-                        }}
-                        on:mouseleave={() => {
-                            !navigating ? (helpActive = undefined) : "";
-                        }}
-                    >
-                        {#if $requestedScreenSharingState}
-                            {$LL.actionbar.stopScreenSharing()}
-                        {:else}
-                            {$LL.actionbar.startScreenSharing()}
-                        {/if}
-                    </button>
-
-                    <button
-                        class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold"
-                        on:click={() => analyticsClient.screenSharing()}
-                        on:click={() => (camMenuIsDropped = !camMenuIsDropped)}
-                        on:click={() => (burgerOpen = !burgerOpen)}
-                        on:click={() => (smallArrowVisible = !smallArrowVisible)}
-                        on:mouseenter={() => {
-                            !navigating ? (helpActive = "share") : "";
-                        }}
-                        on:mouseleave={() => {
-                            !navigating ? (helpActive = undefined) : "";
-                        }}
-                    >
-                        <!-- <p>Screen Sharing Mode</p> -->
-                        {$LL.actionbar.screenSharingMode()}
-                    </button>
-                {/if}
-            </div>
-            {#if $mapMenuVisibleStore}
-                <div class="h-[1px] w-full bg-white/10 my-2 block @md/actions:hidden" />
-                <div class="flex text-xxs uppercase text-white/50 px-4 py-2 relative justify-end">
-                    {$LL.actionbar.map()}
-                </div>
-            {/if}
-            <!-- FIXME: we need proper "if" around the items of the burger menu. Should we centralize the notion of button? -->
-            {#if $backOfficeMenuVisibleStore}
-                <button
-                    class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold"
-                    on:click={() => openBo()}
-                >
-                    {$LL.actionbar.bo()}
-                </button>
-            {/if}
-            {#if $globalMessageVisibleStore}
-                <button class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold">
-                    {$LL.actionbar.globalMessage()}
-                </button>
-            {/if}
-            <!--{#if $megaphoneCanBeUsedStore && !$silentStore && ($myMicrophoneStore || $myCameraStore)}-->
-            <!--    <button class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold">-->
-            <!--        {$LL.actionbar.megaphone()}-->
-            <!--    </button>-->
-            <!--{/if}-->
-            <div class="h-[1px] w-full bg-white/10 my-4" />
-            {#if $inviteUserActivated}
-                <div class="px-4 space-y-2">
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    {#each $addClassicButtonActionBarEvent as button, index (index)}
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                        <div
-                            class="flex flex-initial"
-                            in:fly={{}}
-                            on:dragstart|preventDefault={noDrag}
-                            on:click={() => analyticsClient.clickOnCustomButton(button.id, button.label)}
-                            on:click={() => {
-                                buttonActionBarTrigger(button.id);
-                            }}
-                        >
-                            <button class="btn btn-light btn-sm w-full justify-center" id={button.id}>
-                                {button.label}
-                            </button>
-                        </div>
-                    {/each}
-                    {#if $inviteUserActivated}
-                        <button
-                            in:fly={{}}
-                            on:dragstart|preventDefault={noDrag}
-                            on:click={() => analyticsClient.openInvite()}
-                            on:click={() => showMenuItem(SubMenusInterface.invite)}
-                            class="btn btn-sm w-full justify-center {!$userIsConnected && ENABLE_OPENID
-                                ? 'btn-ghost btn-light'
-                                : 'btn-secondary'}"
-                        >
-                            {$LL.menu.sub.invite()}
-                        </button>
-                    {/if}
-                    {#if !$userIsConnected && ENABLE_OPENID}
-                        <a
-                            href="/login"
-                            on:click={() => analyticsClient.login()}
-                            class="btn btn-secondary btn-sm w-full justify-center"
-                        >
-                            {$LL.actionbar.login()}
-                        </a>
-                    {:else}
-                        <button
-                            on:click={() => analyticsClient.logout()}
-                            on:click={() => connectionManager.logout()}
-                            class="btn btn-secondary btn-sm w-full justify-center"
-                        >
-                            {$LL.menu.profile.logout()}
-                        </button>
-                    {/if}
-                </div>
-            {/if}
-            {#if $addActionButtonActionBarEvent.length > 0}
-                {#each $addActionButtonActionBarEvent as button, index (index)}
-                    <div class="px-4">
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                        <div
-                            in:fly={{}}
-                            on:dragstart|preventDefault={noDrag}
-                            on:click={() =>
-                                analyticsClient.clickOnCustomButton(
-                                    button.id,
-                                    undefined,
-                                    button.toolTip,
-                                    button.imageSrc
-                                )}
-                            on:click={() => {
-                                buttonActionBarTrigger(button.id);
-                            }}
-                            class="flex items-center justify-center btn btn-ghost btn-sm btn-light rounded select-none cursor-pointer"
-                        >
-                            <img
-                                draggable="false"
-                                src={button.imageSrc}
-                                alt={button.toolTip}
-                                class="h-6 mr-2 cursor-pointer"
-                            />
-                            {button.toolTip}
-                            <!-- src="./static/images/Workadventure.gif"   src={button.imageSrc}   -->
-                        </div>
-                    </div>
-                {/each}
-            {/if}
-        </div>
-    {/if}
 </div>
 
 <style lang="scss">

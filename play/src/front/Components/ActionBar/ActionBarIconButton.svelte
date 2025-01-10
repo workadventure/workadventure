@@ -41,6 +41,6 @@
 >
     <slot />
 </button>
-{#if helpActive && !$helpTextDisabledStore && !disabledHelp}
+{#if helpActive && !$helpTextDisabledStore && !disabledHelp && (tooltipTitle || tooltipDesc)}
     <HelpTooltip title={tooltipTitle} desc={tooltipDesc} />
 {/if}
