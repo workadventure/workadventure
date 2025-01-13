@@ -60,7 +60,7 @@ export interface ChatRoom {
 
 export interface ChatRoomMembershipManagement {
     readonly name: Readable<string>;
-    readonly myMembership: ChatRoomMembership;
+    readonly myMembership: Readable<ChatRoomMembership>;
     readonly members: Readable<ChatRoomMember[]>;
     readonly joinRoom: () => Promise<void>;
     readonly leaveRoom: () => Promise<void>;
@@ -119,11 +119,12 @@ export type ChatMessageContent = {
 export const historyVisibilityOptions = ["world_readable", "joined", "invited"] as const;
 export type historyVisibility = (typeof historyVisibilityOptions)[number];
 
-export interface RoomFolder {
+export interface RoomFolder extends ChatRoom, ChatRoomMembershipManagement {
     id: string;
     name: Readable<string>;
-    rooms: MapStore<ChatRoom["id"], ChatRoom>;
-    folders: MapStore<RoomFolder["id"], RoomFolder>;
+    rooms: Readable<ChatRoom[]>;
+    folders: Readable<RoomFolder[]>;
+    invitations: Readable<ChatRoom[]>;
 }
 
 export interface CreateRoomOptions {
@@ -148,7 +149,7 @@ export interface ChatConnectionInterface {
     directRooms: Readable<ChatRoom[]>;
     rooms: Readable<(ChatRoom & ChatRoomMembershipManagement)[]>;
     invitations: Readable<ChatRoom[]>;
-    roomFolders: MapStore<RoomFolder["id"], RoomFolder>;
+    folders: Readable<RoomFolder[]>;
     createRoom: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string }>;
     createFolder: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string }>;
     createDirectRoom(userChatId: string): Promise<(ChatRoom & ChatRoomMembershipManagement) | undefined>;

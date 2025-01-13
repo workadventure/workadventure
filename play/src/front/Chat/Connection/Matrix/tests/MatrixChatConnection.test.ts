@@ -1,7 +1,7 @@
 import { ClientEvent, EventType, MatrixClient, PendingEventOrdering, RoomEvent, SyncState } from "matrix-js-sdk";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { KnownMembership } from "matrix-js-sdk/lib/types";
-import { get, Readable, writable } from "svelte/store";
+import { get, readable, Readable, writable } from "svelte/store";
 import { AvailabilityStatus } from "@workadventure/messages";
 import { MatrixChatConnection } from "../MatrixChatConnection";
 import { CreateRoomOptions } from "../../ChatConnection";
@@ -24,6 +24,13 @@ vi.mock("../../../../Phaser/Entity/CharacterLayerManager", () => {
                 return Promise.resolve("");
             },
         },
+    };
+});
+
+vi.mock("../../../../Enum/EnvironmentVariable.ts", () => {
+    return {
+        MATRIX_ADMIN_USER: "admin",
+        MATRIX_DOMAIN: "domain",
     };
 });
 
@@ -64,22 +71,22 @@ describe("MatrixChatConnection", () => {
         const directChatRoom = {
             id: "directChatRoom",
             type: "direct",
-            myMembership: KnownMembership.Join,
+            myMembership: readable(KnownMembership.Join),
         } as unknown as MatrixChatRoom;
         const InviteDirectChatRoom = {
             id: "InviteDirectChatRoom",
             type: "direct",
-            myMembership: KnownMembership.Invite,
+            myMembership: readable(KnownMembership.Invite),
         } as unknown as MatrixChatRoom;
         const multipleChatRoom = {
             id: "multipleChatRoom",
             type: "multiple",
-            myMembership: KnownMembership.Join,
+            myMembership: readable(KnownMembership.Join),
         } as unknown as MatrixChatRoom;
         const InviteMultipleChatRoom = {
             id: "InviteMultipleChatRoom",
             type: "multiple",
-            myMembership: KnownMembership.Invite,
+            myMembership: readable(KnownMembership.Invite),
         } as unknown as MatrixChatRoom;
 
         beforeAll(() => {

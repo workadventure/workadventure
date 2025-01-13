@@ -296,6 +296,12 @@ const chat: DeepPartial<Translation["chat"]> = {
         muteRoom: "Couper les notification",
         unmuteRoom: "Activer les notifications",
     },
+    folderMenu: {
+        leaveFolder: {
+            label: "Quitter le dossier",
+            notification: "Vous avez quitté le dossier",
+        },
+    },
     e2ee: {
         configure: "Configuré",
         encryptionNotConfigured: "Chiffrement non configuré",

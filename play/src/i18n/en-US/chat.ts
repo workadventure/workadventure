@@ -296,6 +296,12 @@ const chat: BaseTranslation = {
         muteRoom: "Mute Room",
         unmuteRoom: "Unmute Room",
     },
+    folderMenu: {
+        leaveFolder: {
+            label: "Leave Folder",
+            notification: "You have left the folder",
+        },
+    },
     e2ee: {
         configure: "Configure",
         encryptionNotConfigured: "Encryption not configured",

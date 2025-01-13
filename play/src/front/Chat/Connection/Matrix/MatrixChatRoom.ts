@@ -55,8 +55,8 @@ export class MatrixChatRoom
     readonly hasUnreadMessages: Writable<boolean>;
     avatarUrl: string | undefined;
     messages: SearchableArrayStore<string, MatrixChatMessage>;
-    myMembership: ChatRoomMembership;
     members: Writable<MatrixChatRoomMember[]>;
+    myMembership: Writable<ChatRoomMembership>;
     messageReactions: MapStore<string, MapStore<string, MatrixChatMessageReaction>>;
     hasPreviousMessage: Writable<boolean>;
     timelineWindow: TimelineWindow;
@@ -72,6 +72,7 @@ export class MatrixChatRoom
     private handleRoomRedaction = this.onRoomRedaction.bind(this);
     private handleStateEvent = this.onRoomStateEvent.bind(this);
     private handleNewMember = this.onRoomNewMember.bind(this);
+    private handleMyMembership = this.onRoomMyMembership.bind(this);
 
     constructor(
         private matrixRoom: Room,
@@ -88,7 +89,7 @@ export class MatrixChatRoom
         this.messages = new SearchableArrayStore((item: MatrixChatMessage) => item.id);
         this.messageReactions = new MapStore<string, MapStore<string, MatrixChatMessageReaction>>();
         this.sendMessage = this.sendMessage.bind(this);
-        this.myMembership = matrixRoom.getMyMembership();
+        this.myMembership = writable(matrixRoom.getMyMembership());
 
         this.members = writable([
             ...matrixRoom
@@ -141,7 +142,7 @@ export class MatrixChatRoom
             })
             .catch((error) => {
                 console.error(error);
-                Sentry.captureMessage("Failed to init Matrix room messages");
+                Sentry.captureMessage(`Failed to init Matrix room messages : ${error}`);
             });
 
         //Necessary to keep matrix event content for local event deletions after initialization
@@ -205,7 +206,12 @@ export class MatrixChatRoom
         this.matrixRoom.on(RoomEvent.Name, this.handleRoomName);
         this.matrixRoom.on(RoomEvent.Redaction, this.handleRoomRedaction);
         this.matrixRoom.on(RoomStateEvent.Events, this.handleStateEvent);
+        this.matrixRoom.on(RoomEvent.MyMembership, this.handleMyMembership);
         this.matrixRoom.on(RoomStateEvent.NewMember, this.handleNewMember);
+    }
+
+    protected onRoomMyMembership(room: Room) {
+        this.myMembership.set(room.getMyMembership());
     }
 
     private onRoomNewMember(event: MatrixEvent, state: RoomState, member: RoomMember) {

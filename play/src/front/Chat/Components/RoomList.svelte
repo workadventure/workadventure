@@ -36,7 +36,7 @@
     let rooms = chat.rooms;
     //TODO : Make a distinction between invitations to a room or a space;
     let roomInvitations = chat.invitations;
-    let roomFolders = chat.roomFolders;
+    let roomFolders = chat.folders;
     let proximityHasUnreadMessages = proximityChatRoom.hasUnreadMessages;
 
     let displayDirectRooms = false;
@@ -298,7 +298,7 @@
                             </div>
                         </div>
                         {#if $isGuest === false}
-                            <CreateRoomOrFolderOption />
+                            <CreateRoomOrFolderOption parentID={undefined} parentName={""} folder={undefined} />
                         {/if}
                         <button
                             class="tw-transition-all group-hover:tw-bg-white/10 tw-p-1 tw-rounded-lg tw-aspect-square tw-flex tw-items-center tw-justify-center tw-text-white"
@@ -314,17 +314,10 @@
                                 <Room {room} />
                             </ShowMore>
                         </div>
-                        <!--roomBySpace-->
                     {/if}
+                    <!--roomBySpace-->
                     {#each Array.from($roomFolders.values()) as rootRoomFolder (rootRoomFolder.id)}
-                        <RoomFolder
-                            name={rootRoomFolder.name}
-                            folders={rootRoomFolder.folders}
-                            rooms={rootRoomFolder.rooms}
-                            isGuest={$isGuest}
-                            id={rootRoomFolder.id}
-                            rootFolder={true}
-                        />
+                        <RoomFolder folder={rootRoomFolder} rootFolder={true} />
                     {/each}
                 {/if}
             </div>
