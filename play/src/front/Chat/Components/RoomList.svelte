@@ -322,7 +322,7 @@
                 {/if}
             </div>
             {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}
-                <div class="tw-sticky tw-bottom-0 tw-w-full tw-backdrop-blur-md tw-mt-3">
+                <div class="tw-fixed tw-bottom-0 tw-w-full tw-backdrop-blur-md tw-mt-3">
                     <button
                         data-testid="restoreEncryptionButton"
                         on:click|stopPropagation={initChatConnectionEncryption}
