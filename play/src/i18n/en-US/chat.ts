@@ -40,6 +40,7 @@ const chat: BaseTranslation = {
     searchChat: "Search for channel, message, etc ...",
     people: "People",
     rooms: "Rooms",
+    addNew: "Add new : ",
     invitations: "Invitations",
     availableRooms: "Available rooms",
     proximity: "Proximity Chat",

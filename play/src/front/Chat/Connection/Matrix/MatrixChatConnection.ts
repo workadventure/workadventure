@@ -909,12 +909,12 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         return undefined;
     }
 
-    async searchChatUsers(searchText: string) {
+    async searchChatUsers(searchText: string, limit = 20) {
         try {
             if (!this.client) {
                 throw new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG);
             }
-            const searchUserResponse = await this.client.searchUserDirectory({ term: searchText, limit: 20 });
+            const searchUserResponse = await this.client.searchUserDirectory({ term: searchText, limit });
             return searchUserResponse.results.map((user) => ({ id: user.user_id, name: user.display_name }));
         } catch (error) {
             console.error("Unable to search matrix chat user with searchText: ", searchText, error);
@@ -1047,6 +1047,12 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         const directMap: Record<string, string[]> = this.client.getAccountData("m.direct")?.getContent() || {};
         directMap[userId] = [...(directMap[userId] || []), roomId];
         await this.client.setAccountData("m.direct", directMap);
+    }
+
+    async isUserExist(address: string): Promise<boolean> {
+        const user = await this.searchChatUsers(address, 1);
+        if (!user) return false;
+        return user && user.some((user) => user.id === address);
     }
 
     clearListener() {
