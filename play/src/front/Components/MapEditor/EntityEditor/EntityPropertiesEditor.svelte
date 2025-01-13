@@ -7,7 +7,7 @@
     } from "@workadventure/map-editor";
     import { onDestroy } from "svelte";
     import { ApplicationDefinitionInterface } from "@workadventure/messages";
-    import { uuid } from "uuidv4";
+    import { v4 as uuid } from "uuid";
     import {
         mapEditorEntityModeStore,
         mapEditorSelectedEntityPrefabStore,

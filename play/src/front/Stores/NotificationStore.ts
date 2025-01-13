@@ -1,5 +1,5 @@
 import { writable } from "svelte/store";
-import { uuid } from "uuidv4";
+import { v4 as uuid } from "uuid";
 
 export type Notification = {
     id: string;

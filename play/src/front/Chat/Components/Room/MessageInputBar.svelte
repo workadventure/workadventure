@@ -15,7 +15,7 @@
 <script lang="ts">
     import { onDestroy } from "svelte";
     import { writable } from "svelte/store";
-    import { uuid } from "uuidv4";
+    import { v4 as uuid } from "uuid";
     import { ChatRoom } from "../../Connection/ChatConnection";
     import { selectedChatMessageToReply } from "../../Stores/ChatStore";
     import { getChatEmojiPicker } from "../../EmojiPicker";
