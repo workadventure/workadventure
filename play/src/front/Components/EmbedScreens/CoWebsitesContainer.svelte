@@ -37,20 +37,11 @@
 
     onMount(() => {
         updateScreenSize();
-        //resizeCowebsite();
-        if (!vertical) {
-            //let widthOnMount = parseInt(getComputedStyle(container).width);
-            //widthContainerForWindow.set(widthOnMount);
-        } else {
-            //let heightOnMount = parseInt(getComputedStyle(container).height);
-            //heightContainerForWindow.set(heightOnMount);
-        }
 
         unsubscribeCowebsitesUpdate = coWebsites.subscribe((arr) => {
             activeCowebsite = arr[arr.length - 1];
         });
 
-        //waScaleManager.applyNewSize();
         resizeBar.addEventListener("mousedown", handleMouseDown);
         resizeBar.addEventListener("touchstart", handleTouchStart);
     });
@@ -170,7 +161,6 @@
     let tabsOverflowing = false;
     let tabsScrollX = 0;
     $: tabsContainerWidth, $coWebsites, (tabsOverflowing = areTabsOverflowing());
-    $: console.log(tabsContainerWidth, tabsContainer?.scrollWidth);
 
     function areTabsOverflowing(): boolean {
         if (!tabsContainer) {
@@ -181,17 +171,37 @@
     }
 
     function scrollTabsLeft() {
-        tabsContainer?.scrollBy({
-            left: -300,
-            behavior: "smooth",
-        });
+        if (!tabsContainer) {
+            return;
+        }
+        const scrollX = tabsContainer.scrollLeft;
+        for (let i = tabsContainer.childNodes.length - 1; i >= 0; i--) {
+            const tab = tabsContainer.childNodes[i] as HTMLElement;
+            if (tab.offsetLeft < scrollX) {
+                tabsContainer.scrollTo({
+                    left: tab.offsetLeft,
+                    behavior: "smooth",
+                });
+                break;
+            }
+        }
     }
 
     function scrollTabsRight() {
-        tabsContainer?.scrollBy({
-            left: 300,
-            behavior: "smooth",
-        });
+        if (!tabsContainer) {
+            return;
+        }
+        const scrollX = tabsContainer.scrollLeft;
+        for (let i = 0; i < tabsContainer.childNodes.length; i++) {
+            const tab = tabsContainer.childNodes[i] as HTMLElement;
+            if (tab.offsetLeft > scrollX) {
+                tabsContainer.scrollTo({
+                    left: tab.offsetLeft,
+                    behavior: "smooth",
+                });
+                break;
+            }
+        }
     }
 
     function onTabsScroll() {

@@ -225,7 +225,10 @@
     let canvasSizeUnsubscriber: Unsubscriber;
     onMount(() => {
         document.addEventListener("mousemove", detectInCameraArea);
-        canvasSizeUnsubscriber = canvasSize.subscribe(() => {
+        canvasSizeUnsubscriber = canvasSize.subscribe(({ width, height }) => {
+            if (width < 1 || height < 1) {
+                return;
+            }
             waScaleManager.applyNewSize();
             waScaleManager.refreshFocusOnTarget();
         });
@@ -265,9 +268,7 @@
     {#if $coWebsites.length > 0}
         <!-- FIXME: adapt FLY effect to vertical and RTL mode -->
         <div class="flex-1" transition:fly={{ duration: 200, x: $coWebsitesSize.width }}>
-            <!--{#if flexBasis !== undefined}-->
             <CoWebsitesContainer />
-            <!--{/if}-->
         </div>
     {/if}
 </div>
