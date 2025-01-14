@@ -15,6 +15,7 @@
 <script lang="ts">
     import { onDestroy } from "svelte";
     import { writable } from "svelte/store";
+    import { v4 as uuid } from "uuid";
     import { ChatRoom } from "../../Connection/ChatConnection";
     import { selectedChatMessageToReply } from "../../Stores/ChatStore";
     import { getChatEmojiPicker } from "../../EmojiPicker";
@@ -146,7 +147,7 @@
     }
 
     export function handleFiles(event: CustomEvent<FileList>) {
-        const newFiles = [...event.detail].map((file) => ({ id: window.crypto.randomUUID(), file }));
+        const newFiles = [...event.detail].map((file) => ({ id: uuid(), file }));
         files = [...files, ...newFiles];
         addToPreviews(newFiles);
     }
