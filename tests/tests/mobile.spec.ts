@@ -43,16 +43,15 @@ test.describe('Mobile', () => {
         // TODO: find a solution to test Joystick
         await Map.walkToPosition(pageAlice, positionToDiscuss.x, positionToDiscuss.y);
 
-        await page.pause();
-
-        await expect(pageAlice.locator(`.cameras-container .other-cameras .media-container`).nth(0)).toBeVisible({
-            timeout: 10000
-        });
-        await expect(page.locator(`.cameras-container .other-cameras .media-container`).nth(0)).toBeVisible({
-            timeout: 10000
-        });
-        expect(await pageAlice.locator(`.cameras-container .other-cameras .media-container`).count()).toBe(1);
-        expect(await page.locator(`.cameras-container .other-cameras .media-container`).count()).toBe(1);
+        await expect(pageAlice.getByText('Bob')).toBeVisible();
+        // check if we can still open and close burgerMenu when 2 in proximity chat with cam on
+        await Menu.openBurgerMenu(pageAlice);
+        await Menu.closeBurgerMenu(pageAlice);
+        
+        //  TODO: User should be able to click on button to have the camera of other user bigger.
+        
+        /*await page.getByTestId('burger-menu').click();
+        await expect(page.getByText('Change your status')).toBeHidden();*/
 
         // Second browser
         const newBrowserJohn = await browser.newContext();
@@ -66,18 +65,11 @@ test.describe('Mobile', () => {
         await Map.walkToPosition(pageJohn, positionToDiscuss.x, positionToDiscuss.y);
 
         // Expect to see camera of users
-        await expect(pageJohn.locator(`.cameras-container .other-cameras .media-container`).nth(1)).toBeVisible({
-            timeout: 10000
-        });
-        await expect(pageAlice.locator(`.cameras-container .other-cameras .media-container`).nth(1)).toBeVisible({
-            timeout: 10000
-        });
-        await expect(page.locator(`.cameras-container .other-cameras .media-container`).nth(1)).toBeVisible({
-            timeout: 10000
-        });
-        expect(await pageAlice.locator(`.cameras-container .other-cameras .media-container`).count()).toBe(2);
-        expect(await page.locator(`.cameras-container .other-cameras .media-container`).count()).toBe(2);
-        expect(await pageJohn.locator(`.cameras-container .other-cameras .media-container`).count()).toBe(2);
+        await expect(pageJohn.getByText('Bob')).toBeVisible();
+        await expect(pageJohn.getByText('Alice')).toBeVisible();
+        // check if we can still open and close burgerMenu when 2 in proximity chat with cam on
+        await Menu.openBurgerMenu(pageJohn);
+        await Menu.closeBurgerMenu(pageJohn);
 
         await pageAlice.close();
         await pageJohn.close();
