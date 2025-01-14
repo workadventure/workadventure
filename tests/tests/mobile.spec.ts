@@ -16,7 +16,6 @@ test.describe('Mobile', () => {
             test.skip();
             return;
         }
-
         await page.goto(Map.url("empty"));
         await login(page, "Bob", 3, 'en-US', true);
 
@@ -28,9 +27,9 @@ test.describe('Mobile', () => {
         // walk on the position for the test
         // TODO: find a solution to test Joystick
         await Map.walkToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
-
+        //await page.pause();
         // Text open menu
-        await Menu.openMenu(page);
+        await Menu.openMenuMobile(page);
         // Text close menu
         await Menu.closeMenu(page);
 
@@ -119,4 +118,4 @@ test.describe('Mobile', () => {
     });
 
     // TODO: create test to interact with another object
-});
+});//.cameras-container .other-cameras .media-container
