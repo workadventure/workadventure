@@ -90,6 +90,7 @@ export class Player extends Character {
             y: this.y,
         });
         this._lastDirection = direction;
+        this.companion?.setTarget(this.x, this.y, this._lastDirection);
         this.playAnimation(this._lastDirection, false);
     }
 

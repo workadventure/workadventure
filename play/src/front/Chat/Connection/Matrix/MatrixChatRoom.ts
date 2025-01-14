@@ -14,27 +14,41 @@ import {
     ReceiptType,
     Room,
     RoomEvent,
+    RoomMember,
     RoomState,
     RoomStateEvent,
     TimelineWindow,
 } from "matrix-js-sdk";
 import * as Sentry from "@sentry/svelte";
-import { get, Writable, writable } from "svelte/store";
+import { derived, get, readable, Readable, Writable, writable } from "svelte/store";
 import { MediaEventContent, MediaEventInfo } from "matrix-js-sdk/lib/@types/media";
-import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
 import { RoomMessageEventContent } from "matrix-js-sdk/lib/@types/events";
-import { ChatRoom, ChatRoomMember, ChatRoomMembership } from "../ChatConnection";
+import {
+    ChatPermissionLevel,
+    ChatRoom,
+    ChatRoomMember,
+    ChatRoomMembership,
+    ChatRoomMembershipManagement,
+    ChatRoomModeration,
+    ChatRoomNotificationControl,
+    memberTypingInformation,
+} from "../ChatConnection";
 import { isAChatRoomIsVisible, navChat, selectedChatMessageToReply, selectedRoomStore } from "../../Stores/ChatStore";
 import { gameManager } from "../../../Phaser/Game/GameManager";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { matrixSecurity } from "./MatrixSecurity";
+import { MatrixChatRoomMember } from "./MatrixChatRoomMember";
 
 type EventId = string;
 
-export class MatrixChatRoom implements ChatRoom {
+type ModerationAction = "ban" | "kick" | "invite" | "redact";
+
+export class MatrixChatRoom
+    implements ChatRoom, ChatRoomMembershipManagement, ChatRoomModeration, ChatRoomNotificationControl
+{
     readonly id: string;
     readonly name: Writable<string>;
     readonly type: "multiple" | "direct";
@@ -42,21 +56,22 @@ export class MatrixChatRoom implements ChatRoom {
     avatarUrl: string | undefined;
     messages: SearchableArrayStore<string, MatrixChatMessage>;
     myMembership: ChatRoomMembership;
-    membersId: string[];
-    members: ChatRoomMember[];
+    members: Writable<MatrixChatRoomMember[]>;
     messageReactions: MapStore<string, MapStore<string, MatrixChatMessageReaction>>;
     hasPreviousMessage: Writable<boolean>;
     timelineWindow: TimelineWindow;
     inMemoryEventsContent: Map<EventId, IContent>;
     isEncrypted!: Writable<boolean>;
-    typingMembers: Writable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
+    typingMembers: Readable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
     isRoomFolder = false;
     areNotificationsMuted = writable(false);
+    currentRoomMember: Readable<MatrixChatRoomMember>;
 
     private handleRoomTimeline = this.onRoomTimeline.bind(this);
     private handleRoomName = this.onRoomName.bind(this);
     private handleRoomRedaction = this.onRoomRedaction.bind(this);
     private handleStateEvent = this.onRoomStateEvent.bind(this);
+    private handleNewMember = this.onRoomNewMember.bind(this);
 
     constructor(
         private matrixRoom: Room,
@@ -74,24 +89,31 @@ export class MatrixChatRoom implements ChatRoom {
         this.messageReactions = new MapStore<string, MapStore<string, MatrixChatMessageReaction>>();
         this.sendMessage = this.sendMessage.bind(this);
         this.myMembership = matrixRoom.getMyMembership();
-        this.membersId = [
-            ...matrixRoom.getMembersWithMembership(KnownMembership.Invite).map((member) => member.userId),
-            ...matrixRoom.getMembersWithMembership(KnownMembership.Join).map((member) => member.userId),
-        ];
 
-        this.members = [
-            ...matrixRoom.getMembers().map((member) => ({
-                id: member.userId,
-                name: member.name ?? member.userId,
-                membership: member.membership ?? "join",
-            })),
-        ];
+        this.members = writable([
+            ...matrixRoom
+                .getMembers()
+                .map((member) => new MatrixChatRoomMember(member, this.matrixRoom.client.baseUrl)),
+        ]);
 
         this.hasPreviousMessage = writable(false);
+
+        this.currentRoomMember = derived(
+            this.members,
+            (members) => members.filter((member) => member.id === this.matrixRoom.myUserId)[0]
+        );
+
         this.timelineWindow = new TimelineWindow(matrixRoom.client, matrixRoom.getLiveTimeline().getTimelineSet());
         this.isEncrypted = writable(matrixRoom.hasEncryptionStateEvent());
-        this.typingMembers = writable([]);
 
+        this.typingMembers = derived(
+            get(this.members).map((member) => member.isTypingInformation),
+            (membersInformation) => {
+                return membersInformation.filter(
+                    (member) => member !== null && member.id !== this.matrixRoom.client.getUserId()
+                ) as memberTypingInformation[];
+            }
+        );
         this.isRoomFolder = matrixRoom.isSpaceRoom();
         this.inMemoryEventsContent = new Map<EventId, MatrixEvent>();
 
@@ -183,8 +205,15 @@ export class MatrixChatRoom implements ChatRoom {
         this.matrixRoom.on(RoomEvent.Name, this.handleRoomName);
         this.matrixRoom.on(RoomEvent.Redaction, this.handleRoomRedaction);
         this.matrixRoom.on(RoomStateEvent.Events, this.handleStateEvent);
+        this.matrixRoom.on(RoomStateEvent.NewMember, this.handleNewMember);
     }
 
+    private onRoomNewMember(event: MatrixEvent, state: RoomState, member: RoomMember) {
+        this.members.update((members) => [
+            ...members,
+            new MatrixChatRoomMember(member, this.matrixRoom.client.baseUrl),
+        ]);
+    }
     private onRoomStateEvent(event: MatrixEvent, state: RoomState, lastStateEvent: MatrixEvent | null) {
         if (get(this.isEncrypted)) return;
         const isEncrypted = !!state.getStateEvents(EventType.RoomEncryption)[0];
@@ -229,10 +258,6 @@ export class MatrixChatRoom implements ChatRoom {
                 if (event.getType() === "m.reaction") {
                     this.handleNewMessageReaction(event, this.messageReactions);
                 }
-                this.membersId = [
-                    ...room.getMembersWithMembership(KnownMembership.Invite).map((member) => member.userId),
-                    ...room.getMembersWithMembership(KnownMembership.Join).map((member) => member.userId),
-                ];
             })().catch((error) => console.error(error));
         }
     }
@@ -589,6 +614,10 @@ export class MatrixChatRoom implements ChatRoom {
         this.matrixRoom.off(RoomEvent.Name, this.handleRoomName);
         this.matrixRoom.off(RoomEvent.Redaction, this.handleRoomRedaction);
         this.matrixRoom.off(RoomStateEvent.Events, this.handleStateEvent);
+        this.matrixRoom.off(RoomStateEvent.NewMember, this.handleNewMember);
+        get(this.members).forEach((member) => {
+            member.destroy();
+        });
     }
 
     startTyping(): Promise<object> {
@@ -603,5 +632,95 @@ export class MatrixChatRoom implements ChatRoom {
 
     public get lastMessageTimestamp(): number {
         return this.matrixRoom.getLastActiveTimestamp();
+    }
+
+    public hasPermissionTo(action: ModerationAction, member?: ChatRoomMember): Readable<boolean> {
+        const otherUserPermissionLevel = member ? member.permissionLevel : readable(ChatPermissionLevel.USER);
+
+        return derived(
+            [get(this.currentRoomMember).permissionLevel, otherUserPermissionLevel],
+            ([$currentRoomPermission, $otherUserPermission]) => {
+                if (!$currentRoomPermission) return false;
+
+                const currentRoomMemberPowerLevel = MatrixChatRoomMember.getPowerLevel($currentRoomPermission);
+                const otherUserPowerLevel = MatrixChatRoomMember.getPowerLevel($otherUserPermission);
+
+                const hasSufficientPowerLevel =
+                    this.matrixRoom
+                        .getLiveTimeline()
+                        .getState(Direction.Backward)
+                        ?.hasSufficientPowerLevelFor(action, currentRoomMemberPowerLevel) ?? false;
+
+                return hasSufficientPowerLevel && currentRoomMemberPowerLevel > otherUserPowerLevel;
+            }
+        );
+    }
+
+    public async changePermissionLevelFor(member: ChatRoomMember, permissionLevel: ChatPermissionLevel): Promise<void> {
+        try {
+            await this.matrixRoom.refreshLiveTimeline();
+
+            const roomPowerLevelsState = this.matrixRoom
+                .getLiveTimeline()
+                .getState(Direction.Backward)
+                ?.getStateEvents(EventType.RoomPowerLevels);
+
+            if (!roomPowerLevelsState || roomPowerLevelsState.length === 0) {
+                console.error("No room power levels state found");
+                return;
+            }
+
+            const currentContent = roomPowerLevelsState[0].getContent();
+            const newRoomPowerLevelsState = {
+                ...currentContent,
+                users: {
+                    ...currentContent.users,
+                    [member.id]: MatrixChatRoomMember.getPowerLevel(permissionLevel),
+                },
+            };
+
+            await this.matrixRoom.client.sendStateEvent(this.id, EventType.RoomPowerLevels, newRoomPowerLevelsState);
+        } catch (e) {
+            console.error("Failed to change permission level : " + e);
+            Sentry.captureMessage(`Failed to change Permission Level : ${e}`);
+        }
+    }
+
+    public getAllowedRolesToAssign(): ChatPermissionLevel[] {
+        const allowedRolesToAssign: ChatPermissionLevel[] = [];
+
+        const currentRoomMemberPermissionLevel = get(get(this.currentRoomMember).permissionLevel);
+
+        const currentRoomMemberPowerLevel = MatrixChatRoomMember.getPowerLevel(currentRoomMemberPermissionLevel);
+
+        for (const permissionLevel of Object.values(ChatPermissionLevel)) {
+            const permissionLevelPower = MatrixChatRoomMember.getPowerLevel(permissionLevel as ChatPermissionLevel);
+
+            if (currentRoomMemberPowerLevel >= permissionLevelPower) {
+                allowedRolesToAssign.push(permissionLevel as ChatPermissionLevel);
+            }
+        }
+
+        return allowedRolesToAssign;
+    }
+
+    public canModifyRoleOf(permissionLevel?: ChatPermissionLevel): boolean {
+        const currentRoomMemberPermissionLevel = get(get(this.currentRoomMember).permissionLevel);
+        const currentRoomMemberPowerLevel = MatrixChatRoomMember.getPowerLevel(currentRoomMemberPermissionLevel);
+        const memberPowerLevel = permissionLevel ? MatrixChatRoomMember.getPowerLevel(permissionLevel) : 0;
+
+        const canModifyRoleOfThisMember = currentRoomMemberPowerLevel > memberPowerLevel;
+
+        return canModifyRoleOfThisMember && currentRoomMemberPermissionLevel === ChatPermissionLevel.ADMIN;
+    }
+
+    public async kick(userID: string, reason?: string): Promise<void> {
+        await this.matrixRoom.client.kick(this.id, userID, reason);
+    }
+    public async ban(userID: string, reason?: string): Promise<void> {
+        await this.matrixRoom.client.ban(this.id, userID, reason);
+    }
+    public async unban(userID: string): Promise<void> {
+        await this.matrixRoom.client.unban(this.id, userID);
     }
 }

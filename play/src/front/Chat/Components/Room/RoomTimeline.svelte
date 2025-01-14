@@ -15,7 +15,6 @@
     import { IconChevronLeft, IconLoader, IconMailBox } from "@wa-icons";
 
     export let room: ChatRoom;
-
     let myChatID = localUserStore.getChatId();
 
     const NUMBER_OF_TYPING_MEMBER_TO_DISPLAY = 3;
@@ -31,13 +30,18 @@
     let scrollTimer: ReturnType<typeof setTimeout>;
     let shouldDisplayLoader = false;
 
+    let messageInputBarRef: MessageInputBar;
+
     $: messages = room?.messages;
     $: messageReaction = room?.messageReactions;
     $: roomName = room?.name;
 
     onMount(() => {
-        scrollToMessageListBottom();
-        initMessages().catch((error) => console.error(error));
+        initMessages()
+            .catch((error) => console.error(error))
+            .finally(() => {
+                scrollToMessageListBottom();
+            });
     });
 
     async function initMessages() {
@@ -59,9 +63,13 @@
             }
         };
 
-        await loadMessages();
-        scrollToMessageListBottom();
-        setFirstListItem();
+        try {
+            await loadMessages();
+            scrollToMessageListBottom();
+            setFirstListItem();
+        } catch (error) {
+            console.error(`Failed to load messages: ${error}`);
+        }
     }
 
     beforeUpdate(() => {
@@ -110,28 +118,28 @@
         loadingMessagePromise = new Promise<void>((resolve) => {
             (async () => {
                 const loadMessages = async () => {
-                    try {
-                        if (messageListRef.scrollTop === 0) {
-                            shouldDisplayLoader = true;
-                        }
-                        await room.loadMorePreviousMessages();
+                    if (messageListRef.scrollTop === 0) {
+                        shouldDisplayLoader = true;
+                    }
+                    await room.loadMorePreviousMessages();
 
-                        if (shouldLoadMoreMessages()) {
-                            loadMorePreviousMessages();
-                        }
-                    } catch {
-                        throw new Error("Failed to load messages");
-                    } finally {
-                        if (shouldDisplayLoader) {
-                            shouldDisplayLoader = false;
-                        }
+                    if (shouldLoadMoreMessages()) {
+                        loadMorePreviousMessages();
                     }
                 };
 
                 await loadMessages();
-            })().finally(() => {
-                resolve();
-            });
+            })()
+                .catch((error) => {
+                    console.error(`Failed to load messages: ${error}`);
+                    throw new Error(`Failed to load messages: ${error}`);
+                })
+                .finally(() => {
+                    if (shouldDisplayLoader) {
+                        shouldDisplayLoader = false;
+                    }
+                    resolve();
+                });
         }).finally(() => {
             loadingMessagePromise = undefined;
         });
@@ -170,9 +178,21 @@
             scrollToMessageListBottom();
         }
     }
+
+    function onDropFiles(event: DragEvent) {
+        if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
+            messageInputBarRef.handleFiles({
+                detail: event.dataTransfer.files,
+            } as CustomEvent<FileList>);
+        }
+    }
 </script>
 
-<div class="flex flex-col flex-auto h-full w-full max-w-full">
+<div
+    class="flex flex-col flex-auto h-full w-full max-w-full"
+    on:dragover|preventDefault
+    on:drop|preventDefault|stopPropagation={onDropFiles}
+>
     {#if room !== undefined}
         <div class="flex flex-col gap-2">
             <div class="p-2 flex items-center border border-solid border-x-0 border-b border-t-0 border-white/10">
@@ -262,7 +282,6 @@
 
         {#if $typingMembers.length > 0}
             <div class="flex row w-full text-gray-300 text-sm  m-0 px-2 mb-2">
-                <!-- {$typingMembers.map(typingMember => typingMember.name).slice(0, NUMBER_OF_TYPING_MEMBER_TO_DISPLAY)} -->
                 {#each $typingMembers
                     .map((typingMember, index) => ({ ...typingMember, index }))
                     .slice(0, NUMBER_OF_TYPING_MEMBER_TO_DISPLAY) as typingMember (typingMember.id)}
@@ -289,7 +308,7 @@
                 </div>
             </div>
         {/if}
-        <MessageInputBar {room} />
+        <MessageInputBar {room} bind:this={messageInputBarRef} />
     {/if}
 </div>
 

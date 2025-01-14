@@ -95,32 +95,39 @@ const chat: BaseTranslation = {
             klaxoon: {
                 title: "Klaxoon",
                 description: "Send embedded klaxoon in the chat!",
-                error: "Please enter a valid Klaxoon URL",
             },
             youtube: {
-                title: "Youtube",
+                title: "YouTube",
                 description: "Send embedded youtube video in the chat!",
-                error: "Please enter a valid Youtube URL",
             },
             googleDocs: {
                 title: "Google Docs",
                 description: "Send embedded google docs in the chat!",
-                error: "Please enter a valid Google Docs URL",
             },
             googleSlides: {
                 title: "Google Slides",
                 description: "Send embedded google slides in the chat!",
-                error: "Please enter a valid Google Slides URL",
             },
             googleSheets: {
                 title: "Google Sheets",
                 description: "Send embedded google sheets in the chat!",
-                error: "Please enter a valid Google Sheets URL",
             },
             eraser: {
                 title: "Eraser",
                 description: "Send embedded eraser in the chat!",
-                error: "Please enter a valid Eraser URL",
+            },
+            googleDrive: {
+                title: "Google Drive",
+                description: "Send a file from google drive in the chat!",
+            },
+            excalidraw: {
+                title: "Excalidraw",
+                description:
+                    "Send an source virtual hand-drawn style whiteboard. Collaborative and end-to-end encrypted.",
+            },
+            cards: {
+                title: "Cards",
+                description: "Send a card in the chat!",
             },
             weblink: {
                 error: "Please enter a valid URL",
@@ -255,7 +262,7 @@ const chat: BaseTranslation = {
     manageRoomUsers: {
         roomOption: "Participants",
         error: "Unable send invitations",
-        title: "Invite participants",
+        title: "Manage participants",
         invitations: "Invitations",
         participants: "Participants",
         join: "Joined",
@@ -263,9 +270,21 @@ const chat: BaseTranslation = {
         ban: "Banned",
         kick: "Kicked",
         leave: "Leaved",
+        membership: "Membership",
+        permissionLevel: "Roles",
+        actions: "Actions",
         buttons: {
             sendInvitations: "Send invitations",
             cancel: "Cancel",
+            ban: "Ban",
+            kick: "Kick",
+            unban: "Unban",
+            invite: "Invite",
+        },
+        roles: {
+            USER: "User",
+            ADMIN: "Admin",
+            MODERATOR: "Moderator",
         },
         sendInvitationsSuccessNotification: "Invitations sent successfully",
     },

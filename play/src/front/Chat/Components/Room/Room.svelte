@@ -1,13 +1,18 @@
 <script lang="ts">
     import highlightWords from "highlight-words";
-    import { ChatRoom } from "../../Connection/ChatConnection";
+    import {
+        ChatRoom,
+        ChatRoomMembershipManagement,
+        ChatRoomModeration,
+        ChatRoomNotificationControl,
+    } from "../../Connection/ChatConnection";
     import { chatSearchBarValue, selectedRoomStore } from "../../Stores/ChatStore";
     import Avatar from "../Avatar.svelte";
     import EncryptionBadge from "../EncryptionBadge.svelte";
     import RoomMenu from "./RoomMenu/RoomMenu.svelte";
     import { IconBellOff } from "@wa-icons";
 
-    export let room: ChatRoom;
+    export let room: ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl;
 
     let hasUnreadMessage = room.hasUnreadMessages;
     let roomName = room.name;
@@ -31,6 +36,7 @@
     on:keyup={() => selectedRoomStore.set(room)}
     role="button"
     tabindex="0"
+    data-testid={$roomName}
 >
     <div class="relative">
         <Avatar avatarUrl={room.avatarUrl} fallbackName={$roomName} />

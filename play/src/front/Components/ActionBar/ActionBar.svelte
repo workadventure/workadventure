@@ -394,7 +394,7 @@
         ? 'hidden'
         : ''}"
 >
-    <div class="flex w-full p-2 space-x-2 @xl/actions:p-4 @xl/actions:space-x-4">
+    <div class="flex w-full p-2 space-x-2 @xl/actions:p-4 @xl/actions:space-x-4 screen-blocker">
         <div class="justify-start flex-1 w-32">
             <div
                 class="flex relative transition-all duration-150 z-[2] {$chatVisibilityStore ? 'hidden' : ''}"

@@ -176,6 +176,7 @@ import PopUpRoomAccessDenied from "../../Components/PopUp/PopUpRoomAccessDenied.
 import PopUpTriggerActionMessage from "../../Components/PopUp/PopUpTriggerActionMessage.svelte";
 import PopUpMapEditorNotEnabled from "../../Components/PopUp/PopUpMapEditorNotEnabled.svelte";
 import PopUpMapEditorShortcut from "../../Components/PopUp/PopUpMapEditorShortcut.svelte";
+import { enableUserInputsStore } from "../../Stores/UserInputStore";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -2084,7 +2085,7 @@ export class GameScene extends DirtyScene {
         });
 
         this.emoteUnsubscriber = emoteStore.subscribe((emote) => {
-            if (emote) {
+            if (emote && get(enableUserInputsStore)) {
                 this.CurrentPlayer?.playEmote(emote.emoji);
                 this.connection?.emitEmoteEvent(emote.emoji);
                 emoteStore.set(null);

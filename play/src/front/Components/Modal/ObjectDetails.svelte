@@ -44,7 +44,7 @@
         // Make sure that if the user click on another object, the previous one is not selected anymore
         oldEntity = $mapExplorationObjectSelectedStore;
         mapExplorationObjectSelectedStoreSubscription = mapExplorationObjectSelectedStore.subscribe((value) => {
-            if (oldEntity instanceof Entity) oldEntity.removePointedToEditColor();
+            if (oldEntity instanceof Entity) oldEntity.setPointedToEditColor(0x000000);
             if (oldEntity instanceof AreaPreview) oldEntity.setStrokeStyle(2, 0x000000);
             oldEntity = value;
             if (value instanceof Entity) value.setPointedToEditColor(0xf9e82d);
@@ -56,10 +56,10 @@
     onDestroy(() => {
         if (mapExplorationObjectSelectedStoreSubscription) mapExplorationObjectSelectedStoreSubscription();
         if ($mapExplorationObjectSelectedStore instanceof Entity)
-            $mapExplorationObjectSelectedStore.removePointedToEditColor();
+            $mapExplorationObjectSelectedStore.setPointedToEditColor(0x000000);
         if ($mapExplorationObjectSelectedStore instanceof AreaPreview)
             $mapExplorationObjectSelectedStore.setStrokeStyle(2, 0x000000);
-        if (oldEntity instanceof Entity) oldEntity.removePointedToEditColor();
+        if (oldEntity instanceof Entity) oldEntity.setPointedToEditColor(0x000000);
         if (oldEntity instanceof AreaPreview) oldEntity.setStrokeStyle(2, 0x000000);
 
         cleanPropertyComponents();
@@ -100,10 +100,10 @@
 
     function close() {
         if ($mapExplorationObjectSelectedStore instanceof Entity)
-            $mapExplorationObjectSelectedStore.removePointedToEditColor();
+            $mapExplorationObjectSelectedStore.setPointedToEditColor(0x000000);
         if ($mapExplorationObjectSelectedStore instanceof AreaPreview)
             $mapExplorationObjectSelectedStore.setStrokeStyle(2, 0x000000);
-        if (oldEntity instanceof Entity) oldEntity.removePointedToEditColor();
+        if (oldEntity instanceof Entity) oldEntity.setPointedToEditColor(0x000000);
         if (oldEntity instanceof AreaPreview) oldEntity.setStrokeStyle(2, 0x000000);
         mapExplorationObjectSelectedStore.set(undefined);
     }

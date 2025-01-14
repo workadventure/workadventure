@@ -19,7 +19,7 @@ export const getGoogleSlidesEmbedUrl = (url: URL): string => {
     return getGoogleWorkSpaceEmbedUrl(url);
 };
 
-function getGoogleWorkSpaceEmbedUrl(url: URL): string {
+export function getGoogleWorkSpaceEmbedUrl(url: URL): string {
     const link = url.toString();
     if (isEmbedableGooglWorkSapceLink(url)) return link;
     url.searchParams.set("embedded", "true");

@@ -71,7 +71,7 @@
 </script>
 
 <section class="section-input-send-text test">
-    <div class="input-send-text" bind:this={QUILL_EDITOR} />
+    <div class="input-send-text" role="textbox" bind:this={QUILL_EDITOR} />
 </section>
 
 <style lang="scss">

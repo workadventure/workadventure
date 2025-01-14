@@ -132,14 +132,6 @@
         .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
 
     $: displayTwoColumnLayout = sideBarWidth >= CHAT_LAYOUT_LIMIT;
-
-    const isFoldersOpen: { [key: string]: boolean } = {};
-
-    $roomFolders.forEach((folder) => {
-        if (!(folder.id in isFoldersOpen)) {
-            isFoldersOpen[folder.id] = false;
-        }
-    });
 </script>
 
 <div
@@ -246,13 +238,13 @@
                             <div class="text-sm font-bold tracking-widest uppercase grow text-left">
                                 {$LL.chat.invitations()}
                             </div>
-                            <div
-                                class="transition-all group-hover:bg-white/10 p-1 rounded aspect-square flex items-center justify-center text-white"
+                            <button
+                                class="transition-all group-hover:bg-white/10 p-1 rounded-lg aspect-square flex items-center justify-center text-white"
                             >
                                 <IconChevronUp
                                     class={`transform transition ${!displayRoomInvitations ? "" : "rotate-180"}`}
                                 />
-                            </div>
+                            </button>
                         </button>
                         {#if displayRoomInvitations}
                             <div class="flex flex-col overflow-auto pl-3 pr-4 pb-3">
@@ -263,8 +255,7 @@
                         {/if}
                     {/if}
 
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div
+                    <button
                         class="group relative px-3 m-0 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center border border-solid border-x-0 border-t border-b-0 border-white/10"
                         on:click={toggleDisplayDirectRooms}
                     >
@@ -272,15 +263,15 @@
                             <div class="text-sm font-bold tracking-widest uppercase grow text-left">
                                 {$LL.chat.people()}
                             </div>
-                            <div
-                                class="transition-all group-hover:bg-white/10 p-1 rounded aspect-square flex items-center justify-center text-white"
+                            <button
+                                class="transition-all group-hover:bg-white/10 p-1 rounded-lg aspect-square flex items-center justify-center text-white"
                             >
                                 <IconChevronUp
                                     class={`transform transition ${!displayDirectRooms ? "" : "rotate-180"}`}
                                 />
-                            </div>
+                            </button>
                         </div>
-                    </div>
+                    </button>
 
                     {#if displayDirectRooms}
                         <div class="flex flex-col px-2 pb-2">
@@ -290,9 +281,8 @@
                         </div>
                     {/if}
 
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div
-                        class="group relative px-3 m-0 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center border border-solid border-x-0 border-t border-b-0 border-white/10"
+                    <button
+                        class="group relative px-3 m-0 mb-2 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center border border-solid border-x-0 border-t border-b-0 border-white/10"
                         on:click={toggleDisplayRooms}
                         data-testid="roomAccordeon"
                     >
@@ -304,12 +294,12 @@
                         {#if $isGuest === false}
                             <CreateRoomOrFolderOption />
                         {/if}
-                        <div
-                            class="transition-all group-hover:bg-white/10 p-1 rounded aspect-square flex items-center justify-center text-white"
+                        <button
+                            class="transition-all group-hover:bg-white/10 p-1 rounded-lg aspect-square flex items-center justify-center text-white"
                         >
                             <IconChevronUp class={`transform transition ${!displayRooms ? "" : "rotate-180"}`} />
-                        </div>
-                    </div>
+                        </button>
+                    </button>
                     {#if displayRooms}
                         <div class="px-2 pb-2">
                             <ShowMore items={filteredRooms} maxNumber={8} idKey="id" let:item={room}>
@@ -317,17 +307,17 @@
                             </ShowMore>
                         </div>
                         <!--roomBySpace-->
-                        {#each Array.from($roomFolders.values()) as rootRoomFolder (rootRoomFolder.id)}
-                            <RoomFolder
-                                bind:isOpen={isFoldersOpen[rootRoomFolder.id]}
-                                name={rootRoomFolder.name}
-                                folders={rootRoomFolder.folders}
-                                rooms={rootRoomFolder.rooms}
-                                isGuest={$isGuest}
-                                id={rootRoomFolder.id}
-                            />
-                        {/each}
                     {/if}
+                    {#each Array.from($roomFolders.values()) as rootRoomFolder (rootRoomFolder.id)}
+                        <RoomFolder
+                            name={rootRoomFolder.name}
+                            folders={rootRoomFolder.folders}
+                            rooms={rootRoomFolder.rooms}
+                            isGuest={$isGuest}
+                            id={rootRoomFolder.id}
+                            rootFolder={true}
+                        />
+                    {/each}
                 {/if}
             </div>
             {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}

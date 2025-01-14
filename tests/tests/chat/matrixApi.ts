@@ -1,5 +1,5 @@
 import axios from "axios";
-import { matrix_server_url } from "../utils/urls";
+import { matrix_domain, matrix_server_url } from "../utils/urls";
 
 const LOGIN_ENDPOINT = `${matrix_server_url}/_matrix/client/v3/login`;
 
@@ -7,7 +7,7 @@ const USERS_ENDPOINT = `${matrix_server_url}/_synapse/admin/v2/users`;
 
 const DEACTIVATE_USER_ENDPOINT = `${matrix_server_url}/_synapse/admin/v1/deactivate`;
 
-const MATRIX_ADMIN_USER = "@admin:matrix.workadventure.localhost";
+const MATRIX_ADMIN_USER = `@admin:${matrix_domain}`;
 
 interface MatrixLoginBody {
   type: "m.login.password" | string;
@@ -56,7 +56,7 @@ class MatrixApi {
     } catch (error) {
       console.error(error);
       throw new Error(error)
-    }
+    } 
   }
 
   private async getUsers() {
@@ -105,6 +105,80 @@ class MatrixApi {
 
   private getAuthenticatedHeader() {
     return { headers: { Authorization: `Bearer ${this.adminLoginToken}` } };
+  }
+
+  public async acceptAllInvitations(alias : string) {
+    try {
+      const publicRoomsResponse = await axios.get(
+        `${matrix_server_url}/_matrix/client/r0/publicRooms`,
+        this.getAuthenticatedHeader()
+      );
+
+      const room = publicRoomsResponse.data.chunk.find(
+        (room) => room.name === alias
+      );
+
+      if (room) {
+        await axios.post(
+          `${matrix_server_url}/_matrix/client/r0/join/${room.room_id}`,
+          {},
+          this.getAuthenticatedHeader()
+        );
+      }
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
+
+  public async getMemberPowerLevel(roomAlias: string): Promise<number> {
+    try {
+      const publicRoomsResponse = await axios.get(
+        `${matrix_server_url}/_matrix/client/r0/publicRooms`,
+        this.getAuthenticatedHeader()
+      );
+
+      const room = publicRoomsResponse.data.chunk.find(
+        (room) => room.name === roomAlias
+      );
+
+      if (!room) {
+        throw new Error(`Room ${roomAlias} not found`);
+      }
+
+      const powerLevelsResponse = await axios.get(
+        `${matrix_server_url}/_matrix/client/r0/rooms/${room.room_id}/state/m.room.power_levels/`,
+        this.getAuthenticatedHeader()
+      );
+
+      return powerLevelsResponse.data.users[MATRIX_ADMIN_USER] || 0;
+
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
+
+  public async overrideRateLimitForUser(userId: string) {
+    try {
+    const response = await axios.post(
+        `${matrix_server_url}/_synapse/admin/v1/users/${userId}/override_ratelimit`,
+        {
+            message_per_second: 0,
+            burst_count: 0,
+        },
+        {
+            headers: {
+                Authorization: `Bearer ${this.adminLoginToken}`,
+            },
+        }
+    );
+    if (response.status === 200) {
+        return;
+    } else {
+        throw new Error("Failed with status " + response.status);
+    }
+} catch (error) {
+      throw new Error(error);
+    }
   }
 }
 
