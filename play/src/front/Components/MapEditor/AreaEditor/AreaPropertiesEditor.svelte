@@ -482,7 +482,7 @@
             {/if}
         </div>
         {#if extensionModulesAreaMapEditor.length > 0}
-            <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-mt-2">
+            <div class="properties-buttons flex flex-row flex-wrap tw-mt-2">
                 {#each extensionModulesAreaMapEditor as extensionModuleAreaMapEditor, index (`extensionModulesAreaMapEditor-${index}`)}
                     {#each Object.entries(extensionModuleAreaMapEditor) as [subtype, index] (`extensionModuleAreaMapEditor-${index}`)}
                         {#if extensionModuleAreaMapEditor[subtype].shouldDisplayButton(properties)}
@@ -498,7 +498,7 @@
                 {/each}
             </div>
         {/if}
-        <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-mt-2">
+        <div class="properties-buttons flex flex-row flex-wrap tw-mt-2">
             <AddPropertyButtonWrapper
                 property="openWebsite"
                 subProperty="klaxoon"
