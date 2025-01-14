@@ -1266,7 +1266,7 @@
                     </ActionBarButtonWrapper>
                     {#if burgerOpen}
                         <div
-                            class="w-48 bg-contrast/80 absolute right-2 top-auto z-[1000] py-4 rounded-lg text-right text-white no-underline pointer-events-auto block @lg:hidden before:content-[''] before:absolute before:w-0 before:h-0 sm:before:-top-[14px] sm:before:bottom-auto before:-bottom-4 before:top-auto before:rotate-180 sm:before:rotate-0 before:right-5 before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all"
+                            class="mobile:bottom-14 w-48 bg-contrast/80 absolute right-2 top-auto z-[1000] py-4 rounded-lg text-right text-white no-underline pointer-events-auto block @lg:hidden before:content-[''] before:absolute before:w-0 before:h-0 sm:before:-top-[14px] sm:before:bottom-auto before:-bottom-4 before:top-auto before:rotate-180 sm:before:rotate-0 before:right-5 before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all"
                             transition:fly={{ y: 40, duration: 150 }}
                         >
                             <div class="block @md/actions:hidden">
