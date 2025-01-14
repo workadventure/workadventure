@@ -14,9 +14,9 @@ class Menu {
         // await expect(await page.getByRole('button', {name: 'toggle-map-editor'}).first()).toHaveClass(/bor²der-top-light/);
     }
 
-    async openMenuMobile(page: Page) {
+    async openBurgerMenu(page: Page) {
         await page.getByTestId('burger-menu').click();
-        await expect(page.getByText('Change you status')).toBeVisible();
+        await expect(page.getByText('Change your status')).toBeVisible();
     }
 
     async openMenu(page: Page) {
@@ -39,6 +39,11 @@ class Menu {
     async closeMenu(page: Page) {
         await page.getByTestId('action-user').click({timeout: 30_000});
         await expect(page.getByTestId('profile-menu')).toBeHidden();
+    }
+
+    async closeBurgerMenu(page: Page) {
+        await page.getByTestId('burger-menu').click();
+        await expect(page.getByText('Change your status')).toBeHidden();
     }
 
     async closeMapMenu(page: Page) {

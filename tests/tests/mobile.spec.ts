@@ -27,11 +27,10 @@ test.describe('Mobile', () => {
         // walk on the position for the test
         // TODO: find a solution to test Joystick
         await Map.walkToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
-        //await page.pause();
         // Text open menu
-        await Menu.openMenuMobile(page);
+        await Menu.openBurgerMenu(page);
         // Text close menu
-        await Menu.closeMenu(page);
+        await Menu.closeBurgerMenu(page);
 
         // Second browser
         const newBrowserAlice = await browser.newContext();
@@ -43,6 +42,8 @@ test.describe('Mobile', () => {
         // Move Alice and create a bubble with another user
         // TODO: find a solution to test Joystick
         await Map.walkToPosition(pageAlice, positionToDiscuss.x, positionToDiscuss.y);
+
+        await page.pause();
 
         await expect(pageAlice.locator(`.cameras-container .other-cameras .media-container`).nth(0)).toBeVisible({
             timeout: 10000
