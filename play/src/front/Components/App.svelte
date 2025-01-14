@@ -6,6 +6,7 @@
     import WebFontLoaderPlugin from "phaser3-rex-plugins/plugins/webfontloader-plugin.js";
     import AwaitLoaderPlugin from "phaser3-rex-plugins/plugins/awaitloader-plugin.js";
     import OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
+    import { Unsubscriber } from "svelte/store";
     import { DEBUG_MODE, SENTRY_DSN_FRONT, SENTRY_ENVIRONMENT, SENTRY_RELEASE } from "../Enum/EnvironmentVariable";
     import { HdpiManager } from "../Phaser/Services/HdpiManager";
     import { EntryScene } from "../Phaser/Login/EntryScene";
@@ -22,11 +23,11 @@
     import { iframeListener } from "../Api/IframeListener";
     import { desktopApi } from "../Api/Desktop";
     import {
+        canvasSize,
         coWebsiteManager,
         coWebsites,
+        coWebsitesSize,
         fullScreenCowebsite,
-        isResized,
-        isVerticalMode,
     } from "../Stores/CoWebsiteStore";
     import { mouseInCameraTriggerArea } from "../Stores/MediaStore";
     import GameOverlay from "./GameOverlay.svelte";
@@ -36,9 +37,6 @@
     let game: Game;
     let gameDiv: HTMLDivElement;
     let activeCowebsite = $coWebsites[0];
-    let cowebsiteContainer: HTMLDivElement;
-    let widthPercent = 50;
-    let flexBasis: string | undefined;
     let gameContainer: HTMLDivElement;
 
     onMount(() => {
@@ -204,60 +202,13 @@
             });
         }
 
-        window.addEventListener("resize", function () {
-            waScaleManager.applyNewSize();
-            waScaleManager.refreshFocusOnTarget();
-            updateDynamicStyles();
-            updateScreenSize();
-        });
-
-        updateScreenSize();
+        //updateScreenSize();
         iframeListener.init();
         desktopApi.init();
     });
 
-    function updateScreenSize() {
-        if (window.innerWidth <= 768) {
-            isVerticalMode.set(true);
-            updateDynamicStyles();
-        } else {
-            isVerticalMode.set(false);
-            updateDynamicStyles();
-        }
-    }
-
     $: if ($coWebsites.length > 0) {
         activeCowebsite = $coWebsites[0];
-        if (!cowebsiteContainer) {
-            cowebsiteContainer = document.getElementById("cowebsiteContainer") as HTMLDivElement;
-            if (cowebsiteContainer) {
-                updateDynamicStyles();
-            }
-        } else {
-            updateDynamicStyles();
-        }
-    }
-
-    function updateDynamicStyles() {
-        if (!activeCowebsite) {
-            return;
-        }
-        widthPercent = activeCowebsite.getWidthPercent() || 50;
-
-        if (widthPercent < 25) widthPercent = 25;
-        else if (widthPercent > 75) widthPercent = 75;
-
-        flexBasis = `${widthPercent}%`;
-
-        if (cowebsiteContainer) {
-            cowebsiteContainer.style.flexBasis = flexBasis;
-            cowebsiteContainer.style.flexGrow = "1";
-            cowebsiteContainer.style.flexShrink = "0";
-
-            if ($isVerticalMode || $isResized) {
-                cowebsiteContainer.style.flex = "1";
-            }
-        }
     }
 
     function closeCoWebsiteFullScreen() {
@@ -269,15 +220,20 @@
         closeCoWebsiteFullScreen();
     }
 
-    $: $coWebsites.length < 1 ? (flexBasis = undefined) : null;
-    $: $isResized ? updateDynamicStyles() : null;
+    //$: $coWebsites.length < 1 ? (flexBasis = undefined) : null;
 
+    let canvasSizeUnsubscriber: Unsubscriber;
     onMount(() => {
         document.addEventListener("mousemove", detectInCameraArea);
+        canvasSizeUnsubscriber = canvasSize.subscribe(() => {
+            waScaleManager.applyNewSize();
+            waScaleManager.refreshFocusOnTarget();
+        });
     });
 
     onDestroy(() => {
         document.removeEventListener("mousemove", detectInCameraArea);
+        canvasSizeUnsubscriber?.();
     });
 
     let lastInTriggerArea = false;
@@ -298,31 +254,20 @@
     };
 </script>
 
-<div class="h-screen w-screen responsive-position" id="main-container" bind:this={gameContainer}>
+<div
+    class="h-screen w-screen flex landscape:flex-row portrait:flex-col-reverse"
+    id="main-container"
+    bind:this={gameContainer}
+>
     <div id="game" class="relative {$fullScreenCowebsite ? 'hidden' : ''}" bind:this={gameDiv}>
         <GameOverlay {game} />
     </div>
     {#if $coWebsites.length > 0}
-        <div
-            transition:fly={{ duration: 200, x: (widthPercent / 100) * window.innerWidth }}
-            bind:this={cowebsiteContainer}
-        >
-            {#if flexBasis !== undefined}
-                <CoWebsitesContainer />
-            {/if}
+        <!-- FIXME: adapt FLY effect to vertical and RTL mode -->
+        <div class="flex-1" transition:fly={{ duration: 200, x: $coWebsitesSize.width }}>
+            <!--{#if flexBasis !== undefined}-->
+            <CoWebsitesContainer />
+            <!--{/if}-->
         </div>
     {/if}
 </div>
-
-<style>
-    .responsive-position {
-        display: flex;
-        flex-direction: column-reverse;
-    }
-    @media (min-width: 768px) {
-        .responsive-position {
-            display: flex;
-            flex-direction: row;
-        }
-    }
-</style>

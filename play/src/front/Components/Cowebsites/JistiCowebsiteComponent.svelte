@@ -189,10 +189,6 @@
     });
 </script>
 
-<div bind:this={jitsiContainer} class="absolute w-full h-[50%] height pb-3 pr-6 md:pr-0 z-0" id="iframe" />
-
-<style>
-    .height {
-        height: -webkit-fill-available;
-    }
-</style>
+<div class="relative w-full h-full">
+    <div bind:this={jitsiContainer} class="absolute w-full h-full z-0" />
+</div>

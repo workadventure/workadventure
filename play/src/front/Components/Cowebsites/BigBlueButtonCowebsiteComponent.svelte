@@ -34,11 +34,15 @@
     });
 </script>
 
-<iframe
-    src={actualCowebsite.getUrl().toString()}
-    frameborder="0"
-    allow={actualCowebsite.getAllowPolicy()}
-    title="Big Blue Button Meeting"
-    class="pixel bg-white h-full w-full z-index-0"
-    id="iframe"
-/>
+<div class="relative w-full h-full">
+    <div class="absolute w-full h-full z-0">
+        <iframe
+            src={actualCowebsite.getUrl().toString()}
+            frameborder="0"
+            allow={actualCowebsite.getAllowPolicy()}
+            title="Big Blue Button Meeting"
+            class="bg-white w-full h-full"
+            id="iframe"
+        />
+    </div>
+</div>

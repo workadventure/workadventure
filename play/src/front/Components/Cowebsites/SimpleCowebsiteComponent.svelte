@@ -20,12 +20,15 @@
     });
 </script>
 
-<iframe
-    bind:this={iframeSimpleCowebsite}
-    src={actualCowebsite.getUrl().toString()}
-    frameborder="0"
-    allow={actualCowebsite.getAllowPolicy()}
-    title="Cowebsite"
-    class="pixel bg-white h-full w-full z-index-0"
-    id="iframe"
-/>
+<div class="relative w-full h-full">
+    <div class="absolute w-full h-full z-0">
+        <iframe
+            bind:this={iframeSimpleCowebsite}
+            src={actualCowebsite.getUrl().toString()}
+            frameborder="0"
+            allow={actualCowebsite.getAllowPolicy()}
+            title="Cowebsite"
+            class="bg-white w-full h-full"
+        />
+    </div>
+</div>

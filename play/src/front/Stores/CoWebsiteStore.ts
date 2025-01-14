@@ -1,4 +1,4 @@
-import { derived, get, writable } from "svelte/store";
+import { derived, get, readable, writable } from "svelte/store";
 import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 
 export function createCoWebsiteStore() {
@@ -66,65 +66,85 @@ export const totalTabWidthMobile = derived(coWebsites, ($coWebsites) => {
     return $coWebsites.length * 220;
 });
 
-export const widthContainerForWindow = writable(0);
-export const widthFromResize = writable(0);
-export const heightFromResize = writable(0);
-export const heightContainerForWindow = writable(0);
-export const widthContainer = writable(window.innerWidth);
-export const heightContainer = writable(window.innerHeight);
 export const fullScreenCowebsite = writable(false);
-export const canvasWidth = writable(window.innerWidth);
-export const canvasHeight = writable(window.innerHeight);
-export const resizeFromCowebsite = writable(false);
-export const isVerticalMode = writable(false);
-export const isResized = writable(false);
+
+const windowSize = readable({ width: window.innerWidth, height: window.innerHeight }, (set) => {
+    const handleResize = () => {
+        set({ width: window.innerWidth, height: window.innerHeight });
+    };
+    window.addEventListener("resize", handleResize);
+    return () => {
+        window.removeEventListener("resize", handleResize);
+    };
+});
+
+export const coWebsiteRatio = writable(0.5);
+
+export const canvasSize = derived(
+    [coWebsites, windowSize, coWebsiteRatio],
+    ([$coWebsites, $windowSize, $coWebsiteRatio]) => {
+        if ($coWebsites.length === 0) {
+            return { width: window.innerWidth, height: window.innerHeight };
+        }
+        if ($windowSize.width <= $windowSize.height) {
+            return {
+                width: $windowSize.width,
+                height: $windowSize.height * (1 - $coWebsiteRatio),
+            };
+        } else {
+            return {
+                width: $windowSize.width * (1 - $coWebsiteRatio),
+                height: $windowSize.height,
+            };
+        }
+    }
+);
+
+export const coWebsitesSize = derived(
+    [coWebsites, windowSize, coWebsiteRatio],
+    ([$coWebsites, $windowSize, $coWebsiteRatio]) => {
+        if ($coWebsites.length === 0) {
+            return { width: 0, height: 0 };
+        }
+        if ($windowSize.width <= $windowSize.height) {
+            return {
+                width: $windowSize.width,
+                height: $windowSize.height * $coWebsiteRatio,
+            };
+        } else {
+            return {
+                width: $windowSize.width * $coWebsiteRatio,
+                height: $windowSize.height,
+            };
+        }
+    }
+);
 
 export class CoWebsiteManager {
     get verticalMode(): boolean {
-        if (window.innerWidth <= 768) {
-            return true;
-        } else {
-            return false;
-        }
+        return window.innerWidth <= window.innerHeight;
     }
 
+    // FIXME: can we use stores to recompute this instead?
     private calculateNewWidth() {
-        if (!this.verticalMode && get(resizeFromCowebsite) && get(coWebsites).length > 0) {
-            canvasWidth.set(window.innerWidth - get(widthContainerForWindow));
-            return window.innerWidth - get(widthContainerForWindow);
-        } else if (!this.verticalMode && !get(resizeFromCowebsite) && get(coWebsites).length > 0) {
-            return window.innerWidth - get(widthContainerForWindow);
+        if (!this.verticalMode && get(coWebsites).length > 0) {
+            return Math.round(window.innerWidth * (1 - get(coWebsiteRatio)));
         } else {
             return window.innerWidth;
         }
     }
 
     private calculateNewHeight() {
-        if (get(resizeFromCowebsite) && this.verticalMode && get(coWebsites).length > 0) {
-            canvasHeight.set(window.innerHeight - get(heightContainerForWindow));
-            return window.innerHeight - get(heightContainerForWindow);
-        } else if (!get(resizeFromCowebsite) && this.verticalMode && get(coWebsites).length > 0) {
-            return window.innerHeight - get(heightContainerForWindow);
+        if (this.verticalMode && get(coWebsites).length > 0) {
+            return Math.round(window.innerHeight - (1 - get(coWebsiteRatio)));
         } else {
             return window.innerHeight;
         }
     }
 
     public getGameSize(): { height: number; width: number } {
-        const height = this.calculateNewHeight();
-        const width = this.calculateNewWidth();
-
-        if (height !== undefined) {
-            heightContainer.set(height);
-        }
-        if (width !== undefined) {
-            widthContainer.set(width);
-        }
-
-        return {
-            height: height,
-            width: width,
-        };
+        // FIXME: replace this with a subscription to the store
+        return get(canvasSize);
     }
 
     public generateUniqueId() {

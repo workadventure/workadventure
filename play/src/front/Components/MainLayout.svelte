@@ -17,7 +17,7 @@
     import { actionsMenuStore } from "../Stores/ActionsMenuStore";
     import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore";
     import { uiWebsitesStore } from "../Stores/UIWebsiteStore";
-    import { canvasHeight, canvasWidth, coWebsites } from "../Stores/CoWebsiteStore";
+    import { coWebsites } from "../Stores/CoWebsiteStore";
     import { proximityMeetingStore } from "../Stores/MyMediaStore";
     import { notificationPlayingStore } from "../Stores/NotificationStore";
     import { popupStore } from "../Stores/PopupStore";
@@ -53,21 +53,7 @@
     import AudioPlayer from "./AudioManager/AudioPlayer.svelte";
     import MediaBox from "./Video/MediaBox.svelte";
     import PresentationLayout from "./EmbedScreens/Layouts/PresentationLayout.svelte";
-    //let mainLayout: HTMLDivElement;
     let keyboardEventIsDisable = false;
-    /*let isMobile = isMediaBreakpointUp("md");
-    const resizeObserver = new ResizeObserver(() => {
-        isMobile = isMediaBreakpointUp("md");
-    });*/
-
-    // FIXME: This is WRONG. The MainLayout component can be called several times, and the canvasWidth and canvasHeight
-    // will be set several times. we need to move this code somewhere else.
-    window.addEventListener("resize", () => {
-        if ($coWebsites.length < 1) {
-            canvasWidth.set(window.innerWidth);
-            canvasHeight.set(window.innerHeight);
-        }
-    });
 
     const handleFocusInEvent = (event: FocusEvent) => {
         const target = event.target as HTMLElement | null;

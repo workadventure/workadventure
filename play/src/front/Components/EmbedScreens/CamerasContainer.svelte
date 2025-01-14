@@ -8,7 +8,7 @@
     import { myCameraStore } from "../../Stores/MyMediaStore";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
 
-    let isHightlighted = false;
+    let isHighlighted = false;
     let isMobile: boolean;
     let unsubscribeHighlightEmbedScreen: Unsubscriber;
 
@@ -23,9 +23,9 @@
     unsubscribeHighlightEmbedScreen = highlightedEmbedScreen.subscribe((value) => {
         checkOverflow();
         if (value) {
-            isHightlighted = true;
+            isHighlighted = true;
         } else {
-            isHightlighted = false;
+            isHighlighted = false;
         }
     });
 
@@ -67,7 +67,7 @@
 </script>
 
 <div
-    class="{isHightlighted
+    class="{isHighlighted
         ? 'flex justify-center gap-4 whitespace-nowrap relative overflow-x-auto overflow-y-hidden m-0 mx-auto my-0 w-full max-w-full'
         : 'not-highlighted mt-0'} {$highlightFullScreen && $highlightedEmbedScreen ? 'hidden' : ''} pointer-events-none"
     id="cameras-container"
@@ -76,7 +76,7 @@
         {#if $highlightedEmbedScreen !== peer}
             {#key uniqueId}
                 <div
-                    class={isHightlighted
+                    class={isHighlighted
                         ? " pointer-events-auto w-[230px] all-cameras-highlighted camera-box"
                         : "w-full h-full all-cameras m-auto camera-box"}
                 >
@@ -89,7 +89,7 @@
     {#if $myCameraStore && !$myJitsiCameraStore}
         <div
             id="unique-mycam"
-            class={isHightlighted
+            class={isHighlighted
                 ? "w-[230px] all-cameras-highlighted pointer-events-auto"
                 : "w-full h-full all-cameras m-auto pointer-event-auto"}
         >
