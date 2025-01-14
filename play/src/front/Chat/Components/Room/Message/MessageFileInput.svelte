@@ -55,7 +55,7 @@
         type="file"
         multiple
         bind:files
-        data-testid="uploadCustomAsset"
+        data-testid="uploadChatCustomAsset"
         on:focusin={focusChatInput}
         on:focusout={unfocusChatInput}
     />

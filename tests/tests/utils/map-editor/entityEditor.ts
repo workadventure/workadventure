@@ -84,8 +84,6 @@ class EntityEditor {
   }
 
   async uploadTestAsset(page: Page) {
-    await page.getByTestId("addApplicationButton").click();
-    await page.getByTestId("fileAttachmentButton").click();
     await page
       .getByTestId("uploadCustomAsset")
       .setInputFiles(path.join(__dirname, `../../assets/${this.getTestAssetFile()}`));
