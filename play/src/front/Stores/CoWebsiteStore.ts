@@ -58,14 +58,6 @@ export function createCoWebsiteStore() {
 
 export const coWebsites = createCoWebsiteStore();
 
-export const totalTabWidth = derived(coWebsites, ($coWebsites) => {
-    return $coWebsites.length * 300;
-});
-
-export const totalTabWidthMobile = derived(coWebsites, ($coWebsites) => {
-    return $coWebsites.length * 220;
-});
-
 export const fullScreenCowebsite = writable(false);
 
 const windowSize = readable({ width: window.innerWidth, height: window.innerHeight }, (set) => {
