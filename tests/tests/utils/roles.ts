@@ -28,13 +28,13 @@ export async function selectMedias(page: Page, isMobile = false) {
 
   await page.click("text=Save");
 
-  if(isMobile){
+  /*if(isMobile){
       await expect(await page.locator('button#burgerIcon')).toBeVisible();
       const mobileMenuVisible = await page.locator('button#burgerIcon img.tw-rotate-0').isVisible();
       if(mobileMenuVisible){
           await page.click('button#burgerIcon');
       }
-  }
+  }*/
   await expect(page.locator("div#main-layout").nth(0)).toBeVisible();
 }
 

@@ -9,9 +9,9 @@ test.use({
   baseURL: play_url,
 })
 test.describe('Mobile', () => {
-    test('Successfully bubble discussion with mobile device', async ({ page, browser, request, browserName }) => {
+    test('Successfully bubble discussion with mobile device', async ({ page, browser, request, browserName }, workerInfo) => {
         // If the browser is webkit
-        if (browser.browserType().name() !== "mobilechromium") {
+        if (workerInfo.project.name!== "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
@@ -86,9 +86,9 @@ test.describe('Mobile', () => {
         await newBrowserJohn.close();
     });
 
-    test('Successfully jitsi cowebsite with mobile device', async ({ page, browser }) => {
+    test('Successfully jitsi cowebsite with mobile device', async ({ page, browser }, workerInfo) => {
         // If the browser is webkit, we skip the test because the option 'ArrowRight' doesn't work
-        if (browser.browserType().name() !== "mobilechromium") {
+        if (workerInfo.project.name !== "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
