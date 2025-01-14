@@ -377,7 +377,6 @@ const chat: BaseTranslation = {
         from: "from",
     },
     requiresLoginForChat: "Sign in to access the chat messages",
-    featureComingSoon: "Feature coming soon!",
     emojis: {
         Dog: "Dog",
         Cat: "Cat",
@@ -444,6 +443,11 @@ const chat: BaseTranslation = {
         Folder: "Folder",
         Pin: "Pin",
         unknownLabel: "Unknown Label",
+    },
+    fileAttachment: {
+        title: "File attachment",
+        description: "Upload and share a file",
+        featureComingSoon: "Coming soon!",
     },
 };
 
