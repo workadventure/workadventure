@@ -377,7 +377,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         from: "depuis",
     },
     requiresLoginForChat: "Identifiez-vous pour accéder aux messages du chat",
-    featureComingSoon: "Prochainement disponible !",
     emojis: {
         Dog: "Chien",
         Cat: "Chat",
@@ -444,6 +443,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         Folder: "Dossier",
         Pin: "Punaise",
         unknownLabel: "Label Inconnu",
+    },
+    fileAttachment: {
+        title: "Pièce jointe",
+        description: "Téléchargez un fichier pour le partager",
+        featureComingSoon: "Fonctionnalité à venir !",
     },
 };
 
