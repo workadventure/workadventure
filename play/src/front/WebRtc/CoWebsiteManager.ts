@@ -754,6 +754,7 @@ class CoWebsiteManager {
 
     public closeCoWebsite(coWebsite: CoWebsite, withStack = true): void {
         if (get(coWebsites).length === 1) {
+            this.restoreMainSize();
             this.fire();
         }
 

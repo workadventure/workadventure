@@ -12,7 +12,6 @@ import { gameManager } from "../Phaser/Game/GameManager";
 import { userIsConnected } from "../Stores/MenuStore";
 import { chatVisibilityStore } from "../Stores/ChatStore";
 import { navChat, selectedRoomStore } from "./Stores/ChatStore";
-import { ChatRoom } from "./Connection/ChatConnection";
 import RequiresLoginForChatModal from "./Components/RequiresLoginForChatModal.svelte";
 
 export type OpenCoWebsiteObject = {
@@ -77,11 +76,11 @@ export const openChatRoom = async (chatID: string) => {
             return;
         }
         const chatConnection = gameManager.chatConnection;
-        let room: ChatRoom | undefined = chatConnection.getDirectRoomFor(chatID);
+        let room = chatConnection.getDirectRoomFor(chatID);
         if (!room) room = await chatConnection.createDirectRoom(chatID);
         if (!room) throw new Error("Failed to create room");
 
-        if (room.myMembership === "invite") {
+        if (get(room.myMembership) === "invite") {
             room.joinRoom().catch((error: unknown) => console.error(error));
         }
 

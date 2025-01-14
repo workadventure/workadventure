@@ -348,10 +348,10 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         const yCenter = (box.yEnd - box.yStart) / 2 + box.yStart;
 
         const game = HtmlUtils.querySelectorOrFail<HTMLCanvasElement>("#game canvas");
-        // Let's put this in Game coordinates by applying the zoom level:
 
-        const followOffsetX = ((xCenter - game.offsetWidth / 2) * window.devicePixelRatio) / this.scene.scale.zoom;
-        const followOffsetY = ((yCenter - game.offsetHeight / 2) * window.devicePixelRatio) / this.scene.scale.zoom;
+        // Let's put this in Game coordinates by applying the zoom level:
+        const followOffsetX = (xCenter - game.offsetWidth / 2) / this.scene.scale.zoom;
+        const followOffsetY = (yCenter - game.offsetHeight / 2) / this.scene.scale.zoom;
 
         if (instant) {
             this.camera.setFollowOffset(followOffsetX, followOffsetY);

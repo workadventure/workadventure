@@ -60,7 +60,13 @@
     });
 
     function switchTool(newTool: EditorToolName) {
-        mapEditorVisibilityStore.set(true);
+        // The map sidebar is opened when the user clicks on the explorer for the first time.
+        // If the user clicks on the Explorer again, we need to show the map sidebar.
+        if (newTool === EditorToolName.ExploreTheRoom) {
+            mapEditorVisibilityStore.set(!$mapEditorVisibilityStore);
+        } else {
+            mapEditorVisibilityStore.set(true);
+        }
         analyticsClient.openMapEditorTool(newTool);
         gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(newTool);
     }

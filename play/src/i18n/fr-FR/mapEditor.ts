@@ -130,10 +130,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultStartArea: "Zone de départ par défaut",
         },
         youtubeProperties: {
-            label: "Ouvrir Youtube",
-            description: "Ouvrir Youtube dans l'application ou dans un nouvel onglet.",
-            error: "Veuillez entrer une URL Youtube valide",
-            disabled: "L'intégration Youtube est désactivée.",
+            label: "Ouvrir YouTube",
+            description: "Ouvrir YouTube dans l'application ou dans un nouvel onglet.",
+            error: "Veuillez entrer une URL YouTube valide",
+            disabled: "L'intégration YouTube est désactivée.",
         },
         googleDocsProperties: {
             label: "Ouvrir Google Docs",

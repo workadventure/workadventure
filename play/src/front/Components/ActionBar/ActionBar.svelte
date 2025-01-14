@@ -36,7 +36,7 @@
     import emojiPickOn from "../images/emoji-on.png";
     import closeImg from "../images/close.png";
     import penImg from "../images/pen.png";
-    import hammerImg from "../images/hammer.png";
+    import backOfficeImg from "../images/back-office.svg";
     import megaphoneImg from "../images/megaphone.svg";
     import WorkAdventureImg from "../images/icon-workadventure-white.png";
     import worldImg from "../images/world.svg";
@@ -481,7 +481,7 @@
     class:animated={$bottomActionBarVisibilityStore}
     bind:this={mainHtmlDiv}
 >
-    <div class="bottom-action-bar tw-absolute">
+    <div class="bottom-action-bar tw-absolute screen-blocker">
         {#if $bottomActionBarVisibilityStore}
             <div
                 class="bottom-action-section tw-flex animate"
@@ -1002,8 +1002,18 @@
                                 <Tooltip text={$LL.actionbar.bo()} />
                             {/if}
 
-                            <button id="backOfficeIcon">
-                                <img draggable="false" src={hammerImg} style="padding: 2px" alt="toggle-bo" />
+                            <button
+                                id="backOfficeIcon"
+                                name="toggle-back-office"
+                                disabled={isMobile || !$mapManagerActivated}
+                            >
+                                <img
+                                    draggable="false"
+                                    src={backOfficeImg}
+                                    class:disable-opacity={isMobile}
+                                    style="padding: 2px"
+                                    alt={$LL.actionbar.bo()}
+                                />
                             </button>
                         </div>
                     {/if}

@@ -38,6 +38,7 @@ export { default as IconUserPlus } from "~icons/tabler/userPlus";
 export { default as IconDotsCircle } from "~icons/tabler/dotsCircleHorizontal";
 export { default as IconLogout } from "~icons/tabler/logout";
 export { default as IconMessage } from "~icons/tabler/message";
+export { default as IconMessagePlus } from "~icons/tabler/message";
 export { default as IconFolder } from "~icons/tabler/folder";
 export { default as IconUnMute } from "~icons/tabler/volume";
 export { default as IconMute } from "~icons/tabler/volume3";
@@ -49,4 +50,9 @@ export { default as IconExclamation } from "~icons/tabler/message-2-exclamation"
 export { default as IconCloudLock } from "~icons/tabler/cloud-lock";
 export { default as IconMessageCircle2 } from "~icons/tabler/message-circle-2";
 export { default as IconVerify } from "~icons/tabler/rosetteDiscountCheck";
+export { default as IconUserEdit } from "~icons/tabler/user-edit";
+export { default as IconMail } from "~icons/tabler/mail";
+export { default as IconClock } from "~icons/tabler/clock";
+export { default as IconPoint } from "~icons/tabler/point";
+export { default as IconDoorExit } from "~icons/tabler/door-exit";
 export { default as IconInbox } from "~icons/tabler/mailbox";
