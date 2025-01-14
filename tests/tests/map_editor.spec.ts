@@ -112,12 +112,8 @@ test.describe("Map editor @oidc", () => {
         // click on the megaphone button to start the streaming session
         await expect(page2.getByText('test', { exact: true })).toBeVisible({timeout: 15_000});
 
-        // TODO: HOW TO STOP THE MEGAPHONE?????
-        // TODO: HOW TO STOP THE MEGAPHONE?????
-        // TODO: HOW TO STOP THE MEGAPHONE?????
-        // TODO: HOW TO STOP THE MEGAPHONE?????
-        // Shouldn't we stay on the same page and click the STOP button?!!!!!
-        await Menu.toggleMegaphoneButton(page);
+        await page.getByRole('button', { name: 'Stop megaphone' }).click();
+        await expect(page.getByRole('heading', { name: 'Global communication' })).toBeHidden();
 
         await page2.close();
         await newBrowser.close();
@@ -131,7 +127,7 @@ test.describe("Map editor @oidc", () => {
         await page.goto(Map.url("empty"));
         //await page.evaluate(() => { localStorage.setItem('debug', '*'); });
         //await page.reload();
-        await login(page, "test", 2, "en-US", false);
+        await login(page, "Alice", 2, "en-US", false);
         await oidcAdminTagLogin(page, false);
 
         await Menu.openMapEditor(page);
@@ -145,25 +141,21 @@ test.describe("Map editor @oidc", () => {
         await AreaEditor.setListenerZoneProperty(page, `${browser.browserType().name()}SpeakerZone`.toLowerCase());
         await Menu.closeMapEditor(page);
         await Map.teleportToPosition(page, 4 * 32, 2 * 32);
-        await expect(await page.locator(".jitsi-video")).toBeVisible({
-            timeout: 20_000,
-        });
+        await expect(page.locator('#cameras-container').getByText('Alice')).toBeVisible();
 
         // Second browser
         const newBrowser = await browser.newContext();
         const page2 = await newBrowser.newPage();
         await page2.goto(Map.url("empty"));
 
-        await login(page2, "test2", 5, "en-US", false);
+        await login(page2, "Bob", 5, "en-US", false);
         await oidcAdminTagLogin(page2, false);
         await Map.teleportToPosition(page2, 4 * 32, 7 * 32);
 
         // The user in the listener zone can see the speaker
-        await expect(page2.locator(".cameras-container .other-cameras .jitsi-video")).toBeVisible({
-            timeout: 20_000,
-        });
+        await expect(page2.locator('#cameras-container').getByText('Alice')).toBeVisible({timeout: 20_000});
         // The speaker cannot see the listener
-        await expect(page.locator(".cameras-container .other-cameras .jitsi-video")).toBeHidden({timeout: 20_000});
+        await expect(page.locator('#cameras-container').getByText('Bob')).toBeHidden({timeout: 20_000});
 
         // Now, let's move player 2 to the speaker zone
         await Map.walkToPosition(page2, 4 * 32, 2 * 32);
@@ -171,11 +163,9 @@ test.describe("Map editor @oidc", () => {
         //await Map.teleportToPosition(page2, 4*32, 2*32);
 
         // The first speaker (player 1) can now see player2
-        await expect(page.locator(".cameras-container .other-cameras .jitsi-video")).toBeVisible({timeout: 20_000});
+        await expect(page.locator('#cameras-container').getByText('Bob')).toBeVisible({timeout: 20_000});
         // And the opposite is still true (player 2 can see player 1)
-        await expect(page2.locator(".cameras-container .other-cameras .jitsi-video")).toBeVisible({
-            timeout: 20_000,
-        });
+        await expect(page2.locator('#cameras-container').getByText('Alice')).toBeVisible({timeout: 20_000});
 
         await page2.close();
         await newBrowser.close();
@@ -691,6 +681,9 @@ test.describe("Map editor @oidc", () => {
         await expect(page2.getByTestId('map-menu')).toBeHidden();
         //await Menu.isNotThereMegaphoneButton(page2);
         // Remove rights
+        await Menu.openMapEditor(page);
+        await MapEditor.openConfigureMyRoom(page);
+        await ConfigureMyRoom.selectMegaphoneItemInCMR(page);
         await Megaphone.megaphoneRemoveRights(page, "example");
         await Megaphone.megaphoneSave(page);
         await Megaphone.isCorrectlySaved(page);
@@ -699,8 +692,6 @@ test.describe("Map editor @oidc", () => {
 
         // Megaphone button is not displayed because it is hidden in the "Admin" menu. BUT! It is available to anyone!
         await Menu.isThereMegaphoneButton(page2);
-        await Menu.closeMapEditorConfigureMyRoomPopUp(page);
-        await Menu.closeMapEditor(page);
 
         // TODO : create this test in admin part (global message and text audio message if an admin feature)
         // TODO : change to use the global message feature for user through megaphon settings rights

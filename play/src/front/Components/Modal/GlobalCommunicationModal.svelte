@@ -164,6 +164,13 @@
         analyticsClient.startMegaphone();
         currentLiveStreamingSpaceStore.set($megaphoneSpaceStore);
         requestedMegaphoneStore.set(true);
+        //close();
+    }
+
+    function stopLive() {
+        analyticsClient.stopMegaphone();
+        currentLiveStreamingSpaceStore.set(undefined);
+        requestedMegaphoneStore.set(false);
         close();
     }
 </script>
@@ -472,16 +479,22 @@
                         {/if}
                     </div>
                     <div class="flex flew-row justify-center">
-                        <button
-                            class="light h-8 w-24 text-black bg-white rounded-md"
-                            on:click={startLive}
-                            disabled={!$requestedCameraState && !$requestedMicrophoneState}
-                        >
-                            {#if !$requestedCameraState && !$requestedMicrophoneState && !$requestedScreenSharingState}
-                                <Tooltip text={$LL.warning.megaphoneNeeds()} />
-                            {/if}
-                            {$LL.megaphone.modal.liveMessage.startMegaphone()}
-                        </button>
+                        {#if !$requestedMegaphoneStore}
+                            <button
+                                class="btn light  text-black bg-white rounded-md"
+                                on:click={startLive}
+                                disabled={!$requestedCameraState && !$requestedMicrophoneState}
+                            >
+                                {#if !$requestedCameraState && !$requestedMicrophoneState && !$requestedScreenSharingState}
+                                    <Tooltip text={$LL.warning.megaphoneNeeds()} />
+                                {/if}
+                                {$LL.megaphone.modal.liveMessage.startMegaphone()}
+                            </button>
+                        {:else}
+                            <button class="btn btn-danger" on:click={stopLive}>
+                                {$LL.megaphone.modal.liveMessage.stopMegaphone()}
+                            </button>
+                        {/if}
                     </div>
                 </div>
             {/if}
