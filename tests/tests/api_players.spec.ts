@@ -32,10 +32,8 @@ test.describe("API WA.players", () => {
     await login(page2, "Bob", 3, "en-US", project.name === "mobilechromium");
 
     const events = getCoWebsiteIframe(page).locator("#events");
-
-    await expect(events).toContainText("New user: Bob", {
-        timeout: 10000,
-    });
+    
+    await expect(events.getByText('New user: Bob')).toBeVisible();
 
     await getCoWebsiteIframe(page).locator("#listCurrentPlayers").click();
     const list = getCoWebsiteIframe(page).locator("#list");
@@ -64,7 +62,7 @@ test.describe("API WA.players", () => {
     await page2.close();
     await newBrowser.close();
 
-    await expect(events).toContainText("User left: Bob");
+    await expect(events.getByText('User left: Bob')).toBeVisible();
     await getCoWebsiteIframe(page).locator("#listCurrentPlayers").click();
     await expect(list).not.toContainText("Bob");
   });
