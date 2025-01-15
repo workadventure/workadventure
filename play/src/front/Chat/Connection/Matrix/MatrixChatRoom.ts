@@ -41,8 +41,8 @@ import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { matrixSecurity } from "./MatrixSecurity";
 import { MatrixChatRoomMember } from "./MatrixChatRoomMember";
-import { NotificationType } from "../../../WebRtc/MediaManager";
 import { mediaManager } from "../../../WebRtc/MediaManager";
+import { MessageNotification } from "../../../Notification";
 
 type EventId = string;
 
@@ -252,17 +252,7 @@ export class MatrixChatRoom
                     if (this.isEventReplacingExistingOne(event)) {
                         this.handleMessageModification(event);
                     } else {
-                        this.handleNewMessage(event);
-                        const senderID = event.getSender();
-                        if (senderID !== this.matrixRoom.client.getSafeUserId() && !get(this.areNotificationsMuted)) {
-                            this.playNewMessageSound();
-                            console.log("createNotification", senderID, NotificationType.message, this.id);
-                            await mediaManager.createNotificationWithActions(senderID ?? "unknown", NotificationType.message, this.id);
-                            if (!isAChatRoomIsVisible() && get(selectedRoomStore)?.id !== "proximity") {
-                                selectedRoomStore.set(this);
-                                navChat.switchToChat();
-                            }
-                        }
+                        await this.handleNewMessage(event);
                     }
                 }
                 if (event.getType() === "m.reaction") {
@@ -280,8 +270,20 @@ export class MatrixChatRoom
         this.handleDeletion(event);
     }
 
-    private handleNewMessage(event: MatrixEvent) {
-        this.messages.push(new MatrixChatMessage(event, this.matrixRoom));
+    private async handleNewMessage(event: MatrixEvent) {
+        const message = new MatrixChatMessage(event, this.matrixRoom);
+        this.messages.push(message);
+
+        const senderID = event.getSender();
+        if (senderID !== this.matrixRoom.client.getSafeUserId() && !get(this.areNotificationsMuted)) {
+            this.playNewMessageSound();
+            mediaManager.createNotification(new MessageNotification(get(this.name), senderID ?? "unknown", get(message.content).body, this.id, get(this.name)));
+            if (!isAChatRoomIsVisible() && get(selectedRoomStore)?.id !== "proximity") {
+                selectedRoomStore.set(this);
+                navChat.switchToChat();
+            }
+        }
+
         this.addEventContentInMemory(event);
     }
 

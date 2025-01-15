@@ -16,31 +16,21 @@ import { MediaStreamConstraintsError } from "../Stores/Errors/MediaStreamConstra
 import { localUserStore } from "../Connection/LocalUserStore";
 import { LL } from "../../i18n/i18n-svelte";
 import { localeDetector } from "../../i18n/locales";
-import { ChatRoom } from "../Chat/Connection/ChatConnection";
-import { selectedRoomStore } from "../Chat/Stores/ChatStore";
-import { gameManager } from "../Phaser/Game/GameManager";
+import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger";
+import { notificationListener, NotificationWA } from "../Notification";
 
 export type StartScreenSharingCallback = (media: MediaStream) => void;
 export type StopScreenSharingCallback = (media: MediaStream) => void;
-
-export enum NotificationType {
-    discussion = 1,
-    message,
-}
 
 //TODO add parameter to manage time to send notification
 const TIME_NOTIFYING_MILLISECOND = 10000;
 
 export class MediaManager {
     private userInputManager?: UserInputManager;
-
     private canSendNotification = true;
     private canPlayNotificationMessage = true;
-    private messageChannel: BroadcastChannel;
 
     constructor() {
-        this.messageChannel = new BroadcastChannel('messageChannel');
-        this.initMessageChannel();
         localeDetector()
             .catch(() => {
                 throw new Error("Cannot load locale on media manager");
@@ -93,30 +83,6 @@ export class MediaManager {
             });
     }
 
-    private initMessageChannel() {
-        this.messageChannel.onmessage = async (event) => {
-            console.log("Received message in MediaManager:", event.data);
-            if (event.data.type === "reply") {
-                // Handle reply action
-                const chatRoomId :string = JSON.parse(event.data.data.chatRoom);
-                let room : ChatRoom | undefined;
-                if(chatRoomId === "proximity") {
-                    console.log("proximity");
-                    proximityMeetingStore.set(true);
-                    room = gameManager.getCurrentGameScene().proximityChatRoom;
-                } else {
-                    console.log("not proximity");
-                    const chatConnection = await gameManager.getChatConnection();
-                    room = await chatConnection.findRoomOrFolder(chatRoomId);
-                }
-                console.log("room", room);
-                if(room) {
-                    selectedRoomStore.set(room);
-                }
-            }
-        };
-    }
-
     public enableMyCamera(): void {
         if (!get(myCameraBlockedStore)) {
             myCameraStore.set(true);
@@ -150,77 +116,28 @@ export class MediaManager {
     }
 
     public hasNotification(): boolean {
-        if (
-            //this.canSendNotification &&
-             Notification.permission === "granted") {
-            return localUserStore.getNotification();
-        } else {
-            return false;
-        }
+        return (
+            this.canSendNotification &&
+            Notification.permission === "granted" &&
+            statusChanger.allowNotificationSound() &&
+            localUserStore.getNotification()
+        );
     }
 
-    public async createNotificationWithActions(userName: string, notificationType: NotificationType, chatRoom: string | null = null) {
-        if (document.hasFocus()) {
-            return;
-        }
-        console.log("createNotificationWithActions", userName, notificationType, chatRoom);
-        if (this.hasNotification()) {
-            const options = {
-                icon: "/static/images/logo-WA-min.png",
-                image: "/static/images/logo-WA-min.png",
-                badge: "/static/images/logo-WA-min.png",
-            };
-            switch (notificationType) {
-                case NotificationType.discussion:
-                   // new Notification(`${userName} ${get(LL).notification.discussion()}`, options);
-                    break;
-                case NotificationType.message:
-                    console.log("in message", userName, notificationType, chatRoom);
-                    await navigator.serviceWorker.register("/notification-service-worker.js").then((registration) => {
-                        console.log("in showNotification", userName, notificationType, chatRoom);
-                        registration.showNotification(`${userName} ${get(LL).notification.message()} ${
-                            chatRoom !== null && get(LL).notification.chatRoom() + " " + chatRoom
-                        }`, {
-                            ...options,
-                            actions: [{ action: "reply", title: "Reply" }],
-                             data: {
-                                 chatRoom : JSON.stringify(chatRoom),
-                             },
-                        });
-               });
-
-                    break;
-            }
-            this.canSendNotification = false;
-            setTimeout(() => (this.canSendNotification = true), TIME_NOTIFYING_MILLISECOND);
-        }
-
+    public destroy() {
+        notificationListener.destroy();
     }
 
-    public createNotification(userName: string, notificationType: NotificationType, chatRoom: string | null = null) {
+    public createNotification(notification: NotificationWA) {
         if (document.hasFocus()) {
             return;
         }
 
         if (this.hasNotification()) {
-            const options = {
-                icon: "/static/images/logo-WA-min.png",
-                image: "/static/images/logo-WA-min.png",
-                badge: "/static/images/logo-WA-min.png",
-            };
-            switch (notificationType) {
-                case NotificationType.discussion:
-                    new Notification(`${userName} ${get(LL).notification.discussion()}`, options);
-                    break;
-                case NotificationType.message:
-                    new Notification(
-                        `${userName} ${get(LL).notification.message()} ${
-                            chatRoom !== null && get(LL).notification.chatRoom() + " " + chatRoom
-                        }`,
-                        options
-                    );
-                    break;
-            }
+            notification.sendNotification();
+            //TODO : voir si on applique la regle du time_notifying_millisecond sinon deplacer la logique dans chaque classe
+            //TODO : peut etre avoir 2 classe generique une qui avec time_notifying_millisecond et une qui n'en a pas
+
             this.canSendNotification = false;
             setTimeout(() => (this.canSendNotification = true), TIME_NOTIFYING_MILLISECOND);
         }

@@ -210,6 +210,7 @@ import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import Clamp = Phaser.Math.Clamp;
+import { notificationListener } from "../../Notification";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -1085,6 +1086,7 @@ export class GameScene extends DirtyScene {
         this.scriptingOutputAudioStreamManager?.close();
         this.scriptingInputAudioStreamManager?.close();
         this._spaceRegistry?.destroy();
+        mediaManager.destroy();
 
         // We need to destroy all the entities
         get(extensionModuleStore).forEach((extensionModule) => {
