@@ -48,10 +48,11 @@ test.describe('Mobile', () => {
         await Menu.openBurgerMenu(pageAlice);
         await Menu.closeBurgerMenu(pageAlice);
         
-        //  TODO: User should be able to click on button to have the camera of other user bigger.
-        
-        /*await page.getByTestId('burger-menu').click();
-        await expect(page.getByText('Change your status')).toBeHidden();*/
+        // check if we can pin the camera of other user
+        // to do this we use the pin button to unpin the video
+        await pageAlice.locator('#cameras-container').getByRole('button').nth(1).click();
+        await pageAlice.locator('#video-container-receive').getByRole('button').first().click();
+        await pageAlice.getByRole('button', {name: 'Pin', exact: true }).click();
 
         // Second browser
         const newBrowserJohn = await browser.newContext();
@@ -70,6 +71,11 @@ test.describe('Mobile', () => {
         // check if we can still open and close burgerMenu when 2 in proximity chat with cam on
         await Menu.openBurgerMenu(pageJohn);
         await Menu.closeBurgerMenu(pageJohn);
+        
+        await pageJohn.locator('#cameras-container').getByRole('button').nth(1).click();
+        await pageJohn.locator('#video-container-receive').getByRole('button').first().click();
+        await pageJohn.getByRole('button', {name: 'Pin', exact: true }).click();
+        
 
         await pageAlice.close();
         await pageJohn.close();
