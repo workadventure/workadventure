@@ -398,7 +398,6 @@ test.describe('Availability Status', () => {
 
             //move to trigger status change 
             await Map.walkTo(page,'ArrowRight',100);
-            //await page.pause();
             await Menu.expectStatus(page, 'Online');
         })
         test('should disable microphone and camera',async({ page, browser,browserName }, {project})=>{
