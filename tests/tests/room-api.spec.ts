@@ -6,6 +6,7 @@ import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
 import {RENDERER_MODE} from "./utils/environment";
 import {maps_domain, play_url, publicTestMapUrl} from "./utils/urls";
+import { getCoWebsiteIframe } from "./utils/iframe";
 
 const apiKey = process.env.ROOM_API_SECRET_KEY;
 
@@ -69,9 +70,11 @@ test.describe('Room API', async () => {
         await gotoWait200(page, roomUrl+"?phaserMode="+RENDERER_MODE);
         await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
 
-        const textField = page
-            .frameLocator('#cowebsite-buffer iframe')
-            .locator('#textField');
+        /*const textField = page
+            .frameLocator('#cowebsite-buffer iframe') // !!!!
+            .locator('#textField');*/
+
+        const textField = getCoWebsiteIframe(page).locator("#textField");
 
         await expect(client.saveVariable({
             name: variableName,
@@ -80,6 +83,9 @@ test.describe('Room API', async () => {
         })).resolves.not.toThrow();
 
         // Check reading on browser
+        //await page.pause();
+        //await expect(page.locator('iframe[title="Cowebsite"]').contentFrame().locator('#textField')).toBeVisible();
+
         await expect(textField).toHaveValue(newValue);
 
         const value = await client.readVariable({
