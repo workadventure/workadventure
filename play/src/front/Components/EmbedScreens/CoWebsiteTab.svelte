@@ -126,8 +126,7 @@
 
         <div class="flex gap-0.5">
             {#if isDuplicable}
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div
+                <button
                     class="group {active
                         ? 'hover:bg-contrast/10'
                         : 'hover:bg-white/10'} transition-all aspect-ratio h-8 w-8 rounded flex items-center justify-center"
@@ -139,9 +138,9 @@
                         strokeColor={active ? "stroke-contrast" : "stroke-white"}
                         hover={active ? "" : ""}
                     />
-                </div>
+                </button>
             {/if}
-            <div
+            <button
                 class="group {active
                     ? 'hover:bg-contrast/10'
                     : 'hover:bg-white/10'} transition-all aspect-ratio h-8 w-8 rounded flex items-center justify-center"
@@ -153,9 +152,9 @@
                     strokeColor={active ? "stroke-contrast" : "stroke-white"}
                     hover={active ? "" : ""}
                 />
-            </div>
+            </button>
             {#if coWebsite.isClosable() === true}
-                <div
+                <button
                     class="group {active
                         ? 'hover:bg-contrast/10'
                         : 'hover:bg-white/10'} transition-all aspect-ratio h-8 w-8 rounded flex items-center justify-center"
@@ -167,7 +166,7 @@
                         strokeColor={active ? "stroke-contrast" : "stroke-white"}
                         hover={active ? "" : ""}
                     />
-                </div>
+                </button>
             {/if}
         </div>
     </div>

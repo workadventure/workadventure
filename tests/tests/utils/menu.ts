@@ -14,17 +14,26 @@ class Menu {
         // await expect(await page.getByRole('button', {name: 'toggle-map-editor'}).first()).toHaveClass(/border-top-light/);
     }
 
-    async openMenu(page: Page, isMobile: boolean) {
-        if(isMobile){
-            await expect(page.locator('button#burgerIcon')).toBeVisible();
-            const mobileMenuVisible = await page.locator('button#burgerIcon img.tw-rotate-0').isVisible();
-            if(mobileMenuVisible){
-                await page.click('button#burgerIcon');
-            }
-        }
+    async openBurgerMenu(page: Page) {
+        await page.getByTestId('burger-menu').click();
+        await expect(page.getByText('Change your status')).toBeVisible();
+    }
+
+    async openMenu(page: Page) {
         await page.getByTestId('action-user').click({timeout: 30_000});
         await expect(await page.getByTestId('profile-menu')).toHaveClass(/backdrop-blur/);
     }
+
+    /*async openMenu(page: Page) {
+        // 'button#burgerIcon' do not exist in the new graphic version !!
+        await expect(page.locator('button#burgerIcon')).toBeVisible();
+        const mobileMenuVisible = await page.locator('button#burgerIcon img.tw-rotate-0').isVisible();
+        if(mobileMenuVisible){
+            await page.click('button#burgerIcon');
+        }
+        await page.getByTestId('action-user').click({timeout: 30_000});
+        await expect(await page.getByTestId('profile-menu')).toHaveClass(/backdrop-blur/);
+    }*/
 
     async openMapMenu(page: Page) {
         // await page.pause();
@@ -35,6 +44,11 @@ class Menu {
     async closeMenu(page: Page) {
         await page.getByTestId('action-user').click({timeout: 30_000});
         await expect(page.getByTestId('profile-menu')).toBeHidden();
+    }
+
+    async closeBurgerMenu(page: Page) {
+        await page.getByTestId('burger-menu').click();
+        await expect(page.getByText('Change your status')).toBeHidden();
     }
 
     async closeMapMenu(page: Page) {

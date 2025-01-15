@@ -8,6 +8,7 @@ test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
   baseURL: play_url,
 })
+
 test.describe('Mobile', () => {
     test('Successfully bubble discussion with mobile device', async ({ page, browser, request, browserName }, workerInfo) => {
         // If the browser is webkit
@@ -16,7 +17,6 @@ test.describe('Mobile', () => {
             test.skip();
             return;
         }
-
         await page.goto(Map.url("empty"));
         await login(page, "Bob", 3, 'en-US', true);
 
@@ -28,11 +28,10 @@ test.describe('Mobile', () => {
         // walk on the position for the test
         // TODO: find a solution to test Joystick
         await Map.walkToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
-
         // Text open menu
-        await Menu.openMenu(page);
+        await Menu.openBurgerMenu(page);
         // Text close menu
-        await Menu.closeMenu(page);
+        await Menu.closeBurgerMenu(page);
 
         // Second browser
         const newBrowserAlice = await browser.newContext();
@@ -45,14 +44,16 @@ test.describe('Mobile', () => {
         // TODO: find a solution to test Joystick
         await Map.walkToPosition(pageAlice, positionToDiscuss.x, positionToDiscuss.y);
 
-        await expect(pageAlice.locator(`.cameras-container .other-cameras .media-container`).nth(0)).toBeVisible({
-            timeout: 10000
-        });
-        await expect(page.locator(`.cameras-container .other-cameras .media-container`).nth(0)).toBeVisible({
-            timeout: 10000
-        });
-        expect(await pageAlice.locator(`.cameras-container .other-cameras .media-container`).count()).toBe(1);
-        expect(await page.locator(`.cameras-container .other-cameras .media-container`).count()).toBe(1);
+        await expect(pageAlice.getByText('Bob')).toBeVisible();
+        // check if we can still open and close burgerMenu when 2 in proximity chat with cam on
+        await Menu.openBurgerMenu(pageAlice);
+        await Menu.closeBurgerMenu(pageAlice);
+        
+        // check if we can pin the camera of other user
+        // to do this we use the pin button to unpin the video
+        await pageAlice.locator('#cameras-container').getByRole('button').nth(1).click();
+        await pageAlice.locator('#video-container-receive').getByRole('button').first().click();
+        await pageAlice.getByRole('button', {name: 'Pin', exact: true }).click();
 
         // Second browser
         const newBrowserJohn = await browser.newContext();
@@ -66,18 +67,17 @@ test.describe('Mobile', () => {
         await Map.walkToPosition(pageJohn, positionToDiscuss.x, positionToDiscuss.y);
 
         // Expect to see camera of users
-        await expect(pageJohn.locator(`.cameras-container .other-cameras .media-container`).nth(1)).toBeVisible({
-            timeout: 10000
-        });
-        await expect(pageAlice.locator(`.cameras-container .other-cameras .media-container`).nth(1)).toBeVisible({
-            timeout: 10000
-        });
-        await expect(page.locator(`.cameras-container .other-cameras .media-container`).nth(1)).toBeVisible({
-            timeout: 10000
-        });
-        expect(await pageAlice.locator(`.cameras-container .other-cameras .media-container`).count()).toBe(2);
-        expect(await page.locator(`.cameras-container .other-cameras .media-container`).count()).toBe(2);
-        expect(await pageJohn.locator(`.cameras-container .other-cameras .media-container`).count()).toBe(2);
+        await expect(pageJohn.getByText('Bob')).toBeVisible();
+        await expect(pageJohn.getByText('Alice')).toBeVisible();
+
+        // check if we can still open and close burgerMenu when 2 in proximity chat with cam on
+        await Menu.openBurgerMenu(pageJohn);
+        await Menu.closeBurgerMenu(pageJohn);
+        
+        await pageJohn.locator('#cameras-container').getByRole('button').nth(1).click();
+        await pageJohn.locator('#video-container-receive').getByRole('button').first().click();
+        await pageJohn.getByRole('button', {name: 'Pin', exact: true }).click();
+        
 
         await pageAlice.close();
         await pageJohn.close();
@@ -97,21 +97,15 @@ test.describe('Mobile', () => {
             publicTestMapUrl('tests/CoWebsite/cowebsite_jitsiroom.json', 'mobile')
         );
         await login(page, "Bob", 3, 'en-US', true);
-
         // Move to open a cowebsite
         await page.locator('#body').press('ArrowRight', { delay: 3000 });
         // Now, let's move player 2 to the speaker zone
-
-        // Check that the cowebsite is visible
-        await expect(page.locator(`#cowebsite #cowebsite-aside #cowebsite-aside-buttons #cowebsite-close`)).toBeVisible({
-            timeout: 10000
-        });
-
+        
         // Click on the button to close the cowebsite
-        await page.locator(`#cowebsite #cowebsite-aside #cowebsite-aside-buttons #cowebsite-close`).click({timeout: 10000});
+        await page.getByTestId('tab1').getByRole('button', {name: 'Close'}).click();
 
         // Check that the cowebsite is hidden
-        await expect(page.locator(`#cowebsite #cowebsite-aside`)).toBeHidden({
+        await expect(page.getByTestId('tab1').getByRole('button', {name: 'Close'})).toBeHidden({
             timeout: 10000
         });
 
