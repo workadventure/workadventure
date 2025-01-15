@@ -20,11 +20,8 @@ class Menu {
     }
 
     async openMenu(page: Page) {
-        await expect(page.locator('button#burgerIcon')).toBeVisible();
-        const mobileMenuVisible = await page.locator('button#burgerIcon img.tw-rotate-0').isVisible();
-        if(mobileMenuVisible){
-            await page.click('button#burgerIcon');
-        }
+        await page.getByTestId('action-user').click({timeout: 30_000});
+        await expect(await page.getByTestId('profile-menu')).toHaveClass(/backdrop-blur/);
     }
 
     /*async openMenu(page: Page) {
