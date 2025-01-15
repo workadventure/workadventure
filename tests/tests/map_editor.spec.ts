@@ -301,14 +301,19 @@ test.describe("Map editor @oidc", () => {
 
         await Menu.closeMapEditor(page);
 
-        // walk on the area position and open the popup
-        await Map.walkToPosition(page, 9 * 32, 9 * 32);
+        // teleport on the area position and open the popup
+        await Map.teleportToPosition(page, 9 * 32, 9 * 32);
 
         // check if the iframe was opened and button thumbnail is visible
-        await page.pause();
-        await expect(page.locator("#cowebsite-thumbnail-0")).toBeVisible();
-        await expect(page.locator("#cowebsite-thumbnail-1")).toBeVisible();
-        await expect(page.locator("#cowebsite-thumbnail-2")).toBeVisible();
+        await page.getByTestId('tab1').getByText('Docs', { exact: true }).click();
+        await page.getByTestId('tab2').getByText('Docs', { exact: true }).click();
+        await page.locator('#cowebsites-container').getByRole('button').click();
+        await page.getByTestId('tab2').getByText('Docs', { exact: true }).click();
+        await page.getByTestId('tab3').getByText('Docs', { exact: true }).click();
+        await page.locator('#cowebsites-container').getByRole('button').nth(1).click();
+        await page.getByText('Drive', { exact: true }).click();
+        await page.locator('#cowebsites-container').getByRole('button').nth(1).click();
+        await page.getByText('Drive', { exact: true }).click();
     });
 
     test("Successfully set GoogleWorkspace's application entity in the map editor", async ({page, request}, {project}) => {
