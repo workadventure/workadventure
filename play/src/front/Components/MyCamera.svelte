@@ -161,9 +161,9 @@
         border-color: #4156f6;
     }
 
-    .background-color-speaker {
+    /*.background-color-speaker {
         background-color: #4156f6;
-    }
+    }*/
 
     @container (max-width: 767px) {
         .responsive-dimension {

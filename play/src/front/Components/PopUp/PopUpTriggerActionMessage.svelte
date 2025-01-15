@@ -22,11 +22,3 @@
         <button class="btn btn-secondary btn-sm w-full max-w-96 justify-center" on:click={click}> Close </button>
     </svelte:fragment>
 </PopUpContainer>
-
-<style>
-    @media (max-width: 768px) {
-        .responsive-message {
-            scale: 1.2;
-        }
-    }
-</style>

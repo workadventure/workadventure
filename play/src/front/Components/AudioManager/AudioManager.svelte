@@ -155,9 +155,3 @@
         </div>
     </div>
 </div>
-
-<style lang="scss">
-    .hidden {
-        display: none;
-    }
-</style>

@@ -51,11 +51,3 @@
         <button class="btn btn-secondary w-1/2 justify-center" on:click={closeBanner}> Close </button>
     </svelte:fragment>
 </PopUpContainer>
-
-<style>
-    @media (max-width: 768px) {
-        .responsive {
-            scale: 0.7;
-        }
-    }
-</style>

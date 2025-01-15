@@ -44,9 +44,4 @@
             scale: 0.6;
         }
     }
-    .buttons-wrapper {
-        .btn {
-            @apply w-full;
-        }
-    }
 </style>

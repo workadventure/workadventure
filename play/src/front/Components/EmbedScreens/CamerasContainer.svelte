@@ -67,9 +67,22 @@
 </script>
 
 <div
-    class="{isHighlighted
-        ? 'flex justify-center gap-4 whitespace-nowrap relative overflow-x-auto overflow-y-hidden m-0 mx-auto my-0 w-full max-w-full'
-        : 'not-highlighted mt-0'} {$highlightFullScreen && $highlightedEmbedScreen ? 'hidden' : ''} pointer-events-none"
+    class:hidden={$highlightFullScreen && $highlightedEmbedScreen}
+    class:flex={isHighlighted}
+    class:justify-center={isHighlighted}
+    class:gap-4={isHighlighted}
+    class:whitespace-nowrap={isHighlighted}
+    class:relative={isHighlighted}
+    class:overflow-x-auto={isHighlighted}
+    class:overflow-y-hidden={isHighlighted}
+    class:m-0={isHighlighted}
+    class:mx-auto={isHighlighted}
+    class:my-0={isHighlighted}
+    class:w-full={isHighlighted}
+    class:max-w-full={isHighlighted}
+    class:not-highlighted={!isHighlighted}
+    class:mt-0={!isHighlighted}
+    class="pointer-events-none"
     id="cameras-container"
 >
     {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
@@ -103,7 +116,7 @@
 </div>
 
 <!-- && !$megaphoneEnabledStore TODO HUGO -->
-<style>
+<style lang="scss">
     .hidden {
         display: none !important;
     }
@@ -159,20 +172,6 @@
             grid-template-rows: repeat(auto-fit, 79px);
         }
 
-        .highlight {
-            display: flex;
-            justify-content: center;
-            margin: 0;
-            gap: 1rem;
-            white-space: nowrap;
-            position: relative;
-            overflow-x: auto;
-            overflow-y: hidden;
-            margin: 0 auto;
-            width: 100%;
-            max-width: 100%;
-            -webkit-overflow-scrolling: touch;
-        }
         .all-cameras-highlighted {
             min-width: 180px;
             max-width: 180px;

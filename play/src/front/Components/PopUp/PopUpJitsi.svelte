@@ -22,13 +22,3 @@
         <button class="btn btn-secondary btn-sm w-full max-w-96 justify-center" on:click={click}>Enter Jitsi</button>
     </svelte:fragment>
 </PopUpContainer>
-
-<style>
-    @media (min-width: 768px) {
-        .responsive-bar {
-            position: absolute;
-            width: 100%;
-            bottom: 0;
-        }
-    }
-</style>

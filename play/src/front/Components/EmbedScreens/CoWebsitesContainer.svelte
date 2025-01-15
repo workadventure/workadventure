@@ -46,7 +46,7 @@
         resizeBar.addEventListener("touchstart", handleTouchStart);
     });
 
-    const handleMouseDown = (e: { clientX: number }) => {
+    const handleMouseDown = () => {
         document.addEventListener("mousemove", handleMouseMove);
         document.addEventListener("mouseup", handleMouseUp);
     };
