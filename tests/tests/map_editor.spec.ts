@@ -412,8 +412,9 @@ test.describe("Map editor @oidc", () => {
         // click on the object and open popup
         await EntityEditor.moveAndClick(page, 14 * 32, 13 * 32);
 
-        // check if the popup with application is opened
-        await expect(page.locator(".actions-menu .actions button").nth(0)).toContainText("Open Klaxoon");
+        // check if the popup with application is opened and can be closed
+        await expect(page.getByRole('button', { name: 'Open Klaxoon' })).toBeVisible();
+        await page.getByRole('button', { name: 'Close' }).click();
     });
 
     // Create test for Google picker docs
