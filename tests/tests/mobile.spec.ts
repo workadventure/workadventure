@@ -8,6 +8,7 @@ test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
   baseURL: play_url,
 })
+
 test.describe('Mobile', () => {
     test('Successfully bubble discussion with mobile device', async ({ page, browser, request, browserName }, workerInfo) => {
         // If the browser is webkit
@@ -68,6 +69,7 @@ test.describe('Mobile', () => {
         // Expect to see camera of users
         await expect(pageJohn.getByText('Bob')).toBeVisible();
         await expect(pageJohn.getByText('Alice')).toBeVisible();
+
         // check if we can still open and close burgerMenu when 2 in proximity chat with cam on
         await Menu.openBurgerMenu(pageJohn);
         await Menu.closeBurgerMenu(pageJohn);
@@ -95,21 +97,15 @@ test.describe('Mobile', () => {
             publicTestMapUrl('tests/CoWebsite/cowebsite_jitsiroom.json', 'mobile')
         );
         await login(page, "Bob", 3, 'en-US', true);
-
         // Move to open a cowebsite
         await page.locator('#body').press('ArrowRight', { delay: 3000 });
         // Now, let's move player 2 to the speaker zone
-
-        // Check that the cowebsite is visible
-        await expect(page.locator(`#cowebsite #cowebsite-aside #cowebsite-aside-buttons #cowebsite-close`)).toBeVisible({
-            timeout: 10000
-        });
-
+        
         // Click on the button to close the cowebsite
-        await page.locator(`#cowebsite #cowebsite-aside #cowebsite-aside-buttons #cowebsite-close`).click({timeout: 10000});
+        await page.getByTestId('tab1').getByRole('button', {name: 'Close'}).click();
 
         // Check that the cowebsite is hidden
-        await expect(page.locator(`#cowebsite #cowebsite-aside`)).toBeHidden({
+        await expect(page.getByTestId('tab1').getByRole('button', {name: 'Close'})).toBeHidden({
             timeout: 10000
         });
 
