@@ -35,7 +35,6 @@ test.describe("API WA.players", () => {
     
     await expect(events.getByText('New user: Bob')).toBeVisible();
 
-    //await page.pause();
     await getCoWebsiteIframe(page).locator("#listCurrentPlayers").click();
     const list = getCoWebsiteIframe(page).locator("#list");
     await expect(list).toContainText("Bob");
@@ -62,8 +61,6 @@ test.describe("API WA.players", () => {
 
     await page2.close();
     await newBrowser.close();
-
-    //await expect(page.locator('iframe[title="Cowebsite"]').contentFrame().getByText('User left: Bob')).toBeVisible();
 
     await expect(events.getByText('User left: Bob')).toBeVisible();
     await getCoWebsiteIframe(page).locator("#listCurrentPlayers").click();
