@@ -75,7 +75,7 @@
                 {/if}
             </div>
         {/if}
-        <div class="flex items-center bg-contrast" class:margin-close={!actionsMenuData.menuName}>
+        <div class="flex flex-col-reverse items-center bg-contrast" class:margin-close={!actionsMenuData.menuName}>
             <button
                 type="button"
                 class="btn btn-ghost justify-center basis-1/2 m-2 w-full"

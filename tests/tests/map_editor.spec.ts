@@ -373,11 +373,12 @@ test.describe("Map editor @oidc", () => {
         // click on the object and open popup
         await EntityEditor.moveAndClick(page, 14 * 32, 13 * 32);
 
-        // check if the popup with application is opened
-        await expect(page.locator(".actions-menu .actions button").nth(0)).toContainText("Open Google Docs");
-        await expect(page.locator(".actions-menu .actions button").nth(1)).toContainText("Open Google Sheets");
-        await expect(page.locator(".actions-menu .actions button").nth(2)).toContainText("Open Google Slides");
-        await expect(page.locator(".actions-menu .actions button").nth(3)).toContainText("Open Google Drive");
+        // check if the popup with application is opened and can be close
+        await expect(page.getByRole('button', { name: 'Open Google Drive' })).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Open Google Slides' })).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Open Google Sheets' })).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Open Google Docs' })).toBeVisible();
+        await page.getByRole('button', { name: 'Close' }).click();
     });
 
     test("Successfully set Klaxoon's application entity in the map editor @local", async ({page, request}, {project}) => {
