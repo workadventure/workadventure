@@ -70,10 +70,6 @@ test.describe('Room API', async () => {
         await gotoWait200(page, roomUrl+"?phaserMode="+RENDERER_MODE);
         await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
 
-        /*const textField = page
-            .frameLocator('#cowebsite-buffer iframe') // !!!!
-            .locator('#textField');*/
-
         const textField = getCoWebsiteIframe(page).locator("#textField");
 
         await expect(client.saveVariable({
@@ -83,9 +79,6 @@ test.describe('Room API', async () => {
         })).resolves.not.toThrow();
 
         // Check reading on browser
-        //await page.pause();
-        //await expect(page.locator('iframe[title="Cowebsite"]').contentFrame().locator('#textField')).toBeVisible();
-
         await expect(textField).toHaveValue(newValue);
 
         const value = await client.readVariable({
@@ -122,9 +115,7 @@ test.describe('Room API', async () => {
         await gotoWait200(page, roomUrl+"?phaserMode="+RENDERER_MODE);
         await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
 
-        const textField = page
-            .frameLocator('#cowebsite-buffer iframe')
-            .locator('#textField');
+        const textField = getCoWebsiteIframe(page).locator("#textField");
 
         setTimeout(async () => {
             await expect(client.saveVariable({
