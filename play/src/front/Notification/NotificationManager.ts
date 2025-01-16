@@ -35,7 +35,10 @@ class NotificationManager {
         }
 
         if (this.hasNotification()) {
-            notification.sendNotification();
+            notification.sendNotification().catch((error) => {
+                Sentry.captureException(error);
+                console.error("Error while sending notification", error);
+            });
         }
     }
 
