@@ -210,7 +210,6 @@ import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import Clamp = Phaser.Math.Clamp;
-import { notificationListener } from "../../Notification";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;

@@ -1,56 +1,95 @@
-import { NotificationWA } from ".";
+import { z } from "zod";
+import * as Sentry from "@sentry/svelte";
+import { Subscriber, Unsubscriber, Writable } from "svelte/store";
 import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger";
 import { localUserStore } from "../Connection/LocalUserStore";
-import { notificationListener } from "./MessageListener";
-import { TIME_NOTIFYING_MILLISECOND } from "./Notification";
- 
+import { ChatRoom } from "../Chat/Connection/ChatConnection";
+import { gameManager } from "../Phaser/Game/GameManager";
+import { selectedRoomStore } from "../Chat/Stores/ChatStore";
+import { proximityMeetingStore } from "../Stores/MyMediaStore";
+import { NotificationWA } from ".";
+
+type SelectedRoomStore = {
+    subscribe: (this: void, run: Subscriber<ChatRoom | undefined>) => Unsubscriber;
+    set: (value: ChatRoom | undefined) => void;
+};
+
 class NotificationManager {
-    private canSendNotification = true;
-    private canPlayNotificationMessage = true;
+    private channels: Map<string, BroadcastChannel> = new Map();
+
+    constructor(private proximityMeetingStore: Writable<boolean>, private selectedRoomStore: SelectedRoomStore) {
+        this.createNotificationMessageChannel();
+    }
 
     public hasNotification(): boolean {
         return (
-            this.canSendNotification &&
             Notification.permission === "granted" &&
             statusChanger.allowNotificationSound() &&
             localUserStore.getNotification()
         );
     }
-    
+
     public createNotification(notification: NotificationWA) {
         if (document.hasFocus()) {
             return;
         }
 
         if (this.hasNotification()) {
-            console.log("send notification");
             notification.sendNotification();
         }
     }
 
-    //TODO : voir si cette fonction est utile parce qu'on utilise souvent le playsound de gamescene directement ou la deplacer dans playsound 
-    public playNewMessageNotification() {
-        //play notification message
-        const elementAudioNewMessageNotification = document.getElementById("newMessageSound");
-        if (
-            this.canPlayNotificationMessage &&
-            elementAudioNewMessageNotification &&
-            elementAudioNewMessageNotification instanceof HTMLAudioElement
-        ) {
-            elementAudioNewMessageNotification.volume = 0.2;
-            elementAudioNewMessageNotification
-                .play()
-                .then(() => {
-                    this.canPlayNotificationMessage = false;
-                    return setTimeout(() => (this.canPlayNotificationMessage = true), TIME_NOTIFYING_MILLISECOND);
-                })
-                .catch((err) => console.error("Trying to play notification message error: ", err));
+    private createNotificationMessageChannel() {
+        const messageChannel = new BroadcastChannel(NotificationChannel.message);
+        messageChannel.onmessage = async (event) => {
+            try {
+                const result = NotificationSchema.parse(event.data);
+                const validatedData = result.data;
+                const chatRoomId: string = JSON.parse(validatedData.chatRoomId);
+
+                await this.handleMessageNotification(chatRoomId);
+            } catch (error) {
+                Sentry.captureException(error);
+                console.error("Invalid notification data:", error);
+                return;
+            }
+        };
+
+        this.channels.set(NotificationChannel.message, messageChannel);
+    }
+
+    private async handleMessageNotification(chatRoomId: string) {
+        let room: ChatRoom | undefined;
+        if (chatRoomId === "proximity") {
+            this.proximityMeetingStore.set(true);
+            room = gameManager.getCurrentGameScene().proximityChatRoom;
+        } else {
+            const chatConnection = await gameManager.getChatConnection();
+            room = await chatConnection.getRoom(chatRoomId);
+        }
+        if (room) {
+            this.selectedRoomStore.set(room);
         }
     }
 
     public destroy() {
-        notificationListener.destroy();
+        this.channels.forEach((channel) => {
+            channel.close();
+        });
     }
 }
 
-export const notificationManager = new NotificationManager();
+enum NotificationChannel {
+    message = "message",
+}
+
+const NotificationSchema = z.object({
+    type: z.literal("openChat"),
+    data: z.object({
+        chatRoomId: z.string(),
+        chatRoomName: z.string(),
+        tabUrl: z.string(),
+    }),
+});
+
+export const notificationManager = new NotificationManager(proximityMeetingStore, selectedRoomStore);
