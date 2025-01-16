@@ -13,22 +13,14 @@ import {
 } from "../Stores/MyMediaStore";
 import { layoutManagerActionStore } from "../Stores/LayoutManagerStore";
 import { MediaStreamConstraintsError } from "../Stores/Errors/MediaStreamConstraintsError";
-import { localUserStore } from "../Connection/LocalUserStore";
 import { LL } from "../../i18n/i18n-svelte";
 import { localeDetector } from "../../i18n/locales";
-import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger";
-import { notificationListener, NotificationWA } from "../Notification";
 
 export type StartScreenSharingCallback = (media: MediaStream) => void;
 export type StopScreenSharingCallback = (media: MediaStream) => void;
 
-//TODO add parameter to manage time to send notification
-const TIME_NOTIFYING_MILLISECOND = 10000;
-
 export class MediaManager {
     private userInputManager?: UserInputManager;
-    private canSendNotification = true;
-    private canPlayNotificationMessage = true;
 
     constructor() {
         localeDetector()
@@ -113,53 +105,6 @@ export class MediaManager {
 
     public setUserInputManager(userInputManager: UserInputManager) {
         this.userInputManager = userInputManager;
-    }
-
-    public hasNotification(): boolean {
-        return (
-            this.canSendNotification &&
-            Notification.permission === "granted" &&
-            statusChanger.allowNotificationSound() &&
-            localUserStore.getNotification()
-        );
-    }
-
-    public destroy() {
-        notificationListener.destroy();
-    }
-
-    public createNotification(notification: NotificationWA) {
-        if (document.hasFocus()) {
-            return;
-        }
-
-        if (this.hasNotification()) {
-            notification.sendNotification();
-            //TODO : voir si on applique la regle du time_notifying_millisecond sinon deplacer la logique dans chaque classe
-            //TODO : peut etre avoir 2 classe generique une qui avec time_notifying_millisecond et une qui n'en a pas
-
-            this.canSendNotification = false;
-            setTimeout(() => (this.canSendNotification = true), TIME_NOTIFYING_MILLISECOND);
-        }
-    }
-
-    public playNewMessageNotification() {
-        //play notification message
-        const elementAudioNewMessageNotification = document.getElementById("newMessageSound");
-        if (
-            this.canPlayNotificationMessage &&
-            elementAudioNewMessageNotification &&
-            elementAudioNewMessageNotification instanceof HTMLAudioElement
-        ) {
-            elementAudioNewMessageNotification.volume = 0.2;
-            elementAudioNewMessageNotification
-                .play()
-                .then(() => {
-                    this.canPlayNotificationMessage = false;
-                    return setTimeout(() => (this.canPlayNotificationMessage = true), TIME_NOTIFYING_MILLISECOND);
-                })
-                .catch((err) => console.error("Trying to play notification message error: ", err));
-        }
     }
 }
 

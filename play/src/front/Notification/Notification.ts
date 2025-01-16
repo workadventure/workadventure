@@ -9,4 +9,4 @@ export interface NotificationWA {
     sendNotification: () => void;
 }
 
-
+export const TIME_NOTIFYING_MILLISECOND = 10000;

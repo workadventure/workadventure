@@ -1,6 +1,6 @@
 import { get } from "svelte/store";
 import LL from "../../i18n/i18n-svelte";
-import { NotificationWA } from "./Notification";
+import { defaultOptions, NotificationWA } from "./Notification";
 
 export class MessageNotification implements NotificationWA {
     constructor(private title: string, private userName: string, private message: string, private chatRoomId: string, private chatRoomName: string, private options = defaultOptions) {

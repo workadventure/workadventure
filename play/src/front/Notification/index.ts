@@ -1,7 +1,7 @@
 import { MessageNotification } from "./MessageNotification";
-import { BasicNotification } from "./BasicNotification";
+import { BubbleNotification } from "./BubbleNotification";
 import { NotificationWA } from "./Notification";
 import { notificationListener } from "./MessageListener";
-
-export { MessageNotification, BasicNotification ,notificationListener };
+import { notificationManager } from "./NotificationManager";
+export { MessageNotification, BubbleNotification as BasicNotification ,notificationListener, notificationManager };
 export type { NotificationWA };

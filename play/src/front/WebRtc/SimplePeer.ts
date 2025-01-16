@@ -20,7 +20,8 @@ import { mediaManager} from "./MediaManager";
 import { ScreenSharingPeer } from "./ScreenSharingPeer";
 import { VideoPeer } from "./VideoPeer";
 import { blackListManager } from "./BlackListManager";
-import { BasicNotification } from "../Notification";
+import { BasicNotification, notificationManager } from "../Notification";
+import LL from "../../i18n/i18n-svelte";
 
 export interface UserSimplePeerInterface {
     userId: number;
@@ -213,7 +214,7 @@ export class SimplePeer {
 
         //Create a notification for first user in circle discussion
         if (peerStore.getSize() === 0) {
-            mediaManager.createNotification(new BasicNotification(name));
+            notificationManager.createNotification(new BasicNotification(`${name} ${get(LL).notification.discussion()}`));
         }
 
         analyticsClient.addNewParticipant(peer.uniqueId, user.userId, uuid);
