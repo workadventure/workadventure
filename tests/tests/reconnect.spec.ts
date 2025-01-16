@@ -19,7 +19,7 @@ test.describe("Connection", () => {
 
     await page.goto(publicTestMapUrl("tests/mousewheel.json", "reconnect"));
 
-    await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+    await login(page, 'Alice', 2, 'en-US');
 
     //Simulation of offline network
     await context.setOffline(true);
@@ -51,7 +51,7 @@ test.describe("Connection", () => {
 
     await page.goto(Map.url("empty"));
 
-    await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+    await login(page, 'Alice', 2, 'en-US');
 
     //Simulation of offline network
     await context.setOffline(true);

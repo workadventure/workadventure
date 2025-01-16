@@ -9,7 +9,7 @@ test.describe('Scripting moveto function', () => {
             publicTestMapUrl("tests/E2E/empty.json", "scripting_follow")
         );
 
-        await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+        await login(page, 'Alice', 2, 'en-US');
 
         await Map.walkToPosition(page, 5*32, 5*32);
 

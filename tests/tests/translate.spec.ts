@@ -16,7 +16,7 @@ test.describe('Translation', () => {
       publicTestMapUrl("tests/mousewheel.json", "translate")
     );
 
-    await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+    await login(page, 'Alice', 2, 'en-US');
 
     if(project.name === "mobilechromium"){
       await expect(page.locator('button#burgerIcon')).toBeVisible();

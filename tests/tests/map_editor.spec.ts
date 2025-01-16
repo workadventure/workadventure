@@ -43,7 +43,7 @@ test.describe("Map editor @oidc", () => {
         await resetWamMaps(request);
         await page.goto(Map.url("empty"));
         //await page.evaluate(() => localStorage.setItem('debug', '*'));
-        await login(page, "test", 3, "en-US", false);
+        await login(page, "test", 3, "en-US");
         await oidcAdminTagLogin(page, false);
         // Because webkit in playwright does not support Camera/Microphone Permission by settings
         if (browserName === "webkit") {
@@ -56,7 +56,7 @@ test.describe("Map editor @oidc", () => {
         const page2 = await newBrowser.newPage();
         await page2.goto(Map.url("empty"));
         await page2.evaluate(() => localStorage.setItem("debug", "*"));
-        await login(page2, "test2", 5, "en-US", false);
+        await login(page2, "test2", 5, "en-US");
         await oidcAdminTagLogin(page2, false);
 
     // await page.pause();
@@ -127,7 +127,7 @@ test.describe("Map editor @oidc", () => {
         await page.goto(Map.url("empty"));
         //await page.evaluate(() => { localStorage.setItem('debug', '*'); });
         //await page.reload();
-        await login(page, "Alice", 2, "en-US", false);
+        await login(page, "Alice", 2, "en-US");
         await oidcAdminTagLogin(page, false);
 
         await Menu.openMapEditor(page);
@@ -148,7 +148,7 @@ test.describe("Map editor @oidc", () => {
         const page2 = await newBrowser.newPage();
         await page2.goto(Map.url("empty"));
 
-        await login(page2, "Bob", 5, "en-US", false);
+        await login(page2, "Bob", 5, "en-US");
         await oidcAdminTagLogin(page2, false);
         await Map.teleportToPosition(page2, 4 * 32, 7 * 32);
 
@@ -174,7 +174,7 @@ test.describe("Map editor @oidc", () => {
     test("Successfully set start area in the map editor", async ({page, request}, {project}) => {
         await resetWamMaps(request);
         await page.goto(Map.url("start"));
-        await login(page, "test", 3, "en-US", false);
+        await login(page, "test", 3, "en-US");
         await oidcAdminTagLogin(page, false);
 
         await Menu.openMapEditor(page);
@@ -189,7 +189,7 @@ test.describe("Map editor @oidc", () => {
         await resetWamMaps(request);
 
         await page.goto(Map.url("exit"));
-        await login(page, "test", 3, "en-US", false);
+        await login(page, "test", 3, "en-US");
         await oidcAdminTagLogin(page, false);
 
         await Menu.openMapEditor(page);
@@ -222,7 +222,7 @@ test.describe("Map editor @oidc", () => {
         await resetWamMaps(request);
 
         await page.goto(Map.url("empty"));
-        await login(page, "test", 3, "en-US", false);
+        await login(page, "test", 3, "en-US");
         await oidcAdminTagLogin(page, false);
 
         //await Menu.openMapEditor(page);
@@ -257,7 +257,7 @@ test.describe("Map editor @oidc", () => {
         await resetWamMaps(request);
 
         await page.goto(Map.url("empty"));
-        await login(page, "test", 3, "en-US", false);
+        await login(page, "test", 3, "en-US");
         await oidcAdminTagLogin(page, false);
 
         //await Menu.openMapEditor(page);
@@ -320,7 +320,7 @@ test.describe("Map editor @oidc", () => {
         await resetWamMaps(request);
 
         await page.goto(Map.url("empty"));
-        await login(page, "test", 3, "en-US", false);
+        await login(page, "test", 3, "en-US");
         await oidcAdminTagLogin(page, false);
 
         // open map editor
@@ -385,7 +385,7 @@ test.describe("Map editor @oidc", () => {
         await resetWamMaps(request);
 
         await page.goto(Map.url("empty"));
-        await login(page, "test", 3, "en-US", false);
+        await login(page, "test", 3, "en-US");
         await oidcAdminTagLogin(page, false);
 
         // open map editor
@@ -427,7 +427,7 @@ test.describe("Map editor @oidc", () => {
         await resetWamMaps(request);
 
         await page.goto(Map.url("empty"));
-        await login(page, "test", 3, "en-US", false);
+        await login(page, "test", 3, "en-US");
         await oidcAdminTagLogin(page, false);
 
         // open map editor
@@ -448,7 +448,7 @@ test.describe("Map editor @oidc", () => {
 
         // First browser + moved woka
         await page.goto(Map.url("empty"));
-        await login(page, "test", 3, "en-US", false);
+        await login(page, "test", 3, "en-US");
         await oidcAdminTagLogin(page, false);
         await Map.teleportToPosition(page, 0, 0);
 
@@ -456,7 +456,7 @@ test.describe("Map editor @oidc", () => {
         const newBrowser = await browser.newContext();
         const page2 = await newBrowser.newPage();
         await page2.goto(Map.url("empty"));
-        await login(page2, "test2", 3, "en-US", false);
+        await login(page2, "test2", 3, "en-US");
         await oidcAdminTagLogin(page2, false);
 
         // open map editor
@@ -500,7 +500,7 @@ test.describe("Map editor @oidc", () => {
 
         // First browser + moved woka
         await page.goto(Map.url("empty"));
-        await login(page, "test", 3, "en-US", false);
+        await login(page, "test", 3, "en-US");
         await oidcAdminTagLogin(page, false);
         await Map.teleportToPosition(page, 0, 0);
 
@@ -508,7 +508,7 @@ test.describe("Map editor @oidc", () => {
         const newBrowser = await browser.newContext();
         const page2 = await newBrowser.newPage();
         await page2.goto(Map.url("empty"));
-        await login(page2, "test2", 3, "en-US", false);
+        await login(page2, "test2", 3, "en-US");
         await oidcAdminTagLogin(page2, false);
 
         // open map editor on both pages
@@ -550,7 +550,7 @@ test.describe("Map editor @oidc", () => {
 
         // First browser + moved woka
         await page.goto(Map.url("empty"));
-        await login(page, "test", 3, "en-US", false);
+        await login(page, "test", 3, "en-US");
         await oidcAdminTagLogin(page, false);
 
         await Map.teleportToPosition(page, 0, 0);
@@ -559,7 +559,7 @@ test.describe("Map editor @oidc", () => {
         const newBrowser = await browser.newContext();
         const page2 = await newBrowser.newPage();
         await page2.goto(Map.url("empty"));
-        await login(page2, "test2", 3, "en-US", false);
+        await login(page2, "test2", 3, "en-US");
         await oidcAdminTagLogin(page2, false);
 
         // open map editor on both pages
@@ -591,7 +591,7 @@ test.describe("Map editor @oidc", () => {
     test("Successfully set searchable processus for entity and zone", async ({page, browser, request}, {project}) => {
         await resetWamMaps(request);
         await page.goto(Map.url("empty"));
-        await login(page, "test", 3, "en-US", false);
+        await login(page, "test", 3, "en-US");
         await oidcAdminTagLogin(page, false);
 
         // Open the map editor
@@ -651,7 +651,7 @@ test.describe("Map editor @oidc", () => {
         await resetWamMaps(request);
         await page.goto(Map.url("empty"));
 
-        await login(page, "test", 3, "en-US", false);
+        await login(page, "test", 3, "en-US");
         await oidcAdminTagLogin(page, false);
 
         // Move user and not create discussion with the second user
@@ -662,7 +662,7 @@ test.describe("Map editor @oidc", () => {
         const page2 = await newBrowser.newPage();
         await page2.goto(Map.url("empty"));
         await page2.evaluate(() => localStorage.setItem("debug", "*"));
-        await login(page2, "test2", 5, "en-US", false);
+        await login(page2, "test2", 5, "en-US");
 
         // Open the map editor and configure the megaphone to have access to the global message
         await Menu.openMapEditor(page);

@@ -20,7 +20,7 @@ test.describe("Iframe API", () => {
       publicTestMapUrl("tests/Metadata/cowebsiteAllowApi.json", "iframe_script")
     );
 
-    await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+    await login(page, 'Alice', 2, 'en-US');
 
     // FIXME e2e test related to chat
     //await expect(page.locator('p.other-text')).toHaveText('The iframe opened by a script works !', {useInnerText: true});
@@ -119,7 +119,7 @@ test.describe("Iframe API", () => {
       publicTestMapUrl("tests/E2E/empty.json", "iframe_script") + "#foo=bar"
     );
 
-    await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+    await login(page, 'Alice', 2, 'en-US');
 
     const parameter = await evaluateScript(page, async () => {
       await WA.onInit();
@@ -140,7 +140,7 @@ test.describe("Iframe API", () => {
 
     await page.goto(publicTestMapUrl("tests/E2E/empty.json", "iframe_script"));
 
-    await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+    await login(page, 'Alice', 2, 'en-US');
     await oidcAdminTagLogin(page, false);
 
     // Create a script to evaluate function to disable map editor
@@ -177,7 +177,7 @@ test.describe("Iframe API", () => {
     await page.goto(publicTestMapUrl("tests/E2E/empty.json", "iframe_script"));
 
     await page.evaluate(() => localStorage.setItem("debug", "*"));
-    await login(page, "Alice", 3, "en-US", project.name === "mobilechromium");
+    await login(page, "Alice", 3, "en-US");
 
     // Create a script to evaluate function to disable map editor
     await evaluateScript(page, async () => {
@@ -217,7 +217,7 @@ test.describe("Iframe API", () => {
     await page.goto(publicTestMapUrl("tests/E2E/empty.json", "iframe_script"));
 
     await page.evaluate(() => localStorage.setItem("debug", "*"));
-    await login(page, "Alice", 3, "en-US", project.name === "mobilechromium");
+    await login(page, "Alice", 3, "en-US");
 
     // Create a script to evaluate function to disable map editor
     await evaluateScript(page, async () => {
@@ -233,7 +233,7 @@ test.describe("Iframe API", () => {
       publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
     );
     await pageBob.evaluate(() => localStorage.setItem("debug", "*"));
-    await login(pageBob, "Bob", 5, 'en-US', project.name === "mobilechromium");
+    await login(pageBob, "Bob", 5, 'en-US');
 
     // Check if the screen sharing is disabled
     await expect(
@@ -268,7 +268,7 @@ test.describe("Iframe API", () => {
     await page.goto(publicTestMapUrl("tests/E2E/empty.json", "iframe_script"));
 
     await page.evaluate(() => localStorage.setItem("debug", "*"));
-    await login(page, 'Alice', 3, 'en-US', project.name === "mobilechromium");
+    await login(page, 'Alice', 3, 'en-US');
 
     // Right click to move the user
     await page.locator("canvas").click({

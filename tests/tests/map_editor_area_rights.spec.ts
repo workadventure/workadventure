@@ -50,7 +50,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));
-    await login(page, "test", 2, "en-US", project.name === "mobilechromium");
+    await login(page, "test", 2, "en-US");
     await oidcAdminTagLogin(page, false);
 
     await Menu.openMapEditor(page);
@@ -83,7 +83,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));
-    await login(page, "test", 2, "en-US", project.name === "mobilechromium");
+    await login(page, "test", 2, "en-US");
     await oidcAdminTagLogin(page, false);
 
     await Menu.openMapEditor(page);
@@ -132,7 +132,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));
-    await login(page, "test", 2, "en-US", project.name === "mobilechromium");
+    await login(page, "test", 2, "en-US");
 
     // In the new design, you cannot access the map menu if the user is a basic user
     await expect(page.getByTestId('map-menu')).toBeHidden();
@@ -153,7 +153,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));
-    await login(page, "test", 2, "en-US", project.name === "mobilechromium");
+    await login(page, "test", 2, "en-US");
     await oidcAdminTagLogin(page, false);
 
     // Add area with admin rights
@@ -172,7 +172,7 @@ test.describe("Map editor area with rights @oidc", () => {
     const newBrowser = await browser.newContext();
     const page2 = await newBrowser.newPage();
     await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
+    await login(page2, "test2", 5, "en-US");
     await oidcMemberTagLogin(page2);
 
 
@@ -197,7 +197,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));
-    await login(page, "test", 3, "en-US", project.name === "mobilechromium");
+    await login(page, "test", 3, "en-US");
     await oidcAdminTagLogin(page, false);
 
     // Add area with admin rights
@@ -216,7 +216,7 @@ test.describe("Map editor area with rights @oidc", () => {
     const newBrowser = await browser.newContext();
     const page2 = await newBrowser.newPage();
     await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
+    await login(page2, "test2", 5, "en-US");
     await oidcMemberTagLogin(page2);
 
     // Expect user in other page to not have the right
@@ -240,7 +240,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));
-    await login(page, "test", 3, "en-US", project.name === "mobilechromium");
+    await login(page, "test", 3, "en-US");
     await oidcAdminTagLogin(page, false);
 
     // Add area with admin rights
@@ -257,7 +257,7 @@ test.describe("Map editor area with rights @oidc", () => {
     const newBrowser = await browser.newContext();
     const page2 = await newBrowser.newPage();
     await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
+    await login(page2, "test2", 5, "en-US");
     await oidcMemberTagLogin(page2);
 
     // From browser 2
@@ -296,7 +296,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));
-    await login(page, "test", 3, "en-US", project.name === "mobilechromium");
+    await login(page, "test", 3, "en-US");
     await oidcAdminTagLogin(page, false);
 
     // Add area with admin rights
@@ -313,7 +313,7 @@ test.describe("Map editor area with rights @oidc", () => {
     const newBrowser = await browser.newContext();
     const page2 = await newBrowser.newPage();
     await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
+    await login(page2, "test2", 5, "en-US");
     await oidcMemberTagLogin(page2);
 
     // From browser 2
@@ -352,7 +352,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));
-    await login(page, "test", 3, "en-US", project.name === "mobilechromium");
+    await login(page, "test", 3, "en-US");
     await oidcAdminTagLogin(page, false);
 
     // Add area with admin rights
@@ -371,7 +371,7 @@ test.describe("Map editor area with rights @oidc", () => {
     const newBrowser = await browser.newContext();
     const page2 = await newBrowser.newPage();
     await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
+    await login(page2, "test2", 5, "en-US");
     await oidcMemberTagLogin(page2);
 
     // From browser 2
@@ -406,7 +406,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));
-    await login(page, "test", 3, "en-US", project.name === "mobilechromium");
+    await login(page, "test", 3, "en-US");
     await oidcAdminTagLogin(page, false);
 
     // Add area with admin rights
@@ -425,7 +425,7 @@ test.describe("Map editor area with rights @oidc", () => {
     const newBrowser = await browser.newContext();
     const page2 = await newBrowser.newPage();
     await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
+    await login(page2, "test2", 5, "en-US");
     await oidcMemberTagLogin(page2);
 
     // From browser 2
@@ -461,7 +461,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));
-    await login(page, "test", 3, "en-US", project.name === "mobilechromium");
+    await login(page, "test", 3, "en-US");
     await oidcAdminTagLogin(page, false);
 
     // Add area with admin rights
@@ -480,7 +480,7 @@ test.describe("Map editor area with rights @oidc", () => {
     const newBrowser = await browser.newContext();
     const page2 = await newBrowser.newPage();
     await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
+    await login(page2, "test2", 5, "en-US");
     await oidcMemberTagLogin(page2);
 
     // From browser 2
@@ -516,7 +516,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));
-    await login(page, "test", 3, "en-US", project.name === "mobilechromium");
+    await login(page, "test", 3, "en-US");
     await oidcAdminTagLogin(page, false);
 
     await Menu.openMapEditor(page);
@@ -533,7 +533,7 @@ test.describe("Map editor area with rights @oidc", () => {
     const newBrowser = await browser.newContext();
     const page2 = await newBrowser.newPage();
     await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
+    await login(page2, "test2", 5, "en-US");
     await oidcMemberTagLogin(page2);
 
     // Move to area and claim it
@@ -575,7 +575,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));
-    await login(page, "test", 3, "en-US", project.name === "mobilechromium");
+    await login(page, "test", 3, "en-US");
     await oidcAdminTagLogin(page, false);
 
     await Menu.openMapEditor(page);
@@ -592,7 +592,7 @@ test.describe("Map editor area with rights @oidc", () => {
     const newBrowser = await browser.newContext();
     const page2 = await newBrowser.newPage();
     await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5, "en-US", project.name === "mobilechromium");
+    await login(page2, "test2", 5, "en-US");
 
     // Move to area and claim it
     await Map.teleportToPosition(
@@ -615,7 +615,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));
-    await login(page, "test", 3, "en-US", project.name === "mobilechromium");
+    await login(page, "test", 3, "en-US");
     await oidcAdminTagLogin(page, false);
 
     // Add a first area

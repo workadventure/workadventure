@@ -25,7 +25,7 @@ test.describe("#Scripting chat functions", () => {
   test("can open / close chat + start / stop typing @chat", async ({
     page,
   }) => {
-    await login(page, "bob", 3, "us-US", false);
+    await login(page, "bob", 3, "us-US");
     //await oidcMatrixUserLogin(page, false);
 
     // Test open chat scripting
@@ -87,7 +87,7 @@ test.describe("#Scripting chat functions", () => {
 
   test("can send message to bubble users @chat", async ({ page, browser }) => {
     const bob = page;
-    await login(bob, "bob", 3, "us-US", false);
+    await login(bob, "bob", 3, "us-US");
     //await oidcMatrixUserLogin(bob, false);
     // test to send bubble message when entering proximity meeting
     await evaluateScript(bob, async () => {
@@ -109,7 +109,7 @@ test.describe("#Scripting chat functions", () => {
     const newBrowser = await browser.newContext();
     const alice = await newBrowser.newPage();
     await alice.goto(Map.url("empty"));
-    await login(alice, "alice", 4, "us-US", false);
+    await login(alice, "alice", 4, "us-US");
     //await oidcMemberTagLogin(alice, false);
 
     const chatMessageReceivedPromise = evaluateScript(alice, async () => {

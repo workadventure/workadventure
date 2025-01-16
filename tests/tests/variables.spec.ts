@@ -32,7 +32,7 @@ test.describe('Variables', () => {
 
     await gotoWait200(page, publicTestMapUrl("tests/Variables/shared_variables.json", "variables") + "&somerandomparam=1");
 
-    await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+    await login(page, 'Alice', 2, 'en-US');
 
     const textField = page
       .frameLocator('#cowebsite-buffer iframe')
@@ -160,7 +160,7 @@ test.describe('Variables', () => {
       publicTestMapUrl("tests/Variables/Cache/variables_tmp.json", "variables")
     );
 
-    await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+    await login(page, 'Alice', 2, 'en-US');
 
     // Wait for page to load before copying file (it seems the await above does not 100% fills its role otherwise).
     await timeout(5000);
@@ -181,7 +181,7 @@ test.describe('Variables', () => {
       publicTestMapUrl("tests/Variables/Cache/variables_tmp.json", "variables")
     );
 
-    await login(page2, 'Chapelier', 3, 'en-US', project.name === "mobilechromium");
+    await login(page2, 'Chapelier', 3, 'en-US');
 
     // Let's check we successfully manage to save the variable value.
     await assertLogMessage(page2, 'SUCCESS!');

@@ -24,7 +24,7 @@ test.describe('Scripting player message function', () => {
             publicTestMapUrl("tests/E2E/empty.json", "scripting_follow")
         );
 
-        await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+        await login(page, 'Alice', 2, 'en-US');
 
         let playerMessage;
         

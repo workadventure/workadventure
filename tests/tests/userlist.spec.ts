@@ -12,10 +12,9 @@ test.describe("Walk to", () => {
       return;
     }
 
-    const isMobileTest = project.name === "mobilechromium";
     await page.goto(publicTestMapUrl("tests/E2E/empty.json", "userlist"));
 
-    await login(page, "Alice", 2, "en-US", isMobileTest);
+    await login(page, "Alice", 2, "en-US");
 
     const alicePosition = {
       x: 3 * 32,
@@ -29,7 +28,7 @@ test.describe("Walk to", () => {
 
     await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", "userlist"));
     // Login user "Bob"
-    await login(userBob, "Bob", 3, "en-US", isMobileTest);
+    await login(userBob, "Bob", 3, "en-US");
     //await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
     await chatUtils.openUserList(userBob, false);
     await chatUtils.UL_walkTo(userBob, "Alice");

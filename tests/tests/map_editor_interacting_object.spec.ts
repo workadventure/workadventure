@@ -36,7 +36,7 @@ test.describe("Map editor interacting with object @oidc", () => {
     // Go to the map
     await resetWamMaps(request);
     await page.goto(Map.url("empty"));
-    await login(page, "Bob", 2, "en-US", project.name === "mobilechromium");
+    await login(page, "Bob", 2, "en-US");
     await oidcAdminTagLogin(page, false);
 
     // Create area on the map for the test
@@ -79,7 +79,7 @@ test.describe("Map editor interacting with object @oidc", () => {
     // Go to the map
     await resetWamMaps(request);
     await page.goto(Map.url("empty"));
-    await login(page, "Bob", 3, "en-US", project.name === "mobilechromium");
+    await login(page, "Bob", 3, "en-US");
     await oidcAdminTagLogin(page, false);
 
     // Create entity on the map for the test

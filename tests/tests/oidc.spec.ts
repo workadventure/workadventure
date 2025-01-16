@@ -19,7 +19,7 @@ test.describe('OpenID connect @oidc', () => {
         publicTestMapUrl("tests/E2E/empty.json", "oidc")
     );
 
-    await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+    await login(page, 'Alice', 2, 'en-US');
 
     // Test if player variable is correct
     let isLogged = await evaluateScript(page, async () => {

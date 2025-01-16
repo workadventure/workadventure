@@ -21,7 +21,7 @@ test.describe("Scripting audio streams", () => {
     await page.goto(
         publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream")
     );
-    await login(page, "bob", 3, "us-US", false);
+    await login(page, "bob", 3, "us-US");
 
     await Map.teleportToPosition(page, 32, 32);
 
@@ -31,7 +31,7 @@ test.describe("Scripting audio streams", () => {
     await alice.goto(
         publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream")
     );
-    await login(alice, "alice", 4, "us-US", false);
+    await login(alice, "alice", 4, "us-US");
 
     // Move alice to the same position as bob
     await Map.teleportToPosition(alice, 32, 32);

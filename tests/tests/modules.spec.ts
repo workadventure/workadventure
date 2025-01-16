@@ -17,7 +17,7 @@ test.describe('Module', () => {
       publicTestMapUrl("tests/Modules/with_modules.json", "modules")
     );
 
-    await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+    await login(page, 'Alice', 2, 'en-US');
 
     await assertLogMessage(page, 'Successfully loaded module: foo =  bar');
   });

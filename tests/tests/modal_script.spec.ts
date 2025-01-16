@@ -17,7 +17,7 @@ test.describe('Modal', () => {
         await page.goto(
             publicTestMapUrl("tests/E2E/empty.json", "modal_script")
         );
-        await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
+        await login(page, "Alice", 2, "en-US");
         await evaluateScript(page, async () => {
             return WA.ui.modal.openModal({
                 src: "https://workadventu.re"

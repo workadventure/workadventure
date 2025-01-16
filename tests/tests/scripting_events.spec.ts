@@ -16,7 +16,7 @@ test.describe('Scripting API Events', () => {
         await page.goto(
             publicTestMapUrl("tests/E2E/empty.json", "scripting_events")
         );
-        await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
+        await login(page, "Alice", 2, "en-US");
 
         // 1. Test that the event is triggered locally
         const eventTriggered = await evaluateScript(page, async () => {
@@ -58,7 +58,7 @@ test.describe('Scripting API Events', () => {
             publicTestMapUrl("tests/E2E/empty.json", "scripting_events")
         );
 
-        await login(page2, 'Bob', 2, 'en-US', project.name === "mobilechromium");
+        await login(page2, 'Bob', 2, 'en-US');
 
 
         let gotExpectedBroadcastNotification = false;

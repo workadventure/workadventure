@@ -56,12 +56,12 @@ test.describe('Map-storage Upload API', () => {
         await expect(uploadFile2.ok()).toBeTruthy();
 
         await gotoWait200(page, `/~/map1.wam?phaserMode=${RENDERER_MODE}`);
-        await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+        await login(page, 'Alice', 2, 'en-US');
 
         const newBrowser = await browser.newContext();
         const page2 = await newBrowser.newPage();
         await gotoWait200(page2, `/~/map2.wam?phaserMode=${RENDERER_MODE}`);
-        await login(page2, 'Bob', 5, 'en-US', project.name === "mobilechromium");
+        await login(page2, 'Bob', 5, 'en-US');
 
         // Let's trigger a reload of map 1 only
         const uploadFile3 = await request.put("map1.wam", {

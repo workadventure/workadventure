@@ -17,14 +17,14 @@ test.describe('Scripting follow functions', () => {
             publicTestMapUrl("tests/E2E/empty.json", "scripting_follow")
         );
 
-        await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+        await login(page, 'Alice', 2, 'en-US');
 
         await Map.teleportToPosition(page, 32, 32);
 
         const newBrowser = await browser.newContext();
         const page2 = await newBrowser.newPage();
         await page2.goto(publicTestMapUrl("tests/E2E/empty.json", "scripting_follow"));
-        await login(page2, "Bob", 3, "en-US", project.name === "mobilechromium");
+        await login(page2, "Bob", 3, "en-US");
 
 
         await Map.teleportToPosition(page2, 32, 32);
