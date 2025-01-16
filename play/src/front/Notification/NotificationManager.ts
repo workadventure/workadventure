@@ -7,6 +7,7 @@ import { ChatRoom } from "../Chat/Connection/ChatConnection";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { selectedRoomStore } from "../Chat/Stores/ChatStore";
 import { proximityMeetingStore } from "../Stores/MyMediaStore";
+import { chatVisibilityStore } from "../Stores/ChatStore";
 import { NotificationWA } from ".";
 
 type SelectedRoomStore = {
@@ -48,7 +49,7 @@ class NotificationManager {
             try {
                 const result = NotificationSchema.parse(event.data);
                 const validatedData = result.data;
-                const chatRoomId: string = JSON.parse(validatedData.chatRoomId);
+                const chatRoomId: string = validatedData.chatRoomId;
 
                 await this.handleMessageNotification(chatRoomId);
             } catch (error) {
@@ -62,6 +63,7 @@ class NotificationManager {
     }
 
     private async handleMessageNotification(chatRoomId: string) {
+        chatVisibilityStore.set(true);
         let room: ChatRoom | undefined;
         if (chatRoomId === "proximity") {
             this.proximityMeetingStore.set(true);
@@ -90,8 +92,6 @@ const NotificationSchema = z.object({
     type: z.literal("openChat"),
     data: z.object({
         chatRoomId: z.string(),
-        chatRoomName: z.string(),
-        tabUrl: z.string(),
     }),
 });
 

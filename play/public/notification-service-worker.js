@@ -34,11 +34,11 @@ self.addEventListener('notificationclick', (event) => {
             
             // Send message to open chat if room data exists
             if (chatRoomId) {
-                const messageChannel = new BroadcastChannel(NotificationChannel.message);
+                const messageChannel = new BroadcastChannel("message");
                 messageChannel.postMessage({
                     type: 'openChat',
                     data: {
-                        chatRoomId
+                        chatRoomId,
                     }
                 });
             }

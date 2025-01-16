@@ -104,7 +104,6 @@ export class ProximityChatRoom implements ChatRoom {
             gameManager.getCurrentGameScene().playSound("new-message");
             notificationManager.createNotification(
                 new MessageNotification(
-                    get(this.name),
                     message.sender.username ?? "unknown",
                     get(message.content).body,
                     this.id,
