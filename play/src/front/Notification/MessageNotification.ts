@@ -22,7 +22,6 @@ export class MessageNotification implements NotificationWA {
 
             const data = {
                 chatRoomId: this.chatRoomId,
-                chatRoomName: this.chatRoomName,
                 tabUrl: window.location.href,
             };
 
