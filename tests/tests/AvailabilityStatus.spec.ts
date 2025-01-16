@@ -35,9 +35,8 @@ test.describe('Availability Status', () => {
 
         
             //move to trigger status change 
-            await Map.walkTo(page,'ArrowRight',100)
+            await Map.walkTo(page,'ArrowRight',100);
             await Menu.openStatusList(page, isMobileTest);
-
             await expect(page.getByRole('button', { name: 'Online' }).locator('svg')).toBeVisible();
         })
         test('should disable microphone and camera',async({ page, browser,browserName }, {project})=>{
@@ -286,11 +285,9 @@ test.describe('Availability Status', () => {
             await Menu.clickOnStatus(page,statusName);
 
             await Menu.openStatusList(page, isMobileTest);
-            
+
             await expect(page.getByRole('button', { name: statusName }).locator('svg')).toBeVisible();
-
-            await Map.walkTo(page,'ArrowRight',100)
-
+            await Map.walkTo(page,'ArrowRight',100);
             await Menu.expectStatus(page, 'Online');
         })
         test('should disable microphone and camera',async({ page, browser,browserName }, {project})=>{
@@ -400,8 +397,7 @@ test.describe('Availability Status', () => {
 
 
             //move to trigger status change 
-            await Map.walkTo(page,'ArrowRight',100)
-
+            await Map.walkTo(page,'ArrowRight',100);
             await Menu.expectStatus(page, 'Online');
         })
         test('should disable microphone and camera',async({ page, browser,browserName }, {project})=>{

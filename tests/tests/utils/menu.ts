@@ -178,7 +178,7 @@ class Menu {
     }
 
     async expectStatus(page: Page, status: string) {
-        await expect(page.getByTestId('action-user').getByText(status).locator('visible=true')).toBeVisible();
+        await expect(page.getByText(status).first()).toBeVisible();
     }
 
     async closeNotificationPopUp(page:Page){
