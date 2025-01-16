@@ -173,6 +173,7 @@ import { faviconManager } from "../../WebRtc/FaviconManager";
 import { ScriptingOutputAudioStreamManager } from "../../WebRtc/AudioStream/ScriptingOutputAudioStreamManager";
 import { ScriptingInputAudioStreamManager } from "../../WebRtc/AudioStream/ScriptingInputAudioStreamManager";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
+import { notificationManager } from "../../Notification";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -1085,7 +1086,7 @@ export class GameScene extends DirtyScene {
         this.scriptingOutputAudioStreamManager?.close();
         this.scriptingInputAudioStreamManager?.close();
         this._spaceRegistry?.destroy();
-        mediaManager.destroy();
+        notificationManager.destroy();
 
         // We need to destroy all the entities
         get(extensionModuleStore).forEach((extensionModule) => {
