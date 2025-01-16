@@ -1,6 +1,6 @@
-import { Room } from "matrix-js-sdk";
+import { Room } from "matrix-js-sdk/src/matrix";
 import { Writable, writable } from "svelte/store";
-import { KnownMembership } from "matrix-js-sdk/lib/types";
+import { KnownMembership } from "matrix-js-sdk/src/types";
 import * as Sentry from "@sentry/svelte";
 import { MapStore } from "@workadventure/store-utils";
 import { RoomFolder } from "../ChatConnection";

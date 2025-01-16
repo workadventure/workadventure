@@ -1,4 +1,4 @@
-import { MatrixClient, SetPresence, User } from "matrix-js-sdk";
+import { MatrixClient, SetPresence, User } from "matrix-js-sdk/src/matrix";
 import { writable } from "svelte/store";
 import { AvailabilityStatus } from "@workadventure/messages";
 import { ChatUser } from "../ChatConnection";
