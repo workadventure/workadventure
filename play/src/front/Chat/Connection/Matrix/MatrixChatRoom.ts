@@ -37,12 +37,11 @@ import {
 import { isAChatRoomIsVisible, navChat, selectedChatMessageToReply, selectedRoomStore } from "../../Stores/ChatStore";
 import { gameManager } from "../../../Phaser/Game/GameManager";
 import { localUserStore } from "../../../Connection/LocalUserStore";
+import { MessageNotification, notificationManager } from "../../../Notification";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { matrixSecurity } from "./MatrixSecurity";
 import { MatrixChatRoomMember } from "./MatrixChatRoomMember";
-import { mediaManager } from "../../../WebRtc/MediaManager";
-import { MessageNotification } from "../../../Notification";
 
 type EventId = string;
 
@@ -78,9 +77,17 @@ export class MatrixChatRoom
 
     constructor(
         private matrixRoom: Room,
-        private playNewMessageSound = () => {
+        private notifyNewMessage = (message: MatrixChatMessage) => {
             if (!localUserStore.getChatSounds() || get(this.areNotificationsMuted)) return;
             gameManager.getCurrentGameScene().playSound("new-message");
+            notificationManager.createNotification(
+                new MessageNotification(
+                    message.sender?.username ?? "unknown",
+                    get(message.content).body,
+                    this.id,
+                    get(this.name)
+                )
+            );
         }
     ) {
         this.id = matrixRoom.roomId;
@@ -252,7 +259,7 @@ export class MatrixChatRoom
                     if (this.isEventReplacingExistingOne(event)) {
                         this.handleMessageModification(event);
                     } else {
-                        await this.handleNewMessage(event);
+                        this.handleNewMessage(event);
                     }
                 }
                 if (event.getType() === "m.reaction") {
@@ -270,14 +277,13 @@ export class MatrixChatRoom
         this.handleDeletion(event);
     }
 
-    private async handleNewMessage(event: MatrixEvent) {
+    private handleNewMessage(event: MatrixEvent) {
         const message = new MatrixChatMessage(event, this.matrixRoom);
         this.messages.push(message);
 
         const senderID = event.getSender();
         if (senderID !== this.matrixRoom.client.getSafeUserId() && !get(this.areNotificationsMuted)) {
-            this.playNewMessageSound();
-            mediaManager.createNotification(new MessageNotification(get(this.name), senderID ?? "unknown", get(message.content).body, this.id, get(this.name)));
+            this.notifyNewMessage(message);
             if (!isAChatRoomIsVisible() && get(selectedRoomStore)?.id !== "proximity") {
                 selectedRoomStore.set(this);
                 navChat.switchToChat();

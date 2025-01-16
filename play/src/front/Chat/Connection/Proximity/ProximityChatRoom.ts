@@ -99,9 +99,18 @@ export class ProximityChatRoom implements ChatRoom {
         private spaceRegistry: SpaceRegistryInterface,
         private simplePeer: SimplePeer,
         iframeListenerInstance: Pick<typeof iframeListener, "newChatMessageWritingStatusStream">,
-        private playNewMessageSound = () => {
+        private notifyNewMessage = (message: ProximityChatMessage) => {
             if (!localUserStore.getChatSounds() || get(this.areNotificationsMuted)) return;
             gameManager.getCurrentGameScene().playSound("new-message");
+            notificationManager.createNotification(
+                new MessageNotification(
+                    get(this.name),
+                    message.sender.username ?? "unknown",
+                    get(message.content).body,
+                    this.id,
+                    get(this.name)
+                )
+            );
         }
     ) {
         this.typingMembers = writable([]);
@@ -227,9 +236,7 @@ export class ProximityChatRoom implements ChatRoom {
 
         this.lastMessageTimestamp = newMessage.date.getTime();
 
-        this.playNewMessageSound();
-
-        notificationManager.createNotification(new MessageNotification(get(this.name), chatUser.username ?? "unknown", message, this.id, get(this.name)));
+        this.notifyNewMessage(newMessage);
 
         if (get(selectedRoomStore) !== this) {
             this.hasUnreadMessages.set(true);
