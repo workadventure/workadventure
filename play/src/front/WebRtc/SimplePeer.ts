@@ -16,12 +16,12 @@ import { nbSoundPlayedInBubbleStore } from "../Stores/ApparentMediaContraintStor
 import { SpaceFilterInterface } from "../Space/SpaceFilter/SpaceFilter";
 import { askDialogStore } from "../Stores/MeetingStore";
 import { RemotePlayersRepository } from "../Phaser/Game/RemotePlayersRepository";
-import { mediaManager} from "./MediaManager";
+import { BasicNotification, notificationManager } from "../Notification";
+import LL from "../../i18n/i18n-svelte";
+import { mediaManager } from "./MediaManager";
 import { ScreenSharingPeer } from "./ScreenSharingPeer";
 import { VideoPeer } from "./VideoPeer";
 import { blackListManager } from "./BlackListManager";
-import { BasicNotification, notificationManager } from "../Notification";
-import LL from "../../i18n/i18n-svelte";
 
 export interface UserSimplePeerInterface {
     userId: number;
@@ -214,7 +214,9 @@ export class SimplePeer {
 
         //Create a notification for first user in circle discussion
         if (peerStore.getSize() === 0) {
-            notificationManager.createNotification(new BasicNotification(`${name} ${get(LL).notification.discussion()}`));
+            notificationManager.createNotification(
+                new BasicNotification(`${name} ${get(LL).notification.discussion()}`)
+            );
         }
 
         analyticsClient.addNewParticipant(peer.uniqueId, user.userId, uuid);
