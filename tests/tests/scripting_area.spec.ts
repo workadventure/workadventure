@@ -66,13 +66,13 @@ test.describe("Scripting for Map editor @oidc", () => {
 
         await menu.closeMapEditor(page);
         await Map.teleportToPosition(page, 9 * 32, 3 * 32);
-        await expect(page.locator('span.characterTriggerAction').nth(0)).toHaveText("Welcome to MyZone");
-        await page.locator('span.characterTriggerAction').nth(0).click();
+        await expect(page.getByText('Welcome to MyZone')).toBeVisible();
+        await page.getByRole('button', { name: 'Close' }).click();
 
         await Map.teleportToPosition(page, 9 * 32, 9 * 32);
-        await expect(page.locator('span.characterTriggerAction').nth(0)).toHaveText("Goodby to MyZone");
-        await page.locator('span.characterTriggerAction').nth(0).click();
+        await expect(page.getByText('Goodby to MyZone')).toBeVisible();
+        await page.getByRole('button', { name: 'Close' }).click();
 
-        await expect(page.locator('span.characterTriggerAction')).toBeHidden();
+        await expect(page.getByRole('button', { name: 'Close'})).toBeHidden();
     });
 });
