@@ -47,7 +47,7 @@ export class VoidChatConnection implements ChatConnectionInterface {
         return Promise.resolve(undefined);
     }
 
-    getRoombyID(roomId: string): Promise<ChatRoom> {
+    getRoombyID(roomId: string): ChatRoom {
         throw new Error("Method not implemented.");
     }
 
