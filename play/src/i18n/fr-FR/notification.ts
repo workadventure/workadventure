@@ -2,7 +2,7 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const notification: DeepPartial<Translation["notification"]> = {
-    discussion: "veut discuter avec toi",
+    discussion: "{name} veut discuter avec toi",
     message: "{name} a envoyé un message",
     chatRoom: "sur le salon",
     open: "Ouvrir",
