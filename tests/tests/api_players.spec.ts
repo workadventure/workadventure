@@ -5,8 +5,14 @@ import { assertLogMessage, startRecordLogs } from "./utils/log";
 import { evaluateScript } from "./utils/scripting";
 import { oidcLogin, oidcLogout } from "./utils/oidc";
 import { publicTestMapUrl } from "./utils/urls";
+import { aliceStorageTest, bobStorageTest } from "./auth.setup";
 
 test.describe("API WA.players", () => {
+  
+  test.use({
+    storageState: aliceStorageTest
+  })
+
   test("enter leave events are received", async ({ page, browser }, {
     project,
   }) => {
@@ -17,19 +23,21 @@ test.describe("API WA.players", () => {
       return;
     }
 
-    await page.goto(
+    /*await page.goto(
       publicTestMapUrl(`tests/RemotePlayers/remote_players.json`, "api_players")
-    );
-    await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
+    );*/
+    //await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
 
-    const newBrowser = await browser.newContext();
+    const newBrowser = await browser.newContext({
+      storageState: bobStorageTest
+    });
     const page2 = await newBrowser.newPage();
 
-    await page2.goto(
+    /*await page2.goto(
       publicTestMapUrl(`tests/RemotePlayers/remote_players.json`, "api_players")
-    );
+    );*/
 
-    await login(page2, "Bob", 3, "en-US", project.name === "mobilechromium");
+    //await login(page2, "Bob", 3, "en-US", project.name === "mobilechromium");
 
     const events = getCoWebsiteIframe(page).locator("#events");
     
@@ -83,7 +91,7 @@ test.describe("API WA.players", () => {
         "api_players"
       )
     );
-    await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
+    await login(page, "Alice", 2, "en-US");
 
     await expect(
       getCoWebsiteIframe(page).locator("#onPlayerEntersException")
@@ -106,7 +114,7 @@ test.describe("API WA.players", () => {
 
     await page.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
 
-    await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
+    await login(page, "Alice", 2, "en-US");
 
     await evaluateScript(page, async () => {
       await WA.onInit();
@@ -123,7 +131,7 @@ test.describe("API WA.players", () => {
 
     await page2.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
 
-    await login(page2, "Bob", 3, "en-US", project.name === "mobilechromium");
+    await login(page2, "Bob", 3, "en-US");
 
     const myvar = await evaluateScript(page2, async () => {
       await WA.onInit();
@@ -245,7 +253,7 @@ test.describe("API WA.players", () => {
 
     await page2.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
 
-    await login(page2, "Bob", 3, "en-US", isMobile);
+    await login(page2, "Bob", 3, "en-US");
 
     const readRemotePlayerVariable = async (
       playerName: string,
@@ -416,9 +424,9 @@ test.describe("API WA.players", () => {
 
     await page.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
 
-    await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
+    await login(page, "Alice", 2, "en-US");
 
-    await runPersistenceTest(page, browser, project.name === "mobilechromium");
+    await runPersistenceTest(page, browser);
   });
 
   test("Test variable persistence for logged users. @oidc", async ({
@@ -435,7 +443,7 @@ test.describe("API WA.players", () => {
     test.setTimeout(120_000); // Fix Webkit that can take more than 60s
     await page.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
 
-    await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
+    await login(page, "Alice", 2, "en-US");
 
     await oidcLogin(page);
 
@@ -458,7 +466,7 @@ test.describe("API WA.players", () => {
       publicTestMapUrl("tests/E2E/empty_2_frames.json", "api_players")
     );
 
-    await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
+    await login(page, "Alice", 2, "en-US");
 
     await evaluateScript(
       page,
@@ -511,7 +519,7 @@ test.describe("API WA.players", () => {
 
     await page.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
 
-    await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
+    await login(page, "Alice", 2, "en-US");
 
     /*console.log("PAGE 1 MY ID", await evaluateScript(page, async () => {
       await WA.onInit();
@@ -610,7 +618,7 @@ test.describe("API WA.players", () => {
 
     await page.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
 
-    await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
+    await login(page, "Alice", 2, "en-US");
 
     // Test that a variable triggered locally can be listened locally
     let gotExpectedNotification = false;

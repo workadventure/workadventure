@@ -5,7 +5,6 @@ export async function login(
     userName = 'Alice',
     characterNumber = 2,
     browserLanguage: string | null = 'en-US',
-    isMobile = false
 ) {
   // window.localStorage.setItem('language', browserLanguage)
 
@@ -20,11 +19,12 @@ export async function login(
 
     await page.click('button.selectCharacterSceneFormSubmit');
 
-  await selectMedias(page, isMobile);
+  await selectMedias(page);
     }
 
-export async function selectMedias(page: Page, isMobile = false) {
-    await expect(page.locator('h2', { hasText: "Turn on your camera and microphone" })).toBeVisible();
+export async function selectMedias(page: Page) {
+  
+  await expect(page.locator('h2', { hasText: "Turn on your camera and microphone" })).toBeVisible();
 
   await page.click("text=Save");
 

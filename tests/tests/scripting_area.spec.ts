@@ -34,7 +34,7 @@ test.describe("Scripting for Map editor @oidc", () => {
     test("Scripting Area onEnter & onLeave", async ({page, request}, {project}) => {
         await resetWamMaps(request);
         await page.goto(Map.url("start"));
-        await login(page, "test", 3, "en-US", false);
+        await login(page, "test", 3, "en-US");
         await oidcAdminTagLogin(page, false);
 
         await menu.openMapEditor(page);

@@ -22,7 +22,7 @@ test.describe('Areas', () => {
         await page.goto(
             publicTestMapUrl("tests/Areas/AreaFromTiledMap/map.json", "areas")
         );
-        await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+        await login(page, 'Alice', 2, 'en-US');
 
         await evaluateScript(page, async () => {
             await WA.onInit();
@@ -64,7 +64,7 @@ test.describe('Areas', () => {
         await expect(page.getByRole('slider')).toBeHidden();
 
         // Enable audio area blocking
-        await Menu.openMenu(page, false);
+        await Menu.openMenu(page);
         await page.getByRole('button', { name: 'Other settings' }).click();
         await page.getByText('Block ambient sounds and music').click();
         await page.locator('#closeMenu').click();

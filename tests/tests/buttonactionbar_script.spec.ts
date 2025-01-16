@@ -18,7 +18,7 @@ test.describe('Button in action bar', () => {
         );
 
         // Login Alice
-        await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
+        await login(page, "Alice", 2, "en-US");
 
         // Use script to add new button
         await evaluateScript(page, async () => {
@@ -54,7 +54,7 @@ test.describe('Action button in action bar', () => {
         );
 
         // Login Alice
-        await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
+        await login(page, "Alice", 2, "en-US");
 
         // Use script to add new button
         await evaluateScript(page, async () => {
