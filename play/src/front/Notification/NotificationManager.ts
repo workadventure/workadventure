@@ -65,7 +65,7 @@ class NotificationManager {
             room = gameManager.getCurrentGameScene().proximityChatRoom;
         } else {
             const chatConnection = await gameManager.getChatConnection();
-            room = await chatConnection.getRoom(chatRoomId);
+            room = await chatConnection.getRoombyID(chatRoomId);
         }
         if (room) {
             this.selectedRoomStore.set(room);
