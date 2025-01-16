@@ -1085,7 +1085,6 @@ export class GameScene extends DirtyScene {
         this.scriptingOutputAudioStreamManager?.close();
         this.scriptingInputAudioStreamManager?.close();
         this._spaceRegistry?.destroy();
-
         // We need to destroy all the entities
         get(extensionModuleStore).forEach((extensionModule) => {
             extensionModule.destroy();

@@ -1055,6 +1055,18 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         return user && user.some((user) => user.id === address);
     }
 
+    getRoombyID(roomId: string): ChatRoom {
+        if (!this.client) {
+            throw new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG);
+        }
+        const room = this.client.getRoom(roomId);
+        if (!room) {
+            throw new Error("Room not found");
+        }
+
+        return new MatrixChatRoom(room);
+    }
+
     clearListener() {
         this.roomList.forEach((room) => {
             this.roomList.delete(room.id);
