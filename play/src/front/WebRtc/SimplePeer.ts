@@ -214,9 +214,8 @@ export class SimplePeer {
 
         //Create a notification for first user in circle discussion
         if (peerStore.getSize() === 0) {
-            notificationManager.createNotification(
-                new BasicNotification(`${name} ${get(LL).notification.discussion()}`)
-            );
+            const notificationText = get(LL).notification.discussion({ name });
+            notificationManager.createNotification(new BasicNotification(notificationText));
         }
 
         analyticsClient.addNewParticipant(peer.uniqueId, user.userId, uuid);
