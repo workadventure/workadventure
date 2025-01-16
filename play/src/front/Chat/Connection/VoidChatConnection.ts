@@ -47,8 +47,8 @@ export class VoidChatConnection implements ChatConnectionInterface {
         return Promise.resolve(undefined);
     }
 
-    destroy(): Promise<void> {
-        return Promise.resolve();
+    getRoombyID(roomId: string): Promise<ChatRoom> {
+        throw new Error("Method not implemented.");
     }
 
     searchChatUsers(searchText: string): Promise<{ id: string; name: string | undefined }[] | undefined> {
@@ -63,5 +63,8 @@ export class VoidChatConnection implements ChatConnectionInterface {
         return Promise.resolve(false);
     }
 
+    destroy(): Promise<void> {
+        return Promise.resolve();
+    }
     clearListener(): void {}
 }
