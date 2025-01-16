@@ -1,5 +1,5 @@
 import { MatrixClient, SetPresence, User } from "matrix-js-sdk";
-import Sentry from "@sentry/svelte";
+import * as Sentry from "@sentry/svelte";
 import { writable } from "svelte/store";
 import { AvailabilityStatus } from "@workadventure/messages";
 import { ChatUser } from "../ChatConnection";
