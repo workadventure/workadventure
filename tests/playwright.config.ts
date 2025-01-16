@@ -48,6 +48,7 @@ const config: PlaywrightTestConfig = {
 
   /* Configure projects for major browsers */
   projects: [
+    { name: 'setup', testMatch: /.*\.setup\.ts/ },
     {
       name: 'chromium',
       use: {
@@ -58,6 +59,7 @@ const config: PlaywrightTestConfig = {
           args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'],
         },
       },
+      dependencies: ['setup']
     },
 
     {

@@ -1,0 +1,58 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://play.workadventure.localhost",
+      "localStorage": [
+        {
+          "name": "emojiFavorite",
+          "value": "[{\"emoji\":\"👍\",\"name\":\"thumbs up\"},{\"emoji\":\"❤️\",\"name\":\"red heart\"},{\"emoji\":\"😂\",\"name\":\"face with tears of joy\"},{\"emoji\":\"👏\",\"name\":\"clapping hands\"},{\"emoji\":\"😍\",\"name\":\"smiling face with heart-eyes\"},{\"emoji\":\"🙏\",\"name\":\"folded hands\"}]"
+        },
+        {
+          "name": "playerName",
+          "value": "Bob"
+        },
+        {
+          "name": "requestedMicrophoneStateKey",
+          "value": "false"
+        },
+        {
+          "name": "preferredVideoInputDevice",
+          "value": ""
+        },
+        {
+          "name": "requestedCameraStateKey",
+          "value": "false"
+        },
+        {
+          "name": "lastRoomUrl",
+          "value": "http://play.workadventure.localhost/_/api-players/maps.workadventure.localhost/tests/RemotePlayers/remote_players.json?phaserMode=auto"
+        },
+        {
+          "name": "helpCameraSettingsShown",
+          "value": "1"
+        },
+        {
+          "name": "authToken",
+          "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZGVudGlmaWVyIjoiMGQ5Y2UzMzItNjdjMi00OGFlLWIxMmItNzNiNjhmNzA5ZjY5IiwiaWF0IjoxNzM3MDQ2MDE3LCJleHAiOjE3Mzk2MzgwMTd9.MlFJnehVFkq8a1CjvEZjpxOxJI8muKxUyL9zuXDiyu0"
+        },
+        {
+          "name": "language",
+          "value": "en-US"
+        },
+        {
+          "name": "localUser",
+          "value": "{\"uuid\":\"0d9ce332-67c2-48ae-b12b-73b68f709f69\",\"email\":null,\"matrixUserId\":null,\"isMatrixRegistered\":false}"
+        },
+        {
+          "name": "characterTextures",
+          "value": "[\"male4\"]"
+        },
+        {
+          "name": "preferredAudioInputDevice",
+          "value": ""
+        }
+      ]
+    }
+  ]
+}
