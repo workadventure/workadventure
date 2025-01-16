@@ -12,32 +12,15 @@
     import { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
     import ChevronLeftIcon from "../Icons/ChevronLeftIcon.svelte";
     import ChevronRightIcon from "../Icons/ChevronRightIcon.svelte";
+    import { screenOrientationStore } from "../../Stores/ScreenOrientationStore";
     import CoWebsiteTab from "./CoWebsiteTab.svelte";
 
     //let container: HTMLElement;
     let activeCowebsite = $coWebsites[0];
     let resizeBar: HTMLElement;
-    let vertical: boolean;
-
-    function updateScreenSize() {
-        if (window.innerWidth <= window.innerHeight) {
-            vertical = true;
-        } else {
-            vertical = false;
-        }
-    }
-
-    window.addEventListener("resize", () => {
-        if ($coWebsites.length > 0) {
-            updateScreenSize();
-        }
-    });
-
     let unsubscribeCowebsitesUpdate: Unsubscriber | undefined;
 
     onMount(() => {
-        updateScreenSize();
-
         unsubscribeCowebsitesUpdate = coWebsites.subscribe((arr) => {
             activeCowebsite = arr[arr.length - 1];
         });
@@ -57,7 +40,7 @@
     };
 
     const handleMove = (clientX: number, clientY: number) => {
-        if (!vertical) {
+        if ($screenOrientationStore === "landscape") {
             if (document.documentElement.dir === "rtl") {
                 // 8 is the number of pixels of the resize bar
                 if (clientX < 8) {
@@ -295,7 +278,7 @@
             </div>
         </div>
 
-        <div class={vertical ? "flex-1 mb-3" : "h-full object-contain ml-3"}>
+        <div class={$screenOrientationStore === "portrait" ? "flex-1 mb-3" : "h-full object-contain ml-3"}>
             {#if activeCowebsite instanceof JitsiCoWebsite}
                 <JitsiCowebsiteComponent actualCowebsite={activeCowebsite} />
             {:else if activeCowebsite instanceof BBBCoWebsite}
@@ -306,7 +289,7 @@
         </div>
     </div>
     <div
-        class={vertical
+        class={$screenOrientationStore === "portrait"
             ? "-mt-1.5 mx-auto w-40 h-1 bg-white rounded cursor-row-resize"
             : "absolute left-1 top-0 bottom-0 m-auto w-1 h-40 bg-white rounded cursor-col-resize"}
         class:hidden={$fullScreenCowebsite}

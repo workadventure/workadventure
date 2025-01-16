@@ -30,6 +30,7 @@
         fullScreenCowebsite,
     } from "../Stores/CoWebsiteStore";
     import { mouseInCameraTriggerArea } from "../Stores/MediaStore";
+    import { screenOrientationStore } from "../Stores/ScreenOrientationStore";
     import GameOverlay from "./GameOverlay.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
 
@@ -266,8 +267,19 @@
         <GameOverlay {game} />
     </div>
     {#if $coWebsites.length > 0}
-        <!-- FIXME: adapt FLY effect to vertical and RTL mode -->
-        <div class="flex-1" transition:fly={{ duration: 200, x: $coWebsitesSize.width }}>
+        <div
+            class="flex-1"
+            transition:fly={{
+                duration: 200,
+                x:
+                    $screenOrientationStore === "portrait"
+                        ? 0
+                        : document.documentElement.dir === "rtl"
+                        ? -$coWebsitesSize.width
+                        : $coWebsitesSize.width,
+                y: $screenOrientationStore === "portrait" ? -$coWebsitesSize.height : 0,
+            }}
+        >
             <CoWebsitesContainer />
         </div>
     {/if}
