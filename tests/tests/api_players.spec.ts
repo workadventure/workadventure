@@ -5,7 +5,7 @@ import { assertLogMessage, startRecordLogs } from "./utils/log";
 import { evaluateScript } from "./utils/scripting";
 import { oidcLogin, oidcLogout } from "./utils/oidc";
 import { publicTestMapUrl } from "./utils/urls";
-//import { aliceStorageTest, bobStorageTest } from "./auth.setup";
+import { createUser, aliceStorageTest, bobStorageTest } from "./auth";
 
 test.describe("API WA.players", () => {
 
@@ -20,16 +20,20 @@ test.describe("API WA.players", () => {
     }
 
     //await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
+    
+    await createUser('Alice');
+    await createUser('Bob');
+
     const newBrowserAlice = await browser.newContext({
-      storageState: './.auth/Alice.json'
+      storageState: aliceStorageTest
     });
-    const page = await newBrowserAlice.newPage();
+    const page1 = await newBrowserAlice.newPage();
     const newBrowserBob = await browser.newContext({
-      storageState: './.auth/Bob.json'
+      storageState: bobStorageTest
     });
     const page2 = await newBrowserBob.newPage();
     
-    await page.goto(
+    await page1.goto(
       publicTestMapUrl(`tests/RemotePlayers/remote_players.json`, "api_players")
     );
 
@@ -39,12 +43,12 @@ test.describe("API WA.players", () => {
 
     //await login(page2, "Bob", 3, "en-US", project.name === "mobilechromium");
 
-    const events = getCoWebsiteIframe(page).locator("#events");
+    const events = getCoWebsiteIframe(page1).locator("#events");
     
     await expect(events.getByText('New user: Bob')).toBeVisible();
 
-    await getCoWebsiteIframe(page).locator("#listCurrentPlayers").click();
-    const list = getCoWebsiteIframe(page).locator("#list");
+    await getCoWebsiteIframe(page1).locator("#listCurrentPlayers").click();
+    const list = getCoWebsiteIframe(page1).locator("#list");
     await expect(list).toContainText("Bob");
 
     await getCoWebsiteIframe(page2).locator("#listCurrentPlayers").click();
@@ -52,8 +56,8 @@ test.describe("API WA.players", () => {
     await expect(list2).toContainText("Alice");
 
     // Now, let's test variables
-    await getCoWebsiteIframe(page).locator("#the-variable").fill("yeah");
-    await getCoWebsiteIframe(page)
+    await getCoWebsiteIframe(page1).locator("#the-variable").fill("yeah");
+    await getCoWebsiteIframe(page1)
       .locator("#the-variable")
       .evaluate((e) => e.blur());
     const events2 = getCoWebsiteIframe(page2).locator("#events");
@@ -71,9 +75,9 @@ test.describe("API WA.players", () => {
     await newBrowserBob.close();
 
     await expect(events.getByText('User left: Bob')).toBeVisible();
-    await getCoWebsiteIframe(page).locator("#listCurrentPlayers").click();
+    await getCoWebsiteIframe(page1).locator("#listCurrentPlayers").click();
     await expect(list).not.toContainText("Bob");
-    await page.close()
+    await page1.close()
     await newBrowserAlice.close();
   });
 

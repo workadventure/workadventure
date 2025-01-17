@@ -59,7 +59,6 @@ const config: PlaywrightTestConfig = {
           args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'],
         },
       },
-      dependencies: ['setup']
     },
 
     {
