@@ -4,7 +4,7 @@ import { assertLogMessage, startRecordLogs } from "./utils/log";
 import { evaluateScript } from "./utils/scripting";
 import { oidcLogin, oidcLogout } from "./utils/oidc";
 import { publicTestMapUrl } from "./utils/urls";
-import { getPage } from "./auth";
+import { getPage } from "./utils/auth";
 
 test.describe("API WA.players", () => {
 

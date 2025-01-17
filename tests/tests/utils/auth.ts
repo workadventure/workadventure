@@ -1,6 +1,6 @@
 import fs from 'fs';
 import { Browser, BrowserContext, expect, Page } from 'playwright/test';
-import { publicTestMapUrl } from "./utils/urls";
+import { publicTestMapUrl } from "./urls";
 
 const characterNumber = 3;
 

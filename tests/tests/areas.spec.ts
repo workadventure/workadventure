@@ -4,7 +4,7 @@ import {expect, test} from '@playwright/test';
 import {evaluateScript} from "./utils/scripting";
 import {publicTestMapUrl} from "./utils/urls";
 import Menu from "./utils/menu";
-import { getPage } from "./auth";
+import { getPage } from "./utils/auth";
 
 test.describe('Areas', () => {
     test('can edit Tiled area from scripting API', async ({ browser }, { project }) => {
@@ -35,6 +35,8 @@ test.describe('Areas', () => {
             return;
         });
         await expect(page.getByText('You\'re in a silent zone')).toBeVisible();
+        await page.close();
+        await page.context().close();
     });
 
     test('blocking audio areas', async ({ browser }, { project }) => {
@@ -78,6 +80,8 @@ test.describe('Areas', () => {
             return;
         });
         await Menu.expectButtonState(page, "music-button", "disabled");
+        await page.close();
+        await page.context().close();
     });
 
     test('display warning on fail to load audio', async ({ browser }, { project }) => {
@@ -104,5 +108,7 @@ test.describe('Areas', () => {
         });
         await Menu.expectButtonState(page, "music-button", "forbidden");
         await expect(page.getByText('Could not load sound')).toBeVisible();
+        await page.close();
+        await page.context().close();
     });
 });
