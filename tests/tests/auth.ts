@@ -1,30 +1,24 @@
 import fs from 'fs';
-import { BrowserContext, chromium, expect, Page } from 'playwright/test';
+import { Browser, BrowserContext, expect, Page } from 'playwright/test';
 import { publicTestMapUrl } from "./utils/urls";
 
-export const aliceStorageTest = './.auth/Alice.json'
-export const bobStorageTest = './.auth/Bob.json'
-export const johnStoragetest = './.auth/John.json'
-export const characterNumber = 3;
+const characterNumber = 3;
 
 function isJsonCreate(name: string): boolean {
     return fs.existsSync('./.auth/' + name + '.json')
 }
 
-export async function createUser(name='Alice'): Promise<void> {
+async function createUser(name='Alice', browser: Browser): Promise<void> {
     
     if(isJsonCreate(name)) {
-        console.log("File " + name + " exist");
         return;
     }
-    console.log("File " + name + " don't exist");
-    const browser = await chromium.launch({headless: true});
 
     const context: BrowserContext = await browser.newContext();
     const page: Page = await context.newPage();
     
     await page.goto(
-        publicTestMapUrl(`tests/RemotePlayers/remote_players.json`, "api-players")
+        publicTestMapUrl(`tests/RemotePlayers/remote_players.json`, "setup")
     );
     // login
     await page.fill('input[name="loginSceneName"]', name);
@@ -47,5 +41,12 @@ export async function createUser(name='Alice'): Promise<void> {
 
     await page.close();
     await context.close();
-    await browser.close();
+}
+
+export async function getPage(browser: Browser, name: string, url:string): Promise<Page> {
+    await createUser(name, browser);
+    const newBrowser: BrowserContext = await browser.newContext({ storageState: './.auth/' + name + '.json' });
+    const page: Page = await newBrowser.newPage();
+    await page.goto(url);
+    return page;
 }

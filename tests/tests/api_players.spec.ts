@@ -1,11 +1,10 @@
 import { Browser, expect, Page, test } from "@playwright/test";
-//import { login } from "./utils/roles";
 import { getCoWebsiteIframe } from "./utils/iframe";
 import { assertLogMessage, startRecordLogs } from "./utils/log";
 import { evaluateScript } from "./utils/scripting";
 import { oidcLogin, oidcLogout } from "./utils/oidc";
 import { publicTestMapUrl } from "./utils/urls";
-import { createUser, aliceStorageTest, bobStorageTest } from "./auth";
+import { getPage } from "./auth";
 
 test.describe("API WA.players", () => {
 
@@ -18,31 +17,19 @@ test.describe("API WA.players", () => {
       test.skip();
       return;
     }
-
-    //await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
     
-    await createUser('Alice');
-    await createUser('Bob');
-
-    const newBrowserAlice = await browser.newContext({
-      storageState: aliceStorageTest
-    });
-    const page1 = await newBrowserAlice.newPage();
-    const newBrowserBob = await browser.newContext({
-      storageState: bobStorageTest
-    });
-    const page2 = await newBrowserBob.newPage();
-    
-    await page1.goto(
+    const page1 = await getPage(
+      browser,
+      'Alice',
       publicTestMapUrl(`tests/RemotePlayers/remote_players.json`, "api_players")
     );
-
-    await page2.goto(
+    const page2 = await getPage(
+      browser,
+      'Bob',
       publicTestMapUrl(`tests/RemotePlayers/remote_players.json`, "api_players")
     );
-
-    //await login(page2, "Bob", 3, "en-US", project.name === "mobilechromium");
-
+    
+    
     const events = getCoWebsiteIframe(page1).locator("#events");
     
     await expect(events.getByText('New user: Bob')).toBeVisible();
@@ -72,13 +59,12 @@ test.describe("API WA.players", () => {
     );
 
     await page2.close();
-    await newBrowserBob.close();
-
+    await page2.context().close();
     await expect(events.getByText('User left: Bob')).toBeVisible();
     await getCoWebsiteIframe(page1).locator("#listCurrentPlayers").click();
     await expect(list).not.toContainText("Bob");
     await page1.close()
-    await newBrowserAlice.close();
+    await page1.context().close();
   });
 
   test("exception if we forget to call WA.players.configureTracking", async ({
@@ -90,18 +76,11 @@ test.describe("API WA.players", () => {
       test.skip();
       return;
     }
-    const newBrowserAlice = await browser.newContext({
-      storageState: './.auth/Alice.json'
-    });
-    const page = await newBrowserAlice.newPage();
-    await page.goto(
-      publicTestMapUrl(
-        `tests/RemotePlayers/remote_players_no_init.json`,
-        "api_players"
-      )
+    const page = await getPage(
+      browser,
+      'Alice',
+      publicTestMapUrl(`tests/RemotePlayers/remote_players_no_init.json`, "api_players")
     );
-    //await login(page, "Alice", 2, "en-US");
-
     await expect(
       getCoWebsiteIframe(page).locator("#onPlayerEntersException")
     ).toHaveText("Yes");
@@ -109,7 +88,7 @@ test.describe("API WA.players", () => {
       getCoWebsiteIframe(page).locator("#onPlayerLeavesException")
     ).toHaveText("Yes");
     await page.close();
-    await newBrowserAlice.close();
+    await page.context().close();
   });
 
   test("Test that player B arriving after player A set his variables can read the variable.", async ({
@@ -121,14 +100,11 @@ test.describe("API WA.players", () => {
       test.skip();
       return;
     }
-
-    const newBrowserAlice = await browser.newContext({
-      storageState: './.auth/Alice.json'
-    });
-    const page = await newBrowserAlice.newPage();
-    await page.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
-
-    //await login(page, "Alice", 2, "en-US");
+    const page = await getPage(
+      browser,
+      'Alice',
+      publicTestMapUrl(`tests/E2E/empty.json`, "api_players")
+    );
 
     await evaluateScript(page, async () => {
       await WA.onInit();
@@ -139,16 +115,12 @@ test.describe("API WA.players", () => {
       });
       return;
     });
-    const newBrowserBob = await browser.newContext({
-      storageState: './.auth/Bob.json'
-    });
-    /*const page = await newBrowserAlice.newPage();
-    const newBrowser = await browser.newContext();*/
-    const page2 = await newBrowserBob.newPage();
+    const page2 = await getPage(
+      browser,
+      'Bob',
+      publicTestMapUrl(`tests/E2E/empty.json`, "api_players")
+    );
 
-    await page2.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
-
-    //await login(page2, "Bob", 3, "en-US");
 
     const myvar = await evaluateScript(page2, async () => {
       await WA.onInit();
@@ -162,9 +134,9 @@ test.describe("API WA.players", () => {
     await expect(myvar).toBe(12);
 
     await page2.close();
-    await newBrowserBob.close();
+    await page2.context().close();
     await page.close();
-    await newBrowserAlice.close();
+    await page.context().close();
   });
 
   const runPersistenceTest = async (
@@ -266,17 +238,14 @@ test.describe("API WA.players", () => {
 
       return;
     });
-    const newBrowserBob = await browser.newContext({
-      storageState: './.auth/Bob.json'
-    });
-    //const newBrowser = await browser.newContext();
-    const page2 = await newBrowserBob.newPage();
+    const page2 = await getPage(
+      browser,
+      'Bob',
+      publicTestMapUrl(`tests/E2E/empty.json`, "api_players")
+    );
 
-    await page2.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
 
-    //await login(page2, "Bob", 3, "en-US");
-
-    const readRemotePlayerVariable = async (
+      const readRemotePlayerVariable = async (
       playerName: string,
       variableName: string,
       targetPage: Page
@@ -429,7 +398,7 @@ test.describe("API WA.players", () => {
       .toBe(undefined);
     
     await page2.close();
-    await newBrowserBob.close();
+    await page2.context().close();
   };
 
   test("Test variable persistence for anonymous users.", async ({
@@ -441,18 +410,17 @@ test.describe("API WA.players", () => {
       test.skip();
       return;
     }
-
-    const newBrowserAlice = await browser.newContext({
-      storageState: './.auth/Alice.json'
-    });
-    const page = await newBrowserAlice.newPage();
-    await page.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
+    const page = await getPage(
+      browser,
+      'Alice',
+      publicTestMapUrl(`tests/E2E/empty.json`, "api_players")
+    );
 
     //await login(page, "Alice", 2, "en-US");
 
     await runPersistenceTest(page, browser);
     await page.close();
-    await newBrowserAlice.close();
+    await page.context().close();
   });
 
   test("Test variable persistence for logged users. @oidc", async ({
@@ -467,12 +435,12 @@ test.describe("API WA.players", () => {
 
     test.setTimeout(120_000); // Fix Webkit that can take more than 60s
     
-    const newBrowserAlice = await browser.newContext({
-      storageState: './.auth/Alice.json'
-    });
-    const page = await newBrowserAlice.newPage();
+    const page = await getPage(
+      browser,
+      'Alice',
+      publicTestMapUrl(`tests/E2E/empty.json`, "api_players")
+    );
 
-    await page.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
 
     //await login(page, "Alice", 2, "en-US");
 
@@ -482,7 +450,7 @@ test.describe("API WA.players", () => {
 
     await oidcLogout(page, false);
     await page.close();
-    await newBrowserAlice.close();
+    await page.context().close();
   });
 
   test("Test variables are sent across frames.", async ({ browser }, {
@@ -495,16 +463,11 @@ test.describe("API WA.players", () => {
       return;
     }
 
-    const newBrowserAlice = await browser.newContext({
-      storageState: './.auth/Alice.json'
-    });
-    const page = await newBrowserAlice.newPage();
-
-    await page.goto(
-      publicTestMapUrl("tests/E2E/empty_2_frames.json", "api_players")
+    const page = await getPage(
+      browser,
+      'Alice',
+      publicTestMapUrl(`tests/E2E/empty_2_frames.json`, "api_players")
     );
-
-    //await login(page, "Alice", 2, "en-US");
 
     await evaluateScript(
       page,
@@ -541,7 +504,7 @@ test.describe("API WA.players", () => {
     );
     await expect(variable).toBe(12);
     await page.close();
-    await newBrowserAlice.close();
+    await page.context().close();
   });
 
   // This test is testing that we are listening on the back side to variables modification inside Redis.
@@ -555,14 +518,11 @@ test.describe("API WA.players", () => {
       test.skip();
       return;
     }
-
-    const newBrowserAlice = await browser.newContext({
-      storageState: './.auth/Alice.json'
-    });
-    const page = await newBrowserAlice.newPage();
-    await page.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
-
-    //await login(page, "Alice", 2, "en-US");
+    const page = await getPage(
+      browser,
+      'Alice',
+      publicTestMapUrl("tests/E2E/empty.json", "api_players")
+    );
 
     /*console.log("PAGE 1 MY ID", await evaluateScript(page, async () => {
       await WA.onInit();
@@ -570,7 +530,8 @@ test.describe("API WA.players", () => {
     }));*/
 
     // We use a new tab to keep the same LocalStorage
-    const page2 = await newBrowserAlice.newPage();
+     
+    const page2 = await page.context().newPage();
 
     await page2.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
 
@@ -646,7 +607,7 @@ test.describe("API WA.players", () => {
     await expect.poll(() => gotUnexpectedNotification).toBe(false);
 
     await page2.close();
-    await newBrowserAlice.close();
+    await page2.context().close();
   });
 
   test("Test that a variable changed can be listened to locally.", async ({
@@ -658,14 +619,11 @@ test.describe("API WA.players", () => {
       test.skip();
       return;
     }
-
-    const newBrowserAlice = await browser.newContext({
-      storageState: './.auth/Alice.json'
-    });
-    const page = await newBrowserAlice.newPage();
-    await page.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
-
-    //await login(page, "Alice", 2, "en-US");
+    const page = await getPage(
+      browser,
+      'Alice',
+      publicTestMapUrl(`tests/E2E/empty.json`, "api_players")
+    );
 
     // Test that a variable triggered locally can be listened locally
     let gotExpectedNotification = false;
@@ -705,7 +663,7 @@ test.describe("API WA.players", () => {
     await expect.poll(() => gotExpectedNotification).toBe(true);
 
     await page.close();
-    await newBrowserAlice.close();
+    await page.context().close();
   });
 
   test('cowebsites tab system', async ({ browser }, { project }) => {
@@ -717,13 +675,12 @@ test.describe("API WA.players", () => {
     }
 
     // Open the main page with the cowebsite container
-    const newBrowserAlice = await browser.newContext({
-      storageState: './.auth/Alice.json'
-    });
-    const page = await newBrowserAlice.newPage();
-    await page.goto(
-        publicTestMapUrl(`tests/RemotePlayers/remote_players_cowebsite.json`, "api_players")
+    const page = await getPage(
+      browser,
+      'Alice',
+      publicTestMapUrl(`tests/RemotePlayers/remote_players_cowebsite.json`, "api_players")
     );
+
 
     //await login(page, 'Alice');
     // Ouvrir le Site A dans le premier onglet
@@ -751,7 +708,6 @@ test.describe("API WA.players", () => {
     await expect(eventpage2).toContainText('Site B Page 2');
 
     await page.close();
-    await newBrowserAlice.close();
+    await page.context().close();
   });
-
 });
