@@ -44,7 +44,7 @@ export async function oidcLogout(page: Page, isMobile = false) {
       await page.click("button#burgerIcon");
     }
   }
-  await Menu.openMenu(page, isMobile);
+  await Menu.openMenu(page);
   await page.getByRole('button', { name: 'Log out' }).click();
   await expect(page.locator('a:has-text("Login")')).toBeVisible();
 }
