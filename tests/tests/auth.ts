@@ -5,7 +5,14 @@ import { publicTestMapUrl } from "./utils/urls";
 const characterNumber = 3;
 
 function isJsonCreate(name: string): boolean {
-    return fs.existsSync('./.auth/' + name + '.json')
+
+    const file: string = './.auth/' + name + '.json'
+    if (!fs.existsSync(file)) {
+        return false;
+    }
+    const date: Date = new Date();
+    const timeCreate: number = date.getMilliseconds() - fs.statSync(file).birthtime.getMilliseconds();
+    return timeCreate <= 7200000; // 7 200 000 ms = 2 hours
 }
 
 async function createUser(name='Alice', browser: Browser): Promise<void> {
