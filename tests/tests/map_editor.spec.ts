@@ -1,16 +1,17 @@
-import {expect, test, webkit} from "@playwright/test";
+import { expect, test, webkit } from "@playwright/test";
 import Map from "./utils/map";
 import AreaEditor from "./utils/map-editor/areaEditor";
 import ConfigureMyRoom from "./utils/map-editor/configureMyRoom";
 import EntityEditor from "./utils/map-editor/entityEditor";
 import Megaphone from "./utils/map-editor/megaphone";
-import {resetWamMaps} from "./utils/map-editor/uploader";
+import { resetWamMaps } from "./utils/map-editor/uploader";
 import MapEditor from "./utils/mapeditor";
 import Menu from "./utils/menu";
-import {hideNoCamera, login} from "./utils/roles";
-import {evaluateScript} from "./utils/scripting";
-import {map_storage_url} from "./utils/urls";
-import {oidcAdminTagLogin} from "./utils/oidc";
+import { hideNoCamera } from "./utils/roles";
+import { evaluateScript } from "./utils/scripting";
+import { map_storage_url } from "./utils/urls";
+import { oidcAdminTagLogin } from "./utils/oidc";
+import { getPage } from "./utils/auth";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -39,12 +40,11 @@ test.describe("Map editor @oidc", () => {
         }
     });
 
-    test("Successfully set the megaphone feature", async ({page, browser, request, browserName}, {project}) => {
+    test("Successfully set the megaphone feature", async ({ browser, request, browserName }) => {
         await resetWamMaps(request);
-        await page.goto(Map.url("empty"));
+        const page = await getPage(browser, "Admin1", Map.url("empty"));
         //await page.evaluate(() => localStorage.setItem('debug', '*'));
-        await login(page, "test", 3, "en-US");
-        await oidcAdminTagLogin(page, false);
+        //await oidcAdminTagLogin(page, false);
         // Because webkit in playwright does not support Camera/Microphone Permission by settings
         if (browserName === "webkit") {
             await hideNoCamera(page);
@@ -52,12 +52,8 @@ test.describe("Map editor @oidc", () => {
         await Map.teleportToPosition(page, 5 * 32, 5 * 32);
 
         // Second browser
-        const newBrowser = await browser.newContext();
-        const page2 = await newBrowser.newPage();
-        await page2.goto(Map.url("empty"));
-        await page2.evaluate(() => localStorage.setItem("debug", "*"));
-        await login(page2, "test2", 5, "en-US");
-        await oidcAdminTagLogin(page2, false);
+        const page2 = await getPage(browser, 'Admin2', Map.url("empty"));
+        //await oidcAdminTagLogin(page2, false);
 
         // await Menu.openMenuAdmin(page);
         await Menu.openMapEditor(page);
@@ -109,17 +105,19 @@ test.describe("Map editor @oidc", () => {
             .click({timeout: 10_000});
 
         // click on the megaphone button to start the streaming session
-        await expect(page2.getByText('test', { exact: true })).toBeVisible({timeout: 15_000});
+        await expect(page2.getByText('Admin1', { exact: true })).toBeVisible({timeout: 15_000});
 
         await page.getByRole('button', { name: 'Stop megaphone' }).click();
         await expect(page.getByRole('heading', { name: 'Global communication' })).toBeHidden();
 
         await page2.close();
-        await newBrowser.close();
+        await page2.context().close();
+        await page.close();
+        await page.context().close();
         // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
     });
 
-    test('Successfully set "SpeakerZone" in the map editor', async ({page, browser, request}, {project}) => {
+    test('Successfully set "SpeakerZone" in the map editor', async ({page, browser, request}) => {
         // skip the test, speaker zone with Jitsi is deprecated
         await resetWamMaps(request);
 
@@ -170,7 +168,7 @@ test.describe("Map editor @oidc", () => {
         await newBrowser.close();
     });
 
-    test("Successfully set start area in the map editor", async ({page, request}, {project}) => {
+    test("Successfully set start area in the map editor", async ({page, request}) => {
         await resetWamMaps(request);
         await page.goto(Map.url("start"));
         await login(page, "test", 3, "en-US");
@@ -184,7 +182,7 @@ test.describe("Map editor @oidc", () => {
         await Menu.closeMapEditor(page);
     });
 
-    test("Successfully set and working exit area in the map editor", async ({page, request}, {project}) => {
+    test("Successfully set and working exit area in the map editor", async ({page, request}) => {
         await resetWamMaps(request);
 
         await page.goto(Map.url("exit"));
@@ -217,7 +215,7 @@ test.describe("Map editor @oidc", () => {
     });
 
     // Test to set Klaxoon application in the area with the map editor
-    test("Successfully set Klaxoon's application in the area in the map editor", async ({page, browser, request}, {project}) => {
+    test("Successfully set Klaxoon's application in the area in the map editor", async ({page, browser, request}) => {
         await resetWamMaps(request);
 
         await page.goto(Map.url("empty"));
@@ -252,7 +250,7 @@ test.describe("Map editor @oidc", () => {
         // TODO make same test with object editor
     });
 
-    test("Successfully set GoogleWorkspace's applications in the area in the map editor", async ({page, request}, {project}) => {
+    test("Successfully set GoogleWorkspace's applications in the area in the map editor", async ({page, request}) => {
         await resetWamMaps(request);
 
         await page.goto(Map.url("empty"));
@@ -315,7 +313,7 @@ test.describe("Map editor @oidc", () => {
         await page.getByText('Drive', { exact: true }).click();
     });
 
-    test("Successfully set GoogleWorkspace's application entity in the map editor", async ({page, request}, {project}) => {
+    test("Successfully set GoogleWorkspace's application entity in the map editor", async ({page, request}) => {
         await resetWamMaps(request);
 
         await page.goto(Map.url("empty"));
@@ -380,7 +378,7 @@ test.describe("Map editor @oidc", () => {
         await page.getByRole('button', { name: 'Close' }).click();
     });
 
-    test("Successfully set Klaxoon's application entity in the map editor @local", async ({page, request}, {project}) => {
+    test("Successfully set Klaxoon's application entity in the map editor @local", async ({page, request}) => {
         await resetWamMaps(request);
 
         await page.goto(Map.url("empty"));
@@ -422,7 +420,7 @@ test.describe("Map editor @oidc", () => {
     // Create test fir Google picker presentation
     // Create test for Google picker drive
 
-    test("Successfully upload a custom entity", async ({page, request}, {project}) => {
+    test("Successfully upload a custom entity", async ({page, request}) => {
         await resetWamMaps(request);
 
         await page.goto(Map.url("empty"));
@@ -442,7 +440,7 @@ test.describe("Map editor @oidc", () => {
         expect(uploadedEntityElement).toContain(EntityEditor.getTestAssetName());
     });
 
-    test("Successfully upload and use custom entity in the map", async ({page, browser, request}, {project}) => {
+    test("Successfully upload and use custom entity in the map", async ({page, browser, request}) => {
         await resetWamMaps(request);
 
         // First browser + moved woka
@@ -493,7 +491,7 @@ test.describe("Map editor @oidc", () => {
         await newBrowser.close();
     });
 
-    test("Successfully upload and edit asset name", async ({page, browser, request}, {project}) => {
+    test("Successfully upload and edit asset name", async ({page, browser, request}) => {
         // Init wam file
         await resetWamMaps(request);
 
@@ -544,7 +542,7 @@ test.describe("Map editor @oidc", () => {
         await newBrowser.close();
     });
 
-    test("Successfully upload and remove custom entity", async ({page, browser, request}, {project}) => {
+    test("Successfully upload and remove custom entity", async ({page, browser, request}) => {
         await resetWamMaps(request);
 
         // First browser + moved woka
@@ -587,7 +585,7 @@ test.describe("Map editor @oidc", () => {
         await newBrowser.close();
     });
 
-    test("Successfully set searchable processus for entity and zone", async ({page, browser, request}, {project}) => {
+    test("Successfully set searchable processus for entity and zone", async ({page, browser, request}) => {
         await resetWamMaps(request);
         await page.goto(Map.url("empty"));
         await login(page, "test", 3, "en-US");
@@ -646,7 +644,7 @@ test.describe("Map editor @oidc", () => {
         expect(await page.locator(".map-editor .sidebar .area-items .item").count()).toBe(1);
     });
 
-    test("Successfully test global message text and sound feature", async ({page, browser, request}, {project}) => {
+    test("Successfully test global message text and sound feature", async ({page, browser, request}) => {
         await resetWamMaps(request);
         await page.goto(Map.url("empty"));
 

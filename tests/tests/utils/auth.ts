@@ -1,6 +1,6 @@
 import fs from 'fs';
 import { Browser, BrowserContext, expect, Page } from 'playwright/test';
-import { publicTestMapUrl } from "./urls";
+import { oidcAdminTagLogin, oidcMatrixUserLogin, oidcMemberTagLogin } from './oidc';
 
 const characterNumber = 3;
 
@@ -12,11 +12,12 @@ function isJsonCreate(name: string): boolean {
     }
     // broken
     const date: Date = new Date();
-    const timeCreate: number = date.getMilliseconds() - fs.statSync(file).birthtime.getMilliseconds();
+    const timeCreate: number = date.getTime() - fs.statSync(file).birthtime.getTime();
     return timeCreate <= 7200000; // 7 200 000 ms = 2 hours
 }
 
-async function createUser(name='Alice', browser: Browser): Promise<void> {
+async function createUser(name: "Alice" | "Bob" | "Admin1" | "Admin2" | "Member1" | "UserMatrix",
+    browser: Browser, url: string): Promise<void> {
     
     if(isJsonCreate(name)) {
         return;
@@ -25,9 +26,7 @@ async function createUser(name='Alice', browser: Browser): Promise<void> {
     const context: BrowserContext = await browser.newContext();
     const page: Page = await context.newPage();
     
-    await page.goto(
-        publicTestMapUrl(`tests/RemotePlayers/remote_players.json`, "setup")
-    );
+    await page.goto(url);
     // login
     await page.fill('input[name="loginSceneName"]', name);
     await page.click('button.loginSceneFormSubmit');
@@ -44,15 +43,30 @@ async function createUser(name='Alice', browser: Browser): Promise<void> {
     await page.click("text=Save");
 
     await expect(page.locator("div#main-layout").nth(0)).toBeVisible();
-
+    switch (name) {
+        case "Admin1":
+        case "Admin2":
+            await oidcAdminTagLogin(page, false);    
+            break;
+        case "Member1":
+            oidcMemberTagLogin(page, false);
+            break;
+        case "UserMatrix":
+            oidcMatrixUserLogin(page, false);    
+            break;
+        default:
+            break;
+    }
     await page.context().storageState({ path: './.auth/' + name + '.json'})
 
     await page.close();
     await context.close();
 }
 
-export async function getPage(browser: Browser, name: string, url:string): Promise<Page> {
-    await createUser(name, browser);
+export async function getPage(browser: Browser,
+    name: "Alice" | "Bob" | "Admin1" | "Admin2" | "Member1" | "UserMatrix",
+     url:string): Promise<Page> {
+    await createUser(name, browser, url);
     const newBrowser: BrowserContext = await browser.newContext({ storageState: './.auth/' + name + '.json' });
     const page: Page = await newBrowser.newPage();
     await page.goto(url);

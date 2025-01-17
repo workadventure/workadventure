@@ -46,10 +46,9 @@ test.describe("Map editor area with rights @oidc", () => {
 
   test("Successfully set Area with right access", async ({ browser, request }) => {
     await resetWamMaps(request);
-    const page = await getPage(browser, 'test',
+    const page = await getPage(browser, 'Admin1',
       Map.url("empty")
     );
-    await oidcAdminTagLogin(page, false);
 
     await Menu.openMapEditor(page);
     await AreaAccessRights.openAreaEditorAndAddAreaWithRights(
@@ -78,10 +77,9 @@ test.describe("Map editor area with rights @oidc", () => {
 
   test("Access restricted area with right click to move", async ({ browser, request }) => {
     await resetWamMaps(request);
-    const page = await getPage(browser, 'test',
+    const page = await getPage(browser, 'Admin1',
       Map.url("empty")
     );
-    await oidcAdminTagLogin(page, false);
 
     await Menu.openMapEditor(page);
     await AreaAccessRights.openAreaEditorAndAddAreaWithRights(
@@ -126,7 +124,7 @@ test.describe("Map editor area with rights @oidc", () => {
 
   test("MapEditor is disabled for basic user because there are no thematics", async ({ browser, request }) => {
     await resetWamMaps(request);
-    const page = await getPage(browser, 'test',
+    const page = await getPage(browser, 'Alice',
       Map.url("empty")
     );
     // In the new design, you cannot access the map menu if the user is a basic user
@@ -144,11 +142,9 @@ test.describe("Map editor area with rights @oidc", () => {
 
   test("Area with restricted write access : Trying to read an object", async ({ browser, request }) => {
     await resetWamMaps(request);
-    const page = await getPage(browser, 'test',
+    const page = await getPage(browser, 'Admin1',
       Map.url("empty")
     );
-    await oidcAdminTagLogin(page, false);
-
     // Add area with admin rights
     await Menu.openMapEditor(page);
     await AreaAccessRights.openAreaEditorAndAddAreaWithRights(
@@ -162,19 +158,19 @@ test.describe("Map editor area with rights @oidc", () => {
     await oidcLogout(page, false);
 
     // Second browser with member user trying to read the object
-    const page2 = await getPage(browser, 'test2',
+    const page2 = await getPage(browser, 'Member1',
       Map.url("empty")
     );
-    await oidcMemberTagLogin(page2);
-
 
     // Expect user in other page to not have the right
     // to read the object
+    await page.pause();
     await EntityEditor.moveAndClick(
       page2,
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
+    
     await expect(page2.getByRole('button', { name: 'Open Link' })).toBeHidden();
 
     await page2.close();
