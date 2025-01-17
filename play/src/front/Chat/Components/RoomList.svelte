@@ -287,27 +287,31 @@
                         </div>
                     {/if}
 
-                    <button
-                        class="tw-group tw-relative tw-px-3 tw-m-0 tw-mb-2 tw-rounded-none tw-text-white/75 hover:tw-text-white tw-h-11 hover:tw-bg-contrast-200/10 tw-w-full tw-flex tw-space-x-2 tw-items-center tw-border tw-border-solid tw-border-x-0 tw-border-t tw-border-b-0 tw-border-white/10"
-                        on:click={toggleDisplayRooms}
-                        data-testid="roomAccordeon"
-                    >
-                        <div class="tw-flex tw-items-center tw-space-x-2 tw-grow tw-m-0 tw-p-0">
-                            <div class="tw-text-sm tw-font-bold tw-tracking-widest tw-uppercase tw-grow tw-text-left">
-                                {$LL.chat.rooms()}
-                            </div>
-                        </div>
-                        {#if $isGuest === false}
-                            <CreateRoomOrFolderOption parentID={undefined} parentName={""} folder={undefined} />
-                        {/if}
-                        <button
-                            class="tw-transition-all group-hover:tw-bg-white/10 tw-p-1 tw-rounded-lg tw-aspect-square tw-flex tw-items-center tw-justify-center tw-text-white"
+                    <div class="tw-flex tw-items-center tw-space-x-2 tw-grow tw-m-0 tw-p-0">
+                        <!-- TODO : use div instead of button to avoid focus issues try to find a better solution -->
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <div
+                            class="tw-group tw-relative tw-px-3 tw-m-0 tw-mb-2 tw-rounded-none tw-text-white/75 hover:tw-text-white tw-h-11 hover:tw-bg-contrast-200/10 tw-w-full tw-flex tw-space-x-2 tw-items-center tw-border tw-border-solid tw-border-x-0 tw-border-t tw-border-b-0 tw-border-white/10"
+                            on:click={toggleDisplayRooms}
+                            data-testid="roomAccordeon"
                         >
-                            <IconChevronUp
-                                class={`tw-transform tw-transition ${!displayRooms ? "" : "tw-rotate-180"}`}
-                            />
-                        </button>
-                    </button>
+                            <div class="tw-flex tw-items-center tw-space-x-2 tw-grow tw-m-0 tw-p-0">
+                                <div
+                                    class="tw-text-sm tw-font-bold tw-tracking-widest tw-uppercase tw-grow tw-text-left"
+                                >
+                                    {$LL.chat.rooms()}
+                                </div>
+                            </div>
+                            <CreateRoomOrFolderOption parentID={undefined} parentName={""} folder={undefined} />
+                            <button
+                                class="tw-transition-all group-hover:tw-bg-white/10 tw-p-1 tw-rounded-lg tw-aspect-square tw-flex tw-items-center tw-justify-center tw-text-white"
+                            >
+                                <IconChevronUp
+                                    class={`tw-transform tw-transition ${!displayRooms ? "" : "tw-rotate-180"}`}
+                                />
+                            </button>
+                        </div>
+                    </div>
                     {#if displayRooms}
                         <div class="tw-px-2 tw-pb-2">
                             <ShowMore items={filteredRooms} maxNumber={8} idKey="id" let:item={room}>
