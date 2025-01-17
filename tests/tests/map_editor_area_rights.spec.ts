@@ -3,7 +3,6 @@ import Map from "./utils/map";
 import { resetWamMaps } from "./utils/map-editor/uploader";
 import MapEditor from "./utils/mapeditor";
 import Menu from "./utils/menu";
-import { login } from "./utils/roles";
 import { map_storage_url } from "./utils/urls";
 import {
   oidcAdminTagLogin,
@@ -13,6 +12,7 @@ import {
 import EntityEditor from "./utils/map-editor/entityEditor";
 import AreaAccessRights from "./utils/areaAccessRights";
 import { evaluateScript } from "./utils/scripting";
+import { getPage } from "./utils/auth";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -44,13 +44,11 @@ test.describe("Map editor area with rights @oidc", () => {
     }
   );
 
-  test("Successfully set Area with right access", async ({ page, request }, {
-    project,
-  }) => {
+  test("Successfully set Area with right access", async ({ browser, request }) => {
     await resetWamMaps(request);
-
-    await page.goto(Map.url("empty"));
-    await login(page, "test", 2, "en-US");
+    const page = await getPage(browser, 'test',
+      Map.url("empty")
+    );
     await oidcAdminTagLogin(page, false);
 
     await Menu.openMapEditor(page);
@@ -74,16 +72,15 @@ test.describe("Map editor area with rights @oidc", () => {
     await expect(
       page.getByText("Sorry, you don't have access to this area")
     ).toBeAttached();
+    await page.close();
+    await page.context().close();
   });
 
-  test("Access restricted area with right click to move", async ({
-    page,
-    request,
-  }, { project }) => {
+  test("Access restricted area with right click to move", async ({ browser, request }) => {
     await resetWamMaps(request);
-
-    await page.goto(Map.url("empty"));
-    await login(page, "test", 2, "en-US");
+    const page = await getPage(browser, 'test',
+      Map.url("empty")
+    );
     await oidcAdminTagLogin(page, false);
 
     await Menu.openMapEditor(page);
@@ -123,17 +120,15 @@ test.describe("Map editor area with rights @oidc", () => {
     );
 
     expect(userCurrentPosition).toEqual(actualPositionAfterRightClickToMove);
+    await page.close();
+    await page.context().close();
   });
 
-  test("MapEditor is disabled for basic user because there are no thematics", async ({
-    page,
-    request,
-  }, { project }) => {
+  test("MapEditor is disabled for basic user because there are no thematics", async ({ browser, request }) => {
     await resetWamMaps(request);
-
-    await page.goto(Map.url("empty"));
-    await login(page, "test", 2, "en-US");
-
+    const page = await getPage(browser, 'test',
+      Map.url("empty")
+    );
     // In the new design, you cannot access the map menu if the user is a basic user
     await expect(page.getByTestId('map-menu')).toBeHidden();
     /*await Menu.openMapEditor(page);
@@ -143,17 +138,15 @@ test.describe("Map editor area with rights @oidc", () => {
       "section.side-bar-container .side-bar .tool-button button#EntityEditor"
     );
     await expect(entityEditorButton).not.toBeAttached();*/
+    await page.close();
+    await page.context().close();
   });
 
-  test("Area with restricted write access : Trying to read an object", async ({
-    page,
-    browser,
-    request,
-  }, { project }) => {
+  test("Area with restricted write access : Trying to read an object", async ({ browser, request }) => {
     await resetWamMaps(request);
-
-    await page.goto(Map.url("empty"));
-    await login(page, "test", 2, "en-US");
+    const page = await getPage(browser, 'test',
+      Map.url("empty")
+    );
     await oidcAdminTagLogin(page, false);
 
     // Add area with admin rights
@@ -169,10 +162,9 @@ test.describe("Map editor area with rights @oidc", () => {
     await oidcLogout(page, false);
 
     // Second browser with member user trying to read the object
-    const newBrowser = await browser.newContext();
-    const page2 = await newBrowser.newPage();
-    await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5, "en-US");
+    const page2 = await getPage(browser, 'test2',
+      Map.url("empty")
+    );
     await oidcMemberTagLogin(page2);
 
 
@@ -186,18 +178,15 @@ test.describe("Map editor area with rights @oidc", () => {
     await expect(page2.getByRole('button', { name: 'Open Link' })).toBeHidden();
 
     await page2.close();
-    await newBrowser.close();
+    await page.close();
+    await page2.context().close();
+    await page.context().close();
   });
 
-  test("Area with restricted write access : Trying to read an object with read/write access", async ({
-    page,
-    browser,
-    request,
-  }, { project }) => {
+  test("Area with restricted write access : Trying to read an object with read/write access",
+     async ({ browser, request,}) => {
     await resetWamMaps(request);
-
-    await page.goto(Map.url("empty"));
-    await login(page, "test", 3, "en-US");
+    const page = await getPage(browser, 'test', Map.url("empty"))
     await oidcAdminTagLogin(page, false);
 
     // Add area with admin rights
@@ -213,10 +202,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await oidcLogout(page, false);
 
     // Second browser with member user trying to read the object
-    const newBrowser = await browser.newContext();
-    const page2 = await newBrowser.newPage();
-    await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5, "en-US");
+    const page2 = await getPage(browser, 'test2', Map.url("empty"))
     await oidcMemberTagLogin(page2);
 
     // Expect user in other page to not have the right
@@ -229,18 +215,14 @@ test.describe("Map editor area with rights @oidc", () => {
     await expect(page2.getByRole('button', { name: 'Open Link' })).toBeVisible();
 
     await page2.close();
-    await newBrowser.close();
+    await page2.context().close();
+    await page.close();
+    await page.context().close();
   });
 
-  test("Area with restricted write access : Trying to add an object", async ({
-    page,
-    browser,
-    request,
-  }, { project }) => {
+  test("Area with restricted write access : Trying to add an object", async ({ browser, request }) => {
     await resetWamMaps(request);
-
-    await page.goto(Map.url("empty"));
-    await login(page, "test", 3, "en-US");
+    const page = await getPage(browser, 'test', Map.url('empty'));
     await oidcAdminTagLogin(page, false);
 
     // Add area with admin rights
@@ -254,10 +236,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await oidcLogout(page, false);
 
     // Second browser with member user trying to read the object
-    const newBrowser = await browser.newContext();
-    const page2 = await newBrowser.newPage();
-    await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5, "en-US");
+    const page2 = await getPage(browser, 'test2', Map.url("empty"))
     await oidcMemberTagLogin(page2);
 
     // From browser 2
@@ -285,18 +264,15 @@ test.describe("Map editor area with rights @oidc", () => {
       )
     ).not.toBeAttached();
     await page2.close();
-    await newBrowser.close();
+    await page2.context().close();
+    await page.close();
+    await page.context().close();
   });
 
-  test("Area with restricted write access : Trying to add an object with write access", async ({
-    page,
-    browser,
-    request,
-  }, { project }) => {
+  test("Area with restricted write access : Trying to add an object with write access", 
+    async ({ browser, request }) => {
     await resetWamMaps(request);
-
-    await page.goto(Map.url("empty"));
-    await login(page, "test", 3, "en-US");
+    const page = await getPage(browser, 'test', Map.url("empty"));
     await oidcAdminTagLogin(page, false);
 
     // Add area with admin rights
@@ -310,10 +286,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await oidcLogout(page, false);
 
     // Second browser with member user trying to read the object
-    const newBrowser = await browser.newContext();
-    const page2 = await newBrowser.newPage();
-    await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5, "en-US");
+    const page2 = await getPage(browser, 'test2', Map.url("empty"));
     await oidcMemberTagLogin(page2);
 
     // From browser 2
@@ -341,18 +314,14 @@ test.describe("Map editor area with rights @oidc", () => {
       )
     ).toBeAttached();
     await page2.close();
-    await newBrowser.close();
+    await page2.context().close();
+    await page.close();
+    await page.context().close();
   });
 
-  test("Area with restricted write access : Trying to remove an object", async ({
-    page,
-    browser,
-    request,
-  }, { project }) => {
+  test("Area with restricted write access : Trying to remove an object", async ({ browser, request }) => {
     await resetWamMaps(request);
-
-    await page.goto(Map.url("empty"));
-    await login(page, "test", 3, "en-US");
+    const page = await getPage(browser, 'test', Map.url("empty"));
     await oidcAdminTagLogin(page, false);
 
     // Add area with admin rights
@@ -368,10 +337,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await oidcLogout(page, false);
 
     // Second browser with member user trying to read the object
-    const newBrowser = await browser.newContext();
-    const page2 = await newBrowser.newPage();
-    await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5, "en-US");
+    const page2 = await getPage(browser, 'test2', Map.url("empty"));
     await oidcMemberTagLogin(page2);
 
     // From browser 2
@@ -395,18 +361,15 @@ test.describe("Map editor area with rights @oidc", () => {
     );
     await expect(page2.getByRole('button', { name: 'Open Link' })).toBeVisible();
     await page2.close();
-    await newBrowser.close();
+    await page2.context().close();
+    await page.close();
+    await page.context().close();
   });
 
-  test("Area with restricted write access : Trying to remove an object with write access", async ({
-    page,
-    browser,
-    request,
-  }, { project }) => {
+  test("Area with restricted write access : Trying to remove an object with write access", 
+    async ({ browser, request }) => {
     await resetWamMaps(request);
-
-    await page.goto(Map.url("empty"));
-    await login(page, "test", 3, "en-US");
+    const page = await getPage(browser, 'test', Map.url("empty"))
     await oidcAdminTagLogin(page, false);
 
     // Add area with admin rights
@@ -422,10 +385,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await oidcLogout(page, false);
 
     // Second browser with member user trying to read the object
-    const newBrowser = await browser.newContext();
-    const page2 = await newBrowser.newPage();
-    await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5, "en-US");
+    const page2 = await getPage(browser, 'test2', Map.url("empty"));
     await oidcMemberTagLogin(page2);
 
     // From browser 2
@@ -450,18 +410,15 @@ test.describe("Map editor area with rights @oidc", () => {
 
     await expect(page2.getByRole('button', { name: 'Open Link' })).toBeHidden();
     await page2.close();
-    await newBrowser.close();
+    await page2.context().close();
+    await page.close();
+    await page.context().close();
   });
 
-  test("Area with restricted write access : Trying to remove an object outside the area", async ({
-    page,
-    browser,
-    request,
-  }, { project }) => {
+  test("Area with restricted write access : Trying to remove an object outside the area",
+     async ({ browser, request }) => {
     await resetWamMaps(request);
-
-    await page.goto(Map.url("empty"));
-    await login(page, "test", 3, "en-US");
+    const page = await getPage(browser, 'test', Map.url("empty"));
     await oidcAdminTagLogin(page, false);
 
     // Add area with admin rights
@@ -477,10 +434,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await oidcLogout(page, false);
 
     // Second browser with member user trying to read the object
-    const newBrowser = await browser.newContext();
-    const page2 = await newBrowser.newPage();
-    await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5, "en-US");
+    const page2 = await getPage(browser, 'test2', Map.url("empty"));
     await oidcMemberTagLogin(page2);
 
     // From browser 2
@@ -505,18 +459,14 @@ test.describe("Map editor area with rights @oidc", () => {
 
     await expect(page2.getByRole('button', { name: 'Open Link' })).toBeVisible();
     await page2.close();
-    await newBrowser.close();
+    await page2.context().close();
+    await page.close();
+    await page.context().close()
   });
 
-  test("Claim personal area from allowed user", async ({
-    page,
-    browser,
-    request,
-  }, { project }) => {
+  test("Claim personal area from allowed user", async ({ browser, request }) => {
     await resetWamMaps(request);
-
-    await page.goto(Map.url("empty"));
-    await login(page, "test", 3, "en-US");
+    const page = await getPage(browser, 'test', Map.url("empty"));
     await oidcAdminTagLogin(page, false);
 
     await Menu.openMapEditor(page);
@@ -530,10 +480,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await page.close();
 
     // Second browser with member user trying to read the object
-    const newBrowser = await browser.newContext();
-    const page2 = await newBrowser.newPage();
-    await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5, "en-US");
+    const page2 = await getPage(browser, 'test2', Map.url("empty"));
     await oidcMemberTagLogin(page2);
 
     // Move to area and claim it
@@ -564,18 +511,13 @@ test.describe("Map editor area with rights @oidc", () => {
       )
     ).toBeAttached();
     await page2.close();
-    await newBrowser.close();
+    await page2.context().close();
+    await page.context().close();
   });
 
-  test("Claim personal area from unauthorized user", async ({
-    page,
-    browser,
-    request,
-  }, { project }) => {
+  test("Claim personal area from unauthorized user", async ({ browser, request }) => {
     await resetWamMaps(request);
-
-    await page.goto(Map.url("empty"));
-    await login(page, "test", 3, "en-US");
+    const page = await getPage(browser, 'test', Map.url("empty"));
     await oidcAdminTagLogin(page, false);
 
     await Menu.openMapEditor(page);
@@ -589,10 +531,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await page.close();
 
     // Second browser with member user trying to read the object
-    const newBrowser = await browser.newContext();
-    const page2 = await newBrowser.newPage();
-    await page2.goto(Map.url("empty"));
-    await login(page2, "test2", 5, "en-US");
+    const page2 = await getPage(browser, 'test2', Map.url("empty"));
 
     // Move to area and claim it
     await Map.teleportToPosition(
@@ -604,18 +543,14 @@ test.describe("Map editor area with rights @oidc", () => {
       page2.getByTestId("claimPersonalAreaButton")
     ).not.toBeAttached();
     await page2.close();
-    await newBrowser.close();
+    await page.close();
+    await page2.context().close();
+    await page.context().close()  
   });
 
-  test("Claim multi personal area", async ({
-    page,
-    browser,
-    request,
-  }, { project }) => {
+  test("Claim multi personal area", async ({ browser, request }) => {
     await resetWamMaps(request);
-
-    await page.goto(Map.url("empty"));
-    await login(page, "test", 3, "en-US");
+    const page = await getPage(browser, 'test', Map.url("empty"));
     await oidcAdminTagLogin(page, false);
 
     // Add a first area
@@ -647,5 +582,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await expect(
       page.getByTestId("claimPersonalAreaButton")
     ).not.toBeAttached();
+    await page.close();
+    await page.context().close();
   });
 });
