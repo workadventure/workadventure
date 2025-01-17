@@ -10,6 +10,7 @@ function isJsonCreate(name: string): boolean {
     if (!fs.existsSync(file)) {
         return false;
     }
+    // broken
     const date: Date = new Date();
     const timeCreate: number = date.getMilliseconds() - fs.statSync(file).birthtime.getMilliseconds();
     return timeCreate <= 7200000; // 7 200 000 ms = 2 hours

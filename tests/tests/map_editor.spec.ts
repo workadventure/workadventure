@@ -59,8 +59,7 @@ test.describe("Map editor @oidc", () => {
         await login(page2, "test2", 5, "en-US");
         await oidcAdminTagLogin(page2, false);
 
-    // await page.pause();
-    // await Menu.openMenuAdmin(page);
+        // await Menu.openMenuAdmin(page);
         await Menu.openMapEditor(page);
         await MapEditor.openConfigureMyRoom(page);
         await ConfigureMyRoom.selectMegaphoneItemInCMR(page);
