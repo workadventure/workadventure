@@ -79,10 +79,9 @@ export class MatrixChatMessage implements ChatMessage {
         if (this.event.isDecryptionFailure()) {
             return { body: "🔐 Failed to decrypt", url: undefined };
         }
-        if (relation) {
-            if (relation["m.replace"]) {
-                return { body: relation["m.replace"].content?.["m.new_content"].body, url: undefined };
-            }
+
+        if (relation && relation["m.replace"] && relation["m.replace"].content?.["m.new_content"]?.body) {
+            return { body: relation["m.replace"].content?.["m.new_content"].body, url: undefined };
         }
 
         const content = this.event.getOriginalContent();
