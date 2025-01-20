@@ -10,9 +10,11 @@ function isJsonCreate(name: string): boolean {
     if (!fs.existsSync(file)) {
         return false;
     }
-    const date: Date = new Date();
-    const timeCreate: number = date.getTime() - fs.statSync(file).birthtime.getTime();
-    return timeCreate <= 7200000; // 7 200 000 ms = 2 hours
+
+    const stats = fs.statSync(file);
+    const timeCreation: number = stats.mtime.getTime();
+    const twoHoursAgo: number = new Date().getTime() - 2 * 60 * 60 * 1000; // 2 hours in ms
+    return timeCreation > twoHoursAgo;
 }
 
 async function createUser(name: "Alice" | "Bob" | "Admin1" | "Admin2" | "Member1" | "UserMatrix" | "UserLogin1",
@@ -21,11 +23,10 @@ async function createUser(name: "Alice" | "Bob" | "Admin1" | "Admin2" | "Member1
     if(isJsonCreate(name)) {
         return;
     }
-
     const context: BrowserContext = await browser.newContext();
     const page: Page = await context.newPage();
-    
     await page.goto(url);
+
     // login
     await page.fill('input[name="loginSceneName"]', name);
     await page.click('button.loginSceneFormSubmit');
@@ -36,12 +37,10 @@ async function createUser(name: "Alice" | "Bob" | "Admin1" | "Admin2" | "Member1
     await page.click('button.selectCharacterSceneFormSubmit');
 
     // selectMedia
-
     await expect(page.locator('h2', { hasText: "Turn on your camera and microphone" })).toBeVisible();
-
     await page.click("text=Save");
-
     await expect(page.locator("div#main-layout").nth(0)).toBeVisible();
+
     switch (name) {
         case "Admin1":
         case "Admin2":

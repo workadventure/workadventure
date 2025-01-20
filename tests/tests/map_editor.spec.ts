@@ -370,13 +370,9 @@ test.describe("Map editor @oidc", () => {
         await page.context().close();
     });
 
-    test("Successfully set Klaxoon's application entity in the map editor @local", async ({page, request}) => {
-        // TODO make it faster
+    test("Successfully set Klaxoon's application entity in the map editor @local", async ({browser, request}) => {
         await resetWamMaps(request);
-
-        await page.goto(Map.url("empty"));
-        await login(page, "test", 3, "en-US");
-        await oidcAdminTagLogin(page, false);
+        const page = await getPage(browser, "Admin1", Map.url("empty"));
 
         // open map editor
         await Menu.openMapEditor(page);
@@ -405,6 +401,9 @@ test.describe("Map editor @oidc", () => {
         // check if the popup with application is opened and can be closed
         await expect(page.getByRole('button', { name: 'Open Klaxoon' })).toBeVisible();
         await page.getByRole('button', { name: 'Close' }).click();
+
+        await page.close();
+        await page.context().close();
     });
 
     // Create test for Google picker docs
@@ -413,12 +412,9 @@ test.describe("Map editor @oidc", () => {
     // Create test fir Google picker presentation
     // Create test for Google picker drive
 
-    test("Successfully upload a custom entity", async ({page, request}) => {
+    test("Successfully upload a custom entity", async ({browser, request}) => {
         await resetWamMaps(request);
-
-        await page.goto(Map.url("empty"));
-        await login(page, "test", 3, "en-US");
-        await oidcAdminTagLogin(page, false);
+        const page = await getPage(browser, "Admin1", Map.url("empty"));
 
         // open map editor
         await Menu.openMapEditor(page);
@@ -431,23 +427,20 @@ test.describe("Map editor @oidc", () => {
         const uploadedEntityLocator = await EntityEditor.searchEntity(page, EntityEditor.getTestAssetName());
         const uploadedEntityElement = await uploadedEntityLocator.innerHTML();
         expect(uploadedEntityElement).toContain(EntityEditor.getTestAssetName());
+
+        await page.close();
+        await page.context().close();
     });
 
-    test("Successfully upload and use custom entity in the map", async ({page, browser, request}) => {
+    test("Successfully upload and use custom entity in the map", async ({ browser, request}) => {
         await resetWamMaps(request);
 
         // First browser + moved woka
-        await page.goto(Map.url("empty"));
-        await login(page, "test", 3, "en-US");
-        await oidcAdminTagLogin(page, false);
+        const page = await getPage(browser, "Admin1", Map.url("empty"));
         await Map.teleportToPosition(page, 0, 0);
 
         // Second browser
-        const newBrowser = await browser.newContext();
-        const page2 = await newBrowser.newPage();
-        await page2.goto(Map.url("empty"));
-        await login(page2, "test2", 3, "en-US");
-        await oidcAdminTagLogin(page2, false);
+        const page2 = await getPage(browser, "Admin2", Map.url("empty"));
 
         // open map editor
         await page.bringToFront();
@@ -481,25 +474,21 @@ test.describe("Map editor @oidc", () => {
         await expect(page2.getByRole('button', { name: 'Open Link' })).toBeVisible();
 
         await page2.close();
-        await newBrowser.close();
+        await page2.context().close();
+        await page.close();
+        await page.context().close();
     });
 
-    test("Successfully upload and edit asset name", async ({page, browser, request}) => {
+    test("Successfully upload and edit asset name", async ({ browser, request}) => {
         // Init wam file
         await resetWamMaps(request);
 
         // First browser + moved woka
-        await page.goto(Map.url("empty"));
-        await login(page, "test", 3, "en-US");
-        await oidcAdminTagLogin(page, false);
+        const page = await getPage(browser, "Admin1", Map.url("empty"));
         await Map.teleportToPosition(page, 0, 0);
 
         // Second browser
-        const newBrowser = await browser.newContext();
-        const page2 = await newBrowser.newPage();
-        await page2.goto(Map.url("empty"));
-        await login(page2, "test2", 3, "en-US");
-        await oidcAdminTagLogin(page2, false);
+        const page2 = await getPage(browser, "Admin2", Map.url("empty"));
 
         // open map editor on both pages
         await Menu.openMapEditor(page);
@@ -532,25 +521,22 @@ test.describe("Map editor @oidc", () => {
         expect(uploadedEntityElement2).toContain(newEntityName);
 
         await page2.close();
-        await newBrowser.close();
+        await page2.context().close();
+        await page.close();
+        await page.context().close();
     });
 
-    test("Successfully upload and remove custom entity", async ({page, browser, request}) => {
+    test("Successfully upload and remove custom entity", async ({ browser, request}) => {
         await resetWamMaps(request);
 
         // First browser + moved woka
-        await page.goto(Map.url("empty"));
-        await login(page, "test", 3, "en-US");
-        await oidcAdminTagLogin(page, false);
+        const page = await getPage(browser, "Admin1", Map.url("empty"));
+
 
         await Map.teleportToPosition(page, 0, 0);
 
         // Second browser
-        const newBrowser = await browser.newContext();
-        const page2 = await newBrowser.newPage();
-        await page2.goto(Map.url("empty"));
-        await login(page2, "test2", 3, "en-US");
-        await oidcAdminTagLogin(page2, false);
+        const page2 = await getPage(browser, "Admin2", Map.url("empty"));
 
         // open map editor on both pages
         await Menu.openMapEditor(page);
@@ -575,14 +561,14 @@ test.describe("Map editor @oidc", () => {
         await expect(page2.getByTestId("entity-item")).toHaveCount(0);
 
         await page2.close();
-        await newBrowser.close();
+        await page2.context().close();
+        await page.close();
+        await page.context().close();
     });
 
-    test("Successfully set searchable processus for entity and zone", async ({page, browser, request}) => {
+    test("Successfully set searchable processus for entity and zone", async ({ browser, request}) => {
         await resetWamMaps(request);
-        await page.goto(Map.url("empty"));
-        await login(page, "test", 3, "en-US");
-        await oidcAdminTagLogin(page, false);
+        const page = await getPage(browser, "Admin1", Map.url("empty"));
 
         // Open the map editor
         await Menu.openMapEditor(page);
@@ -635,24 +621,20 @@ test.describe("Map editor @oidc", () => {
         await expect(page.locator(".map-editor .sidebar .areas")).toContainText("1 areas found");
         await page.locator(".map-editor .sidebar .areas").click();
         expect(await page.locator(".map-editor .sidebar .area-items .item").count()).toBe(1);
+
+        await page.close();
+        await page.context().close();
     });
 
-    test("Successfully test global message text and sound feature", async ({page, browser, request}) => {
+    test("Successfully test global message text and sound feature", async ({ browser, request}) => {
         await resetWamMaps(request);
-        await page.goto(Map.url("empty"));
-
-        await login(page, "test", 3, "en-US");
-        await oidcAdminTagLogin(page, false);
+        const page = await getPage(browser, "Admin1", Map.url("empty"));
 
         // Move user and not create discussion with the second user
         await Map.teleportToPosition(page, 5 * 32, 5 * 32);
 
         // Second browser
-        const newBrowser = await browser.newContext();
-        const page2 = await newBrowser.newPage();
-        await page2.goto(Map.url("empty"));
-        await page2.evaluate(() => localStorage.setItem("debug", "*"));
-        await login(page2, "test2", 5, "en-US");
+        const page2 = await getPage(browser, "Bob", Map.url("empty"));
 
         // Open the map editor and configure the megaphone to have access to the global message
         await Menu.openMapEditor(page);
@@ -694,8 +676,9 @@ test.describe("Map editor @oidc", () => {
         // TODO : change to use the global message feature for user through megaphon settings rights
 
         await page2.close();
-        await newBrowser.close();
+        await page2.context().close();
         await page.close();
+        await page.context().close();
         // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
     });
 });

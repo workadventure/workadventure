@@ -6,7 +6,6 @@ import { resetWamMaps } from "./utils/map-editor/uploader";
 import MapEditor from "./utils/mapeditor";
 import Menu from "./utils/menu";
 import { map_storage_url } from "./utils/urls";
-import { oidcAdminTagLogin } from "./utils/oidc";
 import { getPage } from "./utils/auth";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
@@ -30,8 +29,7 @@ test.describe("Map editor interacting with object @oidc", () => {
   test("Success to interact with area", async ({ browser, request }) => {
     // Go to the map
     await resetWamMaps(request);
-    const page = await getPage(browser, 'Bob', Map.url("empty"));
-    await oidcAdminTagLogin(page, false);
+    const page = await getPage(browser, 'Admin1', Map.url("empty"));
 
     // Create area on the map for the test
     await Menu.openMapEditor(page);
@@ -69,8 +67,7 @@ test.describe("Map editor interacting with object @oidc", () => {
 
     // Go to the map
     await resetWamMaps(request);
-    const page = await getPage(browser, 'Bob', Map.url("empty"));
-    await oidcAdminTagLogin(page, false);
+    const page = await getPage(browser, 'Admin1', Map.url("empty"));
 
     // Create entity on the map for the test
     await Menu.openMapEditor(page);
