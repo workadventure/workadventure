@@ -49,10 +49,10 @@ async function createUser(name: "Alice" | "Bob" | "Admin1" | "Admin2" | "Member1
             await oidcAdminTagLogin(page, false);    
             break;
         case "Member1":
-            oidcMemberTagLogin(page, false);
+            await oidcMemberTagLogin(page, false);
             break;
         case "UserMatrix":
-            oidcMatrixUserLogin(page, false);    
+            await oidcMatrixUserLogin(page, false);
             break;
         default:
             break;

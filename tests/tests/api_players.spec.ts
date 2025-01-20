@@ -11,6 +11,7 @@ test.describe("API WA.players", () => {
   test("enter leave events are received", async ({ browser }, {
     project,
   }) => {
+    // FIXME update test to make easy to read
     // Skip test for mobile device
     if (project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
@@ -18,12 +19,12 @@ test.describe("API WA.players", () => {
       return;
     }
     
-    const page1 = await getPage(
+    const page1 : Page = await getPage(
       browser,
       'Alice',
       publicTestMapUrl(`tests/RemotePlayers/remote_players.json`, "api_players")
     );
-    const page2 = await getPage(
+    const page2: Page = await getPage(
       browser,
       'Bob',
       publicTestMapUrl(`tests/RemotePlayers/remote_players.json`, "api_players")
@@ -33,9 +34,9 @@ test.describe("API WA.players", () => {
     const events = getCoWebsiteIframe(page1).locator("#events");
     
     await expect(events.getByText('New user: Bob')).toBeVisible();
-
     await getCoWebsiteIframe(page1).locator("#listCurrentPlayers").click();
     const list = getCoWebsiteIframe(page1).locator("#list");
+    await page1.pause();
     await expect(list).toContainText("Bob");
 
     await getCoWebsiteIframe(page2).locator("#listCurrentPlayers").click();
