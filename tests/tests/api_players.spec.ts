@@ -2,7 +2,7 @@ import { Browser, expect, Page, test } from "@playwright/test";
 import { getCoWebsiteIframe } from "./utils/iframe";
 import { assertLogMessage, startRecordLogs } from "./utils/log";
 import { evaluateScript } from "./utils/scripting";
-import { oidcLogin, oidcLogout } from "./utils/oidc";
+import {oidcLogin, oidcLogout} from "./utils/oidc";
 import { publicTestMapUrl } from "./utils/urls";
 import { getPage } from "./utils/auth";
 
@@ -36,7 +36,6 @@ test.describe("API WA.players", () => {
     await expect(events.getByText('New user: Bob')).toBeVisible();
     await getCoWebsiteIframe(page1).locator("#listCurrentPlayers").click();
     const list = getCoWebsiteIframe(page1).locator("#list");
-    await page1.pause();
     await expect(list).toContainText("Bob");
 
     await getCoWebsiteIframe(page2).locator("#listCurrentPlayers").click();
@@ -417,8 +416,6 @@ test.describe("API WA.players", () => {
       publicTestMapUrl(`tests/E2E/empty.json`, "api_players")
     );
 
-    //await login(page, "Alice", 2, "en-US");
-
     await runPersistenceTest(page, browser);
     await page.close();
     await page.context().close();
@@ -441,12 +438,7 @@ test.describe("API WA.players", () => {
       'Alice',
       publicTestMapUrl(`tests/E2E/empty.json`, "api_players")
     );
-
-
-    //await login(page, "Alice", 2, "en-US");
-
-    await oidcLogin(page);
-
+    await oidcLogin(page); // FIXME should be remove but don't work when we load the .json
     await runPersistenceTest(page, browser, project.name === "mobilechromium");
 
     await oidcLogout(page, false);

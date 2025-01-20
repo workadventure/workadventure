@@ -2,7 +2,6 @@ import { chromium, expect, test } from "@playwright/test";
 import { evaluateScript } from "./utils/scripting";
 import { publicTestMapUrl } from "./utils/urls";
 import Menu from "./utils/menu";
-import {oidcAdminTagLogin} from "./utils/oidc";
 import { getPage } from "./utils/auth";
 
 test.describe("Iframe API", () => {
@@ -53,10 +52,9 @@ test.describe("Iframe API", () => {
       test.skip();
       return;
     }
-    const page = await getPage(browser, 'Alice',
+    const page = await getPage(browser, 'Admin1',
       publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
     );
-    await oidcAdminTagLogin(page, false);
 
     // Create a script to evaluate function to disable map editor
     await evaluateScript(page, async () => {

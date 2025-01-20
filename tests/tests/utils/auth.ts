@@ -1,6 +1,6 @@
 import fs from 'fs';
 import { Browser, BrowserContext, expect, Page } from 'playwright/test';
-import { oidcAdminTagLogin, oidcMatrixUserLogin, oidcMemberTagLogin } from './oidc';
+import { oidcAdminTagLogin, oidcMatrixUserLogin, oidcMemberTagLogin, oidcLogin } from './oidc';
 
 const characterNumber = 3;
 
@@ -10,13 +10,12 @@ function isJsonCreate(name: string): boolean {
     if (!fs.existsSync(file)) {
         return false;
     }
-    // broken
     const date: Date = new Date();
     const timeCreate: number = date.getTime() - fs.statSync(file).birthtime.getTime();
     return timeCreate <= 7200000; // 7 200 000 ms = 2 hours
 }
 
-async function createUser(name: "Alice" | "Bob" | "Admin1" | "Admin2" | "Member1" | "UserMatrix",
+async function createUser(name: "Alice" | "Bob" | "Admin1" | "Admin2" | "Member1" | "UserMatrix" | "UserLogin1",
     browser: Browser, url: string): Promise<void> {
     
     if(isJsonCreate(name)) {
@@ -54,6 +53,9 @@ async function createUser(name: "Alice" | "Bob" | "Admin1" | "Admin2" | "Member1
         case "UserMatrix":
             await oidcMatrixUserLogin(page, false);
             break;
+        case "UserLogin1":
+            await oidcLogin(page);
+            break;
         default:
             break;
     }
@@ -64,7 +66,7 @@ async function createUser(name: "Alice" | "Bob" | "Admin1" | "Admin2" | "Member1
 }
 
 export async function getPage(browser: Browser,
-    name: "Alice" | "Bob" | "Admin1" | "Admin2" | "Member1" | "UserMatrix",
+    name: "Alice" | "Bob" | "Admin1" | "Admin2" | "Member1" | "UserMatrix" | "UserLogin1",
      url:string): Promise<Page> {
     await createUser(name, browser, url);
     const newBrowser: BrowserContext = await browser.newContext({ storageState: './.auth/' + name + '.json' });

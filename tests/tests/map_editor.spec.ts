@@ -10,7 +10,6 @@ import Menu from "./utils/menu";
 import { hideNoCamera } from "./utils/roles";
 import { evaluateScript } from "./utils/scripting";
 import { map_storage_url } from "./utils/urls";
-import { oidcAdminTagLogin } from "./utils/oidc";
 import { getPage } from "./utils/auth";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
@@ -53,7 +52,7 @@ test.describe("Map editor @oidc", () => {
 
         // Second browser
         const page2 = await getPage(browser, 'Admin2', Map.url("empty"));
-        //await oidcAdminTagLogin(page2, false);
+
 
         // await Menu.openMenuAdmin(page);
         await Menu.openMapEditor(page);
@@ -117,15 +116,12 @@ test.describe("Map editor @oidc", () => {
         // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
     });
 
-    test('Successfully set "SpeakerZone" in the map editor', async ({page, browser, request}) => {
+    test('Successfully set "SpeakerZone" in the map editor', async ({ browser, request }) => {
         // skip the test, speaker zone with Jitsi is deprecated
         await resetWamMaps(request);
-
-        await page.goto(Map.url("empty"));
+        const page = await getPage(browser, "Admin1", Map.url("empty"));
         //await page.evaluate(() => { localStorage.setItem('debug', '*'); });
         //await page.reload();
-        await login(page, "Alice", 2, "en-US");
-        await oidcAdminTagLogin(page, false);
 
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
@@ -138,21 +134,17 @@ test.describe("Map editor @oidc", () => {
         await AreaEditor.setListenerZoneProperty(page, `${browser.browserType().name()}SpeakerZone`.toLowerCase());
         await Menu.closeMapEditor(page);
         await Map.teleportToPosition(page, 4 * 32, 2 * 32);
-        await expect(page.locator('#cameras-container').getByText('Alice')).toBeVisible();
+        await expect(page.locator('#cameras-container').getByText('Admin1')).toBeVisible();
 
         // Second browser
-        const newBrowser = await browser.newContext();
-        const page2 = await newBrowser.newPage();
-        await page2.goto(Map.url("empty"));
+        const page2 = await getPage(browser, "Admin2", Map.url("empty"));
 
-        await login(page2, "Bob", 5, "en-US");
-        await oidcAdminTagLogin(page2, false);
         await Map.teleportToPosition(page2, 4 * 32, 7 * 32);
 
         // The user in the listener zone can see the speaker
-        await expect(page2.locator('#cameras-container').getByText('Alice')).toBeVisible({timeout: 20_000});
+        await expect(page2.locator('#cameras-container').getByText('Admin1')).toBeVisible({timeout: 20_000});
         // The speaker cannot see the listener
-        await expect(page.locator('#cameras-container').getByText('Bob')).toBeHidden({timeout: 20_000});
+        await expect(page.locator('#cameras-container').getByText('Admin2')).toBeHidden({timeout: 20_000});
 
         // Now, let's move player 2 to the speaker zone
         await Map.walkToPosition(page2, 4 * 32, 2 * 32);
@@ -160,19 +152,19 @@ test.describe("Map editor @oidc", () => {
         //await Map.teleportToPosition(page2, 4*32, 2*32);
 
         // The first speaker (player 1) can now see player2
-        await expect(page.locator('#cameras-container').getByText('Bob')).toBeVisible({timeout: 20_000});
+        await expect(page.locator('#cameras-container').getByText('Admin2')).toBeVisible({timeout: 20_000});
         // And the opposite is still true (player 2 can see player 1)
-        await expect(page2.locator('#cameras-container').getByText('Alice')).toBeVisible({timeout: 20_000});
+        await expect(page2.locator('#cameras-container').getByText('Admin1')).toBeVisible({timeout: 20_000});
 
         await page2.close();
-        await newBrowser.close();
+        await page2.context().close();
+        await page.close();
+        await page.context().close();
     });
 
-    test("Successfully set start area in the map editor", async ({page, request}) => {
+    test("Successfully set start area in the map editor", async ({browser, request}) => {
         await resetWamMaps(request);
-        await page.goto(Map.url("start"));
-        await login(page, "test", 3, "en-US");
-        await oidcAdminTagLogin(page, false);
+        const page = await getPage(browser, "Admin1", Map.url("empty"));
 
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
@@ -180,14 +172,13 @@ test.describe("Map editor @oidc", () => {
         await AreaEditor.setAreaName(page, "MyStartZone");
         await AreaEditor.addProperty(page, "Start area");
         await Menu.closeMapEditor(page);
+        await page.close();
+        await page.context().close();
     });
 
-    test("Successfully set and working exit area in the map editor", async ({page, request}) => {
+    test("Successfully set and working exit area in the map editor", async ({browser, request}) => {
         await resetWamMaps(request);
-
-        await page.goto(Map.url("exit"));
-        await login(page, "test", 3, "en-US");
-        await oidcAdminTagLogin(page, false);
+        const page = await getPage(browser, "Admin1", Map.url("empty"));
 
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
@@ -212,15 +203,14 @@ test.describe("Map editor @oidc", () => {
             }
             throw new Error(`Player is not at the correct position : ${position.x} ${position.y}`);
         });
+        await page.close();
+        await page.context().close();
     });
 
     // Test to set Klaxoon application in the area with the map editor
-    test("Successfully set Klaxoon's application in the area in the map editor", async ({page, browser, request}) => {
+    test("Successfully set Klaxoon's application in the area in the map editor", async ({ browser, request}) => {
         await resetWamMaps(request);
-
-        await page.goto(Map.url("empty"));
-        await login(page, "test", 3, "en-US");
-        await oidcAdminTagLogin(page, false);
+        const page = await getPage(browser, "Admin1", Map.url("empty"));
 
         //await Menu.openMapEditor(page);
         await Menu.openMapEditor(page);
@@ -248,14 +238,13 @@ test.describe("Map editor @oidc", () => {
         await popupPromise;
 
         // TODO make same test with object editor
+        await page.close();
+        await page.context().close();
     });
 
-    test("Successfully set GoogleWorkspace's applications in the area in the map editor", async ({page, request}) => {
+    test("Successfully set GoogleWorkspace's applications in the area in the map editor", async ({browser, request}) => {
         await resetWamMaps(request);
-
-        await page.goto(Map.url("empty"));
-        await login(page, "test", 3, "en-US");
-        await oidcAdminTagLogin(page, false);
+        const page = await getPage(browser, "Admin1", Map.url("empty"));
 
         //await Menu.openMapEditor(page);
         await Menu.openMapEditor(page);
@@ -304,21 +293,21 @@ test.describe("Map editor @oidc", () => {
         // check if the iframe was opened and button thumbnail is visible
         await page.getByTestId('tab1').getByText('Docs', { exact: true }).click();
         await page.getByTestId('tab2').getByText('Docs', { exact: true }).click();
-        await page.locator('#cowebsites-container').getByRole('button').click();
+        await page.locator('.flex-0 > .w-10').click();
         await page.getByTestId('tab2').getByText('Docs', { exact: true }).click();
         await page.getByTestId('tab3').getByText('Docs', { exact: true }).click();
-        await page.locator('#cowebsites-container').getByRole('button').nth(1).click();
+        await page.locator('div:nth-child(3) > .w-10').click();
         await page.getByText('Drive', { exact: true }).click();
-        await page.locator('#cowebsites-container').getByRole('button').nth(1).click();
+        await page.locator('div:nth-child(3) > .w-10').click();
         await page.getByText('Drive', { exact: true }).click();
+
+        await page.close();
+        await page.context().close();
     });
 
-    test("Successfully set GoogleWorkspace's application entity in the map editor", async ({page, request}) => {
+    test("Successfully set GoogleWorkspace's application entity in the map editor", async ({browser, request}) => {
         await resetWamMaps(request);
-
-        await page.goto(Map.url("empty"));
-        await login(page, "test", 3, "en-US");
-        await oidcAdminTagLogin(page, false);
+        const page = await getPage(browser, "Admin1", Map.url("empty"));
 
         // open map editor
         await Menu.openMapEditor(page);
@@ -376,9 +365,13 @@ test.describe("Map editor @oidc", () => {
         await expect(page.getByRole('button', { name: 'Open Google Sheets' })).toBeVisible();
         await expect(page.getByRole('button', { name: 'Open Google Docs' })).toBeVisible();
         await page.getByRole('button', { name: 'Close' }).click();
+
+        await page.close();
+        await page.context().close();
     });
 
     test("Successfully set Klaxoon's application entity in the map editor @local", async ({page, request}) => {
+        // TODO make it faster
         await resetWamMaps(request);
 
         await page.goto(Map.url("empty"));
