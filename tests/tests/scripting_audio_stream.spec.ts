@@ -1,12 +1,11 @@
 import {chromium, expect, test} from "@playwright/test";
 import { evaluateScript } from "./utils/scripting";
-import { login } from "./utils/roles";
 import Map from "./utils/map";
 import {publicTestMapUrl} from "./utils/urls";
+import { getPage} from "./utils/auth";
 
 test.describe("Scripting audio streams", () => {
   test("can play and listen to sounds", async ({
-    page,
     browser,
   }, { project }) => {
     // This test runs only on Chrome
@@ -17,21 +16,11 @@ test.describe("Scripting audio streams", () => {
       test.skip();
       return;
     }
-
-    await page.goto(
-        publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream")
-    );
-    await login(page, "bob", 3, "us-US");
-
+    const page = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"));
     await Map.teleportToPosition(page, 32, 32);
 
     // Open new page for alice
-    const newBrowser = await browser.newContext();
-    const alice = await newBrowser.newPage();
-    await alice.goto(
-        publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream")
-    );
-    await login(alice, "alice", 4, "us-US");
+    const alice = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"));
 
     // Move alice to the same position as bob
     await Map.teleportToPosition(alice, 32, 32);
@@ -82,6 +71,8 @@ test.describe("Scripting audio streams", () => {
     await expect.poll(() => evaluateScript(page, () => window.streamInterrupted)).toBe(true);
 
     await alice.close();
-    await newBrowser.close();
+    await alice.context().close();
+    await page.close();
+    await page.context().close();
   });
 });
