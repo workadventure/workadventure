@@ -82,7 +82,7 @@
             </li>
         </ul>
     </div>
-    <div class="content">
+    <div class="content space-y-6 space   ">
         {#if $mapEditorWamSettingsEditorToolCurrentMenuItemStore !== undefined}
             <svelte:component this={getCurrentComponent()} />
         {/if}

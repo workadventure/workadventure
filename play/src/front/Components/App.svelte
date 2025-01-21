@@ -259,7 +259,7 @@
 </script>
 
 <div
-    class="h-screen w-screen flex landscape:flex-row portrait:flex-col-reverse"
+    class="h-screen w-screen flex landscape:flex-row portrait:flex-col-reverse fixed"
     id="main-container"
     bind:this={gameContainer}
 >

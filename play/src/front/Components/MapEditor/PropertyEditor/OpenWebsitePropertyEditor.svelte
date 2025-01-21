@@ -15,6 +15,7 @@
         KlaxoonService,
         YoutubeService,
     } from "@workadventure/shared-utils";
+    import InputSwitch from "../../Input/InputSwitch.svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import youtubeSvg from "../../images/applications/icon_youtube.svg";
@@ -43,6 +44,11 @@
     export let icon = "resources/icons/icon_link.png";
     export let isArea = false;
 
+    let newTab = false;
+    if (newTab) {
+        console.log("Nouvel onglet activé");
+    }
+
     type Option = {
         value: string;
         label: string;
@@ -50,6 +56,7 @@
     };
 
     let optionAdvancedActivated = shouldDisplayAdvancedOption();
+
     let embeddable = true;
     let embeddableLoading = false;
     let error = "";
@@ -681,8 +688,13 @@
         {/if}
         {#if isArea}
             <div>
-                <label class="m-0" for="trigger">{$LL.mapEditor.properties.linkProperties.trigger()}</label>
-                <select id="trigger" class="w-full m-0" bind:value={property.trigger} on:change={onTriggerValueChange}>
+                <label class="m-0 " for="trigger">{$LL.mapEditor.properties.linkProperties.trigger()}</label>
+                <select
+                    id="trigger"
+                    class="w-full m-0 px-4 py-2 text-black "
+                    bind:value={property.trigger}
+                    on:change={onTriggerValueChange}
+                >
                     <option value={undefined}>{$LL.mapEditor.properties.linkProperties.triggerShowImmediately()}</option
                     >
                     {#if !property.newTab}
@@ -761,17 +773,29 @@
             {/if}
         </div>
         {#if !property.hideButtonLabel}
-            <div class="value-input flex flex-col">
+            <div class="&ut  flex flex-col">
                 <label for="linkButton">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
                 <input id="linkButton" type="text" bind:value={property.buttonLabel} on:change={onValueChange} />
             </div>
         {/if}
-        <div class="value-switch">
-            <label for="advancedOption">{$LL.mapEditor.properties.advancedOptions()}</label>
+
+        <!-- <div class="value-switch">
             <input id="advancedOption" type="checkbox" class="input-switch" bind:checked={optionAdvancedActivated} />
-        </div>
+            <label class="inline-flex cursor-pointer">
+                <label for="advancedOption">{$LL.mapEditor.properties.advancedOptions()}</label>
+                <input id="advancedOption" class="sr-only peer" type="checkbox" value="" bind:checked={optionAdvancedActivated} />
+                <div class="input-switch input-switch-white"></div>
+            </label>
+        </div> -->
+
+        <InputSwitch
+            id="advancedOption"
+            label={$LL.mapEditor.properties.advancedOptions()}
+            bind:value={optionAdvancedActivated}
+        />
+
         <div class:active={optionAdvancedActivated} class="advanced-option px-2">
-            {#if (isArea && triggerOptionActivated && triggerOnActionChoosen) || !isArea}
+            {#if (isArea && triggerOptionActivated) || !isArea}
                 <div class="value-input flex flex-col">
                     <label for="triggerMessage">{$LL.mapEditor.properties.linkProperties.triggerMessage()}</label>
                     <input
@@ -783,17 +807,29 @@
                     />
                 </div>
             {/if}
-            <div class="value-switch">
-                <label for="newTab">{$LL.mapEditor.properties.linkProperties.newTabLabel()}</label>
-                <input
-                    id="newTab"
+
+            <!-- <div class="value-switch">
+                
+                <label class="inline-flex cursor-pointer">
+                    <label for="newTab">{$LL.mapEditor.properties.linkProperties.newTabLabel()}</label>
+                    <input 
+                    id="newTab" 
                     type="checkbox"
-                    class="input-switch"
+                    class="sr-only peer" 
                     bind:checked={property.newTab}
-                    on:change={onNewTabValueChange}
-                    disabled={property.forceNewTab}
-                />
-            </div>
+                    on:change={onNewTabValueChange} 
+                    disabled={property.forceNewTab} />
+                    <div class="input-switch input-switch-white"></div>
+            </div> -->
+
+            <InputSwitch
+                id="newTab"
+                label={$LL.mapEditor.properties.linkProperties.newTabLabel()}
+                bind:value={property.newTab}
+                onChange={onNewTabValueChange}
+                disabled={property.forceNewTab}
+            />
+
             {#if property.forceNewTab == true}
                 <div class="mb-3">
                     <span class="err text-warning-900 text-xs italic">
@@ -829,17 +865,26 @@
                         on:change={onValueChange}
                     />
                 </div>
-                <div class="value-switch">
+                <!-- <div class="value-switch">
                     <label for="closable">{$LL.mapEditor.properties.linkProperties.closable()}</label>
-                    <input
-                        id="closable"
-                        type="checkbox"
-                        class="input-switch"
-                        bind:checked={property.closable}
-                        on:change={onValueChange}
-                    />
-                </div>
-                <div class="value-switch">
+                
+                    <label class="inline-flex cursor-pointer">
+                        <input id="closable" class="sr-only peer" type="checkbox" value="" bind:checked={property.closable}
+                        on:change={onValueChange}>
+                        <div class="input-switch input-switch-white"></div>
+            
+                    </label>
+
+                </div> -->
+
+                <InputSwitch
+                    id="closable"
+                    label={$LL.mapEditor.properties.linkProperties.closable()}
+                    bind:value={property.closable}
+                    onChange={onValueChange}
+                />
+
+                <!-- <div class="value-switch">
                     <label for="allowAPI">{$LL.mapEditor.properties.linkProperties.allowAPI()}</label>
                     <input
                         id="allowAPI"
@@ -848,7 +893,21 @@
                         bind:checked={property.allowAPI}
                         on:change={onValueChange}
                     />
-                </div>
+                    <label class="inline-flex cursor-pointer">
+                        <input id="allowAPI" class="sr-only peer" type="checkbox" value=""  bind:checked={property.allowAPI}
+                        on:change={onValueChange}>
+                        <div class="input-switch input-switch-white"></div>
+            
+                    </label>
+                </div> -->
+
+                <InputSwitch
+                    id="allowAPI"
+                    label={$LL.mapEditor.properties.linkProperties.allowAPI()}
+                    bind:value={property.allowAPI}
+                    onChange={onValueChange}
+                />
+
                 {#if policy != undefined}
                     <div class="value-input flex flex-col">
                         <InputTags
