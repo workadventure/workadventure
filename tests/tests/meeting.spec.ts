@@ -6,9 +6,7 @@ import menu from "./utils/menu";
 import Mapeditor from "./utils/mapeditor";
 import AreaEditor from "./utils/map-editor/areaEditor";
 import Menu from "./utils/menu";
-import {oidcAdminTagLogin} from "./utils/oidc";
 import {getPage} from "./utils/auth";
-import {login} from "./utils/roles";
 
 test.describe('Meeting actions test', () => {
 
@@ -84,15 +82,13 @@ test.describe('Meeting actions test', () => {
         await page.context().close();
   });
 
-  test('Jitsi meeting action to mute microphone & video', async ({ page, browser, request }, { project }) => {
-    // FIXME
+  test('Jitsi meeting action to mute microphone & video', async ({ browser, request }, { project }) => {
     // Skip test for mobile device
     if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
     }
-
     if(browser.browserType() === webkit) {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
@@ -100,15 +96,11 @@ test.describe('Meeting actions test', () => {
     }
 
     await resetWamMaps(request);
-
-    await page.goto(Map.url("empty"));
-
+      const page = await getPage(browser, 'Admin1', Map.url("empty"));
     // await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
 
     //await page.evaluate(() => { localStorage.setItem('debug', '*'); });
     //await page.reload();
-    await login(page, "Alice", 3);
-    await oidcAdminTagLogin(page, false);
 
     // Open the map editor
     await menu.openMapEditor(page);
@@ -123,19 +115,16 @@ test.describe('Meeting actions test', () => {
     // Close the map editor
     await Menu.closeMapEditor(page);
 
-    // Move user "Alice" to the new area
-    await Map.walkTo(page, 'ArrowRight', 1000);
-    await Map.walkTo(page, 'ArrowUp', 2000);
+    // Move user "Admin1" to the new area
+    //await page.pause();
+    await Map.teleportToPosition(page, 2, 5);
+    //await Map.walkTo(page, 'ArrowRight', 1000);
+    //await Map.walkTo(page, 'ArrowUp', 2000);
 
     // Add a second user "Bob"
-    const newBrowser = await browser.browserType().launch();
-    const userBob = await newBrowser.newPage();
-    await userBob.goto(Map.url("empty"));
-    // Login user "Bob"
-    await login(userBob, "Bob", 3);
+    const userBob = await getPage(browser, "Bob", Map.url("empty"))
     // Move user "Bob" to the new area
-    // FIME: the teleportToPosition does not work ??
-    await Map.walkTo(userBob, 'ArrowUp', 2000);
+    await Map.teleportToPosition(userBob, 2, 5);
 
     // The user in the bubble meeting should be visible
     await page.locator('.video-media-box:has-text("Bob")').getByRole('button').first().click();
@@ -149,6 +138,7 @@ test.describe('Meeting actions test', () => {
     
     // Check if the user has been muted
     await expect(page.getByLabel('Bob is muted.')).toBeVisible();
+    await expect(userBob.getByLabel('Bob is muted.')).toBeVisible();
 
     // Click on the mute video button
     await page.locator('.video-media-box:has-text("Bob")').getByRole('button').first().click();
@@ -163,6 +153,7 @@ test.describe('Meeting actions test', () => {
 
     await page.close();
     await userBob.close();
-    await newBrowser.close();
+    await userBob.context().close();
+    await page.context().close();
   });
 });
