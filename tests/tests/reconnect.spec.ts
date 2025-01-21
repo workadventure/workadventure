@@ -39,9 +39,7 @@ test.describe("Connection", () => {
   });
 
   test("can succeed on WAM file even if WorkAdventure starts while pusher is down @slow", async ({
-                                                                                 page,
-                                                                                 context,
-                                                                               }, { project }) => {
+       page, context }, { project }) => {
     // Skip test for mobile device
     if (project.name === "mobilechromium" || project.name === "webkit") {
       //eslint-disable-next-line playwright/no-skipped-test

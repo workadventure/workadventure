@@ -52,10 +52,10 @@ test.describe("Scripting for Map editor @oidc", () => {
 
             WA.mapEditor.area.onLeave("MyZone").subscribe(() => {
                 WA.ui.displayActionMessage({
-                    message: "Goodby to MyZone",
+                    message: "Goodbye to MyZone",
                     type: "message",
                     callback: () => {
-                        console.info("Goodby to MyZone");
+                        console.info("Goodbye to MyZone");
                     }
                 });
             });
@@ -66,7 +66,7 @@ test.describe("Scripting for Map editor @oidc", () => {
         await expect(page.getByText('Welcome to MyZone')).toBeVisible();
         await page.getByRole('button', { name: 'Close' }).first().click();
         await Map.teleportToPosition(page, 9 * 32, 9 * 32);
-        await expect(page.getByText('Goodby to MyZone')).toBeVisible();
+        await expect(page.getByText('Goodbye to MyZone')).toBeVisible();
         await page.getByRole('button', { name: 'Close' }).click();
         await expect(page.locator('span.characterTriggerAction')).toBeHidden();
 
