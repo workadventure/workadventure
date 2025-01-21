@@ -36,6 +36,8 @@ test.describe('Variables', () => {
     const textField = page
       .frameLocator('#cowebsite-buffer iframe')
       .locator('#textField');
+
+    // FIXME
     await expect(textField).toHaveValue('default value');
     await textField.fill('');
     await textField.fill('new value');
