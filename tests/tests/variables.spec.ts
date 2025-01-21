@@ -11,14 +11,14 @@ import {
 } from './utils/containers';
 import {getBackDump, getPusherDump, getPusherRooms} from './utils/debug';
 import {assertLogMessage, startRecordLogs} from './utils/log';
-import { login } from './utils/roles';
 import {maps_domain, maps_test_url, play_url, publicTestMapUrl} from "./utils/urls";
+import { getPageWait200, getPage } from "./utils/auth";
 
 test.setTimeout(360000);
 test.describe('Variables', () => {
   // WARNING: Since this test restarts traefik and other components, it might fail when run against the vite dev server.
   // when running with --headed you can manually reload the page to avoid this issue.
-  test('storage works @docker', async ({ page }, { project }) => {
+  test('storage works @docker', async ({ browser }, { project }) => {
     // Skip test for mobile device
     if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
@@ -30,9 +30,8 @@ test.describe('Variables', () => {
 
     await Promise.all([rebootBack(), rebootPlay()]);
 
-    await gotoWait200(page, publicTestMapUrl("tests/Variables/shared_variables.json", "variables") + "&somerandomparam=1");
-
-    await login(page, 'Alice', 2, 'en-US');
+    const page = await getPageWait200(browser, 'Alice',
+        publicTestMapUrl("tests/Variables/shared_variables.json", "variables") +  + "&somerandomparam=1");
 
     const textField = page
       .frameLocator('#cowebsite-buffer iframe')
@@ -135,10 +134,12 @@ test.describe('Variables', () => {
     // Redis will reconnect automatically and will store the variable on reconnect!
     // So we should see the new value.
     await expect(textField).toHaveValue('value set after pusher restart');
+
+    await page.close();
+    await page.context().close();
   });
 
   test('cache doesnt prevent setting a variable in case the map changes @local', async ({
-    page,
     browser,
     request,
   }, { project }) => {
@@ -155,15 +156,9 @@ test.describe('Variables', () => {
       '../maps/tests/Variables/Cache/variables_cache_1.json',
       '../maps/tests/Variables/Cache/variables_tmp.json'
     );
+    const page = await getPage(browser, 'Alice',
+        publicTestMapUrl("tests/Variables/Cache/variables_tmp.json", "variables"));
 
-    await page.goto(
-      publicTestMapUrl("tests/Variables/Cache/variables_tmp.json", "variables")
-    );
-
-    await login(page, 'Alice', 2, 'en-US');
-
-    // Wait for page to load before copying file (it seems the await above does not 100% fills its role otherwise).
-    await timeout(5000);
 
     // Let's REPLACE the map by a map that has a new variable
     // At this point, the back server contains a cache of the old map (with no variables)
@@ -171,18 +166,10 @@ test.describe('Variables', () => {
       '../maps/tests/Variables/Cache/variables_cache_2.json',
       '../maps/tests/Variables/Cache/variables_tmp.json'
     );
-
-    const newBrowser = await browser.newContext();
-    const page2 = await newBrowser.newPage();
+    const page2 = await getPage(browser, 'Bob',
+        publicTestMapUrl("tests/Variables/Cache/variables_tmp.json", "variables"));
 
     startRecordLogs(page2);
-
-    await page2.goto(
-      publicTestMapUrl("tests/Variables/Cache/variables_tmp.json", "variables")
-    );
-
-    await login(page2, 'Chapelier', 3, 'en-US');
-
     // Let's check we successfully manage to save the variable value.
     await assertLogMessage(page2, 'SUCCESS!');
 
@@ -195,11 +182,12 @@ test.describe('Variables', () => {
     }).toBe(2);
 
     await page2.close();
-    await newBrowser.close();
+    await page2.context().close();
+    await page.close();
+    await page.context().close();
   });
 });
 
-
-function timeout(ms) {
+/*function timeout(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
-}
+}*/
