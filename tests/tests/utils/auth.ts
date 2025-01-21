@@ -1,6 +1,7 @@
 import fs from 'fs';
 import { Browser, BrowserContext, expect, Page } from 'playwright/test';
 import { oidcAdminTagLogin, oidcMatrixUserLogin, oidcMemberTagLogin, oidcLogin } from './oidc';
+import { gotoWait200} from "./containers";
 
 const characterNumber = 3;
 
@@ -72,5 +73,15 @@ export async function getPage(browser: Browser,
     const newBrowser: BrowserContext = await browser.newContext({ storageState: './.auth/' + name + '.json' });
     const page: Page = await newBrowser.newPage();
     await page.goto(url);
+    return page;
+}
+
+export async function getPageWait200(browser: Browser,
+        name: "Alice" | "Bob" | "Admin1" | "Admin2" | "Member1" | "UserMatrix" | "UserLogin1" | "John",
+        url:string): Promise<Page> {
+    await createUser(name, browser, url);
+    const newBrowser: BrowserContext = await browser.newContext({ storageState: './.auth/' + name + '.json' });
+    const page: Page = await newBrowser.newPage();
+    await gotoWait200(page, url);
     return page;
 }

@@ -1,12 +1,11 @@
 import {chromium, expect, test} from '@playwright/test';
 import { createRoomApiClient } from '../../libs/room-api-clients/room-api-client-js/src';
 import {Value} from "../../libs/room-api-clients/room-api-client-js/src/compiled_proto/google/protobuf/struct";
-import { gotoWait200 } from './utils/containers';
-import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
 import {RENDERER_MODE} from "./utils/environment";
 import {maps_domain, play_url, publicTestMapUrl} from "./utils/urls";
 import { getCoWebsiteIframe } from "./utils/iframe";
+import {getPage, getPageWait200} from "./utils/auth";
 
 const apiKey = process.env.ROOM_API_SECRET_KEY;
 
@@ -50,7 +49,7 @@ test.describe('Room API', async () => {
         }
     });
 
-    test("Save & read a variable", async ({ page, browser }, { project }) => {
+    test("Save & read a variable", async ({ browser }, { project }) => {
         // Skip test for mobile device
         if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
@@ -66,9 +65,7 @@ test.describe('Room API', async () => {
         }
 
         const newValue =  "New Value - " + Math.random().toString(36).substring(2,7);
-
-        await gotoWait200(page, roomUrl+"?phaserMode="+RENDERER_MODE);
-        await login(page, 'Alice', 2, 'en-US');
+        const page = await getPageWait200(browser, "Alice", roomUrl + "?phaserMode=" + RENDERER_MODE);
 
         const textField = getCoWebsiteIframe(page).locator("#textField");
 
@@ -88,9 +85,12 @@ test.describe('Room API', async () => {
 
         // Check reading on GRPC
         expect(Value.unwrap(value)).toEqual(newValue);
+
+        await page.close();
+        await page.context().close();
     });
 
-    test("Listen to a variable", async ({ page, browser }, { project }) => {
+    test("Listen to a variable", async ({ browser }, { project }) => {
         // Skip test for mobile device
         if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
@@ -111,9 +111,7 @@ test.describe('Room API', async () => {
             name: variableName,
             room: roomUrl,
         });
-
-        await gotoWait200(page, roomUrl+"?phaserMode="+RENDERER_MODE);
-        await login(page, 'Alice', 2, 'en-US');
+        const page = await getPageWait200(browser, "Alice", roomUrl + "?phaserMode=" + RENDERER_MODE);
 
         const textField = getCoWebsiteIframe(page).locator("#textField");
 
@@ -130,9 +128,12 @@ test.describe('Room API', async () => {
             await expect(textField).toHaveValue(newValue);
             break;
         }
+
+        await page.close();
+        await page.context().close();
     });
 
-    test("Listen to an event emitted from the game", async ({ page, browser }, { project }) => {
+    test("Listen to an event emitted from the game", async ({ browser }, { project }) => {
         // Skip test for mobile device
         if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
@@ -161,9 +162,7 @@ test.describe('Room API', async () => {
         })().then(() => {
             resolved = true;
         })
-
-        await page.goto(publicTestMapUrl("tests/E2E/empty.json", "room-api"));
-        await login(page, 'Alice', 2, 'en-US');
+        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "room-api"));
 
         await evaluateScript(page, async () => {
             await WA.onInit();
@@ -172,9 +171,12 @@ test.describe('Room API', async () => {
         });
 
         await expect.poll(() => resolved).toBeTruthy();
+
+        await page.close();
+        await page.context().close();
     });
 
-    test("Send an event from the Room API", async ({ page, browser }, { project }) => {
+    test("Send an event from the Room API", async ({ browser }, { project }) => {
         // Skip test for mobile device
         if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
@@ -188,9 +190,7 @@ test.describe('Room API', async () => {
             test.skip();
             return;
         }
-
-        await page.goto(publicTestMapUrl("tests/E2E/empty.json", "room-api"));
-        await login(page, 'Alice', 2, 'en-US');
+        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "room-api"));
 
         let gotExpectedBroadcastNotification = false;
         page.on('console', async (msg) => {
@@ -222,5 +222,8 @@ test.describe('Room API', async () => {
         });
 
         await expect.poll(() => gotExpectedBroadcastNotification).toBe(true);
+
+        await page.close();
+        await page.context().close();
     });
 });
