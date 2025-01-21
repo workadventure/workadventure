@@ -23,7 +23,7 @@ export async function login(
   await selectMedias(page);
     }
 
-export async function selectMedias(page: Page) {
+async function selectMedias(page: Page) {
   
   await expect(page.locator('h2', { hasText: "Turn on your camera and microphone" })).toBeVisible();
 

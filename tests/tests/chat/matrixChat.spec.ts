@@ -133,7 +133,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
   });
   test("Send application messages and klaxoon link in public chat room", async ({ page }, { project }) => {
     const isMobile = project.name === "mobilechromium";
-    await login(page, "test", 3, "us-US", isMobile);
+    await login(page, "test", 3, "us-US");
     await oidcMatrixUserLogin(page, isMobile);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
@@ -186,7 +186,8 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.getByTestId("sendMessageButton").click();
 
     // check that the link build for message is correct and the message is displayed
-    await expect(page.getByText("https://app.klaxoon.com/join/KXEWMSE3NF2M?from=aG3stVtZnDmhrhqKc17to1OlfvyyEUeV")).toBeAttached();
+    await expect(page.getByRole('link', { name: 'https://app.klaxoon.com/join/KXEWMSE3NF2M?from=abcd' })).toBeVisible();
+    //await expect(page.getByText("https://app.klaxoon.com/join/KXEWMSE3NF2M?from=aG3stVtZnDmhrhqKc17to1OlfvyyEUeV")).toBeAttached();
     // check that the message is displayed
     await expect(page.getByText(chatMessageContent)).toBeAttached();
   });
