@@ -73,6 +73,7 @@ export async function getPage(browser: Browser,
     const newBrowser: BrowserContext = await browser.newContext({ storageState: './.auth/' + name + '.json' });
     const page: Page = await newBrowser.newPage();
     await page.goto(url);
+    await expect(page.getByTestId('microphone-button')).toBeVisible();
     return page;
 }
 
