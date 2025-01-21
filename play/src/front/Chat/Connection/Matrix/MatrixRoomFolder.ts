@@ -1,6 +1,6 @@
-import { Room } from "matrix-js-sdk/src/matrix";
+import { Room } from "matrix-js-sdk/lib/matrix";
 import { derived, get, Readable } from "svelte/store";
-import { KnownMembership } from "matrix-js-sdk/src/types";
+import { KnownMembership } from "matrix-js-sdk/lib/types";
 import * as Sentry from "@sentry/svelte";
 import { MapStore } from "@workadventure/store-utils";
 import { Deferred } from "ts-deferred";

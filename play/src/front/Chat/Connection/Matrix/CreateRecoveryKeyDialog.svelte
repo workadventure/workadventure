@@ -1,7 +1,7 @@
 <script lang="ts">
     import { closeModal, onBeforeClose } from "svelte-modals";
-    import { CryptoApi } from "matrix-js-sdk/src/crypto-api";
-    import { GeneratedSecretStorageKey } from "matrix-js-sdk/src/crypto-api";
+    import { CryptoApi } from "matrix-js-sdk/lib/crypto-api";
+    import { GeneratedSecretStorageKey } from "matrix-js-sdk/lib/crypto-api";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import { chatInputFocusStore } from "../../../Stores/ChatStore";

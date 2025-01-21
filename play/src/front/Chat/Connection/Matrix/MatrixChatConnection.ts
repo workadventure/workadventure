@@ -17,13 +17,13 @@ import {
     SyncState,
     UserEvent,
     Visibility,
-} from "matrix-js-sdk/src/matrix";
+} from "matrix-js-sdk/lib/matrix";
 
-// import { Room, MatrixEvent, MatrixClient, User, EventType, ClientEvent } from "matrix-js-sdk/src/matrix";
+// import { Room, MatrixEvent, MatrixClient, User, EventType, ClientEvent } from "matrix-js-sdk/lib/matrix";
 
 import * as Sentry from "@sentry/svelte";
 import { MapStore } from "@workadventure/store-utils";
-import { KnownMembership } from "matrix-js-sdk/src/types";
+import { KnownMembership } from "matrix-js-sdk/lib/types";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { AvailabilityStatus } from "@workadventure/messages";
 import { canAcceptVerificationRequest, VerificationRequest } from "matrix-js-sdk/lib/crypto-api";

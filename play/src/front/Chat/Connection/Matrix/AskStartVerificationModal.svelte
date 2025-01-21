@@ -1,8 +1,8 @@
 <script lang="ts">
     import * as Sentry from "@sentry/svelte";
     import { closeModal } from "svelte-modals";
-    import { ShowSasCallbacks, VerificationRequestEvent, Verifier, VerifierEvent } from "matrix-js-sdk/src/crypto-api";
-    import { VerificationMethod } from "matrix-js-sdk/src/types";
+    import { ShowSasCallbacks, VerificationRequestEvent, Verifier, VerifierEvent } from "matrix-js-sdk/lib/crypto-api";
+    import { VerificationMethod } from "matrix-js-sdk/lib/types";
     import { Phase } from "matrix-js-sdk/lib/crypto/verification/request/VerificationRequest";
     import { Deferred } from "ts-deferred";
     import Popup from "../../../Components/Modal/Popup.svelte";

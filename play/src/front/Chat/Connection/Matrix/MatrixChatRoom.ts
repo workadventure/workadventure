@@ -18,10 +18,10 @@ import {
     RoomState,
     RoomStateEvent,
     TimelineWindow,
-} from "matrix-js-sdk/src/matrix";
+} from "matrix-js-sdk/lib/matrix";
 import * as Sentry from "@sentry/svelte";
 import { derived, get, readable, Readable, Writable, writable } from "svelte/store";
-import { MediaEventContent, MediaEventInfo,RoomMessageEventContent } from "matrix-js-sdk/src/types";
+import { MediaEventContent, MediaEventInfo,RoomMessageEventContent } from "matrix-js-sdk/lib/types";
 import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
 import {
     ChatPermissionLevel,

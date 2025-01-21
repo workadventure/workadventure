@@ -8,11 +8,11 @@ import {
     IndexedDBStore,
     MatrixClient,
     SecretStorage,
-} from "matrix-js-sdk/src/matrix";
+} from "matrix-js-sdk/lib/matrix";
 
-import { SecretStorageKeyDescriptionAesV1 } from "matrix-js-sdk/src/secret-storage";
+import { SecretStorageKeyDescriptionAesV1 } from "matrix-js-sdk/lib/secret-storage";
 import { openModal } from "svelte-modals";
-import { VerificationMethod } from "matrix-js-sdk/src/types";
+import { VerificationMethod } from "matrix-js-sdk/lib/types";
 import { LocalUser } from "../../../Connection/LocalUser";
 import AccessSecretStorageDialog from "./AccessSecretStorageDialog.svelte";
 import { matrixSecurity } from "./MatrixSecurity";
