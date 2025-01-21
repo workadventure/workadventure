@@ -1,10 +1,10 @@
 import {expect, test} from '@playwright/test';
-import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
 import {publicTestMapUrl} from "./utils/urls";
+import { getPage } from "./utils/auth"
 
 test.describe('Scripting API Events', () => {
-    test('test events', async ({ page, browser, request }, { project }) => {
+    test('test events', async ({ browser, request }, { project }) => {
         // Skip test for mobile device
         if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
@@ -12,11 +12,8 @@ test.describe('Scripting API Events', () => {
             return;
         }
 
-        // Go to 
-        await page.goto(
-            publicTestMapUrl("tests/E2E/empty.json", "scripting_events")
-        );
-        await login(page, "Alice", 2, "en-US");
+        // Go to
+        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_events"));
 
         // 1. Test that the event is triggered locally
         const eventTriggered = await evaluateScript(page, async () => {
@@ -51,15 +48,7 @@ test.describe('Scripting API Events', () => {
         expect(eventTriggered).toBeTruthy();
 
         // 2. Connect 2 users and check that the events are triggered on the other user (using broadcast events)
-        const newBrowser = await browser.newContext();
-        const page2 = await newBrowser.newPage();
-
-        await page2.goto(
-            publicTestMapUrl("tests/E2E/empty.json", "scripting_events")
-        );
-
-        await login(page2, 'Bob', 2, 'en-US');
-
+        const page2 = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_events"));
 
         let gotExpectedBroadcastNotification = false;
         let gotExpectedTargetedNotification = false;
@@ -164,5 +153,8 @@ test.describe('Scripting API Events', () => {
 
         await expect.poll(() => gotExpectedGlobalNotification).toBe(true);
         await page2.close();
+        await page2.context().close();
+        await page.close();
+        await page.context().close();
     });
 });
