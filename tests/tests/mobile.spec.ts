@@ -94,8 +94,8 @@ test.describe('Mobile', () => {
         //await page.pause();
         //await Map.walkTo(page, 'ArrowRight', 3000);
         //await page.waitForTimeout(6000);
-        await Map.walkToPosition(page, 190, 85);
-        //await page.locator('#body').press('ArrowRight', { delay: 10000 });
+        await page.waitForTimeout(200);
+        await page.locator('#body').press('ArrowRight', { delay: 10000 });
         // Now, let's move player 2 to the speaker zone
         
         // Click on the button to close the cowebsite

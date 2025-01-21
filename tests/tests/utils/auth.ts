@@ -39,6 +39,7 @@ async function createUser(name: "Alice" | "Bob" | "Admin1" | "Admin2" | "Member1
     // selectMedia
     await expect(page.locator('h2', { hasText: "Turn on your camera and microphone" })).toBeVisible();
     await page.click("text=Save");
+    await expect(page.locator('#unique-mycam img')).toBeVisible();
     await expect(page.locator("div#main-layout").nth(0)).toBeVisible();
 
     switch (name) {
