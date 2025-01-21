@@ -137,7 +137,7 @@
     "google-protobuf": "^3.21.0",
     "highlight-words": "^1.2.2",
     "highlight.js": "^11.10.0",
-    "hyper-express": "^6.17.2",
+    "hyper-express": "^6.17.3",
     "jsonwebtoken": "^9.0.0",
     "lib-jitsi-meet": "github:jitsi/lib-jitsi-meet#v1827.0.0+142c4410",
     "live-directory": "moufmouf/live-directory#hot_reload_param",

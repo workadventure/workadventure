@@ -21,6 +21,7 @@ export class VoidChatConnection implements ChatConnectionInterface {
     isEncryptionRequiredAndNotSet: Readable<boolean> = writable(false);
     isGuest: Readable<boolean> = writable(false);
     hasUnreadMessages: Readable<boolean> = writable(false);
+    folders: Readable<RoomFolder[]> = writable([]);
 
     createRoom(roomOptions: CreateRoomOptions): Promise<{ room_id: string }> {
         throw new Error("VoidChatConnection: createRoom is not implemented.");
@@ -46,8 +47,8 @@ export class VoidChatConnection implements ChatConnectionInterface {
         return Promise.resolve(undefined);
     }
 
-    destroy(): Promise<void> {
-        return Promise.resolve();
+    getRoombyID(roomId: string): ChatRoom {
+        throw new Error("Method not implemented.");
     }
 
     searchChatUsers(searchText: string): Promise<{ id: string; name: string | undefined }[] | undefined> {
@@ -58,5 +59,12 @@ export class VoidChatConnection implements ChatConnectionInterface {
         return Promise.resolve();
     }
 
+    isUserExist(userId: string): Promise<boolean> {
+        return Promise.resolve(false);
+    }
+
+    destroy(): Promise<void> {
+        return Promise.resolve();
+    }
     clearListener(): void {}
 }

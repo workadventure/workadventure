@@ -1,3 +1,4 @@
+import { v4 as uuid } from "uuid";
 import {
     type PlayerMessageType,
     type MessageReferenceEvent,
@@ -15,7 +16,7 @@ export class PlayerMessage {
     private readonly callback: () => void;
 
     constructor(playerMessageOptions: PlayerMessageOptions, private onRemove: () => void) {
-        this.uuid = window.crypto.randomUUID();
+        this.uuid = uuid();
         this.message = playerMessageOptions.message;
         this.type = playerMessageOptions.type ?? "message";
         this.callback = playerMessageOptions.callback;

@@ -131,10 +131,10 @@ const mapEditor: BaseTranslation = {
             defaultStartArea: "Default start area",
         },
         youtubeProperties: {
-            label: "Open Youtube Video",
-            description: "Open Youtube video within WorkAdventure or as a new tab.",
-            error: "Please enter a valid Youtube URL",
-            disabled: "Youtube integration is disabled.",
+            label: "Open YouTube Video",
+            description: "Open YouTube video within WorkAdventure or as a new tab.",
+            error: "Please enter a valid YouTube URL",
+            disabled: "YouTube integration is disabled.",
         },
         googleDocsProperties: {
             label: "Open Google Docs",

@@ -40,6 +40,7 @@ const chat: BaseTranslation = {
     searchChat: "Search for channel, message, etc ...",
     people: "People",
     rooms: "Rooms",
+    addNew: "Add new : ",
     invitations: "Invitations",
     availableRooms: "Available rooms",
     proximity: "Proximity Chat",
@@ -95,32 +96,39 @@ const chat: BaseTranslation = {
             klaxoon: {
                 title: "Klaxoon",
                 description: "Send embedded klaxoon in the chat!",
-                error: "Please enter a valid Klaxoon URL",
             },
             youtube: {
-                title: "Youtube",
+                title: "YouTube",
                 description: "Send embedded youtube video in the chat!",
-                error: "Please enter a valid Youtube URL",
             },
             googleDocs: {
                 title: "Google Docs",
                 description: "Send embedded google docs in the chat!",
-                error: "Please enter a valid Google Docs URL",
             },
             googleSlides: {
                 title: "Google Slides",
                 description: "Send embedded google slides in the chat!",
-                error: "Please enter a valid Google Slides URL",
             },
             googleSheets: {
                 title: "Google Sheets",
                 description: "Send embedded google sheets in the chat!",
-                error: "Please enter a valid Google Sheets URL",
             },
             eraser: {
                 title: "Eraser",
                 description: "Send embedded eraser in the chat!",
-                error: "Please enter a valid Eraser URL",
+            },
+            googleDrive: {
+                title: "Google Drive",
+                description: "Send a file from google drive in the chat!",
+            },
+            excalidraw: {
+                title: "Excalidraw",
+                description:
+                    "Send an source virtual hand-drawn style whiteboard. Collaborative and end-to-end encrypted.",
+            },
+            cards: {
+                title: "Cards",
+                description: "Send a card in the chat!",
             },
             weblink: {
                 error: "Please enter a valid URL",
@@ -289,6 +297,12 @@ const chat: BaseTranslation = {
         muteRoom: "Mute Room",
         unmuteRoom: "Unmute Room",
     },
+    folderMenu: {
+        leaveFolder: {
+            label: "Leave Folder",
+            notification: "You have left the folder",
+        },
+    },
     e2ee: {
         configure: "Configure",
         encryptionNotConfigured: "Encryption not configured",
@@ -363,7 +377,6 @@ const chat: BaseTranslation = {
         from: "from",
     },
     requiresLoginForChat: "Sign in to access the chat messages",
-    featureComingSoon: "Feature coming soon!",
     emojis: {
         Dog: "Dog",
         Cat: "Cat",
@@ -430,6 +443,11 @@ const chat: BaseTranslation = {
         Folder: "Folder",
         Pin: "Pin",
         unknownLabel: "Unknown Label",
+    },
+    fileAttachment: {
+        title: "File attachment",
+        description: "Upload and share a file",
+        featureComingSoon: "Coming soon!",
     },
 };
 

@@ -87,32 +87,38 @@ const chat: DeepPartial<Translation["chat"]> = {
             klaxoon: {
                 title: "Klaxoon",
                 description: "Klaxoon を送信します",
-                error: "有効な Klaxoon の URL を入力してください",
             },
             youtube: {
-                title: "Youtube",
-                description: "埋め込み Youtube ビデオを送信します",
-                error: "有効な Youtube の URL を入力してください",
+                title: "YouTube",
+                description: "埋め込み YouTube ビデオを送信します",
             },
             googleDocs: {
                 title: "Google ドキュメント",
                 description: "Google ドキュメントを送信します",
-                error: "有効な Google ドキュメントの URL を入力してください",
             },
             googleSlides: {
                 title: "Google スライド",
                 description: "Google スライドを送信します",
-                error: "有効な Google スライドの URL を入力してください",
             },
             googleSheets: {
                 title: "Google シート",
                 description: "Google シートを送信します",
-                error: "有効な Google シートの URL を入力してください",
             },
             eraser: {
                 title: "Eraser",
                 description: "Eraser を送信します",
-                error: "有効な Eraser の URL を入力してください",
+            },
+            googleDrive: {
+                title: "Google ドライブ",
+                description: "Google ドライブからファイルを送信します",
+            },
+            excalidraw: {
+                title: "Excalidraw",
+                description: "Excalidraw を送信します",
+            },
+            cards: {
+                title: "カード",
+                description: "カードを送信します",
             },
             weblink: {
                 error: "有効な URL を入力してください",
@@ -299,7 +305,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         content_3: " 体験を続けるにはログインしてください。",
     },
     requiresLoginForChat: "チャットメッセージにアクセスするにはログインしてください。",
-    featureComingSoon: "近日公開予定！",
+    fileAttachment: {
+        title: "ファイル添付",
+        description: "ファイルをアップロードして共有する",
+        featureComingSoon: "近日公開予定！",
+    },
 };
 
 export default chat;

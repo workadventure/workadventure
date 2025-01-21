@@ -36,6 +36,7 @@ import {
 import { isAChatRoomIsVisible, navChat, selectedChatMessageToReply, selectedRoomStore } from "../../Stores/ChatStore";
 import { gameManager } from "../../../Phaser/Game/GameManager";
 import { localUserStore } from "../../../Connection/LocalUserStore";
+import { MessageNotification, notificationManager } from "../../../Notification";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { matrixSecurity } from "./MatrixSecurity";
@@ -54,8 +55,8 @@ export class MatrixChatRoom
     readonly hasUnreadMessages: Writable<boolean>;
     avatarUrl: string | undefined;
     messages: SearchableArrayStore<string, MatrixChatMessage>;
-    myMembership: ChatRoomMembership;
     members: Writable<MatrixChatRoomMember[]>;
+    myMembership: Writable<ChatRoomMembership>;
     messageReactions: MapStore<string, MapStore<string, MatrixChatMessageReaction>>;
     hasPreviousMessage: Writable<boolean>;
     timelineWindow: TimelineWindow;
@@ -71,12 +72,21 @@ export class MatrixChatRoom
     private handleRoomRedaction = this.onRoomRedaction.bind(this);
     private handleStateEvent = this.onRoomStateEvent.bind(this);
     private handleNewMember = this.onRoomNewMember.bind(this);
+    private handleMyMembership = this.onRoomMyMembership.bind(this);
 
     constructor(
         private matrixRoom: Room,
-        private playNewMessageSound = () => {
+        private notifyNewMessage = (message: MatrixChatMessage) => {
             if (!localUserStore.getChatSounds() || get(this.areNotificationsMuted)) return;
             gameManager.getCurrentGameScene().playSound("new-message");
+            notificationManager.createNotification(
+                new MessageNotification(
+                    message.sender?.username ?? "unknown",
+                    get(message.content).body,
+                    this.id,
+                    get(this.name)
+                )
+            );
         }
     ) {
         this.id = matrixRoom.roomId;
@@ -87,7 +97,7 @@ export class MatrixChatRoom
         this.messages = new SearchableArrayStore((item: MatrixChatMessage) => item.id);
         this.messageReactions = new MapStore<string, MapStore<string, MatrixChatMessageReaction>>();
         this.sendMessage = this.sendMessage.bind(this);
-        this.myMembership = matrixRoom.getMyMembership();
+        this.myMembership = writable(matrixRoom.getMyMembership());
 
         this.members = writable([
             ...matrixRoom
@@ -140,7 +150,7 @@ export class MatrixChatRoom
             })
             .catch((error) => {
                 console.error(error);
-                Sentry.captureMessage("Failed to init Matrix room messages");
+                Sentry.captureMessage(`Failed to init Matrix room messages : ${error}`);
             });
 
         //Necessary to keep matrix event content for local event deletions after initialization
@@ -204,7 +214,12 @@ export class MatrixChatRoom
         this.matrixRoom.on(RoomEvent.Name, this.handleRoomName);
         this.matrixRoom.on(RoomEvent.Redaction, this.handleRoomRedaction);
         this.matrixRoom.on(RoomStateEvent.Events, this.handleStateEvent);
+        this.matrixRoom.on(RoomEvent.MyMembership, this.handleMyMembership);
         this.matrixRoom.on(RoomStateEvent.NewMember, this.handleNewMember);
+    }
+
+    protected onRoomMyMembership(room: Room) {
+        this.myMembership.set(room.getMyMembership());
     }
 
     private onRoomNewMember(event: MatrixEvent, state: RoomState, member: RoomMember) {
@@ -244,14 +259,6 @@ export class MatrixChatRoom
                         this.handleMessageModification(event);
                     } else {
                         this.handleNewMessage(event);
-                        const senderID = event.getSender();
-                        if (senderID !== this.matrixRoom.client.getSafeUserId() && !get(this.areNotificationsMuted)) {
-                            this.playNewMessageSound();
-                            if (!isAChatRoomIsVisible() && get(selectedRoomStore)?.id !== "proximity") {
-                                selectedRoomStore.set(this);
-                                navChat.switchToChat();
-                            }
-                        }
                     }
                 }
                 if (event.getType() === "m.reaction") {
@@ -270,7 +277,18 @@ export class MatrixChatRoom
     }
 
     private handleNewMessage(event: MatrixEvent) {
-        this.messages.push(new MatrixChatMessage(event, this.matrixRoom));
+        const message = new MatrixChatMessage(event, this.matrixRoom);
+        this.messages.push(message);
+
+        const senderID = event.getSender();
+        if (senderID !== this.matrixRoom.client.getSafeUserId() && !get(this.areNotificationsMuted)) {
+            this.notifyNewMessage(message);
+            if (!isAChatRoomIsVisible() && get(selectedRoomStore)?.id !== "proximity") {
+                selectedRoomStore.set(this);
+                navChat.switchToChat();
+            }
+        }
+
         this.addEventContentInMemory(event);
     }
 

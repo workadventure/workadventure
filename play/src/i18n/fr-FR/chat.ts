@@ -69,6 +69,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     open: "Ouvrir",
     me: "Moi",
     you: "Vous",
+    addNew: "Ajouter un nouveau : ",
     ban: {
         title: "Bannir",
         content: "Bannir l'utilisateur {userName} du monde courant. Cela peut être annulé depuis l'administration.",
@@ -96,32 +97,38 @@ const chat: DeepPartial<Translation["chat"]> = {
             klaxoon: {
                 title: "Klaxoon",
                 description: "Envoyer un klaxoon dans le chat !",
-                error: "L'URL Klaxoon n'est pas valide",
             },
             youtube: {
-                title: "Youtube",
+                title: "YouTube",
                 description: "Envoyer une vidéo youtube dans le chat !",
-                error: "L'URL Youtube n'est pas valide",
             },
             googleDocs: {
                 title: "Google Docs",
                 description: "Envoyer un document google docs dans le chat !",
-                error: "L'URL Google Docs n'est pas valide",
             },
             googleSlides: {
                 title: "Google Slides",
                 description: "Envoyer une présentation google slides dans le chat !",
-                error: "L'URL Google Slides n'est pas valide",
             },
             googleSheets: {
                 title: "Google Sheets",
                 description: "Envoyer un tableau google sheets dans le chat !",
-                error: "L'URL Google Sheets n'est pas valide",
             },
             eraser: {
                 title: "Eraser",
                 description: "Envoyer un tableau eraser dans le chat !",
-                error: "L'URL Eraser n'est pas valide",
+            },
+            googleDrive: {
+                title: "Google Drive",
+                description: "Envoyer un document google drive dans le chat !",
+            },
+            excalidraw: {
+                title: "Excalidraw",
+                description: "Envoyer un tableau excalidraw dans le chat !",
+            },
+            cards: {
+                title: "Cards",
+                description: "Envoyer un tableau cards dans le chat !",
             },
             weblink: {
                 error: "L'URL n'est pas valide",
@@ -290,6 +297,12 @@ const chat: DeepPartial<Translation["chat"]> = {
         muteRoom: "Couper les notification",
         unmuteRoom: "Activer les notifications",
     },
+    folderMenu: {
+        leaveFolder: {
+            label: "Quitter le dossier",
+            notification: "Vous avez quitté le dossier",
+        },
+    },
     e2ee: {
         configure: "Configuré",
         encryptionNotConfigured: "Chiffrement non configuré",
@@ -364,7 +377,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         from: "depuis",
     },
     requiresLoginForChat: "Identifiez-vous pour accéder aux messages du chat",
-    featureComingSoon: "Prochainement disponible !",
     emojis: {
         Dog: "Chien",
         Cat: "Chat",
@@ -431,6 +443,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         Folder: "Dossier",
         Pin: "Punaise",
         unknownLabel: "Label Inconnu",
+    },
+    fileAttachment: {
+        title: "Pièce jointe",
+        description: "Téléchargez un fichier pour le partager",
+        featureComingSoon: "Fonctionnalité à venir !",
     },
 };
 
