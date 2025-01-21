@@ -17,9 +17,13 @@ import {
     SyncState,
     UserEvent,
     Visibility,
+    Room,
+    MatrixEvent,
+    MatrixClient,
+    User,
+    EventType,
+    EventTimeline,
 } from "matrix-js-sdk/lib/matrix";
-
-// import { Room, MatrixEvent, MatrixClient, User, EventType, ClientEvent } from "matrix-js-sdk/lib/matrix";
 
 import * as Sentry from "@sentry/svelte";
 import { MapStore } from "@workadventure/store-utils";
@@ -1041,9 +1045,9 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         if (!this.client) {
             throw new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG);
         }
-        const directMap: Record<string, string[]> = this.client.getAccountData("m.direct")?.getContent() || {};
+        const directMap: Record<string, string[]> = this.client.getAccountData(EventType.Direct)?.getContent() || {};
         directMap[userId] = [...(directMap[userId] || []), roomId];
-        await this.client.setAccountData("m.direct", directMap);
+        await this.client.setAccountData(EventType.Direct, directMap);
     }
 
     async isUserExist(address: string): Promise<boolean> {

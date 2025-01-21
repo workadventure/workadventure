@@ -21,7 +21,7 @@ import {
 } from "matrix-js-sdk/lib/matrix";
 import * as Sentry from "@sentry/svelte";
 import { derived, get, readable, Readable, Writable, writable } from "svelte/store";
-import { MediaEventContent, MediaEventInfo,RoomMessageEventContent } from "matrix-js-sdk/lib/types";
+import { MediaEventContent, MediaEventInfo, RoomMessageEventContent } from "matrix-js-sdk/lib/types";
 import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
 import {
     ChatPermissionLevel,
@@ -128,7 +128,7 @@ export class MatrixChatRoom
 
         this.areNotificationsMuted.set(
             this.matrixRoom.client
-                .getAccountData("m.push_rules")
+                .getAccountData(EventType.PushRules)
                 ?.getContent()
                 .global.override.some((rule: IPushRule) => {
                     if (rule.actions.includes(PushRuleActionName.DontNotify) && rule.rule_id === this.id) {
