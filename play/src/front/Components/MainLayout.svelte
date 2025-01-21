@@ -23,7 +23,6 @@
     import { popupStore } from "../Stores/PopupStore";
     import { mapEditorAskToClaimPersonalAreaStore, mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
-    import { externalPopupSvelteComponent } from "../Stores/Utils/externalSvelteComponentStore";
     import { gameManager, GameSceneNotFoundError } from "../Phaser/Game/GameManager";
     import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
     import { highlightFullScreen } from "../Stores/ActionsCamStore";
@@ -53,6 +52,7 @@
     import AudioPlayer from "./AudioManager/AudioPlayer.svelte";
     import MediaBox from "./Video/MediaBox.svelte";
     import PresentationLayout from "./EmbedScreens/Layouts/PresentationLayout.svelte";
+    import ExternalComponents from "./ExternalModules/ExternalComponents.svelte";
     let keyboardEventIsDisable = false;
 
     const handleFocusInEvent = (event: FocusEvent) => {
@@ -216,11 +216,7 @@
                 <WarningToast />
             {/if}
 
-            {#if $externalPopupSvelteComponent.size > 0}
-                {#each [...$externalPopupSvelteComponent.entries()] as [key, value] (key)}
-                    <svelte:component this={value.componentType} extensionModule={value.extensionModule} />
-                {/each}
-            {/if}
+            <ExternalComponents zone="popup" />
 
             <MainModal />
         </section>

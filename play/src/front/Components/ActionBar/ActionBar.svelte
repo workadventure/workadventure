@@ -63,7 +63,6 @@
     } from "../../Stores/ModalStore";
     import { isActivatedStore as isCalendarActivatedStore, isCalendarVisibleStore } from "../../Stores/CalendarStore";
     import { isActivatedStore as isTodoListActivatedStore, isTodoListVisibleStore } from "../../Stores/TodoListStore";
-    import { externalActionBarSvelteComponent } from "../../Stores/Utils/externalSvelteComponentStore";
     import { ADMIN_BO_URL, ENABLE_OPENID } from "../../Enum/EnvironmentVariable";
     import Woka from "../Woka/WokaFromUserId.svelte";
     import Companion from "../Companion/Companion.svelte";
@@ -108,6 +107,8 @@
         audioManagerVisibilityStore,
     } from "../../Stores/AudioManagerStore";
     import AudioManager from "../AudioManager/AudioManager.svelte";
+    import ExternalComponents from "../ExternalModules/ExternalComponents.svelte";
+    import { externalSvelteComponentService } from "../../Stores/Utils/externalSvelteComponentService";
     import ActionBarIconButton from "./ActionBarIconButton.svelte";
     import MapSubMenu from "./MenuIcons/MapSubMenu.svelte";
     import ActionBarButtonWrapper from "./ActionBarButtonWrapper.svelte";
@@ -386,6 +387,8 @@
             return $requestedMicrophoneState ? "normal" : "forbidden";
         }
     );
+
+    const externalActionBarSvelteComponent = externalSvelteComponentService.getComponentsByZone("actionBar");
 </script>
 
 <div
@@ -678,15 +681,7 @@
 
                                             <div class="bottom-action-section flex animate">
                                                 <!-- External module action bar -->
-                                                {#if $externalActionBarSvelteComponent.size > 0}
-                                                    {#each [...$externalActionBarSvelteComponent.entries()] as [id, value] (`externalActionBarSvelteComponent-${id}`)}
-                                                        <svelte:component
-                                                            this={value.componentType}
-                                                            extensionModule={value.extensionModule}
-                                                            {isMobile}
-                                                        />
-                                                    {/each}
-                                                {/if}
+                                                <ExternalComponents zone="actionBar" {isMobile} />
                                             </div>
                                         </div>
                                     </div>
