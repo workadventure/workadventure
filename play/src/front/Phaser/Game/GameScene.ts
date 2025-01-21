@@ -164,7 +164,7 @@ import { AdminUserProvider } from "../../Chat/UserProvider/AdminUserProvider";
 import { ExtensionModuleStatusSynchronization } from "../../Rules/StatusRules/ExtensionModuleStatusSynchronization";
 import { isActivatedStore as isCalendarActiveStore, calendarEventsStore } from "../../Stores/CalendarStore";
 import { isActivatedStore as isTodoListActiveStore, todoListsStore } from "../../Stores/TodoListStore";
-import { externalSvelteComponentStore } from "../../Stores/Utils/externalSvelteComponentStore";
+import { externalSvelteComponentService } from "../../Stores/Utils/externalSvelteComponentService";
 import { ExtensionModule } from "../../ExternalModule/ExtensionModule";
 import { SpaceInterface } from "../../Space/SpaceInterface";
 import { UserProviderInterface } from "../../Chat/UserProvider/UserProviderInterface";
@@ -2002,9 +2002,14 @@ export class GameScene extends DirtyScene {
                         throw new Error("Connection is undefined");
                     }
 
+                    const authToken = localUserStore.getAuthToken();
+                    if (!authToken) {
+                        throw new Error("Auth token is undefined");
+                    }
+
                     defaultExtensionModule.init(this._room.metadata, {
                         workadventureStatusStore: availabilityStatusStore,
-                        userAccessToken: localUserStore.getAuthToken()!,
+                        userAccessToken: authToken,
                         roomId: this.roomUrl,
                         externalModuleMessage: connection.externalModuleMessage,
                         onExtensionModuleStatusChange: ExtensionModuleStatusSynchronization.onStatusChange,
@@ -2014,7 +2019,7 @@ export class GameScene extends DirtyScene {
                         closeCoWebsite,
                         getOauthRefreshToken: connection.getOauthRefreshToken.bind(this.connection),
                         adminUrl: ADMIN_URL,
-                        externalSvelteComponent: externalSvelteComponentStore,
+                        externalSvelteComponent: externalSvelteComponentService,
                         spaceRegistry: this.spaceRegistry,
                         logoutCallback: () => {
                             connectionManager.logout();

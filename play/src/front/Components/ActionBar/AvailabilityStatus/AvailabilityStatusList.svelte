@@ -3,11 +3,11 @@
     import { resetAllStatusStoreExcept } from "../../../Rules/StatusRules/statusChangerFunctions";
     import { availabilityStatusMenuStore } from "../../../Stores/AvailabilityStatusMenuStore";
     import { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
-    import { externalAvailibilitySatusSvelteComponent } from "../../../Stores/Utils/externalSvelteComponentStore";
     import CheckIcon from "../../Icons/CheckIcon.svelte";
     import { availabilityStatusStore } from "../../../Stores/MediaStore";
     import { getColorHexOfStatus, getStatusLabel } from "../../../Utils/AvailabilityStatus";
     import LL from "../../../../i18n/i18n-svelte";
+    import ExternalComponents from "../../ExternalModules/ExternalComponents.svelte";
     import { StatusInformationInterface } from "./Interfaces/AvailabilityStatusPropsInterface";
     import AvailabilityStatusCircle from "./AvailabilityStatusCircle.svelte";
 
@@ -30,11 +30,8 @@
 </script>
 
 <div>
-    {#if $externalAvailibilitySatusSvelteComponent.size > 0}
-        {#each [...$externalAvailibilitySatusSvelteComponent.entries()] as [key, value] (`${key}`)}
-            <svelte:component this={value.componentType} extensionModule={value.extensionModule} />
-        {/each}
-    {/if}
+    <ExternalComponents zone="availabilityStatus" />
+
     <div
         class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-2 relative bold"
         class:justify-end={align === "right"}

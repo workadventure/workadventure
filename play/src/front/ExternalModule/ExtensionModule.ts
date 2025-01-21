@@ -6,18 +6,16 @@ import { AreaData, AreaDataProperties } from "@workadventure/map-editor";
 import { Observable } from "rxjs";
 import { OpenCoWebsiteObject } from "../Chat/Utils";
 import { SpaceRegistryInterface } from "../Space/SpaceRegistry/SpaceRegistryInterface";
+import { ExternalComponentZones } from "../Stores/Utils/externalSvelteComponentService";
 
-export interface ExternalSvelteComponentStore {
-    addActionBarComponent: (key: string, externsionModule: ExtensionModule, componentType: ComponentType) => void;
-    removeActionBarComponent: (key: string) => void;
-    addAvailibilityStatusComponent: (
+export interface ExternalSvelteComponentServiceInterface {
+    addComponentToZone(
+        zone: ExternalComponentZones,
         key: string,
-        externsionModule: ExtensionModule,
+        extensionModule: ExtensionModule,
         componentType: ComponentType
-    ) => void;
-    removeAvailibilityStatusComponent: (key: string) => void;
-    addPopupComponent: (key: string, externsionModule: ExtensionModule, componentType: ComponentType) => void;
-    removePopupComponent: (key: string) => void;
+    ): void;
+    removeComponentFromZone(zone: ExternalComponentZones, key: string): void;
 }
 
 export interface ExtensionModuleOptions {
@@ -25,7 +23,7 @@ export interface ExtensionModuleOptions {
     userAccessToken: string;
     roomId: string;
     externalModuleMessage: Observable<ExternalModuleMessage>;
-    externalSvelteComponent: Readable<ExternalSvelteComponentStore>;
+    externalSvelteComponent: ExternalSvelteComponentServiceInterface;
     externalRestrictedMapEditorProperties?: Writable<string[]>;
     onExtensionModuleStatusChange: (workAdventureNewStatus: AvailabilityStatus) => void;
     openCoWebSite: (openCoWebsiteObject: OpenCoWebsiteObject, source: MessageEventSource | null) => { id: string };
@@ -49,7 +47,6 @@ export interface ExtensionModuleAreaProperty {
 export interface ExtensionModule {
     id: string;
     init: (roomMetadata: unknown, options: ExtensionModuleOptions) => void;
-    joinMeeting: () => void;
     destroy: () => void;
     areaMapEditor?: () => { [key: string]: ExtensionModuleAreaProperty } | undefined;
     components?: () => ComponentType[];
