@@ -1,15 +1,11 @@
 import {test} from '@playwright/test';
-import { login } from './utils/roles';
 import Map from './utils/map';
 import {publicTestMapUrl} from "./utils/urls";
+import { getPage} from "./utils/auth";
 
 test.describe('Scripting moveto function', () => {
-    test('stops at correct position', async ({ page, browser}, { project }) => {
-        await page.goto(
-            publicTestMapUrl("tests/E2E/empty.json", "scripting_follow")
-        );
-
-        await login(page, 'Alice', 2, 'en-US');
+    test('stops at correct position', async ({ browser}) => {
+        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_follow"));
 
         await Map.walkToPosition(page, 5*32, 5*32);
 
