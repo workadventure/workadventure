@@ -1,32 +1,21 @@
 import {expect, test, webkit} from '@playwright/test';
-import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
 import Map from './utils/map';
 import {publicTestMapUrl} from "./utils/urls";
+import { getPage } from './utils/auth';
 
 test.describe('Scripting follow functions', () => {
-    test('can trigger follow from script', async ({ page, browser}, { project }) => {
+    test('can trigger follow from script', async ({ browser}, { project }) => {
         // It seems WebRTC fails to start on Webkit
         if(browser.browserType() === webkit) {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
         }
-
-        await page.goto(
-            publicTestMapUrl("tests/E2E/empty.json", "scripting_follow")
-        );
-
-        await login(page, 'Alice', 2, 'en-US');
-
+        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_follow"))
         await Map.teleportToPosition(page, 32, 32);
 
-        const newBrowser = await browser.newContext();
-        const page2 = await newBrowser.newPage();
-        await page2.goto(publicTestMapUrl("tests/E2E/empty.json", "scripting_follow"));
-        await login(page2, "Bob", 3, "en-US");
-
-
+        const page2 = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_follow"));
         await Map.teleportToPosition(page2, 32, 32);
 
         await expect(page.getByText('Bob')).toBeVisible();
@@ -67,7 +56,7 @@ test.describe('Scripting follow functions', () => {
 
         expect(position.y).toBeGreaterThan(100);
 
-        // Lets move back Bob in the same position as Alice
+        // Let's move back Bob in the same position as Alice
         await Map.teleportToPosition(page2, 300, 32);
 
         // Alice triggers a follow request and bob cancels it
@@ -94,6 +83,8 @@ test.describe('Scripting follow functions', () => {
 
         await waitForUnfollowPromise;
         await page2.close();
-        await newBrowser.close();
+        await page2.context().close();
+        await page.close();
+        await page.context().close();
     });
 });
