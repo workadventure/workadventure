@@ -35,8 +35,15 @@
     import { InputTagOption } from "../../Input/InputTagOption";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
+    import InputLabel from "../../Input/InputLabel.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     import { IconAlertTriangle } from "@wa-icons";
+
+    let triggerOptions = [
+        { value: undefined, label: $LL.mapEditor.properties.linkProperties.triggerShowImmediately() },
+        { value: "onicon", label: $LL.mapEditor.properties.linkProperties.triggerOnClick() },
+        { value: "onaction", label: $LL.mapEditor.properties.linkProperties.triggerOnAction() },
+    ];
 
     export let property: OpenWebsitePropertyData;
     export let triggerOnActionChoosen: boolean = property.trigger === "onaction";
@@ -682,7 +689,7 @@
             </div>
         {/if}
 
-        {#if isArea}
+        <!-- {#if isArea}
             <div>
                 <label class="m-0 " for="trigger">{$LL.mapEditor.properties.linkProperties.trigger()}</label>
                 <select
@@ -699,12 +706,22 @@
                     <option value="onaction">{$LL.mapEditor.properties.linkProperties.triggerOnAction()}</option>
                 </select>
             </div>
+        {/if} -->
+
+        {#if isArea}
+            <InputLabel
+                id="trigger"
+                label={$LL.mapEditor.properties.linkProperties.trigger()}
+                type="select"
+                bind:value={property.trigger}
+                options={triggerOptions}
+                onChange={onTriggerValueChange}
+            />
         {/if}
 
         <div class="value-input flex flex-col">
-            <label for="tabLink">{$LL.mapEditor.properties.linkProperties.linkLabel()}</label>
             <div class="flex flex-row">
-                <input
+                <!-- <input
                     id="tabLink"
                     type="url"
                     bind:this={linkElement}
@@ -715,7 +732,19 @@
                     on:blur={() => checkWebsiteProperty()}
                     on:click={onClickInputHandler}
                     disabled={embeddableLoading}
+                /> -->
+
+                <InputLabel
+                    id="tablink"
+                    placeholder={property.placeholder ?? $LL.mapEditor.properties.linkProperties.linkPlaceholder()}
+                    label={$LL.mapEditor.properties.linkProperties.linkLabel()}
+                    type="url"
+                    bind:value={property.link}
+                    onChange={onValueChange}
+                    onClick={onClickInputHandler}
+                    disabled={embeddableLoading}
                 />
+
                 {#if property.application === "googleDocs" || property.application === "googleSheets" || property.application === "googleSlides" || property.application === "klaxoon" || property.application === "googleDrive"}
                     <div class="flex flex-row items-center justify-center">
                         <img
@@ -784,16 +813,14 @@
 
         <div class:active={optionAdvancedActivated} class="advanced-option px-2">
             {#if (isArea && triggerOptionActivated) || !isArea}
-                <div class="value-input flex flex-col">
-                    <label for="triggerMessage">{$LL.mapEditor.properties.linkProperties.triggerMessage()}</label>
-                    <input
-                        id="triggerMessage"
-                        type="text"
-                        placeholder={$LL.trigger.object()}
-                        bind:value={property.triggerMessage}
-                        on:change={onValueChange}
-                    />
-                </div>
+                <InputLabel
+                    id="triggerMessage"
+                    placeholder={$LL.trigger.object()}
+                    label={$LL.mapEditor.properties.linkProperties.linkLabel()}
+                    type="url"
+                    bind:value={property.link}
+                    onChange={onValueChange}
+                />
             {/if}
 
             <InputSwitch
