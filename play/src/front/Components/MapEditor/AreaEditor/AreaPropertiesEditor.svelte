@@ -34,6 +34,7 @@
     import MatrixRoomPropertyEditor from "../PropertyEditor/MatrixRoomPropertyEditor.svelte";
     import TooltipPropertyButton from "../PropertyEditor/TooltipPropertyButton.svelte";
     import InputSwitch from "../../Input/InputSwitch.svelte";
+    import InputLabel from "../../Input/InputLabel.svelte";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
@@ -593,32 +594,14 @@
                 />
             {/each}
         </div>
-        <div class="area-name-container ">
-            <label for="objectName">{$LL.mapEditor.areaEditor.nameLabel()}</label>
-            <input
-                class="input-label input-label-light"
-                id="objectName"
-                type="text"
-                placeholder={$LL.mapEditor.areaEditor.nameLabelPlaceholder()}
-                bind:value={areaName}
-                on:change={onUpdateName}
-            />
-        </div>
 
-        <div class="flex flex-col">
-            <div class="input-label input-label-light">
-                <label class="relative text-contrast grow" for="input1"> Input label </label>
-            </div>
-            <div class="relative flex grow">
-                <input
-                    class="grow input-text input-text-light"
-                    id="input1"
-                    placeholder="This is the placeholder..."
-                    type="text"
-                    value=""
-                />
-            </div>
-        </div>
+        <InputLabel
+            id="objectName"
+            label={$LL.mapEditor.areaEditor.nameLabel()}
+            placeholder={$LL.mapEditor.areaEditor.nameLabelPlaceholder()}
+            bind:value={areaName}
+            onChange={onUpdateName}
+        />
 
         <div class="area-name-container">
             {#if !showDescriptionField}

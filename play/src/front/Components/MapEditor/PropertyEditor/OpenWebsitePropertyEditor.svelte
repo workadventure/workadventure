@@ -681,6 +681,7 @@
                 <img class="w-20 mr-1" src={property.poster} alt="" />
             </div>
         {/if}
+
         {#if isArea}
             <div>
                 <label class="m-0 " for="trigger">{$LL.mapEditor.properties.linkProperties.trigger()}</label>
@@ -699,6 +700,7 @@
                 </select>
             </div>
         {/if}
+
         <div class="value-input flex flex-col">
             <label for="tabLink">{$LL.mapEditor.properties.linkProperties.linkLabel()}</label>
             <div class="flex flex-row">
@@ -768,20 +770,11 @@
             {/if}
         </div>
         {#if !property.hideButtonLabel}
-            <div class="&ut  flex flex-col">
+            <div class=" flex flex-col">
                 <label for="linkButton">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
                 <input id="linkButton" type="text" bind:value={property.buttonLabel} on:change={onValueChange} />
             </div>
         {/if}
-
-        <!-- <div class="value-switch">
-            <input id="advancedOption" type="checkbox" class="input-switch" bind:checked={optionAdvancedActivated} />
-            <label class="inline-flex cursor-pointer">
-                <label for="advancedOption">{$LL.mapEditor.properties.advancedOptions()}</label>
-                <input id="advancedOption" class="sr-only peer" type="checkbox" value="" bind:checked={optionAdvancedActivated} />
-                <div class="input-switch input-switch-white"></div>
-            </label>
-        </div> -->
 
         <InputSwitch
             id="advancedOption"
@@ -802,20 +795,6 @@
                     />
                 </div>
             {/if}
-
-            <!-- <div class="value-switch">
-                
-                <label class="inline-flex cursor-pointer">
-                    <label for="newTab">{$LL.mapEditor.properties.linkProperties.newTabLabel()}</label>
-                    <input 
-                    id="newTab" 
-                    type="checkbox"
-                    class="sr-only peer" 
-                    bind:checked={property.newTab}
-                    on:change={onNewTabValueChange} 
-                    disabled={property.forceNewTab} />
-                    <div class="input-switch input-switch-white"></div>
-            </div> -->
 
             <InputSwitch
                 id="newTab"
@@ -860,17 +839,6 @@
                         on:change={onValueChange}
                     />
                 </div>
-                <!-- <div class="value-switch">
-                    <label for="closable">{$LL.mapEditor.properties.linkProperties.closable()}</label>
-                
-                    <label class="inline-flex cursor-pointer">
-                        <input id="closable" class="sr-only peer" type="checkbox" value="" bind:checked={property.closable}
-                        on:change={onValueChange}>
-                        <div class="input-switch input-switch-white"></div>
-            
-                    </label>
-
-                </div> -->
 
                 <InputSwitch
                     id="closable"
@@ -878,23 +846,6 @@
                     bind:value={property.closable}
                     onChange={onValueChange}
                 />
-
-                <!-- <div class="value-switch">
-                    <label for="allowAPI">{$LL.mapEditor.properties.linkProperties.allowAPI()}</label>
-                    <input
-                        id="allowAPI"
-                        type="checkbox"
-                        class="input-switch"
-                        bind:checked={property.allowAPI}
-                        on:change={onValueChange}
-                    />
-                    <label class="inline-flex cursor-pointer">
-                        <input id="allowAPI" class="sr-only peer" type="checkbox" value=""  bind:checked={property.allowAPI}
-                        on:change={onValueChange}>
-                        <div class="input-switch input-switch-white"></div>
-            
-                    </label>
-                </div> -->
 
                 <InputSwitch
                     id="allowAPI"
