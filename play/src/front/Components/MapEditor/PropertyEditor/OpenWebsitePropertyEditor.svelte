@@ -44,11 +44,6 @@
     export let icon = "resources/icons/icon_link.png";
     export let isArea = false;
 
-    let newTab = false;
-    if (newTab) {
-        console.log("Nouvel onglet activé");
-    }
-
     type Option = {
         value: string;
         label: string;
