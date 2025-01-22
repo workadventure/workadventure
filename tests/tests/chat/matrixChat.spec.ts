@@ -27,6 +27,10 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await ChatUtils.resetMatrixDatabase();
   });
 
+  /*test("reset matrix database", async () => {
+    await ChatUtils.resetMatrixDatabase();
+  });*/
+
   test("Open matrix Chat", async ({ browser }, {project}) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
     await oidcMatrixUserLogin(page, project.name === "mobilechrominum");
@@ -232,9 +236,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.getByTestId("openEmojiPickerButton").click();
     const reactionKey = "😀";
     await page.getByText(reactionKey).nth(1).click({ force: true });
-    await expect(
-      page.getByTestId(`${reactionKey}_reactionButton`)
-    ).toBeAttached();
+    await expect(page.getByTestId('😀_reactionButton').getByText('😀')).toBeVisible();
     await page.close();
     await page.context().close();
   });
@@ -620,7 +622,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     const otherPage = await getPage(browser, 'Bob', Map.url("empty"));
     await oidcMatrixUserLogin(otherPage, project.name === "mobilechrominum");
     await ChatUtils.openChat(otherPage);
-    await otherPage.pause();
+    await otherPage.getByTestId('chatBackward').click();
     await otherPage.getByText(privateChatRoom).click();
     await otherPage.getByTestId("VerifyWithAnotherDeviceButton").click();
 
@@ -654,6 +656,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     const otherPage = await getPage(browser, 'Bob', Map.url("empty"));
     await oidcMatrixUserLogin(otherPage, project.name === "mobilechrominum");
     await ChatUtils.openChat(otherPage);
+    await otherPage.getByTestId('chatBackward').click();
     await otherPage.getByText(privateChatRoom).click();
     await otherPage.getByTestId("VerifyWithAnotherDeviceButton").click();
 
