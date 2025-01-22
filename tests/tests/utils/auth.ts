@@ -3,6 +3,7 @@ import { Browser, BrowserContext, expect, Page } from 'playwright/test';
 import { oidcAdminTagLogin, oidcMatrixUserLogin, oidcMemberTagLogin, oidcLogin } from './oidc';
 import { gotoWait200} from "./containers";
 import Menu from "./menu";
+import {play_url} from "./urls";
 
 const characterNumber = 3;
 
@@ -28,7 +29,9 @@ async function createUser(
     }
     const context: BrowserContext = await browser.newContext();
     const page: Page = await context.newPage();
-    await page.goto(url);
+    const targetUrl = new URL(url, play_url).toString();
+
+    await page.goto(targetUrl);
 
     // login
     await page.fill('input[name="loginSceneName"]', name);
