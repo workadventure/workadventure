@@ -94,9 +94,10 @@
     <input type="checkbox" class="input-switch" bind:checked={enabled} on:change={partialSave} disabled={loading} />
     <h3 id="megaphone">{$LL.mapEditor.settings.megaphone.title()}</h3>
 </div>
+
 <p class="help-text h-fit">{$LL.mapEditor.settings.megaphone.description()}</p>
 {#if enabled}
-    <div class="settings flex-grow flex-auto flex-shrink" transition:fade={{ duration: 200 }}>
+    <div class="settings space-y-4 flex-grow flex-auto flex-shrink" transition:fade={{ duration: 200 }}>
         {#await getTags()}
             <PureLoader size={12} color="lighter-purple" customClass="h-full" />
         {:then tags}

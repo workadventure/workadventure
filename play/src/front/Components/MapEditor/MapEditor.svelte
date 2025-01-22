@@ -40,7 +40,7 @@
                 ><IconMinus font-size="14" /></button
             >
             <button
-                class="close-window"
+                class="close-window flex space-x-7"
                 data-testid="mapEditor-close-button"
                 on:click|preventDefault|stopPropagation={closeMapEditor}>&#215;</button
             >
