@@ -86,5 +86,6 @@ export async function getPageWait200(browser: Browser,
     const newBrowser: BrowserContext = await browser.newContext({ storageState: './.auth/' + name + '.json' });
     const page: Page = await newBrowser.newPage();
     await gotoWait200(page, url);
+    await expect(page.getByTestId('microphone-button')).toBeVisible({ timeout: 40_000 });
     return page;
 }

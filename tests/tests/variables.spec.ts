@@ -31,13 +31,12 @@ test.describe('Variables', () => {
     await Promise.all([rebootBack(), rebootPlay()]);
 
     const page = await getPageWait200(browser, 'Alice',
-        publicTestMapUrl("tests/Variables/shared_variables.json", "variables") +  + "&somerandomparam=1");
-
+        publicTestMapUrl("tests/Variables/shared_variables.json", "variables") + + "&somerandomparam=1");
+    console.log(publicTestMapUrl("tests/Variables/shared_variables.json", "variables") + "&somerandomparam=1");
     const textField = page
       .frameLocator('#cowebsite-buffer iframe')
       .locator('#textField');
 
-    // FIXME
     await expect(textField).toHaveValue('default value');
     await textField.fill('');
     await textField.fill('new value');
