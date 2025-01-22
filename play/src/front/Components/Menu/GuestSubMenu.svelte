@@ -4,6 +4,7 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
+    import InputSwitch from "../Input/InputSwitch.svelte";
 
     let entryPoint: string = $startLayerNamesStore[0];
     let walkAutomatically = false;
@@ -60,7 +61,7 @@
 <div transition:fly={{ x: -700, duration: 250 }}>
     {#if !canShare}
         <section class="share-url not-mobile">
-            <div class="bg-contrast font-bold text-lg p-4 flex items-center">
+            <div class="bg-contrast font-bold text-lg p-4 flex items-center ">
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     class="mr-4 opacity-50"
@@ -124,12 +125,12 @@
         </section>
     {:else}
         <section class="is-mobile">
-            <h3 class="bg-contrast font-bold text-lg p-4 flex items-center">{$LL.menu.invite.description()}</h3>
+            <h3 class="bg-contrast font-bold text-lg p-4 flex items-center mb-7 m-l">{$LL.menu.invite.description()}</h3>
             <input type="hidden" readonly value={location.toString()} />
-            <button type="button" class="btn btn-secondary" on:click={shareLink}>{$LL.menu.invite.share()}</button>
+            <button type="button" class="btn btn-secondary mb-7 ml-1" on:click={shareLink}>{$LL.menu.invite.share()}</button>
         </section>
     {/if}
-    <div class="bg-contrast font-bold text-lg p-4 flex items-center">
+    <div class="bg-contrast font-bold text-lg p-4 flex items-center ">
         <svg
             xmlns="http://www.w3.org/2000/svg"
             class="mr-4 opacity-50"
@@ -150,9 +151,9 @@
             {$LL.menu.invite.selectEntryPoint()}
         </div>
     </div>
-    <section class="m-4">
+    <section class="m-4 mt-7">
         <select
-            class="bg-contrast rounded border border-solid border-white/20 mb-0 w-full"
+            class="bg-contrast rounded border border-solid border-white/20 mb-4 w-full "
             bind:value={entryPoint}
             on:blur={() => {
                 updateInputFieldValue();
@@ -164,22 +165,16 @@
         </select>
 
         <label for="walkto" class="flex cursor-pointer items-center relative my-4 ">
-            <input
+            <InputSwitch
                 type="checkbox"
                 id="walkto"
                 class="peer sr-only"
                 bind:checked={walkAutomatically}
-                on:change={() => {
+                onChange={() => {
                     updateInputFieldValue();
                 }}
+                label={$LL.menu.invite.walkAutomaticallyToPosition()}
             />
-            <div
-                class="dot peer-checked:translate-x-full peer-checked:bg-white absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition"
-            />
-            <div class="block bg-contrast peer-checked:bg-secondary w-12 h-7 rounded-full" />
-            <div class="ml-3 text-white/50 font-regular peer-checked:text-white">
-                {$LL.menu.invite.walkAutomaticallyToPosition()}
-            </div>
         </label>
     </section>
 </div>

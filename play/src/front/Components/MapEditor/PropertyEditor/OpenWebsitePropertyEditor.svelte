@@ -35,11 +35,18 @@
     import { InputTagOption } from "../../Input/InputTagOption";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
+    import InputLabel from "../../Input/InputLabel.svelte";
     import Input from "../../Input/Input.svelte";
     import Select from "../../Input/Select.svelte";
     import RangeSlider from "../../Input/RangeSlider.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     import { IconAlertTriangle } from "@wa-icons";
+
+    let triggerOptions = [
+        { value: undefined, label: $LL.mapEditor.properties.linkProperties.triggerShowImmediately() },
+        { value: "onicon", label: $LL.mapEditor.properties.linkProperties.triggerOnClick() },
+        { value: "onaction", label: $LL.mapEditor.properties.linkProperties.triggerOnAction() },
+    ];
 
     export let property: OpenWebsitePropertyData;
     export let triggerOnActionChoosen: boolean = property.trigger === "onaction";
@@ -705,19 +712,14 @@
         {/if} -->
 
         {#if isArea}
-            <Select
+            <InputLabel
                 id="trigger"
                 label={$LL.mapEditor.properties.linkProperties.trigger()}
                 type="select"
                 bind:value={property.trigger}
+                options={triggerOptions}
                 onChange={onTriggerValueChange}
-            >
-                <option value={undefined}>{$LL.mapEditor.properties.linkProperties.triggerShowImmediately()}</option>
-                {#if !property.newTab}
-                    <option value="onicon">{$LL.mapEditor.properties.linkProperties.triggerOnClick()}</option>
-                {/if}
-                <option value="onaction">{$LL.mapEditor.properties.linkProperties.triggerOnAction()}</option>
-            </Select>
+            />
         {/if}
 
         <div class="value-input flex flex-col">
@@ -735,7 +737,7 @@
                     disabled={embeddableLoading}
                 /> -->
 
-                <Input
+                <InputLabel
                     id="tablink"
                     placeholder={property.placeholder ?? $LL.mapEditor.properties.linkProperties.linkPlaceholder()}
                     label={$LL.mapEditor.properties.linkProperties.linkLabel()}
@@ -814,7 +816,7 @@
 
         <div class:active={optionAdvancedActivated} class="advanced-option px-2">
             {#if (isArea && triggerOptionActivated) || !isArea}
-                <Input
+                <InputLabel
                     id="triggerMessage"
                     placeholder={$LL.trigger.object()}
                     label={$LL.mapEditor.properties.linkProperties.linkLabel()}

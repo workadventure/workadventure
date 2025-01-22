@@ -18,6 +18,8 @@
     import { videoBandwidthStore } from "../../Stores/MediaStore";
     import { screenShareBandwidthStore } from "../../Stores/ScreenSharingStore";
     import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
+    import InputSwitch from "../Input/InputSwitch.svelte";
+    import RangeSlider from "../Input/RangeSlider.svelte";
 
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification();
@@ -160,6 +162,7 @@
     }
 
     function changeCameraPrivacySettings() {
+        
         // Analytics Client
         analyticsClient.settingMicrophone(valueCameraPrivacySettings ? "true" : "false");
 
@@ -302,9 +305,10 @@
                         >
                     </li>
                 </ul>
-                <input
+                <RangeSlider
                     type="range"
                     class="w-full bg-pop-blue"
+                    buttonShape="square"
                     min="1"
                     max="3"
                     step="1"
@@ -427,7 +431,7 @@
                         >
                     </li>
                 </ul>
-                <input
+                <RangeSlider
                     type="range"
                     class="w-full"
                     min="1"
@@ -435,11 +439,38 @@
                     step="1"
                     bind:value={valueScreenShareBandwidth}
                     on:change={updateScreenShareBandwidth}
+                    buttonShape="square"
                 />
             </div>
         </div>
 
-        <h3 class="blue-title">{$LL.menu.settings.proximityDiscussionVolume()}</h3>
+        <div class="bg-contrast font-bold text-lg p-4 flex items-center">
+          
+
+            <svg xmlns="http://www.w3.org/2000/svg" 
+                class=" mr-4 opacity-50 stroke-white icon icon-tabler icon-tabler-adjustments" 
+                width="24" 
+                height="24" 
+                viewBox="0 0 24 24" 
+                stroke-width="1.5" 
+                fill="none" 
+                stroke-linecap="round" 
+                stroke-linejoin="round">
+
+                <path stroke="none" d="M0 0h24H0z" fill="none"></path>
+                <path d="M4 10a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path>
+                <path d="M6 4v4"></path>
+                <path d="M6 12v8"></path>
+                <path d="M10 16a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path>
+                <path d="M12 4v10"></path>
+                <path d="M12 18v2"></path>
+                <path d="M16 7a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path>
+                <path d="M18 4v1"></path>
+                <path d="M18 9v11"></path>
+            </svg>
+            {$LL.menu.settings.proximityDiscussionVolume()}
+        </div>
+      
         <div class="flex w-full justify-center">
             <div class="flex flex-col w-10/12 lg:w-6/12">
                 <ul class="flex justify-between w-full px-[10px] mb-5">
@@ -477,11 +508,11 @@
                         <span class="absolute">10</span>
                     </li>
                 </ul>
-                <input
+                <RangeSlider
                     type="range"
                     class="w-full"
                     min="0"
-                    max="1"
+                    max="10"
                     step="0.1"
                     bind:value={volumeProximityDiscussion}
                     on:change={updateVolumeProximityDiscussion}
@@ -555,38 +586,28 @@
                 </div>
             </div>
         </div>
+        
         <label for="cam-toggle" class="flex cursor-pointer items-center relative m-4">
-            <input
-                type="checkbox"
+            <InputSwitch
                 id="cam-toggle"
                 class="peer sr-only"
                 bind:checked={valueCameraPrivacySettings}
-                on:change={changeCameraPrivacySettings}
+                onChange={changeCameraPrivacySettings}
+                label={$LL.menu.settings.privacySettings.cameraToggle()}
             />
-            <div
-                class="dot peer-checked:translate-x-full peer-checked:bg-white absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition"
-            />
-            <div class="block bg-contrast peer-checked:bg-secondary w-12 h-7 rounded-full" />
-            <div class="ml-3 text-white/50 font-regular peer-checked:text-white">
-                {$LL.menu.settings.privacySettings.cameraToggle()}
-            </div>
+            
         </label>
+       
 
         <label for="mic-toggle" class="flex cursor-pointer items-center relative m-4">
-            <input
-                type="checkbox"
+            <InputSwitch
                 id="mic-toggle"
                 class="peer sr-only"
                 bind:checked={valueMicrophonePrivacySettings}
-                on:change={changeMicrophonePrivacySettings}
+                onChange={changeMicrophonePrivacySettings}
+                label={$LL.menu.settings.privacySettings.microphoneToggle()}
             />
-            <div
-                class="dot peer-checked:translate-x-full peer-checked:bg-white absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition"
-            />
-            <div class="block bg-contrast peer-checked:bg-secondary w-12 h-7 rounded-full" />
-            <div class="ml-3 text-white/50 font-regular peer-checked:text-white">
-                {$LL.menu.settings.privacySettings.microphoneToggle()}
-            </div>
+           
         </label>
     </section>
     <section class="flex flex-col p-0 first:pt-0 pt-8 m-0">
@@ -618,116 +639,75 @@
         </div>
 
         <label for="fullscreen-toggle" class="flex cursor-pointer items-center relative m-4">
-            <input
-                type="checkbox"
+            <InputSwitch
                 id="fullscreen-toggle"
                 class="peer sr-only"
                 bind:checked={fullscreen}
-                on:change={changeFullscreen}
+                onChange={changeFullscreen}
+                label={$LL.menu.settings.fullscreen()}
             />
-            <div
-                class="dot peer-checked:translate-x-full peer-checked:bg-white absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition"
-            />
-            <div class="block bg-contrast peer-checked:bg-secondary w-12 h-7 rounded-full" />
-            <div class="ml-3 text-white/50 font-regular peer-checked:text-white">
-                {$LL.menu.settings.fullscreen()}
-            </div>
+          
         </label>
         <label for="notification-toggle" class="flex cursor-pointer items-center relative m-4">
-            <input
-                type="checkbox"
+            <InputSwitch
                 id="notification-toggle"
                 class="peer sr-only"
                 bind:checked={notification}
-                on:change={changeNotification}
+                onChange={changeNotification}
+                label={$LL.menu.settings.notifications()}
             />
-            <div
-                class="dot peer-checked:translate-x-full peer-checked:bg-white absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition"
-            />
-            <div class="block bg-contrast peer-checked:bg-secondary w-12 h-7 rounded-full" />
-            <div class="ml-3 text-white/50 font-regular peer-checked:text-white">
-                {$LL.menu.settings.notifications()}
-            </div>
+            
         </label>
         <label for="cowebsiteTrigger-toggle" class="flex cursor-pointer items-center relative m-4">
-            <input
-                type="checkbox"
+            <InputSwitch
                 id="cowebsiteTrigger-toggle"
                 class="peer sr-only"
                 bind:checked={forceCowebsiteTrigger}
-                on:change={changeForceCowebsiteTrigger}
+                onChange={changeForceCowebsiteTrigger}
+                label={$LL.menu.settings.cowebsiteTrigger()}
             />
-            <div
-                class="dot peer-checked:translate-x-full peer-checked:bg-white absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition"
-            />
-            <div class="block bg-contrast peer-checked:bg-secondary w-12 h-7 rounded-full" />
-            <div class="ml-3 text-white/50 font-regular peer-checked:text-white">
-                {$LL.menu.settings.cowebsiteTrigger()}
-            </div>
         </label>
+
         <label for="cowebsiteTrigger-toggle" class="flex cursor-pointer items-center relative m-4">
-            <input
-                type="checkbox"
+            <InputSwitch
                 id="cowebsiteTrigger-toggle"
                 class="peer sr-only"
                 bind:checked={ignoreFollowRequests}
-                on:change={changeIgnoreFollowRequests}
+                onChange={changeIgnoreFollowRequests}
+                label={$LL.menu.settings.ignoreFollowRequest()}
             />
-            <div
-                class="dot peer-checked:translate-x-full peer-checked:bg-white absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition"
-            />
-            <div class="block bg-contrast peer-checked:bg-secondary w-12 h-7 rounded-full" />
-            <div class="ml-3 text-white/50 font-regular peer-checked:text-white">
-                {$LL.menu.settings.ignoreFollowRequest()}
-            </div>
+           
         </label>
         <label for="decreaseAudioPlayerVolumeWhileTalking-toggle" class="flex cursor-pointer items-center relative m-4">
-            <input
-                type="checkbox"
+            <InputSwitch
                 id="decreaseAudioPlayerVolumeWhileTalking-toggle"
                 class="peer sr-only"
                 bind:checked={decreaseAudioPlayerVolumeWhileTalking}
-                on:change={changeDecreaseAudioPlayerVolumeWhileTalking}
+                onChange ={changeDecreaseAudioPlayerVolumeWhileTalking}
+                label= {$LL.audio.manager.reduce()}
             />
-            <div
-                class="dot peer-checked:translate-x-full peer-checked:bg-white absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition"
-            />
-            <div class="block bg-contrast peer-checked:bg-secondary w-12 h-7 rounded-full" />
-            <div class="ml-3 text-white/50 font-regular peer-checked:text-white">
-                {$LL.audio.manager.reduce()}
-            </div>
         </label>
+        
         <label for="changeBlockAudio" class="flex cursor-pointer items-center relative m-4">
-            <input
-                type="checkbox"
+            <InputSwitch
                 id="changeBlockAudio"
                 class="peer sr-only"
                 bind:checked={blockAudio}
-                on:change={changeBlockAudio}
+                onChange={changeBlockAudio}
+                label={$LL.menu.settings.blockAudio()}
             />
-            <div
-                class="dot peer-checked:translate-x-full peer-checked:bg-white absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition"
-            />
-            <div class="block bg-contrast peer-checked:bg-secondary w-12 h-7 rounded-full" />
-            <div class="ml-3 text-white/50 font-regular peer-checked:text-white">
-                {$LL.menu.settings.blockAudio()}
-            </div>
+
         </label>
+
         <label for="changeDisableAnimations" class="flex cursor-pointer items-center relative m-4">
-            <input
-                type="checkbox"
+            <InputSwitch
                 id="changeDisableAnimations"
                 class="peer sr-only"
                 bind:checked={disableAnimations}
-                on:change={changeDisableAnimations}
+                onChange={changeDisableAnimations}
+                label={$LL.menu.settings.disableAnimations()}
             />
-            <div
-                class="dot peer-checked:translate-x-full peer-checked:bg-white absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition"
-            />
-            <div class="block bg-contrast peer-checked:bg-secondary w-12 h-7 rounded-full" />
-            <div class="ml-3 text-white/50 font-regular peer-checked:text-white">
-                {$LL.menu.settings.disableAnimations()}
-            </div>
+           
         </label>
     </section>
 </div>

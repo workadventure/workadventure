@@ -8,12 +8,15 @@
     //secondary = bleu   light = noir sinon par défaut la ligne est blanche
     export let variant: "secondary" | "light" | "" = "";
     export let buttonShape: "square" | "" = "";
-    export let unit = "%";
+    export let unit = "" ;
 
     let uniqueId = id || `input-${Math.random().toString(36).substr(2, 9)} `;
 </script>
 
-<label for={uniqueId} class=""> {label} <slot />: {value} {unit}</label>
+{#if label}
+    <label for={uniqueId} class=""> {label} <slot />: {value} {unit}</label>
+{/if}
+
 
 <div class="mx-2.5">
     <div
