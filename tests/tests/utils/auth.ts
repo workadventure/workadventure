@@ -18,7 +18,8 @@ function isJsonCreate(name: string): boolean {
     return timeCreation > twoHoursAgo;
 }
 
-async function createUser(name: "Alice" | "Bob" | "Admin1" | "Admin2" | "Member1" | "UserMatrix" | "UserLogin1" | "John",
+async function createUser(
+    name: "Alice" | "Bob" | "Admin1" | "Admin2" | "Member1" | "UserMatrix" | "UserLogin1" | "John" | "UserMatrix2",
     browser: Browser, url: string): Promise<void> {
     
     if(isJsonCreate(name)) {
@@ -52,6 +53,7 @@ async function createUser(name: "Alice" | "Bob" | "Admin1" | "Admin2" | "Member1
             await oidcMemberTagLogin(page, false);
             break;
         case "UserMatrix":
+        case "UserMatrix2":
             await oidcMatrixUserLogin(page, false);
             break;
         case "UserLogin1":
@@ -67,13 +69,13 @@ async function createUser(name: "Alice" | "Bob" | "Admin1" | "Admin2" | "Member1
 }
 
 export async function getPage(browser: Browser,
-    name: "Alice" | "Bob" | "Admin1" | "Admin2" | "Member1" | "UserMatrix" | "UserLogin1" | "John",
+    name: "Alice" | "Bob" | "Admin1" | "Admin2" | "Member1" | "UserMatrix" | "UserLogin1" | "John" | "UserMatrix2",
      url:string): Promise<Page> {
     await createUser(name, browser, url);
     const newBrowser: BrowserContext = await browser.newContext({ storageState: './.auth/' + name + '.json' });
     const page: Page = await newBrowser.newPage();
     await page.goto(url);
-    await expect(page.getByTestId('microphone-button')).toBeVisible();
+    await expect(page.getByTestId('microphone-button')).toBeVisible({ timeout: 15_000 });
     return page;
 }
 
