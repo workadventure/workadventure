@@ -11,8 +11,12 @@ test.describe('Module', () => {
       test.skip();
       return;
     }
-    const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/Modules/with_modules.json", "modules"));
-    startRecordLogs(page);
+    const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/Modules/with_modules.json", "modules"),
+        {
+          pageCreatedHook: (page) => {
+            startRecordLogs(page);
+          }
+        });
 
     await assertLogMessage(page, 'Successfully loaded module: foo =  bar');
   });

@@ -2,6 +2,7 @@ import fs from 'fs';
 import { Browser, BrowserContext, expect, Page } from 'playwright/test';
 import { oidcAdminTagLogin, oidcMatrixUserLogin, oidcMemberTagLogin, oidcLogin } from './oidc';
 import { gotoWait200} from "./containers";
+import Menu from "./menu";
 
 const characterNumber = 3;
 
@@ -41,8 +42,8 @@ async function createUser(
     // selectMedia
     await expect(page.locator('h2', { hasText: "Turn on your camera and microphone" })).toBeVisible();
     await page.click("text=Save");
-    await expect(page.locator('#unique-mycam img')).toBeVisible();
-    await expect(page.locator("div#main-layout").nth(0)).toBeVisible();
+
+    await Menu.expectButtonState(page, "microphone-button", 'normal');
 
     switch (name) {
         case "Admin1":
@@ -62,18 +63,27 @@ async function createUser(
         default:
             break;
     }
+
     await page.context().storageState({ path: './.auth/' + name + '.json'})
 
     await page.close();
     await context.close();
 }
 
+
+
 export async function getPage(browser: Browser,
-    name: "Alice" | "Bob" | "Admin1" | "Admin2" | "Member1" | "UserMatrix" | "UserLogin1" | "John" | "UserMatrix2",
-     url:string): Promise<Page> {
+      name: "Alice" | "Bob" | "Admin1" | "Admin2" | "Member1" | "UserMatrix" | "UserLogin1" | "John" | "UserMatrix2",
+      url:string,
+      options: {
+    pageCreatedHook?: (page: Page) => void,
+      } = {}): Promise<Page> {
     await createUser(name, browser, url);
     const newBrowser: BrowserContext = await browser.newContext({ storageState: './.auth/' + name + '.json' });
     const page: Page = await newBrowser.newPage();
+    if(options.pageCreatedHook) {
+        options.pageCreatedHook(page);
+    }
     await page.goto(url);
     await expect(page.getByTestId('microphone-button')).toBeVisible({ timeout: 15_000 });
     return page;
