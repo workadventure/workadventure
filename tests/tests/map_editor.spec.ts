@@ -400,7 +400,7 @@ test.describe("Map editor @oidc", () => {
 
         // check if the popup with application is opened and can be closed
         await expect(page.getByRole('button', { name: 'Open Klaxoon' })).toBeVisible();
-        await page.getByRole('button', { name: 'Close' }).click();
+        await page.getByRole('button', { name: 'Close', exact: true}).click();
 
         await page.close();
         await page.context().close();
