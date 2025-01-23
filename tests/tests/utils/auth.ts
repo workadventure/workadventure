@@ -4,7 +4,13 @@ import { oidcAdminTagLogin, oidcMatrixUserLogin, oidcMemberTagLogin, oidcLogin }
 import Menu from "./menu";
 import {play_url} from "./urls";
 
-const characterNumber = 3;
+function selectWoka(name: string): number {
+    let res = 0;
+    for (let i = 0; i < name.length; i++) {
+        res += name.charCodeAt(i);
+    }
+    return res % 10;
+}
 
 function isJsonCreate(name: string): boolean {
 
@@ -14,8 +20,8 @@ function isJsonCreate(name: string): boolean {
     }
 
     const stats = fs.statSync(file);
-    const timeCreation: number = stats.mtime.getTime();
-    const twoHoursAgo: number = new Date().getTime() - 2 * 60 * 60 * 1000; // 2 hours in ms
+    const timeCreation = stats.mtime.getTime();
+    const twoHoursAgo = new Date().getTime() - 2 * 60 * 60 * 1000; // 2 hours in ms
     return timeCreation > twoHoursAgo;
 }
 
@@ -36,7 +42,7 @@ async function createUser(
     await page.fill('input[name="loginSceneName"]', name);
     await page.click('button.loginSceneFormSubmit');
     await expect(page.locator('button.selectCharacterSceneFormSubmit')).toBeVisible();
-    for (let i = 0; i < characterNumber; i++) {
+    for (let i = 0; i < selectWoka(name); i++) {
         await page.keyboard.press('ArrowRight');
     }
     await page.click('button.selectCharacterSceneFormSubmit');
