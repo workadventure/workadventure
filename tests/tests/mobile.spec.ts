@@ -1,8 +1,8 @@
 import {expect, test} from '@playwright/test';
 import Menu from "./utils/menu";
-import {login} from "./utils/roles";
 import Map from "./utils/map";
 import {play_url, publicTestMapUrl} from "./utils/urls";
+import {getPage} from "./utils/auth";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -10,15 +10,14 @@ test.use({
 })
 
 test.describe('Mobile', () => {
-    test('Successfully bubble discussion with mobile device', async ({ page, browser, request, browserName }, workerInfo) => {
+    test('Successfully bubble discussion with mobile device', async ({ browser }, workerInfo) => {
         // If the browser is webkit
-        if (workerInfo.project.name!== "mobilechromium") {
+        if (workerInfo.project.name !== "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
         }
-        await page.goto(Map.url("empty"));
-        await login(page, "Bob", 3, 'en-US', true);
+        const page = await getPage(browser, 'Bob', Map.url("empty"));
 
         const positionToDiscuss = {
             x: 3 * 32,
@@ -34,11 +33,8 @@ test.describe('Mobile', () => {
         await Menu.closeBurgerMenu(page);
 
         // Second browser
-        const newBrowserAlice = await browser.newContext();
-        const pageAlice = await newBrowserAlice.newPage();
-        await pageAlice.goto(Map.url("empty"));
+        const pageAlice = await getPage(browser, 'Alice', Map.url("empty"));
         await pageAlice.evaluate(() => localStorage.setItem('debug', '*'));
-        await login(pageAlice, "Alice", 5, 'en-US', true);
 
         // Move Alice and create a bubble with another user
         // TODO: find a solution to test Joystick
@@ -56,11 +52,8 @@ test.describe('Mobile', () => {
         await pageAlice.getByRole('button', {name: 'Pin', exact: true }).click();
 
         // Second browser
-        const newBrowserJohn = await browser.newContext();
-        const pageJohn = await newBrowserJohn.newPage();
-        await pageJohn.goto(Map.url("empty"));
+        const pageJohn = await getPage(browser, 'John', Map.url("empty"));
         await pageJohn.evaluate(() => localStorage.setItem('debug', '*'));
-        await login(pageJohn, "John", 5, 'en-US', true);
 
         // Move John and create a bubble with another user
         // TODO: find a solution to test Joystick
@@ -82,23 +75,26 @@ test.describe('Mobile', () => {
         await pageAlice.close();
         await pageJohn.close();
         await page.close();
-        await newBrowserAlice.close();
-        await newBrowserJohn.close();
+        await pageJohn.context().close();
+        await pageAlice.context().close();
+        await page.context().close();
     });
 
-    test('Successfully jitsi cowebsite with mobile device', async ({ page, browser }, workerInfo) => {
+    test('Successfully jitsi cowebsite with mobile device', async ({ browser }, workerInfo) => {
         // If the browser is webkit, we skip the test because the option 'ArrowRight' doesn't work
         if (workerInfo.project.name !== "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
         }
-        page.goto(
-            publicTestMapUrl('tests/CoWebsite/cowebsite_jitsiroom.json', 'mobile')
-        );
-        await login(page, "Bob", 3, 'en-US', true);
+        const page = await getPage(browser, 'Bob',
+            publicTestMapUrl('tests/CoWebsite/cowebsite_jitsiroom.json', 'mobile'));
+
         // Move to open a cowebsite
-        await page.locator('#body').press('ArrowRight', { delay: 3000 });
+        //await page.pause();
+        //await Map.walkTo(page, 'ArrowRight', 3000);
+        //await page.waitForTimeout(6000);
+        await page.locator('#body').press('ArrowRight', { delay: 10000 });
         // Now, let's move player 2 to the speaker zone
         
         // Click on the button to close the cowebsite
@@ -109,7 +105,8 @@ test.describe('Mobile', () => {
             timeout: 10000
         });
 
-        page.close();
+        await page.close();
+        await page.context().close();
     });
 
     // TODO: create test to interact with another object

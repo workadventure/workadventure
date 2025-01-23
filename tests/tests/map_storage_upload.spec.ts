@@ -1,10 +1,9 @@
 import *  as fs from "fs";
 import { APIResponse, expect, test } from '@playwright/test';
-import { login } from './utils/roles';
 import {createZipFromDirectory} from "./utils/zip";
 import {RENDERER_MODE} from "./utils/environment";
 import {map_storage_url, maps_domain} from "./utils/urls";
-import { gotoWait200 } from "./utils/containers";
+import { getPage} from "./utils/auth";
 
 test.use({
     baseURL: map_storage_url,
@@ -12,7 +11,7 @@ test.use({
 
 test.describe('Map-storage Upload API', () => {
     test('users are asked to reconnect when a map is updated', async ({
-        request, page, browser
+        request, browser
     }, { project }) => {
         // Skip test for mobile device
         if(project.name === "mobilechromium") {
@@ -54,14 +53,8 @@ test.describe('Map-storage Upload API', () => {
             }
         });
         await expect(uploadFile2.ok()).toBeTruthy();
-
-        await gotoWait200(page, `/~/map1.wam?phaserMode=${RENDERER_MODE}`);
-        await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
-
-        const newBrowser = await browser.newContext();
-        const page2 = await newBrowser.newPage();
-        await gotoWait200(page2, `/~/map2.wam?phaserMode=${RENDERER_MODE}`);
-        await login(page2, 'Bob', 5, 'en-US', project.name === "mobilechromium");
+        const page = await getPage(browser, 'Alice', `/~/map1.wam?phaserMode=${RENDERER_MODE}`);
+        const page2 = await getPage(browser, 'Bob', `/~/map2.wam?phaserMode=${RENDERER_MODE}`);
 
         // Let's trigger a reload of map 1 only
         const uploadFile3 = await request.put("map1.wam", {
@@ -85,7 +78,9 @@ test.describe('Map-storage Upload API', () => {
         await expect((await (page.locator(".test-class")).innerText())).toEqual("New version of map detected. Refresh needed");
         await expect(page2.getByText("New version of map detected. Refresh needed")).toBeHidden();
         await page2.close();
-        await newBrowser.close();
+        await page2.context().close();
+        await page.close();
+        await page.context().close();
     });
 
     test('can upload ZIP file', async ({

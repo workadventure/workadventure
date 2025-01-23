@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { resetWamMaps } from "../utils/map-editor/uploader";
 import Map from "../utils/map";
-import { login } from "../utils/roles";
 import { oidcMatrixUserLogin } from "../utils/oidc";
+import {getPage} from "../utils/auth";
 import ChatUtils from "./chatUtils";
 import matrixApi from "./matrixApi";
 
@@ -29,9 +29,9 @@ test.describe("chat moderation @matrix", () => {
     await ChatUtils.resetMatrixDatabase();
   });
 
-  test("should create a public chat room and verify admin permissions", async ({ page }, { project }) => {
+  test("should create a public chat room and verify admin permissions", async ({ browser }, { project }) => {
     const isMobile = project.name === "mobilechromium";
-    await login(page, "test", 3, "us-US", isMobile);
+    const page = await getPage(browser, 'Alice', Map.url("empty"));
     await oidcMatrixUserLogin(page, isMobile);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
@@ -53,11 +53,13 @@ test.describe("chat moderation @matrix", () => {
     await expect(page.getByTestId("@john.doe:matrix.workadventure.localhost-participant").getByTestId("@john.doe:matrix.workadventure.localhost-permissionLevel")).toHaveText("Admin");
     await expect(page.getByTestId("@john.doe:matrix.workadventure.localhost-participant").getByTestId("@john.doe:matrix.workadventure.localhost-membership")).toHaveText("Joined");
 
+    await page.close();
+    await page.context().close();
   });
 
-  test("should manage participants and permissions in public chat room", async ({ page }, { project }) => {
+  test("should manage participants and permissions in public chat room", async ({ browser }, { project }) => {
     const isMobile = project.name === "mobilechromium";
-    await login(page, "test", 3, "us-US", isMobile);
+    const page = await getPage(browser, 'Alice', Map.url("empty"));
     await oidcMatrixUserLogin(page, isMobile);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
@@ -120,6 +122,7 @@ test.describe("chat moderation @matrix", () => {
 
     expect(powerLevel).toBe(50);
 
+    await page.close();
+    await page.context().close();
   });
-
 });

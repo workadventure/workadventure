@@ -1,12 +1,11 @@
 import { expect, test } from "@playwright/test";
 import { evaluateScript } from "./utils/scripting";
-import { login } from "./utils/roles";
 import Map from "./utils/map";
 import { resetWamMaps } from "./utils/map-editor/uploader";
-import { oidcAdminTagLogin } from "./utils/oidc";
 import menu from "./utils/menu";
 import mapeditor from "./utils/mapeditor";
 import areaEditor from "./utils/map-editor/areaEditor";
+import {getPage} from "./utils/auth"
 
 test.describe("Scripting for Map editor @oidc", () => {
     test.beforeEach(
@@ -31,11 +30,9 @@ test.describe("Scripting for Map editor @oidc", () => {
     });
 
 
-    test("Scripting Area onEnter & onLeave", async ({page, request}, {project}) => {
+    test("Scripting Area onEnter & onLeave", async ({browser, request}) => {
         await resetWamMaps(request);
-        await page.goto(Map.url("start"));
-        await login(page, "test", 3, "en-US", false);
-        await oidcAdminTagLogin(page, false);
+        const page = await getPage(browser, 'Admin1', Map.url("empty"));
 
         await menu.openMapEditor(page);
         await mapeditor.openAreaEditor(page);
@@ -55,10 +52,10 @@ test.describe("Scripting for Map editor @oidc", () => {
 
             WA.mapEditor.area.onLeave("MyZone").subscribe(() => {
                 WA.ui.displayActionMessage({
-                    message: "Goodby to MyZone",
+                    message: "Goodbye to MyZone",
                     type: "message",
                     callback: () => {
-                        console.info("Goodby to MyZone");
+                        console.info("Goodbye to MyZone");
                     }
                 });
             });
@@ -67,12 +64,13 @@ test.describe("Scripting for Map editor @oidc", () => {
         await menu.closeMapEditor(page);
         await Map.teleportToPosition(page, 9 * 32, 3 * 32);
         await expect(page.getByText('Welcome to MyZone')).toBeVisible();
-        await page.getByRole('button', { name: 'Close' }).click();
-
+        await page.getByRole('button', { name: 'Close' }).first().click();
         await Map.teleportToPosition(page, 9 * 32, 9 * 32);
-        await expect(page.getByText('Goodby to MyZone')).toBeVisible();
+        await expect(page.getByText('Goodbye to MyZone')).toBeVisible();
         await page.getByRole('button', { name: 'Close' }).click();
+        await expect(page.locator('span.characterTriggerAction')).toBeHidden();
 
-        await expect(page.getByRole('button', { name: 'Close'})).toBeHidden();
+        await page.close();
+        await page.context().close();
     });
 });

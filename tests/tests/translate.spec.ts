@@ -1,10 +1,10 @@
 import { expect, test } from '@playwright/test';
-import { login } from './utils/roles';
 import {publicTestMapUrl} from "./utils/urls";
+import { getPage } from "./utils/auth";
 
 test.describe('Translation', () => {
   test('can be switched to French', async ({
-    page
+    browser
   }, { project }) => {
     // Skip test for mobile device
     if(project.name === "mobilechromium") {
@@ -12,13 +12,10 @@ test.describe('Translation', () => {
       test.skip();
       return;
     }
-    await page.goto(
-      publicTestMapUrl("tests/mousewheel.json", "translate")
-    );
+    const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/mousewheel.json", "translate"))
 
-    await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
-
-    if(project.name === "mobilechromium"){
+    // FIXME test for mobile might be broken
+    if(project.name === "mobilechromium") {
       await expect(page.locator('button#burgerIcon')).toBeVisible();
       const mobileMenuVisible = await page.locator('button#burgerIcon img.tw-rotate-0').isVisible();
       if(mobileMenuVisible){
@@ -31,6 +28,7 @@ test.describe('Translation', () => {
 
     await page.reload();
 
+    // FIXME test for mobile might be broken
     if(project.name === "mobilechromium"){
       await expect(page.locator('button#burgerIcon')).toBeVisible();
       const mobileMenuVisible = await page.locator('button#burgerIcon img.tw-rotate-0').isVisible();
@@ -40,5 +38,8 @@ test.describe('Translation', () => {
     }
     await page.getByTestId('action-user').click();         // new way
     await expect(page.locator('button:has-text("Paramètres")')).toBeVisible();
+
+    await page.close();
+    await page.context().close();
   });
 });

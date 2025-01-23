@@ -56,10 +56,8 @@ class Menu {
         await expect(page.getByTestId('map-sub-menu')).toBeHidden();
     }
 
-    async waitForMapMenu(page: Page, timeout = 30_000) {
-        await expect(page.getByTestId('map-menu')).toBeVisible({
-            timeout
-        });
+    async waitForMapLoad(page: Page, timeout = 30_000) {
+        await expect(page.getByTestId('microphone-button')).toBeVisible({ timeout: 15_000 });
     }
 
     async closeMapEditor(page: Page) {

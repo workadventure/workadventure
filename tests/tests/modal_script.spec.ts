@@ -1,11 +1,11 @@
 import {expect, test} from '@playwright/test';
-import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
 import {expectInViewport} from "./utils/viewport";
 import {publicTestMapUrl} from "./utils/urls";
+import { getPage } from './utils/auth';
 
 test.describe('Modal', () => {
-    test('test', async ({ page }, { project }) => {
+    test('test', async ({ browser }, { project }) => {
         // Skip test for mobile device
         if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
@@ -13,11 +13,8 @@ test.describe('Modal', () => {
             return;
         }
 
-        // Go to 
-        await page.goto(
-            publicTestMapUrl("tests/E2E/empty.json", "modal_script")
-        );
-        await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
+        // Go to
+        const page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/empty.json", "modal_script"));
         await evaluateScript(page, async () => {
             return WA.ui.modal.openModal({
                 src: "https://workadventu.re"

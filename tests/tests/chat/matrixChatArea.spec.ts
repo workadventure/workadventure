@@ -3,9 +3,10 @@ import MapEditor from "../utils/mapeditor";
 import Menu from "../utils/menu";
 import AreaEditor from "../utils/map-editor/areaEditor";
 import Map from "../utils/map";
-import { hideNoCamera, login } from "../utils/roles";
+import { hideNoCamera } from "../utils/hideNoCamera";
 import { oidcMatrixUserLogin, oidcMemberTagLogin } from "../utils/oidc";
 import { resetWamMaps } from "../utils/map-editor/uploader";
+import { getPage } from "../utils/auth";
 import chatUtils from "./chatUtils";
 
 test.describe("matrix chat area property @matrix", () => {
@@ -20,17 +21,14 @@ test.describe("matrix chat area property @matrix", () => {
       }
       await chatUtils.resetMatrixDatabase();
       await resetWamMaps(request);
-
-      await page.goto(Map.url("empty"));
     }
   );
 
   test("it should automatically open the chat when entering the area if the property is checked", async ({
-    page,
-    browserName,
+    browserName, browser
   }) => {
     //await page.evaluate(() => localStorage.setItem('debug', '*'));
-    await login(page, "test", 3, "en-US", false);
+    const page = await getPage(browser, 'Alice', Map.url("empty"));
     await oidcMatrixUserLogin(page, false);
 
     // Because webkit in playwright does not support Camera/Microphone Permission by settings
@@ -59,13 +57,15 @@ test.describe("matrix chat area property @matrix", () => {
     expect(await page.getByTestId("roomName").textContent()).toBe(
       "name of new room"
     );
+    await page.close();
+    await page.context().close();
   });
 
   test("it should automatically close the chat when the user leaves the area", async ({
-    page,
+    browser,
     browserName,
   }) => {
-    await login(page, "test", 3, "en-US", false);
+    const page = await getPage(browser, 'Alice', Map.url("empty"));
     await oidcMatrixUserLogin(page, false);
 
     if (browserName === "webkit") {
@@ -93,13 +93,15 @@ test.describe("matrix chat area property @matrix", () => {
     await Map.walkToPosition(page, 1, 1);
 
     expect(await chatUtils.isChatSidebarOpen(page)).toBeFalsy();
+    await page.close();
+    await page.context().close();
   });
 
   test("it should leave the matrix room when the user quits the room from an area with a matrix chat room link", async ({
-    page,
+    browser,
     browserName,
   }) => {
-    await login(page, "test", 3, "en-US", false);
+    const page = await getPage(browser, 'Alice', Map.url("empty"));
     await oidcMatrixUserLogin(page, false);
 
     if (browserName === "webkit") {
@@ -129,12 +131,16 @@ test.describe("matrix chat area property @matrix", () => {
     await chatUtils.openRoomAreaList(page);
 
     expect(await page.getByText("name of new room").isVisible()).toBeFalsy();
+
+    await page.close();
+      await page.context().close();
   });
+
   test("it should be moderator in room when he have a admin tag (access to manage participants / can delete other message)", async ({
-    page,
+    browser,
     browserName,
   }) => {
-    await login(page, "test", 3, "en-US", false);
+    const page = await getPage(browser, 'Alice', Map.url("empty"));
     await oidcMatrixUserLogin(page, false);
 
     if (browserName === "webkit") {
@@ -177,11 +183,10 @@ test.describe("matrix chat area property @matrix", () => {
   });
 
   test("it shouldn't be moderator in room when he don't have a admin tag ", async ({
-    page,
     browserName,
     browser
   }) => {
-    await login(page, "test", 3, "en-US", false);
+    const page = await getPage(browser, 'Alice', Map.url("empty"));
     await oidcMatrixUserLogin(page, false);
 
     if (browserName === "webkit") {
@@ -203,16 +208,7 @@ test.describe("matrix chat area property @matrix", () => {
 
     await Menu.closeMapEditor(page);
     //await page.close()
-
-    const newBrowser = await browser.newContext();
-    const page2 = await newBrowser.newPage();
-    await page2.goto(Map.url("empty"));
-
-
-
-    
-    
-    await login(page2, "test2", 3, "en-US", false);
+    const page2 = await getPage(browser, 'Bob', Map.url("empty"));
     await oidcMemberTagLogin(page2, false);
     
     if (browserName === "webkit") {
@@ -227,7 +223,5 @@ test.describe("matrix chat area property @matrix", () => {
     await page2.getByTestId("name of new room").hover() ; 
     await page2.getByTestId("name of new room").getByTestId("toggleRoomMenu").click();
     await expect(page2.getByTestId("manageParticipantOption")).not.toBeAttached();
-
   });
-  
 });

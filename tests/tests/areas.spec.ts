@@ -1,13 +1,13 @@
 
 import {} from "../../play/packages/iframe-api-typings/iframe_api";
 import {expect, test} from '@playwright/test';
-import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
 import {publicTestMapUrl} from "./utils/urls";
 import Menu from "./utils/menu";
+import { getPage } from "./utils/auth";
 
 test.describe('Areas', () => {
-    test('can edit Tiled area from scripting API', async ({ page }, { project }) => {
+    test('can edit Tiled area from scripting API', async ({ browser }, { project }) => {
         // Skip test for mobile device
         if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
@@ -19,10 +19,9 @@ test.describe('Areas', () => {
         // The Woka is out of the zone, but we move the zone to cover the Woka.
         // We check the silent zone applies to the Woka.
 
-        await page.goto(
+        const page = await getPage(browser, 'Alice',
             publicTestMapUrl("tests/Areas/AreaFromTiledMap/map.json", "areas")
         );
-        await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
 
         await evaluateScript(page, async () => {
             await WA.onInit();
@@ -36,9 +35,11 @@ test.describe('Areas', () => {
             return;
         });
         await expect(page.getByText('You\'re in a silent zone')).toBeVisible();
+        await page.close();
+        await page.context().close();
     });
 
-    test('blocking audio areas', async ({ page, browser }, { project }) => {
+    test('blocking audio areas', async ({ browser }, { project }) => {
         if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
@@ -46,9 +47,9 @@ test.describe('Areas', () => {
         }
 
         // Open audio test map
-        await page.goto(publicTestMapUrl("tests/E2E/audio.json", "areas"));
-        await login(page);
-
+        const page = await getPage(browser, 'Alice',
+            publicTestMapUrl("tests/E2E/audio.json", "areas")
+        );
         // Verify audio area is working
         await evaluateScript(page, async () => {
             console.log('Waiting for WA.onInit()');
@@ -64,7 +65,7 @@ test.describe('Areas', () => {
         await expect(page.getByRole('slider')).toBeHidden();
 
         // Enable audio area blocking
-        await Menu.openMenu(page, false);
+        await Menu.openMenu(page);
         await page.getByRole('button', { name: 'Other settings' }).click();
         await page.getByText('Block ambient sounds and music').click();
         await page.locator('#closeMenu').click();
@@ -79,9 +80,11 @@ test.describe('Areas', () => {
             return;
         });
         await Menu.expectButtonState(page, "music-button", "disabled");
+        await page.close();
+        await page.context().close();
     });
 
-    test('display warning on fail to load audio', async ({ page, browser }, { project }) => {
+    test('display warning on fail to load audio', async ({ browser }, { project }) => {
         if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
@@ -89,8 +92,9 @@ test.describe('Areas', () => {
         }
 
         // Open audio test map
-        await page.goto(publicTestMapUrl("tests/E2E/audio.json", "areas"));
-        await login(page);
+        const page = await getPage(browser, 'Alice',
+            publicTestMapUrl("tests/E2E/audio.json", "areas")
+        );
 
         // Verify audio area is working
         await evaluateScript(page, async () => {
@@ -104,5 +108,7 @@ test.describe('Areas', () => {
         });
         await Menu.expectButtonState(page, "music-button", "forbidden");
         await expect(page.getByText('Could not load sound')).toBeVisible();
+        await page.close();
+        await page.context().close();
     });
 });

@@ -1,12 +1,12 @@
 import { expect, test } from '@playwright/test';
-import { login } from './utils/roles';
 import {oidcLogin, oidcLogout} from "./utils/oidc";
 import {evaluateScript} from "./utils/scripting";
 import {publicTestMapUrl} from "./utils/urls";
+import {getPage} from "./utils/auth";
 
 test.describe('OpenID connect @oidc', () => {
   test('can login and logout', async ({
-    page,
+    browser
   }, { project }) => {
     // Skip test for mobile device
     if(project.name === "mobilechromium") {
@@ -14,12 +14,7 @@ test.describe('OpenID connect @oidc', () => {
       test.skip();
       return;
     }
-
-    await page.goto(
-        publicTestMapUrl("tests/E2E/empty.json", "oidc")
-    );
-
-    await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+    const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "oidc"))
 
     // Test if player variable is correct
     let isLogged = await evaluateScript(page, async () => {

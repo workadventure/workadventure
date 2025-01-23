@@ -1,23 +1,22 @@
 import { test } from '@playwright/test';
 import { assertLogMessage, startRecordLogs} from './utils/log';
-import { login } from './utils/roles';
+import { getPage } from './utils/auth';
 import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('Module', () => {
-  test('loading should work out of the box', async ({ page }, { project }) => {
+  test('loading should work out of the box', async ({ browser }, { project }) => {
     // Skip test for mobile device
     if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
     }
-
-    startRecordLogs(page);
-    await page.goto(
-      publicTestMapUrl("tests/Modules/with_modules.json", "modules")
-    );
-
-    await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+    const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/Modules/with_modules.json", "modules"),
+        {
+          pageCreatedHook: (page) => {
+            startRecordLogs(page);
+          }
+        });
 
     await assertLogMessage(page, 'Successfully loaded module: foo =  bar');
   });

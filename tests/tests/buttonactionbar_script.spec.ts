@@ -1,24 +1,20 @@
 import {expect, test} from '@playwright/test';
-import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
 import {publicTestMapUrl} from "./utils/urls";
+import { getPage } from './utils/auth';
 
 test.describe('Button in action bar', () => {
-    test('test', async ({ page }, { project }) => {
+    test('test', async ({ browser }, { project }) => {
         // Skip test for mobile device
         if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
         }
-      
-        // Go to WorkAdventure platform
-        await page.goto(
+        
+        const page = await getPage(browser, 'Alice',
             publicTestMapUrl("tests/E2E/empty.json", "buttonactionbar_script")
         );
-
-        // Login Alice
-        await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
 
         // Use script to add new button
         await evaluateScript(page, async () => {
@@ -36,26 +32,23 @@ test.describe('Button in action bar', () => {
 
         // Check if the register button is hidden
         await expect(page.getByText('Register')).toHaveCount(0);
+        await page.close();
+        await page.context().close();
     });
 });
 
 test.describe('Action button in action bar', () => {
-    test('test', async ({ page }, { project }) => {
+    test('test', async ({ browser }, { project }) => {
         // Skip test for mobile device
         if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
         }
-      
-        // Go to WorkAdventure platform
-        await page.goto(
+        const page = await getPage(browser, 'Alice', 
             publicTestMapUrl("tests/E2E/empty.json", "buttonactionbar_script")
         );
-
-        // Login Alice
-        await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
-
+        
         // Use script to add new button
         await evaluateScript(page, async () => {
             return WA.ui.actionBar.addButton({
@@ -77,5 +70,7 @@ test.describe('Action button in action bar', () => {
 
         // Check if the register button is hidden
         await expect(page.locator('#register-btn')).toHaveCount(0);
+        await page.close();
+        await page.context().close();
     });
 });
