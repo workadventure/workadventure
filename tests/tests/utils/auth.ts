@@ -1,7 +1,6 @@
 import fs from 'fs';
 import { Browser, BrowserContext, expect, Page } from 'playwright/test';
 import { oidcAdminTagLogin, oidcMatrixUserLogin, oidcMemberTagLogin, oidcLogin } from './oidc';
-import { gotoWait200} from "./containers";
 import Menu from "./menu";
 import {play_url} from "./urls";
 
@@ -87,18 +86,19 @@ export async function getPage(browser: Browser,
     if(options.pageCreatedHook) {
         options.pageCreatedHook(page);
     }
-    await page.goto(url);
+    const targetUrl = new URL(url, play_url).toString();
+    await page.goto(targetUrl);
     await expect(page.getByTestId('microphone-button')).toBeVisible({ timeout: 15_000 });
     return page;
 }
 
-export async function getPageWait200(browser: Browser,
+/*export async function getPageWait200(browser: Browser,
         name: "Alice" | "Bob" | "Admin1" | "Admin2" | "Member1" | "UserMatrix" | "UserLogin1" | "John",
         url:string): Promise<Page> {
     await createUser(name, browser, url);
     const newBrowser: BrowserContext = await browser.newContext({ storageState: './.auth/' + name + '.json' });
     const page: Page = await newBrowser.newPage();
     await gotoWait200(page, url);
-    await expect(page.getByTestId('microphone-button')).toBeVisible({ timeout: 40_000 });
+    await expect(page.getByTestId('microphone-button')).toBeVisible({ timeout: 120_000 });
     return page;
-}
+}*/

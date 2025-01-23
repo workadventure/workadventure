@@ -7,7 +7,7 @@ import Megaphone from "./utils/map-editor/megaphone";
 import { resetWamMaps } from "./utils/map-editor/uploader";
 import MapEditor from "./utils/mapeditor";
 import Menu from "./utils/menu";
-import { hideNoCamera } from "./utils/roles";
+import { hideNoCamera } from "./utils/hideNoCamera";
 import { evaluateScript } from "./utils/scripting";
 import { map_storage_url } from "./utils/urls";
 import { getPage } from "./utils/auth";

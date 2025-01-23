@@ -3,7 +3,7 @@ import MapEditor from "../utils/mapeditor";
 import Menu from "../utils/menu";
 import AreaEditor from "../utils/map-editor/areaEditor";
 import Map from "../utils/map";
-import { hideNoCamera } from "../utils/roles";
+import { hideNoCamera } from "../utils/hideNoCamera";
 import { oidcMatrixUserLogin, oidcMemberTagLogin } from "../utils/oidc";
 import { resetWamMaps } from "../utils/map-editor/uploader";
 import { getPage } from "../utils/auth";

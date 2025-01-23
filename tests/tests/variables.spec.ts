@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { expect, test } from '@playwright/test';
 import {
-  gotoWait200,
+
   rebootBack,
   rebootPlay,
   rebootTraefik,
@@ -12,13 +12,13 @@ import {
 import {getBackDump, getPusherDump, getPusherRooms} from './utils/debug';
 import {assertLogMessage, startRecordLogs} from './utils/log';
 import {maps_domain, maps_test_url, play_url, publicTestMapUrl} from "./utils/urls";
-import { getPageWait200, getPage } from "./utils/auth";
+import { getPage } from "./utils/auth";
 
 test.setTimeout(360000);
 test.describe('Variables', () => {
   // WARNING: Since this test restarts traefik and other components, it might fail when run against the vite dev server.
   // when running with --headed you can manually reload the page to avoid this issue.
-  test('storage works @docker', async ({ browser }, { project }) => {
+  test('storage works @docker', async ({ browser, request }, { project }) => {
     // Skip test for mobile device
     if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
@@ -28,14 +28,11 @@ test.describe('Variables', () => {
 
     await resetRedis();
 
-    await Promise.all([rebootBack(), rebootPlay()]);
+    await Promise.all([rebootBack(), rebootPlay(request)]);
 
-    const page = await getPageWait200(browser, 'Alice',
-        publicTestMapUrl("tests/Variables/shared_variables.json", "variables") + + "&somerandomparam=1");
-    console.log(publicTestMapUrl("tests/Variables/shared_variables.json", "variables") + "&somerandomparam=1");
-    const textField = page
-      .frameLocator('#cowebsite-buffer iframe')
-      .locator('#textField');
+    const page = await getPage(browser, 'Alice',
+        publicTestMapUrl("tests/Variables/shared_variables.json", "variables") + "&somerandomparam=1");
+    const textField = page.locator('iframe[title="Cowebsite"]').contentFrame().locator('#textField');
 
     await expect(textField).toHaveValue('default value');
     await textField.fill('');
@@ -85,11 +82,11 @@ test.describe('Variables', () => {
         new URL(`/_/global/${maps_domain}/tests/Variables/shared_variables.json`, play_url).toString()
       ]
     ).toBe(undefined);
-
-    await gotoWait200(
+    await page.goto(publicTestMapUrl("tests/Variables/shared_variables.json", "variables"))
+    /*await gotoWait200(
         page,
       publicTestMapUrl("tests/Variables/shared_variables.json", "variables")
-    );
+    );*/
     // Redis will reconnect automatically and will store the variable on reconnect!
     // So we should see the new value.
     await expect(textField).toHaveValue('value set while Redis stopped', {
@@ -98,11 +95,11 @@ test.describe('Variables', () => {
 
     // Now, let's try to kill / reboot the back
     await rebootBack();
-
-    await gotoWait200(
+    await page.goto(publicTestMapUrl("tests/Variables/shared_variables.json", "variables"));
+    /*await gotoWait200(
         page,
       publicTestMapUrl("tests/Variables/shared_variables.json", "variables")
-    );
+    );*/
     await expect(textField).toHaveValue('value set while Redis stopped', {
       timeout: 60000,
     });
@@ -118,9 +115,10 @@ test.describe('Variables', () => {
     await expect(textField).toHaveValue('value set after back restart');
 
     // Now, let's try to kill / reboot the back
-    await rebootPlay();
+    await rebootPlay(request);
 
-    await gotoWait200(page, publicTestMapUrl("tests/Variables/shared_variables.json", "variables"));
+    await page.goto(publicTestMapUrl("tests/Variables/shared_variables.json", "variables"));
+    //await gotoWait200(page, publicTestMapUrl("tests/Variables/shared_variables.json", "variables"));
 
     await expect(textField).toHaveValue('value set after back restart', {
       timeout: 60000,

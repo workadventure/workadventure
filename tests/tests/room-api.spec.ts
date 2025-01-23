@@ -5,7 +5,7 @@ import {evaluateScript} from "./utils/scripting";
 import {RENDERER_MODE} from "./utils/environment";
 import {maps_domain, play_url, publicTestMapUrl} from "./utils/urls";
 import { getCoWebsiteIframe } from "./utils/iframe";
-import {getPage, getPageWait200} from "./utils/auth";
+import {getPage } from "./utils/auth";
 
 const apiKey = process.env.ROOM_API_SECRET_KEY;
 
@@ -65,7 +65,7 @@ test.describe('Room API', async () => {
         }
 
         const newValue =  "New Value - " + Math.random().toString(36).substring(2,7);
-        const page = await getPageWait200(browser, "Alice", roomUrl + "?phaserMode=" + RENDERER_MODE);
+        const page = await getPage(browser, "Alice", roomUrl + "?phaserMode=" + RENDERER_MODE);
 
         const textField = getCoWebsiteIframe(page).locator("#textField");
 
@@ -111,7 +111,7 @@ test.describe('Room API', async () => {
             name: variableName,
             room: roomUrl,
         });
-        const page = await getPageWait200(browser, "Alice", roomUrl + "?phaserMode=" + RENDERER_MODE);
+        const page = await getPage(browser, "Alice", roomUrl + "?phaserMode=" + RENDERER_MODE);
 
         const textField = getCoWebsiteIframe(page).locator("#textField");
 

@@ -3,7 +3,7 @@ import { APIResponse, expect, test } from '@playwright/test';
 import {createZipFromDirectory} from "./utils/zip";
 import {RENDERER_MODE} from "./utils/environment";
 import {map_storage_url, maps_domain} from "./utils/urls";
-import { getPageWait200} from "./utils/auth";
+import { getPage} from "./utils/auth";
 
 test.use({
     baseURL: map_storage_url,
@@ -53,8 +53,8 @@ test.describe('Map-storage Upload API', () => {
             }
         });
         await expect(uploadFile2.ok()).toBeTruthy();
-        const page = await getPageWait200(browser, 'Alice', `/~/map1.wam?phaserMode=${RENDERER_MODE}`);
-        const page2 = await getPageWait200(browser, 'Bob', `/~/map2.wam?phaserMode=${RENDERER_MODE}`);
+        const page = await getPage(browser, 'Alice', `/~/map1.wam?phaserMode=${RENDERER_MODE}`);
+        const page2 = await getPage(browser, 'Bob', `/~/map2.wam?phaserMode=${RENDERER_MODE}`);
 
         // Let's trigger a reload of map 1 only
         const uploadFile3 = await request.put("map1.wam", {
