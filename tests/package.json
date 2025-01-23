@@ -36,5 +36,8 @@
     "*.ts": [
       "eslint --fix"
     ]
+  },
+  "dependencies": {
+    "playwright": "^1.49.1"
   }
 }

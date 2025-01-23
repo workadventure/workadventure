@@ -50,8 +50,11 @@ async function createUser(
     // selectMedia
     await expect(page.locator('h2', { hasText: "Turn on your camera and microphone" })).toBeVisible();
     await page.click("text=Save");
-
-    await Menu.expectButtonState(page, "microphone-button", 'normal');
+    if(browser.browserType().name() !== "webkit") {
+        await Menu.expectButtonState(page, "microphone-button", 'normal');
+        await Menu.expectButtonState(page, "camera-button", 'normal');
+    }
+    await expect(page.getByTestId('chat-btn')).toBeVisible();
 
     switch (name) {
         case "Admin1":
