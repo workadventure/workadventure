@@ -1,5 +1,4 @@
-
-import {expect, test} from '@playwright/test';
+import {expect, test } from '@playwright/test';
 import { evaluateScript } from './utils/scripting';
 import Menu  from './utils/menu';
 import Map  from './utils/map';
