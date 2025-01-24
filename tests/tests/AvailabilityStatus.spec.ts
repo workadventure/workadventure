@@ -6,12 +6,12 @@ import { publicTestMapUrl } from './utils/urls';
 import { getPage } from './utils/auth'
 
 test.describe('Availability Status', () => {
-    test.beforeEach(async ({ }, workerInfo: TestInfo) => {
-        if (workerInfo.project.name !== "mobilechromium") {
-            test.skip();
-        }
-    });
     test.describe('Busy Status',() => {
+        test.beforeEach(async ({ }, workerInfo: TestInfo) => {
+            if (workerInfo.project.name !== "mobilechromium") {
+                test.skip();
+            }
+        });
         test('should return to online status when you move',async({ browser, browserName }, {project}) => {
             // Skip webkit because the moving player with the keyboard doesn't work
             if(browserName === "webkit") {
@@ -132,6 +132,11 @@ test.describe('Availability Status', () => {
         })
         
         test.describe('busy interaction',async()=>{
+            test.beforeEach(async ({ }, workerInfo: TestInfo) => {
+                if (workerInfo.project.name !== "mobilechromium") {
+                    test.skip();
+                }
+            });
             test('should open a popup when a bubble is created...',
                 async({ browserName, browser }, { project }) => {
                 if(browserName === "webkit"){
@@ -278,6 +283,11 @@ test.describe('Availability Status', () => {
 
     })
     test.describe('Back in a moment Status',()=>{
+        test.beforeEach(async ({ }, workerInfo: TestInfo) => {
+            if (workerInfo.project.name !== "mobilechromium") {
+                test.skip();
+            }
+        });
         test('should return to online status when you move', async({ browser, browserName },{ project }) => {
             // Skip webkit because the moving player with the keyboard doesn't work
             if(browserName === "webkit"){
@@ -359,6 +369,11 @@ test.describe('Availability Status', () => {
             await page.context().close();
         })
         test.describe('Back in a moment interaction',async()=>{
+            test.beforeEach(async ({ }, workerInfo: TestInfo) => {
+                if (workerInfo.project.name !== "mobilechromium") {
+                    test.skip();
+                }
+            });
             test('should not create a bubble',async({ browser }, { project }) => {
                 const statusName = "Back in a moment";
                 const isMobileTest = project.name === "mobilechromium";
@@ -389,6 +404,11 @@ test.describe('Availability Status', () => {
         })
     })
     test.describe('Do not disturb Status',()=>{
+        test.beforeEach(async ({ }, workerInfo: TestInfo) => {
+            if (workerInfo.project.name !== "mobilechromium") {
+                test.skip();
+            }
+        });
         test('should return to online status when you move', async({ browser, browserName }, { project }) => {
             // Skip webkit because the moving player with the keyboard doesn't work
             if(browserName === "webkit"){

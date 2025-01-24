@@ -6,12 +6,12 @@ import { getPage } from '../utils/auth'
 
 test.describe('Availability Status on mobile', () => {
     // FIXME remove when mobileChromium will be no more
-    test.beforeEach(async ({ }, workerInfo: TestInfo) => {
-        if (workerInfo.project.name !== "mobilechromium") {
-            test.skip();
-        }
-    });
     test.describe('Busy Status',() => {
+        test.beforeEach(async ({ }, workerInfo: TestInfo) => {
+            if (workerInfo.project.name !== "mobilechromium") {
+                test.skip();
+            }
+        });
        test('should return to online status when you move',async({ browser}) => {
            const statusName = "Busy";
            const page = await getPage(browser, 'Alice',
@@ -30,6 +30,11 @@ test.describe('Availability Status on mobile', () => {
        });
     });
     test.describe('Back in a moment status',() => {
+        test.beforeEach(async ({ }, workerInfo: TestInfo) => {
+            if (workerInfo.project.name !== "mobilechromium") {
+                test.skip();
+            }
+        });
         test('should return to online status when you move',async({ browser}) => {
             const statusName = "Back in a moment";
             const page = await getPage(browser, 'Alice',
@@ -48,7 +53,12 @@ test.describe('Availability Status on mobile', () => {
         });
     });
     test.describe('Do not disturb status',() => {
-       test('should return to online status when you move',async({ browser}) => {
+        test.beforeEach(async ({ }, workerInfo: TestInfo) => {
+            if (workerInfo.project.name !== "mobilechromium") {
+                test.skip();
+            }
+        });
+        test('should return to online status when you move',async({ browser}) => {
            const statusName = "Do not disturb";
            const page = await getPage(browser, 'Alice',
             publicTestMapUrl("tests/E2E/empty.json", "availability-status")
