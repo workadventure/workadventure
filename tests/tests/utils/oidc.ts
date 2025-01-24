@@ -3,13 +3,16 @@ import Menu from "./menu";
 
 export async function oidcLogin(
   page: Page,
+  isMobile = false,
   userName = "User1",
-  password = "pwd",
-  _isMobile = false
+  password = "pwd"
 ) {
-  //await page.click("#menuIcon img:first-child");
-  await page.click('a:has-text("Login")');
-
+  if (isMobile) {
+    await page.getByRole('link', { name: 'Login' }).click();
+  }
+  else {
+    await page.click('a:has-text("Login")');
+  }
   await page.fill("#Input_Username", userName, {
     timeout: 40_000,
   });
@@ -27,27 +30,22 @@ export async function oidcLogin(
 
 export async function oidcLogout(page: Page, isMobile = false) {
   if (isMobile) {
-    await expect(page.locator("button#burgerIcon")).toBeVisible();
-    const mobileMenuVisible = await page
-      .locator("button#burgerIcon img.tw-rotate-0")
-      .isVisible();
-    if (mobileMenuVisible) {
-      await page.click("button#burgerIcon");
-    }
+    await page.getByTestId('burger-menu').click();
   }
-  await Menu.openMenu(page);
+  else {
+    await Menu.openMenu(page);
+  }
   await page.getByRole('button', { name: 'Log out' }).click();
-  await expect(page.locator('a:has-text("Login")')).toBeVisible();
 }
 
 export async function oidcAdminTagLogin(page, isMobile = false) {
-  await oidcLogin(page, "User1", "pwd", isMobile);
+  await oidcLogin(page, isMobile, "User1", "pwd");
 }
 
 export async function oidcMatrixUserLogin(page, isMobile = false) {
-  await oidcLogin(page, "UserMatrix", "pwd", isMobile);
+  await oidcLogin(page, isMobile, "UserMatrix", "pwd");
 }
 
 export async function oidcMemberTagLogin(page, isMobile = false) {
-  await oidcLogin(page, "User2", "pwd", isMobile);
+  await oidcLogin(page, isMobile, "User2", "pwd");
 }

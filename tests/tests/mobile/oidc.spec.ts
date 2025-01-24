@@ -1,0 +1,47 @@
+import { expect, test } from '@playwright/test';
+import {oidcLogin, oidcLogout} from "../utils/oidc";
+import {evaluateScript} from "../utils/scripting";
+import {publicTestMapUrl} from "../utils/urls";
+import {getPage} from "../utils/auth";
+
+test.describe('OpenId connect @oidc mobile', () => {
+    test('Can login and logout', async ({ browser }, { project }) => {
+        if(project.name !== "mobilechromium") {
+            // eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+        }
+        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "oidc"));
+
+        // Test if player variable is correct
+        let isLogged = await evaluateScript(page, async () => {
+            await WA.onInit();
+            return WA.player.isLogged;
+        });
+        await expect(isLogged).toBe(false);
+
+        // Login and Logout
+        await page.getByTestId('burger-menu').click();
+        await oidcLogin(page, true);
+
+        // Test  if player variable is correct
+        isLogged = await evaluateScript(page, async () => {
+            await WA.onInit();
+            return WA.player.isLogged;
+        });
+        await expect(isLogged).toBe(true);
+
+        // Logout User
+        await oidcLogout(page, true);
+
+        // Check user is Logout
+        await page.getByTestId('burger-menu').click();
+        await expect(page.getByRole('link', { name: 'Login' })).toBeVisible();
+
+        // Let's try to login using the scripting API
+        await evaluateScript(page, async () => {
+            await WA.onInit();
+            await WA.nav.goToLogin();
+        });
+        await expect(page.locator('#Input_Username')).toBeVisible();
+    });
+});
