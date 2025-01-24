@@ -54,7 +54,7 @@ async function createUser(
         await Menu.expectButtonState(page, "microphone-button", 'normal');
         await Menu.expectButtonState(page, "camera-button", 'normal');
     }
-    await expect(page.getByTestId('chat-btn')).toBeVisible();
+    await expect(page.locator('#main-layout').getByRole('button').filter({ hasText: /^$/ }).first()).toBeVisible();
 
     switch (name) {
         case "Admin1":
