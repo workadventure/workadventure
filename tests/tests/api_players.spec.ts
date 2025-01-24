@@ -418,7 +418,7 @@ test.describe("API WA.players", () => {
       publicTestMapUrl(`tests/E2E/empty.json`, "api_players")
     );
 
-    await runPersistenceTest(page, browser);
+    await runPersistenceTest(page, browser, false);
     await page.close();
     await page.context().close();
   });
@@ -441,7 +441,7 @@ test.describe("API WA.players", () => {
       publicTestMapUrl(`tests/E2E/empty.json`, "api_players")
     );
     await oidcLogin(page);
-    await runPersistenceTest(page, browser, project.name === "mobilechromium");
+    await runPersistenceTest(page, browser, false);
 
     await oidcLogout(page, false);
     await page.close();
