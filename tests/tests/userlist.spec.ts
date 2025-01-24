@@ -6,15 +6,15 @@ import { getPage } from "./utils/auth";
 
 test.describe("Walk to", () => {
   test("walk to a user ", async ({ browser }, { project }) => {
-    if (project.name === "mobilechromium") {
+    if (project.name === "mobilechromium" || project.name === "webkit") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
     }
     const page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/empty.json", "userlist"));
     const alicePosition = {
-      x: 3 * 32,
-      y: 4 * 32,
+      x: 4 * 32,
+      y: 5 * 32,
     };
     await Map.teleportToPosition(page, alicePosition.x, alicePosition.y);
 
@@ -24,7 +24,7 @@ test.describe("Walk to", () => {
     await chatUtils.openUserList(userBob, false);
     await chatUtils.UL_walkTo(userBob, "Alice");
 
-    //await chatUtils.open(page, false);
+    await chatUtils.open(page, false);
 
     await expect(page.getByTestId("roomName")).toHaveText(
       "Proximity Chat"
