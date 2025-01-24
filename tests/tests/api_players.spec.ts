@@ -399,8 +399,8 @@ test.describe("API WA.players", () => {
     
     await page2.close();
     await page2.context().close();
-    await page.close();
-    await page.context().close();
+    //await page.close();
+    //await page.context().close();
   };
 
   test("Test variable persistence for anonymous users.", async ({
@@ -603,8 +603,8 @@ test.describe("API WA.players", () => {
 
     await page2.close();
     await page2.context().close();
-    await page.close();
-    await page.context().close();
+    //await page.close();
+    //await page.context().close();
   });
 
   test("Test that a variable changed can be listened to locally.", async ({
