@@ -1,4 +1,4 @@
-import {expect, test } from '@playwright/test';
+import {expect, test, TestInfo} from '@playwright/test';
 import { evaluateScript } from './utils/scripting';
 import Menu  from './utils/menu';
 import Map  from './utils/map';
@@ -6,6 +6,11 @@ import { publicTestMapUrl } from './utils/urls';
 import { getPage } from './utils/auth'
 
 test.describe('Availability Status', () => {
+    test.beforeEach(async ({ }, workerInfo: TestInfo) => {
+        if (workerInfo.project.name !== "mobilechromium") {
+            test.skip();
+        }
+    });
     test.describe('Busy Status',() => {
         test('should return to online status when you move',async({ browser, browserName }, {project}) => {
             // Skip webkit because the moving player with the keyboard doesn't work

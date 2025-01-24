@@ -6,7 +6,7 @@ import { getPage } from '../utils/auth'
 
 test.describe('Availability Status on mobile', () => {
     // FIXME remove when mobileChromium will be no more
-    test.beforeEach(async ({ browser }, workerInfo: TestInfo) => {
+    test.beforeEach(async ({ }, workerInfo: TestInfo) => {
         if (workerInfo.project.name !== "mobilechromium") {
             test.skip();
         }
