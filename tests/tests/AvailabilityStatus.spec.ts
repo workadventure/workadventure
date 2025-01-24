@@ -1,4 +1,4 @@
-import {expect, test, TestInfo} from '@playwright/test';
+import {expect, test} from '@playwright/test';
 import { evaluateScript } from './utils/scripting';
 import Menu  from './utils/menu';
 import Map  from './utils/map';
@@ -7,14 +7,9 @@ import { getPage } from './utils/auth'
 
 test.describe('Availability Status', () => {
     test.describe('Busy Status',() => {
-        test.beforeEach(async ({ }, workerInfo: TestInfo) => {
-            if (workerInfo.project.name !== "mobilechromium") {
-                test.skip();
-            }
-        });
-        test('should return to online status when you move',async({ browser, browserName }, {project}) => {
+        test('should return to online status when you move',async({ browser }, {project}) => {
             // Skip webkit because the moving player with the keyboard doesn't work
-            if(browserName === "webkit") {
+            if(project.name === "webkit" || project.name === "mobilechromium") {
                 //eslint-disable-next-line playwright/no-skipped-test
                test.skip();
                return;
@@ -44,8 +39,8 @@ test.describe('Availability Status', () => {
             await page.close();
             await page.context().close();
         })
-        test('should disable microphone and camera', async({ browser, browserName }, {project}) => {
-            if(browserName === "webkit"){
+        test('should disable microphone and camera', async({ browser }, {project}) => {
+            if(project.name === "webkit" || project.name === "mobilechromium"){
                  //eslint-disable-next-line playwright/no-skipped-test
                 test.skip();
                 return;
@@ -104,7 +99,7 @@ test.describe('Availability Status', () => {
         })
         test('should ask to change notification permission when you pass in Busy status and your browser notification permission is denied',
             async({ browser, browserName }, { project }) => {
-            if(browserName === "firefox" || browserName === "webkit"){
+            if(browserName === "firefox" || browserName === "webkit" || project.name === "mobilechromium"){
                 //skip for firefox because of notification permission management
                 //eslint-disable-next-line playwright/no-skipped-test
                 test.skip();
@@ -131,15 +126,10 @@ test.describe('Availability Status', () => {
             await page.context().close();
         })
         
-        test.describe('busy interaction',async()=>{
-            test.beforeEach(async ({ }, workerInfo: TestInfo) => {
-                if (workerInfo.project.name !== "mobilechromium") {
-                    test.skip();
-                }
-            });
+        test.describe('busy interaction',async() => {
             test('should open a popup when a bubble is created...',
                 async({ browserName, browser }, { project }) => {
-                if(browserName === "webkit"){
+                if(browserName === "webkit" || project.name === "mobilechromium"){
                      //eslint-disable-next-line playwright/no-skipped-test
                     test.skip();
                     return;
@@ -190,7 +180,7 @@ test.describe('Availability Status', () => {
             })
             test('should return to online status after accept conversation',
                 async({ browser, browserName}, { project }) => {
-                if(browserName === "webkit"){
+                if(browserName === "webkit" || project.name === "mobilechromium"){
                      //eslint-disable-next-line playwright/no-skipped-test
                     test.skip();
                     return;
@@ -235,7 +225,7 @@ test.describe('Availability Status', () => {
             test('should keep busy status  after refuse conversation',
                 async({ browser, browserName}, { project })=>{
                 
-                if(browserName === "webkit"){
+                if(browserName === "webkit" || project.name === "mobilechromium"){
                      //eslint-disable-next-line playwright/no-skipped-test
                     test.skip();
                     return;
@@ -283,14 +273,9 @@ test.describe('Availability Status', () => {
 
     })
     test.describe('Back in a moment Status',()=>{
-        test.beforeEach(async ({ }, workerInfo: TestInfo) => {
-            if (workerInfo.project.name !== "mobilechromium") {
-                test.skip();
-            }
-        });
         test('should return to online status when you move', async({ browser, browserName },{ project }) => {
             // Skip webkit because the moving player with the keyboard doesn't work
-            if(browserName === "webkit"){
+            if(browserName === "webkit" || project.name === "mobilechromium"){
                 //eslint-disable-next-line playwright/no-skipped-test
                 test.skip();
                 return;
@@ -315,7 +300,7 @@ test.describe('Availability Status', () => {
         test('should disable microphone and camera',async({ browser, browserName }, { project }) => {
             const statusName = "Back in a moment";
             const isMobileTest = project.name === "mobilechromium";
-            if(browserName === "webkit") {
+            if(browserName === "webkit" || project.name === "mobilechromium") {
                  //eslint-disable-next-line playwright/no-skipped-test
                 test.skip();
                 return;
@@ -369,15 +354,12 @@ test.describe('Availability Status', () => {
             await page.context().close();
         })
         test.describe('Back in a moment interaction',async()=>{
-            test.beforeEach(async ({ }, workerInfo: TestInfo) => {
-                if (workerInfo.project.name !== "mobilechromium") {
+            test('should not create a bubble',async({ browser }, { project }) => {
+                if(project.name === "mobilechromium") {
                     test.skip();
                 }
-            });
-            test('should not create a bubble',async({ browser }, { project }) => {
                 const statusName = "Back in a moment";
-                const isMobileTest = project.name === "mobilechromium";
-                const page = await getPage(browser, 'Alice', 
+                const page = await getPage(browser, 'Alice',
                     publicTestMapUrl("tests/E2E/empty.json", "availability-status")
                 );
                 const positionToDiscuss = {
@@ -386,7 +368,7 @@ test.describe('Availability Status', () => {
                 };
 
                 await Map.teleportToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
-                await Menu.openStatusList(page, isMobileTest);
+                await Menu.openStatusList(page, false);
                 await Menu.clickOnStatus(page,statusName); 
                 
                 const userBob = await getPage(browser, 'Bob', 
@@ -404,14 +386,9 @@ test.describe('Availability Status', () => {
         })
     })
     test.describe('Do not disturb Status',()=>{
-        test.beforeEach(async ({ }, workerInfo: TestInfo) => {
-            if (workerInfo.project.name !== "mobilechromium") {
-                test.skip();
-            }
-        });
         test('should return to online status when you move', async({ browser, browserName }, { project }) => {
             // Skip webkit because the moving player with the keyboard doesn't work
-            if(browserName === "webkit"){
+            if(browserName === "webkit" || project.name === "mobilechromium"){
                 //eslint-disable-next-line playwright/no-skipped-test
                 test.skip();
                 return;
@@ -437,7 +414,7 @@ test.describe('Availability Status', () => {
             await page.context().close();
         })
         test('should disable microphone and camera', async({ browser, browserName }, { project }) => {
-            if(browserName === "webkit"){
+            if(browserName === "webkit" || project.name === "mobilechromium"){
                  //eslint-disable-next-line playwright/no-skipped-test
                 test.skip();
                 return;
@@ -495,6 +472,9 @@ test.describe('Availability Status', () => {
         })
         test.describe('Do not disturb interaction',async()=>{
             test('should not create a bubble ', async({ browser }, { project }) => {
+                if(project.name === "mobilechromium") {
+                    test.skip();
+                }
                 const statusName = "Do not disturb";
                 const isMobileTest = project.name === "mobilechromium";
                 const page = await getPage(browser, 'Alice',

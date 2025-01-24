@@ -1,8 +1,8 @@
 import {expect, test} from '@playwright/test';
-import Menu from "./utils/menu";
-import Map from "./utils/map";
-import {play_url, publicTestMapUrl} from "./utils/urls";
-import {getPage} from "./utils/auth";
+import Menu from "../utils/menu";
+import Map from "../utils/map";
+import {play_url, publicTestMapUrl} from "../utils/urls";
+import {getPage} from "../utils/auth";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
