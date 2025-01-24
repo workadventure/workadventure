@@ -88,6 +88,10 @@ test.describe("Iframe API", () => {
   });
 
   test("test disable invite user button", async ({ browser }, { project }) => {
+    if (project.name === "mobilechromium") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+    }
     const page = await getPage(browser, 'Alice',
       publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
     );
@@ -121,9 +125,9 @@ test.describe("Iframe API", () => {
     await page.context().close();
   });
 
-  test("test disable screen sharing", async ({ browser }) => {
+  test("test disable screen sharing", async ({ browser },{project}) => {
     // This test does not depend on the browser. Let's only run it in Chromium.
-    if (browser.browserType() !== chromium) {
+    if (browser.browserType() !== chromium || project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
@@ -169,9 +173,9 @@ test.describe("Iframe API", () => {
     await page.context().close();
   });
 
-  test("test disable right click user button", async ({ browser }) => {
+  test("test disable right click user button", async ({ browser }, {project}) => {
     // This test does not depend on the browser. Let's only run it in Chromium.
-    if (browser.browserType() !== chromium) {
+    if (browser.browserType() !== chromium || project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
@@ -216,6 +220,5 @@ test.describe("Iframe API", () => {
     await page.close();
     await page.context().close();
   });
-
-  // TDODO: disable and restore wheel zoom
+  // TODO: disable and restore wheel zoom
 });
