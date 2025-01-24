@@ -24,7 +24,7 @@ test.describe("Walk to", () => {
     await chatUtils.openUserList(userBob, false);
     await chatUtils.UL_walkTo(userBob, "Alice");
 
-    await chatUtils.open(page, false);
+    //await chatUtils.open(page, false);
 
     await expect(page.getByTestId("roomName")).toHaveText(
       "Proximity Chat"
