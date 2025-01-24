@@ -6,6 +6,7 @@ import { getPage } from "./utils/auth"
 test.describe('Scripting API Events', () => {
     test('test events', async ({ browser, request }, { project }) => {
         // Skip test for mobile device
+        // FIXME skip for webkit
         if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();

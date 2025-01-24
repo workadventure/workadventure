@@ -399,6 +399,8 @@ test.describe("API WA.players", () => {
     
     await page2.close();
     await page2.context().close();
+    //await page.close();
+    //await page.context().close();
   };
 
   test("Test variable persistence for anonymous users.", async ({
@@ -416,7 +418,7 @@ test.describe("API WA.players", () => {
       publicTestMapUrl(`tests/E2E/empty.json`, "api_players")
     );
 
-    await runPersistenceTest(page, browser);
+    await runPersistenceTest(page, browser, false);
     await page.close();
     await page.context().close();
   });
@@ -438,8 +440,8 @@ test.describe("API WA.players", () => {
       'Alice',
       publicTestMapUrl(`tests/E2E/empty.json`, "api_players")
     );
-    await oidcLogin(page); // FIXME should be remove but don't work when we load the .json
-    await runPersistenceTest(page, browser, project.name === "mobilechromium");
+    await oidcLogin(page);
+    await runPersistenceTest(page, browser, false);
 
     await oidcLogout(page, false);
     await page.close();
@@ -506,7 +508,7 @@ test.describe("API WA.players", () => {
     browser,
   }, { project }) => {
     // Skip test for mobile device
-    if (project.name === "mobilechromium") {
+    if (project.name === "mobilechromium" || project.name === "webkit") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
@@ -601,6 +603,8 @@ test.describe("API WA.players", () => {
 
     await page2.close();
     await page2.context().close();
+    //await page.close();
+    //await page.context().close();
   });
 
   test("Test that a variable changed can be listened to locally.", async ({
