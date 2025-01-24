@@ -53,17 +53,15 @@ export class EntitiesCollectionsManager {
             const entityCollections: { collection: EntityCollection; url: string }[] = [];
             const fetchUrlPromises: Promise<EntityCollectionRaw>[] = [];
             for (const descriptor of collectionDescriptors) {
-                const promise = this.fetchRawCollection(descriptor.url);
+                const promise = this.fetchRawCollection(descriptor.url).then((entityCollectionRaw) => {
+                    entityCollectionRaw = entitiesFileMigration.migrate(entityCollectionRaw);
+                    entityCollections.push({
+                        collection: this.parseRawCollection(entityCollectionRaw, descriptor.type),
+                        url: descriptor.url,
+                    });
+                    return entityCollectionRaw;
+                });
                 fetchUrlPromises.push(promise);
-                promise
-                    .then((entityCollectionRaw) => {
-                        entityCollectionRaw = entitiesFileMigration.migrate(entityCollectionRaw);
-                        entityCollections.push({
-                            collection: this.parseRawCollection(entityCollectionRaw, descriptor.type),
-                            url: descriptor.url,
-                        });
-                    })
-                    .catch((error) => console.warn(error));
             }
 
             //TODO check tagSet and this.currentCollection
