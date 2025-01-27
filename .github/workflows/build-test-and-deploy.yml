@@ -81,11 +81,11 @@ jobs:
           outputs: type=docker,dest=/tmp/play.tar
 
       - name: Load image (for sentry)
-        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' }}
         run: docker image load --input /tmp/play.tar
 
       - name: Sentry push source maps
-        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' }}
         continue-on-error: true
         env:
           SENTRY_URL: ${{ secrets.SENTRY_URL }}
@@ -184,11 +184,11 @@ jobs:
           outputs: type=docker,dest=/tmp/back.tar
 
       - name: Load image (for sentry)
-        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' }}
         run: docker image load --input /tmp/back.tar
 
       - name: Sentry push source maps
-        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' }}
         env:
           SENTRY_URL: ${{ secrets.SENTRY_URL }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
@@ -409,11 +409,11 @@ jobs:
           outputs: type=docker,dest=/tmp/map-storage.tar
 
       - name: Load image (for sentry)
-        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' }}
         run: docker image load --input /tmp/map-storage.tar
 
       - name: Sentry push source maps
-        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
+        if: ${{ github.event_name == 'push' || github.event_name == 'release' }}
         env:
           SENTRY_URL: ${{ secrets.SENTRY_URL }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
