@@ -516,7 +516,7 @@ jobs:
             nbShards: 3
             renderer: headless
           - browser: ""
-            parameters: --project=chromium --shard=1/1 --project=firefox --shard=1/1 --project=webkit --shard=1/1
+            parameters: --project=mobilechromium --project=mobilefirefox --project=mobilewebkit --shard=1/1
             project: mobile
             shard: 1
             nbShards: 1
