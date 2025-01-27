@@ -3,6 +3,7 @@ import Menu from "../utils/menu";
 import Map from "../utils/map";
 import {play_url, publicTestMapUrl} from "../utils/urls";
 import {getPage} from "../utils/auth";
+import {getDevices} from "../utils/devices";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -10,13 +11,13 @@ test.use({
 })
 
 test.describe('Mobile', () => {
-    test('Successfully bubble discussion with mobile device', async ({ browser }, workerInfo) => {
-        // If the browser is webkit
-        if (workerInfo.project.name !== "mobilechromium") {
-            //eslint-disable-next-line playwright/no-skipped-test
+    test.beforeEach(async ({ page }) => {
+        if (!getDevices(page)) {
             test.skip();
             return;
         }
+    });
+    test('Successfully bubble discussion with mobile device', async ({ browser }) => {
         const page = await getPage(browser, 'Bob', Map.url("empty"));
 
         const positionToDiscuss = {
@@ -80,20 +81,11 @@ test.describe('Mobile', () => {
         await page.context().close();
     });
 
-    test('Successfully jitsi cowebsite with mobile device', async ({ browser }, workerInfo) => {
-        // If the browser is webkit, we skip the test because the option 'ArrowRight' doesn't work
-        if (workerInfo.project.name !== "mobilechromium") {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
+    test('Successfully jitsi cowebsite with mobile device', async ({ browser }) => {
         const page = await getPage(browser, 'Bob',
             publicTestMapUrl('tests/CoWebsite/cowebsite_jitsiroom.json', 'mobile'));
 
         // Move to open a cowebsite
-        //await page.pause();
-        //await Map.walkTo(page, 'ArrowRight', 3000);
-        //await page.waitForTimeout(6000);
         await page.locator('#body').press('ArrowRight', { delay: 10000 });
         // Now, let's move player 2 to the speaker zone
         

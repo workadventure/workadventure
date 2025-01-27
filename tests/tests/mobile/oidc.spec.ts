@@ -3,13 +3,15 @@ import {oidcLogin, oidcLogout} from "../utils/oidc";
 import {evaluateScript} from "../utils/scripting";
 import {publicTestMapUrl} from "../utils/urls";
 import {getPage} from "../utils/auth";
+import {getDevices} from "../utils/devices";
 
 test.describe('OpenId connect @oidc mobile', () => {
-    test('Can login and logout', async ({ browser }, { project }) => {
-        if(project.name !== "mobilechromium") {
-            // eslint-disable-next-line playwright/no-skipped-test
+    test.beforeEach(async ({ page }) => {
+        if (!getDevices(page)) {
             test.skip();
         }
+    })
+    test('Can login and logout', async ({ browser }, { project }) => {
         const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "oidc"));
 
         // Test if player variable is correct
@@ -20,8 +22,7 @@ test.describe('OpenId connect @oidc mobile', () => {
         await expect(isLogged).toBe(false);
 
         // Login and Logout
-        await page.getByTestId('burger-menu').click();
-        await oidcLogin(page, true);
+        await oidcLogin(page);
 
         // Test  if player variable is correct
         isLogged = await evaluateScript(page, async () => {
@@ -31,10 +32,10 @@ test.describe('OpenId connect @oidc mobile', () => {
         await expect(isLogged).toBe(true);
 
         // Logout User
-        await oidcLogout(page, true);
+        await oidcLogout(page);
 
         // Check user is Logout
-        await await page.getByTestId('burger-menu').click();
+        await page.getByTestId('burger-menu').click();
         await expect(page.getByRole('link', { name: 'Login' })).toBeVisible();
 
         // Let's try to login using the scripting API

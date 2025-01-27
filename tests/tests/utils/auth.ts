@@ -59,14 +59,14 @@ async function createUser(
     switch (name) {
         case "Admin1":
         case "Admin2":
-            await oidcAdminTagLogin(page, false);    
+            await oidcAdminTagLogin(page);
             break;
         case "Member1":
-            await oidcMemberTagLogin(page, false);
+            await oidcMemberTagLogin(page);
             break;
         case "UserMatrix":
         case "UserMatrix2":
-            await oidcMatrixUserLogin(page, false);
+            await oidcMatrixUserLogin(page);
             break;
         case "UserLogin1":
             await oidcLogin(page);
@@ -100,14 +100,3 @@ export async function getPage(browser: Browser,
     await expect(page.getByTestId('microphone-button')).toBeVisible({ timeout: 15_000 });
     return page;
 }
-
-/*export async function getPageWait200(browser: Browser,
-        name: "Alice" | "Bob" | "Admin1" | "Admin2" | "Member1" | "UserMatrix" | "UserLogin1" | "John",
-        url:string): Promise<Page> {
-    await createUser(name, browser, url);
-    const newBrowser: BrowserContext = await browser.newContext({ storageState: './.auth/' + name + '.json' });
-    const page: Page = await newBrowser.newPage();
-    await gotoWait200(page, url);
-    await expect(page.getByTestId('microphone-button')).toBeVisible({ timeout: 120_000 });
-    return page;
-}*/

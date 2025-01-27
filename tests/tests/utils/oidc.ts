@@ -1,15 +1,15 @@
 import { expect, Page } from "@playwright/test";
 import Menu from "./menu";
+import {getDevices} from "./devices";
 
 
 // for oidcLogin to work on mobile you must open the burger menu before calling this function
 export async function oidcLogin(
   page: Page,
-  isMobile = false,
   userName = "User1",
   password = "pwd"
 ) {
-  if (isMobile) {
+  if (getDevices(page)) {
     await page.getByTestId('burger-menu').click();
     await page.getByRole('link', { name: 'Login' }).click();
   }
@@ -31,8 +31,8 @@ export async function oidcLogin(
   });
 }
 
-export async function oidcLogout(page: Page, isMobile = false) {
-  if (isMobile) {
+export async function oidcLogout(page: Page) {
+  if (getDevices(page)) {
     await page.getByTestId('burger-menu').click();
   }
   else {
@@ -41,14 +41,14 @@ export async function oidcLogout(page: Page, isMobile = false) {
   await page.getByRole('button', { name: 'Log out' }).click();
 }
 
-export async function oidcAdminTagLogin(page, isMobile = false) {
-  await oidcLogin(page, isMobile, "User1", "pwd");
+export async function oidcAdminTagLogin(page: Page, isMobile = "no") {
+  await oidcLogin(page, "User1", "pwd");
 }
 
-export async function oidcMatrixUserLogin(page, isMobile = false) {
-  await oidcLogin(page, isMobile, "UserMatrix", "pwd");
+export async function oidcMatrixUserLogin(page: Page, isMobile = "no") {
+  await oidcLogin(page, "UserMatrix", "pwd");
 }
 
-export async function oidcMemberTagLogin(page, isMobile = false) {
-  await oidcLogin(page, isMobile, "User2", "pwd");
+export async function oidcMemberTagLogin(page: Page, isMobile = "no") {
+  await oidcLogin(page, "User2", "pwd");
 }

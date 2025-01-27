@@ -3,6 +3,7 @@ import { resetWamMaps } from "../utils/map-editor/uploader";
 import Map from "../utils/map";
 import { oidcLogout, oidcMatrixUserLogin } from "../utils/oidc";
 import { getPage} from "../utils/auth";
+import {getDevices} from "../utils/devices";
 import ChatUtils from "./chatUtils";
 
 test.setTimeout(120000);
@@ -11,7 +12,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
   test.beforeEach(
     "Ignore tests on webkit because of issue with camera and microphone",
 
-    async ({ request, browserName }, {project}) => {
+    async ({ request, browserName }) => {
       //WebKit has issue with camera
       if (browserName === "webkit") {
         //eslint-disable-next-line playwright/no-skipped-test
@@ -27,17 +28,18 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await ChatUtils.resetMatrixDatabase();
   });
 
-  test("Open matrix Chat", async ({ browser }, {project}) => {
+  test("Open matrix Chat", async ({ browser }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page, project.name === "mobilechromium");
+
+    await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await expect(page.getByTestId("chat")).toBeAttached();
     await page.close();
     await page.context().close();
   });
-  test("Create a public chat room", async ({ browser }, {project}) => {
+  test("Create a public chat room", async ({ browser }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page, project.name === "mobilechromium");
+    await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const publicChatRoomName = ChatUtils.getRandomName();
@@ -47,9 +49,9 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.close();
     await page.context().close();
   });
-  test("Send messages in public chat room", async ({ browser }, {project}) => {
+  test("Send messages in public chat room", async ({ browser }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page, project.name === "mobilechromium");
+    await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const publicChatRoomName = ChatUtils.getRandomName();
@@ -63,9 +65,9 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.close();
     await page.context().close();
   });
-  test("Send application messages in public chat room", async ({ browser }, {project}) => {
+  test("Send application messages in public chat room", async ({ browser }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page, project.name === "mobilechromium");
+    await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const publicChatRoomName = ChatUtils.getRandomName();
@@ -80,9 +82,9 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.close();
     await page.context().close();
   });
-  test("Send application messages and youtube link in public chat room", async ({ browser }, {project}) => {
+  test("Send application messages and youtube link in public chat room", async ({ browser }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page, project.name === "mobilechromium");
+    await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const publicChatRoomName = ChatUtils.getRandomName();
@@ -135,10 +137,9 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.close();
     await page.context().close();
   });
-  test("Send application messages and klaxoon link in public chat room", async ({ browser },
-      {project}) => {
+  test("Send application messages and klaxoon link in public chat room", async ({ browser }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page, project.name === "mobilechromium");
+    await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const publicChatRoomName = ChatUtils.getRandomName();
@@ -197,9 +198,9 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.close();
     await page.context().close();
   });
-  test("Reply to message", async ({ browser }, {project}) => {
+  test("Reply to message", async ({ browser }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page, project.name === "mobilechromium");
+    await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const publicChatRoomName = ChatUtils.getRandomName();
@@ -217,9 +218,9 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.close();
     await page.context().close();
   });
-  test("React to message", async ({ browser }, {project}) => {
+  test("React to message", async ({ browser }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page, project.name === "mobilechromium");
+    await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const publicChatRoomName = ChatUtils.getRandomName();
@@ -238,9 +239,9 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.context().close();
   });
 
-  test("Remove reaction to message", async ({ browser }, {project}) => {
+  test("Remove reaction to message", async ({ browser }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page, project.name === "mobilechromium");
+    await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const publicChatRoomName = ChatUtils.getRandomName();
@@ -262,9 +263,9 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.context().close();
   });
 
-  test("Remove message", async ({ browser }, {project}) => {
+  test("Remove message", async ({ browser }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page, project.name === "mobilechromium");
+    await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const publicChatRoomName = ChatUtils.getRandomName();
@@ -281,9 +282,9 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.context().close();
   });
 
-  test("Edit message", async ({ browser }, {project}) => {
+  test("Edit message", async ({ browser }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page, project.name === "mobilechromium");
+    await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const publicChatRoomName = ChatUtils.getRandomName();
@@ -304,9 +305,9 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.context().close();
   });
 
-  test("Cancel edit message", async ({ browser }, {project}) => {
+  test("Cancel edit message", async ({ browser }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page, project.name === "mobilechromium");
+    await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const publicChatRoomName = ChatUtils.getRandomName();
@@ -327,9 +328,9 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.context().close();
   });
 
-  test("Create a private chat room", async ({ browser }, {project}) => {
+  test("Create a private chat room", async ({ browser }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page, project.name === "mobilechromium");
+    await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const privateChatRoom = ChatUtils.getRandomName();
@@ -342,9 +343,9 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
   });
 
   test("Create a private encrypted chat room (new user)", async ({
-    browser }, {project}) => {
+    browser }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page, project.name === "mobilechromium");
+    await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
@@ -359,9 +360,9 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
   });
 
   test("Send message in private chat room (new user)", async ({
-    browser }, {project}) => {
+    browser }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page, project.name === "mobilechromium");
+    await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
@@ -379,10 +380,9 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.context().close();
   });
 
-  test("Retrieve encrypted message", async ({ browser }, { project }) => {
-    const isMobile = project.name === "mobilechromium";
+  test("Retrieve encrypted message", async ({ browser }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page, isMobile);
+    await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
@@ -408,12 +408,12 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
       (response) =>
         response.url().includes("anonymLogin") && response.status() === 200
     );
-    if (project.name === "mobilechromium") {
+    if (getDevices(page)) {
       await ChatUtils.closeChat(page);
     }
-    await oidcLogout(page, isMobile);
+    await oidcLogout(page);
     await anonymLoginPromise;
-    await oidcMatrixUserLogin(page, isMobile);
+    await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await page.getByText(privateChatRoom).click();
     await ChatUtils.restoreEncryption(page);
@@ -423,10 +423,9 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
   });
 
   test("Retrieve encrypted message after cancelling passphrase request", async ({
-    browser }, { project }) => {
-    const isMobile = project.name === "mobilechromium";
+    browser }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page, isMobile);
+    await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
@@ -452,13 +451,13 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
       (response) =>
         response.url().includes("anonymLogin") && response.status() === 200
     );
-    if (project.name === "mobilechromium") {
+    if (getDevices(page)) {
       await ChatUtils.closeChat(page);
     }
-    await oidcLogout(page, isMobile);
+    await oidcLogout(page);
     await anonymLoginPromise;
 
-    await oidcMatrixUserLogin(page, isMobile);
+    await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await page.getByText(privateChatRoom).click();
     await page.getByTestId("VerifyWithPassphraseButton").click();
@@ -473,9 +472,9 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
   });
 
   test("Key creation should stop after the SSO process is canceled", async ({
-    browser }, {project}) => {
+    browser }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page, project.name === "mobilechromium");
+    await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
@@ -495,9 +494,9 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.context().close();
   });
 
-  test("Create a public folder", async ({ browser }, {project}) => {
+  test("Create a public folder", async ({ browser }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page, project.name === "mobilechromium");
+    await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateFolderDialog(page);
     const publicFolder = ChatUtils.getRandomName();
@@ -510,9 +509,9 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.context().close();
   });
 
-  test("Create a private folder", async ({ browser }, {project}) => {
+  test("Create a private folder", async ({ browser }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page, project.name === "mobilechromium");
+    await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateFolderDialog(page);
     const privateFolder = ChatUtils.getRandomName();
@@ -525,9 +524,9 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.context().close();
   });
 
-  test("Create a nested folder", async ({ browser }, {project}) => {
+  test("Create a nested folder", async ({ browser }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page, project.name === "mobilechromium");
+    await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
 
     await ChatUtils.openCreateFolderDialog(page);
@@ -555,9 +554,9 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.context().close();
   });
 
-  test("Create a room in a folder", async ({ browser }, {project}) => {
+  test("Create a room in a folder", async ({ browser }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page, project.name === "mobilechromium");
+    await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
 
     await ChatUtils.openCreateFolderDialog(page);
@@ -581,9 +580,9 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.context().close();
   });
 
-  test("Create a restricted room", async ({ browser }, {project}) => {
+  test("Create a restricted room", async ({ browser }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page, project.name === "mobilechromium");
+    await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
 
     await ChatUtils.openCreateFolderDialog(page);
@@ -604,9 +603,9 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.context().close();
   });
 
-  test("Verify a session with emoji", async ({ browser }, {project}) => {
+  test("Verify a session with emoji", async ({ browser }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page, project.name === "mobilechromium");
+    await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
@@ -617,7 +616,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await ChatUtils.initEndToEndEncryption(privateChatRoom, page, page.context());
 
     const otherPage = await getPage(browser, 'Bob', Map.url("empty"));
-    await oidcMatrixUserLogin(otherPage, project.name === "mobilechromium");
+    await oidcMatrixUserLogin(otherPage);
     await ChatUtils.openChat(otherPage);
     await otherPage.getByTestId('chatBackward').click();
     await otherPage.getByText(privateChatRoom).click();
@@ -639,9 +638,9 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
   });
 
   test("Verify a session with emoji , one device click on mismatch button", async ({browser,
-  }, {project}) => {
+  } ) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page, project.name === "mobilechromium");
+    await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
@@ -651,7 +650,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.getByTestId("createRoomButton").click();
     await ChatUtils.initEndToEndEncryption(privateChatRoom, page, page.context());
     const otherPage = await getPage(browser, 'Bob', Map.url("empty"));
-    await oidcMatrixUserLogin(otherPage, project.name === "mobilechromium");
+    await oidcMatrixUserLogin(otherPage);
     await ChatUtils.openChat(otherPage);
     await otherPage.getByTestId('chatBackward').click();
     await otherPage.getByText(privateChatRoom).click();

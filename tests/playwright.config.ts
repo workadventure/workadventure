@@ -89,11 +89,37 @@ const config: PlaywrightTestConfig = {
       name: 'mobilechromium',
       use: {
         ...devices['Pixel 5'],
+        browserName: 'chromium',
         permissions: ["microphone","camera"],
         ignoreHTTPSErrors: true,
         launchOptions: {
           args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'],
         },
+      },
+    },
+    {
+      name: 'mobilefirefox',
+      use: {
+        ...devices['Pixel 5'],
+        browserName: 'firefox',
+        isMobile: false,
+        ignoreHTTPSErrors: true,
+        launchOptions: {
+          firefoxUserPrefs: {
+            // use fake audio and video media
+            "media.navigator.streams.fake": true,
+            "permissions.default.microphone": 1,
+            "permissions.default.camera": 1,
+          },
+        },
+      },
+    },
+    {
+      name: 'mobilewebkit',
+      use: {
+        ...devices['iPhone 7'],
+        browserName: 'webkit',
+        ignoreHTTPSErrors: true,
       },
     },
      

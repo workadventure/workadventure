@@ -2,13 +2,16 @@ import { expect, test } from "@playwright/test";
 import { evaluateScript } from "../utils/scripting";
 import { publicTestMapUrl } from "../utils/urls";
 import { getPage } from "../utils/auth";
+import {getDevices} from "../utils/devices";
 
 test.describe("Iframe API", () => {
-    test("test disable invite user button", async ({ browser }, { project }) => {
-        if (project.name !== "mobilechromium") {
+    test.beforeEach(async ({ page }) => {
+        if (!getDevices(page)) {
             // eslint-disable-next-line playwright/no-skipped-test
             test.skip();
         }
+    });
+    test("test disable invite user button", async ({ browser }) => {
         const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "iframe_script"));
         await page.evaluate(() => localStorage.setItem("debug", "*"));
         await page.getByTestId('burger-menu').click();
@@ -26,12 +29,7 @@ test.describe("Iframe API", () => {
         await page.close();
         await page.context().close();
     });
-    test("test disable screen sharing", async ({ browser }, {project}) => {
-        // This test does not depend on the browser. Let's only run it in Chromium.
-        if (project.name !== "mobilechromium") {
-            // eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-        }
+    test("test disable screen sharing", async ({ browser }) => {
         const page = await getPage(browser, 'Alice',
             publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
         );
@@ -73,12 +71,7 @@ test.describe("Iframe API", () => {
         await page.context().close();
     });
 
-    test("test disable right click user button", async ({ browser }, {project}) => {
-        // This test does not depend on the browser. Let's only run it in Chromium.
-        if (project.name !== "mobilechromium") {
-            // eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-        }
+    test("test disable right click user button", async ({ browser }) => {
         const page = await getPage(browser, 'Alice',
             publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
         );
