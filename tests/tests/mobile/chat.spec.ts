@@ -1,1 +1,0 @@
-// TODO test if we can read and send message to user on mobile

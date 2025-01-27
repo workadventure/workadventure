@@ -34,7 +34,7 @@ test.describe('OpenId connect @oidc mobile', () => {
         await oidcLogout(page, true);
 
         // Check user is Logout
-        await page.getByTestId('burger-menu').click();
+        await await page.getByTestId('burger-menu').click();
         await expect(page.getByRole('link', { name: 'Login' })).toBeVisible();
 
         // Let's try to login using the scripting API

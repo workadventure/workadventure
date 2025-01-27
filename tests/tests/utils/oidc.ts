@@ -1,6 +1,8 @@
 import { expect, Page } from "@playwright/test";
 import Menu from "./menu";
 
+
+// for oidcLogin to work on mobile you must open the burger menu before calling this function
 export async function oidcLogin(
   page: Page,
   isMobile = false,
@@ -8,6 +10,7 @@ export async function oidcLogin(
   password = "pwd"
 ) {
   if (isMobile) {
+    await page.getByTestId('burger-menu').click();
     await page.getByRole('link', { name: 'Login' }).click();
   }
   else {
