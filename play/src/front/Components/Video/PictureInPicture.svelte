@@ -11,11 +11,13 @@
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { srcObject } from "./utils";
     import RemoteSoundWidget from "./PictureInPicture/RemoteSoundWidget.svelte";
+    import RemoteVideoWidget from "./PictureInPicture/RemoteVideoWidget.svelte";
 
     let divElement: HTMLDivElement;
     let myLocalStream: MediaStream | undefined | null;
     let myLocalStreamElement: HTMLVideoElement | undefined;
-    let pipWindowStore = writable<Window | undefined>(undefined);
+    const pipWindowStore = writable<Window | undefined>(undefined);
+    const hightlightedStreamable = writable<Streamable | undefined>(undefined);
 
     let streamableCollectionStoreSubscriber: Unsubscriber | undefined;
     let activePictureInPictureSubscriber: Unsubscriber | undefined;
@@ -26,7 +28,11 @@
     // create interface for window with documentPictureInPicture
     interface WindowExt extends Window {
         documentPictureInPicture: {
-            requestWindow: (options: { preferInitialWindowPlacement: boolean }) => Promise<Window>;
+            requestWindow: (options: {
+                preferInitialWindowPlacement: boolean;
+                height: string;
+                width: string;
+            }) => Promise<Window>;
         };
     }
 
@@ -75,57 +81,22 @@
                     return;
                 }
                 activePictureInPictureStore.set(true);
-                // for each streamable in the collection, we will add the stream to the video element
+                // for each streamable in the collection, we will update ratio of the component for the video element
                 for (const streamable of value.values()) {
-                    // create video for element
                     try {
                         streamablesCollectionStoreSubscriber.push(
                             (streamable as VideoPeer).streamStore.subscribe((media) => {
-                                setTimeout(() => {
-                                    const videoElementCreated = $pipWindowStore?.document.getElementById(
-                                        `video-${streamable.uniqueId}`
-                                    ) as HTMLVideoElement | undefined;
-                                    if (videoElementCreated) videoElementCreated.remove();
-                                    const divMailElement = $pipWindowStore?.document.getElementById(
-                                        `main-${streamable.uniqueId}`
-                                    );
-                                    if (media == undefined) {
-                                        if (divMailElement) divMailElement.style.aspectRatio = "";
-                                        return;
-                                    }
-
-                                    const ratio = media.getVideoTracks()[0]?.getSettings().aspectRatio;
-                                    if (divMailElement) divMailElement.style.aspectRatio = `${ratio}`;
-
-                                    const videoElement = document.createElement("video");
-                                    videoElement.id = `video-${streamable.uniqueId}`;
-                                    videoElement.srcObject = media;
-                                    videoElement.autoplay = true;
-                                    videoElement.muted = true;
-                                    videoElement.style.width = "100%";
-                                    videoElement.style.height = "auto";
-                                    videoElement.style.maxHeight = "100%";
-                                    videoElement.style.objectFit = "cover";
-                                    videoElement.style.borderRadius = "16px";
-                                    videoElement.style.position = "absolute";
-                                    videoElement.style.top = "0";
-                                    videoElement.style.left = "0";
-                                    videoElement.style.right = "0";
-                                    videoElement.style.bottom = "0";
-                                    videoElement.style.backgroundColor = "#373a3e";
-                                    videoElement.style.zIndex = "40";
-                                    videoElement.style.aspectRatio = `${ratio}`;
-
-                                    if (divMailElement) divMailElement.appendChild(videoElement);
-                                }, 1000);
+                                const divMailElement = $pipWindowStore?.document.getElementById(
+                                    `main-${streamable.uniqueId}`
+                                );
+                                if (media == undefined) {
+                                    if (divMailElement) divMailElement.style.aspectRatio = "";
+                                    return;
+                                }
                             })
                         );
                     } catch (e) {
-                        console.info(
-                            "Source undefined. The element streamable will not attach to the video element",
-                            e,
-                            streamable.uniqueId
-                        );
+                        console.info("Source undefined.", e, streamable.uniqueId);
                     }
                 }
             });
@@ -173,6 +144,15 @@
         return get(gameScene.CurrentPlayer.pictureStore) as string;
     }
 
+    function hanglerClickVideo(event: CustomEvent) {
+        const { streamable } = event.detail;
+        if ($hightlightedStreamable != undefined && $hightlightedStreamable?.uniqueId == streamable.uniqueId) {
+            hightlightedStreamable.set(undefined);
+            return;
+        }
+        hightlightedStreamable.set(streamable);
+    }
+
     onMount(() => {
         initiatePictureInPictureBuilder();
 
@@ -186,6 +166,8 @@
         (window as unknown as WindowExt).documentPictureInPicture
             .requestWindow({
                 preferInitialWindowPlacement: true,
+                height: `${$streamableCollectionStore.size * 300}`,
+                width: "400",
             })
             .then((pipWindow: Window) => {
                 // Picture in picture is possible
@@ -211,52 +193,100 @@
 
 <div
     bind:this={divElement}
-    class="tw-h-[84%] tw-w-full tw-flex tw-justify-center tw-items-center tw-z-40 tw-py-8"
+    class="tw-h-[84%] tw-w-full tw-flex tw-justify-center tw-items-center tw-z-40 tw-py-1"
     style="display: none;"
 >
     <div
-        id="wrapper"
-        class="tw-relative tw-w-[98%] tw-h-full tw-justify-center tw-items-center tw-grid tw-content-center tw-grid-cols-1 sm:tw-grid-cols-2 md:w-grid-cols-3 xl:w-grid-cols-4 tw-gap-3"
-        class:!tw-grid-cols-1={$streamableCollectionStore.size === 1}
+        id="scrolllist-wrapper"
+        class="tw-relative tw-flex tw-justify-center tw-items-start tw-w-full tw-h-full tw-overflow-hidden tw-overflow-y-auto"
     >
-        {#each [...$streamableCollectionStore] as [uuid, streamable] (uuid)}
-            <div
-                id={`main-${streamable.uniqueId}`}
-                class="tw-w-full tw-h-auto tw-max-h-full tw-aspect-video tw-relative tw-flex tw-justify-center tw-items-center tw-z-40 tw-rounded-xl tw-bg-[#373a3e]"
-            >
-                <img
-                    src={getPlayerWokaPicture(streamable)}
-                    class="tw-w-auto tw-h-full tw-max-h-[8rem]"
-                    alt="woka user"
-                />
-                <RemoteSoundWidget {streamable} />
-            </div>
-        {/each}
+        <div
+            id="mozaic-wrapper"
+            class="tw-relative tw-w-[98%] tw-h-auto tw-justify-center tw-items-center tw-grid tw-content-center tw-grid-cols-1 sm:tw-grid-cols-2 md:w-grid-cols-3 xl:w-grid-cols-4 tw-gap-3"
+            class:!tw-grid-cols-1={$streamableCollectionStore.size === 1 || $hightlightedStreamable != undefined}
+        >
+            {#each [...$streamableCollectionStore] as [uuid, streamable] (uuid)}
+                {#if $hightlightedStreamable == undefined || $hightlightedStreamable.uniqueId == streamable.uniqueId}
+                    <div
+                        id={`main-${streamable.uniqueId}`}
+                        class="tw-w-full tw-h-auto tw-max-h-full tw-aspect-video tw-relative tw-flex tw-justify-center tw-items-center tw-z-40 tw-rounded-xl tw-bg-[#373a3e]"
+                    >
+                        <img
+                            src={getPlayerWokaPicture(streamable)}
+                            class="tw-w-auto tw-h-full tw-max-h-[8rem]"
+                            alt="woka user"
+                        />
+
+                        <RemoteSoundWidget {streamable} />
+
+                        <RemoteVideoWidget {streamable} on:click={hanglerClickVideo} />
+                    </div>
+                {/if}
+            {/each}
+        </div>
     </div>
     <div
-        id="mycamera-wrapper"
-        class="tw-absolute tw-h-auto tw-w-1/5 tw-justify-center tw-items-center tw-right-[5%] tw-bottom-[20%] tw-flex tw-bg-[#373a3e] tw-z-40 tw-rounded-xl tw-aspect-video"
+        id="mycamera_hightlighted-wrapper"
+        class="tw-absolute tw-h-auto tw-justify-center tw-items-center tw-right-[5%] tw-bottom-[20%] tw-flex tw-flex-row tw-gap-3"
+        style={`width: ${$hightlightedStreamable != undefined ? $streamableCollectionStore.size * 20 : 20}%;`}
     >
-        <img src={getMyPlayerWokaPicture()} class="tw-w-auto tw-h-full tw-max-h-[4rem]" alt="woka user" />
-        <div class="voice-meter-my-container tw-justify-end tw-z-[251] tw-pr-2 tw-absolute tw-w-full tw-top-0">
-            {#if $mediaStreamConstraintsStore.audio}
-                <SoundMeterWidget volume={$localVolumeStore} classcss="tw-top-0" barColor="blue" />
-            {:else}
-                <img draggable="false" src={microphoneOffImg} class="tw-flex tw-p-1 tw-h-8 tw-w-8" alt="Mute" />
+        {#if $hightlightedStreamable != undefined}
+            {#each [...$streamableCollectionStore] as [uuid, streamable] (uuid)}
+                {#if $hightlightedStreamable.uniqueId != streamable.uniqueId}
+                    <div
+                        id={`main-${streamable.uniqueId}`}
+                        class="tw-w-full tw-h-auto tw-max-h-full tw-aspect-video tw-relative tw-flex tw-justify-center tw-items-center tw-z-40 tw-rounded-xl tw-bg-[#373a3e]"
+                    >
+                        <img
+                            src={getPlayerWokaPicture(streamable)}
+                            class="tw-w-auto tw-h-full tw-max-h-[3rem]"
+                            alt="woka user"
+                        />
+                        <RemoteSoundWidget {streamable} isMinified={true} />
+                        <RemoteVideoWidget {streamable} on:click={hanglerClickVideo} />
+                    </div>
+                {/if}
+            {/each}
+        {/if}
+
+        <div
+            id="mycamera-wrapper"
+            class="tw-w-full tw-h-auto tw-max-h-full tw-aspect-video tw-relative tw-flex tw-justify-center tw-items-center tw-z-40 tw-rounded-xl tw-bg-[#373a3e]"
+        >
+            <img src={getMyPlayerWokaPicture()} class="tw-w-auto tw-h-full tw-max-h-[3rem]" alt="woka user" />
+            <div class="voice-meter-my-container tw-justify-end tw-z-[251] tw-pr-2 tw-absolute tw-w-full tw-top-0">
+                {#if $mediaStreamConstraintsStore.audio}
+                    <SoundMeterWidget volume={$localVolumeStore} classcss="tw-top-0" barColor="blue" />
+                {:else}
+                    <img draggable="false" src={microphoneOffImg} class="tw-flex tw-p-1 tw-h-4 tw-w-4" alt="Mute" />
+                {/if}
+            </div>
+            {#if myLocalStream != undefined}
+                <video
+                    bind:this={myLocalStreamElement}
+                    id="my-video"
+                    class="tw-h-full tw-w-full tw-rounded-lg tw-object-cover tw-absolute"
+                    style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
+                    use:srcObject={myLocalStream}
+                    autoplay
+                    muted
+                    playsinline
+                />
             {/if}
         </div>
-        {#if myLocalStream != undefined}
-            <video
-                bind:this={myLocalStreamElement}
-                id="my-video"
-                class="tw-h-full tw-w-full tw-rounded-lg tw-object-cover tw-absolute"
-                style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
-                use:srcObject={myLocalStream}
-                autoplay
-                muted
-                playsinline
-            />
-        {/if}
     </div>
     <ActionBar isPictureInPicture={true} />
 </div>
+
+<style lang="scss">
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    *::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Hide scrollbar for IE, Edge and Firefox */
+    * {
+        -ms-overflow-style: none; /* IE and Edge */
+        scrollbar-width: none; /* Firefox */
+    }
+</style>
