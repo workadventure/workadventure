@@ -39,6 +39,7 @@
     import Input from "../../Input/Input.svelte";
     import Select from "../../Input/Select.svelte";
     import RangeSlider from "../../Input/RangeSlider.svelte";
+    import Input from "../../Input/Input.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     import { IconAlertTriangle } from "@wa-icons";
 
@@ -816,7 +817,7 @@
 
         <div class:active={optionAdvancedActivated} class="advanced-option px-2">
             {#if (isArea && triggerOptionActivated) || !isArea}
-                <InputLabel
+                <Input
                     id="triggerMessage"
                     placeholder={$LL.trigger.object()}
                     label={$LL.mapEditor.properties.linkProperties.linkLabel()}
