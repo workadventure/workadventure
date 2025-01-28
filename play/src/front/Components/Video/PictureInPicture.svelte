@@ -12,6 +12,7 @@
     import { srcObject } from "./utils";
     import RemoteSoundWidget from "./PictureInPicture/RemoteSoundWidget.svelte";
     import RemoteVideoWidget from "./PictureInPicture/RemoteVideoWidget.svelte";
+    import ActivatePictureInPicture from "./PictureInPicture/ActivatePictureInPicture.svelte";
 
     let divElement: HTMLDivElement;
     let myLocalStream: MediaStream | undefined | null;
@@ -80,7 +81,6 @@
                     destroyPictureInPictureComponent();
                     return;
                 }
-                activePictureInPictureStore.set(true);
                 // for each streamable in the collection, we will update ratio of the component for the video element
                 for (const streamable of value.values()) {
                     try {
@@ -121,12 +121,13 @@
     }
 
     function destroyPictureInPictureComponent() {
-        if ($pipWindowStore) $pipWindowStore.removeEventListener("pagehide", destroyPictureInPictureComponent);
-        if ($pipWindowStore) $pipWindowStore.close();
-        pipWindowStore.set(undefined);
         if (streamableCollectionStoreSubscriber) streamableCollectionStoreSubscriber();
         if (activePictureInPictureSubscriber) activePictureInPictureSubscriber();
         if (unsubscribeLocalStreamStore) unsubscribeLocalStreamStore();
+
+        if ($pipWindowStore) $pipWindowStore.removeEventListener("pagehide", destroyPictureInPictureComponent);
+        if ($pipWindowStore) $pipWindowStore.close();
+        pipWindowStore.set(undefined);
         streamablesCollectionStoreSubscriber.forEach((subscriber) => subscriber());
         activePictureInPictureStore.set(false);
     }
@@ -151,6 +152,14 @@
             return;
         }
         hightlightedStreamable.set(streamable);
+    }
+
+    function allowPictureInPicture() {
+        activePictureInPictureStore.set(true);
+    }
+    function disagreePictureInPicture() {
+        activePictureInPictureStore.set(false);
+        destroyPictureInPictureComponent();
     }
 
     onMount(() => {
@@ -196,6 +205,8 @@
     class="tw-h-[84%] tw-w-full tw-flex tw-justify-center tw-items-center tw-z-40 tw-py-1"
     style="display: none;"
 >
+    <ActivatePictureInPicture on:disagree={disagreePictureInPicture} on:allow={allowPictureInPicture} />
+
     <div
         id="scrolllist-wrapper"
         class="tw-relative tw-flex tw-justify-center tw-items-start tw-w-full tw-h-full tw-overflow-hidden tw-overflow-y-auto"
