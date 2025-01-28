@@ -444,7 +444,7 @@ jobs:
           path: /tmp/map-storage.tar.gz
 
   end-to-end-tests:
-    name: "End to end tests with ${{ matrix.project }}"
+    name: "End to end tests with ${{ matrix.project }} ${{ matrix.shard }}/${{ matrix.nbShards }}"
     strategy:
       fail-fast: false
       matrix:
