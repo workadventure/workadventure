@@ -36,6 +36,7 @@
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import Input from "../../Input/Input.svelte";
+    import Select from "../../Input/Select.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     import { IconAlertTriangle } from "@wa-icons";
 
@@ -709,7 +710,7 @@
         {/if} -->
 
         {#if isArea}
-            <Input
+            <Select
                 id="trigger"
                 label={$LL.mapEditor.properties.linkProperties.trigger()}
                 type="select"

@@ -602,6 +602,7 @@
             placeholder={$LL.mapEditor.areaEditor.nameLabelPlaceholder()}
             bind:value={areaName}
             onChange={onUpdateName}
+            buttonsquare={true}
         >
             <div slot="info">coucou comment allez vous ??</div>
 
