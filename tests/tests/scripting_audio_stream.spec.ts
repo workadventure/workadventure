@@ -1,21 +1,25 @@
-import {chromium, expect, test} from "@playwright/test";
+import { expect, test} from "@playwright/test";
 import { evaluateScript } from "./utils/scripting";
 import Map from "./utils/map";
 import {publicTestMapUrl} from "./utils/urls";
 import { getPage} from "./utils/auth";
+import {getDevices} from "./utils/devices";
 
 test.describe("Scripting audio streams", () => {
+  test.beforeEach(async ({ browserName, page }) => {
+    // This test does not depend on the browser. Let's only run it in Chromium.
+    if (browserName !== "chromium" || getDevices(page)) {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+  });
   test("can play and listen to sounds", async ({
     browser,
   }, { project }) => {
     // This test runs only on Chrome
     // Firefox fails it because the sample rate must be equal to the microphone sample rate
     // Safari fails it because Safari
-    if(browser.browserType() !== chromium || project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
     const page = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"));
     await Map.teleportToPosition(page, 32, 32);
 
