@@ -516,7 +516,7 @@ jobs:
       - build-uploader
       - build-map-storage
     timeout-minutes: 60
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v3
@@ -641,7 +641,7 @@ jobs:
       - build-uploader
       - build-map-storage
     timeout-minutes: 60
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v3
@@ -913,7 +913,7 @@ jobs:
     name: "End to end tests in Kubernetes (${{ matrix.shard }}/${{ matrix.nbShards }})"
     needs:
       - helm-deploy
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
