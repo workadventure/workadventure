@@ -10,11 +10,7 @@ test.describe('Availability Status on mobile', () => {
     test.describe('Busy Status',() => {
         test.beforeEach(async ({ page }) => {
             if (!getDevices(page)) {
-                console.log(page.viewportSize().width);
-                console.log(page.viewportSize().height);
-                console.log(getDevices(page));
-                console.log(page.viewportSize().width < 1281);
-                console.log(page.viewportSize().height < 750);
+                //eslint-disable-next-line playwright/no-skipped-test
                 test.skip();
             }
         });

@@ -1,7 +1,16 @@
 import { expect, test } from '@playwright/test';
 import {maps_domain} from "./utils/urls";
+import {getDevices} from "./utils/devices";
 
 test.describe('Meta tags', () => {
+    test.beforeEach(async ({ page, browserName }) => {
+        // Skip test for mobile device
+        if(getDevices(page) && browserName !== "chromium") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+    });
   test('check they are populated when the user-agent is a bot. @selfsigned', async ({ request }) => {
     const result = await request.get(`/_/global/${maps_domain}/tests/Properties/mapProperties.json`, {
         headers: {
