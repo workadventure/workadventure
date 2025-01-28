@@ -2,17 +2,16 @@ import {expect, test} from '@playwright/test';
 import {evaluateScript} from "./utils/scripting";
 import {publicTestMapUrl} from "./utils/urls";
 import { getPage } from "./utils/auth"
+import {getDevices} from "./utils/devices";
 
 test.describe('Scripting API Events', () => {
-    test('test events', async ({ browser, request }, { project }) => {
-        // Skip test for mobile device
-        // FIXME skip for webkit
-        if(project.name === "mobilechromium") {
+    test.beforeEach(async ({ page }) => {
+        if (getDevices(page)) {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
-            return;
         }
-
+    });
+    test('test events', async ({ browser, request }) => {
         // Go to
         const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_events"));
 
@@ -22,7 +21,6 @@ test.describe('Scripting API Events', () => {
                 console.log("WA.player.playerId", WA.player.playerId);
 
             });
-
             const promise = new Promise<void>((resolve, reject) => {
                 WA.event.on("key").subscribe((event) => {
                     if (event.name !== "key") {
@@ -37,11 +35,9 @@ test.describe('Scripting API Events', () => {
                         reject(new Error("Invalid event senderId"));
                         return;
                     }
-
                     resolve();
                 });
             });
-
             WA.event.broadcast("key", "value");
             await promise;
             return true;
@@ -67,7 +63,6 @@ test.describe('Scripting API Events', () => {
                 gotExpectedGlobalNotification = true;
             }
         });
-
         await evaluateScript(page, async () => {
             await WA.onInit();
             WA.event.on("key2").subscribe((event) => {
@@ -89,11 +84,9 @@ test.describe('Scripting API Events', () => {
             await WA.onInit();
             WA.event.broadcast("key2", "value");
         });
-
         await expect.poll(() => gotExpectedBroadcastNotification).toBe(true);
 
         // 3. Connect 2 users and check that the events are triggered on the other user (using targeted events)
-
         await evaluateScript(page, async () => {
             await WA.onInit();
             WA.event.on("key3").subscribe((event) => {
@@ -110,7 +103,6 @@ test.describe('Scripting API Events', () => {
                 console.log("Targeted event triggered");
             });
         });
-
         await evaluateScript(page2, async () => {
             await WA.onInit();
             await WA.players.configureTracking({
@@ -121,11 +113,9 @@ test.describe('Scripting API Events', () => {
                 player.sendEvent("key3", "value");
             }
         });
-
         await expect.poll(() => gotExpectedTargetedNotification).toBe(true);
 
         // 4. Test that sending event through the global /global/event API on the pusher works
-
         await evaluateScript(page, async () => {
             await WA.onInit();
             WA.event.on("key4").subscribe((event) => {
@@ -135,11 +125,9 @@ test.describe('Scripting API Events', () => {
                 if (event.data !== "value") {
                     return;
                 }
-
                 console.log("Global event triggered");
             });
         });
-
         const result = await request.post("/global/event", {
             headers: {
                 "Authorization": process.env.ADMIN_API_TOKEN,
