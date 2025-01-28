@@ -35,7 +35,7 @@
     import { InputTagOption } from "../../Input/InputTagOption";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
-    import InputLabel from "../../Input/InputLabel.svelte";
+    import Input from "../../Input/Input.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     import { IconAlertTriangle } from "@wa-icons";
 
@@ -709,7 +709,7 @@
         {/if} -->
 
         {#if isArea}
-            <InputLabel
+            <Input
                 id="trigger"
                 label={$LL.mapEditor.properties.linkProperties.trigger()}
                 type="select"
@@ -734,7 +734,7 @@
                     disabled={embeddableLoading}
                 /> -->
 
-                <InputLabel
+                <Input
                     id="tablink"
                     placeholder={property.placeholder ?? $LL.mapEditor.properties.linkProperties.linkPlaceholder()}
                     label={$LL.mapEditor.properties.linkProperties.linkLabel()}
@@ -813,7 +813,7 @@
 
         <div class:active={optionAdvancedActivated} class="advanced-option px-2">
             {#if (isArea && triggerOptionActivated) || !isArea}
-                <InputLabel
+                <Input
                     id="triggerMessage"
                     placeholder={$LL.trigger.object()}
                     label={$LL.mapEditor.properties.linkProperties.linkLabel()}
