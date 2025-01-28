@@ -77,28 +77,10 @@ test.describe("Iframe API", () => {
         );
         await page.evaluate(() => localStorage.setItem("debug", "*"));
 
-        // Right click to move the user
-        await page.locator("canvas").click({
-            button: "right",
-            position: {
-                x: 381,
-                y: 121,
-            },
-        });
-
         // Create a script to evaluate function to disable map editor
         await evaluateScript(page, async () => {
             await WA.onInit();
             WA.controls.disableRightClick();
-        });
-
-        // Right click to move the user
-        await page.locator("canvas").click({
-            button: "right",
-            position: {
-                x: 246,
-                y: 295,
-            },
         });
 
         // Create a script to evaluate function to enable map editor

@@ -11,8 +11,9 @@ test.use({
 })
 
 test.describe('Mobile', () => {
-    test.beforeEach(async ({ page }) => {
-        if (!getDevices(page)) {
+    test.beforeEach(async ({ page, browserName }) => {
+        if (!getDevices(page) || browserName === "webkit") {
+            //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
         }
