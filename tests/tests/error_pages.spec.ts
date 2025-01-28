@@ -2,11 +2,11 @@ import { expect, test } from '@playwright/test';
 import {RENDERER_MODE} from "./utils/environment";
 import {publicTestMapUrl} from "./utils/urls";
 import Map from "./utils/map";
-import {getDevices} from "./utils/devices";
+import {isMobile} from "./utils/isMobile";
 
 test.describe('Error pages', () => {
   test.beforeEach(async ({ page }) => {
-    if (getDevices(page)) {
+    if (isMobile(page)) {
         //eslint-disable-next-line playwright/no-skipped-test
         test.skip();
         return;

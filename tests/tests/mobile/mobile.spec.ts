@@ -3,7 +3,7 @@ import Menu from "../utils/menu";
 import Map from "../utils/map";
 import {play_url, publicTestMapUrl} from "../utils/urls";
 import {getPage} from "../utils/auth";
-import {getDevices} from "../utils/devices";
+import {isMobile} from "../utils/isMobile";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -12,7 +12,7 @@ test.use({
 
 test.describe('Mobile', () => {
     test.beforeEach(async ({ page, browserName }) => {
-        if (!getDevices(page) || browserName === "webkit") {
+        if (!isMobile(page) || browserName === "webkit") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;

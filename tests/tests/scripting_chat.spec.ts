@@ -5,7 +5,7 @@ import Map from "./utils/map";
 import { resetWamMaps } from "./utils/map-editor/uploader";
 import chatUtils from "./chat/chatUtils";
 import { getPage } from "./utils/auth";
-import {getDevices} from "./utils/devices";
+import {isMobile} from "./utils/isMobile";
 
 test.describe("#Scripting chat functions", () => {
   test.beforeEach(
@@ -13,7 +13,7 @@ test.describe("#Scripting chat functions", () => {
 
     async ({ browserName, request, page }) => {
       //WebKit has issue with camera
-      if (browserName === "webkit" || getDevices(page)) {
+      if (browserName === "webkit" || isMobile(page)) {
         //eslint-disable-next-line playwright/no-skipped-test
         test.skip();
         return;

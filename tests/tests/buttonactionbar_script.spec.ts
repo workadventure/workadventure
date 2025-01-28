@@ -2,11 +2,11 @@ import {expect, test} from '@playwright/test';
 import {evaluateScript} from "./utils/scripting";
 import {publicTestMapUrl} from "./utils/urls";
 import { getPage } from './utils/auth';
-import {getDevices} from "./utils/devices";
+import {isMobile} from "./utils/isMobile";
 
 test.describe('Button in action bar', () => {
     test.beforeEach(async ({ page }) => {
-        if (getDevices(page)) {
+        if (isMobile(page)) {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
@@ -38,7 +38,7 @@ test.describe('Button in action bar', () => {
 
 test.describe('Action button in action bar', () => {
     test.beforeEach(async ({ page }) => {
-        if (getDevices(page)) {
+        if (isMobile(page)) {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;

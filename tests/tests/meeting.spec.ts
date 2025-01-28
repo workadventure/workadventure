@@ -2,7 +2,7 @@ import {expect, test } from '@playwright/test';
 import Map from "./utils/map";
 import {publicTestMapUrl} from "./utils/urls";
 import {getPage} from "./utils/auth";
-import {getDevices} from "./utils/devices";
+import {isMobile} from "./utils/isMobile";
 
 test.describe('Meeting actions test', () => {
 
@@ -10,7 +10,7 @@ test.describe('Meeting actions test', () => {
         "Ignore tests on mobilechromium because map editor not available for mobile devices",
         ({ browserName, page }) => {
             //Map Editor not available on mobile adn webkit have issue with camera
-            if (browserName === "webkit" || getDevices(page)) {
+            if (browserName === "webkit" || isMobile(page)) {
                 //eslint-disable-next-line playwright/no-skipped-test
                 test.skip();
                 return;

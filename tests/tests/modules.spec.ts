@@ -2,11 +2,11 @@ import { test } from '@playwright/test';
 import { assertLogMessage, startRecordLogs} from './utils/log';
 import { getPage } from './utils/auth';
 import {publicTestMapUrl} from "./utils/urls";
-import {getDevices} from "./utils/devices";
+import {isMobile} from "./utils/isMobile";
 
 test.describe('Module', () => {
     test.beforeEach(async ({ page }) => {
-        if (getDevices(page)) {
+        if (isMobile(page)) {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
         }

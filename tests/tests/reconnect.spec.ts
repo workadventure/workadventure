@@ -3,12 +3,12 @@ import { publicTestMapUrl } from "./utils/urls";
 import Map from "./utils/map";
 import Menu from "./utils/menu";
 import { getPage } from "./utils/auth"
-import {getDevices} from "./utils/devices";
+import {isMobile} from "./utils/isMobile";
 
 test.setTimeout(180_000);
 test.describe("Connection", () => {
   test.beforeEach(async ({ page, browserName }) => {
-    if (getDevices(page) || browserName === "webkit") {
+    if (isMobile(page) || browserName === "webkit") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
     }

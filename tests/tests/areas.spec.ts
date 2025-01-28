@@ -5,11 +5,11 @@ import {evaluateScript} from "./utils/scripting";
 import {publicTestMapUrl} from "./utils/urls";
 import Menu from "./utils/menu";
 import { getPage } from "./utils/auth";
-import {getDevices} from "./utils/devices";
+import {isMobile} from "./utils/isMobile";
 
 test.describe('Areas', () => {
     test.beforeEach(async ({ page }) => {
-        if (getDevices(page)) {
+        if (isMobile(page)) {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;

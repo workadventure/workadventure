@@ -3,12 +3,12 @@ import { evaluateScript } from "./utils/scripting";
 import Map from "./utils/map";
 import {publicTestMapUrl} from "./utils/urls";
 import { getPage} from "./utils/auth";
-import {getDevices} from "./utils/devices";
+import {isMobile} from "./utils/isMobile";
 
 test.describe("Scripting audio streams", () => {
   test.beforeEach(async ({ browserName, page }) => {
     // This test does not depend on the browser. Let's only run it in Chromium.
-    if (browserName !== "chromium" || getDevices(page)) {
+    if (browserName !== "chromium" || isMobile(page)) {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;

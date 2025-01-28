@@ -3,11 +3,11 @@ import {oidcLogin, oidcLogout} from "./utils/oidc";
 import {evaluateScript} from "./utils/scripting";
 import {publicTestMapUrl} from "./utils/urls";
 import {getPage} from "./utils/auth";
-import {getDevices} from "./utils/devices";
+import {isMobile} from "./utils/isMobile";
 
 test.describe('OpenID connect @oidc', () => {
   test.beforeEach(async ({ page }) => {
-    if (getDevices(page)) {
+    if (isMobile(page)) {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
     }

@@ -6,7 +6,7 @@ import {RENDERER_MODE} from "./utils/environment";
 import {maps_domain, play_url, publicTestMapUrl} from "./utils/urls";
 import { getCoWebsiteIframe } from "./utils/iframe";
 import {getPage } from "./utils/auth";
-import {getDevices} from "./utils/devices";
+import {isMobile} from "./utils/isMobile";
 
 const apiKey = process.env.ROOM_API_SECRET_KEY;
 
@@ -22,7 +22,7 @@ const variableName = "textField";
 test.describe('Room API', async () => {
     test.beforeEach(async ({ browserName, page }) => {
         // This test does not depend on the browser. Let's only run it in Chromium.
-        if(browserName !== "chromium" || getDevices(page)) {
+        if(browserName !== "chromium" || isMobile(page)) {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;

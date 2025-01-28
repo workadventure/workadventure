@@ -9,7 +9,7 @@ import EntityEditor from "./utils/map-editor/entityEditor";
 import AreaAccessRights from "./utils/areaAccessRights";
 import { evaluateScript } from "./utils/scripting";
 import { getPage } from "./utils/auth";
-import {getDevices} from "./utils/devices";
+import {isMobile} from "./utils/isMobile";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -21,7 +21,7 @@ test.describe("Map editor area with rights @oidc", () => {
     "Ignore tests on mobilechromium because map editor not available for mobile devices",
     ({ page }) => {
       //Map Editor not available on mobile
-      if (getDevices(page)) {
+      if (isMobile(page)) {
         //eslint-disable-next-line playwright/no-skipped-test
         test.skip();
         return;

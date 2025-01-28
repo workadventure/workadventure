@@ -10,7 +10,7 @@ import Menu from "./utils/menu";
 import { evaluateScript } from "./utils/scripting";
 import { map_storage_url } from "./utils/urls";
 import { getPage } from "./utils/auth";
-import {getDevices} from "./utils/devices";
+import {isMobile} from "./utils/isMobile";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -22,7 +22,7 @@ test.describe("Map editor @oidc", () => {
         "Ignore tests on mobile because map editor not available for mobile devices",
         ({ page }) => {
             //Map Editor not available on mobile
-            if (getDevices(page)) {
+            if (isMobile(page)) {
                 //eslint-disable-next-line playwright/no-skipped-test
                 test.skip();
                 return;

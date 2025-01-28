@@ -3,11 +3,11 @@ import Map from "./utils/map";
 import { publicTestMapUrl } from "./utils/urls";
 import chatUtils from "./utils/chat";
 import { getPage } from "./utils/auth";
-import {getDevices} from "./utils/devices";
+import {isMobile} from "./utils/isMobile";
 
 test.describe("Walk to", () => {
   test.beforeEach(async ({ page, browserName }) => {
-    if (browserName === "webkit" || getDevices(page)) {
+    if (browserName === "webkit" || isMobile(page)) {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
     }

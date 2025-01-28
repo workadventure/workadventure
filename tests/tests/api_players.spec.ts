@@ -5,11 +5,11 @@ import { evaluateScript } from "./utils/scripting";
 import {oidcLogin, oidcLogout} from "./utils/oidc";
 import { publicTestMapUrl } from "./utils/urls";
 import { getPage } from "./utils/auth";
-import {getDevices} from "./utils/devices";
+import {isMobile} from "./utils/isMobile";
 
 test.describe("API WA.players", () => {
   test.beforeEach(async ({ page, browserName }) => {
-    if (getDevices(page) || browserName === "webkit") {
+    if (isMobile(page) || browserName === "webkit") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;

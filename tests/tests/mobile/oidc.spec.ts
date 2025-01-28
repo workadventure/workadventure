@@ -3,13 +3,13 @@ import {oidcLogin, oidcLogout} from "../utils/oidc";
 import {evaluateScript} from "../utils/scripting";
 import {publicTestMapUrl} from "../utils/urls";
 import {getPage} from "../utils/auth";
-import {getDevices} from "../utils/devices";
+import {isMobile} from "../utils/isMobile";
 
 test.describe('OpenId connect @oidc mobile', () => {
     test.beforeEach(async ({ page, browserName }) => {
         // skip on firefox because the browser is too slow
         // (this is specific to mobile format make sur it work on a regular format)
-        if (!getDevices(page) || browserName === "firefox") {
+        if (!isMobile(page) || browserName === "firefox") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
         }

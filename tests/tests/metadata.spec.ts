@@ -1,11 +1,11 @@
 import { expect, test } from '@playwright/test';
 import {maps_domain} from "./utils/urls";
-import {getDevices} from "./utils/devices";
+import {isMobile} from "./utils/isMobile";
 
 test.describe('Meta tags', () => {
     test.beforeEach(async ({ page, browserName }) => {
         // Skip test for mobile device
-        if(getDevices(page) && browserName !== "chromium") {
+        if(isMobile(page) && browserName !== "chromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;

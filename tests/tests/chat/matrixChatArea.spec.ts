@@ -7,7 +7,7 @@ import { hideNoCamera } from "../utils/hideNoCamera";
 import { oidcMatrixUserLogin, oidcMemberTagLogin } from "../utils/oidc";
 import { resetWamMaps } from "../utils/map-editor/uploader";
 import { getPage } from "../utils/auth";
-import {getDevices} from "../utils/devices";
+import {isMobile} from "../utils/isMobile";
 import chatUtils from "./chatUtils";
 
 test.describe("matrix chat area property @matrix", () => {
@@ -15,7 +15,7 @@ test.describe("matrix chat area property @matrix", () => {
     "Ignore tests on mobilechromium because map editor not available for mobile devices",
     async ({ page, request }, { project }) => {
       //Map Editor not available on mobile / WebKit has issue with camera
-      if (getDevices(page) || project.name === "webkit") {
+      if (isMobile(page) || project.name === "webkit") {
         //eslint-disable-next-line playwright/no-skipped-test
         test.skip();
         return;

@@ -1,11 +1,11 @@
 import { expect, test } from '@playwright/test';
 import {publicTestMapUrl} from "./utils/urls";
 import { getPage } from "./utils/auth";
-import {getDevices} from "./utils/devices";
+import {isMobile} from "./utils/isMobile";
 
 test.describe('Translation', () => {
   test.beforeEach(async ({ page }) => {
-    if (getDevices(page)) {
+    if (isMobile(page)) {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
     }

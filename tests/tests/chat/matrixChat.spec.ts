@@ -3,7 +3,7 @@ import { resetWamMaps } from "../utils/map-editor/uploader";
 import Map from "../utils/map";
 import { oidcLogout, oidcMatrixUserLogin } from "../utils/oidc";
 import { getPage} from "../utils/auth";
-import {getDevices} from "../utils/devices";
+import {isMobile} from "../utils/isMobile";
 import ChatUtils from "./chatUtils";
 
 test.setTimeout(120000);
@@ -408,7 +408,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
       (response) =>
         response.url().includes("anonymLogin") && response.status() === 200
     );
-    if (getDevices(page)) {
+    if (isMobile(page)) {
       await ChatUtils.closeChat(page);
     }
     await oidcLogout(page);
@@ -451,7 +451,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
       (response) =>
         response.url().includes("anonymLogin") && response.status() === 200
     );
-    if (getDevices(page)) {
+    if (isMobile(page)) {
       await ChatUtils.closeChat(page);
     }
     await oidcLogout(page);
