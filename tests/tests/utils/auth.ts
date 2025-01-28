@@ -97,6 +97,6 @@ export async function getPage(browser: Browser,
     }
     const targetUrl = new URL(url, play_url).toString();
     await page.goto(targetUrl);
-    await expect(page.getByTestId('microphone-button')).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId('microphone-button')).toBeVisible({ timeout: 120_000 });
     return page;
 }

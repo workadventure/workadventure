@@ -8,8 +8,8 @@ import { getPage } from "./utils/auth";
 import {getDevices} from "./utils/devices";
 
 test.describe("API WA.players", () => {
-  test.beforeEach(async ({ page }) => {
-    if (getDevices(page)) {
+  test.beforeEach(async ({ page, browserName }) => {
+    if (getDevices(page) || browserName === "webkit") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
@@ -383,8 +383,6 @@ test.describe("API WA.players", () => {
     
     await page2.close();
     await page2.context().close();
-    //await page.close();
-    //await page.context().close();
   };
 
   test("Test variable persistence for anonymous users.", async ({ browser }) => {

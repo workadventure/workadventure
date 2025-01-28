@@ -504,7 +504,7 @@ jobs:
             nbShards: 3
             renderer: headless
           - browser: webkit
-            parameters: --project=webkit --shard=2/3 --
+            parameters: --project=webkit --shard=2/3
             project: webkit
             shard: 2
             nbShards: 3
