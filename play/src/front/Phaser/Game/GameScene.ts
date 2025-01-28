@@ -1291,6 +1291,9 @@ export class GameScene extends DirtyScene {
         // Recompute camera offset if needed
         this.time.delayedCall(0, () => {
             biggestAvailableAreaStore.recompute();
+            console.log({
+                biggestAvailableAreaStore: get(biggestAvailableAreaStore),
+            });
             if (this.cameraManager != undefined) {
                 this.cameraManager.updateCameraOffset(get(biggestAvailableAreaStore), instant);
             }

@@ -14,10 +14,19 @@ function findBiggestAvailableArea(): Box {
         yEnd: game.offsetHeight,
     };
 
+    console.log({
+        wholeScreenBox,
+    });
+
     const blockingElements = Array.from(document.getElementsByClassName("screen-blocker"));
+
     if (blockingElements.length === 0) {
         return wholeScreenBox;
     }
+
+    console.log({
+        blockingElements,
+    });
 
     const blockers: Box[] = [];
 
@@ -30,6 +39,10 @@ function findBiggestAvailableArea(): Box {
             yEnd: bounds.bottom,
         });
     }
+
+    console.log({
+        blockers,
+    });
 
     // create vertices arrays and insert game canvas edges
     const verticesX = [game.offsetLeft, game.offsetWidth];
@@ -59,6 +72,10 @@ function findBiggestAvailableArea(): Box {
         }
     }
 
+    console.log({
+        occupiedGrid,
+    });
+
     // create an array of all free boxes
     const freeBoxes: Box[] = [];
     for (let x = 0; x < occupiedGrid.length; x += 1) {
@@ -76,6 +93,10 @@ function findBiggestAvailableArea(): Box {
             biggestBox = box;
         }
     }
+
+    console.log({
+        biggestBox,
+    });
 
     return {
         xStart: verticesX[biggestBox.xStart],
