@@ -40,6 +40,7 @@
     import Select from "../../Input/Select.svelte";
     import RangeSlider from "../../Input/RangeSlider.svelte";
     import Input from "../../Input/Input.svelte";
+    import Select from "../../Input/Select.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     import { IconAlertTriangle } from "@wa-icons";
 
