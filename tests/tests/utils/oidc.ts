@@ -41,14 +41,14 @@ export async function oidcLogout(page: Page) {
   await page.getByRole('button', { name: 'Log out' }).click();
 }
 
-export async function oidcAdminTagLogin(page: Page, isMobile = "no") {
+export async function oidcAdminTagLogin(page: Page) {
   await oidcLogin(page, "User1", "pwd");
 }
 
-export async function oidcMatrixUserLogin(page: Page, isMobile = "no") {
+export async function oidcMatrixUserLogin(page: Page) {
   await oidcLogin(page, "UserMatrix", "pwd");
 }
 
-export async function oidcMemberTagLogin(page: Page, isMobile = "no") {
+export async function oidcMemberTagLogin(page: Page) {
   await oidcLogin(page, "User2", "pwd");
 }
