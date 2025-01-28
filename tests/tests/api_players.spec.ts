@@ -5,20 +5,18 @@ import { evaluateScript } from "./utils/scripting";
 import {oidcLogin, oidcLogout} from "./utils/oidc";
 import { publicTestMapUrl } from "./utils/urls";
 import { getPage } from "./utils/auth";
+import {getDevices} from "./utils/devices";
 
 test.describe("API WA.players", () => {
-
-  test("enter leave events are received", async ({ browser }, {
-    project,
-  }) => {
-    // FIXME update test to make easy to read
-    // Skip test for mobile device
-    if (project.name === "mobilechromium") {
+  test.beforeEach(async ({ page }) => {
+    if (getDevices(page)) {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
-      return;
     }
-    
+  });
+
+  test("enter leave events are received", async ({ browser }) => {
+
     const page1 : Page = await getPage(
       browser,
       'Alice',
@@ -67,15 +65,8 @@ test.describe("API WA.players", () => {
     await page1.context().close();
   });
 
-  test("exception if we forget to call WA.players.configureTracking", async ({
-    browser,
-  }, { project }) => {
-    // Skip test for mobile device
-    if (project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
+  test("exception if we forget to call WA.players.configureTracking", async ({ browser }) => {
+
     const page = await getPage(
       browser,
       'Alice',
@@ -91,15 +82,8 @@ test.describe("API WA.players", () => {
     await page.context().close();
   });
 
-  test("Test that player B arriving after player A set his variables can read the variable.", async ({
-    browser,
-  }, { project }) => {
-    // Skip test for mobile device
-    if (project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
+  test("Test that player B arriving after player A set his variables can read the variable.",
+      async ({ browser }) => {
     const page = await getPage(
       browser,
       'Alice',
@@ -142,7 +126,6 @@ test.describe("API WA.players", () => {
   const runPersistenceTest = async (
     page: Page,
     browser: Browser,
-    isMobile = false
   ) => {
     await evaluateScript(page, async () => {
       /*function later(delay) {
@@ -403,15 +386,7 @@ test.describe("API WA.players", () => {
     //await page.context().close();
   };
 
-  test("Test variable persistence for anonymous users.", async ({
-    browser,
-  }, { project }) => {
-    // Skip test for mobile device
-    if (project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
+  test("Test variable persistence for anonymous users.", async ({ browser }) => {
     const page = await getPage(
       browser,
       'Alice',
@@ -423,15 +398,7 @@ test.describe("API WA.players", () => {
     await page.context().close();
   });
 
-  test("Test variable persistence for logged users. @oidc", async ({
-    browser,
-  }, { project }) => {
-    // Skip test for mobile device
-    if (project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
+  test("Test variable persistence for logged users. @oidc", async ({ browser }) => {
 
     test.setTimeout(120_000); // Fix Webkit that can take more than 60s
     
@@ -441,23 +408,14 @@ test.describe("API WA.players", () => {
       publicTestMapUrl(`tests/E2E/empty.json`, "api_players")
     );
     await oidcLogin(page);
-    await runPersistenceTest(page, browser, false);
+    await runPersistenceTest(page, browser);
 
-    await oidcLogout(page, false);
+    await oidcLogout(page);
     await page.close();
     await page.context().close();
   });
 
-  test("Test variables are sent across frames.", async ({ browser }, {
-    project,
-  }) => {
-    // Skip test for mobile device
-    if (project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
-
+  test("Test variables are sent across frames.", async ({ browser }) => {
     const page = await getPage(
       browser,
       'Alice',
@@ -504,15 +462,8 @@ test.describe("API WA.players", () => {
 
   // This test is testing that we are listening on the back side to variables modification inside Redis.
   // All players with same UUID should share the same state (public or private as long as it is persisted)
-  test("Test that 2 players sharing the same UUID are notified of persisted private variable changes.", async ({
-    browser,
-  }, { project }) => {
-    // Skip test for mobile device
-    if (project.name === "mobilechromium" || project.name === "webkit") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
+  test("Test that 2 players sharing the same UUID are notified of persisted private variable changes.",
+      async ({ browser }) => {
     const page = await getPage(
       browser,
       'Alice',
@@ -607,15 +558,7 @@ test.describe("API WA.players", () => {
     //await page.context().close();
   });
 
-  test("Test that a variable changed can be listened to locally.", async ({
-    browser,
-  }, { project }) => {
-    // Skip test for mobile device
-    if (project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
+  test("Test that a variable changed can be listened to locally.", async ({ browser }) => {
     const page = await getPage(
       browser,
       'Alice',
@@ -663,14 +606,7 @@ test.describe("API WA.players", () => {
     await page.context().close();
   });
 
-  test('cowebsites tab system', async ({ browser }, { project }) => {
-
-    if(project.name === "mobilechromium") {
-        //eslint-disable-next-line playwright/no-skipped-test
-        test.skip();
-        return;
-    }
-
+  test('cowebsites tab system', async ({ browser }) => {
     // Open the main page with the cowebsite container
     const page = await getPage(
       browser,
@@ -678,8 +614,6 @@ test.describe("API WA.players", () => {
       publicTestMapUrl(`tests/RemotePlayers/remote_players_cowebsite.json`, "api_players")
     );
 
-
-    //await login(page, 'Alice');
     // Ouvrir le Site A dans le premier onglet
     await page.locator('.siteA-page1');
 
