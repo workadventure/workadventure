@@ -3,16 +3,17 @@ import {evaluateScript} from "./utils/scripting";
 import {expectInViewport} from "./utils/viewport";
 import {publicTestMapUrl} from "./utils/urls";
 import { getPage } from './utils/auth';
+import {getDevices} from "./utils/devices";
 
 test.describe('Modal', () => {
-    test('test', async ({ browser }, { project }) => {
-        // Skip test for mobile device
-        if(project.name === "mobilechromium") {
+    test.beforeEach(async ({ page }) => {
+        if (getDevices(page)) {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
         }
-
+    });
+    test('test', async ({ browser }) => {
         // Go to
         const page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/empty.json", "modal_script"));
         await evaluateScript(page, async () => {
