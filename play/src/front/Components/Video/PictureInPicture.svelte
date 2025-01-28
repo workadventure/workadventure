@@ -10,15 +10,14 @@
     import microphoneOffImg from "../images/microphone-off.png";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { srcObject } from "./utils";
-    import RemoteSoundWidget from "./PictureInPicture/RemoteSoundWidget.svelte";
-    import RemoteVideoWidget from "./PictureInPicture/RemoteVideoWidget.svelte";
     import ActivatePictureInPicture from "./PictureInPicture/ActivatePictureInPicture.svelte";
+    import StreamableWrapperWidget from "./PictureInPicture/StreamableWrapperWidget.svelte";
 
     let divElement: HTMLDivElement;
     let myLocalStream: MediaStream | undefined | null;
     let myLocalStreamElement: HTMLVideoElement | undefined;
     const pipWindowStore = writable<Window | undefined>(undefined);
-    const hightlightedStreamable = writable<Streamable | undefined>(undefined);
+    const highlightedStreamable = writable<Streamable | undefined>(undefined);
 
     let streamableCollectionStoreSubscriber: Unsubscriber | undefined;
     let activePictureInPictureSubscriber: Unsubscriber | undefined;
@@ -84,6 +83,9 @@
                 // for each streamable in the collection, we will update ratio of the component for the video element
                 for (const streamable of value.values()) {
                     try {
+                        if (streamable.uniqueId === "localScreenSharingStream") {
+                            continue;
+                        }
                         streamablesCollectionStoreSubscriber.push(
                             (streamable as VideoPeer).streamStore.subscribe((media) => {
                                 const divMailElement = $pipWindowStore?.document.getElementById(
@@ -132,14 +134,6 @@
         activePictureInPictureStore.set(false);
     }
 
-    function getPlayerWokaPicture(streamable: Streamable): string {
-        const gameScene = gameManager.getCurrentGameScene();
-        const playerWokaPictureStore = [...gameScene.MapPlayersByKey].find(
-            ([, player]) => player.userUuid === (streamable as VideoPeer).player.userUuid
-        )?.[1].pictureStore;
-        return playerWokaPictureStore ? (get(playerWokaPictureStore) as string) : "";
-    }
-
     function getMyPlayerWokaPicture(): string {
         const gameScene = gameManager.getCurrentGameScene();
         return get(gameScene.CurrentPlayer.pictureStore) as string;
@@ -147,11 +141,11 @@
 
     function hanglerClickVideo(event: CustomEvent) {
         const { streamable } = event.detail;
-        if ($hightlightedStreamable != undefined && $hightlightedStreamable?.uniqueId == streamable.uniqueId) {
-            hightlightedStreamable.set(undefined);
+        if ($highlightedStreamable != undefined && $highlightedStreamable?.uniqueId == streamable.uniqueId) {
+            highlightedStreamable.set(undefined);
             return;
         }
-        hightlightedStreamable.set(streamable);
+        highlightedStreamable.set(streamable);
     }
 
     function allowPictureInPicture() {
@@ -160,6 +154,14 @@
     function disagreePictureInPicture() {
         activePictureInPictureStore.set(false);
         destroyPictureInPictureComponent();
+    }
+
+    function handlerScreanSharingClick() {
+        window.focus();
+    }
+
+    function handlerToggleChat() {
+        window.focus();
     }
 
     onMount(() => {
@@ -212,50 +214,26 @@
         class="tw-relative tw-flex tw-justify-center tw-items-start tw-w-full tw-h-full tw-overflow-hidden tw-overflow-y-auto"
     >
         <div
-            id="mozaic-wrapper"
+            id="mozaic_highlighted-wrapper"
             class="tw-relative tw-w-[98%] tw-h-auto tw-justify-center tw-items-center tw-grid tw-content-center tw-grid-cols-1 sm:tw-grid-cols-2 md:w-grid-cols-3 xl:w-grid-cols-4 tw-gap-3"
-            class:!tw-grid-cols-1={$streamableCollectionStore.size === 1 || $hightlightedStreamable != undefined}
+            class:!tw-grid-cols-1={$streamableCollectionStore.size === 1 || $highlightedStreamable != undefined}
         >
             {#each [...$streamableCollectionStore] as [uuid, streamable] (uuid)}
-                {#if $hightlightedStreamable == undefined || $hightlightedStreamable.uniqueId == streamable.uniqueId}
-                    <div
-                        id={`main-${streamable.uniqueId}`}
-                        class="tw-w-full tw-h-auto tw-max-h-full tw-aspect-video tw-relative tw-flex tw-justify-center tw-items-center tw-z-40 tw-rounded-xl tw-bg-[#373a3e]"
-                    >
-                        <img
-                            src={getPlayerWokaPicture(streamable)}
-                            class="tw-w-auto tw-h-full tw-max-h-[8rem]"
-                            alt="woka user"
-                        />
-
-                        <RemoteSoundWidget {streamable} />
-
-                        <RemoteVideoWidget {streamable} on:click={hanglerClickVideo} />
-                    </div>
+                {#if $highlightedStreamable == undefined || $highlightedStreamable.uniqueId == streamable.uniqueId}
+                    <StreamableWrapperWidget {streamable} on:click={hanglerClickVideo} />
                 {/if}
             {/each}
         </div>
     </div>
     <div
-        id="mycamera_hightlighted-wrapper"
+        id="mycamera_nohighlighted-wrapper"
         class="tw-absolute tw-h-auto tw-justify-center tw-items-center tw-right-[5%] tw-bottom-[20%] tw-flex tw-flex-row tw-gap-3"
-        style={`width: ${$hightlightedStreamable != undefined ? $streamableCollectionStore.size * 20 : 20}%;`}
+        style={`width: ${$highlightedStreamable != undefined ? $streamableCollectionStore.size * 20 : 20}%;`}
     >
-        {#if $hightlightedStreamable != undefined}
+        {#if $highlightedStreamable != undefined}
             {#each [...$streamableCollectionStore] as [uuid, streamable] (uuid)}
-                {#if $hightlightedStreamable.uniqueId != streamable.uniqueId}
-                    <div
-                        id={`main-${streamable.uniqueId}`}
-                        class="tw-w-full tw-h-auto tw-max-h-full tw-aspect-video tw-relative tw-flex tw-justify-center tw-items-center tw-z-40 tw-rounded-xl tw-bg-[#373a3e]"
-                    >
-                        <img
-                            src={getPlayerWokaPicture(streamable)}
-                            class="tw-w-auto tw-h-full tw-max-h-[3rem]"
-                            alt="woka user"
-                        />
-                        <RemoteSoundWidget {streamable} isMinified={true} />
-                        <RemoteVideoWidget {streamable} on:click={hanglerClickVideo} />
-                    </div>
+                {#if $highlightedStreamable.uniqueId != streamable.uniqueId}
+                    <StreamableWrapperWidget {streamable} isMinified={true} on:click={hanglerClickVideo} />
                 {/if}
             {/each}
         {/if}
@@ -286,7 +264,11 @@
             {/if}
         </div>
     </div>
-    <ActionBar isPictureInPicture={true} />
+    <ActionBar
+        isPictureInPicture={true}
+        on:screenSharingClick={handlerScreanSharingClick}
+        on:toggleChat={handlerToggleChat}
+    />
 </div>
 
 <style lang="scss">

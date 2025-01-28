@@ -1,7 +1,7 @@
 <script lang="ts">
     import { writable } from "svelte/store";
     import { fly } from "svelte/transition";
-    import { onDestroy, onMount } from "svelte";
+    import { createEventDispatcher, onDestroy, onMount } from "svelte";
     import { AvailabilityStatus } from "@workadventure/messages";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import {
@@ -110,6 +110,7 @@
     import AvailabilityStatusComponent from "./AvailabilityStatus/AvailabilityStatus.svelte";
     import { IconCheck, IconChevronDown, IconChevronUp } from "@wa-icons";
 
+    const dispatch = createEventDispatcher();
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
     let cameraActive = false;
@@ -117,6 +118,11 @@
     export let isPictureInPicture = false;
 
     function screenSharingClick(): void {
+        // If the picture in picture is activated, the dispatch event could be caught by the parent component.
+        // This will be useless if all of the svelte components are used in the picture in picture component.
+        // More detail on the merge request: https://github.com/workadventure/workadventure/pull/4519
+        if (isPictureInPicture) dispatch("screenSharingClick");
+
         if ($silentStore) return;
         if ($requestedScreenSharingState === true) {
             requestedScreenSharingState.disableScreenSharing();
@@ -174,6 +180,11 @@
     }
 
     function toggleChat() {
+        // If the picture in picture is activated, the dispatch event could be caught by the parent component.
+        // This will be useless if all of the svelte components are used in the picture in picture component.
+        // More detail on the merge request: https://github.com/workadventure/workadventure/pull/4519
+        if (isPictureInPicture) dispatch("toggleChat");
+
         if (!$chatVisibilityStore) {
             menuVisiblilityStore.set(false);
             activeSubMenuStore.activateByIndex(0);

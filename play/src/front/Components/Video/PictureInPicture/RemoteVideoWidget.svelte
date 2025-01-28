@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { createEventDispatcher, onDestroy, onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import { Unsubscriber } from "svelte/store";
     import { Streamable } from "../../../Stores/StreamableCollectionStore";
     import { VideoPeer } from "../../../WebRtc/VideoPeer";
@@ -13,8 +13,6 @@
         requestVideoFrameCallback(callback: VideoFrameRequestCallback, options?: IdleRequestOptions): number;
     }
 
-    const dispatch = createEventDispatcher();
-
     export let streamable: Streamable;
     let streamStore = (streamable as VideoPeer).streamStore;
     let videoElement: HTMLVideoElementExt;
@@ -23,6 +21,7 @@
 
     onMount(() => {
         activePictureInPictureStoreUnsubscriber = activePictureInPictureStore.subscribe((value) => {
+            if (!videoElement) return;
             if (value) {
                 videoElement.muted = false;
             }
@@ -44,6 +43,5 @@
         autoplay
         muted
         playsinline
-        on:click={() => dispatch("click", { streamable })}
     />
 {/if}
