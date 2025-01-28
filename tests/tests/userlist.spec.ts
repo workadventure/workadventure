@@ -3,14 +3,16 @@ import Map from "./utils/map";
 import { publicTestMapUrl } from "./utils/urls";
 import chatUtils from "./utils/chat";
 import { getPage } from "./utils/auth";
+import {getDevices} from "./utils/devices";
 
 test.describe("Walk to", () => {
-  test("walk to a user ", async ({ browser }, { project }) => {
-    if (project.name === "mobilechromium" || project.name === "webkit") {
+  test.beforeEach(async ({ page, browserName }) => {
+    if (browserName === "webkit" || getDevices(page)) {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
-      return;
     }
+  });
+  test("walk to a user ", async ({ browser }, { project }) => {
     const page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/empty.json", "userlist"));
     const alicePosition = {
       x: 4 * 32,

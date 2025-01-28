@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import {publicTestMapUrl} from "./utils/urls";
 import { getPage } from "./utils/auth";
+import {getDevices} from "./utils/devices";
 
 test.describe('Translation', () => {
   test.beforeEach(async ({ page }) => {
