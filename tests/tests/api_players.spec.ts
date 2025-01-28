@@ -12,6 +12,7 @@ test.describe("API WA.players", () => {
     if (getDevices(page)) {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
+      return;
     }
   });
 
