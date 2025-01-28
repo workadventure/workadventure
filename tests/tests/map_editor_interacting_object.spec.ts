@@ -7,6 +7,7 @@ import MapEditor from "./utils/mapeditor";
 import Menu from "./utils/menu";
 import { map_storage_url } from "./utils/urls";
 import { getPage } from "./utils/auth";
+import {getDevices} from "./utils/devices";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -16,9 +17,9 @@ test.use({
 test.describe("Map editor interacting with object @oidc", () => {
   test.beforeEach(
     "Ignore tests on mobilechromium because map editor not available for mobile devices",
-    ({}, { project }) => {
+      ({ page }) => {
       //Map Editor not available on mobile
-      if (project.name === "mobilechromium") {
+      if (getDevices(page)) {
         //eslint-disable-next-line playwright/no-skipped-test
         test.skip();
         return;
