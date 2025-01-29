@@ -64,13 +64,6 @@ test.describe('Scripting follow functions', () => {
             await WA.player.proximityMeeting.followMe();
         });
 
-        // The follow button is not displayed on mobile
-        if(project.name === "mobilechromium") {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
-
         const waitForUnfollowPromise = evaluateScript(page, async () => {
             return new Promise<void>((resolve) => {
                 WA.player.proximityMeeting.onUnfollowed().subscribe(() => {

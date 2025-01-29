@@ -3,17 +3,16 @@ import {oidcLogin, oidcLogout} from "./utils/oidc";
 import {evaluateScript} from "./utils/scripting";
 import {publicTestMapUrl} from "./utils/urls";
 import {getPage} from "./utils/auth";
+import {isMobile} from "./utils/isMobile";
 
 test.describe('OpenID connect @oidc', () => {
-  test('can login and logout', async ({
-    browser
-  }, { project }) => {
-    // Skip test for mobile device
-    if(project.name === "mobilechromium") {
+  test.beforeEach(async ({ page }) => {
+    if (isMobile(page)) {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
-      return;
     }
+  });
+  test('can login and logout', async ({ browser }) => {
     const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "oidc"))
 
     // Test if player variable is correct
@@ -34,9 +33,9 @@ test.describe('OpenID connect @oidc', () => {
     await expect(isLogged).toBe(true);
 
     // Log out user
-    await oidcLogout(page, false);
-
-    // Let's check the sign in button is back here when we signed out
+    await oidcLogout(page);
+    await expect(page.locator('a:has-text("Login")')).toBeVisible();
+    // Let's check the sign-in button is back here when we signed out
     await page.click('#action-invite');
     await expect(page.locator('a:has-text("Login")')).toContainText("Login");
 

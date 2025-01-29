@@ -7,6 +7,7 @@ import { hideNoCamera } from "../utils/hideNoCamera";
 import { oidcMatrixUserLogin, oidcMemberTagLogin } from "../utils/oidc";
 import { resetWamMaps } from "../utils/map-editor/uploader";
 import { getPage } from "../utils/auth";
+import {isMobile} from "../utils/isMobile";
 import chatUtils from "./chatUtils";
 
 test.describe("matrix chat area property @matrix", () => {
@@ -14,7 +15,7 @@ test.describe("matrix chat area property @matrix", () => {
     "Ignore tests on mobilechromium because map editor not available for mobile devices",
     async ({ page, request }, { project }) => {
       //Map Editor not available on mobile / WebKit has issue with camera
-      if (project.name === "mobilechromium" || project.name === "webkit") {
+      if (isMobile(page) || project.name === "webkit") {
         //eslint-disable-next-line playwright/no-skipped-test
         test.skip();
         return;
@@ -29,7 +30,7 @@ test.describe("matrix chat area property @matrix", () => {
   }) => {
     //await page.evaluate(() => localStorage.setItem('debug', '*'));
     const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page, false);
+    await oidcMatrixUserLogin(page);
 
     // Because webkit in playwright does not support Camera/Microphone Permission by settings
     if (browserName === "webkit") {
@@ -37,7 +38,6 @@ test.describe("matrix chat area property @matrix", () => {
     }
 
     await Map.teleportToPosition(page, 5 * 32, 5 * 32);
-    // await chatUtils.openChat(page);
 
     await Menu.openMapEditor(page);
 
@@ -66,7 +66,7 @@ test.describe("matrix chat area property @matrix", () => {
     browserName,
   }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page, false);
+    await oidcMatrixUserLogin(page);
 
     if (browserName === "webkit") {
       await hideNoCamera(page);
@@ -102,7 +102,7 @@ test.describe("matrix chat area property @matrix", () => {
     browserName,
   }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page, false);
+    await oidcMatrixUserLogin(page);
 
     if (browserName === "webkit") {
       await hideNoCamera(page);
@@ -141,7 +141,7 @@ test.describe("matrix chat area property @matrix", () => {
     browserName,
   }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page, false);
+    await oidcMatrixUserLogin(page);
 
     if (browserName === "webkit") {
       await hideNoCamera(page);
@@ -187,7 +187,7 @@ test.describe("matrix chat area property @matrix", () => {
     browser
   }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page, false);
+    await oidcMatrixUserLogin(page);
 
     if (browserName === "webkit") {
       await hideNoCamera(page);
@@ -209,7 +209,7 @@ test.describe("matrix chat area property @matrix", () => {
     await Menu.closeMapEditor(page);
     //await page.close()
     const page2 = await getPage(browser, 'Bob', Map.url("empty"));
-    await oidcMemberTagLogin(page2, false);
+    await oidcMemberTagLogin(page2);
     
     if (browserName === "webkit") {
       await hideNoCamera(page2);

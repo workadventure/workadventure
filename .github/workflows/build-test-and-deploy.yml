@@ -444,68 +444,80 @@ jobs:
           path: /tmp/map-storage.tar.gz
 
   end-to-end-tests:
-    name: "End to end tests with ${{ matrix.project }} (${{ matrix.shard }}/${{ matrix.nbShards }})"
+    name: "End to end tests with ${{ matrix.project }} ${{ matrix.shard }}/${{ matrix.nbShards }}"
     strategy:
       fail-fast: false
       matrix:
         include:
           - browser: chromium
+            parameters: --project=chromium
             project: chromium
             shard: 1
             nbShards: 4
             renderer: auto
           - browser: chromium
+            parameters: --project=chromium
             project: chromium
             shard: 2
             nbShards: 4
             renderer: auto
           - browser: chromium
+            parameters: --project=chromium
             project: chromium
             shard: 3
             nbShards: 4
             renderer: auto
           - browser: chromium
+            parameters: --project=chromium
             project: chromium
             shard: 4
             nbShards: 4
             renderer: auto
           - browser: firefox
+            parameters: --project=firefox
             project: firefox
             shard: 1
             nbShards: 4
             renderer: auto
           - browser: firefox
+            parameters: --project=firefox
             project: firefox
             shard: 2
             nbShards: 4
             renderer: auto
           - browser: firefox
+            parameters: --project=firefox
             project: firefox
             shard: 3
             nbShards: 4
             renderer: auto
           - browser: firefox
+            parameters: --project=firefox
             project: firefox
             shard: 4
             nbShards: 4
             renderer: auto
           - browser: webkit
+            parameters: --project=webkit
             project: webkit
             shard: 1
             nbShards: 3
             renderer: headless
           - browser: webkit
+            parameters: --project=webkit
             project: webkit
             shard: 2
             nbShards: 3
             renderer: headless
           - browser: webkit
+            parameters: --project=webkit
             project: webkit
             shard: 3
             nbShards: 3
             renderer: headless
-          - browser: chromium
-            project: mobilechromium
+          - browser: ""
+            parameters: --project=mobilechromium --project=mobilefirefox --project=mobilewebkit
+            project: mobile
             shard: 1
             nbShards: 1
             renderer: auto
@@ -596,7 +608,7 @@ jobs:
         run: sleep 30 && npm run upload-test-map
         working-directory: map-storage
       - name: Run Playwright tests
-        run: npm run test-prod-like -- --project=${{ matrix.project }} --shard=${{ matrix.shard }}/${{ matrix.nbShards }} --grep-invert "@slow"
+        run: npm run test-prod-like -- ${{ matrix.parameters }} --shard=${{ matrix.shard }}/${{ matrix.nbShards }}--grep-invert "@slow"
         working-directory: tests
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}

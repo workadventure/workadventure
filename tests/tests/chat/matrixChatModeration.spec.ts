@@ -29,10 +29,10 @@ test.describe("chat moderation @matrix", () => {
     await ChatUtils.resetMatrixDatabase();
   });
 
-  test("should create a public chat room and verify admin permissions", async ({ browser }, { project }) => {
-    const isMobile = project.name === "mobilechromium";
+  test("should create a public chat room and verify admin permissions",
+      async ({ browser }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page, isMobile);
+    await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const publicChatRoomName = ChatUtils.getRandomName();
@@ -57,10 +57,10 @@ test.describe("chat moderation @matrix", () => {
     await page.context().close();
   });
 
-  test("should manage participants and permissions in public chat room", async ({ browser }, { project }) => {
-    const isMobile = project.name === "mobilechromium";
+  test("should manage participants and permissions in public chat room",
+      async ({ browser }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page, isMobile);
+    await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     const publicChatRoomName = ChatUtils.getRandomName();
