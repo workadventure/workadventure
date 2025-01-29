@@ -156,9 +156,9 @@ test.describe('Variables', () => {
       '../maps/tests/Variables/Cache/variables_tmp.json'
     );
     const page2 = await getPage(browser, 'Bob',
-        publicTestMapUrl("tests/Variables/Cache/variables_tmp.json", "variables"));
+        publicTestMapUrl("tests/Variables/Cache/variables_tmp.json", "variables"),
+        { pageCreatedHook: (page2) => startRecordLogs(page2) });
 
-    startRecordLogs(page2);
     // Let's check we successfully manage to save the variable value.
     await assertLogMessage(page2, 'SUCCESS!');
 
