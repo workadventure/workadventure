@@ -91,3 +91,5 @@ function createScreenSharingStreamStore() {
 export const screenSharingStreamStore = createScreenSharingStreamStore();
 
 export const volumeProximityDiscussionStore = writable(localUserStore.getVolumeProximityDiscussion());
+
+export const activePictureInPictureStore = writable(false);
