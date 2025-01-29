@@ -11,12 +11,12 @@
 </script>
 
 <div class="flex flex--col">
-    <div class="input-label">
-        <label for={id} class="grow font-light">{label}</label>
-    </div>
-
     {#if type === "select"}
         <div class="relative flex-grow">
+            <div class="input-label">
+                <label for={id} class="grow font-light">{label}</label>
+            </div>
+
             <select
                 {id}
                 class="grow w-full input-select input-select-light font-light"
