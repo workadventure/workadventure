@@ -13,10 +13,6 @@ export function findBiggestAvailableArea(gameSize: { width: number; height: numb
         yEnd: gameSize.height,
     };
 
-    console.log({
-        wholeScreenBox,
-    });
-
     if (blockers.length === 0) {
         return wholeScreenBox;
     }

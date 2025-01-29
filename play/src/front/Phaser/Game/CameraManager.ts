@@ -356,18 +356,6 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         // const followOffsetX = ((xCenter - game.offsetWidth / 2) * window.devicePixelRatio) / this.scene.scale.zoom;
         // const followOffsetY = ((yCenter - game.offsetHeight / 2) * window.devicePixelRatio) / this.scene.scale.zoom;
 
-        console.log({
-            followOffsetX,
-            followOffsetY,
-            windowDevicePixelRatio: window.devicePixelRatio,
-            sceneScaleZoom: this.scene.scale.zoom,
-            xCenter,
-            yCenter,
-            gameOffsetWidth: game.offsetWidth,
-            gameOffsetHeight: game.offsetHeight,
-            box,
-        });
-
         if (instant) {
             this.camera.setFollowOffset(followOffsetX, followOffsetY);
             this.scene.markDirty();
@@ -387,11 +375,6 @@ export class CameraManager extends Phaser.Events.EventEmitter {
                 const progress = tween.getValue();
                 const newOffsetX = oldFollowOffsetX + (followOffsetX - oldFollowOffsetX) * progress;
                 const newOffsetY = oldFollowOffsetY + (followOffsetY - oldFollowOffsetY) * progress;
-                console.log(">>> onUpdate", {
-                    progress,
-                    newOffsetX,
-                    newOffsetY,
-                });
                 this.camera.setFollowOffset(newOffsetX, newOffsetY);
                 this.scene.markDirty();
             },
