@@ -11,7 +11,7 @@
     export let onClick = () => {};
     export let variant: "light" | "" = "";
     export let size: "xs" | "sm" | "lg" | "" = "";
-    export let AppendSide: "left" | "" = "";
+    export let appendSide: "left" | "right" = "right";
     export let status: "error" | "success" | "" = "";
 
     const SLOTS = $$slots;
@@ -36,13 +36,13 @@
         {/if}
     </div>
 
-    {#if type === "text"}
-        <div class=" relative flex grow">
+    <div class=" relative flex grow">
+        {#if type === "text"}
             <input
                 id={uniqueId}
                 type="text"
                 class="grow input-text input-icon  "
-                class:input-icon-left={AppendSide === "left"}
+                class:input-icon-left={appendSide === "left"}
                 class:input-text-light={variant === "light"}
                 class:input-text-xs={size === "xs"}
                 class:input-text-sm={size === "sm"}
@@ -55,11 +55,29 @@
                 on:click={onClick}
                 {disabled}
             />
-            {#if SLOTS.InputAppend}
-                <slot name="InputAppend" />
-            {/if}
-        </div>
-    {/if}
+        {:else if type === "url"}
+            <input
+                id={uniqueId}
+                type="url"
+                class="grow input-text input-icon  "
+                class:input-icon-left={appendSide === "left"}
+                class:input-text-light={variant === "light"}
+                class:input-text-xs={size === "xs"}
+                class:input-text-sm={size === "sm"}
+                class:input-text-lg={size === "lg"}
+                class:error={status === "error"}
+                class:success={status === "success"}
+                bind:value
+                {placeholder}
+                on:change={onChange}
+                on:click={onClick}
+                {disabled}
+            />
+        {/if}
+        {#if SLOTS.InputAppend}
+            <slot name="InputAppend" />
+        {/if}
+    </div>
 
     {#if SLOTS.helper}
         <div class="flex items-center px-3 space-x-1.5 opacity-50">
@@ -67,22 +85,5 @@
                 <slot name="helper" />
             </div>
         </div>
-    {/if}
-
-    {#if type === "url"}
-        <input
-            id={uniqueId}
-            type="url"
-            class="grow input-text input-text"
-            class:input-text-light={variant === "light"}
-            class:input-text-xs={size === "xs"}
-            class:input-text-sm={size === "sm"}
-            class:input-text-lg={size === "lg"}
-            bind:value
-            {placeholder}
-            on:change={onChange}
-            on:click={onClick}
-            {disabled}
-        />
     {/if}
 </div>
