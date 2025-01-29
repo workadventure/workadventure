@@ -39,7 +39,7 @@ test.describe("Iframe API", () => {
     await page.close();
   });
 
-  test("disable and enable map editor", async ({ browser }) => {
+  test("disable and enable map editor @oidc", async ({ browser }) => {
     const page = await getPage(browser, 'Admin1',
       publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
     );
