@@ -187,7 +187,7 @@
                 </p>
             </section>
 
-            <div class="flex space-x-4 items-start">
+            <div class="flex space-x-4 items-center flex-col lg:flex-row lg:items-start">
                 <div class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 flex flex-col justify-center items-center">
                     <div class="text-lg bold flex items-center justify-center space-x-3 mb-2 pl-2">
                         <MicOnIcon height="h-8" width="w-8" />
@@ -497,7 +497,7 @@
                 {/if}
             </div>
             <div
-                class="fixed bottom-0 w-full bg-contrast/80 backdrop-blur-md border border-solid border-t border-b-0 border-x-0 border-white/10"
+                class="lg:fixed bottom-0 w-full bg-contrast/80 backdrop-blur-md border border-solid border-t border-b-0 border-x-0 border-white/10"
             >
                 <section
                     class="container m-auto p-4 flex flex-col-reverse md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4 justify-between"
@@ -510,6 +510,16 @@
                         >{$LL.menu.settings.save()}</button
                     >
                 </section>
+                {#if legalString}
+                    <section class="terms-and-conditions h-fit z-40 text-center w-full">
+                        <a style="display: none;" href="traduction">Need for traduction</a>
+                        <p class="text-white text-xs italic opacity-50">
+                            {@html $LL.login.terms({
+                                links: legalString,
+                            })}
+                        </p>
+                    </section>
+                {/if}
             </div>
         </div>
     </section>
@@ -517,16 +527,7 @@
 <div class="absolute left-0 top-0 w-screen h-screen bg-cover z-10" style="background-image: url('{bgMap}');" />
 <div class="absolute left-0 top-0 w-screen h-screen bg-contrast/80 z-20" style="background-color: '{bgColor}';" />
 
-{#if legalString}
-    <section class="terms-and-conditions h-fit absolute z-40 bottom-0 text-center w-full">
-        <a style="display: none;" href="traduction">Need for traduction</a>
-        <p class="text-white text-xs italic opacity-50">
-            {$LL.login.terms({
-                links: legalString,
-            })}
-        </p>
-    </section>
-{/if}
+
 
 <style lang="scss">
     .enableCameraScene {
