@@ -527,8 +527,6 @@
 <div class="absolute left-0 top-0 w-screen h-screen bg-cover z-10" style="background-image: url('{bgMap}');" />
 <div class="absolute left-0 top-0 w-screen h-screen bg-contrast/80 z-20" style="background-color: '{bgColor}';" />
 
-
-
 <style lang="scss">
     .enableCameraScene {
         h2 {
