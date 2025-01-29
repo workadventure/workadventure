@@ -6,21 +6,22 @@ import menu from "./utils/menu";
 import mapeditor from "./utils/mapeditor";
 import areaEditor from "./utils/map-editor/areaEditor";
 import {getPage} from "./utils/auth"
+import {isMobile} from "./utils/isMobile";
 
 test.describe("Scripting for Map editor @oidc", () => {
     test.beforeEach(
         "Ignore tests on mobilechromium because map editor not available for mobile devices",
-        ({}, {project}) => {
+        ({ page }) => {
             //Map Editor not available on mobile
-            if (project.name === "mobilechromium") {
+            if (isMobile(page)) {
                 //eslint-disable-next-line playwright/no-skipped-test
                 test.skip();
                 return;
             }
         }
     );
-
-    test.beforeEach("Ignore tests on webkit because of issue with camera and microphone", ({browserName}) => {
+    test.beforeEach("Ignore tests on webkit because of issue with camera and microphone",
+        ({browserName}) => {
         //WebKit has issue with camera
         if (browserName === "webkit") {
             //eslint-disable-next-line playwright/no-skipped-test
@@ -28,12 +29,9 @@ test.describe("Scripting for Map editor @oidc", () => {
             return;
         }
     });
-
-
     test("Scripting Area onEnter & onLeave", async ({browser, request}) => {
         await resetWamMaps(request);
         const page = await getPage(browser, 'Admin1', Map.url("empty"));
-
         await menu.openMapEditor(page);
         await mapeditor.openAreaEditor(page);
         await areaEditor.drawArea(page, {x: 6 * 32, y: 0}, {x: 20 * 32, y: 6 * 32});

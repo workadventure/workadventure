@@ -5,16 +5,17 @@ import {evaluateScript} from "./utils/scripting";
 import {publicTestMapUrl} from "./utils/urls";
 import Menu from "./utils/menu";
 import { getPage } from "./utils/auth";
+import {isMobile} from "./utils/isMobile";
 
 test.describe('Areas', () => {
-    test('can edit Tiled area from scripting API', async ({ browser }, { project }) => {
-        // Skip test for mobile device
-        if(project.name === "mobilechromium") {
+    test.beforeEach(async ({ page }) => {
+        if (isMobile(page)) {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
         }
-
+    });
+    test('can edit Tiled area from scripting API', async ({ browser }) => {
         // This tests connects on a map with an area named "silent".
         // The Woka is out of the zone, but we move the zone to cover the Woka.
         // We check the silent zone applies to the Woka.
@@ -39,13 +40,7 @@ test.describe('Areas', () => {
         await page.context().close();
     });
 
-    test('blocking audio areas', async ({ browser }, { project }) => {
-        if(project.name === "mobilechromium") {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
-
+    test('blocking audio areas', async ({ browser }) => {
         // Open audio test map
         const page = await getPage(browser, 'Alice',
             publicTestMapUrl("tests/E2E/audio.json", "areas")
@@ -84,13 +79,7 @@ test.describe('Areas', () => {
         await page.context().close();
     });
 
-    test('display warning on fail to load audio', async ({ browser }, { project }) => {
-        if(project.name === "mobilechromium") {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
-
+    test('display warning on fail to load audio', async ({ browser }) => {
         // Open audio test map
         const page = await getPage(browser, 'Alice',
             publicTestMapUrl("tests/E2E/audio.json", "areas")

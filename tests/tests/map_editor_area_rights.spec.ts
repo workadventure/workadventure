@@ -9,6 +9,7 @@ import EntityEditor from "./utils/map-editor/entityEditor";
 import AreaAccessRights from "./utils/areaAccessRights";
 import { evaluateScript } from "./utils/scripting";
 import { getPage } from "./utils/auth";
+import {isMobile} from "./utils/isMobile";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -18,9 +19,9 @@ test.use({
 test.describe("Map editor area with rights @oidc", () => {
   test.beforeEach(
     "Ignore tests on mobilechromium because map editor not available for mobile devices",
-    ({}, { project }) => {
+    ({ page }) => {
       //Map Editor not available on mobile
-      if (project.name === "mobilechromium") {
+      if (isMobile(page)) {
         //eslint-disable-next-line playwright/no-skipped-test
         test.skip();
         return;
@@ -57,7 +58,7 @@ test.describe("Map editor area with rights @oidc", () => {
       (response) =>
         response.url().includes("anonymLogin") && response.status() === 200
     );
-    await oidcLogout(page, false);
+    await oidcLogout(page);
 
     await anonymLoginPromise;
 
@@ -88,7 +89,7 @@ test.describe("Map editor area with rights @oidc", () => {
       (response) =>
         response.url().includes("anonymLogin") && response.status() === 200
     );
-    await oidcLogout(page, false);
+    await oidcLogout(page);
 
     await anonymLoginPromise;
 
@@ -127,7 +128,6 @@ test.describe("Map editor area with rights @oidc", () => {
     await expect(page.getByTestId('map-menu')).toBeHidden();
     /*await Menu.openMapEditor(page);
 
-    await page.pause();
     const entityEditorButton = await page.locator(
       "section.side-bar-container .side-bar .tool-button button#EntityEditor"
     );
@@ -152,7 +152,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await AreaAccessRights.openEntityEditorAndAddEntityWithOpenLinkPropertyInsideArea(
       page
     );
-    await oidcLogout(page, false);
+    await oidcLogout(page);
 
     // Second browser with member user trying to read the object
     const page2 = await getPage(browser, 'Member1',
@@ -192,7 +192,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await AreaAccessRights.openEntityEditorAndAddEntityWithOpenLinkPropertyInsideArea(
       page
     );
-    await oidcLogout(page, false);
+    await oidcLogout(page);
 
     // Second browser with member user trying to read the object
     const page2 = await getPage(browser, 'Member1', Map.url("empty"))
@@ -224,7 +224,7 @@ test.describe("Map editor area with rights @oidc", () => {
       ["admin"]
     );
     await Menu.closeMapEditor(page);
-    await oidcLogout(page, false);
+    await oidcLogout(page);
 
     // Second browser with member user trying to read the object
     const page2 = await getPage(browser, 'Member1', Map.url("empty"))
@@ -272,7 +272,7 @@ test.describe("Map editor area with rights @oidc", () => {
       []
     );
     await Menu.closeMapEditor(page);
-    await oidcLogout(page, false);
+    await oidcLogout(page);
 
     // Second browser with member user trying to read the object
     const page2 = await getPage(browser, 'Member1', Map.url("empty"));
@@ -321,7 +321,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await AreaAccessRights.openEntityEditorAndAddEntityWithOpenLinkPropertyInsideArea(
       page
     );
-    await oidcLogout(page, false);
+    await oidcLogout(page);
 
     // Second browser with member user trying to read the object
     const page2 = await getPage(browser, 'Member1', Map.url("empty"));
@@ -367,7 +367,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await AreaAccessRights.openEntityEditorAndAddEntityWithOpenLinkPropertyInsideArea(
       page
     );
-    await oidcLogout(page, false);
+    await oidcLogout(page);
 
     // Second browser with member user trying to read the object
     const page2 = await getPage(browser, 'Member1', Map.url("empty"));
@@ -414,7 +414,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await AreaAccessRights.openEntityEditorAndAddEntityWithOpenLinkPropertyOutsideArea(
       page
     );
-    await oidcLogout(page, false);
+    await oidcLogout(page);
 
     // Second browser with member user trying to read the object
     const page2 = await getPage(browser, 'Member1', Map.url("empty"));
@@ -456,7 +456,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await page.getByTestId("allowedTags").fill("member");
     await page.press("body", "Enter");
     await Menu.closeMapEditor(page);
-    await oidcLogout(page, false);
+    await oidcLogout(page);
 
     await page.close();
 
@@ -505,7 +505,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await page.getByTestId("allowedTags").fill("member");
     await page.press("body", "Enter");
     await Menu.closeMapEditor(page);
-    await oidcLogout(page, false);
+    await oidcLogout(page);
 
     await page.close();
 

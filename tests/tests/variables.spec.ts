@@ -13,19 +13,19 @@ import {getBackDump, getPusherDump, getPusherRooms} from './utils/debug';
 import {assertLogMessage, startRecordLogs} from './utils/log';
 import {maps_domain, maps_test_url, play_url, publicTestMapUrl} from "./utils/urls";
 import { getPage } from "./utils/auth";
+import {isMobile} from "./utils/isMobile";
 
 test.setTimeout(360000);
 test.describe('Variables', () => {
-  // WARNING: Since this test restarts traefik and other components, it might fail when run against the vite dev server.
-  // when running with --headed you can manually reload the page to avoid this issue.
-  test('storage works @docker', async ({ browser, request }, { project }) => {
-    // Skip test for mobile device
-    if(project.name === "mobilechromium") {
+  test.beforeEach(async ({ page }) => {
+    if (isMobile(page)) {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
-      return;
     }
-
+  });
+  // WARNING: Since this test restarts traefik and other components, it might fail when run against the vite dev server.
+  // when running with --headed you can manually reload the page to avoid this issue.
+  test('storage works @docker', async ({ browser, request }) => {
     await resetRedis();
 
     await Promise.all([rebootBack(), rebootPlay(request)]);
@@ -138,19 +138,9 @@ test.describe('Variables', () => {
     await page.context().close();
   });
 
-  test('cache doesnt prevent setting a variable in case the map changes @local', async ({
-    browser,
-    request,
-  }, { project }) => {
-    // Skip test for mobile device
-    if(project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
-    
+  test('cache doesnt prevent setting a variable in case the map changes @local',
+      async ({ browser,  request }) => {
     // Let's start by visiting a map that DOES not have the variable.
-
     fs.copyFileSync(
       '../maps/tests/Variables/Cache/variables_cache_1.json',
       '../maps/tests/Variables/Cache/variables_tmp.json'
@@ -166,9 +156,9 @@ test.describe('Variables', () => {
       '../maps/tests/Variables/Cache/variables_tmp.json'
     );
     const page2 = await getPage(browser, 'Bob',
-        publicTestMapUrl("tests/Variables/Cache/variables_tmp.json", "variables"));
+        publicTestMapUrl("tests/Variables/Cache/variables_tmp.json", "variables"),
+        { pageCreatedHook: (page2) => startRecordLogs(page2) });
 
-    startRecordLogs(page2);
     // Let's check we successfully manage to save the variable value.
     await assertLogMessage(page2, 'SUCCESS!');
 

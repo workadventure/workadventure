@@ -91,16 +91,13 @@ class Menu {
     async openStatusList(page : Page, isMobile = false){
         if(isMobile){
             await page.getByTestId('burger-menu').click();
-            /*await expect(await page.locator('button#burgerIcon')).toBeVisible();
-            const mobileMenuVisible = await page.locator('button#burgerIcon img.tw-rotate-0').isVisible();
-            if(mobileMenuVisible){
-                await page.click('button#burgerIcon');
-            }*/
         }
-        await page.getByTestId('action-user').click();
+        else {
+            await page.getByTestId('action-user').click();
+        }
     }
 
-    async clickOnStatus(page:Page,status: string){
+    async clickOnStatus(page:Page, status: string){
         await expect(page.getByText(status)).toBeVisible();
         await page.getByText(status).click();
         //eslint-disable-next-line playwright/no-wait-for-timeout

@@ -3,17 +3,17 @@ import { evaluateScript } from "./utils/scripting";
 import { publicTestMapUrl } from "./utils/urls";
 import Menu from "./utils/menu";
 import { getPage } from "./utils/auth";
+import {isMobile} from "./utils/isMobile";
 
 test.describe("Iframe API", () => {
-  test("can be called from an iframe loading a script", async ({ browser }, {
-    project,
-  }) => {
-    // Skip test for mobile device
-    if (project.name === "mobilechromium") {
+  test.beforeEach(async ({ page }) => {
+    if (isMobile(page)) {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
     }
+  });
+  test("can be called from an iframe loading a script", async ({ browser }) => {
     const page = await getPage(browser, 'Alice', 
       publicTestMapUrl("tests/Metadata/cowebsiteAllowApi.json", "iframe_script")
     );
@@ -24,13 +24,7 @@ test.describe("Iframe API", () => {
     await page.context().close();
   });
 
-  test("base room properties", async ({ browser }, { project }) => {
-    // Skip test for mobile device
-    if (project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
+  test("base room properties", async ({ browser }) => {
     const page = await getPage(browser, 'Alice',
       publicTestMapUrl("tests/E2E/empty.json", "iframe_script") + "#foo=bar"
     );
@@ -45,13 +39,7 @@ test.describe("Iframe API", () => {
     await page.close();
   });
 
-  test("disable and enable map editor", async ({ browser }, { project }) => {
-    // Skip test for mobile device
-    if (project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
+  test("disable and enable map editor @oidc", async ({ browser }) => {
     const page = await getPage(browser, 'Admin1',
       publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
     );
@@ -87,7 +75,7 @@ test.describe("Iframe API", () => {
     await page.context().close();
   });
 
-  test("test disable invite user button", async ({ browser }, { project }) => {
+  test("test disable invite user button", async ({ browser }) => {
     const page = await getPage(browser, 'Alice',
       publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
     );
@@ -216,6 +204,5 @@ test.describe("Iframe API", () => {
     await page.close();
     await page.context().close();
   });
-
-  // TDODO: disable and restore wheel zoom
+  // TODO: disable and restore wheel zoom
 });

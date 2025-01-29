@@ -104,8 +104,11 @@
             case "webgl":
                 mode = Phaser.WEBGL;
                 break;
+            case "headless":
+                mode = Phaser.HEADLESS;
+                break;
             default:
-                throw new Error('phaserMode parameter must be one of "auto", "canvas" or "webgl"');
+                throw new Error('phaserMode parameter must be one of "auto", "canvas", "webgl" or "headless"');
         }
 
         const hdpiManager = new HdpiManager(640 * 480, 196 * 196);

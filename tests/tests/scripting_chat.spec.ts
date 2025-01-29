@@ -5,14 +5,15 @@ import Map from "./utils/map";
 import { resetWamMaps } from "./utils/map-editor/uploader";
 import chatUtils from "./chat/chatUtils";
 import { getPage } from "./utils/auth";
+import {isMobile} from "./utils/isMobile";
 
 test.describe("#Scripting chat functions", () => {
   test.beforeEach(
     "Ignore tests on webkit because of issue with camera and microphone",
 
-    async ({ browserName, request }, { project }) => {
+    async ({ browserName, request, page }) => {
       //WebKit has issue with camera
-      if (browserName === "webkit" || project.name === "mobilechromium") {
+      if (browserName === "webkit" || isMobile(page)) {
         //eslint-disable-next-line playwright/no-skipped-test
         test.skip();
         return;
@@ -130,7 +131,6 @@ test.describe("#Scripting chat functions", () => {
     // Check that bob received the message
     //await bob.pause();
     await expect(bob.getByText('Alice joined the discussion')).toBeVisible();
-
 
     // Check that bob received the message
     await expect(bob.locator("#chat")).toContainText("Test message sent", {
