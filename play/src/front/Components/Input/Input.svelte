@@ -1,6 +1,4 @@
 <script lang="ts">
-    import IconWorldSearch from "../Icons/IconWorldSearch.svelte";
-    import SettingIconBtn from "../Icons/SettingIconBtn.svelte";
     import InfoButton from "./InfoButton.svelte";
 
     export let id: string | undefined = undefined;
@@ -12,6 +10,8 @@
     export let value: string | null | undefined;
     export let onClick = () => {};
     export let variant: "light" | "" = "";
+    export let taille: "xs" | "sm" | "lg" | "" = "";
+    export let side: "left" | "" = "";
 
     const SLOTS = $$slots;
     console.log(SLOTS);
@@ -35,25 +35,20 @@
             <input
                 id={uniqueId}
                 type="text"
-                class="grow input-text "
+                class="grow input-text input-icon "
+                class:input-icon-left={side === "left"}
                 class:input-switch-light={variant === "light"}
+                class:input-text-xs={taille === "xs"}
+                class:input-text-sm={taille === "sm"}
+                class:input-text-lg={taille === "lg"}
                 bind:value
                 {placeholder}
                 on:change={onChange}
                 on:click={onClick}
                 {disabled}
             />
-            {#if SLOTS.IconWorldSearch}
-                <IconWorldSearch><slot name="IconWorldSearch" /></IconWorldSearch>
-            {/if}
-
-            {#if SLOTS.InBtnRight}
-                <button class="btn btn-sm btn-secondary absolute top-0 bottom-2 right-1.5 m-auto h-9">
-                    <div class="btn-label"><slot name="InBtnRight" /></div>
-                </button>
-            {/if}
-            {#if SLOTS.SettingIconBtn}
-                <SettingIconBtn><slot name="SettingIconBtn" /></SettingIconBtn>
+            {#if SLOTS.right}
+                <slot name="right" />
             {/if}
         </div>
     {/if}
@@ -67,9 +62,13 @@
     {/if}
     {#if type === "url"}
         <input
-            {id}
+            id={uniqueId}
             type="url"
-            class="grow input-text input-text-light"
+            class="grow input-text input-text"
+            class:input-switch-light={variant === "light"}
+            class:input-text-xs={taille === "xs"}
+            class:input-text-sm={taille === "sm"}
+            class:input-text-lg={taille === "lg"}
             bind:value
             {placeholder}
             on:change={onChange}

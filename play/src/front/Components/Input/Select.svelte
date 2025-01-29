@@ -8,6 +8,7 @@
     export let disabled = false;
     export let placeholder = "";
     export let type: "text" | "select" = "text";
+    export let variant: "light" | "" = "";
 </script>
 
 <div class="flex flex--col">
@@ -19,7 +20,8 @@
 
             <select
                 {id}
-                class="grow w-full input-select input-select-light font-light"
+                class="grow w-full input-select font-light"
+                class:input-select-light={variant === "light"}
                 bind:value
                 on:change={onChange}
                 on:click={onClick}
