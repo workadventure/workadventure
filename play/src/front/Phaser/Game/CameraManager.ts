@@ -353,9 +353,6 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         const followOffsetX = (xCenter - game.offsetWidth / 2) / this.scene.scale.zoom;
         const followOffsetY = (yCenter - game.offsetHeight / 2) / this.scene.scale.zoom;
 
-        // const followOffsetX = ((xCenter - game.offsetWidth / 2) * window.devicePixelRatio) / this.scene.scale.zoom;
-        // const followOffsetY = ((yCenter - game.offsetHeight / 2) * window.devicePixelRatio) / this.scene.scale.zoom;
-
         if (instant) {
             this.camera.setFollowOffset(followOffsetX, followOffsetY);
             this.scene.markDirty();
