@@ -5,62 +5,106 @@ import { HtmlUtils } from "../WebRtc/HtmlUtils";
 /**
  * Tries to find the biggest available box of remaining space (this is a space where we can center the character)
  */
-function findBiggestAvailableArea(): Box {
-    const game = HtmlUtils.querySelectorOrFail<HTMLCanvasElement>("#game canvas");
+export function findBiggestAvailableArea(gameSize: { width: number; height: number }, blockers: Box[] = []): Box {
     const wholeScreenBox = {
         xStart: 0,
         yStart: 0,
-        xEnd: game.offsetWidth,
-        yEnd: game.offsetHeight,
+        xEnd: gameSize.width,
+        yEnd: gameSize.height,
     };
 
     console.log({
         wholeScreenBox,
     });
 
-    const blockingElements = Array.from(document.getElementsByClassName("screen-blocker"));
-
-    if (blockingElements.length === 0) {
+    if (blockers.length === 0) {
         return wholeScreenBox;
     }
 
-    console.log({
-        blockingElements,
-    });
-
-    const blockers: Box[] = [];
-
-    for (const blocker of blockingElements) {
-        const bounds = blocker.getBoundingClientRect();
-        blockers.push({
-            xStart: bounds.x,
-            yStart: bounds.y,
-            xEnd: bounds.right,
-            yEnd: bounds.bottom,
-        });
-    }
-
-    console.log({
-        blockers,
-    });
-
-    // create vertices arrays and insert game canvas edges
-    const verticesX = [game.offsetLeft, game.offsetWidth];
-    const verticesY = [game.offsetTop, game.offsetHeight];
+    //clamp the blockers to the screen
+    const clampedBlockers = clampAllBoxesToScreen(blockers, wholeScreenBox).filter(
+        (box) => !isBoxTakingWholeScreen(box, gameSize)
+    );
 
     // populate with all vertices
-    for (const blocker of blockers) {
-        verticesX.push(blocker.xStart, blocker.xEnd);
-        verticesY.push(blocker.yStart, blocker.yEnd);
-    }
-    verticesX.sort((a, b) => a - b);
-    verticesY.sort((a, b) => a - b);
+    const [verticesX, verticesY] = createVerticesArrays(wholeScreenBox, clampedBlockers);
 
     // NOTE: cannot use fill() here, it makes references to a single array
+    const occupiedGrid: boolean[][] = createOccupiedGrid(verticesX, verticesY, clampedBlockers);
+
+    // create an array of all free boxes
+    const freeBoxes: Box[] = getAllFreeBoxes(occupiedGrid);
+
+    const biggestBox = freeBoxes.length > 0 ? findBiggestFreeBox(freeBoxes, verticesX, verticesY) : wholeScreenBox;
+
+    return {
+        xStart: verticesX[biggestBox.xStart],
+        yStart: verticesY[biggestBox.yStart],
+        xEnd: verticesX[biggestBox.xEnd + 1],
+        yEnd: verticesY[biggestBox.yEnd + 1],
+    };
+}
+
+export function isBoxTakingWholeScreen(box: Box, gameSize: { width: number; height: number }): boolean {
+    const xTakeWholeScreen = box.xStart <= 0 && box.xEnd >= gameSize.width;
+    const yTakeWholeScreen = box.yStart <= 0 && box.yEnd >= gameSize.height;
+
+    return xTakeWholeScreen && yTakeWholeScreen;
+}
+
+export function clampBoxToScreen(box: Box, screen: Box): Box {
+    return {
+        xStart: Math.min(Math.max(box.xStart, screen.xStart), screen.xEnd),
+        yStart: Math.min(Math.max(box.yStart, screen.yStart), screen.yEnd),
+        xEnd: Math.max(Math.min(box.xEnd, screen.xEnd), screen.xStart),
+        yEnd: Math.max(Math.min(box.yEnd, screen.yEnd), screen.yStart),
+    };
+}
+
+export function clampAllBoxesToScreen(boxes: Box[], screen: Box): Box[] {
+    return boxes.map((box) => clampBoxToScreen(box, screen));
+}
+
+export function findBiggestFreeBox(freeBoxes: Box[], verticesX: number[], verticesY: number[]): Box {
+    let biggestBox = freeBoxes[0];
+    let biggestArea = getBoxArea(biggestBox, verticesX, verticesY);
+    for (const box of freeBoxes) {
+        const area = getBoxArea(box, verticesX, verticesY);
+        if (area > biggestArea) {
+            biggestArea = area;
+            biggestBox = box;
+        }
+    }
+    return biggestBox;
+}
+
+export function createVerticesArrays(canvas: Box, blockers: Box[]): [number[], number[]] {
+    const verticesX: Set<number> = new Set([canvas.xStart, canvas.xEnd]);
+    const verticesY: Set<number> = new Set([canvas.yStart, canvas.yEnd]);
+
+    for (const box of [...blockers]) {
+        verticesX.add(box.xStart);
+        verticesX.add(box.xEnd);
+        verticesY.add(box.yStart);
+        verticesY.add(box.yEnd);
+    }
+
+    const verticesXArray = Array.from(verticesX).sort((a, b) => a - b);
+    const verticesYArray = Array.from(verticesY).sort((a, b) => a - b);
+
+    return [verticesXArray, verticesYArray];
+}
+
+function initializeOccupiedGrid(verticesX: number[], verticesY: number[]): boolean[][] {
     const occupiedGrid: boolean[][] = new Array(verticesY.length - 1);
     for (let j = 0; j < verticesY.length - 1; j += 1) {
         occupiedGrid[j] = new Array(verticesX.length - 1).fill(false);
     }
+    return occupiedGrid;
+}
+
+export function createOccupiedGrid(verticesX: number[], verticesY: number[], blockers: Box[]): boolean[][] {
+    const occupiedGrid: boolean[][] = initializeOccupiedGrid(verticesX, verticesY);
 
     for (const blocker of blockers) {
         const [left, top] = getGridCoordinates(blocker.xStart, blocker.yStart, verticesX, verticesY);
@@ -71,39 +115,17 @@ function findBiggestAvailableArea(): Box {
             }
         }
     }
+    return occupiedGrid;
+}
 
-    console.log({
-        occupiedGrid,
-    });
-
-    // create an array of all free boxes
+export function getAllFreeBoxes(occupiedGrid: boolean[][]): Box[] {
     const freeBoxes: Box[] = [];
-    for (let x = 0; x < occupiedGrid.length; x += 1) {
-        for (let y = 0; y < occupiedGrid[x].length; y += 1) {
-            freeBoxes.push(...findAllFreeBoxes(x, y, occupiedGrid));
+    for (let row = 0; row < occupiedGrid.length; row += 1) {
+        for (let column = 0; column < occupiedGrid[row].length; column += 1) {
+            freeBoxes.push(...findAllFreeBoxes(column, row, occupiedGrid));
         }
     }
-
-    let biggestArea = 0;
-    let biggestBox = wholeScreenBox;
-    for (const box of freeBoxes) {
-        const area = getBoxArea(box, verticesX, verticesY);
-        if (area > biggestArea) {
-            biggestArea = area;
-            biggestBox = box;
-        }
-    }
-
-    console.log({
-        biggestBox,
-    });
-
-    return {
-        xStart: verticesX[biggestBox.xStart],
-        yStart: verticesY[biggestBox.yStart],
-        xEnd: verticesX[biggestBox.xEnd + 1],
-        yEnd: verticesY[biggestBox.yEnd + 1],
-    };
+    return freeBoxes;
 }
 
 export function getBoxArea(box: Box, xVertices: number[], yVertices: number[]): number {
@@ -121,19 +143,39 @@ function createBiggestAvailableAreaStore() {
     return {
         subscribe,
         recompute: () => {
-            set(findBiggestAvailableArea());
+            const game = HtmlUtils.querySelectorOrFail<HTMLCanvasElement>("#game canvas");
+
+            const gameSize = {
+                width: game.offsetWidth,
+                height: game.offsetHeight,
+            };
+
+            const blockingElements = Array.from(document.getElementsByClassName("screen-blocker"));
+
+            const blockingBoxes = blockingElements.map((element) => {
+                const bounds = element.getBoundingClientRect();
+                return {
+                    xStart: bounds.x,
+                    yStart: bounds.y,
+                    xEnd: bounds.right,
+                    yEnd: bounds.bottom,
+                };
+            });
+
+            set(findBiggestAvailableArea(gameSize, blockingBoxes));
         },
     };
 }
 
-export function findAllFreeBoxes(left: number, top: number, grid: boolean[][]): Box[] {
+export function findAllFreeBoxes(column: number, row: number, grid: boolean[][]): Box[] {
     if (grid.length === 0) {
         return [];
     }
     if (grid[0].length === 0) {
         return [];
     }
-    if (grid[top][left] === true) {
+
+    if (grid[row][column] === true) {
         return [];
     }
 
@@ -142,11 +184,11 @@ export function findAllFreeBoxes(left: number, top: number, grid: boolean[][]): 
     // we expect grid rows to be of the same length
     let xEnd = grid[0].length;
 
-    for (let y = top; y < grid.length; y += 1) {
+    for (let y = row; y < grid.length; y += 1) {
         let found = false;
         const lastXEnd = xEnd;
         let x;
-        for (x = left; x < xEnd; x += 1) {
+        for (x = column; x < xEnd; x += 1) {
             // do not add boxes with occupied parts
             if (grid[y][x] === true) {
                 // no point in trying to find free box after this column
@@ -156,9 +198,9 @@ export function findAllFreeBoxes(left: number, top: number, grid: boolean[][]): 
             }
         }
         if (found || x === lastXEnd) {
-            boxes.push({ xStart: left, yStart: top, xEnd: x - 1, yEnd: y });
+            boxes.push({ xStart: column, yStart: row, xEnd: x - 1, yEnd: y });
         }
-        if (x === left && grid[y][x] === true) {
+        if (x === column && grid[y][x] === true) {
             break;
         }
     }
