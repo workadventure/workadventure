@@ -10,23 +10,29 @@
     export let value: string | null | undefined;
     export let onClick = () => {};
     export let variant: "light" | "" = "";
-    export let taille: "xs" | "sm" | "lg" | "" = "";
-    export let side: "left" | "" = "";
+    export let size: "xs" | "sm" | "lg" | "" = "";
+    export let AppendSide: "left" | "" = "";
+    export let status: "error" | "success" | "" = "";
 
     const SLOTS = $$slots;
-    console.log(SLOTS);
 
     let uniqueId = id || `input-${Math.random().toString(36).substr(2, 9)} `;
 </script>
 
 <div class="flex flex-col">
     <div class="input-label">
-        <label for={uniqueId} class="grow">{label}</label>
+        <label for={uniqueId} class=" relative grow">{label}</label>
 
         {#if SLOTS.info}
             <InfoButton>
                 <slot name="info" />
             </InfoButton>
+        {/if}
+
+        {#if SLOTS.optional}
+            <div class="text-xs opacity-50 ">
+                <slot name="optional" />
+            </div>
         {/if}
     </div>
 
@@ -35,20 +41,22 @@
             <input
                 id={uniqueId}
                 type="text"
-                class="grow input-text input-icon "
-                class:input-icon-left={side === "left"}
-                class:input-switch-light={variant === "light"}
-                class:input-text-xs={taille === "xs"}
-                class:input-text-sm={taille === "sm"}
-                class:input-text-lg={taille === "lg"}
+                class="grow input-text input-icon  "
+                class:input-icon-left={AppendSide === "left"}
+                class:input-text-light={variant === "light"}
+                class:input-text-xs={size === "xs"}
+                class:input-text-sm={size === "sm"}
+                class:input-text-lg={size === "lg"}
+                class:error={status === "error"}
+                class:success={status === "success"}
                 bind:value
                 {placeholder}
                 on:change={onChange}
                 on:click={onClick}
                 {disabled}
             />
-            {#if SLOTS.right}
-                <slot name="right" />
+            {#if SLOTS.InputAppend}
+                <slot name="InputAppend" />
             {/if}
         </div>
     {/if}
@@ -60,15 +68,16 @@
             </div>
         </div>
     {/if}
+
     {#if type === "url"}
         <input
             id={uniqueId}
             type="url"
             class="grow input-text input-text"
-            class:input-switch-light={variant === "light"}
-            class:input-text-xs={taille === "xs"}
-            class:input-text-sm={taille === "sm"}
-            class:input-text-lg={taille === "lg"}
+            class:input-text-light={variant === "light"}
+            class:input-text-xs={size === "xs"}
+            class:input-text-sm={size === "sm"}
+            class:input-text-lg={size === "lg"}
             bind:value
             {placeholder}
             on:change={onChange}

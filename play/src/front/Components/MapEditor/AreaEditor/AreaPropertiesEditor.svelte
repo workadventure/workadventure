@@ -602,9 +602,9 @@
             placeholder={$LL.mapEditor.areaEditor.nameLabelPlaceholder()}
             bind:value={areaName}
             onChange={onUpdateName}
-            side="left"
+            variant="light"
         >
-            <div slot="info">coucou comment allez vous ??</div>
+            <div slot="optional">Optional</div>
 
             <div slot="helper">Helper Text</div>
         </Input>
