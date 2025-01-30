@@ -1116,7 +1116,7 @@
                     </div>
                 {/each}
             {/if}
-            }
+
             {#if isPictureInPicture == false && isMobile}
                 <!-- Menu mobile part -->
                 <div class="bottom-action-section tw-flex tw-flex-initial">

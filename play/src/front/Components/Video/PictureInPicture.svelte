@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
     import { get, Unsubscriber, writable } from "svelte/store";
+    import { z } from "zod";
     import { Streamable, streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
     import ActionBar from "../ActionBar/ActionBar.svelte";
     import { VideoPeer } from "../../WebRtc/VideoPeer";
@@ -35,6 +36,25 @@
             }) => Promise<Window>;
         };
     }
+
+    const DocumentPictureInPictureSchema = z.object({
+        requestWindow: z
+            .function()
+            .args(
+                z.object({
+                    preferInitialWindowPlacement: z.boolean(),
+                    height: z.string(),
+                    width: z.string(),
+                })
+            )
+            .returns(z.promise(z.instanceof(Window))),
+    });
+
+    const WindowExtSchema = z
+        .object({
+            documentPictureInPicture: DocumentPictureInPictureSchema,
+        })
+        .passthrough();
 
     function copySteelSheet(pipWindow: Window) {
         [...document.styleSheets].forEach((styleSheet) => {
@@ -174,12 +194,20 @@
         // request permission to use the picture in picture mode
         // TODO: Picture in Picture element is not requested if transitient user acvtivation is not activated
         // see the documentation for more details: https://developer.mozilla.org/en-US/docs/Glossary/Transient_activation
+        const windowExtResult = WindowExtSchema.safeParse(window);
+        if (!windowExtResult.success) {
+            console.info("Picture in Picture is not supported");
+            return;
+        }
+
+        const options = {
+            preferInitialWindowPlacement: true,
+            height: `${$streamableCollectionStore.size * 300}`,
+            width: "400",
+        };
+
         (window as unknown as WindowExt).documentPictureInPicture
-            .requestWindow({
-                preferInitialWindowPlacement: true,
-                height: `${$streamableCollectionStore.size * 300}`,
-                width: "400",
-            })
+            .requestWindow(options)
             .then((pipWindow: Window) => {
                 // Picture in picture is possible
                 // we store the window to start the picture in picture mode
