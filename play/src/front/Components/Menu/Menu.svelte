@@ -138,7 +138,7 @@
     <div class="menu-nav-sidebar bg-transparent rounded-none min-w-[200px] relative">
         <!--<h2 class="p-8 text-white/10 h-5 tracking-[1rem] mb-8">{$LL.menu.title()}</h2>-->
         <nav
-            class="mt-0 @md/main-layout:mt-24 mr-16 @md/main-layout:mr-0 flex flex-row @md/main-layout:flex-col items-stretch @md/main-layout:items-start overflow-hidden overflow-x-scroll @md/main-layout:overflow-auto px-4 @md/main-layout:px-0"
+            class="mt-0 @md/main-layout:mt-24 mr-16 @md/main-layout:mr-0 flex flex-row @md/main-layout:flex-col items-stretch @md/main-layout:items-start overflow-auto h-full @md/main-layout:overflow-auto px-4 @md/main-layout:px-0"
         >
             {#each $subMenusStore as submenu, i (`${submenu.key}_${submenu.type}`)}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
