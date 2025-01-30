@@ -1216,26 +1216,28 @@
                                     </div>
                                 </button>
 
-                                <button
-                                    on:click={() => analyticsClient.logout()}
-                                    on:click={() => connectionManager.logout()}
-                                    class="group flex p-2 gap-2 items-center hover:bg-danger-600 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
-                                >
-                                    <div
-                                        class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center"
+                                {#if ENABLE_OPENID && $userIsConnected}
+                                    <button
+                                        on:click={() => analyticsClient.logout()}
+                                        on:click={() => connectionManager.logout()}
+                                        class="group flex p-2 gap-2 items-center hover:bg-danger-600 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
                                     >
-                                        <IconLogout
-                                            height="20"
-                                            width="20"
-                                            class="text-danger-600 group-hover:text-white"
-                                        />
-                                    </div>
-                                    <div
-                                        class="text-left leading-4 text-danger-600 group-hover:text-white flex items-center"
-                                    >
-                                        {$LL.menu.profile.logout()}
-                                    </div>
-                                </button>
+                                        <div
+                                            class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center"
+                                        >
+                                            <IconLogout
+                                                height="20"
+                                                width="20"
+                                                class="text-danger-600 group-hover:text-white"
+                                            />
+                                        </div>
+                                        <div
+                                            class="text-left leading-4 text-danger-600 group-hover:text-white flex items-center"
+                                        >
+                                            {$LL.menu.profile.logout()}
+                                        </div>
+                                    </button>
+                                {/if}
                             </div>
                         </div>
                     {/if}
@@ -1407,22 +1409,24 @@
                                             {$LL.menu.sub.invite()}
                                         </button>
                                     {/if}
-                                    {#if !$userIsConnected && ENABLE_OPENID}
-                                        <a
-                                            href="/login"
-                                            on:click={() => analyticsClient.login()}
-                                            class="btn btn-secondary btn-sm w-full justify-center"
-                                        >
-                                            {$LL.actionbar.login()}
-                                        </a>
-                                    {:else}
-                                        <button
-                                            on:click={() => analyticsClient.logout()}
-                                            on:click={() => connectionManager.logout()}
-                                            class="btn btn-secondary btn-sm w-full justify-center"
-                                        >
-                                            {$LL.menu.profile.logout()}
-                                        </button>
+                                    {#if ENABLE_OPENID}
+                                        {#if !$userIsConnected}
+                                            <a
+                                                href="/login"
+                                                on:click={() => analyticsClient.login()}
+                                                class="btn btn-secondary btn-sm w-full justify-center"
+                                            >
+                                                {$LL.actionbar.login()}
+                                            </a>
+                                        {:else}
+                                            <button
+                                                on:click={() => analyticsClient.logout()}
+                                                on:click={() => connectionManager.logout()}
+                                                class="btn btn-secondary btn-sm w-full justify-center"
+                                            >
+                                                {$LL.menu.profile.logout()}
+                                            </button>
+                                    {/if}
                                     {/if}
                                 </div>
                             {/if}
