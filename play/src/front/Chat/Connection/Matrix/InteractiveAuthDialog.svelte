@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { AuthDict, AuthType, InteractiveAuth, MatrixClient, UIAResponse } from "matrix-js-sdk";
+    import { AuthDict, InteractiveAuth, MatrixClient, UIAResponse } from "matrix-js-sdk/lib/matrix";
+    import { AuthType } from "matrix-js-sdk/lib/interactive-auth";
     import { onMount } from "svelte";
     import { closeModal, onBeforeClose } from "svelte-modals";
     import Popup from "../../../Components/Modal/Popup.svelte";

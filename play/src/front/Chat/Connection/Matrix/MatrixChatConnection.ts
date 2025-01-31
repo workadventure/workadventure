@@ -4,29 +4,30 @@ import {
     CryptoEvent,
     Direction,
     EmittedEvents,
-    EventTimeline,
-    EventType,
     ICreateRoomOpts,
     ICreateRoomStateEvent,
     IPushRule,
     IRoomDirectoryOptions,
-    MatrixClient,
     MatrixError,
-    MatrixEvent,
     PendingEventOrdering,
     PushRuleActionName,
-    Room,
     RoomEvent,
     RoomStateEvent,
     SetPresence,
     SyncState,
-    User,
     UserEvent,
     Visibility,
-} from "matrix-js-sdk";
+    Room,
+    MatrixEvent,
+    MatrixClient,
+    User,
+    EventType,
+    EventTimeline,
+} from "matrix-js-sdk/lib/matrix";
+
 import * as Sentry from "@sentry/svelte";
 import { MapStore } from "@workadventure/store-utils";
-import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
+import { KnownMembership } from "matrix-js-sdk/lib/types";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { AvailabilityStatus } from "@workadventure/messages";
 import { canAcceptVerificationRequest, VerificationRequest } from "matrix-js-sdk/lib/crypto-api";
@@ -1044,9 +1045,9 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         if (!this.client) {
             throw new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG);
         }
-        const directMap: Record<string, string[]> = this.client.getAccountData("m.direct")?.getContent() || {};
+        const directMap: Record<string, string[]> = this.client.getAccountData(EventType.Direct)?.getContent() || {};
         directMap[userId] = [...(directMap[userId] || []), roomId];
-        await this.client.setAccountData("m.direct", directMap);
+        await this.client.setAccountData(EventType.Direct, directMap);
     }
 
     async isUserExist(address: string): Promise<boolean> {

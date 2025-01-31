@@ -6,9 +6,9 @@ import {
     VerificationRequest,
     VerificationRequestEvent,
     VerifierEvent,
+    decodeRecoveryKey
 } from "matrix-js-sdk/lib/crypto-api";
 import { deriveKey } from "matrix-js-sdk/lib/crypto/key_passphrase";
-import { decodeRecoveryKey } from "matrix-js-sdk/lib/crypto/recoverykey";
 import { openModal } from "svelte-modals";
 import { writable } from "svelte/store";
 import * as Sentry from "@sentry/svelte";

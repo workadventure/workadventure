@@ -8,7 +8,7 @@ import {
     IndexedDBStore,
     MatrixClient,
     SecretStorage,
-} from "matrix-js-sdk";
+} from "matrix-js-sdk/lib/matrix";
 
 import { SecretStorageKeyDescriptionAesV1 } from "matrix-js-sdk/lib/secret-storage";
 import { openModal } from "svelte-modals";
