@@ -1426,7 +1426,7 @@
                                             >
                                                 {$LL.menu.profile.logout()}
                                             </button>
-                                    {/if}
+                                        {/if}
                                     {/if}
                                 </div>
                             {/if}
