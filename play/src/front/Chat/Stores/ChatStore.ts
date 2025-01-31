@@ -13,8 +13,9 @@ function createNavChatStore() {
             set("chat");
         },
         switchToUserList() {
-            const isChatOnlineListEnabled = gameManager.getCurrentGameScene().room.isChatOnlineListEnabled;
-            const isChatDisconnectedListEnabled = gameManager.getCurrentGameScene().room.isChatDisconnectedListEnabled;
+            const room = gameManager.getCurrentGameScene().room;
+            const isChatOnlineListEnabled = room.isChatOnlineListEnabled;
+            const isChatDisconnectedListEnabled = room.isChatDisconnectedListEnabled;
 
             if (isChatOnlineListEnabled || isChatDisconnectedListEnabled) {
                 set("users");
