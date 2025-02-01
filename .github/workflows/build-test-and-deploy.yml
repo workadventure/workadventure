@@ -975,3 +975,8 @@ jobs:
           name: playwright-report-helm-${{ matrix.shard }}-${{ matrix.nbShards }}
           path: tests/playwright-report/
           retention-days: 30
+      - name: Restore test maps
+        run: rm -f tests/assets.zip && cd tests/assets && zip -r ../assets.zip * && curl -F 'file=@../assets.zip' https://map-storage-${NAMESPACE}.test.workadventu.re/upload --basic -u john.doe:password
+        env:
+          NAMESPACE: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG_URL || env.GITHUB_REF_SLUG_URL }}
+        working-directory: map-storag
