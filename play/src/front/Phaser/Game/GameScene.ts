@@ -1989,6 +1989,8 @@ export class GameScene extends DirtyScene {
                     return;
                 }
 
+                console.log(`🔥🔥🔥🔥🔥 Initializing extension module: ${moduleName}`);
+
                 (async () => {
                     const extensionModule = (await moduleFactory()) as { default: ExtensionModule };
                     const defaultExtensionModule = extensionModule.default;

@@ -12,6 +12,10 @@ export const externalPopupSvelteComponent = writable<
     Map<string, { componentType: ComponentType; extensionModule: ExtensionModule }>
 >(new Map());
 
+export const externalChatSettingsSvelteComponent = writable<
+    Map<string, { componentType: ComponentType; extensionModule: ExtensionModule }>
+>(new Map());
+
 export const externalSvelteComponentStore: Readable<ExternalSvelteComponentStore> = derived(
     [externalActionBarSvelteComponent, externalAvailibilitySatusSvelteComponent, externalPopupSvelteComponent],
     ([$externalActionBarSvelteComponent, $externalAvailibilitySatusSvelteComponent, $externalPopupSvelteComponent]) => {
@@ -49,6 +53,17 @@ export const externalSvelteComponentStore: Readable<ExternalSvelteComponentStore
             },
             removePopupComponent(key: string) {
                 externalPopupSvelteComponent.update((value) => {
+                    value.delete(key);
+                    return value;
+                });
+            },
+            addChatSettingsComponent(key: string, extensionModule: ExtensionModule, componentType: ComponentType) {
+                externalChatSettingsSvelteComponent.update((value) => {
+                    return new Map([...value, [key, { componentType, extensionModule }]]);
+                });
+            },
+            removeChatSettingsComponent(key: string) {
+                externalChatSettingsSvelteComponent.update((value) => {
                     value.delete(key);
                     return value;
                 });

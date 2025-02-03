@@ -13,6 +13,7 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { UserProviderMerger } from "../UserProviderMerger/UserProviderMerger";
     import discordLogo from "../../Components/images/discord-logo.svg";
+    import { externalChatSettingsSvelteComponent } from "../../Stores/Utils/externalSvelteComponentStore";
     import { IconMessageCircle2, IconSearch, IconUsers, IconX } from "@wa-icons";
 
     const gameScene = gameManager.getCurrentGameScene();
@@ -70,6 +71,12 @@
 <div class="tw-p-2 tw-items-center tw-flex tw-flex-row tw-absolute tw-w-full tw-z-40">
     <div class="tw-flex flex-row {searchActive ? 'tw-hidden' : ''}">
         {#if showNavBar}
+            {#if $externalChatSettingsSvelteComponent.size > 0}
+                {#each [...$externalChatSettingsSvelteComponent.entries()] as [id, value] (`externalChatSettingsSvelteComponent-${id}`)}
+                    <svelte:component this={value.componentType} extensionModule={value.extensionModule} />
+                {/each}
+            {/if}
+
             {#if $allowedDiscordBridgeStore}
                 <button
                     class="tw-flex tw-justify-center tw-items-center tw-p-2 tw-rounded-md tw-cursor-pointer {$navChat ===
@@ -81,6 +88,7 @@
                     <img src={discordLogo} alt="Discord logo" class="tw-w-6" />
                 </button>
             {/if}
+
             {#if $navChat === "chat"}
                 <button
                     class="userList tw-p-3 hover:tw-bg-white/10 tw-rounded-xl tw-aspect-square tw-w-12"
