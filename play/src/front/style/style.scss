@@ -43,6 +43,8 @@ body .message-info.warning {
     background: #ffa500d6;
 }
 
+
+
 /* New layout */
 body {
     margin: 0;
@@ -644,4 +646,40 @@ div.emoji-picker {
     p{
         @apply m-0 p-0;
     }
+}
+
+/* Popper arrow placement */ 
+
+.popper-tooltip[data-popper-placement^='top'] > .popper-arrow {
+    bottom: -4px;
+  }
+  
+  .popper-tooltip[data-popper-placement^='bottom'] > .popper.arrow {
+    top: -4px;
+  }
+  
+  .popper-tooltip[data-popper-placement^='left'] > .popper-arrow {
+    right: -4px;
+  }
+  
+  .popper-tooltip[data-popper-placement^='right'] > .popper-arrow {
+    left: -4px;
+  }
+
+  .popper-arrow,
+.popper-arrow::before {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: inherit;
+}
+
+.popper-arrow {
+  visibility: hidden;
+}
+
+.popper-arrow::before {
+  visibility: visible;
+  content: '';
+  transform: rotate(45deg);
 }
