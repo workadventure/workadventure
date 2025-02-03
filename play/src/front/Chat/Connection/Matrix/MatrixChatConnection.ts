@@ -272,11 +272,13 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.client.on(CryptoEvent.VerificationRequestReceived, this.handleVerificationRequestReceived);
         await this.client.store.startup();
 
-        try {
-            await this.client.initRustCrypto();
-        } catch {
-            await this.client.clearStores();
-            await this.client.initRustCrypto();
+        if (await this.matrixSecurity.canInitRustCrypto()) {
+            try {
+                await this.client.initRustCrypto();
+            } catch {
+                await this.client.clearStores();
+                await this.client.initRustCrypto();
+            }
         }
 
         await this.client.startClient({

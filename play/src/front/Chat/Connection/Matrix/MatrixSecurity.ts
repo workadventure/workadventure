@@ -30,6 +30,7 @@ export class MatrixSecurity {
     private matrixClientStore: MatrixClient | null = null;
     private isVerifyingDevice = false;
     public shouldDisplayModal = false;
+    RustCryptoInitialized = false;
     constructor(
         private initializingEncryptionPromise: Promise<void> | undefined = undefined,
         private restoreRoomMessagesPromise: Promise<void> | undefined = undefined,
@@ -45,6 +46,8 @@ export class MatrixSecurity {
             return Promise.reject(new Error("Guest user, no encryption key"));
         }
 
+        await this.initRustCrypto();
+
         const crypto = this.matrixClientStore.getCrypto();
 
         if (crypto === undefined) {
@@ -57,6 +60,7 @@ export class MatrixSecurity {
 
         alreadyAskForInitCryptoConfiguration.set(true);
         this.shouldDisplayModal = true;
+
         this.initializingEncryptionPromise = new Promise<void>((resolve, initializingEncryptionReject) => {
             (async () => {
                 const keyBackupInfo = await this.matrixClientStore?.getKeyBackupVersion();
@@ -130,6 +134,13 @@ export class MatrixSecurity {
         });
         return;
     };
+
+    async canInitRustCrypto(): Promise<boolean> {
+        const client = this.matrixClientStore;
+        if (!client) return false;
+        const keyBackupInfo = await client.getKeyBackupVersion();
+        return keyBackupInfo !== null && keyBackupInfo !== undefined;
+    }
 
     async restoreRoomsMessages() {
         if (this.restoreRoomMessagesPromise) return this.restoreRoomMessagesPromise;
@@ -227,6 +238,7 @@ export class MatrixSecurity {
     }
 
     public async setupNewKeyStorage() {
+        await this.initRustCrypto();
         const crypto = this.matrixClientStore?.getCrypto();
         if (!crypto) return;
         try {
@@ -273,6 +285,7 @@ export class MatrixSecurity {
     public async verifyOwnDevice() {
         try {
             if (!this.matrixClientStore) throw new Error("MatrixClientStore is null");
+            await this.initRustCrypto();
 
             const crypto = this.matrixClientStore.getCrypto();
 
@@ -367,6 +380,8 @@ export class MatrixSecurity {
 
             if (!client) return;
 
+            await this.initRustCrypto();
+
             const crypto = client.getCrypto();
             const userID = client.getUserId();
 
@@ -406,6 +421,18 @@ export class MatrixSecurity {
             Sentry.captureMessage(`Failed to open modal to choose Verification modal method : ${error}`);
         } finally {
             this.isVerifyingDevice = false;
+        }
+    }
+
+    public async initRustCrypto() {
+        if (!this.matrixClientStore || this.RustCryptoInitialized) return;
+        try {
+            await this.matrixClientStore.initRustCrypto();
+        } catch {
+            await this.matrixClientStore.clearStores();
+            await this.matrixClientStore.initRustCrypto();
+        } finally {
+            this.RustCryptoInitialized = true;
         }
     }
 }
