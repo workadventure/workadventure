@@ -3,7 +3,7 @@ import * as Sentry from "@sentry/svelte";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import type { Room } from "../../Connection/Room";
-import { helpCameraSettingsVisibleStore } from "../../Stores/HelpSettingsStore";
+import { showHelpCameraSettings } from "../../Stores/HelpSettingsStore";
 import {
     availabilityStatusStore,
     requestedCameraDeviceIdStore,
@@ -173,7 +173,7 @@ export class GameManager {
             !localUserStore.getHelpCameraSettingsShown() &&
             (!get(requestedMicrophoneState) || !get(requestedCameraState))
         ) {
-            helpCameraSettingsVisibleStore.set(true);
+            showHelpCameraSettings();
             localUserStore.setHelpCameraSettingsShown();
         }
     }
