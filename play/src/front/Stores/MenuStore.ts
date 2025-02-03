@@ -380,3 +380,36 @@ export const mapMenuVisibleStore = derived(
         return $mapEditorMenuVisibleStore || $backOfficeMenuVisibleStore || $globalMessageVisibleStore;
     }
 );
+
+type Menus = "appMenu" | "profileMenu" | "burgerMenu" | "mapMenu";
+
+function createOpenedMenuStore() {
+    const openedMenuStore = writable<Menus | undefined>(undefined);
+    const { subscribe, set } = openedMenuStore;
+
+    return {
+        subscribe,
+        open(menu: Menus) {
+            set(menu);
+            activeSecondaryZoneActionBarStore.set(undefined);
+        },
+        close(menu: Menus) {
+            if (get({ subscribe }) === menu) {
+                set(undefined);
+            }
+        },
+        closeAll() {
+            set(undefined);
+        },
+        toggle(menu: Menus) {
+            if (get({ subscribe }) === menu) {
+                set(undefined);
+            } else {
+                set(menu);
+                activeSecondaryZoneActionBarStore.set(undefined);
+            }
+        },
+    };
+}
+
+export const openedMenuStore = createOpenedMenuStore();

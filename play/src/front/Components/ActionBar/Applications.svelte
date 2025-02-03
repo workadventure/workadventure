@@ -1,6 +1,4 @@
 <script lang="ts">
-    import { onDestroy, onMount } from "svelte";
-    import { Unsubscriber } from "svelte/store";
     import { fly } from "svelte/transition";
     import { KlaxoonEvent } from "@workadventure/shared-utils/src/types";
     import { KlaxoonService } from "@workadventure/shared-utils";
@@ -18,18 +16,9 @@
     import { connectionManager } from "../../Connection/ConnectionManager";
     import { LL } from "../../../i18n/i18n-svelte";
     import Tooltip from "../Util/Tooltip.svelte";
-    import { activeSecondaryZoneActionBarStore } from "../../Stores/MenuStore";
+    import { openedMenuStore } from "../../Stores/MenuStore";
 
-    let unsubscriptionSecondaryZoneMenuStore: Unsubscriber | null = null;
-
-    // Variable to store the app menu state opened or closed
-    let appMenuOpened = false;
-    function toggleAppMenu() {
-        appMenuOpened = !appMenuOpened;
-        if (appMenuOpened && $activeSecondaryZoneActionBarStore) {
-            activeSecondaryZoneActionBarStore.set(undefined);
-        }
-    }
+    //let unsubscriptionSecondaryZoneMenuStore: Unsubscriber | null = null;
 
     function klaxoonButtonHandler() {
         if (!connectionManager.klaxoonToolClientId) return;
@@ -57,7 +46,7 @@
         return false;
     }
 
-    onMount(() => {
+    /*onMount(() => {
         // Subscribe to the emote menu store and close the app menu if the emote menu is opened
         unsubscriptionSecondaryZoneMenuStore = activeSecondaryZoneActionBarStore.subscribe((value) => {
             if (value !== undefined) {
@@ -69,7 +58,7 @@
     onDestroy(() => {
         // Unsubscribe to the emote menu store
         if (unsubscriptionSecondaryZoneMenuStore) unsubscriptionSecondaryZoneMenuStore();
-    });
+    });*/
 </script>
 
 {#if oneApplicationIsActivated()}
@@ -82,13 +71,15 @@
         on:focus|preventDefault={noDrag}
         on:blur|preventDefault={noDrag}
         on:click={() => {
-            toggleAppMenu();
+            () => {
+                openedMenuStore.toggle("appMenu");
+            };
         }}
         class="bottom-action-button"
     >
         <Tooltip text={$LL.actionbar.app()} />
         <button id="klaxoon">
-            {#if appMenuOpened}
+            {#if $openedMenuStore === "appMenu"}
                 <img draggable="false" src={appOnImg} style="padding: 2px" alt={$LL.actionbar.app()} />
             {:else}
                 <img draggable="false" src={appOffImg} style="padding: 2px" alt={$LL.actionbar.app()} />
@@ -97,7 +88,7 @@
     </div>
 {/if}
 
-{#if appMenuOpened}
+{#if $openedMenuStore === "appMenu"}
     <div
         class="flex justify-center m-auto absolute left-0 right-0 bottom-0"
         style="margin-bottom: 4.5rem; height: auto;"
@@ -110,7 +101,7 @@
                         <button
                             on:click={() => {
                                 klaxoonButtonHandler();
-                                appMenuOpened = false;
+                                openedMenuStore.close("appMenu");
                             }}
                             id={`button-app-klaxoon`}
                             disabled={!connectionManager.klaxoonToolActivated}
@@ -127,7 +118,7 @@
                         <button
                             on:click={() => {
                                 window.open(`https://drive.google.com/drive/home`, "_blanck");
-                                appMenuOpened = false;
+                                openedMenuStore.close("appMenu");
                             }}
                             id={`button-app-klaxoon`}
                             disabled={!connectionManager.googleDriveToolActivated}
@@ -142,7 +133,7 @@
                         <button
                             on:click={() => {
                                 window.open(`https://docs.google.com/document/u/1/`, "_blanck");
-                                appMenuOpened = false;
+                                openedMenuStore.close("appMenu");
                             }}
                             id={`button-app-klaxoon`}
                             disabled={!connectionManager.googleDocsToolActivated}
@@ -157,7 +148,7 @@
                         <button
                             on:click={() => {
                                 window.open(`https://docs.google.com/spreadsheets/u/1/`, "_blanck");
-                                appMenuOpened = false;
+                                openedMenuStore.close("appMenu");
                             }}
                             id={`button-app-klaxoon`}
                             disabled={!connectionManager.googleSheetsToolActivated}
@@ -172,7 +163,7 @@
                         <button
                             on:click={() => {
                                 window.open(`https://docs.google.com/presentation/u/1/`, "_blanck");
-                                appMenuOpened = false;
+                                openedMenuStore.close("appMenu");
                             }}
                             id={`button-app-klaxoon`}
                             disabled={!connectionManager.googleSlidesToolActivated}
@@ -187,7 +178,7 @@
                         <button
                             on:click={() => {
                                 window.open(`https://app.eraser.io/dashboard/all`, "_blanck");
-                                appMenuOpened = false;
+                                openedMenuStore.close("appMenu");
                             }}
                             id={`button-app-klaxoon`}
                             disabled={!connectionManager.eraserToolActivated}
@@ -202,7 +193,7 @@
                         <button
                             on:click={() => {
                                 window.open(`https://excalidraw.com`, "_blanck");
-                                appMenuOpened = false;
+                                openedMenuStore.close("appMenu");
                             }}
                             id={`button-app-klaxoon`}
                             disabled={!connectionManager.excalidrawToolActivated}
@@ -217,7 +208,7 @@
                         <button
                             on:click={() => {
                                 window.open(`https://excalidraw.com`, "_blanck");
-                                appMenuOpened = false;
+                                openedMenuStore.close("appMenu");
                             }}
                             id={`button-app-klaxoon`}
                             disabled={!connectionManager.cardsToolActivated}

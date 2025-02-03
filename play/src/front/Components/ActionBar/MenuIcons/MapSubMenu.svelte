@@ -7,6 +7,7 @@
         globalMessageVisibleStore,
         mapEditorMenuVisibleStore,
         mapMenuVisibleStore,
+        openedMenuStore,
     } from "../../../Stores/MenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { liveStreamingEnabledStore, requestedMegaphoneStore } from "../../../Stores/MegaphoneStore";
@@ -28,8 +29,6 @@
     import { chatVisibilityStore } from "../../../Stores/ChatStore";
     import { ADMIN_BO_URL } from "../../../Enum/EnvironmentVariable";
     import SubMenuItem from "./SubMenuItem.svelte";
-
-    let mapMenuIsDropped = false;
 
     function resetChatVisibility() {
         chatVisibilityStore.set(false);
@@ -79,7 +78,7 @@
     }
 
     function close() {
-        mapMenuIsDropped = false;
+        openedMenuStore.close("mapMenu");
     }
 </script>
 
@@ -88,9 +87,13 @@
     <div
         data-testid="map-menu"
         class="items-center relative transition-all hidden @lg/actions:block cursor-pointer pointer-events-auto"
-        on:click={() => (mapMenuIsDropped = !mapMenuIsDropped)}
+        on:click={() => {
+            openedMenuStore.toggle("mapMenu");
+        }}
         use:clickOutside={close}
-        on:blur={() => (mapMenuIsDropped = false)}
+        on:blur={() => {
+            openedMenuStore.close("mapMenu");
+        }}
     >
         <div
             class="group bg-contrast/80 backdrop-blur rounded-lg h-16 @sm/actions:h-14 @xl/actions:h-16 p-2 transition-all"
@@ -108,13 +111,15 @@
                 </div>
                 <ChevronDownIcon
                     strokeWidth="2"
-                    classList="h-4 w-4 aspect-square transition-all opacity-50 {mapMenuIsDropped ? 'rotate-180' : ''}"
+                    classList="h-4 w-4 aspect-square transition-all opacity-50 {$openedMenuStore === 'mapMenu'
+                        ? 'rotate-180'
+                        : ''}"
                     height="16px"
                     width="16px"
                 />
             </div>
         </div>
-        {#if mapMenuIsDropped}
+        {#if $openedMenuStore === "mapMenu"}
             <div
                 class="absolute mt-2 top-14 @xl/actions:top-16 right-0 bg-contrast/80 backdrop-blur rounded-md w-56 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-transparent before:border-b-contrast/80 transition-all"
                 data-testid="map-sub-menu"

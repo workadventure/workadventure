@@ -19,12 +19,9 @@ const actionbar: BaseTranslation = {
     todoList: "Todo list",
     woka: "Customize your avatar",
     companion: "Add companion",
-    quest: "Achievements",
     //megaphone: "Use megaphone",
     test: "Test my settings",
     editCamMic: "Edit cam / mic",
-    accountType: "Basic account",
-    upgrade: "Upgrade",
     otherSettings: "Other settings",
     bo: "Back office",
     globalMessage: "Send global message",
@@ -114,7 +111,7 @@ const actionbar: BaseTranslation = {
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
         apps: {
-            title: "Third part applications",
+            title: "Third party applications",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
         roomList: {

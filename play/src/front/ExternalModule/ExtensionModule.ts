@@ -1,7 +1,7 @@
 import { AvailabilityStatus, ExternalModuleMessage, OauthRefreshToken } from "@workadventure/messages";
 import { Readable, Updater, Writable } from "svelte/store";
 import { CalendarEventInterface, TodoListInterface } from "@workadventure/shared-utils";
-import { ComponentType } from "svelte";
+import { ComponentProps, ComponentType, SvelteComponentTyped } from "svelte";
 import { AreaData, AreaDataProperties } from "@workadventure/map-editor";
 import { Observable } from "rxjs";
 import { OpenCoWebsiteObject } from "../Chat/Utils";
@@ -9,11 +9,11 @@ import { SpaceRegistryInterface } from "../Space/SpaceRegistry/SpaceRegistryInte
 import { ExternalComponentZones } from "../Stores/Utils/externalSvelteComponentService";
 
 export interface ExternalSvelteComponentServiceInterface {
-    addComponentToZone(
+    addComponentToZone<Component extends SvelteComponentTyped>(
         zone: ExternalComponentZones,
         key: string,
-        extensionModule: ExtensionModule,
-        componentType: ComponentType
+        componentType: ComponentType<Component>,
+        props?: ComponentProps<Component>
     ): void;
     removeComponentFromZone(zone: ExternalComponentZones, key: string): void;
 }

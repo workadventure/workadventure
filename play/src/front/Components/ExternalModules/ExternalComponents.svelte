@@ -10,5 +10,6 @@
 </script>
 
 {#each [...$components.entries()] as [key, value] (`${key}`)}
-    <svelte:component this={value.componentType} extensionModule={value.extensionModule} {...$$restProps} />
+    {@const valueProps = value.props ?? {}}
+    <svelte:component this={value.componentType} {...$$restProps} {...valueProps} />
 {/each}
