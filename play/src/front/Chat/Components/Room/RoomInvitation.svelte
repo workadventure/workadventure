@@ -1,10 +1,11 @@
 <script lang="ts">
-    import { ChatRoom } from "../../Connection/ChatConnection";
+    import { ChatRoomMembershipManagement, ChatRoom } from "../../Connection/ChatConnection";
     import { selectedRoomStore } from "../../Stores/ChatStore";
     import Avatar from "../Avatar.svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { IconLoader } from "@wa-icons";
-    export let room: ChatRoom;
+
+    export let room: ChatRoom & ChatRoomMembershipManagement;
     let roomName = room.name;
     let loadingInvitation = false;
 

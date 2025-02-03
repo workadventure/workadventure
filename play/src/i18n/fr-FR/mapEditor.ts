@@ -130,10 +130,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultStartArea: "Zone de départ par défaut",
         },
         youtubeProperties: {
-            label: "Ouvrir Youtube",
-            description: "Ouvrir Youtube dans l'application ou dans un nouvel onglet.",
-            error: "Veuillez entrer une URL Youtube valide",
-            disabled: "L'intégration Youtube est désactivée.",
+            label: "Ouvrir YouTube",
+            description: "Ouvrir YouTube dans l'application ou dans un nouvel onglet.",
+            error: "Veuillez entrer une URL YouTube valide",
+            disabled: "L'intégration YouTube est désactivée.",
         },
         googleDocsProperties: {
             label: "Ouvrir Google Docs",
@@ -217,6 +217,13 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             roomNameLabel: "Nom du salon",
             roomNameLabelPlaceholder: "Mon Salon",
             defaultChatRoomAreaName: "Salon de zone",
+        },
+        tooltipProperties: {
+            label: "Info Bulle",
+            description: "Afficher une info bulle lors de l'interaction avec l'objet ℹ️",
+            contentPlaceholder: "Contenu de l'info bulle 📝",
+            duration: "Duration (en secondes) ⏱️",
+            infinityDuration: "Infini ⏱️",
         },
     },
     areaEditor: {

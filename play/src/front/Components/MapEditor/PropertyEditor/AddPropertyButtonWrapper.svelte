@@ -354,6 +354,18 @@
     />
 {/if}
 
+{#if property === "tooltipPropertyData"}
+    <AddPropertyButton
+        headerText={$LL.mapEditor.properties.tooltipProperties.label()}
+        descriptionText={$LL.mapEditor.properties.tooltipProperties.description()}
+        img={"resources/icons/icon_infobulle.png"}
+        style={`z-index: 170;${isActive ? "background-color: #4156f6;" : ""}`}
+        on:click={(event) => {
+            dispatch("click", event);
+        }}
+    />
+{/if}
+
 {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
     {#if property === "openWebsite" && subProperty === app.name}
         <AddPropertyButton

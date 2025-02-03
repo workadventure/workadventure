@@ -172,6 +172,7 @@ import { UserProviderInterface } from "../../Chat/UserProvider/UserProviderInter
 import { faviconManager } from "../../WebRtc/FaviconManager";
 import { ScriptingOutputAudioStreamManager } from "../../WebRtc/AudioStream/ScriptingOutputAudioStreamManager";
 import { ScriptingInputAudioStreamManager } from "../../WebRtc/AudioStream/ScriptingInputAudioStreamManager";
+import { enableUserInputsStore } from "../../Stores/UserInputStore";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
@@ -2087,7 +2088,7 @@ export class GameScene extends DirtyScene {
         });
 
         this.emoteUnsubscriber = emoteStore.subscribe((emote) => {
-            if (emote) {
+            if (emote && get(enableUserInputsStore)) {
                 this.CurrentPlayer?.playEmote(emote.emoji);
                 this.connection?.emitEmoteEvent(emote.emoji);
                 emoteStore.set(null);

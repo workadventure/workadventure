@@ -1,4 +1,4 @@
-import { EventType, MatrixEvent, MatrixEventEvent, MsgType, RelationType, Room } from "matrix-js-sdk";
+import { Direction, EventType, MatrixEvent, MatrixEventEvent, MsgType, RelationType, Room } from "matrix-js-sdk";
 import { writable, Writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import { ChatMessage, ChatMessageContent, ChatMessageType, ChatUser } from "../ChatConnection";
@@ -15,6 +15,7 @@ export class MatrixChatMessage implements ChatMessage {
     type: ChatMessageType;
     isDeleted: Writable<boolean>;
     isModified: Writable<boolean>;
+    readonly canDelete: Writable<boolean>;
 
     constructor(private event: MatrixEvent, private room: Room, isQuotedMessage?: boolean) {
         this.id = event.getId() ?? uuidv4();
@@ -26,6 +27,28 @@ export class MatrixChatMessage implements ChatMessage {
         this.isQuotedMessage = isQuotedMessage;
         this.isDeleted = writable(this.getIsDeleted());
         this.isModified = writable(this.getIsModified());
+
+        const myRoomMember = room.getMember(room.client.getSafeUserId());
+        const senderRoomMember = room.getMember(this.sender?.chatId || "");
+
+        let myPowerLevel = 0;
+        let senderPowerLevel = 0;
+
+        if (myRoomMember) {
+            myPowerLevel = myRoomMember.powerLevelNorm;
+        }
+
+        if (senderRoomMember) {
+            senderPowerLevel = senderRoomMember.powerLevelNorm;
+        }
+
+        const hasSufficientPowerLevel =
+            this.room
+                .getLiveTimeline()
+                .getState(Direction.Backward)
+                ?.hasSufficientPowerLevelFor("redact", myPowerLevel) ?? false;
+
+        this.canDelete = writable(this.isMyMessage || (hasSufficientPowerLevel && myPowerLevel > senderPowerLevel));
 
         event.on(MatrixEventEvent.Decrypted, () => {
             this.updateMessageContentOnDecryptedEvent();

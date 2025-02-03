@@ -49,7 +49,7 @@ import { hasCapability } from "./Capabilities";
 interface Guild {
     id: string;
 }
-const enum defautlNativeIntegrationAppName {
+export const enum defautlNativeIntegrationAppName {
     KLAXOON = "Klaxoon",
     YOUTUBE = "Youtube",
     GOOGLE_DRIVE = "Google Drive",

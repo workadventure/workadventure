@@ -32,6 +32,7 @@
     import { extensionModuleStore } from "../../../Stores/GameSceneStore";
     import { ExtensionModule, ExtensionModuleAreaProperty } from "../../../ExternalModule/ExtensionModule";
     import MatrixRoomPropertyEditor from "../PropertyEditor/MatrixRoomPropertyEditor.svelte";
+    import TooltipPropertyButton from "../PropertyEditor/TooltipPropertyButton.svelte";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
@@ -49,6 +50,7 @@
     let hasPersonalAreaProperty: boolean;
     let hasRightsProperty: boolean;
     let hasMatrixRoom: boolean;
+    let hasTooltipPropertyData: boolean;
 
     const ROOM_AREA_PUSHER_URL = new URL("roomArea", PUSHER_URL).toString();
 
@@ -225,6 +227,13 @@
                         matrixRoomId: undefined,
                     },
                 };
+            case "tooltipPropertyData":
+                return {
+                    id,
+                    type,
+                    content: "",
+                    duration: 2,
+                };
             default:
                 throw new Error(`Unknown property type ${type}`);
         }
@@ -345,6 +354,7 @@
         hasPersonalAreaProperty = hasProperty("personalAreaPropertyData");
         hasRightsProperty = hasProperty("restrictedRightsPropertyData");
         hasMatrixRoom = hasProperty("matrixRoomPropertyData");
+        hasTooltipPropertyData = hasProperty("tooltipPropertyData");
     }
 
     function openKlaxoonActivityPicker(app: AreaDataProperty) {
@@ -477,6 +487,14 @@
                     property="matrixRoomPropertyData"
                     on:click={() => {
                         onAddProperty("matrixRoomPropertyData");
+                    }}
+                />
+            {/if}
+            {#if !hasTooltipPropertyData}
+                <AddPropertyButtonWrapper
+                    property="tooltipPropertyData"
+                    on:click={() => {
+                        onAddProperty("tooltipPropertyData");
                     }}
                 />
             {/if}
@@ -722,6 +740,14 @@
                             {property}
                             on:close={({ detail }) => {
                                 onDeleteProperty(property.id, detail);
+                            }}
+                            on:change={() => onUpdateProperty(property)}
+                        />
+                    {:else if property.type === "tooltipPropertyData"}
+                        <TooltipPropertyButton
+                            {property}
+                            on:close={() => {
+                                onDeleteProperty(property.id);
                             }}
                             on:change={() => onUpdateProperty(property)}
                         />

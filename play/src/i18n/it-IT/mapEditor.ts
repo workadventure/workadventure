@@ -129,10 +129,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultStartArea: "Area di partenza predefinita",
         },
         youtubeProperties: {
-            label: "Apri Video Youtube",
-            description: "Apri video Youtube all'interno di WorkAdventure o come nuova scheda.",
-            error: "Inserisci un URL Youtube valido",
-            disabled: "Integrazione Youtube disabilitata.",
+            label: "Apri Video YouTube",
+            description: "Apri video YouTube all'interno di WorkAdventure o come nuova scheda.",
+            error: "Inserisci un URL YouTube valido",
+            disabled: "Integrazione YouTube disabilitata.",
         },
         googleDocsProperties: {
             label: "Apri Google Docs",

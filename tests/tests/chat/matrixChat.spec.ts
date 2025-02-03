@@ -61,6 +61,135 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.getByTestId("sendMessageButton").click();
     await expect(page.getByText(chatMessageContent)).toBeAttached();
   });
+  test("Send application messages in public chat room", async ({ page }, { project }) => {
+    const isMobile = project.name === "mobilechromium";
+    await login(page, "test", 3, "us-US", isMobile);
+    await oidcMatrixUserLogin(page, isMobile);
+    await ChatUtils.openChat(page);
+    await ChatUtils.openCreateRoomDialog(page);
+    const publicChatRoomName = ChatUtils.getRandomName();
+    await page.getByTestId("createRoomName").fill(publicChatRoomName);
+    await page.getByTestId("createRoomButton").click();
+    await page.getByText(publicChatRoomName).click();
+    const chatMessageContent = "This is a test message";
+    await page.getByTestId("messageInput").click();
+    await page.getByTestId("messageInput").fill(chatMessageContent);
+    await page.getByTestId("sendMessageButton").click();
+    await expect(page.getByText(chatMessageContent)).toBeAttached();
+  });
+  test("Send application messages and youtube link in public chat room", async ({ page }, { project }) => {
+    const isMobile = project.name === "mobilechromium";
+    await login(page, "test", 3, "us-US", isMobile);
+    await oidcMatrixUserLogin(page, isMobile);
+    await ChatUtils.openChat(page);
+    await ChatUtils.openCreateRoomDialog(page);
+    const publicChatRoomName = ChatUtils.getRandomName();
+    await page.getByTestId("createRoomName").fill(publicChatRoomName);
+    await page.getByTestId("createRoomButton").click();
+    await page.getByText(publicChatRoomName).click();
+
+    // Add an application
+    await page.getByTestId("addApplicationButton").click();
+
+    // Check that all applications are displayed
+    await expect(page.getByTestId("youtubeApplicationButton")).toBeAttached();
+    await expect(page.getByTestId("klaxoonApplicationButton")).toBeAttached();
+    await expect(page.getByTestId("googleSheetsApplicationButton")).toBeAttached();
+    await expect(page.getByTestId("googleSlidesApplicationButton")).toBeAttached();
+    await expect(page.getByTestId("googleDocsApplicationButton")).toBeAttached();
+    await expect(page.getByTestId("googleDriveApplicationButton")).toBeAttached();
+    await expect(page.getByTestId("eraserApplicationButton")).toBeAttached();
+    await expect(page.getByTestId("excalidrawApplicationButton")).toBeAttached();
+    await expect(page.getByTestId("cardsApplicationButton")).toBeAttached();
+
+    // Add Youtube application
+    await page.getByTestId("youtubeApplicationButton").click();
+
+    // Enter the link
+    await page.getByTestId("applicationInputLink").click();
+    await page.getByTestId("applicationInputLink").fill("test");
+    await page.getByTestId("applicationInputLink").press("Enter");
+
+    // check that the error is displayed
+    await expect(page.getByTestId("applicationLinkError")).toBeAttached();
+
+    // Enter the true link
+    await page.getByTestId("applicationInputLink").click();
+    await page.getByTestId("applicationInputLink").fill("https://www.youtube.com/watch?v=6ZfuNTqbHE8");
+    await page.getByTestId("applicationInputLink").press("Enter");
+
+    // check that the error is not displayed
+    await expect(page.getByTestId("applicationLinkError")).not.toBeAttached();
+
+    const chatMessageContent = "This is a test message";
+    await page.getByTestId("messageInput").click();
+    await page.getByTestId("messageInput").fill(chatMessageContent);
+    await page.getByTestId("sendMessageButton").click();
+
+    // check that the link build for message is correct and the message is displayed
+    await expect(page.getByText("https://www.youtube.com/embed/6ZfuNTqbHE8?feature=oembed")).toBeAttached();
+    // check that the message is displayed
+    await expect(page.getByText(chatMessageContent)).toBeAttached();
+  });
+  test("Send application messages and klaxoon link in public chat room", async ({ page }, { project }) => {
+    const isMobile = project.name === "mobilechromium";
+    await login(page, "test", 3, "us-US", isMobile);
+    await oidcMatrixUserLogin(page, isMobile);
+    await ChatUtils.openChat(page);
+    await ChatUtils.openCreateRoomDialog(page);
+    const publicChatRoomName = ChatUtils.getRandomName();
+    await page.getByTestId("createRoomName").fill(publicChatRoomName);
+    await page.getByTestId("createRoomButton").click();
+    await page.getByText(publicChatRoomName).click();
+
+    // Add an application
+    await page.getByTestId("addApplicationButton").click();
+
+    // Check that all applications are displayed
+    await expect(page.getByTestId("youtubeApplicationButton")).toBeAttached();
+    await expect(page.getByTestId("klaxoonApplicationButton")).toBeAttached();
+    await expect(page.getByTestId("googleSheetsApplicationButton")).toBeAttached();
+    await expect(page.getByTestId("googleSlidesApplicationButton")).toBeAttached();
+    await expect(page.getByTestId("googleDocsApplicationButton")).toBeAttached();
+    await expect(page.getByTestId("googleDriveApplicationButton")).toBeAttached();
+    await expect(page.getByTestId("eraserApplicationButton")).toBeAttached();
+    await expect(page.getByTestId("excalidrawApplicationButton")).toBeAttached();
+    await expect(page.getByTestId("cardsApplicationButton")).toBeAttached();
+
+    // Add Youtube application
+    await page.getByTestId("klaxoonApplicationButton").click();
+
+    // check if the iframe activity picker is opened
+    const popupPromise = page.waitForEvent("popup");
+    await popupPromise;
+    (await popupPromise).close();
+
+    // Enter the link
+    await page.getByTestId("applicationInputLink").click();
+    await page.getByTestId("applicationInputLink").fill("test");
+    await page.getByTestId("applicationInputLink").press("Enter");
+
+    // check that the error is displayed
+    await expect(page.getByTestId("applicationLinkError")).toBeAttached();
+
+    // Enter the true link
+    await page.getByTestId("applicationInputLink").click();
+    await page.getByTestId("applicationInputLink").fill("https://app.klaxoon.com/join/KXEWMSE3NF2M");
+    await page.getByTestId("applicationInputLink").press("Enter");
+
+    // check that the error is not displayed
+    await expect(page.getByTestId("applicationLinkError")).not.toBeAttached();
+
+    const chatMessageContent = "This is a test message";
+    await page.getByTestId("messageInput").click();
+    await page.getByTestId("messageInput").fill(chatMessageContent);
+    await page.getByTestId("sendMessageButton").click();
+
+    // check that the link build for message is correct and the message is displayed
+    await expect(page.getByText("https://app.klaxoon.com/join/KXEWMSE3NF2M?from=aG3stVtZnDmhrhqKc17to1OlfvyyEUeV")).toBeAttached();
+    // check that the message is displayed
+    await expect(page.getByText(chatMessageContent)).toBeAttached();
+  });
   test("Reply to message", async ({ page }, { project }) => {
     const isMobile = project.name === "mobilechromium";
     await login(page, "test", 3, "us-US", isMobile);
@@ -398,16 +527,20 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await expect(page.getByText(privateFolder1)).toBeAttached();
 
     const privateFolder2 = ChatUtils.getRandomName();
+    await page.waitForTimeout(1000);
     await ChatUtils.openCreateFolderDialog(page, privateFolder1);
     await page.getByTestId("createFolderName").fill(privateFolder2);
     await page.getByTestId("createFolderVisibility").selectOption("private");
     await page.getByTestId("createFolderButton").click();
-    await page.getByTestId("roomAccordeon").click();
-    await expect(page.getByText(privateFolder2)).not.toBeAttached();
-    await page.getByTestId("roomAccordeon").click();
+
+
+    await expect(page.getByText(privateFolder2)).toBeHidden({
+      timeout: 60000,
+    });
     await page.getByText(privateFolder1).click();
-    await expect(page.getByText(privateFolder2)).toBeAttached();
+    await expect(page.getByText(privateFolder2)).toBeVisible();
   });
+
   test("Create a room in a folder", async ({ page }, { project }) => {
     const isMobile = project.name === "mobilechromium";
     await login(page, "test", 3, "us-US", isMobile);

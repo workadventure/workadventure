@@ -96,7 +96,7 @@ export class SwaggerController extends BaseHttpController {
                   };</script>`;
                 $("body").append(swaggerScript);
 
-                response.send($.html());
+                response.type("html").send($.html());
                 return;
             });
         });
