@@ -91,4 +91,4 @@ $ docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml up
 
 ### Troubleshooting
 
-See our [troubleshooting guide](docs/others/troubleshooting.md).
+See our [troubleshooting guide](docs/others/troubleshooting.md). 
