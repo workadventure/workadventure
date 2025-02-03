@@ -15,13 +15,15 @@
     export let optional = false;
 
     const SLOTS = $$slots;
+
+    let uniqueId = id || `input-${Math.random().toString(36).substr(2, 9)} `;
 </script>
 
 <div class="flex flex--col">
     {#if type === "select"}
         <div class="relative flex-grow">
             <div class="input-label">
-                <label for={id} class="grow font-light">{label}</label>
+                <label for={uniqueId} class="grow font-light">{label}</label>
 
                 {#if SLOTS.info}
                     <InfoButton>
@@ -37,7 +39,7 @@
             </div>
 
             <select
-                {id}
+                id={uniqueId}
                 class="grow w-full input-select font-light"
                 class:input-select-light={variant === "light"}
                 bind:value
