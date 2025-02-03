@@ -2,8 +2,7 @@ import { get } from "svelte/store";
 import type { UserInputManager } from "../Phaser/UserInput/UserInputManager";
 import { localStreamStore } from "../Stores/MediaStore";
 import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
-import { helpCameraSettingsVisibleStore } from "../Stores/HelpSettingsStore";
-
+import { showHelpCameraSettings } from "../Stores/HelpSettingsStore";
 import {
     myCameraBlockedStore,
     myCameraStore,
@@ -15,9 +14,6 @@ import { MediaStreamConstraintsError } from "../Stores/Errors/MediaStreamConstra
 import { localUserStore } from "../Connection/LocalUserStore";
 import { LL } from "../../i18n/i18n-svelte";
 import { localeDetector } from "../../i18n/locales";
-import { popupStore } from "../Stores/PopupStore";
-import PopUpCameraAccesDenied from "../Components/PopUp/PopUpCameraAccesDenied.svelte";
-import PopUpSharingScreenAcessDenied from "../Components/PopUp/PopUpSharingScreenAcessDenied.svelte";
 
 export type StartScreenSharingCallback = (media: MediaStream) => void;
 export type StopScreenSharingCallback = (media: MediaStream) => void;
@@ -47,23 +43,12 @@ export class MediaManager {
                 localStreamStore.subscribe((result) => {
                     if (result.type === "error") {
                         if (result.error.name !== MediaStreamConstraintsError.NAME && get(myCameraStore)) {
-                            popupStore.addPopup(
-                                PopUpCameraAccesDenied,
-                                {
-                                    message: get(LL).warning.accessDenied.camera(),
-                                    click: () => {
-                                        helpCameraSettingsVisibleStore.set(true);
-                                        popupStore.removePopup("cameraAccessDenied");
-                                    },
-                                    userInputManager: this.userInputManager,
-                                },
-                                "cameraAccessDenied"
-                            );
+                            showHelpCameraSettings();
                         }
                         //remove it after 10 sec
-                        setTimeout(() => {
+                        /*setTimeout(() => {
                             popupStore.removePopup("cameraAccessDenied");
-                        }, 10000);
+                        }, 10000);*/
                         return;
                     }
                 });
@@ -73,22 +58,11 @@ export class MediaManager {
                 screenSharingLocalStreamStore.subscribe((result) => {
                     if (result.type === "error") {
                         console.error(result.error);
-                        popupStore.addPopup(
-                            PopUpSharingScreenAcessDenied,
-                            {
-                                message: get(LL).warning.accessDenied.screenSharing(),
-                                click: () => {
-                                    helpCameraSettingsVisibleStore.set(true);
-                                    popupStore.removePopup("screenSharingAccessDenied");
-                                },
-                                userInputManager: this.userInputManager,
-                            },
-                            "screenSharingAccessDenied"
-                        );
+                        showHelpCameraSettings();
                         //remove it after 10 sec
-                        setTimeout(() => {
+                        /*setTimeout(() => {
                             popupStore.removePopup("screenSharingAccessDenied");
-                        }, 10000);
+                        }, 10000);*/
                         return;
                     }
                 });

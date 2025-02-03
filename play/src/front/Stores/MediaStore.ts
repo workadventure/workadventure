@@ -19,7 +19,7 @@ import { createSilentStore } from "./SilentStore";
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { inExternalServiceStore, myCameraStore, myMicrophoneStore, proximityMeetingStore } from "./MyMediaStore";
 import { userMovingStore } from "./GameStore";
-import { helpCameraSettingsVisibleStore } from "./HelpSettingsStore";
+import { hideHelpCameraSettings } from "./HelpSettingsStore";
 
 /**
  * A store that contains the camera state requested by the user (on or off).
@@ -530,7 +530,7 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                         if (currentStream.getAudioTracks().length > 0) {
                             usedMicrophoneDeviceIdStore.set(currentStream.getAudioTracks()[0]?.getSettings().deviceId);
                         }
-                        helpCameraSettingsVisibleStore.set(false);
+                        hideHelpCameraSettings();
 
                         return stream;
                     })
