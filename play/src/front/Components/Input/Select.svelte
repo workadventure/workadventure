@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { LL } from "../../../i18n/i18n-svelte";
     import InfoButton from "./InfoButton.svelte";
 
     export let label: string;
@@ -11,6 +12,7 @@
     export let placeholder = "";
     export let type: "text" | "select" = "text";
     export let variant: "light" | "" = "";
+    export let optional = false;
 
     const SLOTS = $$slots;
 </script>
@@ -27,9 +29,9 @@
                     </InfoButton>
                 {/if}
 
-                {#if SLOTS.optional}
+                {#if optional}
                     <div class="text-xs opacity-50 ">
-                        <slot name="optional" />
+                        {$LL.form.optional()}
                     </div>
                 {/if}
             </div>
@@ -53,6 +55,7 @@
         </div>
     {/if}
 </div>
+
 {#if SLOTS.helper}
     <div class="flex items-center px-3 space-x-1.5 opacity-50">
         <div class="text-sm text-white grow">

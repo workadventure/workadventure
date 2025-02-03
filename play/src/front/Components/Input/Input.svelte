@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { LL } from "../../../i18n/i18n-svelte";
     import InfoButton from "./InfoButton.svelte";
 
     export let id: string | undefined = undefined;
@@ -13,6 +14,9 @@
     export let size: "xs" | "sm" | "lg" | "" = "";
     export let appendSide: "left" | "right" = "right";
     export let status: "error" | "success" | "" = "";
+    export let errorHelperText: string | null = null;
+    export let onKeyPress = () => {};
+    export let optional = false;
 
     const SLOTS = $$slots;
 
@@ -21,7 +25,7 @@
 
 <div class="flex flex-col">
     <div class="input-label">
-        <label for={uniqueId} class=" relative grow">{label}</label>
+        <label for={uniqueId} class="relative grow">{label}</label>
 
         {#if SLOTS.info}
             <InfoButton>
@@ -29,19 +33,19 @@
             </InfoButton>
         {/if}
 
-        {#if SLOTS.optional}
+        {#if optional}
             <div class="text-xs opacity-50 ">
-                <slot name="optional" />
+                {$LL.form.optional()}
             </div>
         {/if}
     </div>
 
-    <div class=" relative flex grow">
+    <div class="relative flex grow">
         {#if type === "text"}
             <input
                 id={uniqueId}
                 type="text"
-                class="grow input-text input-icon  "
+                class="grow input-text input-icon"
                 class:input-icon-left={appendSide === "left"}
                 class:input-text-light={variant === "light"}
                 class:input-text-xs={size === "xs"}
@@ -51,10 +55,15 @@
                 class:success={status === "success"}
                 bind:value
                 {placeholder}
+                on:keypress={onKeyPress}
                 on:change={onChange}
                 on:click={onClick}
                 {disabled}
             />
+
+            {#if errorHelperText}
+                <p class="text-red-500 text-sm mt-1">{errorHelperText}</p>
+            {/if}
         {:else if type === "url"}
             <input
                 id={uniqueId}
@@ -74,8 +83,8 @@
                 {disabled}
             />
         {/if}
-        {#if SLOTS.InputAppend}
-            <slot name="InputAppend" />
+        {#if SLOTS.inputAppend}
+            <slot name="inputAppend" />
         {/if}
     </div>
 
