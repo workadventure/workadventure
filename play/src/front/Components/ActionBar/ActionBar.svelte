@@ -47,8 +47,8 @@
         globalMessageVisibleStore,
         mapMenuVisibleStore,
         activeSecondaryZoneActionBarStore,
+        openedMenuStore,
     } from "../../Stores/MenuStore";
-    import { emoteMenuStore } from "../../Stores/EmoteStore";
     import { LL } from "../../../i18n/i18n-svelte";
     import { bottomActionBarVisibilityStore } from "../../Stores/BottomActionBarStore";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
@@ -87,7 +87,6 @@
     import ScreenShareIcon from "../Icons/ScreenShareIcon.svelte";
     import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
     import ProfilIcon from "../Icons/ProfilIcon.svelte";
-    import AchievementIcon from "../Icons/AchievementIcon.svelte";
     import CamSettingsIcon from "../Icons/CamSettingsIcon.svelte";
     import SettingsIcon from "../Icons/SettingsIcon.svelte";
     import ChevronUpIcon from "../Icons/ChevronUpIcon.svelte";
@@ -123,13 +122,10 @@
     export const className = "";
     //let microphoneActive = false;
     let mediaSettingsDisplayed = false;
-    let profileMenuIsDropped = false;
-    let burgerOpen = false;
     let helpActive: string | undefined = undefined;
     let navigating = false;
     let camMenuIsDropped = false;
     let smallArrowVisible = true;
-    let appMenuOpened = false;
     //const sound = new Audio("/resources/objects/webrtc-out-button.mp3");
 
     function focusModeOn() {
@@ -218,13 +214,8 @@
             activeSecondaryZoneActionBarStore.set(undefined);
         } else {
             activeSecondaryZoneActionBarStore.set("emote");
-            appMenuOpened = false;
+            openedMenuStore.closeAll();
         }
-    }
-
-    function close(): void {
-        emoteMenuStore.closeEmoteMenu();
-        activeSecondaryZoneActionBarStore.set(undefined);
     }
 
     function showMenuItem(key: MenuKeys | string) {
@@ -307,15 +298,19 @@
     }
 
     function openExternalModuleCalendar() {
+        analyticsClient.openExternalModuleCalendar();
         isCalendarVisibleStore.set(!$isCalendarVisibleStore);
         isTodoListVisibleStore.set(false);
         mapEditorModeStore.switchMode(false);
+        openedMenuStore.close("appMenu");
     }
 
     function openExternalModuleTodoList() {
+        analyticsClient.openExternalModuleTodoList();
         isTodoListVisibleStore.set(!$isTodoListVisibleStore);
         isCalendarVisibleStore.set(false);
         mapEditorModeStore.switchMode(false);
+        openedMenuStore.close("appMenu");
     }
 
     let totalMessagesToSee = writable<number>(0);
@@ -342,15 +337,13 @@
         }
     });*/
 
-    function openAppMenu() {
-        activeSecondaryZoneActionBarStore.set(undefined);
-        appMenuOpened = !appMenuOpened;
-    }
     function showRoomList() {
+        analyticsClient.openedRoomList();
         resetChatVisibility();
         resetModalVisibility();
 
         roomListVisibilityStore.set(true);
+        openedMenuStore.close("appMenu");
     }
 
     const statusToShow: Array<RequestedStatus | AvailabilityStatus.ONLINE> = [
@@ -526,23 +519,23 @@
                             <ActionBarButtonWrapper classList="group/btn-apps">
                                 <ActionBarIconButton
                                     on:click={() => {
-                                        openAppMenu();
+                                        openedMenuStore.toggle("appMenu");
                                     }}
                                     tooltipTitle={$LL.actionbar.help.apps.title()}
                                     tooltipDesc={$LL.actionbar.help.apps.desc()}
-                                    disabledHelp={appMenuOpened}
-                                    state={appMenuOpened ? "active" : "normal"}
+                                    disabledHelp={$openedMenuStore === "appMenu"}
+                                    state={$openedMenuStore === "appMenu" ? "active" : "normal"}
                                     dataTestId={undefined}
                                 >
                                     <AppsIcon
-                                        strokeColor={appMenuOpened
+                                        strokeColor={$openedMenuStore === "appMenu"
                                             ? "stroke-white fill-white"
                                             : "stroke-white fill-transparent"}
                                         hover="group-hover/btn-apps:fill-white"
                                     />
                                 </ActionBarIconButton>
 
-                                {#if appMenuOpened && ($roomListActivated || $isCalendarActivatedStore || $isTodoListActivatedStore || $externalActionBarSvelteComponent.size > 0)}
+                                {#if $openedMenuStore === "appMenu" && ($roomListActivated || $isCalendarActivatedStore || $isTodoListActivatedStore || $externalActionBarSvelteComponent.size > 0)}
                                     <div class="flex justify-center m-auto absolute -left-1.5 top-[69px]">
                                         <img
                                             alt="Sub menu arrow"
@@ -561,9 +554,7 @@
                                                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                                                     <div
                                                         on:dragstart|preventDefault={noDrag}
-                                                        on:click={() => analyticsClient.openedRoomList()}
                                                         on:click={showRoomList}
-                                                        on:click={openAppMenu}
                                                         class="bottom-action-button"
                                                     >
                                                         <!--
@@ -611,9 +602,7 @@
                                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                                                 <div
                                                     on:dragstart|preventDefault={noDrag}
-                                                    on:click={() => analyticsClient.openExternalModuleCalendar()}
                                                     on:click={openExternalModuleCalendar}
-                                                    on:click={openAppMenu}
                                                     class="bottom-action-button"
                                                 >
                                                     <!--
@@ -633,7 +622,6 @@
                                                         class="hover:bg-white/10 rounded flex w-full space-x-2 items-center p-2"
                                                         class:!cursor-not-allowed={!$isCalendarActivatedStore}
                                                         class:!no-pointer-events={!$isCalendarActivatedStore}
-                                                        on:click={openAppMenu}
                                                         disabled={!$isCalendarActivatedStore}
                                                     >
                                                         <IconCalendar width="20" height="20" />
@@ -647,9 +635,7 @@
                                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                                                 <div
                                                     on:dragstart|preventDefault={noDrag}
-                                                    on:click={() => analyticsClient.openExternalModuleTodoList()}
                                                     on:click={openExternalModuleTodoList}
-                                                    on:click={openAppMenu}
                                                     class="bottom-action-button"
                                                 >
                                                     <!--
@@ -756,7 +742,7 @@
                                         tooltipDesc={$followStateStore === "active"
                                             ? $LL.actionbar.help.unfollow.desc()
                                             : $LL.actionbar.help.follow.desc()}
-                                        disabledHelp={appMenuOpened}
+                                        disabledHelp={$openedMenuStore !== undefined}
                                         state={$followStateStore === "active" ? "active" : "normal"}
                                         dataTestId={undefined}
                                     >
@@ -771,7 +757,7 @@
                                         }}
                                         tooltipTitle={$LL.actionbar.help.lock.title()}
                                         tooltipDesc={$LL.actionbar.help.lock.desc()}
-                                        disabledHelp={appMenuOpened}
+                                        disabledHelp={$openedMenuStore !== undefined}
                                         state={$currentPlayerGroupLockStateStore ? "forbidden" : "normal"}
                                         dataTestId="lock-button"
                                     >
@@ -806,7 +792,7 @@
                                               status: getStatusLabel($availabilityStatusStore),
                                           })
                                         : $LL.actionbar.help.mic.desc()}
-                                    disabledHelp={appMenuOpened}
+                                    disabledHelp={$openedMenuStore !== undefined}
                                     state={$microphoneButtonStateStore}
                                     dataTestId="microphone-button"
                                 >
@@ -860,7 +846,7 @@
                                               status: getStatusLabel($availabilityStatusStore),
                                           })
                                         : $LL.actionbar.help.cam.desc()}
-                                    disabledHelp={appMenuOpened}
+                                    disabledHelp={$openedMenuStore !== undefined}
                                     state={$cameraButtonStateStore}
                                     dataTestId="camera-button"
                                 >
@@ -885,7 +871,7 @@
                                     }}
                                     tooltipTitle={$LL.actionbar.help.share.title()}
                                     tooltipDesc={$LL.actionbar.help.share.desc()}
-                                    disabledHelp={appMenuOpened}
+                                    disabledHelp={$openedMenuStore !== undefined}
                                     state={!$screenSharingActivatedStore
                                         ? "disabled"
                                         : $requestedScreenSharingState && !$silentStore
@@ -1067,12 +1053,12 @@
                 <div
                     data-testid="action-user"
                     class="flex items-center relative transition-all hidden @md/actions:flex cursor-pointer pointer-events-auto"
-                    on:click={() => (profileMenuIsDropped = !profileMenuIsDropped)}
-                    on:click|preventDefault={close}
-                    on:blur={() => (profileMenuIsDropped = false)}
                 >
                     <div
                         class="group bg-contrast/80 backdrop-blur rounded-lg h-16 @sm/actions:h-14 @xl/actions:h-16 p-2"
+                        on:click|preventDefault={() => {
+                            openedMenuStore.toggle("profileMenu");
+                        }}
                     >
                         <div
                             class="flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded space-x-2 pl-2 pr-3"
@@ -1102,37 +1088,26 @@
                             <div>
                                 <ChevronDownIcon
                                     strokeWidth="2"
-                                    classList="transition-all opacity-50 {profileMenuIsDropped ? 'rotate-180' : ''}"
+                                    classList="transition-all opacity-50 {$openedMenuStore === 'profileMenu'
+                                        ? 'rotate-180'
+                                        : ''}"
                                     height="h-4"
                                     width="w-4"
                                 />
                             </div>
                         </div>
                     </div>
-                    {#if profileMenuIsDropped}
+                    {#if $openedMenuStore === "profileMenu"}
                         <div
                             class="absolute mt-2 top-14 @xl/actions:top-16 bg-contrast/80 backdrop-blur rounded-md p-1 w-56 right-0 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-transparent before:border-b-contrast/80 transition-all hidden @md/actions:block max-h-[calc(100vh-96px)] overflow-y-auto"
                             data-testid="profile-menu"
                             transition:fly={{ y: 40, duration: 150 }}
                             use:clickOutside={() => {
-                                profileMenuIsDropped = false;
+                                openedMenuStore.close("profileMenu");
                             }}
                         >
                             <div class="p-0 m-0 list-none">
-                                <a
-                                    href="https://workadventu.re/pricing/"
-                                    target="_blank"
-                                    class="group flex p-1 transition-all cursor-pointer text-sm font-bold w-full text-white no-underline bg-white/10 rounded hover:bg-white/20"
-                                >
-                                    <div class="flex items-center px-3 py-3 w-full">
-                                        <div class="w-full text-left leading-4">{$LL.actionbar.accountType()}</div>
-                                        <div class="">
-                                            <div class="btn btn-light btn-sm">
-                                                {$LL.actionbar.upgrade()}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </a>
+                                <ExternalComponents zone="menuTop" />
                                 <AvailabilityStatusList statusInformation={getStatusInformation(statusToShow)} />
                                 <div class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-2 relative bold">
                                     {$LL.menu.sub.profile()}
@@ -1175,16 +1150,16 @@
                                     </div>
                                     <div class="text-left leading-4 flex items-center">{$LL.actionbar.companion()}</div>
                                 </button>
-                                <button
-                                    class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
-                                >
-                                    <div
-                                        class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center"
-                                    >
-                                        <AchievementIcon />
-                                    </div>
-                                    <div class="text-left flex items-center">{$LL.actionbar.quest()}</div>
-                                </button>
+                                <!--                                <button-->
+                                <!--                                    class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"-->
+                                <!--                                >-->
+                                <!--                                    <div-->
+                                <!--                                        class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center"-->
+                                <!--                                    >-->
+                                <!--                                        <AchievementIcon />-->
+                                <!--                                    </div>-->
+                                <!--                                    <div class="text-left flex items-center">{$LL.actionbar.quest()}</div>-->
+                                <!--                                </button>-->
                                 <div class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-2 relative bold">
                                     Settings
                                 </div>
@@ -1205,6 +1180,7 @@
                                     class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
                                     id="settings"
                                     on:click={() => showMenuItem(SubMenusInterface.settings)}
+                                    on:click={() => openedMenuStore.close("profileMenu")}
                                 >
                                     <div
                                         class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center"
@@ -1242,16 +1218,22 @@
                         </div>
                     {/if}
                 </div>
-                <div use:clickOutside={() => (burgerOpen = false)}>
+                <div
+                    use:clickOutside={() => {
+                        openedMenuStore.close("burgerMenu");
+                    }}
+                >
                     <ActionBarButtonWrapper classList="group/btn-burger @lg:hidden rounded-r-lg pr-2">
                         <ActionBarIconButton
                             dataTestId="burger-menu"
                             on:click={() => {
-                                burgerOpen = !burgerOpen;
+                                openedMenuStore.toggle("burgerMenu");
                             }}
-                            on:blur={() => (burgerOpen = false)}
+                            on:blur={() => {
+                                openedMenuStore.close("burgerMenu");
+                            }}
                         >
-                            {#if !burgerOpen}
+                            {#if $openedMenuStore !== "burgerMenu"}
                                 <!-- pointer-events-none is important for clickOutside to work. Otherwise, the
                                      SVG is the target of the click, is removed from the DOM on click and considered to be
                                      outside the main div -->
@@ -1261,7 +1243,7 @@
                             {/if}
                         </ActionBarIconButton>
                     </ActionBarButtonWrapper>
-                    {#if burgerOpen}
+                    {#if $openedMenuStore === "burgerMenu"}
                         <div
                             class="mobile:bottom-16 w-48 bg-contrast/80 absolute right-2 top-auto z-[1000] py-4 rounded-lg text-right text-white no-underline pointer-events-auto block @lg:hidden before:content-[''] before:absolute before:w-0 before:h-0 sm:before:-top-[14px] sm:before:bottom-auto before:-bottom-4 before:top-auto before:rotate-180 sm:before:rotate-0 before:right-5 before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all"
                             transition:fly={{ y: 40, duration: 150 }}
@@ -1293,9 +1275,9 @@
                                 >
                                     {$LL.actionbar.companion()}
                                 </button>
-                                <button class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold">
+                                <!-- <button class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold">
                                     {$LL.actionbar.quest()}
-                                </button>
+                                </button> -->
                                 <button
                                     class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold"
                                     on:click={openEnableCameraScene}
@@ -1305,6 +1287,7 @@
                                 <button
                                     class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold"
                                     on:click={() => showMenuItem(SubMenusInterface.settings)}
+                                    on:click={() => openedMenuStore.close("burgerMenu")}
                                 >
                                     {$LL.actionbar.otherSettings()}
                                 </button>

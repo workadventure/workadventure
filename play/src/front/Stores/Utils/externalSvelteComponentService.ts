@@ -1,11 +1,33 @@
-import { ComponentType } from "svelte";
+import { ComponentProps, ComponentType, SvelteComponentTyped } from "svelte";
 import { writable } from "svelte/store";
-import { ExtensionModule, ExternalSvelteComponentServiceInterface } from "../../ExternalModule/ExtensionModule";
+import { ExternalSvelteComponentServiceInterface } from "../../ExternalModule/ExtensionModule";
 
 const externalComponentsByZone = {
-    actionBar: writable(new Map<string, { componentType: ComponentType; extensionModule: ExtensionModule }>()),
-    availabilityStatus: writable(new Map<string, { componentType: ComponentType; extensionModule: ExtensionModule }>()),
-    popup: writable(new Map<string, { componentType: ComponentType; extensionModule: ExtensionModule }>()),
+    actionBar: writable(
+        new Map<
+            string,
+            { componentType: ComponentType<SvelteComponentTyped>; props?: ComponentProps<SvelteComponentTyped> }
+        >()
+    ),
+    availabilityStatus: writable(
+        new Map<
+            string,
+            { componentType: ComponentType<SvelteComponentTyped>; props?: ComponentProps<SvelteComponentTyped> }
+        >()
+    ),
+    popup: writable(
+        new Map<
+            string,
+            { componentType: ComponentType<SvelteComponentTyped>; props?: ComponentProps<SvelteComponentTyped> }
+        >()
+    ),
+    // Components displayed at the top of the menu when the menu is open
+    menuTop: writable(
+        new Map<
+            string,
+            { componentType: ComponentType<SvelteComponentTyped>; props?: ComponentProps<SvelteComponentTyped> }
+        >()
+    ),
 };
 
 export type ExternalComponentZones = keyof typeof externalComponentsByZone;
@@ -15,14 +37,14 @@ class ExternalSvelteComponentService implements ExternalSvelteComponentServiceIn
         return externalComponentsByZone[zone];
     }
 
-    public addComponentToZone(
+    public addComponentToZone<Component extends SvelteComponentTyped>(
         zone: ExternalComponentZones,
         key: string,
-        extensionModule: ExtensionModule,
-        componentType: ComponentType
+        componentType: ComponentType<Component>,
+        props?: ComponentProps<Component>
     ) {
         externalComponentsByZone[zone].update((map) => {
-            map.set(key, { componentType, extensionModule });
+            map.set(key, { componentType, props });
             return map;
         });
     }
