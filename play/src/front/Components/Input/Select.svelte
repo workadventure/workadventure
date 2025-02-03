@@ -47,6 +47,8 @@
                 {#each options as { value: optionValue, label: optionLabel } (optionValue)}
                     <option value={optionValue}>{optionLabel}</option>
                 {/each}
+
+                <slot />
             </select>
         </div>
     {/if}

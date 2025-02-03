@@ -40,12 +40,6 @@
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     import { IconAlertTriangle } from "@wa-icons";
 
-    let triggerOptions = [
-        { value: undefined, label: $LL.mapEditor.properties.linkProperties.triggerShowImmediately() },
-        { value: "onicon", label: $LL.mapEditor.properties.linkProperties.triggerOnClick() },
-        { value: "onaction", label: $LL.mapEditor.properties.linkProperties.triggerOnAction() },
-    ];
-
     export let property: OpenWebsitePropertyData;
     export let triggerOnActionChoosen: boolean = property.trigger === "onaction";
     export let triggerOptionActivated = true;
@@ -715,9 +709,14 @@
                 label={$LL.mapEditor.properties.linkProperties.trigger()}
                 type="select"
                 bind:value={property.trigger}
-                options={triggerOptions}
                 onChange={onTriggerValueChange}
-            />
+            >
+                <option value={undefined}>{$LL.mapEditor.properties.linkProperties.triggerShowImmediately()}</option>
+                {#if !property.newTab}
+                    <option value="onicon">{$LL.mapEditor.properties.linkProperties.triggerOnClick()}</option>
+                {/if}
+                <option value="onaction">{$LL.mapEditor.properties.linkProperties.triggerOnAction()}</option>
+            </Select>
         {/if}
 
         <div class="value-input flex flex-col">
