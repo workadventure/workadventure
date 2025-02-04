@@ -21,6 +21,8 @@
     import { proximityMeetingStore } from "../Stores/MyMediaStore";
     import { notificationPlayingStore } from "../Stores/NotificationStore";
     import { popupStore } from "../Stores/PopupStore";
+    import { visibilityStore } from "../Stores/VisibilityStore";
+    import { streamableCollectionStore } from "../Stores/StreamableCollectionStore";
     import { mapEditorAskToClaimPersonalAreaStore, mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
     import { gameManager, GameSceneNotFoundError } from "../Phaser/Game/GameManager";
@@ -53,6 +55,7 @@
     import MediaBox from "./Video/MediaBox.svelte";
     import PresentationLayout from "./EmbedScreens/Layouts/PresentationLayout.svelte";
     import ExternalComponents from "./ExternalModules/ExternalComponents.svelte";
+    import PictureInPicture from "./Video/PictureInPicture.svelte";
     let keyboardEventIsDisable = false;
 
     const handleFocusInEvent = (event: FocusEvent) => {
@@ -224,6 +227,11 @@
             <ActionBar />
         </div>
     </div>
+
+    {#if $visibilityStore == false && $streamableCollectionStore.size > 0}
+        <PictureInPicture />
+    {/if}
+
 
     {#if $actionsMenuStore}
         <ActionsMenu />

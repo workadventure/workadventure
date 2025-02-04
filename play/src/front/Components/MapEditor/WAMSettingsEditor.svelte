@@ -77,7 +77,7 @@
                         WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone
                     )}
             >
-                <span>Megaphone</span>
+                <span>{$LL.mapEditor.settings.megaphone.title()}</span>
                 <IconChevronRight class={`-mr-2`} />
             </li>
         </ul>

@@ -3,22 +3,16 @@
 
     let searchActive = false;
     import { chatSearchBarValue, navChat, joignableRoom } from "../Stores/ChatStore";
-    import {
-        ENABLE_CHAT,
-        ENABLE_CHAT_DISCONNECTED_LIST,
-        ENABLE_CHAT_ONLINE_LIST,
-    } from "../../Enum/EnvironmentVariable";
     import LoadingSmall from "../images/loading-small.svelte";
     import LL from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { UserProviderMerger } from "../UserProviderMerger/UserProviderMerger";
+    import OnlineUsersCount from "./OnlineUsersCount.svelte";
     import { IconMessageCircle2, IconSearch, IconUsers, IconX } from "@wa-icons";
-
     const gameScene = gameManager.getCurrentGameScene();
     const chat = gameManager.chatConnection;
-    const showNavBar = (ENABLE_CHAT_ONLINE_LIST || ENABLE_CHAT_DISCONNECTED_LIST) && ENABLE_CHAT;
+    const showNavBar = gameScene.room.isChatOnlineListEnabled || gameScene.room.isChatDisconnectedListEnabled;
     const userProviderMergerPromise = gameScene.userProviderMerger;
-    let userWorldCount = gameScene.worldUserCounter;
     let searchLoader = false;
     const chatStatusStore = chat.connectionStatus;
     let typingTimer: ReturnType<typeof setTimeout>;
@@ -94,14 +88,9 @@
                 {$LL.chat.users()}
             {/if}
         </div>
-        <div class="flex items-center justify-center text-success space-x-1.5 {searchActive ? 'hidden' : ''}">
-            <div
-                class="text-xs aspect-square min-w-5 h-5 px-1 border border-solid border-success flex items-center justify-center font-bold rounded-sm"
-            >
-                {$userWorldCount}
-            </div>
-            <div class="text-xs font-bold">{$LL.chat.onlineUsers()}</div>
-        </div>
+        {#if gameScene.room.isChatOnlineListEnabled}
+            <OnlineUsersCount {searchActive} />
+        {/if}
     </div>
     <div class="">
         {#if $chatStatusStore !== "OFFLINE"}

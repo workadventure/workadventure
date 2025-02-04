@@ -1,6 +1,5 @@
 <script lang="ts">
     import { closeModal } from "svelte-modals";
-    import Select from "svelte-select";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import { CreateRoomOptions } from "../../Connection/ChatConnection";
     import { gameManager } from "../../../Phaser/Game/GameManager";
@@ -8,7 +7,7 @@
     import { IconHelpCircle, IconLoader } from "../../../Components/Icons";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
     import { chatInputFocusStore } from "../../../Stores/ChatStore";
-
+    import SelectMatrixUser from "../SelectMatrixUser.svelte";
     export let isOpen: boolean;
     export let parentID: string | undefined;
     let createFolderOptions: CreateRoomOptions = { visibility: "public", description: "" };
@@ -41,19 +40,6 @@
     function notifyUserForFolderCreation() {
         notificationPlayingStore.playNotification($LL.chat.createFolder.creationSuccessNotification());
     }
-    async function searchMembers(filterText: string) {
-        try {
-            const chatUsers = await chat.searchChatUsers(filterText);
-            if (chatUsers === undefined) {
-                return [];
-            }
-            return chatUsers.map((user) => ({ value: user.id, label: user.name ?? user.id }));
-        } catch (error) {
-            console.error(error);
-        }
-
-        return [];
-    }
 
     function focusChatInput() {
         // Disable input manager to prevent the game from receiving the input
@@ -62,6 +48,10 @@
     function unfocusChatInput() {
         // Enable input manager to allow the game to receive the input
         chatInputFocusStore.set(false);
+    }
+
+    function handleSelectMatrixUserError(e: CustomEvent) {
+        createFolderError = e.detail.error;
     }
 </script>
 
@@ -117,24 +107,12 @@
                 id=""
                 on:keypress={() => {}}
             />
-            <p class="p-0 m-0 pl-1 font-bold">{$LL.chat.createFolder.users()}</p>
-            <Select
+            <p class="tw-p-0 tw-m-0 tw-pl-1 tw-font-bold">{$LL.chat.createFolder.users()}</p>
+            <SelectMatrixUser
+                on:error={handleSelectMatrixUserError}
                 bind:value={createFolderOptions.invite}
-                multiple
-                class="!border-light-purple border border-solid !bg-contrast !rounded-md"
-                inputStyles="box-shadow:none !important"
-                --border-focused="2px solid rgb(146 142 187)"
-                --input-color="white"
-                --item-color="black"
-                --item-hover-color="black"
-                --clear-select-color="red"
-                loadOptions={searchMembers}
                 placeholder={$LL.chat.createFolder.users()}
-            >
-                <div slot="item" let:item>
-                    {`${item.label} (${item.value})`}
-                </div>
-            </Select>
+            />
         {/if}
     </div>
 

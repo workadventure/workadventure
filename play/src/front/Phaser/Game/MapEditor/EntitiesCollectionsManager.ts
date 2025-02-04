@@ -55,20 +55,30 @@ export class EntitiesCollectionsManager {
             for (const descriptor of collectionDescriptors) {
                 const promise = this.fetchRawCollection(descriptor.url);
                 fetchUrlPromises.push(promise);
-                promise
-                    .then((entityCollectionRaw) => {
-                        entityCollectionRaw = entitiesFileMigration.migrate(entityCollectionRaw);
-                        entityCollections.push({
-                            collection: this.parseRawCollection(entityCollectionRaw, descriptor.type),
-                            url: descriptor.url,
-                        });
-                    })
-                    .catch((error) => console.warn(error));
             }
 
             //TODO check tagSet and this.currentCollection
             Promise.allSettled(fetchUrlPromises)
-                .then(() => {
+                .then((promises) => {
+                    for (let i = 0; i < promises.length; i++) {
+                        const promise = promises[i];
+                        const descriptor = collectionDescriptors[i];
+                        if (promise.status === "fulfilled") {
+                            let entityCollectionRaw = promise.value;
+                            try {
+                                entityCollectionRaw = entitiesFileMigration.migrate(entityCollectionRaw);
+                                entityCollections.push({
+                                    collection: this.parseRawCollection(entityCollectionRaw, descriptor.type),
+                                    url: descriptor.url,
+                                });
+                            } catch (error) {
+                                console.error("Error while parsing entity collection", descriptor.url, error);
+                            }
+                        } else {
+                            console.error("Error while loading entity collection", descriptor.url, promise.reason);
+                        }
+                    }
+
                     for (const { collection, url } of entityCollections) {
                         const tagSet = new Set<string>();
                         collection.collection.forEach((entity: EntityPrefab) => {

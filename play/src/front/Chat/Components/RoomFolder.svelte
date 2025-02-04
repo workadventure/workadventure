@@ -1,33 +1,34 @@
 <script lang="ts">
     // eslint-disable-next-line import/no-unresolved
-    import { get, Readable } from "svelte/store";
-    import { ChatRoom, RoomFolder } from "../Connection/ChatConnection";
+    import { get } from "svelte/store";
+    import { RoomFolder, ChatRoom } from "../Connection/ChatConnection";
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue } from "../Stores/ChatStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import Room from "./Room/Room.svelte";
     import CreateRoomOrFolderOption from "./Room/CreateRoomOrFolderOption.svelte";
     import ShowMore from "./ShowMore.svelte";
+    import RoomInvitation from "./Room/RoomInvitation.svelte";
     import { IconChevronUp } from "@wa-icons";
-    export let folders: Readable<Map<string, RoomFolder>>;
-    export let rooms: Readable<Map<string, ChatRoom>>;
-    export let name: Readable<string>;
-    export let isGuest: boolean;
-    export let id: string;
+
     export let rootFolder: boolean;
+    export let folder: RoomFolder;
+    $: ({ name, folders, invitations, rooms, id } = folder);
     let isOpen: boolean = localUserStore.hasFolderOpened(id) ?? false;
 
     const isFoldersOpen: { [key: string]: boolean } = {};
 
-    $: filteredRoom = Array.from($rooms.values())
+    $: filteredRoom = $rooms
         .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
         .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
 
-    $folders.forEach((folder) => {
+    $folders?.forEach((folder) => {
         if (!(folder.id in isFoldersOpen)) {
             isFoldersOpen[folder.id] = false;
         }
     });
+
+    let displayRoomInvitations = ($invitations?.length ?? 0) > 0;
 
     function toggleFolder() {
         isOpen = !isOpen;
@@ -58,9 +59,7 @@
                     {$name}
                 </div>
             </button>
-            {#if isGuest === false}
-                <CreateRoomOrFolderOption parentID={id} parentName={$name} />
-            {/if}
+            <CreateRoomOrFolderOption {folder} parentID={id} parentName={$name} />
         </div>
 
         <button
@@ -73,20 +72,20 @@
 
     {#if isOpen}
         <div class="flex flex-col overflow-auto">
+            {#if displayRoomInvitations}
+                <div class="flex flex-col overflow-auto pl-3 pr-4 pb-3">
+                    <ShowMore items={$invitations} maxNumber={8} idKey="id" let:item={room}>
+                        <RoomInvitation {room} />
+                    </ShowMore>
+                </div>
+            {/if}
             {#each Array.from($folders.values()) as folder (folder.id)}
-                <svelte:self
-                    id={folder.id}
-                    name={folder.name}
-                    folders={folder.folders}
-                    rooms={folder.rooms}
-                    {isGuest}
-                    rootFolder={false}
-                />
+                <svelte:self {folder} rootFolder={false} />
             {/each}
             <ShowMore items={filteredRoom} maxNumber={8} idKey="id" let:item={room} showNothingToDisplayMessage={false}>
                 <Room {room} />
             </ShowMore>
-            {#if $rooms.size === 0 && $folders.size === 0}
+            {#if $rooms.length === 0 && $folders.length === 0}
                 <p
                     class={`${
                         rootFolder ? "self-center text-md text-gray-500" : "py-2 px-3 m-0 text-white/50 italic text-sm"

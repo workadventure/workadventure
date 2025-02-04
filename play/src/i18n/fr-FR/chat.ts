@@ -69,6 +69,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     open: "Ouvrir",
     me: "Moi",
     you: "Vous",
+    addNew: "Ajouter un nouveau : ",
     ban: {
         title: "Bannir",
         content: "Bannir l'utilisateur {userName} du monde courant. Cela peut être annulé depuis l'administration.",
@@ -296,6 +297,12 @@ const chat: DeepPartial<Translation["chat"]> = {
         muteRoom: "Couper les notification",
         unmuteRoom: "Activer les notifications",
     },
+    folderMenu: {
+        leaveFolder: {
+            label: "Quitter le dossier",
+            notification: "Vous avez quitté le dossier",
+        },
+    },
     e2ee: {
         configure: "Configuré",
         encryptionNotConfigured: "Chiffrement non configuré",
@@ -370,7 +377,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         from: "depuis",
     },
     requiresLoginForChat: "Identifiez-vous pour accéder aux messages du chat",
-    featureComingSoon: "Prochainement disponible !",
     emojis: {
         Dog: "Chien",
         Cat: "Chat",
@@ -437,6 +443,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         Folder: "Dossier",
         Pin: "Punaise",
         unknownLabel: "Label Inconnu",
+    },
+    fileAttachment: {
+        title: "Pièce jointe",
+        description: "Téléchargez un fichier pour le partager",
+        featureComingSoon: "Fonctionnalité à venir !",
     },
 };
 
