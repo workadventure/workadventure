@@ -12,7 +12,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         content: "Der Zugriff auf Kamera und Mikrofon muss im Browser freigegeben werden.",
         firefoxContent:
             'Bitte klicke auf die Schaltfläche "Diese Entscheidung speichern", um erneute Nachfragen nach der Freigabe in Firefox zu verhindern.',
-        refresh: "Aktualisieren",
         continue: "Ohne Kamera fortfahren",
         screen: {
             firefox: "/resources/help-setting-camera-permission/de-DE-firefox.png",
