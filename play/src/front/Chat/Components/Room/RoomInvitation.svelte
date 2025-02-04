@@ -11,9 +11,10 @@
 
     function joinRoom() {
         loadingInvitation = true;
+
         room.joinRoom()
             .then(() => {
-                selectedRoomStore.set(room);
+                if (!room.isRoomFolder) selectedRoomStore.set(room);
             })
             .finally(() => {
                 loadingInvitation = false;
@@ -43,7 +44,7 @@
             <IconLoader class="animate-spin" />
         </div>
     {:else}
-        <div class="flex">
+        <div class="flex gap-1">
             <button
                 class="border border-solid border-danger text-danger hover:bg-danger-400/10 rounded text-xs py-1 px-2 m-0"
                 on:click={() => leaveRoom()}

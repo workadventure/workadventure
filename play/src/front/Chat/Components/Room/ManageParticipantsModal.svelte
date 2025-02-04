@@ -1,5 +1,4 @@
 <script lang="ts">
-    import Select from "svelte-select";
     import { closeModal } from "svelte-modals";
     import { fade } from "svelte/transition";
     import { get } from "svelte/store";
@@ -7,18 +6,14 @@
     import { ChatRoomMembershipManagement, ChatRoomModeration } from "../../Connection/ChatConnection";
     import LL from "../../../../i18n/i18n-svelte";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
-    import { searchChatMembersRule } from "./searchChatMembersRule";
+    import SelectMatrixUser from "../SelectMatrixUser.svelte";
     import RoomParticipant from "./RoomParticipant.svelte";
     import { IconLoader } from "@wa-icons";
-
     export let isOpen: boolean;
     export let room: ChatRoomMembershipManagement & ChatRoomModeration;
     const members = room.members;
 
-    const { searchMembers } = searchChatMembersRule();
-
     let invitations: { value: string; label: string }[] = [];
-    let filterText = "";
     let sendingInvitationsToRoom = false;
     let invitationToRoomError: string | undefined = undefined;
 
@@ -38,6 +33,10 @@
             setTimeout(() => (invitationToRoomError = undefined), 2000);
         }
     }
+
+    function handleSelectMatrixUserError(e: CustomEvent) {
+        invitationToRoomError = e.detail.error;
+    }
 </script>
 
 <Popup {isOpen}>
@@ -53,24 +52,11 @@
                     {$LL.chat.manageRoomUsers.error()} : <b><i>{invitationToRoomError}</i></b>
                 </div>
             {/if}
-            <Select
+            <SelectMatrixUser
+                on:error={handleSelectMatrixUserError}
                 bind:value={invitations}
-                multiple
-                class="!border-light-purple border border-solid !bg-contrast !rounded-md"
-                inputStyles="box-shadow:none !important"
-                --border-focused="2px solid rgb(146 142 187)"
-                --input-color="white"
-                --item-color="black"
-                --item-hover-color="black"
-                --clear-select-color="red"
-                loadOptions={searchMembers}
-                bind:filterText
                 placeholder={$LL.chat.createRoom.users()}
-            >
-                <div slot="item" let:item>
-                    {`${item.label} (${item.value})`}
-                </div>
-            </Select>
+            />
             <div class="max-h-96 overflow-auto">
                 <table class="w-full border-separate border-spacing-2">
                     <thead>

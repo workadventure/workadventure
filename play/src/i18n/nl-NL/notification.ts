@@ -3,7 +3,7 @@ import type { DeepPartial } from "../DeepPartial";
 
 const notification: DeepPartial<Translation["notification"]> = {
     discussion: "{name} wil met je praten",
-    message: "stuurt een bericht",
+    message: "{name} stuurt een bericht",
     askToMuteMicrophone: "Vraag om je microfoon te dempen 🙏",
     askToMuteCamera: "Vraag om je camera te dempen 🙏",
     help: {

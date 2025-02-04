@@ -36,7 +36,7 @@
     let rooms = chat.rooms;
     //TODO : Make a distinction between invitations to a room or a space;
     let roomInvitations = chat.invitations;
-    let roomFolders = chat.roomFolders;
+    let roomFolders = chat.folders;
     let proximityHasUnreadMessages = proximityChatRoom.hasUnreadMessages;
 
     let displayDirectRooms = false;
@@ -281,47 +281,44 @@
                         </div>
                     {/if}
 
-                    <button
-                        class="group relative px-3 m-0 mb-2 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center border border-solid border-x-0 border-t border-b-0 border-white/10"
-                        on:click={toggleDisplayRooms}
-                        data-testid="roomAccordeon"
-                    >
-                        <div class="flex items-center space-x-2 grow m-0 p-0">
-                            <div class="text-sm font-bold tracking-widest uppercase grow text-left">
-                                {$LL.chat.rooms()}
-                            </div>
-                        </div>
-                        {#if $isGuest === false}
-                            <CreateRoomOrFolderOption />
-                        {/if}
-                        <button
-                            class="transition-all group-hover:bg-white/10 p-1 rounded-lg aspect-square flex items-center justify-center text-white"
+                    <div class="flex items-center space-x-2 grow m-0 p-0">
+                        <!-- TODO : use div instead of button to avoid focus issues try to find a better solution -->
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <div
+                            class="group relative px-3 m-0 mb-2 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center border border-solid border-x-0 border-t border-b-0 border-white/10"
+                            on:click={toggleDisplayRooms}
+                            data-testid="roomAccordeon"
                         >
+                            <div class="flex items-center space-x-2 grow m-0 p-0">
+                                <div
+                                    class="text-sm font-bold tracking-widest uppercase grow text-left"
+                                >
+                                    {$LL.chat.rooms()}
+                                </div>
+                            </div>
+                            <CreateRoomOrFolderOption parentID={undefined} parentName={""} folder={undefined} />
+                            <button
+                            class="transition-all group-hover:bg-white/10 p-1 rounded-lg aspect-square flex items-center justify-center text-white"
+                            >
                             <IconChevronUp class={`transform transition ${!displayRooms ? "" : "rotate-180"}`} />
-                        </button>
-                    </button>
+                            </button>
+                        </div>
+                    </div>
                     {#if displayRooms}
                         <div class="px-2 pb-2">
                             <ShowMore items={filteredRooms} maxNumber={8} idKey="id" let:item={room}>
                                 <Room {room} />
                             </ShowMore>
                         </div>
-                        <!--roomBySpace-->
                     {/if}
+                    <!--roomBySpace-->
                     {#each Array.from($roomFolders.values()) as rootRoomFolder (rootRoomFolder.id)}
-                        <RoomFolder
-                            name={rootRoomFolder.name}
-                            folders={rootRoomFolder.folders}
-                            rooms={rootRoomFolder.rooms}
-                            isGuest={$isGuest}
-                            id={rootRoomFolder.id}
-                            rootFolder={true}
-                        />
+                        <RoomFolder folder={rootRoomFolder} rootFolder={true} />
                     {/each}
                 {/if}
             </div>
             {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}
-                <div class="sticky bottom-0 w-full backdrop-blur-md mt-3">
+                <div class="fixed bottom-0 w-full backdrop-blur-md mt-3">
                     <button
                         data-testid="restoreEncryptionButton"
                         on:click|stopPropagation={initChatConnectionEncryption}

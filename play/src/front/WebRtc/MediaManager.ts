@@ -12,7 +12,6 @@ import {
     proximityMeetingStore,
 } from "../Stores/MyMediaStore";
 import { MediaStreamConstraintsError } from "../Stores/Errors/MediaStreamConstraintsError";
-import { localUserStore } from "../Connection/LocalUserStore";
 import { LL } from "../../i18n/i18n-svelte";
 import { localeDetector } from "../../i18n/locales";
 import { popupStore } from "../Stores/PopupStore";
@@ -22,19 +21,8 @@ import PopUpSharingScreenAcessDenied from "../Components/PopUp/PopUpSharingScree
 export type StartScreenSharingCallback = (media: MediaStream) => void;
 export type StopScreenSharingCallback = (media: MediaStream) => void;
 
-export enum NotificationType {
-    discussion = 1,
-    message,
-}
-
-//TODO add parameter to manage time to send notification
-const TIME_NOTIFYING_MILLISECOND = 10000;
-
 export class MediaManager {
     private userInputManager?: UserInputManager;
-
-    private canSendNotification = true;
-    private canPlayNotificationMessage = true;
 
     constructor() {
         localeDetector()
@@ -125,62 +113,6 @@ export class MediaManager {
 
     public setUserInputManager(userInputManager: UserInputManager) {
         this.userInputManager = userInputManager;
-    }
-
-    public hasNotification(): boolean {
-        if (this.canSendNotification && Notification.permission === "granted") {
-            return localUserStore.getNotification();
-        } else {
-            return false;
-        }
-    }
-
-    public createNotification(userName: string, notificationType: NotificationType, chatRoom: string | null = null) {
-        if (document.hasFocus()) {
-            return;
-        }
-
-        if (this.hasNotification()) {
-            const options = {
-                icon: "/static/images/logo-WA-min.png",
-                image: "/static/images/logo-WA-min.png",
-                badge: "/static/images/logo-WA-min.png",
-            };
-            switch (notificationType) {
-                case NotificationType.discussion:
-                    new Notification(`${get(LL).notification.discussion({ name: userName })}`, options);
-                    break;
-                case NotificationType.message:
-                    new Notification(
-                        `${userName} ${get(LL).notification.message()} ${
-                            chatRoom !== null && get(LL).notification.chatRoom() + " " + chatRoom
-                        }`,
-                        options
-                    );
-                    break;
-            }
-            this.canSendNotification = false;
-            setTimeout(() => (this.canSendNotification = true), TIME_NOTIFYING_MILLISECOND);
-        }
-    }
-
-    public playNewMessageNotification() {
-        //play notification message
-        const elementAudioNewMessageNotification = document.getElementById("newMessageSound");
-        if (
-            this.canPlayNotificationMessage &&
-            elementAudioNewMessageNotification &&
-            elementAudioNewMessageNotification instanceof HTMLAudioElement
-        ) {
-            elementAudioNewMessageNotification.volume = 0.2;
-            elementAudioNewMessageNotification
-                .play()
-                .then(() => {
-                    this.canPlayNotificationMessage = false;
-                    return setTimeout(() => (this.canPlayNotificationMessage = true), TIME_NOTIFYING_MILLISECOND);
-                })
-                .catch((err) => console.error("Trying to play notification message error: ", err));
-        }
     }
 }
 

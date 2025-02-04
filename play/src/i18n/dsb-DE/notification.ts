@@ -3,7 +3,7 @@ import type { Translation } from "../i18n-types";
 
 const notification: DeepPartial<Translation["notification"]> = {
     discussion: "{name} co z tobu diskutěrowaś",
-    message: "sćelo śi powěsć",
+    message: "{name} sćelo śi powěsć",
     chatRoom: "we forumje",
 };
 

@@ -305,7 +305,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         content_3: " 体験を続けるにはログインしてください。",
     },
     requiresLoginForChat: "チャットメッセージにアクセスするにはログインしてください。",
-    featureComingSoon: "近日公開予定！",
+    fileAttachment: {
+        title: "ファイル添付",
+        description: "ファイルをアップロードして共有する",
+        featureComingSoon: "近日公開予定！",
+    },
 };
 
 export default chat;

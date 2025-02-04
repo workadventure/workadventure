@@ -44,7 +44,6 @@ import {
     ADMIN_URL,
     DEBUG_MODE,
     ENABLE_CHAT_DISCONNECTED_LIST,
-    ENABLE_CHAT_ONLINE_LIST,
     ENABLE_MAP_EDITOR,
     ENABLE_OPENID,
     MAX_PER_GROUP,
@@ -1089,7 +1088,6 @@ export class GameScene extends DirtyScene {
         this.scriptingOutputAudioStreamManager?.close();
         this.scriptingInputAudioStreamManager?.close();
         this._spaceRegistry?.destroy();
-
         // We need to destroy all the entities
         get(extensionModuleStore).forEach((extensionModule) => {
             extensionModule.destroy();
@@ -1586,7 +1584,7 @@ export class GameScene extends DirtyScene {
                             userProviders.push(new ChatUserProvider(chatConnection));
                         }
 
-                        if (allUserSpace && ENABLE_CHAT_ONLINE_LIST && this._room.isChatOnlineListEnabled) {
+                        if (allUserSpace && this._room.isChatOnlineListEnabled) {
                             this.worldUserProvider = new WorldUserProvider(allUserSpace);
                             userProviders.push(this.worldUserProvider);
                         }
