@@ -650,23 +650,23 @@ div.emoji-picker {
 
 /* Popper arrow placement */ 
 
-.popper-tooltip[data-popper-placement^='top'] > .popper-arrow {
+.popper-tooltip[data-popper-placement^='top'] .popper-arrow {
     bottom: -4px;
-  }
+}
   
-  .popper-tooltip[data-popper-placement^='bottom'] > .popper.arrow {
+.popper-tooltip[data-popper-placement^='bottom'] .popper-arrow {
     top: -4px;
-  }
+}
   
-  .popper-tooltip[data-popper-placement^='left'] > .popper-arrow {
+.popper-tooltip[data-popper-placement^='left'] .popper-arrow {
     right: -4px;
-  }
+}
   
-  .popper-tooltip[data-popper-placement^='right'] > .popper-arrow {
+.popper-tooltip[data-popper-placement^='right'] .popper-arrow {
     left: -4px;
-  }
+}
 
-  .popper-arrow,
+.popper-arrow,
 .popper-arrow::before {
   position: absolute;
   width: 8px;

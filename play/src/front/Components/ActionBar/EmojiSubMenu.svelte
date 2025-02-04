@@ -12,7 +12,6 @@
     import { mapEditorModeStore } from "../../Stores/MapEditorStore";
     import { inputFormFocusStore } from "../../Stores/UserInputStore";
 
-    import tooltipArrow from "../images/arrow-top.svg";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import XIcon from "../Icons/XIcon.svelte";
     import PenIcon from "../Icons/PenIcon.svelte";
@@ -96,16 +95,15 @@
 
 <svelte:window on:keydown={onKeyDown} />
 <div
-    class="flex justify-center m-auto absolute left-0 -right-2 top-[70px] w-auto z-[500]"
+    class="flex justify-center m-auto w-auto z-[500]"
     transition:fly={{ y: 20, duration: 150 }}
-    use:clickOutside={() => emoteMenuStore.closeEmoteMenu()}
+    use:clickOutside={() => {
+        console.log("CLICKOUTSIDE");
+        if (!$emoteMenuStore) {
+            activeSecondaryZoneActionBarStore.set(undefined);
+        }
+    }}
 >
-    <img
-        loading="eager"
-        src={tooltipArrow}
-        alt="Sub menu arrow"
-        class="content-[''] absolute -top-1 left-0 right-0 m-auto w-2 h-1"
-    />
     <div
         class="bottom-action-bar bg-contrast/80 transition-all backdrop-blur-md rounded-md px-1 flex flex-col items-stretch pointer-events-auto justify-center m-auto bottom-6 md:bottom-4 z-[251] duration-300 md:flex-row"
     >
@@ -180,4 +178,5 @@
             -->
         </div>
     </div>
+    <div class="popper-arrow bg-contrast/80" data-popper-arrow />
 </div>
