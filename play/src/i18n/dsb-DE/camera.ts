@@ -12,7 +12,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         content: "Pśistup ku kamerje a mikrofonoju musy se zwóliś we browseru.",
         firefoxContent:
             'Klikni na bublin "Te nastajenja zachowaś", aby njemusali kuždy raz wótnowotki to zwólenje we Firefoxu aktiwěrowaś',
-        refresh: "Aktualizěrowaś",
         continue: "Dalej mimo kamery",
         screen: {
             firefox: "/resources/help-setting-camera-permission/de-DE-chrome.png",

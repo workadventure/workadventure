@@ -12,7 +12,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         content: "ブラウザからカメラとマイクへのアクセスを許可する必要があります。",
         firefoxContent:
             "今後 Firefox からの問い合わせを受けたくない場合は「今後も同様に処理する」にチェックを付けてください。",
-        refresh: "更新",
         continue: "カメラなしで続ける",
         screen: {
             firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
