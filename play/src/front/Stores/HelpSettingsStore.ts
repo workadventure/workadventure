@@ -1,6 +1,6 @@
 import { writable } from "svelte/store";
-import { popupStore } from "./PopupStore";
 import HelpCameraSettingsPopup from "../Components/HelpSettings/HelpCameraSettingsPopup.svelte";
+import { popupStore } from "./PopupStore";
 
 export function showHelpCameraSettings() {
     popupStore.addPopup(HelpCameraSettingsPopup, {}, "cameraAccessDenied");
