@@ -37,6 +37,7 @@
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import Input from "../../Input/Input.svelte";
     import Select from "../../Input/Select.svelte";
+    import RangeSlider from "../../Input/RangeSlider.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     import { IconAlertTriangle } from "@wa-icons";
 
@@ -853,17 +854,19 @@
             {/if}
             {#if !property.newTab}
                 <div class="">
-                    <label for="websiteWidth"
+                    <!-- <label for="websiteWidth"
                         >{$LL.mapEditor.properties.linkProperties.width()}: {property.width ?? 50}%</label
-                    >
-                    <input
+                    > -->
+
+                    <RangeSlider
                         id="websiteWidth"
-                        type="range"
-                        min="1"
-                        max="75"
-                        placeholder="50"
+                        min={1}
+                        label={$LL.mapEditor.properties.linkProperties.width()}
+                        max={75}
                         bind:value={property.width}
                         on:change={onValueChange}
+                        variant="secondary"
+                        buttonShape="square"
                     />
                 </div>
 
