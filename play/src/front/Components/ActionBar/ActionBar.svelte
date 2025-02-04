@@ -1,17 +1,11 @@
 <script lang="ts">
-    import { derived, get, Readable, writable } from "svelte/store";
+    import { get, writable } from "svelte/store";
     import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
     import { clickOutside } from "svelte-outside";
     import { AvailabilityStatus } from "@workadventure/messages";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
-    import {
-        requestedCameraState,
-        requestedMicrophoneState,
-        silentStore,
-        enableCameraSceneVisibilityStore,
-        availabilityStatusStore,
-    } from "../../Stores/MediaStore";
+    import { silentStore, enableCameraSceneVisibilityStore, availabilityStatusStore } from "../../Stores/MediaStore";
     import tooltipArrow from "../images/arrow-top.svg";
 
     import HelpTooltip from "../Tooltip/HelpTooltip.svelte";
@@ -42,7 +36,6 @@
         MenuKeys,
         subMenusStore,
         userIsConnected,
-        screenSharingActivatedStore,
         backOfficeMenuVisibleStore,
         globalMessageVisibleStore,
         mapMenuVisibleStore,
@@ -75,15 +68,9 @@
     import { EnableCameraScene, EnableCameraSceneName } from "../../Phaser/Login/EnableCameraScene";
     import MessageCircleIcon from "../Icons/MessageCircleIcon.svelte";
     import UsersIcon from "../Icons/UsersIcon.svelte";
-    import CamOffIcon from "../Icons/CamOffIcon.svelte";
-    import CamOnIcon from "../Icons/CamOnIcon.svelte";
     import FollowIcon from "../Icons/FollowIcon.svelte";
     import LockIcon from "../Icons/LockIcon.svelte";
     import LockOpenIcon from "../Icons/LockOpenIcon.svelte";
-    import MicOffIcon from "../Icons/MicOffIcon.svelte";
-    import MicOnIcon from "../Icons/MicOnIcon.svelte";
-    import ScreenShareOffIcon from "../Icons/ScreenShareOffIcon.svelte";
-    import ScreenShareIcon from "../Icons/ScreenShareIcon.svelte";
     import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
     import ProfilIcon from "../Icons/ProfilIcon.svelte";
     import CamSettingsIcon from "../Icons/CamSettingsIcon.svelte";
@@ -113,6 +100,9 @@
     import MediaSettingsList from "./MediaSettingsList.svelte";
     import AvailabilityStatusList from "./AvailabilityStatus/AvailabilityStatusList.svelte";
     import EmojiMenuItem from "./MenuIcons/EmojiMenuItem.svelte";
+    import CameraMenuItem from "./MenuIcons/CameraMenuItem.svelte";
+    import MicrophoneMenuItem from "./MenuIcons/MicrophoneMenuItem.svelte";
+    import ScreenSharingMenuItem from "./MenuIcons/ScreenSharingMenuItem.svelte";
     import { IconArrowDown, IconCheckList, IconCalendar, IconLogout, IconMusic } from "@wa-icons";
 
     // gameManager.currenwStartedRoom?.miniLogo ?? WorkAdventureImg;
@@ -140,33 +130,6 @@
 
     function hideModeOn() {
         hideMode.set(!get(hideMode));
-    }
-
-    function microphoneClick(): void {
-        if ($silentStore) return;
-        if ($requestedMicrophoneState === true) {
-            requestedMicrophoneState.disableMicrophone();
-        } else {
-            requestedMicrophoneState.enableMicrophone();
-        }
-    }
-
-    function cameraClick(): void {
-        if ($silentStore) return;
-        if ($requestedCameraState === true) {
-            requestedCameraState.disableWebcam();
-        } else {
-            requestedCameraState.enableWebcam();
-        }
-    }
-
-    function screenSharingClick(): void {
-        if ($silentStore) return;
-        if ($requestedScreenSharingState === true) {
-            requestedScreenSharingState.disableScreenSharing();
-        } else {
-            requestedScreenSharingState.enableScreenSharing();
-        }
     }
 
     // Still needed ?
@@ -335,40 +298,22 @@
         openedMenuStore.close("appMenu");
     }
 
+    function screenSharingClick(): void {
+        analyticsClient.screenSharing();
+        if ($silentStore) return;
+        if ($requestedScreenSharingState === true) {
+            requestedScreenSharingState.disableScreenSharing();
+        } else {
+            requestedScreenSharingState.enableScreenSharing();
+        }
+    }
+
     const statusToShow: Array<RequestedStatus | AvailabilityStatus.ONLINE> = [
         AvailabilityStatus.ONLINE,
         AvailabilityStatus.BUSY,
         AvailabilityStatus.BACK_IN_A_MOMENT,
         AvailabilityStatus.DO_NOT_DISTURB,
     ];
-
-    const cameraButtonStateStore: Readable<"active" | "disabled" | "normal" | "forbidden"> = derived(
-        [availabilityStatusStore, requestedCameraState],
-        ([$availabilityStatusStore, $requestedCameraState]) => {
-            if (
-                $availabilityStatusStore === AvailabilityStatus.AWAY ||
-                $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
-                $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB
-            ) {
-                return "disabled";
-            }
-            return $requestedCameraState ? "normal" : "forbidden";
-        }
-    );
-
-    const microphoneButtonStateStore: Readable<"active" | "disabled" | "normal" | "forbidden"> = derived(
-        [availabilityStatusStore, requestedMicrophoneState],
-        ([$availabilityStatusStore, $requestedMicrophoneState]) => {
-            if (
-                $availabilityStatusStore === AvailabilityStatus.AWAY ||
-                $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
-                $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB
-            ) {
-                return "disabled";
-            }
-            return $requestedMicrophoneState ? "normal" : "forbidden";
-        }
-    );
 
     const externalActionBarSvelteComponent = externalSvelteComponentService.getComponentsByZone("actionBar");
 </script>
@@ -742,31 +687,7 @@
                     <!-- ACTION WRAPPER : CAM & MIC -->
                     <div class="group/hardware flex items-center relative">
                         {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore && $myMicrophoneStore}
-                            <ActionBarButtonWrapper classList="group/btn-mic peer/mic">
-                                <ActionBarIconButton
-                                    on:click={() => {
-                                        analyticsClient.microphone();
-                                        microphoneClick();
-                                    }}
-                                    tooltipTitle={$microphoneButtonStateStore === "disabled"
-                                        ? $LL.actionbar.help.micDisabledByStatus.title()
-                                        : $LL.actionbar.help.mic.title()}
-                                    tooltipDesc={$microphoneButtonStateStore === "disabled"
-                                        ? $LL.actionbar.help.micDisabledByStatus.desc({
-                                              status: getStatusLabel($availabilityStatusStore),
-                                          })
-                                        : $LL.actionbar.help.mic.desc()}
-                                    disabledHelp={$openedMenuStore !== undefined}
-                                    state={$microphoneButtonStateStore}
-                                    dataTestId="microphone-button"
-                                >
-                                    {#if $requestedMicrophoneState && !$silentStore}
-                                        <MicOnIcon />
-                                    {:else}
-                                        <MicOffIcon />
-                                    {/if}
-                                </ActionBarIconButton>
-                            </ActionBarButtonWrapper>
+                            <MicrophoneMenuItem />
                         {/if}
                         {#if smallArrowVisible}
                             <div
@@ -796,60 +717,14 @@
                         {/if}
                         <!-- NAV : CAMERA START -->
                         {#if !$inExternalServiceStore && $myCameraStore && !$silentStore}
-                            <ActionBarButtonWrapper classList="group/btn-cam">
-                                <ActionBarIconButton
-                                    on:click={() => {
-                                        analyticsClient.camera();
-                                        cameraClick();
-                                    }}
-                                    tooltipTitle={$cameraButtonStateStore === "disabled"
-                                        ? $LL.actionbar.help.camDisabledByStatus.title()
-                                        : $LL.actionbar.help.cam.title()}
-                                    tooltipDesc={$cameraButtonStateStore === "disabled"
-                                        ? $LL.actionbar.help.camDisabledByStatus.desc({
-                                              status: getStatusLabel($availabilityStatusStore),
-                                          })
-                                        : $LL.actionbar.help.cam.desc()}
-                                    disabledHelp={$openedMenuStore !== undefined}
-                                    state={$cameraButtonStateStore}
-                                    dataTestId="camera-button"
-                                >
-                                    {#if $requestedCameraState && !$silentStore}
-                                        <CamOnIcon />
-                                    {:else}
-                                        <CamOffIcon />
-                                    {/if}
-                                </ActionBarIconButton>
-                            </ActionBarButtonWrapper>
+                            <CameraMenuItem />
                         {/if}
                         <!-- NAV : CAMERA END -->
 
                         <!-- NAV : SCREENSHARING START -->
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         {#if $bottomActionBarVisibilityStore}
-                            <ActionBarButtonWrapper classList="group/btn-screen-share">
-                                <ActionBarIconButton
-                                    on:click={() => {
-                                        analyticsClient.screenSharing();
-                                        screenSharingClick();
-                                    }}
-                                    tooltipTitle={$LL.actionbar.help.share.title()}
-                                    tooltipDesc={$LL.actionbar.help.share.desc()}
-                                    disabledHelp={$openedMenuStore !== undefined}
-                                    state={!$screenSharingActivatedStore
-                                        ? "disabled"
-                                        : $requestedScreenSharingState && !$silentStore
-                                        ? "active"
-                                        : "normal"}
-                                    dataTestId="screenShareButton"
-                                >
-                                    {#if $requestedScreenSharingState && !$silentStore}
-                                        <ScreenShareOffIcon />
-                                    {:else}
-                                        <ScreenShareIcon />
-                                    {/if}
-                                </ActionBarIconButton>
-                            </ActionBarButtonWrapper>
+                            <ScreenSharingMenuItem />
 
                             {#if camMenuIsDropped}
                                 <div
