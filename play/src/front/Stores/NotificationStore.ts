@@ -1,4 +1,5 @@
 import { writable } from "svelte/store";
+import { v4 as uuid } from "uuid";
 
 export type Notification = {
     id: string;
@@ -17,7 +18,7 @@ function createNotificationStore() {
         playNotification: (text: string, icon?: string, id?: string) => {
             update((list) => {
                 list.add({
-                    id: id ?? crypto.randomUUID(),
+                    id: id ?? uuid(),
                     text,
                     icon,
                 });

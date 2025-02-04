@@ -80,7 +80,7 @@ export const openChatRoom = async (chatID: string) => {
         if (!room) room = await chatConnection.createDirectRoom(chatID);
         if (!room) throw new Error("Failed to create room");
 
-        if (room.myMembership === "invite") {
+        if (get(room.myMembership) === "invite") {
             room.joinRoom().catch((error: unknown) => console.error(error));
         }
 

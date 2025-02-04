@@ -1,13 +1,17 @@
 <script lang="ts">
     import { openModal } from "svelte-modals";
     import LL from "../../../../i18n/i18n-svelte";
-    import CreateRoomModal from "./CreateRoomModal.svelte";
+    import { notificationPlayingStore } from "../../../Stores/NotificationStore";
+    import { RoomFolder } from "../../Connection/ChatConnection";
+
     import CreateFolderModal from "./CreateFolderModal.svelte";
+    import CreateRoomModal from "./CreateRoomModal.svelte";
     import RoomOption from "./RoomMenu/RoomOption.svelte";
-    import { IconDots, IconFolder, IconMessage } from "@wa-icons";
+    import { IconDots, IconFolder, IconLogout, IconMessage } from "@wa-icons";
 
     export let parentID: string | undefined = undefined;
     export let parentName = "";
+    export let folder: RoomFolder | undefined;
     let optionButtonRef: HTMLButtonElement | undefined = undefined;
     let hideFolderOptions = true;
 
@@ -17,17 +21,26 @@
         }
         hideFolderOptions = !hideFolderOptions;
     }
+    function openCreateSpace() {
+        openModal(CreateFolderModal, {
+            parentID,
+        });
+        hideFolderOptions = true;
+    }
     function closeMenuAndOpenCreateRoom() {
         openModal(CreateRoomModal, {
             parentID,
         });
         hideFolderOptions = true;
     }
-    function openCreateSpace() {
-        openModal(CreateFolderModal, {
-            parentID,
-        });
-        hideFolderOptions = true;
+    function closeMenuAndLeaveFolder() {
+        toggleSpaceOption();
+        folder
+            ?.leaveRoom()
+            .then(() => {
+                notificationPlayingStore.playNotification($LL.chat.roomMenu.leaveRoom.notification());
+            })
+            .catch(() => console.error("Failed to leave room"));
     }
 </script>
 
@@ -58,4 +71,13 @@
         title={$LL.chat.createFolder.title()}
         on:click={openCreateSpace}
     />
+
+    {#if folder}
+        <RoomOption
+            IconComponent={IconLogout}
+            title={$LL.chat.folderMenu.leaveFolder.label()}
+            bg="tw-bg-danger/50 hover:tw-bg-danger"
+            on:click={closeMenuAndLeaveFolder}
+        />
+    {/if}
 </div>

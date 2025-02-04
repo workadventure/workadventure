@@ -324,7 +324,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         content_3: " Per favore, accedi per procedere con l'esperienza.",
     },
     requiresLoginForChat: "Accedi per accedere ai messaggi della chat",
-    featureComingSoon: "Funzione in arrivo!",
+    fileAttachment: {
+        title: "Allega file",
+        description: "Allega un file alla tua chat",
+        featureComingSoon: "Funzionalità in arrivo!",
+    },
 };
 
 export default chat;

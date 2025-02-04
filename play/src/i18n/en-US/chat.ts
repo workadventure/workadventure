@@ -40,6 +40,7 @@ const chat: BaseTranslation = {
     searchChat: "Search for channel, message, etc ...",
     people: "People",
     rooms: "Rooms",
+    addNew: "Add new : ",
     invitations: "Invitations",
     availableRooms: "Available rooms",
     proximity: "Proximity Chat",
@@ -296,6 +297,12 @@ const chat: BaseTranslation = {
         muteRoom: "Mute Room",
         unmuteRoom: "Unmute Room",
     },
+    folderMenu: {
+        leaveFolder: {
+            label: "Leave Folder",
+            notification: "You have left the folder",
+        },
+    },
     e2ee: {
         configure: "Configure",
         encryptionNotConfigured: "Encryption not configured",
@@ -370,7 +377,6 @@ const chat: BaseTranslation = {
         from: "from",
     },
     requiresLoginForChat: "Sign in to access the chat messages",
-    featureComingSoon: "Feature coming soon!",
     emojis: {
         Dog: "Dog",
         Cat: "Cat",
@@ -437,6 +443,11 @@ const chat: BaseTranslation = {
         Folder: "Folder",
         Pin: "Pin",
         unknownLabel: "Unknown Label",
+    },
+    fileAttachment: {
+        title: "File attachment",
+        description: "Upload and share a file",
+        featureComingSoon: "Coming soon!",
     },
 };
 
