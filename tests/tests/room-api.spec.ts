@@ -1,11 +1,12 @@
 import {chromium, expect, test} from '@playwright/test';
 import { createRoomApiClient } from '../../libs/room-api-clients/room-api-client-js/src';
 import {Value} from "../../libs/room-api-clients/room-api-client-js/src/compiled_proto/google/protobuf/struct";
-import { gotoWait200 } from './utils/containers';
-import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
 import {RENDERER_MODE} from "./utils/environment";
 import {maps_domain, play_url, publicTestMapUrl} from "./utils/urls";
+import { getCoWebsiteIframe } from "./utils/iframe";
+import {getPage } from "./utils/auth";
+import {isMobile} from "./utils/isMobile";
 
 const apiKey = process.env.ROOM_API_SECRET_KEY;
 
@@ -19,66 +20,50 @@ const roomUrl = `${play_url}/_/room-api/${maps_domain}/tests/Variables/shared_va
 const variableName = "textField";
 
 test.describe('Room API', async () => {
-    test("With a bad API key", async ({ browser }, { project }) => {
-        // Skip test for mobile device
-        if(project.name === "mobilechromium") {
+    test.beforeEach(async ({ browserName, page }) => {
+        // This test does not depend on the browser. Let's only run it in Chromium.
+        if(browserName !== "chromium" || isMobile(page)) {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
         }
-      
+    });
+    test("With a bad API key", async ({ browser }) => {
         // This test does not depend on the browser. Let's only run it in Chromium.
         if(browser.browserType() !== chromium) {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
         }
-
         const badClient = createRoomApiClient("BAD KEY", process.env.ROOM_API_HOSTNAME ?? "room-api.workadventure.localhost", process.env.ROOM_API_PORT ? Number(process.env.ROOM_API_PORT) : 80);
-
         try {
             await badClient.saveVariable({
                  name: variableName,
                  room: roomUrl,
                  value: 'Bad Value',
             });
-
             throw new Error("Should not be here");
         } catch (error) {
             expect(error.message).toContain("UNAUTHENTICATED: Wrong API key");
         }
     });
-
-    test("Save & read a variable", async ({ page, browser }, { project }) => {
-        // Skip test for mobile device
-        if(project.name === "mobilechromium") {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
-
+    test("Save & read a variable", async ({ browser }) => {
         // This test does not depend on the browser. Let's only run it in Chromium.
         if(browser.browserType() !== chromium) {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
         }
-
         const newValue =  "New Value - " + Math.random().toString(36).substring(2,7);
+        const page = await getPage(browser, "Alice", roomUrl + "?phaserMode=" + RENDERER_MODE);
 
-        await gotoWait200(page, roomUrl+"?phaserMode="+RENDERER_MODE);
-        await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
-
-        const textField = page
-            .frameLocator('#cowebsite-buffer iframe')
-            .locator('#textField');
+        const textField = getCoWebsiteIframe(page).locator("#textField");
 
         await expect(client.saveVariable({
             name: variableName,
             room: roomUrl,
             value: newValue,
         })).resolves.not.toThrow();
-
         // Check reading on browser
         await expect(textField).toHaveValue(newValue);
 
@@ -89,16 +74,12 @@ test.describe('Room API', async () => {
 
         // Check reading on GRPC
         expect(Value.unwrap(value)).toEqual(newValue);
+
+        await page.close();
+        await page.context().close();
     });
 
-    test("Listen to a variable", async ({ page, browser }, { project }) => {
-        // Skip test for mobile device
-        if(project.name === "mobilechromium") {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
-
+    test("Listen to a variable", async ({ browser }) => {
         // This test does not depend on the browser. Let's only run it in Chromium.
         if(browser.browserType() !== chromium) {
             //eslint-disable-next-line playwright/no-skipped-test
@@ -112,13 +93,9 @@ test.describe('Room API', async () => {
             name: variableName,
             room: roomUrl,
         });
+        const page = await getPage(browser, "Alice", roomUrl + "?phaserMode=" + RENDERER_MODE);
 
-        await gotoWait200(page, roomUrl+"?phaserMode="+RENDERER_MODE);
-        await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
-
-        const textField = page
-            .frameLocator('#cowebsite-buffer iframe')
-            .locator('#textField');
+        const textField = getCoWebsiteIframe(page).locator("#textField");
 
         setTimeout(async () => {
             await expect(client.saveVariable({
@@ -133,16 +110,12 @@ test.describe('Room API', async () => {
             await expect(textField).toHaveValue(newValue);
             break;
         }
+
+        await page.close();
+        await page.context().close();
     });
 
-    test("Listen to an event emitted from the game", async ({ page, browser }, { project }) => {
-        // Skip test for mobile device
-        if(project.name === "mobilechromium") {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
-
+    test("Listen to an event emitted from the game", async ({ browser }) => {
         // This test does not depend on the browser. Let's only run it in Chromium.
         if(browser.browserType() !== chromium) {
             //eslint-disable-next-line playwright/no-skipped-test
@@ -164,9 +137,7 @@ test.describe('Room API', async () => {
         })().then(() => {
             resolved = true;
         })
-
-        await page.goto(publicTestMapUrl("tests/E2E/empty.json", "room-api"));
-        await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "room-api"));
 
         await evaluateScript(page, async () => {
             await WA.onInit();
@@ -175,30 +146,23 @@ test.describe('Room API', async () => {
         });
 
         await expect.poll(() => resolved).toBeTruthy();
+
+        await page.close();
+        await page.context().close();
     });
 
-    test("Send an event from the Room API", async ({ page, browser }, { project }) => {
-        // Skip test for mobile device
-        if(project.name === "mobilechromium") {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
-
+    test("Send an event from the Room API", async ({ browser }) => {
         // This test does not depend on the browser. Let's only run it in Chromium.
         if(browser.browserType() !== chromium) {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
         }
-
-        await page.goto(publicTestMapUrl("tests/E2E/empty.json", "room-api"));
-        await login(page, 'Alice', 2, 'en-US', project.name === "mobilechromium");
+        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "room-api"));
 
         let gotExpectedBroadcastNotification = false;
         page.on('console', async (msg) => {
             const text = await msg.text();
-            //console.log(text);
             if (text === 'Broadcast event triggered') {
                 gotExpectedBroadcastNotification = true;
             }
@@ -225,5 +189,8 @@ test.describe('Room API', async () => {
         });
 
         await expect.poll(() => gotExpectedBroadcastNotification).toBe(true);
+
+        await page.close();
+        await page.context().close();
     });
 });

@@ -1,25 +1,22 @@
 import {expect, test} from '@playwright/test';
-import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
 import {publicTestMapUrl} from "./utils/urls";
+import { getPage } from './utils/auth';
+import {isMobile} from "./utils/isMobile";
 
 test.describe('Button in action bar', () => {
-    test('test', async ({ page }, { project }) => {
-        // Skip test for mobile device
-        if(project.name === "mobilechromium") {
+    test.beforeEach(async ({ page }) => {
+        if (isMobile(page)) {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
         }
-      
-        // Go to WorkAdventure platform
-        await page.goto(
+    });
+    test('test', async ({ browser }) => {
+        
+        const page = await getPage(browser, 'Alice',
             publicTestMapUrl("tests/E2E/empty.json", "buttonactionbar_script")
         );
-
-        // Login Alice
-        await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
-
         // Use script to add new button
         await evaluateScript(page, async () => {
             return WA.ui.actionBar.addButton({
@@ -30,32 +27,27 @@ test.describe('Button in action bar', () => {
                 }
             });
         });
-
         // Click on the register button
         await page.getByText('Register').click();
-
         // Check if the register button is hidden
         await expect(page.getByText('Register')).toHaveCount(0);
+        await page.close();
+        await page.context().close();
     });
 });
 
 test.describe('Action button in action bar', () => {
-    test('test', async ({ page }, { project }) => {
-        // Skip test for mobile device
-        if(project.name === "mobilechromium") {
+    test.beforeEach(async ({ page }) => {
+        if (isMobile(page)) {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
         }
-      
-        // Go to WorkAdventure platform
-        await page.goto(
+    });
+    test('test', async ({ browser }) => {
+        const page = await getPage(browser, 'Alice', 
             publicTestMapUrl("tests/E2E/empty.json", "buttonactionbar_script")
         );
-
-        // Login Alice
-        await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
-
         // Use script to add new button
         await evaluateScript(page, async () => {
             return WA.ui.actionBar.addButton({
@@ -68,14 +60,14 @@ test.describe('Action button in action bar', () => {
                 }
             });
         });
-
         /**
          *  TODO apply this when API scripting will released
-         */
+         **/
         // Click on the register button
         await page.locator('#register-btn').click();
-
         // Check if the register button is hidden
         await expect(page.locator('#register-btn')).toHaveCount(0);
+        await page.close();
+        await page.context().close();
     });
 });

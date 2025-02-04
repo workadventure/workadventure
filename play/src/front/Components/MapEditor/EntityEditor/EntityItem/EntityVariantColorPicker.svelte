@@ -5,13 +5,13 @@
 </script>
 
 {#if colors.length > 1}
-    <p class="tw-m-0 tw-text-xxs">Colors</p>
-    <div class="tw-flex tw-flex-row tw-gap-2">
+    <p class="m-0 text-xxs">Colors</p>
+    <div class="flex flex-row gap-2">
         {#each colors as color (color)}
-            <div class={`hover:tw-cursor-pointer`}>
+            <div class={`hover:cursor-pointer`}>
                 <button
-                    class={`tw-w-4 tw-h-4 tw-rounded-full tw-p-0 ${
-                        selectedColor === color ? "tw-border-solid tw-border-yellow-400 tw-rounded-full" : ""
+                    class={`w-4 h-4 rounded-full p-0 ${
+                        selectedColor === color ? "border-solid border-yellow-400 rounded-full" : ""
                     }`}
                     style="background-color: {color};"
                     on:click={() => onColorChange(color)}

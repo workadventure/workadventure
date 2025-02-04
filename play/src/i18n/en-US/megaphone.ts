@@ -6,6 +6,7 @@ const megaphone: BaseTranslation = {
         selectMicrophone: "Select a microphone 🎙️",
         liveMessage: {
             startMegaphone: "Start megaphone",
+            stopMegaphone: "Stop megaphone",
             goingToStream: "You are going to stream",
             yourMicrophone: "your microphone",
             yourCamera: "your camera",

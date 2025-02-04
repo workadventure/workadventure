@@ -1,11 +1,14 @@
 import type { BaseTranslation } from "../i18n-types";
 
 const notification: BaseTranslation = {
-    discussion: "wants to discuss with you",
+    discussion: "{name} wants to discuss with you",
     message: "sends a message",
     chatRoom: "in the chat room",
-    askToMuteMicrophone: "Ask to mute your Microphone 🙏",
-    askToMuteCamera: "Ask to mute your Camera 🙏",
+    askToMuteMicrophone: "Can I mute your microphone?",
+    askToMuteCamera: "Can I mute your camera?",
+    microphoneMuted: "Your microphone was muted by a moderator",
+    cameraMuted: "Your camera was muted by a moderator",
+    announcement: "Announcement",
     help: {
         title: "Notifications access denied",
         permissionDenied: "Permission denied",

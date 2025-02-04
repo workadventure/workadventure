@@ -104,7 +104,7 @@ export const jitsiLocalTracksStore = derived<
             const newTracks = await JitsiMeetJS.createLocalTracks({ devices: requestedDevices });
             if (!(newTracks instanceof Array)) {
                 // newTracks is a JitsiConferenceError
-                console.error("jitsiLocalTracksStore", newTracks);
+                //   console.error("jitsiLocalTracksStore", newTracks);
                 set(failure(new Error("Error when creating Jitsi local track: " + newTracks)));
                 oldDevices = structuredClone($jitsiDevicesStore);
                 return oldDevices;

@@ -25,19 +25,19 @@
     const { content, isMyMessage, type, canDelete } = message;
 </script>
 
-<div class="tw-flex tw-flex-row tw-gap-1 tw-items-center">
+<div class="flex flex-row gap-1 items-center">
     {#if message.type !== "text"}
         <a
             href={$content.url}
             download={$content.body}
-            class="tw-p-0 tw-m-0 tw-text-white/50 hover:tw-text-white tw-transition-all"
+            class="p-0 m-0 text-white/50 hover:text-white transition-all"
             target="_blank"
         >
-            <IconArrowDown font-size={16} class="hover:tw-cursor-pointer" />
+            <IconArrowDown font-size={16} class="hover:cursor-pointer" />
         </a>
     {/if}
     <button
-        class="tw-p-0 tw-m-0 tw-text-white/50 hover:tw-text-white tw-transition-all hover:tw-cursor-pointer"
+        class="p-0 m-0 text-white/50 hover:text-white transition-all hover:cursor-pointer"
         data-testid="replyToMessageButton"
         on:click={replyToMessage}
     >
@@ -46,7 +46,7 @@
     <EmojiButton on:change={addReaction} />
     {#if isMyMessage && type === "text"}
         <button
-            class="tw-p-0 tw-m-0 tw-text-white/50 hover:tw-text-white tw-transition-all hover:tw-cursor-pointer"
+            class="p-0 m-0 text-white/50 hover:text-white transition-all hover:cursor-pointer"
             data-testid="editMessageButton"
             on:click={selectMessageToEdit}
         >
@@ -55,7 +55,7 @@
     {/if}
     {#if $canDelete}
         <button
-            class="tw-p-0 tw-m-0 tw-text-white/50 hover:tw-text-white tw-transition-all hover:tw-cursor-pointer"
+            class="p-0 m-0 text-white/50 hover:text-white transition-all hover:cursor-pointer"
             data-testid="removeMessageButton"
             on:click={removeMessage}
         >

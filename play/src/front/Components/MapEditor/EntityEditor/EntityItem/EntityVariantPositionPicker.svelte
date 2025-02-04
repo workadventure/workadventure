@@ -8,15 +8,13 @@
 </script>
 
 {#if entityPrefabsPositions.length > 1}
-    <p class="tw-m-0 tw-text-xxs">Positions</p>
-    <div class="tw-flex tw-flex-row tw-gap-2">
+    <p class="m-0 text-xxs">Positions</p>
+    <div class="flex flex-row gap-2">
         {#each entityPrefabsPositions as item (item.id)}
-            <div class="hover:tw-cursor-pointer" on:click={() => onPickItem(item)}>
+            <div class="hover:cursor-pointer" on:click={() => onPickItem(item)}>
                 <img
-                    class={`hover:tw-cursor-pointer item-image tw-max-w-[32px] ${
-                        item.imagePath === selectedEntity?.imagePath
-                            ? "tw-border-solid tw-border-yellow-400 tw-rounded-sm"
-                            : ""
+                    class={`hover:cursor-pointer item-image max-w-[32px] ${
+                        item.imagePath === selectedEntity?.imagePath ? "border-solid border-yellow-400 rounded-sm" : ""
                     }`}
                     src={item.imagePath}
                     alt={item.name}

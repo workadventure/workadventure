@@ -2,18 +2,10 @@ import { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const actionbar: DeepPartial<Translation["actionbar"]> = {
-    chat: "チャットの表示／非表示",
-    follow: "フォローする",
-    unfollow: "フォローしない",
-    lock: "会話のロック／アンロック",
-    screensharing: "画面共有の開始／停止",
-    layout: "タイル表示の切り替え",
-    disableLayout: "ミーティング参加者が1人の場合は利用できません",
-    camera: "カメラの開始／停止",
-    microphone: "ミュート／ミュート解除",
-    emoji: "絵文字の表示／非表示",
-    disableMegaphone: "メガホンの無効化",
-    menu: "メニューの表示／非表示",
+    //layout: "タイル表示の切り替え",
+    //disableLayout: "ミーティング参加者が1人の場合は利用できません",
+    //disableMegaphone: "メガホンの無効化",
+    //menu: "メニューの表示／非表示",
     mapEditor: "マップエディターの表示／非表示",
     mapEditorMobileLocked: "マップエディタ―はモバイルモードではロックされています",
     mapEditorLocked: "マップエディターはロックされています 🔐",
@@ -25,8 +17,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     app: "アプリケーションの表示／非表示",
     listStatusTitle: {
         enable: "ステータスの変更",
-        inMeeting: "よいミーティングを 🤓",
-        inSilentZone: "サイレントゾーンを楽しんで 😁",
     },
 
     status: {
@@ -36,8 +26,34 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         BUSY: "忙しい",
     },
     globalMessage: "グローバルメッセージの送信",
-    roomList: "ルームリストの表示／非表示",
-    appList: "アプリリストの表示／非表示",
+    //roomList: "ルームリストの表示／非表示",
+    //appList: "アプリリストの表示／非表示",
+    help: {
+        chat: {
+            title: "チャットの表示／非表示",
+        },
+        follow: {
+            title: "フォローする",
+        },
+        unfollow: {
+            title: "フォローしない",
+        },
+        lock: {
+            title: "会話のロック／アンロック",
+        },
+        share: {
+            title: "画面共有の開始／停止",
+        },
+        mic: {
+            title: "ミュート／ミュート解除",
+        },
+        cam: {
+            title: "カメラの開始／停止",
+        },
+        emoji: {
+            title: "絵文字の表示／非表示",
+        },
+    },
 };
 
 export default actionbar;

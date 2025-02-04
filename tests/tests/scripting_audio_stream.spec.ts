@@ -1,37 +1,30 @@
-import {chromium, expect, test} from "@playwright/test";
+import { expect, test} from "@playwright/test";
 import { evaluateScript } from "./utils/scripting";
-import { login } from "./utils/roles";
 import Map from "./utils/map";
 import {publicTestMapUrl} from "./utils/urls";
+import { getPage} from "./utils/auth";
+import {isMobile} from "./utils/isMobile";
 
 test.describe("Scripting audio streams", () => {
+  test.beforeEach(async ({ browserName, page }) => {
+    // This test does not depend on the browser. Let's only run it in Chromium.
+    if (browserName !== "chromium" || isMobile(page)) {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+  });
   test("can play and listen to sounds", async ({
-    page,
     browser,
   }, { project }) => {
     // This test runs only on Chrome
     // Firefox fails it because the sample rate must be equal to the microphone sample rate
     // Safari fails it because Safari
-    if(browser.browserType() !== chromium || project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
-
-    await page.goto(
-        publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream")
-    );
-    await login(page, "bob", 3, "us-US", false);
-
+    const page = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"));
     await Map.teleportToPosition(page, 32, 32);
 
     // Open new page for alice
-    const newBrowser = await browser.newContext();
-    const alice = await newBrowser.newPage();
-    await alice.goto(
-        publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream")
-    );
-    await login(alice, "alice", 4, "us-US", false);
+    const alice = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"));
 
     // Move alice to the same position as bob
     await Map.teleportToPosition(alice, 32, 32);
@@ -82,6 +75,8 @@ test.describe("Scripting audio streams", () => {
     await expect.poll(() => evaluateScript(page, () => window.streamInterrupted)).toBe(true);
 
     await alice.close();
-    await newBrowser.close();
+    await alice.context().close();
+    await page.close();
+    await page.context().close();
   });
 });

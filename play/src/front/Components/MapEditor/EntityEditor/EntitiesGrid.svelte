@@ -10,12 +10,12 @@
 </script>
 
 {#if entityPrefabVariants.length === 0}
-    <div class="tw-flex tw-flex-col tw-items-center tw-text-gray-500">
+    <div class="flex flex-col items-center text-gray-500">
         <IconPhotoOff />
         <p>{$LL.mapEditor.entityEditor.noImage()}</p>
     </div>
 {:else}
-    <div class="tw-grid tw-grid-cols-[repeat(auto-fit,minmax(64px,3.6em))] tw-gap-2 tw-justify-center">
+    <div class="grid grid-cols-[repeat(auto-fit,minmax(64px,3.6em))] gap-2 justify-center">
         {#each entityPrefabVariants as entityPrefabVariant (entityPrefabVariant.defaultPrefab.id)}
             <EntityItem
                 on:selectEntity={(event) => onSelectEntity(event.detail)}

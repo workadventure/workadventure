@@ -22,6 +22,7 @@ import video from "./video";
 import statusModal from "./statusModal";
 import area from "./area";
 import externalModule from "./externalModule";
+import form from "./form";
 
 const en_US: BaseTranslation = {
     area,
@@ -47,6 +48,7 @@ const en_US: BaseTranslation = {
     video,
     statusModal,
     externalModule,
+    form,
 };
 
 export default en_US;

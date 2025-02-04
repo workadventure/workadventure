@@ -11,7 +11,7 @@
 </script>
 
 <button
-    class="add-property-button tooltip tw-p-4 tw-flex tw-justify-center tw-items-center"
+    class="add-property-button tooltip p-4 flex justify-center items-center"
     data-testid={testId}
     {style}
     on:click={() => {
@@ -20,30 +20,62 @@
     }}
     {disabled}
 >
-    <div
-        class="tw-w-10 tw-h-10 tw-flex tw-flex-wrap tw-items-center tw-justify-center"
-        style={disabled ? `opacity: 0.5;` : ""}
-    >
-        <img draggable="false" class="tw-max-w-[75%] tw-max-h-[75%]" src={img} alt="info icon" />
+    <div class="w-10 h-10 flex flex-wrap items-center justify-center" style={disabled ? `opacity: 0.5;` : ""}>
+        <img draggable="false" class="max-w-[75%] max-h-[75%]" src={img} alt="info icon" />
     </div>
-    <span class="tooltiptext tw-text-xs">
-        <p class="tw-text-sm tw-mb-2">{headerText}</p>
+    <span class="tooltiptext text-xs">
+        <p class="text-sm mb-2">{headerText}</p>
         {descriptionText}
     </span>
 </button>
 
 <style lang="scss">
-    .add-property-button {
-        --tw-border-opacity: 1;
-        border-color: rgb(77 75 103 / var(--tw-border-opacity));
+    .tooltip {
+        position: relative;
+        display: inline-block;
+    }
+
+    .tooltip .tooltiptext {
+        visibility: hidden;
+        position: absolute;
+        bottom: 100%;
+        align-items: center;
+        border-radius: 0.25rem;
         --tw-bg-opacity: 1;
-        background-color: rgb(27 27 41 / var(--tw-bg-opacity));
+        background-color: rgb(56 56 74 / var(--tw-bg-opacity));
+        padding: 1.25rem 0.75rem;
+        text-align: center;
         --tw-text-opacity: 1;
+        color: rgb(255 255 255 / var(--tw-text-opacity));
+    }
+
+    .tooltip:hover .tooltiptext {
+        visibility: visible;
+    }
+
+    .tooltip .tooltiptext:after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 2.5rem;
+        border-style: solid;
+        margin-left: -5px;
+        border-width: 5px;
+        border-color: #38384a transparent transparent transparent;
+    }
+
+    .add-property-button {
+        --border-opacity: 1;
+        border-color: rgb(77 75 103 / var(--border-opacity));
+        --bg-opacity: 1;
+        background-color: rgb(27 27 41 / var(--bg-opacity));
+        --text-opacity: 1;
         color: gray;
         border-radius: 10px;
         position: relative;
         display: flex;
         flex-direction: column;
+        margin: 0.25rem 0.125rem;
 
         .tooltiptext {
             top: 100%;

@@ -4,9 +4,9 @@
     export let label: string;
 </script>
 
-<div class="tw-text-gray-400 tw-text-xl tw-flex tw-flex-col tw-items-center tw-my-10 tw-gap-2">
-    <IconLoader class="tw-animate-[spin_2s_linear_infinite]" font-size={40} />
-    <p class="tw-m-0">
+<div class="text-gray-400 text-xl flex flex-col items-center my-10 gap-2">
+    <IconLoader class="animate-[spin_2s_linear_infinite]" font-size={40} />
+    <p class="m-0">
         {label}
     </p>
 </div>

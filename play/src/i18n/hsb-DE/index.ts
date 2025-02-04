@@ -19,6 +19,7 @@ import actionbar from "./actionbar";
 import mapEditor from "./mapEditor";
 import megaphone from "./megaphone";
 import video from "./video";
+import form from "./form";
 
 const hsb_DE = merge(en_US, {
     audio,
@@ -40,6 +41,7 @@ const hsb_DE = merge(en_US, {
     mapEditor,
     megaphone,
     video,
+    form,
 });
 
 export default hsb_DE;

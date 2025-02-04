@@ -33,6 +33,8 @@
     import { ExtensionModule, ExtensionModuleAreaProperty } from "../../../ExternalModule/ExtensionModule";
     import MatrixRoomPropertyEditor from "../PropertyEditor/MatrixRoomPropertyEditor.svelte";
     import TooltipPropertyButton from "../PropertyEditor/TooltipPropertyButton.svelte";
+    import InputSwitch from "../../Input/InputSwitch.svelte";
+    import Input from "../../Input/Input.svelte";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
@@ -394,8 +396,8 @@
 {#if $mapEditorSelectedAreaPreviewStore === undefined}
     {$LL.mapEditor.areaEditor.editInstructions()}
 {:else}
-    <div class="tw-overflow-auto">
-        <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
+    <div class="overflow-auto space-y-3">
+        <div class="properties-buttons flex flex-row flex-wrap">
             {#if !hasPersonalAreaProperty && !hasRightsProperty}
                 <AddPropertyButtonWrapper
                     property="personalAreaPropertyData"
@@ -409,7 +411,7 @@
                 />
             {/if}
         </div>
-        <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
+        <div class="properties-buttons flex flex-row flex-wrap">
             {#if !hasFocusableProperty}
                 <AddPropertyButtonWrapper
                     property="focusable"
@@ -500,7 +502,7 @@
             {/if}
         </div>
         {#if extensionModulesAreaMapEditor.length > 0}
-            <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-mt-2">
+            <div class="properties-buttons flex flex-row flex-wrap mt-2">
                 {#each extensionModulesAreaMapEditor as extensionModuleAreaMapEditor, index (`extensionModulesAreaMapEditor-${index}`)}
                     {#each Object.entries(extensionModuleAreaMapEditor) as [subtype, index] (`extensionModuleAreaMapEditor-${index}`)}
                         {#if extensionModuleAreaMapEditor[subtype].shouldDisplayButton(properties)}
@@ -516,7 +518,7 @@
                 {/each}
             </div>
         {/if}
-        <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-mt-2">
+        <div class="properties-buttons flex flex-row flex-wrap mt-2">
             <AddPropertyButtonWrapper
                 property="openWebsite"
                 subProperty="klaxoon"
@@ -581,7 +583,7 @@
                 }}
             />
         </div>
-        <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-mt-2">
+        <div class="properties-buttons flex flex-row flex-wrap mt-2">
             {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
                 <AddPropertyButtonWrapper
                     property="openWebsite"
@@ -592,23 +594,28 @@
                 />
             {/each}
         </div>
-        <div class="area-name-container">
-            <label for="objectName">{$LL.mapEditor.areaEditor.nameLabel()}</label>
-            <input
-                id="objectName"
-                type="text"
-                placeholder={$LL.mapEditor.areaEditor.nameLabelPlaceholder()}
-                bind:value={areaName}
-                on:change={onUpdateName}
-            />
-        </div>
+
+        <Input
+            id="objectName"
+            label={$LL.mapEditor.areaEditor.nameLabel()}
+            type="text"
+            placeholder={$LL.mapEditor.areaEditor.nameLabelPlaceholder()}
+            bind:value={areaName}
+            onChange={onUpdateName}
+            variant="light"
+        >
+            <div slot="optional">Optional</div>
+
+            <div slot="helper">Helper Text</div>
+        </Input>
+
         <div class="area-name-container">
             {#if !showDescriptionField}
-                <button class="tw-pl-0 tw-text-blue-500" on:click={toggleDescriptionField}>
+                <button class="pl-0 text-blue-500" on:click={toggleDescriptionField}>
                     <IconChevronRight />{$LL.mapEditor.areaEditor.addDescriptionField()}</button
                 >
             {:else}
-                <button class="tw-pl-0 tw-text-blue-500" on:click={toggleDescriptionField}>
+                <button class="pl-0 text-blue-500" on:click={toggleDescriptionField}>
                     <IconChevronDown />{$LL.mapEditor.areaEditor.addDescriptionField()}</button
                 >
                 <label for="objectDescription">{$LL.mapEditor.areaEditor.areaDescription()}</label>
@@ -620,16 +627,15 @@
                 />
             {/if}
         </div>
-        <div class="value-switch">
-            <label for="searchable">{$LL.mapEditor.areaEditor.areaSerchable()}</label>
-            <input
-                id="searchable"
-                type="checkbox"
-                class="input-switch"
-                bind:checked={areaSearchable}
-                on:change={onUpdateAreaSearchable}
-            />
-        </div>
+
+        <!-- svelte-ignore missing-declaration -->
+        <InputSwitch
+            id="searchable"
+            label={$LL.mapEditor.areaEditor.areaSerchable()}
+            bind:value={areaSearchable}
+            onChange={onUpdateAreaSearchable}
+        />
+
         <div class="properties-container">
             {#each properties as property (property.id)}
                 <div class="property-box">
@@ -794,68 +800,68 @@
         }
     }
 
-    .input-switch {
-        position: relative;
-        top: 0px;
-        right: 0px;
-        bottom: 0px;
-        left: 0px;
-        display: inline-block;
-        height: 1rem;
-        width: 2rem;
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        appearance: none;
-        border-radius: 9999px;
-        border-width: 1px;
-        border-style: solid;
-        --tw-border-opacity: 1;
-        border-color: rgb(77 75 103 / var(--tw-border-opacity));
-        --tw-bg-opacity: 1;
-        background-color: rgb(15 31 45 / var(--tw-bg-opacity));
-        background-image: none;
-        padding: 0px;
-        --tw-text-opacity: 1;
-        color: rgb(242 253 255 / var(--tw-text-opacity));
-        outline: 2px solid transparent;
-        outline-offset: 2px;
-        cursor: url(../../../../../public/static/images/cursor_pointer.png), pointer;
-    }
+    //     .input-switch {
+    //         position: relative;
+    //         top: 0px;
+    //         right: 0px;
+    //         bottom: 0px;
+    //         left: 0px;
+    //         display: inline-block;
+    //         height: 1rem;
+    //         width: 2rem;
+    //         -webkit-appearance: none;
+    //         -moz-appearance: none;
+    //         appearance: none;
+    //         border-radius: 9999px;
+    //         border-width: 1px;
+    //         border-style: solid;
+    //         --border-opacity: 1;
+    //         border-color: rgb(77 75 103 / var(--border-opacity));
+    //         --bg-opacity: 1;
+    //         background-color: rgb(15 31 45 / var(--bg-opacity));
+    //         background-image: none;
+    //         padding: 0px;
+    //         --text-opacity: 1;
+    //         color: rgb(242 253 255 / var(--text-opacity));
+    //         outline: 2px solid transparent;
+    //         outline-offset: 2px;
+    //         cursor: url(../../../../../public/static/images/cursor_pointer.png), pointer;
+    //     }
 
-    .input-switch::before {
-        position: absolute;
-        left: -3px;
-        top: -3px;
-        height: 1.25rem;
-        width: 1.25rem;
-        border-radius: 9999px;
-        --tw-bg-opacity: 1;
-        background-color: rgb(146 142 187 / var(--tw-bg-opacity));
-        transition-property: all;
-        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-        transition-duration: 150ms;
-        --tw-content: "";
-        content: var(--tw-content);
-    }
+    //     .input-switch::before {
+    //         position: absolute;
+    //         left: -3px;
+    //         top: -3px;
+    //         height: 1.25rem;
+    //         width: 1.25rem;
+    //         border-radius: 9999px;
+    //         --bg-opacity: 1;
+    //         background-color: rgb(146 142 187 / var(--bg-opacity));
+    //         transition-property: all;
+    //         transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    //         transition-duration: 150ms;
+    //         --content: "";
+    //         content: var(--content);
+    //     }
 
-    .input-switch:checked {
-        --tw-border-opacity: 1;
-        border-color: rgb(146 142 187 / var(--tw-border-opacity));
-    }
+    //     .input-switch:checked {
+    //         --border-opacity: 1;
+    //         border-color: rgb(146 142 187 / var(--border-opacity));
+    //     }
 
-    .input-switch:checked::before {
-        left: 13px;
-        top: -3px;
-        --tw-bg-opacity: 1;
-        background-color: rgb(65 86 246 / var(--tw-bg-opacity));
-        content: var(--tw-content);
-        /*--tw-shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
---tw-shadow-colored: 0 0 7px 0 var(--tw-shadow-color);
-box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);*/
-    }
+    //     .input-switch:checked::before {
+    //         left: 13px;
+    //         top: -3px;
+    //         --bg-opacity: 1;
+    //         background-color: rgb(65 86 246 / var(--bg-opacity));
+    //         content: var(--content);
+    //         /*--shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
+    // --shadow-colored: 0 0 7px 0 var(--shadow-color);
+    // box-shadow: var(--ring-offset-shadow, 0 0 #0000), var(--ring-shadow, 0 0 #0000), var(--shadow);*/
+    //     }
 
-    .input-switch:disabled {
-        cursor: not-allowed;
-        opacity: 0.4;
-    }
+    //     .input-switch:disabled {
+    //         cursor: not-allowed;
+    //         opacity: 0.4;
+    //     }
 </style>

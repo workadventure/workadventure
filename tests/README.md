@@ -21,6 +21,14 @@ docker-compose exec play npm run build-typings
 
 If you change the scripting API, you will need to re-run this command.
 
+## Build room-api-clients
+```bash
+cd libs/room-api-clients/room-api-client-js/
+npm install
+npm run ts-proto
+npm run build
+```
+
 ## Run on development environment
 
 Start WorkAdventure with:

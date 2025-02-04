@@ -3,8 +3,8 @@
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
 
     export let volume: Readable<number[] | undefined> | undefined;
-    export let classcss: string;
+    export let cssClass: string;
     export let barColor = "white";
 </script>
 
-<SoundMeterWidget {barColor} {classcss} volume={$volume} />
+<SoundMeterWidget {barColor} {cssClass} volume={$volume} />

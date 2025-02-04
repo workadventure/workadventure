@@ -1,6 +1,8 @@
 import { derived, writable } from "svelte/store";
 import { getColorRgbFromHue } from "../WebRtc/ColorGenerator";
 import { gameManager } from "../Phaser/Game/GameManager";
+import PopUpFollow from "../Components/PopUp/PopUpFollow.svelte";
+import { popupStore } from "./PopupStore";
 
 type FollowState = "off" | "requesting" | "active" | "ending";
 type FollowRole = "leader" | "follower";
@@ -88,3 +90,11 @@ export const followUsersColorStore = derived(
         return (Math.round(r * 255) << 16) | (Math.round(g * 255) << 8) | Math.round(b * 255);
     }
 );
+
+export const suscriptionFollowStore = followStateStore.subscribe((followState) => {
+    if (followState === "requesting" || followState === "active") {
+        popupStore.addPopup(PopUpFollow, {}, "popupFollow");
+    } else {
+        popupStore.removePopup("popupFollow");
+    }
+});

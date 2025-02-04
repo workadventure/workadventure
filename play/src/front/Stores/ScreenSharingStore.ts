@@ -1,11 +1,14 @@
-import type { Readable } from "svelte/store";
-import { derived, readable, writable } from "svelte/store";
+import { get, Readable, derived, readable, writable } from "svelte/store";
 import type { DesktopCapturerSource } from "../Interfaces/DesktopAppInterfaces";
 import { localUserStore } from "../Connection/LocalUserStore";
+import LL from "../../i18n/i18n-svelte";
+import { SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
 import { peerStore } from "./PeerStore";
 import type { LocalStreamStoreValue } from "./MediaStore";
 import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "./MyMediaStore";
 import type {} from "../Api/Desktop";
+import { Streamable } from "./StreamableCollectionStore";
+import { currentPlayerWokaStore } from "./CurrentPlayerWokaStore";
 
 declare const navigator: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -24,7 +27,7 @@ function createRequestedScreenSharingState() {
 
 export const requestedScreenSharingState = createRequestedScreenSharingState();
 
-let currentStream: MediaStream | null = null;
+let currentStream: MediaStream | undefined = undefined;
 
 /**
  * Stops the camera from filming
@@ -35,7 +38,7 @@ function stopScreenSharing(): void {
             track.stop();
         }
     }
-    currentStream = null;
+    currentStream = undefined;
 }
 
 let previousComputedVideoConstraint: boolean | MediaTrackConstraints = false;
@@ -129,7 +132,7 @@ async function getDesktopCapturerSources() {
 }
 
 /**
- * A store containing the MediaStream object for ScreenSharing (or null if nothing requested, or Error if an error occurred)
+ * A store containing the MediaStream object for ScreenSharing (or undefined if nothing requested, or Error if an error occurred)
  */
 export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstraints>, LocalStreamStoreValue>(
     screenSharingConstraintsStore,
@@ -141,7 +144,7 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
             requestedScreenSharingState.disableScreenSharing();
             set({
                 type: "success",
-                stream: null,
+                stream: undefined,
             });
             return;
         }
@@ -176,7 +179,7 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
                         previousComputedAudioConstraint = false;
                         set({
                             type: "success",
-                            stream: null,
+                            stream: undefined,
                         });
                     };
                 }
@@ -187,7 +190,7 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
                 });
                 return;
             } catch (e) {
-                currentStream = null;
+                currentStream = undefined;
                 requestedScreenSharingState.disableScreenSharing();
                 console.info("Error. Unable to share screen.", e);
                 set({
@@ -213,24 +216,40 @@ export const screenSharingAvailableStore = derived(peerStore, ($peerStore, set) 
 
 export interface ScreenSharingLocalMedia {
     uniqueId: string;
-    stream: MediaStream | null;
+    stream: MediaStream | undefined;
     userId?: undefined;
 }
 
 /**
  * The representation of the screen sharing stream.
  */
-export const screenSharingLocalMedia = readable<ScreenSharingLocalMedia | null>(null, function start(set) {
-    const localMedia: ScreenSharingLocalMedia = {
+export const screenSharingLocalMedia = readable<Streamable | undefined>(undefined, function start(set) {
+    const localMediaStreamStore = writable<MediaStream | undefined>(undefined);
+    const localMedia = {
         uniqueId: "localScreenSharingStream",
-        stream: null,
-    };
+        media: {
+            type: "mediaStore",
+            streamStore: localMediaStreamStore,
+        },
+        getExtendedSpaceUser(): Promise<SpaceUserExtended> | undefined {
+            return undefined;
+        },
+        hasAudio: writable(false),
+        hasVideo: writable(true),
+        isMuted: writable(true),
+        name: writable(""),
+        pictureStore: currentPlayerWokaStore,
+        showVoiceIndicator: writable(false),
+        statusStore: writable("connected"),
+        volumeStore: writable(undefined),
+    } satisfies Streamable;
 
     const unsubscribe = screenSharingLocalStreamStore.subscribe((screenSharingLocalStream) => {
+        localMedia.name = writable(get(LL).camera.my.nameTag());
         if (screenSharingLocalStream.type === "success") {
-            localMedia.stream = screenSharingLocalStream.stream;
+            localMediaStreamStore.set(screenSharingLocalStream.stream);
         } else {
-            localMedia.stream = null;
+            localMediaStreamStore.set(undefined);
         }
         set(localMedia);
     });

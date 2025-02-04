@@ -17,6 +17,7 @@ import notification from "./notification";
 import cowebsite from "./cowebsite";
 import actionbar from "./actionbar";
 import video from "./video";
+import form from "./form";
 
 const es_ES = merge(en_US, {
     audio,
@@ -36,6 +37,7 @@ const es_ES = merge(en_US, {
     cowebsite,
     actionbar,
     video,
+    form,
 });
 
 export default es_ES;

@@ -88,8 +88,8 @@
     }
 </script>
 
-<div class="tw-flex tw-flex-col tw-flex-1 tw-gap-2">
-    <div class="tw-self-center tw-relative tw-flex tw-items-center">
+<div class="flex flex-col flex-1 gap-2">
+    <div class="self-center relative flex items-center">
         {#if !floatingObject}
             <EntityEditionCollisionGrid
                 {collisionGrid}
@@ -98,37 +98,37 @@
             />
         {/if}
         <EntityImage
-            classNames="tw-w-32 tw-max-h-32 tw-object-contain"
+            classNames="w-32 max-h-32 object-contain"
             on:onImageLoad={(event) => generateCollisionGridIfNotExists(event.detail)}
             imageSource={customEntity.imagePath}
             imageAlt={customEntity.name}
         />
         {#if displayDepthCustomSelector}
             <div>
-                <p class="tw-m-0 tw-p-0 tw-text-xs">{$LL.mapEditor.entityEditor.customEntityEditorForm.wokaAbove()}</p>
-                <div class="tw-rotate-[270deg]" style="width: 30px;margin-top: {entityImageRef?.height - 30}px">
+                <p class="m-0 p-0 text-xs">{$LL.mapEditor.entityEditor.customEntityEditorForm.wokaAbove()}</p>
+                <div class="rotate-[270deg]" style="width: 30px;margin-top: {entityImageRef?.height - 30}px">
                     <input
-                        class="!tw-cursor-grab active:!tw-cursor-grabbing slider"
+                        class="!cursor-grab active:!cursor-grabbing slider"
                         style="width: {entityImageRef?.height}px"
                         bind:value={depthOffset}
                         type="range"
                         max={entityImageRef?.naturalHeight}
                     />
                 </div>
-                <p class="tw-m-0 tw-p-0 tw-text-xs">{$LL.mapEditor.entityEditor.customEntityEditorForm.wokaBelow()}</p>
+                <p class="m-0 p-0 text-xs">{$LL.mapEditor.entityEditor.customEntityEditorForm.wokaBelow()}</p>
             </div>
         {/if}
     </div>
     {#if !floatingObject}
         <div>
             <img src={LogoCollisionGrid} alt="Logo collision grid" width="28px" />
-            <p class="tw-text-xs tw-m-0 tw-p-0">{$LL.mapEditor.entityEditor.customEntityEditorForm.collision()}</p>
+            <p class="text-xs m-0 p-0">{$LL.mapEditor.entityEditor.customEntityEditorForm.collision()}</p>
         </div>
     {/if}
     <div>
         <label for="id"><b>{$LL.mapEditor.entityEditor.customEntityEditorForm.imageName()}</b></label>
         <input
-            class="tw-p-1 tw-rounded-md tw-bg-dark-purple !tw-border-solid !tw-border !tw-border-gray-400 tw-text-white tw-min-w-full"
+            class="p-1 rounded-md bg-dark-purple !border-solid !border !border-gray-400 text-white min-w-full"
             bind:value={name}
             id="name"
             data-testid="name"
@@ -145,7 +145,7 @@
         <label for="type"><b>{$LL.mapEditor.entityEditor.customEntityEditorForm.depth()}</b></label>
         <select
             bind:value={selectedDepthOption}
-            class="tw-p-1 tw-rounded-md tw-bg-dark-purple !tw-border-solid !tw-border !tw-border-gray-400 tw-text-white tw-min-w-full"
+            class="p-1 rounded-md bg-dark-purple !border-solid !border !border-gray-400 text-white min-w-full"
         >
             {#each Object.values(depthOptions) as depthOption (depthOption)}
                 <option value={depthOption}>{getTranslationForDepthOption(depthOption)}</option>
@@ -153,35 +153,35 @@
         </select>
     </div>
     {#if isUploadForm}
-        <div class="tw-flex tw-gap-2 tw-mt-2 hover:tw-cursor-pointer">
+        <div class="flex gap-2 mt-2 hover:cursor-pointer">
             <input
                 type="checkbox"
-                class="tw-p-1 tw-rounded-md tw-bg-dark-purple !tw-border-solid !tw-border !tw-border-gray-400 tw-text-white"
+                class="p-1 rounded-md bg-dark-purple !border-solid !border !border-gray-400 text-white"
                 id="floatingObject"
                 data-testid="floatingObject"
                 bind:checked={floatingObject}
             />
-            <label class="tw-mt-[-4px]" for="floatingObject"
+            <label class="mt-[-4px]" for="floatingObject"
                 ><b>{$LL.mapEditor.entityEditor.customEntityEditorForm.floatingObject()}</b>
                 <br />
                 {$LL.mapEditor.entityEditor.customEntityEditorForm.floatingObjectDescription()}
             </label>
         </div>
     {/if}
-    <div class="tw-flex tw-flex-row tw-gap-2 tw-flex-wrap tw-justify-end tw-text-sm">
+    <div class="flex flex-row gap-2 flex-wrap justify-end text-sm">
         {#if !isUploadForm}
             <button
-                class="tw-bg-red-500 tw-rounded"
+                class="bg-red-500 rounded"
                 data-testid="removeEntity"
                 on:click={() => dispatch("removeEntity", { entityId: customEntity.id })}
                 >{$LL.mapEditor.entityEditor.buttons.delete()}</button
             >
         {/if}
-        <button class="tw-rounded tw-border-white tw-border tw-border-solid" on:click={() => dispatch("closeForm")}
+        <button class="rounded border-white border border-solid" on:click={() => dispatch("closeForm")}
             >{$LL.mapEditor.entityEditor.buttons.cancel()}</button
         >
         <button
-            class="tw-bg-blue-500 tw-rounded"
+            class="bg-blue-500 rounded"
             data-testid="applyEntityModifications"
             on:click={() => dispatch("applyEntityModifications", getModifiedCustomEntity())}
             >{isUploadForm

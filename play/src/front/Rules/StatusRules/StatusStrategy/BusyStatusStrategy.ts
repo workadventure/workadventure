@@ -1,9 +1,10 @@
 import { AvailabilityStatus } from "@workadventure/messages";
 import { TimedRules } from "../statusRules";
 import { askIfUserWantToJoinBubbleOf, askToChangeStatus } from "../statusChangerFunctions";
-import { notificationPermissionModalVisibility } from "../../../Stores/AvailabilityStatusModalsStore";
-import { helpNotificationSettingsVisibleStore } from "../../../Stores/HelpSettingsStore";
+//import { helpNotificationSettingsVisibleStore } from "../../../Stores/HelpSettingsStore";
 import { localUserStore } from "../../../Connection/LocalUserStore";
+import { popupStore } from "../../../Stores/PopupStore";
+import NotificationPermissionModal from "../../../Components/ActionBar/AvailabilityStatus/Modals/NotificationPermissionModal.svelte";
 import { BasicStatusStrategy } from "./BasicStatusStrategy";
 
 export class BusyStatusStrategy extends BasicStatusStrategy {
@@ -49,15 +50,21 @@ export class BusyStatusStrategy extends BasicStatusStrategy {
             ? new Date(localStoragelastNotificationPermissionRequest)
             : new Date();
 
-        if (this.NotificationPermissionIs("default")) notificationPermissionModalVisibility.open();
+        if (this.NotificationPermissionIs("default")) {
+            this.openNotificationPermissionModal();
+        }
 
         if (
             (this.NotificationPermissionIs("denied") &&
                 this.lastNotificationPermissionRequestMoreThanTwoWeeks(lastNotificationPermissionRequest)) ||
             localStoragelastNotificationPermissionRequest === null
         ) {
-            helpNotificationSettingsVisibleStore.set(true);
+            this.openNotificationPermissionModal();
             localUserStore.setLastNotificationPermissionRequest();
         }
+    };
+
+    private openNotificationPermissionModal = () => {
+        popupStore.addPopup(NotificationPermissionModal, {}, "notification_permission_modal");
     };
 }

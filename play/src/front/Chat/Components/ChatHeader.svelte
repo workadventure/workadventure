@@ -66,19 +66,19 @@
     }
 </script>
 
-<div class="tw-p-2 tw-flex tw-items-center tw-absolute tw-w-full tw-z-40">
-    <div class={searchActive ? "tw-hidden" : ""}>
+<div class="p-2 flex items-center absolute w-full z-40">
+    <div class={searchActive ? "hidden" : ""}>
         {#if showNavBar}
             {#if $navChat === "chat"}
                 <button
-                    class="userList tw-p-3 hover:tw-bg-white/10 tw-rounded-xl tw-aspect-square tw-w-12"
+                    class="userList p-3 hover:bg-white/10 rounded aspect-square w-12 h-12"
                     on:click={() => navChat.switchToUserList()}
                 >
                     <IconUsers font-size="20" />
                 </button>
             {:else}
                 <button
-                    class="tw-p-3 hover:tw-bg-white/10 tw-rounded-2xl tw-aspect-square tw-w-12"
+                    class="p-3 hover:bg-white/10 rounded aspect-square w-12 h-12"
                     on:click={() => navChat.switchToChat()}
                 >
                     <IconMessageCircle2 font-size="20" />
@@ -86,31 +86,27 @@
             {/if}
         {/if}
     </div>
-    <div class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-grow">
-        <div class="tw-text-md tw-font-bold tw-h-5 {searchActive ? 'tw-hidden' : ''}">
+    <div class="flex flex-col items-center justify-center grow">
+        <div class="text-md font-bold h-5 {searchActive ? 'hidden' : ''}">
             {#if $navChat === "chat"}
                 {$LL.chat.chat()}
             {:else}
                 {$LL.chat.users()}
             {/if}
         </div>
-        <div
-            class="tw-flex tw-items-center tw-justify-center tw-text-success tw-space-x-1.5 {searchActive
-                ? 'tw-hidden'
-                : ''}"
-        >
+        <div class="flex items-center justify-center text-success space-x-1.5 {searchActive ? 'hidden' : ''}">
             <div
-                class="tw-text-xs tw-aspect-square tw-min-w-5 tw-h-5 tw-px-1 tw-border tw-border-solid tw-border-success tw-flex tw-items-center tw-justify-center tw-font-bold tw-rounded"
+                class="text-xs aspect-square min-w-5 h-5 px-1 border border-solid border-success flex items-center justify-center font-bold rounded-sm"
             >
                 {$userWorldCount}
             </div>
-            <div class="tw-text-xs tw-font-bold">{$LL.chat.onlineUsers()}</div>
+            <div class="text-xs font-bold">{$LL.chat.onlineUsers()}</div>
         </div>
     </div>
     <div class="">
         {#if $chatStatusStore !== "OFFLINE"}
             <button
-                class="tw-p-3 hover:tw-bg-white/10 tw-rounded-xl tw-aspect-square tw-w-12 tw-relative tw-z-50"
+                class="p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 relative z-50"
                 on:click={() => (searchActive = !searchActive)}
             >
                 {#if searchLoader}
@@ -123,17 +119,17 @@
                 {/if}
             </button>
         {:else}
-            <div class="tw-w-12" />
+            <div class="w-12" />
         {/if}
         <!-- searchbar -->
         {#if searchActive && $chatStatusStore !== "OFFLINE"}
             {#await userProviderMergerPromise}
                 <div />
             {:then userProviderMerger}
-                <div class="tw-absolute tw-w-full tw-h-full tw-z-40 tw-right-0 tw-top-0 tw-bg-contrast/30">
+                <div class="absolute w-full h-full z-40 right-0 top-0 bg-contrast/30">
                     <input
                         autocomplete="new-password"
-                        class="wa-searchbar tw-block tw-text-white placeholder:tw-text-white/50 tw-w-full placeholder:tw-text-sm tw-border-none tw-pl-6 tw-pr-20 tw-bg-transparent tw-py-3 tw-text-base tw-h-full"
+                        class="wa-searchbar block text-white placeholder:text-white/50 w-full placeholder:text-sm border-none pl-6 pr-20 bg-transparent py-3 text-base h-full"
                         placeholder={$navChat === "users" ? $LL.chat.searchUser() : $LL.chat.searchChat()}
                         on:keydown={handleKeyDown}
                         on:keyup={() => handleKeyUp(userProviderMerger)}

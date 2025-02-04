@@ -1,9 +1,10 @@
 import {expect, test} from '@playwright/test';
+import {isMobile} from "./utils/isMobile";
 
 test.describe('Swagger documentation', () => {
-    test('Pusher -> Admin', async ({page}, { project }) => {
+    test('Pusher -> Admin', async ({page}) => {
         // Skip test for mobile device
-        if(project.name === "mobilechromium") {
+        if(isMobile(page)) {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;

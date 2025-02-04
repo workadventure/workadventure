@@ -1,9 +1,9 @@
 .pure-loader{
   .svg {
-    @apply tw-bg-contain tw-bg-no-repeat tw-bg-center tw-w-7 tw-h-7 tw-ml-3;
+    @apply bg-contain bg-no-repeat bg-center w-7 h-7 ml-3;
     content: "";
   }
   p {
-    @apply tw-text-center tw-animate-pulse;
+    @apply text-center animate-pulse;
   }
 }

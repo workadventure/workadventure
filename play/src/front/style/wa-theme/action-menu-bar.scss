@@ -1,82 +1,36 @@
 @layer components {
-    .emote-menu {
-        @apply tw-flex tw-flex-col tw-items-center tw-pointer-events-auto tw-justify-center tw-m-auto tw-bottom-1 tw-z-[251] tw-transition-transform tw-duration-300;
-        @apply sm:tw-flex-row;
-    }
-
     .bottom-action-bar {
-        @apply tw-flex tw-flex-col tw-items-center tw-pointer-events-auto tw-justify-center tw-m-auto tw-bottom-6 md:tw-bottom-4 tw-z-[251] tw-transition-transform tw-duration-300;
-        @apply sm:tw-flex-row;
 
         .bottom-action-section {
-            @apply tw-flex-row tw-flex tw-items-center tw-mx-1 tw-my-1;
-            @apply md:tw-mx-2 md:tw-my-0;
 
-            .bottom-action-button {
-                button {
-                    @apply tw-rounded-none tw-bg-dark-purple/95 tw-w-10 tw-h-10 tw-px-2 tw-m-0 tw-outline-none;
-                    @apply sm:tw-w-12 sm:tw-h-12;
-
-                    &.focus,
-                    &.hover,
-                    &:hover,
-                    &:has(+ *:hover){
-                        @apply tw-bg-medium-purple/95;
-                        filter: brightness(1.25);
-                    }
-
-                    img {
-                        @apply tw-select-none tw-w-7 tw-h-7;
-                        @apply sm:tw-w-8 sm:tw-h-8;
-                    }
-
-                    &.emoji {
-                        @apply tw-w-11 tw-h-10;
-                        @apply sm:tw-w-14 sm:tw-h-12;
-                    }
-                }
-
-                button.large {
-                    @apply tw-w-max;
-                }
+            #invite-btn {
+                @apply min-h-[2rem] h-8 sm:h-10 outline-none;
+            }
+            #register-btn {
+                @apply min-h-[2rem] h-8 sm:h-10 outline-none;
             }
 
-            .bottom-action-button:first-child {
-                button {
-                    @apply tw-rounded-l-lg tw-rounded-r-none;
-                }
-            }
-
-            .bottom-action-button:last-child {
-                button {
-                    @apply tw-rounded-r-lg tw-rounded-l-none;
-                }
-            }
-
-            /* one item */
-            .bottom-action-button:first-child:nth-last-child(1) {
-                button {
-                    @apply tw-rounded-r-lg tw-rounded-l-lg;
-                }
+            button.large {
+              @apply w-max;
             }
 
             .border-top-light {
                 border-top: 4px solid theme("colors.light-blue");
-                @apply tw-pt-0;
+                @apply pt-0;
             }
 
             .border-top-warning {
                 border-top: 4px solid rgb(233, 199, 76);
-                @apply tw-pt-0;
+                @apply pt-0;
             }
 
             .megaphone-confirm {
-                @apply tw-border-warning tw-border tw-border-solid;
+                @apply border-warning border border-solid;
                 transform: translateX(-38%);
                 bottom: calc(100% + 1rem);
 
                 &::before {
-                    @apply tw-border-dark-purple/95;
+                    @apply border-dark-purple/95;
                     width: 0;
                     height: 0;
                     border-style: solid;
@@ -91,7 +45,7 @@
                     z-index: 1;
                 }
                 &::after {
-                    @apply tw-border-warning;
+                    @apply border-warning;
                     width: 0;
                     height: 0;
                     border-style: solid;
@@ -107,20 +61,20 @@
 
                 button[type="button"] {
                     all: unset;
-                    @apply tw-m-auto tw-cursor-pointer tw-min-w-fit;
+                    @apply m-auto cursor-pointer min-w-fit;
                     border-radius: 0.25rem !important;
                     padding: 0.2rem 0.8rem !important;
                     height: initial !important;
                     min-height: fit-content !important;
 
                     &.light {
-                        @apply tw-bg-light-blue tw-text-brand-blue;
+                        @apply bg-light-blue text-brand-blue;
                     }
 
                     &.dark {
-                        @apply tw-text-white;
+                        @apply text-white;
                         &:hover {
-                            @apply tw-bg-light-purple;
+                            @apply bg-light-purple;
                         }
                     }
 
@@ -129,13 +83,13 @@
                     }
 
                     &.disabled {
-                        @apply tw-cursor-not-allowed tw-opacity-50;
+                        @apply cursor-not-allowed opacity-50;
                     }
                 }
             }
 
             .disable-opacity {
-                @apply tw-opacity-50;
+                @apply opacity-50;
             }
         }
     }

@@ -2,18 +2,16 @@ import type { Translation } from "../i18n-types";
 import type { DeepPartial } from "../DeepPartial";
 
 const actionbar: DeepPartial<Translation["actionbar"]> = {
-    chat: "Chat öffnen / schließen",
-    follow: "Folgen",
-    unfollow: "Entfolgen",
-    lock: "Diskussion sperren / entsperren",
-    screensharing: "Bildschirmfreigabe starten / stoppen",
-    layout: "Kachelansicht umschalten",
-    disableLayout: "Nicht verfügbar, wenn nur eine Person im Meeting ist",
-    camera: "Kamera starten / stoppen",
-    microphone: "Mikrofon stummschalten / einschalten",
-    emoji: "Emoji öffnen / schließen",
-    disableMegaphone: "Megafon deaktivieren",
-    menu: "Menü öffnen / schließen",
+    camera: {
+        disabled: "Kamera stoppen",
+        activate: "Kamera starten",
+    },
+    microphone: {
+        disabled: "Mikrofon einschalten",
+        activate: "Mikrofon stummschalten",
+    },
+    //disableMegaphone: "Megafon deaktivieren",
+    //menu: "Menü öffnen / schließen",
     calendar: "Kalender öffnen / schließen",
     mapEditor: "Kartenmanager öffnen / schließen",
     mapEditorMobileLocked: "Karteneditor ist im mobilen Modus gesperrt",
@@ -26,8 +24,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     app: "Anwendungen öffnen / schließen",
     listStatusTitle: {
         enable: "Ändere deinen Status",
-        inMeeting: "Viel Spaß im Meeting 🤓",
-        inSilentZone: "Genieße die stille Zone 😁",
     },
 
     status: {
@@ -37,7 +33,28 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         BUSY: "Beschäftigt",
     },
     globalMessage: "Sende eine globale Nachricht",
-    roomList: "Raumliste öffnen / schließen",
+    //roomList: "Raumliste öffnen / schließen",
+    help: {
+        chat: {
+            title: "Chat öffnen / schließen",
+            //desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        },
+        emoji: {
+            title: "Emoji öffnen / schließen",
+            //desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        },
+        follow: {
+            title: "Folgen",
+        },
+        unfollow: {
+            title: "Entfolgen",
+        },
+        lock: {
+            title: "Diskussion sperren / entsperren",
+        },
+        share: {
+            title: "Bildschirmfreigabe starten / stoppen",
+        },
+    },
 };
-
 export default actionbar;

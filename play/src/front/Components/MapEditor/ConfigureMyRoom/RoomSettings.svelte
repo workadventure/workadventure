@@ -78,7 +78,7 @@
     }
 </script>
 
-<div class="tw-flex tw-flex-col">
+<div class="flex flex-col">
     <h3>{$LL.mapEditor.settings.room.title()}</h3>
     <InputText
         label={$LL.mapEditor.settings.room.inputs.name()}
@@ -113,19 +113,19 @@
         onKeyPress={() => {}}
     />
 
-    <div class="tw-flex tw-flex-row tw-justify-center">
+    <div class="flex flex-row justify-center">
         <input
             id="confirm-save"
             type="checkbox"
-            class:tw-border-danger-1000={dynamicStrings.error.confirmSave}
+            class:border-danger-1000={dynamicStrings.error.confirmSave}
             bind:checked={$confirmSaving}
         />
-        <label for="confirm-save" class="tw-ml-2" class:tw-text-danger-1000={dynamicStrings.error.confirmSave}>
+        <label for="confirm-save" class="ml-2" class:text-danger-1000={dynamicStrings.error.confirmSave}>
             {$LL.mapEditor.settings.room.confirmSave()}
         </label>
     </div>
 
-    <div class="tw-flex tw-flex-row tw-justify-center">
+    <div class="flex flex-row justify-center">
         <ButtonState promise={save} initialText={$LL.menu.settings.save()} loadingText="Saving" />
     </div>
 </div>

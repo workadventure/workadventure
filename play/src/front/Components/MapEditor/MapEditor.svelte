@@ -27,16 +27,20 @@
 </script>
 
 <MapEditorSideBar />
-<div class={`map-editor tw-bg-dark-blue/95 ${$mapEditorSelectedToolStore}`}>
+<div class={`map-editor bg-contrast/80 backdrop-blur-md h-screen ${$mapEditorSelectedToolStore}`}>
     {#if $mapEditorSelectedToolStore === EditorToolName.WAMSettingsEditor}
         <ConfigureMyRoom />
     {:else if $mapEditorVisibilityStore}
-        <div class="sidebar" in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>
-            <button class="tw-absolute tw-right-10 tw-p-1 tw-cursor-pointer" on:click={hideMapEditor}
+        <div
+            class="sidebar h-screen"
+            in:fly={{ x: 100, duration: 250, delay: 200 }}
+            out:fly={{ x: 100, duration: 200 }}
+        >
+            <button class="absolute right-10 p-1 cursor-pointer" on:click={hideMapEditor}
                 ><IconMinus font-size="14" /></button
             >
             <button
-                class="close-window"
+                class="close-window flex space-x-7"
                 data-testid="mapEditor-close-button"
                 on:click|preventDefault|stopPropagation={closeMapEditor}>&#215;</button
             >
@@ -62,7 +66,7 @@
         top: 0;
         right: 0;
         width: fit-content !important;
-        z-index: 425;
+        z-index: 800;
 
         pointer-events: auto;
         color: whitesmoke;

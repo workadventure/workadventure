@@ -23,6 +23,7 @@ import video from "./video";
 import statusModal from "./statusModal";
 import area from "./area";
 import externalModule from "./externalModule";
+import form from "./form";
 
 const nl_NL = merge(en_US, {
     area,
@@ -48,6 +49,7 @@ const nl_NL = merge(en_US, {
     video,
     statusModal,
     externalModule,
+    form,
 });
 
 export default nl_NL;

@@ -15,11 +15,12 @@ import {
     OPID_PROFILE_SCREEN_PROVIDER,
     REPORT_ISSUES_URL,
 } from "../Enum/EnvironmentVariable";
-import { userIsAdminStore } from "./GameStore";
+import { gameManager } from "../Phaser/Game/GameManager";
+import { userHasAccessToBackOfficeStore, userIsAdminStore } from "./GameStore";
+import { megaphoneCanBeUsedStore } from "./MegaphoneStore";
 
 export const menuIconVisiblilityStore = writable(false);
 export const menuVisiblilityStore = writable(false);
-export const menuInputFocusStore = writable(false);
 export const userIsConnected = writable(false);
 
 export const profileAvailable = derived(userIsConnected, ($userIsConnected) => {
@@ -59,7 +60,7 @@ export enum SubMenusInterface {
     chat = "chat",
 }
 
-type MenuKeys = keyof Translation["menu"]["sub"];
+export type MenuKeys = keyof Translation["menu"]["sub"];
 
 export interface TranslatedMenu {
     type: "translated";
@@ -87,7 +88,7 @@ export const mapEditorActivated = writable(false);
 export const mapManagerActivated = writable(true);
 export const screenSharingActivatedStore = writable(true);
 export const mapEditorActivatedForCurrentArea = writable(false);
-export const mapEditorActivatedForThematics = writable(true);
+export const mapEditorActivatedForThematics = writable(false);
 export const roomListActivated = writable(true);
 
 function createSubMenusStore() {
@@ -315,7 +316,15 @@ function createAdditionalButtonsMenu() {
         subscribe,
         addAdditionnalButtonActionBar(button: AddButtonActionBarEvent) {
             update((additionnalButtonsMenu) => {
-                additionnalButtonsMenu.set(button.id, button);
+                if (button.type === "action") {
+                    additionnalButtonsMenu.set(button.id, {
+                        ...button,
+                        imageSrc: new URL(button.imageSrc, gameManager.currentStartedRoom.mapUrl).toString(),
+                    });
+                } else {
+                    additionnalButtonsMenu.set(button.id, button);
+                }
+
                 return additionnalButtonsMenu;
             });
         },
@@ -341,3 +350,66 @@ additionnalButtonsMenu.subscribe((map) => {
         [...map.values()].filter((c) => c.type === "action") as AddActionButtonActionBarEvent[]
     );
 });
+
+// The store that decides what tools to display just below the menu (typically triggered when you click on an item in the action bar)
+export const activeSecondaryZoneActionBarStore = writable<"emote" | "audio-manager" | undefined>(undefined);
+
+export const helpTextDisabledStore = derived(
+    activeSecondaryZoneActionBarStore,
+    ($activeSecondaryZoneActionBarStore) => {
+        return $activeSecondaryZoneActionBarStore !== undefined;
+    }
+);
+
+export const mapEditorMenuVisibleStore = derived(
+    [mapEditorActivated, mapManagerActivated, mapEditorActivatedForThematics],
+    ([$mapEditorActivated, $mapManagerActivated, $mapEditorActivatedForThematics]) => {
+        return ($mapEditorActivated || $mapEditorActivatedForThematics) && $mapManagerActivated;
+    }
+);
+export const backOfficeMenuVisibleStore = userHasAccessToBackOfficeStore;
+export const globalMessageVisibleStore = derived(
+    [megaphoneCanBeUsedStore, userIsAdminStore],
+    ([$megaphoneCanBeUsedStore, $userIsAdminStore]) => {
+        return $megaphoneCanBeUsedStore || $userIsAdminStore;
+    }
+);
+export const mapMenuVisibleStore = derived(
+    [mapEditorMenuVisibleStore, backOfficeMenuVisibleStore, globalMessageVisibleStore],
+    ([$mapEditorMenuVisibleStore, $backOfficeMenuVisibleStore, $globalMessageVisibleStore]) => {
+        return $mapEditorMenuVisibleStore || $backOfficeMenuVisibleStore || $globalMessageVisibleStore;
+    }
+);
+
+type Menus = "appMenu" | "profileMenu" | "burgerMenu" | "mapMenu";
+
+function createOpenedMenuStore() {
+    const openedMenuStore = writable<Menus | undefined>(undefined);
+    const { subscribe, set } = openedMenuStore;
+
+    return {
+        subscribe,
+        open(menu: Menus) {
+            set(menu);
+            activeSecondaryZoneActionBarStore.set(undefined);
+        },
+        close(menu: Menus) {
+            if (get({ subscribe }) === menu) {
+                set(undefined);
+            }
+        },
+        closeAll() {
+            set(undefined);
+        },
+        toggle(menu: Menus) {
+            if (get({ subscribe }) === menu) {
+                set(undefined);
+            } else {
+                set(menu);
+                activeSecondaryZoneActionBarStore.set(undefined);
+            }
+        },
+    };
+}
+
+export const openedMenuStore = createOpenedMenuStore();

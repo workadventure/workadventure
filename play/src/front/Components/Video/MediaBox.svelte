@@ -8,17 +8,15 @@
     import type { ObtainedMediaStreamConstraints } from "../../WebRtc/P2PMessages/ConstraintMessage";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { JitsiTrackStreamWrapper } from "../../Streaming/Jitsi/JitsiTrackStreamWrapper";
+    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
+    import { highlightFullScreen } from "../../Stores/ActionsCamStore";
     import VideoMediaBox from "./VideoMediaBox.svelte";
-    import ScreenSharingMediaBox from "./ScreenSharingMediaBox.svelte";
-    import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
-    import JitsiMediaBox from "./JitsiMediaBox.svelte";
 
     export let streamable: Streamable;
-    export let isHightlighted = false;
-    export let isClickable = false;
-    export let mozaicSolo = false;
-    export let mozaicDuo = false;
-    export let mozaicQuarter = false;
+    export let isHighlighted = false;
+    export let flipX = false;
+    // If set to true, the video will be muted (no sound will come out). This does not prevent the volume bar from being displayed.
+    export let muted = false;
 
     let constraintStore: Readable<ObtainedMediaStreamConstraints | null>;
     if (streamable instanceof VideoPeer) {
@@ -38,91 +36,49 @@
     onDestroy(() => {
         gameScene.reposition();
     });
-    $: videoEnabled = $constraintStore ? $constraintStore.video : false;
+
+    // Remove the highlight if the video is disabled
+    $: {
+        if (isHighlighted && $constraintStore && $constraintStore?.video === false) {
+            highlightedEmbedScreen.removeHighlight();
+        }
+    }
+
+    $: isHighlighted = $highlightedEmbedScreen === streamable;
+    $: fullScreen = $highlightedEmbedScreen === streamable && $highlightFullScreen;
 </script>
+
+<!-- svelte-ignore missing-declaration -->
+<!-- Bug with tansition : transition:fly={{ y: 50, duration: 150 }} -->
 
 {#if streamable instanceof VideoPeer}
     {#if $constraintStore || $statusStore === "error" || $statusStore === "connecting"}
         <div
-            class="media-container media-box-shape-color tw-pointer-events-auto screen-blocker tw-rounded-2xl"
-            class:hightlighted={isHightlighted}
-            class:tw-mr-6={isHightlighted && videoEnabled}
-            class:tw-flex={!isHightlighted}
-            class:media-box-camera-on-size={!isHightlighted && videoEnabled}
-            class:media-box-camera-off-size={!isHightlighted && !videoEnabled}
-            class:tw-max-w-sm={isHightlighted && !videoEnabled}
-            class:tw-mx-auto={isHightlighted && !videoEnabled}
-            class:tw-h-12={!isHightlighted && !videoEnabled}
-            class:clickable={isClickable}
-            class:mozaic-duo={mozaicDuo}
-            class:mozaic-full-width={mozaicSolo}
-            class:mozaic-quarter={mozaicQuarter}
+            class="video-media-box pointer-events-auto media-container transition-all justify-center relative h-full w-full"
+            in:fly={{ y: 50, duration: 150 }}
         >
-            <div class="tw-w-full tw-h-full tw-flex screen-blocker tw-items-center" class:tw-mx-auto={!isHightlighted}>
-                <VideoMediaBox peer={streamable} clickable={isClickable} {isHightlighted} />
-            </div>
+            <VideoMediaBox peer={streamable} {isHighlighted} {fullScreen} {flipX} {muted} />
         </div>
     {/if}
 {:else if streamable instanceof ScreenSharingPeer}
     <div
-        class="media-container {isHightlighted ? 'hightlighted' : 'tw-flex media-box-camera-on-size'}
-     media-box-shape-color
-"
-        class:clickable={isClickable}
-        class:mozaic-duo={mozaicDuo}
-        class:mozaic-full-width={mozaicSolo}
-        class:mozaic-quarter={mozaicQuarter}
+        class="video-media-box pointer-events-auto media-container transition-all justify-center relative h-full w-full"
+        in:fly={{ y: 50, duration: 150 }}
     >
-        <div class="{isHightlighted ? '' : 'tw-mx-auto'} tw-w-full tw-h-full tw-flex screen-blocker">
-            <ScreenSharingMediaBox peer={streamable} clickable={isClickable} />
-        </div>
+        <VideoMediaBox peer={streamable} {isHighlighted} {fullScreen} {flipX} {muted} />
     </div>
 {:else if streamable instanceof JitsiTrackStreamWrapper}
     <div
-        class="media-container media-box-shape-color tw-pointer-events-auto screen-blocker tw-flex tw-items-center"
-        class:hightlighted={isHightlighted}
-        class:tw-mr-6={isHightlighted && streamable.getVideoTrack()}
-        class:media-box-camera-on-size={!isHightlighted && streamable.getVideoTrack()}
-        class:media-box-camera-off-size={!isHightlighted && !streamable.getVideoTrack()}
-        class:tw-max-w-sm={isHightlighted && !streamable.getVideoTrack()}
-        class:tw-h-12={!isHightlighted && !streamable.getVideoTrack()}
-        class:clickable={isClickable}
-        class:mozaic-full-width={mozaicSolo}
-        class:mozaic-duo={mozaicDuo}
-        class:mozaic-quarter={mozaicQuarter}
-        transition:fly={{ x: 200, duration: 250 }}
+        class="video-media-box pointer-events-auto media-container transition-all justify-center relative h-full w-full"
+        in:fly={{ y: 50, duration: 150 }}
     >
-        <div class="tw-w-full tw-h-full tw-flex screen-blocker" class:tw-mx-auto={!isHightlighted}>
-            <JitsiMediaBox peer={streamable} clickable={isClickable} {isHightlighted} />
-        </div>
+        <VideoMediaBox peer={streamable} {isHighlighted} {fullScreen} {flipX} {muted} />
     </div>
 {:else}
     <div
-        class="media-container {isHightlighted ? 'hightlighted' : 'tw-flex media-box-camera-on-size'}
-     media-box-shape-color
-"
-        class:clickable={isClickable}
-        class:mozaic-full-width={mozaicSolo}
-        class:mozaic-duo={mozaicDuo}
-        class:mozaic-quarter={mozaicQuarter}
+        class="video-media-box pointer-events-auto media-container transition-all justify-center relative h-full w-full"
+        in:fly={{ y: 50, duration: 150 }}
     >
-        <div class="{isHightlighted ? '' : 'tw-mx-auto'}   tw-w-full tw-h-full tw-flex screen-blocker">
-            <LocalStreamMediaBox peer={streamable} clickable={isClickable} cssClass="" />
-        </div>
+        <VideoMediaBox peer={streamable} {isHighlighted} {fullScreen} {flipX} {muted} />
     </div>
 {/if}
-
-<style lang="scss">
-    @import "../../style/breakpoints.scss";
-
-    //Classes factorizing tailwind's ones are defined in video-ui.scss
-
-    .media-container {
-        transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s, max-height 0.2s,
-            max-width 0.2s;
-
-        &.clickable {
-            cursor: pointer;
-        }
-    }
-</style>

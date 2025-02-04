@@ -186,26 +186,24 @@
     });
 </script>
 
-<div class="tw-flex tw-flex-col tw-w-full tw-justify-center tw-items-center tw-py-4 tw-px-6 tw-gap-2">
-    <div class="tw-flex tw-flex-row tw-w-full tw-justify-between tw-items-center tw-gap-2">
-        <img draggable="false" class="tw-w-8" src={property.img} alt="info icon" />
-        <h2 class="tw-text-sm tw-p-0 tw-m-0">{property.title}</h2>
+<div class="flex flex-col w-full justify-center items-center py-4 px-6 gap-2">
+    <div class="flex flex-row w-full justify-between items-center gap-2">
+        <img draggable="false" class="w-8" src={property.img} alt="info icon" />
+        <h2 class="text-sm p-0 m-0">{property.title}</h2>
         <CloseButton
             on:click={() => {
                 dispatch("close");
             }}
         />
     </div>
-    <p
-        class="tw-text-xs tw-text-center tw-p-0 tw-m-0 tw-h-8 tw-w-full tw-whitespace-nowrap tw-overflow-hidden tw-overflow-ellipsis tw-text-gray-400"
-    >
+    <p class="text-xs text-center p-0 m-0 h-8 w-full whitespace-nowrap overflow-hidden overflow-ellipsis text-gray-400">
         {property.description}
     </p>
 
     <input
         data-testid="applicationInputLink"
         type="text"
-        class="tw-border tw-rounded tw-w-full !tw-m-0"
+        class="border rounded w-full !m-0"
         value={property.link}
         bind:this={htmlElementInput}
         on:input={() => {
@@ -224,7 +222,7 @@
     />
 
     {#if errorLink != undefined && errorLink != ""}
-        <p data-testid="applicationLinkError" class="tw-text-xs tw-text-red-500 tw-p-0 tw-m-0 tw-h-fit tw-w-full">
+        <p data-testid="applicationLinkError" class="text-xs text-red-500 p-0 m-0 h-fit w-full">
             {errorLink}
         </p>
     {/if}

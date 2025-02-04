@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
     <script src="<?php echo $_SERVER["FRONT_URL"] ?>/iframe_api.js"></script>
     <script>
@@ -24,7 +25,7 @@
                         console.log('I am NOT telling you a joke!');
                     });
                 });
-                
+
                 addActionButton.addEventListener('click', () => {
                     const randomActionName = (Math.floor(Math.random() * 100)).toString();
                     action = lastRemotePlayerClicked?.addAction(randomActionName, () => {
@@ -35,9 +36,11 @@
         })
     </script>
 </head>
+
 <body>
 
-<button id="addActionButton">Add Action</button>
+    <button id="addActionButton">Add Action</button>
 
 </body>
+
 </html>

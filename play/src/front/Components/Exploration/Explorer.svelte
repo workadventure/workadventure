@@ -147,14 +147,14 @@
     }
 </script>
 
-<div class="mapexplorer tw-flex tw-flex-col tw-overflow-auto">
+<div class="mapexplorer flex flex-col overflow-auto">
     <div class="header-container">
-        <h3 class="tw-text-l tw-text-left">{$LL.mapEditor.explorer.title()}</h3>
+        <h3 class="text-l text-left">{$LL.mapEditor.explorer.title()}</h3>
     </div>
-    <div class="tw-flex tw-flex-col tw-justify-center">
-        <div class="tw-flex tw-flex-col tw-justify-center tw-items-center">
+    <div class="flex flex-col justify-center">
+        <div class="flex flex-col justify-center items-center">
             <input
-                class="filter-input tw-h-8 tw-m-5"
+                class="filter-input h-8 m-5"
                 type="search"
                 bind:value={filter}
                 on:input={onChangeFilterHandle}
@@ -164,7 +164,7 @@
             />
         </div>
 
-        <div class="tw-flex tw-flex-row tw-overflow-y-hidden tw-overflow-x-scroll">
+        <div class="flex flex-row overflow-y-hidden overflow-x-scroll">
             <AddPropertyButtonWrapper
                 property="personalAreaPropertyData"
                 on:click={() => addFilter("personalAreaPropertyData")}
@@ -243,27 +243,27 @@
 
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div
-            class="entities tw-p-4 tw-rounded-2xl tw-flex tw-flex-row tw-justify-around tw-items-center tw-cursor-pointer"
+            class="entities p-4 rounded-2xl flex flex-row justify-around items-center cursor-pointer"
             on:click={toggleEntityList}
         >
-            <img class="tw-w-10 tw-h-auto tw-mr-2 tw-pointer-events-none" src={EntityToolImg} alt="link icon" />
+            <img class="w-10 h-auto mr-2 pointer-events-none" src={EntityToolImg} alt="link icon" />
             {#if $entitiesListFiltered.size > 0}
-                <span class="tw-pointer-events-none"
+                <span class="pointer-events-none"
                     >{$entitiesListFiltered.size}
                     {$LL.mapEditor.explorer.entitiesFound($entitiesListFiltered.size > 1)}</span
                 >
                 {#if entityListActive}
-                    <IconChevronDown class="tw-pointer-events-none" font-size="32" />
+                    <IconChevronDown class="pointer-events-none" font-size="32" />
                 {:else}
-                    <IconChevronUp class="tw-pointer-events-none" font-size="32" />
+                    <IconChevronUp class="pointer-events-none" font-size="32" />
                 {/if}
             {:else}
-                <p class="tw-m-0">{$LL.mapEditor.explorer.noEntitiesFound()}</p>
+                <p class="m-0">{$LL.mapEditor.explorer.noEntitiesFound()}</p>
             {/if}
         </div>
 
         {#if entityListActive && $entitiesListFiltered.size > 0}
-            <div class="entity-items tw-p-4 tw-flex tw-flex-col">
+            <div class="entity-items p-4 flex flex-col">
                 {#each [...$entitiesListFiltered] as [key, entity] (key)}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
@@ -271,14 +271,14 @@
                         on:mouseenter={() => highlightEntity(entity)}
                         on:mouseleave={() => unhighlightEntity(entity)}
                         on:click={() => mapExplorationObjectSelectedStore.set(entity)}
-                        class="item tw-p-4 tw-rounded-2xl tw-flex tw-flex-row tw-justify-around tw-items-center tw-cursor-pointer"
+                        class="item p-4 rounded-2xl flex flex-row justify-around items-center cursor-pointer"
                     >
                         <img
-                            class="tw-w-10 tw-h-auto tw-mr-2 tw-pointer-events-none"
+                            class="w-10 h-auto mr-2 pointer-events-none"
                             src={entity.getPrefab().imagePath}
                             alt="link icon"
                         />
-                        <span class="tw-pointer-events-none tw-font-bold"
+                        <span class="pointer-events-none font-bold"
                             >{entity.getEntityData().name ?? entity.getPrefab().name}</span
                         >
                     </div>
@@ -288,26 +288,26 @@
 
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div
-            class="areas tw-p-4 tw-rounded-2xl tw-flex tw-flex-row tw-justify-around tw-items-center tw-cursor-pointer"
+            class="areas p-4 rounded-2xl flex flex-row justify-around items-center cursor-pointer"
             on:click={toggleAreaList}
         >
-            <img class="tw-w-10 tw-h-auto tw-mr-2 tw-pointer-events-none" src={AreaToolImg} alt="link icon" />
+            <img class="w-10 h-auto mr-2 pointer-events-none" src={AreaToolImg} alt="link icon" />
             {#if $areasListFiltered.size > 0}
-                <span class="tw-pointer-events-none"
+                <span class="pointer-events-none"
                     >{$areasListFiltered.size}
                     {$LL.mapEditor.explorer.areasFound($areasListFiltered.size > 1)}</span
                 >
                 {#if areaListActive}
-                    <IconChevronDown class="tw-pointer-events-none" font-size="32" />
+                    <IconChevronDown class="pointer-events-none" font-size="32" />
                 {:else}
-                    <IconChevronUp class="tw-pointer-events-none" font-size="32" />
+                    <IconChevronUp class="pointer-events-none" font-size="32" />
                 {/if}
             {:else}
-                <p class="tw-m-0">{$LL.mapEditor.explorer.noAreasFound()}</p>
+                <p class="m-0">{$LL.mapEditor.explorer.noAreasFound()}</p>
             {/if}
         </div>
         {#if areaListActive && $areasListFiltered.size > 0}
-            <div class="area-items tw-p-4 tw-flex tw-flex-col">
+            <div class="area-items p-4 flex flex-col">
                 {#if $areasListFiltered.size > 0}
                     {#each [...$areasListFiltered] as [key, area] (key)}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -316,17 +316,13 @@
                             on:mouseenter={() => highlightArea(area)}
                             on:mouseleave={() => unhighlightArea(area)}
                             on:click={() => mapExplorationObjectSelectedStore.set(area)}
-                            class="item tw-p-4 tw-rounded-2xl tw-flex tw-flex-row tw-justify-around tw-items-center tw-cursor-pointer"
+                            class="item p-4 rounded-2xl flex flex-row justify-around items-center cursor-pointer"
                         >
-                            <img
-                                class="tw-w-10 tw-h-auto tw-mr-2 tw-pointer-events-none"
-                                src={AreaToolImg}
-                                alt="link icon"
-                            />
+                            <img class="w-10 h-auto mr-2 pointer-events-none" src={AreaToolImg} alt="link icon" />
                             <span
-                                class="tw-pointer-events-none tw-w-32"
-                                class:tw-italic={!area.getAreaData().name || area.getAreaData().name == ""}
-                                class:tw-font-bold={area.getAreaData().name && area.getAreaData().name != ""}
+                                class="pointer-events-none w-32"
+                                class:italic={!area.getAreaData().name || area.getAreaData().name == ""}
+                                class:font-bold={area.getAreaData().name && area.getAreaData().name != ""}
                             >
                                 {area.getAreaData().name || "No name"}
                             </span>

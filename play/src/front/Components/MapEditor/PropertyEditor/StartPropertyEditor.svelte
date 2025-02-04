@@ -16,9 +16,9 @@
         dispatch("close");
     }}
 >
-    <span slot="header" class="tw-flex tw-justify-center tw-items-center">
+    <span slot="header" class="flex justify-center items-center">
         <img
-            class="tw-w-6 tw-mr-1"
+            class="w-6 mr-1"
             src="resources/icons/icon_start.png"
             alt={$LL.mapEditor.properties.startProperties.description()}
         />
@@ -30,7 +30,7 @@
             <label for="startTypeSelector">{$LL.mapEditor.properties.startProperties.type()}</label>
             <select
                 id="startTypeSelector"
-                class="tw-w-full"
+                class="w-full"
                 bind:value={property.isDefault}
                 on:change={() => {
                     onValueChange();

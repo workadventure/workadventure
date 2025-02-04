@@ -4,6 +4,7 @@
     import { getNavigatorType, isAndroid as isAndroidFct, NavigatorType } from "../../WebRtc/DeviceUtils";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import Alert from "../UI/Alert.svelte";
 
     let isAndroid = isAndroidFct();
     let isFirefox = getNavigatorType() === NavigatorType.firefox;
@@ -24,36 +25,42 @@
 </script>
 
 <form
-    class="helpCameraSettings tw-z-[600] tw-backdrop-blur-sm tw-bg-dark-purple/80 tw-rounded tw-text-white tw-self-center tw-p-3 tw-pointer-events-auto tw-flex tw-flex-col tw-m-auto tw-w-full md:tw-w-2/3 2xl:tw-w-1/4 tw-text-sm md:tw-text-base"
+    class="helpCameraSettings z-[600] bg-contrast/80 backdrop-filter text-center rounded-lg text-white self-center pointer-events-auto flex flex-col m-auto w-full md:w-2/3 xl:w-[380px] text-sm md:text-base absolute bottom-4 left-0 right-0 m-auto overflow-hidden"
     style={getBackgroundColor() ? `background-color: ${getBackgroundColor()};` : ""}
     on:submit|preventDefault={close}
     transition:fly={{ y: -50, duration: 500 }}
 >
-    <section class="tw-mb-0">
-        <h2 class="tw-mb-0">{$LL.camera.help.title()}</h2>
-        <p class="err blue-title">{$LL.camera.help.permissionDenied()}</p>
-        <p>{$LL.camera.help.content()}</p>
-        <p class="tw-mb-0 tw-flex tw-justify-center tw-flex-col">
+    <section class="mb-0">
+        <div class="mb-0 text-lg bold border border-solid border-transparent border-b-white/20 bg-white/10 px-4 py-3">
+            {$LL.camera.help.title()}
+        </div>
+        <div class="px-4 mt-4">
+            <Alert>
+                {$LL.camera.help.permissionDenied()}
+            </Alert>
+        </div>
+        <div class="p-4 italic opacity-50 text-sm leading-4">
+            {$LL.camera.help.content()}
+        </div>
+        {#if isFirefox}
+            <p class="err">
+                {$LL.camera.help.firefoxContent()}
+            </p>
+        {/if}
+        <div class="h-72 overflow-hidden opacity-80 saturate-50">
             {#if isFirefox}
-                <p class="err">
-                    {$LL.camera.help.firefoxContent()}
-                </p>
-                <img
-                    src={$LL.camera.help.screen.firefox()}
-                    alt="help camera setup"
-                    class="tw-rounded-lg tw-w-5/6 md:tw-w-80 tw-m-auto"
-                />
+                <img src={$LL.camera.help.screen.firefox()} alt="help camera setup" class="w-full m-auto" />
             {:else if isChrome && !isAndroid}
-                <img
-                    src={$LL.camera.help.screen.chrome()}
-                    alt="help camera setup"
-                    class="tw-rounded-lg tw-w-5/6 md:tw-w-80 tw-m-auto"
-                />
+                <img src={$LL.camera.help.screen.chrome()} alt="help camera setup" class="w-full m-auto" />
             {/if}
-        </p>
+        </div>
     </section>
-    <section class="tw-flex tw-row tw-justify-center">
-        <button class="light" on:click|preventDefault={refresh}>{$LL.camera.help.refresh()}</button>
-        <button type="submit" class="outline" on:click|preventDefault={close}>{$LL.camera.help.continue()}</button>
+    <section class="flex row justify-center p-4 bg-contrast">
+        <button class="btn btn-sm btn-border btn-light mr-2 w-full justify-center" on:click|preventDefault={refresh}
+            >{$LL.camera.help.refresh()}</button
+        >
+        <button type="submit" class="btn btn-danger btn-sm w-full justify-center" on:click|preventDefault={close}
+            >{$LL.camera.help.continue()}</button
+        >
     </section>
 </form>

@@ -6,7 +6,7 @@ import { iframeListener } from "../Api/IframeListener";
 import { connectionManager } from "../Connection/ConnectionManager";
 import { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 import { SimpleCoWebsite } from "../WebRtc/CoWebsite/SimpleCoWebsite";
-import { coWebsiteManager } from "../WebRtc/CoWebsiteManager";
+import { coWebsites } from "../Stores/CoWebsiteStore";
 import { scriptUtils } from "../Api/ScriptUtils";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { userIsConnected } from "../Stores/MenuStore";
@@ -19,14 +19,12 @@ export type OpenCoWebsiteObject = {
     allowApi?: boolean;
     allowPolicy?: string;
     widthPercent?: number;
-    position?: number;
     closable?: boolean;
-    lazy?: boolean;
 };
 
 //enlever les events lié au chat dans iframelistener
-export const openCoWebSite = async (
-    { url, allowApi, allowPolicy, widthPercent, position, closable, lazy }: OpenCoWebsiteObject,
+export const openCoWebSite = (
+    { url, allowApi, allowPolicy, widthPercent, closable }: OpenCoWebsiteObject,
     source: MessageEventSource | null
 ) => {
     if (!url || !source) {
@@ -41,13 +39,11 @@ export const openCoWebSite = async (
         closable
     );
 
-    return openSimpleCowebsite(coWebsite, position, lazy);
+    return openSimpleCowebsite(coWebsite);
 };
 
 export const getCoWebSite = () => {
-    const coWebsites = coWebsiteManager.getCoWebsites();
-
-    return coWebsites.map((coWebsite: CoWebsite) => {
+    return get(coWebsites).map((coWebsite: CoWebsite) => {
         return {
             id: coWebsite.getId(),
         };
@@ -93,14 +89,12 @@ export const openChatRoom = async (chatID: string) => {
     }
 };
 
-export const openCoWebSiteWithoutSource = async ({
+export const openCoWebSiteWithoutSource = ({
     url,
     allowApi,
     allowPolicy,
     widthPercent,
-    position,
     closable,
-    lazy,
 }: OpenCoWebsiteObject) => {
     if (!url) {
         throw new Error("Unknown query source");
@@ -108,15 +102,11 @@ export const openCoWebSiteWithoutSource = async ({
 
     const coWebsite: SimpleCoWebsite = new SimpleCoWebsite(new URL(url), allowApi, allowPolicy, widthPercent, closable);
 
-    return openSimpleCowebsite(coWebsite, position, lazy);
+    return openSimpleCowebsite(coWebsite);
 };
 
-const openSimpleCowebsite = async (coWebsite: SimpleCoWebsite, position?: number, lazy?: boolean) => {
-    coWebsiteManager.addCoWebsiteToStore(coWebsite, position);
-
-    if (lazy === undefined || !lazy) {
-        await coWebsiteManager.loadCoWebsite(coWebsite);
-    }
+const openSimpleCowebsite = (coWebsite: SimpleCoWebsite) => {
+    coWebsites.add(coWebsite);
 
     return {
         id: coWebsite.getId(),
@@ -124,12 +114,12 @@ const openSimpleCowebsite = async (coWebsite: SimpleCoWebsite, position?: number
 };
 
 export const closeCoWebsite = (coWebsiteId: string) => {
-    const coWebsite = coWebsiteManager.getCoWebsiteById(coWebsiteId);
+    const coWebsite = coWebsites.findById(coWebsiteId);
 
     if (!coWebsite) {
         console.warn("Unknown co-website, probably already closed", coWebsiteId);
         return;
     }
 
-    return coWebsiteManager.closeCoWebsite(coWebsite);
+    coWebsites.remove(coWebsite);
 };

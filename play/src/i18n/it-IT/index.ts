@@ -22,6 +22,7 @@ import megaphone from "./megaphone";
 import video from "./video";
 import statusModal from "./statusModal";
 import area from "./area";
+import form from "./form";
 
 const it_IT = merge(en_US, {
     area,
@@ -46,6 +47,7 @@ const it_IT = merge(en_US, {
     megaphone,
     video,
     statusModal,
+    form,
 });
 
 export default it_IT;
