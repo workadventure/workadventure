@@ -51,47 +51,45 @@
         ? 'hidden'
         : ''}"
 >
-    <div class="flex w-full p-2 space-x-2 @xl/actions:p-4 @xl/actions:space-x-4 screen-blocker">
-        <div class="justify-start flex-1 w-32">
+    <div class="flex w-full p-2 space-x-2 @xl/actions:p-4 @xl/actions:space-x-4 justify-items-center">
+        <div class="justify-items-center flex-1 w-32">
             <div
                 class="flex relative transition-all duration-150 z-[2] {$chatVisibilityStore ? 'hidden' : ''}"
                 class:opacity-0={$chatVisibilityStore}
                 data-testid="chat-action"
             >
-                <ActionBarButtonWrapper classList="group/btn-message-circle">
-                    <ActionBarIconButton
-                        on:click={() => {
-                            toggleChat();
-                            navChat.switchToChat();
-                            analyticsClient.openedChat();
-                        }}
-                        tooltipTitle={$LL.actionbar.help.chat.title()}
-                        tooltipDesc={$LL.actionbar.help.chat.desc()}
-                        dataTestId="chat-btn"
-                        state={"normal"}
-                        disabledHelp={false}
-                    >
-                        <MessageCircleIcon />
-                    </ActionBarIconButton>
-                    {#if $chatZoneLiveStore || $peerStore.size > 0}
-                        <div>
-                            <span class="w-4 h-4 block rounded-full absolute -top-1 -left-1 animate-ping bg-white" />
-                            <span class="w-3 h-3 block rounded-full absolute -top-0.5 -left-0.5 bg-white" />
-                        </div>
-                    {:else if $totalMessagesToSee > 0}
-                        <div
-                            class="absolute -top-2 -left-2 aspect-square flex w-5 h-5 items-center justify-center text-sm font-bold leading-none text-contrast bg-success rounded-full z-10"
+                <div class="mr-3">
+                    <ActionBarButtonWrapper classList="group/btn-message-circle">
+                        <ActionBarIconButton
+                            on:click={() => {
+                                toggleChat();
+                                navChat.switchToChat();
+                                analyticsClient.openedChat();
+                            }}
+                            tooltipTitle={$LL.actionbar.help.chat.title()}
+                            tooltipDesc={$LL.actionbar.help.chat.desc()}
+                            dataTestId="chat-btn"
+                            state={"normal"}
+                            disabledHelp={false}
                         >
-                            {$totalMessagesToSee}
-                        </div>
-                    {/if}
-                </ActionBarButtonWrapper>
-            </div>
-        </div>
-        <div
-            class="@xxs/actions:justify-center justify-end main-action pointer-events-auto min-w-32 @sm/actions:min-w-[192px]"
-        >
-            <div class="flex justify-center relative space-x-0 @md/actions:space-x-2 @xl/actions:space-x-4">
+                            <MessageCircleIcon />
+                        </ActionBarIconButton>
+                        {#if $chatZoneLiveStore || $peerStore.size > 0}
+                            <div>
+                                <span
+                                    class="w-4 h-4 block rounded-full absolute -top-1 -left-1 animate-ping bg-white"
+                                />
+                                <span class="w-3 h-3 block rounded-full absolute -top-0.5 -left-0.5 bg-white" />
+                            </div>
+                        {:else if $totalMessagesToSee > 0}
+                            <div
+                                class="absolute -top-2 -left-2 aspect-square flex w-5 h-5 items-center justify-center text-sm font-bold leading-none text-contrast bg-success rounded-full z-10"
+                            >
+                                {$totalMessagesToSee}
+                            </div>
+                        {/if}
+                    </ActionBarButtonWrapper>
+                </div>
                 <div>
                     <!-- ACTION WRAPPER : CAM & MIC -->
                     <div class="group/hardware flex items-center relative">
