@@ -290,17 +290,15 @@
                             data-testid="roomAccordeon"
                         >
                             <div class="flex items-center space-x-2 grow m-0 p-0">
-                                <div
-                                    class="text-sm font-bold tracking-widest uppercase grow text-left"
-                                >
+                                <div class="text-sm font-bold tracking-widest uppercase grow text-left">
                                     {$LL.chat.rooms()}
                                 </div>
                             </div>
                             <CreateRoomOrFolderOption parentID={undefined} parentName={""} folder={undefined} />
                             <button
-                            class="transition-all group-hover:bg-white/10 p-1 rounded-lg aspect-square flex items-center justify-center text-white"
+                                class="transition-all group-hover:bg-white/10 p-1 rounded-lg aspect-square flex items-center justify-center text-white"
                             >
-                            <IconChevronUp class={`transform transition ${!displayRooms ? "" : "rotate-180"}`} />
+                                <IconChevronUp class={`transform transition ${!displayRooms ? "" : "rotate-180"}`} />
                             </button>
                         </div>
                     </div>
