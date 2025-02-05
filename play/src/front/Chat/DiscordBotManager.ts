@@ -30,7 +30,9 @@ export class DiscordBotManager {
         try {
             //try to get existing direct room with the bot
             const existingDirectRoom = this.chatConnection.getDirectRoomFor(DISCORD_BOT_ID);
-            console.log(" 🫡existingDirectRoom", existingDirectRoom);
+            console.log(" 🫡existingDirectRoom", this.chatConnection.getRoomList());
+            console.log("discord bot id", DISCORD_BOT_ID);
+            console.log(">>>>>>>existingDirectRoom", existingDirectRoom);
             if (existingDirectRoom instanceof MatrixChatRoom) {
                 this.discordBotRoom = existingDirectRoom;
                 return;
