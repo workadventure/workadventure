@@ -4,9 +4,9 @@
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { Streamable } from "../../../Stores/StreamableCollectionStore";
     import { VideoPeer } from "../../../WebRtc/VideoPeer";
+    import ScreenShareIcon from "../../Icons/ScreenShareIcon.svelte";
     import RemoteSoundWidget from "./RemoteSoundWidget.svelte";
     import RemoteVideoWidget from "./RemoteVideoWidget.svelte";
-    import ScreenShareIcon from "../../Icons/ScreenShareIcon.svelte";
 
     const dispatch = createEventDispatcher();
 

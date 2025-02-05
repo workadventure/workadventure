@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { createEventDispatcher } from "svelte";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import ActionBarIconButton from "../ActionBarIconButton.svelte";
     import ActionBarButtonWrapper from "../ActionBarButtonWrapper.svelte";
@@ -9,10 +10,8 @@
     import ScreenShareIcon from "../../Icons/ScreenShareIcon.svelte";
     import ScreenShareOffIcon from "../../Icons/ScreenShareOffIcon.svelte";
     import { requestedScreenSharingState } from "../../../Stores/ScreenSharingStore";
-    import {createEventDispatcher} from "svelte";
 
     const dispatch = createEventDispatcher();
-
 
     function screenSharingClick(): void {
         dispatch("click");

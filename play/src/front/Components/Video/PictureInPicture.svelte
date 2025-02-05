@@ -8,11 +8,11 @@
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
     import { localStreamStore, localVolumeStore, mediaStreamConstraintsStore } from "../../Stores/MediaStore";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
+    import MicOffIcon from "../Icons/MicOffIcon.svelte";
+    import PictureInPictureActionBar from "../ActionBar/PictureInPictureActionBar.svelte";
     import { srcObject } from "./utils";
     import ActivatePictureInPicture from "./PictureInPicture/ActivatePictureInPicture.svelte";
     import StreamableWrapperWidget from "./PictureInPicture/StreamableWrapperWidget.svelte";
-    import MicOffIcon from "../Icons/MicOffIcon.svelte";
-    import PictureInPictureActionBar from "../ActionBar/PictureInPictureActionBar.svelte";
 
     let divElement: HTMLDivElement;
     let myLocalStream: MediaStream | undefined | null;
@@ -230,17 +230,10 @@
     });
 </script>
 
-<div
-        bind:this={divElement}
-        class="h-full w-full"
-        style="display: none;"
->
+<div bind:this={divElement} class="h-full w-full" style="display: none;">
     <ActivatePictureInPicture on:disagree={disagreePictureInPicture} on:allow={allowPictureInPicture} />
     <div class="flex flex-col w-full h-full">
-        <div
-            class="h-[84%] w-full flex justify-center items-center z-40 py-1 flex-1"
-        >
-
+        <div class="h-[84%] w-full flex justify-center items-center z-40 py-1 flex-1">
             <div
                 id="scrolllist-wrapper"
                 class="relative flex justify-center items-start w-full h-full overflow-hidden overflow-y-auto"
@@ -298,11 +291,12 @@
             </div>
         </div>
         <PictureInPictureActionBar
-                on:screenSharingClick={handlerScreanSharingClick}
-                on:toggleChat={handlerToggleChat}
+            on:screenSharingClick={handlerScreanSharingClick}
+            on:toggleChat={handlerToggleChat}
         />
     </div>
 </div>
+
 <style lang="scss">
     /* Hide scrollbar for Chrome, Safari and Opera */
     *::-webkit-scrollbar {
