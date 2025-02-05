@@ -12,7 +12,6 @@
     import LL from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { UserProviderMerger } from "../UserProviderMerger/UserProviderMerger";
-    import discordLogo from "../../Components/images/discord-logo.svg";
     import { externalChatSettingsSvelteComponent } from "../../Stores/Utils/externalSvelteComponentStore";
     import { IconMessageCircle2, IconSearch, IconUsers, IconX } from "@wa-icons";
 

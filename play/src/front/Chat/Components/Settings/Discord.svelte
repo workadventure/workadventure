@@ -14,8 +14,8 @@
     import { userIsConnected } from "../../../Stores/MenuStore";
     import LL from "../../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
+    import { ChatMessage } from "../../Connection/ChatConnection";
     import { IconDotsCircle } from "@wa-icons";
-    import {ChatMessage} from "../../Connection/ChatConnection";
 
     //initialize discordBotManager
     let DiscordBot: DiscordBotManager;
