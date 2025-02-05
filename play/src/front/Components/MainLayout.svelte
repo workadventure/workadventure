@@ -232,7 +232,6 @@
         <PictureInPicture />
     {/if}
 
-
     {#if $actionsMenuStore}
         <ActionsMenu />
     {/if}

@@ -1,6 +1,6 @@
 <script lang="ts">
     import { writable } from "svelte/store";
-    import {createEventDispatcher} from "svelte";
+    import { createEventDispatcher } from "svelte";
     import { silentStore } from "../../Stores/MediaStore";
 
     import { analyticsClient } from "../../Administration/AnalyticsClient";
@@ -12,10 +12,7 @@
         myMicrophoneStore,
         proximityMeetingStore,
     } from "../../Stores/MyMediaStore";
-    import {
-        activeSubMenuStore,
-        menuVisiblilityStore,
-    } from "../../Stores/MenuStore";
+    import { activeSubMenuStore, menuVisiblilityStore } from "../../Stores/MenuStore";
     import { LL } from "../../../i18n/i18n-svelte";
     import { bottomActionBarVisibilityStore } from "../../Stores/BottomActionBarStore";
     import { peerStore } from "../../Stores/PeerStore";
@@ -39,7 +36,6 @@
         }
 
         chatVisibilityStore.set(!$chatVisibilityStore);
-
     }
 
     function toggleScreensharing() {
@@ -47,7 +43,6 @@
     }
 
     let totalMessagesToSee = writable<number>(0);
-
 </script>
 
 <div
