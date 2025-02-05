@@ -334,20 +334,27 @@ class ConnectionManager {
                         };
                     }
                     if (response.status === "ok") {
-                        const parsedRoomMetadata = RoomMetadataType.safeParse(this._currentRoom.metadata).data;
+                        const parsedRoomMetadata = RoomMetadataType.parse(this._currentRoom.metadata);
                         if (parsedRoomMetadata) {
                             enableDiscordBridge.set(parsedRoomMetadata.discordSettings.enableDiscordBridge);
-                            parsedRoomMetadata;
                             //Let's check if the discord mandatory is activated
+                            console.log(">>>>> 🤯🤯🤯 Discord ???", parsedRoomMetadata.discordSettings.enableDiscordMandatory)
                             if (parsedRoomMetadata.discordSettings.enableDiscordMandatory) {
                                 const discordToken = parsedRoomMetadata.player?.accessTokens?.find(
                                     (token) => token.provider === "discord"
                                 );
+                                console.log(">>>>> 🤯🤯🤯 Discord mandatory est activé")
                                 if (!discordToken) {
+                                    //redirect to login page
+                                    const redirect = this.loadOpenIDScreen(true);
+                                    if (redirect !== null) {
+                                         redirect.searchParams.append("error", "You need to be log with Discord in this world");
+                                         return redirect;
+                                    }
                                     return {
                                         nextScene: "errorScene",
-                                        error: new Error("You don't have access to this room"),
-                                    };
+                                        error: new Error(`Discord token is missing`),
+                                    }
                                 }
                                 if (parsedRoomMetadata.discordSettings.discordAllowedGuilds.length > 0) {
                                     const allowedDiscordGuildsId =
@@ -366,6 +373,7 @@ class ConnectionManager {
                                             const isUserInGuild = allowedDiscordGuildsId.some((guild) =>
                                                 userGuildsId.includes(guild)
                                             );
+                                            console.log(">>>>> On as verifié les guild du user")
                                             if (!isUserInGuild) {
                                                 return {
                                                     nextScene: "errorScene",
@@ -376,7 +384,7 @@ class ConnectionManager {
                                             return {
                                                 nextScene: "errorScene",
                                                 error: new Error(
-                                                    `An error occurred while fatching our discord guilds: \n ${err}`
+                                                    `An error occurred while fetching our discord guilds: \n ${err}`
                                                 ),
                                             };
                                         }

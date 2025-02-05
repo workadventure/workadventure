@@ -15,6 +15,7 @@
     import LL from "../../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { IconDotsCircle } from "@wa-icons";
+    import {ChatMessage} from "../../Connection/ChatConnection";
 
     //initialize discordBotManager
     let DiscordBot: DiscordBotManager;
@@ -124,7 +125,7 @@
         }
         DiscordBot = new DiscordBotManager(chatConnection);
         await DiscordBot.initDiscordBotRoom();
-        let bridgeConnectionStatusMessage;
+        let bridgeConnectionStatusMessage: ChatMessage;
         try {
             bridgeConnectionStatusMessage = await DiscordBot.sendMessage("ping");
         } catch (e) {
@@ -134,12 +135,13 @@
             return;
         }
         const bridgeConnectionStatus = get(bridgeConnectionStatusMessage.content).body;
-        discordUser = await DiscordBot.getCurrentDiscordUser();
+        discordUser = await DiscordBot.getCurrentDiscordUser(bridgeConnectionStatusMessage);
 
         if (
-            bridgeConnectionStatus.includes("You're logged in as") ||
-            bridgeConnectionStatus.includes("You're already logged in") ||
-            bridgeConnectionStatus.includes("Successfully logged in as")
+            // bridgeConnectionStatus.includes("You're logged in as") ||
+            // bridgeConnectionStatus.includes("You're already logged in") ||
+            // bridgeConnectionStatus.includes("Successfully logged in as")
+            discordUser
         ) {
             bridgeConnected = true;
 

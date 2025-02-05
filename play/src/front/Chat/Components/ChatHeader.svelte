@@ -71,22 +71,12 @@
 <div class="tw-p-2 tw-items-center tw-flex tw-flex-row tw-absolute tw-w-full tw-z-40">
     <div class="tw-flex flex-row {searchActive ? 'tw-hidden' : ''}">
         {#if showNavBar}
-            {#if $externalChatSettingsSvelteComponent.size > 0}
-                {#each [...$externalChatSettingsSvelteComponent.entries()] as [id, value] (`externalChatSettingsSvelteComponent-${id}`)}
-                    <svelte:component this={value.componentType} extensionModule={value.extensionModule} />
-                {/each}
-            {/if}
-
             {#if $allowedDiscordBridgeStore}
-                <button
-                    class="tw-flex tw-justify-center tw-items-center tw-p-2 tw-rounded-md tw-cursor-pointer {$navChat ===
-                    'settings'
-                        ? 'tw-bg-secondary-800 tw-text-black'
-                        : 'hover:tw-bg-white hover:tw-bg-opacity-10'}"
-                    on:click={() => navChat.switchToSettings()}
-                >
-                    <img src={discordLogo} alt="Discord logo" class="tw-w-6" />
-                </button>
+                {#if $externalChatSettingsSvelteComponent.size > 0}
+                    {#each [...$externalChatSettingsSvelteComponent.entries()] as [id, value] (`externalChatSettingsSvelteComponent-${id}`)}
+                        <svelte:component this={value.componentType} extensionModule={value.extensionModule} />
+                    {/each}
+                {/if}
             {/if}
 
             {#if $navChat === "chat"}

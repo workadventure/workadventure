@@ -29,13 +29,17 @@ export class DiscordBotManager {
         }
         try {
             //try to get existing direct room with the bot
-            // const existingDirectRoom = this.chatConnection.getDirectRoom(DISCORD_BOT_ID);
-
-            const discordChatRoom = await this.chatConnection.createDirectRoom(DISCORD_BOT_ID);
-            if (discordChatRoom instanceof MatrixChatRoom) {
-                this.discordBotRoom = discordChatRoom;
-                //get number of message of the room
-                console.log("&&&&", this.discordBotRoom.messages.length);
+            const existingDirectRoom = this.chatConnection.getDirectRoomFor(DISCORD_BOT_ID);
+            console.log(" 🫡existingDirectRoom", existingDirectRoom);
+            if (existingDirectRoom instanceof MatrixChatRoom) {
+                this.discordBotRoom = existingDirectRoom;
+                return;
+            }else {
+                //if no existing direct room create one
+                const discordChatRoom = await this.chatConnection.createDirectRoom(DISCORD_BOT_ID);
+                if (discordChatRoom instanceof MatrixChatRoom) {
+                    this.discordBotRoom = discordChatRoom;
+                }
             }
         } catch (error) {
             console.error("Failed to create direct room with the bot", error);
@@ -51,13 +55,14 @@ export class DiscordBotManager {
             }
             try {
                 this.discordBotRoom.sendMessage(message);
+                console.log("-------> send message: ", message);
             } catch (e) {
                 console.error("Failed to send message to discord bot", e);
                 reject(e);
             }
             this.botMessageSubscription = this.discordBotRoom.messages.onPush.subscribe((lastMessage) => {
-                console.log("lastMessage", get(lastMessage.content).body);
-                console.log(">>>>>>", this.discordBotRoom?.messages.length);
+                // console.log("lastMessage", get(lastMessage.content).body);
+                // console.log(">>>>>>", this.discordBotRoom?.messages.length);
                 if (!this.discordBotRoom) {
                     return reject(new Error("Discord bot room is not initialized"));
                 }
@@ -68,8 +73,8 @@ export class DiscordBotManager {
                 } else if (get(lastMessage.content).body.includes("welcome from bridge bot")) {
                     //ignoring the welcome message
                     welcomeMessageNumber++;
-                    console.log("welcomeMessageNumber", welcomeMessageNumber);
-                    if (welcomeMessageNumber >= 3) {
+                    //console.log("welcomeMessageNumber", welcomeMessageNumber);
+                    if (welcomeMessageNumber > 3) {
                         return resolve(this.sendMessage(message));
                     }
                     return;
@@ -82,6 +87,7 @@ export class DiscordBotManager {
                     return;
                 } else {
                     if (this.botMessageSubscription) this.botMessageSubscription.unsubscribe();
+                    console.log(">>>> 👌lastMessage", get(lastMessage.content).body);
                     return resolve(lastMessage);
                 }
             });
@@ -108,7 +114,8 @@ export class DiscordBotManager {
         return null;
     }
 
-    //Not same as parseGuilds parseGuildsContentMessage is in case guild status response message is not a MatrixChatMessage
+    //Not same as parseGuilds, parseGuildsContentMessage is in case guild status response message is not a MatrixChatMessageor
+    // or if we have only a string to parse in guilds list
     public parseGuildsContentMessage(message: string): DiscordServer[] {
         const regex = /^\* (.*) \(`(\d+)`\) - (.*)$/gm;
 
@@ -312,6 +319,10 @@ export class DiscordBotManager {
         });
     }
     destroy() {
+        //close the direct room with the bot
+        if (this.discordBotRoom) {
+            this.discordBotRoom.destroy();
+        }
         if (this.botMessageSubscription) this.botMessageSubscription.unsubscribe();
     }
 }
