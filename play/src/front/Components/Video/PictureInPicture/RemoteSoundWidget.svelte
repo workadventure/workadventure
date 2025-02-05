@@ -20,7 +20,7 @@
 
 <div class="voice-meter-my-container justify-end z-[251] pr-2 absolute w-full top-0">
     {#if volumeStore && $constraintStore && $constraintStore.audio !== false}
-        <SoundMeterWidget volume={$volumeStore} classcss="" barColor="blue" />
+        <SoundMeterWidget volume={$volumeStore} cssClass="" barColor="blue" />
     {:else if isMinified}
         <MicOffIcon width="w-4" height="h-4" />
     {:else}
