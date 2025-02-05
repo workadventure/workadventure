@@ -1,4 +1,5 @@
 import { derived, writable } from "svelte/store";
+import { v4 as uuid } from "uuid";
 
 interface ErrorMessage {
     id: string | undefined;
@@ -85,7 +86,7 @@ function createWarningMessageStore() {
                 const newWarningMessage = {
                     message,
                     closable: options?.closable ?? true,
-                    id: options?.id ?? crypto.randomUUID(),
+                    id: options?.id ?? uuid(),
                 };
                 if (
                     !messages.find(

@@ -2,8 +2,8 @@ import type { Translation } from "../i18n-types";
 import type { DeepPartial } from "../DeepPartial";
 
 const notification: DeepPartial<Translation["notification"]> = {
-    discussion: "wil met je praten",
-    message: "stuurt een bericht",
+    discussion: "{name} wil met je praten",
+    message: "{name} stuurt een bericht",
     askToMuteMicrophone: "Vraag om je microfoon te dempen 🙏",
     askToMuteCamera: "Vraag om je camera te dempen 🙏",
     help: {

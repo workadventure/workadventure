@@ -1,7 +1,7 @@
 <script lang="ts">
     import { writable } from "svelte/store";
     import { fly } from "svelte/transition";
-    import { onDestroy, onMount } from "svelte";
+    import { createEventDispatcher, onDestroy, onMount } from "svelte";
     import { AvailabilityStatus } from "@workadventure/messages";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import {
@@ -110,12 +110,19 @@
     import AvailabilityStatusComponent from "./AvailabilityStatus/AvailabilityStatus.svelte";
     import { IconCheck, IconChevronDown, IconChevronUp } from "@wa-icons";
 
+    const dispatch = createEventDispatcher();
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
     let cameraActive = false;
     let microphoneActive = false;
+    export let isPictureInPicture = false;
 
     function screenSharingClick(): void {
+        // If the picture in picture is activated, the dispatch event could be caught by the parent component.
+        // This will be useless if all of the svelte components are used in the picture in picture component.
+        // More detail on the merge request: https://github.com/workadventure/workadventure/pull/4519
+        if (isPictureInPicture) dispatch("screenSharingClick");
+
         if ($silentStore) return;
         if ($requestedScreenSharingState === true) {
             requestedScreenSharingState.disableScreenSharing();
@@ -173,6 +180,11 @@
     }
 
     function toggleChat() {
+        // If the picture in picture is activated, the dispatch event could be caught by the parent component.
+        // This will be useless if all of the svelte components are used in the picture in picture component.
+        // More detail on the merge request: https://github.com/workadventure/workadventure/pull/4519
+        if (isPictureInPicture) dispatch("toggleChat");
+
         if (!$chatVisibilityStore) {
             menuVisiblilityStore.set(false);
             activeSubMenuStore.activateByIndex(0);
@@ -411,7 +423,10 @@
     const chatHasUnreadMessage = chatConnection.hasUnreadMessages;
 
     onMount(() => {
-        resizeObserver.observe(mainHtmlDiv);
+        // this component is used in the picture in picture dom
+        // there is issue with the resize observer, when we close picture in picture
+        // the element destroy of this component is never called and the resize observer is still active
+        if (isPictureInPicture == false) resizeObserver.observe(mainHtmlDiv);
     });
 
     onDestroy(() => {
@@ -486,89 +501,98 @@
             <div
                 class="bottom-action-section tw-flex animate"
                 id="bubble-menu"
-                in:fly={{ y: 70, duration: 100, delay: 200 }}
-                out:fly={{ y: 70, duration: 100, delay: 0 }}
                 class:tw-translate-x-0={$bottomActionBarVisibilityStore}
                 class:translate-right={!$bottomActionBarVisibilityStore}
             >
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div
-                    class="tw-transition-all bottom-action-button"
-                    class:disabled={$followStateStore !== "off"}
-                    on:click={() => analyticsClient.follow()}
-                    on:click={followClick}
-                >
-                    {#if !isMobile}
-                        {#if $followStateStore === "active"}
-                            <Tooltip text={$LL.actionbar.unfollow()} />
-                        {:else}
-                            <Tooltip text={$LL.actionbar.follow()} />
+                {#if isPictureInPicture == false}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div
+                        class="tw-transition-all bottom-action-button"
+                        class:disabled={$followStateStore !== "off"}
+                        on:click={() => analyticsClient.follow()}
+                        on:click={followClick}
+                    >
+                        {#if !isMobile}
+                            {#if $followStateStore === "active"}
+                                <Tooltip text={$LL.actionbar.unfollow()} />
+                            {:else}
+                                <Tooltip text={$LL.actionbar.follow()} />
+                            {/if}
                         {/if}
-                    {/if}
 
-                    <button class:border-top-light={$followStateStore === "active"}>
-                        <img
-                            draggable="false"
-                            src={followImg}
-                            style="padding: 2px"
-                            alt={$followStateStore === "active" ? $LL.actionbar.unfollow() : $LL.actionbar.follow()}
-                        />
-                    </button>
-                </div>
-
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div
-                    class="tw-transition-all bottom-action-button"
-                    on:click={() => analyticsClient.layoutPresentChange()}
-                    on:click={switchLayoutMode}
-                >
-                    {#if !isMobile}
-                        <Tooltip text={$LL.actionbar.layout()} />
-                    {/if}
-
-                    <button>
-                        {#if $embedScreenLayoutStore === LayoutMode.Presentation}
+                        <button class:border-top-light={$followStateStore === "active"}>
                             <img
                                 draggable="false"
-                                src={layoutChatImg}
+                                src={followImg}
                                 style="padding: 2px"
-                                alt="Switch to presentation mode"
+                                alt={$followStateStore === "active" ? $LL.actionbar.unfollow() : $LL.actionbar.follow()}
                             />
-                        {:else}
-                            <img
-                                draggable="false"
-                                src={layoutPresentationImg}
-                                style="padding: 2px"
-                                alt="Switch to mosaic mode"
-                            />
-                        {/if}
-                    </button>
-                </div>
+                        </button>
+                    </div>
+                {/if}
 
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div
-                    class="tw-transition-all bottom-action-button"
-                    class:disabled={$currentPlayerGroupLockStateStore}
-                    on:click={() => analyticsClient.lockDiscussion()}
-                    on:click={lockClick}
-                >
-                    {#if !isMobile}
-                        <Tooltip text={$LL.actionbar.lock()} />
-                    {/if}
-
-                    <button class:border-top-light={$currentPlayerGroupLockStateStore}>
-                        {#if $currentPlayerGroupLockStateStore}
-                            <img
-                                draggable="false"
-                                src={lockCloseImg}
-                                style="padding: 2px"
-                                alt="Unlock videochat bubble"
-                            />
-                        {:else}
-                            <img draggable="false" src={lockOpenImg} style="padding: 2px" alt="Lock videochat bubble" />
+                {#if isPictureInPicture == false}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div
+                        class="tw-transition-all bottom-action-button"
+                        on:click={() => analyticsClient.layoutPresentChange()}
+                        on:click={switchLayoutMode}
+                    >
+                        {#if !isMobile}
+                            <Tooltip text={$LL.actionbar.layout()} />
                         {/if}
-                    </button>
-                </div>
+
+                        <button>
+                            {#if $embedScreenLayoutStore === LayoutMode.Presentation}
+                                <img
+                                    draggable="false"
+                                    src={layoutChatImg}
+                                    style="padding: 2px"
+                                    alt="Switch to presentation mode"
+                                />
+                            {:else}
+                                <img
+                                    draggable="false"
+                                    src={layoutPresentationImg}
+                                    style="padding: 2px"
+                                    alt="Switch to mosaic mode"
+                                />
+                            {/if}
+                        </button>
+                    </div>
+                {/if}
+
+                {#if isPictureInPicture == false}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div
+                        class="tw-transition-all bottom-action-button"
+                        class:disabled={$currentPlayerGroupLockStateStore}
+                        on:click={() => analyticsClient.lockDiscussion()}
+                        on:click={lockClick}
+                    >
+                        {#if !isMobile}
+                            <Tooltip text={$LL.actionbar.lock()} />
+                        {/if}
+
+                        <button class:border-top-light={$currentPlayerGroupLockStateStore}>
+                            {#if $currentPlayerGroupLockStateStore}
+                                <img
+                                    draggable="false"
+                                    src={lockCloseImg}
+                                    style="padding: 2px"
+                                    alt="Unlock videochat bubble"
+                                />
+                            {:else}
+                                <img
+                                    draggable="false"
+                                    src={lockOpenImg}
+                                    style="padding: 2px"
+                                    alt="Lock videochat bubble"
+                                />
+                            {/if}
+                        </button>
+                    </div>
+                {/if}
 
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
@@ -814,7 +838,7 @@
                 {/if}
 
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
-                {#if $isSpeakerStore && !$streamingMegaphoneStore}
+                {#if isPictureInPicture == false && $isSpeakerStore && !$streamingMegaphoneStore}
                     <div
                         class="tw-transition-all bottom-action-button"
                         on:click={() => analyticsClient.layoutPresentChange()}
@@ -886,7 +910,8 @@
                         <img draggable="false" src={emojiPickOn} style="padding: 2px" alt="Toggle emoji picker" />
                     </button>
                 </div>
-                {#if $megaphoneCanBeUsedStore && !$silentStore && ($myMicrophoneStore || $myCameraStore)}
+
+                {#if isPictureInPicture == false && $megaphoneCanBeUsedStore && !$silentStore && ($myMicrophoneStore || $myCameraStore)}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div on:click={toggleGlobalMessage} class="bottom-action-button tw-relative">
                         {#if !isMobile}
@@ -918,7 +943,7 @@
                 {/if}
             </div>
 
-            {#if !isMobile || openMobileMenu == true}
+            {#if isPictureInPicture == false && (!isMobile || openMobileMenu == true)}
                 <!-- Menu part -->
                 <div class="bottom-action-section tw-flex tw-flex-initial">
                     <!-- Logo part -->
@@ -1020,7 +1045,7 @@
                 </div>
             {/if}
 
-            {#if $addActionButtonActionBarEvent.length > 0}
+            {#if isPictureInPicture == false && $addActionButtonActionBarEvent.length > 0}
                 <div class="bottom-action-section tw-flex tw-flex-initial">
                     {#each $addActionButtonActionBarEvent as button (button.id)}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -1055,7 +1080,7 @@
                 </div>
             {/if}
 
-            {#if $inviteUserActivated}
+            {#if isPictureInPicture == false && $inviteUserActivated}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class="bottom-action-section tw-flex tw-flex-initial"
@@ -1073,24 +1098,26 @@
                     </button>
                 </div>
             {/if}
-            {#each $addClassicButtonActionBarEvent as button (button.id)}
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div
-                    class="bottom-action-section tw-flex tw-flex-initial"
-                    in:fly={{}}
-                    on:dragstart|preventDefault={noDrag}
-                    on:click={() => analyticsClient.clickOnCustomButton(button.id, button.label)}
-                    on:click={() => {
-                        buttonActionBarTrigger(button.id);
-                    }}
-                >
-                    <button class="btn light tw-m-0 tw-font-bold tw-text-xs sm:tw-text-base" id={button.id}>
-                        {button.label}
-                    </button>
-                </div>
-            {/each}
+            {#if isPictureInPicture == false}
+                {#each $addClassicButtonActionBarEvent as button (button.id)}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div
+                        class="bottom-action-section tw-flex tw-flex-initial"
+                        in:fly={{}}
+                        on:dragstart|preventDefault={noDrag}
+                        on:click={() => analyticsClient.clickOnCustomButton(button.id, button.label)}
+                        on:click={() => {
+                            buttonActionBarTrigger(button.id);
+                        }}
+                    >
+                        <button class="btn light tw-m-0 tw-font-bold tw-text-xs sm:tw-text-base" id={button.id}>
+                            {button.label}
+                        </button>
+                    </div>
+                {/each}
+            {/if}
 
-            {#if isMobile}
+            {#if isPictureInPicture == false && isMobile}
                 <!-- Menu mobile part -->
                 <div class="bottom-action-section tw-flex tw-flex-initial">
                     <!-- svelte-ignore a11y-click-events-have-key-events -->

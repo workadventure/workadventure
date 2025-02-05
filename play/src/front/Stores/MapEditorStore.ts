@@ -77,6 +77,7 @@ export const mapEditorDeleteCustomEntityEventStore = writable<DeleteCustomEntity
 export enum WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM {
     Megaphone = "Megaphone",
     RoomSettings = "Room Settings",
+    MatrixRoomList = "Matrix Room List",
 }
 
 export const mapEditorWamSettingsEditorToolCurrentMenuItemStore = writable<

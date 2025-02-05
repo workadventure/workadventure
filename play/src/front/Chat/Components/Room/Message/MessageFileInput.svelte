@@ -1,12 +1,13 @@
 <script lang="ts">
     import { get } from "svelte/store";
+    import { createEventDispatcher, onMount } from "svelte";
     import { ChatRoom } from "../../../Connection/ChatConnection";
     import { selectedChatMessageToReply } from "../../../Stores/ChatStore";
     import { ProximityChatRoom } from "../../../Connection/Proximity/ProximityChatRoom";
-    import Tooltip from "../../../../Components/Util/Tooltip.svelte";
-    import { LL } from "../../../../../i18n/i18n-svelte";
     import { chatInputFocusStore } from "../../../../Stores/ChatStore";
-    import { IconLoader, IconPaperclip } from "@wa-icons";
+    import { IconLoader, IconPaperclip, IconX } from "@wa-icons";
+
+    const dispatch = createEventDispatcher();
 
     let files: FileList | undefined = undefined;
     export let room: ChatRoom;
@@ -27,6 +28,7 @@
         if (get(selectedChatMessageToReply) !== null) {
             selectedChatMessageToReply.set(null);
         }
+        dispatch("fileUploaded");
     }
 
     function focusChatInput() {
@@ -37,12 +39,15 @@
         // Enable input manager to allow the game to receive the input
         chatInputFocusStore.set(false);
     }
+
+    onMount(() => {
+        // Unselect chat message to reply if the input is focused
+        const input = document.getElementById("labelUpload");
+        input?.click();
+    });
 </script>
 
-<div>
-    {#if isProximityChatRoom}
-        <Tooltip leftPosition={"true"} text={$LL.chat.featureComingSoon()} />
-    {/if}
+<div class="tw-relative">
     <input
         id="upload"
         class="tw-hidden"
@@ -50,11 +55,12 @@
         type="file"
         multiple
         bind:files
-        data-testid="uploadCustomAsset"
+        data-testid="uploadChatCustomAsset"
         on:focusin={focusChatInput}
         on:focusout={unfocusChatInput}
     />
     <label
+        id="labelUpload"
         for="upload"
         class="tw-p-0 tw-m-0 tw-h-11 tw-w-11 tw-flex tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-none"
     >
@@ -69,4 +75,10 @@
             />
         {/if}
     </label>
+    <button
+        class="tw-absolute tw-top-0 tw-right-0 tw-m-1 hover:tw-bg-white/10 tw-cursor-pointer"
+        on:click={() => unselectChatMessageToReplyIfSelected()}
+    >
+        <IconX class=" tw-text-white/50 hover:tw-text-white tw-transition-all" font-size={16} />
+    </button>
 </div>

@@ -264,7 +264,7 @@
         if (!$mapEditorSelectedAreaPreviewStore) return;
         analyticsClient.addMapEditorProperty("entity", app.name);
         const property: OpenWebsitePropertyData = {
-            id: crypto.randomUUID(),
+            id: uuid(),
             type: "openWebsite",
             application: app.name,
             closable: true,

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import { audioManagerVisibilityStore } from "../Stores/AudioManagerStore";
     import { hasEmbedScreen } from "../Stores/EmbedScreensStore";
     import { emoteDataStoreLoading, emoteMenuStore } from "../Stores/EmoteStore";
@@ -13,7 +13,7 @@
     import { menuVisiblilityStore, warningBannerStore } from "../Stores/MenuStore";
     import { showReportScreenStore, userReportEmpty } from "../Stores/ShowReportScreenStore";
     import { followStateStore } from "../Stores/FollowStore";
-    import { peerStore } from "../Stores/PeerStore";
+    import { activePictureInPictureStore, peerStore } from "../Stores/PeerStore";
     import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
     import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
     import { soundPlayingStore } from "../Stores/SoundPlayingStore";
@@ -39,6 +39,8 @@
     import { mapEditorAskToClaimPersonalAreaStore, mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
     import { externalPopupSvelteComponent } from "../Stores/Utils/externalSvelteComponentStore";
+    import { visibilityStore } from "../Stores/VisibilityStore";
+    import { streamableCollectionStore } from "../Stores/StreamableCollectionStore";
     import AudioManager from "./AudioManager/AudioManager.svelte";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
@@ -71,6 +73,7 @@
     import WarningToast from "./WarningContainer/WarningToast.svelte";
     import ClaimPersonalAreaDialogBox from "./MapEditor/ClaimPersonalAreaDialogBox.svelte";
     import MainModal from "./Modal/MainModal.svelte";
+    import PictureInPicture from "./Video/PictureInPicture.svelte";
     let mainLayout: HTMLDivElement;
     let isMobile = isMediaBreakpointUp("md");
     const resizeObserver = new ResizeObserver(() => {
@@ -79,6 +82,10 @@
 
     onMount(() => {
         resizeObserver.observe(mainLayout);
+    });
+
+    onDestroy(() => {
+        resizeObserver.disconnect();
     });
 </script>
 
@@ -160,7 +167,7 @@
             <VisitCard visitCardUrl={$requestVisitCardsStore} />
         {/if}
 
-        {#if hasEmbedScreen}
+        {#if hasEmbedScreen && $activePictureInPictureStore == false}
             <EmbedScreensContainer />
         {/if}
 
@@ -219,6 +226,10 @@
     {/if}
     {#if $notificationPermissionModalVisibility}
         <NotificationPermissionModal />
+    {/if}
+
+    {#if $visibilityStore == false && $streamableCollectionStore.size > 0}
+        <PictureInPicture />
     {/if}
 
     <Lazy

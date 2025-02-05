@@ -3,23 +3,17 @@
 
     let searchActive = false;
     import { chatSearchBarValue, navChat, joignableRoom } from "../Stores/ChatStore";
-    import {
-        ENABLE_CHAT,
-        ENABLE_CHAT_DISCONNECTED_LIST,
-        ENABLE_CHAT_ONLINE_LIST,
-    } from "../../Enum/EnvironmentVariable";
     import LoadingSmall from "../images/loading-small.svelte";
     import LL from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { UserProviderMerger } from "../UserProviderMerger/UserProviderMerger";
     import { externalChatSettingsSvelteComponent } from "../../Stores/Utils/externalSvelteComponentStore";
+    import OnlineUsersCount from "./OnlineUsersCount.svelte";
     import { IconMessageCircle2, IconSearch, IconUsers, IconX } from "@wa-icons";
-
     const gameScene = gameManager.getCurrentGameScene();
     const chat = gameManager.chatConnection;
-    const showNavBar = (ENABLE_CHAT_ONLINE_LIST || ENABLE_CHAT_DISCONNECTED_LIST) && ENABLE_CHAT;
+    const showNavBar = gameScene.room.isChatOnlineListEnabled || gameScene.room.isChatDisconnectedListEnabled;
     const userProviderMergerPromise = gameScene.userProviderMerger;
-    let userWorldCount = gameScene.worldUserCounter;
     let searchLoader = false;
     const chatStatusStore = chat.connectionStatus;
     let typingTimer: ReturnType<typeof setTimeout>;
@@ -103,18 +97,9 @@
                 {$LL.chat.users()}
             {/if}
         </div>
-        <div
-            class="tw-flex tw-items-center tw-justify-center tw-text-success tw-space-x-1.5 {searchActive
-                ? 'tw-hidden'
-                : ''}"
-        >
-            <div
-                class="tw-text-xs tw-aspect-square tw-min-w-5 tw-h-5 tw-px-1 tw-border tw-border-solid tw-border-success tw-flex tw-items-center tw-justify-center tw-font-bold tw-rounded"
-            >
-                {$userWorldCount}
-            </div>
-            <div class="tw-text-xs tw-font-bold">{$LL.chat.onlineUsers()}</div>
-        </div>
+        {#if gameScene.room.isChatOnlineListEnabled}
+            <OnlineUsersCount {searchActive} />
+        {/if}
     </div>
     <div class="">
         {#if $chatStatusStore !== "OFFLINE"}

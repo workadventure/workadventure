@@ -502,7 +502,7 @@ class AdminApi implements AdminInterface {
          *        description: "The full URL of WorkAdventure"
          *        required: true
          *        type: "string"
-         *        example: "http://play.workadventure.localhost/@/teamSlug/worldSLug/roomSlug"
+         *        example: "http://play.workadventure.localhost/@/teamSlug/worldSlug/roomSlug"
          *     responses:
          *       200:
          *         description: The details of the member

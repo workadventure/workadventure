@@ -3,6 +3,7 @@ import { ChatMessage as NewChatMessage, ChatRoom } from "../Connection/ChatConne
 import { chatVisibilityStore } from "../../Stores/ChatStore";
 import { matrixSecurity } from "../Connection/Matrix/MatrixSecurity";
 import { ENABLE_CHAT, ENABLE_CHAT_DISCONNECTED_LIST, ENABLE_CHAT_ONLINE_LIST } from "../../Enum/EnvironmentVariable";
+import { gameManager } from "../../Phaser/Game/GameManager";
 
 function createNavChatStore() {
     const defaultValue = ENABLE_CHAT ? "chat" : "users";
@@ -17,7 +18,11 @@ function createNavChatStore() {
             set("chat");
         },
         switchToUserList() {
-            if (ENABLE_CHAT_ONLINE_LIST || ENABLE_CHAT_DISCONNECTED_LIST) {
+            const room = gameManager.getCurrentGameScene().room;
+            const isChatOnlineListEnabled = room.isChatOnlineListEnabled;
+            const isChatDisconnectedListEnabled = room.isChatDisconnectedListEnabled;
+
+            if (isChatOnlineListEnabled || isChatDisconnectedListEnabled) {
                 set("users");
             }
         },

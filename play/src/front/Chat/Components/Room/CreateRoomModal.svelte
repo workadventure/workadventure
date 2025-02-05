@@ -1,7 +1,6 @@
 <script lang="ts">
     import { closeModal } from "svelte-modals";
     import { get } from "svelte/store";
-    import Select from "svelte-select";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import { CreateRoomOptions, historyVisibility, historyVisibilityOptions } from "../../Connection/ChatConnection";
     import { gameManager } from "../../../Phaser/Game/GameManager";
@@ -9,8 +8,7 @@
     import { IconAlertTriangle, IconHelpCircle, IconLoader } from "../../../Components/Icons";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
     import { chatInputFocusStore } from "../../../Stores/ChatStore";
-    import { searchChatMembersRule } from "./searchChatMembersRule";
-
+    import SelectMatrixUser from "../SelectMatrixUser.svelte";
     export let isOpen: boolean;
     export let parentID: string | undefined;
     let createRoomOptions: CreateRoomOptions = { visibility: "public" };
@@ -18,8 +16,6 @@
     let createRoomError: string | undefined = undefined;
 
     const chat = gameManager.chatConnection;
-
-    const { searchMembers } = searchChatMembersRule();
 
     let loadingRoomCreation = false;
 
@@ -64,6 +60,10 @@
     function unfocusChatInput() {
         // Enable input manager to allow the game to receive the input
         chatInputFocusStore.set(false);
+    }
+
+    function handleSelectMatrixUserError(e: CustomEvent) {
+        createRoomError = e.detail.error;
     }
 </script>
 
@@ -130,23 +130,12 @@
                 </p>
             {/if}
             <p class="tw-p-0 tw-m-0 tw-pl-1 tw-font-bold">{$LL.chat.createRoom.users()}</p>
-            <Select
+            <SelectMatrixUser
+                on:error={handleSelectMatrixUserError}
                 bind:value={createRoomOptions.invite}
-                multiple
-                class="!tw-border-light-purple tw-border tw-border-solid !tw-bg-contrast !tw-rounded-xl"
-                inputStyles="box-shadow:none !important"
-                --border-focused="2px solid rgb(146 142 187)"
-                --input-color="white"
-                --item-color="black"
-                --item-hover-color="black"
-                --clear-select-color="red"
-                loadOptions={searchMembers}
                 placeholder={$LL.chat.createRoom.users()}
-            >
-                <div slot="item" let:item>
-                    {`${item.label} (${item.value})`}
-                </div>
-            </Select>
+            />
+
             <p class="tw-p-0 tw-m-0 tw-pl-1 tw-font-bold">{$LL.chat.createRoom.historyVisibility.label()}</p>
             {#each historyVisibilityOptions as historyVisibilityOption (historyVisibilityOption)}
                 <label class="tw-m-0">
