@@ -51,6 +51,7 @@ const config: PlaywrightTestConfig = {
     {
       name: 'chromium',
       use: {
+        locale: 'en-US',
         ...devices['Desktop Chrome'],
         permissions: ["microphone","camera",'notifications'],
         ignoreHTTPSErrors: true,
@@ -63,6 +64,7 @@ const config: PlaywrightTestConfig = {
     {
       name: 'firefox',
       use: {
+        locale: 'en-US',
         launchOptions: {
           firefoxUserPrefs: {
             // use fake audio and video media
@@ -79,6 +81,7 @@ const config: PlaywrightTestConfig = {
     {
       name: 'webkit',
       use: {
+        locale: 'en-US',
         ignoreHTTPSErrors: true,
         ...devices['Desktop Safari'],
       },

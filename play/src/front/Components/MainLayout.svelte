@@ -2,11 +2,7 @@
     import { fly } from "svelte/transition";
     import { emoteDataStoreLoading, emoteMenuStore } from "../Stores/EmoteStore";
     import { requestVisitCardsStore } from "../Stores/GameStore";
-    import {
-        helpCameraSettingsVisibleStore,
-        helpNotificationSettingsVisibleStore,
-        helpWebRtcSettingsVisibleStore,
-    } from "../Stores/HelpSettingsStore";
+    import { helpNotificationSettingsVisibleStore, helpWebRtcSettingsVisibleStore } from "../Stores/HelpSettingsStore";
     import { helpSettingsPopupBlockedStore } from "../Stores/HelpSettingsPopupBlockedStore";
     import { menuVisiblilityStore, warningBannerStore } from "../Stores/MenuStore";
     import { showReportScreenStore, userReportEmpty } from "../Stores/ShowReportScreenStore";
@@ -29,7 +25,6 @@
     import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
     import { highlightFullScreen } from "../Stores/ActionsCamStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
-    import HelpCameraSettingsPopup from "./HelpSettings/HelpCameraSettingsPopup.svelte";
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
     import HelpNotificationSettingsPopup from "./HelpSettings/HelpNotificationSettingPopup.svelte";
     import Menu from "./Menu/Menu.svelte";
@@ -165,10 +160,6 @@
 
             {#if $showReportScreenStore !== userReportEmpty}
                 <ReportMenu />
-            {/if}
-
-            {#if $helpCameraSettingsVisibleStore}
-                <HelpCameraSettingsPopup />
             {/if}
 
             {#if $helpNotificationSettingsVisibleStore}

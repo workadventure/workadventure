@@ -12,7 +12,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         content: "Devi consentire l'accesso alla fotocamera e al microfono nel tuo browser.",
         firefoxContent:
             'Si prega di cliccare sulla casella "Ricorda questa decisione", se non vuoi che Firefox continui a chiederti l\'autorizzazione.',
-        refresh: "Ricarica",
         continue: "Continua senza webcam",
         screen: {
             firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
