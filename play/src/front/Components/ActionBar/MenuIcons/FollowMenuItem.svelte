@@ -1,8 +1,7 @@
 <script lang="ts">
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import FollowIcon from "../../Icons/FollowIcon.svelte";
-    import ActionBarIconButton from "../ActionBarIconButton.svelte";
-    import ActionBarButtonWrapper from "../ActionBarButtonWrapper.svelte";
+    import ActionBarButton from "../ActionBarButton.svelte";
     import { followRoleStore, followStateStore, followUsersStore } from "../../../Stores/FollowStore";
     import LL from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
@@ -25,21 +24,18 @@
     }
 </script>
 
-<ActionBarButtonWrapper classList="group/btn-follow">
-    <ActionBarIconButton
-        on:click={() => {
-            analyticsClient.follow();
-            followClick();
-        }}
-        tooltipTitle={$followStateStore === "active"
-            ? $LL.actionbar.help.unfollow.title()
-            : $LL.actionbar.help.follow.title()}
-        tooltipDesc={$followStateStore === "active"
-            ? $LL.actionbar.help.unfollow.desc()
-            : $LL.actionbar.help.follow.desc()}
-        disabledHelp={$openedMenuStore !== undefined}
-        state={$followStateStore === "active" ? "active" : "normal"}
-    >
-        <FollowIcon />
-    </ActionBarIconButton>
-</ActionBarButtonWrapper>
+<ActionBarButton
+    on:click={() => {
+        analyticsClient.follow();
+        followClick();
+    }}
+    classList="group/btn-follow"
+    tooltipTitle={$followStateStore === "active"
+        ? $LL.actionbar.help.unfollow.title()
+        : $LL.actionbar.help.follow.title()}
+    tooltipDesc={$followStateStore === "active" ? $LL.actionbar.help.unfollow.desc() : $LL.actionbar.help.follow.desc()}
+    disabledHelp={$openedMenuStore !== undefined}
+    state={$followStateStore === "active" ? "active" : "normal"}
+>
+    <FollowIcon />
+</ActionBarButton>

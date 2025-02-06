@@ -4,9 +4,8 @@
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { getStatusLabel } from "../../../Utils/AvailabilityStatus";
     import CamOnIcon from "../../Icons/CamOnIcon.svelte";
-    import ActionBarIconButton from "../ActionBarIconButton.svelte";
+    import ActionBarButton from "../ActionBarButton.svelte";
     import CamOffIcon from "../../Icons/CamOffIcon.svelte";
-    import ActionBarButtonWrapper from "../ActionBarButtonWrapper.svelte";
     import { availabilityStatusStore, requestedCameraState, silentStore } from "../../../Stores/MediaStore";
     import LL from "../../../../i18n/i18n-svelte";
     import { openedMenuStore } from "../../../Stores/MenuStore";
@@ -36,25 +35,24 @@
     }
 </script>
 
-<ActionBarButtonWrapper classList="group/btn-cam">
-    <ActionBarIconButton
-        on:click={cameraClick}
-        tooltipTitle={$cameraButtonStateStore === "disabled"
-            ? $LL.actionbar.help.camDisabledByStatus.title()
-            : $LL.actionbar.help.cam.title()}
-        tooltipDesc={$cameraButtonStateStore === "disabled"
-            ? $LL.actionbar.help.camDisabledByStatus.desc({
-                  status: getStatusLabel($availabilityStatusStore),
-              })
-            : $LL.actionbar.help.cam.desc()}
-        disabledHelp={$openedMenuStore !== undefined}
-        state={$cameraButtonStateStore}
-        dataTestId="camera-button"
-    >
-        {#if $requestedCameraState && !$silentStore}
-            <CamOnIcon />
-        {:else}
-            <CamOffIcon />
-        {/if}
-    </ActionBarIconButton>
-</ActionBarButtonWrapper>
+<ActionBarButton
+    on:click={cameraClick}
+    classList="group/btn-cam"
+    tooltipTitle={$cameraButtonStateStore === "disabled"
+        ? $LL.actionbar.help.camDisabledByStatus.title()
+        : $LL.actionbar.help.cam.title()}
+    tooltipDesc={$cameraButtonStateStore === "disabled"
+        ? $LL.actionbar.help.camDisabledByStatus.desc({
+              status: getStatusLabel($availabilityStatusStore),
+          })
+        : $LL.actionbar.help.cam.desc()}
+    disabledHelp={$openedMenuStore !== undefined}
+    state={$cameraButtonStateStore}
+    dataTestId="camera-button"
+>
+    {#if $requestedCameraState && !$silentStore}
+        <CamOnIcon />
+    {:else}
+        <CamOffIcon />
+    {/if}
+</ActionBarButton>

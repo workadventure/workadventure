@@ -69,9 +69,8 @@
     import { RequestedStatus } from "../../Rules/StatusRules/statusRules";
     import { audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
     import ExternalComponents from "../ExternalModules/ExternalComponents.svelte";
-    import ActionBarIconButton from "./ActionBarIconButton.svelte";
+    import ActionBarButton from "./ActionBarButton.svelte";
     import MapSubMenu from "./MenuIcons/MapSubMenu.svelte";
-    import ActionBarButtonWrapper from "./ActionBarButtonWrapper.svelte";
     import MediaSettingsList from "./MediaSettingsList.svelte";
     import AvailabilityStatusList from "./AvailabilityStatus/AvailabilityStatusList.svelte";
     import EmojiMenuItem from "./MenuIcons/EmojiMenuItem.svelte";
@@ -660,26 +659,25 @@
                         openedMenuStore.close("burgerMenu");
                     }}
                 >
-                    <ActionBarButtonWrapper classList="group/btn-burger @lg:hidden rounded-r-lg pr-2">
-                        <ActionBarIconButton
-                            dataTestId="burger-menu"
-                            on:click={() => {
-                                openedMenuStore.toggle("burgerMenu");
-                            }}
-                            on:blur={() => {
-                                openedMenuStore.close("burgerMenu");
-                            }}
-                        >
-                            {#if $openedMenuStore !== "burgerMenu"}
-                                <!-- pointer-events-none is important for clickOutside to work. Otherwise, the
-                                     SVG is the target of the click, is removed from the DOM on click and considered to be
-                                     outside the main div -->
-                                <MenuBurgerIcon classList="pointer-events-none" />
-                            {:else}
-                                <XIcon classList="pointer-events-none" />
-                            {/if}
-                        </ActionBarIconButton>
-                    </ActionBarButtonWrapper>
+                    <ActionBarButton
+                        classList="group/btn-burger @lg:hidden rounded-r-lg pr-2"
+                        dataTestId="burger-menu"
+                        on:click={() => {
+                            openedMenuStore.toggle("burgerMenu");
+                        }}
+                        on:blur={() => {
+                            openedMenuStore.close("burgerMenu");
+                        }}
+                    >
+                        {#if $openedMenuStore !== "burgerMenu"}
+                            <!-- pointer-events-none is important for clickOutside to work. Otherwise, the
+                                 SVG is the target of the click, is removed from the DOM on click and considered to be
+                                 outside the main div -->
+                            <MenuBurgerIcon classList="pointer-events-none" />
+                        {:else}
+                            <XIcon classList="pointer-events-none" />
+                        {/if}
+                    </ActionBarButton>
                     {#if $openedMenuStore === "burgerMenu"}
                         <div
                             class="mobile:bottom-16 w-48 bg-contrast/80 absolute right-2 top-auto z-[1000] py-4 rounded-lg text-right text-white no-underline pointer-events-auto block @lg:hidden before:content-[''] before:absolute before:w-0 before:h-0 sm:before:-top-[14px] sm:before:bottom-auto before:-bottom-4 before:top-auto before:rotate-180 sm:before:rotate-0 before:right-5 before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all"
