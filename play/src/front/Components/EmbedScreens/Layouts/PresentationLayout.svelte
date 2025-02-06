@@ -102,7 +102,7 @@
     // }
 </script>
 
-<div class="presentation-layout  flex mobile:flex-col-reverse flex-col pointer-events-none h-full w-full absolute">
+<div class="presentation-layout flex flex-col pointer-events-none h-full w-full absolute mobile:mt-3">
     {#if $streamableCollectionStore.size > 0 || $myCameraStore || $myJitsiCameraStore}
         <div class="justify-end md:justify-center" bind:this={camContainer}>
             {#if ($streamableCollectionStore.size > 0 && $proximityMeetingStore === true) || $myCameraStore || $myJitsiCameraStore}
