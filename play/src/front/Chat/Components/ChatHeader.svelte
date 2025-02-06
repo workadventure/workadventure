@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { chatInputFocusStore } from "../../Stores/ChatStore";
+    import { chatInputFocusStore, allowedDiscordBridgeStore } from "../../Stores/ChatStore";
 
     let searchActive = false;
     import { chatSearchBarValue, navChat, joignableRoom } from "../Stores/ChatStore";
@@ -7,6 +7,7 @@
     import LL from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { UserProviderMerger } from "../UserProviderMerger/UserProviderMerger";
+    import { externalChatSettingsSvelteComponent } from "../../Stores/Utils/externalSvelteComponentStore";
     import OnlineUsersCount from "./OnlineUsersCount.svelte";
     import { IconMessageCircle2, IconSearch, IconUsers, IconX } from "@wa-icons";
     const gameScene = gameManager.getCurrentGameScene();
@@ -60,9 +61,17 @@
     }
 </script>
 
-<div class="tw-p-2 tw-flex tw-items-center tw-absolute tw-w-full tw-z-40">
-    <div class={searchActive ? "tw-hidden" : ""}>
+<div class="tw-p-2 tw-items-center tw-flex tw-flex-row tw-absolute tw-w-full tw-z-40">
+    <div class="tw-flex flex-row {searchActive ? 'tw-hidden' : ''}">
         {#if showNavBar}
+            {#if $allowedDiscordBridgeStore}
+                {#if $externalChatSettingsSvelteComponent.size > 0}
+                    {#each [...$externalChatSettingsSvelteComponent.entries()] as [id, value] (`externalChatSettingsSvelteComponent-${id}`)}
+                        <svelte:component this={value.componentType} extensionModule={value.extensionModule} />
+                    {/each}
+                {/if}
+            {/if}
+
             {#if $navChat === "chat"}
                 <button
                     class="userList tw-p-3 hover:tw-bg-white/10 tw-rounded-xl tw-aspect-square tw-w-12"

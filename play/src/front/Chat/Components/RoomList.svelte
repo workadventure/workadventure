@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { get } from "svelte/store";
+    import { get, writable } from "svelte/store";
     // eslint-disable-next-line import/no-unresolved
     import { onDestroy, onMount } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
@@ -23,6 +23,8 @@
     import ShowMore from "./ShowMore.svelte";
     import ChatHeader from "./ChatHeader.svelte";
     import { IconChevronUp, IconCloudLock } from "@wa-icons";
+    import discordLogo from "../../Components/images/discord-logo.svg";
+
 
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
 
@@ -79,6 +81,20 @@
             await chat.initEndToEndEncryption();
         } catch (error) {
             console.error("Failed to initChatConnectionEncryption", error);
+        }
+    }
+
+    let isDiscordBandVisible = writable(true);
+    function closeDiscordband() {
+        isDiscordBandVisible.set(false);
+    }
+
+    function openDiscordBridgeConfiguration(){
+        console.log("openDiscordBridgeConfiguration");
+        try{
+            navChat.switchToSettings();
+        } catch (error) {
+            console.error("Failed to openDiscordBridgeConfiguration", error);
         }
     }
 
@@ -325,25 +341,51 @@
                     {/each}
                 {/if}
             </div>
-            {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}
-                <div class="tw-fixed tw-bottom-0 tw-w-full tw-backdrop-blur-md tw-mt-3">
-                    <button
-                        data-testid="restoreEncryptionButton"
-                        on:click|stopPropagation={initChatConnectionEncryption}
-                        class="tw-text-white tw-flex tw-gap-2 tw-justify-center tw-w-full tw-bg-white/20 hover:tw-bg-neutral hover:tw-brightness-100 tw-m-0 tw-rounded-none tw-py-2 tw-px-3 tw-appearance-none"
-                    >
-                        <IconCloudLock font-size="20" />
-                        <div class="tw-text-sm tw-font-bold tw-grow tw-text-left">
-                            {$LL.chat.e2ee.encryptionNotConfigured()}
-                        </div>
-                        <div
-                            class="tw-text-xs tw-rounded tw-border tw-border-solid tw-border-white tw-py-0.5 tw-px-1.5 group-hover:tw-bg-white/10"
+            <div class="tw-fixed tw-bottom-0 tw-w-full tw-flex tw-flex-col">
+                {#if isDiscordBandVisible}
+                    <div class="tw-w-full tw-backdrop-blur-md tw-mt-3">
+                        <button
+                            data-testid="restoreEncryptionButton"
+                            on:click={openDiscordBridgeConfiguration}
+                            class="tw-text-white tw-flex tw-gap-2 tw-justify-center tw-w-full tw-bg-[#5865F2]/80 hover:tw-bg-[#5865F2] hover:tw-brightness-100 tw-m-0 tw-rounded-none tw-py-2 tw-px-3 tw-appearance-none"
                         >
-                            {$LL.chat.e2ee.configure()}
-                        </div>
-                    </button>
-                </div>
-            {/if}
+                            <img src={discordLogo} alt="Discord logo" class="tw-w-4" />
+
+                            <div class="tw-text-sm tw-font-bold tw-grow tw-text-left">
+                                {$LL.chat.e2ee.discordNotConfigured()}
+                            </div>
+                            <button class="tw-text-xs tw-py-0.5 tw-px-1.5 tw-underline">
+                                {$LL.chat.e2ee.dismiss()}
+                            </button>
+                            <button
+                                on:click|stopPropagation={closeDiscordband}
+                                class="tw-text-xs tw-rounded tw-border tw-border-solid tw-border-white tw-py-0.5 tw-px-1.5 group-hover:tw-bg-white/10"
+                            >
+                                {$LL.chat.e2ee.configure()}
+                            </button>
+                        </button>
+                    </div>
+                {/if}
+                {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}
+                    <div class="tw-w-full tw-backdrop-blur-md">
+                        <button
+                                data-testid="restoreEncryptionButton"
+                                on:click|stopPropagation={initChatConnectionEncryption}
+                                class="tw-text-white tw-flex tw-gap-2 tw-justify-center tw-w-full tw-bg-white/20 hover:tw-bg-neutral hover:tw-brightness-100 tw-m-0 tw-rounded-none tw-py-2 tw-px-3 tw-appearance-none"
+                        >
+                            <IconCloudLock font-size="20" />
+                            <div class="tw-text-sm tw-font-bold tw-grow tw-text-left">
+                                {$LL.chat.e2ee.encryptionNotConfigured()}
+                            </div>
+                            <div
+                                    class="tw-text-xs tw-rounded tw-border tw-border-solid tw-border-white tw-py-0.5 tw-px-1.5 group-hover:tw-bg-white/10"
+                            >
+                                {$LL.chat.e2ee.configure()}
+                            </div>
+                        </button>
+                    </div>
+                {/if}
+            </div>
         </div>
     {/if}
     {#if $selectedRoomStore !== undefined}

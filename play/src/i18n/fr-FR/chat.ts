@@ -305,6 +305,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     e2ee: {
         configure: "Configuré",
+        dismiss: "Fermer",
         encryptionNotConfigured: "Chiffrement non configuré",
         createRecoveryKey: {
             title: "Création d'une clé de récupération",
@@ -344,6 +345,7 @@ const chat: DeepPartial<Translation["chat"]> = {
                 confirm: "Confirmer",
             },
         },
+        discordNotConfigured: "Configurer synchronisation des messages Discord",
     },
     connectionError: "Chat indisponible",
     requiresLoginForChatModal: {

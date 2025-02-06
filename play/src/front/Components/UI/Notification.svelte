@@ -5,6 +5,7 @@
     import microphoneOffImg from "../images/microphone-off.png";
     import cameraOffImg from "../images/camera-off.png";
     import jistiImg from "../images/jitsi.png";
+    import discordImg from "../images/discord-logo.svg";
     import waImg from "../images/icon-workadventure-white.png";
     import AreaToolImg from "../images/icon-tool-area.png";
 
@@ -13,6 +14,7 @@
         ["camera-off.png", cameraOffImg],
         ["jitsi.png", jistiImg],
         ["jitsi.png", jistiImg],
+        ["discord-logo.svg", discordImg],
         ["icon-tool-area.png", AreaToolImg],
     ]);
 

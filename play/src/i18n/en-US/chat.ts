@@ -305,6 +305,7 @@ const chat: BaseTranslation = {
     },
     e2ee: {
         configure: "Configure",
+        dismiss: "Dismiss",
         encryptionNotConfigured: "Encryption not configured",
         createRecoveryKey: {
             title: "Chat recovery key creation",
@@ -344,6 +345,7 @@ const chat: BaseTranslation = {
                 confirm: "Confirm",
             },
         },
+        discordNotConfigured: "Connecct to Discord",
     },
     connectionError: "Chat not available",
     requiresLoginForChatModal: {

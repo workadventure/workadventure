@@ -37,6 +37,7 @@ import {
 import { isAChatRoomIsVisible, navChat, selectedChatMessageToReply, selectedRoomStore } from "../../Stores/ChatStore";
 import { gameManager } from "../../../Phaser/Game/GameManager";
 import { localUserStore } from "../../../Connection/LocalUserStore";
+import { DISCORD_BOT_ID } from "../../../Enum/EnvironmentVariable";
 import { MessageNotification, notificationManager } from "../../../Notification";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
@@ -282,6 +283,9 @@ export class MatrixChatRoom
         this.messages.push(message);
 
         const senderID = event.getSender();
+        if (senderID === DISCORD_BOT_ID) {
+            return;
+        }
         if (senderID !== this.matrixRoom.client.getSafeUserId() && !get(this.areNotificationsMuted)) {
             this.notifyNewMessage(message);
             if (!isAChatRoomIsVisible() && get(selectedRoomStore)?.id !== "proximity") {
