@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { get, writable } from "svelte/store";
+    import { get } from "svelte/store";
     import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
     import { clickOutside } from "svelte-outside";
@@ -16,7 +16,7 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import { chatVisibilityStore, chatZoneLiveStore } from "../../Stores/ChatStore";
+    import { chatVisibilityStore } from "../../Stores/ChatStore";
     import { navChat } from "../../Chat/Stores/ChatStore";
     import {
         inExternalServiceStore,
@@ -66,7 +66,6 @@
     import { selectCompanionSceneVisibleStore } from "../../Stores/SelectCompanionStore";
     import { SelectCompanionScene, SelectCompanionSceneName } from "../../Phaser/Login/SelectCompanionScene";
     import { EnableCameraScene, EnableCameraSceneName } from "../../Phaser/Login/EnableCameraScene";
-    import MessageCircleIcon from "../Icons/MessageCircleIcon.svelte";
     import UsersIcon from "../Icons/UsersIcon.svelte";
     import FollowIcon from "../Icons/FollowIcon.svelte";
     import LockIcon from "../Icons/LockIcon.svelte";
@@ -103,6 +102,7 @@
     import CameraMenuItem from "./MenuIcons/CameraMenuItem.svelte";
     import MicrophoneMenuItem from "./MenuIcons/MicrophoneMenuItem.svelte";
     import ScreenSharingMenuItem from "./MenuIcons/ScreenSharingMenuItem.svelte";
+    import ChatMenuItem from "./MenuIcons/ChatMenuItem.svelte";
     import { IconArrowDown, IconCheckList, IconCalendar, IconLogout, IconMusic } from "@wa-icons";
 
     // gameManager.currenwStartedRoom?.miniLogo ?? WorkAdventureImg;
@@ -115,6 +115,10 @@
     let camMenuIsDropped = false;
     let smallArrowVisible = true;
     //const sound = new Audio("/resources/objects/webrtc-out-button.mp3");
+
+    const gameScene = gameManager.getCurrentGameScene();
+    const showChatButton = gameScene.room.isChatOnlineListEnabled;
+    const showUserListButton = gameScene.room.isChatDisconnectedListEnabled;
 
     function focusModeOn() {
         focusMode.set(!get(focusMode));
@@ -265,8 +269,6 @@
         openedMenuStore.close("appMenu");
     }
 
-    let totalMessagesToSee = writable<number>(0);
-
     onMount(() => {
         //resizeObserver.observe(mainHtmlDiv);
     });
@@ -326,55 +328,34 @@
 >
     <div class="flex w-full p-2 space-x-2 @xl/actions:p-4 @xl/actions:space-x-4 screen-blocker">
         <div class="justify-start flex-1 w-32">
-            <div
-                class="flex relative transition-all duration-150 z-[2] {$chatVisibilityStore ? 'hidden' : ''}"
-                class:opacity-0={$chatVisibilityStore}
-                data-testid="chat-action"
-            >
-                <ActionBarButtonWrapper classList="group/btn-message-circle">
-                    <ActionBarIconButton
-                        on:click={() => {
-                            toggleChat();
-                            navChat.switchToChat();
-                            analyticsClient.openedChat();
-                        }}
-                        tooltipTitle={$LL.actionbar.help.chat.title()}
-                        tooltipDesc={$LL.actionbar.help.chat.desc()}
-                        dataTestId="chat-btn"
-                        state={"normal"}
-                        disabledHelp={false}
-                    >
-                        <MessageCircleIcon />
-                    </ActionBarIconButton>
-                    {#if $chatZoneLiveStore || $peerStore.size > 0}
-                        <div>
-                            <span class="w-4 h-4 block rounded-full absolute -top-1 -left-1 animate-ping bg-white" />
-                            <span class="w-3 h-3 block rounded-full absolute -top-0.5 -left-0.5 bg-white" />
-                        </div>
-                    {:else if $totalMessagesToSee > 0}
-                        <div
-                            class="absolute -top-2 -left-2 aspect-square flex w-5 h-5 items-center justify-center text-sm font-bold leading-none text-contrast bg-success rounded-full z-10"
-                        >
-                            {$totalMessagesToSee}
-                        </div>
+            {#if showChatButton || showUserListButton}
+                <div
+                    class="flex relative transition-all duration-150 z-[2] {$chatVisibilityStore ? 'hidden' : ''}"
+                    class:opacity-0={$chatVisibilityStore}
+                    data-testid="chat-action"
+                >
+                    {#if showChatButton}
+                        <ChatMenuItem />
                     {/if}
-                </ActionBarButtonWrapper>
-                <ActionBarButtonWrapper classList="group/btn-users">
-                    <ActionBarIconButton
-                        on:click={() => {
-                            toggleChat();
-                            navChat.switchToUserList();
-                        }}
-                        tooltipTitle={$LL.actionbar.help.users.title()}
-                        tooltipDesc={$LL.actionbar.help.users.desc()}
-                        state={"normal"}
-                        dataTestId="user-list-button"
-                        disabledHelp={false}
-                    >
-                        <UsersIcon />
-                    </ActionBarIconButton>
-                </ActionBarButtonWrapper>
-            </div>
+                    {#if showUserListButton}
+                        <ActionBarButtonWrapper classList="group/btn-users">
+                            <ActionBarIconButton
+                                on:click={() => {
+                                    toggleChat();
+                                    navChat.switchToUserList();
+                                }}
+                                tooltipTitle={$LL.actionbar.help.users.title()}
+                                tooltipDesc={$LL.actionbar.help.users.desc()}
+                                state={"normal"}
+                                dataTestId="user-list-button"
+                                disabledHelp={false}
+                            >
+                                <UsersIcon />
+                            </ActionBarIconButton>
+                        </ActionBarButtonWrapper>
+                    {/if}
+                </div>
+            {/if}
         </div>
         <div
             class="@xxs/actions:justify-center justify-end main-action pointer-events-auto min-w-32 @sm/actions:min-w-[192px]"
