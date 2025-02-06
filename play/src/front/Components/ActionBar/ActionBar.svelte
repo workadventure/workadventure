@@ -17,7 +17,6 @@
     import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { chatVisibilityStore } from "../../Stores/ChatStore";
-    import { navChat } from "../../Chat/Stores/ChatStore";
     import {
         inExternalServiceStore,
         myCameraStore,
@@ -66,7 +65,6 @@
     import { selectCompanionSceneVisibleStore } from "../../Stores/SelectCompanionStore";
     import { SelectCompanionScene, SelectCompanionSceneName } from "../../Phaser/Login/SelectCompanionScene";
     import { EnableCameraScene, EnableCameraSceneName } from "../../Phaser/Login/EnableCameraScene";
-    import UsersIcon from "../Icons/UsersIcon.svelte";
     import FollowIcon from "../Icons/FollowIcon.svelte";
     import LockIcon from "../Icons/LockIcon.svelte";
     import LockOpenIcon from "../Icons/LockOpenIcon.svelte";
@@ -103,6 +101,7 @@
     import MicrophoneMenuItem from "./MenuIcons/MicrophoneMenuItem.svelte";
     import ScreenSharingMenuItem from "./MenuIcons/ScreenSharingMenuItem.svelte";
     import ChatMenuItem from "./MenuIcons/ChatMenuItem.svelte";
+    import UserListMenuItem from "./MenuIcons/UserListMenuItem.svelte";
     import { IconArrowDown, IconCheckList, IconCalendar, IconLogout, IconMusic } from "@wa-icons";
 
     // gameManager.currenwStartedRoom?.miniLogo ?? WorkAdventureImg;
@@ -163,15 +162,6 @@
 
     function lockClick() {
         gameManager.getCurrentGameScene().connection?.emitLockGroup(!$currentPlayerGroupLockStateStore);
-    }
-
-    function toggleChat() {
-        if (!$chatVisibilityStore) {
-            menuVisiblilityStore.set(false);
-            activeSubMenuStore.activateByIndex(0);
-        }
-
-        chatVisibilityStore.set(!$chatVisibilityStore);
     }
 
     function showMenuItem(key: MenuKeys | string) {
@@ -338,21 +328,7 @@
                         <ChatMenuItem />
                     {/if}
                     {#if showUserListButton}
-                        <ActionBarButtonWrapper classList="group/btn-users">
-                            <ActionBarIconButton
-                                on:click={() => {
-                                    toggleChat();
-                                    navChat.switchToUserList();
-                                }}
-                                tooltipTitle={$LL.actionbar.help.users.title()}
-                                tooltipDesc={$LL.actionbar.help.users.desc()}
-                                state={"normal"}
-                                dataTestId="user-list-button"
-                                disabledHelp={false}
-                            >
-                                <UsersIcon />
-                            </ActionBarIconButton>
-                        </ActionBarButtonWrapper>
+                        <UserListMenuItem />
                     {/if}
                 </div>
             {/if}
