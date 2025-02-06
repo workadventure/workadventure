@@ -9,7 +9,6 @@
 
     import HelpTooltip from "../Tooltip/HelpTooltip.svelte";
 
-    import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
@@ -55,7 +54,6 @@
     import { selectCompanionSceneVisibleStore } from "../../Stores/SelectCompanionStore";
     import { SelectCompanionScene, SelectCompanionSceneName } from "../../Phaser/Login/SelectCompanionScene";
     import { EnableCameraScene, EnableCameraSceneName } from "../../Phaser/Login/EnableCameraScene";
-    import FollowIcon from "../Icons/FollowIcon.svelte";
     import LockIcon from "../Icons/LockIcon.svelte";
     import LockOpenIcon from "../Icons/LockOpenIcon.svelte";
     import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
@@ -87,6 +85,7 @@
     import UserListMenuItem from "./MenuIcons/UserListMenuItem.svelte";
     import MusicMenuItem from "./MenuIcons/MusicMenuItem.svelte";
     import AppsMenuItem from "./MenuIcons/AppsMenuItem.svelte";
+    import FollowMenuItem from "./MenuIcons/FollowMenuItem.svelte";
     import { IconArrowDown, IconLogout } from "@wa-icons";
     //import ChangeLayoutMenuItem from "./MenuIcons/ChangeLayoutMenuItem.svelte";
 
@@ -119,22 +118,6 @@
 
     function hideModeOn() {
         hideMode.set(!get(hideMode));
-    }
-
-    function followClick() {
-        switch ($followStateStore) {
-            case "off":
-                gameManager.getCurrentGameScene().connection?.emitFollowRequest();
-                followRoleStore.set("leader");
-                followStateStore.set("active");
-                break;
-            case "requesting":
-            case "active":
-            case "ending":
-                gameManager.getCurrentGameScene().connection?.emitFollowAbort();
-                followUsersStore.stopFollowing();
-                break;
-        }
     }
 
     function lockClick() {
@@ -298,24 +281,7 @@
                         {#if $bottomActionBarVisibilityStore}
                             <!-- <ChangeLayoutMenuItem /> -->
 
-                            <ActionBarButtonWrapper classList="group/btn-follow">
-                                <ActionBarIconButton
-                                    on:click={() => {
-                                        analyticsClient.follow();
-                                        followClick();
-                                    }}
-                                    tooltipTitle={$followStateStore === "active"
-                                        ? $LL.actionbar.help.unfollow.title()
-                                        : $LL.actionbar.help.follow.title()}
-                                    tooltipDesc={$followStateStore === "active"
-                                        ? $LL.actionbar.help.unfollow.desc()
-                                        : $LL.actionbar.help.follow.desc()}
-                                    disabledHelp={$openedMenuStore !== undefined}
-                                    state={$followStateStore === "active" ? "active" : "normal"}
-                                >
-                                    <FollowIcon />
-                                </ActionBarIconButton>
-                            </ActionBarButtonWrapper>
+                            <FollowMenuItem />
                             <ActionBarButtonWrapper classList="group/btn-lock">
                                 <ActionBarIconButton
                                     on:click={() => {
