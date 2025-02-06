@@ -10,7 +10,6 @@
     import HelpTooltip from "../Tooltip/HelpTooltip.svelte";
 
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { chatVisibilityStore } from "../../Stores/ChatStore";
     import {
@@ -54,8 +53,6 @@
     import { selectCompanionSceneVisibleStore } from "../../Stores/SelectCompanionStore";
     import { SelectCompanionScene, SelectCompanionSceneName } from "../../Phaser/Login/SelectCompanionScene";
     import { EnableCameraScene, EnableCameraSceneName } from "../../Phaser/Login/EnableCameraScene";
-    import LockIcon from "../Icons/LockIcon.svelte";
-    import LockOpenIcon from "../Icons/LockOpenIcon.svelte";
     import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
     import ProfilIcon from "../Icons/ProfilIcon.svelte";
     import CamSettingsIcon from "../Icons/CamSettingsIcon.svelte";
@@ -86,6 +83,7 @@
     import MusicMenuItem from "./MenuIcons/MusicMenuItem.svelte";
     import AppsMenuItem from "./MenuIcons/AppsMenuItem.svelte";
     import FollowMenuItem from "./MenuIcons/FollowMenuItem.svelte";
+    import LockDiscussionMenuItem from "./MenuIcons/LockDiscussionMenuItem.svelte";
     import { IconArrowDown, IconLogout } from "@wa-icons";
     //import ChangeLayoutMenuItem from "./MenuIcons/ChangeLayoutMenuItem.svelte";
 
@@ -118,10 +116,6 @@
 
     function hideModeOn() {
         hideMode.set(!get(hideMode));
-    }
-
-    function lockClick() {
-        gameManager.getCurrentGameScene().connection?.emitLockGroup(!$currentPlayerGroupLockStateStore);
     }
 
     function showMenuItem(key: MenuKeys | string) {
@@ -282,25 +276,7 @@
                             <!-- <ChangeLayoutMenuItem /> -->
 
                             <FollowMenuItem />
-                            <ActionBarButtonWrapper classList="group/btn-lock">
-                                <ActionBarIconButton
-                                    on:click={() => {
-                                        analyticsClient.lockDiscussion();
-                                        lockClick();
-                                    }}
-                                    tooltipTitle={$LL.actionbar.help.lock.title()}
-                                    tooltipDesc={$LL.actionbar.help.lock.desc()}
-                                    disabledHelp={$openedMenuStore !== undefined}
-                                    state={$currentPlayerGroupLockStateStore ? "forbidden" : "normal"}
-                                    dataTestId="lock-button"
-                                >
-                                    {#if $currentPlayerGroupLockStateStore}
-                                        <LockIcon />
-                                    {:else}
-                                        <LockOpenIcon />
-                                    {/if}
-                                </ActionBarIconButton>
-                            </ActionBarButtonWrapper>
+                            <LockDiscussionMenuItem />
                         {/if}
                     </div>
                 </div>
