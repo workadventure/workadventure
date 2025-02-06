@@ -6,12 +6,9 @@
     import { AvailabilityStatus } from "@workadventure/messages";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import { silentStore, enableCameraSceneVisibilityStore, availabilityStatusStore } from "../../Stores/MediaStore";
-    import tooltipArrow from "../images/arrow-top.svg";
 
     import HelpTooltip from "../Tooltip/HelpTooltip.svelte";
 
-    import { LayoutMode } from "../../WebRtc/LayoutManager";
-    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
@@ -30,7 +27,6 @@
         additionnalButtonsMenu,
         inviteUserActivated,
         menuVisiblilityStore,
-        roomListActivated,
         SubMenusInterface,
         MenuKeys,
         subMenusStore,
@@ -38,23 +34,17 @@
         backOfficeMenuVisibleStore,
         globalMessageVisibleStore,
         mapMenuVisibleStore,
-        activeSecondaryZoneActionBarStore,
         openedMenuStore,
     } from "../../Stores/MenuStore";
     import { LL } from "../../../i18n/i18n-svelte";
     import { bottomActionBarVisibilityStore } from "../../Stores/BottomActionBarStore";
-    import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-    import { mapEditorModeStore } from "../../Stores/MapEditorStore";
     import { iframeListener } from "../../Api/IframeListener";
     import { peerStore } from "../../Stores/PeerStore";
     import {
         modalIframeStore,
         modalVisibilityStore,
-        roomListVisibilityStore,
         showModalGlobalComminucationVisibilityStore,
     } from "../../Stores/ModalStore";
-    import { isActivatedStore as isCalendarActivatedStore, isCalendarVisibleStore } from "../../Stores/CalendarStore";
-    import { isActivatedStore as isTodoListActivatedStore, isTodoListVisibleStore } from "../../Stores/TodoListStore";
     import { ADMIN_BO_URL, ENABLE_OPENID } from "../../Enum/EnvironmentVariable";
     import Woka from "../Woka/WokaFromUserId.svelte";
     import Companion from "../Companion/Companion.svelte";
@@ -79,18 +69,11 @@
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { connectionManager } from "../../Connection/ConnectionManager";
 
-    import AppsIcon from "../Icons/AppsIcon.svelte";
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
     import { getColorHexOfStatus, getStatusInformation, getStatusLabel } from "../../Utils/AvailabilityStatus";
     import { RequestedStatus } from "../../Rules/StatusRules/statusRules";
-    import {
-        audioManagerPlayerState,
-        audioManagerRetryPlaySubject,
-        audioManagerVisibilityStore,
-    } from "../../Stores/AudioManagerStore";
-    import AudioManager from "../AudioManager/AudioManager.svelte";
+    import { audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
     import ExternalComponents from "../ExternalModules/ExternalComponents.svelte";
-    import { externalSvelteComponentService } from "../../Stores/Utils/externalSvelteComponentService";
     import ActionBarIconButton from "./ActionBarIconButton.svelte";
     import MapSubMenu from "./MenuIcons/MapSubMenu.svelte";
     import ActionBarButtonWrapper from "./ActionBarButtonWrapper.svelte";
@@ -102,7 +85,10 @@
     import ScreenSharingMenuItem from "./MenuIcons/ScreenSharingMenuItem.svelte";
     import ChatMenuItem from "./MenuIcons/ChatMenuItem.svelte";
     import UserListMenuItem from "./MenuIcons/UserListMenuItem.svelte";
-    import { IconArrowDown, IconCheckList, IconCalendar, IconLogout, IconMusic } from "@wa-icons";
+    import MusicMenuItem from "./MenuIcons/MusicMenuItem.svelte";
+    import AppsMenuItem from "./MenuIcons/AppsMenuItem.svelte";
+    import { IconArrowDown, IconLogout } from "@wa-icons";
+    //import ChangeLayoutMenuItem from "./MenuIcons/ChangeLayoutMenuItem.svelte";
 
     // gameManager.currenwStartedRoom?.miniLogo ?? WorkAdventureImg;
     let userName = gameManager.getPlayerName() || "";
@@ -133,15 +119,6 @@
 
     function hideModeOn() {
         hideMode.set(!get(hideMode));
-    }
-
-    // Still needed ?
-    function switchLayoutMode() {
-        // if ($embedScreenLayoutStore === LayoutMode.Presentation) {
-        //     $embedScreenLayoutStore = LayoutMode.VideoChat;
-        // } else {
-        //     $embedScreenLayoutStore = LayoutMode.Presentation;
-        // }
     }
 
     function followClick() {
@@ -243,22 +220,6 @@
         return false;
     }
 
-    function openExternalModuleCalendar() {
-        analyticsClient.openExternalModuleCalendar();
-        isCalendarVisibleStore.set(!$isCalendarVisibleStore);
-        isTodoListVisibleStore.set(false);
-        mapEditorModeStore.switchMode(false);
-        openedMenuStore.close("appMenu");
-    }
-
-    function openExternalModuleTodoList() {
-        analyticsClient.openExternalModuleTodoList();
-        isTodoListVisibleStore.set(!$isTodoListVisibleStore);
-        isCalendarVisibleStore.set(false);
-        mapEditorModeStore.switchMode(false);
-        openedMenuStore.close("appMenu");
-    }
-
     onMount(() => {
         //resizeObserver.observe(mainHtmlDiv);
     });
@@ -272,7 +233,6 @@
         return iframeListener.sendButtonActionBarTriggered(button);
     }
 
-    let isMobile = isMediaBreakpointUp("md");
     // FIXME: the code below was stopping the map editor when going in small screen
     /*const resizeObserver = new ResizeObserver(() => {
         isMobile = isMediaBreakpointUp("md");
@@ -280,15 +240,6 @@
             mapEditorModeStore.set(false);
         }
     });*/
-
-    function showRoomList() {
-        analyticsClient.openedRoomList();
-        resetChatVisibility();
-        resetModalVisibility();
-
-        roomListVisibilityStore.set(true);
-        openedMenuStore.close("appMenu");
-    }
 
     function screenSharingClick(): void {
         analyticsClient.screenSharing();
@@ -306,8 +257,6 @@
         AvailabilityStatus.BACK_IN_A_MOMENT,
         AvailabilityStatus.DO_NOT_DISTURB,
     ];
-
-    const externalActionBarSvelteComponent = externalSvelteComponentService.getComponentsByZone("actionBar");
 </script>
 
 <div
@@ -340,263 +289,14 @@
                 <div>
                     <div class="flex items-center">
                         {#if $audioManagerVisibilityStore !== "hidden" && !$silentStore}
-                            <ActionBarButtonWrapper classList="group/btn-music">
-                                <ActionBarIconButton
-                                    on:click={() => {
-                                        if (
-                                            $audioManagerVisibilityStore === "visible" &&
-                                            $audioManagerPlayerState !== "not_allowed" &&
-                                            $activeSecondaryZoneActionBarStore !== "audio-manager"
-                                        ) {
-                                            activeSecondaryZoneActionBarStore.set("audio-manager");
-                                        } else if (
-                                            $audioManagerVisibilityStore === "visible" &&
-                                            $audioManagerPlayerState === "not_allowed"
-                                        ) {
-                                            audioManagerRetryPlaySubject.next();
-                                        } else {
-                                            activeSecondaryZoneActionBarStore.set(undefined);
-                                        }
-                                    }}
-                                    tooltipTitle={$audioManagerPlayerState !== "not_allowed"
-                                        ? $LL.actionbar.help.audioManager.title()
-                                        : $LL.actionbar.help.audioManagerNotAllowed.title()}
-                                    tooltipDesc={$audioManagerPlayerState !== "not_allowed"
-                                        ? $LL.actionbar.help.audioManager.desc()
-                                        : $LL.actionbar.help.audioManagerNotAllowed.desc()}
-                                    state={$audioManagerVisibilityStore === "visible"
-                                        ? $audioManagerPlayerState !== "not_allowed"
-                                            ? $activeSecondaryZoneActionBarStore !== "audio-manager"
-                                                ? "normal"
-                                                : "active"
-                                            : "forbidden"
-                                        : $audioManagerVisibilityStore === "error"
-                                        ? "forbidden"
-                                        : $audioManagerVisibilityStore === "disabledBySettings"
-                                        ? "disabled"
-                                        : undefined}
-                                    dataTestId="music-button"
-                                >
-                                    <IconMusic height="24" width="24" />
-                                </ActionBarIconButton>
-                                {#if $activeSecondaryZoneActionBarStore === "audio-manager"}
-                                    <AudioManager />
-                                {/if}
-                            </ActionBarButtonWrapper>
+                            <MusicMenuItem />
                         {/if}
 
                         <EmojiMenuItem />
-                        <ActionBarButtonWrapper classList="group/btn-apps">
-                            <ActionBarIconButton
-                                on:click={() => {
-                                    openedMenuStore.toggle("appMenu");
-                                }}
-                                tooltipTitle={$LL.actionbar.help.apps.title()}
-                                tooltipDesc={$LL.actionbar.help.apps.desc()}
-                                disabledHelp={$openedMenuStore === "appMenu"}
-                                state={$openedMenuStore === "appMenu" ? "active" : "normal"}
-                                dataTestId={undefined}
-                            >
-                                <AppsIcon
-                                    strokeColor={$openedMenuStore === "appMenu"
-                                        ? "stroke-white fill-white"
-                                        : "stroke-white fill-transparent"}
-                                    hover="group-hover/btn-apps:fill-white"
-                                />
-                            </ActionBarIconButton>
-
-                            {#if $openedMenuStore === "appMenu" && ($roomListActivated || $isCalendarActivatedStore || $isTodoListActivatedStore || $externalActionBarSvelteComponent.size > 0)}
-                                <div class="flex justify-center m-auto absolute -left-1.5 top-[69px]">
-                                    <img
-                                        alt="Sub menu arrow"
-                                        loading="eager"
-                                        src={tooltipArrow}
-                                        class="content-[''] absolute -top-1 left-9 m-auto w-2 h-1"
-                                    />
-                                    <div class="bottom-action-bar">
-                                        <div
-                                            class="bottom-action-section flex flex-col animate bg-contrast/80 backdrop-blur-md rounded-md p-1"
-                                        >
-                                            <!-- Room list part -->
-                                            {#if $roomListActivated}
-                                                <!-- TODO button hep -->
-                                                <!-- Room list button -->
-                                                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                                <div
-                                                    on:dragstart|preventDefault={noDrag}
-                                                    on:click={showRoomList}
-                                                    class="bottom-action-button"
-                                                >
-                                                    <!--
-                                                    {#if !isMobile}
-                                                        <HelpTooltip
-                                                            title={$LL.actionbar.help.roomList.title()}
-                                                            desc={$LL.actionbar.help.roomList.desc()}
-                                                        />
-                                                    {/if}
-                                                    -->
-
-                                                    <button
-                                                        id="roomListIcon"
-                                                        class="hover:bg-white/10 rounded flex w-full space-x-2 items-center p-2"
-                                                    >
-                                                        <svg
-                                                            xmlns="http://www.w3.org/2000/svg"
-                                                            viewBox="0 0 24 24"
-                                                            fill="none"
-                                                            stroke="currentColor"
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                            width="20"
-                                                            height="20"
-                                                            stroke-width="1.5"
-                                                        >
-                                                            <path d="M21 12a9 9 0 1 0 -9 9" />
-                                                            <path d="M3.6 9h16.8" />
-                                                            <path d="M3.6 15h7.9" />
-                                                            <path d="M11.5 3a17 17 0 0 0 0 18" />
-                                                            <path d="M12.5 3a16.984 16.984 0 0 1 2.574 8.62" />
-                                                            <path d="M18 18m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
-                                                            <path d="M20.2 20.2l1.8 1.8" />
-                                                        </svg>
-                                                        <div class="whitespace-nowrap bold text-sm grow pr-2 text-left">
-                                                            {$LL.actionbar.help.roomList.title()}
-                                                        </div>
-                                                    </button>
-                                                </div>
-                                            {/if}
-
-                                            <!-- Calendar integration -->
-                                            <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                            <div
-                                                on:dragstart|preventDefault={noDrag}
-                                                on:click={openExternalModuleCalendar}
-                                                class="bottom-action-button"
-                                            >
-                                                <!--
-                                                {#if !isMobile}
-                                                    <HelpTooltip
-                                                        title={$isCalendarActivatedStore
-                                                            ? $LL.actionbar.help.calendar.title()
-                                                            : $LL.actionbar.featureNotAvailable()}
-                                                        desc={$isCalendarActivatedStore
-                                                            ? $LL.actionbar.help.calendar.desc()
-                                                            : ""}
-                                                    />
-                                                {/if}
-                                                -->
-                                                <button
-                                                    id="calendarIcon"
-                                                    class="hover:bg-white/10 rounded flex w-full space-x-2 items-center p-2"
-                                                    class:!cursor-not-allowed={!$isCalendarActivatedStore}
-                                                    class:!no-pointer-events={!$isCalendarActivatedStore}
-                                                    disabled={!$isCalendarActivatedStore}
-                                                >
-                                                    <IconCalendar width="20" height="20" />
-                                                    <div class="whitespace-nowrap bold text-sm grow pr-2 text-left">
-                                                        {$LL.actionbar.calendar()}
-                                                    </div>
-                                                </button>
-                                            </div>
-
-                                            <!-- Todo List Integration -->
-                                            <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                            <div
-                                                on:dragstart|preventDefault={noDrag}
-                                                on:click={openExternalModuleTodoList}
-                                                class="bottom-action-button"
-                                            >
-                                                <!--
-                                                {#if !isMobile}
-                                                    <HelpTooltip
-                                                        title={$isTodoListActivatedStore
-                                                            ? $LL.actionbar.help.todolist.title()
-                                                            : $LL.actionbar.featureNotAvailable()}
-                                                        desc={$isTodoListActivatedStore
-                                                            ? $LL.actionbar.help.todolist.desc()
-                                                            : ""}
-                                                    />
-                                                {/if}
-                                                -->
-                                                <button
-                                                    id="todoListIcon"
-                                                    class="hover:bg-white/10 rounded flex w-full space-x-2 items-center p-2"
-                                                    class:!cursor-not-allowed={!$isTodoListActivatedStore}
-                                                    class:!no-pointer-events={!$isTodoListActivatedStore}
-                                                    disabled={!$isTodoListActivatedStore}
-                                                >
-                                                    <IconCheckList width="20" height="20" />
-                                                    <div class="whitespace-nowrap bold text-sm grow pr-2 text-left">
-                                                        {$LL.actionbar.todoList()}
-                                                    </div>
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <div class="bottom-action-section flex animate">
-                                            <!-- External module action bar -->
-                                            <ExternalComponents zone="actionBar" {isMobile} />
-                                        </div>
-                                    </div>
-                                </div>
-                            {/if}
-                        </ActionBarButtonWrapper>
+                        <AppsMenuItem />
 
                         {#if $bottomActionBarVisibilityStore}
-                            <!-- svelte-ignore a11y-click-events-have-key-events -->
-                            <div
-                                class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 rounded btn-layout/btn-more:bg-white/10 aspect-square flex items-center justify-center transition-all"
-                                on:click={() => analyticsClient.layoutPresentChange()}
-                                on:click={switchLayoutMode}
-                            >
-                                {#if $embedScreenLayoutStore === LayoutMode.Presentation}
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        class="icon icon-tabler icon-tabler-arrows-minimize"
-                                        width="24"
-                                        height="24"
-                                        viewBox="0 0 24 24"
-                                        stroke-width="1.5"
-                                        stroke="#ffffff"
-                                        fill="none"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    >
-                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                        <path d="M5 9l4 0l0 -4" />
-                                        <path d="M3 3l6 6" />
-                                        <path d="M5 15l4 0l0 4" />
-                                        <path d="M3 21l6 -6" />
-                                        <path d="M19 9l-4 0l0 -4" />
-                                        <path d="M15 9l6 -6" />
-                                        <path d="M19 15l-4 0l0 4" />
-                                        <path d="M15 15l6 6" />
-                                    </svg>
-                                {:else}
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        class="icon icon-tabler icon-tabler-arrows-maximize"
-                                        width="24"
-                                        height="24"
-                                        viewBox="0 0 24 24"
-                                        stroke-width="1.5"
-                                        stroke="#ffffff"
-                                        fill="none"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    >
-                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                        <path d="M16 4l4 0l0 4" />
-                                        <path d="M14 10l6 -6" />
-                                        <path d="M8 20l-4 0l0 -4" />
-                                        <path d="M4 20l6 -6" />
-                                        <path d="M16 20l4 0l0 -4" />
-                                        <path d="M14 14l6 6" />
-                                        <path d="M8 4l-4 0l0 4" />
-                                        <path d="M4 4l6 6" />
-                                    </svg>
-                                {/if}
-                            </div>
+                            <!-- <ChangeLayoutMenuItem /> -->
 
                             <ActionBarButtonWrapper classList="group/btn-follow">
                                 <ActionBarIconButton
@@ -612,7 +312,6 @@
                                         : $LL.actionbar.help.follow.desc()}
                                     disabledHelp={$openedMenuStore !== undefined}
                                     state={$followStateStore === "active" ? "active" : "normal"}
-                                    dataTestId={undefined}
                                 >
                                     <FollowIcon />
                                 </ActionBarIconButton>
