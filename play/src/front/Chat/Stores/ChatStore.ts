@@ -2,7 +2,7 @@ import { get, writable } from "svelte/store";
 import { ChatMessage as NewChatMessage, ChatRoom } from "../Connection/ChatConnection";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
 import { matrixSecurity } from "../Connection/Matrix/MatrixSecurity";
-import { ENABLE_CHAT, ENABLE_CHAT_DISCONNECTED_LIST, ENABLE_CHAT_ONLINE_LIST } from "../../Enum/EnvironmentVariable";
+import { ENABLE_CHAT } from "../../Enum/EnvironmentVariable";
 import { gameManager } from "../../Phaser/Game/GameManager";
 
 function createNavChatStore() {

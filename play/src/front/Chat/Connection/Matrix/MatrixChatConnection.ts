@@ -46,7 +46,6 @@ import { MatrixChatRoom } from "./MatrixChatRoom";
 import { MatrixSecurity, matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity";
 import { MatrixRoomFolder } from "./MatrixRoomFolder";
 import { chatUserFactory, mapMatrixPresenceToAvailabilityStatus } from "./MatrixChatUser";
-import {MatrixChatRoomMember} from "./MatrixChatRoomMember";
 
 const CLIENT_NOT_INITIALIZED_ERROR_MSG = "MatrixClient not yet initialized";
 export const defaultWoka =
@@ -891,33 +890,19 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         }
     }
 
-    // @ts-ignore
-    getRoomList() {
-        return Array.from(this.roomList.values()).map((room) => {
-            return {
-                members: get(room.members),
-                type: room.type
-            };
-        });
-    }
-
     getDirectRoomFor(userID: string): (ChatRoom & ChatRoomMembershipManagement) | undefined {
         const directRooms = Array.from(this.roomList.values())
             .filter((room) => {
                 const memberIDs = get(room.members)
                     .filter((member) => member.id && ["join", "invite"].includes(get(member.membership)))
                     .map((member) => member.id);
-                console.log("|||||||||", memberIDs," ",room.type, (room.type === "direct" &&
-                    memberIDs.some((memberId) => memberId === userID && memberIDs.length === 2)));
                 return (
                     room.type === "direct" &&
                     memberIDs.some((memberId) => memberId === userID && memberIDs.length === 2)
                 );
             })
             .map((room) => room);
-
         if (directRooms.length > 0) return directRooms[0];
-
         return undefined;
     }
 

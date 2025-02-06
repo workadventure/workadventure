@@ -152,8 +152,9 @@
         }
         document.addEventListener("click", closeDropdownOnClickOutside);
     });
-    onDestroy(() => {
-        DiscordBot.destroy();
+    onDestroy(async () => {
+        await DiscordBot.destroy();
+        console.log("🗑️🗑️🗑️🗑️Discord bot destroyed");
         document.removeEventListener("click", closeDropdownOnClickOutside);
     });
 
