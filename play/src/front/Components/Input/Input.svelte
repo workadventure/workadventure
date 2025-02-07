@@ -17,10 +17,16 @@
     export let errorHelperText: string | null = null;
     export let onKeyPress = () => {};
     export let optional = false;
+    export let isValid = true;
 
     const SLOTS = $$slots;
 
     let uniqueId = id || `input-${Math.random().toString(36).substr(2, 9)} `;
+
+    function validateInput(event: Event) {
+        const inputElement = event.target as HTMLInputElement;
+        isValid = inputElement.checkValidity();
+    }
 </script>
 
 <div class="flex flex-col">
@@ -58,6 +64,7 @@
                 on:keypress={onKeyPress}
                 on:change={onChange}
                 on:click={onClick}
+                on:input={validateInput}
                 {disabled}
             />
 
@@ -80,6 +87,7 @@
                 {placeholder}
                 on:change={onChange}
                 on:click={onClick}
+                on:input={validateInput}
                 {disabled}
             />
         {/if}

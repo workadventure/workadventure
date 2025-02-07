@@ -60,7 +60,7 @@
     let error = "";
     let warning = "";
     let oldNewTabValue = property.newTab;
-    let linkElement: HTMLInputElement;
+    let isLinkValid = true;
     let policy: Option[] | undefined = undefined;
     let policyOption: InputTagOption[] = [
         { value: "accelerometer", label: "accelerometer", created: undefined },
@@ -440,12 +440,13 @@
             checkEmbeddableLink();
         } catch (e) {
             console.info("Error checking embeddable website", e);
+            embeddableLoading = false;
         }
     }
 
     function checkEmbeddableLink(): void {
         if (property.forceNewTab) return;
-        if (property.link == undefined || !linkElement.checkValidity()) {
+        if (property.link == undefined || !isLinkValid) {
             embeddableLoading = false;
             warning = warning ? warning : $LL.mapEditor.properties.linkProperties.errorInvalidUrl();
             return;
@@ -744,6 +745,7 @@
                     onChange={onValueChange}
                     onClick={onClickInputHandler}
                     disabled={embeddableLoading}
+                    bind:isValid={isLinkValid}
                 />
 
                 {#if property.application === "googleDocs" || property.application === "googleSheets" || property.application === "googleSlides" || property.application === "klaxoon" || property.application === "googleDrive"}
