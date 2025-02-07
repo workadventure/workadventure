@@ -36,7 +36,7 @@ test.describe('Areas', () => {
             return;
         });
         await page.pause();
-        await expect(page.getByText('You\'re in a silent zone')).toBeVisible();
+        await expect(page.getByText('Silent zone')).toBeVisible();
         await page.close();
         await page.context().close();
     });
