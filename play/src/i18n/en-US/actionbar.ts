@@ -29,8 +29,6 @@ const actionbar: BaseTranslation = {
     mapEditorMobileLocked: "Map editor is locked on mobile mode",
     mapEditorLocked: "Map editor is locked 🔐",
     app: "Third applications",
-    silentTitle: "You're in a silent zone!",
-    silentDesc: "You can't talk, the chat remains accessible. To speak with someone leave the silent zone.",
     camera: {
         disabled: "Your camera is disabled",
         activate: "Activate your camera",
