@@ -7,6 +7,7 @@
     } from "@workadventure/map-editor";
     import { onDestroy } from "svelte";
     import { ApplicationDefinitionInterface } from "@workadventure/messages";
+    import { v4 as uuid } from "uuid";
     import {
         mapEditorEntityModeStore,
         mapEditorSelectedEntityPrefabStore,
@@ -36,7 +37,7 @@
             const descriptionProperty = properties.find((p) => p.type === "entityDescriptionProperties");
             if (!descriptionProperty) {
                 $mapEditorSelectedEntityStore?.addProperty({
-                    id: crypto.randomUUID(),
+                    id: uuid(),
                     type: "entityDescriptionProperties",
                     description: "",
                     searchable: false,
@@ -64,7 +65,7 @@
         if (!$mapEditorSelectedEntityStore) return;
         analyticsClient.addMapEditorProperty("entity", app.name);
         const property: EntityDataProperty = {
-            id: crypto.randomUUID(),
+            id: uuid(),
             type: "openWebsite",
             application: app.name,
             closable: true,
@@ -126,7 +127,7 @@
     }
 
     function getPropertyFromType(type: EntityDataPropertiesKeys, subtype?: string): EntityDataProperty {
-        const id = crypto.randomUUID();
+        const id = uuid();
         let placeholder: string;
         let buttonLabel: string;
         let policy: string | undefined;

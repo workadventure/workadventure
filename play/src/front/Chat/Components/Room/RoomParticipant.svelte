@@ -84,7 +84,6 @@
     };
 
     const getIconForMembership = (membership: ChatRoomMembership) => {
-        console.log("membership : ", membership);
         switch (membership) {
             case "ban":
                 return IconForbid;
@@ -104,7 +103,6 @@
     };
 
     function getTranslatedPermissionLevel(permission: ChatPermissionLevel) {
-        console.log("permission : ", permission, $LL.chat.manageRoomUsers.roles.USER());
         switch (permission) {
             case ChatPermissionLevel.USER:
                 return $LL.chat.manageRoomUsers.roles.USER();
@@ -128,8 +126,6 @@
     const hasPermissionToBan = room.hasPermissionTo("ban", member);
 
     $: availableRoles = room.canModifyRoleOf($permissionLevel) ? room.getAllowedRolesToAssign() : [];
-
-    $: console.log("availableRoles : ", availableRoles);
 </script>
 
 <tr data-testid={`${id}-participant`}>

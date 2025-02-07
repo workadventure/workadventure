@@ -9,10 +9,13 @@
     import { chatSearchBarValue } from "../../Stores/ChatStore";
     import { defaultColor, defaultWoka } from "../../Connection/Matrix/MatrixChatConnection";
     import { openChatRoom } from "../../Utils";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
     import UserActionButton from "./UserActionButton.svelte";
     import { IconLoader, IconSend } from "@wa-icons";
 
     export let user: ChatUser;
+
+    let showRoomCreationInProgress = false;
 
     $: ({ chatId, availabilityStatus, username = "", color, isAdmin, avatarUrl } = user);
 
@@ -24,6 +27,8 @@
         text: username.match(/\[\d*]/) ? username.substring(0, username.search(/\[\d*]/)) : username,
         query: $chatSearchBarValue,
     });
+
+    $: roomCreationInProgress = gameManager.chatConnection.roomCreationInProgress;
 
     function getNameOfAvailabilityStatus(status: AvailabilityStatus) {
         switch (status) {
@@ -129,16 +134,28 @@
                     <UserActionButton {user} />
                 {/if}
             </div>
-            {#if !isMe}
+            {#if !isMe && !showRoomCreationInProgress}
                 <button
                     class="transition-all group-hover/chatItem:bg-white/10 p-1 rounded-md aspect-square flex items-center justify-center text-white group-hover/chatItem:opacity-100 opacity-0 m-0"
                     on:click|stopPropagation={() => {
-                        if (user.chatId !== user.uuid && !isMe)
-                            openChatRoom(chatId).catch((error) => console.error(error));
+                        if (user.chatId !== user.uuid && !isMe) {
+                            showRoomCreationInProgress = true;
+                            openChatRoom(chatId)
+                                .catch((error) => console.error(error))
+                                .finally(() => {
+                                    showRoomCreationInProgress = false;
+                                });
+                        }
                     }}
                 >
                     <IconSend font-size="16" />
                 </button>
+            {:else if $roomCreationInProgress && showRoomCreationInProgress}
+                <div
+                    class="tw-min-h-[30px] tw-text-md tw-flex tw-gap-2 tw-justify-center tw-flex-row tw-items-center tw-p-1"
+                >
+                    <IconLoader class="tw-animate-spin" />
+                </div>
             {/if}
         </div>
     </div>

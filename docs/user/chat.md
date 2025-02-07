@@ -66,6 +66,11 @@ want to invite users with a Matrix ID outside WorkAdventure to join).
 - **Members only (since they joined)** means that new users can only read the chat history from the moment they joined the room.
 - **Members only (since they were invited)** applies to private rooms. New users can only read the chat history from the moment they were invited to the room (even if they did not join the room at that time).
 
+:::info
+If you are using the SAAS version of WorkAdventure, there is another way to create a Matrix room that [automatically
+binds members to a room based on their tags](/admin/chat/matrix-admin-managed-rooms).
+:::
+
 ### Folders
 
 Rooms can be organized in folders. Folders can be created by clicking on the "Create folder" button.
