@@ -19,6 +19,8 @@ import { createSilentStore } from "./SilentStore";
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { inExternalServiceStore, myCameraStore, myMicrophoneStore, proximityMeetingStore } from "./MyMediaStore";
 import { userMovingStore } from "./GameStore";
+//TODO : old way to trigger popup
+//import { layoutManagerActionStore } from "../WebRtc/LayoutManager";
 import { helpCameraSettingsVisibleStore } from "./HelpSettingsStore";
 
 /**
@@ -513,6 +515,7 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                 return navigator.mediaDevices
                     .getUserMedia(constraints)
                     .then((stream) => {
+                        console.log("initStream then >>>>>>", stream);
                         // Close old stream
                         if (currentStream) {
                             //we need stop all tracks to make sure the old stream will be garbage collected
@@ -554,6 +557,7 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                                 type: "error",
                                 error: e instanceof Error ? e : new Error("An unknown error happened"),
                             });
+
                             // Let's try without video constraints
                             //if (constraints.video !== false) {
                             requestedCameraState.disableWebcam();
@@ -561,16 +565,132 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                             /*if (constraints.audio !== false) {
                                 requestedMicrophoneState.disableMicrophone();
                             }*/
+
+                            //TODO : listen camera and microphone permission
+                            (async () => {
+                                try {
+                                    console.log("listen camera and microphone permission");
+                                    const cameraPermission = await navigator.permissions.query({ name: "camera" });
+                                    const micPermission = await navigator.permissions.query({ name: "microphone" });
+
+                                    // Function to handle permission changes
+                                    const handleChange = () => {
+                                        console.log(
+                                            "Permission changed! Camera:",
+                                            cameraPermission.state,
+                                            "Microphone:",
+                                            micPermission.state
+                                        );
+
+                                        if (cameraPermission.state === "granted" || micPermission.state === "granted") {
+                                            set({
+                                                type: "success",
+                                                stream: null,
+                                            });
+                                            cameraPermission.onchange = null;
+                                            micPermission.onchange = null;
+                                            //removeListeners(); // Remove listeners after first change
+                                        }
+                                    };
+                                    //TODO : old way to trigger popup
+                                    // layoutManagerActionStore.removeAction("cameraAccessDenied");
+                                    helpCameraSettingsVisibleStore.set(false);
+                                    // Assign the event listeners
+                                    cameraPermission.onchange = handleChange;
+                                    micPermission.onchange = handleChange;
+                                } catch (error) {
+                                    console.error("Error checking permissions:", error);
+                                }
+                            })().catch((e) => {
+                                console.error("Error checking permissions:", e);
+                            });
                         } else if (!constraints.video && !constraints.audio) {
                             set({
                                 type: "error",
                                 error: new MediaStreamConstraintsError(),
+                            });
+
+                            //TODO : listen camera and microphone permission
+                            (async () => {
+                                console.log("listen camera and microphone permission");
+                                const cameraPermission = await navigator.permissions.query({ name: "camera" });
+                                const micPermission = await navigator.permissions.query({ name: "microphone" });
+
+                                // Function to handle permission changes
+                                const handleChange = () => {
+                                    console.log(
+                                        "Permission changed! Camera:",
+                                        cameraPermission.state,
+                                        "Microphone:",
+                                        micPermission.state
+                                    );
+
+                                    if (cameraPermission.state === "granted" || micPermission.state === "granted") {
+                                        set({
+                                            type: "success",
+                                            stream: null,
+                                        });
+                                        cameraPermission.onchange = null;
+                                        micPermission.onchange = null;
+                                        //removeListeners(); // Remove listeners after first change
+                                    }
+                                };
+                                //TODO : old way to trigger popup
+                                // layoutManagerActionStore.removeAction("cameraAccessDenied");
+                                helpCameraSettingsVisibleStore.set(false);
+                                // Assign the event listeners
+                                cameraPermission.onchange = handleChange;
+                                micPermission.onchange = handleChange;
+                            })().catch((e) => {
+                                console.error("Error checking permissions:", e);
                             });
                         } else {
                             console.info("Error. Unable to get microphone and/or camera access.", constraints, e);
                             set({
                                 type: "error",
                                 error: e instanceof Error ? e : new Error("An unknown error happened"),
+                            });
+
+                            //TODO : listen camera and microphone permission
+                            (async () => {
+                                try {
+                                    console.log("listen camera and microphone permission");
+                                    const cameraPermission = await navigator.permissions.query({ name: "camera" });
+                                    const micPermission = await navigator.permissions.query({ name: "microphone" });
+
+                                    // Function to handle permission changes
+                                    const handleChange = () => {
+                                        console.log(
+                                            "Permission changed! Camera:",
+                                            cameraPermission.state,
+                                            "Microphone:",
+                                            micPermission.state
+                                        );
+
+                                        if (cameraPermission.state === "granted" || micPermission.state === "granted") {
+                                            set({
+                                                type: "success",
+                                                stream: null,
+                                            });
+
+                                            //TODO : old way to trigger popup
+                                            // layoutManagerActionStore.removeAction("cameraAccessDenied");
+                                            helpCameraSettingsVisibleStore.set(false);
+
+                                            cameraPermission.onchange = null;
+                                            micPermission.onchange = null;
+                                            //removeListeners(); // Remove listeners after first change
+                                        }
+                                    };
+
+                                    // Assign the event listeners
+                                    cameraPermission.onchange = handleChange;
+                                    micPermission.onchange = handleChange;
+                                } catch (error) {
+                                    console.error("Error checking permissions:", error);
+                                }
+                            })().catch((e) => {
+                                console.error("Error checking permissions:", e);
                             });
                         }
                         return undefined;
