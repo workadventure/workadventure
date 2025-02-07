@@ -713,7 +713,7 @@
                 bind:value={property.trigger}
                 onChange={onTriggerValueChange}
             >
-                <option value={undefined}>{$LL.mapEditor.properties.linkProperties.triggerShowImmediately()}</option>
+                <option value="">{$LL.mapEditor.properties.linkProperties.triggerShowImmediately()}</option>
                 {#if !property.newTab}
                     <option value="onicon">{$LL.mapEditor.properties.linkProperties.triggerOnClick()}</option>
                 {/if}
@@ -737,7 +737,7 @@
                 /> -->
 
                 <Input
-                    id="tablink"
+                    id="tabLink"
                     placeholder={property.placeholder ?? $LL.mapEditor.properties.linkProperties.linkPlaceholder()}
                     label={$LL.mapEditor.properties.linkProperties.linkLabel()}
                     type="url"
