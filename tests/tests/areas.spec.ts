@@ -35,6 +35,7 @@ test.describe('Areas', () => {
             silentArea.height = 600;
             return;
         });
+        await page.pause();
         await expect(page.getByText('You\'re in a silent zone')).toBeVisible();
         await page.close();
         await page.context().close();
