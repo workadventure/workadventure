@@ -11,7 +11,6 @@ import {
     proximityMeetingStore,
 } from "../Stores/MyMediaStore";
 import { MediaStreamConstraintsError } from "../Stores/Errors/MediaStreamConstraintsError";
-import { LL } from "../../i18n/i18n-svelte";
 import { localeDetector } from "../../i18n/locales";
 
 export type StartScreenSharingCallback = (media: MediaStream) => void;
