@@ -21,7 +21,7 @@ test.describe('Availability Status on mobile', () => {
            );
            await Menu.openStatusList(page, true);
            await Menu.clickOnStatus(page, statusName);
-           await Menu.openStatusList(page, true);
+           //await Menu.openStatusList(page, true);
            await expect(page.getByRole('button', {name: statusName}).locator('svg')).toBeVisible();
 
            await Map.walkTo(page, 'ArrowRight', 1000);
@@ -44,11 +44,11 @@ test.describe('Availability Status on mobile', () => {
             );
             await Menu.openStatusList(page, true);
             await Menu.clickOnStatus(page, statusName);
-            await Menu.openStatusList(page, true);
+            //await Menu.openStatusList(page, true);
             await expect(page.getByRole('button', {name: statusName}).locator('svg')).toBeVisible();
-
             await Map.walkTo(page, 'ArrowRight', 1000);
-            await Menu.openStatusList(page, true);
+
+            //await Menu.openStatusList(page, true);
             await expect(page.getByRole('button', {name: 'Online'}).locator('svg')).toHaveClass(/opacity-100/);
             await page.close();
             await page.context().close();
@@ -67,7 +67,7 @@ test.describe('Availability Status on mobile', () => {
            );
            await Menu.openStatusList(page, true);
            await Menu.clickOnStatus(page, statusName);
-           await Menu.openStatusList(page, true);
+           //await Menu.openStatusList(page, true);
            await expect(page.getByRole('button', {name: statusName}).locator('svg')).toBeVisible();
            await Map.walkTo(page, 'ArrowRight', 1000);
            await Menu.openStatusList(page, true);
