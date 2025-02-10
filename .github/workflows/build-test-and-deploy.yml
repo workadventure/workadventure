@@ -516,11 +516,23 @@ jobs:
             nbShards: 3
             renderer: headless
           - browser: ""
-            parameters: --project=mobilechromium --project=mobilefirefox --project=mobilewebkit
-            project: mobile
+            parameters: --project=mobilechromium
+            project: mobilechromium
             shard: 1
             nbShards: 1
             renderer: auto
+          - browser: ""
+            parameters: --project=mobilefirefox
+            project: mobilefirefox
+            shard: 1
+            nbShards: 1
+            renderer: auto
+          - browser: ""
+            parameters: --project=mobilewebkit
+            project: mobilewebkit
+            shard: 1
+            nbShards: 1
+            renderer: headless
     needs:
       - build-play
       - build-back
