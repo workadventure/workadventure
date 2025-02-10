@@ -24,6 +24,7 @@
     import ShowMore from "./ShowMore.svelte";
     import ChatHeader from "./ChatHeader.svelte";
     import { IconChevronUp, IconCloudLock } from "@wa-icons";
+    import ExternalComponents from "../../Components/ExternalModules/ExternalComponents.svelte";
 
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
 
@@ -317,11 +318,7 @@
                 {/if}
             </div>
             <div class="fixed bottom-0 w-full flex flex-col">
-                {#if $externalChatBandSvelteComponent.size > 0}
-                    {#each [...$externalChatBandSvelteComponent.entries()] as [id, value] (`externalChatBandSvelteComponent-${id}`)}
-                        <svelte:component this={value.componentType} />
-                    {/each}
-                {/if}
+                <ExternalComponents zone="chatBand" />
                 {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}
                     <div class="w-full">
                         <button

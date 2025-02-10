@@ -177,48 +177,48 @@
     </p>
     <a
         type="button"
-        class="btn light min-w-[220px] flex justify-center items-center tw-my-2"
+        class="btn light min-w-[220px] flex justify-center items-center my-2"
         href="/login"
         on:click={() => analyticsClient.login()}
     >
         {$LL.menu.profile.login()}
     </a>
 {:else if bridgeConnected === null}
-    <div class="tw-flex tw-items-center tw-justify-center tw-p-8">
+    <div class="flex items-center justify-center p-8">
         <div
-            class="tw-loader tw-w-6 tw-h-6 tw-border-2 tw-border-t-[2px] tw-border-primary tw-rounded-full tw-animate-spin"
+            class="loader w-6 h-6 border-2 border-t-[2px] border-primary rounded-full animate-spin"
             style="border-top-style: solid;"
         />
     </div>
 {:else if bridgeError}
-    <div class="tw-full tw-bg-red-500 tw-py-6 tw-px-2 tw-flex tw-items-center tw-justify-center tw-rounded-lg">
-        <p class="tw-text-white tw-mb-0">Error while starting the bridge</p>
+    <div class="full bg-red-500 py-6 px-2 flex items-center justify-center rounded-lg">
+        <p class="text-white mb-0">Error while starting the bridge</p>
     </div>
 {:else}
-    <div class="tw-flex tw-flex-col tw-w-full tw-gap-5">
+    <div class="flex flex-col w-full gap-5">
         {#if !bridgeConnected && qrCodeUrl.length <= 0 && !needManualToken}
-            <div class="tw-py-3 tw-px-3">
-                <p class=" tw-text-sm tw-text-gray-500">
+            <div class="py-3 px-3">
+                <p class=" text-sm text-gray-500">
                     {$LL.externalModule.discord.explainText()}
                 </p>
                 <button
                     id="discordBridgeLoginBtn"
                     on:click={getQrCodeUrl}
-                    class="tw-w-full tw-p-2 tw-bg-secondary-800  tw-text-white tw-no-underline tw-rounded-md tw-flex tw-flex-row tw-items-center tw-gap-3 tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white"
+                    class="w-full p-2 bg-secondary-800  text-white no-underline rounded-md flex flex-row items-center gap-3 justify-center cursor-pointer hover:no-underline hover:text-white"
                 >
-                    <img src={DiscordLogo} alt="" class="tw-w-6 tw-h-6" />
+                    <img src={DiscordLogo} alt="" class="w-6 h-6" />
                     {$LL.externalModule.discord.login()}
                 </button>
             </div>
         {/if}
 
         {#if qrCodeUrl.length > 0 && !needManualToken && !bridgeConnected}
-            <div class="tw-flex tw-justify-end">
+            <div class="flex justify-end">
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <span class=" tw-cursor-pointer" on:click={() => storedQrCodeUrl.set("")}>&#10005;</span>
+                <span class=" cursor-pointer" on:click={() => storedQrCodeUrl.set("")}>&#10005;</span>
             </div>
             <img src={qrCodeUrl} alt="QR Code" />
-            <p class="tw-text-sm tw-text-gray-300">
+            <p class="text-sm text-gray-300">
                 Scan the QR code with your Discord app to login. QR codes are time limited, sometimes you need to
                 regenerate one
                 {$LL.externalModule.discord.qrCodeExplainText()}
@@ -226,32 +226,32 @@
 
             <button
                 on:click={getQrCodeUrl}
-                class="tw-w-full tw-p-2 tw-bg-white/10 hover:tw-bg-white/30 tw-text-white tw-no-underline tw-rounded-md tw-text-center tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white tw-flex tw-flex-row tw-items-center"
+                class="w-full p-2 bg-white/10 hover:bg-white/30 text-white no-underline rounded-md text-center justify-center cursor-pointer hover:no-underline hover:text-white flex flex-row items-center"
             >
                 {$LL.externalModule.discord.qrCodeRegenerate()}
             </button>
             <button
                 id="logWithToken"
                 on:click={() => (needManualToken = true)}
-                class="tw-w-full tw-p-2 tw-bg-secondary-800 tw-text-white tw-no-underline tw-rounded-md tw-text-center tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white tw-flex tw-flex-row tw-items-center"
+                class="w-full p-2 bg-secondary-800 text-white no-underline rounded-md text-center justify-center cursor-pointer hover:no-underline hover:text-white flex flex-row items-center"
             >
                 {$LL.externalModule.discord.loginToken()}
             </button>
         {/if}
 
         {#if needManualToken && !bridgeConnected}
-            <div class="tw-flex tw-flex-col tw-items-center tw-gap-5">
-                <div class="tw-w-full tw-flex tw-justify-end">
+            <div class="flex flex-col items-center gap-5">
+                <div class="w-full flex justify-end">
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <span class=" tw-cursor-pointer" on:click={() => (needManualToken = false)}>&#10005;</span>
+                    <span class=" cursor-pointer" on:click={() => (needManualToken = false)}>&#10005;</span>
                 </div>
-                <div class="tw-w-full ">
-                    <label for="discordToken" class="tw-text-white tw-mb-2">Discord Token</label>
-                    <input type="text" class="tw-w-full tw-mb-0" bind:value={manualDiscordToken} id="discordToken" />
+                <div class="w-full ">
+                    <label for="discordToken" class="text-white mb-2">Discord Token</label>
+                    <input type="text" class="w-full mb-0" bind:value={manualDiscordToken} id="discordToken" />
                     <button
                         id="sendToken"
                         on:click={sendDiscordToken}
-                        class="tw-w-full tw-p-2 tw-bg-secondary-800  tw-text-white tw-no-underline tw-rounded-md tw-text-center tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white tw-flex tw-flex-row tw-items-center"
+                        class="w-full p-2 bg-secondary-800  text-white no-underline rounded-md text-center justify-center cursor-pointer hover:no-underline hover:text-white flex flex-row items-center"
                     >
                         {$LL.externalModule.discord.sendDiscordToken()}
                     </button>
@@ -264,27 +264,27 @@
                 </p>
             </div>
         {/if}
-        <div class="tw-flex tw-flex-col tw-gap-2 ">
+        <div class="flex flex-col gap-2 ">
             {#if discordUser}
                 <div
-                    class="tw-px-5 tw-py-3 tw-flex tw-flex-row tw-gap-2 tw-items-center tw-justify-between tw-text-white tw-border-solid tw-border-b tw-border-b-white/10 tw-border-0 tw-mb-4 tw-relative"
+                    class="px-5 py-3 flex flex-row gap-2 items-center justify-between text-white border-solid border-b border-b-white/10 border-0 mb-4 relative"
                 >
-                    <div class="tw-flex tw-flex-col tw-gap-1">
-                        <p class="tw-mb-0 tw-text-sm tw-text-gray-400">Connected with:</p>
-                        <p class="tw-mb-0">
+                    <div class="flex flex-col gap-1">
+                        <p class="mb-0 text-sm text-gray-400">Connected with:</p>
+                        <p class="mb-0">
                             {$LL.externalModule.discord.loggedIn} <strong>@{discordUser.username}</strong>
                         </p>
                     </div>
 
                     <button
                         on:click|preventDefault|stopPropagation={handleLogout}
-                        class="tw-px-2 hover:tw-bg-white/10 tw-border tw-border-solid tw-border-white tw-rounded-lg"
+                        class="px-2 hover:bg-white/10 border border-solid border-white rounded-lg"
                     >
                         {$LL.externalModule.discord.logout()}
                     </button>
 
                     <!--                    <button-->
-                    <!--                        class="tw-text-gray-400 hover:tw-text-white tx-relative"-->
+                    <!--                        class="text-gray-400 hover:text-white tx-relative"-->
                     <!--                        data-testid="discord-settings-button"-->
                     <!--                        bind:this={buttonRef}-->
                     <!--                        on:click|preventDefault|stopPropagation={toggleDropdown}-->
@@ -294,11 +294,11 @@
                     <!--                    {#if showDropdown}-->
                     <!--                        <div-->
                     <!--                            bind:this={dropdownRef}-->
-                    <!--                            class="tw-absolute tw-top-full tw-right-0 tw-mt-2 tw-bg-contrast-900 tw-shadow-md tw-rounded-md tw-py-0 tw-z-50"-->
+                    <!--                            class="absolute top-full right-0 mt-2 bg-contrast-900 shadow-md rounded-md py-0 z-50"-->
                     <!--                        >-->
                     <!--                            <button-->
                     <!--                                on:click|preventDefault|stopPropagation={handleLogout}-->
-                    <!--                                class="tw-px-6 hover:tw-bg-white/10"-->
+                    <!--                                class="px-6 hover:bg-white/10"-->
                     <!--                            >-->
                     <!--                                Logout-->
                     <!--                            </button>-->
@@ -306,33 +306,33 @@
                     <!--                    {/if}-->
                 </div>
             {/if}
-            <div class="tw-px-5">
+            <div class="px-5">
                 <div>
-                    <div class="tw-uppercase tw-text-white tw-text-lg tw-font-bold tw-mb-2">
+                    <div class="uppercase text-white text-lg font-bold mb-2">
                         {$LL.externalModule.discord.guilds()}
                     </div>
-                    <p class="tw-text-gray-400 tw-text-sm">
+                    <p class="text-gray-400 text-sm">
                         {$LL.externalModule.discord.guildExplain()}
                     </p>
                 </div>
                 {#each guilds as server (server.id)}
                     <li
-                        class="tw-flex tw-flex-row tw-gap-2 tw-py-2 tw-rounded-md tw-items-center tw-justify-between tw-mb-2 hover:tw-bg-white/10 {server.isSync
-                            ? 'tw-bg-white/10'
+                        class="flex flex-row gap-2 py-2 rounded-md items-center justify-between mb-2 hover:bg-white/10 {server.isSync
+                            ? 'bg-white/10'
                             : ''}"
                     >
-                        <div class="tw-flex tw-flex-row tw-items-center tw-gap-2 tw-pl-2">
-                            <div class="server-icon tw-relative" class:sync={server.isSync}>
+                        <div class="flex flex-row items-center gap-2 pl-2">
+                            <div class="server-icon relative" class:sync={server.isSync}>
                                 {#if server.icon}
                                     <img
                                         src={server.icon}
                                         alt={server.name}
-                                        class="tw-w-8 tw-h-8 tw-rounded-full"
+                                        class="w-8 h-8 rounded-full"
                                         on:error={handleImageError}
                                     />
                                 {:else}
                                     <div
-                                        class="tw-w-8 tw-h-8 tw-rounded-full tw-bg-gray-300 tw-flex tw-justify-center tw-items-center tw-text-gray-700"
+                                        class="w-8 h-8 rounded-full bg-gray-300 flex justify-center items-center text-gray-700"
                                     >
                                         {getInitials(server.name)}
                                     </div>
@@ -346,7 +346,7 @@
                         <input
                             type="checkbox"
                             checked={server.isSync}
-                            class="tw-mr-[5%]"
+                            class="mr-[5%]"
                             on:change={() => handleCheckboxChange(server)}
                         />
                     </li>
@@ -354,14 +354,14 @@
             </div>
         </div>
         {#if bridgeConnected && guilds.length > 0}
-            <div class="tw-sticky tw-p-3 tw-bottom-0 flex items-center justify-center tw-bg-contrast">
+            <div class="sticky p-3 bottom-0 flex items-center justify-center bg-contrast">
                 <button
                     id="saveSync"
-                    class="tw-w-full tw-p-2 tw-bg-secondary-800  tw-text-white tw-no-underline tw-rounded-md tw-text-center tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white tw-flex tw-flex-row tw-gap-1.5 tw-items-center"
+                    class="w-full p-2 bg-secondary-800  text-white no-underline rounded-md text-center justify-center cursor-pointer hover:no-underline hover:text-white flex flex-row gap-1.5 items-center"
                     on:click={bridgeServers}
                 >
                     <span>Add</span>
-                    <span class="tw-px-2 tw-aspect-square tw-bg-white tw-text-secondary-800 tw-rounded-md"
+                    <span class="px-2 aspect-square bg-white text-secondary-800 rounded-md"
                         >{serversToBridge.length}</span
                     >
                     <span>discord channels</span>
@@ -370,13 +370,13 @@
         {/if}
         {#if loadingFetchServer}
             <div
-                class="tw-flex tw-flex-col tw-gap-2 tw-p-6 tw-rounded-xl tw-z-50 tw-w-full tw-justify-center tw-items-center"
+                class="flex flex-col gap-2 p-6 rounded-xl z-50 w-full justify-center items-center"
             >
                 <div
-                    class="tw-loader tw-w-6 tw-h-6 tw-border-2 tw-border-t-[2px] tw-border-contrast tw-rounded-full tw-animate-spin"
+                    class="loader w-6 h-6 border-2 border-t-[2px] border-contrast rounded-full animate-spin"
                     style="border-top-style: solid;"
                 />
-                <span class="tw-ml-2 tw-text-white">{$LL.externalModule.discord.fetchingServer()}</span>
+                <span class="ml-2 text-white">{$LL.externalModule.discord.fetchingServer()}</span>
             </div>
         {/if}
     </div>
