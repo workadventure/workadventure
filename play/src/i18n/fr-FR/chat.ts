@@ -305,7 +305,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     e2ee: {
         configure: "Configuré",
-        dismiss: "Fermer",
         encryptionNotConfigured: "Chiffrement non configuré",
         createRecoveryKey: {
             title: "Création d'une clé de récupération",
@@ -345,7 +344,6 @@ const chat: DeepPartial<Translation["chat"]> = {
                 confirm: "Confirmer",
             },
         },
-        discordNotConfigured: "Configurer synchronisation des messages Discord",
     },
     connectionError: "Chat indisponible",
     requiresLoginForChatModal: {
@@ -451,6 +449,13 @@ const chat: DeepPartial<Translation["chat"]> = {
         description: "Téléchargez un fichier pour le partager",
         featureComingSoon: "Fonctionnalité à venir !",
     },
+    discord: {
+        chatBand: {
+            configure: "Configurer",
+            dismiss: "Fermer",
+            discordNotConfigured: "Synchronisation Discord",
+        }
+    }
 };
 
 export default chat;

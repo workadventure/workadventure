@@ -305,7 +305,6 @@ const chat: BaseTranslation = {
     },
     e2ee: {
         configure: "Configure",
-        dismiss: "Dismiss",
         encryptionNotConfigured: "Encryption not configured",
         createRecoveryKey: {
             title: "Chat recovery key creation",
@@ -345,7 +344,6 @@ const chat: BaseTranslation = {
                 confirm: "Confirm",
             },
         },
-        discordNotConfigured: "Connecct to Discord",
     },
     connectionError: "Chat not available",
     requiresLoginForChatModal: {
@@ -451,6 +449,13 @@ const chat: BaseTranslation = {
         description: "Upload and share a file",
         featureComingSoon: "Coming soon!",
     },
+    discord: {
+        chatBand: {
+            configure: "Configure",
+            dismiss: "Dismiss",
+            discordNotConfigured: "Connect to Discord",
+        }
+    }
 };
 
 export default chat;

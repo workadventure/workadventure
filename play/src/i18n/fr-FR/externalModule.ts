@@ -27,6 +27,7 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         howToGetTokenButton: "Comment obtenir mon jeton de connexion Discord",
         loggedIn: "Connecté en tant que",
         saveSync: "Enregistrer et synchroniser 🔌",
+        logout: "Se déconnecter",
     },
 };
 

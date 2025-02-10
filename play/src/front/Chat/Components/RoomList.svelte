@@ -1,5 +1,8 @@
 <script lang="ts">
-    import { get, writable } from "svelte/store";
+    import { get } from "svelte/store";
+    import { fly, scale } from 'svelte/transition';
+    import { quintOut } from 'svelte/easing';
+    import { externalChatBandSvelteComponent } from "../../Stores/Utils/externalSvelteComponentStore";
     // eslint-disable-next-line import/no-unresolved
     import { onDestroy, onMount } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
@@ -23,7 +26,6 @@
     import ShowMore from "./ShowMore.svelte";
     import ChatHeader from "./ChatHeader.svelte";
     import { IconChevronUp, IconCloudLock } from "@wa-icons";
-    import discordLogo from "../../Components/images/discord-logo.svg";
 
 
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
@@ -84,9 +86,11 @@
         }
     }
 
-    let isDiscordBandVisible = writable(true);
+    //dont know why !localStorage.getItem('haveCloseDiscordChatBand') is not working
+    let isDiscordBandVisible = localStorage.getItem('haveCloseDiscordChatBand')  === true ? false : true;
     function closeDiscordband() {
-        isDiscordBandVisible.set(false);
+        localStorage.setItem('haveCloseDiscordChatBand', 'true');
+        isDiscordBandVisible = false;
     }
 
     function openDiscordBridgeConfiguration(){
@@ -96,6 +100,19 @@
         } catch (error) {
             console.error("Failed to openDiscordBridgeConfiguration", error);
         }
+    }
+
+    function closeChatBandTransition(node, { delay = 0, duration = 100, easing = quintOut, x = 0, y = 0 }) {
+        return {
+            delay,
+            duration,
+            easing,
+            css: t => {
+                const scaleStyle = scale(node, { start: 0.4, duration, opacity: 0 }).css(t);
+                const flyStyle = fly(node, { x, y, duration, easing }).css(t);
+                return `${flyStyle} ${scaleStyle}`;
+            }
+        };
     }
 
     $: isEncryptionRequiredAndNotSet = chat.isEncryptionRequiredAndNotSet;
@@ -342,36 +359,51 @@
                 {/if}
             </div>
             <div class="tw-fixed tw-bottom-0 tw-w-full tw-flex tw-flex-col">
-                {#if isDiscordBandVisible}
-                    <div class="tw-w-full tw-backdrop-blur-md tw-mt-3">
-                        <button
-                            data-testid="restoreEncryptionButton"
-                            on:click={openDiscordBridgeConfiguration}
-                            class="tw-text-white tw-flex tw-gap-2 tw-justify-center tw-w-full tw-bg-[#5865F2]/80 hover:tw-bg-[#5865F2] hover:tw-brightness-100 tw-m-0 tw-rounded-none tw-py-2 tw-px-3 tw-appearance-none"
-                        >
-                            <img src={discordLogo} alt="Discord logo" class="tw-w-4" />
-
-                            <div class="tw-text-sm tw-font-bold tw-grow tw-text-left">
-                                {$LL.chat.e2ee.discordNotConfigured()}
-                            </div>
-                            <button class="tw-text-xs tw-py-0.5 tw-px-1.5 tw-underline">
-                                {$LL.chat.e2ee.dismiss()}
-                            </button>
-                            <button
-                                on:click|stopPropagation={closeDiscordband}
-                                class="tw-text-xs tw-rounded tw-border tw-border-solid tw-border-white tw-py-0.5 tw-px-1.5 group-hover:tw-bg-white/10"
-                            >
-                                {$LL.chat.e2ee.configure()}
-                            </button>
-                        </button>
-                    </div>
+                {#if $externalChatBandSvelteComponent.size > 0}
+                    {#each [...$externalChatBandSvelteComponent.entries()] as [id, value] (`externalChatBandSvelteComponent-${id}`)}
+                        <svelte:component this={value.componentType} />
+                    {/each}
                 {/if}
+                <!--{#if isDiscordBandVisible && allowedDiscordBridgeStore}-->
+                <!--    <div class="tw-w-full tw-backdrop-blur-md tw-mt-3" out:closeChatBandTransition={{y:50 , duration: 100}}>-->
+                <!--        <div-->
+                <!--            data-testid="restoreEncryptionButton"-->
+                <!--            class="tw-text-white tw-flex tw-gap-2 tw-justify-between tw-w-full tw-bg-[#5865F2] hover:tw-brightness-100 tw-m-0 tw-rounded-none tw-py-2 tw-px-3 tw-appearance-none"-->
+                <!--        >-->
+                <!--            <div class="tw-flex tw-flew-row tw-items-center tw-justify-start tw-gap-2">-->
+                <!--                <img src={discordLogo} alt="Discord logo" class="tw-h-[24px]" />-->
+
+                <!--                <div class="tw-text-sm tw-font-bold tw-text-left tw-flex tw-items-center tw-justify-start">-->
+                <!--                    <span>-->
+                <!--                        {$LL.chat.e2ee.discordNotConfigured()}-->
+                <!--                    </span>-->
+                <!--                </div>-->
+                <!--            </div>-->
+
+                <!--            <div class="tw-flex tw-flew-row tw-items-center tw-justify-start">-->
+                <!--                <button-->
+                <!--                    class="tw-text-xs tw-py-0.5 tw-px-1.5 tw-underline"-->
+                <!--                    on:click|stopPropagation={closeDiscordband}-->
+
+                <!--                >-->
+                <!--                    {$LL.chat.e2ee.dismiss()}-->
+                <!--                </button>-->
+                <!--                <button-->
+                <!--                        on:click|stopPropagation={openDiscordBridgeConfiguration}-->
+                <!--                        class="tw-text-xs tw-rounded tw-border tw-border-solid tw-border-white tw-py-0.5 tw-px-1.5 hover:tw-bg-white/20"-->
+                <!--                >-->
+                <!--                    {$LL.chat.e2ee.configure()}-->
+                <!--                </button>-->
+                <!--            </div>-->
+                <!--        </div>-->
+                <!--    </div>-->
+                <!--{/if}-->
                 {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}
-                    <div class="tw-w-full tw-backdrop-blur-md">
+                    <div class="tw-w-full">
                         <button
                                 data-testid="restoreEncryptionButton"
                                 on:click|stopPropagation={initChatConnectionEncryption}
-                                class="tw-text-white tw-flex tw-gap-2 tw-justify-center tw-w-full tw-bg-white/20 hover:tw-bg-neutral hover:tw-brightness-100 tw-m-0 tw-rounded-none tw-py-2 tw-px-3 tw-appearance-none"
+                                class="tw-text-white tw-flex tw-gap-2 tw-justify-center tw-w-full tw-bg-neutral  hover:tw-bg-neutral-600 hover:tw-brightness-100 tw-m-0 tw-rounded-none tw-py-2 tw-px-3 tw-appearance-none"
                         >
                             <IconCloudLock font-size="20" />
                             <div class="tw-text-sm tw-font-bold tw-grow tw-text-left">

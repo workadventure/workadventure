@@ -16,6 +16,10 @@ export const externalChatSettingsSvelteComponent = writable<
     Map<string, { componentType: ComponentType; extensionModule: ExtensionModule }>
 >(new Map());
 
+export const externalChatBandSvelteComponent = writable<
+    Map<string, { componentType: ComponentType; extensionModule: ExtensionModule }>
+>(new Map());
+
 export const externalSvelteComponentStore: Readable<ExternalSvelteComponentStore> = derived(
     [externalActionBarSvelteComponent, externalAvailibilitySatusSvelteComponent, externalPopupSvelteComponent],
     ([$externalActionBarSvelteComponent, $externalAvailibilitySatusSvelteComponent, $externalPopupSvelteComponent]) => {
@@ -68,6 +72,17 @@ export const externalSvelteComponentStore: Readable<ExternalSvelteComponentStore
                     return value;
                 });
             },
+            addChatBandComponent(key: string, extensionModule: ExtensionModule, componentType: ComponentType) {
+                externalChatBandSvelteComponent.update((value) => {
+                    return new Map([...value, [key, { componentType, extensionModule }]]);
+                });
+            },
+            removeChatBandComponent(key: string) {
+                externalChatBandSvelteComponent.update((value) => {
+                    value.delete(key);
+                    return value;
+                });
+            }
         };
     }
 );

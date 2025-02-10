@@ -29,17 +29,17 @@ export class DiscordBotManager {
         }
         try {
             //try to get existing direct room with the bot
-            // const existingDirectRoom = this.chatConnection.getDirectRoomFor(DISCORD_BOT_ID);
-            // if (existingDirectRoom instanceof MatrixChatRoom) {
-            //     this.discordBotRoom = existingDirectRoom;
-            // }else {
-            //if no existing direct room create one
-            console.log(">>>>> Creating direct room with the bot");
-            const discordChatRoom = await this.chatConnection.createDirectRoom(DISCORD_BOT_ID);
-            if (discordChatRoom instanceof MatrixChatRoom) {
-                this.discordBotRoom = discordChatRoom;
+            const existingDirectRoom = this.chatConnection.getDirectRoomFor(DISCORD_BOT_ID);
+            if (existingDirectRoom instanceof MatrixChatRoom) {
+                this.discordBotRoom = existingDirectRoom;
+            }else {
+                //if no existing direct room create one
+                console.log(">>>>> Creating direct room with the bot");
+                const discordChatRoom = await this.chatConnection.createDirectRoom(DISCORD_BOT_ID);
+                if (discordChatRoom instanceof MatrixChatRoom) {
+                    this.discordBotRoom = discordChatRoom;
+                }
             }
-            //}
         } catch (error) {
             console.error("Failed to create direct room with the bot", error);
         }
@@ -336,9 +336,9 @@ export class DiscordBotManager {
 
     async destroy() {
         //close the direct room with the bot
-        if (this.discordBotRoom) {
-            await this.discordBotRoom.leaveRoom();
-        }
+        // if (this.discordBotRoom) {
+        //     await this.discordBotRoom.leaveRoom();
+        // }
         this.resetSubscription();
     }
 }

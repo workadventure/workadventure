@@ -10,12 +10,10 @@
     import { MatrixChatConnection } from "../../Connection/Matrix/MatrixChatConnection";
     import { storedQrCodeUrl } from "../../Stores/DiscordConnectionStore";
     import DiscordLogo from "../../../Components/images/discord-logo.svg";
-    import userLogo from "../../images/user.svg";
     import { userIsConnected } from "../../../Stores/MenuStore";
     import LL from "../../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { ChatMessage } from "../../Connection/ChatConnection";
-    import { IconDotsCircle } from "@wa-icons";
 
     //initialize discordBotManager
     let DiscordBot: DiscordBotManager;
@@ -60,16 +58,21 @@
         }
     }
 
-    let serversToBridge: DiscordServer[] = [];
-    let serversToUnBridge: DiscordServer[] = [];
+    $: serversToBridge = [] as Array<DiscordServer>;
+    $: serversToUnBridge= [] as Array<DiscordServer>;
 
     function handleCheckboxChange(server: DiscordServer) {
         server.isSync = !server.isSync;
         if (server.isSync) {
             serversToBridge.push(server);
+            serversToUnBridge = serversToUnBridge.filter((s) => s.id !== server.id);
+            serversToBridge = [...serversToBridge];
         } else {
             serversToUnBridge.push(server);
+            serversToBridge = serversToBridge.filter((s) => s.id !== server.id);
+            serversToUnBridge = [...serversToUnBridge];
         }
+        console.log("serversToBridge", serversToBridge);
     }
 
     async function bridgeServers(): Promise<void> {
@@ -213,8 +216,7 @@
         <p class="tw-text-white tw-mb-0">Error while starting the bridge</p>
     </div>
 {:else}
-    <div class="tw-flex tw-flex-col tw-w-full tw-gap-5 tw-p-5">
-        <!--{#if !bridgeConnected && qrCodeUrl === undefined && !needManualToken }-->
+    <div class="tw-flex tw-flex-col tw-w-full tw-gap-5">
         {#if !bridgeConnected && qrCodeUrl.length <= 0 && !needManualToken}
             <div class="tw-py-3 tw-px-3">
                 <p class=" tw-text-sm tw-text-gray-500">
@@ -286,81 +288,102 @@
         <div class="tw-flex tw-flex-col tw-gap-2 ">
             {#if discordUser}
                 <div
-                    class="tw-px-2 tw-py-3 tw-flex tw-flex-row tw-gap-2 tw-items-center tw-justify-around tw-text-white tw-border-solid tw-border-b tw-border-b-white/10 tw-border-0 tw-mb-4 tw-relative"
+                    class="tw-px-5 tw-py-3 tw-flex tw-flex-row tw-gap-2 tw-items-center tw-justify-between tw-text-white tw-border-solid tw-border-b tw-border-b-white/10 tw-border-0 tw-mb-4 tw-relative"
                 >
-                    <div class="tw-flex tw-row tw-gap-2">
-                        <img src={userLogo} alt="" class="tw-h-6 tw-w-6" />
+                    <div class="tw-flex tw-flex-col tw-gap-1">
+                        <p class="tw-mb-0 tw-text-sm tw-text-gray-400">Connected with:</p>
                         <p class="tw-mb-0">
                             {$LL.externalModule.discord.loggedIn} <strong>@{discordUser.username}</strong>
                         </p>
                     </div>
 
                     <button
-                        class="tw-text-gray-400 hover:tw-text-white tx-relative"
-                        data-testid="discord-settings-button"
-                        bind:this={buttonRef}
-                        on:click|preventDefault|stopPropagation={toggleDropdown}
+                            on:click|preventDefault|stopPropagation={handleLogout}
+                            class="tw-px-2 hover:tw-bg-white/10 tw-border tw-border-solid tw-border-white tw-rounded-lg"
                     >
-                        <IconDotsCircle />
+                        {$LL.externalModule.discord.logout()}
                     </button>
-                    {#if showDropdown}
-                        <div
-                            bind:this={dropdownRef}
-                            class="tw-absolute tw-top-full tw-right-0 tw-mt-2 tw-bg-contrast-900 tw-shadow-md tw-rounded-md tw-py-0 tw-z-50"
-                        >
-                            <button
-                                on:click|preventDefault|stopPropagation={handleLogout}
-                                class="tw-px-6 hover:tw-bg-white/10">Logout</button
-                            >
-                        </div>
-                    {/if}
+
+<!--                    <button-->
+<!--                        class="tw-text-gray-400 hover:tw-text-white tx-relative"-->
+<!--                        data-testid="discord-settings-button"-->
+<!--                        bind:this={buttonRef}-->
+<!--                        on:click|preventDefault|stopPropagation={toggleDropdown}-->
+<!--                    >-->
+<!--                        <IconDotsCircle />-->
+<!--                    </button>-->
+<!--                    {#if showDropdown}-->
+<!--                        <div-->
+<!--                            bind:this={dropdownRef}-->
+<!--                            class="tw-absolute tw-top-full tw-right-0 tw-mt-2 tw-bg-contrast-900 tw-shadow-md tw-rounded-md tw-py-0 tw-z-50"-->
+<!--                        >-->
+<!--                            <button-->
+<!--                                on:click|preventDefault|stopPropagation={handleLogout}-->
+<!--                                class="tw-px-6 hover:tw-bg-white/10"-->
+<!--                            >-->
+<!--                                Logout-->
+<!--                            </button>-->
+<!--                        </div>-->
+<!--                    {/if}-->
                 </div>
             {/if}
-            {#each guilds as server (server.id)}
-                <li
-                    class="tw-flex tw-flex-row tw-gap-2 tw-py-2 tw-rounded-md tw-items-center tw-justify-between tw-mb-2 hover:tw-bg-white/10 {server.isSync
-                        ? 'tw-bg-white/10'
-                        : ''}"
-                >
-                    <div class="tw-flex tw-flex-row tw-items-center tw-gap-2 tw-pl-2">
-                        <div class="server-icon tw-relative" class:sync={server.isSync}>
-                            {#if server.icon}
-                                <img
-                                    src={server.icon}
-                                    alt={server.name}
-                                    class="tw-w-8 tw-h-8 tw-rounded-full"
-                                    on:error={handleImageError}
-                                />
-                            {:else}
-                                <div
-                                    class="tw-w-8 tw-h-8 tw-rounded-full tw-bg-gray-300 tw-flex tw-justify-center tw-items-center tw-text-gray-700"
-                                >
-                                    {getInitials(server.name)}
-                                </div>
-                            {/if}
-                        </div>
-
-                        <span>
-                            {server.name}
-                        </span>
+            <div class="tw-px-5">
+                <div>
+                    <div class="tw-uppercase tw-text-white tw-text-lg tw-font-bold tw-mb-2">
+                        {$LL.externalModule.discord.guilds()}
                     </div>
-                    <input
-                        type="checkbox"
-                        checked={server.isSync}
-                        class="tw-mr-[5%]"
-                        on:change={() => handleCheckboxChange(server)}
-                    />
-                </li>
-            {/each}
+                    <p class="tw-text-gray-400 tw-text-sm">
+                        {$LL.externalModule.discord.guildExplain()}
+                    </p>
+                </div>
+                {#each guilds as server (server.id)}
+                    <li
+                        class="tw-flex tw-flex-row tw-gap-2 tw-py-2 tw-rounded-md tw-items-center tw-justify-between tw-mb-2 hover:tw-bg-white/10 {server.isSync
+                            ? 'tw-bg-white/10'
+                            : ''}"
+                    >
+                        <div class="tw-flex tw-flex-row tw-items-center tw-gap-2 tw-pl-2">
+                            <div class="server-icon tw-relative" class:sync={server.isSync}>
+                                {#if server.icon}
+                                    <img
+                                        src={server.icon}
+                                        alt={server.name}
+                                        class="tw-w-8 tw-h-8 tw-rounded-full"
+                                        on:error={handleImageError}
+                                    />
+                                {:else}
+                                    <div
+                                        class="tw-w-8 tw-h-8 tw-rounded-full tw-bg-gray-300 tw-flex tw-justify-center tw-items-center tw-text-gray-700"
+                                    >
+                                        {getInitials(server.name)}
+                                    </div>
+                                {/if}
+                            </div>
+
+                            <span>
+                                {server.name}
+                            </span>
+                        </div>
+                        <input
+                            type="checkbox"
+                            checked={server.isSync}
+                            class="tw-mr-[5%]"
+                            on:change={() => handleCheckboxChange(server)}
+                        />
+                    </li>
+                {/each}
+            </div>
         </div>
         {#if bridgeConnected && guilds.length > 0}
-            <div class="tw-sticky tw-bottom-0 flex items-center justify-center">
+            <div class="tw-sticky tw-p-3 tw-bottom-0 flex items-center justify-center tw-bg-contrast">
                 <button
                     id="saveSync"
-                    class="tw-w-full tw-p-2 tw-bg-secondary-800  tw-text-white tw-no-underline tw-rounded-md tw-text-center tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white tw-flex tw-flex-row tw-items-center"
+                    class="tw-w-full tw-p-2 tw-bg-secondary-800  tw-text-white tw-no-underline tw-rounded-md tw-text-center tw-justify-center tw-cursor-pointer hover:tw-no-underline hover:tw-text-white tw-flex tw-flex-row tw-gap-1.5 tw-items-center"
                     on:click={bridgeServers}
                 >
-                    {$LL.externalModule.discord.saveSync()}
+                    <span>Add</span>
+                    <span class="tw-px-2 tw-aspect-square tw-bg-white tw-text-secondary-800 tw-rounded-md">{serversToBridge.length}</span>
+                    <span>discord channels</span>
                 </button>
             </div>
         {/if}
@@ -369,7 +392,7 @@
                 class="tw-flex tw-flex-col tw-gap-2 tw-p-6 tw-rounded-xl tw-z-50 tw-w-full tw-justify-center tw-items-center"
             >
                 <div
-                    class="tw-loader tw-w-6 tw-h-6 tw-border-2 tw-border-t-[2px] tw-border-primary tw-rounded-full tw-animate-spin"
+                    class="tw-loader tw-w-6 tw-h-6 tw-border-2 tw-border-t-[2px] tw-border-contrast tw-rounded-full tw-animate-spin"
                     style="border-top-style: solid;"
                 />
                 <span class="tw-ml-2 tw-text-white">{$LL.externalModule.discord.fetchingServer()}</span>
