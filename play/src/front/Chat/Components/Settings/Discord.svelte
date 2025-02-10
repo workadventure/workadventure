@@ -4,7 +4,6 @@
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
     import { navChat, selectedRoomStore } from "../../Stores/ChatStore";
-
     import { DiscordUser, DiscordBotManager } from "../../DiscordBotManager";
     import { DiscordServer } from "../../../Interfaces/DiscordServerInterface";
     import { MatrixChatConnection } from "../../Connection/Matrix/MatrixChatConnection";
@@ -28,24 +27,6 @@
     let manualDiscordToken = "";
     let loadingFetchServer = false;
 
-    let showDropdown = false;
-    let dropdownRef: HTMLDivElement | undefined = undefined;
-    let buttonRef: HTMLButtonElement | undefined = undefined;
-
-    function toggleDropdown() {
-        showDropdown = !showDropdown;
-    }
-    function closeDropdownOnClickOutside(event: MouseEvent) {
-        if (
-            buttonRef &&
-            !buttonRef.contains(event.target as Node) &&
-            dropdownRef &&
-            !dropdownRef.contains(event.target as Node)
-        ) {
-            showDropdown = false;
-        }
-    }
-
     async function sendDiscordToken(): Promise<void> {
         const response = await DiscordBot.AttemptToken(manualDiscordToken);
         if (response.includes("Successfully") || response.includes("Connecting")) {
@@ -59,7 +40,7 @@
     }
 
     $: serversToBridge = [] as Array<DiscordServer>;
-    $: serversToUnBridge= [] as Array<DiscordServer>;
+    $: serversToUnBridge = [] as Array<DiscordServer>;
 
     function handleCheckboxChange(server: DiscordServer) {
         server.isSync = !server.isSync;
@@ -153,12 +134,10 @@
             bridgeConnected = false;
             console.info("bridge detected as non connected");
         }
-        document.addEventListener("click", closeDropdownOnClickOutside);
     });
     onDestroy(async () => {
         await DiscordBot.destroy();
         console.log("🗑️🗑️🗑️🗑️Discord bot destroyed");
-        document.removeEventListener("click", closeDropdownOnClickOutside);
     });
 
     function getInitials(name: string) {
@@ -179,26 +158,26 @@
         initialsElement.className = "initials";
         initialsElement.textContent = initials;
         initialsElement.classList.add(
-            "tw-w-8",
-            "tw-h-8",
-            "tw-rounded-full",
-            "tw-flex",
-            "tw-justify-center",
-            "tw-items-center",
-            "tw-bg-gray-300",
-            "tw-text-gray-700"
+            "w-8",
+            "h-8",
+            "rounded-full",
+            "flex",
+            "justify-center",
+            "items-center",
+            "bg-gray-300",
+            "text-gray-700"
         );
         imgElement.parentNode?.insertBefore(initialsElement, imgElement);
     }
 </script>
 
 {#if !$userIsConnected}
-    <p class="tw-text-gray-400 tw-w-full tw-text-center tw-pt-2">
+    <p class="text-gray-400 w-full text-center pt-2">
         {$LL.chat.requiresLoginForChat()}
     </p>
     <a
         type="button"
-        class="btn light tw-min-w-[220px] tw-flex tw-justify-center tw-items-center tw-my-2"
+        class="btn light min-w-[220px] flex justify-center items-center tw-my-2"
         href="/login"
         on:click={() => analyticsClient.login()}
     >
@@ -298,33 +277,33 @@
                     </div>
 
                     <button
-                            on:click|preventDefault|stopPropagation={handleLogout}
-                            class="tw-px-2 hover:tw-bg-white/10 tw-border tw-border-solid tw-border-white tw-rounded-lg"
+                        on:click|preventDefault|stopPropagation={handleLogout}
+                        class="tw-px-2 hover:tw-bg-white/10 tw-border tw-border-solid tw-border-white tw-rounded-lg"
                     >
                         {$LL.externalModule.discord.logout()}
                     </button>
 
-<!--                    <button-->
-<!--                        class="tw-text-gray-400 hover:tw-text-white tx-relative"-->
-<!--                        data-testid="discord-settings-button"-->
-<!--                        bind:this={buttonRef}-->
-<!--                        on:click|preventDefault|stopPropagation={toggleDropdown}-->
-<!--                    >-->
-<!--                        <IconDotsCircle />-->
-<!--                    </button>-->
-<!--                    {#if showDropdown}-->
-<!--                        <div-->
-<!--                            bind:this={dropdownRef}-->
-<!--                            class="tw-absolute tw-top-full tw-right-0 tw-mt-2 tw-bg-contrast-900 tw-shadow-md tw-rounded-md tw-py-0 tw-z-50"-->
-<!--                        >-->
-<!--                            <button-->
-<!--                                on:click|preventDefault|stopPropagation={handleLogout}-->
-<!--                                class="tw-px-6 hover:tw-bg-white/10"-->
-<!--                            >-->
-<!--                                Logout-->
-<!--                            </button>-->
-<!--                        </div>-->
-<!--                    {/if}-->
+                    <!--                    <button-->
+                    <!--                        class="tw-text-gray-400 hover:tw-text-white tx-relative"-->
+                    <!--                        data-testid="discord-settings-button"-->
+                    <!--                        bind:this={buttonRef}-->
+                    <!--                        on:click|preventDefault|stopPropagation={toggleDropdown}-->
+                    <!--                    >-->
+                    <!--                        <IconDotsCircle />-->
+                    <!--                    </button>-->
+                    <!--                    {#if showDropdown}-->
+                    <!--                        <div-->
+                    <!--                            bind:this={dropdownRef}-->
+                    <!--                            class="tw-absolute tw-top-full tw-right-0 tw-mt-2 tw-bg-contrast-900 tw-shadow-md tw-rounded-md tw-py-0 tw-z-50"-->
+                    <!--                        >-->
+                    <!--                            <button-->
+                    <!--                                on:click|preventDefault|stopPropagation={handleLogout}-->
+                    <!--                                class="tw-px-6 hover:tw-bg-white/10"-->
+                    <!--                            >-->
+                    <!--                                Logout-->
+                    <!--                            </button>-->
+                    <!--                        </div>-->
+                    <!--                    {/if}-->
                 </div>
             {/if}
             <div class="tw-px-5">
@@ -382,7 +361,9 @@
                     on:click={bridgeServers}
                 >
                     <span>Add</span>
-                    <span class="tw-px-2 tw-aspect-square tw-bg-white tw-text-secondary-800 tw-rounded-md">{serversToBridge.length}</span>
+                    <span class="tw-px-2 tw-aspect-square tw-bg-white tw-text-secondary-800 tw-rounded-md"
+                        >{serversToBridge.length}</span
+                    >
                     <span>discord channels</span>
                 </button>
             </div>

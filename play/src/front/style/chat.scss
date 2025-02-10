@@ -217,7 +217,8 @@
     @apply translate-x-full;
 }
 .chatWindow nav .background.hidden{
-    @apply tw-hidden;
+    //@apply hidden;
+    display: none;
 }
 .chatWindow nav ul{
     @apply flex list-none justify-between w-full p-0 m-0;
@@ -254,5 +255,5 @@
 
 .server-icon.sync:after {
     content: "";
-    @apply tw-absolute tw-top-0 tw-right-0 tw-w-3 tw-h-3 tw-bg-green-500 tw-rounded-full;
+    @apply absolute top-0 right-0 w-3 h-3 bg-green-500 rounded-full;
 }

@@ -1,10 +1,8 @@
 <script lang="ts">
     import { get } from "svelte/store";
-    import { fly, scale } from 'svelte/transition';
-    import { quintOut } from 'svelte/easing';
+    import { onDestroy, onMount } from "svelte";
     import { externalChatBandSvelteComponent } from "../../Stores/Utils/externalSvelteComponentStore";
     // eslint-disable-next-line import/no-unresolved
-    import { onDestroy, onMount } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue, joignableRoom, navChat, selectedRoomStore } from "../Stores/ChatStore";
@@ -26,7 +24,6 @@
     import ShowMore from "./ShowMore.svelte";
     import ChatHeader from "./ChatHeader.svelte";
     import { IconChevronUp, IconCloudLock } from "@wa-icons";
-
 
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
 
@@ -84,35 +81,6 @@
         } catch (error) {
             console.error("Failed to initChatConnectionEncryption", error);
         }
-    }
-
-    //dont know why !localStorage.getItem('haveCloseDiscordChatBand') is not working
-    let isDiscordBandVisible = localStorage.getItem('haveCloseDiscordChatBand')  === true ? false : true;
-    function closeDiscordband() {
-        localStorage.setItem('haveCloseDiscordChatBand', 'true');
-        isDiscordBandVisible = false;
-    }
-
-    function openDiscordBridgeConfiguration(){
-        console.log("openDiscordBridgeConfiguration");
-        try{
-            navChat.switchToSettings();
-        } catch (error) {
-            console.error("Failed to openDiscordBridgeConfiguration", error);
-        }
-    }
-
-    function closeChatBandTransition(node, { delay = 0, duration = 100, easing = quintOut, x = 0, y = 0 }) {
-        return {
-            delay,
-            duration,
-            easing,
-            css: t => {
-                const scaleStyle = scale(node, { start: 0.4, duration, opacity: 0 }).css(t);
-                const flyStyle = fly(node, { x, y, duration, easing }).css(t);
-                return `${flyStyle} ${scaleStyle}`;
-            }
-        };
     }
 
     $: isEncryptionRequiredAndNotSet = chat.isEncryptionRequiredAndNotSet;
@@ -348,25 +316,25 @@
                     {/each}
                 {/if}
             </div>
-            <div class="tw-fixed tw-bottom-0 tw-w-full tw-flex tw-flex-col">
+            <div class="fixed bottom-0 w-full flex flex-col">
                 {#if $externalChatBandSvelteComponent.size > 0}
                     {#each [...$externalChatBandSvelteComponent.entries()] as [id, value] (`externalChatBandSvelteComponent-${id}`)}
                         <svelte:component this={value.componentType} />
                     {/each}
                 {/if}
                 {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}
-                    <div class="tw-w-full">
+                    <div class="w-full">
                         <button
-                                data-testid="restoreEncryptionButton"
-                                on:click|stopPropagation={initChatConnectionEncryption}
-                                class="tw-text-white tw-flex tw-gap-2 tw-justify-center tw-w-full tw-bg-neutral  hover:tw-bg-neutral-600 hover:tw-brightness-100 tw-m-0 tw-rounded-none tw-py-2 tw-px-3 tw-appearance-none"
+                            data-testid="restoreEncryptionButton"
+                            on:click|stopPropagation={initChatConnectionEncryption}
+                            class="text-white flex gap-2 justify-center w-full bg-neutral  hover:bg-neutral-600 hover:tw-brightness-100 tw-m-0 tw-rounded-none tw-py-2 tw-px-3 tw-appearance-none"
                         >
                             <IconCloudLock font-size="20" />
                             <div class="tw-text-sm tw-font-bold tw-grow tw-text-left">
                                 {$LL.chat.e2ee.encryptionNotConfigured()}
                             </div>
                             <div
-                                    class="tw-text-xs tw-rounded tw-border tw-border-solid tw-border-white tw-py-0.5 tw-px-1.5 group-hover:tw-bg-white/10"
+                                class="tw-text-xs tw-rounded tw-border tw-border-solid tw-border-white tw-py-0.5 tw-px-1.5 group-hover:tw-bg-white/10"
                             >
                                 {$LL.chat.e2ee.configure()}
                             </div>

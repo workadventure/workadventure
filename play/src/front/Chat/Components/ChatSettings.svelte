@@ -3,10 +3,10 @@
     import ChatHeader from "./ChatHeader.svelte";
 </script>
 
-<div class="tw-overflow-y-scroll tw-overflow-x-hidden">
-    <div class="tw-flex tw-flex-col">
+<div class="overflow-y-scroll overflow-x-hidden">
+    <div class="flex flex-col">
         <ChatHeader />
-        <div class="tw-relative tw-pt-[72px]  tw-h-[calc(100%-2rem)]">
+        <div class="relative pt-[72px]  h-[calc(100%-2rem)]">
             <Discord />
         </div>
     </div>

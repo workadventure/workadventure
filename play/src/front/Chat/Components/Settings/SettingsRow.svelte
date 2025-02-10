@@ -36,14 +36,14 @@
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div class="tw-flex tw-flex-col">
+<div class="flex flex-col">
     <div
-        class="tw-flex tw-items-center tw-justify-between tw-p-4 tw-cursor-pointer tw-rounded-lg hover:tw-bg-white/10 {open
-            ? 'tw-bg-white/10'
+        class="flex items-center justify-between p-4 cursor-pointer rounded-lg hover:bg-white/10 {open
+            ? 'bg-white/10'
             : ''}"
         on:click={toggleOpen}
     >
-        <div class="tw-flex tw-row tw-gap-3 tw-items-center tw-justify-start">
+        <div class="flex row gap-3 items-center tw-justify-start">
             <div class="tw-w-6 tw-h-6 tw-flex tw-items-center tw-justify-center">
                 <slot name="icon" />
             </div>
