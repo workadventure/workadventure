@@ -1055,7 +1055,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         return user && user.some((user) => user.id === address);
     }
 
-    getRoombyID(roomId: string): ChatRoom {
+    getRoomByID(roomId: string): ChatRoom {
         if (!this.client) {
             throw new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG);
         }
