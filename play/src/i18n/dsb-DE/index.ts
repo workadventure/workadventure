@@ -18,6 +18,7 @@ import cowebsite from "./cowebsite";
 import actionbar from "./actionbar";
 import mapEditor from "./mapEditor";
 import megaphone from "./megaphone";
+import form from "./form";
 
 const dsb_DE = merge(en_US, {
     audio,
@@ -38,6 +39,7 @@ const dsb_DE = merge(en_US, {
     actionbar,
     mapEditor,
     megaphone,
+    form,
 });
 
 export default dsb_DE;

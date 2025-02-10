@@ -9,15 +9,13 @@
 {#if $users.size > 0}
     <div
         on:click={() => reaction.react()}
-        class="tw-group tw-flex tw-flex-row tw-space-x-1 tw-py-1.5 tw-px-2 hover:tw-bg-white/20 tw-text-white hover:tw-cursor-pointer"
+        class="group flex flex-row space-x-1 py-1.5 px-2 hover:bg-white/20 text-white hover:cursor-pointer"
         data-testid={`${key}_reactionButton`}
     >
-        <div
-            class="group-hover:tw-scale-[2.5] group-hover:tw-rotate-3 tw-transition-all tw-text-xs tw-p-0 tw-m-0 hover:tw-cursor-pointer"
-        >
+        <div class="group-hover:scale-[2.5] group-hover:rotate-3 transition-all text-xs p-0 m-0 hover:cursor-pointer">
             {key}
         </div>
-        <div class="tw-text-xs tw-p-0 tw-m-0 hover:tw-cursor-pointer tw-text-white" class:tw-font-extrabold={$reacted}>
+        <div class="text-xs p-0 m-0 hover:cursor-pointer text-white" class:font-extrabold={$reacted}>
             {$users.size}
         </div>
     </div>

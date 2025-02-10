@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
     <style>
         body {
@@ -25,10 +26,12 @@
         })
     </script>
 </head>
+
 <body>
 
-<p>Exception correctly thrown for onPlayerEnters: <span id="onPlayerEntersException">No</span></p>
-<p>Exception correctly thrown for onPlayerLeaves: <span id="onPlayerLeavesException">No</span></p>
+    <p>Exception correctly thrown for onPlayerEnters: <span id="onPlayerEntersException">No</span></p>
+    <p>Exception correctly thrown for onPlayerLeaves: <span id="onPlayerLeavesException">No</span></p>
 
 </body>
+
 </html>

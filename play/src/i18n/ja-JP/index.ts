@@ -22,6 +22,7 @@ import video from "./video";
 import statusModal from "./statusModal";
 import area from "./area";
 import externalModule from "./externalModule";
+import form from "./form";
 
 const ja_JP = merge(en_US, {
     area,
@@ -46,6 +47,7 @@ const ja_JP = merge(en_US, {
     video,
     statusModal,
     externalModule,
+    form,
 });
 
 export default ja_JP;

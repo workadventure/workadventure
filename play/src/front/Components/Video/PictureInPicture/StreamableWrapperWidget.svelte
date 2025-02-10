@@ -4,7 +4,7 @@
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { Streamable } from "../../../Stores/StreamableCollectionStore";
     import { VideoPeer } from "../../../WebRtc/VideoPeer";
-    import screenshareOn from "../../images/screenshare-on.png";
+    import ScreenShareIcon from "../../Icons/ScreenShareIcon.svelte";
     import RemoteSoundWidget from "./RemoteSoundWidget.svelte";
     import RemoteVideoWidget from "./RemoteVideoWidget.svelte";
 
@@ -34,21 +34,16 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
     id={`main-${streamable.uniqueId}`}
-    class="tw-w-full tw-h-auto tw-max-h-full tw-aspect-video tw-relative tw-flex tw-justify-center tw-items-center tw-z-40 tw-rounded-xl tw-bg-[#373a3e]"
+    class="w-full h-auto max-h-full aspect-video relative flex justify-center items-center z-40 rounded-xl bg-[#373a3e]"
     on:click={hanglerClickVideo}
 >
     {#if streamable.uniqueId === "localScreenSharingStream"}
-        <img
-            src={screenshareOn}
-            class="tw-w-auto tw-h-full tw-max-h-[2rem]"
-            class:tw-max-h-[1rem]={isMinified}
-            alt="woka user"
-        />
+        <ScreenShareIcon />
     {:else}
         <img
             src={getPlayerWokaPicture()}
-            class="tw-w-auto tw-h-full tw-max-h-[8rem]"
-            class:tw-max-h-[3rem]={isMinified}
+            class="w-auto h-full max-h-[8rem]"
+            class:max-h-[3rem]={isMinified}
             alt="woka user"
         />
     {/if}

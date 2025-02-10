@@ -1,6 +1,6 @@
-* {
-    cursor: auto;
-}
+//* {
+//    cursor: auto;
+//}
 * a,
 button,
 select {
@@ -43,6 +43,8 @@ body .message-info.warning {
     background: #ffa500d6;
 }
 
+
+
 /* New layout */
 body {
     margin: 0;
@@ -57,102 +59,11 @@ body {
 }
 
 #game {
-    position: relative; /* Position relative is needed for the game-overlay. */
-
     iframe {
         pointer-events: all;
     }
 }
 
-/*
- * Style Input Range
- * https://www.cssportal.com/style-input-range/
- */
-input[type="range"] {
-    height: 28px;
-    -webkit-appearance: none;
-    appearance: none;
-    margin: 10px 0;
-    width: 100%;
-    background-color: transparent;
-}
-input[type="range"]:focus {
-    outline: none;
-}
-input[type="range"]::-webkit-slider-runnable-track {
-    width: 100%;
-    height: 5px;
-    animation-duration: 0.2s;
-    box-shadow: 1px 1px 1px #000000;
-    background: #ffffff;
-    border-radius: 5px;
-    border: 1px solid #000000;
-}
-input[type="range"]::-webkit-slider-thumb {
-    box-shadow: 1px 1px 1px #000000;
-    border: 1px solid #000000;
-    height: 20px;
-    width: 10px;
-    border-radius: 5px;
-    background: #ffffff;
-    -webkit-appearance: none;
-    margin-top: -8.5px;
-}
-input[type="range"]:focus::-webkit-slider-runnable-track {
-    background: #ffffff;
-}
-input[type="range"]::-moz-range-track {
-    width: 100%;
-    height: 5px;
-    animation-duration: 0.2s;
-    box-shadow: 1px 1px 1px #000000;
-    background: #ffffff;
-    border-radius: 5px;
-    border: 1px solid #000000;
-}
-input[type="range"]::-moz-range-thumb {
-    box-shadow: 1px 1px 1px #000000;
-    border: 1px solid #000000;
-    height: 20px;
-    width: 10px;
-    border-radius: 5px;
-    background: #ffffff;
-}
-input[type="range"]::-ms-track {
-    width: 100%;
-    height: 5px;
-    animation-duration: 0.2s;
-    background: transparent;
-    border-color: transparent;
-    color: transparent;
-}
-input[type="range"]::-ms-fill-lower {
-    background: #ffffff;
-    border: 1px solid #000000;
-    border-radius: 10px;
-    box-shadow: 1px 1px 1px #000000;
-}
-input[type="range"]::-ms-fill-upper {
-    background: #ffffff;
-    border: 1px solid #000000;
-    border-radius: 10px;
-    box-shadow: 1px 1px 1px #000000;
-}
-input[type="range"]::-ms-thumb {
-    margin-top: 1px;
-    box-shadow: 1px 1px 1px #000000;
-    border: 1px solid #000000;
-    height: 20px;
-    width: 10px;
-    border-radius: 5px;
-    background: #ffffff;
-}
-input[type="range"]:focus::-ms-fill-lower {
-    background: #ffffff;
-}
-input[type="range"]:focus::-ms-fill-upper {
-    background: #ffffff;
-}
 
 .chat-mode > div {
     margin: 1%;
@@ -162,7 +73,7 @@ input[type="range"]:focus::-ms-fill-upper {
 }
 
 .chat-mode > div:hover {
-    margin: 0%;
+    margin: 0;
 }
 
 .chat-mode.one-col {
@@ -370,7 +281,7 @@ div.modal-report-user {
 .discussion {
     position: fixed;
     left: -300px;
-    top: 0px;
+    top: 0;
     width: 220px;
     height: 100%;
     background-color: #333333;
@@ -474,12 +385,12 @@ div.modal-report-user {
     position: absolute;
     background-color: #2d2d2dba;
     right: 34px;
-    margin: 0px;
-    padding: 2px 0px;
+    margin: 0;
+    padding: 2px 0;
     border-radius: 15px;
     border: none;
     color: white;
-    width: 0px;
+    width: 0;
     overflow: hidden;
     transition: all 0.5s ease;
 }
@@ -608,29 +519,6 @@ div.action.danger p.action-body {
     color: #000;
 }
 
-.popUpElement {
-    @apply tw-text-left tw-text-white tw-text-sm;
-}
-
-.popUpElement div {
-    @apply tw-bg-dark-purple/95 tw-text-sm;;
-    white-space: pre-line;
-}
-
-.popUpElement .nes-container {
-    padding: 1rem 1rem;
-}
-
-.popUpElement button {
-    @apply tw-relative tw-text-xs tw-text-black tw-ml-1 tw-px-1;
-    border-image-repeat: revert;
-}
-
-.popUpElement .buttonContainer {
-    float: right;
-    background-color: inherit;
-}
-
 @keyframes mymove {
     0% {
         bottom: 40px;
@@ -664,12 +552,6 @@ div.action.danger p.action-body {
         width: 100%;
         height: 100%;
 
-        & > div {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-        }
-
         & > div.scrollable {
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
@@ -682,13 +564,55 @@ div.action.danger p.action-body {
     }
 }
 
-div.emoji-picker {
-    background-color: #23222c;
-    border-radius: 1em;
-    border: none;
 
+.active-discussion div.emoji-picker {
+    transform: translateX(-188px);
+}
+
+div.emoji-picker {
+    @apply bg-contrast/80 backdrop-blur rounded-lg border-none;
+    transform: translateX(-68px);
     input.emoji-picker__search {
         border-radius: 1em;
+    }
+    .emoji-picker__content {
+        @apply pb-0 px-0;
+    }
+    button.emoji-picker__category-button {
+        @apply relative z-10;
+        &:not(.active) {
+            @apply opacity-50 transition-all;
+            &:hover {
+                @apply opacity-100;
+            }
+        }
+        &.active {
+            @apply border-none pb-2;
+            @apply after:content-[''] after:absolute after:-bottom-[1px] after:left-0 after:w-full after:h-[3px] after:rounded after:bg-success;
+        }
+    }
+    .emoji-picker__emoji {
+        @apply transition-all rounded;
+        &:focus, &:hover {
+            @apply bg-white/10;
+        }
+    }
+    .emoji-picker__emojis {
+        h2.emoji-picker__category-name {
+            @apply text-xs uppercase text-white/50 pl-3 font-normal first:mt-3;
+        }
+    }
+    .emoji-picker__search-container {
+        @apply flex items-center;
+        .emoji-picker__search {
+            @apply pl-4 bg-white/10 border-none placeholder:text-white/50;
+        }
+        .emoji-picker__search-icon {
+            @apply static px-3 opacity-20;
+        }
+    }
+    .emoji-picker__category-buttons {
+        @apply m-0 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-[1px] after:bg-white/20;
     }
 }
 
@@ -720,6 +644,42 @@ div.emoji-picker {
         display: none;
     }
     p{
-        @apply tw-m-0 tw-p-0;
+        @apply m-0 p-0;
     }
+}
+
+/* Popper arrow placement */ 
+
+.popper-tooltip[data-popper-placement^='top'] .popper-arrow {
+    bottom: -4px;
+}
+  
+.popper-tooltip[data-popper-placement^='bottom'] .popper-arrow {
+    top: -4px;
+}
+  
+.popper-tooltip[data-popper-placement^='left'] .popper-arrow {
+    right: -4px;
+}
+  
+.popper-tooltip[data-popper-placement^='right'] .popper-arrow {
+    left: -4px;
+}
+
+.popper-arrow,
+.popper-arrow::before {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: inherit;
+}
+
+.popper-arrow {
+  visibility: hidden;
+}
+
+.popper-arrow::before {
+  visibility: visible;
+  content: '';
+  transform: rotate(45deg);
 }

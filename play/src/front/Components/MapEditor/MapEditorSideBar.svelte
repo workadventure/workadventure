@@ -73,17 +73,17 @@
 </script>
 
 <div
-    class="!tw-flex !tw-fixed tw-justify-center !tw-w-full !tw-h-fit -tw-top-4"
+    class="!flex !fixed justify-center !w-full !h-fit bottom-0"
     in:fly={{ y: 100, duration: 250, delay: 200 }}
     out:fly={{ y: 100, duration: 200 }}
 >
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
-        class="tw-flex tw-items-center !tw-h-fit !tw-w-fit tw-rounded-2xl tw-bg-dark-purple/80 tw-backdrop-blur-lg tw-text-white tw-p-4 tw-pt-6 tw-gap-2"
+        class="flex items-center !h-fit !w-fit rounded-t-2xl bg-dark-purple/80 backdrop-blur-lg text-white p-4 pt-6 gap-2"
     >
         {#each availableTools as tool (tool.toolName)}
             {#if $mapEditorSelectedToolStore === tool.toolName}
-                <img src={tool.img} class="tw-w-fit tw-h-4" alt="open tool {tool.toolName}" />
+                <img src={tool.img} class="w-fit h-4" alt="open tool {tool.toolName}" />
             {/if}
         {/each}
         {#if $mapEditorSelectedToolStore === EditorToolName.ExploreTheRoom}
@@ -101,14 +101,14 @@
         {/if}
         <img
             src={CloseImg}
-            class="tw-h-4 tw-ml-4 tw-pointer-events-auto tw-cursor-pointer"
+            class="h-4 ml-4 pointer-events-auto cursor-pointer"
             alt={$LL.mapEditor.sideBar.closeMapEditor()}
             on:click|preventDefault={() => switchTool(EditorToolName.CloseMapEditor)}
         />
     </div>
 </div>
 
-<section class="side-bar-container" class:!tw-right-20={!$mapEditorVisibilityStore}>
+<section class="side-bar-container" class:!right-20={!$mapEditorVisibilityStore}>
     <!--put a section to avoid lower div to be affected by some css-->
     <div class="side-bar">
         {#each availableTools as tool (tool.toolName)}
@@ -128,8 +128,9 @@
 <style lang="scss">
     .side-bar-container {
         position: absolute;
-        bottom: 0;
         right: 28rem;
+        top: 10%;
+        z-index: 500;
         pointer-events: auto;
     }
     .side-bar {

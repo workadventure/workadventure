@@ -89,11 +89,11 @@
 
 <div class="customize-main">
     <div class="submenu">
-        <section class="centered-column resizing-width tw-m-auto resizing-text">
+        <section class="centered-column resizing-width m-auto resizing-text">
             {#if showWokaNameButton()}
                 <button
                     type="button"
-                    class="tw-w-full outline tw-min-w-[220px]"
+                    class="w-full outline min-w-[220px]"
                     on:click={() => analyticsClient.editName()}
                     on:click={openEditNameScene}
                 >
@@ -110,7 +110,7 @@
             {/if}
             <button
                 type="button"
-                class="tw-w-full outline tw-min-w-[220px]"
+                class="w-full outline min-w-[220px]"
                 on:click={() => analyticsClient.editWoka()}
                 on:click={openEditSkinScene}
             >
@@ -119,7 +119,7 @@
             </button>
             <button
                 type="button"
-                class="tw-w-full outline tw-min-w-[220px]"
+                class="w-full outline min-w-[220px]"
                 on:click={() => analyticsClient.editCompanion()}
                 on:click={openEditCompanionScene}
             >
@@ -128,7 +128,7 @@
             </button>
             <button
                 type="button"
-                class="tw-w-full outline tw-min-w-[220px]"
+                class="w-full outline min-w-[220px]"
                 on:click={() => analyticsClient.editCamera()}
                 on:click={openEnableCameraScene}
             >
@@ -146,7 +146,7 @@
                 {#if $userIsConnected}
                     <button
                         type="button"
-                        class="tw-w-full outline tw-min-w-[220px] tw-flex tw-justify-center tw-items-center"
+                        class="w-full outline min-w-[220px] flex justify-center items-center"
                         on:click={() => analyticsClient.logout()}
                         on:click={logOut}>{$LL.menu.profile.logout()}</button
                     >
@@ -154,7 +154,7 @@
                     <a
                         type="button"
                         id="submenu-login-btn"
-                        class="btn light tw-min-w-[220px] tw-flex tw-justify-center tw-items-center"
+                        class="btn light min-w-[220px] flex justify-center items-center"
                         href="/login"
                         on:click={() => analyticsClient.login()}
                     >
@@ -166,13 +166,13 @@
     </div>
 
     <div class="content">
-        <section class="centered-column tw-w-full tw-m-auto resizing-text">
+        <section class="centered-column w-full m-auto resizing-text">
             {#if $profileAvailable}
                 <iframe
                     bind:this={profileIframe}
                     title="profile"
                     src={getProfileUrl()}
-                    class="tw-w-4/5 tw-h-screen tw-border-0 tw-border-solid tw-border-light-blue"
+                    class="w-4/5 h-screen border-0 border-solid border-light-blue"
                 />
             {/if}
         </section>

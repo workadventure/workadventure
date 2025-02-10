@@ -30,7 +30,6 @@ import {
 import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
 import { userMessageManager } from "../../Administration/UserMessageManager";
 import { connectionManager } from "../../Connection/ConnectionManager";
-import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { urlManager } from "../../Url/UrlManager";
 import { mediaManager } from "../../WebRtc/MediaManager";
 import { UserInputManager } from "../UserInput/UserInputManager";
@@ -40,6 +39,7 @@ import { waScaleManager } from "../Services/WaScaleManager";
 import { lazyLoadPlayerCharacterTextures } from "../Entity/PlayerTexturesLoadingManager";
 import { lazyLoadPlayerCompanionTexture } from "../Companion/CompanionTexturesLoadingManager";
 import { iframeListener } from "../../Api/IframeListener";
+import { coWebsiteManager, coWebsites } from "../../Stores/CoWebsiteStore";
 import {
     ADMIN_URL,
     DEBUG_MODE,
@@ -79,7 +79,6 @@ import type { ActionableItem } from "../Items/ActionableItem";
 import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
 import { peerStore } from "../../Stores/PeerStore";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
-import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { emoteMenuStore, emoteStore } from "../../Stores/EmoteStore";
 import {
@@ -164,13 +163,18 @@ import { AdminUserProvider } from "../../Chat/UserProvider/AdminUserProvider";
 import { ExtensionModuleStatusSynchronization } from "../../Rules/StatusRules/ExtensionModuleStatusSynchronization";
 import { isActivatedStore as isCalendarActiveStore, calendarEventsStore } from "../../Stores/CalendarStore";
 import { isActivatedStore as isTodoListActiveStore, todoListsStore } from "../../Stores/TodoListStore";
-import { externalSvelteComponentStore } from "../../Stores/Utils/externalSvelteComponentStore";
+import { externalSvelteComponentService } from "../../Stores/Utils/externalSvelteComponentService";
 import { ExtensionModule } from "../../ExternalModule/ExtensionModule";
 import { SpaceInterface } from "../../Space/SpaceInterface";
 import { UserProviderInterface } from "../../Chat/UserProvider/UserProviderInterface";
-import { faviconManager } from "../../WebRtc/FaviconManager";
 import { ScriptingOutputAudioStreamManager } from "../../WebRtc/AudioStream/ScriptingOutputAudioStreamManager";
 import { ScriptingInputAudioStreamManager } from "../../WebRtc/AudioStream/ScriptingInputAudioStreamManager";
+import { faviconManager } from "../../WebRtc/FaviconManager";
+import { popupStore } from "../../Stores/PopupStore";
+import PopUpRoomAccessDenied from "../../Components/PopUp/PopUpRoomAccessDenied.svelte";
+import PopUpTriggerActionMessage from "../../Components/PopUp/PopUpTriggerActionMessage.svelte";
+import PopUpMapEditorNotEnabled from "../../Components/PopUp/PopUpMapEditorNotEnabled.svelte";
+import PopUpMapEditorShortcut from "../../Components/PopUp/PopUpMapEditorShortcut.svelte";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
@@ -195,12 +199,11 @@ import type { PlayerDetailsUpdate } from "./RemotePlayersRepository";
 import { RemotePlayersRepository } from "./RemotePlayersRepository";
 import { IframeEventDispatcher } from "./IframeEventDispatcher";
 import { PlayerVariablesManager } from "./PlayerVariablesManager";
-import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManager";
 import { DEPTH_BUBBLE_CHAT_SPRITE, DEPTH_WHITE_MASK } from "./DepthIndexes";
 import { ScriptingEventsManager } from "./ScriptingEventsManager";
 import { FollowManager } from "./FollowManager";
-
+import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
@@ -938,15 +941,17 @@ export class GameScene extends DirtyScene {
             console.error('Error while fetching new room "' + roomUrl.toString() + '"', e);
 
             //show information room access denied
-            layoutManagerActionStore.addAction({
-                uuid: "roomAccessDenied",
-                type: "warning",
-                message: get(LL).warning.accessDenied.room(),
-                callback: () => {
-                    layoutManagerActionStore.removeAction("roomAccessDenied");
+            popupStore.addPopup(
+                PopUpRoomAccessDenied,
+                {
+                    message: get(LL).warning.accessDenied.room(),
+                    click: () => {
+                        popupStore.removePopup("roomAccessDenied");
+                    },
+                    userInputManager: this.userInputManager,
                 },
-                userInputManager: this.userInputManager,
-            });
+                "roomAccessDenied"
+            );
 
             this.mapTransitioning = false;
             return;
@@ -1019,7 +1024,6 @@ export class GameScene extends DirtyScene {
         followUsersStore.stopFollowing();
 
         audioManagerFileStore.unloadAudio();
-        layoutManagerActionStore.clearActions();
 
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
         if (this.allUserSpace) {
@@ -2003,9 +2007,14 @@ export class GameScene extends DirtyScene {
                         throw new Error("Connection is undefined");
                     }
 
+                    const authToken = localUserStore.getAuthToken();
+                    if (!authToken) {
+                        throw new Error("Auth token is undefined");
+                    }
+
                     defaultExtensionModule.init(this._room.metadata, {
                         workadventureStatusStore: availabilityStatusStore,
-                        userAccessToken: localUserStore.getAuthToken()!,
+                        userAccessToken: authToken,
                         roomId: this.roomUrl,
                         externalModuleMessage: connection.externalModuleMessage,
                         onExtensionModuleStatusChange: ExtensionModuleStatusSynchronization.onStatusChange,
@@ -2015,7 +2024,7 @@ export class GameScene extends DirtyScene {
                         closeCoWebsite,
                         getOauthRefreshToken: connection.getOauthRefreshToken.bind(this.connection),
                         adminUrl: ADMIN_URL,
-                        externalSvelteComponent: externalSvelteComponentStore,
+                        externalSvelteComponent: externalSvelteComponentService,
                         spaceRegistry: this.spaceRegistry,
                         logoutCallback: () => {
                             connectionManager.logout();
@@ -2372,18 +2381,19 @@ export class GameScene extends DirtyScene {
                     return;
                 }
                 const escapedMessage = HtmlUtils.escapeHtml(openPopupEvent.message);
-                let html = '<div id="container" hidden>';
+                let html =
+                    '<div id="container" class="relative bg-contrast/50 backdrop-blur pt-4 overflow-hidden rounded-lg text-white" hidden>';
                 if (escapedMessage) {
-                    html += `<div class="with-title is-centered">
+                    html += `<div class="text-xxs text-center px-2">
 ${escapedMessage}
  </div> `;
                 }
 
-                const buttonContainer = '<div class="buttonContainer"</div>';
+                const buttonContainer = '<div class="buttonContainer bg-contrast/50 py-2 px-2 mt-2"</div>';
                 html += buttonContainer;
                 let id = 0;
                 for (const button of openPopupEvent.buttons) {
-                    html += `<button type="button" class="is-${HtmlUtils.escapeHtml(
+                    html += `<button type="button" class="btn btn-xs justify-center w-full pb-4 ${HtmlUtils.escapeHtml(
                         button.className ?? ""
                     )}" id="popup-${openPopupEvent.popupId}-${id}">${HtmlUtils.escapeHtml(button.label)}</button>`;
                     id++;
@@ -2790,7 +2800,7 @@ ${escapedMessage}
             })
         );
 
-        iframeListener.registerAnswerer("openCoWebsite", async (openCoWebsite, source) => {
+        iframeListener.registerAnswerer("openCoWebsite", (openCoWebsite, source) => {
             return openCoWebSite(openCoWebsite, source);
         });
 
@@ -2803,7 +2813,7 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("closeCoWebsites", () => {
-            return coWebsiteManager.closeCoWebsites();
+            return coWebsites.removeAll();
         });
 
         iframeListener.registerAnswerer("openUIWebsite", (websiteConfig) => {
@@ -2988,15 +2998,24 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("triggerActionMessage", (message) =>
-            layoutManagerActionStore.addAction({
-                uuid: message.uuid,
-                type: "message",
-                message: message.message,
-                callback: () => {
-                    layoutManagerActionStore.removeAction(message.uuid);
-                    iframeListener.sendActionMessageTriggered(message.uuid);
+            popupStore.addPopup(
+                PopUpTriggerActionMessage,
+                {
+                    message: message.message,
+                    click: () => {
+                        popupStore.removePopup(message.uuid);
+                        iframeListener.sendActionMessageTriggered(message.uuid);
+                    },
+                    userInputManager: this.userInputManager,
                 },
-                userInputManager: this.userInputManager,
+                message.uuid
+            )
+        );
+
+        iframeListener.registerAnswerer("triggerPlayerMessage", (message) =>
+            this.CurrentPlayer.playText(message.uuid, message.message, undefined, () => {
+                this.CurrentPlayer.destroyText(message.uuid);
+                iframeListener.sendActionMessageTriggered(message.uuid);
             })
         );
 
@@ -3037,7 +3056,11 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("removeActionMessage", (message) => {
-            layoutManagerActionStore.removeAction(message.uuid);
+            popupStore.removePopup(message.uuid);
+        });
+
+        iframeListener.registerAnswerer("removePlayerMessage", (message) => {
+            this.CurrentPlayer.destroyText(message.uuid);
         });
 
         iframeListener.registerAnswerer("removePlayerMessage", (message) => {
@@ -3152,14 +3175,19 @@ ${escapedMessage}
         const toolEditorParam = urlManager.getHashParameter("mapEditor");
         if (toolEditorParam) {
             if (!get(mapEditorActivated)) {
-                layoutManagerActionStore.addAction({
-                    uuid: "mapEditorNotEnabled",
-                    type: "warning",
-                    message: get(LL).warning.mapEditorNotEnabled(),
-                    callback: () => layoutManagerActionStore.removeAction("mapEditorNotEnabled"),
-                    userInputManager: this.userInputManager,
-                });
-                setTimeout(() => layoutManagerActionStore.removeAction("mapEditorNotEnabled"), 6_000);
+                popupStore.addPopup(
+                    PopUpMapEditorNotEnabled,
+                    {
+                        message: get(LL).warning.mapEditorNotEnabled(),
+                        click: () => {
+                            popupStore.removePopup("mapEditorNotEnabled");
+                        },
+                        userInputManager: this.userInputManager,
+                    },
+                    "mapEditorNotEnabled"
+                );
+
+                setTimeout(() => popupStore.removePopup("mapEditorNotEnabled"), 6_000);
             } else {
                 switch (toolEditorParam) {
                     case "wamSettingsEditorTool": {
@@ -3198,14 +3226,19 @@ ${escapedMessage}
                         break;
                     }
                     default: {
-                        layoutManagerActionStore.addAction({
-                            uuid: "mapEditorShortCut",
-                            type: "warning",
-                            message: get(LL).warning.mapEditorShortCut(),
-                            callback: () => layoutManagerActionStore.removeAction("mapEditorShortCut"),
-                            userInputManager: this.userInputManager,
-                        });
-                        setTimeout(() => layoutManagerActionStore.removeAction("mapEditorShortCut"), 6_000);
+                        popupStore.addPopup(
+                            PopUpMapEditorShortcut,
+                            {
+                                message: get(LL).warning.mapEditorShortCut(),
+                                click: () => {
+                                    popupStore.removePopup("mapEditorShortCut");
+                                },
+                                userInputManager: this.userInputManager,
+                            },
+                            "mapEditorShortCut"
+                        );
+
+                        setTimeout(() => popupStore.removePopup("mapEditorShortCut"), 6_000);
                         break;
                     }
                 }

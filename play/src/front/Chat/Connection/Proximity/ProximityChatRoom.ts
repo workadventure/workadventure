@@ -367,9 +367,9 @@ export class ProximityChatRoom implements ChatRoom {
 
     public joinSpace(spaceName: string): void {
         this._space = this.spaceRegistry.joinSpace(spaceName);
-        bindMuteEventsToSpace(this._space);
 
         this._spaceWatcher = this._space.watchAllUsers();
+        bindMuteEventsToSpace(this._space, this._spaceWatcher);
         this.usersUnsubscriber = this._spaceWatcher.usersStore.subscribe((users) => {
             this.users = users;
             this.hasUserInProximityChat.set(users.size > 1);

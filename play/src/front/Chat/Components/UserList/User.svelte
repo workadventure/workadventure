@@ -57,28 +57,26 @@
 </script>
 
 {#if loadingDirectRoomAccess}
-    <div class="tw-min-h-[60px] tw-text-md tw-flex tw-gap-2 tw-justify-center tw-flex-row tw-items-center tw-p-1">
-        <IconLoader class="tw-animate-spin" />
+    <div class="min-h-[60px] text-md flex gap-2 justify-center flex-row items-center p-1">
+        <IconLoader class="animate-spin" />
     </div>
 {:else}
-    <div class="tw-flex tw-flex-col tw-px-2 tw-pb-2 user">
+    <div class="flex flex-col px-2 pb-2 user">
         <div
             class="wa-chat-item {isAdmin
                 ? 'admin'
-                : 'user'} tw-group/chatItem tw-relative tw-mb-[1px] tw-text-md tw-flex tw-gap-2 tw-flex-row tw-items-center hover:tw-bg-white tw-transition-all hover:tw-bg-opacity-10 hover:tw-rounded-md hover:!tw-cursor-pointer tw-px-2 tw-py-2 tw-cursor-pointer"
+                : 'user'} group/chatItem relative mb-[1px] text-md flex gap-2 flex-row items-center hover:bg-white transition-all hover:bg-opacity-10 hover:rounded hover:!cursor-pointer px-2 py-2 cursor-pointer"
         >
             <div
-                class="tw-relative wa-avatar {!$userStatus
-                    ? 'tw-opacity-50'
-                    : ''} tw-cursor-default tw-w-7 tw-h-7 tw-rounded-lg"
+                class="relative wa-avatar {!$userStatus ? 'opacity-50' : ''} cursor-default w-7 h-7 rounded-md"
                 style={`background-color: ${color ?? defaultColor}`}
             >
-                <div class="tw-w-7 tw-h-7 tw-rounded-lg tw-overflow-hidden">
+                <div class="w-7 h-7 rounded-md overflow-hidden">
                     <div
-                        class="tw-translate-y-[3px] -tw-translate-x-[3px] group-hover/chatItem:tw-translate-y-[0] tw-transition-all"
+                        class="translate-y-[3px] -translate-x-[3px] group-hover/chatItem:translate-y-[0] transition-all"
                     >
                         <img
-                            class="tw-w-8 tw-h-8 tw-cursor-default"
+                            class="w-8 h-8 cursor-default"
                             style="image-rendering: pixelated;"
                             src={avatarUrl ?? defaultWoka}
                             alt="Avatar"
@@ -86,16 +84,16 @@
                     </div>
                 </div>
             </div>
-            <div class={`tw-flex-auto tw-ml-1 ${!$userStatus && "tw-opacity-50"}  tw-cursor-default`}>
-                <div class="tw-flex tw-items-center tw-h-4">
-                    <div class="tw-text-sm tw-font-bold tw-mb-0 tw-cursor-default tw-flex tw-items-center">
+            <div class={`flex-auto ml-1 ${!$userStatus && "opacity-50"}  cursor-default`}>
+                <div class="flex items-center h-4">
+                    <div class="text-sm font-bold mb-0 cursor-default flex items-center">
                         {#each chunks as chunk (chunk.key)}
-                            <div class={`${chunk.match ? "tw-text-light-blue" : ""}  tw-cursor-default`}>
+                            <div class={`${chunk.match ? "text-light-blue" : ""}  cursor-default`}>
                                 {chunk.text}
                             </div>
                         {/each}
                         {#if username && username.match(/\[\d*]/)}
-                            <div class="tw-font-light tw-text-xs tw-text-gray tw-cursor-default">
+                            <div class="font-light text-xs text-gray cursor-default">
                                 #{username
                                     .match(/\[\d*]/)
                                     ?.join()
@@ -105,7 +103,7 @@
                         {/if}
                         {#if isAdmin}
                             <div
-                                class="tw-text-xxs tw-bg-secondary tw-rounded-sm tw-px-1 tw-py-0.5 tw-ml-1"
+                                class="text-xxs bg-secondary rounded-sm px-1 py-0.5 ml-1"
                                 title={$LL.chat.role.admin()}
                             >
                                 {$LL.chat.role.adminShort()}
@@ -113,17 +111,14 @@
                         {/if}
                     </div>
                 </div>
-                <div class="tw-text-xs tw-mb-0 tw-font-condensed tw-opacity-75 tw-cursor-default tw-self-end">
+                <div class="text-xs mb-0 font-condensed opacity-75 cursor-default self-end">
                     {#if isMe}
                         {$LL.chat.you()}
                     {:else if $userStatus}
-                        <div
-                            class="tw-flex tw-items-center tw-brightness-150"
-                            style="color:{getColorHexOfStatus($userStatus)}"
-                        >
+                        <div class="flex items-center brightness-150" style="color:{getColorHexOfStatus($userStatus)}">
                             {#if $userStatus}
                                 <div
-                                    class="tw-rounded-full tw-mr-1 tw-h-1.5 tw-w-1.5"
+                                    class="rounded-full mr-1 h-1.5 w-1.5"
                                     style="background:{getColorHexOfStatus($userStatus)}"
                                 />
                             {/if}
@@ -134,14 +129,14 @@
                     {/if}
                 </div>
             </div>
-            <div class="group-hover/chatItem:tw-opacity-100 tw-opacity-0 tw-transition-all">
+            <div class="group-hover/chatItem:opacity-100 opacity-0 transition-all">
                 {#if !isMe}
                     <UserActionButton {user} />
                 {/if}
             </div>
             {#if !isMe && !showRoomCreationInProgress}
                 <button
-                    class="tw-transition-all group-hover/chatItem:tw-bg-white/10 tw-p-1 tw-rounded-lg tw-aspect-square tw-flex tw-items-center tw-justify-center tw-text-white group-hover/chatItem:tw-opacity-100 tw-opacity-0 tw-m-0"
+                    class="transition-all group-hover/chatItem:bg-white/10 p-1 rounded-md aspect-square flex items-center justify-center text-white group-hover/chatItem:opacity-100 opacity-0 m-0"
                     on:click|stopPropagation={() => {
                         if (user.chatId !== user.uuid && !isMe) {
                             showRoomCreationInProgress = true;

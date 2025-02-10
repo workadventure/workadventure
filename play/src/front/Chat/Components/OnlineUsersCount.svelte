@@ -6,11 +6,11 @@
     const userWorldCount = gameScene.worldUserCounter;
 </script>
 
-<div class="tw-flex tw-items-center tw-justify-center tw-text-success tw-space-x-1.5 {searchActive ? 'tw-hidden' : ''}">
+<div class="flex items-center justify-center text-success space-x-1.5 {searchActive ? 'hidden' : ''}">
     <div
-        class="tw-text-xs tw-aspect-square tw-min-w-5 tw-h-5 tw-px-1 tw-border tw-border-solid tw-border-success tw-flex tw-items-center tw-justify-center tw-font-bold tw-rounded"
+        class="text-xs aspect-square min-w-5 h-5 px-1 border border-solid border-success flex items-center justify-center font-bold rounded"
     >
         {$userWorldCount}
     </div>
-    <div class="tw-text-xs tw-font-bold">{$LL.chat.onlineUsers()}</div>
+    <div class="text-xs font-bold">{$LL.chat.onlineUsers()}</div>
 </div>

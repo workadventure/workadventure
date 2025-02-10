@@ -3,13 +3,13 @@
     import { get, Unsubscriber, writable } from "svelte/store";
     import { z } from "zod";
     import { Streamable, streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
-    import ActionBar from "../ActionBar/ActionBar.svelte";
     import { VideoPeer } from "../../WebRtc/VideoPeer";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
     import { localStreamStore, localVolumeStore, mediaStreamConstraintsStore } from "../../Stores/MediaStore";
-    import microphoneOffImg from "../images/microphone-off.png";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
+    import MicOffIcon from "../Icons/MicOffIcon.svelte";
+    import PictureInPictureActionBar from "../ActionBar/PictureInPictureActionBar.svelte";
     import { srcObject } from "./utils";
     import ActivatePictureInPicture from "./PictureInPicture/ActivatePictureInPicture.svelte";
     import StreamableWrapperWidget from "./PictureInPicture/StreamableWrapperWidget.svelte";
@@ -230,73 +230,71 @@
     });
 </script>
 
-<div
-    bind:this={divElement}
-    class="tw-h-[84%] tw-w-full tw-flex tw-justify-center tw-items-center tw-z-40 tw-py-1"
-    style="display: none;"
->
+<div bind:this={divElement} class="h-full w-full" style="display: none;">
     <ActivatePictureInPicture on:disagree={disagreePictureInPicture} on:allow={allowPictureInPicture} />
-
-    <div
-        id="scrolllist-wrapper"
-        class="tw-relative tw-flex tw-justify-center tw-items-start tw-w-full tw-h-full tw-overflow-hidden tw-overflow-y-auto"
-    >
-        <div
-            id="mozaic_highlighted-wrapper"
-            class="tw-relative tw-w-[98%] tw-h-auto tw-justify-center tw-items-center tw-grid tw-content-center tw-grid-cols-1 sm:tw-grid-cols-2 md:w-grid-cols-3 xl:w-grid-cols-4 tw-gap-3"
-            class:!tw-grid-cols-1={$streamableCollectionStore.size === 1 || $highlightedStreamable != undefined}
-        >
-            {#each [...$streamableCollectionStore] as [uuid, streamable] (uuid)}
-                {#if $highlightedStreamable == undefined || $highlightedStreamable.uniqueId == streamable.uniqueId}
-                    <StreamableWrapperWidget {streamable} on:click={hanglerClickVideo} />
-                {/if}
-            {/each}
-        </div>
-    </div>
-    <div
-        id="mycamera_nohighlighted-wrapper"
-        class="tw-absolute tw-h-auto tw-justify-center tw-items-center tw-right-[5%] tw-bottom-[20%] tw-flex tw-flex-row tw-gap-3"
-        style={`width: ${$highlightedStreamable != undefined ? $streamableCollectionStore.size * 20 : 20}%;`}
-    >
-        {#if $highlightedStreamable != undefined}
-            {#each [...$streamableCollectionStore] as [uuid, streamable] (uuid)}
-                {#if $highlightedStreamable.uniqueId != streamable.uniqueId}
-                    <StreamableWrapperWidget {streamable} isMinified={true} on:click={hanglerClickVideo} />
-                {/if}
-            {/each}
-        {/if}
-
-        <div
-            id="mycamera-wrapper"
-            class="tw-w-full tw-h-auto tw-max-h-full tw-aspect-video tw-relative tw-flex tw-justify-center tw-items-center tw-z-40 tw-rounded-xl tw-bg-[#373a3e]"
-        >
-            <img src={getMyPlayerWokaPicture()} class="tw-w-auto tw-h-full tw-max-h-[3rem]" alt="woka user" />
-            <div class="voice-meter-my-container tw-justify-end tw-z-[251] tw-pr-2 tw-absolute tw-w-full tw-top-0">
-                {#if $mediaStreamConstraintsStore.audio}
-                    <SoundMeterWidget volume={$localVolumeStore} classcss="tw-top-0" barColor="blue" />
-                {:else}
-                    <img draggable="false" src={microphoneOffImg} class="tw-flex tw-p-1 tw-h-4 tw-w-4" alt="Mute" />
-                {/if}
+    <div class="flex flex-col w-full h-full">
+        <div class="h-[84%] w-full flex justify-center items-center z-40 py-1 flex-1">
+            <div
+                id="scrolllist-wrapper"
+                class="relative flex justify-center items-start w-full h-full overflow-hidden overflow-y-auto"
+            >
+                <div
+                    id="mozaic_highlighted-wrapper"
+                    class="relative w-[98%] h-auto justify-center items-center grid content-center grid-cols-1 sm:grid-cols-2 md:w-grid-cols-3 xl:w-grid-cols-4 gap-3"
+                    class:!grid-cols-1={$streamableCollectionStore.size === 1 || $highlightedStreamable != undefined}
+                >
+                    {#each [...$streamableCollectionStore] as [uuid, streamable] (uuid)}
+                        {#if $highlightedStreamable == undefined || $highlightedStreamable.uniqueId == streamable.uniqueId}
+                            <StreamableWrapperWidget {streamable} on:click={hanglerClickVideo} />
+                        {/if}
+                    {/each}
+                </div>
             </div>
-            {#if myLocalStream != undefined}
-                <video
-                    bind:this={myLocalStreamElement}
-                    id="my-video"
-                    class="tw-h-full tw-w-full tw-rounded-lg tw-object-cover tw-absolute"
-                    style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
-                    use:srcObject={myLocalStream}
-                    autoplay
-                    muted
-                    playsinline
-                />
-            {/if}
+            <div
+                id="mycamera_nohighlighted-wrapper"
+                class="absolute h-auto justify-center items-center right-[5%] bottom-[20%] flex flex-row gap-3"
+                style={`width: ${$highlightedStreamable != undefined ? $streamableCollectionStore.size * 20 : 20}%;`}
+            >
+                {#if $highlightedStreamable != undefined}
+                    {#each [...$streamableCollectionStore] as [uuid, streamable] (uuid)}
+                        {#if $highlightedStreamable.uniqueId != streamable.uniqueId}
+                            <StreamableWrapperWidget {streamable} isMinified={true} on:click={hanglerClickVideo} />
+                        {/if}
+                    {/each}
+                {/if}
+
+                <div
+                    id="mycamera-wrapper"
+                    class="w-full h-auto max-h-full aspect-video relative flex justify-center items-center z-40 rounded-xl bg-[#373a3e]"
+                >
+                    <img src={getMyPlayerWokaPicture()} class="w-auto h-full max-h-[3rem]" alt="woka user" />
+                    <div class="voice-meter-my-container justify-end z-[251] pr-2 absolute w-full top-0">
+                        {#if $mediaStreamConstraintsStore.audio}
+                            <SoundMeterWidget volume={$localVolumeStore} cssClass="top-0" barColor="blue" />
+                        {:else}
+                            <MicOffIcon />
+                        {/if}
+                    </div>
+                    {#if myLocalStream != undefined}
+                        <video
+                            bind:this={myLocalStreamElement}
+                            id="my-video"
+                            class="h-full w-full rounded-lg object-cover absolute"
+                            style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
+                            use:srcObject={myLocalStream}
+                            autoplay
+                            muted
+                            playsinline
+                        />
+                    {/if}
+                </div>
+            </div>
         </div>
+        <PictureInPictureActionBar
+            on:screenSharingClick={handlerScreanSharingClick}
+            on:toggleChat={handlerToggleChat}
+        />
     </div>
-    <ActionBar
-        isPictureInPicture={true}
-        on:screenSharingClick={handlerScreanSharingClick}
-        on:toggleChat={handlerToggleChat}
-    />
 </div>
 
 <style lang="scss">

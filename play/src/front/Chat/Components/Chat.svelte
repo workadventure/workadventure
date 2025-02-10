@@ -12,9 +12,9 @@
     const userProviderMergerPromise = gameScene.userProviderMerger;
 </script>
 
-<div class="tw-flex tw-flex-col tw-h-full">
-    <div id="chatModal" class="tw-absolute tw-to-50%" />
-    <div class="tw-flex tw-flex-col tw-gap-2 !tw-flex-1 tw-min-h-0">
+<div class="flex flex-col h-full">
+    <div id="chatModal" class="absolute to-50%" />
+    <div class="flex flex-col gap-2 !flex-1 min-h-0">
         {#if $navChat === "users"}
             {#await userProviderMergerPromise}
                 <div />

@@ -9,12 +9,12 @@
 <a
     href={$content.url}
     download
-    class="tw-flex tw-items-center tw-text-white hover:tw-bg-white/10 tw-px-4 tw-py-2 tw-rounded-full hover:tw-no-underline hover:tw-text-white tw-font-bold tw-cursor-pointer"
+    class="flex items-center text-white hover:bg-white/10 px-4 py-2 rounded-full hover:no-underline hover:text-white font-bold cursor-pointer"
 >
-    <div class="tw-flex tw-items-center tw-justify-center tw-p-2 tw-bg-white/10 tw-rounded-full">
+    <div class="flex items-center justify-center p-2 bg-white/10 rounded-full">
         <IconInbox font-size="20" />
     </div>
-    <div class="tw-px-4 tw-truncate">
+    <div class="px-4 truncate">
         {$content.body}
     </div>
 </a>

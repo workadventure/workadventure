@@ -1,4 +1,5 @@
 import { writable, derived } from "svelte/store";
+import { ADMIN_BO_URL } from "../Enum/EnvironmentVariable";
 import { BannerEvent } from "./../Api/Events/Ui/BannerEvent";
 
 export const userMovingStore = writable(false);
@@ -19,7 +20,7 @@ export const limitMapStore = writable(false);
 export const userHasAccessToBackOfficeStore = derived(
     [userIsAdminStore, userIsEditorStore],
     ([$userIsAdminStore, $userIsEditorStore]) => {
-        return $userIsAdminStore || $userIsEditorStore;
+        return ADMIN_BO_URL && ($userIsAdminStore || $userIsEditorStore);
     }
 );
 

@@ -40,20 +40,20 @@
     }
 </script>
 
-<div class={`${!rootFolder ? "tw-mx-2 tw-p-1 tw-bg-contrast-300/10 tw-rounded-lg tw-mb-4" : ""}`}>
+<div class={`${!rootFolder ? "mx-2 p-1 bg-contrast-300/10 rounded-lg mb-4" : ""}`}>
     <div
-        class={`tw-group tw-relative tw-px-3 tw-m-0 tw-rounded-none tw-text-white/75 hover:tw-text-white tw-h-11 hover:tw-bg-contrast-200/10 tw-w-full tw-flex tw-space-x-2 tw-items-center ${
-            rootFolder ? "tw-border-solid tw-border-x-0 tw-border-t tw-border-b-0 tw-border-white/10" : ""
+        class={`group relative px-3 m-0 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center ${
+            rootFolder ? "border-solid border-x-0 border-t border-b-0 border-white/10" : ""
         }`}
-        class:tw-mb-2={isOpen || rootFolder}
+        class:mb-2={isOpen || rootFolder}
     >
-        <div class="tw-flex tw-items-center tw-space-x-2 tw-grow tw-m-0 tw-p-0">
-            <button class="tw-flex tw-items-center tw-space-x-2 tw-grow tw-m-0 tw-p-0" on:click={toggleFolder}>
+        <div class="flex items-center space-x-2 grow m-0 p-0">
+            <button class="flex items-center space-x-2 grow m-0 p-0" on:click={toggleFolder}>
                 <div
                     class={`${
                         rootFolder
-                            ? "tw-text-white/75 group-hover:tw-text-white tw-text-sm tw-font-bold tw-tracking-widest tw-uppercase tw-grow tw-text-left"
-                            : "tw-text-sm tw-font-bold tw-tracking-widest tw-uppercase tw-grow tw-text-left"
+                            ? "text-white/75 group-hover:text-white text-sm font-bold tracking-widest uppercase grow text-left"
+                            : "text-sm font-bold tracking-widest uppercase grow text-left"
                     }`}
                 >
                     {$name}
@@ -63,17 +63,17 @@
         </div>
 
         <button
-            class="tw-transition-all group-hover:tw-bg-white/10 tw-p-1 tw-rounded-lg tw-aspect-square tw-flex tw-items-center tw-justify-center tw-text-white"
+            class="transition-all group-hover:bg-white/10 p-1 rounded-lg aspect-square flex items-center justify-center text-white"
             on:click={toggleFolder}
         >
-            <IconChevronUp class={`tw-transform tw-transition ${!isOpen ? "" : "tw-rotate-180"}`} />
+            <IconChevronUp class={`transform transition ${!isOpen ? "" : "rotate-180"}`} />
         </button>
     </div>
 
     {#if isOpen}
-        <div class="tw-flex tw-flex-col tw-overflow-auto">
+        <div class="flex flex-col overflow-auto">
             {#if displayRoomInvitations}
-                <div class="tw-flex tw-flex-col tw-overflow-auto tw-pl-3 tw-pr-4 tw-pb-3">
+                <div class="flex flex-col overflow-auto pl-3 pr-4 pb-3">
                     <ShowMore items={$invitations} maxNumber={8} idKey="id" let:item={room}>
                         <RoomInvitation {room} />
                     </ShowMore>
@@ -88,9 +88,7 @@
             {#if $rooms.length === 0 && $folders.length === 0}
                 <p
                     class={`${
-                        rootFolder
-                            ? "tw-self-center tw-text-md tw-text-gray-500"
-                            : "tw-py-2 tw-px-3 tw-m-0 tw-text-white/50 tw-italic tw-text-sm"
+                        rootFolder ? "self-center text-md text-gray-500" : "py-2 px-3 m-0 text-white/50 italic text-sm"
                     }`}
                 >
                     {$LL.chat.nothingToDisplay()}

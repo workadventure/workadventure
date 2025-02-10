@@ -76,9 +76,7 @@ class AreaAccessRights {
       this.mouseCoordinatesToClickOnEntityOutsideArea.x,
       this.mouseCoordinatesToClickOnEntityOutsideArea.y
     );
-    await expect(
-      page.locator(".actions-menu .actions button").nth(0)
-    ).toContainText("Open Link");
+    await expect(page.getByRole('button', { name: 'Open Link' })).toBeVisible();
   }
 
   async openEntityEditorAndAddEntityWithOpenLinkPropertyInsideArea(page) {
@@ -106,9 +104,7 @@ class AreaAccessRights {
       this.mouseCoordinatesToClickOnEntityInsideArea.x,
       this.mouseCoordinatesToClickOnEntityInsideArea.y
     );
-    await expect(
-      page.locator(".actions-menu .actions button").nth(0)
-    ).toContainText("Open Link");
+    await expect(page.getByRole('button', { name: 'Open Link' })).toBeVisible();
   }
 }
 

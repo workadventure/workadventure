@@ -1,27 +1,27 @@
 import { expect, test } from "@playwright/test";
 import { evaluateScript } from "./utils/scripting";
-import { login } from "./utils/roles";
 import Map from "./utils/map";
 import { resetWamMaps } from "./utils/map-editor/uploader";
-import { oidcAdminTagLogin } from "./utils/oidc";
 import menu from "./utils/menu";
 import mapeditor from "./utils/mapeditor";
 import areaEditor from "./utils/map-editor/areaEditor";
+import {getPage} from "./utils/auth"
+import {isMobile} from "./utils/isMobile";
 
 test.describe("Scripting for Map editor @oidc", () => {
     test.beforeEach(
         "Ignore tests on mobilechromium because map editor not available for mobile devices",
-        ({}, {project}) => {
+        ({ page }) => {
             //Map Editor not available on mobile
-            if (project.name === "mobilechromium") {
+            if (isMobile(page)) {
                 //eslint-disable-next-line playwright/no-skipped-test
                 test.skip();
                 return;
             }
         }
     );
-
-    test.beforeEach("Ignore tests on webkit because of issue with camera and microphone", ({browserName}) => {
+    test.beforeEach("Ignore tests on webkit because of issue with camera and microphone",
+        ({browserName}) => {
         //WebKit has issue with camera
         if (browserName === "webkit") {
             //eslint-disable-next-line playwright/no-skipped-test
@@ -29,14 +29,9 @@ test.describe("Scripting for Map editor @oidc", () => {
             return;
         }
     });
-
-
-    test("Scripting Area onEnter & onLeave", async ({page, request}, {project}) => {
+    test("Scripting Area onEnter & onLeave", async ({browser, request}) => {
         await resetWamMaps(request);
-        await page.goto(Map.url("start"));
-        await login(page, "test", 3, "en-US", false);
-        await oidcAdminTagLogin(page, false);
-
+        const page = await getPage(browser, 'Admin1', Map.url("empty"));
         await menu.openMapEditor(page);
         await mapeditor.openAreaEditor(page);
         await areaEditor.drawArea(page, {x: 6 * 32, y: 0}, {x: 20 * 32, y: 6 * 32});
@@ -55,10 +50,10 @@ test.describe("Scripting for Map editor @oidc", () => {
 
             WA.mapEditor.area.onLeave("MyZone").subscribe(() => {
                 WA.ui.displayActionMessage({
-                    message: "Goodby to MyZone",
+                    message: "Goodbye to MyZone",
                     type: "message",
                     callback: () => {
-                        console.info("Goodby to MyZone");
+                        console.info("Goodbye to MyZone");
                     }
                 });
             });
@@ -66,13 +61,14 @@ test.describe("Scripting for Map editor @oidc", () => {
 
         await menu.closeMapEditor(page);
         await Map.teleportToPosition(page, 9 * 32, 3 * 32);
-        await expect(page.locator('span.characterTriggerAction').nth(0)).toHaveText("Welcome to MyZone");
-        await page.locator('span.characterTriggerAction').nth(0).click();
-
+        await expect(page.getByText('Welcome to MyZone')).toBeVisible();
+        await page.getByRole('button', { name: 'Close' }).first().click();
         await Map.teleportToPosition(page, 9 * 32, 9 * 32);
-        await expect(page.locator('span.characterTriggerAction').nth(0)).toHaveText("Goodby to MyZone");
-        await page.locator('span.characterTriggerAction').nth(0).click();
-
+        await expect(page.getByText('Goodbye to MyZone')).toBeVisible();
+        await page.getByRole('button', { name: 'Close' }).click();
         await expect(page.locator('span.characterTriggerAction')).toBeHidden();
+
+        await page.close();
+        await page.context().close();
     });
 });

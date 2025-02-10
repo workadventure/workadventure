@@ -1,23 +1,21 @@
 import { expect, Page } from "@playwright/test";
+import Menu from "./menu";
+import {isMobile} from "./isMobile";
 
+
+// for oidcLogin to work on mobile you must open the burger menu before calling this function
 export async function oidcLogin(
   page: Page,
   userName = "User1",
-  password = "pwd",
-  isMobile = false
+  password = "pwd"
 ) {
-  if (isMobile) {
-    await expect(page.locator("button#burgerIcon")).toBeVisible();
-    const mobileMenuVisible = await page
-      .locator("button#burgerIcon img.tw-rotate-0")
-      .isVisible();
-    if (mobileMenuVisible) {
-      await page.click("button#burgerIcon");
-    }
+  if (isMobile(page)) {
+    await page.getByTestId('burger-menu').click();
+    await page.getByRole('link', { name: 'Login' }).click();
   }
-  await page.click("#menuIcon img:first-child");
-  await page.click('a:has-text("Sign in")');
-
+  else {
+    await page.click('a:has-text("Login")');
+  }
   await page.fill("#Input_Username", userName, {
     timeout: 40_000,
   });
@@ -28,40 +26,29 @@ export async function oidcLogin(
     timeout: 50000
   });
 
-  if (!isMobile) {
-    await expect(page.locator("button#menuIcon").first()).toBeVisible({
-      timeout: 50_000,
-    });
-  } else {
-    await expect(page.locator("button#burgerIcon")).toBeVisible({
-      timeout: 50_000,
-    });
+  await expect(page.locator('#main-layout')).toBeVisible({
+    timeout: 50_000,
+  });
+}
+
+export async function oidcLogout(page: Page) {
+  if (isMobile(page)) {
+    await page.getByTestId('burger-menu').click();
   }
-}
-
-export async function oidcLogout(page: Page, isMobile = false) {
-  if (isMobile) {
-    await expect(page.locator("button#burgerIcon")).toBeVisible();
-    const mobileMenuVisible = await page
-      .locator("button#burgerIcon img.tw-rotate-0")
-      .isVisible();
-    if (mobileMenuVisible) {
-      await page.click("button#burgerIcon");
-    }
+  else {
+    await Menu.openMenu(page);
   }
-  await page.click("#menuIcon img:first-child");
-  await page.click('button:has-text("Log out")');
-  await expect(page.getByRole('heading', { name: 'Profile' })).toBeHidden();
+  await page.getByRole('button', { name: 'Log out' }).click();
 }
 
-export async function oidcAdminTagLogin(page, isMobile = false) {
-  await oidcLogin(page, "User1", "pwd", isMobile);
+export async function oidcAdminTagLogin(page: Page) {
+  await oidcLogin(page, "User1", "pwd");
 }
 
-export async function oidcMatrixUserLogin(page, isMobile = false) {
-  await oidcLogin(page, "UserMatrix", "pwd", isMobile);
+export async function oidcMatrixUserLogin(page: Page) {
+  await oidcLogin(page, "UserMatrix", "pwd");
 }
 
-export async function oidcMemberTagLogin(page, isMobile = false) {
-  await oidcLogin(page, "User2", "pwd", isMobile);
+export async function oidcMemberTagLogin(page: Page) {
+  await oidcLogin(page, "User2", "pwd");
 }

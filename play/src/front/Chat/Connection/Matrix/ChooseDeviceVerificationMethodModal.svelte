@@ -23,19 +23,19 @@
 
 <Popup {isOpen}>
     <h1 slot="title">{$LL.chat.chooseDeviceVerificationMethodModal.title()}</h1>
-    <div slot="content" class="tw-w-full tw-flex tw-justify-center">
+    <div slot="content" class="w-full flex justify-center">
         {$LL.chat.chooseDeviceVerificationMethodModal.description()}
     </div>
     <svelte:fragment slot="action">
         <button
             data-testid="VerifyWithAnotherDeviceButton"
-            class=" tw-bg-secondary tw-flex-1 tw-justify-center tw-mx-4"
+            class=" bg-secondary flex-1 justify-center mx-4"
             on:click={startVerificationWithOtherDevice}
             >{$LL.chat.chooseDeviceVerificationMethodModal.withOtherDevice()}
         </button>
         <button
             data-testid="VerifyWithPassphraseButton"
-            class=" tw-bg-secondary tw-flex-1 tw-justify-center tw-mx-4"
+            class=" bg-secondary flex-1 justify-center mx-4"
             on:click={startVerificationWithPassphrase}
             >{$LL.chat.chooseDeviceVerificationMethodModal.withPassphrase()}
         </button>

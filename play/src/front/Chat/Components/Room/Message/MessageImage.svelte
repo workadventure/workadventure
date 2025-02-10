@@ -5,13 +5,13 @@
     export let content: Readable<ChatMessageContent>;
 </script>
 
-<a href={$content.url} target="_blank" class="tw-cursor-pointer tw-relative tw-group">
+<a href={$content.url} target="_blank" class="cursor-pointer relative group">
     <div
-        class="tw-bg-contrast/50 tw-p-4 tw-rounded-full tw-absolute tw-top-0 tw-bottom-0 tw-left-0 tw-right-0 tw-m-auto tw-h-16 tw-w-16 tw-flex tw-items-center tw-justify-center tw-opacity-0 group-hover:tw-opacity-100 tw-transition-all"
+        class="bg-contrast/50 p-4 rounded-full absolute top-0 bottom-0 left-0 right-0 m-auto h-16 w-16 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
     >
         <svg
             xmlns="http://www.w3.org/2000/svg"
-            class="tw-block"
+            class="block"
             width="28"
             height="28"
             viewBox="0 0 24 24"
@@ -27,5 +27,5 @@
             <path d="M15 4h5v5" />
         </svg>
     </div>
-    <img class="tw-w-full tw-object-contain tw-max-h-52 tw-rounded-md" src={$content.url} alt={$content.body} />
+    <img class="w-full object-contain max-h-52 rounded" src={$content.url} alt={$content.body} />
 </a>

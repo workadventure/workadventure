@@ -34,30 +34,30 @@
     <div class="submenu">
         {#if gameManager.getCurrentGameScene().room.isChatEnabled}
             {#if $userIsConnected}
-                <h3 class="blue-title tw-pt-2">{$LL.menu.chat.matrixIDLabel()}</h3>
-                <div class="tw-flex tw-w-full tw-justify-center tw-py-1">
+                <h3 class="blue-title pt-2">{$LL.menu.chat.matrixIDLabel()}</h3>
+                <div class="flex w-full justify-center py-1">
                     {mychatID}
                 </div>
-                <h3 class="blue-title tw-py-2">{$LL.menu.chat.settings()}</h3>
+                <h3 class="blue-title py-2">{$LL.menu.chat.settings()}</h3>
                 <label>
                     <input type="checkbox" bind:checked={chatSounds} on:change={changeChatSounds} />
                     <span>{$LL.menu.settings.chatSounds()}</span>
                 </label>
-                <section class="centered-column resizing-width tw-m-auto resizing-text">
+                <section class="centered-column resizing-width m-auto resizing-text">
                     <button
                         type="button"
-                        class="tw-w-full tw-bg-danger-900 tw-min-w-[220px] tw-flex tw-justify-center tw-items-center"
+                        class="w-full bg-danger-900 min-w-[220px] flex justify-center items-center"
                         on:click={openResetKeyStorage}>{$LL.menu.chat.resetKeyStorageUpButtonLabel()}</button
                     >
                 </section>
             {:else}
-                <div class="tw-flex tw-flex-col tw-gap-2 tw-w-full tw-h-full tw-items-center">
-                    <p class="tw-text-gray-400 tw-w-full tw-text-center tw-pt-2">
+                <div class="flex flex-col gap-2 w-full h-full items-center">
+                    <p class="text-gray-400 w-full text-center pt-2">
                         {$LL.chat.requiresLoginForChat()}
                     </p>
                     <a
                         type="button"
-                        class="btn light tw-flex tw-justify-center tw-items-center tw-w-1/2"
+                        class="btn light flex justify-center items-center w-1/2"
                         href="/login"
                         on:click={() => analyticsClient.login()}
                     >

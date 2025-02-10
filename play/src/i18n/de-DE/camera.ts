@@ -4,7 +4,7 @@ import type { Translation } from "../i18n-types";
 const camera: DeepPartial<Translation["camera"]> = {
     enable: {
         title: "Bitte schalte deine Kamera und dein Mikrofon ein.",
-        start: "Los gehts!",
+        start: "Willkommen auf unserer Seite zur Konfiguration von Audio- und Videogeräten! Finden Sie hier die Werkzeuge, um Ihr Online-Erlebnis zu verbessern. Passen Sie die Einstellungen nach Ihren Vorlieben an, um mögliche Probleme zu lösen. Stellen Sie sicher, dass Ihre Hardware ordnungsgemäß angeschlossen und auf dem neuesten Stand ist. Erkunden und testen Sie verschiedene Konfigurationen, um herauszufinden, was am besten für Sie funktioniert.",
     },
     help: {
         title: "Zugriff auf Kamera / Mikrofon erforderlich",

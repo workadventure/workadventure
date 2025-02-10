@@ -2,9 +2,11 @@
     import type { Unsubscriber } from "svelte/store";
     import { onDestroy } from "svelte";
     import { actionsMenuStore } from "../../Stores/ActionsMenuStore";
+    import { LL } from "../../../i18n/i18n-svelte";
 
     import type { ActionsMenuAction, ActionsMenuData } from "../../Stores/ActionsMenuStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import bgMap from "../images/map-exemple.png";
 
     let actionsMenuData: ActionsMenuData | undefined;
     let sortedActions: ActionsMenuAction[] | undefined;
@@ -49,93 +51,55 @@
 <svelte:window on:keydown={onKeyDown} />
 
 {#if actionsMenuData}
-    <div class="tw-flex tw-w-full tw-h-full tw-justify-center tw-items-center">
-        <div class="actions-menu tw-p-4 is-rounded tw-max-w-xs">
-            <button type="button" class="close-window" on:click|preventDefault|stopPropagation={closeActionsMenu}
-                >×</button
-            >
-            {#if actionsMenuData.menuName}
-                <h2 class="name tw-mb-2 !tw-mt-0 tw-mx-2 margin-close">{actionsMenuData.menuName}</h2>
-            {/if}
-            {#if actionsMenuData.menuDescription}
-                <p class="tw-mb-2 tw-mx-2 margin-close tw-whitespace-pre-wrap">{actionsMenuData.menuDescription}</p>
-            {/if}
-            {#if sortedActions}
-                <div
-                    class="actions tw-flex tw tw-flex-col tw-items-center"
-                    class:margin-close={!actionsMenuData.menuName}
-                >
-                    {#each sortedActions ?? [] as action (action.actionName)}
-                        <button
-                            type="button"
-                            class="btn light tw-justify-center tw-font-bold tw-text-xs sm:tw-text-base tw-text-center tw-h-fit tw-m-2 tw-w-full {action.style ??
-                                ''}"
-                            on:click={analyticsClient.clicPropertykMapEditor(action.actionName, action.style)}
-                            on:click|preventDefault={() => {
-                                action.callback();
-                            }}
-                        >
-                            {action.actionName}
-                        </button>
-                    {/each}
+    <div
+        class="absolute left-0 right-0 m-auto w-96 z-50 bg-contrast/80 transition-all backdrop-blur rounded-lg overflow-hidden pointer-events-auto overflow-hidden top-1/2 -translate-y-1/2"
+    >
+        {#if actionsMenuData.menuName}
+            <div class="mb-4">
+                <div class="h-32 w-full bg-cover relative mb-8" style="background-image: url('{bgMap}');">
+                    <div class="w-full h-full absolute z-10 bg-contrast/50 left-0 right-0" />
+                    <div class="h-20 w-20 aspect-ratio bg-white rounded absolute -bottom-4 left-4 z-20" />
+                    <div class="px-4 flex items-center bottom-2 absolute z-20">
+                        <div class="h5 text-white ml-20 pl-4">
+                            {actionsMenuData.menuName}
+                        </div>
+                        <div>
+                            <div class="chip chip-sm chip-danger ml-2">Administrator</div>
+                        </div>
+                    </div>
                 </div>
+                {#if actionsMenuData.menuDescription}
+                    <p class="text-sm opacity-50 text-white px-4">
+                        {actionsMenuData.menuDescription}
+                    </p>
+                {/if}
+            </div>
+        {/if}
+        <div class="flex flex-col-reverse items-center bg-contrast" class:margin-close={!actionsMenuData.menuName}>
+            <button
+                type="button"
+                class="btn btn-ghost justify-center basis-1/2 m-2 w-full"
+                on:click|preventDefault|stopPropagation={closeActionsMenu}
+            >
+                {$LL.actionbar.close()}
+            </button>
+            {#if sortedActions}
+                {#each sortedActions ?? [] as action (action.actionName)}
+                    <button
+                        type="button"
+                        class="btn btn-danger justify-center basis-1/2 m-2 w-full {action.style ?? ''}"
+                        on:click={analyticsClient.clicPropertykMapEditor(action.actionName, action.style)}
+                        on:click|preventDefault={() => {
+                            action.callback();
+                        }}
+                    >
+                        {action.actionName}
+                    </button>
+                {/each}
             {/if}
         </div>
     </div>
 {/if}
 
 <style lang="scss">
-    .actions-menu {
-        position: relative;
-        width: auto !important;
-        height: max-content !important;
-        max-height: 50vh;
-        margin-top: 200px;
-        overflow-y: auto;
-        z-index: 425;
-        word-break: break-all;
-        pointer-events: auto;
-        color: whitesmoke;
-        border-radius: 0.25rem;
-        background-color: rgb(27 27 41 / 0.95);
-
-        .close-window {
-            position: absolute;
-            right: 0rem;
-            top: 0rem;
-            margin-top: 0.3rem;
-            margin-right: 0.2rem;
-        }
-
-        .margin-close {
-            margin-top: 15px;
-        }
-
-        .actions {
-            max-height: 30vh;
-            width: 100%;
-            overflow-x: hidden;
-            overflow-y: auto;
-        }
-
-        .name {
-            max-height: 25vh;
-            margin: 20px 20px 0 20px;
-            overflow-y: auto;
-        }
-
-        .actions::-webkit-scrollbar {
-            display: none;
-        }
-
-        h2 {
-            text-align: center;
-        }
-
-        .nes-btn.is-error.close {
-            position: absolute;
-            top: -20px;
-            right: -20px;
-        }
-    }
 </style>

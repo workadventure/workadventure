@@ -91,7 +91,7 @@
 <svelte:window on:click={handleClickOutside} on:touchstart={handleClickOutside} />
 <div class="wa-dropdown">
     <button
-        class="tw-m-0 tw-p-1 tw-rounded-lg hover:tw-bg-white/10 tw-bg-transparent"
+        class="m-0 p-1 rounded-md hover:bg-white/10 bg-transparent"
         bind:this={buttonElement}
         on:click|stopPropagation={toggleChatUSerMenu}
     >
@@ -99,11 +99,11 @@
     </button>
     <!-- on:mouseleave={closeChatUserMenu} -->
     {#if chatMenuActive}
-        <div bind:this={popoversElement} class={`wa-dropdown-menu tw-mr-1 tw-absolute`}>
+        <div bind:this={popoversElement} class={`wa-dropdown-menu mr-1 absolute`}>
             {#if isInTheSameMap}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <span
-                    class="walk-to wa-dropdown-item tw-flex tw-gap-2 tw-items-center hover:tw-bg-white/10 tw-m-0 tw-p-2 tw-w-full tw-text-sm tw-rounded"
+                    class="walk-to wa-dropdown-item flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
                     on:click|stopPropagation={() => {
                         goTo("user", user.playUri ?? "", user.uuid ?? "");
                         closeChatUserMenu();
@@ -114,7 +114,7 @@
             {:else if user.playUri}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <span
-                    class="teleport wa-dropdown-item tw-flex tw-gap-2 tw-items-center hover:tw-bg-white/10 tw-m-0 tw-p-2 tw-w-full tw-text-sm tw-rounded"
+                    class="teleport wa-dropdown-item flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
                     on:click|stopPropagation={() => {
                         goTo("room", user.playUri ?? "", user.uuid ?? "");
                         closeChatUserMenu();
@@ -126,7 +126,7 @@
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             {#if user.visitCardUrl}
                 <span
-                    class="businessCard wa-dropdown-item tw-flex tw-gap-2 tw-items-center hover:tw-bg-white/10 tw-m-0 tw-p-2 tw-w-full tw-text-sm tw-rounded"
+                    class="businessCard wa-dropdown-item flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
                     on:click|stopPropagation={() => showBusinessCard(user.visitCardUrl)}
                     ><img class="noselect" src={businessCard} alt="Business card" height="13" width="13" />
                     {$LL.chat.userList.businessCard()}</span
@@ -136,23 +136,21 @@
             {#if user.chatId && user.chatId !== user.uuid && !$roomCreationInProgress}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <span
-                    class="sendMessage wa-dropdown-item tw-flex tw-gap-2 tw-items-center hover:tw-bg-white/10 tw-m-0 tw-p-2 tw-w-full tw-text-sm tw-rounded"
+                    class="sendMessage wa-dropdown-item flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
                     on:click|stopPropagation={() => openChatRoom(user.chatId)}
                     ><IconMessage font-size="13" />
                     {$LL.chat.userList.sendMessage()}</span
                 >
             {:else if $roomCreationInProgress}
-                <div
-                    class="tw-min-h-[30px] tw-text-md tw-flex tw-gap-2 tw-justify-center tw-flex-row tw-items-center tw-p-1"
-                >
-                    <IconLoader class="tw-animate-spin" />
+                <div class="min-h-[30px] text-md flex gap-2 justify-center flex-row items-center p-1">
+                    <IconLoader class="animate-spin" />
                 </div>
             {/if}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             {#if iAmAdmin}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <span
-                    class="ban wa-dropdown-item tw-text-pop-red"
+                    class="ban wa-dropdown-item text-pop-red"
                     on:click|stopPropagation={() => {
                         if (user.username && user.id) {
                             showReportScreenStore.set({ userId: user.id, userName: user.username });

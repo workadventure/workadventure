@@ -106,7 +106,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
     },
     sub: {
-        profile: "profil",
         settings: "nastajenja",
         invite: "přeprošenje",
         credit: "wo karće",

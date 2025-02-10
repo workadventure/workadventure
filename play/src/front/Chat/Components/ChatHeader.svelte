@@ -61,8 +61,8 @@
     }
 </script>
 
-<div class="tw-p-2 tw-items-center tw-flex tw-flex-row tw-absolute tw-w-full tw-z-40">
-    <div class="tw-flex flex-row {searchActive ? 'tw-hidden' : ''}">
+<div class="p-2 flex items-center absolute w-full z-40">
+    <div class={searchActive ? "hidden" : ""}>
         {#if showNavBar}
             {#if $allowedDiscordBridgeStore}
                 {#if $externalChatSettingsSvelteComponent.size > 0}
@@ -74,14 +74,14 @@
 
             {#if $navChat === "chat"}
                 <button
-                    class="userList tw-p-3 hover:tw-bg-white/10 tw-rounded-xl tw-aspect-square tw-w-12"
+                    class="userList p-3 hover:bg-white/10 rounded aspect-square w-12 h-12"
                     on:click={() => navChat.switchToUserList()}
                 >
                     <IconUsers font-size="20" />
                 </button>
             {:else}
                 <button
-                    class="tw-p-3 hover:tw-bg-white/10 tw-rounded-2xl tw-aspect-square tw-w-12"
+                    class="p-3 hover:bg-white/10 rounded aspect-square w-12 h-12"
                     on:click={() => navChat.switchToChat()}
                 >
                     <IconMessageCircle2 font-size="20" />
@@ -89,8 +89,8 @@
             {/if}
         {/if}
     </div>
-    <div class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-grow">
-        <div class="tw-text-md tw-font-bold tw-h-5 {searchActive ? 'tw-hidden' : ''}">
+    <div class="flex flex-col items-center justify-center grow">
+        <div class="text-md font-bold h-5 {searchActive ? 'hidden' : ''}">
             {#if $navChat === "chat"}
                 {$LL.chat.chat()}
             {:else}
@@ -104,7 +104,7 @@
     <div class="">
         {#if $chatStatusStore !== "OFFLINE"}
             <button
-                class="tw-p-3 hover:tw-bg-white/10 tw-rounded-xl tw-aspect-square tw-w-12 tw-relative tw-z-50"
+                class="p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 relative z-50"
                 on:click={() => (searchActive = !searchActive)}
             >
                 {#if searchLoader}
@@ -117,17 +117,17 @@
                 {/if}
             </button>
         {:else}
-            <div class="tw-w-12" />
+            <div class="w-12" />
         {/if}
         <!-- searchbar -->
         {#if searchActive && $chatStatusStore !== "OFFLINE"}
             {#await userProviderMergerPromise}
                 <div />
             {:then userProviderMerger}
-                <div class="tw-absolute tw-w-full tw-h-full tw-z-40 tw-right-0 tw-top-0 tw-bg-contrast/30">
+                <div class="absolute w-full h-full z-40 right-0 top-0 bg-contrast/30">
                     <input
                         autocomplete="new-password"
-                        class="wa-searchbar tw-block tw-text-white placeholder:tw-text-white/50 tw-w-full placeholder:tw-text-sm tw-border-none tw-pl-6 tw-pr-20 tw-bg-transparent tw-py-3 tw-text-base tw-h-full"
+                        class="wa-searchbar block text-white placeholder:text-white/50 w-full placeholder:text-sm border-none pl-6 pr-20 bg-transparent py-3 text-base h-full"
                         placeholder={$navChat === "users" ? $LL.chat.searchUser() : $LL.chat.searchChat()}
                         on:keydown={handleKeyDown}
                         on:keyup={() => handleKeyUp(userProviderMerger)}

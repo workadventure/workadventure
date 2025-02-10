@@ -1,11 +1,11 @@
 {
   "devDependencies": {
-    "@playwright/test": "^1.49.1",
+    "@playwright/test": "^1.50.0",
     "@types/adm-zip": "^0.5.0",
     "@types/dockerode": "^3.3.11",
     "@typescript-eslint/eslint-plugin": "^5.40.1",
     "@typescript-eslint/parser": "^5.40.1",
-    "@workadventure/iframe-api-typings": "^1.12.10",
+    "@workadventure/iframe-api-typings": "^1.25.6",
     "adm-zip": "^0.5.10",
     "axios": "^1.7.4",
     "dockerode": "^3.3.4",
@@ -25,6 +25,7 @@
     "test-headed-chrome": "dotenv -e ../.env -- playwright test --headed --project=chromium",
     "test-headed-firefox": "dotenv -e ../.env -- playwright test --headed --project=firefox",
     "test-headed-webkit": "dotenv -e ../.env -- playwright test --headed --project=webkit",
+    "test-headed-mobile": "dotenv -e ../.env -- playwright test --headed --project=mobilechromium --project=mobilefirefox --project=mobilewebkit",
     "test-prod-like": "OVERRIDE_DOCKER_COMPOSE=docker-compose.e2e.yml npm run test -- ",
     "test-single-domain-install": "NODE_TLS_REJECT_UNAUTHORIZED=0 ROOM_API_HOSTNAME=https://play.workadventure.localhost ROOM_API_PORT=50051 MAP_STORAGE_PROTOCOL=https MAP_STORAGE_ENDPOINT=play.workadventure.localhost/map-storage/ dotenv -e ../contrib/docker/.env -- playwright test --project=chromium --grep-invert \"@docker|@oidc|@selfsigned|@chat|@matrix\"",
     "test-helm-install": "NODE_TLS_REJECT_UNAUTHORIZED=0 ROOM_API_PORT=443 MAP_STORAGE_PROTOCOL=https playwright test --project=chromium --grep-invert \"@docker|@oidc|@selfsigned|@local|@chat|@matrix|@slow\"",
