@@ -131,7 +131,7 @@
 
 <!-- TODO HUGO : REMOVE !important -->
 <div
-    class="w-full h-full top-0 flex-col @md/main-layout:flex-row @md/main-layout:rounded-xl @md/main-layout:h-3/4 @md/main-layout:w-11/12 @md/main-layout:top-24 @2xl/main-layout:container close-window pointer-events-auto absolute flex bg-contrast/50 right-0 left-0 bottom-0 z-[900] m-auto backdrop-blur overflow-hidden font-main"
+    class="w-full h-full top-0 flex-col @md/main-layout:flex-row @md/main-layout:rounded-xl [@media(min-height:953px)]/main-layout:h-3/4 @md/main-layout:w-11/12 @2xl:max-w-screen-2xl close-window pointer-events-auto absolute flex bg-contrast/50 right-0 left-0 bottom-0 z-[900] m-auto backdrop-blur overflow-hidden font-main"
     transition:fly={{ y: 1000, duration: 150 }}
     on:blur={closeMenu}
 >

@@ -22,13 +22,4 @@
     });
 </script>
 
-<iframe title="customSubMenu" src={url} bind:this={HTMLIframe} {allow} />
-
-<style lang="scss">
-    iframe {
-        border: none;
-        height: calc(100% - 56px);
-        width: 100%;
-        margin: 0;
-    }
-</style>
+<iframe title="customSubMenu" src={url} bind:this={HTMLIframe} {allow} class="border-none w-full h-full m-0" />
