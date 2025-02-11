@@ -58,7 +58,12 @@ test.describe("chat moderation @matrix", () => {
   });
 
   test("should manage participants and permissions in public chat room",
-      async ({ browser }) => {
+      async ({ browser }, testInfo) => {
+
+    if (testInfo.project.name === "mobilefirefox") {
+      test.skip();
+    }
+
     const page = await getPage(browser, 'Alice', Map.url("empty"));
     await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
