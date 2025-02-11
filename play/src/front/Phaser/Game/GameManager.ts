@@ -26,6 +26,7 @@ import { ENABLE_CHAT, MATRIX_PUBLIC_URI } from "../../Enum/EnvironmentVariable";
 import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
 import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
 import { VoidChatConnection } from "../../Chat/Connection/VoidChatConnection";
+import { isMatrixChatEnabledStore } from "../../Stores/ChatStore";
 import { GameScene } from "./GameScene";
 
 /**
@@ -253,11 +254,13 @@ export class GameManager {
             this._chatConnection = matrixChatConnection;
 
             this.chatConnectionPromise = matrixChatConnection.init().then(() => matrixChatConnection);
+            isMatrixChatEnabledStore.set(true);
 
             return this.chatConnectionPromise;
         } else {
             // No matrix connection? Let's fill the gap with a "void" object
             this._chatConnection = new VoidChatConnection();
+            isMatrixChatEnabledStore.set(false);
             return this._chatConnection;
         }
     }

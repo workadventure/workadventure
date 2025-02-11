@@ -233,6 +233,10 @@
         AvailabilityStatus.BACK_IN_A_MOMENT,
         AvailabilityStatus.DO_NOT_DISTURB,
     ];
+
+    function showWokaNameMenuItem() {
+        return connectionManager.currentRoom?.opidWokaNamePolicy !== "force_opid";
+    }
 </script>
 
 <div
@@ -548,17 +552,21 @@
                                 <div class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-2 relative bold">
                                     {$LL.menu.sub.profile()}
                                 </div>
-                                <button
-                                    class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
-                                    on:click={() => openEditNameScene()}
-                                >
-                                    <div
-                                        class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center"
+                                {#if showWokaNameMenuItem()}
+                                    <button
+                                        class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
+                                        on:click={() => openEditNameScene()}
                                     >
-                                        <ProfilIcon />
-                                    </div>
-                                    <div class="text-left leading-4 flex items-center">{$LL.actionbar.profil()}</div>
-                                </button>
+                                        <div
+                                            class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center"
+                                        >
+                                            <ProfilIcon />
+                                        </div>
+                                        <div class="text-left leading-4 flex items-center">
+                                            {$LL.actionbar.profil()}
+                                        </div>
+                                    </button>
+                                {/if}
                                 <button
                                     class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
                                     on:click={() => openEditSkinScene()}
@@ -691,13 +699,14 @@
                                 <div class="flex text-xxs uppercase text-white/50 px-4 py-2 relative justify-end">
                                     {$LL.menu.sub.profile()}
                                 </div>
-
-                                <button
-                                    class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold"
-                                    on:click={() => openEditNameScene()}
-                                >
-                                    {$LL.actionbar.profil()}
-                                </button>
+                                {#if showWokaNameMenuItem()}
+                                    <button
+                                        class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold"
+                                        on:click={() => openEditNameScene()}
+                                    >
+                                        {$LL.actionbar.profil()}
+                                    </button>
+                                {/if}
                                 <button
                                     class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold"
                                     on:click={() => openEditSkinScene()}
