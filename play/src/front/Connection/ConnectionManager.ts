@@ -10,7 +10,7 @@ import {
 import { isAxiosError } from "axios";
 import { KlaxoonService } from "@workadventure/shared-utils";
 import { analyticsClient } from "../Administration/AnalyticsClient";
-import { subMenusStore, userIsConnected, warningBannerStore } from "../Stores/MenuStore";
+import { userIsConnected, warningBannerStore } from "../Stores/MenuStore";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
 import { _ServiceWorker } from "../Network/ServiceWorker";
 import { GameConnexionTypes, urlManager } from "../Url/UrlManager";
@@ -387,9 +387,6 @@ class ConnectionManager {
         }
 
         this.serviceWorker = new _ServiceWorker();
-
-        // add report issue menu
-        subMenusStore.addReportIssuesMenu();
 
         return Promise.resolve({
             room: this._currentRoom,
