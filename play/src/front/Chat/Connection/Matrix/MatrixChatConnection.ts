@@ -414,7 +414,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         }
 
         const eventType = event.getType();
-        if (eventType !== "m.space.child" && eventType !== "m.space.parent") {
+        if (eventType !== "m.space.child") {
             return;
         }
 
@@ -548,6 +548,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             parentFolder.roomList.set(room.roomId, new MatrixChatRoom(room));
         }
     }
+
     private async handleOrphanRoom(room: Room): Promise<void> {
         if (room.isSpaceRoom()) {
             await this.createAndAddNewRootFolder(room);
