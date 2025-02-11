@@ -1536,7 +1536,8 @@ export class SocketManager implements ZoneEventListener {
         }
 
         if (!chatID) {
-            return Promise.reject(new Error("ChatID is undefined"));
+            console.error("ChatID is undefined");
+            return;
         }
 
         try {
@@ -1560,7 +1561,8 @@ export class SocketManager implements ZoneEventListener {
         const chatID = socketData.chatID;
 
         if (!chatID) {
-            return Promise.reject(new Error("ChatID is undefined"));
+            console.error("ChatID is undefined");
+            return;
         }
         try {
             await matrixProvider.kickUserFromRoom(chatID, chatRoomAreaToLeave);
