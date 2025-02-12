@@ -35,12 +35,9 @@
     import { InputTagOption } from "../../Input/InputTagOption";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
-    import InputLabel from "../../Input/InputLabel.svelte";
     import Input from "../../Input/Input.svelte";
     import Select from "../../Input/Select.svelte";
     import RangeSlider from "../../Input/RangeSlider.svelte";
-    import Input from "../../Input/Input.svelte";
-    import Select from "../../Input/Select.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     import { IconAlertTriangle } from "@wa-icons";
 
@@ -708,7 +705,7 @@
         {/if} -->
 
         {#if isArea}
-            <InputLabel
+            <Select
                 id="trigger"
                 label={$LL.mapEditor.properties.linkProperties.trigger()}
                 type="select"
@@ -738,7 +735,7 @@
                     disabled={embeddableLoading}
                 /> -->
 
-                <InputLabel
+                <Input
                     id="tablink"
                     placeholder={property.placeholder ?? $LL.mapEditor.properties.linkProperties.linkPlaceholder()}
                     label={$LL.mapEditor.properties.linkProperties.linkLabel()}

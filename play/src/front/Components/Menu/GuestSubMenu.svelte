@@ -125,9 +125,13 @@
         </section>
     {:else}
         <section class="is-mobile">
-            <h3 class="bg-contrast font-bold text-lg p-4 flex items-center mb-7 m-l">{$LL.menu.invite.description()}</h3>
+            <h3 class="bg-contrast font-bold text-lg p-4 flex items-center mb-7 m-l">
+                {$LL.menu.invite.description()}
+            </h3>
             <input type="hidden" readonly value={location.toString()} />
-            <button type="button" class="btn btn-secondary mb-7 ml-1" on:click={shareLink}>{$LL.menu.invite.share()}</button>
+            <button type="button" class="btn btn-secondary mb-7 ml-1" on:click={shareLink}
+                >{$LL.menu.invite.share()}</button
+            >
         </section>
     {/if}
     <div class="bg-contrast font-bold text-lg p-4 flex items-center ">
@@ -166,10 +170,8 @@
 
         <label for="walkto" class="flex cursor-pointer items-center relative my-4 ">
             <InputSwitch
-                type="checkbox"
                 id="walkto"
-                class="peer sr-only"
-                bind:checked={walkAutomatically}
+                bind:value={walkAutomatically}
                 onChange={() => {
                     updateInputFieldValue();
                 }}

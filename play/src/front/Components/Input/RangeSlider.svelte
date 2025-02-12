@@ -1,14 +1,15 @@
 <script lang="ts">
     export let id: string | undefined = undefined;
-    export let label: string;
+    export let label: string | undefined = undefined;
     export let value = 0;
     export let min = 0;
     export let max = 100;
+    export let step = 0;
     export let onChange = (v: number) => {};
     //secondary = bleu   light = noir sinon par défaut la ligne est blanche
     export let variant: "secondary" | "light" | "" = "";
     export let buttonShape: "square" | "" = "";
-    export let unit = "" ;
+    export let unit = "";
 
     let uniqueId = id || `input-${Math.random().toString(36).substr(2, 9)} `;
 </script>
@@ -16,7 +17,6 @@
 {#if label}
     <label for={uniqueId} class=""> {label} <slot />: {value} {unit}</label>
 {/if}
-
 
 <div class="mx-2.5">
     <div
@@ -55,8 +55,9 @@
             id={uniqueId}
             type="range"
             class="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
-            min={min.toString()}
-            max={max.toString()}
+            {min}
+            {max}
+            {step}
             bind:value
             on:input={() => onChange(value)}
         />
