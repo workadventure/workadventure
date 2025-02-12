@@ -285,7 +285,12 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             pendingEventOrdering: PendingEventOrdering.Detached,
         });
 
-        await this.waitInitialSync();
+        try {
+            await this.waitInitialSync();
+        } catch (error) {
+            console.error(error);
+            Sentry.captureMessage("Failed to wait initial sync");
+        }
     }
 
     private onVerificationRequestReceived(request: VerificationRequest) {
@@ -339,7 +344,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
         return devicesMap.get(deviceId);
     }
-    private waitInitialSync(timeout = 10_000, interval = 3500): Promise<void> {
+    private waitInitialSync(timeout = 30_000, interval = 3500): Promise<void> {
         return new Promise((resolve, reject) => {
             const startTime = Date.now();
             const checkSync = () => {
@@ -347,7 +352,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                     resolve();
                 } else {
                     if (Date.now() - startTime >= timeout) {
-                        reject(new Error("Failed to wait initial sync"));
+                        reject(new Error(`Failed to wait initial sync : timeout ${timeout} ms`));
                     } else {
                         setTimeout(checkSync, interval);
                     }
