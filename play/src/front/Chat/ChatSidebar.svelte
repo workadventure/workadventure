@@ -7,9 +7,11 @@
     import { gameManager } from "../Phaser/Game/GameManager";
     import Chat from "./Components/Chat.svelte";
     import { IconX } from "@wa-icons";
+    import ExternalComponents from "../Components/ExternalModules/ExternalComponents.svelte";
 
     export const chatSidebarWidthStore = writable(INITIAL_SIDEBAR_WIDTH);
     let container: HTMLElement;
+
 
     const gameScene = gameManager.getCurrentGameScene();
 

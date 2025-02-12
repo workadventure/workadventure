@@ -6,7 +6,7 @@ import { DISCORD_BOT_ID } from "../Enum/EnvironmentVariable";
 import { ChatMessage } from "./Connection/ChatConnection";
 import { MatrixChatConnection } from "./Connection/Matrix/MatrixChatConnection";
 import { MatrixChatRoom } from "./Connection/Matrix/MatrixChatRoom";
-import { storedQrCodeUrl } from "./Stores/DiscordConnectionStore";
+import { storedQrCodeUrl } from "../external-modules/discord/Stores/DiscordConnectionStore";
 import { MatrixChatMessage } from "./Connection/Matrix/MatrixChatMessage";
 
 export interface DiscordUser {
@@ -34,7 +34,7 @@ export class DiscordBotManager {
                 this.discordBotRoom = existingDirectRoom;
             }else {
                 //if no existing direct room create one
-                console.log(">>>>> Creating direct room with the bot");
+                //console.log(">>>>> Creating direct room with the bot");
                 const discordChatRoom = await this.chatConnection.createDirectRoom(DISCORD_BOT_ID);
                 if (discordChatRoom instanceof MatrixChatRoom) {
                     this.discordBotRoom = discordChatRoom;
@@ -54,31 +54,31 @@ export class DiscordBotManager {
             }
             try {
                 this.discordBotRoom.sendMessage(message);
-                console.log("-------> send message: ", message);
+                //console.log("-------> send message: ", message);
             } catch (e) {
                 console.error("Failed to send message to discord bot", e);
                 reject(e);
             }
-            console.log("avant le subscribe");
+            //console.log("avant le subscribe");
             try {
                 this.botMessageSubscription = this.discordBotRoom.messages.onPush.subscribe((lastMessage) => {
-                    console.log("dans le subscribe");
+                    //console.log("dans le subscribe");
                     // console.log(">>>> 👌", get(lastMessage.content).body);
                     if (!this.discordBotRoom) {
                         return reject(new Error("Discord bot room is not initialized"));
                     }
                     if (`${lastMessage.sender?.chatId}` !== DISCORD_BOT_ID) {
-                        console.log("🙅🙅🙅🙅", "le sender n'est pas le bot");
+                        //console.log("🙅🙅🙅🙅", "le sender n'est pas le bot");
                         return;
                     } else if (get(lastMessage.content).body.includes("websocket: close sent")) {
-                        console.log("🙅🙅🙅🙅", "websocket: close sent");
+                        //console.log("🙅🙅🙅🙅", "websocket: close sent");
                         return;
                     } else if (get(lastMessage.content).body.includes("welcome from bridge bot")) {
                         //ignoring the welcome message
                         welcomeMessageNumber++;
-                        console.log("welcomeMessageNumber", welcomeMessageNumber);
+                        //console.log("welcomeMessageNumber", welcomeMessageNumber);
                         if (welcomeMessageNumber > 3) {
-                            console.log("🙅🙅🙅🙅", "welcomeMessageNumber > 3");
+                            //console.log("🙅🙅🙅🙅", "welcomeMessageNumber > 3");
                             return resolve(this.sendMessage(message));
                         }
                         return;
@@ -98,7 +98,7 @@ export class DiscordBotManager {
                 console.error("Failed to subscribe to bot message", e);
                 reject(e);
             }
-            console.log("après le subscribe");
+            //console.log("après le subscribe");
         });
     }
 

@@ -36,7 +36,7 @@ import type { Locales } from "../../i18n/i18n-types";
 import { setCurrentLocale } from "../../i18n/locales";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 import { RoomMetadataType } from "../ExternalModule/ExtensionModule";
-import { enableDiscordBridge } from "../Chat/Stores/DiscordConnectionStore";
+//import { enableDiscordBridge } from "../Chat/Stores/DiscordConnectionStore";
 import { axiosToPusher, axiosWithRetry } from "./AxiosUtils";
 import { Room } from "./Room";
 import { LocalUser } from "./LocalUser";
@@ -336,7 +336,7 @@ class ConnectionManager {
                     if (response.status === "ok") {
                         const parsedRoomMetadata = RoomMetadataType.parse(this._currentRoom.metadata);
                         if (parsedRoomMetadata) {
-                            enableDiscordBridge.set(parsedRoomMetadata.discordSettings.enableDiscordBridge);
+                            //enableDiscordBridge.set(parsedRoomMetadata.discordSettings.enableDiscordBridge);
                             //Let's check if the discord mandatory is activated
                             console.log(">>>>> 🤯🤯🤯 Discord ???", parsedRoomMetadata.discordSettings.enableDiscordMandatory)
                             if (parsedRoomMetadata.discordSettings.enableDiscordMandatory) {
