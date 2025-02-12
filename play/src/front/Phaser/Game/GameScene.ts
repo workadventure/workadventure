@@ -2320,7 +2320,7 @@ export class GameScene extends DirtyScene {
                 this.CurrentPlayer.destroyText(id);
                 this.CurrentPlayer.playText(
                     id,
-                    `New device detected (${device.label}). Use it? [SPACE]`,
+                    get(LL).camera.webrtc.newDeviceDetected({ device: device.label }),
                     5000,
                     () => {
                         this.CurrentPlayer.destroyText(id);
