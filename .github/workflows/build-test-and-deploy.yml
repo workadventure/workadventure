@@ -20,8 +20,10 @@ jobs:
       matrix:
         include:
           - platform: linux/amd64
+            shortPlatform: amd64
             os: ubuntu-24.04
           - platform: linux/arm64
+            shortPlatform: arm64
             os: ubuntu-24.04-arm
     steps:
       - name: Prepare
@@ -43,6 +45,13 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - uses: rlespinasse/github-slug-action@4.2.3
 
       - name: Docker meta
@@ -51,20 +60,24 @@ jobs:
         with:
           images: thecodingmachine/workadventure-play
 
-      - name: Build and push by digest
+      - name: Build and push
         uses: docker/build-push-action@v6
-        id: buildplay
         with:
           context: .
           file: play/Dockerfile
           platforms: ${{ matrix.platform }}
+          push: true
+          tags:
+            thecodingmachine/workadventure-play:${{ matrix.shortPlatform }}-${{ github.sha }}
           cache-from: |
             type=registry,ref=thecodingmachine/workadventure-play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
             type=registry,ref=thecodingmachine/workadventure-play:develop
+#            ghcr.io/workadventure/play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+#            ${{ github.ref == 'refs/heads/master' && format('ghcr.io/workadventure/play:master-{0}', github.sha) || '' }}
           cache-to: type=inline
-          outputs: |
-            type=image,"name=thecodingmachine/workadventure-play",push-by-digest=true,name-canonical=true,push=true
-            type=docker,dest=/tmp/play.tar
+#          outputs: |
+#            type=image,"name=thecodingmachine/workadventure-play",push-by-digest=true,name-canonical=true,push=true
+#            type=docker,dest=/tmp/play.tar
           labels: ${{ steps.meta.outputs.labels }}
           secrets: |
             "SENTRY_URL=${{ secrets.SENTRY_URL }}"
@@ -74,11 +87,6 @@ jobs:
             "SENTRY_ENVIRONMENT=${{ github.event_name == 'release' && 'production' || env.GITHUB_REF_NAME == 'master' && 'staging' || 'testing' }}"
             "SENTRY_RELEASE=${{ github.event_name == 'release' && env.GITHUB_REF_NAME || format('{0}@{1}', env.GITHUB_REF_NAME_SLUG, env.GITHUB_SHA) }}"
 
-      - name: Export digest
-        run: |
-          mkdir -p ${{ runner.temp }}/digests
-          digest="${{ steps.buildplay.outputs.digest }}"
-          touch "${{ runner.temp }}/digests/${digest#sha256:}"
       
 
 #      - name: Build test image
@@ -97,9 +105,9 @@ jobs:
 #          labels: ${{ steps.meta.outputs.labels }}
 #          outputs: type=docker,dest=/tmp/play.tar
 
-      - name: Load image (for sentry)
-        if: ${{ (github.event_name == 'push' || github.event_name == 'release') && matrix.platform == 'linux/amd64' }}
-        run: docker image load --input /tmp/play.tar
+#      - name: Load image (for sentry)
+#        if: ${{ (github.event_name == 'push' || github.event_name == 'release') && matrix.platform == 'linux/amd64' }}
+#        run: docker image load --input /tmp/play.tar
 
       - name: Sentry push source maps
         if: ${{ (github.event_name == 'push' || github.event_name == 'release') && matrix.platform == 'linux/amd64' }}
@@ -120,34 +128,8 @@ jobs:
             -e SENTRY_PROJECT \
             -e SENTRY_RELEASE \
             -e SENTRY_ENVIRONMENT \
-            thecodingmachine/workadventure-play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} \
+            thecodingmachine/workadventure-play:${{ matrix.shortPlatform }}-${{ github.sha }} \
             /bin/sh -c 'npm install --dev && npm run push-sentry-sourcemaps'
-
-
-      - name: Zip image
-        if: ${{ matrix.platform == 'linux/amd64' }}
-        run: gzip play.tar
-        working-directory: /tmp
-
-      - name: Upload image as artifact
-        if: ${{ matrix.platform == 'linux/amd64' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: play
-          path: /tmp/play.tar.gz
-
-      - name: Prepare upload digest
-        run: |
-          platform=${{ matrix.platform }}
-          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
-
-      - name: Upload digest
-        uses: actions/upload-artifact@v4
-        with:
-          name: digests-play-${{ env.PLATFORM_PAIR }}
-          path: ${{ runner.temp }}/digests/*
-          if-no-files-found: error
-          retention-days: 1
 
   merge-play:
     runs-on: ubuntu-latest
@@ -155,13 +137,6 @@ jobs:
       - build-play
     if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
     steps:
-      - name: Download digests
-        uses: actions/download-artifact@v4
-        with:
-          path: ${{ runner.temp }}/digests
-          pattern: digests-play-*
-          merge-multiple: true
-
       - name: Login to DockerHub
         uses: docker/login-action@v3
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
@@ -199,6 +174,13 @@ jobs:
       - name: Inspect image
         run: |
           docker buildx imagetools inspect thecodingmachine/workadventure-play:${{ steps.meta.outputs.version }}
+
+      - name: Create and push manifest
+        run: |
+          docker manifest create thecodingmachine/workadventure-play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} \
+            thecodingmachine/workadventure-play:amd64-${{ github.sha }} \
+            thecodingmachine/workadventure-play:arm64-${{ github.sha }}
+          docker manifest push thecodingmachine/workadventure-play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
 
   build-back:
     runs-on: ubuntu-latest
