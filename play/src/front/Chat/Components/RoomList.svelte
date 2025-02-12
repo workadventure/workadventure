@@ -4,6 +4,7 @@
     import { onDestroy, onMount } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import LL from "../../../i18n/i18n-svelte";
+    import { ENABLE_OPENID } from "../../Enum/EnvironmentVariable";
     import { chatSearchBarValue, joignableRoom, navChat, selectedRoomStore } from "../Stores/ChatStore";
     import { ChatRoom } from "../Connection/ChatConnection";
     import { INITIAL_SIDEBAR_WIDTH } from "../../Stores/ChatStore";
@@ -156,7 +157,7 @@
                     <ChatError />
                 {/if}
 
-                {#if !$userIsConnected && gameManager.getCurrentGameScene().room.isChatEnabled}
+                {#if !$userIsConnected && ENABLE_OPENID && gameManager.getCurrentGameScene().room.isChatEnabled}
                     <div class="flex-col items-center justify-center text-center px-4 py-12">
                         <img src={messageSmileyImg} alt="Smiley happy" />
                         <div class="w-full text-center text-lg font-bold">

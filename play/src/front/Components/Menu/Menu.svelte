@@ -3,6 +3,7 @@
     import { onDestroy, onMount } from "svelte";
     import type { Unsubscriber } from "svelte/store";
     import chevronImg from "../images/chevron.svg";
+    import { ENABLE_OPENID } from "../../Enum/EnvironmentVariable";
     import type { MenuItem } from "../../Stores/MenuStore";
     import {
         activeSubMenuStore,
@@ -140,7 +141,7 @@
         <nav
             class="mt-0 @md/main-layout:mt-24 mr-16 @md/main-layout:mr-0 flex flex-row @md/main-layout:flex-col items-stretch @md/main-layout:items-start overflow-auto h-full @md/main-layout:overflow-auto px-4 @md/main-layout:px-0"
         >
-            {#each $subMenusStore as submenu, i (`${submenu.key}_${submenu.type}`)}
+            {#each $subMenusStore.filter((submenu) => !(submenu.key === SubMenusInterface.chat && !ENABLE_OPENID)) as submenu, i (`${submenu.key}_${submenu.type}`)}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class="menu-item-container group flex py-4 px-4 relative transition-all w-auto @md/main-layout:w-full @md/main-layout:hover:pl-6 hover:opacity-100 cursor-pointer before:z-1 before:transition-all before:content-[''] before:absolute before:h-full before:w-0 before:top-0 before:right-0 before:bg-contrast/80 {activeSubMenu ===
