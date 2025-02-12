@@ -32,6 +32,7 @@ const camera: BaseTranslation = {
         preparingYouNetworkGuide: '"Preparing your network" guide',
         refresh: "Refresh",
         continue: "Continue",
+        newDeviceDetected: "New device detected {device} 🎉 Switch? [SPACE]",
     },
     my: {
         silentZone: "Silent zone",
