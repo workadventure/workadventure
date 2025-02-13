@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "ts-proto": "grpc_tools_node_protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=../libs/messages/src/ts-proto-generated --ts_proto_opt=outputServices=grpc-js --ts_proto_opt=oneof=unions --ts_proto_opt=esModuleInterop=true -I ./protos protos/*.proto",
+    "ts-proto": "grpc_tools_node_protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=../libs/messages/src/ts-proto-generated --ts_proto_opt=outputServices=grpc-js --ts_proto_opt=oneof=unions --ts_proto_opt=esModuleInterop=true -I ./protos protos/*.proto && sed -i '1i\\//@ts-nocheck' ../libs/messages/src/ts-proto-generated/*.ts",
     "proto-all": "npm run ts-proto",
     "proto:watch": "npm run proto-all; npm run proto:watch-files",
     "proto:watch-files": "chokidar 'protos/*.proto' -c 'npm run proto-all'",
