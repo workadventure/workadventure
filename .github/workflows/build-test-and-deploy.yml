@@ -17,9 +17,10 @@ jobs:
     uses: ./.github/workflows/build-multi-arch-image.yml
     secrets: inherit
     with:
-      ghcr-dev-build-image-name: 'ghcr.io/workadventure/play-dev-build'
-      ghcr-image-name: 'ghcr.io/workadventure/play'
+      ghcr-dev-build-image-name: 'ghcr.io/${{ github.repository_owner }}/play-dev-build'
+      ghcr-image-name: 'ghcr.io/${{ github.repository_owner }}/play'
       dockerio-image-name: 'thecodingmachine/workadventure-play'
+      push-to-dockerio: ${{ github.repository_owner == 'workadventure' }}
       final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
       dockerfile: play/Dockerfile
 
@@ -656,12 +657,12 @@ jobs:
           path: /tmp
       - name: Load image
         run: |
-          docker image load --input /tmp/play.tar.gz
           docker image load --input /tmp/back.tar.gz
           docker image load --input /tmp/maps.tar.gz
           docker image load --input /tmp/map-storage.tar.gz
           docker image load --input /tmp/uploader.tar.gz
           docker image ls -a
+          #docker image load --input /tmp/play.tar.gz
       - name: Start WorkAdventure
         run: docker compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml up -d
         env:
