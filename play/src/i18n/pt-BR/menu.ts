@@ -20,12 +20,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         close: "Fechar",
     },
     profile: {
-        edit: {
-            name: "Edite seu nome",
-            woka: "Edite seu personagem",
-            companion: "Edite seu companheiro",
-            camera: "Edite sua câmera",
-        },
         login: "Entrar",
         logout: "Sair",
     },

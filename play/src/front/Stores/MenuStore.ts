@@ -1,4 +1,4 @@
-import { derived, get, writable } from "svelte/store";
+import { derived, get, writable, Readable } from "svelte/store";
 import type { Translation } from "../../i18n/i18n-types";
 import {
     AddActionButtonActionBarEvent,
@@ -18,6 +18,8 @@ import {
 import { gameManager } from "../Phaser/Game/GameManager";
 import { userHasAccessToBackOfficeStore, userIsAdminStore } from "./GameStore";
 import { megaphoneCanBeUsedStore } from "./MegaphoneStore";
+import { isMatrixChatEnabledStore } from "./ChatStore";
+import { gameSceneStore } from "./GameSceneStore";
 
 export const menuIconVisiblilityStore = writable(false);
 export const menuVisiblilityStore = writable(false);
@@ -65,6 +67,7 @@ export type MenuKeys = keyof Translation["menu"]["sub"];
 export interface TranslatedMenu {
     type: "translated";
     key: MenuKeys;
+    visible: Readable<boolean>;
 }
 
 /**
@@ -74,14 +77,10 @@ interface ScriptingMenu {
     type: "scripting";
     label: string;
     key: string;
+    visible: Readable<boolean>;
 }
 
 export type MenuItem = TranslatedMenu | ScriptingMenu;
-
-export const inviteMenu: MenuItem = {
-    type: "translated",
-    key: SubMenusInterface.invite,
-};
 
 export const inviteUserActivated = writable(true);
 export const mapEditorActivated = writable(false);
@@ -90,76 +89,64 @@ export const screenSharingActivatedStore = writable(true);
 export const mapEditorActivatedForCurrentArea = writable(false);
 export const mapEditorActivatedForThematics = writable(false);
 export const roomListActivated = writable(true);
+export const contactPageStore = writable<string | undefined>(CONTACT_URL);
+
+const alwaysVisible = writable(true);
 
 function createSubMenusStore() {
     const store = writable<MenuItem[]>([
         {
             type: "translated",
             key: SubMenusInterface.profile,
+            visible: profileAvailable,
         },
         {
             type: "translated",
             key: SubMenusInterface.settings,
+            visible: alwaysVisible,
         },
         {
             type: "translated",
             key: SubMenusInterface.aboutRoom,
+            visible: alwaysVisible,
         },
-        inviteMenu,
+        {
+            type: "translated",
+            key: SubMenusInterface.invite,
+            visible: inviteUserActivated,
+        },
         {
             type: "translated",
             key: SubMenusInterface.globalMessages,
-        },
-        {
-            type: "translated",
-            key: SubMenusInterface.contact,
+            visible: userIsAdminStore,
         },
         {
             type: "translated",
             key: SubMenusInterface.chat,
+            visible: isMatrixChatEnabledStore,
+        },
+        {
+            type: "translated",
+            key: SubMenusInterface.contact,
+            visible: derived(contactPageStore, ($contactPageStore) => $contactPageStore !== undefined),
+        },
+        {
+            type: "translated",
+            key: SubMenusInterface.report,
+            visible: derived(
+                gameSceneStore,
+                ($gameSceneStore) =>
+                    $gameSceneStore?.room.reportIssuesUrl !== undefined ||
+                    (ENABLE_REPORT_ISSUES_MENU != undefined &&
+                        ENABLE_REPORT_ISSUES_MENU &&
+                        REPORT_ISSUES_URL != undefined)
+            ),
         },
     ]);
     const { subscribe, update } = store;
 
-    // It is ok to not unsubscribe to this store because the function is called only once
-    // eslint-disable-next-line svelte/no-ignored-unsubscribe
-    inviteUserActivated.subscribe((value) => {
-        //update menu tab
-        update((valuesSubMenusStore) => {
-            const indexInviteMenu = valuesSubMenusStore.findIndex(
-                (menu) => (menu as TranslatedMenu).key === SubMenusInterface.invite
-            );
-            if (value && indexInviteMenu === -1) {
-                valuesSubMenusStore.splice(3, 0, inviteMenu);
-            } else if (!value && indexInviteMenu !== -1) {
-                valuesSubMenusStore.splice(indexInviteMenu, 1);
-            }
-            return valuesSubMenusStore;
-        });
-    });
-
     return {
         subscribe,
-        addTranslatedMenu(menuCommand: MenuKeys) {
-            update((menuList) => {
-                if (!menuList.find((menu) => menu.type === "translated" && menu.key === menuCommand)) {
-                    menuList.push({
-                        type: "translated",
-                        key: menuCommand,
-                    });
-                }
-                return menuList;
-            });
-        },
-        removeTranslatedMenu(menuCommand: MenuKeys) {
-            update((menuList) => {
-                const index = menuList.findIndex((menu) => menu.type === "translated" && menu.key === menuCommand);
-                if (index !== -1) {
-                    menuList.splice(index, 1);
-                }
-                return menuList;
-            });
-        },
         /**
          * Returns a translated menu item by its key.
          * Throw an error if the key was not found.
@@ -196,6 +183,7 @@ function createSubMenusStore() {
                         type: "scripting",
                         label: menuCommand,
                         key: menuKey,
+                        visible: alwaysVisible,
                     });
                 }
                 return menuList;
@@ -209,22 +197,6 @@ function createSubMenusStore() {
                 }
                 return menuList;
             });
-        },
-        addReportIssuesMenu() {
-            if (
-                connectionManager.currentRoom?.reportIssuesUrl != undefined ||
-                (ENABLE_REPORT_ISSUES_MENU != undefined &&
-                    ENABLE_REPORT_ISSUES_MENU === true &&
-                    REPORT_ISSUES_URL != undefined)
-            ) {
-                update((valuesSubMenusStore) => {
-                    valuesSubMenusStore.push({
-                        type: "translated",
-                        key: SubMenusInterface.report,
-                    });
-                    return valuesSubMenusStore;
-                });
-            }
         },
     };
 }
@@ -252,21 +224,6 @@ function createActiveSubMenuStore() {
 }
 
 export const activeSubMenuStore = createActiveSubMenuStore();
-
-export const contactPageStore = writable<string | undefined>(CONTACT_URL);
-
-export function checkSubMenuToShow() {
-    subMenusStore.removeTranslatedMenu(SubMenusInterface.globalMessages);
-    subMenusStore.removeTranslatedMenu(SubMenusInterface.contact);
-
-    if (get(userIsAdminStore)) {
-        subMenusStore.addTranslatedMenu(SubMenusInterface.globalMessages);
-    }
-
-    if (get(contactPageStore) !== undefined) {
-        subMenusStore.addTranslatedMenu(SubMenusInterface.contact);
-    }
-}
 
 export const customMenuIframe = new Map<string, { url: string; allowApi: boolean; allow?: string | undefined }>();
 

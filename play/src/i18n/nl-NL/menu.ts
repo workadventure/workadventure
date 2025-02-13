@@ -21,12 +21,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         sendMessage: "Verstuur bericht",
     },
     profile: {
-        edit: {
-            name: "Bewerk je naam",
-            woka: "Bewerk je WOKA",
-            companion: "Bewerk je metgezel",
-            camera: "Bewerk je camera",
-        },
         login: "Inloggen",
         logout: "Uitloggen",
     },
