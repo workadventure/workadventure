@@ -148,9 +148,11 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
 
         if (!userToUpdate) return;
 
-        merge(userToUpdate, applyFieldMask(newData, updateMask));
+        const maskedNewData = applyFieldMask(newData, updateMask);
 
-        for (const key in newData) {
+        merge(userToUpdate, maskedNewData);
+
+        for (const key in maskedNewData) {
             // We allow ourselves a not 100% exact type cast here.
             // Technically, newData could contain any key, not only keys part of SpaceUser type (because additional keys
             // are allowed in Javascript objects)
@@ -167,9 +169,9 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
             }
         }
 
-        if (this._setUsers) {
+        /*if (this._setUsers) {
             this._setUsers(this._users);
-        }
+        }*/
     }
 
     protected setFilter(newFilter: Filter) {

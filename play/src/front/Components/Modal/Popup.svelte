@@ -8,27 +8,24 @@
 
 {#if isOpen}
     <div
-        class="popup-menu tw-w-[90%] tw-m-auto tw-left-0 tw-right-0 sm:tw-max-w-[668px] tw-min-h-fit tw-rounded-3xl"
+        class="popup-menu w-[90%] m-auto left-0 right-0 sm:max-w-[668px] min-h-fit rounded-3xl"
         transition:fly={{ y: -1000, delay: 0, duration: 300 }}
     >
         <button
             type="button"
             data-testid="closeModal"
-            class="close-window !tw-bg-transparent !tw-border-none"
+            class="close-window !bg-transparent !border-none"
             on:click|preventDefault|stopPropagation={closeModal}
             >&times
         </button>
-        <div class="tw-p-8 tw-flex tw-flex-col tw-justify-center tw-items-center">
-            <h1 class="tw-p-2">
+        <div class="p-8 flex flex-col justify-center items-center">
+            <h1 class="p-2">
                 <slot name="title" />
             </h1>
             <slot name="content" />
         </div>
-
         {#if withAction}
-            <div
-                class="footer tw-flex tw-flex-row tw-justify-evenly tw-items-center tw-bg-dark-purple tw-w-full tw-p-2 tw-rounded-b-3xl"
-            >
+            <div class="footer flex flex-row justify-evenly items-center bg-dark-purple w-full p-2 rounded-b-3xl">
                 <slot name="action" />
             </div>
         {/if}
@@ -58,13 +55,13 @@
     }
 
     /*@media (max-height: 700px) {
-        .popup-menu {
-            height: 100vh !important;
-            top: 0;
-            .footer {
-                position: fixed;
-                bottom: 0;
-            }
-        }
-    }*/
+      .popup-menu {
+          height: 100vh !important;
+          top: 0;
+          .footer {
+              position: fixed;
+              bottom: 0;
+          }
+      }
+  }*/
 </style>

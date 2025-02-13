@@ -62,7 +62,7 @@
 <svelte:window on:keydown={onKeyDown} />
 
 <div class="menu-container center">
-    <div class="tw-w-full tw-bg-dark-purple/95 tw-rounded" transition:fly={{ x: 1000, duration: 500 }}>
+    <div class="w-full bg-dark-purple/95 rounded" transition:fly={{ x: 1000, duration: 500 }}>
         <button type="button" class="close-window" on:click|preventDefault|stopPropagation={close}>&times</button>
         <select class="tag-selector" bind:value={selectedKey} on:change={() => onSelectedKey()}>
             <option value="">{$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.addConfig()}</option>
@@ -178,68 +178,68 @@
             background-color: rgb(77 75 103);
         }
     }
-    .input-switch {
-        position: relative;
-        top: 0px;
-        right: 0px;
-        bottom: 0px;
-        left: 0px;
-        display: inline-block;
-        height: 1rem;
-        width: 2rem;
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        appearance: none;
-        border-radius: 9999px;
-        border-width: 1px;
-        border-style: solid;
-        --tw-border-opacity: 1;
-        border-color: rgb(77 75 103 / var(--tw-border-opacity));
-        --tw-bg-opacity: 1;
-        background-color: rgb(15 31 45 / var(--tw-bg-opacity));
-        background-image: none;
-        padding: 0px;
-        --tw-text-opacity: 1;
-        color: rgb(242 253 255 / var(--tw-text-opacity));
-        outline: 2px solid transparent;
-        outline-offset: 2px;
-        cursor: url(../../../../../public/static/images/cursor_pointer.png), pointer;
-    }
+    // .input-switch {
+    //     position: relative;
+    //     top: 0px;
+    //     right: 0px;
+    //     bottom: 0px;
+    //     left: 0px;
+    //     display: inline-block;
+    //     height: 1rem;
+    //     width: 2rem;
+    //     -webkit-appearance: none;
+    //     -moz-appearance: none;
+    //     appearance: none;
+    //     border-radius: 9999px;
+    //     border-width: 1px;
+    //     border-style: solid;
+    //     --border-opacity: 1;
+    //     border-color: rgb(77 75 103 / var(--border-opacity));
+    //     --bg-opacity: 1;
+    //     background-color: rgb(15 31 45 / var(--bg-opacity));
+    //     background-image: none;
+    //     padding: 0px;
+    //     --text-opacity: 1;
+    //     color: rgb(242 253 255 / var(--text-opacity));
+    //     outline: 2px solid transparent;
+    //     outline-offset: 2px;
+    //     cursor: url(../../../../../public/static/images/cursor_pointer.png), pointer;
+    // }
 
-    .input-switch::before {
-        position: absolute;
-        left: -3px;
-        top: -3px;
-        height: 1.25rem;
-        width: 1.25rem;
-        border-radius: 9999px;
-        --tw-bg-opacity: 1;
-        background-color: rgb(146 142 187 / var(--tw-bg-opacity));
-        transition-property: all;
-        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-        transition-duration: 150ms;
-        --tw-content: "";
-        content: var(--tw-content);
-    }
+    // .input-switch::before {
+    //     position: absolute;
+    //     left: -3px;
+    //     top: -3px;
+    //     height: 1.25rem;
+    //     width: 1.25rem;
+    //     border-radius: 9999px;
+    //     --bg-opacity: 1;
+    //     background-color: rgb(146 142 187 / var(--bg-opacity));
+    //     transition-property: all;
+    //     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    //     transition-duration: 150ms;
+    //     --content: "";
+    //     content: var(--content);
+    // }
 
-    .input-switch:checked {
-        --tw-border-opacity: 1;
-        border-color: rgb(146 142 187 / var(--tw-border-opacity));
-    }
+    // .input-switch:checked {
+    //     --border-opacity: 1;
+    //     border-color: rgb(146 142 187 / var(--border-opacity));
+    // }
 
-    .input-switch:checked::before {
-        left: 13px;
-        top: -3px;
-        --tw-bg-opacity: 1;
-        background-color: rgb(65 86 246 / var(--tw-bg-opacity));
-        content: var(--tw-content);
-        /*--tw-shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
-        --tw-shadow-colored: 0 0 7px 0 var(--tw-shadow-color);
-        box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);*/
-    }
+    // .input-switch:checked::before {
+    //     left: 13px;
+    //     top: -3px;
+    //     --bg-opacity: 1;
+    //     background-color: rgb(65 86 246 / var(--bg-opacity));
+    //     content: var(--content);
+    //     /*--shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
+    //     --shadow-colored: 0 0 7px 0 var(--shadow-color);
+    //     box-shadow: var(--ring-offset-shadow, 0 0 #0000), var(--ring-shadow, 0 0 #0000), var(--shadow);*/
+    // }
 
-    .input-switch:disabled {
-        cursor: not-allowed;
-        opacity: 0.4;
-    }
+    // .input-switch:disabled {
+    //     cursor: not-allowed;
+    //     opacity: 0.4;
+    // }
 </style>

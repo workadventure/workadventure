@@ -28,40 +28,40 @@
 </script>
 
 <div
-    class="tw-group/chatItem tw-relative tw-mb-[1px] tw-text-md tw-m-0 tw-flex tw-gap-2 tw-flex-row tw-items-center hover:tw-bg-white tw-transition-all hover:tw-bg-opacity-10 hover:tw-rounded-md hover:!tw-cursor-pointer tw-p-2 tw-cursor-pointer tw-w-full"
-    class:tw-bg-white={isSelected}
-    class:tw-bg-opacity-10={isSelected}
-    class:tw-rounded-md={isSelected}
+    class="group/chatItem relative mb-[1px] text-md m-0 flex gap-2 flex-row items-center hover:bg-white transition-all hover:bg-opacity-10 hover:rounded hover:!cursor-pointer p-2 cursor-pointer w-full"
+    class:bg-white={isSelected}
+    class:bg-opacity-10={isSelected}
+    class:rounded={isSelected}
     on:click={() => selectedRoomStore.set(room)}
     on:keyup={() => selectedRoomStore.set(room)}
     role="button"
     tabindex="0"
     data-testid={$roomName}
 >
-    <div class="tw-relative">
+    <div class="relative">
         <Avatar avatarUrl={room.avatarUrl} fallbackName={$roomName} />
 
         {#if $isEncrypted}
             <EncryptionBadge />
         {/if}
     </div>
-    <div class="tw-m-0 tw-flex-1 tw-text-left">
+    <div class="m-0 flex-1 text-left">
         {#each chunks as chunk (chunk.key)}
             <span
-                class="{chunk.match ? 'tw-text-light-blue' : ''} {$hasUnreadMessage
-                    ? 'tw-text-white tw-font-bold'
-                    : 'tw-text-white/75'} tw-cursor-default tw-text-sm">{chunk.text}</span
+                class="{chunk.match ? 'text-light-blue' : ''} {$hasUnreadMessage
+                    ? 'text-white font-bold'
+                    : 'text-white/75'} cursor-default text-sm">{chunk.text}</span
             >
         {/each}
     </div>
     {#if $areNotificationsMuted}
-        <IconBellOff font-size="12" class="tw-opacity-50" />
+        <IconBellOff font-size="12" class="opacity-50" />
     {/if}
     <RoomMenu {room} />
     {#if $hasUnreadMessage}
-        <div class="tw-flex tw-items-center tw-justify-center tw-h-7 tw-w-7 tw-relative">
-            <div class="tw-rounded-full tw-bg-secondary-200 tw-h-2 tw-w-2 tw-animate-ping tw-absolute" />
-            <div class="tw-rounded-full tw-bg-secondary-200 tw-h-1.5 tw-w-1.5 tw-absolute" />
+        <div class="flex items-center justify-center h-7 w-7 relative">
+            <div class="rounded-full bg-secondary-200 h-2 w-2 animate-ping absolute" />
+            <div class="rounded-full bg-secondary-200 h-1.5 w-1.5 absolute" />
         </div>
     {/if}
 </div>

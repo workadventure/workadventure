@@ -41,6 +41,8 @@ export default defineConfig(({ mode }) => {
                     // don't warn on:
                     if (warning.code === "a11y-click-events-have-key-events") return;
                     if (warning.code === "security-anchor-rel-noreferrer") return;
+                    if (warning.code === "Unknown at rule @container (css)") return;
+                    if (warning.message.includes("Unknown at rule @container")) return;
 
                     // handle all other warnings normally
                     if (defaultHandler) {

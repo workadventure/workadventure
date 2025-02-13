@@ -8,7 +8,7 @@
     export let errorHelperText: string | undefined = undefined;
 </script>
 
-<div class="tw-flex tw-flex-col">
+<div class="flex flex-col">
     <label for="input">
         {label}
     </label>

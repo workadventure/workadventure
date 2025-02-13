@@ -34,9 +34,9 @@
         dispatch("close");
     }}
 >
-    <span slot="header" class="tw-flex tw-justify-center tw-items-center">
+    <span slot="header" class="flex justify-center items-center">
         <img
-            class="tw-w-6 tw-mr-1"
+            class="w-6 mr-1"
             src="resources/icons/icon_meeting.png"
             alt={$LL.mapEditor.properties.jitsiProperties.description()}
         />
@@ -57,7 +57,7 @@
             <label for="advancedOption">{$LL.mapEditor.properties.advancedOptions()}</label>
             <input id="advancedOption" type="checkbox" class="input-switch" bind:checked={optionAdvancedActivated} />
         </div>
-        <div class:active={optionAdvancedActivated} class="advanced-option tw-px-2">
+        <div class:active={optionAdvancedActivated} class="advanced-option px-2">
             <div class="value-switch">
                 <label for="closable">{$LL.mapEditor.properties.jitsiProperties.closable()}</label>
                 <input
@@ -115,10 +115,10 @@
             {/if}
             {#if triggerOptionActivated}
                 <div>
-                    <label class="tw-m-0" for="trigger">{$LL.mapEditor.properties.jitsiProperties.trigger()}</label>
+                    <label class="m-0" for="trigger">{$LL.mapEditor.properties.jitsiProperties.trigger()}</label>
                     <select
                         id="trigger"
-                        class=" tw-m-0 tw-w-full"
+                        class=" m-0 w-full"
                         bind:value={property.trigger}
                         on:change={onTriggerValueChange}
                     >
@@ -131,7 +131,7 @@
                 </div>
             {/if}
             {#if (isArea && triggerOptionActivated && triggerOnActionChoosen) || !isArea}
-                <div class="value-input tw-flex tw-flex-col">
+                <div class="value-input flex flex-col">
                     <label for="triggerMessage">{$LL.mapEditor.properties.linkProperties.triggerMessage()}</label>
                     <input
                         id="triggerMessage"
@@ -206,70 +206,70 @@
             margin-bottom: 0;
         }
     }
-    .input-switch {
-        position: relative;
-        top: 0px;
-        right: 0px;
-        bottom: 0px;
-        left: 0px;
-        display: inline-block;
-        height: 1rem;
-        width: 2rem;
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        appearance: none;
-        border-radius: 9999px;
-        border-width: 1px;
-        border-style: solid;
-        --tw-border-opacity: 1;
-        border-color: rgb(77 75 103 / var(--tw-border-opacity));
-        --tw-bg-opacity: 1;
-        background-color: rgb(15 31 45 / var(--tw-bg-opacity));
-        background-image: none;
-        padding: 0px;
-        --tw-text-opacity: 1;
-        color: rgb(242 253 255 / var(--tw-text-opacity));
-        outline: 2px solid transparent;
-        outline-offset: 2px;
-        cursor: url(../../../../../public/static/images/cursor_pointer.png), pointer;
-    }
-    .input-switch::before {
-        position: absolute;
-        left: -3px;
-        top: -3px;
-        height: 1.25rem;
-        width: 1.25rem;
-        border-radius: 9999px;
-        --tw-bg-opacity: 1;
-        background-color: rgb(146 142 187 / var(--tw-bg-opacity));
-        transition-property: all;
-        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-        transition-duration: 150ms;
-        --tw-content: "";
-        content: var(--tw-content);
-    }
-    .input-switch:checked {
-        --tw-border-opacity: 1;
-        border-color: rgb(146 142 187 / var(--tw-border-opacity));
-    }
-    .input-switch:checked::before {
-        left: 13px;
-        top: -3px;
-        --tw-bg-opacity: 1;
-        background-color: rgb(65 86 246 / var(--tw-bg-opacity));
-        content: var(--tw-content);
-        /*--tw-shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
-        --tw-shadow-colored: 0 0 7px 0 var(--tw-shadow-color);
-        box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);*/
-    }
-    .input-switch:disabled {
-        cursor: not-allowed;
-        opacity: 0.4;
-    }
-    .advanced-option {
-        display: none;
-        &.active {
-            display: block;
-        }
-    }
+    // .input-switch {
+    //     position: relative;
+    //     top: 0px;
+    //     right: 0px;
+    //     bottom: 0px;
+    //     left: 0px;
+    //     display: inline-block;
+    //     height: 1rem;
+    //     width: 2rem;
+    //     -webkit-appearance: none;
+    //     -moz-appearance: none;
+    //     appearance: none;
+    //     border-radius: 9999px;
+    //     border-width: 1px;
+    //     border-style: solid;
+    //     --border-opacity: 1;
+    //     border-color: rgb(77 75 103 / var(--border-opacity));
+    //     --bg-opacity: 1;
+    //     background-color: rgb(15 31 45 / var(--bg-opacity));
+    //     background-image: none;
+    //     padding: 0px;
+    //     --text-opacity: 1;
+    //     color: rgb(242 253 255 / var(--text-opacity));
+    //     outline: 2px solid transparent;
+    //     outline-offset: 2px;
+    //     cursor: url(../../../../../public/static/images/cursor_pointer.png), pointer;
+    // }
+    // .input-switch::before {
+    //     position: absolute;
+    //     left: -3px;
+    //     top: -3px;
+    //     height: 1.25rem;
+    //     width: 1.25rem;
+    //     border-radius: 9999px;
+    //     --bg-opacity: 1;
+    //     background-color: rgb(146 142 187 / var(--bg-opacity));
+    //     transition-property: all;
+    //     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    //     transition-duration: 150ms;
+    //     --content: "";
+    //     content: var(--content);
+    // }
+    // .input-switch:checked {
+    //     --border-opacity: 1;
+    //     border-color: rgb(146 142 187 / var(--border-opacity));
+    // }
+    // .input-switch:checked::before {
+    //     left: 13px;
+    //     top: -3px;
+    //     --bg-opacity: 1;
+    //     background-color: rgb(65 86 246 / var(--bg-opacity));
+    //     content: var(--content);
+    //     /*--shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
+    //     --shadow-colored: 0 0 7px 0 var(--shadow-color);
+    //     box-shadow: var(--ring-offset-shadow, 0 0 #0000), var(--ring-shadow, 0 0 #0000), var(--shadow);*/
+    // }
+    // .input-switch:disabled {
+    //     cursor: not-allowed;
+    //     opacity: 0.4;
+    // }
+    // .advanced-option {
+    //     display: none;
+    //     &.active {
+    //         display: block;
+    //     }
+    // }
 </style>

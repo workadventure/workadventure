@@ -20,12 +20,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         close: "Zacyniś",
     },
     profile: {
-        edit: {
-            name: "Mě pśeměniś",
-            woka: "WOKA pśeměniś",
-            companion: "Pśewóźowarja pśeměniś",
-            camera: "Nastajenja kamery pśeměniś",
-        },
         login: "Zalogowaś se",
         logout: "Wulogowaś se",
     },
@@ -107,7 +101,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
     },
     sub: {
-        profile: "Profil",
         settings: "Nastajenja",
         invite: "Pśepšosenje",
         credit: "Informacije dla teje kórty",

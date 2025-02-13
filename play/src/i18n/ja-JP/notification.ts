@@ -12,14 +12,8 @@ const notification: DeepPartial<Translation["notification"]> = {
         permissionDenied: "拒否されました",
         content:
             "会話を見逃さない。WorkAdventure タブを開いていなくても、誰かがあなたと話したがっていることを通知できるように、通知を有効にしてください。",
-        firefoxContent:
-            'Please click the "Remember this decision" checkbox, if you don\'t want Firefox to keep asking you the authorization.',
         refresh: "更新",
         continue: "通知なしで続行",
-        screen: {
-            firefox: "/resources/help-setting-notification-permission/en-US-chrome.png",
-            chrome: "/resources/help-setting-notification-permission/en-US-chrome.png",
-        },
     },
     addNewTag: '新しいタグを追加する : "{tag}"',
 };

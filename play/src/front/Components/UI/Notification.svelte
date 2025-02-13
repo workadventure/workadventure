@@ -2,18 +2,19 @@
     import { fly } from "svelte/transition";
     import { onMount } from "svelte";
     import { Notification, notificationPlayingStore } from "../../Stores/NotificationStore";
-    import microphoneOffImg from "../images/microphone-off.png";
-    import cameraOffImg from "../images/camera-off.png";
+    import microphoneOffImg from "../images/mic.svg";
+    import cameraOffImg from "../images/cam.svg";
     import jistiImg from "../images/jitsi.png";
     import waImg from "../images/icon-workadventure-white.png";
     import AreaToolImg from "../images/icon-tool-area.png";
+    import megaphoneImg from "./images/megaphone.svg";
 
     const icons = new Map<string, string>([
         ["microphone-off.png", microphoneOffImg],
         ["camera-off.png", cameraOffImg],
         ["jitsi.png", jistiImg],
-        ["jitsi.png", jistiImg],
         ["icon-tool-area.png", AreaToolImg],
+        ["megaphone", megaphoneImg],
     ]);
 
     export let notification: Notification;
@@ -26,11 +27,11 @@
     });
 </script>
 
-<div class="notification-playing tw-bg-dark-blue/95 tw-mt-1" transition:fly={{ x: 210, duration: 500 }}>
+<div class="notification-playing bg-dark-blue/95 mt-1" transition:fly={{ x: 210, duration: 500 }}>
     <img
         src={notification.icon ? icons.get(notification.icon) ?? notification.icon : waImg}
         alt="Audio playing"
-        class="tw-bg-medium-purple tw-rounded-full tw-h-14"
+        class="bg-medium-purple rounded-full h-14"
     />
     <p>{notification.text}</p>
 </div>

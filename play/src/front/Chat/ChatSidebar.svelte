@@ -107,11 +107,11 @@
         on:introend={reposition}
         on:outroend={reposition}
         style="width: {sideBarWidth}px; max-width: {Math.min(sideBarWidth, document.documentElement.clientWidth)}px;"
-        class="chatWindow !tw-min-w-full sm:!tw-min-w-[360px] tw-bg-contrast/80 tw-backdrop-blur-md tw-p-0 screen-blocker"
+        class="chatWindow !min-w-full sm:!min-w-[360px] bg-contrast/80 backdrop-blur-md p-0 screen-blocker"
     >
-        <div class="close-window tw-absolute -tw-right-[4.5rem] tw-top-2 tw-p-2 tw-bg-contrast/80 tw-rounded-2xl">
+        <div class="close-window absolute -right-[4.5rem] top-2 p-2 bg-contrast/80 rounded-2xl">
             <button
-                class="tw-p-3 hover:tw-bg-white/10 tw-rounded-xl tw-aspect-square tw-w-12 tw-m-0"
+                class="p-3 hover:bg-white/10 rounded aspect-square w-12 m-0"
                 data-testid="closeChatButton"
                 on:click={closeChat}
             >
@@ -121,7 +121,7 @@
         <Chat {sideBarWidth} />
 
         <div
-            class="!tw-absolute !tw-right-1 !tw-top-0 !tw-bottom-0 !tw-m-auto !tw-w-1 !tw-h-32 !tw-bg-white !tw-rounded !tw-cursor-col-resize"
+            class="!absolute !right-1 !top-0 !bottom-0 !m-auto !w-1 !h-32 !bg-white !rounded !cursor-col-resize"
             id="resize-bar"
             on:mousedown={handleMousedown}
             on:dblclick={handleDbClick}

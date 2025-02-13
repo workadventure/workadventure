@@ -38,7 +38,7 @@
         id={`video-${streamable.uniqueId}`}
         bind:this={videoElement}
         use:srcObject={$streamStore}
-        class="tw-w-full tw-h-auto tw-max-h-full tw-object-cover tw-rounded-lg tw-absolute tw-top-0 tw-left-0 tw-right-0 tw-bottom-0 tw-bg-gray-800 tw-z-40 tw-cursor-pointer"
+        class="w-full h-auto max-h-full object-cover rounded-lg absolute top-0 left-0 right-0 bottom-0 bg-gray-800 z-40 cursor-pointer"
         style={`aspect-ratio: ${$streamStore?.getVideoTracks()[0]?.getSettings().aspectRatio};`}
         autoplay
         muted

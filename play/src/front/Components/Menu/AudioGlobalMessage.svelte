@@ -102,7 +102,7 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <section
-    class="section-input-send-audio centered-column tw-cursor-pointer"
+    class="section-input-send-audio centered-column cursor-pointer"
     on:dragover|preventDefault={() => {
         dropHover = true;
     }}
@@ -117,26 +117,26 @@
         fileInput.click();
     }}
 >
-    <p class="tw-pointer-events-none">
+    <p class="pointer-events-none">
         {$LL.menu.globalAudio.dragAndDrop()}
     </p>
     <img
-        class="clickable tw-w-1/6 tw-pointer-events-none"
-        class:tw-hidden={!dropHover}
+        class="clickable w-1/6 pointer-events-none"
+        class:hidden={!dropHover}
         draggable="false"
         src={uploadFileActive}
         alt={$LL.menu.globalAudio.uploadInfo()}
     />
     <img
-        class="clickable tw-w-1/6 tw-pointer-events-none"
-        class:tw-hidden={dropHover}
+        class="clickable w-1/6 pointer-events-none"
+        class:hidden={dropHover}
         draggable="false"
         src={uploadFile}
         alt={$LL.menu.globalAudio.uploadInfo()}
     />
 
     {#if fileName !== undefined}
-        <p class="tw-p-4">{fileName} : {fileSize}</p>
+        <p class="p-4">{fileName} : {fileSize}</p>
     {/if}
     {#if errorFile}
         <p class="err">{$LL.menu.globalAudio.error()}</p>
@@ -145,7 +145,7 @@
         <p class="err">{$LL.menu.globalAudio.errorUpload()}</p>
     {/if}
     <input
-        class="tw-hidden"
+        class="hidden"
         type="file"
         id="input-send-audio"
         bind:this={fileInput}

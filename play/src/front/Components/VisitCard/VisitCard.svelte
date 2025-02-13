@@ -46,25 +46,20 @@
         <div class="loader" />
     {/if}
     {#if !hidden}
-        <div class="buttonContainer tw-flex tw-flex-row-reverse tw-gap-2">
-            <button
-                class="light tw-cursor-pointer tw-px-3 tw-mb-2 tw-mr-0"
-                data-testid="closeVisitCard"
-                on:click={closeCard}>{$LL.menu.visitCard.close()}</button
+        <div class="buttonContainer flex flex-row-reverse gap-2">
+            <button class="light cursor-pointer px-3 mb-2 mr-0" data-testid="closeVisitCard" on:click={closeCard}
+                >{$LL.menu.visitCard.close()}</button
             >
             {#if selectPlayerChatID}
                 {#if !$roomCreationInProgress}
                     <button
-                        class="light tw-cursor-pointer tw-px-3 tw-mb-2 tw-mr-0"
+                        class="light cursor-pointer px-3 mb-2 mr-0"
                         data-testid="sendMessagefromVisitCardButton"
                         on:click={openChat}>{$LL.menu.visitCard.sendMessage()}</button
                     >
                 {:else}
-                    <button
-                        class="light tw-cursor-pointer tw-px-3 tw-mb-2 tw-mr-0"
-                        data-testid="sendMessagefromVisitCardButton"
-                    >
-                        <IconLoader class="tw-animate-spin" />
+                    <button class="light cursor-pointer px-3 mb-2 mr-0" data-testid="sendMessagefromVisitCardButton">
+                        <IconLoader class="animate-spin" />
                     </button>
                 {/if}
             {/if}

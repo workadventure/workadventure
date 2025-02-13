@@ -72,14 +72,14 @@
         dispatch("close");
     }}
 >
-    <span slot="header" class="tw-flex tw-justify-center tw-items-center">
-        <img class="tw-w-6 tw-mr-1" src={audioSvg} alt={$LL.mapEditor.properties.audioProperties.description()} />
+    <span slot="header" class="flex justify-center items-center">
+        <img class="w-6 mr-1" src={audioSvg} alt={$LL.mapEditor.properties.audioProperties.description()} />
         {$LL.mapEditor.properties.audioProperties.label()}
     </span>
     <span slot="content">
         <div class="value-input">
             <label for="audioLink">{$LL.mapEditor.properties.audioProperties.audioLinkLabel()}</label>
-            <div class="tw-flex">
+            <div class="flex">
                 <input
                     id="audioLink"
                     type="text"
@@ -88,23 +88,23 @@
                     on:change={onValueChange}
                 />
                 {#if !playing}
-                    <button on:click={playAudio} class="tw-m-0 tw-pl-1 tw-pr-0 tw-text-xl"> ▶️ </button>
+                    <button on:click={playAudio} class="m-0 pl-1 pr-0 text-xl"> ▶️ </button>
                 {:else}
-                    <button on:click={stopAudio} class="tw-m-0 tw-pl-1 tw-pr-0 tw-text-xl"> ⏹️ </button>
+                    <button on:click={stopAudio} class="m-0 pl-1 pr-0 text-xl"> ⏹️ </button>
                 {/if}
             </div>
             <audio class="audio-manager-audioplayer" bind:this={HTMLAudioPlayer} />
         </div>
-        <div class="value-input tw-text-danger-500" class:tw-invisible={!errorMessage}>
+        <div class="value-input text-danger-500" class:invisible={!errorMessage}>
             ⚠️ {errorMessage}
         </div>
         <div class="value-switch">
             <label for="advancedOption">{$LL.mapEditor.properties.advancedOptions()}</label>
             <input id="advancedOption" type="checkbox" class="input-switch" bind:checked={optionAdvancedActivated} />
         </div>
-        <div class:active={optionAdvancedActivated} class="advanced-option tw-px-2">
+        <div class:active={optionAdvancedActivated} class="advanced-option px-2">
             {#if isArea === false}
-                <div class="value-input tw-flex tw-flex-col">
+                <div class="value-input flex flex-col">
                     <label for="triggerMessage">{$LL.mapEditor.properties.linkProperties.triggerMessage()}</label>
                     <input
                         id="triggerMessage"
@@ -180,70 +180,70 @@
             margin-bottom: 0;
         }
     }
-    .input-switch {
-        position: relative;
-        top: 0px;
-        right: 0px;
-        bottom: 0px;
-        left: 0px;
-        display: inline-block;
-        height: 1rem;
-        width: 2rem;
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        appearance: none;
-        border-radius: 9999px;
-        border-width: 1px;
-        border-style: solid;
-        --tw-border-opacity: 1;
-        border-color: rgb(77 75 103 / var(--tw-border-opacity));
-        --tw-bg-opacity: 1;
-        background-color: rgb(15 31 45 / var(--tw-bg-opacity));
-        background-image: none;
-        padding: 0px;
-        --tw-text-opacity: 1;
-        color: rgb(242 253 255 / var(--tw-text-opacity));
-        outline: 2px solid transparent;
-        outline-offset: 2px;
-        cursor: url(../../../../../public/static/images/cursor_pointer.png), pointer;
-    }
-    .input-switch::before {
-        position: absolute;
-        left: -3px;
-        top: -3px;
-        height: 1.25rem;
-        width: 1.25rem;
-        border-radius: 9999px;
-        --tw-bg-opacity: 1;
-        background-color: rgb(146 142 187 / var(--tw-bg-opacity));
-        transition-property: all;
-        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-        transition-duration: 150ms;
-        --tw-content: "";
-        content: var(--tw-content);
-    }
-    .input-switch:checked {
-        --tw-border-opacity: 1;
-        border-color: rgb(146 142 187 / var(--tw-border-opacity));
-    }
-    .input-switch:checked::before {
-        left: 13px;
-        top: -3px;
-        --tw-bg-opacity: 1;
-        background-color: rgb(65 86 246 / var(--tw-bg-opacity));
-        content: var(--tw-content);
-        /*--tw-shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
-        --tw-shadow-colored: 0 0 7px 0 var(--tw-shadow-color);
-        box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);*/
-    }
-    .input-switch:disabled {
-        cursor: not-allowed;
-        opacity: 0.4;
-    }
-    .advanced-option {
-        display: none;
-        &.active {
-            display: block;
-        }
-    }
+    // .input-switch {
+    //     position: relative;
+    //     top: 0px;
+    //     right: 0px;
+    //     bottom: 0px;
+    //     left: 0px;
+    //     display: inline-block;
+    //     height: 1rem;
+    //     width: 2rem;
+    //     -webkit-appearance: none;
+    //     -moz-appearance: none;
+    //     appearance: none;
+    //     border-radius: 9999px;
+    //     border-width: 1px;
+    //     border-style: solid;
+    //     --border-opacity: 1;
+    //     border-color: rgb(77 75 103 / var(--border-opacity));
+    //     --bg-opacity: 1;
+    //     background-color: rgb(15 31 45 / var(--bg-opacity));
+    //     background-image: none;
+    //     padding: 0px;
+    //     --text-opacity: 1;
+    //     color: rgb(242 253 255 / var(--text-opacity));
+    //     outline: 2px solid transparent;
+    //     outline-offset: 2px;
+    //     cursor: url(../../../../../public/static/images/cursor_pointer.png), pointer;
+    // }
+    // .input-switch::before {
+    //     position: absolute;
+    //     left: -3px;
+    //     top: -3px;
+    //     height: 1.25rem;
+    //     width: 1.25rem;
+    //     border-radius: 9999px;
+    //     --bg-opacity: 1;
+    //     background-color: rgb(146 142 187 / var(--bg-opacity));
+    //     transition-property: all;
+    //     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    //     transition-duration: 150ms;
+    //     --content: "";
+    //     content: var(--content);
+    // }
+    // .input-switch:checked {
+    //     --border-opacity: 1;
+    //     border-color: rgb(146 142 187 / var(--border-opacity));
+    // }
+    // .input-switch:checked::before {
+    //     left: 13px;
+    //     top: -3px;
+    //     --bg-opacity: 1;
+    //     background-color: rgb(65 86 246 / var(--bg-opacity));
+    //     content: var(--content);
+    //     /*--shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
+    //     --shadow-colored: 0 0 7px 0 var(--shadow-color);
+    //     box-shadow: var(--ring-offset-shadow, 0 0 #0000), var(--ring-shadow, 0 0 #0000), var(--shadow);*/
+    // }
+    // .input-switch:disabled {
+    //     cursor: not-allowed;
+    //     opacity: 0.4;
+    // }
+    // .advanced-option {
+    //     display: none;
+    //     &.active {
+    //         display: block;
+    //     }
+    // }
 </style>

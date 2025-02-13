@@ -257,11 +257,11 @@
         <h3>{$LL.mapEditor.entityEditor.editing({ name: $mapEditorSelectedEntityStore.getPrefab().name })}</h3>
     </div>
     <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <p on:click|preventDefault={backToSelectObject} class="tw-flex tw-flex-row tw-items-center tw-text-xs tw-m-0">
-        <IconArrowLeft font-size="12" class="tw-cursor-pointer" />
-        <span class="tw-ml-1 tw-cursor-pointer">{$LL.mapEditor.entityEditor.itemPicker.backToSelectObject()}</span>
+    <p on:click|preventDefault={backToSelectObject} class="flex flex-row items-center text-xs m-0">
+        <IconArrowLeft font-size="12" class="cursor-pointer" />
+        <span class="ml-1 cursor-pointer">{$LL.mapEditor.entityEditor.itemPicker.backToSelectObject()}</span>
     </p>
-    <div class="properties-buttons tw-flex tw-flex-row">
+    <div class="properties-buttons flex flex-row">
         {#if !hasJitsiRoomProperty}
             <AddPropertyButtonWrapper
                 property="jitsiRoomProperty"
@@ -283,7 +283,7 @@
             }}
         />
     </div>
-    <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-m-2">
+    <div class="properties-buttons flex flex-row flex-wrap m-2">
         <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="klaxoon"
@@ -341,7 +341,7 @@
             }}
         />
     </div>
-    <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-m-2">
+    <div class="properties-buttons flex flex-row flex-wrap m-2">
         {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
             <AddPropertyButtonWrapper
                 property="openWebsite"
@@ -455,68 +455,68 @@
         }
     }
 
-    .input-switch {
-        position: relative;
-        top: 0px;
-        right: 0px;
-        bottom: 0px;
-        left: 0px;
-        display: inline-block;
-        height: 1rem;
-        width: 2rem;
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        appearance: none;
-        border-radius: 9999px;
-        border-width: 1px;
-        border-style: solid;
-        --tw-border-opacity: 1;
-        border-color: rgb(77 75 103 / var(--tw-border-opacity));
-        --tw-bg-opacity: 1;
-        background-color: rgb(15 31 45 / var(--tw-bg-opacity));
-        background-image: none;
-        padding: 0px;
-        --tw-text-opacity: 1;
-        color: rgb(242 253 255 / var(--tw-text-opacity));
-        outline: 2px solid transparent;
-        outline-offset: 2px;
-        cursor: url(../../../../../public/static/images/cursor_pointer.png), pointer;
-    }
+    // .input-switch {
+    //     position: relative;
+    //     top: 0px;
+    //     right: 0px;
+    //     bottom: 0px;
+    //     left: 0px;
+    //     display: inline-block;
+    //     height: 1rem;
+    //     width: 2rem;
+    //     -webkit-appearance: none;
+    //     -moz-appearance: none;
+    //     appearance: none;
+    //     border-radius: 9999px;
+    //     border-width: 1px;
+    //     border-style: solid;
+    //     --border-opacity: 1;
+    //     border-color: rgb(77 75 103 / var(--border-opacity));
+    //     --bg-opacity: 1;
+    //     background-color: rgb(15 31 45 / var(--bg-opacity));
+    //     background-image: none;
+    //     padding: 0px;
+    //     --text-opacity: 1;
+    //     color: rgb(242 253 255 / var(--text-opacity));
+    //     outline: 2px solid transparent;
+    //     outline-offset: 2px;
+    //     cursor: url(../../../../../public/static/images/cursor_pointer.png), pointer;
+    // }
 
-    .input-switch::before {
-        position: absolute;
-        left: -3px;
-        top: -3px;
-        height: 1.25rem;
-        width: 1.25rem;
-        border-radius: 9999px;
-        --tw-bg-opacity: 1;
-        background-color: rgb(146 142 187 / var(--tw-bg-opacity));
-        transition-property: all;
-        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-        transition-duration: 150ms;
-        --tw-content: "";
-        content: var(--tw-content);
-    }
+    // .input-switch::before {
+    //     position: absolute;
+    //     left: -3px;
+    //     top: -3px;
+    //     height: 1.25rem;
+    //     width: 1.25rem;
+    //     border-radius: 9999px;
+    //     --bg-opacity: 1;
+    //     background-color: rgb(146 142 187 / var(--bg-opacity));
+    //     transition-property: all;
+    //     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    //     transition-duration: 150ms;
+    //     --content: "";
+    //     content: var(--content);
+    // }
 
-    .input-switch:checked {
-        --tw-border-opacity: 1;
-        border-color: rgb(146 142 187 / var(--tw-border-opacity));
-    }
+    // .input-switch:checked {
+    //     --border-opacity: 1;
+    //     border-color: rgb(146 142 187 / var(--border-opacity));
+    // }
 
-    .input-switch:checked::before {
-        left: 13px;
-        top: -3px;
-        --tw-bg-opacity: 1;
-        background-color: rgb(65 86 246 / var(--tw-bg-opacity));
-        content: var(--tw-content);
-        /*--tw-shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
-        --tw-shadow-colored: 0 0 7px 0 var(--tw-shadow-color);
-        box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);*/
-    }
+    // .input-switch:checked::before {
+    //     left: 13px;
+    //     top: -3px;
+    //     --bg-opacity: 1;
+    //     background-color: rgb(65 86 246 / var(--bg-opacity));
+    //     content: var(--content);
+    //     /*--shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
+    //     --shadow-colored: 0 0 7px 0 var(--shadow-color);
+    //     box-shadow: var(--ring-offset-shadow, 0 0 #0000), var(--ring-shadow, 0 0 #0000), var(--shadow);*/
+    // }
 
-    .input-switch:disabled {
-        cursor: not-allowed;
-        opacity: 0.4;
-    }
+    // .input-switch:disabled {
+    //     cursor: not-allowed;
+    //     opacity: 0.4;
+    // }
 </style>

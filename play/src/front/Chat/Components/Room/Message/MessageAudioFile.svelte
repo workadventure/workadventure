@@ -5,7 +5,7 @@
     export let content: Readable<ChatMessageContent>;
 </script>
 
-<audio controls src={$content.url} class="tw-max-w-full tw-min-w-96 tw-block tw-p-2" />
+<audio controls src={$content.url} class="max-w-full min-w-96 block p-2" />
 
 <style>
     audio::-webkit-media-controls-panel {

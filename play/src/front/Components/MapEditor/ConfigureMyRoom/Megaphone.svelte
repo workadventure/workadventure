@@ -90,15 +90,16 @@
     }
 </script>
 
-<div class="tw-flex tw-flex-wrap tw-gap-x-4 tw-items-center tw-h-fit">
+<div class="flex flex-wrap gap-x-4 items-center h-fit">
     <input type="checkbox" class="input-switch" bind:checked={enabled} on:change={partialSave} disabled={loading} />
-    <h3>{$LL.mapEditor.settings.megaphone.title()}</h3>
+    <h3 id="megaphone">{$LL.mapEditor.settings.megaphone.title()}</h3>
 </div>
-<p class="help-text tw-h-fit">{$LL.mapEditor.settings.megaphone.description()}</p>
+
+<p class="help-text h-fit">{$LL.mapEditor.settings.megaphone.description()}</p>
 {#if enabled}
-    <div class="settings tw-flex-grow tw-flex-auto tw-flex-shrink" transition:fade={{ duration: 200 }}>
+    <div class="settings space-y-4 flex-grow flex-auto flex-shrink" transition:fade={{ duration: 200 }}>
         {#await getTags()}
-            <PureLoader size={12} color="lighter-purple" customClass="tw-h-full" />
+            <PureLoader size={12} color="lighter-purple" customClass="h-full" />
         {:then tags}
             <InputText
                 errorHelperText={dynamicStrings.error.title}

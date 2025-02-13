@@ -4,7 +4,7 @@
     import { Streamable } from "../../../Stores/StreamableCollectionStore";
     import { VideoPeer } from "../../../WebRtc/VideoPeer";
     import SoundMeterWidget from "../../SoundMeterWidget.svelte";
-    import microphoneOffImg from "../../images/microphone-off.png";
+    import MicOffIcon from "../../Icons/MicOffIcon.svelte";
 
     export let streamable: Streamable;
     export let isMinified = false;
@@ -18,12 +18,12 @@
     });
 </script>
 
-<div class="voice-meter-my-container tw-justify-end tw-z-[251] tw-pr-2 tw-absolute tw-w-full tw-top-0">
+<div class="voice-meter-my-container justify-end z-[251] pr-2 absolute w-full top-0">
     {#if volumeStore && $constraintStore && $constraintStore.audio !== false}
-        <SoundMeterWidget volume={$volumeStore} classcss="" barColor="blue" />
+        <SoundMeterWidget volume={$volumeStore} cssClass="" barColor="blue" />
     {:else if isMinified}
-        <img draggable="false" src={microphoneOffImg} class="tw-flex tw-p-1 tw-h-4 tw-w-4" alt="Mute" />
+        <MicOffIcon width="w-4" height="h-4" />
     {:else}
-        <img draggable="false" src={microphoneOffImg} class="tw-flex tw-p-1 tw-h-8 tw-w-8" alt="Mute" />
+        <MicOffIcon width="w-8" height="h-8" />
     {/if}
 </div>

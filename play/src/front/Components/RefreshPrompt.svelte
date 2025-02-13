@@ -15,12 +15,12 @@
     });
 </script>
 
-<div class="tw-grid tw-place-items-center tw-h-screen refresh">
-    <div class="tw-px-10 tw-py-80 tw-flex tw-items-center tw-flex-col">
+<div class="grid place-items-center h-screen refresh">
+    <div class="px-10 py-80 flex items-center flex-col">
         <p class="test-class">{$LL.mapEditor.map.refreshPrompt()}</p>
         <button
             type="button"
-            class="light tw-m-auto tw-cursor-pointer tw-px-3"
+            class="light m-auto cursor-pointer px-3"
             on:click|preventDefault={() => window.location.reload()}
             >{`${$LL.refreshPrompt.refresh()} (${timeToRefreshSeconds})`}
         </button>

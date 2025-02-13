@@ -3,12 +3,12 @@
     import { Readable, Unsubscriber } from "svelte/store";
     import type JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
     import { onDestroy, onMount } from "svelte";
-    import microphoneOffImg from "../images/microphone-off.png";
-    import { EmbedScreen, highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
+
+    import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
+    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { Streamable, myJitsiCameraStore } from "../../Stores/StreamableCollectionStore";
     import SoundMeterWidgetWrapper from "../SoundMeterWidgetWrapper.svelte";
     import { JitsiTrackStreamWrapper } from "../../Streaming/Jitsi/JitsiTrackStreamWrapper";
-    import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
@@ -20,13 +20,13 @@
     import ActionMediaBox from "./ActionMediaBox.svelte";
 
     export let clickable = true;
-    export let isHightlighted = false;
+    export let isHighlighted = false;
     export let peer: JitsiTrackStreamWrapper;
 
     const videoTrackStore: Readable<JitsiTrack | undefined> = peer.videoTrackStore;
     const audioTrackStore: Readable<JitsiTrack | undefined> = peer.audioTrackStore;
 
-    let embedScreen: EmbedScreen;
+    let embedScreen: Streamable;
     let backGroundColor = "#000000";
     peer.jitsiTrackWrapper.spaceUser
         .then((spaceUser) => {
@@ -38,12 +38,8 @@
     let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
 
     if (peer) {
-        embedScreen = {
-            type: "streamable",
-            embed: peer as unknown as Streamable,
-        };
+        embedScreen = peer as unknown as Streamable;
     }
-
     let jitsiMediaBoxHtml: HTMLDivElement;
     let isMobileFormat = isMediaBreakpointUp("md");
     const resizeObserver = new ResizeObserver(() => {
@@ -55,7 +51,7 @@
     onMount(() => {
         resizeObserver.observe(jitsiMediaBoxHtml);
         videoTrackUnSuscriber = videoTrackStore.subscribe((videoTrack) => {
-            if (videoTrack == undefined && isHightlighted) highlightedEmbedScreen.toggleHighlight(embedScreen);
+            if (videoTrack == undefined && isHighlighted) highlightedEmbedScreen.toggleHighlight(embedScreen);
         });
     });
 
@@ -77,40 +73,77 @@
             : null}
 >
     {#if $myJitsiCameraStore?.uniqueId != peer.uniqueId}
-        <ActionMediaBox
-            {embedScreen}
-            trackStreamWrapper={peer}
-            videoEnabled={$videoTrackStore ? $videoTrackStore?.isActive() : false}
-        />
+        {#await peer.getExtendedSpaceUser()}
+            <div />
+        {:then spaceUser}
+            <!-- TODO: implement on:close -->
+            <ActionMediaBox
+                {embedScreen}
+                {spaceUser}
+                videoEnabled={$videoTrackStore ? $videoTrackStore?.isActive() : false}
+                on:close={() => {
+                    /* TODO */
+                }}
+            />
+        {/await}
     {/if}
     {#if $videoTrackStore}
-        <div class="tw-rounded-sm tw-overflow-hidden tw-flex tw-justify-center tw-flex-col tw-w-full tw-h-full">
+        <div class="rounded-sm overflow-hidden flex justify-center flex-col w-full h-full">
             <JitsiVideoElement
                 jitsiTrack={$videoTrackStore}
                 isLocal={$videoTrackStore?.isLocal()}
-                {isHightlighted}
+                {isHighlighted}
                 {isMobileFormat}
             />
         </div>
     {/if}
     {#if peer.target === "video/audio"}
-        <div class={`tw-absolute ${$videoTrackStore ? "tw-top-0.5 tw-right-2" : "tw-top-1 tw-right-3"}`}>
+        <div class={`absolute ${$videoTrackStore ? "top-0.5 right-2" : "top-1 right-3"}`}>
             {#if $audioTrackStore}
                 <JitsiAudioElement jitsiTrack={$audioTrackStore} />
                 <SoundMeterWidgetWrapper
-                    classcss="tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
+                    cssClass="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
                     barColor={$videoTrackStore ? "blue" : "black"}
                     volume={peer.jitsiTrackWrapper.volumeStore}
                 />
             {:else}
-                <img
-                    draggable="false"
-                    src={microphoneOffImg}
-                    class="tw-flex tw-p-1 tw-h-8 tw-w-8 voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
-                    alt="Mute"
-                    class:tw-brightness-0={textColor === "black" && !$videoTrackStore}
-                    class:tw-brightness-100={textColor === "white" && !$videoTrackStore}
-                />
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M1.375 2.375L21.625 22.625"
+                        stroke="white"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
+                    <path
+                        d="M8.125 4.625C8.125 3.72989 8.48058 2.87145 9.11351 2.23851C9.74645 1.60558 10.6049 1.25 11.5 1.25C12.3951 1.25 13.2536 1.60558 13.8865 2.23851C14.5194 2.87145 14.875 3.72989 14.875 4.625V10.25C14.875 10.5832 14.8258 10.9145 14.7287 11.2332M12.4788 13.4832C11.9744 13.6361 11.4412 13.6687 10.922 13.5784C10.4028 13.4882 9.9119 13.2776 9.4887 12.9635C9.06549 12.6494 8.72171 12.2406 8.48491 11.7698C8.2481 11.299 8.12484 10.7793 8.125 10.2522V9.12725"
+                        stroke="white"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
+                    <path
+                        d="M3.625 10.25C3.62475 11.6713 4.00915 13.0661 4.73742 14.2866C5.46568 15.5071 6.51068 16.5077 7.76159 17.1824C9.01249 17.8571 10.4227 18.1807 11.8426 18.1189C13.2625 18.0571 14.6392 17.6121 15.8267 16.8313M18.0767 14.5813C18.9248 13.2961 19.3756 11.78ƒbtn)97 19.3727 10.25"
+                        stroke="white"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
+                    <path
+                        d="M7 22.625H16"
+                        stroke="white"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
+                    <path
+                        d="M11.5 18.125V22.625"
+                        stroke="white"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
+                </svg>
             {/if}
         </div>
     {/if}
@@ -121,12 +154,10 @@
             <div
                 id="tag"
                 style="background-color: {backGroundColor}; color: {textColor};"
-                class="tw-flex tw-flex-col tw-justify-center tw-items-center tw-content-center !tw-h-full tw-w-full tw-gap-2"
+                class="flex flex-col justify-center items-center content-center !h-full w-full gap-2"
             >
                 <Woka src={spaceUser.getWokaBase64} customHeight={`100px`} customWidth={`100px`} />
-                <span
-                    class="tw-font-semibold tw-text-sm tw-not-italic tw-break-words tw-px-2 tw-overflow-y-auto tw-max-h-10"
-                >
+                <span class="font-semibold text-sm not-italic break-words px-2 overflow-y-auto max-h-10">
                     {peer.jitsiTrackWrapper.isLocal ? $LL.camera.my.nameTag() : spaceUser.name}
                 </span>
             </div>
@@ -140,9 +171,3 @@
         {/if}
     {/await}
 </div>
-
-<style lang="scss">
-    /*    video.no-video {
-        visibility: collapse;
-    }*/
-</style>

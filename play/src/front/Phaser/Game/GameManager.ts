@@ -3,7 +3,7 @@ import * as Sentry from "@sentry/svelte";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import type { Room } from "../../Connection/Room";
-import { helpCameraSettingsVisibleStore } from "../../Stores/HelpSettingsStore";
+import { showHelpCameraSettings } from "../../Stores/HelpSettingsStore";
 import {
     availabilityStatusStore,
     requestedCameraDeviceIdStore,
@@ -26,6 +26,7 @@ import { ENABLE_CHAT, MATRIX_PUBLIC_URI } from "../../Enum/EnvironmentVariable";
 import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
 import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
 import { VoidChatConnection } from "../../Chat/Connection/VoidChatConnection";
+import { isMatrixChatEnabledStore } from "../../Stores/ChatStore";
 import { GameScene } from "./GameScene";
 
 /**
@@ -173,7 +174,7 @@ export class GameManager {
             !localUserStore.getHelpCameraSettingsShown() &&
             (!get(requestedMicrophoneState) || !get(requestedCameraState))
         ) {
-            helpCameraSettingsVisibleStore.set(true);
+            showHelpCameraSettings();
             localUserStore.setHelpCameraSettingsShown();
         }
     }
@@ -253,11 +254,13 @@ export class GameManager {
             this._chatConnection = matrixChatConnection;
 
             this.chatConnectionPromise = matrixChatConnection.init().then(() => matrixChatConnection);
+            isMatrixChatEnabledStore.set(true);
 
             return this.chatConnectionPromise;
         } else {
             // No matrix connection? Let's fill the gap with a "void" object
             this._chatConnection = new VoidChatConnection();
+            isMatrixChatEnabledStore.set(false);
             return this._chatConnection;
         }
     }

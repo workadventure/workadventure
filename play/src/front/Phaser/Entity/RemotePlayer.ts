@@ -65,6 +65,10 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         }
     }
 
+    public getVisitCardUrl(): string | null {
+        return this.visitCardUrl;
+    }
+
     public registerActionsMenuAction(action: ActionsMenuAction): void {
         actionsMenuStore.addAction({
             ...action,
