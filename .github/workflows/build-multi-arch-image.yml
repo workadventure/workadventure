@@ -24,6 +24,11 @@ on:
       dockerfile:
         required: true
         type: string
+      sentry_project:
+        required: false
+        type: string
+        default: ""
+
 
 jobs:
   build-image:
@@ -78,43 +83,16 @@ jobs:
             type=registry,ref=${{ inputs.ghcr-dev-build-image-name }}:${{ matrix.shortPlatform }}-${{ env.PREV_SHA }}
             type=registry,ref=${{ inputs.ghcr-dev-build-image-name }}:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
             type=registry,ref=${{ inputs.ghcr-image-name }}:develop
-          #            type=registry,ref=thecodingmachine/workadventure-play:${{ matrix.shortPlatform }}-${{ env.PREV_SHA }}
-          #            type=registry,ref=thecodingmachine/workadventure-play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-          #            type=registry,ref=thecodingmachine/workadventure-play:develop
           cache-to: type=inline
-          #          outputs: |
-          #            type=image,"name=thecodingmachine/workadventure-play",push-by-digest=true,name-canonical=true,push=true
-          #            type=docker,dest=/tmp/play.tar
           labels: ${{ steps.meta.outputs.labels }}
-          secrets: |
+          secrets:
+            "SENTRY_PROJECT=${{ inputs.sentry_project }}"
             "SENTRY_URL=${{ secrets.SENTRY_URL }}"
             "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}"
             "SENTRY_ORG=${{ secrets.SENTRY_ORG }}"
-            "SENTRY_PROJECT=play"
             "SENTRY_ENVIRONMENT=${{ github.event_name == 'release' && 'production' || env.GITHUB_REF_NAME == 'master' && 'staging' || 'testing' }}"
             "SENTRY_RELEASE=${{ github.event_name == 'release' && env.GITHUB_REF_NAME || format('{0}@{1}', env.GITHUB_REF_NAME_SLUG, env.GITHUB_SHA) }}"
-      
-#      - name: Sentry push source maps
-#        if: ${{ (github.event_name == 'push' || github.event_name == 'release') && matrix.platform == 'linux/amd64' }}
-#        continue-on-error: true
-#        env:
-#          SENTRY_URL: ${{ secrets.SENTRY_URL }}
-#          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-#          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-#          SENTRY_PROJECT: pusher
-#          SENTRY_ENVIRONMENT: ${{ github.event_name == 'release' && 'production' || env.GITHUB_REF_NAME == 'master' && 'staging' || 'testing' }}
-#          SENTRY_RELEASE: ${{ github.event_name == 'release' && env.GITHUB_REF_NAME || format('{0}@{1}', env.GITHUB_REF_NAME, env.GITHUB_SHA) }}
-#        run: |
-#          docker run --rm \
-#            --user 0       \
-#            -e SENTRY_URL \
-#            -e SENTRY_AUTH_TOKEN \
-#            -e SENTRY_ORG \
-#            -e SENTRY_PROJECT \
-#            -e SENTRY_RELEASE \
-#            -e SENTRY_ENVIRONMENT \
-#            ${{ inputs.ghcr-dev-build-image-name }}:${{ matrix.shortPlatform }}-${{ github.sha }} \
-#            /bin/sh -c 'npm install --dev && npm run push-sentry-sourcemaps'
+
 
   merge-image:
     runs-on: ubuntu-latest
