@@ -11,12 +11,12 @@ services:
         condition: service_healthy
 
   play:
-    image: thecodingmachine/workadventure-play:${DOCKER_TAG:-develop}
+    image: ghcr.io/workadventure/play-dev-build:amd64-${ GIT_SHA }
     build:
       context: ./
       dockerfile: play/Dockerfile
       cache_from:
-        - thecodingmachine/workadventure-play:${DOCKER_TAG:-develop}
+        - ghcr.io/workadventure/play-dev-build:amd64-${ GIT_SHA }
       args:
         BUILDKIT_INLINE_CACHE: 1
     working_dir: /usr/src/play
