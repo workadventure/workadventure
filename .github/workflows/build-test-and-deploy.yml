@@ -14,171 +14,182 @@ concurrency:
 
 jobs:
   build-play:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform: linux/amd64
-            shortPlatform: amd64
-            os: ubuntu-24.04
-          - platform: linux/arm64
-            shortPlatform: arm64
-            os: ubuntu-24.04-arm
-    steps:
-      - name: Prepare
-        run: |
-          platform=${{ matrix.platform }}
-          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
+    uses: ./.github/workflows/build-multi-arch-image.yml
+    secrets: inherit
+    with:
+      ghcr-dev-build-image-name: 'ghcr.io/workadventure/play-dev-build'
+      ghcr-image-name: 'ghcr.io/workadventure/play'
+      dockerio-image-name: 'thecodingmachine/workadventure-play'
+      final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
+      dockerfile: play/Dockerfile
 
-      - name: Checkout
-        uses: actions/checkout@v4
 
-      # docker
-#      - name: Set up Docker Buildx
-#        uses: docker/setup-buildx-action@v3
-
-      - name: Login to DockerHub
-        uses: docker/login-action@v3
-        if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Login to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: rlespinasse/github-slug-action@4.2.3
-
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: thecodingmachine/workadventure-play
-
-      - name: Get previous commit SHA
-        id: prev-commit
-        run: echo "PREV_SHA=$(git rev-parse HEAD^1)" >> $GITHUB_ENV
-
-      - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: play/Dockerfile
-          #platforms: ${{ matrix.platform }}
-          push: true
-          tags: |
-            ghcr.io/workadventure/play-dev-build:${{ matrix.shortPlatform }}-${{ github.sha }}
-          cache-from: |
-            type=registry,ref=ghcr.io/workadventure/play-dev-build:${{ matrix.shortPlatform }}-${{ env.PREV_SHA }}
-            type=registry,ref=ghcr.io/workadventure/play-dev-build:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-            type=registry,ref=ghcr.io/workadventure/play:develop
-#            type=registry,ref=thecodingmachine/workadventure-play:${{ matrix.shortPlatform }}-${{ env.PREV_SHA }}
-#            type=registry,ref=thecodingmachine/workadventure-play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-#            type=registry,ref=thecodingmachine/workadventure-play:develop
-          cache-to: type=inline
-#          outputs: |
-#            type=image,"name=thecodingmachine/workadventure-play",push-by-digest=true,name-canonical=true,push=true
-#            type=docker,dest=/tmp/play.tar
-          labels: ${{ steps.meta.outputs.labels }}
-          secrets: |
-            "SENTRY_URL=${{ secrets.SENTRY_URL }}"
-            "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}"
-            "SENTRY_ORG=${{ secrets.SENTRY_ORG }}"
-            "SENTRY_PROJECT=play"
-            "SENTRY_ENVIRONMENT=${{ github.event_name == 'release' && 'production' || env.GITHUB_REF_NAME == 'master' && 'staging' || 'testing' }}"
-            "SENTRY_RELEASE=${{ github.event_name == 'release' && env.GITHUB_REF_NAME || format('{0}@{1}', env.GITHUB_REF_NAME_SLUG, env.GITHUB_SHA) }}"
-
-      
-
-#      - name: Build test image
-#        uses: docker/build-push-action@v3
-#        if: ${{ matrix.platform == 'linux/amd64' }}
+#  build-play:
+#    runs-on: ${{ matrix.os }}
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        include:
+#          - platform: linux/amd64
+#            shortPlatform: amd64
+#            os: ubuntu-24.04
+#          - platform: linux/arm64
+#            shortPlatform: arm64
+#            os: ubuntu-24.04-arm
+#    steps:
+#      - name: Prepare
+#        run: |
+#          platform=${{ matrix.platform }}
+#          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
+#
+#      - name: Checkout
+#        uses: actions/checkout@v4
+#
+#      # docker
+##      - name: Set up Docker Buildx
+##        uses: docker/setup-buildx-action@v3
+#
+#      - name: Login to DockerHub
+#        uses: docker/login-action@v3
+#        if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
+#        with:
+#          username: ${{ secrets.DOCKER_USERNAME }}
+#          password: ${{ secrets.DOCKER_PASSWORD }}
+#
+#      - name: Login to GHCR
+#        uses: docker/login-action@v3
+#        with:
+#          registry: ghcr.io
+#          username: ${{ github.actor }}
+#          password: ${{ secrets.GITHUB_TOKEN }}
+#
+#      - uses: rlespinasse/github-slug-action@4.2.3
+#
+#      - name: Docker meta
+#        id: meta
+#        uses: docker/metadata-action@v5
+#        with:
+#          images: thecodingmachine/workadventure-play
+#
+#      - name: Get previous commit SHA
+#        id: prev-commit
+#        run: echo "PREV_SHA=$(git rev-parse HEAD^1)" >> $GITHUB_ENV
+#
+#      - name: Build and push
+#        uses: docker/build-push-action@v6
 #        with:
 #          context: .
 #          file: play/Dockerfile
-#          platforms: linux/amd64
-#          push: false
-#          tags: thecodingmachine/workadventure-play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+#          #platforms: ${{ matrix.platform }}
+#          push: true
+#          tags: |
+#            ghcr.io/workadventure/play-dev-build:${{ matrix.shortPlatform }}-${{ github.sha }}
 #          cache-from: |
-#            type=registry,ref=thecodingmachine/workadventure-play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-#            type=registry,ref=thecodingmachine/workadventure-play:develop
+#            type=registry,ref=ghcr.io/workadventure/play-dev-build:${{ matrix.shortPlatform }}-${{ env.PREV_SHA }}
+#            type=registry,ref=ghcr.io/workadventure/play-dev-build:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+#            type=registry,ref=ghcr.io/workadventure/play:develop
+##            type=registry,ref=thecodingmachine/workadventure-play:${{ matrix.shortPlatform }}-${{ env.PREV_SHA }}
+##            type=registry,ref=thecodingmachine/workadventure-play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+##            type=registry,ref=thecodingmachine/workadventure-play:develop
 #          cache-to: type=inline
+##          outputs: |
+##            type=image,"name=thecodingmachine/workadventure-play",push-by-digest=true,name-canonical=true,push=true
+##            type=docker,dest=/tmp/play.tar
 #          labels: ${{ steps.meta.outputs.labels }}
-#          outputs: type=docker,dest=/tmp/play.tar
-
-#      - name: Load image (for sentry)
+#          secrets: |
+#            "SENTRY_URL=${{ secrets.SENTRY_URL }}"
+#            "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}"
+#            "SENTRY_ORG=${{ secrets.SENTRY_ORG }}"
+#            "SENTRY_PROJECT=play"
+#            "SENTRY_ENVIRONMENT=${{ github.event_name == 'release' && 'production' || env.GITHUB_REF_NAME == 'master' && 'staging' || 'testing' }}"
+#            "SENTRY_RELEASE=${{ github.event_name == 'release' && env.GITHUB_REF_NAME || format('{0}@{1}', env.GITHUB_REF_NAME_SLUG, env.GITHUB_SHA) }}"
+#
+#
+#
+##      - name: Build test image
+##        uses: docker/build-push-action@v3
+##        if: ${{ matrix.platform == 'linux/amd64' }}
+##        with:
+##          context: .
+##          file: play/Dockerfile
+##          platforms: linux/amd64
+##          push: false
+##          tags: thecodingmachine/workadventure-play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+##          cache-from: |
+##            type=registry,ref=thecodingmachine/workadventure-play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+##            type=registry,ref=thecodingmachine/workadventure-play:develop
+##          cache-to: type=inline
+##          labels: ${{ steps.meta.outputs.labels }}
+##          outputs: type=docker,dest=/tmp/play.tar
+#
+##      - name: Load image (for sentry)
+##        if: ${{ (github.event_name == 'push' || github.event_name == 'release') && matrix.platform == 'linux/amd64' }}
+##        run: docker image load --input /tmp/play.tar
+#
+#      - name: Sentry push source maps
 #        if: ${{ (github.event_name == 'push' || github.event_name == 'release') && matrix.platform == 'linux/amd64' }}
-#        run: docker image load --input /tmp/play.tar
-
-      - name: Sentry push source maps
-        if: ${{ (github.event_name == 'push' || github.event_name == 'release') && matrix.platform == 'linux/amd64' }}
-        continue-on-error: true
-        env:
-          SENTRY_URL: ${{ secrets.SENTRY_URL }}
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-          SENTRY_PROJECT: pusher
-          SENTRY_ENVIRONMENT: ${{ github.event_name == 'release' && 'production' || env.GITHUB_REF_NAME == 'master' && 'staging' || 'testing' }}
-          SENTRY_RELEASE: ${{ github.event_name == 'release' && env.GITHUB_REF_NAME || format('{0}@{1}', env.GITHUB_REF_NAME, env.GITHUB_SHA) }}
-        run: |
-          docker run --rm \
-            --user 0       \
-            -e SENTRY_URL \
-            -e SENTRY_AUTH_TOKEN \
-            -e SENTRY_ORG \
-            -e SENTRY_PROJECT \
-            -e SENTRY_RELEASE \
-            -e SENTRY_ENVIRONMENT \
-            ghcr.io/workadventure/play-dev-build:${{ matrix.shortPlatform }}-${{ github.sha }} \
-            /bin/sh -c 'npm install --dev && npm run push-sentry-sourcemaps'
-
-  merge-play:
-    runs-on: ubuntu-latest
-    needs:
-      - build-play
-    if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
-    steps:
-      - name: Login to DockerHub
-        uses: docker/login-action@v3
-        if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Login to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - uses: rlespinasse/github-slug-action@4.2.3
-
-      - name: Create and push manifest
-        run: |
-          docker manifest create ghcr.io/workadventure/play-dev-build:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} \
-            ghcr.io/workadventure/play-dev-build:amd64-${{ github.sha }} \
-            ghcr.io/workadventure/play-dev-build:arm64-${{ github.sha }}
-          docker manifest push ghcr.io/workadventure/play-dev-build:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-
-      - name: Install regctl
-        uses: regclient/actions/regctl-installer@main
-        with:
-          release: 'v0.8.1'
-
-      # Copy the image to GHCR and DockerHub
-      - name: Copy image to GHCR and DockerHub
-        run: |
-          regctl image copy ghcr.io/workadventure/play-dev-build:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} thecodingmachine/workadventure-play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-          regctl image copy ghcr.io/workadventure/play-dev-build:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} ghcr.io/workadventure/play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+#        continue-on-error: true
+#        env:
+#          SENTRY_URL: ${{ secrets.SENTRY_URL }}
+#          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+#          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+#          SENTRY_PROJECT: pusher
+#          SENTRY_ENVIRONMENT: ${{ github.event_name == 'release' && 'production' || env.GITHUB_REF_NAME == 'master' && 'staging' || 'testing' }}
+#          SENTRY_RELEASE: ${{ github.event_name == 'release' && env.GITHUB_REF_NAME || format('{0}@{1}', env.GITHUB_REF_NAME, env.GITHUB_SHA) }}
+#        run: |
+#          docker run --rm \
+#            --user 0       \
+#            -e SENTRY_URL \
+#            -e SENTRY_AUTH_TOKEN \
+#            -e SENTRY_ORG \
+#            -e SENTRY_PROJECT \
+#            -e SENTRY_RELEASE \
+#            -e SENTRY_ENVIRONMENT \
+#            ghcr.io/workadventure/play-dev-build:${{ matrix.shortPlatform }}-${{ github.sha }} \
+#            /bin/sh -c 'npm install --dev && npm run push-sentry-sourcemaps'
+#
+#  merge-play:
+#    runs-on: ubuntu-latest
+#    needs:
+#      - build-play
+#    if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
+#    steps:
+#      - name: Login to DockerHub
+#        uses: docker/login-action@v3
+#        if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
+#        with:
+#          username: ${{ secrets.DOCKER_USERNAME }}
+#          password: ${{ secrets.DOCKER_PASSWORD }}
+#
+#      - name: Login to GHCR
+#        uses: docker/login-action@v3
+#        with:
+#          registry: ghcr.io
+#          username: ${{ github.actor }}
+#          password: ${{ secrets.GITHUB_TOKEN }}
+#
+#      - name: Set up Docker Buildx
+#        uses: docker/setup-buildx-action@v3
+#
+#      - uses: rlespinasse/github-slug-action@4.2.3
+#
+#      - name: Create and push manifest
+#        run: |
+#          docker manifest create ghcr.io/workadventure/play-dev-build:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} \
+#            ghcr.io/workadventure/play-dev-build:amd64-${{ github.sha }} \
+#            ghcr.io/workadventure/play-dev-build:arm64-${{ github.sha }}
+#          docker manifest push ghcr.io/workadventure/play-dev-build:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+#
+#      - name: Install regctl
+#        uses: regclient/actions/regctl-installer@main
+#        with:
+#          release: 'v0.8.1'
+#
+#      # Copy the image to GHCR and DockerHub
+#      - name: Copy image to GHCR and DockerHub
+#        run: |
+#          regctl image copy ghcr.io/workadventure/play-dev-build:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} thecodingmachine/workadventure-play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+#          regctl image copy ghcr.io/workadventure/play-dev-build:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} ghcr.io/workadventure/play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
 
   build-back:
     runs-on: ubuntu-latest
@@ -618,11 +629,11 @@ jobs:
           sed -i "s/MAP_STORAGE_API_TOKEN=/MAP_STORAGE_API_TOKEN=MYAWESOMEKEY/g" .env
         env:
           KLAXOON_CLIENT_ID: ${{ secrets.KLAXOON_CLIENT_ID }}
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: play
-          path: /tmp
+#      - name: Download artifact
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: play
+#          path: /tmp
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
@@ -655,6 +666,7 @@ jobs:
         run: docker compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml up -d
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          GIT_SHA: ${{ github.sha }}
       - name: Upload test-map
         run: sleep 30 && npm run upload-test-map
         working-directory: map-storage
@@ -664,21 +676,25 @@ jobs:
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           RENDERER_MODE: ${{ matrix.renderer }}
+          GIT_SHA: ${{ github.sha }}
       - name: Display docker compose logs on failure
         run: docker compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml logs
         if: failure()
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          GIT_SHA: ${{ github.sha }}
       - name: Display containers state
         run: docker compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml ps
         if: failure()
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          GIT_SHA: ${{ github.sha }}
       - name: Side-load docker compose logs in the playwright report
         run: docker compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml logs > tests/playwright-report/docker-compose.log
         if: failure()
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          GIT_SHA: ${{ github.sha }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -1058,10 +1074,21 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Delete old container versions
-        uses: actions/delete-package-versions@v5
+#      - name: Delete old container versions
+#        uses: actions/delete-package-versions@v5
+#        with:
+#          delete-only-untagged-versions: 'true'
+#          min-versions-to-keep: 50
+#          package-name: workadventure/play-dev-build
+#          package-type: container
+      - name: Prune
+        uses: vlaurin/action-ghcr-prune@v0.6.0
         with:
-          delete-only-untagged-versions: 'true'
-          min-versions-to-keep: 50
-          package-name: workadventure/play-dev-build
-          package-type: container
+          token: ${{ secrets.YOUR_TOKEN }}
+          organization: ${{ github.repository_owner }}
+          container: play-dev-build
+          dry-run: false # Dry-run first, then change to `false`
+          keep-younger-than: 7 # days
+          keep-last: 5
+          prune-untagged: true
+          prune-tags-regexes: ".*"
