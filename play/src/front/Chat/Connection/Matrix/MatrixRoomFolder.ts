@@ -1,4 +1,4 @@
-import { Room } from "matrix-js-sdk";
+import { Room } from "matrix-js-sdk/lib/matrix";
 import { derived, get, Readable } from "svelte/store";
 import { KnownMembership } from "matrix-js-sdk/lib/types";
 import * as Sentry from "@sentry/svelte";

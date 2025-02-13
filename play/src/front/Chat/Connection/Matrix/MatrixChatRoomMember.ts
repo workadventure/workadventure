@@ -1,4 +1,4 @@
-import { MatrixEvent, RoomMember, RoomMemberEvent } from "matrix-js-sdk";
+import { MatrixEvent, RoomMember, RoomMemberEvent } from "matrix-js-sdk/lib/matrix";
 import { Writable, get, writable } from "svelte/store";
 import { ChatPermissionLevel, ChatRoomMember, ChatRoomMembership, memberTypingInformation } from "../ChatConnection";
 

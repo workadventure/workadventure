@@ -1,4 +1,4 @@
-import { Direction, EventType, MatrixEvent, MatrixEventEvent, MsgType, RelationType, Room } from "matrix-js-sdk";
+import { Direction, EventType, MatrixEvent, MatrixEventEvent, MsgType, RelationType, Room } from "matrix-js-sdk/lib/matrix";
 import { writable, Writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import { ChatMessage, ChatMessageContent, ChatMessageType, ChatUser } from "../ChatConnection";
