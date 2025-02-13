@@ -72,6 +72,12 @@ services:
     environment:
       STARTUP_COMMAND_1: ""
       STARTUP_COMMAND_2: ""
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/ping" ]
+      interval: 5s
+      timeout: 5s
+      start_period: 3s
+      retries: 20
 
   maps:
     image: thecodingmachine/workadventure-maps:${DOCKER_TAG:-develop}
@@ -101,3 +107,11 @@ services:
     environment:
       ENABLE_OPENAPI_ENDPOINT: "false"
       STARTUP_COMMAND_1: ""
+
+  everything_started:
+    image: alpine:3.14
+    command: echo "Everything started"
+    depends_on:
+      # Actually, we only check the start of the map-storage because this is the first thing we need (to upload the maps)
+      map-storage:
+        condition: service_healthy
