@@ -1,21 +1,25 @@
 import { get, writable } from "svelte/store";
+import { ComponentType } from "svelte";
 import { ChatMessage as NewChatMessage, ChatRoom } from "../Connection/ChatConnection";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
 import { matrixSecurity } from "../Connection/Matrix/MatrixSecurity";
 import { ENABLE_CHAT } from "../../Enum/EnvironmentVariable";
 import { gameManager } from "../../Phaser/Game/GameManager";
-import {ComponentType} from "svelte";
 
-type NavChatTab = {
-    key: "chat"
-} | {
-    key: "users"
-} | {
-    key: "settings"
-} | {
-    key: "externalModule",
-    component: ComponentType
-}
+type NavChatTab =
+    | {
+          key: "chat";
+      }
+    | {
+          key: "users";
+      }
+    | {
+          key: "settings";
+      }
+    | {
+          key: "externalModule";
+          component: ComponentType;
+      };
 
 function createNavChatStore() {
     const defaultValue = ENABLE_CHAT ? "chat" : "users";
@@ -24,10 +28,10 @@ function createNavChatStore() {
     return {
         subscribe,
         switchToSettings() {
-            set({key: "settings"});
+            set({ key: "settings" });
         },
         switchToChat() {
-            set({key: "chat"});
+            set({ key: "chat" });
         },
         switchToUserList() {
             const room = gameManager.getCurrentGameScene().room;
@@ -35,12 +39,12 @@ function createNavChatStore() {
             const isChatDisconnectedListEnabled = room.isChatDisconnectedListEnabled;
 
             if (isChatOnlineListEnabled || isChatDisconnectedListEnabled) {
-                set({key: "users"});
+                set({ key: "users" });
             }
         },
         switchToCustomComponent(component: ComponentType) {
-            set({key: "externalModule", component});
-        }
+            set({ key: "externalModule", component });
+        },
     };
 }
 

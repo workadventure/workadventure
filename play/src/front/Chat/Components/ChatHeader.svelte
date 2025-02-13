@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { chatInputFocusStore, allowedDiscordBridgeStore } from "../../Stores/ChatStore";
+    import { chatInputFocusStore } from "../../Stores/ChatStore";
 
     let searchActive = false;
     import { chatSearchBarValue, navChat, joignableRoom } from "../Stores/ChatStore";
@@ -7,7 +7,6 @@
     import LL from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { UserProviderMerger } from "../UserProviderMerger/UserProviderMerger";
-    import { externalChatSettingsSvelteComponent } from "../../Stores/Utils/externalSvelteComponentStore";
     import OnlineUsersCount from "./OnlineUsersCount.svelte";
     import { IconMessageCircle2, IconSearch, IconUsers, IconX } from "@wa-icons";
     const gameScene = gameManager.getCurrentGameScene();
@@ -30,7 +29,7 @@
         clearTimeout(typingTimer);
         typingTimer = setTimeout(() => {
             searchLoader = true;
-            if ($navChat === "chat" && $chatSearchBarValue.trim() !== "") {
+            if ($navChat.key === "chat" && $chatSearchBarValue.trim() !== "") {
                 searchAccessibleRooms();
             }
 
@@ -72,7 +71,7 @@
             <!--    {/if}-->
             <!--{/if}-->
 
-            {#if $navChat === "chat"}
+            {#if $navChat.key === "chat"}
                 <button
                     class="userList p-3 hover:bg-white/10 rounded aspect-square w-12 h-12"
                     on:click={() => navChat.switchToUserList()}
@@ -91,7 +90,7 @@
     </div>
     <div class="flex flex-col items-center justify-center grow">
         <div class="text-md font-bold h-5 {searchActive ? 'hidden' : ''}">
-            {#if $navChat === "chat"}
+            {#if $navChat.key === "chat"}
                 {$LL.chat.chat()}
             {:else}
                 {$LL.chat.users()}
@@ -128,7 +127,7 @@
                     <input
                         autocomplete="new-password"
                         class="wa-searchbar block text-white placeholder:text-white/50 w-full placeholder:text-sm border-none pl-6 pr-20 bg-transparent py-3 text-base h-full"
-                        placeholder={$navChat === "users" ? $LL.chat.searchUser() : $LL.chat.searchChat()}
+                        placeholder={$navChat.key === "users" ? $LL.chat.searchUser() : $LL.chat.searchChat()}
                         on:keydown={handleKeyDown}
                         on:keyup={() => handleKeyUp(userProviderMerger)}
                         bind:value={$chatSearchBarValue}

@@ -56,7 +56,6 @@
     import PresentationLayout from "./EmbedScreens/Layouts/PresentationLayout.svelte";
     import ExternalComponents from "./ExternalModules/ExternalComponents.svelte";
     import PictureInPicture from "./Video/PictureInPicture.svelte";
-    import DiscordConfigurePopups from "./PopUp/DiscordConfigurePopups.svelte";
     let keyboardEventIsDisable = false;
 
     const handleFocusInEvent = (event: FocusEvent) => {
@@ -222,7 +221,7 @@
 
             <ExternalComponents zone="popup" />
             <div class=" absolute top-0 bottom-0 w-full h-full flex items-center justify-center">
-<!--                <DiscordConfigurePopups />-->
+                <!--                <DiscordConfigurePopups />-->
                 <ExternalComponents zone="centeredPopup" />
             </div>
 

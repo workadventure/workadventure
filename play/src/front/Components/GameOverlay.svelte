@@ -33,7 +33,6 @@
     import GlobalCommunicationModal from "./Modal/GlobalCommunicationModal.svelte";
     import Calendar from "./Calendar/Calendar.svelte";
     import TodoList from "./TodoList/TodoList.svelte";
-    import ExternalComponents from "./ExternalModules/ExternalComponents.svelte";
 
     export let game: Game;
 

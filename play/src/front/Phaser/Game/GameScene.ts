@@ -2,8 +2,9 @@ import * as Sentry from "@sentry/svelte";
 import type { Subscription } from "rxjs";
 import AnimatedTiles from "phaser-animated-tiles";
 import { Queue } from "queue-typescript";
+import { ComponentType } from "svelte";
 import type { Readable, Unsubscriber } from "svelte/store";
-import { get, set} from "svelte/store";
+import { get } from "svelte/store";
 import { throttle } from "throttle-debounce";
 import { MapStore } from "@workadventure/store-utils";
 import { MathUtils } from "@workadventure/math-utils";
@@ -152,7 +153,7 @@ import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/sta
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import { closeCoWebsite, getCoWebSite, openCoWebSite, openCoWebSiteWithoutSource } from "../../Chat/Utils";
 import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
-import { selectedRoomStore, navChat,  } from "../../Chat/Stores/ChatStore";
+import { selectedRoomStore, navChat } from "../../Chat/Stores/ChatStore";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
 import { ProximitySpaceManager } from "../../WebRtc/ProximitySpaceManager";
 import { SpaceRegistryInterface } from "../../Space/SpaceRegistry/SpaceRegistryInterface";
@@ -213,8 +214,6 @@ import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import Clamp = Phaser.Math.Clamp;
-import { ComponentType } from "svelte";
-import { chatVisibilityStore } from "../../Stores/ChatStore";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -2032,7 +2031,7 @@ export class GameScene extends DirtyScene {
                         showComponentInChat(component: ComponentType) {
                             navChat.switchToCustomComponent(component);
                             chatVisibilityStore.set(true);
-                        }
+                        },
                     });
 
                     if (defaultExtensionModule.calendarSynchronised) isCalendarActiveStore.set(true);
@@ -3148,8 +3147,8 @@ ${escapedMessage}
         });
         const channel = new BroadcastChannel("discord");
         channel.onmessage = (event) => {
-            console.log("event", event.data)
-        }
+            console.log("event", event.data);
+        };
     }
 
     private setPropertyLayer(

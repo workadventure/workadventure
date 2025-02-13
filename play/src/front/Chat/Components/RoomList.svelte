@@ -1,7 +1,6 @@
 <script lang="ts">
     import { get } from "svelte/store";
     import { onDestroy, onMount } from "svelte";
-    import { externalChatBandSvelteComponent } from "../../Stores/Utils/externalSvelteComponentStore";
     // eslint-disable-next-line import/no-unresolved
     import { gameManager } from "../../Phaser/Game/GameManager";
     import LL from "../../../i18n/i18n-svelte";
@@ -13,6 +12,7 @@
     import WokaFromUserId from "../../Components/Woka/WokaFromUserId.svelte";
     import getCloseImg from "../images/get-close.png";
     import messageSmileyImg from "../images/message-smiley.svg";
+    import ExternalComponents from "../../Components/ExternalModules/ExternalComponents.svelte";
     import Room from "./Room/Room.svelte";
     import RoomTimeline from "./Room/RoomTimeline.svelte";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
@@ -24,7 +24,6 @@
     import ShowMore from "./ShowMore.svelte";
     import ChatHeader from "./ChatHeader.svelte";
     import { IconChevronUp, IconCloudLock } from "@wa-icons";
-    import ExternalComponents from "../../Components/ExternalModules/ExternalComponents.svelte";
 
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
 
@@ -138,7 +137,7 @@
 
 <div
     class="flex-1 flex flex-row overflow-auto"
-    class:!flex-row={sideBarWidth > INITIAL_SIDEBAR_WIDTH * 2 && $navChat === "chat"}
+    class:!flex-row={sideBarWidth > INITIAL_SIDEBAR_WIDTH * 2 && $navChat.key === "chat"}
 >
     {#if $selectedRoomStore === undefined || displayTwoColumnLayout}
         <div
