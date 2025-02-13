@@ -101,6 +101,8 @@ export class AuthenticateController extends BaseHttpController {
                 z.object({
                     playUri: z.string(),
                     manuallyTriggered: z.literal("true").optional(),
+                    chatId: z.string().optional(),
+                    chatRoomId: z.string().optional(),
                 })
             );
             if (query === undefined) {
@@ -118,7 +120,14 @@ export class AuthenticateController extends BaseHttpController {
                 return;
             }
 
-            const loginUri = await openIDClient.authorizationUrl(res, query.playUri, req, query.manuallyTriggered);
+            const loginUri = await openIDClient.authorizationUrl(
+                res,
+                query.playUri,
+                req,
+                query.manuallyTriggered,
+                query.chatId,
+                query.chatRoomId
+            );
             res.atomic(() => {
                 res.cookie("playUri", query.playUri, undefined, {
                     httpOnly: true, // dont let browser javascript access cookie ever
@@ -375,7 +384,11 @@ export class AuthenticateController extends BaseHttpController {
                 throw new Error("Missing playUri in cookies");
             }
 
-            const query = validateQuery(req, res, z.object({ loginToken: z.string() }));
+            const query = validateQuery(
+                req,
+                res,
+                z.object({ loginToken: z.string(), chatId: z.string().optional(), chatRoomId: z.string().optional() })
+            );
             if (query === undefined) {
                 return;
             }
@@ -385,6 +398,10 @@ export class AuthenticateController extends BaseHttpController {
                 res.clearCookie("authToken");
                 const playUri = new URL(req.cookies.playUri);
                 playUri.searchParams.append("matrixLoginToken", query.loginToken);
+                if (query.chatId && query.chatRoomId) {
+                    playUri.searchParams.append("chatId", query.chatId);
+                    playUri.searchParams.append("chatRoomId", query.chatRoomId);
+                }
 
                 const html = Mustache.render(this.redirectToPlayFile, {
                     playUri: playUri.toString(),
