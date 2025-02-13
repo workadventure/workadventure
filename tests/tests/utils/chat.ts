@@ -15,7 +15,7 @@ class Chat {
     async open(page: Page, isMobile: boolean) {
         if(isMobile){
             await expect(page.locator('button#burgerIcon')).toBeVisible();
-            const mobileMenuVisible = await page.locator('button#burgerIcon img.tw-rotate-0').isVisible();
+            const mobileMenuVisible = await page.locator('button#burgerIcon img.rotate-0').isVisible();
             if(mobileMenuVisible){
                 await page.click('button#burgerIcon');
             }
@@ -27,7 +27,7 @@ class Chat {
     async openUserList(page: Page, isMobile: boolean){
         if(isMobile){
             /*await expect(page.locator('button#burgerIcon')).toBeVisible();
-            const mobileMenuVisible = await page.locator('button#burgerIcon img.tw-rotate-0').isVisible();
+            const mobileMenuVisible = await page.locator('button#burgerIcon img.rotate-0').isVisible();
             if(mobileMenuVisible){
                 await page.click('button#burgerIcon');
             }*/
@@ -143,9 +143,9 @@ class Chat {
     }
 
     async expandUsers(page: Page){
-        //await expect(page.locator('#users div:has-text("Users") button .feather-chevron-up')).toHaveClass(/tw-rotate-180/);
+        //await expect(page.locator('#users div:has-text("Users") button .feather-chevron-up')).toHaveClass(/rotate-180/);
         await this.get(page).locator('#users div:has-text("Users") button > .feather-chevron-up').click();
-        //await expect(page.locator('#users div:has-text("Users") button .feather-chevron-up')).not.toHaveClass(/tw-rotate-180/);
+        //await expect(page.locator('#users div:has-text("Users") button .feather-chevron-up')).not.toHaveClass(/rotate-180/);
     }
 
     async forumExist(page: Page, name: string) {

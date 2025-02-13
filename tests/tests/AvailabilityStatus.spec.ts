@@ -373,7 +373,7 @@ test.describe('Availability Status', () => {
                 )
                 
                 await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
-                await expect( page.locator('button.chat-btn + div>span.tw-animate-ping')).toBeHidden();
+                await expect( page.locator('button.chat-btn + div>span.animate-ping')).toBeHidden();
                 
                 await userBob.close()
                 await userBob.context().close();
@@ -484,7 +484,7 @@ test.describe('Availability Status', () => {
                 );
 
                 await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
-                await expect( page.locator('button.chat-btn + div>span.tw-animate-ping')).toBeHidden();
+                await expect( page.locator('button.chat-btn + div>span.animate-ping')).toBeHidden();
                 
                 await userBob.close();
                 await userBob.context().close();

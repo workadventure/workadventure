@@ -28,6 +28,24 @@ const externalComponentsByZone = {
             { componentType: ComponentType<SvelteComponentTyped>; props?: ComponentProps<SvelteComponentTyped> }
         >()
     ),
+    chatBand: writable(
+        new Map<
+            string,
+            { componentType: ComponentType<SvelteComponentTyped>; props?: ComponentProps<SvelteComponentTyped> }
+        >()
+    ),
+    centeredPopup: writable(
+        new Map<
+            string,
+            { componentType: ComponentType<SvelteComponentTyped>; props?: ComponentProps<SvelteComponentTyped> }
+        >()
+    ),
+    leftSideBar: writable(
+        new Map<
+            string,
+            { componentType: ComponentType<SvelteComponentTyped>; props?: ComponentProps<SvelteComponentTyped> }
+        >()
+    ),
 };
 
 export type ExternalComponentZones = keyof typeof externalComponentsByZone;

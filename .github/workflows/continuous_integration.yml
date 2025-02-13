@@ -215,6 +215,50 @@ jobs:
           git diff --exit-code
         working-directory: "libs/map-editor"
 
+  continuous-integration-lib-store-utils:
+    name: "Continuous Integration Store Utils"
+
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2.0.0"
+
+      - name: "Setup NodeJS"
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          version: '3.x'
+
+      - name: "Install dependencies"
+        run: npm ci --workspace=@workadventure/store-utils
+
+      - name: "Pretty Check"
+        run: npm run pretty-check
+        working-directory: "libs/store-utils"
+
+      - name: "ESLint"
+        run: npm run lint
+        working-directory: "libs/store-utils"
+
+      - name: "Svelte Check"
+        run: npm run svelte-check
+        working-directory: "libs/store-utils"
+
+      - name: "Typecheck"
+        run: npm run typecheck
+        working-directory: "libs/store-utils"
+
+      - name: "vitest"
+        run: npm test
+        working-directory: "libs/store-utils"
+
   continuous-integration-shared-utils:
     name: "Continuous Integration shared-utils Library"
 

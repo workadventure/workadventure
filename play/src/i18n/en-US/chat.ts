@@ -449,6 +449,13 @@ const chat: BaseTranslation = {
         description: "Upload and share a file",
         featureComingSoon: "Coming soon!",
     },
+    discord: {
+        chatBand: {
+            configure: "Configure",
+            dismiss: "Dismiss",
+            discordNotConfigured: "Connect to Discord",
+        }
+    }
 };
 
 export default chat;

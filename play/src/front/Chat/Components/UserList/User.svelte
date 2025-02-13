@@ -151,10 +151,8 @@
                     <IconSend font-size="16" />
                 </button>
             {:else if $roomCreationInProgress && showRoomCreationInProgress}
-                <div
-                    class="tw-min-h-[30px] tw-text-md tw-flex tw-gap-2 tw-justify-center tw-flex-row tw-items-center tw-p-1"
-                >
-                    <IconLoader class="tw-animate-spin" />
+                <div class="min-h-[30px] text-md flex gap-2 justify-center flex-row items-center p-1">
+                    <IconLoader class="animate-spin" />
                 </div>
             {/if}
         </div>

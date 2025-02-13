@@ -4,6 +4,7 @@ import { CalendarEventInterface, TodoListInterface } from "@workadventure/shared
 import { ComponentProps, ComponentType, SvelteComponentTyped } from "svelte";
 import { AreaData, AreaDataProperties } from "@workadventure/map-editor";
 import { Observable } from "rxjs";
+import { z } from "zod";
 import { OpenCoWebsiteObject } from "../Chat/Utils";
 import { SpaceRegistryInterface } from "../Space/SpaceRegistry/SpaceRegistryInterface";
 import { ExternalComponentZones } from "../Stores/Utils/externalSvelteComponentService";
@@ -34,6 +35,7 @@ export interface ExtensionModuleOptions {
     calendarEventsStoreUpdate?: (this: void, updater: Updater<Map<string, CalendarEventInterface>>) => void;
     todoListStoreUpdate?: (this: void, updater: Updater<Map<string, TodoListInterface>>) => void;
     logoutCallback?(): void;
+    showComponentInChat(component: ComponentType): void;
 }
 
 export interface ExtensionModuleAreaProperty {
@@ -61,3 +63,26 @@ export interface ExtensionModule {
     calendarSynchronised: boolean;
     todoListSynchronized: boolean;
 }
+
+export const RoomMetadataType = z.object({
+    player: z
+        .object({
+            accessTokens: z
+                .array(
+                    z.object({
+                        token: z.string(),
+                        provider: z.string(),
+                    })
+                )
+                .optional(),
+        })
+        .optional(),
+    modules: z.string().array(),
+    discordSettings: z.object({
+        enableDiscordBridge: z.boolean().default(true),
+        enableDiscordMandatory: z.boolean().default(false),
+        discordAllowedGuilds: z.string().default(""),
+    }),
+});
+
+export type RoomMetadataType = z.infer<typeof RoomMetadataType>;

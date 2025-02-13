@@ -449,6 +449,13 @@ const chat: DeepPartial<Translation["chat"]> = {
         description: "Téléchargez un fichier pour le partager",
         featureComingSoon: "Fonctionnalité à venir !",
     },
+    discord: {
+        chatBand: {
+            configure: "Configurer",
+            dismiss: "Fermer",
+            discordNotConfigured: "Synchronisation Discord",
+        }
+    }
 };
 
 export default chat;
