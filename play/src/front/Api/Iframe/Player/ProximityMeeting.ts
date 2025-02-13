@@ -1,7 +1,7 @@
 import { Observable, Subject } from "rxjs";
 import type { JoinProximityMeetingEvent } from "../../Events/ProximityMeeting/JoinProximityMeetingEvent";
 import type { ParticipantProximityMeetingEvent } from "../../Events/ProximityMeeting/ParticipantProximityMeetingEvent";
-
+import {AudioActivityEvent} from "../../Events/ProximityMeeting/AudioActivityEvent";
 import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "../IframeApiContribution";
 import { RemotePlayer } from "../Players/RemotePlayer";
 import { apiCallback } from "../registeredCallbacks";
@@ -16,6 +16,7 @@ export class WorkadventureProximityMeetingCommands extends IframeApiContribution
     private unfollowedStream: Subject<RemotePlayer> | undefined;
     private leaveStream: Subject<void> | undefined;
     private pcmDataStream: Subject<Float32Array> = new Subject();
+    private audioActivityStream: Subject<AudioActivityEvent> = new Subject();
 
     callbacks = [
         apiCallback({
@@ -60,6 +61,12 @@ export class WorkadventureProximityMeetingCommands extends IframeApiContribution
                 this.pcmDataStream.next(payloadData.data);
             },
         }),
+        apiCallback({
+            type: "audioActivity",
+            callback: (payloadData: AudioActivityEvent) => {
+                this.audioActivityStream.next(payloadData);
+            }
+        })
     ];
 
     /**
@@ -165,6 +172,27 @@ export class WorkadventureProximityMeetingCommands extends IframeApiContribution
                 });
             };
         });
+    }
+
+    listenToAudioActivity(): Observable<AudioActivityEvent> {
+        // FIXME: will only work if listenToAudioStream was called before
+        return this.audioActivityStream;
+        /*return new Observable<AudioActivityEvent>((subscriber) => {
+            sendToWorkadventure({
+                type: "startListeningToAudioActivityInBubble",
+                data: undefined,
+            });
+
+            const subscription = this.audioActivityStream.subscribe(subscriber);
+
+            return () => {
+                subscription.unsubscribe();
+                sendToWorkadventure({
+                    type: "stopListeningToAudioActivityInBubble",
+                    data: undefined,
+                });
+            };
+        });*/
     }
 
     /**
