@@ -63,7 +63,9 @@ class OpenIDClient {
         res: Response,
         playUri: string,
         req: Request,
-        manuallyTriggered: "true" | undefined
+        manuallyTriggered: "true" | undefined,
+        chatId: string | undefined,
+        chatRoomId: string | undefined
     ): Promise<string> {
         return this.initClient().then((client) => {
             if (!OPID_SCOPE.includes("email") || !OPID_SCOPE.includes("openid")) {
@@ -98,7 +100,8 @@ class OpenIDClient {
                 // anonymous) or whether the login was triggered because user was not authenticated and authentication
                 // is mandatory.
                 manuallyTriggered,
-
+                chatId,
+                chatRoomId,
                 code_challenge,
                 code_challenge_method: "S256",
             });
