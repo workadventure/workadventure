@@ -20,12 +20,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         sendMessage: "メッセージの送信",
     },
     profile: {
-        edit: {
-            name: "名前を編集する",
-            woka: "WOKA を編集する",
-            companion: "仲間を編集する",
-            camera: "カメラを編集する",
-        },
         login: "ログイン",
         logout: "ログアウト",
     },

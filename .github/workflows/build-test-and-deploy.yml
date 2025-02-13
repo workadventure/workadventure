@@ -14,17 +14,17 @@ concurrency:
 
 jobs:
   build-play:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
       # docker
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to DockerHub
         uses: docker/login-action@v3
@@ -42,7 +42,7 @@ jobs:
           images: thecodingmachine/workadventure-play
 
       - name: Build and push
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
         with:
           context: .
@@ -66,7 +66,7 @@ jobs:
             "SENTRY_RELEASE=${{ github.event_name == 'release' && env.GITHUB_REF_NAME || format('{0}@{1}', env.GITHUB_REF_NAME_SLUG, env.GITHUB_SHA) }}"
 
       - name: Build test image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: play/Dockerfile
@@ -118,17 +118,17 @@ jobs:
           path: /tmp/play.tar.gz
 
   build-back:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
       # docker
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to DockerHub
         uses: docker/login-action@v3
@@ -152,7 +152,7 @@ jobs:
           fi
 
       - name: Build and push
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
         with:
           context: .
@@ -169,7 +169,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Build test image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: back/Dockerfile
@@ -220,13 +220,13 @@ jobs:
           path: /tmp/back.tar.gz
 
   build-uploader:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to DockerHub
         uses: docker/login-action@v3
@@ -244,7 +244,7 @@ jobs:
           images: thecodingmachine/workadventure-uploader
 
       - name: Build and push
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
         with:
           file: uploader/Dockerfile
@@ -259,7 +259,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Build test image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6
         with:
           file: uploader/Dockerfile
           push: false
@@ -282,16 +282,16 @@ jobs:
           path: /tmp/uploader.tar.gz
 
   build-maps:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to DockerHub
         uses: docker/login-action@v3
@@ -309,7 +309,7 @@ jobs:
           images: thecodingmachine/workadventure-maps
 
       - name: Build and push
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
         with:
           context: maps/
@@ -325,7 +325,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Build test image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6
         with:
           context: maps/
           file: maps/Dockerfile
@@ -349,17 +349,17 @@ jobs:
           path: /tmp/maps.tar.gz
 
   build-map-storage:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
       # docker
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to DockerHub
         uses: docker/login-action@v3
@@ -377,7 +377,7 @@ jobs:
           images: thecodingmachine/workadventure-map-storage
 
       - name: Build and push
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
         with:
           context: .
@@ -394,7 +394,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Build test image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: map-storage/Dockerfile
@@ -516,11 +516,23 @@ jobs:
             nbShards: 3
             renderer: headless
           - browser: ""
-            parameters: --project=mobilechromium --project=mobilefirefox --project=mobilewebkit
-            project: mobile
+            parameters: --project=mobilechromium
+            project: mobilechromium
             shard: 1
             nbShards: 1
             renderer: auto
+          - browser: ""
+            parameters: --project=mobilefirefox
+            project: mobilefirefox
+            shard: 1
+            nbShards: 1
+            renderer: auto
+          - browser: ""
+            parameters: --project=mobilewebkit
+            project: mobilewebkit
+            shard: 1
+            nbShards: 1
+            renderer: headless
     needs:
       - build-play
       - build-back
@@ -528,7 +540,7 @@ jobs:
       - build-uploader
       - build-map-storage
     timeout-minutes: 60
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v3
@@ -653,7 +665,7 @@ jobs:
       - build-uploader
       - build-map-storage
     timeout-minutes: 60
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v3
@@ -749,7 +761,7 @@ jobs:
       - build-maps
       - build-uploader
       - build-map-storage
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
 
     steps:
@@ -926,7 +938,7 @@ jobs:
     name: "End to end tests in Kubernetes (${{ matrix.shard }}/${{ matrix.nbShards }})"
     needs:
       - helm-deploy
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:

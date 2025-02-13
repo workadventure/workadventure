@@ -12,7 +12,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         content: "Přistup na kameru a mikrofon dyrbi so w browseru dopušćić dać.",
         firefoxContent:
             'Prošu zaklik na "Diese Entscheidungen speichern" šaltowanskej přestrjeni, zo by so wospjetnym naprašowanjam za dowolnosću w Firefox zadźěwało.',
-        refresh: "aktualizować",
         continue: "bjez kamery pokročować",
         screen: {
             firefox: "/resources/help-setting-camera-permission/de-DE-chrome.png",

@@ -1,8 +1,8 @@
 <script lang="ts">
     export let id: string | undefined = undefined;
     export let label: string;
-    export let value = 0;
     export let min = 0;
+    export let value = min;
     export let max = 100;
     export let onChange = (v: number) => {};
     //secondary = bleu   light = noir sinon par défaut la ligne est blanche

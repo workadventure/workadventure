@@ -10,7 +10,7 @@ import {
 import { isAxiosError } from "axios";
 import { KlaxoonService } from "@workadventure/shared-utils";
 import { analyticsClient } from "../Administration/AnalyticsClient";
-import { subMenusStore, userIsConnected, warningBannerStore } from "../Stores/MenuStore";
+import { userIsConnected, warningBannerStore } from "../Stores/MenuStore";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
 import { _ServiceWorker } from "../Network/ServiceWorker";
 import { GameConnexionTypes, urlManager } from "../Url/UrlManager";
@@ -338,23 +338,29 @@ class ConnectionManager {
                         if (parsedRoomMetadata) {
                             //enableDiscordBridge.set(parsedRoomMetadata.discordSettings.enableDiscordBridge);
                             //Let's check if the discord mandatory is activated
-                            console.log(">>>>> 🤯🤯🤯 Discord ???", parsedRoomMetadata.discordSettings.enableDiscordMandatory)
+                            console.log(
+                                ">>>>> 🤯🤯🤯 Discord ???",
+                                parsedRoomMetadata.discordSettings.enableDiscordMandatory
+                            );
                             if (parsedRoomMetadata.discordSettings.enableDiscordMandatory) {
                                 const discordToken = parsedRoomMetadata.player?.accessTokens?.find(
                                     (token) => token.provider === "discord"
                                 );
-                                console.log(">>>>> 🤯🤯🤯 Discord mandatory est activé")
+                                console.log(">>>>> 🤯🤯🤯 Discord mandatory est activé");
                                 if (!discordToken) {
                                     //redirect to login page
                                     const redirect = this.loadOpenIDScreen(true);
                                     if (redirect !== null) {
-                                         redirect.searchParams.append("error", "You need to be log with Discord in this world");
-                                         return redirect;
+                                        redirect.searchParams.append(
+                                            "error",
+                                            "You need to be log with Discord in this world"
+                                        );
+                                        return redirect;
                                     }
                                     return {
                                         nextScene: "errorScene",
                                         error: new Error(`Discord token is missing`),
-                                    }
+                                    };
                                 }
                                 if (parsedRoomMetadata.discordSettings.discordAllowedGuilds.length > 0) {
                                     const allowedDiscordGuildsId =
@@ -373,7 +379,7 @@ class ConnectionManager {
                                             const isUserInGuild = allowedDiscordGuildsId.some((guild) =>
                                                 userGuildsId.includes(guild)
                                             );
-                                            console.log(">>>>> On as verifié les guild du user")
+                                            console.log(">>>>> On as verifié les guild du user");
                                             if (!isUserInGuild) {
                                                 return {
                                                     nextScene: "errorScene",
@@ -451,9 +457,6 @@ class ConnectionManager {
         }
 
         this.serviceWorker = new _ServiceWorker();
-
-        // add report issue menu
-        subMenusStore.addReportIssuesMenu();
 
         return Promise.resolve({
             room: this._currentRoom,
