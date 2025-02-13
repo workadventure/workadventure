@@ -24,7 +24,7 @@ on:
 jobs:
   build-image:
     runs-on: ${{ matrix.os }}
-    if: ${{ inputs.final_build == true || matrix.shortPlatform != 'arm64' }}
+    #if: ${{ inputs.final_build == true || matrix.shortPlatform != 'arm64' }}
     strategy:
       fail-fast: false
       matrix:
@@ -38,6 +38,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Get at least the previous revision to be able to fetch the HEAD^1 SHA.
+          fetch-depth: 1
 
       - name: Login to GHCR
         uses: docker/login-action@v3
@@ -62,7 +65,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: {{ inputs.dockerfile }}
+          file: ${{ inputs.dockerfile }}
           #platforms: ${{ matrix.platform }}
           push: true
           tags: |
