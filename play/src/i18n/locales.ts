@@ -47,6 +47,7 @@ export const setCurrentLocale = async (locale: Locales) => {
     setLocale(locale);
     // Let's update the locale in the HTML lang tag
     document.documentElement.lang = locale;
+    document.documentElement.dir = locale === "ar-SA" ? "rtl" : "ltr";
 };
 
 export const displayableLocales: { id: Locales; language: string | undefined; region: string | undefined }[] =
