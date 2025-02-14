@@ -52,9 +52,9 @@ jobs:
           tags: |
             thecodingmachine/workadventure-play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
             ${{ github.ref == 'refs/heads/master' && format('thecodingmachine/workadventure-play:master-{0}', github.sha) || '' }}
-#          cache-from: |
-#            type=registry,ref=thecodingmachine/workadventure-play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-#            type=registry,ref=thecodingmachine/workadventure-play:develop
+          cache-from: |
+            type=registry,ref=thecodingmachine/workadventure-play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+            type=registry,ref=thecodingmachine/workadventure-play:develop
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
           secrets: |
@@ -73,9 +73,9 @@ jobs:
           platforms: linux/amd64
           push: false
           tags: thecodingmachine/workadventure-play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-#          cache-from: |
-#            type=registry,ref=thecodingmachine/workadventure-play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-#            type=registry,ref=thecodingmachine/workadventure-play:develop
+          cache-from: |
+            type=registry,ref=thecodingmachine/workadventure-play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+            type=registry,ref=thecodingmachine/workadventure-play:develop
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=docker,dest=/tmp/play.tar
