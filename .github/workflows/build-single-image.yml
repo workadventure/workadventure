@@ -17,6 +17,9 @@ on:
       dockerfile:
         required: true
         type: string
+      context:
+        required: true
+        type: string
       sentry_project:
         required: false
         type: string
@@ -63,7 +66,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ${{ inputs.context }}
           file: ${{ inputs.dockerfile }}
           push: ${{ inputs.push-to-registry }}
           tags: |

@@ -23,6 +23,9 @@ on:
       dockerfile:
         required: true
         type: string
+      context:
+        required: true
+        type: string
       sentry_project:
         required: false
         type: string
@@ -38,6 +41,7 @@ jobs:
       platform: amd64
       image-name: ${{ inputs.ghcr-dev-build-image-name }}
       dockerfile: ${{ inputs.dockerfile }}
+      context: ${{ inputs.context }}
       sentry_project: ${{ inputs.sentry_project }}
       push-to-registry: ${{ inputs.push-to-registry }}
 
@@ -50,6 +54,7 @@ jobs:
       platform: arm64
       image-name: ${{ inputs.ghcr-dev-build-image-name }}
       dockerfile: ${{ inputs.dockerfile }}
+      context: ${{ inputs.context }}
       sentry_project: ${{ inputs.sentry_project }}
       push-to-registry: ${{ inputs.push-to-registry }}
 
