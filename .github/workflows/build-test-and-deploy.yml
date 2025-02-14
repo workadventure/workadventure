@@ -26,6 +26,7 @@ jobs:
       sentry_project: play
       # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
       push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
+      context: ./
 
   build-back:
     uses: ./.github/workflows/build-multi-arch-image.yml
@@ -39,6 +40,7 @@ jobs:
       sentry_project: back
       # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
       push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
+      context: ./
 
   build-uploader:
     uses: ./.github/workflows/build-multi-arch-image.yml
@@ -52,6 +54,7 @@ jobs:
       sentry_project: uploader
       # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
       push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
+      context: ./
 
   build-maps:
     uses: ./.github/workflows/build-multi-arch-image.yml
@@ -65,6 +68,7 @@ jobs:
       sentry_project: maps
       # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
       push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
+      context: ./maps
 
   build-map-storage:
     uses: ./.github/workflows/build-multi-arch-image.yml
@@ -78,6 +82,7 @@ jobs:
       sentry_project: map-storage
       # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
       push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
+      context: ./
 
   push-to-sentry:
     runs-on: ubuntu-latest
