@@ -17,10 +17,9 @@ on:
         required: false
         type: boolean
         default: false
-      push-to-dockerio:
-        required: false
+      push-to-registry:
+        required: true
         type: boolean
-        default: false
       dockerfile:
         required: true
         type: string
@@ -40,6 +39,7 @@ jobs:
       image-name: ${{ inputs.ghcr-dev-build-image-name }}
       dockerfile: ${{ inputs.dockerfile }}
       sentry_project: ${{ inputs.sentry_project }}
+      push-to-registry: ${{ inputs.push-to-registry }}
 
   build-arm-image:
     uses: ./.github/workflows/build-single-image.yml
@@ -51,6 +51,7 @@ jobs:
       image-name: ${{ inputs.ghcr-dev-build-image-name }}
       dockerfile: ${{ inputs.dockerfile }}
       sentry_project: ${{ inputs.sentry_project }}
+      push-to-registry: ${{ inputs.push-to-registry }}
 
   merge-image:
     runs-on: ubuntu-latest
@@ -97,6 +98,5 @@ jobs:
 
       # Copy the image to DockerHub
       - name: Copy image to DockerHub
-        if: ${{ inputs.push-to-dockerio == true }}
         run: |
           regctl image copy ${{ inputs.ghcr-dev-build-image-name }}:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} ${{ inputs.dockerio-image-name }}:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
