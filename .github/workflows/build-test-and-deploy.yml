@@ -17,10 +17,10 @@ jobs:
     uses: ./.github/workflows/build-multi-arch-image.yml
     secrets: inherit
     with:
-      ghcr-dev-build-image-name: 'ghcr.io/${{ github.repository_owner }}/play-dev-build'
-      ghcr-image-name: 'ghcr.io/${{ github.repository_owner }}/play'
+      ghcr-dev-build-image-name: 'ghcr.io/${{ github.event.pull_request.head.repo.owner.login || github.repository_owner }}/play-dev-build'
+      ghcr-image-name: 'ghcr.io/${{ github.event.pull_request.head.repo.owner.login || github.repository_owner }}/play'
       dockerio-image-name: 'thecodingmachine/workadventure-play'
-      push-to-dockerio: ${{ github.repository_owner == 'workadventure' }}
+      push-to-dockerio: ${{ github.event.pull_request.head.repo.owner.login == 'workadventure' || github.repository_owner == 'workadventure' }}
       final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
       dockerfile: play/Dockerfile
       sentry_project: play
@@ -29,10 +29,10 @@ jobs:
     uses: ./.github/workflows/build-multi-arch-image.yml
     secrets: inherit
     with:
-      ghcr-dev-build-image-name: 'ghcr.io/${{ github.repository_owner }}/back-dev-build'
-      ghcr-image-name: 'ghcr.io/${{ github.repository_owner }}/back'
+      ghcr-dev-build-image-name: 'ghcr.io/${{ github.event.pull_request.head.repo.owner.login || github.repository_owner }}/back-dev-build'
+      ghcr-image-name: 'ghcr.io/${{ github.event.pull_request.head.repo.owner.login || github.repository_owner }}/back'
       dockerio-image-name: 'thecodingmachine/workadventure-back'
-      push-to-dockerio: ${{ github.repository_owner == 'workadventure' }}
+      push-to-dockerio: ${{ github.event.pull_request.head.repo.owner.login == 'workadventure' || github.repository_owner == 'workadventure' }}
       final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
       dockerfile: back/Dockerfile
       sentry_project: back
@@ -41,10 +41,10 @@ jobs:
     uses: ./.github/workflows/build-multi-arch-image.yml
     secrets: inherit
     with:
-      ghcr-dev-build-image-name: 'ghcr.io/${{ github.repository_owner }}/uploader-dev-build'
-      ghcr-image-name: 'ghcr.io/${{ github.repository_owner }}/uploader'
+      ghcr-dev-build-image-name: 'ghcr.io/${{ github.event.pull_request.head.repo.owner.login || github.repository_owner }}/uploader-dev-build'
+      ghcr-image-name: 'ghcr.io/${{ github.event.pull_request.head.repo.owner.login || github.repository_owner }}/uploader'
       dockerio-image-name: 'thecodingmachine/workadventure-uploader'
-      push-to-dockerio: ${{ github.repository_owner == 'workadventure' }}
+      push-to-dockerio: ${{ github.event.pull_request.head.repo.owner.login == 'workadventure' || github.repository_owner == 'workadventure' }}
       final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
       dockerfile: uploader/Dockerfile
       sentry_project: uploader
@@ -53,10 +53,10 @@ jobs:
     uses: ./.github/workflows/build-multi-arch-image.yml
     secrets: inherit
     with:
-      ghcr-dev-build-image-name: 'ghcr.io/${{ github.repository_owner }}/maps-dev-build'
-      ghcr-image-name: 'ghcr.io/${{ github.repository_owner }}/maps'
+      ghcr-dev-build-image-name: 'ghcr.io/${{ github.event.pull_request.head.repo.owner.login || github.repository_owner }}/maps-dev-build'
+      ghcr-image-name: 'ghcr.io/${{ github.event.pull_request.head.repo.owner.login || github.repository_owner }}/maps'
       dockerio-image-name: 'thecodingmachine/workadventure-maps'
-      push-to-dockerio: ${{ github.repository_owner == 'workadventure' }}
+      push-to-dockerio: ${{ github.event.pull_request.head.repo.owner.login == 'workadventure' || github.repository_owner == 'workadventure' }}
       final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
       dockerfile: maps/Dockerfile
       sentry_project: maps
@@ -65,10 +65,10 @@ jobs:
     uses: ./.github/workflows/build-multi-arch-image.yml
     secrets: inherit
     with:
-      ghcr-dev-build-image-name: 'ghcr.io/${{ github.repository_owner }}/map-storage-dev-build'
-      ghcr-image-name: 'ghcr.io/${{ github.repository_owner }}/map-storage'
+      ghcr-dev-build-image-name: 'ghcr.io/${{ github.event.pull_request.head.repo.owner.login || github.repository_owner }}/map-storage-dev-build'
+      ghcr-image-name: 'ghcr.io/${{ github.event.pull_request.head.repo.owner.login || github.repository_owner }}/map-storage'
       dockerio-image-name: 'thecodingmachine/workadventure-map-storage'
-      push-to-dockerio: ${{ github.repository_owner == 'workadventure' }}
+      push-to-dockerio: ${{ github.event.pull_request.head.repo.owner.login == 'workadventure' || github.repository_owner == 'workadventure' }}
       final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
       dockerfile: map-storage/Dockerfile
       sentry_project: map-storage
@@ -97,7 +97,7 @@ jobs:
             -e SENTRY_PROJECT \
             -e SENTRY_RELEASE \
             -e SENTRY_ENVIRONMENT \
-            ghcr.io/${{ github.repository_owner }}/play-dev-build:amd64-${{ github.sha }} \
+            ghcr.io/${{ github.event.pull_request.head.repo.owner.login || github.repository_owner }}/play-dev-build:amd64-${{ github.sha }} \
             /bin/sh -c 'npm install --dev && npm run push-sentry-sourcemaps'
 
       - name: Sentry push source maps
@@ -117,7 +117,7 @@ jobs:
             -e SENTRY_PROJECT \
             -e SENTRY_RELEASE \
             -e SENTRY_ENVIRONMENT \
-            ghcr.io/${{ github.repository_owner }}/back-dev-build:amd64-${{ github.sha }} \
+            ghcr.io/${{ github.event.pull_request.head.repo.owner.login || github.repository_owner }}/back-dev-build:amd64-${{ github.sha }} \
             /bin/sh -c 'npm install --dev && npm run push-sentry-sourcemaps'
 
       - name: Sentry push source maps
@@ -138,7 +138,7 @@ jobs:
             -e SENTRY_PROJECT \
             -e SENTRY_RELEASE \
             -e SENTRY_ENVIRONMENT \
-            ghcr.io/${{ github.repository_owner }}/map-storage-dev-build:amd64-${{ github.sha }} \
+            ghcr.io/${{ github.event.pull_request.head.repo.owner.login || github.repository_owner }}/map-storage-dev-build:amd64-${{ github.sha }} \
             /bin/sh -c 'cd /usr/src && npm ci -w map-storage && cd /usr/src/map-storage && npm run push-sentry-sourcemaps'
 
   end-to-end-tests:
@@ -647,7 +647,7 @@ jobs:
         uses: vlaurin/action-ghcr-prune@v0.6.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          organization: ${{ github.repository_owner }}
+          organization: ${{ github.event.pull_request.head.repo.owner.login || github.repository_owner }}
           container: play-dev-build
           dry-run: false # Dry-run first, then change to `false`
           keep-younger-than: 7 # days
