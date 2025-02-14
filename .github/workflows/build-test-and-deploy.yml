@@ -684,16 +684,65 @@ jobs:
       - end-to-end-tests
       - prod-single-domain-deploy-tests
       - helm-test
-    if: always()
-    # This will fail if the token does not belong to an admin
+    # This will fail if the token does not belong to an admin, hence the always
+    if: always() && ((github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure'))
     continue-on-error: true
     steps:
-      - name: Prune
+      - name: Prune play
         uses: vlaurin/action-ghcr-prune@v0.6.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          organization: ${{ github.event.pull_request.head.repo.owner.login || github.repository_owner }}
+          organization: workadventure
           container: play-dev-build
+          dry-run: false # Dry-run first, then change to `false`
+          keep-younger-than: 7 # days
+          keep-last: 5
+          prune-untagged: true
+          prune-tags-regexes: ".*"
+
+      - name: Prune back
+        uses: vlaurin/action-ghcr-prune@v0.6.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          organization: workadventure
+          dry-run: false # Dry-run first, then change to `false`
+          container: back-dev-build
+          keep-younger-than: 7 # days
+          keep-last: 5
+          prune-untagged: true
+          prune-tags-regexes: ".*"
+
+      - name: Prune map-storage
+        uses: vlaurin/action-ghcr-prune@v0.6.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          organization: workadventure
+          container: map-storage-dev-build
+          dry-run: false # Dry-run first, then change to `false`
+          keep-younger-than: 7 # days
+          keep-last: 5
+          prune-untagged: true
+          prune-tags-regexes: ".*"
+
+      - name: Prune maps
+        uses: vlaurin/action-ghcr-prune@v0.6.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          organization: workadventure
+          container: maps-dev-build
+          dry-run: false # Dry-run first, then change to `false`
+          keep-younger-than: 7 # days
+          keep-last: 5
+          prune-untagged: true
+          prune-tags-regexes: ".*"
+
+
+      - name: Prune uploader
+        uses: vlaurin/action-ghcr-prune@v0.6.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          organization: workadventure
+          container: uploader-dev-build
           dry-run: false # Dry-run first, then change to `false`
           keep-younger-than: 7 # days
           keep-last: 5
