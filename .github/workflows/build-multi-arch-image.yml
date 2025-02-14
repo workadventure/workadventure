@@ -100,3 +100,9 @@ jobs:
       - name: Copy image to DockerHub
         run: |
           regctl image copy ${{ inputs.ghcr-dev-build-image-name }}:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} ${{ inputs.dockerio-image-name }}:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+
+      - name: Special tag for master branch
+        if: ${{ github.ref == 'refs/heads/master' }}
+        run: |
+          regctl image copy ${{ inputs.ghcr-dev-build-image-name }}:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} ${{ inputs.dockerio-image-name }}:master-${{ github.sha }}
+          regctl image copy ${{ inputs.ghcr-dev-build-image-name }}:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} ${{ inputs.ghcr-image-name }}:master-${{ github.sha }}
