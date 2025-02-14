@@ -26,6 +26,8 @@ on:
 jobs:
   build-image:
     runs-on: ${{ inputs.os }}
+    permissions:
+      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
