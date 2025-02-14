@@ -730,6 +730,40 @@ export const deviceListStore = readable<MediaDeviceInfo[] | undefined>(undefined
         navigator.mediaDevices
             .enumerateDevices()
             .then((mediaDeviceInfos) => {
+                // check if the new list has the prefered device
+                const preferredVideoInputDevice = localUserStore.getPreferredVideoInputDevice();
+                const preferredAudioInputDevice = localUserStore.getPreferredAudioInputDevice();
+                const preferredSpeakerDevice = localUserStore.getSpeakerDeviceId();
+
+                if (
+                    preferredVideoInputDevice &&
+                    mediaDeviceInfos.find((device) => device.deviceId === preferredVideoInputDevice)
+                ) {
+                    requestedCameraDeviceIdStore.set(preferredVideoInputDevice);
+                }
+                if (
+                    preferredAudioInputDevice &&
+                    mediaDeviceInfos.find((device) => device.deviceId === preferredAudioInputDevice)
+                ) {
+                    requestedMicrophoneDeviceIdStore.set(preferredAudioInputDevice);
+                }
+                if (
+                    preferredSpeakerDevice &&
+                    mediaDeviceInfos.find((device) => device.deviceId === preferredSpeakerDevice)
+                ) {
+                    speakerSelectedStore.set(preferredSpeakerDevice);
+                }
+
+                const actualsMediaDevices = get(deviceListStore);
+                // get all media that not exist in the list
+                if (actualsMediaDevices != undefined) {
+                    // set the last new media devices detected
+                    const newDevices = mediaDeviceInfos.filter(
+                        (device) => actualsMediaDevices.find((d) => d.deviceId === device.deviceId) == undefined
+                    );
+                    lastNewMediaDeviceDetectedStore.set(newDevices);
+                }
+
                 set(mediaDeviceInfos);
                 devicesNotLoaded.set(false);
             })
@@ -921,3 +955,5 @@ function createVideoBandwidthStore() {
 }
 
 export const videoBandwidthStore = createVideoBandwidthStore();
+
+export const lastNewMediaDeviceDetectedStore = writable<MediaDeviceInfo[]>([]);
