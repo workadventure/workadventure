@@ -108,10 +108,20 @@ services:
       ENABLE_OPENAPI_ENDPOINT: "false"
       STARTUP_COMMAND_1: ""
 
+  synapse:
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8008" ]
+      interval: 5s
+      timeout: 5s
+      start_period: 3s
+      retries: 20
+
   everything_started:
     image: alpine:3.14
     command: echo "Everything started"
     depends_on:
       # Actually, we only check the start of the map-storage because this is the first thing we need (to upload the maps)
       map-storage:
+        condition: service_healthy
+      synapse:
         condition: service_healthy
