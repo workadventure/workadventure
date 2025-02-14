@@ -86,7 +86,8 @@ jobs:
 
   push-to-sentry:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
+    #if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
+    if: ${{ github.event_name == 'push' || github.event_name == 'release' }}
     needs:
       - build-play
     steps:
@@ -132,7 +133,6 @@ jobs:
             /bin/sh -c 'npm install --dev && npm run push-sentry-sourcemaps'
 
       - name: Sentry push map-storage source maps
-        if: ${{ github.event_name == 'push' || github.event_name == 'release' }}
         env:
           SENTRY_URL: ${{ secrets.SENTRY_URL }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
