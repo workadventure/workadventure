@@ -17,61 +17,67 @@ jobs:
     uses: ./.github/workflows/build-multi-arch-image.yml
     secrets: inherit
     with:
-      ghcr-dev-build-image-name: 'ghcr.io/${{ github.event.pull_request.head.repo.owner.login || github.repository_owner }}/play-dev-build'
-      ghcr-image-name: 'ghcr.io/${{ github.event.pull_request.head.repo.owner.login || github.repository_owner }}/play'
+      ghcr-dev-build-image-name: 'ghcr.io/workadventure/play-dev-build'
+      ghcr-image-name: 'ghcr.io/workadventure/play'
       dockerio-image-name: 'thecodingmachine/workadventure-play'
-      push-to-dockerio: ${{ github.event.pull_request.head.repo.owner.login == 'workadventure' || github.repository_owner == 'workadventure' }}
+      # FIXME: Final build should only build on master or tags
       final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
       dockerfile: play/Dockerfile
       sentry_project: play
+      # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
+      push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || github.repository_owner == 'workadventure' }}
 
   build-back:
     uses: ./.github/workflows/build-multi-arch-image.yml
     secrets: inherit
     with:
-      ghcr-dev-build-image-name: 'ghcr.io/${{ github.event.pull_request.head.repo.owner.login || github.repository_owner }}/back-dev-build'
-      ghcr-image-name: 'ghcr.io/${{ github.event.pull_request.head.repo.owner.login || github.repository_owner }}/back'
+      ghcr-dev-build-image-name: 'ghcr.io/workadventure/back-dev-build'
+      ghcr-image-name: 'ghcr.io/workadventure/back'
       dockerio-image-name: 'thecodingmachine/workadventure-back'
-      push-to-dockerio: ${{ github.event.pull_request.head.repo.owner.login == 'workadventure' || github.repository_owner == 'workadventure' }}
       final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
       dockerfile: back/Dockerfile
       sentry_project: back
+      # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
+      push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || github.repository_owner == 'workadventure' }}
 
   build-uploader:
     uses: ./.github/workflows/build-multi-arch-image.yml
     secrets: inherit
     with:
-      ghcr-dev-build-image-name: 'ghcr.io/${{ github.event.pull_request.head.repo.owner.login || github.repository_owner }}/uploader-dev-build'
-      ghcr-image-name: 'ghcr.io/${{ github.event.pull_request.head.repo.owner.login || github.repository_owner }}/uploader'
+      ghcr-dev-build-image-name: 'ghcr.io/workadventure/uploader-dev-build'
+      ghcr-image-name: 'ghcr.io/workadventure/uploader'
       dockerio-image-name: 'thecodingmachine/workadventure-uploader'
-      push-to-dockerio: ${{ github.event.pull_request.head.repo.owner.login == 'workadventure' || github.repository_owner == 'workadventure' }}
       final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
       dockerfile: uploader/Dockerfile
       sentry_project: uploader
+      # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
+      push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || github.repository_owner == 'workadventure' }}
 
   build-maps:
     uses: ./.github/workflows/build-multi-arch-image.yml
     secrets: inherit
     with:
-      ghcr-dev-build-image-name: 'ghcr.io/${{ github.event.pull_request.head.repo.owner.login || github.repository_owner }}/maps-dev-build'
-      ghcr-image-name: 'ghcr.io/${{ github.event.pull_request.head.repo.owner.login || github.repository_owner }}/maps'
+      ghcr-dev-build-image-name: 'ghcr.io/workadventure/maps-dev-build'
+      ghcr-image-name: 'ghcr.io/workadventure/maps'
       dockerio-image-name: 'thecodingmachine/workadventure-maps'
-      push-to-dockerio: ${{ github.event.pull_request.head.repo.owner.login == 'workadventure' || github.repository_owner == 'workadventure' }}
       final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
       dockerfile: maps/Dockerfile
       sentry_project: maps
+      # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
+      push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || github.repository_owner == 'workadventure' }}
 
   build-map-storage:
     uses: ./.github/workflows/build-multi-arch-image.yml
     secrets: inherit
     with:
-      ghcr-dev-build-image-name: 'ghcr.io/${{ github.event.pull_request.head.repo.owner.login || github.repository_owner }}/map-storage-dev-build'
-      ghcr-image-name: 'ghcr.io/${{ github.event.pull_request.head.repo.owner.login || github.repository_owner }}/map-storage'
+      ghcr-dev-build-image-name: 'ghcr.io/workadventure/map-storage-dev-build'
+      ghcr-image-name: 'ghcr.io/workadventure/map-storage'
       dockerio-image-name: 'thecodingmachine/workadventure-map-storage'
-      push-to-dockerio: ${{ github.event.pull_request.head.repo.owner.login == 'workadventure' || github.repository_owner == 'workadventure' }}
       final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
       dockerfile: map-storage/Dockerfile
       sentry_project: map-storage
+      # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
+      push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || github.repository_owner == 'workadventure' }}
 
   push-to-sentry:
     runs-on: ubuntu-latest
@@ -97,10 +103,10 @@ jobs:
             -e SENTRY_PROJECT \
             -e SENTRY_RELEASE \
             -e SENTRY_ENVIRONMENT \
-            ghcr.io/${{ github.event.pull_request.head.repo.owner.login || github.repository_owner }}/play-dev-build:amd64-${{ github.sha }} \
+            ghcr.io/workadventure/play-dev-build:amd64-${{ github.sha }} \
             /bin/sh -c 'npm install --dev && npm run push-sentry-sourcemaps'
 
-      - name: Sentry push source maps
+      - name: Sentry push back source maps
         env:
           SENTRY_URL: ${{ secrets.SENTRY_URL }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
@@ -117,10 +123,10 @@ jobs:
             -e SENTRY_PROJECT \
             -e SENTRY_RELEASE \
             -e SENTRY_ENVIRONMENT \
-            ghcr.io/${{ github.event.pull_request.head.repo.owner.login || github.repository_owner }}/back-dev-build:amd64-${{ github.sha }} \
+            ghcr.io/workadventure/back-dev-build:amd64-${{ github.sha }} \
             /bin/sh -c 'npm install --dev && npm run push-sentry-sourcemaps'
 
-      - name: Sentry push source maps
+      - name: Sentry push map-storage source maps
         if: ${{ github.event_name == 'push' || github.event_name == 'release' }}
         env:
           SENTRY_URL: ${{ secrets.SENTRY_URL }}
@@ -138,7 +144,7 @@ jobs:
             -e SENTRY_PROJECT \
             -e SENTRY_RELEASE \
             -e SENTRY_ENVIRONMENT \
-            ghcr.io/${{ github.event.pull_request.head.repo.owner.login || github.repository_owner }}/map-storage-dev-build:amd64-${{ github.sha }} \
+            ghcr.io/workadventure/map-storage-dev-build:amd64-${{ github.sha }} \
             /bin/sh -c 'cd /usr/src && npm ci -w map-storage && cd /usr/src/map-storage && npm run push-sentry-sourcemaps'
 
   end-to-end-tests:
@@ -253,6 +259,45 @@ jobs:
           sed -i "s/MAP_STORAGE_API_TOKEN=/MAP_STORAGE_API_TOKEN=MYAWESOMEKEY/g" .env
         env:
           KLAXOON_CLIENT_ID: ${{ secrets.KLAXOON_CLIENT_ID }}
+      - name: Download artifact
+        if: ${{ !(github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') && github.repository_owner != 'workadventure' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: play
+          path: /tmp
+      - name: Download artifact
+        if: ${{ !(github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') && github.repository_owner != 'workadventure' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: back
+          path: /tmp
+      - name: Download artifact
+        if: ${{ !(github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') && github.repository_owner != 'workadventure' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: maps
+          path: /tmp
+      - name: Download artifact
+        if: ${{ !(github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') && github.repository_owner != 'workadventure' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: map-storage
+          path: /tmp
+      - name: Download artifact
+        if: ${{ !(github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') && github.repository_owner != 'workadventure' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: uploader
+          path: /tmp
+      - name: Load image
+        if: ${{ !(github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') && github.repository_owner != 'workadventure' }}
+        run: |
+          docker image load --input /tmp/play.tar.gz
+          docker image load --input /tmp/back.tar.gz
+          docker image load --input /tmp/maps.tar.gz
+          docker image load --input /tmp/map-storage.tar.gz
+          docker image load --input /tmp/uploader.tar.gz
+          docker image ls -a
       - name: Start WorkAdventure
         run: docker compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml up -d
       - name: Upload test-map
