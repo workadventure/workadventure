@@ -83,12 +83,12 @@ jobs:
           outputs: type=docker,dest=/tmp/image.tar
 
       - name: Zip image
-        if: ${{ !inputs.push-to-registry }}
+        if: ${{ inputs.push-to-registry != true }}
         run: gzip image.tar
         working-directory: /tmp
 
       - name: Upload image as artifact
-        if: ${{ !inputs.push-to-registry }}
+        if: ${{ inputs.push-to-registry != true }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.sentry_project }}
