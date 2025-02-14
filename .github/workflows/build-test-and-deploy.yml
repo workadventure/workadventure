@@ -25,7 +25,7 @@ jobs:
       dockerfile: play/Dockerfile
       sentry_project: play
       # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
-      push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || github.repository_owner == 'workadventure' }}
+      push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
 
   build-back:
     uses: ./.github/workflows/build-multi-arch-image.yml
@@ -38,7 +38,7 @@ jobs:
       dockerfile: back/Dockerfile
       sentry_project: back
       # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
-      push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || github.repository_owner == 'workadventure' }}
+      push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
 
   build-uploader:
     uses: ./.github/workflows/build-multi-arch-image.yml
@@ -51,7 +51,7 @@ jobs:
       dockerfile: uploader/Dockerfile
       sentry_project: uploader
       # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
-      push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || github.repository_owner == 'workadventure' }}
+      push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
 
   build-maps:
     uses: ./.github/workflows/build-multi-arch-image.yml
@@ -64,7 +64,7 @@ jobs:
       dockerfile: maps/Dockerfile
       sentry_project: maps
       # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
-      push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || github.repository_owner == 'workadventure' }}
+      push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
 
   build-map-storage:
     uses: ./.github/workflows/build-multi-arch-image.yml
@@ -77,7 +77,7 @@ jobs:
       dockerfile: map-storage/Dockerfile
       sentry_project: map-storage
       # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
-      push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || github.repository_owner == 'workadventure' }}
+      push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
 
   push-to-sentry:
     runs-on: ubuntu-latest
@@ -260,37 +260,37 @@ jobs:
         env:
           KLAXOON_CLIENT_ID: ${{ secrets.KLAXOON_CLIENT_ID }}
       - name: Download artifact
-        if: ${{ !(github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') && github.repository_owner != 'workadventure' }}
+        if: ${{ !((github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure')) }}
         uses: actions/download-artifact@v4
         with:
           name: play
           path: /tmp
       - name: Download artifact
-        if: ${{ !(github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') && github.repository_owner != 'workadventure' }}
+        if: ${{ !((github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure')) }}
         uses: actions/download-artifact@v4
         with:
           name: back
           path: /tmp
       - name: Download artifact
-        if: ${{ !(github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') && github.repository_owner != 'workadventure' }}
+        if: ${{ !((github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure')) }}
         uses: actions/download-artifact@v4
         with:
           name: maps
           path: /tmp
       - name: Download artifact
-        if: ${{ !(github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') && github.repository_owner != 'workadventure' }}
+        if: ${{ !((github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure')) }}
         uses: actions/download-artifact@v4
         with:
           name: map-storage
           path: /tmp
       - name: Download artifact
-        if: ${{ !(github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') && github.repository_owner != 'workadventure' }}
+        if: ${{ !((github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure')) }}
         uses: actions/download-artifact@v4
         with:
           name: uploader
           path: /tmp
       - name: Load image
-        if: ${{ !(github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') && github.repository_owner != 'workadventure' }}
+        if: ${{ !((github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure')) }}
         run: |
           docker image load --input /tmp/play.tar.gz
           docker image load --input /tmp/back.tar.gz
