@@ -1,8 +1,8 @@
 <script lang="ts">
     export let id: string | undefined = undefined;
     export let label: string | undefined = undefined;
-    export let value = 0;
     export let min = 0;
+    export let value = min;
     export let max = 100;
     export let step = 0;
     export let onChange = (v: number) => {};
