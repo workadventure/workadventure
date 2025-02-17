@@ -18,7 +18,7 @@ const camera: DeepPartial<Translation["camera"]> = {
         content: "Vous devez autoriser l'accès à la caméra et au microphone dans votre navigateur.",
         firefoxContent:
             'Veuillez cocher la case "Se souvenir de cette décision" si vous ne voulez pas que Firefox vous demande sans cesse l\'autorisation.',
-        refresh: "Rafraîchir",
+        allow: "Autoriser la webcam",
         continue: "Continuer sans webcam",
         screen: {
             firefox: "/resources/help-setting-camera-permission/fr-FR-chrome.png",
@@ -40,6 +40,7 @@ const camera: DeepPartial<Translation["camera"]> = {
         preparingYouNetworkGuide: '"guide de préparation du réseau"',
         refresh: "Rafraîchir",
         continue: "Continuer",
+        newDeviceDetected: "Nouveau périphérique détecté {device} 🎉 Changer ? [ESPACE]",
     },
     my: {
         silentZone: "Zone silencieuse",

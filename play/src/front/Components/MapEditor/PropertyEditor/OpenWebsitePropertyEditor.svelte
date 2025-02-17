@@ -60,7 +60,7 @@
     let error = "";
     let warning = "";
     let oldNewTabValue = property.newTab;
-    let linkElement: HTMLInputElement;
+    let isLinkValid = true;
     let policy: Option[] | undefined = undefined;
     let policyOption: InputTagOption[] = [
         { value: "accelerometer", label: "accelerometer", created: undefined },
@@ -440,12 +440,13 @@
             checkEmbeddableLink();
         } catch (e) {
             console.info("Error checking embeddable website", e);
+            embeddableLoading = false;
         }
     }
 
     function checkEmbeddableLink(): void {
         if (property.forceNewTab) return;
-        if (property.link == undefined || !linkElement.checkValidity()) {
+        if (property.link == undefined || !isLinkValid) {
             embeddableLoading = false;
             warning = warning ? warning : $LL.mapEditor.properties.linkProperties.errorInvalidUrl();
             return;
@@ -712,7 +713,7 @@
                 bind:value={property.trigger}
                 onChange={onTriggerValueChange}
             >
-                <option value={undefined}>{$LL.mapEditor.properties.linkProperties.triggerShowImmediately()}</option>
+                <option value="">{$LL.mapEditor.properties.linkProperties.triggerShowImmediately()}</option>
                 {#if !property.newTab}
                     <option value="onicon">{$LL.mapEditor.properties.linkProperties.triggerOnClick()}</option>
                 {/if}
@@ -736,7 +737,7 @@
                 /> -->
 
                 <Input
-                    id="tablink"
+                    id="tabLink"
                     placeholder={property.placeholder ?? $LL.mapEditor.properties.linkProperties.linkPlaceholder()}
                     label={$LL.mapEditor.properties.linkProperties.linkLabel()}
                     type="url"
@@ -744,6 +745,7 @@
                     onChange={onValueChange}
                     onClick={onClickInputHandler}
                     disabled={embeddableLoading}
+                    bind:isValid={isLinkValid}
                 />
 
                 {#if property.application === "googleDocs" || property.application === "googleSheets" || property.application === "googleSlides" || property.application === "klaxoon" || property.application === "googleDrive"}

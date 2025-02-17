@@ -17,7 +17,7 @@ const camera: BaseTranslation = {
         content: "You must allow camera and microphone access in your browser.",
         firefoxContent:
             'Please click the "Remember this decision" checkbox, if you don\'t want Firefox to keep asking you the authorization.',
-        refresh: "Refresh",
+        allow: "Allow webcam",
         continue: "Continue without webcam",
         screen: {
             firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
@@ -38,6 +38,7 @@ const camera: BaseTranslation = {
         preparingYouNetworkGuide: '"Preparing your network" guide',
         refresh: "Refresh",
         continue: "Continue",
+        newDeviceDetected: "New device detected {device} 🎉 Switch? [SPACE]",
     },
     my: {
         silentZone: "Silent zone",

@@ -21,12 +21,6 @@ const menu: BaseTranslation = {
         sendMessage: "Send message",
     },
     profile: {
-        edit: {
-            name: "Edit your name",
-            woka: "Edit your WOKA",
-            companion: "Edit your companion",
-            camera: "Edit your camera",
-        },
         login: "Sign in",
         logout: "Log out",
     },

@@ -114,7 +114,7 @@
                     <path d="M21 21l-6 -6" />
                 </svg>
             </div>
-            <div class="flex flex-row flex-wrap space-x-4 space-y-4 justify-center overflow-auto">
+            <div class="flex flex-row flex-wrap space-x-4 items-stretch justify-center items-start overflow-auto">
                 {#if $isFetching}
                     <h3>{$LL.mapEditor.listRoom.isFetching()}</h3>
                 {/if}
@@ -125,13 +125,19 @@
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
                         id={roomUrl}
-                        class="room-card flex flex-col items-center justify-center cursor-pointer basis-1/6 hover:bg-white/10 rounded-lg overflow-hidden p-3"
+                        class="room-card flex flex-col items-center justify-center cursor-pointer w-56 hover:bg-white/10 rounded-lg overflow-hidden p-3"
                         on:click={() => clickRoom(roomData.roomUrl, roomData.name)}
                     >
-                        <div
-                            class="bg-cover h-32 w-full rounded"
-                            style="background-image: url('{roomData.thumbnail ?? defaultMapImg}')"
-                        />
+                        <div class="h-32 w-full rounded">
+                            <img
+                                src={roomData.thumbnail ?? defaultMapImg}
+                                alt={roomData.name}
+                                class="w-full h-full object-cover"
+                                on:error={function () {
+                                    this.src = defaultMapImg;
+                                }}
+                            />
+                        </div>
                         <div class="py-2 text-center">
                             <div
                                 class="pointer-events-none text-lg text-white font-bold m-0 text-ellipsis overflow-hidden w-full px-3"
