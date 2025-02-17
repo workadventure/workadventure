@@ -51,6 +51,7 @@
     import PresentationLayout from "./EmbedScreens/Layouts/PresentationLayout.svelte";
     import ExternalComponents from "./ExternalModules/ExternalComponents.svelte";
     import PictureInPicture from "./Video/PictureInPicture.svelte";
+    import ActionBar2 from "./ActionBar/ActionBar2.svelte";
     let keyboardEventIsDisable = false;
 
     const handleFocusInEvent = (event: FocusEvent) => {
@@ -215,8 +216,9 @@
             <MainModal />
         </section>
         <div class="">
-            <ActionBar />
+            <!--<ActionBar />-->
         </div>
+        <ActionBar2 />
     </div>
 
     {#if $visibilityStore == false && $streamableCollectionStore.size > 0}
