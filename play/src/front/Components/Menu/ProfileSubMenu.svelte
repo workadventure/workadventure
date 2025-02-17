@@ -89,11 +89,11 @@
 
 <div class="customize-main">
     <div class="submenu">
-        <section class="centered-column resizing-width m-auto resizing-text">
+        <section class="centered-column resizing-width m-auto resizing-text self-center">
             {#if showWokaNameButton()}
                 <button
                     type="button"
-                    class="w-full outline min-w-[220px]"
+                    class="w-full outline min-w-[220px] btn-lg btn btn-danger btn-border"
                     on:click={() => analyticsClient.editName()}
                     on:click={openEditNameScene}
                 >

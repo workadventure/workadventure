@@ -188,7 +188,9 @@
             </section>
 
             <div class="flex space-x-4 items-center flex-col lg:flex-row lg:items-start">
-                <div class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 flex flex-col justify-center items-center">
+                <div
+                    class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 max-w-[450px]  flex flex-col justify-center items-center"
+                >
                     <div class="text-lg bold flex items-center justify-center space-x-3 mb-2 pl-2">
                         <MicOnIcon height="h-8" width="w-8" />
                         <div class="grow pr-8">{$LL.actionbar.subtitle.microphone()}</div>
@@ -204,7 +206,7 @@
                         <div class="flex flex-wrap items-center justify-center min-h-[129px]">
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div
-                                class="border border-solid border-white rounded-lg pr-8 pl-6 pb-4 m-2 items-center justify-center space-x-4 transition-all cursor-pointer relative {selectedMicrophone ===
+                                class="border border-solid border-white min-w-[25em] rounded-lg pr-8 pl-6 pb-4 m-2 items-center justify-center space-x-4 transition-all cursor-pointer relative {selectedMicrophone ===
                                 undefined
                                     ? 'bg-white text-secondary pt-12'
                                     : 'over:bg-white/10 pt-4'} {(microphoneEdit && selectedMicrophone != undefined) ||
@@ -247,7 +249,7 @@
                             {#each $microphoneListStore ?? [] as microphone (microphone.deviceId)}
                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <div
-                                    class="border border-solid border-white rounded-lg pr-8 pl-6 pb-4 m-2 items-center justify-center space-x-4 transition-all cursor-pointer relative {selectedMicrophone ===
+                                    class="border border-solid border-white min-w-[25em] rounded-lg pr-8 pl-6 pb-4 m-2 items-center justify-center space-x-4 transition-all cursor-pointer relative {selectedMicrophone ===
                                     microphone.deviceId
                                         ? 'bg-white text-secondary pt-12'
                                         : 'hover:bg-white/10 pt-4'} {(microphoneEdit &&
@@ -297,7 +299,9 @@
                     </div>
                 </div>
 
-                <div class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 flex flex-col justify-center items-center">
+                <div
+                    class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 max-w-[450px] min-w-[28em] flex flex-col justify-center items-center"
+                >
                     <div class="text-lg bold flex items-center justify-center space-x-3 mb-2 pl-2">
                         <CamOnIcon height="h-8" width="w-8" />
                         <div class="grow pr-8">{$LL.camera.editCam()}</div>
@@ -310,10 +314,10 @@
                     </div>
 
                     <div class="flex justify-center">
-                        <div class="flex items-center justify-center min-h-[294px]">
+                        <div class="flex items-center justify-center ">
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div
-                                class="border border-solid border-white rounded-lg items-center justify-start m-2 space-x-4 transition-all cursor-pointer overflow-hidden {selectedCamera ==
+                                class="border border-solid border-white min-w-[25em]  rounded-lg items-center justify-start m-2 space-x-4 transition-all cursor-pointer overflow-hidden {selectedCamera ==
                                 undefined
                                     ? 'bg-white/10'
                                     : 'hover:bg-white/10'} {(cameraEdit && selectedCamera != undefined) ||
@@ -426,7 +430,9 @@
                 </div>
 
                 {#if $speakerSelectedStore != undefined && $speakerListStore && $speakerListStore.length > 0}
-                    <div class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 flex flex-col justify-center items-center">
+                    <div
+                        class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 max-w-[450px]  flex flex-col justify-center items-center"
+                    >
                         <div class="text-lg bold flex items-center justify-center space-x-3 mb-2 pl-2">
                             <MicOnIcon height="h-8" width="w-8" />
                             <div class="grow pr-8">{$LL.camera.editSpeaker()}</div>
@@ -443,7 +449,7 @@
                                 {#each $speakerListStore as speaker, index (index)}
                                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                                     <div
-                                        class="border border-solid rounded-lg relative justify-start items-center m-2 space-x-4 transition-all overflow-hidden cursor-pointer px-8 py-6 {$speakerSelectedStore ===
+                                        class="border border-solid min-w-[25em] rounded-lg relative  justify-start items-center m-2 space-x-4 transition-all overflow-hidden cursor-pointer px-8 py-6 {$speakerSelectedStore ===
                                         speaker.deviceId
                                             ? 'bg-white text-secondary border-none'
                                             : 'border-white hover:bg-white/10'} {(speakerEdit &&
