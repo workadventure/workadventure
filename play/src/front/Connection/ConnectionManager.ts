@@ -36,7 +36,6 @@ import type { Locales } from "../../i18n/i18n-types";
 import { setCurrentLocale } from "../../i18n/locales";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 import { RoomMetadataType } from "../ExternalModule/ExtensionModule";
-//import { enableDiscordBridge } from "../Chat/Stores/DiscordConnectionStore";
 import { axiosToPusher, axiosWithRetry } from "./AxiosUtils";
 import { Room } from "./Room";
 import { LocalUser } from "./LocalUser";
@@ -334,32 +333,17 @@ class ConnectionManager {
                         };
                     }
                     if (response.status === "ok") {
-                        const parsedRoomMetadata = RoomMetadataType.parse(this._currentRoom.metadata);
+                        const parsedRoomMetadata = RoomMetadataType.safeParse(this._currentRoom.metadata).data;
                         if (parsedRoomMetadata) {
-                            //enableDiscordBridge.set(parsedRoomMetadata.discordSettings.enableDiscordBridge);
                             //Let's check if the discord mandatory is activated
-                            console.log(
-                                ">>>>> 🤯🤯🤯 Discord ???",
-                                parsedRoomMetadata.discordSettings.enableDiscordMandatory
-                            );
                             if (parsedRoomMetadata.discordSettings.enableDiscordMandatory) {
                                 const discordToken = parsedRoomMetadata.player?.accessTokens?.find(
                                     (token) => token.provider === "discord"
                                 );
-                                console.log(">>>>> 🤯🤯🤯 Discord mandatory est activé");
                                 if (!discordToken) {
-                                    //redirect to login page
-                                    const redirect = this.loadOpenIDScreen(true);
-                                    if (redirect !== null) {
-                                        redirect.searchParams.append(
-                                            "error",
-                                            "You need to be log with Discord in this world"
-                                        );
-                                        return redirect;
-                                    }
                                     return {
                                         nextScene: "errorScene",
-                                        error: new Error(`Discord token is missing`),
+                                        error: new Error(`Your are not connected to the discord`),
                                     };
                                 }
                                 if (parsedRoomMetadata.discordSettings.discordAllowedGuilds.length > 0) {

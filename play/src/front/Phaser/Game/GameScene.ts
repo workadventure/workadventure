@@ -3146,9 +3146,7 @@ ${escapedMessage}
             await this.simplePeer.dispatchSound(soundUrl);
         });
         const channel = new BroadcastChannel("discord");
-        channel.onmessage = (event) => {
-            console.log("event", event.data);
-        };
+        channel.onmessage = (event) => {};
     }
 
     private setPropertyLayer(

@@ -145,11 +145,6 @@ export class Room {
             const roomRedirectChecking = isRoomRedirect.safeParse(data);
             const mapDetailsDataChecking = isMapDetailsData.safeParse(data);
             const errorApiDataChecking = ErrorApiData.safeParse(data);
-
-            console.log("roomRedirectChecking", roomRedirectChecking);
-            console.log("mapDetailsDataChecking", mapDetailsDataChecking);
-            console.log("errorApiDataChecking", errorApiDataChecking);
-
             if (roomRedirectChecking.success) {
                 const data = roomRedirectChecking.data;
                 return {
@@ -183,7 +178,6 @@ export class Room {
                 this._showPoweredBy = data.showPoweredBy ?? true;
                 this._backgroundColor = data.backgroundColor ?? undefined;
                 this._metadata = data.metadata ?? undefined;
-                console.log(">>>>>>>>metadata", this._metadata);
 
                 this._roomName = data.roomName ?? undefined;
 
