@@ -2,7 +2,6 @@ import { derived, get, Readable, Unsubscriber, writable, Writable } from "svelte
 import {
     ClientEvent,
     CryptoEvent,
-    Direction,
     EmittedEvents,
     EventTimeline,
     EventType,
@@ -358,7 +357,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     }
 
     private getParentRoomID(room: Room): string[] {
-        return (room.getLiveTimeline().getState(Direction.Forward)?.getStateEvents("m.space.parent") || []).reduce(
+        return (room.getLiveTimeline().getState(EventTimeline.FORWARDS)?.getStateEvents("m.space.parent") || []).reduce(
             (acc, currentMatrixEvent) => {
                 const parentID = currentMatrixEvent.getStateKey();
                 if (parentID) acc.push(parentID);
@@ -418,11 +417,12 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         if (eventType !== "m.space.child") {
             return;
         }
+
         const roomID = event.getStateKey();
+
         if (!roomID) {
             return;
         }
-
         const room = this.client.getRoom(roomID);
         if (!room) {
             return;
@@ -433,11 +433,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
         const parentID = event.getRoomId();
         if (!parentID) {
-            return;
-        }
-
-        const parentRoom = this.client.getRoom(parentID);
-        if (!parentRoom) {
             return;
         }
 
@@ -553,6 +548,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             parentFolder.roomList.set(room.roomId, new MatrixChatRoom(room));
         }
     }
+
     private async handleOrphanRoom(room: Room): Promise<void> {
         if (room.isSpaceRoom()) {
             await this.createAndAddNewRootFolder(room);
@@ -582,6 +578,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     }
 
     private async createAndAddNewRootFolder(room: Room): Promise<void> {
+        if (this.roomFolders.get(room.roomId)) return;
         const newFolder = new MatrixRoomFolder(room);
         this.roomFolders.set(newFolder.id, newFolder);
         await newFolder.init();
@@ -635,15 +632,14 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     private onRoomEventMembership(room: Room, membership: string, prevMembership: string | undefined) {
         const { roomId } = room;
 
-        if (membership !== prevMembership) {
-            if (membership === KnownMembership.Join) {
-                this.roomList.delete(roomId);
-                this.roomFolders.delete(roomId);
-                this.manageRoomOrFolder(room).catch((e) => {
-                    console.error("Failed to manageRoomOrFolder :", e);
-                });
-                return;
-            }
+        if (membership !== prevMembership && membership === KnownMembership.Join) {
+            this.roomList.delete(roomId);
+            this.roomFolders.delete(roomId);
+
+            this.manageRoomOrFolder(room).catch((e) => {
+                console.error("Failed to manageRoomOrFolder :", e);
+            });
+            return;
         }
 
         if (membership === KnownMembership.Invite) {
@@ -666,6 +662,12 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                             this.createAndAddNewRootRoom(room);
                         });
                     }
+
+                    this.roomList.delete(room.roomId);
+                    this.roomFolders.delete(room.roomId);
+                    this.manageRoomOrFolder(room).catch((e) => {
+                        console.error("Failed to manageRoomOrFolder : ", e);
+                    });
                 })
                 .catch((e) => {
                     console.error("Failed to get client : ", e);
@@ -1055,7 +1057,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         return user && user.some((user) => user.id === address);
     }
 
-    getRoombyID(roomId: string): ChatRoom {
+    getRoomByID(roomId: string): ChatRoom {
         if (!this.client) {
             throw new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG);
         }
