@@ -187,9 +187,9 @@
                 </p>
             </section>
 
-            <div class="flex space-x-4 items-center flex-col lg:flex-row lg:items-start">
+            <div class="flex space-x-4 items-center flex-col lg:flex-row  items-stretch">
                 <div
-                    class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 max-w-[450px]  flex flex-col justify-center items-center"
+                    class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 max-w-[450px]  flex flex-col justify-center items-start "
                 >
                     <div class="text-lg bold flex items-center justify-center space-x-3 mb-2 pl-2">
                         <MicOnIcon height="h-8" width="w-8" />
