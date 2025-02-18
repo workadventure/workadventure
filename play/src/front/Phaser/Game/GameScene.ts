@@ -2034,8 +2034,8 @@ export class GameScene extends DirtyScene {
                             connectionManager.logout();
                         },
                         externalRestrictedMapEditorProperties: mapEditorRestrictedPropertiesStore,
-                        showComponentInChat(component: ComponentType) {
-                            navChat.switchToCustomComponent(component);
+                        showComponentInChat(component: ComponentType, props: Record<string, unknown>) {
+                            navChat.switchToCustomComponent(component, props);
                             chatVisibilityStore.set(true);
                         },
                     });

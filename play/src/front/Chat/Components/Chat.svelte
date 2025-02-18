@@ -24,7 +24,7 @@
         {:else if $navChat.key === "settings"}
             <ChatSettings />
         {:else if $navChat.key === "externalModule"}
-            <svelte:component this={$navChat.component} />
+            <svelte:component this={$navChat.component} {...$$restProps} {...$navChat.props} />
         {:else}
             <RoomList {sideBarWidth} />
         {/if}

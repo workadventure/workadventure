@@ -35,7 +35,7 @@ export interface ExtensionModuleOptions {
     calendarEventsStoreUpdate?: (this: void, updater: Updater<Map<string, CalendarEventInterface>>) => void;
     todoListStoreUpdate?: (this: void, updater: Updater<Map<string, TodoListInterface>>) => void;
     logoutCallback?(): void;
-    showComponentInChat(component: ComponentType): void;
+    showComponentInChat(component: ComponentType, props?: Record<string, unknown>): void;
 }
 
 export interface ExtensionModuleAreaProperty {

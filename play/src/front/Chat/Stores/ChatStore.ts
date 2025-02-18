@@ -19,6 +19,7 @@ type NavChatTab =
     | {
           key: "externalModule";
           component: ComponentType;
+          props?: Record<string, unknown>;
       };
 
 function createNavChatStore() {
@@ -42,14 +43,13 @@ function createNavChatStore() {
                 set({ key: "users" });
             }
         },
-        switchToCustomComponent(component: ComponentType) {
-            set({ key: "externalModule", component });
+        switchToCustomComponent(component: ComponentType, props?: Record<string, unknown>) {
+            set({ key: "externalModule", component, props });
         },
     };
 }
 
 export const navChat = createNavChatStore();
-//export const navChat = writable<"chat" | "users">("chat");
 
 export const shownRoomListStore = writable<string>("");
 export const chatSearchBarValue = writable<string>("");
