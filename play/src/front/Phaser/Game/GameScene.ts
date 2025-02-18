@@ -106,9 +106,13 @@ import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGrou
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
 import {
     availabilityStatusStore,
+    lastNewMediaDeviceDetectedStore,
     localVolumeStore,
+    requestedCameraDeviceIdStore,
     requestedCameraState,
+    requestedMicrophoneDeviceIdStore,
     requestedMicrophoneState,
+    speakerSelectedStore,
 } from "../../Stores/MediaStore";
 import { LL, locale } from "../../../i18n/i18n-svelte";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
@@ -288,6 +292,7 @@ export class GameScene extends DirtyScene {
     private mapExplorationStoreUnsubscriber!: Unsubscriber;
     private modalVisibilityStoreUnsubscriber!: Unsubscriber;
     private cameraResistanceModeStoreUnsubscriber!: Unsubscriber;
+    private lastNewMediaDeviceDetectedStoreUnsubscriber!: Unsubscriber;
     private unsubscribers: Unsubscriber[] = [];
     private entityPermissions: EntityPermissions | undefined;
     private entityPermissionsDeferred: Deferred<EntityPermissions> = new Deferred();
@@ -1058,6 +1063,7 @@ export class GameScene extends DirtyScene {
         this.availabilityStatusStoreUnsubscriber?.();
         this.mapExplorationStoreUnsubscriber?.();
         this.cameraResistanceModeStoreUnsubscriber?.();
+        this.lastNewMediaDeviceDetectedStoreUnsubscriber?.();
         for (const unsubscriber of this.unsubscribers) {
             unsubscriber();
         }
@@ -2054,7 +2060,8 @@ export class GameScene extends DirtyScene {
             this.peerStoreUnsubscriber != undefined ||
             this.mapEditorModeStoreUnsubscriber != undefined ||
             this.refreshPromptStoreStoreUnsubscriber != undefined ||
-            this.mapExplorationStoreUnsubscriber != undefined
+            this.mapExplorationStoreUnsubscriber != undefined ||
+            this.lastNewMediaDeviceDetectedStoreUnsubscriber != undefined
         ) {
             console.error(
                 "subscribeToStores => Check all subscriber undefined ",
@@ -2067,7 +2074,8 @@ export class GameScene extends DirtyScene {
                 this.peerStoreUnsubscriber,
                 this.mapEditorModeStoreUnsubscriber,
                 this.refreshPromptStoreStoreUnsubscriber,
-                this.mapExplorationStoreUnsubscriber
+                this.mapExplorationStoreUnsubscriber,
+                this.lastNewMediaDeviceDetectedStoreUnsubscriber
             );
 
             throw new Error("One store is already subscribed.");
@@ -2306,6 +2314,62 @@ export class GameScene extends DirtyScene {
                 this.cameraManager.setExplorationMode();
             } else {
                 this.input.keyboard?.enableGlobalCapture();
+            }
+        });
+
+        this.lastNewMediaDeviceDetectedStoreUnsubscriber = lastNewMediaDeviceDetectedStore.subscribe((devices) => {
+            if (devices.length === 0) return;
+            // filter device by name tu avoid multiple notification for the same device
+            const devicesToNotify = devices.reduce((devices: MediaDeviceInfo[], currentDevice: MediaDeviceInfo) => {
+                if (
+                    devices.find((device_) => device_.label == currentDevice.label) != undefined ||
+                    get(requestedCameraDeviceIdStore) == currentDevice.deviceId ||
+                    get(requestedMicrophoneDeviceIdStore) == currentDevice.deviceId ||
+                    get(speakerSelectedStore) == currentDevice.deviceId
+                )
+                    return devices;
+
+                devices.push(currentDevice);
+                return devices;
+            }, []);
+
+            for (const device of devicesToNotify) {
+                const id = `playtext-mediadevice-${device.deviceId}`;
+                this.CurrentPlayer.destroyText(id);
+                this.CurrentPlayer.playText(
+                    id,
+                    get(LL).camera.webrtc.newDeviceDetected({ device: device.label }),
+                    5000,
+                    () => {
+                        this.CurrentPlayer.destroyText(id);
+
+                        // get all devices with the same label
+                        const devicesToUse = devices.filter((device_) => device_.label === device.label);
+
+                        for (const deviceToUse of devicesToUse) {
+                            switch (deviceToUse.kind) {
+                                case "videoinput":
+                                    requestedCameraDeviceIdStore.set(deviceToUse.deviceId);
+                                    localUserStore.setPreferredVideoInputDevice(deviceToUse.deviceId);
+                                    break;
+                                // use the new device
+                                case "audioinput":
+                                    requestedMicrophoneDeviceIdStore.set(deviceToUse.deviceId);
+                                    localUserStore.setPreferredAudioInputDevice(deviceToUse.deviceId);
+                                    break;
+
+                                case "audiooutput":
+                                    localUserStore.setSpeakerDeviceId(deviceToUse.deviceId);
+                                    speakerSelectedStore.set(deviceToUse.deviceId);
+                                    break;
+                                default:
+                                    console.warn("Unknown device kind: ", deviceToUse.kind);
+                            }
+                        }
+                    },
+                    true,
+                    "message"
+                );
             }
         });
     }

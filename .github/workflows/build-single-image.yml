@@ -1,0 +1,102 @@
+name: Build a single image
+
+on:
+  workflow_call:
+    inputs:
+      # One of amd64 or arm64
+      platform:
+        required: true
+        type: string
+      # One of ubuntu-24.04 or ubuntu-24.04-arm
+      os:
+        required: true
+        type: string
+      image-name:
+        required: true
+        type: string
+      dockerfile:
+        required: true
+        type: string
+      context:
+        required: true
+        type: string
+      sentry_project:
+        required: false
+        type: string
+        default: ""
+      push-to-registry:
+        required: true
+        type: boolean
+
+jobs:
+  build-image:
+    runs-on: ${{ inputs.os }}
+    permissions:
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Get at least the previous revision to be able to fetch the HEAD^1 SHA.
+          fetch-depth: 2
+
+      - name: Set up Docker Buildx
+        if: ${{ inputs.push-to-registry != true }}
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: rlespinasse/github-slug-action@4.2.3
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ inputs.image-name }}
+
+      - name: Get previous commit SHA
+        id: prev-commit
+        run: echo "PREV_SHA=$(git rev-parse HEAD^1)" >> $GITHUB_ENV
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ inputs.context }}
+          file: ${{ inputs.dockerfile }}
+          push: ${{ inputs.push-to-registry }}
+          tags: |
+            ${{ inputs.image-name }}:${{ inputs.platform }}-${{ github.sha }}
+            ${{ inputs.image-name }}:${{ inputs.platform }}-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-from: |
+            type=registry,ref=${{ inputs.image-name }}:${{ inputs.platform }}-${{ env.PREV_SHA }}
+            type=registry,ref=${{ inputs.image-name }}:${{ inputs.platform }}-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+#           type=gha
+          cache-to: |
+            type=inline
+#           type=gha,mode=max
+          labels: ${{ steps.meta.outputs.labels }}
+          secrets: |
+            "SENTRY_PROJECT=${{ inputs.sentry_project }}"
+            "SENTRY_URL=${{ secrets.SENTRY_URL }}"
+            "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}"
+            "SENTRY_ORG=${{ secrets.SENTRY_ORG }}"
+            "SENTRY_ENVIRONMENT=${{ github.event_name == 'release' && 'production' || env.GITHUB_REF_NAME == 'master' && 'staging' || 'testing' }}"
+            "SENTRY_RELEASE=${{ github.event_name == 'release' && env.GITHUB_REF_NAME || format('{0}@{1}', env.GITHUB_REF_NAME_SLUG, env.GITHUB_SHA) }}"
+          outputs: ${{ inputs.push-to-registry != true && format('type=docker,dest=/tmp/{0}.tar', inputs.sentry_project) || '' }}
+
+      - name: Zip image
+        if: ${{ inputs.push-to-registry != true }}
+        run: gzip ${{ inputs.sentry_project }}.tar
+        working-directory: /tmp
+
+      - name: Upload image as artifact
+        if: ${{ inputs.push-to-registry != true }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.sentry_project }}
+          path: /tmp/${{ inputs.sentry_project }}.tar.gz
