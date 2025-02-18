@@ -14,7 +14,7 @@ import {
 import { layoutManagerActionStore } from "../Stores/LayoutManagerStore";
 import { MediaStreamConstraintsError } from "../Stores/Errors/MediaStreamConstraintsError";
 import { LL } from "../../i18n/i18n-svelte";
-import { localeDetector } from "../../i18n/locales";
+import { localeDetector } from "../Utils/locales";
 
 export type StartScreenSharingCallback = (media: MediaStream) => void;
 export type StopScreenSharingCallback = (media: MediaStream) => void;
@@ -24,7 +24,8 @@ export class MediaManager {
 
     constructor() {
         localeDetector()
-            .catch(() => {
+            .catch((e) => {
+                console.error(e);
                 throw new Error("Cannot load locale on media manager");
             })
             .finally(() => {
