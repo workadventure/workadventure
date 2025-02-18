@@ -15,6 +15,7 @@ describe("MapFetcher", () => {
     it("should return true on an IP resolving to a local domain", async () => {
         expect(await mapFetcher.isLocalUrl("https://127.0.0.1")).toBe(true);
         expect(await mapFetcher.isLocalUrl("https://192.168.0.1")).toBe(true);
+        expect(await mapFetcher.isLocalUrl("https://[fd01::1]")).toBe(true);
     });
 
     it("should return false on an IP resolving to a global domain", async () => {
