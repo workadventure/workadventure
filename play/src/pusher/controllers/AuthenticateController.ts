@@ -64,7 +64,6 @@ export class AuthenticateController extends BaseHttpController {
         this.anonymLogin();
         this.profileCallback();
         this.logoutUser();
-        this.thirdPartyLogin();
     }
 
     private openIDLogin(): void {
@@ -679,44 +678,6 @@ export class AuthenticateController extends BaseHttpController {
                 });
                 res.redirect(query.redirect);
             });
-        });
-    }
-
-    private thirdPartyLogin(): void {
-        /**
-         * @openapi
-         * /login-screen:
-         *   get:
-         *     description: Redirects the user to the OpenID login screen
-         *     parameters:
-         *      - name: "nonce"
-         *        in: "query"
-         *        description: "todo"
-         *        required: true
-         *        type: "string"
-         *      - name: "state"
-         *        in: "query"
-         *        description: "todo"
-         *        required: true
-         *        type: "string"
-         *      - name: "playUri"
-         *        in: "query"
-         *        description: "todo"
-         *        required: false
-         *        type: "string"
-         *      - name: "redirect"
-         *        in: "query"
-         *        description: "todo"
-         *        required: false
-         *        type: "string"
-         *     responses:
-         *       302:
-         *         description: Redirects the user to the OpenID login screen
-         *
-         */
-        //eslint-disable-next-line @typescript-eslint/no-misused-promises
-        this.app.get("/third-party-login/login/:provider", (req, res) => {
-            return;
         });
     }
 }

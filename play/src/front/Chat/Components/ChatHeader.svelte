@@ -63,14 +63,6 @@
 <div class="p-2 flex items-center absolute w-full z-40">
     <div class={searchActive ? "hidden" : ""}>
         {#if showNavBar}
-            <!--{#if $allowedDiscordBridgeStore}-->
-            <!--    {#if $externalChatSettingsSvelteComponent.size > 0}-->
-            <!--        {#each [...$externalChatSettingsSvelteComponent.entries()] as [id, value] (`externalChatSettingsSvelteComponent-${id}`)}-->
-            <!--            <svelte:component this={value.componentType} extensionModule={value.extensionModule} />-->
-            <!--        {/each}-->
-            <!--    {/if}-->
-            <!--{/if}-->
-
             {#if $navChat.key === "chat"}
                 <button
                     class="userList p-3 hover:bg-white/10 rounded aspect-square w-12 h-12"

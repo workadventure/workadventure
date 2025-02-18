@@ -212,7 +212,6 @@
 
             <ExternalComponents zone="popup" />
             <div class=" absolute top-0 bottom-0 w-full h-full flex items-center justify-center">
-                <!--                <DiscordConfigurePopups />-->
                 <ExternalComponents zone="centeredPopup" />
             </div>
 

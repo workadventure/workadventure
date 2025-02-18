@@ -14,9 +14,6 @@ type NavChatTab =
           key: "users";
       }
     | {
-          key: "settings";
-      }
-    | {
           key: "externalModule";
           component: ComponentType;
           props?: Record<string, unknown>;
@@ -28,9 +25,6 @@ function createNavChatStore() {
 
     return {
         subscribe,
-        switchToSettings() {
-            set({ key: "settings" });
-        },
         switchToChat() {
             set({ key: "chat" });
         },

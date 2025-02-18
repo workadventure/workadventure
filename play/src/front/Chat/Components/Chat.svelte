@@ -4,8 +4,6 @@
     import { INITIAL_SIDEBAR_WIDTH } from "../../Stores/ChatStore";
     import RoomUserList from "./UserList/RoomUserList.svelte";
     import RoomList from "./RoomList.svelte";
-    import ChatSettings from "./ChatSettings.svelte";
-
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
 
     const gameScene = gameManager.getCurrentGameScene();
@@ -21,8 +19,6 @@
             {:then userProviderMerger}
                 <RoomUserList {userProviderMerger} />
             {/await}
-        {:else if $navChat.key === "settings"}
-            <ChatSettings />
         {:else if $navChat.key === "externalModule"}
             <svelte:component this={$navChat.component} {...$$restProps} {...$navChat.props} />
         {:else}
