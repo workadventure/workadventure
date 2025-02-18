@@ -454,8 +454,8 @@ const chat: BaseTranslation = {
             configure: "Configure",
             dismiss: "Dismiss",
             discordNotConfigured: "Connect to Discord",
-        }
-    }
+        },
+    },
 };
 
 export default chat;

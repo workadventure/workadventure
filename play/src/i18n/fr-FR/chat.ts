@@ -454,8 +454,8 @@ const chat: DeepPartial<Translation["chat"]> = {
             configure: "Configurer",
             dismiss: "Fermer",
             discordNotConfigured: "Synchronisation Discord",
-        }
-    }
+        },
+    },
 };
 
 export default chat;

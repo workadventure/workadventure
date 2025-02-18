@@ -7,7 +7,7 @@
     <div class="flex flex-col">
         <ChatHeader />
         <div class="relative pt-[72px]  h-[calc(100%-2rem)]">
-<!--            <Discord />-->
+            <!--            <Discord />-->
         </div>
     </div>
 </div>

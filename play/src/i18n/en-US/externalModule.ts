@@ -31,7 +31,7 @@ const externalModule: BaseTranslation = {
         saveSync: "Save and sync 🔌",
         logout: "Logout",
         guilds: "Discord servers",
-        guildExplain: "Select channels you want to add to Workadventure chat interface.\n"
+        guildExplain: "Select channels you want to add to Workadventure chat interface.\n",
     },
 };
 
