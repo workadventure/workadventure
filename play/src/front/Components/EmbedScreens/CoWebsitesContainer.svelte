@@ -194,7 +194,7 @@
 
 <div id="cowebsites-container" class="w-full h-full bg-contrast/50 backdrop-blur">
     <div class="h-full w-full flex flex-col">
-        <div class="flex py-2 ml-3 items-center height-tab overflow-hidden h-13 flex-none">
+        <div class="flex py-2 ml-3 items-center height-tab overflow-hidden flex-none">
             {#if tabsOverflowing && tabsScrollX > 0}
                 <div class="flex-0 w-10">
                     <button
