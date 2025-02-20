@@ -1392,75 +1392,69 @@ export class SocketManager {
             throw new Error(`Could not find space ${privateEvent.spaceName} to dispatch public event`);
         }
 
-        if (privateEvent.spaceEvent?.event && privateEvent.spaceEvent.event.$case === "webRtcStartMessage") {
-            if (TURN_STATIC_AUTH_SECRET) {
-                const { username, password } = this.getTURNCredentials(
-                    privateEvent.spaceEvent.event.webRtcStartMessage.userId.toString(),
-                    TURN_STATIC_AUTH_SECRET
-                );
-                privateEvent.spaceEvent.event.webRtcStartMessage.webRtcUserName = username;
-                privateEvent.spaceEvent.event.webRtcStartMessage.webRtcPassword = password;
-            }
-        }
-        if (privateEvent.spaceEvent?.event?.$case === "webRtcSignalToServerMessage") {
-            const webrtcSignalToClientMessage: Partial<WebRtcSignalToClientMessage> = {
-                userId: privateEvent.senderUserId,
-                signal: privateEvent.spaceEvent.event.webRtcSignalToServerMessage.signal,
-            };
-
-            // TODO: only compute credentials if data.signal.type === "offer"
-            if (TURN_STATIC_AUTH_SECRET) {
-                const { username, password } = this.getTURNCredentials(
-                    privateEvent.senderUserId.toString(),
-                    TURN_STATIC_AUTH_SECRET
-                );
-                webrtcSignalToClientMessage.webRtcUserName = username;
-                webrtcSignalToClientMessage.webRtcPassword = password;
-            }
-            //TODO : peut faire plus simple on change juste le case
-            space.dispatchPrivateEvent({
-                spaceName: privateEvent.spaceName,
-                senderUserId: privateEvent.senderUserId,
-                receiverUserId: privateEvent.receiverUserId,
-                spaceEvent: {
-                    event: {
-                        $case: "webRtcSignalToClientMessage",
-                        webRtcSignalToClientMessage:
-                            WebRtcSignalToClientMessage.fromPartial(webrtcSignalToClientMessage),
-                    },
-                },
-            });
-        } else if (privateEvent.spaceEvent?.event?.$case === "webRtcScreenSharingSignalToServerMessage") {
-            const webrtcSignalToClientMessage: Partial<WebRtcSignalToClientMessage> = {
-                userId: privateEvent.senderUserId,
-                signal: privateEvent.spaceEvent.event.webRtcScreenSharingSignalToServerMessage.signal,
-            };
-
-            // TODO: only compute credentials if data.signal.type === "offer"
-            if (TURN_STATIC_AUTH_SECRET) {
-                const { username, password } = this.getTURNCredentials(
-                    privateEvent.senderUserId.toString(),
-                    TURN_STATIC_AUTH_SECRET
-                );
-                webrtcSignalToClientMessage.webRtcUserName = username;
-                webrtcSignalToClientMessage.webRtcPassword = password;
-            }
-            //TODO : peut faire plus simple on change juste le case
-            space.dispatchPrivateEvent({
-                spaceName: privateEvent.spaceName,
-                senderUserId: privateEvent.senderUserId,
-                receiverUserId: privateEvent.receiverUserId,
-                spaceEvent: {
-                    event: {
-                        $case: "webRtcScreenSharingSignalToClientMessage",
-                        webRtcScreenSharingSignalToClientMessage:
-                            WebRtcSignalToClientMessage.fromPartial(webrtcSignalToClientMessage),
-                    },
-                },
-            });
-        } else {
+        if (!privateEvent.spaceEvent?.event) {
             space.dispatchPrivateEvent(privateEvent);
+            return;
         }
+
+        switch (privateEvent.spaceEvent.event.$case) {
+            case "webRtcStartMessage": {
+                if (TURN_STATIC_AUTH_SECRET) {
+                    const { username, password } = this.getTURNCredentials(
+                        privateEvent.spaceEvent.event.webRtcStartMessage.userId.toString(),
+                        TURN_STATIC_AUTH_SECRET
+                    );
+                    privateEvent.spaceEvent.event.webRtcStartMessage.webRtcUserName = username;
+                    privateEvent.spaceEvent.event.webRtcStartMessage.webRtcPassword = password;
+                }
+                break;
+            }
+
+            case "webRtcSignalToServerMessage":
+            case "webRtcScreenSharingSignalToServerMessage": {
+                const signal =
+                    privateEvent.spaceEvent.event.$case === "webRtcSignalToServerMessage"
+                        ? privateEvent.spaceEvent.event.webRtcSignalToServerMessage.signal
+                        : privateEvent.spaceEvent.event.webRtcScreenSharingSignalToServerMessage.signal;
+
+                const webrtcSignalToClientMessage: Partial<WebRtcSignalToClientMessage> = {
+                    userId: privateEvent.senderUserId,
+                    signal,
+                };
+
+                if (TURN_STATIC_AUTH_SECRET) {
+                    const { username, password } = this.getTURNCredentials(
+                        privateEvent.senderUserId.toString(),
+                        TURN_STATIC_AUTH_SECRET
+                    );
+                    webrtcSignalToClientMessage.webRtcUserName = username;
+                    webrtcSignalToClientMessage.webRtcPassword = password;
+                }
+
+                space.dispatchPrivateEvent({
+                    spaceName: privateEvent.spaceName,
+                    senderUserId: privateEvent.senderUserId,
+                    receiverUserId: privateEvent.receiverUserId,
+                    spaceEvent: {
+                        event:
+                            privateEvent.spaceEvent.event.$case === "webRtcSignalToServerMessage"
+                                ? {
+                                      $case: "webRtcSignalToClientMessage",
+                                      webRtcSignalToClientMessage:
+                                          WebRtcSignalToClientMessage.fromPartial(webrtcSignalToClientMessage),
+                                  }
+                                : {
+                                      $case: "webRtcScreenSharingSignalToClientMessage",
+                                      webRtcScreenSharingSignalToClientMessage:
+                                          WebRtcSignalToClientMessage.fromPartial(webrtcSignalToClientMessage),
+                                  },
+                    },
+                });
+                return;
+            }
+        }
+
+        space.dispatchPrivateEvent(privateEvent);
     }
 
     private handleSendEventQuery(gameRoom: GameRoom, user: User, sendEventQuery: SendEventQuery) {
