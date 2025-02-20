@@ -177,7 +177,9 @@ export class VideoPeer extends Peer implements Streamable {
                         this.blocked = true;
                         this.toggleRemoteStream(false);
                         const simplePeer = this.space.getSimplePeer();
-                        simplePeer.blockedFromRemotePlayer(this.userId);
+                        if (simplePeer) {
+                            simplePeer.blockedFromRemotePlayer(this.userId);
+                        }
                         break;
                     }
                     case "unblocked": {

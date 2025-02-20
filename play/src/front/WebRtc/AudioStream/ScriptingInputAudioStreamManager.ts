@@ -57,8 +57,10 @@ export class ScriptingInputAudioStreamManager {
                     });
 
                     // Let's add all the peers to the stream
-                    get(peerStore).forEach((peer) => {
-                        this.addMediaStreamStore(peer.streamStore);
+                    get(peerStore).forEach((spaceStore) => {
+                        spaceStore.forEach((peer) => {
+                            this.addMediaStreamStore(peer.streamStore);
+                        });
                     });
                 })().catch((e) => {
                     console.error("Error while starting listening to streams", e);
@@ -73,8 +75,10 @@ export class ScriptingInputAudioStreamManager {
                 this.appendPCMDataStreamUnsubscriber = undefined;
 
                 // Let's remove all the peers to the stream
-                get(peerStore).forEach((peer) => {
-                    this.removeMediaStreamStore(peer.streamStore);
+                get(peerStore).forEach((spaceStore) => {
+                    spaceStore.forEach((peer) => {
+                        this.removeMediaStreamStore(peer.streamStore);
+                    });
                 });
 
                 if (this.pcmStreamerResolved || this.pcmStreamerResolving) {

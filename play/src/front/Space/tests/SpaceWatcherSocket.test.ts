@@ -30,7 +30,7 @@ describe("SpaceRegistry", () => {
         };
 
         const spaceRegistry = new SpaceRegistry(roomConnection as unknown as RoomConnection);
-        const space = spaceRegistry.joinSpace("space-name");
+        const space = spaceRegistry.joinSpace("space-name", []);
 
         roomConnection.updateSpaceMetadataMessageStream.next(updateSpaceMetadataMessage);
 
