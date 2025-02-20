@@ -26,43 +26,36 @@
     }
 </script>
 
-<MapEditorSideBar />
-<div class={`map-editor bg-contrast/80 backdrop-blur-md h-screen ${$mapEditorSelectedToolStore}`}>
-    {#if $mapEditorSelectedToolStore === EditorToolName.WAMSettingsEditor}
-        <ConfigureMyRoom />
-    {:else if $mapEditorVisibilityStore}
-        <div
-            class="sidebar h-screen"
-            in:fly={{ x: 100, duration: 250, delay: 200 }}
-            out:fly={{ x: 100, duration: 200 }}
-        >
-            <button class="absolute right-10 p-1 cursor-pointer" on:click={hideMapEditor}
-                ><IconMinus font-size="14" /></button
+<div class="flex flex-row items-start justify-end gap-4 absolute h-full top-0 right-0">
+    <MapEditorSideBar />
+    <div class={`map-editor bg-contrast/80 backdrop-blur-md h-screen ${$mapEditorSelectedToolStore}`}>
+        {#if $mapEditorSelectedToolStore === EditorToolName.WAMSettingsEditor}
+            <ConfigureMyRoom />
+        {:else if $mapEditorVisibilityStore}
+            <div
+                class="sidebar h-screen"
+                in:fly={{ x: 100, duration: 250, delay: 200 }}
+                out:fly={{ x: 100, duration: 200 }}
             >
-            <button
-                class="close-window flex space-x-7"
-                data-testid="mapEditor-close-button"
-                on:click|preventDefault|stopPropagation={closeMapEditor}>&#215;</button
-            >
-            {#if $mapEditorSelectedToolStore === EditorToolName.TrashEditor}
-                <TrashEditor />
-            {/if}
-            {#if $mapEditorSelectedToolStore === EditorToolName.EntityEditor}
-                <EntityEditor />
-            {/if}
-            {#if $mapEditorSelectedToolStore === EditorToolName.AreaEditor}
-                <AreaEditor />
-            {/if}
-            {#if $mapEditorSelectedToolStore === EditorToolName.ExploreTheRoom}
-                <Explorer />
-            {/if}
-        </div>
-    {/if}
+                {#if $mapEditorSelectedToolStore === EditorToolName.TrashEditor}
+                    <TrashEditor />
+                {/if}
+                {#if $mapEditorSelectedToolStore === EditorToolName.EntityEditor}
+                    <EntityEditor />
+                {/if}
+                {#if $mapEditorSelectedToolStore === EditorToolName.AreaEditor}
+                    <AreaEditor />
+                {/if}
+                {#if $mapEditorSelectedToolStore === EditorToolName.ExploreTheRoom}
+                    <Explorer />
+                {/if}
+            </div>
+        {/if}
+    </div>
 </div>
 
 <style lang="scss">
     .map-editor {
-        position: absolute !important;
         top: 0;
         right: 0;
         width: fit-content !important;

@@ -14,6 +14,7 @@
     import EntityToolImg from "../images/icon-tool-entity.svg";
     import TrashImg from "../images/trash.svg";
     import MagnifyingGlassSvg from "../images/loupe.svg";
+    import {IconX} from "@wa-icons";
 
     const availableTools: { toolName: EditorToolName; img: string; tooltiptext: LocalizedString }[] = [];
 
@@ -108,20 +109,32 @@
     </div>
 </div>
 
-<section class="side-bar-container" class:!right-20={!$mapEditorVisibilityStore}>
+<section class="" class:!right-20={!$mapEditorVisibilityStore}>
     <!--put a section to avoid lower div to be affected by some css-->
-    <div class="side-bar">
-        {#each availableTools as tool (tool.toolName)}
-            <div class="tool-button">
-                <button
-                    id={tool.toolName}
-                    class:active={$mapEditorSelectedToolStore === tool.toolName}
-                    on:click|preventDefault={() => switchTool(tool.toolName)}
-                    type="button"><img src={tool.img} alt="open tool {tool.toolName}" /></button
-                >
-                <Tooltip text={tool.tooltiptext} leftPosition="true" />
-            </div>
-        {/each}
+    <div class="flex flex-col items-center gap-4 pt-2">
+        <div class="close-window p-2 bg-contrast/80 rounded-2xl">
+            <button
+                    class="p-3 hover:bg-white/10 rounded aspect-square w-12 m-0"
+                    data-testid="closeChatButton"
+                    on:click|preventDefault={() => switchTool(EditorToolName.CloseMapEditor)}
+            >
+                <IconX font-size="20" />
+            </button>
+        </div>
+        <div class="p-2 bg-contrast/80 rounded-2xl">
+            {#each availableTools as tool (tool.toolName)}
+                <div class=" p-3 hover:bg-white/10 first:rounded-t-lg last:rounded-b-lg">
+                    <button
+                            class="!bg-transparent !p-4 h-12 w-12"
+                        id={tool.toolName}
+                        class:active={$mapEditorSelectedToolStore === tool.toolName}
+                        on:click|preventDefault={() => switchTool(tool.toolName)}
+                        type="button"><img class="h-6 w-6" src={tool.img} alt="open tool {tool.toolName}" /></button
+                    >
+                    <Tooltip text={tool.tooltiptext} leftPosition="true" />
+                </div>
+            {/each}
+        </div>
     </div>
 </section>
 
