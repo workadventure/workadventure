@@ -2038,6 +2038,10 @@ export class GameScene extends DirtyScene {
                             navChat.switchToCustomComponent(component, props);
                             chatVisibilityStore.set(true);
                         },
+                        openErrorScreen: (error: Error) => {
+                            errorScreenStore.setException(error);
+                            gameManager.closeGameScene();
+                        },
                     });
 
                     if (defaultExtensionModule.calendarSynchronised) isCalendarActiveStore.set(true);

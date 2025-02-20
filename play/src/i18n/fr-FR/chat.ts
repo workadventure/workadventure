@@ -452,6 +452,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     discord: {
         chatBand: {
             configure: "Configurer",
+            open: "Ouvrir",
             dismiss: "Fermer",
             discordNotConfigured: "Synchronisation Discord",
         },

@@ -452,6 +452,7 @@ const chat: BaseTranslation = {
     discord: {
         chatBand: {
             configure: "Configure",
+            open: "Open",
             dismiss: "Dismiss",
             discordNotConfigured: "Connect to Discord",
         },
