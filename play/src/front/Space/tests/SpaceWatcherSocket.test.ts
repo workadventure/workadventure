@@ -16,7 +16,29 @@ vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
 vi.mock("../../Phaser/Game/GameManager", () => {
     return {};
 });
+// Mock the PeerStore module
+vi.mock("../../Stores/PeerStore", () => ({
+    peerStore: {
+        getSpaceStore: vi.fn(),
+        cleanupStore: vi.fn(),
+        removePeer: vi.fn(),
+        getPeer: vi.fn(),
+    },
+    screenSharingPeerStore: {
+        getSpaceStore: vi.fn(),
+        cleanupStore: vi.fn(),
+        removePeer: vi.fn(),
+        getPeer: vi.fn(),
+    },
+}));
 
+// Mock SimplePeer
+vi.mock("../../WebRtc/SimplePeer", () => ({
+    SimplePeer: vi.fn().mockImplementation(() => ({
+        closeAllConnections: vi.fn(),
+        destroy: vi.fn(),
+    })),
+}));
 describe("SpaceRegistry", () => {
     it("should call updateSpaceMetadata when stream updateSpaceMetadata receive a new message", () => {
         const roomConnection = new MockRoomConnectionForSpaces();

@@ -8,7 +8,6 @@ import {
 } from "@workadventure/messages";
 import { SimplePeer } from "../WebRtc/SimplePeer";
 import { gameManager } from "../Phaser/Game/GameManager";
-import { peerStore, screenSharingPeerStore } from "../Stores/PeerStore";
 import { PrivateEventsObservables, PublicEventsObservables, SpaceInterface, SpaceUserUpdate } from "./SpaceInterface";
 import { SpaceNameIsEmptyError } from "./Errors/SpaceError";
 import { SpaceFilter, SpaceFilterInterface } from "./SpaceFilter/SpaceFilter";
@@ -18,16 +17,19 @@ import { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegistry"
 
 // -------------------- Interfaces --------------------
 
-export interface PeerConnectionInterface {
+export interface SimplePeerConnectionInterface {
     closeAllConnections(): void;
     blockedFromRemotePlayer(userId: number): void;
     setSpaceFilter(filter: SpaceFilterInterface): void;
 }
 
 export interface PeerFactoryInterface {
-    create(space: SpaceInterface): PeerConnectionInterface;
+    create(space: SpaceInterface): SimplePeerConnectionInterface;
 }
 
+export interface PeerConnectionInterface {
+    destroy(): void;
+}
 export interface PeerStoreInterface {
     getSpaceStore(spaceName: string): Map<number, PeerConnectionInterface> | undefined;
     cleanupStore(spaceName: string): void;
@@ -37,7 +39,7 @@ export interface PeerStoreInterface {
 
 // -------------------- Default Implementations --------------------x
 
-const defaultPeerFactory: PeerFactoryInterface = {
+export const defaultPeerFactory: PeerFactoryInterface = {
     create: (space: SpaceInterface) => {
         const repository = gameManager.getCurrentGameScene().getRemotePlayersRepository();
         return new SimplePeer(space, repository);
@@ -46,13 +48,13 @@ const defaultPeerFactory: PeerFactoryInterface = {
 
 // -------------------- Peer Manager --------------------
 export class SpacePeerManager {
-    private _peer: PeerConnectionInterface | undefined;
+    private _peer: SimplePeerConnectionInterface | undefined;
 
     constructor(
         private space: SpaceInterface,
         private peerStore: PeerStoreInterface,
         private screenSharingPeerStore: PeerStoreInterface,
-        private peerFactory: PeerFactoryInterface = defaultPeerFactory
+        private peerFactory: PeerFactoryInterface
     ) {}
 
     initialize(propertiesToSync: string[]): void {
@@ -81,7 +83,7 @@ export class SpacePeerManager {
         this.screenSharingPeerStore.cleanupStore(spaceName);
     }
 
-    getPeer(): PeerConnectionInterface | undefined {
+    getPeer(): SimplePeerConnectionInterface | undefined {
         return this._peer;
     }
 }
@@ -103,15 +105,16 @@ export class Space implements SpaceInterface {
         private _metadata = new Map<string, unknown>(),
         private _connection: RoomConnectionForSpacesInterface,
         private _propertiesToSync: string[] = [],
-        private _peerStore: PeerStoreInterface = peerStore,
-        private _screenSharingPeerStore: PeerStoreInterface = screenSharingPeerStore
+        private _peerFactory: PeerFactoryInterface,
+        private _peerStore: PeerStoreInterface,
+        private _screenSharingPeerStore: PeerStoreInterface
     ) {
         if (name === "") {
             throw new SpaceNameIsEmptyError();
         }
         this.name = name;
 
-        this.peerManager = new SpacePeerManager(this, this._peerStore, this._screenSharingPeerStore);
+        this.peerManager = new SpacePeerManager(this, this._peerStore, this._screenSharingPeerStore, this._peerFactory);
 
         this.peerManager.initialize(_propertiesToSync);
 
@@ -306,7 +309,7 @@ export class Space implements SpaceInterface {
         this.peerManager.cleanup();
     }
 
-    public getSimplePeer(): PeerConnectionInterface | undefined {
+    public getSimplePeer(): SimplePeerConnectionInterface | undefined {
         return this.peerManager.getPeer();
     }
     /**

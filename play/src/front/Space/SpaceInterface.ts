@@ -2,7 +2,7 @@ import { Observable, Subject } from "rxjs";
 import { PrivateSpaceEvent, SpaceEvent, SpaceUser, UpdateSpaceMetadataMessage } from "@workadventure/messages";
 import { SpaceFilterInterface } from "./SpaceFilter/SpaceFilter";
 import { AllUsersSpaceFilterInterface } from "./SpaceFilter/AllUsersSpaceFilter";
-import { PeerConnectionInterface } from "./Space";
+import { SimplePeerConnectionInterface } from "./Space";
 
 export type PublicSpaceEvent = NonNullable<SpaceEvent["event"]>;
 
@@ -44,6 +44,6 @@ export interface SpaceInterface {
     emitUpdateSpaceMetadata(metadata: Map<string, unknown>): void;
     watchSpaceMetadata(): Observable<UpdateSpaceMetadataMessage>;
     //TODO : voir si on utilise une interface a la place de simple-peer
-    getSimplePeer(): PeerConnectionInterface | undefined;
+    getSimplePeer(): SimplePeerConnectionInterface | undefined;
     readonly onLeaveSpace: Observable<void>;
 }

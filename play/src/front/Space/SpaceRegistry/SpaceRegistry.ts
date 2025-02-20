@@ -3,8 +3,9 @@ import { Subscription } from "rxjs";
 import { z } from "zod";
 import { SpaceInterface } from "../SpaceInterface";
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
-import { Space } from "../Space";
+import { defaultPeerFactory, PeerFactoryInterface, PeerStoreInterface, Space } from "../Space";
 import { RoomConnection } from "../../Connection/RoomConnection";
+import { peerStore, screenSharingPeerStore } from "../../Stores/PeerStore";
 import { SpaceRegistryInterface } from "./SpaceRegistryInterface";
 
 /**
@@ -45,7 +46,12 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     private proximityPrivateMessageEventSubscription: Subscription;
     private spaceDestroyedMessageSubscription: Subscription;
 
-    constructor(private roomConnection: RoomConnectionForSpacesInterface) {
+    constructor(
+        private roomConnection: RoomConnectionForSpacesInterface,
+        private _peerFactory: PeerFactoryInterface = defaultPeerFactory,
+        private _peerStore: PeerStoreInterface = peerStore,
+        private _screenSharingPeerStore: PeerStoreInterface = screenSharingPeerStore
+    ) {
         this.addSpaceUserMessageStreamSubscription = roomConnection.addSpaceUserMessageStream.subscribe((message) => {
             if (!message.user || !message.filterName) {
                 console.error(message);
@@ -138,7 +144,15 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         metadata: Map<string, unknown> = new Map<string, unknown>()
     ): SpaceInterface {
         if (this.exist(spaceName)) throw new SpaceAlreadyExistError(spaceName);
-        const newSpace = new Space(spaceName, metadata, this.roomConnection, propertiesToSync);
+        const newSpace = new Space(
+            spaceName,
+            metadata,
+            this.roomConnection,
+            propertiesToSync,
+            this._peerFactory,
+            this._peerStore,
+            this._screenSharingPeerStore
+        );
         this.spaces.set(newSpace.getName(), newSpace);
         return newSpace;
     }
