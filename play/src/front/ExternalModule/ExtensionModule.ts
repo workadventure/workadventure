@@ -79,11 +79,6 @@ export const RoomMetadataType = z.object({
         })
         .optional(),
     modules: z.string().array(),
-    discordSettings: z.object({
-        enableDiscordBridge: z.boolean().default(true),
-        enableDiscordMandatory: z.boolean().default(false),
-        discordAllowedGuilds: z.string().default(""),
-    }),
 });
 
 export type RoomMetadataType = z.infer<typeof RoomMetadataType>;

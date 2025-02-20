@@ -359,7 +359,6 @@ export class GameScene extends DirtyScene {
     public extensionModule: ExtensionModule | undefined = undefined;
     public landingAreas: AreaData[] = [];
 
-    // Add new attribut chat connection used for discord
     public _chatConnection: ChatConnectionInterface | undefined;
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
@@ -3213,8 +3212,6 @@ ${escapedMessage}
             const soundUrl = new URL(message.url, this.mapUrlFile);
             await this.simplePeer.dispatchSound(soundUrl);
         });
-        const channel = new BroadcastChannel("discord");
-        channel.onmessage = (event) => {};
     }
 
     private setPropertyLayer(

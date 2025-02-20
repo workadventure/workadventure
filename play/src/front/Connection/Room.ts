@@ -12,7 +12,6 @@ import {
 } from "../Enum/EnvironmentVariable";
 import { ApiError } from "../Stores/Errors/ApiError";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
-import { allowedDiscordBridgeStore } from "../Stores/ChatStore";
 import { axiosWithRetry } from "./AxiosUtils";
 import { localUserStore } from "./LocalUserStore";
 export class MapDetail {
@@ -21,12 +20,6 @@ export class MapDetail {
 
 export interface RoomRedirect {
     redirectUrl: string;
-}
-
-export interface DiscordSettings {
-    enableDiscordMandatory: number;
-    discordAllowedGuilds: string;
-    enableDiscordBridge: boolean;
 }
 
 export class Room {
@@ -203,13 +196,6 @@ export class Room {
 
                 this._errorSceneLogo = data.errorSceneLogo ?? undefined;
                 this._modules = data.modules ?? [];
-
-                //add discord allowed settings into a store
-                // @ts-ignore
-                if (this._metadata) {
-                    // @ts-ignore
-                    allowedDiscordBridgeStore.set(this._metadata.discordSettings?.enableDiscordBridge ?? false);
-                }
 
                 return new MapDetail(data.mapUrl, data.wamUrl);
             } else if (errorApiDataChecking.success) {
